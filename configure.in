@@ -35,6 +35,9 @@ AC_PROG_CC
 dnl AC_PROG_CXX
 dnl AC_PROG_F77
 if test "$enable_fortran" = "yes" ; then
+    if test -z "$FC" -a -n "$F77" ; then
+        FC="$F77"
+    fi
     UD_PROG_FC
 fi
 dnl UD_PROG_CC
