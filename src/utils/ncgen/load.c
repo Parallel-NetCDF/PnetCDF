@@ -60,11 +60,11 @@ gen_load_c(
 {
     int  idim, ival;
     char *val_string;
-    char *charvalp;
-    short *shortvalp;
-    int *intvalp;
-    float *floatvalp;
-    double *doublevalp;
+    char *charvalp = NULL;
+    short *shortvalp = NULL;
+    int *intvalp = NULL;
+    float *floatvalp = NULL;
+    double *doublevalp = NULL;
     char stmnt[C_MAX_STMNT];
     size_t stmnt_len;
     char s2[C_MAX_STMNT];
@@ -117,6 +117,9 @@ gen_load_c(
 	      case NC_DOUBLE:
 		doublevalp = (double *) rec_start;
 		break;
+	      default:
+		derror("Unhandled type %d\n", vars[varnum].type);
+		break;
 	    }
             for (ival = 0; ival < var_len-1; ival++) {
 		switch (vars[varnum].type) {
@@ -137,6 +140,10 @@ gen_load_c(
 			tztrim(s2);
 			strcat(s2, ", ");
 		    break;
+		  default:
+		    derror("Unhandled type %d\n", vars[varnum].type);
+		    break;
+
 		}
 		stmnt_len += strlen(s2);
 		if (stmnt_len < C_MAX_STMNT)
@@ -164,6 +171,9 @@ gen_load_c(
 		  case NC_DOUBLE:
 			sprintf(s2, "%#.16g", *doublevalp++);
 			tztrim(s2);
+		    break;
+		  default:
+		    derror("Unhandled type %d\n", vars[varnum].type);
 		    break;
 		}
 		stmnt_len += strlen(s2);
@@ -256,6 +266,9 @@ gen_load_c(
 	    doublevalp = (double *) rec_start;
 	    sprintf(s2, "%#.16g", *doublevalp++);
 	    tztrim(s2);
+	    break;
+	  default:
+	    derror("Unhandled type %d\n", vars[varnum].type);
 	    break;
 	}
 	strncat(stmnt, s2, C_MAX_STMNT - strlen(stmnt) );
@@ -470,14 +483,14 @@ load_netcdf(
     )
 {
     int idim;
-    int stat;
+    int stat = -1;
     MPI_Offset start[NC_MAX_VAR_DIMS];
     MPI_Offset count[NC_MAX_VAR_DIMS];
-    char *charvalp;
-    short *shortvalp;
-    int *intvalp;
-    float *floatvalp;
-    double *doublevalp;
+    char *charvalp = NULL;
+    short *shortvalp = NULL;
+    int *intvalp = NULL;
+    float *floatvalp = NULL;
+    double *doublevalp = NULL;
 
     /* load values into variable */
 
@@ -497,6 +510,9 @@ load_netcdf(
 	break;
       case NC_DOUBLE:
 	doublevalp = (double *) rec_start;
+	break;
+      default:
+	derror("Unhandled type %d\n", vars[varnum].type);
 	break;
     }
     if (vars[varnum].ndims > 0) {
@@ -539,6 +555,9 @@ load_netcdf(
 	break;
       case NC_DOUBLE:
 	stat = ncmpi_put_vara_double_all(ncid, varnum, start, count, doublevalp);
+	break;
+      default:
+	derror("Unhandled type %d\n", vars[varnum].type);
 	break;
     }
     check_err(stat);

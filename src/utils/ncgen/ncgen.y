@@ -434,6 +434,10 @@ datadecl:       avar
 			 case NC_DOUBLE:
 			   double_valp = (double *) rec_start;
 			   break;
+			 default:
+			   derror("Unhandled type %d\n", valtype);
+			   break;
+
 		       }
 		 }
 		'=' constlist
@@ -466,7 +470,7 @@ dconst:
 				      multiple of record size */
 			       ptrdiff_t rec_inc = (char *)rec_cur
 				   - (char *)rec_start;
-			       var_len += rec_len * (1 + valnum - var_len)/rec_len;
+			       var_len += rec_len * (1 + valnum )/rec_len;
 			       rec_start = erealloc(rec_start, var_len*var_size);
 			       rec_cur = (char *)rec_start + rec_inc;
 			       char_valp = (char *) rec_cur;
@@ -501,6 +505,9 @@ dconst:
 			     case NC_DOUBLE:
 			       rec_cur = (void *) double_valp;
 			       break;
+			     default: 
+			       derror("Unhandled type %d\n", valtype);
+			       break;
 			   }
 		       }
 		   }
@@ -527,6 +534,9 @@ const:         CHAR_CONST
 			   break;
 			 case NC_DOUBLE:
 			   *double_valp++ = char_val;
+			   break; 
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
 		       valnum++;
@@ -583,6 +593,9 @@ const:         CHAR_CONST
 			       derror("string value invalid for %s variable",
 				      nctype(valtype));
 			       break;
+			     default: 
+			       derror("Unhandled type %d\n", valtype);
+			       break;
 			   }
 		       }
 		   }
@@ -607,6 +620,9 @@ const:         CHAR_CONST
 			   break;
 			 case NC_DOUBLE:
 			   *double_valp++ = byte_val;
+			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
 		       valnum++;
@@ -633,6 +649,9 @@ const:         CHAR_CONST
 			 case NC_DOUBLE:
 			   *double_valp++ = short_val;
 			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
+			   break;
 		       }
 		       valnum++;
 		   }
@@ -658,6 +677,9 @@ const:         CHAR_CONST
 			 case NC_DOUBLE:
 			   *double_valp++ = int_val;
 			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
+			   break;
 		       }
 		       valnum++;
 		   }
@@ -682,6 +704,9 @@ const:         CHAR_CONST
 			   break;
 			 case NC_DOUBLE:
 			   *double_valp++ = float_val;
+			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
 		       valnum++;
@@ -710,6 +735,9 @@ const:         CHAR_CONST
 			   break;
 			 case NC_DOUBLE:
 			   *double_valp++ = double_val;
+			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
 		       valnum++;
@@ -741,6 +769,9 @@ const:         CHAR_CONST
 		       case NC_DOUBLE:
 			   nc_fill(valtype, 1, (void *)double_valp++,
 				   vars[varnum].fill_value);
+			   break;
+		       default: 
+			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
 		       valnum++;
