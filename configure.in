@@ -142,6 +142,25 @@ AC_FUNC_ALLOCA
 AC_STRUCT_ST_BLKSIZE
 UD_CHECK_IEEE
 AC_TYPE_SIZE_T
+
+dnl Check that sizeof(size_t) == sizeof(int); bail otherwise.
+dnl
+dnl This is important because we do some casting in the Fortran
+dnl bindings based on this assumption.
+AC_MSG_CHECKING(whether size_t and int size match)
+AC_TRY_RUN([
+	#include <stdio.h>
+	
+	int main(void)
+	{
+		if (sizeof(size_t) == sizeof(int)) return 0; /* true */
+		else return 1; /* false */
+	}
+],
+[AC_MSG_RESULT(yes)],
+[AC_MSG_RESULT(no)
+AC_MSG_ERROR(This is a critical error; please report this size mismatch to the developers!)])
+
 AC_TYPE_OFF_T
 AC_CHECK_TYPE(ssize_t, int)
 AC_CHECK_TYPE(ptrdiff_t, int)
