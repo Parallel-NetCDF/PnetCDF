@@ -970,19 +970,23 @@ NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[
  
   ndims = varp->ndims;
 
-  if (IS_RECVAR(varp))
-    offset += index[0] * ncp->recsize;
-  else 
-    offset += index[ndims-1] * varp->xsz;
+  if (ndims > 0) {
 
-  if (ndims > 1) {
     if (IS_RECVAR(varp))
-      offset += index[ndims - 1] * varp->xsz;
-    else
-      offset += index[0] * varp->dsizes[1] * varp->xsz;
+      offset += index[0] * ncp->recsize;
+    else 
+      offset += index[ndims-1] * varp->xsz;
 
-    for (dim = 1; dim < ndims - 1; dim++)
-      offset += index[dim] * varp->dsizes[dim+1] * varp->xsz;
+    if (ndims > 1) {
+      if (IS_RECVAR(varp))
+        offset += index[ndims - 1] * varp->xsz;
+      else
+        offset += index[0] * varp->dsizes[1] * varp->xsz;
+
+      for (dim = 1; dim < ndims - 1; dim++)
+        offset += index[dim] * varp->dsizes[dim+1] * varp->xsz;
+    }
+
   }
 
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
@@ -1073,13 +1077,20 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
   offset = varp->begin;
   
   ndims = varp->ndims;
-  end = (size_t *)malloc(sizeof(size_t) * ndims);
-  shape = (int *)malloc(sizeof(int) * ndims);
-  subcount = (int *)malloc(sizeof(int) * ndims);
-  substart = (int *)malloc(sizeof(int) * ndims);
 
-  for (dim = 0; dim < ndims; dim++)
-    end[dim] = start[dim] + count[dim] - 1;
+  if (ndims > 0) {
+
+    /* if ndims == 0, all below pointers would be null */
+
+    end = (size_t *)malloc(sizeof(size_t) * ndims);
+    shape = (int *)malloc(sizeof(int) * ndims);
+    subcount = (int *)malloc(sizeof(int) * ndims);
+    substart = (int *)malloc(sizeof(int) * ndims);
+
+    for (dim = 0; dim < ndims; dim++)
+      end[dim] = start[dim] + count[dim] - 1;
+  }
+
   status = NCcoordck(ncp, varp, end);
   if (status != NC_NOERR)
     return status;
@@ -1159,14 +1170,20 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
       subcount[dim] = count[dim];
       substart[dim] = start[dim];
     }
-    shape[dim] = varp->xsz * varp->shape[dim];
-    subcount[dim] = varp->xsz * count[dim];
-    substart[dim] = varp->xsz * start[dim];
 
-    MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-	 		   MPI_ORDER_C, MPI_BYTE, &filetype); 
+    if (ndims > 0) {
+      shape[dim] = varp->xsz * varp->shape[dim];
+      subcount[dim] = varp->xsz * count[dim];
+      substart[dim] = varp->xsz * start[dim];
 
-    MPI_Type_commit(&filetype);
+      MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+	 		     MPI_ORDER_C, MPI_BYTE, &filetype); 
+
+      MPI_Type_commit(&filetype);
+    } else {
+      /* scalar variable */
+      filetype = MPI_BYTE;
+    }
   }
 
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
@@ -1180,11 +1197,14 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
   }
 
 
-  MPI_Type_free(&filetype);
+  if (ndims > 0) {
+    MPI_Type_free(&filetype);
 
-  free(shape);
-  free(subcount);
-  free(substart);
+    free(end);
+    free(shape);
+    free(subcount);
+    free(substart);
+  }
 
   return NC_NOERR;
 }
@@ -1206,52 +1226,64 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   offset = varp->begin;
   
   ndims = varp->ndims;
-  subtypes = (MPI_Datatype *)malloc((ndims+1) * sizeof(MPI_Datatype));
-  filetype = subtypes;
-  subtypes[ndims] = MPI_BYTE;
 
-  end = (size_t *) malloc(ndims * sizeof(size_t));
-  for (dim = 0; dim < ndims; dim++)
-    end[dim] = start[dim] + (count[dim] - 1) * stride[dim];
-  status = NCcoordck(ncp, varp, end);
-  if (status != NC_NOERR)
-    return status; 
+  if (ndims == 0) {
 
-  blocklens = (size_t *) malloc(ndims * sizeof(size_t));
-  blockstride = (size_t *) malloc(ndims * sizeof(size_t));
-  blockcount = (size_t *) malloc(ndims * sizeof(size_t));
-  blocklens[ndims - 1] = varp->xsz;
-  blockcount[ndims - 1] = count[ndims - 1];
-  if (ndims == 1 && IS_RECVAR(varp)) {
-    blockstride[ndims - 1] = stride[ndims - 1] * ncp->recsize;
-    offset += start[ndims - 1] * ncp->recsize;
-  } else {
-    blockstride[ndims - 1] = stride[ndims - 1] * varp->xsz;
-    offset += start[ndims - 1] * varp->xsz;
-  }
+    /* scalar variable */
 
-  for (dim = ndims - 1; dim >= 0; dim--) {
-#if (MPI_VERSION < 2)
-    MPI_Type_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
-                     subtypes[dim + 1], subtypes + dim);
-#else
-    MPI_Type_create_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
-                            subtypes[dim + 1], subtypes + dim);
-#endif
-    MPI_Type_commit(subtypes + dim);
-    
-    if (dim - 1 >= 0) {
-      blocklens[dim - 1] = 1;
-      blockcount[dim - 1] = count[dim - 1];
-      if (dim - 1 == 0 && IS_RECVAR(varp)) {
-        blockstride[dim - 1] = stride[dim - 1] * ncp->recsize;
-	offset += start[dim-1] * ncp->recsize;
-      } else {
-        blockstride[dim - 1] = stride[dim - 1] * varp->dsizes[dim] * varp->xsz;
-        offset += start[dim-1] * varp->dsizes[dim] * varp->xsz;
-      }
+    filetype = subtypes = (MPI_Datatype *)malloc(sizeof(MPI_Datatype));
+    *filetype = MPI_BYTE;
+  
+  } else {  
+  
+    subtypes = (MPI_Datatype *)malloc((ndims+1) * sizeof(MPI_Datatype));
+    filetype = subtypes;
+    subtypes[ndims] = MPI_BYTE;
+  
+    end = (size_t *) malloc(ndims * sizeof(size_t));
+    for (dim = 0; dim < ndims; dim++)
+      end[dim] = start[dim] + (count[dim] - 1) * stride[dim];
+    status = NCcoordck(ncp, varp, end);
+    if (status != NC_NOERR)
+      return status; 
+  
+    blocklens = (size_t *) malloc(ndims * sizeof(size_t));
+    blockstride = (size_t *) malloc(ndims * sizeof(size_t));
+    blockcount = (size_t *) malloc(ndims * sizeof(size_t));
+    blocklens[ndims - 1] = varp->xsz;
+    blockcount[ndims - 1] = count[ndims - 1];
+    if (ndims == 1 && IS_RECVAR(varp)) {
+      blockstride[ndims - 1] = stride[ndims - 1] * ncp->recsize;
+      offset += start[ndims - 1] * ncp->recsize;
+    } else {
+      blockstride[ndims - 1] = stride[ndims - 1] * varp->xsz;
+      offset += start[ndims - 1] * varp->xsz;
     }
-  } 
+  
+    for (dim = ndims - 1; dim >= 0; dim--) {
+#if (MPI_VERSION < 2)
+      MPI_Type_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
+                       subtypes[dim + 1], subtypes + dim);
+#else
+      MPI_Type_create_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
+                              subtypes[dim + 1], subtypes + dim);
+#endif
+      MPI_Type_commit(subtypes + dim);
+      
+      if (dim - 1 >= 0) {
+        blocklens[dim - 1] = 1;
+        blockcount[dim - 1] = count[dim - 1];
+        if (dim - 1 == 0 && IS_RECVAR(varp)) {
+          blockstride[dim - 1] = stride[dim - 1] * ncp->recsize;
+	  offset += start[dim-1] * ncp->recsize;
+        } else {
+          blockstride[dim - 1] = stride[dim - 1] * varp->dsizes[dim] * varp->xsz;
+          offset += start[dim-1] * varp->dsizes[dim] * varp->xsz;
+        }
+      }
+    } 
+
+  }
 
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
                     *filetype, "native", ncp->nciop->mpiinfo);
@@ -1264,12 +1296,16 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   }
 
 
-  for (dim= 0; dim < ndims; dim++ ) 
-    MPI_Type_free(subtypes + dim);
+  if (ndims > 0) {
+    for (dim=0; dim < ndims; dim++) 
+      MPI_Type_free(subtypes + dim);
 
-  free(blocklens);
-  free(blockstride);
-  free(blockcount);
+    free(blocklens);
+    free(blockstride);
+    free(blockcount);
+  }
+
+  free(subtypes);
 
   return NC_NOERR;
 }
