@@ -6,7 +6,7 @@ include ../../macros.make
 ALL: pnctestf pnctest csnap pnf_test
 
 INCDIR = $(srcdir)/../../src/lib
-INCDIRF = $(srcdir)/../../src/libf/
+INCDIRF = ../../src/libf/
 LNKDIR = ../../src/lib
 
 MPICC = @MPICC@
