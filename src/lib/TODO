@@ -13,8 +13,8 @@ vara         I   I      I    I     I   I    I      I
 vara_all     I   I      I    I     I   I    I      I     
 vars         I   I      I    I     I   I    I      I     
 vars_all     I   I      I    I     I   I    I      I     
-varm         U   U      U    U     U   I    U      U     
-varm_all     U   U      U    U     U   I    U      U     
+varm         I   I      I    I     I   I    I      I     
+varm_all     I   I      I    I     I   I    I      I     
 
 ncmpi_put  text uchar schar short int long float double
 var1 [0]     I   I      I    I     I   I    I      I
@@ -24,8 +24,8 @@ vara         I   I      I    I     I   I    I      I
 vara_all     I   I      I    I     I   I    I      I     
 vars         I   I      I    I     I   I    I      I     
 vars_all     I   I      I    I     I   I    I      I     
-varm         U   U      U    U     U   I    U      U     
-varm_all     U   U      U    U     U   I    U      U     
+varm         I   I      I    I     I   I    I      I     
+varm_all     I   I      I    I     I   I    I      I     
 
 [0] the var1 functions are all independent operations
 
@@ -94,4 +94,5 @@ the following functions are just wrappers around netcdf implementations:
 
 
 Implemented:
-. the flexible data mdoe and high-level data mode interfaces for many types
+. the flexible data mode and high-level data mode interfaces for many types
+  using MPI derived datatype to specify memory data layout

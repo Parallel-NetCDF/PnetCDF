@@ -30,7 +30,8 @@ LIB_CSRCS = \
 	nc.c \
 	ncx.c \
 	string.c \
-	var.c
+	var.c \
+	ncmpidtype.c 
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \
@@ -43,7 +44,8 @@ PACKING_LIST = \
 	ncx.h \
 	pnetcdf.3 \
 	pnetcdf.h \
-	rnd.h 
+	rnd.h \
+	ncmpidtype.h 
 
 LIB_OBJS = $(LIB_CSRCS:.c=.o)
 

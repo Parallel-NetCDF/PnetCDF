@@ -169,6 +169,14 @@ ncmpi_strerror(int err)
 	    return "One or more variable sizes violate format constraints";
 	case NC_EDIMSIZE:
 	    return "Invalid dimension size";
+	case NC_EMULTITYPES:
+	    return "Multiple types used in memory data";
+	case NC_EIOMISMATCH:
+	    return "Input/Output data amount mismatch";
+	case NC_ENEGATIVECNT:
+	    return "Negative count is prohibited";
+	default:
+	    return unknown;
 	}
 	/* default */
 	return unknown;

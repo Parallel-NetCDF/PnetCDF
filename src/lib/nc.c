@@ -383,7 +383,7 @@ fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 		index += (*vpp)->len;
 		/* check if record size must fit in 32-bits */
 #if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
-		if (ncp->recsize > X_UNIT_MAX - (*vpp)->len)
+		if (ncp->recsize > X_UINT_MAX - (*vpp)->len)
 		{
 			return NC_EVARSIZE;
 		}
