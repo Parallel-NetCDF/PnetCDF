@@ -21,7 +21,7 @@
 \begin{document}
 
 %\title{Parallel netCDF: A High-performance I/O Interface for Scientific Datasets}
-\title{Parallel netCDF: A Scientific High-performance I/O Interface}
+\title{Parallel netCDF: A Scientific High-Performance I/O Interface}
 
 %\author{\begin{tabular}{c@{\extracolsep{2em}}c}
 %  Jianwei Li, Wei-keng Liao, Alok Choudhary & Robert Ross, Rajeev Thakur, William Gropp \\
@@ -45,17 +45,17 @@
 
 \begin{abstract}
 
-Dataset storage, exchange and access play a critical role in scientific applications. For such
-purpose netCDF serves as a portable and efficient file format and interface, which is popular in a
-number of scientific application domains. However, the original interface does not provide a
-parallel mechanism for high performance data storage and access.
+Dataset storage, exchange, and access play a critical role in scientific applications. For such
+purposes netCDF serves as a portable and efficient file format and interface, which is popular in 
+numerous scientific application domains. However, the original interface does not provide a
+parallel mechanism for high-performance data storage and access.
 
 In this work, we present a new parallel interface for writing and reading netCDF datasets. This
-interface is derived from the serial netCDF interface, but defines semantics for parallel access
+interface is derived from the serial netCDF interface but defines semantics for parallel access
 and is tailored for high performance. The underlying parallel I/O is achieved through MPI-IO,
-allowing for huge performance gains through the use of collective I/O optimizations. By building a
-C library and running a number of tests above it, we observe obvious programming convenience and
-significant I/O performance improvement using this parallel netCDF interface.
+allowing for dramatic performance gains through the use of collective I/O optimizations. 
+Our tests indicate programming convenience and
+significant I/O performance improvement with this parallel netCDF interface.
 
 \end{abstract}
 
@@ -66,13 +66,12 @@ Scientists have recognized the importance of portable and
 efficient mechanisms for storing large datasets created and used
 by their applications. The Network Common Data Form (netCDF)
 \cite{ReDa90, RDED97} is one such mechanism used by a number of
-applications in the fields of fusion and climate modeling, among
-others.
+applications.
 
-The netCDF software was originally developed at the Unidata Program Center in Boulder, Colorado. It
-was intended to provide a common data access method for Unidata's atmospheric science applications,
+The netCDF software was developed at the Unidata Program Center in Boulder, Colorado. It
+was originally intended to provide a common data access method for Unidata's atmospheric science applications,
 which deal with a variety of data types that encompass single-point observations, time series,
-regularly-spaced grids, and satellite or radar images \cite{RDED97}. Today several organizations
+regularly spaced grids, and satellite or radar images \cite{RDED97}. Today several organizations
 have adopted netCDF as a data access standard.
 
 The netCDF design consists of both a portable file format and an
@@ -80,23 +79,22 @@ easy-to-use API. The API provides a convenient interface for
 storing and retrieving netCDF files across multiple platforms,
 while the netCDF file format guarantees data portability.
 Unfortunately, the original design of netCDF interface is proving
-itself inadequate for parallel applications because it does not
-define a parallel access mechanism. In particular there is no
-support for concurrently writing to a netCDF data file. Because of
-this, parallel applications operating on netCDF files must
+inadequate for parallel applications because it does not
+define a parallel access mechanism. In particular, there is no
+support for concurrently writing to a netCDF data file. 
+Hence, parallel applications operating on netCDF files must
 serialize access. Traditionally, write operations to netCDF files
 in parallel applications are accomplished by passing data to write
-back to a single process. This mode of access is both cumbersome
-to the application programmer and considerably slower than
-parallel access to the netCDF file, if this were an option.
+back to a single process. This mode of access is both slow and cumbersome
+to the application programmer.
 
 To facilitate parallel I/O operations, we have defined an alternative API for accessing netCDF
-files in parallel applications that we call ``Parallel netCDF''. This interface maintains the look
-and feel of the serial netCDF interface, but is designed to allow the application of well-known
+files in parallel applications. This interface, which we call ``Parallel netCDF'' maintains the look
+and feel of the serial netCDF interface but allows the application of well-known
 parallel I/O techniques such as collective I/O. We implement this interface above MPI-IO, which is
-specified by MPI-2 standard \cite{GrLT99, Mess97, GLDS96} and freely available on most platforms.
-By making use of optimizations provided by MPI-IO, our design allows for higher performance. In
-practice, we build a C library for a major subset of this new parallel netCDF interface and run a
+specified by MPI-2 standard \cite{GrLT99, Mess97, GLDS96} and is freely available on most platforms.
+By using optimizations provided by MPI-IO, our design allows for higher performance. We 
+have built a C library for a major subset of this new parallel netCDF interface and have run a
 number of tests using this library. We observe significant I/O performance improvement.
 
 As we know, HDF5 \cite{HDF5} also stores multidimensional arrays together with ancillary data in a
@@ -106,10 +104,10 @@ is more concise and goes much closer to MPI-IO interface, which introduces less 
 providing us more optimization opportunities for better performance. Our goal is to make the
 parallel netCDF interface a data access standard for parallel scientific applications.
 
-The rest of this paper is organized as follows. Section 2 takes an overview at some related work.
-Section 3 gives the background knowledge of netCDF and points out its potential usage in parallel
-scientific applications. Section 4 presents design and implementation of our parallel netCDF.
-Section 5 shows some preliminary performance results. Section 6 draws conclusions and points out
+The rest of this paper is organized as follows. Section 2 reviews some related work.
+Section 3 gives the background information about netCDF and points out its potential usage in parallel
+scientific applications. Section 4 presents the design and implementation of our parallel netCDF.
+Section 5 shows some preliminary performance results. Section 6 presents our conclusions and
 our future work.
 
 %\begin{figure}
@@ -122,32 +120,32 @@ our future work.
 %-------------------------------------------------------------------------
 \section{Related Work}
 
-Many researches have been done on data access for scientific applications. They are focusing either
-on data I/O performance or on data management convenience or both. Among those are MPI-IO and HDF,
-which are most related to our research.
+Considerable research has been done on data access for scientific applications. The work has focused 
+on data I/O performance and data management convenience. Two projects, MPI-IO and HDF,
+are most closely related to our research.
 
-MPI-IO is a parallel I/O interface specified in MPI-2 standard. It is implemented and used on a
-wide range of platforms. The most popular implementation, ROMIO by Thakur {\em et al.}
-\cite{TRLG02}, is used as an example in our discussion. ROMIO is implemented portably on top of an
-abstract I/O device (ADIO) layer \cite{ThGL96,ThGL99b} that enables portability to new underlying
-I/O systems. One of the most important features in ROMIO is the collective I/O operations, which
-adopts the two-phase I/O strategy \cite{RoBC93,TBCP94,ThCh96,ThGL99} and improves the parallel I/O
+MPI-IO is a parallel I/O interface specified in the MPI-2 standard. It is implemented and used on a
+wide range of platforms. The most popular implementation, ROMIO 
+\cite{TRLG02} is implemented portably on top of an
+abstract I/O device layer \cite{ThGL96,ThGL99b} that enables portability to new underlying
+I/O systems. One of the most important features in ROMIO is collective I/O operations, which
+adopt a two-phase I/O strategy \cite{RoBC93,TBCP94,ThCh96,ThGL99} and improve the parallel I/O
 performance by significantly reducing the number of I/O requests that would otherwise result in
-many small non-contiguous I/O requests. As scientific data is concerned, MPI-IO only read/write raw
-data and does not provide any functionality to effectively manage metadata, nor does it guarantee
-data portability, which makes it inconvenient for scientists to organize, transfer and share their
+many small, noncontiguous I/O requests.  MPI-IO reads and writes raw
+data, however, and does not provide any functionality to effectively manage metadata. Nor does it guarantee
+data portability, thereby making it inconvenient for scientists to organize, transfer, and share their
 application data.
 
-HDF is software and file formats for scientific data management developed at NCSA. It is very
-useful and convenient for storing, retrieving, analyzing, visualizing, and converting scientific
-data. The most popular versions of HDF are HDF4 \cite{HDF4} and HDF5 \cite{HDF5}. They both stores
-multidimensional arrays together with ancillary data in portable, self-describing file formats
-while HDF5 is more powerful and convenient than its previous version HDF4. Most importantly, HDF5
-starts to support parallel data access, which is implemented above MPI-IO. However, HDF5 file
-format is not compatible with HDF4, which is inconvenient for a large number of existing HDF4
-programmers to migrate their applications to HDF5. Moreover, the performance for parallel HDF5, as
+HDF is software, developed at NCSA, for storing, retrieving, analyzing, visualizing, and converting scientific
+data. The most popular versions of HDF are HDF4 \cite{HDF4} and HDF5 \cite{HDF5}. They both store
+multidimensional arrays together with ancillary data in portable, self-describing file formats.
+HDF5 is more powerful and more convenient than HDF4, however. Most important, HDF5
+% explain 'starts to support':  is the support simple or incomplete?
+supports parallel data access, which is implemented above MPI-IO. Nevertheless, because the HDF5 file
+format is not compatible with HDF4 it is inconvenient for existing HDF4
+programmers to migrate their applications to HDF5. Moreover, the performance with parallel HDF5, as
 we observed in a number of scientific applications \cite{LLCT02, RNCZ01}, is not as good as we
-expect. Specifically it has too much overhead over and performs much worse than its underlying
+expect. Specifically, parallel HDF5 has more overhead and performs much worse than its underlying
 MPI-IO.
 
 %-------------------------------------------------------------------------
@@ -156,8 +154,8 @@ MPI-IO.
 NetCDF is an abstraction that supports a view of data as a collection of self-describing, portable,
 array-oriented objects that can be accessed through a simple interface. It both defines a file
 format and provides an interface to a library of data access functions for storing and retrieving
-data in the form of arrays in netCDF files. We will first describe the netCDF file format and its
-serial API, and then take a glance at various approaches to access netCDF files nowadays in
+data in the form of arrays in netCDF files. We first describe the netCDF file format and its
+serial API and then consider various approaches to access netCDF files in
 parallel computing environments.
 
 %-------------------------------------------------------------------------
@@ -168,23 +166,23 @@ attributes. Physically, the dataset file is divided into two parts: file header 
 header contains all information (or metadata) about dimensions, attributes, and variables except
 for the variable data itself, while the data part contains arrays of variable values (or raw data).
 
-NetCDF file header first defines a number of dimensions, each with a name and a length. These
+The netCDF file header first defines a number of dimensions, each with a name and a lnngth. These
 dimensions are used to define the shapes of variables in the dataset. One dimension can be
 unlimited and is used as the most significant dimension (record dimension) for growing-size
 variables.
 
 Following the dimensions, a list of named attributes are used to describe the properties of the
-dataset (e.g. data range, purpose, associated applications, etc.). These are called global
-attributes, and are separate from attributes associated with individual variables.
+dataset (e.g., data range, purpose, associated applications ). These are called global
+attributes and are separate from attributes associated with individual variables.
 
-The basic units of named data in a netCDF dataset are variables, which are multi-dimensional
+The basic units of named data in a netCDF dataset are variables, which are multidimensional
 arrays. The header part describes each variable by its name, shape, named attributes, data type,
-array size and data offset, while the data part stores the array values for one variable after
+array size, and data offset, while the data part stores the array values for one variable after
 another, in their defined order.
 
-To support variable-size dataset, for example, data growing with
-time stamps, netCDF introduces record variables and uses a special
-technique to store such kind of data. All record variables share
+To support variable-sized datasets (e.g., data growing with
+time stamps), netCDF introduces record variables and uses a special
+technique to store such data. All record variables share
 the same unlimited dimension as their most significant dimension
 and are expected to grow together along that dimension. The rest,
 less significant dimensions all together define the shape for one
@@ -201,28 +199,23 @@ interleaved in their defined order.
 \label{figure:parallelization}
 \end{figure*}
 
-In order to achieve network-transparency (machine-independence),
+In order to achieve network transparency (machine-independence),
 both the header and data parts of the file are represented in an
-external form, which is very similar to XDR (eXternal Data
+well defined format similar to XDR (eXternal Data
 Representation) but extended to support efficient storage of
-arrays of non-byte data.
+arrays of nonbyte data.
 
 %-------------------------------------------------------------------------
 \subsection{The Serial NetCDF API}
 
-The original netCDF API is designed for serial codes to perform
-netCDF operations through a single process. It is serial because
-the interface does not define parallel access semantics. More
-importantly, the implementation underneath does not support
-parallel reads/writes, though it accepts independent, simultaneous
-reads.
-
+The original netCDF API was designed for serial codes to perform
+netCDF operations through a single process. 
 In the serial netCDF library, a typical sequence of operations to write a new netCDF dataset is to
-create the dataset, define the dimensions, variables and attributes, write variable data, and close
-the dataset; to read an existing netCDF dataset, first open the dataset, then inquire about
-dimensions, variables and attributes, read variable data, and finally close the dataset.
+create the dataset; define the dimensions, variables and attributes; write variable data; and close
+the dataset. Reading an existing netCDF dataset involves first opening the dataset; inquiring about
+dimensions, variables, and attributes; reading variable data; and closing the dataset.
 
-These netCDF operations can be divided into the following five categories, and please refer to
+These netCDF operations can be divided into the following five categories. Refer to
 \cite{RDED97} for details of each function in the netCDF library.
 
 \newcounter{Lcount}
@@ -240,27 +233,26 @@ subarray, subsampled array (strided subarray) and mapped strided subarray
 The I/O implementation of the serial netCDF API is built on the native I/O system calls and has its
 own buffering mechanism in user space. Its design and optimization techniques are suitable for
 serial access but are not efficient or even not possible for parallel access, nor do they allow
-further performance gains provided by modern parallel I/O techniques. Some changes are necessary
-for efficient use in parallel environments.
+further performance gains provided by modern parallel I/O techniques.
 
 %-------------------------------------------------------------------------
 \subsection{NetCDF in Parallel Environments}
 
 Today most scientific applications are designed to run in parallel environments. In order for these
 parallel applications to access netCDF files efficiently, appropriate parallel I/O techniques
-should be applied to achieve good performance. Also, programming convenience is another
+should be applied to achieve good performance. Programming convenience is another
 consideration, since scientists may not focus their effort on dealing with parallel I/O details.
-Before we move forward, we will discuss a couple of common approaches for using netCDF in parallel
-programs. In our discussion we assume a message passing environment.
+Before we present our specific parallel netCDF design, we discuss various approaches for using netCDF in parallel
+programs. In our discussion we assume a message-passing environment.
 
 The first and most straightforward approach is using the serial netCDF API for single files. In
 this scenario [Figure~\ref{figure:parallelization}(a)], one process is in charge of
 collecting/distributing data and performing I/O using the serial netCDF API on a single file. The
 netCDF operations are carried out by shipping all data to and from the single process. The drawback
 of this approach is that collecting all I/O data on a single process may overwhelm its memory
-capacity as well as cause I/O bottleneck.
+capacity as well as cause an I/O bottleneck.
 
-To avoid unnecessary data shipping, an alternative approach is
+To avoid unnecessary data shipping, another approach is
 having all processes directly perform I/O, again using the serial
 netCDF API [Figure~\ref{figure:parallelization}(b)]. In this case,
 netCDF operations by all processes happen concurrently and
@@ -268,37 +260,36 @@ independently, but over multiple files, one for each process. This
 approach apparently solves the data shipping and I/O bottleneck
 problems. However, it introduces another efficiency problem. When
 the number of processes increases, the number of files generated
-also increases, each file decreasing in size. Accessing the whole
-bunch of small file pieces would degrade the performance
-significantly if the number of processes is very large, which is
-usually true for scientific applications. Further, managing these
-file pieces is troublesome.
+also increases, each file decreasing in size. Accessing all the
+small file pieces degrade performance
+significantly if the number of processes is very large, as is
+usually the case with scientific applications. Further, managing these
+file pieces is cumbersome. 
 
-In consideration of both the user interface and the underlying performance, we are in favor of a
-third approach introducing a new API with parallel access semantics and optimized parallel I/O
+A
+third approach introduces a new API with parallel access semantics and optimized parallel I/O
 implementation. For parallel applications, each process performs I/O operations through the
 parallel netCDF library to transfer its partition of data between local memory and the parallel
-file system, all processes cooperatively or collectively operating on a single netCDF file in
-parallel, as in Figure~\ref{figure:parallelization}(c). This approach both frees the user from
+file system; all processes cooperatively or collectively operate on a single netCDF file in
+parallel. This approach, shown in Figure~\ref{figure:parallelization}(c), both frees the user from
 dealing with details of parallel I/O and provides more opportunities for the interface implementer
-to use various parallel I/O optimizations to obtain higher performance. We will discuss the details
-of this parallel netCDF API in next section.
+to use various parallel I/O optimizations to obtain higher performance. We discuss the details
+of this parallel netCDF API in the next section.
 
 %-------------------------------------------------------------------------
 \section{Parallel NetCDF}
 
-In order to facilitate convenient and high performance parallel access to netCDF files, we define a
+To facilitate convenient and high-performance parallel access to netCDF files, we define a
 new parallel interface and provide a prototype implementation for a typical subset of the API.
-Since there are a large number of existing users running their applications over netCDF, our
+Since a large number of existing users are running their applications over netCDF, our
 parallel netCDF design retains the original netCDF file format (version 3) and introduces minimum
-changes from the original interface for easy migration and understanding. We distinguish our API
+changes from the original interface.  We distinguish our API
 from the original serial netCDF API by prefixing our C interface calls with ``ncmpi\_'' and our
 Fortran interface calls with ``nfmpi\_''.
 
 \subsection{API Design}
 
-This parallel netCDF API is designed to be built above MPI-IO and ROMIO is used as an example in
-our discussion. The parallel netCDF built on ROMIO can benefit from its well-known optimizations,
+Our parallel netCDF API is built above MPI-IO; we use the popular ROMIO implemenation.  The parallel netCDF built on ROMIO can benefit from its well-known optimizations,
 such as data sieving and two-phase collective I/O strategies \cite{RoBC93, TBCP94, ThCh96,ThGL99}.
 Figure~\ref{figure:hierarchy} describes the overall architecture for our design.
 
@@ -310,41 +301,41 @@ Figure~\ref{figure:hierarchy} describes the overall architecture for our design.
 \label{figure:hierarchy}
 \end{figure}
 
-In parallel netCDF, a file is opened, operated and closed by
+In parallel netCDF, a file is opened, operated, and closed by
 multiple processes in a communication group. In order for these
 processes to share the same file space, especially the structural
 information contained in the file header, a number of changes are
 made to the original serial netCDF API.
 
 When a netCDF file is opened/created, an MPI communicator is provided to define the I/O process
-scope and an MPI\_Info object is used to pass user access hints. By describing the collection of
-processes with a communicator, we provide the underlying implementation with information that it
-can use to ensure the file consistency. The MPI\_Info hint can be used to provide additional
-optimization information (e.g. expected access patterns, aggregation information) for implementers
+scope, and an MPI\_Info object is used to pass user access hints. By describing the collection of
+processes with a communicator, we provide the underlying implementation with information that
+can be used to ensure file consistency. The MPI\_Info hint provides additional
+optimization information (e.g., expected access patterns, aggregation information) for implementers
 and for users to tune their applications for better performance.
 
-All define mode functions, attribute functions and inquiry
-functions take the same syntax and semantics as the original ones
+Define mode functions, attribute functions, and inquiry
+functions all have the same syntax and semantics as the original ones
 but are made collective to guarantee consistency of dataset
-structure. Particularly, define mode functions must be called by
+structure. In particular, define mode functions must be called by
 all processes in the communicator and with the same values.
 
 We provide two sets of data access APIs: a high-level API that closely mimics the serial netCDF
 data access functions and lends an easy path for original netCDF users to migrate to the parallel
 interface, and a ``flexible'' API that provides a more MPI-like style of access. Specifically, the
-flexible API makes it possible for programmers to use MPI derived datatypes to describe the
-in-memory organization of the values, which is much better in describing any regular-pattern than
-the mapped subarray method of the original netCDF API.
+flexible API enables programmers to use MPI derived datatypes to describe the
+in-memory organization of the values, an appraoch that is much better for describing a regular pattern than
+is the mapped subarray method of the original netCDF API.
 
-Like the original data access functions, the parallel netCDF also supports those five access
-methods. The difference is that all data accesses in our design are performed in parallel and can
+Our parallel netCDF supports the five data access methods of the serial netCDF.
+ The difference is that all data accesses in our design are performed in parallel and can
 be either collective I/O or non-collective I/O. Collective function names end with ``\_all''. They
 are collective across the communicator associated with the opened netCDF file, so all those
 processes must call the function at the same time. By using collective operations provided in our
 parallel netCDF API, application programmers provide the underlying implementation with an
 opportunity to further optimize access to the netCDF file. These optimizations are performed
-without further intervention by the application programmer and have been proven to provide huge
-performance wins in multidimensional dataset access \cite{ThGL99}. The following script gives an
+without further intervention by the application programmer and have been proven to provide dramatic  
+performance improvement in multidimensional dataset access \cite{ThGL99}. The following script gives an
 example of using our parallel netCDF API to access a dataset using collective I/O:
 
 {\scriptsize \setlength{\parskip}{-0.3pc}
@@ -367,8 +358,8 @@ example of using our parallel netCDF API to access a dataset using collective I/
 \subsection{Library Implementation}
 
 We divide our discussion of the implementation into two parts: header I/O and parallel data I/O.
-Dataset functions, define mode functions, attribute functions and inquiry functions deal with
-netCDF file header and related information, so we discuss them first. Following that we focus on
+Dataset functions, define mode functions, attribute functions, and inquiry functions deal with
+netCDF file header and related information, so we discuss them first. Following that, we focus on
 the data access function design and implementation, which form the core of our parallel I/O
 optimization.
 
@@ -383,108 +374,108 @@ optimization.
 %-------------------------------------------------------------------------
 \subsubsection{Access to File Header}
 
-Internally, the header is read/written only by a single process, though a copy is cached in local
-memory on each process. The define mode functions, attribute functions and inquiry functions all
-work on the local copy of the file header and since they are all in-memory operations not involved
-in any file I/O, they bear few changes from the serial netCDF API. They are made collective, though
-it does not necessarily imply inter-process synchronization. In some cases, however, when the
-header definition is changed somehow, synchronization is needed at the end of those changes by
-checking the values passed in by all processes to verify that they match. In all possible cases we
-allow inter-process communications.
+Internally, the header is read/written only by a single process, although a copy is cached in local
+memory on each process. The define mode functions, attribute functions, and inquiry functions all
+work on the local copy of the file header. Since they are all in-memory operations not involved
+in any file I/O, they bear few changes from the serial netCDF API. They are made collective, but thi feature 
+does not necessarily imply interprocess synchronization. In some cases, however, when the
+header definition is changed synchronization is needed to verify that
+the values passed in by all processes match. In all possible cases we
+allow interprocess communications.
 
-The dataset functions, however, need complete reimplementation because they are in charge of
+The dataset functions, unlike the other functions cited, need complete reimplementation because they are in charge of
 collectively opening/creating datasets, performing header I/O and file synchronization for all
-processes, and managing inter-process communication. We build these functions over MPI-IO so that
+processes, and managing interprocess communication. We build these functions over MPI-IO so that
 they have better portability and provide more optimization opportunities. The basic idea is to let
-the ROOT process fetch the file header and broadcast it to all processes when opening a file and to
-let the ROOT process write the file header at the end of definition if any modification occurs in
-header part. Since all define mode and attribute functions are collective and require all processes
+the ROOT process fetch the file header, broadcast it to all processes when opening a file, and 
+write the file header at the end of definition if any modification occurs in
+the header part. Since all define mode and attribute functions are collective and require all processes
 in the communicator to provide the same arguments when adding/removing/changing definitions, the
-local copy of the file header should be always the same across all processes once the file is
-collectively opened and till it is closed.
+local copy of the file header is the same across all processes once the file is
+collectively opened and until it is closed.
 
 %-------------------------------------------------------------------------
 \subsubsection{Parallel I/O for Array Data}
 
-It should be the case that the majority of time spent accessing a netCDF file is in data access, so
-it is most important to get the data I/O efficient. By implementing the data access functions above
-MPI-IO, we discover a number of advantages and optimizations that could benefit our design.
+Since the majority of time spent accessing a netCDF file is in data access,
+the data I/O must be efficient. By implementing the data access functions above
+MPI-IO, we enable a number of advantages and optimizations.
 
 For each of the five data access methods in the flexible data access functions, we represent the
 data access pattern as an MPI file view (a set of data visible and accessible from an open file
 \cite{Mess97}), which is constructed from the variable metadata (shape, size, offset, etc.) in the
 netCDF file header and start[], count[], stride[], imap[], mpi\_datatype arguments provided by
 users. For parallel access, particularly for collective access, each process has a different file
-view, and all processes in combination can make a single MPI-IO request to transfer large
+view; and all processes in combination can make a single MPI-IO request to transfer large
 contiguous data as a whole, thereby preserving useful semantic information that would otherwise be
-lost if the transfer were expressed as per-process non-contiguous requests.
+lost if the transfer were expressed as per process noncontiguous requests.
 
-The high level data access functions are implemented in terms of the flexible data access
-functions, so that existing users migrating from serial netCDF can also benefit the above MPI-IO
-optimizations. However, the flexible data access functions are closer to MPI-IO hence less
-overhead, as they accept user specified MPI derived datatype and pass it directly to MPI-IO for
+The high-level data access functions are implemented in terms of the flexible data access
+functions, so that existing users migrating from serial netCDF can also benefit from the MPI-IO
+optimizations. However, the flexible data access functions are closer to MPI-IO and hence incur less
+overhead. They accept a user-specified MPI derived datatype and pass it directly to MPI-IO for
 optimal handling of in-memory data access patterns.
 
-In some cases, for instance, in record variable access, the data is interleaved by record and the
+In some cases (for instance, in record variable access) the data is interleaved by record and the
 contiguity information is lost, so the existing MPI-IO collective I/O optimization may not help. In
-that case, we need more optimization information from users, like the number, order and record
-indices of the record variables they will access consecutively, such that we can collect multiple
+that case, we need more optimization information from users, such as the number, order, and record
+indices of the record variables they will access consecutively. With such information we can collect multiple
 I/O requests over a number of record variables and optimize the file I/O over a large pool of data
-transfers, which could result in more contiguous and larger transfers. This kind of information is
-passed in as an MPI\_Info hints by users when they open/create a netCDF dataset. We implement our
+transfers, thereby producing more contiguous and larger transfers. This kind of information is
+passed in as an MPI\_Info hint when a user opens or creates a netCDF dataset. We implement our
 user hints in parallel netCDF for all such specific optimization points, while a number of standard
-hints are passed down for MPI-IO to take control of optimal parallel I/O behaviors. That would
-provide experienced users some opportunities to tune their applications for further performance
+hints are passed down for MPI-IO to take control of optimal parallel I/O behaviors. Thus
+experienced users have the opportunitiy to tune their applications for further performance
 gains.
 
-As we have seen, in our data I/O implementation, we just pass the data buffer, metadata (fileview,
-mpi\_datatype, etc.), and other optimization information down to MPI-IO, and all parallel I/O
-operations are carried out in the same manner as mere MPI-IO is used. So there is very little
-overhead and the parallel netCDF performance should be nearly the same as MPI-IO if only raw data
+% gail suggests moving this paragraph somewhere....
+As we have seen, in our data I/O implementation, we simply pass the data buffer, metadata (fileview,
+mpi\_datatype, etc.), and other optimization information to MPI-IO, and all parallel I/O
+operations are carried out in the same manner as when MPI-IO alone is used.  Thus, there is very little
+overhead, and the parallel netCDF performance should be nearly the same as MPI-IO if only raw data
 I/O performance is compared.
 
 %-------------------------------------------------------------------------
 \section{Performance Evaluation}
 
-To evaluate the performance, we run a couple of experiments and compare the performance result of
-our parallel netCDF with that of serial netCDF for performance improvement and scalability. Also we
-would like to compare the performance of parallel netCDF and parallel HDF5, using the FLASH I/O
+To evaluate the performance and scalability of our parallel netCDF with that of serial netCDF, we ran some experiments and compared the results.
+We
+also compared the performance of parallel netCDF with that of parallel HDF5, using the FLASH I/O
 benchmark \cite{FLASHIO}.
 
-The results are obtained on an IBM SP-2 machine. This system is a teraflop-scale Power3 based
-clustered SMP system from IBM with 144 compute nodes. Each compute node has SMP architecture with 4
-GBytes of memory shared among its 8 - 375 MHz Power3 processes. All the compute nodes are
-interconnected by switches. The compute nodes are also connected via switches to the multiple I/O
+The experiments were run on an IBM SP-2 machine. This system is a teraflop-scale 
+clustered SMP with 144 compute nodes. Each compute node has 4
+GB of memory shared among its eight 375 MHz Power3 processors. All the compute nodes are
+interconnected by switches and also connected via switches to the multiple I/O
 nodes running the GPFS parallel file system. There are 12 I/O nodes, each with dual 222 MHz
-processes. The aggregate disk space is 5TBytes and the peak I/O bandwidth is 1.5 GByte/s.
+processes. The aggregate disk space is 5 TB and the peak I/O bandwidth is 1.5 GB/s.
 
 \subsection{Parallel NetCDF v.s. Serial NetCDF}
 
-For our current implementation (C library) of parallel netCDF, we
-write a test code (in C language) to evaluate the performance.
-This parallel netCDF test code was originally developed in Fortran
-language by Woo-sun Yang and Chris Ding at LBL. Basically it
-reads/writes a 3-dimensional array field tt(Z,Y,X) from/into a
+We wrote a test code (in C language) to evaluate the performance of our current
+implementation (C library) of parallel netCDF.
+This test code was originally developed in Fortran
+by Woo-sun Yang and Chris Ding at LBL. Basically it
+reads/writes a three-dimensional array field tt(Z,Y,X) from/into a
 single netCDF file, where Z=level is the most significant
-dimension, then Y=latitude, and X=longitude is the least
-significant dimension. In order to test the performance of our
-parallel netCDF library, we run the test code in seven different
-ways by partitioning the field in Z, Y, X, ZY, ZX, YX, ZYX
+dimension and X=longitude is the least
+significant dimension. We ran the test code in seven different
+ways by partitioning the field in Z, Y, X, ZY, ZX, YX, and ZYX
 dimensions, respectively, as illustrated in
 Figure~\ref{figure:partition}. All data I/O operations in these
-tests are using collective I/O. For comparison, we built the same
-test using the original serial netCDF API and run it in serial
+tests used collective I/O. For comparison, we prepared the same
+test using the original serial netCDF API and ran it in serial
 mode.
 
-Figure~\ref{figure:m64g1} shows the performance results for reading and writing 64 MByte and 1
-GByte netCDF datasets. Generally, the performance scales up with the number of processes. Due to
+Figure~\ref{figure:m64g1} shows the performance results for reading and writing 64 MB and 1
+GB netCDF datasets. Generally, the performance scales with the number of processes. Because of
 collective I/O optimization, the performance difference made by various access patterns is small,
-though we find, for example, partitioning in Z dimension generally performs better than in X
-dimension due to the different access contiguity. The overhead involved is inter-process
-communication, which is very small compared to the time-consuming disk I/O if the file is large
+although partitioning in the Z dimension generally performs better than in the X
+dimension because of the different access contiguity. The overhead involved is interprocess
+communication, which is very small compared with the time-consuming disk I/O if the file is large
 enough. Performance does not scale linearly because the number of I/O nodes (and disks) is fixed.
-As we expect, we also find that our parallel netCDF out performs the original serial netCDF with
-increase in number of processes.
+As expected, we also find that our parallel netCDF outperforms the original serial netCDF 
+as the increase in number of processes increases.
 
 \begin{figure*}
 \begin{center}
@@ -498,53 +489,53 @@ Processors} \label{figure:partition}
 \begin{center}
 \includegraphics[width=0.98\textwidth]{performance.tif}
 \end{center}
-\vskip -0.1in \caption{Parallel NetCDF Performance for 64MBytes \&
-1GBytes Datasets} \label{figure:m64g1}
+\vskip -0.1in \caption{Parallel NetCDF Performance for 64 MB and
+1 GB Datasets} \label{figure:m64g1}
 \end{figure*}
 
 \subsection{Parallel NetCDF v.s. Parallel HDF5}
 
-FLASH I/O benchmark simulates the I/O pattern of an important
+The FLASH I/O benchmark simulates the I/O pattern of an important
 scientific application called FLASH \cite{FORT00}. It recreates
-the primary data structures in FLASH code and produces a
+the primary data structures in the FLASH code and produces a
 checkpoint file, a plotfile with centered data, and a plotfile
 with corner data, using parallel HDF5. Basically, these three
-output files contains multi-dimensional arrays and the access
-pattern is simple (Block, *, ...) which is similar to Z partition
+output files contains multidimensional arrays, and the access
+pattern is simple (Block, *, ...), which is similar to the Z partition
 in Figure~\ref{figure:partition}. The I/O routines in the
 benchmark are identical to the routines used by FLASH, so any
 performance improvements made to the benchmark program will be
-shared by FLASH. In our experiment, we modify this benchmark and
-port it to parallel netCDF and observe the performance impact
-brought by our new parallel I/O approach. The parameters we use in
+shared by FLASH. In our experiment, we modified this benchmark,
+ported it to parallel netCDF, and observed the 
+effect of our new parallel I/O approach. The parameters used in
 our experiment are: nxb = nyb = nzb = 16, nguard = 8, number of
-blocks = 80, nvar = 24.
+blocks = 80, and nvar = 24.
 
-Figure~\ref{figure:flashio} shows the performance results of FLASH
+Figure~\ref{figure:flashio} shows the performance results of the FLASH
 I/O benchmark using parallel netCDF and parallel HDF5. Although
-both of these two I/O libraries are built above MPI-IO, the
-parallel netCDF has much less overhead and out performs parallel
+both I/O libraries are built above MPI-IO, the
+parallel netCDF has much less overhead and outperforms parallel
 HDF5 by almost doubling the overall I/O rate. The extra overhead
-involved in current release of HDF5 (version 5-1.4.3) includes
+involved in the current release of HDF5 (version 5-1.4.3) includes
 synchronizations performed internally in parallel open/close of
-every dataset (analogous to a netCDF variable), recursive handling
-of hyperslab used for parallel access, which makes the packing of
-the hyperslab into a contiguous buffer relatively a long time,
-etc.
+every dataset (analogous to a netCDF variable) and recursive handling
+of the hyperslab used for parallel access, which makes the packing of
+the hyperslab into a contiguous buffer take a relatively long time.
+
 
 %-------------------------------------------------------------------------
 \section{Conclusion and Future Work}
 
-In this work, we extend the serial netCDF interface to facilitate parallel access, and provide an
+In this work, we extend the serial netCDF interface to facilitate parallel access, and we provide an
 implementation for a subset of this new parallel netCDF interface. By building on top of MPI-IO, we
-point out a number of interface advantages and performance optimizations users can benefit from
-using this parallel netCDF package, as shown by our test and performance results. So far, we have
-found a number of users from LBL, ORNL, and University of Chicago for our parallel netCDF library.
+gain a number of interface advantages and performance optimizations users can benefit from
+by using this parallel netCDF package, as shown by our test results. So far, 
+a number of users from LBL, ORNL, and University of Chicago are using our parallel netCDF library.
 
-The future work is to develop a production-quality parallel netCDF API (for C, C++, Fortran and
-other programming languages) and make it freely available to high performance computing community.
-Meanwhile, more research can be done to try to match the file organization to access patterns and
-to investigate cross-file optimizations to address common data access patterns.
+Future work involves developing a production-quality parallel netCDF API (for C, C++, Fortran, and
+other programming languages) and making it freely available to the high-performance computing community.
+Moreover, we need to develop a mechanism for matching the file organization to access patterns, and
+we need to develop cross-file optimizations for addressing common data access patterns.
 
 \begin{figure}
 \begin{center}
@@ -557,6 +548,9 @@ parallel HDF5 vs parallel netCDF} \label{figure:flashio}
 %-------------------------------------------------------------------------
 \subsection*{Acknowledgements}
 
+% missing MICS DOE something or other?
+% is past tense intentional?
+
 This work is sponsored by Scientific Data Management Center of DOE SciDAC ISICs program and jointly
 conducted at Northwestern University and Argonne National Laboratory. This research was also
 supported in part by NSF cooperative agreement ACI-9619020 through computing resources provided by
@@ -564,8 +558,8 @@ the National Partnership for Advanced Computational Infrastructure at the San Di
 Center.
 
 We thank Woo-Sun Yang from LBL for providing us the test code for
-performance evaluation, and Nagiza F. Samatova and David Bauer at
-ORNL for using our library and for giving us feed-back and
+performance evaluation  and Nagiza F. Samatova and David Bauer at
+ORNL for using our library and for giving us feedback and
 valuable suggestions.
 
 %-------------------------------------------------------------------------
@@ -574,92 +568,92 @@ valuable suggestions.
 %\renewcommand{\baselinestretch}{1.0}
 \small \setlength{\parskip}{-0.3pc}
 
-\bibitem{FLASHIO}
-FLASH I/O benchmark. M. Zingale. {\em http://flash.uchicago.
-edu/\verb|~|zingale/flash\_benchmark\_io/}
-
 \bibitem{FORT00}
 B. Fryxell, K. Olson, P. Ricker, F. X. Timmes, M. Zingale, D. Q. Lamb, P. MacNeice, R. Rosner, and
 H. Tufo. ``FLASH: An adaptive mesh hydrodynamics code for modelling astrophysical thermonuclear
-flashes'', {\em Astrophysical Journal Suppliment}, 2000, pp. 131-273
+flashes,'' {\em Astrophysical Journal Suppliment}, 2000, pp. 131-273.
 
 \bibitem{GLDS96}
 W. Gropp, E. Lusk, N. Doss, and A. Skjellum. ``A high-performance, portable implementation of the
-MPI Message-Passing Interface standard'', {\em Parallel Computing}, 22(6):789-828, 1996.
+MPI Message-Passing Interface standard,'' {\em Parallel Computing}, 22(6):789-828, 1996.
 
 \bibitem{GrLT99}
 W. Gropp, E. Lusk, and R. Thakur. {\em Using MPI-2: Advanced Features of the Message Passing
-Interface}, MIT Press, Cambridge, MA, 1999
+Interface}, MIT Press, Cambridge, MA, 1999.
 
 \bibitem{HDF4}
 HDF4 Home Page. The National Center for Supercomputing Applications. {\em http://
-hdf.ncsa.uiuc.edu/hdf4.html}
+hdf.ncsa.uiuc.edu/hdf4.html}.
 
 \bibitem{HDF5}
 HDF5 Home Page. The National Center for Supercomputing Applications. {\em http://
-hdf.ncsa.uiuc.edu/HDF5/}
+hdf.ncsa.uiuc.edu/HDF5/}.
 
 \bibitem{LLCT02}
 J. Li, W. Liao, A. Choudhary, and V. Taylor. ``I/O Analysis and
-Optimization for an AMR Cosmology Application'', in {\em
-Proceeding of IEEE Cluster 2002}, Chicago, IL, September 2002.
+Optimization for an AMR Cosmology Application,'' in {\em
+Proceedings of IEEE Cluster 2002}, Chicago, September 2002.
 
 \bibitem{Mess97}
 Message Passing Interface Forum. ``MPI-2: Extensions to the Message-Passing Interface'', July 1997.
-{\em http://www.mpi-forum.org/docs/docs.html}
+{\em http://www.mpi-forum.org/docs/docs.html}.
 
 \bibitem{RDED97}
-R. Rew, G. Davis, S. Emmerson, and H. Davies, ``NetCDF User's Guide for C'', Unidata Program
-Center, June 1997. {\em http:// www.unidata.ucar.edu/packages/netcdf/guidec/}
+R. Rew, G. Davis, S. Emmerson, and H. Davies, ``NetCDF User's Guide for C,'' Unidata Program
+Center, June 1997. {\em http:// www.unidata.ucar.edu/packages/netcdf/guidec/}.
 
 \bibitem{ReDa90}
 R. Rew and G. Davis, ``The Unidata netCDF: Software for Scientific
-Data Access'', {\em Sixth International Conference on Interactive
+Data Access,'' {\em Sixth International Conference on Interactive
 Information and Processing Systems for Meteorology, Oceanography
-and Hydrology}, Anaheim, CA, February 1990
+and Hydrology}, Anaheim, CA, February 1990.
 
 \bibitem{RNCZ01}
 R. Ross, D. Nurmi, A. Cheng, and M. Zingale, ``A Case Study in
-Application I/O on Linux Clusters'', in {\em Proceeding of
-SC2001}, Denver, CO, November 2001.
+Application I/O on Linux Clusters'', in {\em Proceedings of
+SC2001}, Denver,  November 2001.
 
 \bibitem{RoBC93}
 J.M. Rosario, R. Bordawekar, and A. Choudhary. ``Improved Parallel
-I/O via a Two-phase Run-time Access Strategy'', {\em IPPS '93
-Parallel I/O Workshop}, February 9, 1993
+I/O via a Two-Phase Run-time Access Strategy,'' {\em IPPS '93
+Parallel I/O Workshop}, February 9, 1993.
 
 \bibitem{TBCP94}
 R. Thakur, R. Bordawekar, A. Choudhary, R. Ponnusamy, and T.
 Singh. ``PASSION Runtime Library for Parallel I/O'', {\em Scalable
-Parallel Libraries Conference}, Oct. 1994
+Parallel Libraries Conference}, Oct. 1994.
 
 \bibitem{ThCh96}
 R. Thakur and A. Choudhary. ``An Extended Two-Phase Method for
-Accessing Sections of Out-of-Core Arrays'', {\em Scientific
-Programming}, 5(4):301-317, Winter 1996
+Accessing Sections of Out-of-Core Arrays,'' {\em Scientific
+Programming}, 5(4):301-317, Winter 1996.
 
 \bibitem{ThGL96}
 R. Thakur, W. Gropp, and E. Lusk. ``An Abstract-Device interface
 for Implementing Portable Parallel-I/O Interfaces''(ADIO), in {\em
-Proceeding of the 6th Symposium on the Frontiers of Massively
-Parallel Computation}, October 1996, pp. 180-187
+Proceedings of the 6th Symposium on the Frontiers of Massively
+Parallel Computation}, October 1996, pp. 180-187.
 
 \bibitem{ThGL99}
 R. Thakur, W. Gropp, and E. Lusk. ``Data Sieving and Collective
-I/O in ROMIO'', in {\em Proceeding of the 7th Symposium on the
+I/O in ROMIO,'' in {\em Proceeding of the 7th Symposium on the
 Frontiers of Massively Parallel Computation}, February 1999, pp.
-182-189
+182-189.
 
 \bibitem{ThGL99b}
-R. Thakur, W. Gropp, and E. Lusk. ``On implementing MPI-IO portably and with high performance'', in
+R. Thakur, W. Gropp, and E. Lusk. ``On implementing MPI-IO portably and with high performance,'' in
 {\em Proceedings of the Sixth Workshop on Input/Output in Parallel and Distributed Systems}, May
-1999, pp. 23-32
+1999, pp. 23-32.
 
 \bibitem{TRLG02}
 R. Thakur, R. Ross, E. Lusk, and W. Gropp, ``Users Guide for
-ROMIO: A High-Performance, Portable MPI-IO Implementation'',
+ROMIO: A High-Performance, Portable MPI-IO Implementation,''
 Technical Memorandum No. 234, Mathematics and Computer Science
-Division, Argonne National Laboratory, Revised January 2002
+Division, Argonne National Laboratory, Revised January 2002.
+
+\bibitem{FLASHIO}
+M. Zingale. FLASH I/O benchmark.{\em http://flash.uchicago.
+edu/\verb|~|zingale/flash\_benchmark\_io/}
 
 \end{thebibliography}
 
