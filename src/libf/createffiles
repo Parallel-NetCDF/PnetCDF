@@ -15,5 +15,5 @@ if [ ! -x $mpich2SourceDir/src/binding/f77/buildiface ] ; then
     exit 1
 fi
 
-# Build the files
-$mpich2SourceDir/src/binding/f77/buildiface -infile=../lib/mpinetcdf.h -deffile=defs 
+# Build the files 
+$mpich2SourceDir/src/binding/f77/buildiface -infile=../lib/pnetcdf.h -deffile=defs
