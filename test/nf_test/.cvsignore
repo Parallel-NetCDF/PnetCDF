@@ -1,1 +1,4 @@
 Makefile
+test_get.F
+test_put.F
+*.nc
