@@ -1,0 +1,31 @@
+# For users interested in building on the ASCI White machine (a.k.a. Frost),
+# here's how John Tannahill <tannahill1@llnl.gov> did it.
+#
+# As of parallel-netcdf-0.8.5, We have fixed configure.in and it is no longer
+# necessary to edit it and run autoconf
+
+# John Tannahill's message follows.
+
+# Just for the record, the following are the exact steps I had to
+# follow to install parallel-netcdf-0.8.4 on the Frost machine at
+#  LLNL:
+
+# gunzip parallel-netcdf-0.8.4.tar.gz
+# tar xf parallel-netcdf-0.8.4.tar
+# cd parallel-netcdf-0.8.4
+#
+# Edit configure change MPICC and MPIF77 defintions to mpcc_r & mpxlf_r.
+#
+setenv CC xlc
+setenv FC xlf
+setenv F90 xlf90
+setenv CXX xlC
+setenv FFLAGS "-d -qmaxmem=4096 -O2"
+./configure --prefix=/usr/local/hdf5/pnetcdf-0.8.5 \
+             --with-mpi=/usr/lpp/ppe.poe
+
+# gmake
+# gmake install
+# gmake tests
+
+
