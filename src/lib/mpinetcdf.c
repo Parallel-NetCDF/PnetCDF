@@ -406,7 +406,6 @@ ncmpi_inq_varnatts(int ncid, int varid, int *nattsp) {
 
 /* Begin Of Attribute Functions */
 
-/*
 int 
 ncmpi_inq_att(int ncid, int varid, const char *name,
               nc_type *xtypep, size_t *lenp) {
@@ -543,13 +542,12 @@ ncmpi_get_att_double(int ncid, int varid, const char *name,
   return nc_get_att_double(ncid, varid, name, ip);
 }
 
-*/
-
 /* End Of Attribute Functions */
 
 /* Begin {put,get}_att */
 
 /* to be updated */
+#if 0
 int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
         size_t len, const char *op) {
@@ -562,6 +560,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 
   return status;
 }
+#endif
 
 /* End {put,get}_att */
 
