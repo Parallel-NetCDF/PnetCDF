@@ -213,7 +213,7 @@ if test "$enable_fortran" = yes ; then
 fi
 UD_MAKEWHATIS
 
-UD_CHECK_SIZEOF(off_t)
+large_file_support="no"
 AC_CHECK_HEADERS(unistd.h, 
 	AC_MSG_CHECKING(for large file defines)
 	AC_TRY_COMPILE([
@@ -224,10 +224,20 @@ AC_CHECK_HEADERS(unistd.h,
 		#endif
 		], 
 		CFLAGS="${CFLAGS} -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
-		AC_MSG_RESULT(yes),
-		AC_MSG_RESULT(none) )
+		AC_MSG_RESULT(yes)
+		large_file_support="yes",
+		AC_MSG_RESULT(none))
 	)
 
+UD_CHECK_SIZEOF(off_t)
+dnl on some 64 bit platforms, the _LFS64_LARGEFILE define may not exist -- it
+dnl was, after all, designed for 32 bit systems trying to access large files.
+dnl If off_t is 8 bytes, then we *can* work on large files: do one last check
+dnl so we report the right information to the user
+
+if test "$ac_cv_sizeof_off_t" = "8" ; then
+	large_file_support="yes"
+fi
 
 has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
@@ -238,4 +248,17 @@ AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/l
 if test "$enable_mpi_io_test" != "yes" ; then
 	AC_MSG_WARN([
 "NOTE: disabling the MPI-IO test is a VERY bad idea. Please make sure you know what you are doing"])
+fi
+
+echo ""
+echo "parallel-netCDF features:"
+if test "$large_file_support" = "yes" ; then
+	echo ". parallel-netcdf configured WITH support for large files"
+else
+	echo ". parallel-netcdf configured WITHOUT support for large files"
+fi
+if test "$enable_fortran" = "yes" ; then
+	echo ". parallel-netcdf configured WITH fortran bindings"
+else
+	echo ". parallel-netcdf configured WITHOUT fortran bindings"
 fi
