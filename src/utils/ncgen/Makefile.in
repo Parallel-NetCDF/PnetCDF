@@ -60,11 +60,11 @@ ncgentab.c \
 ncgentab.h:	ncgen.y ncgenyy.c ncgen.h
 	$(yacc) -d $(srcdir)/ncgen.y; \
 	mv y.tab.c ncgentab.c; \
-	mv y.tab.h ncgentab.h; \
+	mv y.tab.h ncgentab.h
 
 ncgenyy.c:	ncgen.l
 	$(lex) ncgen.l; \
-	mv lex.yy.c ncgenyy.c; \
+	mv lex.yy.c ncgenyy.c
 
 vmstab.h \
 vmstab.c:	ncgen.y
