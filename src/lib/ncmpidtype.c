@@ -10,88 +10,6 @@
 #include <mpi.h>
 #include "nc.h"
 
-/* FIXME: working around MPICH2 enum-type design of COMBINER constants.
-
-     All COPMBINERs means all values by MPI-2, including Fortran values.
-
-     4 cases: (1) Using #define but not all COMBINERs are defined, like MPICH1  
-	      (2) Using #define to give all COMINERs 
-	      (3) Using enum-type to enumerate (all COMBINERs)
-	      (4) None of the COMBINER constants is defined in either way
-
-     If any second MPI implemenation also uses enum-type, fixme! And,
-     if it doesn't have all COMBINERs enumerated, that's a real trouble,
-     in which case, we need configure to check each of the COMBINERs.
-
-     Indeed, if some MPI impl chooses to use enum-type, it should enumerate
-     all values, otherwise, it's hard for C preprocessor to check
-     whether a value is code-able or not, unless it has a "#if declared(x)"
-     directive. 
-*/
-#define NCMPI_HAVEALL_MPICOMBINERS		\
-  ( (MPI_VERSION>=2) || defined(MPICH2) )
-
-/* FIXME: working around some MPI impl without all COMBINER constants.
-     Keep it for now, and we may not need it in the future, or use "configure".
-     Assume existing COMBINER constants won't coincide with following values.
-*/
-#if !NCMPI_HAVEALL_MPICOMBINERS 
-#  ifndef MPI_COMBINER_NAMED
-#  define MPI_COMBINER_NAMED		(-1001)
-#  endif
-#  ifndef MPI_COMBINER_DUP
-#  define MPI_COMBINER_DUP		(-1002)
-#  endif
-#  ifndef MPI_COMBINER_CONTIGUOUS
-#  define MPI_COMBINER_CONTIGUOUS	(-1003)
-#  endif
-#  ifndef MPI_COMBINER_VECTOR
-#  define MPI_COMBINER_VECTOR		(-1004)
-#  endif
-#  ifndef MPI_COMBINER_HVECTOR_INTEGER
-#  define MPI_COMBINER_HVECTOR_INTEGER	(-1005)
-#  endif
-#  ifndef MPI_COMBINER_HVECTOR
-#  define MPI_COMBINER_HVECTOR		(-1006)
-#  endif
-#  ifndef MPI_COMBINER_INDEXED
-#  define MPI_COMBINER_INDEXED		(-1007)
-#  endif
-#  ifndef MPI_COMBINER_HINDEXED_INTEGER
-#  define MPI_COMBINER_HINDEXED_INTEGER	(-1008)
-#  endif
-#  ifndef MPI_COMBINER_HINDEXED
-#  define MPI_COMBINER_HINDEXED		(-1009)
-#  endif
-#  ifndef MPI_COMBINER_INDEXED_BLOCK
-#  define MPI_COMBINER_INDEXED_BLOCK	(-1010)
-#  endif
-#  ifndef MPI_COMBINER_STRUCT_INTEGER
-#  define MPI_COMBINER_STRUCT_INTEGER	(-1011)
-#  endif
-#  ifndef MPI_COMBINER_STRUCT
-#  define MPI_COMBINER_STRUCT		(-1012)
-#  endif
-#  ifndef MPI_COMBINER_SUBARRAY
-#  define MPI_COMBINER_SUBARRAY		(-1013)
-#  endif
-#  ifndef MPI_COMBINER_DARRAY
-#  define MPI_COMBINER_DARRAY		(-1014)
-#  endif
-#  ifndef MPI_COMBINER_F90_REAL
-#  define MPI_COMBINER_F90_REAL		(-1015)
-#  endif
-#  ifndef MPI_COMBINER_F90_COMPLEX
-#  define MPI_COMBINER_F90_COMPLEX	(-1016)
-#  endif
-#  ifndef MPI_COMBINER_F90_INTEGER
-#  define MPI_COMBINER_F90_INTEGER	(-1017)
-#  endif
-#  ifndef MPI_COMBINER_RESIZED
-#  define MPI_COMBINER_RESIZED		(-1018)
-#  endif
-#endif
-
 /* Check for Fortran MPI Types to be supported */
 /* FIXME: if some MPI implementation choose to use enum-type for 
 	  MPI Predefined type constants, fixme!
@@ -251,11 +169,20 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 
   MPI_Type_get_envelope(dtype, &num_ints, &num_adds, &num_dtypes, &combiner);
 
-  if ( combiner == MPI_COMBINER_F90_INTEGER ||
-       combiner == MPI_COMBINER_F90_REAL ||
-       combiner == MPI_COMBINER_F90_COMPLEX )
+  if (
+#ifdef HAVE_MPI_COMBINER_F90_INTEGER
+      combiner == MPI_COMBINER_F90_INTEGER ||
+#endif
+#ifdef HAVE_MPI_COMBINER_F90_REAL
+      combiner == MPI_COMBINER_F90_REAL ||
+#endif
+#ifdef HAVE_MPI_COMBINER_F90_COMPLEX
+      combiner == MPI_COMBINER_F90_COMPLEX ||
+#endif
+     0 )
   {
-    fprintf(stderr, "FIXME: F90_INTEGER, F90_REAL or F90_COMPLEX are not supported.\n");
+    fprintf(stderr,
+	    "FIXME: F90_INTEGER, F90_REAL or F90_COMPLEX are not supported.\n");
   }
 
   if ( combiner == MPI_COMBINER_NAMED ) {	
@@ -282,18 +209,32 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 
     /* single etype */
 
-    case MPI_COMBINER_DUP:
     case MPI_COMBINER_CONTIGUOUS:
-    case MPI_COMBINER_HVECTOR_INTEGER:
     case MPI_COMBINER_HVECTOR:
     case MPI_COMBINER_VECTOR:
-    case MPI_COMBINER_INDEXED_BLOCK:
-    case MPI_COMBINER_HINDEXED_INTEGER:
     case MPI_COMBINER_HINDEXED:
     case MPI_COMBINER_INDEXED:
+#ifdef HAVE_MPI_COMBINER_DUP
+    case MPI_COMBINER_DUP:
+#endif
+#ifdef HAVE_MPI_COMBINER_HVECTOR_INTEGER
+    case MPI_COMBINER_HVECTOR_INTEGER:
+#endif
+#ifdef HAVE_MPI_COMBINER_INDEXED_BLOCK
+    case MPI_COMBINER_INDEXED_BLOCK:
+#endif
+#ifdef HAVE_MPI_COMBINER_HINDEXED_INTEGER
+    case MPI_COMBINER_HINDEXED_INTEGER:
+#endif
+#ifdef HAVE_MPI_COMBINER_SUBARRAY
     case MPI_COMBINER_SUBARRAY:
+#endif
+#ifdef HAVE_MPI_COMBINER_DARRAY
     case MPI_COMBINER_DARRAY:
+#endif
+#ifdef HAVE_MPI_COMBINER_RESIZED
     case MPI_COMBINER_RESIZED:
+#endif
 
 	status = ncmpii_dtype_decode(array_of_dtypes[0], ptype, el_size, 
 				     nelems, iscontig_of_ptypes);
@@ -302,8 +243,10 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 
 	break;
 
-    case MPI_COMBINER_STRUCT_INTEGER:
     case MPI_COMBINER_STRUCT:
+#ifdef HAVE_MPI_COMBINER_STRUCT_INTEGER
+    case MPI_COMBINER_STRUCT_INTEGER:
+#endif
 	count = array_of_ints[0];
 	*el_size = 0;
 	for (i=0; i<count && *el_size==0; i++) {
@@ -353,29 +296,38 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 	total_blocks = array_of_ints[0];
 	break;
 
-    case MPI_COMBINER_HVECTOR_INTEGER:
     case MPI_COMBINER_HVECTOR:
     case MPI_COMBINER_VECTOR:
+#ifdef HAVE_MPI_COMBINER_HVECTOR_INTEGER
+    case MPI_COMBINER_HVECTOR_INTEGER:
+#endif
+#ifdef HAVE_MPI_COMBINER_INDEXED_BLOCK
     case MPI_COMBINER_INDEXED_BLOCK:
+#endif
 	*iscontig_of_ptypes = 0;
 	total_blocks = array_of_ints[0]*array_of_ints[1];
 	break;
 
-    case MPI_COMBINER_HINDEXED_INTEGER:
     case MPI_COMBINER_HINDEXED:
     case MPI_COMBINER_INDEXED:
+#ifdef HAVE_MPI_COMBINER_HINDEXED_INTEGER
+    case MPI_COMBINER_HINDEXED_INTEGER:
+#endif
 	*iscontig_of_ptypes = 0;
 	for (i=0, total_blocks=0; i<array_of_ints[0]; i++)
 	  total_blocks += array_of_ints[1+i];
 	break;
 
+#ifdef HAVE_MPI_COMBINER_SUBARRAY
     case MPI_COMBINER_SUBARRAY:
 	*iscontig_of_ptypes = 0;
 	ndims = array_of_ints[0];
 	for (i=0, total_blocks=1; i<ndims; i++)
 	  total_blocks *= array_of_ints[1+ndims+i];
 	break;
+#endif
 
+#ifdef HAVE_MPI_COMBINER_DARRAY
     case MPI_COMBINER_DARRAY:
 	*iscontig_of_ptypes = 0;
 	ndims = array_of_ints[2];
@@ -388,11 +340,14 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 						   array_of_ints+3+2*ndims,
 						   array_of_ints+3+3*ndims);
 	break;
+#endif
 
+#ifdef HAVE_MPI_COMBINER_RESIZED
     case MPI_COMBINER_RESIZED:
 	*iscontig_of_ptypes = 0;
 	total_blocks = 1;
 	break;
+#endif
 
     default: /* DUP etc. */
 	total_blocks = 1;
@@ -443,11 +398,11 @@ int ncmpii_dtype_get_ptype(MPI_Datatype dtype,
 
   while (combiner != MPI_COMBINER_NAMED) {
 
-#   ifndef MPI_COMBINER_DUP
-#   define MPI_COMBINER_DUP MPI_COMBINER_CONTIGUOUS
-#   endif
-
+#ifdef HAVE_MPI_COMBINER_DUP
     if (combiner != MPI_COMBINER_CONTIGUOUS && combiner != MPI_COMBINER_DUP)
+#else
+    if (combiner != MPI_COMBINER_CONTIGUOUS)
+#endif
       *iscontig_of_ptypes = 0;
 
     memsz = num_ints*sizeof(int) 
