@@ -91,7 +91,8 @@ esac
 MPICC=$CC
 AC_MSG_CHECKING(mpi implementation)
 AC_ARG_WITH(mpi, 
-[  --with-mpi              installation prefix for mpi implementation],
+[  --with-mpi=/path/to/implementation
+                          installation prefix for mpi implementation],
 	if test x$withval = xyes; then
 		AC_MSG_ERROR(--with-mpi must be given a pathname)
 	else
