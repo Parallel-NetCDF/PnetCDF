@@ -624,6 +624,53 @@ length_of_mpitype(MPI_Datatype datatype) {
   return -1;
 }
 
+int
+is_nctype(nc_type nctype) {
+  return (nctype == NC_CHAR ||
+          nctype == NC_BYTE ||
+          nctype == NC_SHORT ||
+          nctype == NC_INT ||
+          nctype == NC_FLOAT ||
+          nctype == NC_DOUBLE);
+}
+
+int
+is_mpitype(MPI_Datatype mpitype) {
+  return (mpitype == MPI_CHAR ||
+          mpitype == MPI_BYTE ||
+          mpitype == MPI_SHORT ||
+          mpitype == MPI_INT ||
+          mpitype == MPI_FLOAT ||
+          mpitype == MPI_DOUBLE);
+}
+
+int
+echar(nc_type nctype,MPI_Datatype mpitype) {
+  return ((nctype == NC_CHAR) == (mpitype != MPI_CHAR));
+}
+
+int
+need_convert(nc_type nctype,MPI_Datatype mpitype) {
+  return !(nctype == NC_CHAR || mpitype == MPI_CHAR ||
+           nctype == NC_BYTE && mpitype == MPI_BYTE ||
+           nctype == NC_SHORT && mpitype == MPI_SHORT ||
+           nctype == NC_INT && mpitype == MPI_INT ||
+           nctype == NC_FLOAT && mpitype == MPI_FLOAT ||
+           nctype == NC_DOUBLE && mpitype == MPI_DOUBLE);
+}
+
+int 
+need_swap(nc_type nctype,MPI_Datatype mpitype) {
+#if WORDS_BIGENDIAN
+  return 0;
+#else
+  return (nctype == NC_SHORT && mpitype == MPI_SHORT ||
+          nctype == NC_INT && mpitype == MPI_INT ||
+          nctype == NC_FLOAT && mpitype == MPI_FLOAT ||
+          nctype == NC_DOUBLE && mpitype == MPI_DOUBLE);
+#endif
+}
+
 static void
 swapn(void *dst, const void *src, size_t nn, int xsize)
 {
@@ -638,236 +685,438 @@ swapn(void *dst, const void *src, size_t nn, int xsize)
   }
 }
 
-void
+int
+x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
+  void *xp, *data;
+  int status = ENOERR;
+
+  xp = (void *) xbuf;
+  data = (void *) buf;
+
+  switch (datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+        break;
+    case MPI_SHORT:
+	status = ncx_putn_schar_short(&xp, nelems, (const short *)data);
+        break;
+    case MPI_INT:
+        status = ncx_putn_schar_int(&xp, nelems, (const int *)data);
+        break;
+    case MPI_FLOAT:
+        status = ncx_putn_schar_float(&xp, nelems, (const float *)data);
+        break;
+    case MPI_DOUBLE:
+	status = ncx_putn_schar_double(&xp, nelems, (const double *)data);
+        break;
+  }
+
+  return status;
+}
+
+int
 x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
+  int lstatus, status = ENOERR;
  
   xp = (char *) xbuf;
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch (datatype) {
+    case MPI_CHAR:
+	status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_put_short_short(xp, (const short *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_put_short_short(xp, (const short *)data);
+	  if(lstatus != ENOERR)
+	    status = lstatus;
+	}
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_put_short_int(xp, (const int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_put_short_int(xp, (const int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_put_short_float(xp, (const float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_put_short_float(xp, (const float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_put_short_double(xp, (const double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_put_short_double(xp, (const double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 } 
 
-void
+int
 x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
+  int lstatus, status = ENOERR;
  
   xp = (char *) xbuf;
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch (datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_put_int_short(xp, (const short *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_put_int_short(xp, (const short *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_put_int_int(xp, (const int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_put_int_int(xp, (const int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_put_int_float(xp, (const float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_put_int_float(xp, (const float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_put_int_double(xp, (const double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_put_int_double(xp, (const double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 } 
 
-void
+int
 x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
+  int lstatus, status = ENOERR;
  
   xp = (char *) xbuf;
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch (datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_put_float_short(xp, (const short *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_put_float_short(xp, (const short *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_put_float_int(xp, (const int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_put_float_int(xp, (const int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_put_float_float(xp, (const float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_put_float_float(xp, (const float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_put_float_double(xp, (const double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_put_float_double(xp, (const double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 } 
 
-void
+int
 x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
+  int lstatus, status = ENOERR;
  
   xp = (char *) xbuf; 
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);  
 
   switch (datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc)
-          ncx_put_double_short(xp, (const short *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+          lstatus = ncx_put_double_short(xp, (const short *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc)
-          ncx_put_double_int(xp, (const int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+          lstatus = ncx_put_double_int(xp, (const int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc)
-          ncx_put_double_float(xp, (const float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+          lstatus = ncx_put_double_float(xp, (const float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) 
-          ncx_put_double_double(xp, (const double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+          lstatus = ncx_put_double_double(xp, (const double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 } 
 
-void
+int
+x_getn_schar(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
+  void *xp, *data;
+  int status = ENOERR;
+
+  xp = (void *) xbuf;
+  data = (void *) buf;
+
+  switch (datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+        break;
+    case MPI_SHORT:
+        status = ncx_getn_schar_short((const void **)&xp, nelems, (short *)data);
+        break;
+    case MPI_INT:
+        status = ncx_getn_schar_int((const void **)&xp, nelems, (int *)data);
+        break;
+    case MPI_FLOAT:
+        status = ncx_getn_schar_float((const void **)&xp, nelems, (float *)data);
+        break;
+    case MPI_DOUBLE:
+        status = ncx_getn_schar_double((const void **)&xp, nelems, (double *)data);
+        break;
+  }
+
+  return status;
+}
+
+int
 x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
+  int lstatus, status = ENOERR;
 
   xp = (char *) xbuf;
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch(datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_get_short_short(xp, (short *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_get_short_short(xp, (short *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_get_short_int(xp, (int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_get_short_int(xp, (int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_get_short_float(xp, (float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_get_short_float(xp, (float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc)
-          ncx_get_short_double(xp, (double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
+          lstatus = ncx_get_short_double(xp, (double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 } 
 
-void 
+int 
 x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
+  int lstatus, status = ENOERR;
  
   xp = (char *) xbuf;
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch(datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_get_int_short(xp, (short *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_get_int_short(xp, (short *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_get_int_int(xp, (int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_get_int_int(xp, (int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_get_int_float(xp, (float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_get_int_float(xp, (float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc)
-          ncx_get_int_double(xp, (double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
+          lstatus = ncx_get_int_double(xp, (double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 } 
 
-void
+int
 x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
- 
+  int lstatus, status = ENOERR;
+
   xp = (char *) xbuf;
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch(datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_get_float_short(xp, (short *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_get_float_short(xp, (short *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_get_float_int(xp, (int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_get_float_int(xp, (int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_get_float_float(xp, (float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_get_float_float(xp, (float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc)
-          ncx_get_float_double(xp, (double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
+          lstatus = ncx_get_float_double(xp, (double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 }
 
-void
+int
 x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
+  int lstatus, status = ENOERR;
  
   xp = (char *) xbuf;
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
                                                                                     
   switch(datatype) {
+    case MPI_CHAR:
+        status = NC_ECHAR;
+	break;
     case MPI_SHORT:
-	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) 
-	  ncx_get_double_short(xp, (short *)data);
-	return;
+	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+	  lstatus = ncx_get_double_short(xp, (short *)data);
+	  if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc)
-          ncx_get_double_int(xp, (int *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+          lstatus = ncx_get_double_int(xp, (int *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc)
-          ncx_get_double_float(xp, (float *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+          lstatus = ncx_get_double_float(xp, (float *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc)
-          ncx_get_double_double(xp, (double *)data);
-        return;
+        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
+          lstatus = ncx_get_double_double(xp, (double *)data);
+          if(lstatus != ENOERR)
+            status = lstatus;
+        }
+	break;
   }
+
+  return status;
 }
 
 int
@@ -951,6 +1200,71 @@ NCcoordck(NC *ncp, const NC_var *varp, const size_t *coord)
         }
  
         return NC_NOERR;                                                              }
+
+/*
+ * Check whether 'edges' are valid for the variable and 'start'
+ */
+/*ARGSUSED*/
+static int
+NCedgeck(const NC *ncp, const NC_var *varp,
+         const size_t *start, const size_t *edges)
+{
+  const size_t *const end = start + varp->ndims;
+  const size_t *shp = varp->shape;
+
+  if(varp->ndims == 0)
+    return NC_NOERR;  /* 'scalar' variable */
+
+  if(IS_RECVAR(varp))
+  {
+    start++;
+    edges++;
+    shp++;
+  }
+
+  for(; start < end; start++, edges++, shp++)
+  {
+    /* cast needed for braindead systems with signed size_t */
+    if((unsigned long) *edges > *shp ||
+      (unsigned long) *start + (unsigned long) *edges > *shp)
+    {
+      return(NC_EEDGE);
+    }
+  }
+
+  return NC_NOERR;
+}
+
+static int
+NCstrideedgeck(const NC *ncp, const NC_var *varp,
+         const size_t *start, const size_t *edges, const size_t *stride)
+{
+  const size_t *const end = start + varp->ndims;
+  const size_t *shp = varp->shape;
+
+  if(varp->ndims == 0)
+    return NC_NOERR;  /* 'scalar' variable */
+
+  if(IS_RECVAR(varp))
+  {
+    start++;
+    edges++;
+    shp++;
+    stride++;
+  }
+
+  for(; start < end; start++, edges++, shp++, stride++)
+  {
+    /* cast needed for braindead systems with signed size_t */
+    if((unsigned long) *edges > *shp ||
+      (unsigned long) *start + (unsigned long) *edges * (unsigned long) *stride > *shp)
+    {
+      return(NC_EEDGE);
+    }
+  }
+
+  return NC_NOERR;
+}
 
 int
 NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[]) {
@@ -1060,13 +1374,12 @@ NC_set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
 }
 
 int
-NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[], const size_t count[]) {
+NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[], const size_t count[], int getnotput) {
 
   MPI_Offset offset;
   int status;
   int dim, ndims;
   int *shape, *subcount, *substart; /* all in bytes */
-  size_t *end;
   MPI_Datatype rectype;
   MPI_Datatype filetype;
   int mpireturn;
@@ -1078,111 +1391,126 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
   
   ndims = varp->ndims;
 
-  if (ndims > 0) {
+  status = NCcoordck(ncp, varp, start);
+  if (status != NC_NOERR)
+    return status;
+
+  status = NCedgeck(ncp, varp, start, count);
+  if(status != NC_NOERR)
+    return status;
+
+  if (getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp))
+    return NC_EEDGE;
+
+  if (ndims == 0) {
+
+    /* scalar variable */
+    filetype = MPI_BYTE;
+
+  } else {
 
     /* if ndims == 0, all below pointers would be null */
 
-    end = (size_t *)malloc(sizeof(size_t) * ndims);
     shape = (int *)malloc(sizeof(int) * ndims);
     subcount = (int *)malloc(sizeof(int) * ndims);
     substart = (int *)malloc(sizeof(int) * ndims);
 
-    for (dim = 0; dim < ndims; dim++)
-      end[dim] = start[dim] + count[dim] - 1;
-  }
+    dim = 0;
+    while (dim < ndims && count[dim] > 0) dim++;
 
-  status = NCcoordck(ncp, varp, end);
-  if (status != NC_NOERR)
-    return status;
-  
-  if (IS_RECVAR(varp)) {
-    subcount[0] = count[0];
-    substart[0] = 0;
-    shape[0] = subcount[0];
+    if (dim < ndims) {
 
-    if (ncp->recsize <= varp->len) {
+      /* 0 size data */
+      filetype = MPI_BYTE;
 
-      /* the only record variable */
-
-      if (varp->ndims == 1) {
-        shape[0] *= varp->xsz;
-	subcount[0] *= varp->xsz;
-      } else {
-	for (dim = 1; dim < ndims-1; dim++) {
-          shape[dim] = varp->shape[dim];
-          subcount[dim] = count[dim];
-          substart[dim] = start[dim];
-	}
-	shape[dim] = varp->xsz * varp->shape[dim];
-	subcount[dim] = varp->xsz * count[dim];
-	substart[dim] = varp->xsz * start[dim];
-      }
-      offset += start[0] * ncp->recsize;
-
-      MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-				MPI_ORDER_C, MPI_BYTE, &filetype); 
-
-      MPI_Type_commit(&filetype);
     } else {
 
-      /* more than one record variables */
+      if (IS_RECVAR(varp)) {
+        subcount[0] = count[0];
+        substart[0] = 0;
+        shape[0] = subcount[0];
 
-      offset += start[0] * ncp->recsize;
-      if (varp->ndims == 1) {
+        if (ncp->recsize <= varp->len) {
+    
+          /* the only record variable */
+
+          if (varp->ndims == 1) {
+            shape[0] *= varp->xsz;
+	    subcount[0] *= varp->xsz;
+          } else {
+	    for (dim = 1; dim < ndims-1; dim++) {
+              shape[dim] = varp->shape[dim];
+              subcount[dim] = count[dim];
+              substart[dim] = start[dim];
+	    }
+	    shape[dim] = varp->xsz * varp->shape[dim];
+	    subcount[dim] = varp->xsz * count[dim];
+	    substart[dim] = varp->xsz * start[dim];
+          }
+          offset += start[0] * ncp->recsize;
+
+          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+				    MPI_ORDER_C, MPI_BYTE, &filetype); 
+    
+          MPI_Type_commit(&filetype);
+        } else {
+
+          /* more than one record variables */
+
+          offset += start[0] * ncp->recsize;
+          if (varp->ndims == 1) {
 #if (MPI_VERSION < 2)
-	MPI_Type_vector(subcount[0], varp->xsz, ncp->recsize,
-			MPI_BYTE, &filetype);
+	    MPI_Type_vector(subcount[0], varp->xsz, ncp->recsize,
+			    MPI_BYTE, &filetype);
 #else
-	MPI_Type_create_vector(subcount[0], varp->xsz, ncp->recsize,
-				MPI_BYTE, &filetype);
+	    MPI_Type_create_vector(subcount[0], varp->xsz, ncp->recsize,
+				    MPI_BYTE, &filetype);
 #endif
-	MPI_Type_commit(&filetype);
+	    MPI_Type_commit(&filetype);
+
+          } else {
+            for (dim = 1; dim < ndims-1; dim++) {
+              shape[dim] = varp->shape[dim];
+              subcount[dim] = count[dim];
+              substart[dim] = start[dim];
+            }
+            shape[dim] = varp->xsz * varp->shape[dim];
+            subcount[dim] = varp->xsz * count[dim];
+            substart[dim] = varp->xsz * start[dim];
+
+	    MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
+				     MPI_ORDER_C, MPI_BYTE, &rectype);
+	    MPI_Type_commit(&rectype);
+#if (MPI_VERSION < 2)
+	    MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
+#else
+	    MPI_Type_create_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
+#endif
+	    MPI_Type_commit(&filetype);
+	    MPI_Type_free(&rectype);
+          }
+        }
 
       } else {
-        for (dim = 1; dim < ndims-1; dim++) {
+
+        /* non record variable */
+
+        for (dim = 0; dim < ndims-1; dim++ ) {
           shape[dim] = varp->shape[dim];
           subcount[dim] = count[dim];
           substart[dim] = start[dim];
         }
+
         shape[dim] = varp->xsz * varp->shape[dim];
         subcount[dim] = varp->xsz * count[dim];
         substart[dim] = varp->xsz * start[dim];
 
-	MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
-				 MPI_ORDER_C, MPI_BYTE, &rectype);
-	MPI_Type_commit(&rectype);
-#if (MPI_VERSION < 2)
-	MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
-#else
-	MPI_Type_create_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
-#endif
-	MPI_Type_commit(&filetype);
-	MPI_Type_free(&rectype);
+        MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+		         MPI_ORDER_C, MPI_BYTE, &filetype); 
+
+        MPI_Type_commit(&filetype);
       }
-    }
 
-  } else {
-
-    /* non record variable */
-
-    for (dim = 0; dim < ndims-1; dim++ ) {
-      shape[dim] = varp->shape[dim];
-      subcount[dim] = count[dim];
-      substart[dim] = start[dim];
-    }
-
-    if (ndims > 0) {
-      shape[dim] = varp->xsz * varp->shape[dim];
-      subcount[dim] = varp->xsz * count[dim];
-      substart[dim] = varp->xsz * start[dim];
-
-      MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-	 		     MPI_ORDER_C, MPI_BYTE, &filetype); 
-
-      MPI_Type_commit(&filetype);
-    } else {
-      /* scalar variable */
-      filetype = MPI_BYTE;
     }
   }
 
@@ -1198,9 +1526,9 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
 
 
   if (ndims > 0) {
-    MPI_Type_free(&filetype);
+    if (filetype != MPI_BYTE)
+      MPI_Type_free(&filetype);
 
-    free(end);
     free(shape);
     free(subcount);
     free(substart);
@@ -1212,21 +1540,53 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
 int
 NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
 		     const size_t start[], const size_t count[], 
-                     const size_t stride[]) {
+                     const size_t stride[], int getnotput) {
   MPI_Offset offset;
   int status;
   int mpireturn;
   int dim, ndims;
   MPI_Datatype *subtypes, *filetype;
-  size_t *blocklens, *blockstride, *blockcount, *end;
+  size_t *blocklens, *blockstride, *blockcount;
   int rank;
+
+  status = NCcoordck(ncp, varp, start);
+  if (status != NC_NOERR)
+    return status; 
+
+  ndims = varp->ndims;
+
+  for (dim = 0; dim < ndims; dim++)
+  {
+    if (stride != NULL && stride[dim] == 0 ||
+        /* cast needed for braindead systems with signed size_t */
+        (unsigned long) stride[dim] >= X_INT_MAX)
+    {
+      return NC_ESTRIDE;
+    }
+  }
+
+  status = NCedgeck(ncp, varp, start, count);
+  if(status != NC_NOERR)
+    return status;
+
+ if(getnotput && IS_RECVAR(varp) &&
+     (unsigned long)*start + (unsigned long)*count > NC_get_numrecs(ncp))
+      return NC_EEDGE;
+
+/*
+  status = NCstrideedgeck(ncp, varp, start, count, stride);
+  if(status != NC_NOERR)
+    return status;
+
+  if(getnotput && IS_RECVAR(varp) && 
+     (unsigned long)*start + (unsigned long)*count * (unsigned long)*stride > NC_get_numrecs(ncp))
+      return NC_EEDGE;
+*/
 
   MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   offset = varp->begin;
   
-  ndims = varp->ndims;
-
   if (ndims == 0) {
 
     /* scalar variable */
@@ -1235,53 +1595,60 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
     *filetype = MPI_BYTE;
   
   } else {  
-  
-    subtypes = (MPI_Datatype *)malloc((ndims+1) * sizeof(MPI_Datatype));
-    filetype = subtypes;
-    subtypes[ndims] = MPI_BYTE;
-  
-    end = (size_t *) malloc(ndims * sizeof(size_t));
-    for (dim = 0; dim < ndims; dim++)
-      end[dim] = start[dim] + (count[dim] - 1) * stride[dim];
-    status = NCcoordck(ncp, varp, end);
-    if (status != NC_NOERR)
-      return status; 
-  
+
     blocklens = (size_t *) malloc(ndims * sizeof(size_t));
     blockstride = (size_t *) malloc(ndims * sizeof(size_t));
     blockcount = (size_t *) malloc(ndims * sizeof(size_t));
-    blocklens[ndims - 1] = varp->xsz;
-    blockcount[ndims - 1] = count[ndims - 1];
-    if (ndims == 1 && IS_RECVAR(varp)) {
-      blockstride[ndims - 1] = stride[ndims - 1] * ncp->recsize;
-      offset += start[ndims - 1] * ncp->recsize;
+
+    dim = 0;
+    while (dim < ndims && count[dim] > 0) dim++;
+
+    if (dim < ndims) {
+
+      /* 0 size data */
+      filetype = subtypes = (MPI_Datatype *)malloc(sizeof(MPI_Datatype));
+      *filetype = MPI_BYTE;
+
     } else {
-      blockstride[ndims - 1] = stride[ndims - 1] * varp->xsz;
-      offset += start[ndims - 1] * varp->xsz;
-    }
   
-    for (dim = ndims - 1; dim >= 0; dim--) {
+      subtypes = (MPI_Datatype *)malloc((ndims+1) * sizeof(MPI_Datatype));
+      filetype = subtypes;
+      subtypes[ndims] = MPI_BYTE;
+  
+      blocklens[ndims - 1] = varp->xsz;
+      blockcount[ndims - 1] = count[ndims - 1];
+      if (ndims == 1 && IS_RECVAR(varp)) {
+        blockstride[ndims - 1] = stride[ndims - 1] * ncp->recsize;
+        offset += start[ndims - 1] * ncp->recsize;
+      } else {
+        blockstride[ndims - 1] = stride[ndims - 1] * varp->xsz;
+        offset += start[ndims - 1] * varp->xsz;
+      }
+  
+      for (dim = ndims - 1; dim >= 0; dim--) {
 #if (MPI_VERSION < 2)
-      MPI_Type_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
-                       subtypes[dim + 1], subtypes + dim);
+        MPI_Type_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
+                         subtypes[dim + 1], subtypes + dim);
 #else
-      MPI_Type_create_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
+        MPI_Type_create_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
                               subtypes[dim + 1], subtypes + dim);
 #endif
-      MPI_Type_commit(subtypes + dim);
+        MPI_Type_commit(subtypes + dim);
       
-      if (dim - 1 >= 0) {
-        blocklens[dim - 1] = 1;
-        blockcount[dim - 1] = count[dim - 1];
-        if (dim - 1 == 0 && IS_RECVAR(varp)) {
-          blockstride[dim - 1] = stride[dim - 1] * ncp->recsize;
-	  offset += start[dim-1] * ncp->recsize;
-        } else {
-          blockstride[dim - 1] = stride[dim - 1] * varp->dsizes[dim] * varp->xsz;
-          offset += start[dim-1] * varp->dsizes[dim] * varp->xsz;
+        if (dim - 1 >= 0) {
+          blocklens[dim - 1] = 1;
+          blockcount[dim - 1] = count[dim - 1];
+          if (dim - 1 == 0 && IS_RECVAR(varp)) {
+            blockstride[dim - 1] = stride[dim - 1] * ncp->recsize;
+	    offset += start[dim-1] * ncp->recsize;
+          } else {
+            blockstride[dim - 1] = stride[dim - 1] * varp->dsizes[dim] * varp->xsz;
+            offset += start[dim-1] * varp->dsizes[dim] * varp->xsz;
+          }
         }
-      }
-    } 
+      } 
+
+    }
 
   }
 
@@ -1295,10 +1662,10 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
         return NC_EFILE;
   }
 
-
   if (ndims > 0) {
-    for (dim=0; dim < ndims; dim++) 
-      MPI_Type_free(subtypes + dim);
+    if (*filetype != MPI_BYTE)
+      for (dim=0; dim < ndims; dim++) 
+        MPI_Type_free(subtypes + dim);
 
     free(blocklens);
     free(blockstride);
@@ -1317,18 +1684,13 @@ ncmpi_put_var1(int ncid, int varid,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int words_bigendian = 0;
   int rank;
 
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
- 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
@@ -1351,6 +1713,9 @@ ncmpi_put_var1(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
@@ -1359,64 +1724,63 @@ ncmpi_put_var1(int ncid, int varid,
 
   nbytes = varp->xsz;
 
-  /* assign or allocate MPI read buffer */
+  /* assign or allocate MPI buffer */
  
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
-    xbuf = (void *)buf;	
-  }
-  else
-  { 
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = (void *)buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-   
-    /* automatic datatype conversion */
-   
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_putn_short(xbuf, buf, 1, datatype);
-           break;
-        case NC_INT:
-           x_putn_int(xbuf, buf, 1, datatype);
-           break;
-        case NC_FLOAT:
-           x_putn_float(xbuf, buf, 1, datatype);
-           break;
-        case NC_DOUBLE:
-           x_putn_double(xbuf, buf, 1, datatype);
-           break;
-        default:
-           break;
-      }
-   
-    } else if (!words_bigendian) {
-   
-      swapn(xbuf,  buf, 1, ncx_len_nctype(varp->type));
-   
+  if ( need_convert(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+
+    xbuf = (void *)malloc(nbytes);
+
+    /* automatic numeric datatype conversion */
+  
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_putn_schar(xbuf, buf, 1, datatype);
+         break;
+      case NC_SHORT:
+         status = x_putn_short(xbuf, buf, 1, datatype);
+         break;
+      case NC_INT:
+         status = x_putn_int(xbuf, buf, 1, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_putn_float(xbuf, buf, 1, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_putn_double(xbuf, buf, 1, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+    swapn(xbuf,  buf, 1, ncx_len_nctype(varp->type));
+
+  } else {
+
+    /* else, just assign MPI buffer */
+    xbuf = (void *)buf;
+
   }
- 
+
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_write error = %s\n", rank, errorString);
-        return NC_EWRITE;
+        status = NC_EWRITE;
   }
-
  
-  if (xbuf != buf)
+  if (xbuf != buf && xbuf != NULL)
     free(xbuf);
  
-  if (IS_RECVAR(varp)) {
+  if ( status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
     int newnumrecs;
@@ -1437,17 +1801,12 @@ ncmpi_get_var1(int ncid, int varid,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int nbytes;
-  int words_bigendian = 0;
   MPI_Status mpistatus;
   int mpireturn;
   int rank;
- 
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
  
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -1468,6 +1827,9 @@ ncmpi_get_var1(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
 
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
@@ -1476,66 +1838,62 @@ ncmpi_get_var1(int ncid, int varid,
 
   nbytes = varp->xsz;
 
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR ) 
-  {
-    assert( length_of_mpitype(datatype) == 1 );
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ||  need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+  } else {
+
+    /* else, just assign MPI buffer */
     xbuf = (void *)buf;
+
   }
-  else 
-  {  
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-  }
- 
+
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_read error = %s\n", rank, errorString);
-        return NC_EREAD;
+        status = NC_EREAD;
   }
+ 
+  if ( need_convert(varp->type, datatype) ) {
 
- 
-  /* automatic datatype conversion */
- 
-  if ( ncx_len_nctype(varp->type) != 1 ) {
+    /* automatic numeric datatype conversion */
 
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
- 
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_getn_short(xbuf, buf, 1, datatype);
-           break;
-        case NC_INT:
-           x_getn_int(xbuf, buf, 1, datatype);
-           break;
-        case NC_FLOAT:
-           x_getn_float(xbuf, buf, 1, datatype);
-           break;
-        case NC_DOUBLE:
-           x_getn_double(xbuf, buf, 1, datatype);
-           break;
-        default:
-           break;
-      }
-      free(xbuf);
- 
-    } else if (!words_bigendian) {
-   
-      swapn(buf, xbuf, 1, ncx_len_nctype(varp->type));
-      free(xbuf);
- 
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_getn_schar(xbuf, buf, 1, datatype);
+         break;
+      case NC_SHORT:
+         status = x_getn_short(xbuf, buf, 1, datatype);
+         break;
+      case NC_INT:
+         status = x_getn_int(xbuf, buf, 1, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_getn_float(xbuf, buf, 1, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_getn_double(xbuf, buf, 1, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    swapn(buf, xbuf, 1, ncx_len_nctype(varp->type));
+
   }
- 
+
+  if (xbuf != buf && xbuf != NULL)
+    free(xbuf);
+
   return status;
 }
 
@@ -1543,18 +1901,13 @@ int
 ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int nelems, nbytes;
-  int words_bigendian = 0;
   MPI_Status mpistatus;
   int mpireturn;
   int rank;
 
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
- 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
@@ -1577,72 +1930,71 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
   nelems = bufcount/length_of_mpitype(datatype);
   nbytes = nelems * varp->xsz;
 
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_var_fileview(ncp, &(ncp->nciop->collective_fh), varp);
   if(status != NC_NOERR)
     return status;
  
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ||  need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+  } else {
+
+    /* else, just assign MPI buffer */
     xbuf = (void *)buf;
+
   }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-  }
- 
+
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
-        return NC_EREAD;
+        status = NC_EREAD;
   }
+ 
+  if ( need_convert(varp->type, datatype) ) {
 
- 
-  /* automatic datatype conversion */
- 
-  if ( ncx_len_nctype(varp->type) != 1 ) {
+    /* automatic numeric datatype conversion */
 
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
- 
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_getn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_getn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_getn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_getn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
-      free(xbuf);
-  
-    } else if (!words_bigendian) {
-   
-      swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
-      free(xbuf);
-   
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_getn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_getn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_getn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_getn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_getn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
+
   }
- 
+
+  if (xbuf != buf && xbuf != NULL)
+    free(xbuf);
+
   return status;
 }
 
@@ -1650,18 +2002,13 @@ int
 ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int nelems, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int words_bigendian = 0;
   int rank;
 
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
- 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
@@ -1687,70 +2034,72 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   nelems = bufcount/length_of_mpitype(datatype);
   nbytes = nelems * varp->xsz;
 
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
   if(status != NC_NOERR)
     return status;
- 
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
-    xbuf = (void *)buf;
-  }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = (void *)buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-   
-    /* automatic datatype conversion */
-   
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_putn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_putn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_putn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_putn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
- 
-    } else if (!words_bigendian) {
- 
-      swapn(xbuf,  buf, nelems, ncx_len_nctype(varp->type));
- 
+
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+
+    xbuf = (void *)malloc(nbytes);
+
+    /* automatic numeric datatype conversion */
+
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_putn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_putn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_putn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_putn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_putn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+    swapn(xbuf, buf, nelems, ncx_len_nctype(varp->type));
+
+  } else {
+
+    /* else, just assign MPI buffer */
+    xbuf = (void *)buf;
+
   }
- 
+
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_write error = %s\n", rank, errorString);
-        return NC_EWRITE;
+        status = NC_EWRITE;
   }
-
  
-  if (xbuf != buf)
+  if (xbuf != buf && xbuf != NULL)
     free(xbuf);
  
-  if (IS_RECVAR(varp)) {
+  if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
     int newnumrecs;
@@ -1771,18 +2120,13 @@ int
 ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int nelems, nbytes;
-  int words_bigendian = 0;
   MPI_Status mpistatus;
   int mpireturn;
   int rank;
 
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
- 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
@@ -1805,71 +2149,70 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
   nelems = bufcount/length_of_mpitype(datatype);
   nbytes = nelems * varp->xsz;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
   if(status != NC_NOERR)
     return status;
  
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ||  need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+  } else {
+
+    /* else, just assign MPI buffer */
     xbuf = (void *)buf;
+
   }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-  }
- 
+
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_read error = %s\n", rank, errorString);
-        return NC_EREAD;
+        status = NC_EREAD;
   }
+ 
+  if ( need_convert(varp->type, datatype) ) {
 
- 
-  /* automatic datatype conversion */
- 
-  if ( ncx_len_nctype(varp->type) != 1 ) {
+    /* automatic numeric datatype conversion */
 
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
- 
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_getn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_getn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_getn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_getn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
-      free(xbuf);
- 
-    } else if (!words_bigendian) {
- 
-      swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
-      free(xbuf);
- 
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_getn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_getn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_getn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_getn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_getn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
+
   }
+
+  if (xbuf != buf && xbuf != NULL)
+    free(xbuf);
 
   return status; 
 } 
@@ -1882,7 +2225,7 @@ ncmpi_put_vara_all(int ncid, int varid,
 
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
@@ -1890,11 +2233,6 @@ ncmpi_put_vara_all(int ncid, int varid,
   MPI_Comm comm;
   int mpireturn;
   int rank;
-  int words_bigendian = 0;
-
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -1919,9 +2257,12 @@ ncmpi_put_vara_all(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count);
+  status = NC_set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -1930,48 +2271,48 @@ ncmpi_put_vara_all(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems;
 
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
-    xbuf = (void *)buf;
-  }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = (void *)buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
+  /* assign or allocate MPI buffer */
 
-    /* automatic datatype conversion */
+  if ( need_convert(varp->type, datatype) ) {
 
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_putn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_putn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_putn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_putn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
+    /* allocate new buffer */
 
-    } else if (!words_bigendian) { 
-  
-      swapn(xbuf,  buf, nelems, ncx_len_nctype(varp->type));
-  
+    xbuf = (void *)malloc(nbytes);
+
+    /* automatic numeric datatype conversion */
+
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_putn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_putn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_putn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_putn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_putn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+    swapn(xbuf, buf, nelems, ncx_len_nctype(varp->type));
+
+  } else {
+
+    /* else, just assign MPI buffer */
+    xbuf = (void *)buf;
+
   }
 
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
@@ -1980,14 +2321,13 @@ ncmpi_put_vara_all(int ncid, int varid,
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_write_all error = %s\n", rank, errorString);
-        return NC_EWRITE;
+        status = NC_EWRITE;
   }
 
-
-  if (xbuf != buf)
+  if (xbuf != buf && xbuf != NULL)
     free(xbuf);
  
-  if (IS_RECVAR(varp)) {
+  if (status == NC_NOERR && IS_RECVAR(varp)) {
  
     /* update the number of records in NC
         and write it back to file header, if necessary
@@ -2024,18 +2364,13 @@ ncmpi_get_vara_all(int ncid, int varid,
 
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
-  int words_bigendian = 0;
   MPI_Status mpistatus;
   int mpireturn;
   int rank;
-
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2056,9 +2391,12 @@ ncmpi_get_vara_all(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count);
+  status = NC_set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2067,22 +2405,18 @@ ncmpi_get_vara_all(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems; 
 
-  /* assign or allocate MPI read buffer */ 
+  /* assign or allocate MPI buffer */
 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
+  if ( need_convert(varp->type, datatype) ||  need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+  } else {
+
+    /* else, just assign MPI buffer */
     xbuf = (void *)buf;
-  }
-  else
-  {
-    if ( words_bigendian && 
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
+
   }
 
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
@@ -2091,42 +2425,42 @@ ncmpi_get_vara_all(int ncid, int varid,
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
-        return NC_EREAD;
+        status = NC_EREAD;
   }
 
+  if ( need_convert(varp->type, datatype) ) {
 
-  /* automatic datatype conversion */
+    /* automatic numeric datatype conversion */
 
-  if ( ncx_len_nctype(varp->type) != 1 ) {
-
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_getn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_getn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_getn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_getn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
-      free(xbuf);
-
-    } else if (!words_bigendian) {
-  
-      swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
-      free(xbuf);
-
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_getn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_getn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_getn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_getn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_getn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
+
   }
- 
+
+  if (xbuf != buf && xbuf != NULL)
+    free(xbuf);
+
   return status;
 }
 
@@ -2137,19 +2471,14 @@ ncmpi_put_vara(int ncid, int varid,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int words_bigendian = 0;
   int rank;
 
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
- 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
@@ -2172,9 +2501,12 @@ ncmpi_put_vara(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count);
+  status = NC_set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2183,50 +2515,50 @@ ncmpi_put_vara(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems;
  
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
-    xbuf = (void *)buf;
-  }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = (void *)buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
- 
-    /* automatic datatype conversion */ 
-   
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_putn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_putn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_putn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_putn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
- 
-    } else if (!words_bigendian) {
- 
-      swapn(xbuf,  buf, nelems, ncx_len_nctype(varp->type));
- 
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+
+    xbuf = (void *)malloc(nbytes);
+
+    /* automatic numeric datatype conversion */
+
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_putn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_putn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_putn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_putn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_putn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+    swapn(xbuf, buf, nelems, ncx_len_nctype(varp->type));
+
+  } else {
+
+    /* else, just assign MPI buffer */
+    xbuf = (void *)buf;
+
   }
- 
+
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
@@ -2236,10 +2568,10 @@ ncmpi_put_vara(int ncid, int varid,
         return NC_EWRITE;
   }
 
-  if (xbuf != buf)
+  if (xbuf != buf && xbuf != NULL)
     free(xbuf);
 
-  if (IS_RECVAR(varp)) {
+  if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
     int newnumrecs;
@@ -2260,19 +2592,14 @@ ncmpi_get_vara(int ncid, int varid,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
-  int words_bigendian = 0;
   MPI_Status mpistatus;
   int mpireturn;
   int rank;
 
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
- 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
@@ -2292,9 +2619,12 @@ ncmpi_get_vara(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count);
+  status = NC_set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2303,65 +2633,62 @@ ncmpi_get_vara(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems;
  
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ||  need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+  } else {
+
+    /* else, just assign MPI buffer */
     xbuf = (void *)buf;
+
   }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-  }
- 
+
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_read error = %s\n", rank, errorString);
-        return NC_EREAD;
+        status = NC_EREAD;
   }
- 
-  /* automatic datatype conversion */
- 
-  if ( ncx_len_nctype(varp->type) != 1 ) {
 
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
- 
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_getn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_getn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_getn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_getn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
-      free(xbuf);
- 
-    } else if (!words_bigendian) {
- 
-      swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
-      free(xbuf);
- 
+  if ( need_convert(varp->type, datatype) ) {
+
+    /* automatic numeric datatype conversion */
+
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_getn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_getn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_getn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_getn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_getn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
+
   }
- 
+
+  if (xbuf != buf && xbuf != NULL)
+    free(xbuf);
+
   return status;
 } 
 
@@ -2374,7 +2701,7 @@ ncmpi_put_vars_all(int ncid, int varid,
                    MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
@@ -2382,11 +2709,6 @@ ncmpi_put_vars_all(int ncid, int varid,
   MPI_Comm comm;
   int mpireturn;
   int rank;
-  int words_bigendian = 0;
-
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2411,10 +2733,13 @@ ncmpi_put_vars_all(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_vars_fileview(ncp, &(ncp->nciop->collective_fh), 
-                                varp, start, count, stride);
+                                varp, start, count, stride, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2423,63 +2748,63 @@ ncmpi_put_vars_all(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems;
 
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
-    xbuf = (void *)buf;
-  }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = (void *)buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
- 
-    /* automatic datatype conversion */
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_putn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_putn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_putn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_putn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
- 
-    } else if (!words_bigendian) {
- 
-      swapn(xbuf,  buf, nelems, ncx_len_nctype(varp->type));
- 
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+
+    xbuf = (void *)malloc(nbytes);
+
+    /* automatic numeric datatype conversion */
+
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_putn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_putn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_putn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_putn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_putn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+    swapn(xbuf, buf, nelems, ncx_len_nctype(varp->type));
+
+  } else {
+
+    /* else, just assign MPI buffer */
+    xbuf = (void *)buf;
+
   }
- 
+
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_write_all error = %s\n", rank, errorString);
-        return NC_EWRITE;
+        status = NC_EWRITE;
   }
 
- 
-  if (xbuf != buf)
+  if (xbuf != buf && xbuf != NULL)
     free(xbuf);
  
-  if (IS_RECVAR(varp)) {
+  if (status == NC_NOERR && IS_RECVAR(varp)) {
  
     /* update the number of records in NC
         and write it back to file header, if necessary
@@ -2518,18 +2843,13 @@ ncmpi_get_vars_all(int ncid, int varid,
 
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
-  int words_bigendian = 0;
   MPI_Status mpistatus;
   int mpireturn;
   int rank;
-
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
 
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2550,10 +2870,13 @@ ncmpi_get_vars_all(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_vars_fileview(ncp, &(ncp->nciop->collective_fh), 
-				varp, start, count, stride);
+				varp, start, count, stride, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2562,66 +2885,62 @@ ncmpi_get_vars_all(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems; 
 
-  /* assign or allocate MPI read buffer */ 
+  /* assign or allocate MPI buffer */
 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
+  if ( need_convert(varp->type, datatype) ||  need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+  } else {
+
+    /* else, just assign MPI buffer */
     xbuf = (void *)buf;
+
   }
-  else
-  {
-    if ( words_bigendian && 
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-  }
-  
+
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
-        return NC_EREAD;
+        status = NC_EREAD;
   }
 
+  if ( need_convert(varp->type, datatype) ) {
 
-  /* automatic datatype conversion */
+    /* automatic numeric datatype conversion */
 
-  if ( ncx_len_nctype(varp->type) != 1 ) { 
-
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_getn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_getn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_getn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_getn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
-      free(xbuf);
-  
-    } else if (!words_bigendian) {
-  
-      swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
-      free(xbuf);
-  
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_getn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_getn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_getn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_getn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_getn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
+
   }
- 
+
+  if (xbuf != buf && xbuf != NULL)
+    free(xbuf);
+
   return status;
 }
 
@@ -2634,18 +2953,13 @@ ncmpi_put_vars(int ncid, int varid,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int words_bigendian = 0;
   int rank;
-
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
  
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2669,10 +2983,13 @@ ncmpi_put_vars(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_vars_fileview(ncp, &(ncp->nciop->independent_fh),
-			        varp, start, count, stride);
+			        varp, start, count, stride, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2681,64 +2998,63 @@ ncmpi_put_vars(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems;
  
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
-    xbuf = (void *)buf;
-  }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = (void *)buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
- 
-    /* automatic datatype conversion */ 
- 
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_putn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_putn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_putn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_putn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
-   
-    } else if (!words_bigendian) {
- 
-      swapn(xbuf,  buf, nelems, ncx_len_nctype(varp->type));
- 
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+
+    xbuf = (void *)malloc(nbytes);
+
+    /* automatic numeric datatype conversion */
+
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_putn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_putn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_putn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_putn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_putn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+    swapn(xbuf, buf, nelems, ncx_len_nctype(varp->type));
+
+  } else {
+
+    /* else, just assign MPI buffer */
+    xbuf = (void *)buf;
+
   }
- 
+
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_write error = %s\n", rank, errorString);
-        return NC_EWRITE;
+        status = NC_EWRITE;
   }
 
- 
-  if (xbuf != buf)
+  if (xbuf != buf && xbuf != NULL)
     free(xbuf);
 
-  if (IS_RECVAR(varp)) {
+  if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
     int newnumrecs;
@@ -2761,18 +3077,13 @@ ncmpi_get_vars(int ncid, int varid,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
-  void *xbuf;
+  void *xbuf = NULL;
   int status;
   int dim;
   int nelems, nbytes;
-  int words_bigendian = 0;
   MPI_Status mpistatus;
   int mpireturn;
   int rank;
-
-#if WORDS_BIGENDIAN
-  words_bigendian = 1;
-#endif
  
   status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2793,10 +3104,13 @@ ncmpi_get_vars(int ncid, int varid,
   if(varp == NULL)
     return NC_ENOTVAR;
  
+  if ( echar(varp->type, datatype) )
+    return NC_ECHAR;
+
   /* set the mpi file view */
  
   status = NC_set_vars_fileview(ncp, &(ncp->nciop->independent_fh),
-				varp, start, count, stride); 
+				varp, start, count, stride, 1); 
   if(status != NC_NOERR)
     return status;
  
@@ -2805,66 +3119,62 @@ ncmpi_get_vars(int ncid, int varid,
     nelems *= count[dim];
   nbytes = varp->xsz * nelems;
  
-  /* assign or allocate MPI read buffer */
- 
-  if ( varp->type == NC_BYTE || varp->type == NC_CHAR )
-  {
-    assert( length_of_mpitype(datatype) == 1 );
+  /* assign or allocate MPI buffer */
+
+  if ( need_convert(varp->type, datatype) ||  need_swap(varp->type, datatype) ) {
+
+    /* allocate new buffer */
+    xbuf = (void *)malloc(nbytes);
+
+  } else {
+
+    /* else, just assign MPI buffer */
     xbuf = (void *)buf;
+
   }
-  else
-  {
-    if ( words_bigendian &&
-        ncx_len_nctype(varp->type) == length_of_mpitype(datatype) )
-      /* Just assign MPI read buffer */
-      xbuf = buf;
-    else
-      /* else, allocate new buffer */
-      xbuf = (void *)malloc(nbytes);
-  }
- 
+
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;
         MPI_Error_string(mpireturn, errorString, &errorStringLen);
         printf("%2d: MPI_File_read error = %s\n", rank, errorString);
-        return NC_EREAD;
+        status = NC_EREAD;
   }
+ 
+  if ( need_convert(varp->type, datatype) ) {
 
- 
-  /* automatic datatype conversion */
- 
-  if ( ncx_len_nctype(varp->type) != 1 ) {
+    /* automatic numeric datatype conversion */
 
-    if ( ncx_len_nctype(varp->type) != length_of_mpitype(datatype) ) {
- 
-      switch( varp->type ) {
-        case NC_SHORT:
-           x_getn_short(xbuf, buf, nelems, datatype);
-           break;
-        case NC_INT:
-           x_getn_int(xbuf, buf, nelems, datatype);
-           break;
-        case NC_FLOAT:
-           x_getn_float(xbuf, buf, nelems, datatype);
-           break;
-        case NC_DOUBLE:
-           x_getn_double(xbuf, buf, nelems, datatype);
-           break;
-        default:
-           break;
-      }
-      free(xbuf);
-   
-    } else if (!words_bigendian) {
- 
-      swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
-      free(xbuf);
- 
+    switch( varp->type ) {
+      case NC_BYTE:
+         status = x_getn_schar(xbuf, buf, nelems, datatype);
+         break;
+      case NC_SHORT:
+         status = x_getn_short(xbuf, buf, nelems, datatype);
+         break;
+      case NC_INT:
+         status = x_getn_int(xbuf, buf, nelems, datatype);
+         break;
+      case NC_FLOAT:
+         status = x_getn_float(xbuf, buf, nelems, datatype);
+         break;
+      case NC_DOUBLE:
+         status = x_getn_double(xbuf, buf, nelems, datatype);
+         break;
+      default:
+         break;
     }
+
+  } else if ( need_swap(varp->type, datatype) ) {
+
+    swapn(buf, xbuf, nelems, ncx_len_nctype(varp->type));
+
   }
- 
+
+  if (xbuf != buf && xbuf != NULL)
+    free(xbuf);
+
   return status;
 } 
 
