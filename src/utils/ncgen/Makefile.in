@@ -23,7 +23,7 @@ lib_netcdf	= ../../../src/lib/libpnetcdf.a
 ld_netcdf	= -L../../../src/lib -lpnetcdf
 
 PACKING_LIST	= Makefile.in depend escapes.c generic.h \
-		  ncgenyy.c ncgentab.c ncgentab.h \
+		  ncgentab.c ncgentab.h \
 		  genlib.c genlib.h getfill.c init.c load.c \
 		  main.c ncmpigen.1 ncgen.h ncgen.l ncgen.y c0.cdl
 
@@ -63,7 +63,7 @@ ncgentab.h:	ncgen.y ncgenyy.c ncgen.h
 	mv y.tab.h ncgentab.h
 
 ncgenyy.c:	ncgen.l
-	$(lex) ncgen.l; \
+	$(lex) $(srcdir)/ncgen.l; \
 	mv lex.yy.c ncgenyy.c
 
 vmstab.h \

@@ -27,6 +27,8 @@ const char *cdlname;
 int c_flag;
 int fortran_flag;
 int netcdf_flag;
+int giantfile_flag;
+int nofill_flag;
 char *netcdf_name = NULL;	/* name of output netCDF file to write */
 
 extern FILE *yyin;
@@ -61,7 +63,7 @@ ubasename(
 
 static void usage(void)
 {
-    derror("Usage: %s [ -b ] [ -c ] [ -f ] [ -o outfile]  [ file ... ]",
+    derror("Usage: %s [ -b ] [ -c ] [ -f ] [ -v version ] [ -x ] [ -o outfile]  [ file ... ]",
 	   progname);
     derror("netcdf library version %s", ncmpi_inq_libvers());
 }
@@ -95,13 +97,15 @@ main(
     c_flag = 0;
     fortran_flag = 0;
     netcdf_flag = 0;
+    giantfile_flag = 0;
+    nofill_flag = 0;
 
 #if _CRAYMPP && 0
     /* initialize CRAY MPP parallel-I/O library */
     (void) par_io_init(32, 32);
 #endif
 
-    while ((c = getopt(argc, argv, "bcfno:")) != EOF)
+    while ((c = getopt(argc, argv, "bcfno:v:x")) != EOF)
       switch(c) {
 	case 'c':		/* for c output */
 	  c_flag = 1;
@@ -123,6 +127,30 @@ main(
 	      return(1);
 	  }
 	  (void)strcpy(netcdf_name,optarg);
+	  break;
+	case 'x':     /* set nofill mode to speed up creation fo large files */
+	  nofill_flag = 1;
+	  break;
+	case 'v':     /* for creating 64-bit offet files, specify version 2 */
+	  {
+		  char *version_name = (char *)emalloc(strlen(optarg)+1);
+		  if (! version_name) {
+			  derror ("%s: out of memory", progname);
+			  return (1);
+		  }
+		  (void)strcpy(version_name, optarg);
+		  /* the default version is version 1, with 32-bit offsets */
+		  if (strcmp(version_name, "1") == 0 ||
+				  strcmp(version_name, "classic") == 0) {
+			  giantfile_flag = 0;
+		  }
+		  /* the 64-bit offset version (2) should only be used if
+		   * actually needed */
+		  else if (strcmp(version_name, "2") == 0 || 
+				  strcmp(version_name, "64-bit-offset") == 0) {
+			  giantfile_flag = 1;
+		  }
+	  }
 	  break;
 	case '?':
 	  usage();

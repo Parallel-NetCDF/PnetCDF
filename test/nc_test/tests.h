@@ -124,7 +124,8 @@
 #define BAD_ATTNUM -1           /* invalid att number */
 #define BAD_TYPE (ncmpi_type) 0    /* invalid data type */
 #define BAD_FILLMODE -1         /* invalid fill mode */
-#define BAD_NAME "a+b"		/* invalid name */
+#define BAD_NAME "a/b"		/* invalid name */
+#define BAD_DEFAULT_FORMAT 12	/* invalid default format */
 
 #define LEN_OF(array) ((sizeof array) / (sizeof array[0]))
 
@@ -355,6 +356,7 @@ extern void test_ncmpi_inq_atttype(void);
 extern void test_ncmpi_rename_att(void);
 extern void test_ncmpi_del_att(void);
 extern void test_ncmpi_set_fill(void);
+extern void test_ncmpi_set_default_format(void);
 
 void print_nok(int nok);
 

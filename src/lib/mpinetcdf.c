@@ -61,7 +61,7 @@ static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 int 
 ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
-  size_t sizeof_off_t;
+  size_t sizeof_off_t = 0;
   size_t chunksize=4098;	/* might be a good thing to hint later */
   NC *ncp;
 
@@ -72,9 +72,13 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
   assert(ncp->flags == 0);
 
   if (fIsSet(cmode, NC_64BIT_OFFSET)) {
+	  /* unlike serial netcdf, we will not bother to support
+	   * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
+	   * serial netcdf has proven it's possible if datasets are small, but
+	   * that's a hassle we don't want to worry about */
 	  if (sizeof(off_t) != 8)
 		  return NC_ESMALL;
-	  fSet(ncp->flags, NC_64BIT_OFFSET);
+	  fSet(cmode, NC_64BIT_OFFSET);
 	  sizeof_off_t = 8;
   } else {
 	  sizeof_off_t = 4;

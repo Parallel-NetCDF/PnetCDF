@@ -94,6 +94,10 @@ typedef nc_type ncmpi_type;
 #define NC_LOCK		0x0400	/* Use locking if available */
 #define NC_SHARE	0x0800	/* Share updates, limit cacheing */
 #define NC_64BIT_OFFSET 0x0200  /* Use large (64-bit) file offsets */
+/* Starting with serial netcdf-3.6 and parallel-netcdf-0.9.2, there are
+ * different format netCDF files */
+#define NC_FORMAT_CLASSIC 1
+#define NC_FORMAT_64BIT 2
 
 /*
  * Let nc__create() or nc__open() figure out
@@ -178,6 +182,9 @@ typedef nc_type ncmpi_type;
 /* N.B. following must match value in ncx.h */
 #define NC_ERANGE	(-60)	/* Math result not representable */
 #define NC_ENOMEM	(-61)	/* Memory allocation (malloc) failure */
+#define NC_EVARSIZE     (-62)   /* One or more variable sizes violate
+				   format constraints */
+#define NC_EDIMSIZE     (-63)	/* Invalid dimension size */
 
 /*
  * The Interface
@@ -219,6 +226,7 @@ int ncmpi_enddef(int ncid);
 
 int ncmpi_redef(int ncid);
 
+int ncmpi_set_default_format(int format, int *old_formatp);
 
 int ncmpi_sync(int ncid);
 

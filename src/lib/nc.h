@@ -315,6 +315,9 @@ ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims);
 extern int
 ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);
 
+extern int
+ncmpii_NC_check_vlen(NC_var *varp, size_t vlen_max);
+
 extern NC_var *
 ncmpii_NC_lookupvar(NC *ncp, int varid);
 
@@ -373,9 +376,14 @@ struct NC {
 	ncio *nciop;
 	size_t chunk;	/* largest extent this layer will request from ncio->get() */
 	size_t xsz;	/* external size of this header, <= var[0].begin */
-	off_t begin_var; /* postion of the first (non-record) var */
-	off_t begin_rec; /* postion of the first 'record' */
+	off_t begin_var; /* position of the first (non-record) var */
+	off_t begin_rec; /* position of the first 'record' */
+	/* don't constrain maximu sinze of record unnecessarily */
+#if SIZEOF_OFF_T > SIZEOF_SIZE_T
+	off_t recsize;	/* length of 'record' */	
+#else
 	size_t recsize; /* length of 'record' */
+#endif
 	/* below gets xdr'd */
 	size_t numrecs; /* number of 'records' allocated */
 	NC_dimarray dims;
@@ -476,6 +484,10 @@ ncmpi_inq_natts(int ncid, int *nattsp);
 
 extern int 
 ncmpi_inq_unlimdim(int ncid, int *xtendimp);
+
+extern int
+ncmpi_get_default_format(void);
+
 /* End defined in nc.c */
 /* Begin defined in v1hpg.c */
 

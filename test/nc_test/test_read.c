@@ -51,6 +51,9 @@ test_ncmpi_strerror(void)
 	{NC_EBADNAME, "Attribute or variable name contains illegal characters"},
 	{NC_ERANGE, "Numeric conversion not representable"},
 	{NC_ENOMEM, "Memory allocation (malloc) failure"},
+        {NC_EVARSIZE, "One or more variable sizes violate format constraints"},
+        {NC_EDIMSIZE, "Invalid dimension size"}
+
     };
 
     /* Try on a bad error status */

@@ -1328,8 +1328,7 @@ ncmpix_put_size_t(void **xpp, const size_t *ulp)
 {
 	/* similar to put_ix_int() */
 	uchar *cp = (uchar *) *xpp;
-		/* sizes limited to 2^31 -1 in netcdf */
-	assert(*ulp <= X_SIZE_MAX && (long) (*ulp) >= 0);
+	assert(*ulp <= X_SIZE_MAX);
 
 	*cp++ = (uchar)((*ulp) >> 24);
 	*cp++ = (uchar)(((*ulp) & 0x00ff0000) >> 16);
@@ -1345,9 +1344,8 @@ ncmpix_get_size_t(const void **xpp,  size_t *ulp)
 {
 	/* similar to get_ix_int */
 	const uchar *cp = (const uchar *) *xpp;
-	assert((*cp & 0x80) == 0); /* sizes limited to 2^31 -1 in netcdf */
 
-	*ulp = *cp++ << 24;
+	*ulp = (unsigned)(*cp++ << 24);
 	*ulp |= (*cp++ << 16);
 	*ulp |= (*cp++ << 8);
 	*ulp |= *cp; 
@@ -1399,7 +1397,6 @@ ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
 {
 	/* similar to get_ix_int() */
 	const uchar *cp = (const uchar *) *xpp;
-	assert((*cp & 0x80) == 0); /* No negative offsets stored in netcdf */
 	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
 	
        if (sizeof_off_t == 4) {

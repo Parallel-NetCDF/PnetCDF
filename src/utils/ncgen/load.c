@@ -483,7 +483,7 @@ load_netcdf(
     )
 {
     int idim;
-    int stat = -1;
+    int stat = NC_NOERR;
     MPI_Offset start[NC_MAX_VAR_DIMS];
     MPI_Offset count[NC_MAX_VAR_DIMS];
     char *charvalp = NULL;
@@ -533,13 +533,8 @@ load_netcdf(
     
     switch (vars[varnum].type) {
       case NC_BYTE:
-	      /*
 	stat = ncmpi_put_vara_schar(ncid, varnum, start, count,
 				 (signed char *)charvalp);
-	break;
-	*/  
-	      /* pnetcdf does not yet implement put_vara_schar */
-	fprintf(stderr, "warning: put_vara_schar not implemented\n");
 	break;
       case NC_CHAR:
 	stat = ncmpi_put_vara_text_all(ncid, varnum, start, count, charvalp);
