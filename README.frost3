@@ -19,8 +19,7 @@ setenv FFLAGS "-d -qmaxmem=4096 -O2"
 setenv MPICC /usr/lpp/ppe.poe/bin/mpcc_r
 setenv MPIF77 /usr/lpp/ppe.poe/bin/mpxlf_r
 
-./configure --prefix=/usr/local/hdf5/pnetcdf-0.8.5 \
-             --with-mpi=/usr/lpp/ppe.poe
+./configure --prefix=/usr/local/hdf5/pnetcdf-0.8.5 
 
 # make
 # make install
