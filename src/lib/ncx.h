@@ -27,6 +27,8 @@
 #include <stddef.h> /* size_t */
 #include <errno.h>
 #include <sys/types.h> /* off_t */
+#include <limits.h>
+#include <float.h>
 
 
 /*
@@ -69,30 +71,32 @@
 
 /*
  * limits of the external representation
+ * we rely on ANSI-C defined constants in limits.h. Do any modern environments
+ * not have these?
  */
-#define X_SCHAR_MIN	(-128)
-#define X_SCHAR_MAX	127
-#define X_UCHAR_MAX	255U
-#define X_SHORT_MIN	(-32768)
+#define X_SCHAR_MIN	SCHAR_MIN
+#define X_SCHAR_MAX	SCHAR_MAX
+#define X_UCHAR_MAX	UCHAR_MAX
+#define X_SHORT_MIN	SHRT_MIN
 #define X_SHRT_MIN	X_SHORT_MIN	/* alias compatible with limits.h */
-#define X_SHORT_MAX	32767
+#define X_SHORT_MAX	SHRT_MAX
 #define X_SHRT_MAX	X_SHORT_MAX	/* alias compatible with limits.h */
-#define X_USHORT_MAX	65535U
+#define X_USHORT_MAX	USHRT_MAX
 #define X_USHRT_MAX	X_USHORT_MAX	/* alias compatible with limits.h */
-#define X_INT_MIN	(-2147483647-1)
-#define X_INT_MAX	2147483647
-#define X_UINT_MAX	4294967295U
+#define X_INT_MIN	INT_MIN
+#define X_INT_MAX	INT_MAX
+#define X_UINT_MAX	UINT_MAX
 #if 0
 #define X_LONG_MIN	(-2147483647-1)
 #define X_LONG_MAX	2147483647
 #define X_ULONG_MAX	4294967295U
 #endif
-#define X_FLOAT_MAX	3.40282347e+38f
-#define X_FLOAT_MIN	(-X_FLOAT_MAX)
+#define X_FLOAT_MAX	FLT_MAX
+#define X_FLOAT_MIN	FLT_MIN
 #define X_FLT_MAX	X_FLOAT_MAX	/* alias compatible with limits.h */
 /* scalb(1. - scalb(.5 , -52), 1024) */
-#define X_DOUBLE_MAX	1.7976931348623157e+308 
-#define X_DOUBLE_MIN	(-X_DOUBLE_MAX)
+#define X_DOUBLE_MAX	DBL_MAX
+#define X_DOUBLE_MIN	DBL_MIN
 #define X_DBL_MAX	X_DOUBLE_MAX	/* alias compatible with limits.h */
 
 #define X_SIZE_MAX	X_INT_MAX	/* N.B., just uses the signed range */

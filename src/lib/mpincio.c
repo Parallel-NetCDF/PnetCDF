@@ -39,7 +39,7 @@
 #endif
 
 #if !defined(NDEBUG) && !defined(X_INT_MAX)
-#define  X_INT_MAX 2147483647
+#define  X_INT_MAX INT_MAX
 #endif
 
 #if 0 /* !defined(NDEBUG) && !defined(X_ALIGN) */
