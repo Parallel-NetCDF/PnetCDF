@@ -35,6 +35,10 @@ distclean:	src/lib/distclean \
 
 tests:
 		@cd test && $(MAKE)
+
+testing:
+		@cd test && $(MAKE) testing
+
 clean_macros:
 	-cp macros.make.def macros.make
 
