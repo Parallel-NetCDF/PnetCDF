@@ -14,8 +14,13 @@ UD_SRCDIR
 AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
 AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
-
 AC_CONFIG_AUX_DIR(./scripts)
+
+AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],
+CFLAGS="$CFLAGS -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi")
+AC_ARG_ENABLE(echo, 
+[--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
+
 AC_PROG_INSTALL
 
 UD_PROG_M4
