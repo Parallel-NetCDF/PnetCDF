@@ -23,4 +23,6 @@
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_inq_unlimdim_ ( int *v1, MPI_Fint *v2, MPI_Fint *ierr ){
     *ierr = ncmpi_inq_unlimdim( *v1, v2 );
+
+    *v2 = *v2 + 1;
 }

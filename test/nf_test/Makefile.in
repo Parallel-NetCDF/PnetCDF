@@ -94,6 +94,7 @@ test_put.F:	test_put.m4
 
 # This simple testing target ensures that the test files are present
 testing: test.nc nf_test
+	rm -f scratch.nc
 	./nf_test
 
 test.nc: 
