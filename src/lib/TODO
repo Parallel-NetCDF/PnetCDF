@@ -3,7 +3,40 @@
 # tasks
 #
 
-FUNCTIONS:
+DATA MODE FUNCTIONS: U == unimpplemented I == implemented
+
+ncmpi_get  text uchar schar short int long float double
+var1 [0]     I   U      U    I     I   U    I      I
+var          I   U      U    I     I   U    I      I     
+var_all      I   U      U    I     I   U    I      I     
+vara         I   U      U    I     I   U    I      I     
+vara_all     I   U      U    I     I   U    I      I     
+vars         I   U      U    I     I   U    I      I     
+vars_all     I   U      U    I     I   U    I      I     
+varm         U   U      U    U     U   U    U      U     
+varm_all     U   U      U    U     U   U    U      U     
+vars         I   U      U    I     I   U    I      I     
+vars_all     I   U      U    I     I   U    I      I     
+
+ncmpi_put  text uchar schar short int long float double
+var1 [0]     I   U      U    I     I   U    I      I
+var          I   U      U    I     I   U    I      I     
+var_all      I   U      U    I     I   U    I      I     
+vara         I   U      U    I     I   U    I      I     
+vara_all     I   U      U    I     I   U    I      I     
+vars         I   U      U    I     I   U    I      I     
+vars_all     I   U      U    I     I   U    I      I     
+varm         U   U      U    U     U   U    U      U     
+varm_all     U   U      U    U     U   U    U      U     
+vars         I   U      U    I     I   U    I      I     
+vars_all     I   U      U    I     I   U    I      I  
+
+[0] the var1 functions are all independent operations
+
+
+ncmpi_put  text uchar schar short int long float double
+
+OTHER FUNCTIONS:
 
 the following functions are just wrappers around netcdf implementations:
 
@@ -62,4 +95,4 @@ the following functions are just wrappers around netcdf implementations:
 
 
 Implemented:
-. the flexible data mdoe and high-level data mode interfaces 
+. the flexible data mdoe and high-level data mode interfaces for many types
