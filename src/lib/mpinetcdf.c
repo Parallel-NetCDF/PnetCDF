@@ -366,13 +366,14 @@ ncmpi_close(int ncid) {
 /* End Of Dataset Functions */
 
 /*
- *  MAPPING:  MPI DATATYPE   <--->   NETCDF DATATYPE
- *		MPI_BYTE		NC_BYTE
- *		MPI_CHAR		NC_CHAR
- *		MPI_SHORT		NC_SHORT
- *		MPI_INT			NC_INT
- *		MPI_FLOAT		NC_FLOAT
- *		MPI_DOUBLE		NC_DOUBLE
+ *  MAPPING:  MPI DATATYPE   <--->   NETCDF DATATYPE	   DESCRIPTION
+ *		MPI_UNSIGNED_CHAR	NC_BYTE		  uchar integer
+ *		MPI_BYTE		NC_BYTE		  schar integer
+ *		MPI_CHAR		NC_CHAR		  char(text)
+ *		MPI_SHORT		NC_SHORT	  short
+ *		MPI_INT			NC_INT		  int
+ *		MPI_FLOAT		NC_FLOAT	  float
+ *		MPI_DOUBLE		NC_DOUBLE	  double
  *
  *
  *  Assume: MPI_Datatype and nc_type are both enumerable types
@@ -380,8 +381,10 @@ ncmpi_close(int ncid) {
 
 static int
 length_of_mpitype(MPI_Datatype datatype) {
-  if (datatype == MPI_BYTE || datatype == MPI_CHAR)
-      return (int) sizeof(char);
+  if ( datatype == MPI_UNSIGNED_CHAR || 
+       datatype == MPI_BYTE || 
+       datatype == MPI_CHAR)
+    return (int) sizeof(char);
   else if (datatype == MPI_SHORT)  return (int) sizeof(short);
   else if (datatype == MPI_INT)    return (int) sizeof(int);
   else if (datatype == MPI_LONG)   return (int) sizeof(long);
@@ -402,6 +405,7 @@ static int
 need_convert(nc_type nctype,MPI_Datatype mpitype) {
   return !( (nctype == NC_CHAR && mpitype == MPI_CHAR) ||
             (nctype == NC_BYTE && mpitype == MPI_BYTE) ||
+	    (nctype == NC_BYTE && mpitype == MPI_UNSIGNED_CHAR) ||
             (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
             (nctype == NC_INT && mpitype == MPI_INT) ||
 	    (nctype == NC_INT && mpitype == MPI_LONG && X_SIZEOF_INT == SIZEOF_LONG) ||
@@ -473,6 +477,10 @@ x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
  
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_putn_short_uchar(&xp, nelems, (const unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_putn_short_schar(&xp, nelems, (const signed char *)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_putn_short_short(&xp, nelems, (const short *)data);
   else if (datatype == MPI_INT)
@@ -499,6 +507,10 @@ x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
  
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_putn_int_uchar(&xp, nelems, (const unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_putn_int_schar(&xp, nelems, (const signed char *)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_putn_int_short(&xp, nelems, (const short *)data);
   else if (datatype == MPI_INT)
@@ -525,6 +537,10 @@ x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
  
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_putn_float_uchar(&xp, nelems, (const unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_putn_float_schar(&xp, nelems, (const signed char *)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_putn_float_short(&xp, nelems, (const short *)data);
   else if (datatype == MPI_INT)
@@ -551,6 +567,10 @@ x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 
   if (datatype ==MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_putn_double_uchar(&xp, nelems, (const unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_putn_double_schar(&xp, nelems, (const signed char *)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_putn_double_short(&xp, nelems, (const short *)data);
   else if (datatype == MPI_INT)
@@ -601,6 +621,10 @@ x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
  
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_getn_short_uchar((const void **)&xp, nelems, (unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_getn_short_schar((const void **)&xp, nelems, (signed char*)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_getn_short_short((const void **)&xp, nelems, (short *)data);
   else if (datatype == MPI_INT)
@@ -627,6 +651,10 @@ x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
  
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_getn_int_uchar((const void **)&xp, nelems, (unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_getn_int_schar((const void **)&xp, nelems, (signed char*)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_getn_int_short((const void **)&xp, nelems, (short *)data);
   else if (datatype == MPI_INT)
@@ -653,6 +681,10 @@ x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
  
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_getn_float_uchar((const void **)&xp, nelems, (unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_getn_float_schar((const void **)&xp, nelems, (signed char*)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_getn_float_short((const void **)&xp, nelems, (short *)data);
   else if (datatype == MPI_INT)
@@ -679,6 +711,10 @@ x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
                                                                                     
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
+  else if (datatype == MPI_UNSIGNED_CHAR)
+      status = ncmpix_getn_double_uchar((const void **)&xp, nelems, (unsigned char *)data);
+  else if (datatype == MPI_BYTE)
+      status = ncmpix_getn_double_schar((const void **)&xp, nelems, (signed char*)data);
   else if (datatype == MPI_SHORT)
       status = ncmpix_getn_double_short((const void **)&xp, nelems, (short *)data);
   else if (datatype == MPI_INT)
@@ -2758,6 +2794,46 @@ ncmpi_get_vars(int ncid, int varid,
 } 
 
 int
+ncmpi_put_var1_uchar(int ncid, int varid,
+                     const size_t index[],
+                     const unsigned char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  return ncmpi_put_var1(ncid, varid, index,
+                        (const void *)op, sizeof(char), MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_put_var1_schar(int ncid, int varid,
+                     const size_t index[],
+                     const signed char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  return ncmpi_put_var1(ncid, varid, index,
+                        (const void *)op, sizeof(char), MPI_BYTE);
+}
+
+int
 ncmpi_put_var1_text(int ncid, int varid,
                      const size_t index[],
                      const char *op) {
@@ -2879,6 +2955,46 @@ ncmpi_put_var1_double(int ncid, int varid,
 }
 
 int
+ncmpi_get_var1_uchar(int ncid, int varid,
+                     const size_t index[],
+                     unsigned char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  return ncmpi_get_var1(ncid, varid, index,
+                        (void *)ip, sizeof(char), MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_get_var1_schar(int ncid, int varid,
+                     const size_t index[],
+                     signed char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  return ncmpi_get_var1(ncid, varid, index,
+                        (void *)ip, sizeof(char), MPI_BYTE);
+}
+
+int
 ncmpi_get_var1_text(int ncid, int varid,
                      const size_t index[],
                      char *ip) {
@@ -2997,6 +3113,105 @@ ncmpi_get_var1_double(int ncid, int varid,
   return ncmpi_get_var1(ncid, varid, index,
                         (void *)ip, sizeof(double), MPI_DOUBLE);  
 } 
+
+int
+ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(unsigned char);
+
+  return ncmpi_put_var(ncid, varid, (const void *)op, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_put_var_schar(int ncid, int varid, const signed char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(signed char);
+
+  return ncmpi_put_var(ncid, varid, (const void *)op, nbytes, MPI_BYTE);
+}
+
 
 int
 ncmpi_put_var_text(int ncid, int varid, const char *op) {
@@ -3293,6 +3508,104 @@ ncmpi_put_var_double(int ncid, int varid, const double *op) {
 } 
 
 int
+ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(unsigned char);
+
+  return ncmpi_get_var(ncid, varid, (void *)ip, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_get_var_schar(int ncid, int varid, signed char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(signed char);
+
+  return ncmpi_get_var(ncid, varid, (void *)ip, nbytes, MPI_BYTE);
+}
+
+int
 ncmpi_get_var_text(int ncid, int varid, char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3587,6 +3900,104 @@ ncmpi_get_var_double(int ncid, int varid, double *ip) {
 } 
 
 int
+ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(unsigned char);
+
+  return ncmpi_get_var_all(ncid, varid, (void *)ip, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(signed char);
+
+  return ncmpi_get_var_all(ncid, varid, (void *)ip, nbytes, MPI_BYTE);
+}
+
+int
 ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3879,6 +4290,114 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
  
   return ncmpi_get_var_all(ncid, varid, (void *)ip, nbytes, MPI_DOUBLE);
 } 
+
+int
+ncmpi_put_vara_uchar_all(int ncid, int varid,
+                         const size_t start[], const size_t count[],
+                         const unsigned char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_put_vara_all(ncid, varid, start, count,
+                            (const void *)op, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_put_vara_uchar(int ncid, int varid,
+                     const size_t start[], const size_t count[],
+                     const unsigned char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_put_vara(ncid, varid, start, count,
+                        (const void *)op, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_put_vara_schar_all(int ncid, int varid,
+                         const size_t start[], const size_t count[],
+                         const signed char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_put_vara_all(ncid, varid, start, count,
+                            (const void *)op, nbytes, MPI_BYTE);
+}
+
+int
+ncmpi_put_vara_schar(int ncid, int varid,
+                     const size_t start[], const size_t count[],
+                     const signed char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_put_vara(ncid, varid, start, count,
+                        (const void *)op, nbytes, MPI_BYTE);
+}
 
 int
 ncmpi_put_vara_text_all(int ncid, int varid,
@@ -4202,6 +4721,118 @@ ncmpi_put_vara_double(int ncid, int varid,
  
   return ncmpi_put_vara(ncid, varid, start, count,
                         (const void *)op, nbytes, MPI_DOUBLE);
+}
+
+int
+ncmpi_get_vara_uchar_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    unsigned char *ip) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_get_vara_all(ncid, varid, start, count,
+                            (void *)ip, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_get_vara_uchar(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    unsigned char *ip) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_get_vara(ncid, varid, start, count,
+                        (void *)ip, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_get_vara_schar_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    signed char *ip) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_get_vara_all(ncid, varid, start, count,
+                            (void *)ip, nbytes, MPI_BYTE);
+}
+
+int
+ncmpi_get_vara_schar(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    signed char *ip) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_get_vara(ncid, varid, start, count,
+                        (void *)ip, nbytes, MPI_BYTE);
 }
 
 int
@@ -4534,6 +5165,122 @@ ncmpi_get_vara_double(int ncid, int varid,
  
   return ncmpi_get_vara(ncid, varid, start, count,
                         (void *)ip, nbytes, MPI_DOUBLE);
+}
+
+int
+ncmpi_put_vars_uchar_all(int ncid, int varid,
+                         const size_t start[],
+                         const size_t count[],
+                         const size_t stride[],
+                         const unsigned char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_put_vars_all(ncid, varid, start, count, stride,
+                            (const void *)op, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_put_vars_uchar(int ncid, int varid,
+                     const size_t start[],
+                     const size_t count[],
+                     const size_t stride[],
+                     const unsigned char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_put_vars(ncid, varid, start, count, stride,
+                        (const void *)op, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_put_vars_schar_all(int ncid, int varid,
+                         const size_t start[],
+                         const size_t count[],
+                         const size_t stride[],
+                         const signed char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_put_vars_all(ncid, varid, start, count, stride,
+                            (const void *)op, nbytes, MPI_BYTE);
+}
+
+int
+ncmpi_put_vars_schar(int ncid, int varid,
+                     const size_t start[],
+                     const size_t count[],
+                     const size_t stride[],
+                     const signed char *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_put_vars(ncid, varid, start, count, stride,
+                        (const void *)op, nbytes, MPI_BYTE);
 }
 
 int
@@ -4886,6 +5633,122 @@ ncmpi_put_vars_double(int ncid, int varid,
   return ncmpi_put_vars(ncid, varid, start, count, stride,
                         (const void *)op, nbytes, MPI_DOUBLE);
 
+}
+
+int
+ncmpi_get_vars_uchar_all(int ncid, int varid,
+                         const size_t start[],
+                         const size_t count[],
+                         const size_t stride[],
+                         unsigned char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_get_vars_all(ncid, varid, start, count, stride,
+                            (void *)ip, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_get_vars_uchar(int ncid, int varid,
+                     const size_t start[],
+                     const size_t count[],
+                     const size_t stride[],
+                     unsigned char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(unsigned char) * nelems;
+
+  return ncmpi_get_vars(ncid, varid, start, count, stride,
+                        (void *)ip, nbytes, MPI_UNSIGNED_CHAR);
+}
+
+int
+ncmpi_get_vars_schar_all(int ncid, int varid,
+                         const size_t start[],
+                         const size_t count[],
+                         const size_t stride[],
+                         signed char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_get_vars_all(ncid, varid, start, count, stride,
+                            (void *)ip, nbytes, MPI_BYTE);
+}
+
+int
+ncmpi_get_vars_schar(int ncid, int varid,
+                     const size_t start[],
+                     const size_t count[],
+                     const size_t stride[],
+                     signed char *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(signed char) * nelems;
+
+  return ncmpi_get_vars(ncid, varid, start, count, stride,
+                        (void *)ip, nbytes, MPI_BYTE);
 }
 
 int
