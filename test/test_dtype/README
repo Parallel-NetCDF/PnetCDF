@@ -1,0 +1,2 @@
+This example tests reading into or writing from noncontiguous memory data
+specified by MPI derived datatypes and/or array index mapping.
