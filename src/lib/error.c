@@ -95,12 +95,14 @@ nc_strerror(int err)
 	    return "Operation not allowed in collective data mode";
 	case NC_EINDEP:
 	    return "Operation not allowed in independent data mode";
+	case NC_EFILE:
+	    return "Unknown error in file operation";
         case NC_EREAD:
             return "Unknow error occurs in reading file";
 	case NC_EWRITE:
 	    return "Unknow error occurs in writting file";
 	case NC_EMULTIDEFINE:
-	    return "NC definations on multiprocesses conflict";
+	    return "NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
 	case NC_EOFILE:
 	    return "Can not open/create file";
 	case NC_EBADID:

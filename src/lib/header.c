@@ -527,6 +527,7 @@ int
 hdr_fetch(bufferinfo *gbp) {
   int rank;
   MPI_Comm comm;
+  int mpireturn;
 
   assert(gbp->base != NULL);
   
@@ -535,12 +536,30 @@ hdr_fetch(bufferinfo *gbp) {
 
   (void) memset(gbp->base, 0, gbp->size);
   gbp->pos = gbp->base;
-  MPI_File_set_view(gbp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, 
+  mpireturn = MPI_File_set_view(gbp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, 
 		    "native", gbp->nciop->mpiinfo);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+        MPI_Finalize();
+        return NC_EREAD;
+  }
+
   if (rank == 0) {
     MPI_Status mpistatus;
-    MPI_File_read_at(gbp->nciop->collective_fh, gbp->offset, gbp->base, 
+    mpireturn = MPI_File_read_at(gbp->nciop->collective_fh, gbp->offset, gbp->base, 
 	             gbp->size, MPI_BYTE, &mpistatus);  
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read_at error = %s\n", rank, errorString);
+        MPI_Finalize();
+        return NC_EREAD;
+    }
+
   }
   gbp->offset += gbp->size; 
 

@@ -60,8 +60,18 @@ NC_check_def(MPI_Comm comm, void *buf, size_t nn) {
   int rank;
   int errcheck, compare = 0;
   void *cmpbuf;
+  int max_size;
 
   MPI_Comm_rank(comm, &rank);
+
+  if (rank == 0)
+    max_size = nn;
+  MPI_Bcast(&max_size, 1, MPI_INT, 0, comm);
+
+  compare = max_size - nn;
+  MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
+  if (errcheck)
+    return NC_EMULTIDEFINE;
 
   if (rank == 0) 
     cmpbuf = buf;
@@ -333,20 +343,34 @@ read_numrecs(NC *ncp) {
   size_t nrecs;
   void *buf, *pos;
   MPI_Status mpistatus;
+  int rank;
+
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   assert(!NC_indef(ncp));
  
   pos = buf = (void *)malloc(X_SIZEOF_SIZE_T);
 
   /* reset the file view */
-  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE,
+  mpireturn = MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE,
                     MPI_BYTE, "native", ncp->nciop->mpiinfo);
+  if (mpireturn != MPI_SUCCESS) {
+    char errorString[512];
+    int  errorStringLen;
+    MPI_Error_string(mpireturn, errorString, &errorStringLen);
+    printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+    return NC_EREAD;
+  }
  
   mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
                                buf, X_SIZEOF_SIZE_T, MPI_BYTE, &mpistatus);
  
   if (mpireturn != MPI_SUCCESS) {
-    status = NC_EWRITE;
+    char errorString[512];
+    int  errorStringLen;
+    MPI_Error_string(mpireturn, errorString, &errorStringLen);
+    printf("%2d: MPI_File_read_at error = %s\n", rank, errorString);
+    return NC_EREAD;
   } 
 
   status = ncx_get_size_t((const void **)&pos, &nrecs);
@@ -386,13 +410,27 @@ write_numrecs(NC *ncp) {
   status = ncx_put_size_t(&pos, &nrecs);
 
   if(NC_indep(ncp) && NC_independentFhOpened(ncp->nciop)) {
-    MPI_File_sync(ncp->nciop->independent_fh);
+    mpireturn = MPI_File_sync(ncp->nciop->independent_fh);
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+        return NC_EWRITE;
+    }
     MPI_Barrier(comm);
   }
 
   /* reset the file view */
-  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, 
+  mpireturn = MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, 
 		    MPI_BYTE, "native", ncp->nciop->mpiinfo);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
 
   if (rank == 0) {
     mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
@@ -402,9 +440,21 @@ write_numrecs(NC *ncp) {
   MPI_Bcast(&mpireturn, 1, MPI_INT, 0, comm);
 
   if (mpireturn != MPI_SUCCESS) {
+    char errorString[512];
+    int  errorStringLen;
+    MPI_Error_string(mpireturn, errorString, &errorStringLen);
+    printf("%2d: MPI_File_write_at error = %s\n", rank, errorString);
     status = NC_EWRITE;
   } else {
-    MPI_File_sync(ncp->nciop->collective_fh); 
+    mpireturn = MPI_File_sync(ncp->nciop->collective_fh); 
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+        status = NC_EWRITE;
+    }
+
     MPI_Barrier(comm);
     fClr(ncp->flags, NC_NDIRTY);  
   }
@@ -462,14 +512,31 @@ write_NC(NC *ncp)
     free(buf);
     return status;
   }
- 
+
   /* reset the file view */
-  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE,
+  mpireturn = MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE,
                     MPI_BYTE, "native", ncp->nciop->mpiinfo);
+  if (mpireturn != MPI_SUCCESS) {
+    char errorString[512];
+    int  errorStringLen;
+    MPI_Error_string(mpireturn, errorString, &errorStringLen);
+    printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+    return NC_EWRITE;
+  }
 
   if (rank == 0) {
     mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf, 
 			          ncp->xsz, MPI_BYTE, &mpistatus);
+  }
+
+  MPI_Bcast(&mpireturn, 1, MPI_INT, 0, ncp->nciop->comm);
+
+  if (mpireturn != MPI_SUCCESS) {
+    char errorString[512];
+    int  errorStringLen;
+    MPI_Error_string(mpireturn, errorString, &errorStringLen);
+    printf("%2d: MPI_File_write_at error = %s\n", rank, errorString);
+    return NC_EWRITE;
   }
 
   fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
@@ -477,6 +544,7 @@ write_NC(NC *ncp)
  
   return status;
 } 
+
 /*
  * Write the header or the numrecs if necessary.
  */
@@ -578,11 +646,15 @@ int
 NC_enddef(NC *ncp) {
   int status = NC_NOERR;
   MPI_Comm comm;
+  int mpireturn;
+  int rank;
 
   assert(!NC_readonly(ncp));
   assert(NC_indef(ncp)); 
 
   comm = ncp->nciop->comm;
+
+  MPI_Comm_rank(comm, &rank);
 
   NC_begins(ncp, 0, 1, 0, 1);
  
@@ -595,7 +667,14 @@ NC_enddef(NC *ncp) {
     assert(ncp->begin_var >= ncp->old->begin_var);
     assert(ncp->vars.nelems >= ncp->old->vars.nelems);
  
-    MPI_File_sync(ncp->nciop->collective_fh);
+    mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+        return NC_EWRITE;
+    }
     /*
      * Barrier needed switching between read and write 
      * Important, MPI_File_sync doesn't ensure barrier 
@@ -642,7 +721,15 @@ NC_enddef(NC *ncp) {
   }
  
   fClr(ncp->flags, NC_CREAT | NC_INDEF);
-  MPI_File_sync(ncp->nciop->collective_fh);
+  mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
+
   MPI_Barrier(comm);
 
   return NC_NOERR;

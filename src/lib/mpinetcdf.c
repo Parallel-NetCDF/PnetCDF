@@ -154,8 +154,10 @@ ncmpi_redef(int ncid) {
 int
 ncmpi_begin_indep_data(int ncid) {
   int status = NC_NOERR;
+  int mpireturn;
   NC *ncp;
- 
+  int rank;
+
   status = NC_check_id(ncid, &ncp);
   if (status != NC_NOERR)
     return status;
@@ -163,8 +165,19 @@ ncmpi_begin_indep_data(int ncid) {
   if (NC_indep(ncp))
     return NC_EINDEP;
  
-  if(!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop))
-    MPI_File_sync(ncp->nciop->collective_fh);   /* collective */
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
+
+  if(!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
+    mpireturn = MPI_File_sync(ncp->nciop->collective_fh);   /* collective */
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+        MPI_Finalize();
+        return NC_EFILE;
+    }
+  }
 
   fSet(ncp->flags, NC_INDEP);
 
@@ -176,7 +189,9 @@ ncmpi_begin_indep_data(int ncid) {
 int 
 ncmpi_end_indep_data(int ncid) {
   int status = NC_NOERR;
+  int mpireturn;
   NC *ncp;
+  int rank;
  
   status = NC_check_id(ncid, &ncp);
   if (status != NC_NOERR)
@@ -185,8 +200,19 @@ ncmpi_end_indep_data(int ncid) {
   if (!NC_indep(ncp))
     return NC_ENOTINDEP;
 
-  if(!NC_readonly(ncp) && NC_independentFhOpened(ncp->nciop))
-    MPI_File_sync(ncp->nciop->independent_fh); /* independent */
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
+
+  if(!NC_readonly(ncp) && NC_independentFhOpened(ncp->nciop)) {
+    mpireturn = MPI_File_sync(ncp->nciop->independent_fh); /* independent */
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+        MPI_Finalize();
+        return NC_EFILE;
+    }
+  }
 
   fClr(ncp->flags, NC_INDEP);
  
@@ -931,6 +957,10 @@ NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[
   MPI_Offset offset;
   int status;
   int dim, ndims;
+  int mpireturn;
+  int rank;
+
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   status = NCcoordck(ncp, varp, index);
   if (status != NC_NOERR)
@@ -955,7 +985,14 @@ NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[
       offset += index[dim] * varp->dsizes[dim+1] * varp->xsz;
   }
 
-  MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
+  mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+        return NC_EFILE;
+  }
 
   return NC_NOERR;
 }
@@ -963,12 +1000,24 @@ NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[
 int
 NC_set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
   MPI_Offset offset;
+  int mpireturn;
+  int rank;
+
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   offset = varp->begin;
 
   if (!IS_RECVAR(varp)) { 
     /* Contiguous file view */
-    MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
+    mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+        return NC_EFILE;
+    }
+
   } else {
     /* Record variable, Strided file view */
     int  ndims;
@@ -991,7 +1040,14 @@ NC_set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
 #endif
     MPI_Type_commit(&filetype);
 
-    MPI_File_set_view(*mpifh, offset, MPI_BYTE, filetype, "native", ncp->nciop->mpiinfo);
+    mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, filetype, "native", ncp->nciop->mpiinfo);
+    if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+        return NC_EFILE;
+    }
 
     MPI_Type_free(&filetype); 
   }
@@ -1009,6 +1065,10 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
   size_t *end;
   MPI_Datatype rectype;
   MPI_Datatype filetype;
+  int mpireturn;
+  int rank;
+
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   offset = varp->begin;
   
@@ -1109,8 +1169,16 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
     MPI_Type_commit(&filetype);
   }
 
-  MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
+  mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
 		    filetype, "native", ncp->nciop->mpiinfo);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+        return NC_EFILE;
+  }
+
 
   MPI_Type_free(&filetype);
 
@@ -1127,9 +1195,13 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
                      const size_t stride[]) {
   MPI_Offset offset;
   int status;
+  int mpireturn;
   int dim, ndims;
   MPI_Datatype *subtypes, *filetype;
   size_t *blocklens, *blockstride, *blockcount, *end;
+  int rank;
+
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   offset = varp->begin;
   
@@ -1181,8 +1253,16 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
     }
   } 
 
-  MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
+  mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
                     *filetype, "native", ncp->nciop->mpiinfo);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+        return NC_EFILE;
+  }
+
 
   for (dim= 0; dim < ndims; dim++ ) 
     MPI_Type_free(subtypes + dim);
@@ -1205,8 +1285,10 @@ ncmpi_put_var1(int ncid, int varid,
   int status;
   int nbytes;
   MPI_Status mpistatus;
+  int mpireturn;
   int words_bigendian = 0;
- 
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -1221,6 +1303,8 @@ ncmpi_put_var1(int ncid, int varid,
   if(NC_indef(ncp))
     return NC_EINDEFINE;
  
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
+
   /* check to see that the desired mpi file handle is opened */
  
   status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
@@ -1277,7 +1361,15 @@ ncmpi_put_var1(int ncid, int varid,
  
   }
  
-  MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
+
  
   if (xbuf != buf)
     free(xbuf);
@@ -1308,6 +1400,8 @@ ncmpi_get_var1(int ncid, int varid,
   int nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
+  int mpireturn;
+  int rank;
  
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
@@ -1320,6 +1414,8 @@ ncmpi_get_var1(int ncid, int varid,
   if(NC_indef(ncp))
     return NC_EINDEFINE;
  
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
+
   /* check to see that the desired mpi file handle is opened */
  
   status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
@@ -1348,7 +1444,15 @@ ncmpi_get_var1(int ncid, int varid,
     /* else, allocate new buffer */
     xbuf = (void *)malloc(nbytes);
  
-  MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+        return NC_EREAD;
+  }
+
  
   /* automatic datatype conversion */
  
@@ -1393,7 +1497,9 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
- 
+  int mpireturn;
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -1404,6 +1510,8 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -1434,7 +1542,15 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
     /* else, allocate new buffer */
     xbuf = (void *)malloc(nbytes);
  
-  MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
+        return NC_EREAD;
+  }
+
  
   /* automatic datatype conversion */
  
@@ -1478,8 +1594,10 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   int status;
   int nelems, nbytes;
   MPI_Status mpistatus;
+  int mpireturn;
   int words_bigendian = 0;
- 
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -1493,6 +1611,8 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -1551,7 +1671,15 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
  
   }
  
-  MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
+
  
   if (xbuf != buf)
     free(xbuf);
@@ -1582,7 +1710,9 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
- 
+  int mpireturn;
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -1593,6 +1723,8 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -1623,7 +1755,15 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
     /* else, allocate new buffer */
     xbuf = (void *)malloc(nbytes);
  
-  MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+        return NC_EREAD;
+  }
+
  
   /* automatic datatype conversion */
  
@@ -1673,6 +1813,7 @@ ncmpi_put_vara_all(int ncid, int varid,
   int nelems, nbytes;
   MPI_Status mpistatus;
   MPI_Comm comm;
+  int mpireturn;
   int rank;
   int words_bigendian = 0;
 
@@ -1752,7 +1893,15 @@ ncmpi_put_vara_all(int ncid, int varid,
 
   }
 
-  MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_write_all error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
+
 
   if (xbuf != buf)
     free(xbuf);
@@ -1800,7 +1949,9 @@ ncmpi_get_vara_all(int ncid, int varid,
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
- 
+  int mpireturn;
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -1811,6 +1962,8 @@ ncmpi_get_vara_all(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -1843,7 +1996,15 @@ ncmpi_get_vara_all(int ncid, int varid,
     /* else, allocate new buffer */
     xbuf = (void *)malloc(nbytes);
 
-  MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
+        return NC_EREAD;
+  }
+
 
   /* automatic datatype conversion */
 
@@ -1891,8 +2052,10 @@ ncmpi_put_vara(int ncid, int varid,
   int dim;
   int nelems, nbytes;
   MPI_Status mpistatus;
+  int mpireturn;
   int words_bigendian = 0;
- 
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -1906,6 +2069,8 @@ ncmpi_put_vara(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -1966,8 +2131,15 @@ ncmpi_put_vara(int ncid, int varid,
  
   }
  
-  MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
- 
+  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
+
   if (xbuf != buf)
     free(xbuf);
 
@@ -1998,7 +2170,9 @@ ncmpi_get_vara(int ncid, int varid,
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
- 
+  int mpireturn;
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -2009,6 +2183,8 @@ ncmpi_get_vara(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2041,7 +2217,14 @@ ncmpi_get_vara(int ncid, int varid,
     /* else, allocate new buffer */
     xbuf = (void *)malloc(nbytes);
  
-  MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+        return NC_EREAD;
+  }
  
   /* automatic datatype conversion */
  
@@ -2092,6 +2275,7 @@ ncmpi_put_vars_all(int ncid, int varid,
   int nelems, nbytes;
   MPI_Status mpistatus;
   MPI_Comm comm;
+  int mpireturn;
   int rank;
   int words_bigendian = 0;
 
@@ -2171,7 +2355,15 @@ ncmpi_put_vars_all(int ncid, int varid,
  
   }
  
-  MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_write_all error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
+
  
   if (xbuf != buf)
     free(xbuf);
@@ -2221,7 +2413,9 @@ ncmpi_get_vars_all(int ncid, int varid,
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
- 
+  int mpireturn;
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -2232,6 +2426,8 @@ ncmpi_get_vars_all(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2265,7 +2461,15 @@ ncmpi_get_vars_all(int ncid, int varid,
     /* else, allocate new buffer */
     xbuf = (void *)malloc(nbytes);
 
-  MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
+        return NC_EREAD;
+  }
+
 
   /* automatic datatype conversion */
 
@@ -2315,8 +2519,10 @@ ncmpi_put_vars(int ncid, int varid,
   int dim;
   int nelems, nbytes;
   MPI_Status mpistatus;
+  int mpireturn;
   int words_bigendian = 0;
- 
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -2330,6 +2536,8 @@ ncmpi_put_vars(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2391,7 +2599,15 @@ ncmpi_put_vars(int ncid, int varid,
  
   }
  
-  MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+        return NC_EWRITE;
+  }
+
  
   if (xbuf != buf)
     free(xbuf);
@@ -2425,7 +2641,9 @@ ncmpi_get_vars(int ncid, int varid,
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
- 
+  int mpireturn;
+  int rank;
+
 #if WORDS_BIGENDIAN
   words_bigendian = 1;
 #endif
@@ -2436,6 +2654,8 @@ ncmpi_get_vars(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
+ 
+  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2469,7 +2689,15 @@ ncmpi_get_vars(int ncid, int varid,
     /* else, allocate new buffer */
     xbuf = (void *)malloc(nbytes);
  
-  MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (mpireturn != MPI_SUCCESS) {
+        char errorString[512];
+        int  errorStringLen;
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);
+        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+        return NC_EREAD;
+  }
+
  
   /* automatic datatype conversion */
  
