@@ -18,7 +18,7 @@
  * Files:
  * The read-only tests read files:
  *     test.nc (see below)
- *     tests.h (used merely as an example of a non-netCDF file)
+ *     test_get.c (used merely as an example of a non-netCDF file)
  * 
  * The write tests 
  *     read test.nc (see below) 
@@ -317,7 +317,7 @@ main(int argc, char *argv[])
 
     MPI_Finalize();
 
-    print( "\nNOTE: parallel-netcdf expects to see 3 failures");
+    print( "\nNOTE: parallel-netcdf expects to see 2 failures");
     print( "\nTotal number of failures: %d\n", nfailsTotal);
     return nfailsTotal > 0;
 }

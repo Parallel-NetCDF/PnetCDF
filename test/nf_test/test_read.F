@@ -122,7 +122,7 @@ C       /* Try to open a nonexistent file */
      +   have returned system error')
 
 C       /* Open a file that is not a netCDF file. */
-        call nfmpi_open(comm, 'tests.inc', NF_NOWRITE, MPI_INFO_NULL,
+        call nfmpi_open(comm, 'test_get.F', NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid, err)!/* should fail */
         if (err .ne. NF_ENOTNC)
      +      call errore('nfmpi_open of non-netCDF file: ', err)
