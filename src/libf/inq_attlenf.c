@@ -36,5 +36,5 @@ FORTRAN_API void FORT_CALL nfmpi_inq_attlen_ ( int *v1, int *v2, char *v3 FORT_M
     }
     *ierr = ncmpi_inq_attlen( *v1, l2, p3, &l4 );
     free( p3 );
-    *v4 = (int)l4;
+    if (!*ierr) *v4 = (int)l4;
 }

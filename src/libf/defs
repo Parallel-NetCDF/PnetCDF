@@ -66,7 +66,7 @@ $header_file = "mpinetcdf_impl.h";
 %special_args = (
 	      'copy_att' => '2:3:5', 'copy_att-3' => 'in:addnull', 
 	        'copy_att-2' => 'in:OffsetIndexIn',
-		'copy_att-5' => 'out:OffsetIndex',
+		'copy_att-5' => 'in:OffsetIndexIn',
 	      'create' => 2, 'create-2' => 'in:addnull' ,
 	      'def_dim' => '2:3:4', 'def_dim-2' => 'in:addnull', 
 		'def_dim-3' => 'in:intToSizeT', 
@@ -116,6 +116,10 @@ $header_file = "mpinetcdf_impl.h";
 	        'get_var1_text-2' => 'in:OffsetIndexIn',
 	        'get_var1_text-4' => 'out:blankpad',
 		'get_var1_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
+	      'get_var_double_all' => '2', 
+	        'get_var_double_all-2' => 'in:OffsetIndexIn',
+	      'get_var_double' => '2', 
+	        'get_var_double-2' => 'in:OffsetIndexIn',
 	      'get_var_float_all' => '2', 
 	        'get_var_float_all-2' => 'in:OffsetIndexIn',
 	      'get_var_float' => '2', 
@@ -342,6 +346,10 @@ $header_file = "mpinetcdf_impl.h";
 	        'put_var1_text-2' => 'in:OffsetIndexIn',
 		'put_var1_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 
+	      'put_var_double_all' => '2', 
+	        'put_var_double_all-2' => 'in:OffsetIndexIn',
+	      'put_var_double' => '2', 
+	        'put_var_double-2' => 'in:OffsetIndexIn',
 	      'put_var_float_all' => '2', 
 	        'put_var_float_all-2' => 'in:OffsetIndexIn',
 	      'put_var_float' => '2', 
@@ -703,8 +711,10 @@ sub reorderIntArrOut_ctof {
     print $OUTFD "
     if ($lname) { 
 	int li;
-        for (li=0; li<ln$count; li++) 
-            v$count\[li\] = l$count\[ln$count-1-li\] + 1;
+	if (!*ierr) {
+            for (li=0; li<ln$count; li++) 
+                v$count\[li\] = l$count\[ln$count-1-li\] + 1;
+        }
         $free($lname); }
 ";
 }
@@ -742,7 +752,7 @@ sub sizetToInt_out_arg {
 sub sizetToInt_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
-    print $OUTFD "    *v$count = (int)l$count;\n";	
+    print $OUTFD "    if (!*ierr) *v$count = (int)l$count;\n";	
 }
 
 # -------------------------------------------------------------------------
@@ -764,7 +774,7 @@ sub OffsetIndex_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
-    *v$count = *v$count + 1;\n";
+    if (!*ierr) *v$count = *v$count + 1;\n";
 }
 # -------------------------------------------------------------------------
 # For input of indices, subtract one to the result

@@ -35,5 +35,5 @@ FORTRAN_API void FORT_CALL nfmpi_inq_varid_ ( int *v1, char *v2 FORT_MIXED_LEN(d
     *ierr = ncmpi_inq_varid( *v1, p2, v3 );
     free( p2 );
 
-    *v3 = *v3 + 1;
+    if (!*ierr) *v3 = *v3 + 1;
 }
