@@ -651,12 +651,12 @@ echar(nc_type nctype,MPI_Datatype mpitype) {
 
 int
 need_convert(nc_type nctype,MPI_Datatype mpitype) {
-  return !(nctype == NC_CHAR || mpitype == MPI_CHAR ||
-           nctype == NC_BYTE && mpitype == MPI_BYTE ||
-           nctype == NC_SHORT && mpitype == MPI_SHORT ||
-           nctype == NC_INT && mpitype == MPI_INT ||
-           nctype == NC_FLOAT && mpitype == MPI_FLOAT ||
-           nctype == NC_DOUBLE && mpitype == MPI_DOUBLE);
+  return !( (nctype == NC_CHAR || mpitype == MPI_CHAR) ||
+           (nctype == NC_BYTE && mpitype == MPI_BYTE) ||
+           (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
+           (nctype == NC_INT && mpitype == MPI_INT) ||
+           (nctype == NC_FLOAT && mpitype == MPI_FLOAT) ||
+           (nctype == NC_DOUBLE && mpitype == MPI_DOUBLE) );
 }
 
 int 
@@ -664,10 +664,10 @@ need_swap(nc_type nctype,MPI_Datatype mpitype) {
 #if WORDS_BIGENDIAN
   return 0;
 #else
-  return (nctype == NC_SHORT && mpitype == MPI_SHORT ||
-          nctype == NC_INT && mpitype == MPI_INT ||
-          nctype == NC_FLOAT && mpitype == MPI_FLOAT ||
-          nctype == NC_DOUBLE && mpitype == MPI_DOUBLE);
+  return ( (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
+          (nctype == NC_INT && mpitype == MPI_INT) ||
+          (nctype == NC_FLOAT && mpitype == MPI_FLOAT) ||
+          (nctype == NC_DOUBLE && mpitype == MPI_DOUBLE) );
 #endif
 }
 
@@ -1557,7 +1557,7 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 
   for (dim = 0; dim < ndims; dim++)
   {
-    if (stride != NULL && stride[dim] == 0 ||
+    if ( (stride != NULL && stride[dim] == 0) ||
         /* cast needed for braindead systems with signed size_t */
         (unsigned long) stride[dim] >= X_INT_MAX)
     {
