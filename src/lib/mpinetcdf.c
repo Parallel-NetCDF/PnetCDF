@@ -26,6 +26,42 @@ ncmpi_strerror(int err) {
   return nc_strerror(err);
 }
 
+/* Prototypes for functions used only in this file */
+static int echar(nc_type nctype,MPI_Datatype mpitype);
+static int need_convert(nc_type nctype,MPI_Datatype mpitype);
+static int need_swap(nc_type nctype,MPI_Datatype mpitype);
+static int x_putn_schar(void *xbuf, const void *buf, int nelems,
+			MPI_Datatype datatype);
+static int x_putn_short(void *xbuf, const void *buf, int nelems,
+			MPI_Datatype datatype);
+static int x_putn_int(void *xbuf, const void *buf, int nelems,
+		      MPI_Datatype datatype);
+static int x_putn_float(void *xbuf, const void *buf, int nelems,
+			MPI_Datatype datatype);
+static int x_putn_double(void *xbuf, const void *buf, int nelems,
+			 MPI_Datatype datatype);
+static int x_getn_schar(const void *xbuf, void *buf, int nelems,
+			MPI_Datatype datatype);
+static int x_getn_short(const void *xbuf, void *buf, int nelems,
+			MPI_Datatype datatype);
+static int x_getn_int(const void *xbuf, void *buf, int nelems,
+		      MPI_Datatype datatype);
+static int x_getn_float(const void *xbuf, void *buf, int nelems,
+			MPI_Datatype datatype);
+static int x_getn_double(const void *xbuf, void *buf, int nelems,
+			 MPI_Datatype datatype);
+static int set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
+			     const size_t index[]);
+static int set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp);
+static int set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
+			     const size_t start[], const size_t count[],
+			     int getnotput);
+static int set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
+			     const size_t start[], const size_t count[], 
+			     const size_t stride[], int getnotput);
+static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
+		       int collective);
+
 /* Begin Of Dataset Functions */
 
 int 
@@ -627,32 +663,12 @@ length_of_mpitype(MPI_Datatype datatype) {
   return -1;
 }
 
-int
-is_nctype(nc_type nctype) {
-  return (nctype == NC_CHAR ||
-          nctype == NC_BYTE ||
-          nctype == NC_SHORT ||
-          nctype == NC_INT ||
-          nctype == NC_FLOAT ||
-          nctype == NC_DOUBLE);
-}
-
-int
-is_mpitype(MPI_Datatype mpitype) {
-  return (mpitype == MPI_CHAR ||
-          mpitype == MPI_BYTE ||
-          mpitype == MPI_SHORT ||
-          mpitype == MPI_INT ||
-          mpitype == MPI_FLOAT ||
-          mpitype == MPI_DOUBLE);
-}
-
-int
+static int
 echar(nc_type nctype,MPI_Datatype mpitype) {
   return ((nctype == NC_CHAR) == (mpitype != MPI_CHAR));
 }
 
-int
+static int
 need_convert(nc_type nctype,MPI_Datatype mpitype) {
   return !( (nctype == NC_CHAR || mpitype == MPI_CHAR) ||
            (nctype == NC_BYTE && mpitype == MPI_BYTE) ||
@@ -662,7 +678,7 @@ need_convert(nc_type nctype,MPI_Datatype mpitype) {
            (nctype == NC_DOUBLE && mpitype == MPI_DOUBLE) );
 }
 
-int 
+static int 
 need_swap(nc_type nctype,MPI_Datatype mpitype) {
 #ifdef WORDS_BIGENDIAN
   return 0;
@@ -688,7 +704,7 @@ swapn(void *dst, const void *src, size_t nn, int xsize)
   }
 }
 
-int
+static int
 x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int status = ENOERR;
@@ -717,7 +733,7 @@ x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 }
 
-int
+static int
 x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
@@ -764,7 +780,7 @@ x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 } 
 
-int
+static int
 x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
@@ -811,7 +827,7 @@ x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 } 
 
-int
+static int
 x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
@@ -905,7 +921,7 @@ x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 } 
 
-int
+static int
 x_getn_schar(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int status = ENOERR;
@@ -934,7 +950,7 @@ x_getn_schar(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 }
 
-int
+static int
 x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
@@ -981,7 +997,7 @@ x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 } 
 
-int 
+static int 
 x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
@@ -1028,7 +1044,7 @@ x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 } 
 
-int
+static int
 x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
@@ -1075,7 +1091,7 @@ x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 }
 
-int
+static int
 x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
@@ -1122,8 +1138,8 @@ x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   return status;
 }
 
-int
-NC_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
+static int
+check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
 
   if (collective && NC_indep(ncp))
     return NC_EINDEP;
@@ -1141,7 +1157,7 @@ NC_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
       char errorString[512];
       int  errorStringLen;
       MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("NC_check_mpifh() calliing MPI_File_open error = %s\n", errorString);
+      printf("check_mpifh() calliing MPI_File_open error = %s\n", errorString);
       return NC_ENFILE;
       /* To be determined the return error code ???????????? */
     }
@@ -1238,6 +1254,7 @@ NCedgeck(const NC *ncp, const NC_var *varp,
   return NC_NOERR;
 }
 
+#if 0
 static int
 NCstrideedgeck(const NC *ncp, const NC_var *varp,
          const size_t *start, const size_t *edges, const size_t *stride)
@@ -1268,9 +1285,10 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 
   return NC_NOERR;
 }
+#endif
 
-int
-NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[]) {
+static int
+set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[]) {
   MPI_Offset offset;
   int status;
   int dim, ndims;
@@ -1318,8 +1336,8 @@ NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[
   return NC_NOERR;
 }
 
-int
-NC_set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
+static int
+set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
   MPI_Offset offset;
   int mpireturn;
   int rank;
@@ -1376,13 +1394,13 @@ NC_set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
   return NC_NOERR;
 }
 
-int
-NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[], const size_t count[], int getnotput) {
+static int
+set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[], const size_t count[], int getnotput) {
 
   MPI_Offset offset;
   int status;
   int dim, ndims;
-  int *shape, *subcount, *substart; /* all in bytes */
+  int *shape = NULL, *subcount = NULL, *substart = NULL; /* all in bytes */
   MPI_Datatype rectype;
   MPI_Datatype filetype;
   int mpireturn;
@@ -1540,8 +1558,8 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
   return NC_NOERR;
 }
 
-int
-NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
+static int
+set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
 		     const size_t start[], const size_t count[], 
                      const size_t stride[], int getnotput) {
   MPI_Offset offset;
@@ -1549,7 +1567,7 @@ NC_set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   int mpireturn;
   int dim, ndims;
   MPI_Datatype *subtypes, *filetype;
-  size_t *blocklens, *blockstride, *blockcount;
+  size_t *blocklens = NULL, *blockstride = NULL, *blockcount = NULL;
   int rank;
 
   status = NCcoordck(ncp, varp, start);
@@ -1708,7 +1726,7 @@ ncmpi_put_var1(int ncid, int varid,
 
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -1721,7 +1739,7 @@ ncmpi_put_var1(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
+  status = set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
   if(status != NC_NOERR)
     return status; 
 
@@ -1822,7 +1840,7 @@ ncmpi_get_var1(int ncid, int varid,
 
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -1835,7 +1853,7 @@ ncmpi_get_var1(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
+  status = set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
   if(status != NC_NOERR)
     return status; 
 
@@ -1922,7 +1940,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->collective_fh), ncp->nciop->comm, 1);
+  status = check_mpifh(ncp, &(ncp->nciop->collective_fh), ncp->nciop->comm, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -1938,7 +1956,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
 
   /* set the mpi file view */
  
-  status = NC_set_var_fileview(ncp, &(ncp->nciop->collective_fh), varp);
+  status = set_var_fileview(ncp, &(ncp->nciop->collective_fh), varp);
   if(status != NC_NOERR)
     return status;
  
@@ -2026,7 +2044,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2042,7 +2060,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
 
   /* set the mpi file view */
  
-  status = NC_set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
+  status = set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
   if(status != NC_NOERR)
     return status;
 
@@ -2141,7 +2159,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2157,7 +2175,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
 
   /* set the mpi file view */
  
-  status = NC_set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
+  status = set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
   if(status != NC_NOERR)
     return status;
  
@@ -2252,7 +2270,7 @@ ncmpi_put_vara_all(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->collective_fh), comm, 1);
+  status = check_mpifh(ncp, &(ncp->nciop->collective_fh), comm, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2265,7 +2283,7 @@ ncmpi_put_vara_all(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count, 0);
+  status = set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2386,7 +2404,7 @@ ncmpi_get_vara_all(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->collective_fh), ncp->nciop->comm, 1);
+  status = check_mpifh(ncp, &(ncp->nciop->collective_fh), ncp->nciop->comm, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2399,7 +2417,7 @@ ncmpi_get_vara_all(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count, 1);
+  status = set_vara_fileview(ncp, &(ncp->nciop->collective_fh), varp, start, count, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2496,7 +2514,7 @@ ncmpi_put_vara(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2509,7 +2527,7 @@ ncmpi_put_vara(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 0);
+  status = set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2614,7 +2632,7 @@ ncmpi_get_vara(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2627,7 +2645,7 @@ ncmpi_get_vara(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 1);
+  status = set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2728,7 +2746,7 @@ ncmpi_put_vars_all(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->collective_fh), comm, 1);
+  status = check_mpifh(ncp, &(ncp->nciop->collective_fh), comm, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2741,7 +2759,7 @@ ncmpi_put_vars_all(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vars_fileview(ncp, &(ncp->nciop->collective_fh), 
+  status = set_vars_fileview(ncp, &(ncp->nciop->collective_fh), 
                                 varp, start, count, stride, 0);
   if(status != NC_NOERR)
     return status;
@@ -2865,7 +2883,7 @@ ncmpi_get_vars_all(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->collective_fh), ncp->nciop->comm, 1);
+  status = check_mpifh(ncp, &(ncp->nciop->collective_fh), ncp->nciop->comm, 1);
   if(status != NC_NOERR)
     return status;
  
@@ -2878,7 +2896,7 @@ ncmpi_get_vars_all(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vars_fileview(ncp, &(ncp->nciop->collective_fh), 
+  status = set_vars_fileview(ncp, &(ncp->nciop->collective_fh), 
 				varp, start, count, stride, 1);
   if(status != NC_NOERR)
     return status;
@@ -2978,7 +2996,7 @@ ncmpi_put_vars(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2991,7 +3009,7 @@ ncmpi_put_vars(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vars_fileview(ncp, &(ncp->nciop->independent_fh),
+  status = set_vars_fileview(ncp, &(ncp->nciop->independent_fh),
 			        varp, start, count, stride, 0);
   if(status != NC_NOERR)
     return status;
@@ -3099,7 +3117,7 @@ ncmpi_get_vars(int ncid, int varid,
  
   /* check to see that the desired mpi file handle is opened */
  
-  status = NC_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
+  status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -3112,7 +3130,7 @@ ncmpi_get_vars(int ncid, int varid,
 
   /* set the mpi file view */
  
-  status = NC_set_vars_fileview(ncp, &(ncp->nciop->independent_fh),
+  status = set_vars_fileview(ncp, &(ncp->nciop->independent_fh),
 				varp, start, count, stride, 1); 
   if(status != NC_NOERR)
     return status;

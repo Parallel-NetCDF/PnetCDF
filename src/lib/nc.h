@@ -521,8 +521,10 @@ hdr_get_NC(NC *ncp);
 extern size_t 
 ncx_len_nctype(nc_type type);
 
+#if 0
 extern int
 hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
+#endif
 
 extern size_t
 hdr_len_NC(const NC *ncp);

@@ -1,8 +1,9 @@
-/***********************************************************************************
+/**************************************************************************
  *
- * This file is created by Northwestern University and Argonne National Laboratory
+ * This file is created by Northwestern University and Argonne National
+ * Laboratory
  *
- **********************************************************************************/
+ *************************************************************************/
 
 #include "ncconfig.h"
 #include <assert.h>
@@ -32,8 +33,9 @@
 #include "instr.h"
 #endif
 
-#undef MIN  /* system may define MIN somewhere and complain */
+#ifndef MIN
 #define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
+#endif
 
 #if !defined(NDEBUG) && !defined(X_INT_MAX)
 #define  X_INT_MAX 2147483647
@@ -50,13 +52,13 @@
 static unsigned char IDalloc[MAX_NC_ID];
 
 void
-ncio_free(ncio *nciop) {
+ncmpiio_free(ncio *nciop) {
   if (nciop != NULL)
     free(nciop);
 }
 
 ncio *
-ncio_new(const char *path, int ioflags)
+ncmpiio_new(const char *path, int ioflags)
 {
   size_t sz_ncio = M_RNDUP(sizeof(ncio));
   size_t sz_path = M_RNDUP(strlen(path) +1); 
@@ -75,7 +77,7 @@ ncio_new(const char *path, int ioflags)
 }
 
 int
-ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info, 
+ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info, 
             ncio **nciopp) {
   ncio *nciop;
   int i;
@@ -90,7 +92,7 @@ ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   if(path == NULL || *path == 0)
     return EINVAL;
 
-  nciop = ncio_new(path, ioflags);
+  nciop = ncmpiio_new(path, ioflags);
   if(nciop == NULL)
     return ENOMEM;
 
@@ -119,7 +121,7 @@ ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   if (mpireturn != MPI_SUCCESS) {
     char errorString[512];
     int  errorStringLen;
-    ncio_free(nciop);
+    ncmpiio_free(nciop);
     MPI_Error_string(mpireturn, errorString, &errorStringLen);
     printf("%2d: MPI_File_open error = %s\n", rank, errorString);
     return NC_EOFILE;  
@@ -127,7 +129,7 @@ ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
 
   for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
   if (i == MAX_NC_ID) {
-    ncio_free(nciop);
+    ncmpiio_free(nciop);
     return NC_ENFILE;
   }
   *((int *)&nciop->fd) = i;
@@ -140,7 +142,7 @@ ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
 }
 
 int
-ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
+ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
           ncio **nciopp) {
   ncio *nciop;
   int i;
@@ -153,7 +155,7 @@ ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   if(path == NULL || *path == 0)
     return EINVAL;
  
-  nciop = ncio_new(path, ioflags);
+  nciop = ncmpiio_new(path, ioflags);
   if(nciop == NULL)
     return ENOMEM;
  
@@ -166,7 +168,7 @@ ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   if (mpireturn != MPI_SUCCESS) {
     char errorString[512];
     int  errorStringLen;
-    ncio_free(nciop);
+    ncmpiio_free(nciop);
     MPI_Error_string(mpireturn, errorString, &errorStringLen);
     printf("%2d: MPI_File_open error = %s\n", rank, errorString);
     return NC_EOFILE;
@@ -174,7 +176,7 @@ ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
  
   for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
   if (i == MAX_NC_ID) {
-    ncio_free(nciop);
+    ncmpiio_free(nciop);
     return NC_ENFILE;
   }
   *((int *)&nciop->fd) = i;
@@ -187,7 +189,7 @@ ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
 }
 
 int
-ncio_sync(ncio *nciop) {
+ncmpiio_sync(ncio *nciop) {
   int mpireturn;
   int rank;
 
@@ -223,7 +225,7 @@ ncio_sync(ncio *nciop) {
 }
 
 int
-ncio_close(ncio *nciop, int doUnlink) {
+ncmpiio_close(ncio *nciop, int doUnlink) {
   int status = ENOERR;
   int mpireturn;
   int rank;
@@ -269,13 +271,13 @@ ncio_close(ncio *nciop, int doUnlink) {
 */
   }
 
-  ncio_free(nciop);
+  ncmpiio_free(nciop);
 
   return status;
 }
 
 int
-ncio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
+ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
   int mpireturn, mpierr = 0, errcheck;
   const int bufsize = 4096;
   size_t movesize, bufcount;
