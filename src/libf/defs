@@ -579,7 +579,7 @@ sub ncfxstrerror {
     &print_routine_type_decl( $OUTFD, "xstrerror" );
     &print_args( $OUTFD, $args, 0, "xstrerror" );
     print $OUTFD "{
-    const char *p = nc_strerror( *v1 );
+    const char *p = ncmpi_strerror( *v1 );
     int i;
     /* d2 is the length of the string passed into the routine */
     for (i=0; i<d2 && *p; i++) {
