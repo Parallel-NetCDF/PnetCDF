@@ -2,7 +2,7 @@
 # This file created by buildiface -infile=../lib/pnetcdf.h -deffile=defs
 smvar_autoconf = autoconf:autoconf-2.52:/home/gropp/bin/linux/autoconf
 smvar_autoconf_version = 2.52
-smvar_do_dependencies = 0
+smvar_do_dependencies = no
 mpi_sources = createf.c openf.c enddeff.c redeff.c syncf.c abortf.c \
 	begin_indep_dataf.c end_indep_dataf.c closef.c def_dimf.c def_varf.c \
 	rename_dimf.c rename_varf.c inqf.c inq_ndimsf.c inq_nvarsf.c \
