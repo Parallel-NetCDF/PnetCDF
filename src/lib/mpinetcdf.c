@@ -307,7 +307,7 @@ ncmpi_close(int ncid) {
   int status = NC_NOERR;
   NC *ncp;
 
-  NC_check_id(ncid, &ncp);
+  status = NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
