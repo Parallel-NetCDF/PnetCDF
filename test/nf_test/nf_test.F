@@ -261,7 +261,7 @@
         external        nc_ignorefpe
 
         call MPI_INIT(err)                        
-        comm = MPI_COMM_WORLD;                    
+        comm = MPI_COMM_WORLD                   
 
         call nc_ignorefpe(1)
 
