@@ -178,13 +178,13 @@
       character*80   nf_inq_libvers
       external       nf_inq_libvers
 
-      character*80   nf_strerror
+      character*80   nfmpi_strerror
 !                         (integer             ncerr)
-      external       nf_strerror
+      external       nfmpi_strerror
 
-      logical        nf_issyserr
+      logical        nfmpi_issyserr
 !                         (integer             ncerr)
-      external       nf_issyserr
+      external       nfmpi_issyserr
 
 !
 ! control routines:
@@ -1317,7 +1317,6 @@
    FORTRAN datatype, the NF_INT2_T FORTRAN datatype, and the INTEGER
    FORTRAN datatype, respectively.  If the respective FORTRAN datatype
    does not exist, then do not define the corresponding macro. 
-#endif
 #undef NF_INT1_IS_C_SIGNED_CHAR
 #undef NF_INT1_IS_C_SHORT
 #undef NF_INT1_IS_C_INT
@@ -1331,4 +1330,4 @@
 #undef NF_REAL_IS_C_DOUBLE
 #undef NF_DOUBLEPRECISION_IS_C_DOUBLE
 #undef NF_DOUBLEPRECISION_IS_C_FLOAT
-
+#endif
