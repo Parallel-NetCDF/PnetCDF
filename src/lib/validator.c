@@ -506,7 +506,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     return status;
   }
   status = ncmpix_get_off_t((const void **)&gbp->pos,
-                         &varp->begin);
+                         &varp->begin, (gbp->version == 1 ? 4 : 8));
   if(status != ENOERR) {
     ncmpii_free_NC_var(varp);
     return status;
@@ -646,7 +646,7 @@ val_get_NC(NC *ncp) {
     return status; 
   }
 
-  ncp->xsz = ncmpii_hdr_len_NC(ncp); 
+  ncp->xsz = ncmpii_hdr_len_NC(ncp, (getbuf.version == 1 ? 4 : 8)); 
   status = ncmpii_NC_computeshapes(ncp);
   free(getbuf.base);
 

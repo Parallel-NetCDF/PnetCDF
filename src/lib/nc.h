@@ -480,7 +480,7 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp);
 /* Begin defined in v1hpg.c */
 
 extern size_t
-ncx_len_NC(const NC *ncp);
+ncx_len_NC(const NC *ncp, size_t sizeof_off_t);
 
 extern int
 ncx_put_NC(const NC *ncp, void **xpp, off_t offset, size_t extent);
@@ -512,6 +512,8 @@ ncmpii_put_rec(int ncid, size_t recnum, void *const *datap);
 typedef struct bufferinfo {
   ncio *nciop;		
   MPI_Offset offset;	/* current read/write offset in the file */
+  int version;		/* either 1 for normal netcdf or 
+			   2 for 8-byte offset version */
   void *base;     	/* beginning of read/write buffer */
   void *pos;      	/* current position in buffer */
   size_t size;		/* size of the buffer */
@@ -527,7 +529,7 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
 #endif
 
 extern size_t
-ncmpii_hdr_len_NC(const NC *ncp);
+ncmpii_hdr_len_NC(const NC *ncp, size_t sizeof_off_t);
 
 extern int
 ncmpii_hdr_get_NC(NC *ncp);

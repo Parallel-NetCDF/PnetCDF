@@ -155,7 +155,7 @@ ncmpii_new_NC(const size_t *chunkp)
 	(void) memset(ncp, 0, sizeof(NC));
 
 	ncp->xsz = MIN_NC_XSZ;
-	assert(ncp->xsz == ncmpii_hdr_len_NC(ncp));
+	assert(ncp->xsz == ncmpii_hdr_len_NC(ncp, 0)); 
 	
 	ncp->chunk = chunkp != NULL ? *chunkp : NC_SIZEHINT_DEFAULT;
 
@@ -252,6 +252,7 @@ NC_begins(NC *ncp,
 	size_t v_minfree, size_t r_align)
 {
 	size_t ii;
+	size_t sizeof_off_t;
 	off_t index = 0;
 	NC_var **vpp;
 	NC_var *last = NULL;
@@ -261,7 +262,13 @@ NC_begins(NC *ncp,
 	if(r_align == NC_ALIGN_CHUNK)
 		r_align = ncp->chunk;
 
-	ncp->xsz = ncmpii_hdr_len_NC(ncp);
+	if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
+		sizeof_off_t = 8;
+	} else {
+		sizeof_off_t = 4;
+	}
+
+	ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
 
 	if(ncp->vars.nelems == 0) 
 		return;

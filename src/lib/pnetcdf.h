@@ -93,6 +93,7 @@ typedef nc_type ncmpi_type;
 #define NC_NOFILL	0x100	/* Don't fill data section an records */
 #define NC_LOCK		0x0400	/* Use locking if available */
 #define NC_SHARE	0x0800	/* Share updates, limit cacheing */
+#define NC_64BIT_OFFSET 0x0200  /* Use large (64-bit) file offsets */
 
 /*
  * Let nc__create() or nc__open() figure out
