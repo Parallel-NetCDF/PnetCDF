@@ -9,8 +9,3 @@ nfmpi_create_:
 
 nfmpi_open_:
 . include <stdlib.h>
-
-put_vars.c:
-a couple parameters need to be cast to 'const size_t *':  make the call to the netcdf function look like this.
-   *ierr = ncmpi_put_vars_text( *v1, *v2, 
-   	(const size_t *)v3, (const size_t *)v4, v5, v6 );
