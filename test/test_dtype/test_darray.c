@@ -1,14 +1,92 @@
 #include <mpi.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <pnetcdf.h>
 #include <string.h>
 
 #include "test_dtype.h"
 
-#define TEST_DEFAULT_FILE "test_darray.nc"
-#define TEST_DIMS 3 /* number of dimensions */
-#define TEST_N 16 /* size for the shortest dimension of the memory array */
+/* Configurable test parameters: edit it as you wish */
+#define TEST_DEFAULT_FILE "test_darray.nc" /* file to be written/read */
+#define TEST_DIMS 5 /* number of dimensions */
+#define TEST_N 11 /* size for the shortest dimension of the array */
+#define TEST_M 0.7 /* size of each dimension is increasingly multiplied by M */
 #define TEST_ARRAY_ORDER MPI_ORDER_C
+
+int ndims = TEST_DIMS;
+char *filename = TEST_DEFAULT_FILE;
+int test_n = TEST_N;
+double test_m = TEST_M;
+int order = TEST_ARRAY_ORDER;
+
+void parse_args(int argc, char **argv, int rank) {
+  extern char * optarg;
+  int c;
+
+  if (argc == 1)
+    return;
+
+  while ((c=getopt(argc,argv,"h:f:d:n:m:o:"))!=-1) {
+    switch(c) {
+      case 'f':
+	filename = optarg;
+	break;
+
+      case 'd':
+	ndims = atoi(optarg);
+	break;
+
+      case 'n':
+	test_n = atoi(optarg);
+	break;
+
+      case 'm':
+	test_m = atof(optarg);
+	break;
+
+      case 'o':
+	if ( !strncmp(optarg, "MPI_ORDER_C", 11) || !strcmp(optarg, "0") )
+	  order = MPI_ORDER_C;
+	else if ( !strncmp(optarg, "MPI_ORDER_FORTRAN", 17) || 
+		  !strcmp(optarg, "1") )
+	  order = MPI_ORDER_FORTRAN;
+	else {
+	  if (rank == 0) {
+	    fprintf(stderr,
+		  "Invalid order_of_array specified in command line args! \n");
+	    fprintf(stderr,
+		  "[-o <order_of_array>] 0/1: MPI_ORDER_C/MPI_ORDER_FORTRAN\n");
+          }
+	  TEST_EXIT(-1);
+        }
+	break;
+
+      case 'h':
+      default:
+	if (rank == 0) {
+	  /* print help */
+          printf("Usage: %s [options]\n", argv[0]);
+          printf("or     <mpirun -np 8> %s [options]\n", argv[0]);
+          printf("   [-h] [-f <scratch_file>] [-d <ndims_of_array>]\n");
+          printf("   [-n <first_dimsz>] [-m <multiplier_for_each_dimsz>]\n");
+          printf("   [-o <order_of_array>]\n\n");
+	  printf("\t[-h] print this help.\n");
+	  printf("\t[-f] filename to be used.\n");
+	  printf("\t     NOTE: This test will create/overwrite the file!\n");
+	  printf("\t[-d] ndims of array to be tested. (int)\n");
+	  printf("\t[-n] size of the first array dimension. (int)\n");
+	  printf("\t[-m] multiplier for the size of each later dimension\n");
+	  printf("\t     over the size of previous dimension. (int/float)\n");
+	  printf("\t[-o] memory layout order of the array\n");
+	  printf("\t     0/1 for MPI_ORDER_C/MPI_ORDER_FORTRAN.\n\n");
+        }
+
+	TEST_EXIT( c != 'h' );
+    }
+  }
+
+  return;
+}
 
 void partition_array(	/* input parameters : */
 		     int nprocs, int myrank, int ndims, int *array_of_sizes,
@@ -51,15 +129,13 @@ void partition_array(	/* input parameters : */
 int main(int argc, char** argv) {
 
   int i;
-  int power2;
-  int ndims;
+  double power_M;
   int *array_of_sizes;
   int *array_of_distribs, *array_of_dargs;
   int *array_of_psizes;
   int ncid, *dimids, varid_1, varid_2;
   MPI_Offset *local_starts, *local_edges, *local_strides;
-  char dimname[20], *filename;
-  int order;
+  char dimname[20];
   ncmpi_type nc_etype;
   MPI_Datatype mpi_etype, mpi_darray;
   TEST_NATIVE_ETYPE *buf1, *buf2, *tmpbuf;
@@ -70,32 +146,28 @@ int main(int argc, char** argv) {
   int nprocs, rank;
   int status;
   int success, successall;
+  int malloc_failure, malloc_failure_any;
+  int pass1 = 0, pass2 = 0;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  if (rank == 0) {
-    printf("testing memory darray layout ...\n");
-  }
 
  /* test initializations: nc_file, nc_variables, dimensions, arrays */
 
-  if (argc < 2)
-    filename = TEST_DEFAULT_FILE;
-  else
-    filename = argv[1];
-
+  parse_args(argc, argv, rank);
   TEST_SET_NCMPI_ETYPE(nc_etype, mpi_etype);
 #ifdef TEST_NCTYPE						
   nc_etype = TEST_NCTYPE;					
 #endif								
+  if (rank == 0) {
+    printf("testing memory darray layout ...\n");
+  }
 
   status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, 
 			MPI_INFO_NULL, &ncid);
   TEST_HANDLE_ERR(status);
 
-  ndims = TEST_DIMS;
-  order = TEST_ARRAY_ORDER;
   array_of_sizes = (int *)
 		   malloc(sizeof(int)*ndims*5 + sizeof(MPI_Offset)*ndims*3);
   array_of_distribs = array_of_sizes + ndims;
@@ -107,13 +179,31 @@ int main(int argc, char** argv) {
   local_strides = local_edges + ndims;
 
   total_sz = 1;
-  power2 = 1;
-  for (i=0; i<ndims; i++, power2*=2) {
-    total_sz *= (array_of_sizes[i] = TEST_N*power2);
+  power_M = 1;
+  for (i=0; i<ndims; i++, power_M*=test_m) {
+    array_of_sizes[i] = (int)(test_n*power_M);
+    if (array_of_sizes[i] < 1) {
+      /* lower bound check */
+      array_of_sizes[i] = 1;
+    } else if ( (double)total_sz*array_of_sizes[i] > (double)TEST_MAX_INT ){
+      /* upper bound check */
+      if (rank == 0) {
+        fprintf(stderr, "Total size of array is too big to be represented\n");
+	fprintf(stderr, "Current size = %f, Max size = %d\n", 
+		(double)total_sz*array_of_sizes[i], TEST_MAX_INT);
+      }
+      TEST_EXIT(-1);
+    }
+    total_sz *= array_of_sizes[i];
     sprintf(dimname, "dim_%d", i);
     status = ncmpi_def_dim(ncid, dimname,
 			   (MPI_Offset)array_of_sizes[i], dimids+i);
     TEST_HANDLE_ERR(status);
+  }
+
+  if (order == MPI_ORDER_FORTRAN) {
+    /* reverse the filearray dimension, since NC always use C ORDER */
+    TEST_REVERSE(dimids, ndims, int);
   }
 
   status = ncmpi_def_var(ncid, "var_1", nc_etype, ndims, dimids, &varid_1);
@@ -130,6 +220,19 @@ int main(int argc, char** argv) {
   }
 
   buf1 = (TEST_NATIVE_ETYPE *)malloc(total_sz*sizeof(TEST_NATIVE_ETYPE)*2);
+  malloc_failure = (buf1 == NULL || 
+		    (float)total_sz*sizeof(TEST_NATIVE_ETYPE)*2 > TEST_MAX_INT);
+  MPI_Allreduce(&malloc_failure, &malloc_failure_any, 1, MPI_INT,
+                MPI_LOR, MPI_COMM_WORLD);
+  if (malloc_failure_any) {
+    if (rank == 0) {
+      fprintf(stderr, "malloc(%2.3fMB) failed!\n",
+              (float)total_sz*sizeof(TEST_NATIVE_ETYPE)*2/1024/1024);
+      fprintf(stderr, "The whole array may be too big for malloc to handle!\n");      fprintf(stderr, "Please choose smaller array size.\n");
+    }
+    TEST_EXIT(-1);
+  }
+
   buf2 = buf1 + total_sz;
   for (i=0; i<total_sz; i++)
     /* just make sure any type can represent the number */
@@ -142,6 +245,13 @@ int main(int argc, char** argv) {
 		  array_of_distribs, array_of_dargs,
 		  local_starts, local_edges, local_strides,
 		  array_of_psizes);
+
+  if (order == MPI_ORDER_FORTRAN) {
+    /* reverse the filearray dimension, since NC always use C ORDER */
+    TEST_REVERSE(local_starts, ndims, MPI_Offset);
+    TEST_REVERSE(local_edges, ndims, MPI_Offset);
+    TEST_REVERSE(local_strides, ndims, MPI_Offset);
+  }
 
   local_sz = 1;
   for (i=0; i<ndims; i++) {
@@ -164,12 +274,16 @@ int main(int argc, char** argv) {
 	   ndims, TEST_NATIVE_ETYPE_STR, TEST_GET_NCTYPE_STR(nc_etype));
 
     printf("\t NC Var_1 Shape:\t [");
-    TEST_PRINT_LIST(array_of_sizes, 0, ndims-1, 1);
-    printf("]\n");
+    if (order == MPI_ORDER_C) {
+      TEST_PRINT_LIST(array_of_sizes, 0, ndims-1, 1);
+    } else {
+      TEST_PRINT_LIST(array_of_sizes, ndims-1, 0, -1);
+    }
+    printf("] Always ORDER_C\n");
 
     printf("\t Memory Array Shape:\t [");
     TEST_PRINT_LIST(array_of_sizes, 0, ndims-1, 1);
-    printf("]\n");
+    printf("] %s\n", ((order==MPI_ORDER_C)?"MPI_ORDER_C":"MPI_ORDER_FORTRAN"));
     printf("\t Memory Array Copys: buf1 for write, buf2 for read back (and compare)\n");
 
     printf("\n");
@@ -179,7 +293,7 @@ int main(int argc, char** argv) {
     TEST_PRINT_LIST(array_of_psizes, 0, ndims-1, 1);
     printf("]\n\n");
 
-    printf("Local Memory Darray Regions:  NPROCS = %d\n\n", nprocs);
+    printf("Access Pattern (strided subarray):  NPROCS = %d\n\n", nprocs);
 
   }
 
@@ -206,7 +320,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  fflush(stdout); sleep(2);
+  fflush(stdout); fflush(stdout); fflush(stdout); sleep(2);
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0)
     printf("\n");
@@ -261,6 +375,7 @@ int main(int argc, char** argv) {
     success = 1;
 
   MPI_Reduce(&success, &successall, 1, MPI_INT, MPI_LAND, 0, MPI_COMM_WORLD);
+  pass1 = successall;
   
   if (rank == 0) {
     if (successall)
@@ -286,6 +401,7 @@ int main(int argc, char** argv) {
   for (i=0; i<total_sz; i++) {
     buf2[i] = (TEST_NATIVE_ETYPE)(-1);
   }
+
   status = ncmpi_get_var_all(ncid, varid_1, (void *)buf2, total_sz, mpi_etype);
   TEST_HANDLE_ERR(status);
 
@@ -297,6 +413,7 @@ int main(int argc, char** argv) {
     success = 1;
 
   MPI_Reduce(&success, &successall, 1, MPI_INT, MPI_LAND, 0, MPI_COMM_WORLD);
+  pass2 = successall;
   
   if (rank == 0) {
     if (successall)
@@ -318,6 +435,6 @@ int main(int argc, char** argv) {
 
   MPI_Finalize();
 
-  return 0;
+  return !(pass1 && pass2);
 }
 
