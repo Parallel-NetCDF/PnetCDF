@@ -184,8 +184,8 @@
 !
       function roll(n)
       implicit  none
-      integer   n
 #include "tests.inc"
+      INTEGER(KIND=MPI_OFFSET_KIND)   n
 
       doubleprecision   ud_rand
       external          ud_rand
@@ -206,12 +206,13 @@
         implicit        none
         integer         index           !!/* index to be converted */
         integer         rank            !/* number of dimensions */
-        integer         base(rank)      !/* base(rank) ignored */
-        integer         indexes(rank)   !/* returned FORTRAN indexes */
 #include "tests.inc"
+        INTEGER(KIND=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
+        INTEGER(KIND=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
+	integer intbase
 
         if (rank .gt. 0) then
             offset = index - 1
@@ -220,7 +221,8 @@
                     index2ncindexes = 1
                     return
                 end if
-                indexes(i) = 1 + mod(offset, base(i))
+		intbase = base(i)
+                indexes(i) = 1 + mod(offset, intbase)
                 offset = offset / base(i)
 1           continue
         end if
@@ -239,12 +241,13 @@
         implicit        none
         integer         index           !/* index to be converted */
         integer         rank            !/* number of dimensions */
-        integer         base(rank)      !/* base(rank) ignored */
-        integer         indexes(rank)   !/* returned FORTRAN indexes */
 #include "tests.inc"
+        INTEGER(KIND=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
+        INTEGER(KIND=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
+	integer intbase
 
         if (rank .gt. 0) then
             offset = index - 1
@@ -253,7 +256,8 @@
                     index2indexes = 1
                     return
                 end if
-                indexes(i) = 1 + mod(offset, base(i))
+		intbase = base(i)
+                indexes(i) = 1 + mod(offset, intbase)
                 offset = offset / base(i)
 1           continue
         end if
@@ -291,8 +295,8 @@
       implicit  none
       integer   type
       integer   rank
-      integer   index(*)
 #include "tests.inc"
+      INTEGER(KIND=MPI_OFFSET_KIND)   index(*)
 
       doubleprecision   base
       doubleprecision   result
@@ -405,9 +409,9 @@
       implicit  none
       integer   type
       integer   rank
-      integer   index(*)
-      integer   itype
 #include "tests.inc"
+      INTEGER(KIND=MPI_OFFSET_KIND)   index(*)
+      integer   itype
 
       hash4 = hash( type, rank, index )
       if ((itype .eq. NFT_CHAR) .and. (type .eq. NF_BYTE) .and. 
@@ -474,8 +478,8 @@
       integer function prod(nn, sp)
       implicit  none
       integer   nn
-      integer   sp(MAX_RANK)
 #include "tests.inc"
+      INTEGER(KIND=MPI_OFFSET_KIND)   sp(MAX_RANK)
 
       integer   i
 
@@ -492,11 +496,12 @@
 !   var_name, var_type, var_rank, var_shape, var_natts, var_dimid, var_nels
 !   att_name, gatt_name, att_type, gatt_type, att_len, gatt_len
 !
+
         subroutine init_gvars
         implicit        none
 #include "tests.inc"
 
-        integer         max_dim_len(MAX_RANK)
+        INTEGER(KIND=MPI_OFFSET_KIND)         max_dim_len(MAX_RANK)
         character*1     type_letter(NTYPES)
         character*1     digit(10)
 
@@ -508,7 +513,7 @@
         integer jj
         integer ntypes
         integer tc
-        integer tmp(MAX_RANK)
+        INTEGER(KIND=MPI_OFFSET_KIND) tmp(MAX_RANK)
         integer ac              !/* attribute index */
         integer dn              !/* dimension number */
         integer prod            !/* function */
@@ -604,10 +609,12 @@
         integer         err             !/* status */
         integer         i
         integer         dimid           !/* dimension id */
+	INTEGER(KIND=MPI_OFFSET_KIND) length
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
-                err = nfmpi_def_dim(ncid, dim_name(i), NF_UNLIMITED,
+		length = NF_UNLIMITED
+                err = nfmpi_def_dim(ncid, dim_name(i), length,
      +                           dimid)
             else
                 err = nfmpi_def_dim(ncid, dim_name(i), dim_len(i),
@@ -651,7 +658,7 @@
                                                 ! * attribute */
         integer                 k               !/* attribute index */
         integer                 j               !/* index of attribute */
-        integer                 ndx(1)
+        INTEGER(KIND=MPI_OFFSET_KIND)                 ndx(1)
         logical                 allInRange
         doubleprecision         att(MAX_NELS)
         character*(MAX_NELS+2)  catt
@@ -716,8 +723,8 @@
         integer                 ncid
 #include "tests.inc"
 
-        integer                 start(MAX_RANK)
-        integer                 index(MAX_RANK)
+        INTEGER(KIND=MPI_OFFSET_KIND)                 start(MAX_RANK)
+        INTEGER(KIND=MPI_OFFSET_KIND)                 index(MAX_RANK)
         integer                 err             !/* netCDF status */
         integer                 i
         integer                 j
@@ -823,7 +830,7 @@
 #include "tests.inc"
 
         character*(NF_MAX_NAME) name
-        integer                 length
+        INTEGER(KIND=MPI_OFFSET_KIND)                 length
         integer                 i
         integer                 err           !/* netCDF status */
 
@@ -850,7 +857,7 @@
         integer         ncid
 #include "tests.inc"
 
-        integer                 index(MAX_RANK)
+        INTEGER(KIND=MPI_OFFSET_KIND)                 index(MAX_RANK)
         integer                 err             !/* netCDF status */
         integer                 i
         integer                 j
@@ -863,7 +870,7 @@
         logical                 isChar
         doubleprecision         expect
         character*(NF_MAX_NAME) name
-        integer                 length
+        INTEGER(KIND=MPI_OFFSET_KIND)                 length
         integer                 nok             !/* count of valid comparisons */
 
         nok = 0
@@ -951,9 +958,9 @@
         integer                 k
         integer                 vid             !/* "variable" ID */
         integer                 datatype
-        integer                 ndx(1)
+        INTEGER(KIND=MPI_OFFSET_KIND)                 ndx(1)
         character*(NF_MAX_NAME) name
-        integer                 length
+        INTEGER(KIND=MPI_OFFSET_KIND)                 length
         character*(MAX_NELS)    text
         doubleprecision         value(MAX_NELS)
         doubleprecision         expect
