@@ -6,7 +6,7 @@ $do_profiling = 0;
 $tof77{"size_t"} = "int *";
 $tof77{"size_t *"} = "int *";
 $tof77{"size_t*"} = "int *";
-$tof77{"size_t\[\]"} = "int *";
+$tof77{"size_t\[\]"} = "int";
 $tof77{"int"} = "int *";
 $tof77{"nc_type"} = "int *";
 $tof77{"nc_type *"} = "int *";
@@ -14,10 +14,55 @@ $tof77{"nc_type*"} = "int *";
 $malloc = "malloc";
 $free   = "free";
 $header_file = "mpinetcdf_impl.h";
+
+# Map some of the names from C to Fortran to replace float with real,
+# short with int2
+%CtoFName = (
+	'put_att_float' => 'put_att_real',
+	'get_att_float' => 'get_att_real',
+	'put_var1_float' => 'put_var1_real',
+	'get_var1_float' => 'get_var1_real',
+	'put_var_float' => 'put_var_real',
+	'get_var_float' => 'get_var_real',			
+	'put_var_float_all' => 'put_var_real_all',
+	'get_var_float_all' => 'get_var_real_all',			
+	'put_vara_float_all' => 'put_vara_real_all',
+	'get_vara_float_all' => 'get_vara_real_all',			
+	'put_vara_float' => 'put_vara_real',
+	'get_vara_float' => 'get_vara_real',			
+	'put_vars_float_all' => 'put_vars_real_all',
+	'get_vars_float_all' => 'get_vars_real_all',			
+	'put_vars_float' => 'put_vars_real',
+	'get_vars_float' => 'get_vars_real',			
+
+	'put_att_short' => 'put_att_int2',
+	'get_att_short' => 'get_att_int2',
+	'put_var1_short' => 'put_var1_int2',
+	'get_var1_short' => 'get_var1_int2',
+	'put_var_short' => 'put_var_int2',
+	'get_var_short' => 'get_var_int2',			
+	'put_var_short_all' => 'put_var_int2_all',
+	'get_var_short_all' => 'get_var_int2_all',			
+	'put_vara_short_all' => 'put_vara_int2_all',
+	'get_vara_short_all' => 'get_vara_int2_all',			
+	'put_vara_short' => 'put_vara_int2',
+	'get_vara_short' => 'get_vara_int2',			
+	'put_vars_short_all' => 'put_vars_int2_all',
+	'get_vars_short_all' => 'get_vars_int2_all',			
+	'put_vars_short' => 'put_vars_int2',
+	'get_vars_short' => 'get_vars_int2',			
+	
+);
+#
+# We really need a easier way to force a default for a particular data type
+# (e.g., so that we can say "use 'in:intToSizeT' for size_t.  For arrays,
+# we still need an argument for the array size
+
 %special_args = (
 	      'copy_att' => 3, 'copy_att-3' => 'in:addnull', 
 	      'create' => 2, 'create-2' => 'in:addnull' ,
-	      'def_dim' => 2, 'def_dim-2' => 'in:addnull', 
+	      'def_dim' => '2:3', 'def_dim-2' => 'in:addnull', 
+		'def_dim-3' => 'in:intToSizeT', 
 	      'def_var' => 2, 'def_var-2' => 'in:addnull', 
 	      'del_att' => 3, 'del_att-3' => 'in:addnull',
 	      'get_att_double' => 3, 'get_att_double-3' => 'in:addnull',
@@ -31,41 +76,252 @@ $header_file = "mpinetcdf_impl.h";
 	           'get_att_text-4' => 'out:blankpad',
               'get_att_uchar' => '3:4', 'get_att_uchar-3' => 'in:addnull',
 	           'get_att_uchar-4' => 'out:blankpad',
-	      'get_var1_text' => 4, 'get_var1_text-4' => 'out:blankpad',
+	      'get_var1' => 3, 
+		'get_var1-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_var1_double' => 3,
+		'get_var1_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_var1_float' => 3,
+		'get_var1_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_var1_int' => 3, 
+		'get_var1_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_var1_short' => 3,
+		'get_var1_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_var1_text' => '3:4', 'get_var1_text-4' => 'out:blankpad',
+		'get_var1_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_var_text_all' => 3, 'get_var_text_all-3' => 'out:blankpad',
 	      'get_var_text' => 3, 'get_var_text-3' => 'out:blankpad',
-	      'get_vara_text_all' => 5, 'get_vara_text_all-5' => 'out:blankpad',
-	      'get_vara_text' => 5, 'get_vara_text-5' => 'out:blankpad',
-	      'get_vars_text_all' => 6, 'get_vars_text_all-6' => 'out:blankpad',
-	      'get_vars_text' => 6, 'get_vars_text-6' => 'out:blankpad',
-	      'inq_att' => 3, 'inq_att-3' => 'in:addnull',
+	      'get_vara_all' => '3:4', 
+		'get_vara_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vara' => '3:4', 
+		'get_vara-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vara_double_all' => '3:4:5', 
+		'get_vara_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_double_all-5' => 'out:blankpad',
+	      'get_vara_double' => '3:4:5', 
+		'get_vara_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_double-5' => 'out:blankpad',
+	      'get_vara_float_all' => '3:4:5', 
+		'get_vara_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_float_all-5' => 'out:blankpad',
+	      'get_vara_float' => '3:4:5', 
+		'get_vara_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_float-5' => 'out:blankpad',
+	      'get_vara_int_all' => '3:4:5', 
+		'get_vara_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_int_all-5' => 'out:blankpad',
+	      'get_vara_int' => '3:4:5', 
+		'get_vara_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_int-5' => 'out:blankpad',
+	      'get_vara_short_all' => '3:4:5', 
+		'get_vara_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_short_all-5' => 'out:blankpad',
+	      'get_vara_short' => '3:4:5', 
+		'get_vara_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_short-5' => 'out:blankpad',
+	      'get_vara_text_all' => '3:4:5', 
+		'get_vara_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_text_all-5' => 'out:blankpad',
+	      'get_vara_text' => '3:4:5', 
+		'get_vara_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_text-5' => 'out:blankpad',
+	      'get_vars_all' => '3:4:5', 
+		'get_vars_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars' => '3:4:5', 
+		'get_vars-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_double_all' => '3:4:5', 
+		'get_vars_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_double_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_double' => '3:4:5', 
+		'get_vars_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_double-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_float_all' => '3:4:5', 
+		'get_vars_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_float_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_float' => '3:4:5', 
+		'get_vars_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_float-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_int_all' => '3:4:5', 
+		'get_vars_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_int_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_int' => '3:4:5', 
+		'get_vars_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_int-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_short_all' => '3:4:5', 
+		'get_vars_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_short_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_short' => '3:4:5', 
+		'get_vars_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_short-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'get_vars_text_all' => '3:4:5:6', 
+		'get_vars_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text_all-6' => 'out:blankpad',
+	      'get_vars_text' => '3:4:5:6', 
+		'get_vars_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text-6' => 'out:blankpad',
+	      'inq_att' => '3:5', 'inq_att-3' => 'in:addnull',
+		'inq_att-5' => 'out:sizetToInt',
 	      'inq_attid' => 3, 'inq_attid-3' => 'in:addnull',
-	      'inq_attlen' => 3, 'inq_attlen-3' => 'in:addnull',
+	      'inq_attlen' => '3:4', 'inq_attlen-3' => 'in:addnull',	
+		'inq_attlen-4' => 'out:sizetToInt',
 	      'inq_attname' => 4, 'inq_attname-4' => 'out:blankpad',
 	      'inq_atttype' => 3, 'inq_atttype-3' => 'in:addnull',
 	      'inq_attdim' => 3, 'inq_attdim-3' => 'in:addnull',
+	      'inq_dim' => '3:4', 'inq_dim-3' => 'out:blankpad',
+		'inq_dim-4' => 'out:sizetToInt', 
 	      'inq_dimid' => 2, 'inq_dimid-2' => 'in:addnull',
+	      'inq_dimlen' => 3, 'inq_dimlen-3' => 'out:sizetToInt',
 	      'inq_dimname' => 3, 'inq_dimname-3' => 'out:blankpad',
 	      'inq_var' => 3, 'inq_var-3' => 'in:addnull',
 	      'inq_varid' => 2, 'inq_varid-2' => 'in:addnull',
 	      'inq_varname' => 3, 'inq_varname-3' => 'out:blankpad',
 	      'open' => 2, 'open-2' => 'in:addnull', 
-	      'put_att_double' => 3, 'put_att_double-3' => 'in:addnull',
-	      'put_att_float' => 3, 'put_att_float-3' => 'in:addnull',
-	      'put_att_int' => 3, 'put_att_int-3' => 'in:addnull',
-	      'put_att_long' => 3, 'put_att_long-3' => 'in:addnull',
-	      'put_att_schar' => '3:6', 'put_att_schar-3' => 'in:addnull',
+	      'put_att_double' => '3:5', 'put_att_double-3' => 'in:addnull',
+		'put_att_double-5' => 'in:intToSizeT',
+	      'put_att_float' => '3:5', 'put_att_float-3' => 'in:addnull',
+		'put_att_float-5' => 'in:intToSizeT',
+	      'put_att_int' => '3:5', 'put_att_int-3' => 'in:addnull',
+		'put_att_int-5' => 'in:intToSizeT',
+	      'put_att_long' => '3:5', 'put_att_long-3' => 'in:addnull',
+		'put_att_long-5' => 'in:intToSizeT',
+	      'put_att_schar' => '3:5:6', 'put_att_schar-3' => 'in:addnull',
+			      'put_att_schar-5' => 'in:intToSizeT',
 			      'put_att_schar-6' => 'in:addnull',
-	      'put_att_short' => 3, 'put_att_short-3' => 'in:addnull',
-	      'put_att_text' => '3:5', 'put_att_text-3' => 'in:addnull',
+	      'put_att_short' => '3:5', 'put_att_short-3' => 'in:addnull',
+			      'put_att_short-5' => 'in:intToSizeT',
+	      'put_att_text' => '3:4:5', 'put_att_text-3' => 'in:addnull',
+			     'put_att_text-4' => 'in:intToSizeT',
 			     'put_att_text-5' => 'in:addnull',
-	      'put_att_uchar' => 3, 'put_att_uchar-3' => 'in:addnull',
-	      'put_var1_text' => 4, 'put_var1_text-4' => 'in:addnull',
+	      'put_att_uchar' => '3:5', 'put_att_uchar-3' => 'in:addnull',
+		'put_att_uchar-5' => 'in:intToSizeT',
+	      'put_var1' => 3, 
+		'put_var1-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_var1_double' => 3,
+		'put_var1_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_var1_float' => 3,
+		'put_var1_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_var1_int' => 3,
+		'put_var1_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_var1_short' => 3,
+		'put_var1_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_var1_text' => '3:4', 'put_var1_text-4' => 'in:addnull',
+		'put_var1_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_var_text' => 3, 'put_var_text-3' => 'in:addnull',
-	      'put_vara_text_all' => 5, 'put_vara_text_all-5' => 'in:addnull',
-	      'put_vara_text' => 5, 'put_vara_text-5' => 'in:addnull',
-	      'put_vars_text_all' => 6, 'put_vars_text_all-6' => 'in:addnull',
-	      'put_vars_text' => 6, 'put_vars_text-6' => 'in:addnull',
+	      'put_vara_all' => '3:4', 
+		'put_vara_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara' => '3:4', 
+		'put_vara-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_double' => '3:4',
+		'put_vara_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_double_all' => '3:4',
+		'put_vara_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_float' => '3:4',
+		'put_vara_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_float_all' => '3:4',
+		'put_vara_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_int' => '3:4',
+		'put_vara_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_int_all' => '3:4',
+		'put_vara_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_short' => '3:4',
+		'put_vara_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_short_all' => '3:4',
+		'put_vara_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vara_text_all' => '3:4:5', 
+		'put_vara_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_text_all-5' => 'in:addnull',
+	      'put_vara_text' => '3:4:5', 
+		'put_vara_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_text-5' => 'in:addnull',
+	      'put_vars_all' => '3:4:5', 
+		'put_vars_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars' => '3:4:5', 
+		'put_vars-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_double_all' => '3:4:5', 
+		'put_vars_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_double_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_double' => '3:4:5', 
+		'put_vars_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_double-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_float_all' => '3:4:5', 
+		'put_vars_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_float_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_float' => '3:4:5', 
+		'put_vars_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_float-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_int_all' => '3:4:5', 
+		'put_vars_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_int_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_int' => '3:4:5', 
+		'put_vars_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_int-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_short_all' => '3:4:5', 
+		'put_vars_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_short_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_short' => '3:4:5', 
+		'put_vars_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_short-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+	      'put_vars_text_all' => '3:4:5:6', 
+		'put_vars_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text_all-6' => 'in:addnull',
+	      'put_vars_text' => '3:4:5:6', 
+		'put_vars_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text-6' => 'in:addnull',
 	      'rename_att' => 3, 'rename_att-3' => 'in:addnull',
 	      'rename_dim' => 3, 'rename_dim-3' => 'in:addnull',
 	      'rename_var' => 3, 'rename_var-3' => 'in:addnull',
@@ -74,4 +330,130 @@ $build_prototypes = 1;
 $buildMakefile = 0;
 $prototype_header_file = "mpifnetcdf.h";
 $argsneedcast{'const size_t []'} = '(const size_t *)(ARG)';
+
+#
+# Routines needed for special argument handling for size_t
+# ---------------------------------------------------------------------------
+# Convert from an int array to an Aint array for routines taking an Aint as 
+# input
+# usage is 
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:intToAintArr:*v1',
+# where *v1 will give the array size (the number is the number of the argument)
+
+sub intToSizeTArr_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    size_t *l$count;\n";
+}
+sub intToSizeTArr_ftoc {
+    my $count = $_[0];
+    # We use a local variable for the array size because we may need to	
+    # call a function of some of the other arguments to get the array size
+    print $OUTFD "
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = $Array_size;
+    if (ln > 0) {
+        int li;
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l$count\[li\] = v$count\[li\];
+    }
+    else l$count = 0;
+    }
+#else 
+    l$count = v$count;
+#endif\n";
+}
+sub intToSizeTArr_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+# This routine is invoked even for the in case (to free the result)
+sub intToSizeTArr_in_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    print $OUTFD "
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    if ($lname) { $free($lname); }
+#endif\n";
+}
+
+sub intToSizeT_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    size_t l$count = (size_t)v$count;\n";
+}
+sub intToSizeT_ftoc {
+    my $count = $_[0];
+}
+sub intToSizeT_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+# This routine is invoked even for the in case (to free the result)
+sub intToSizeT_in_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+}
+
+# sizet as output
+sub sizetToInt_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    size_t l$count;\n";
+}
+sub sizetToInt_ftoc {
+    my $count = $_[0];
+}
+sub sizetToInt_out_arg {
+    my $count = $_[0];
+    print $OUTFD "\&l$count";
+}
+# This routine is invoked even for the in case (to free the result)
+sub sizetToInt_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    print $OUTFD "    *v$count = (int)l$count;\n";	
+}
+
+# ---------------------------------------------------------------------------
+# Functions to add routines that need special handling
+$ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";
+$ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
+
+sub ncfxstrerror {
+    $OUTFD = "NCFXSTRERRORFD";
+    open( $OUTFD, ">xstrerrorf.c" ) || die "Cannot open xstrerrorf.c\n";
+    $files[$#files+1] = "xstrerrorf.c";
+    $args = "int *, char *";	
+    &print_header( "ncfmpi_xstrerror", "xstrerror", $args );
+    &print_routine_type_decl( $OUTFD, "xstrerror" );
+    &print_args( $OUTFD, $args, 0, "xstrerror" );
+    print $OUTFD "{
+    const char *p = nc_strerror( *v1 );
+    int i;
+    /* d2 is the length of the string passed into the routine */
+    for (i=0; i<d2 && *p; i++) {
+	v2[i] = *p++;
+    }
+    /* Blank pad */
+    for (; i<d2; i++) v2[i] = ' ';
+}\n";
+    close ($OUTFD);
+
+}
+sub ncfxutil {
+    $OUTFD = "NCFXUTIL";
+    open( $OUTFD, ">nfxutil.c" ) || die "Cannot open nfxutil.c\n";
+    $files[$#files+1] = "nfxutil.c";
+    print $OUTFD "
+#include \"nc.h\"
+int ncxVardim( int ncid, int varid ) {
+  NC_Var *varp;
+  NC     *ncp;
+
+  NC_check_id(ncid, &ncp);
+  varp = NC_lookupvar(ncp, varid);
+  return varp->ndims;
+}\n";
+    close ($OUTFD);	
+}
+
 return 1;
