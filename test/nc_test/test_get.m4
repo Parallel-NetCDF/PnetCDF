@@ -301,10 +301,12 @@ test_ncmpi_get_vara_$1(void)
 	    for (j = 0; j < var_rank[i]; j++) {
 		if (var_dimid[i][j] > 0) {		/* skip record dim */
 		    start[j] = var_shape[i][j];
+		    edge[j] = 1; /* added by Jianwei, fix NC_EINVALCOORDS bug */
 		    err = ncmpi_get_vara_$1_all(ncid, i, start, edge, value);
 		    IF (canConvert && err != NC_EINVALCOORDS)
 			error("bad start: status = %d", err);
 		    start[j] = 0;
+		    edge[j] = 0; /* added by Jianwei, restore original value */
 		}
 	    }
 	    err = ncmpi_get_vara_$1_all(ncid, i, start, edge, value);
@@ -647,15 +649,15 @@ test_ncmpi_get_varm_$1(void)
             stride[j] = 1;
             imap[j] = 1;
         }
-        err = ncmpi_get_varm_$1(BAD_ID, i, start, edge, stride, imap, value);
+        err = ncmpi_get_varm_$1_all(BAD_ID, i, start, edge, stride, imap, value);
         IF (err != NC_EBADID)
             error("bad ncid: status = %d", err);
-        err = ncmpi_get_varm_$1(ncid, BAD_VARID, start, edge, stride, imap, value);
+        err = ncmpi_get_varm_$1_all(ncid, BAD_VARID, start, edge, stride, imap, value);
         IF (err != NC_ENOTVAR)
             error("bad var id: status = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = ncmpi_get_varm_$1(ncid, i, start, edge, stride, imap, value);
+            err = ncmpi_get_varm_$1_all(ncid, i, start, edge, stride, imap, value);
 	  if(!canConvert) {
 		IF (err != NC_ECHAR)
                	    error("conversion: status = %d", err);
@@ -664,12 +666,12 @@ test_ncmpi_get_varm_$1(void)
                 error("bad index: status = %d", err);
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;
-            err = ncmpi_get_varm_$1(ncid, i, start, edge, stride, imap, value);
+            err = ncmpi_get_varm_$1_all(ncid, i, start, edge, stride, imap, value);
             IF (err != NC_EEDGE)
                 error("bad edge: status = %d", err);
             edge[j] = 1;
             stride[j] = 0;
-            err = ncmpi_get_varm_$1(ncid, i, start, edge, stride, imap, value);
+            err = ncmpi_get_varm_$1_all(ncid, i, start, edge, stride, imap, value);
             IF (err != NC_ESTRIDE)
                 error("bad stride: status = %d", err);
             stride[j] = 1;
@@ -739,9 +741,9 @@ test_ncmpi_get_varm_$1(void)
                     }
                 }
                 if (var_rank[i] == 0 && i%2 )
-                    err = ncmpi_get_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value);
+                    err = ncmpi_get_varm_$1_all(ncid,i,NULL,NULL,NULL,NULL,value);
                 else
-                    err = ncmpi_get_varm_$1(ncid,i,index,count,stride,imap,value);
+                    err = ncmpi_get_varm_$1_all(ncid,i,index,count,stride,imap,value);
                 if (canConvert) {
                     if (allInExtRange) {
                         if (allInIntRange) {
@@ -789,14 +791,14 @@ test_ncmpi_get_varm_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_GET_VARM(text)
-dnl TEST_NC_GET_VARM(uchar)
-dnl TEST_NC_GET_VARM(schar)
-dnl TEST_NC_GET_VARM(short)
-dnl TEST_NC_GET_VARM(int)
-dnl TEST_NC_GET_VARM(long)
-dnl TEST_NC_GET_VARM(float)
-dnl TEST_NC_GET_VARM(double)
+TEST_NC_GET_VARM(text)
+TEST_NC_GET_VARM(uchar)
+TEST_NC_GET_VARM(schar)
+TEST_NC_GET_VARM(short)
+TEST_NC_GET_VARM(int)
+TEST_NC_GET_VARM(long)
+TEST_NC_GET_VARM(float)
+TEST_NC_GET_VARM(double)
 
 
 dnl TEST_NC_GET_ATT(TYPE)
