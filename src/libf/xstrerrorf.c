@@ -21,8 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL mpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2), MPI_Fint *ierr FORT_END_LEN(d2) ){
-    const char *p = nc_strerror( *v1 );
+FORTRAN_API void FORT_CALL nfmpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2), MPI_Fint *ierr FORT_END_LEN(d2) ){
+    const char *p = ncmpi_strerror( *v1 );
     int i;
     /* d2 is the length of the string passed into the routine */
     for (i=0; i<d2 && *p; i++) {
