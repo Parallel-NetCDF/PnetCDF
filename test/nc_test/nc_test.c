@@ -168,16 +168,16 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_inq_varndims);
     NC_TEST(ncmpi_inq_vartype);
     NC_TEST(ncmpi_get_var_text);
-    /*NC_TEST(ncmpi_get_var_uchar); */
-    /*NC_TEST(ncmpi_get_var_schar); */
+    NC_TEST(ncmpi_get_var_uchar); 
+    NC_TEST(ncmpi_get_var_schar);
     NC_TEST(ncmpi_get_var_short);
     NC_TEST(ncmpi_get_var_int);
     NC_TEST(ncmpi_get_var_long); 
     NC_TEST(ncmpi_get_var_float);
     NC_TEST(ncmpi_get_var_double);
     NC_TEST(ncmpi_get_var1_text);
-    /*NC_TEST(ncmpi_get_var1_uchar); */
-    /*NC_TEST(ncmpi_get_var1_schar); */
+    NC_TEST(ncmpi_get_var1_uchar); 
+    NC_TEST(ncmpi_get_var1_schar);
     NC_TEST(ncmpi_get_var1_short);
     NC_TEST(ncmpi_get_var1_int);
     NC_TEST(ncmpi_get_var1_long);
@@ -187,8 +187,8 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_var1);
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_vara_text);
-    /*NC_TEST(ncmpi_get_vara_uchar);*/
-    /*NC_TEST(ncmpi_get_vara_schar);*/
+    NC_TEST(ncmpi_get_vara_uchar);
+    NC_TEST(ncmpi_get_vara_schar);
     NC_TEST(ncmpi_get_vara_short);
     NC_TEST(ncmpi_get_vara_int);
     NC_TEST(ncmpi_get_vara_long); 
@@ -198,8 +198,8 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_vara);
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_vars_text);
-    /* NC_TEST(ncmpi_get_vars_uchar); */
-    /* NC_TEST(ncmpi_get_vars_schar); */
+    NC_TEST(ncmpi_get_vars_uchar);
+    NC_TEST(ncmpi_get_vars_schar);
     NC_TEST(ncmpi_get_vars_short);
     NC_TEST(ncmpi_get_vars_int);
     NC_TEST(ncmpi_get_vars_long); 
@@ -247,16 +247,16 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_rename_dim);
 	NC_TEST(ncmpi_def_var);
 	NC_TEST(ncmpi_put_var_text);
-	/* NC_TEST(ncmpi_put_var_uchar); */
-	/* NC_TEST(ncmpi_put_var_schar); */
+	NC_TEST(ncmpi_put_var_uchar);
+	NC_TEST(ncmpi_put_var_schar);
 	NC_TEST(ncmpi_put_var_short);
 	NC_TEST(ncmpi_put_var_int);
 	NC_TEST(ncmpi_put_var_long); 
 	NC_TEST(ncmpi_put_var_float);
 	NC_TEST(ncmpi_put_var_double);
 	NC_TEST(ncmpi_put_var1_text);
-	/* NC_TEST(ncmpi_put_var1_uchar); */
-	/* NC_TEST(ncmpi_put_var1_schar); */
+	NC_TEST(ncmpi_put_var1_uchar); 
+	NC_TEST(ncmpi_put_var1_schar);
 	NC_TEST(ncmpi_put_var1_short);
 	NC_TEST(ncmpi_put_var1_int);
 	NC_TEST(ncmpi_put_var1_long); 
@@ -266,8 +266,8 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_put_var1);
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_put_vara_text);
-	/* NC_TEST(ncmpi_put_vara_uchar); */
-	/* NC_TEST(ncmpi_put_vara_schar); */
+	NC_TEST(ncmpi_put_vara_uchar);
+	NC_TEST(ncmpi_put_vara_schar); 
 	NC_TEST(ncmpi_put_vara_short);
 	NC_TEST(ncmpi_put_vara_int);
 	NC_TEST(ncmpi_put_vara_long);
@@ -277,8 +277,8 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_put_vara);
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_put_vars_text);
-	/* NC_TEST(ncmpi_put_vars_uchar); */
-	/* NC_TEST(ncmpi_put_vars_schar); */
+	NC_TEST(ncmpi_put_vars_uchar);
+	NC_TEST(ncmpi_put_vars_schar);
 	NC_TEST(ncmpi_put_vars_short);
 	NC_TEST(ncmpi_put_vars_int);
 	NC_TEST(ncmpi_put_vars_long); 
