@@ -11,7 +11,7 @@
 #include <limits.h>
 #include <float.h>
 #define NO_NETCDF_2 1
-#include "netcdf.h"
+#include "pnetcdf.h"
 #include <mpi.h>
 #include "error.h"
 
