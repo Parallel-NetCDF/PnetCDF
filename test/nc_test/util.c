@@ -657,7 +657,7 @@ write_file(char *filename)
     int  ncid;			/* netCDF id */
     int  err;		/* status */
 
-    err = ncmpi_create(comm, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, filename, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) 
 	error("ncmpi_create: %s", ncmpi_strerror(err));
 

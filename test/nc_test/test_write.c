@@ -10,16 +10,16 @@
 
 /*
  * Test ncmpi_create
- *    For mode in NC_NOCLOBBER, NC_CLOBBER, MPI_INFO_NULL do:
+ *    For mode in NC_NOCLOBBER|extra_flags, NC_CLOBBER, MPI_INFO_NULL do:
  *       create netcdf file 'scratch.nc' with no data, close it
  *       test that it can be opened, do ncmpi_inq to check nvars = 0, etc.
- *    Try again in NC_NOCLOBBER mode, check error return
+ *    Try again in NC_NOCLOBBER|extra_flags mode, check error return
  * On exit, delete this file
  */
 void
 test_ncmpi_create(void)
 {
-    int clobber;		/* 0 for NC_NOCLOBBER, 1 for NC_CLOBBER, MPI_INFO_NULL */
+    int clobber;		/* 0 for NC_NOCLOBBER|extra_flags, 1 for NC_CLOBBER, MPI_INFO_NULL */
     int err;
     int ncid;
     int ndims;                  /* number of dimensions */
@@ -28,7 +28,7 @@ test_ncmpi_create(void)
     int recdim;                 /* id of unlimited dimension */
 
     for (clobber = 0; clobber < 2; clobber++) {
-	err = ncmpi_create(comm, scratch, clobber ? NC_CLOBBER : NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+	err = ncmpi_create(comm, scratch, clobber ? NC_CLOBBER|extra_flags : NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
 	IF (err)
 	    error("ncmpi_create: %s", ncmpi_strerror(err));
 	err = ncmpi_close(ncid);
@@ -53,7 +53,7 @@ test_ncmpi_create(void)
 	    error("ncmpi_close: %s", ncmpi_strerror(err));
     }
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_EEXIST)
 	error("attempt to overwrite file: status = %d", err);
     err = remove(scratch);
@@ -118,8 +118,8 @@ test_ncmpi_redef(void)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* tests using scratch file */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
-    /* err = ncmpi__create(scratch, NC_NOCLOBBER, 0, &sizehint, &ncid); */
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    /* err = ncmpi__create(scratch, NC_NOCLOBBER|extra_flags, 0, &sizehint, &ncid); */
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -251,7 +251,7 @@ test_ncmpi_sync(void)
         error("bad ncid: status = %d", err);
 
         /* create scratch file & try ncmpi_sync in define mode */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncidw);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncidw);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
 	return;
@@ -319,7 +319,7 @@ test_ncmpi_abort(void)
         error("bad ncid: status = %d", err);
 
         /* create scratch file & try ncmpi_abort in define mode */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -343,7 +343,7 @@ test_ncmpi_abort(void)
 	 * define new dims, vars, atts
 	 * try ncmpi_abort: should restore previous state (no dims, vars, atts)
 	 */ 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -380,7 +380,7 @@ test_ncmpi_abort(void)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
         /* try ncmpi_abort in data mode - should just close */
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -430,7 +430,7 @@ test_ncmpi_def_dim(void)
         error("bad ncid: status = %d", err);
 
         /* data mode test */
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -520,7 +520,7 @@ test_ncmpi_rename_dim(void)
         error("bad ncid: status = %d", err);
 
         /* main tests */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -580,7 +580,7 @@ test_ncmpi_def_var(void)
         error("bad ncid: status = %d", err);
 
         /* scalar tests */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -623,7 +623,7 @@ test_ncmpi_def_var(void)
         error("remove of %s failed", scratch);
 
         /* general tests using global vars */
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -668,7 +668,7 @@ test_ncmpi_put_var1(void)
     double value;
     double buf[1];		/* (void *) buffer */
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -753,7 +753,7 @@ test_ncmpi_put_vara(void)
     char *p;			/* (void *) pointer */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -880,7 +880,7 @@ test_ncmpi_put_vars(void)
     char *p;			/* (void *) pointer */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1035,7 +1035,7 @@ test_ncmpi_put_varm(void)
     char *p;			/* (void *) pointer */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1181,7 +1181,7 @@ test_ncmpi_rename_var(void)
     int i;
     char name[NC_MAX_NAME];
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1263,7 +1263,7 @@ test_ncmpi_put_att(void)
     size_t length;		/* of att */
     double value;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1347,7 +1347,7 @@ test_ncmpi_copy_att(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid_in);
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid_out);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid_out);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1494,7 +1494,7 @@ test_ncmpi_rename_att(void)
     double value[MAX_NELS];
     double expect;
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1644,7 +1644,7 @@ test_ncmpi_del_att(void)
     int varid;
     char *name;                 /* of att */
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1782,7 +1782,7 @@ test_ncmpi_set_fill(void)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* create scratch */
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1866,7 +1866,7 @@ test_ncmpi_set_fill(void)
     err = ncmpi_close(ncid);
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
@@ -1941,7 +1941,7 @@ test_ncmpi_delete(void)
     int err;
     int ncid;
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("error creating scratch file %s, status = %d\n", scratch,err);
     err = ncmpi_close(ncid);

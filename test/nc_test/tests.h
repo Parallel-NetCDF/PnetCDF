@@ -153,6 +153,9 @@ extern char scratch[];		/* netCDF test file for writing */
 extern int  read_only;		/* if 1, don't try to change files */
 extern int  verbose;		/* if 1, print details of tests */
 extern int  nfails;		/* number of failures in specific test */
+extern int  use_cdf2;		/* if 1, use CDF-2 format (offset >2GB ) */
+extern int  extra_flags;	/* if using CDF-2, need extra flags for create*/
+
 
     /* Global variables - test data */
 
@@ -189,6 +192,7 @@ extern const char *s_ncmpi_type(ncmpi_type);
 extern void test_ncmpi_strerror(void);
 extern void test_ncmpi_open(void);
 extern void test_ncmpi_close(void);
+extern void test_ncmpi_delete(void);
 
 extern void test_ncmpi_inq(void);
 extern void test_ncmpi_inq_natts(void);

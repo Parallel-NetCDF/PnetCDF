@@ -117,7 +117,7 @@ test_ncmpi_open(void)
 	error("netCDF IDs for first and second ncmpi_open calls should differ");
 
     if (! read_only) {		/* tests using netCDF scratch file */
-	err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid2);
+	err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid2);
 	IF (err) 
 	    error("ncmpi_create: %s", ncmpi_strerror(err));
 	else 
@@ -175,7 +175,7 @@ test_ncmpi_close(void)
 	error("ncmpi_close in data mode failed: %s", ncmpi_strerror(err));
 
     if (! read_only) {		/* tests using netCDF scratch file */
-        err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
         IF (err) 
             error("ncmpi_create: %s", ncmpi_strerror(err));
 	err = ncmpi_close(ncid);
@@ -252,7 +252,7 @@ test_ncmpi_inq(void)
     if (! read_only) {		/* tests using netCDF scratch file */
 	int ncid2;		/* for scratch netCDF dataset */
 
-        err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid2);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid2);
         IF (err) {
             error("ncmpi_create: %s", ncmpi_strerror(err));
 	} else {		/* add dim, var, gatt, check inq */

@@ -28,6 +28,14 @@
  * It is described by the following global variables.
  */
 
+
+/*
+ * global variables (defined by command line processing in main())
+ * related use of CDF-1 vs CDF-2 file formats
+ */
+int use_cdf2 = 0; 	/* 0: use CDF-1, 1: use CDF-2 */
+int extra_flags = 0; /* if using CDF-2 format, will be set to NC_64BIT_OFFSET */
+
 /* 
  * global variables (defined by function init_gvars) describing file test.nc
  */
@@ -72,6 +80,7 @@ usage(void)
     error("   [-c] Create file test.nc (Do not do tests)\n" );
     error("   [-r] Just do read-only tests\n" );
     error("   [-v] Verbose mode\n" );
+    error("   [-2] (with -c) create file with CDF-2 format\n" );
     error("   [-n <MAX_NMPT>] max. number of messages per test (Default: 8)\n");
 }
 
@@ -114,7 +123,7 @@ main(int argc, char *argv[])
     read_only = 0;               /* assume may write in test dir as default */
     verbose = 0;
     max_nmpt = 8;
-    while ((c = getopt(argc, argv, "chrvn:")) != EOF)
+    while ((c = getopt(argc, argv, "c2hrvn:")) != EOF)
       switch(c) {
 	case 'c':		/* Create file test.nc */
 	  create_file = 1;
@@ -127,6 +136,10 @@ main(int argc, char *argv[])
 	  break;
 	case 'n':		/* verbose mode */
 	  max_nmpt = atoi(optarg);
+	  break;
+	case '2':
+	  use_cdf2 = 1;
+	  extra_flags = NC_64BIT_OFFSET;
 	  break;
 	case 'h':
 	case '?':
