@@ -1,0 +1,34 @@
+ 
+ these are some rough notes for porting code from the serial netcdf api to
+ the pnetcdf API.  Pnetcdf is very similar but there are some changes that
+ have to be made:
+
+
+the nc_* functions are called ncmpi_*
+
+. ncmpi_open takes a communicator and an info structure, in addition to the
+  parameters in the serial nc_open()
+
+For example:
+	status = nc_open(path, NC_NOWRITE, &ncid);
+becomes
+	status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE, 
+		MPI_INFO_NULL, &ncid);
+
+. if you make any independent calls ( those not ending in _all), you must put
+  yourself into independent data mode with ncmpi_begin_indep(ncid) and
+  ncmpi_end_indep(ncid)
+
+. FILL_DOUBLE and FILL_FLOAT are called  NC_FILL_DOUBLE and NC_FILL_FLOAT
+  respectively.  We do not define these NetCDF-2.x era constants in pnetcdf.
+
+.  #include <mpi.h> .  If you want, define a communicator.  MPI_COMM_WORLD
+     should work ok for most things.
+
+. somewhere near main, call MPI_Init(): pnetcdf won't do that for you.
+
+. pnetcdf does not implement nc_advise
+
+. pnetcdf does not support all types that serial netcdf supports. see
+  src/lib/TODO for more specifics
+
