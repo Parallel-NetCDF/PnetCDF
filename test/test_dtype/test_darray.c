@@ -374,7 +374,7 @@ int main(int argc, char** argv) {
   else
     success = 1;
 
-  MPI_Reduce(&success, &successall, 1, MPI_INT, MPI_LAND, 0, MPI_COMM_WORLD);
+  MPI_Allreduce(&success, &successall, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
   pass1 = successall;
   
   if (rank == 0) {
@@ -412,7 +412,7 @@ int main(int argc, char** argv) {
   else
     success = 1;
 
-  MPI_Reduce(&success, &successall, 1, MPI_INT, MPI_LAND, 0, MPI_COMM_WORLD);
+  MPI_Allreduce(&success, &successall, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
   pass2 = successall;
   
   if (rank == 0) {
