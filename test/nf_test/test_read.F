@@ -165,7 +165,7 @@ C       /* Opened OK, see if can open again and get a different netCDF ID */
             end if
             call nfmpi_delete(scratch, err)
             if (err .ne. 0) 
-     +          call errorc('delete of scratch file failed', scratch)
+     +          call errorc('delete of scratch file failed: ', scratch)
         end if
 
         call nfmpi_close(ncid, err)
@@ -362,7 +362,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call nfmpi_close(ncid2, err)
                 call nfmpi_delete(scratch, err)
                 if (err .ne. 0)
-     +              call errorc('delete of scratch file failed:', 
+     +              call errorc('delete of scratch file failed: ', 
      +                  scratch)
             end if
         end if
@@ -540,6 +540,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call errore('nfmpi_inq_dim: ', err)
             else if (dim_name(i) .ne. name)  then
                 call errorc('name unexpected: ', name)
+                print *, ' expected ', dim_name(i),' for the ',i,'entry'
             else if (dim_len(i) .ne. length) then
                 call errori('size unexpected: ', length)
             end if
@@ -574,6 +575,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call errore('nfmpi_inq_dimlen: ', err)
             else if (dim_len(i) .ne. length) then
                 call errori('size unexpected: ', length)
+                print *, 'expected ', dim_len(i),' for the ',i,'entry'
             end if
 1       continue
         call nfmpi_close(ncid, err)

@@ -24,7 +24,7 @@
 FORTRAN_API void FORT_CALL nfmpi_inq_vardimid_ ( int *v1, int *v2, MPI_Fint *v3, MPI_Fint *ierr ){
     int *l3=0, ln3;
 
-    ln3 = ncmpixVardim(*v1,*v2);
+    ln3 = ncmpixVardim(*v1,*v2-1);
     if (ln3 > 0) {
         l3 = (size_t *)malloc( ln3 * sizeof(int) );
     }
