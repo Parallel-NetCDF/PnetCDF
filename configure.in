@@ -1,5 +1,5 @@
 AC_REVISION($Id$)dnl
-dnl
+dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
@@ -25,11 +25,68 @@ dnl need a --with-cxx=no and --with-fortran=no
 dnl UD_PROG_CXX
 dnl UD_PROG_FC
 dnl UD_PROG_F90
+# Checking for Fortran types also determines the Fortran name mangling
+# and places the value into FCALLSCSUB as a the C name corresponding
+# to the Fortran name SUB 
 UD_FORTRAN_TYPES
 UD_CHECK_LIB_MATH
 UD_PROG_AR()
 UD_PROG_NM()
 AC_PROG_RANLIB
+
+#
+# If we are building the Fortran interface, determine the correct name mapping
+case $FCALLSCSUB in 
+    SUB)
+    AC_DEFINE(F77_NAME_UPPER,,[Define if Fortran names are uppercase])
+    ;;
+    sub_)
+    # This is the hard case.  Gcc uses one _ unless the name includes
+    # an underscore, in which case it gets two trailing underscores.
+    # Use essentially the same configure code that the original configure
+    # used to determine SUB
+    AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB_A\")
+	    cat >conftest.f <<\EOF
+              call sub_a()
+              end
+EOF
+	    doit='$FC -c ${FFLAGS} conftest.f'
+	    if AC_TRY_EVAL(doit); then
+		FCALLSCSUBA=`$NM $NMFLAGS conftest.o | awk '
+		    /SUB_A_/{print "SUB_A_";exit}
+		    /SUB_A/ {print "SUB_A"; exit}
+                    /sub_a__/ {print "sub_a__"; exit}
+		    /sub_a_/{print "sub_a_";exit}
+		    /sub_a/ {print "sub_a"; exit}'`
+		case "$FCALLSCSUBA" in
+		    '') AC_MSG_ERROR(not found)
+			;;
+		    *)  AC_MSG_RESULT($FCALLSCSUBA)
+			;;
+		esac
+	    else
+		AC_MSG_ERROR(Could not compile conftest.f)
+	    fi
+	    rm -f conftest*
+    case "$FCALLSCSUBA" in 
+        sub__) 
+	AC_DEFINE(F77_NAME_LOWER_2USCORE,,[Define if Fortran names are lower case with two trailing underscore2])
+	;;
+	sub_)    
+	AC_DEFINE(F77_NAME_LOWER_USCORE,,[Define if Fortran names are lower case with one trailing underscore])
+	;;
+	*)
+        AC_MSG_WARN([Unrecognized Fortran name mapping])
+	;;
+    esac	    
+    ;;
+    sub)
+    AC_DEFINE(F77_NAME_LOWER,,[Define if Fortran names are lower case])
+    ;;
+    *)
+    AC_MSG_WARN([Unrecognized Fortran name mapping])
+    ;;
+esac
 
 MPICC=$CC
 AC_MSG_CHECKING(looking for mpi implementation)
@@ -82,4 +139,4 @@ UD_CHECK_SIZEOF(off_t)
 UD_CHECK_SIZEOF(size_t)
 UD_MAKEWHATIS
 UD_FTPBINDIR
-AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile)
+AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile)

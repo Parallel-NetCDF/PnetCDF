@@ -72,4 +72,23 @@
 /* The number of bytes in a short.  */
 #undef SIZEOF_SHORT
 
+/* Define if Fortran names are lowercase */
+#undef F77_NAME_LOWER
+
+/* Define if Fortran names are lowercase with a trailing underscore */
+#undef F77_NAME_LOWER_USCORE
+
+/* Define if Fortran names containing an underscore have two trailing underscores */
+#undef F77_NAME_LOWER_2USCORE
+
+/* Define if Fortran names are uppercase */
+#undef F77_NAME_UPPER
+
+/* Define if Fortran names preserve the original case */
+#undef F77_NAME_MIXED
+
+/* Define if Fortran names preserve the original case and add a trailing underscore */
+#undef F77_NAME_MIXED_USCORE
+
+
 #endif /* !_NCCONFIG_H_ */
