@@ -44,7 +44,7 @@ test_ncmpi_strerror(void)
 	{NC_ESTS, "In Fortran, string too short"},
 	{NC_EMAXNAME, "NC_MAX_NAME exceeded"},
 	{NC_EUNLIMIT, "NC_UNLIMITED size already in use"},
-	{NC_ENORECVARS, "ncmpi_rec op when there are no record vars"},
+	{NC_ENORECVARS, "nc_rec op when there are no record vars"},
 	{NC_ECHAR, "Attempt to convert between text & numbers"},
 	{NC_EEDGE, "Edge+start exceeds dimension bound"},
 	{NC_ESTRIDE, "Illegal stride"},
