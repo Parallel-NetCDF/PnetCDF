@@ -799,7 +799,7 @@ check_atts(int  ncid)
     MPI_Offset  k;
     ncmpi_type datatype;
     char name[NC_MAX_NAME];
-    size_t length;
+    MPI_Offset length;
     char  text[MAX_NELS];
     double value[MAX_NELS];
     double expect;
