@@ -73,6 +73,10 @@ time:	nctime
 saber_src:
 	#load -C $(CPPFLAGS) $(SRCS) $(ld_netcdf) $(ld_math) $(LIBS)
 
+# This simple testing target ensures that the test files are present
+testing: test.nc nc_test
+	rm -f scratch.nc
+	./nc_test
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend

@@ -97,9 +97,9 @@ testing: test.nc nf_test
 	rm -f scratch.nc
 	./nf_test
 
-test.nc: 
-	(cd ../nc_test && make nc_test && ./nc_test -c)
-	cp ../nc_test/test.nc .
+#test.nc: 
+#	(cd ../nc_test && make nc_test && ./nc_test -c)
+#	cp ../nc_test/test.nc .
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
