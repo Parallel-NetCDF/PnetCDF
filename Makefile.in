@@ -146,4 +146,9 @@ $(FTPBINDIR)/$(PACKAGE)-$(VERSION).tar.Z:
 	    cd $(FTPBINDIR) || exit 1;
 
 
+# rule for generating cscope information
+cscope:
+	find $(srcdir) -iname "*.[ch]" > $(srcdir)/cscope.files
+	( cd $(srcdir); cscope -be -i $(srcdir)/cscope.files )
+
 include $(srcdir)/rules.make

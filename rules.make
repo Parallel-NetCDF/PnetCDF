@@ -162,7 +162,7 @@ clean:		FORCE
 
 distclean:	FORCE
 	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
-	    MANIFEST *.log $(DIST_GARBAGE) Makefile
+	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files
 	rm -rf SunWS_cache
 
 ################################################################################
