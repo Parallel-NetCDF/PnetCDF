@@ -22,9 +22,9 @@
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, int v3[], int v4[], int v5[], char *v6 FORT_MIXED_LEN(d6), MPI_Fint *ierr FORT_END_LEN(d6) ){
-    size_t *l3;
-    size_t *l4;
-    size_t *l5;
+    size_t *l3 = 0;
+    size_t *l4 = 0;
+    size_t *l5 = 0;
     char *p6;
 
     { int ln = ncxVardim(*v1,*v2);
@@ -33,7 +33,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, int v3[], in
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l3[li] = v3[ln-1-li];
-    }
+    }}
 
     { int ln = ncxVardim(*v1,*v2);
     if (ln > 0) {
@@ -41,7 +41,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, int v3[], in
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l4[li] = v4[ln-1-li];
-    }
+    }}
 
     { int ln = ncxVardim(*v1,*v2);
     if (ln > 0) {
@@ -49,7 +49,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, int v3[], in
         l5 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l5[li] = v5[ln-1-li];
-    }
+    }}
 
     {char *p = v6 + d6 - 1;
      int  li;
