@@ -27,23 +27,23 @@
 #define X_CHAR_MAX	CHAR_MAX
 #define X_BYTE_MIN	(-128)
 #define X_BYTE_MAX	127
-#define X_SHORT_MIN	(-32768)
-#define X_SHORT_MAX	32767
-#define X_INT_MIN	(-2147483648.)
-#define X_INT_MAX	2147483647
+#define X_SHORT_MIN	SHRT_MIN
+#define X_SHORT_MAX	SHRT_MAX
+#define X_INT_MIN	INT_MIN
+#define X_INT_MAX	INT_MAX
 #if defined(FLT_MAX_EXP) && FLT_MAX_EXP < 128
 /* FLT_MAX < X_FLOAT_MAX */
 #define X_FLOAT_MAX	FLT_MAX
 #else
 #define X_FLOAT_MAX	3.40282347e+38f
 #endif
-#define X_FLOAT_MIN	(-X_FLOAT_MAX)
+#define X_FLOAT_MIN	FLT_MIN
 #if defined(CRAYFLOAT) && CRAYFLOAT != 0
 /* ldexp(1. - ldexp(.5 , -46), 1024) */
-#define X_DOUBLE_MAX    1.79769313486230e+308
+#define X_DOUBLE_MAX    DBL_MIN
 #else
 /* scalb(1. - scalb(.5 , -52), 1024) */
-#define X_DOUBLE_MAX	1.7976931348623157e+308 
+#define X_DOUBLE_MAX	DBL_MAX
 #endif
 #define X_DOUBLE_MIN	(-X_DOUBLE_MAX)
 
