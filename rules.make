@@ -86,7 +86,7 @@ shared_library:
 	esac
 
 hpux_shared_library:
-	nm libnetcdf.a | grep extern | grep entry | \
+	nm libpnetcdf.a | grep extern | grep entry | \
 	    awk '-F|' '{print $$1}' | sed 's/^/-u /' >symbols.log
 	ld -o $(LIBRARY:.a=.sl) -b -c symbols.log $(LIBRARY)
 	rm symbols.log
@@ -129,17 +129,17 @@ $(LIBDIR)/$(LIBRARY):	$(LIBDIR) $(LIBRARY)
 $(BINDIR)/$(PROGRAM):	$(BINDIR) $(PROGRAM)
 	cp $(PROGRAM) $@
 
-$(BINDIR) \
-$(INCDIR) \
-$(LIBDIR) \
-$(MANDIR) :
-	-test -d $@ || mkdir $@
+#$(BINDIR) \
+#$(INCDIR) \
+#$(LIBDIR) \
+#$(MANDIR) :
+#	-test -d $@ || mkdir $@
 
-$(MANDIR)/man1 \
-$(MANDIR)/man3 \
-$(MANDIR)/man3f \
-$(MANDIR)/man3f90 :		$(MANDIR)
-	-test -d $@ || mkdir $@
+#$(MANDIR)/man1 \
+#$(MANDIR)/man3 \
+#$(MANDIR)/man3f \
+#$(MANDIR)/man3f90 :		$(MANDIR)
+#	-test -d $@ || mkdir $@
 
 $(MANDIR)/man1/$(MANUAL):	$(MANDIR)/man1 $(MANUAL)
 	cp $(srcdir)/$(MANUAL) $@
