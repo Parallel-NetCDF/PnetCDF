@@ -42,8 +42,8 @@ OBJS		= \
 		  nf_test.o	\
 		  test_read.o	\
 		  test_write.o	\
-		  util.o	
-		  #fortlib.o
+		  util.o	\
+		  fortlib.o
 
 time_log	= times
 
