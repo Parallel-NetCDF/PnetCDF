@@ -26,7 +26,6 @@
  * An external data representation interface.
  */
 
-#include <stdio.h>
 #include "ncx.h"
 #include <string.h>
 #include <limits.h>
