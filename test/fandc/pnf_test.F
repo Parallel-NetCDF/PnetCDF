@@ -304,18 +304,18 @@
 
 
 !       =================
-        call Nfmpi_Create
+        ierr = Nfmpi_Create
 !       =================
-     &    (comm_cart, filename, NF_CLOBBER, MPI_INFO_NULL, ncid, ierr)
+     &    (comm_cart, filename, NF_CLOBBER, MPI_INFO_NULL, ncid)
 
 
 !       ==================
-        call Nfmpi_Def_Dim
-     &    (ncid, "level",     totsiz_3d(1), lev_id, ierr)
-        call Nfmpi_Def_Dim
-     &    (ncid, "latitude",  totsiz_3d(2), lat_id, ierr)
-        call Nfmpi_Def_Dim
-     &    (ncid, "longitude", totsiz_3d(3), lon_id, ierr)
+        ierr = Nfmpi_Def_Dim
+     &    (ncid, "level",     totsiz_3d(1), lev_id)
+        ierr = Nfmpi_Def_Dim
+     &    (ncid, "latitude",  totsiz_3d(2), lat_id)
+        ierr = Nfmpi_Def_Dim
+     &    (ncid, "longitude", totsiz_3d(3), lon_id)
 !       ==================
 
 
@@ -324,13 +324,13 @@
         dim_id(3) = lev_id
 
 !       ==================
-        call Nfmpi_Def_Var
+        ierr = Nfmpi_Def_Var
 !       ==================
-     &    (ncid, "tt", NF_REAL, 3, dim_id, tt_id, ierr)
+     &    (ncid, "tt", NF_REAL, 3, dim_id, tt_id)
 
 
 !       =================
-        call Nfmpi_Enddef (ncid, ierr)
+        ierr = Nfmpi_Enddef (ncid)
 !       =================
 
 
@@ -338,13 +338,13 @@
 
 
 !       =============================
-        call Nfmpi_Put_Vara_Real_All
+        ierr = Nfmpi_Put_Vara_Real_All
 !       =============================
-     &    (ncid, tt_id, start_3d, count_3d, tt, ierr)
+     &    (ncid, tt_id, start_3d, count_3d, tt)
 
 
 !       ================
-        call Nfmpi_Close (ncid, ierr)
+        ierr = Nfmpi_Close (ncid)
 !       ================
 
 
@@ -449,28 +449,28 @@
 
 
 !       ===============
-        call Nfmpi_Open
+        ierr = Nfmpi_Open
 !       ===============
-     &    (comm_cart, filename, NF_NOWRITE, MPI_INFO_NULL, ncid, ierr)
+     &    (comm_cart, filename, NF_NOWRITE, MPI_INFO_NULL, ncid)
 
 
 !       ====================
-        call Nfmpi_Inq_Varid
+        ierr = Nfmpi_Inq_Varid
 !       ====================
-     &    (ncid, "tt", tt_id, ierr)
+     &    (ncid, "tt", tt_id)
 
 
         t2 = MPI_Wtime ( )
 
 
 !       =============================
-        call Nfmpi_Get_Vara_Real_All
+        ierr = Nfmpi_Get_Vara_Real_All
 !       =============================
-     &    (ncid, tt_id, start_3d, count_3d, buf, ierr)
+     &    (ncid, tt_id, start_3d, count_3d, buf)
 
 
 !       ================
-        call Nfmpi_Close (ncid, ierr)
+        ierr = Nfmpi_Close (ncid)
 !       ================
 
 
