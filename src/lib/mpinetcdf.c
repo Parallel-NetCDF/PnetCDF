@@ -62,9 +62,10 @@ int
 ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
   size_t sizeof_off_t;
+  size_t chunksize=4098;	/* might be a good thing to hint later */
   NC *ncp;
 
-  ncp = ncmpii_new_NC(NULL);
+  ncp = ncmpii_new_NC(&chunksize);
   if(ncp == NULL) 
     return NC_ENOMEM;
 
@@ -110,8 +111,9 @@ int
 ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
   NC *ncp;
+  size_t chunksize=4098;	/* might be a good thing to hint later */
   
-  ncp = ncmpii_new_NC(NULL);
+  ncp = ncmpii_new_NC(&chunksize);
   if(ncp == NULL)
     return NC_ENOMEM;
 
