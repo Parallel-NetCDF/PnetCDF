@@ -235,6 +235,29 @@ nc_put_att_double(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const double *value);
 extern int
 nc_get_att_double(int ncid, int varid, const char *name, double *tp);
+
+extern int 
+nc_inq_attid(int ncid, int varid, const char *name, int *attnump);
+
+extern int 
+nc_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep);
+
+extern int 
+nc_inq_attlen(int ncid, int varid, const char *name, size_t *lenp);
+
+extern int
+nc_inq_att(int ncid, int varid, const char *name, 
+	nc_type *datatypep, size_t *lenp);
+
+extern int
+nc_copy_att(int ncid_in, int varid_in, const char *name, 
+		int ncid_out, int ovarid);
+
+extern int
+nc_rename_att( int ncid, int varid, const char *name, const char *newname);
+
+extern int
+nc_del_att(int ncid, int varid, const char *name);
 /* End defined in attr.c */
 /*
  * NC variable: description and data

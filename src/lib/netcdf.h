@@ -55,6 +55,8 @@ typedef enum {
 	NC_DOUBLE =	6	/* double precision floating point number */
 } nc_type;
 
+typedef nc_type ncmpi_type;
+
 
 /*
  * 	Default fill values, used unless _FillValue attribute is set.
