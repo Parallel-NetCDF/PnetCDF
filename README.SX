@@ -1,4 +1,4 @@
-# Current notes for NEC SX; based on pnetcdf version 0.9.1; Oct 8, 2003
+# Current notes for NEC SX; based on pnetcdf version 0.9.4; 22 July, 2004
 
 . On the SX, integer*1 does not exist, so no "int1" interfaces will be built.
   However, the declaration for the int1 functions still exist in pnetcdf.inc,
@@ -15,8 +15,14 @@
   To work around this, do the usual "configure; make", but then change to
   src/libf and run "make" a 2nd time.
 
-. SX Cross compiler environment is not supported yet. configure and make steps
-  have to be invoked on the SX directly.
+  UPDATE: This extra step was not needed under Super-UX 14.1.  Running "make" a
+  2nd time in src/libf does no harm, however. 
+
+. SX Cross compiler environment is not supported yet (the check for a working
+  ftruncate is not possible).   Configuring on the target host and then
+  cross-compling works fine when setting up necessary aliases on the configrue
+  host (cc -> sxcc, etc) or vice versa on the compile host (sxcc -> cc).
+  configure and make steps have to be invoked on the SX directly.
 
 . With the following environment variables a pnetcdflib.a has been
   built successfully
@@ -32,4 +38,6 @@
    - f90/SX Compiler Rev.270 2003/04/04
 
 
-Rob Latham <robl@mcs.anl.gov>, Rene Redler <redler@ccrl-nece.de>
+Rob Latham <robl@mcs.anl.gov>
+Rene Redler <redler@ccrl-nece.de>
+Joachim Worringen <joachim@ccrl-nece.de>
