@@ -1,3 +1,4 @@
 Makefile
 *.o
 ncconfig.h
+ncvalid
