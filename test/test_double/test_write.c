@@ -69,12 +69,12 @@ int main(int argc, char **argv) {
   int ncid;
   int dimid1, dimid2, dimid3, udimid;
   int square_dim[2], cube_dim[3], xytime_dim[3], time_dim[1];
-  size_t square_start[2], cube_start[3] = {0, 0, 0};
-  size_t square_count[2] = {50, 50}, cube_count[3] = {100, 50, 50};
-  size_t square_stride[2] = {2, 2};
-  size_t xytime_start[3] = {0, 0, 0};
-  size_t xytime_count[3] = {100, 50, 50};
-  size_t time_start[1], time_count[1] = {25};
+  MPI_Offset square_start[2], cube_start[3] = {0, 0, 0};
+  MPI_Offset square_count[2] = {50, 50}, cube_count[3] = {100, 50, 50};
+  MPI_Offset square_stride[2] = {2, 2};
+  MPI_Offset xytime_start[3] = {0, 0, 0};
+  MPI_Offset xytime_count[3] = {100, 50, 50};
+  MPI_Offset time_start[1], time_count[1] = {25};
   int square_id, cube_id, xytime_id, time_id;
   static char title[] = "example netCDF dataset";
   static char description[] = "2-D integer array";
