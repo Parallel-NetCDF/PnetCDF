@@ -91,6 +91,8 @@ ncmpi_strerror(int err)
 	switch (err) {
 	case NC_NOERR:
 	    return "No error";
+	case NC_ESMALL:
+	    return "Size of off_t too small for requested format ";
 	case NC_ENOTINDEP:
 	    return "Operation not allowed in collective data mode";
 	case NC_EINDEP:
