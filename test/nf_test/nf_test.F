@@ -317,6 +317,7 @@ C       /* Initialize global variables defining test file */
 
         if ( create_file ) then
             call write_file(testfile)
+            call MPI_Finalize(err)
             if (nfailsTotal .eq. 0)
      +           call ud_exit(0)
             call ud_exit(1)
