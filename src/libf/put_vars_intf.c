@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
-FORTRAN_API void FORT_CALL nfmpi_put_vars_int_ ( int *v1, int *v2, int v3[], int v4[], int v5[], int*v6, MPI_Fint *ierr ){
-    *ierr = ncmpi_put_vars_int( *v1, *v2, v3, v4, v5, v6 );
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
+FORTRAN_API void FORT_CALL nfmpi_put_vars_int_ ( int *v1, int *v2, int v3[], int v4[], int v5[], MPI_Fint *v6, MPI_Fint *ierr ){
+    *ierr = ncmpi_put_vars_int( *v1, *v2, (const size_t *)(v3), (const size_t *)(v4), (const size_t *)(v5), v6 );
 }

@@ -43,7 +43,7 @@ lib${MPILIBNAME}_a_SOURCES = ${mpi_sources} setbotf.f
 profilelib_${MPILIBNAME} = p${MPILIBNAME}
 INCLUDES = -I../../include -I${master_top_srcdir}/src/include
 maint-clean:
-	rm -f ${mpi_sources} fproto.h
+	rm -f ${mpi_sources} mpifnetcdf.h
 install_INCLUDE = mpif.h
 install_BIN     = mpif77
 install_ETC     = mpif77.conf

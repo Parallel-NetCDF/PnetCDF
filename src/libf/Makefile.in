@@ -72,9 +72,10 @@ PACKING_LIST = \
 
 LIB_OBJS = $(LIB_CSRCS:.c=.o)
 
-PROG_CSRCS = 
-
-PROG_OBJS = $(PROG_CSRCS:.c=.o)
+# Empty values for PROG_CSRCS cause problems for some makes
+#PROG_CSRCS = 
+#
+#PROG_OBJS = $(PROG_CSRCS:.c=.o)
 
 GARBAGE		= 
 
@@ -87,8 +88,9 @@ install:	$(INCDIR)/$(HEADER)
 
 uninstall:
 
-$(PROGRAM):	$(PROG_OBJS)
-	$(LINK.c) $(PROG_OBJS) $(LIBS)
+# An empty value for the variable PROGRAM causes some makes to fail
+#$(PROGRAM):	$(PROG_OBJS)
+#	$(LINK.c) $(PROG_OBJS) $(LIBS)
 
 include $(srcdir)/../../rules.make
 

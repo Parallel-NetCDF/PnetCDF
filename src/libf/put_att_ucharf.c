@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_put_att_uchar_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), nc_type v4, int v5, char *v6 FORT_MIXED_LEN(d6), MPI_Fint *ierr FORT_END_LEN(d3) FORT_END_LEN(d6) ){
     *ierr = ncmpi_put_att_uchar( *v1, *v2, v3, v4, v5, v6 );
 }

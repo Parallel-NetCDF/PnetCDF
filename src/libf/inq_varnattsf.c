@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
-FORTRAN_API void FORT_CALL nfmpi_inq_varnatts_ ( int *v1, int *v2, int*v3, MPI_Fint *ierr ){
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
+FORTRAN_API void FORT_CALL nfmpi_inq_varnatts_ ( int *v1, int *v2, MPI_Fint *v3, MPI_Fint *ierr ){
     *ierr = ncmpi_inq_varnatts( *v1, *v2, v3 );
 }

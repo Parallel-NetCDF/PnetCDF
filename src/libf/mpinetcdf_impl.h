@@ -6,6 +6,7 @@
 
 #ifndef MPINETCDF_IMPL_H
 #define MPINETCDF_IMPL_H
+#include <stdlib.h>
 #include "../lib/ncconfig.h"
 #include "../lib/pnetcdf.h"
 

@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_put_var_short_ ( int *v1, int *v2, short*v3, MPI_Fint *ierr ){
     *ierr = ncmpi_put_var_short( *v1, *v2, v3 );
 }

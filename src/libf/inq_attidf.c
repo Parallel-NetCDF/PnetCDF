@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
-FORTRAN_API void FORT_CALL nfmpi_inq_attid_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int*v4, MPI_Fint *ierr FORT_END_LEN(d3) ){
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
+FORTRAN_API void FORT_CALL nfmpi_inq_attid_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *v4, MPI_Fint *ierr FORT_END_LEN(d3) ){
     *ierr = ncmpi_inq_attid( *v1, *v2, v3, v4 );
 }

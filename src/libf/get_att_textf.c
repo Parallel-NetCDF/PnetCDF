@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_get_att_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), char *v4 FORT_MIXED_LEN(d4), MPI_Fint *ierr FORT_END_LEN(d3) FORT_END_LEN(d4) ){
     *ierr = ncmpi_get_att_text( *v1, *v2, v3, v4 );
 }
