@@ -3,8 +3,8 @@ VPATH = @srcdir@
 SUBDIRS = common test_double test_double_int test_float test_int  nc_test
 
 all:
-	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i; done
+	set -e; for i in $(SUBDIRS); do pushd . ; cd $$i && $(MAKE); popd; done
 
 clean:
-	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
+	set -e; for i in $(SUBDIRS); do pushd . ; cd $$i && $(MAKE) clean; popd ; done
 
