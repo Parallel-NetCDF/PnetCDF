@@ -13,11 +13,9 @@ AC_INIT(src/lib/ncconfig.in)
 UD_SRCDIR
 dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
-AC_CONFIG_HEADER(
-	src/lib/ncconfig.h:src/lib/ncconfig.in 
-	src/libf/pnetcdf.inc 
-	src/libf/nfconfig.inc:src/libf/nfconfig.in
-)
+dnl must be all on same line
+AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf.inc src/libf/nfconfig.inc:src/libf/nfconfig.in )
+
 AC_CONFIG_AUX_DIR(./scripts)
 
 AC_ARG_ENABLE(fortran,
