@@ -18,6 +18,8 @@
 
 #define NO_NETCDF_2 1
 
+#include "../../src/libf/nfconfig.inc"
+
 !/* Parameters of test data */
 
 #ifdef  NF_INT1_T
@@ -140,12 +142,12 @@
 !    /* Global variables - test data */
 
       CHARACTER*2               DIM_NAME(NDIMS)
-      INTEGER                   DIM_LEN(NDIMS)
+      INTEGER(KIND=MPI_OFFSET_KIND) DIM_LEN(NDIMS)
       CHARACTER*(2+MAX_RANK)    VAR_NAME(NVARS)
       INTEGER                   VAR_TYPE(NVARS)
       INTEGER                   VAR_RANK(NVARS)
       INTEGER                   VAR_DIMID(MAX_RANK,NVARS)
-      INTEGER                   VAR_SHAPE(MAX_RANK,NVARS)
+      INTEGER(KIND=MPI_OFFSET_KIND) VAR_SHAPE(MAX_RANK,NVARS)
       INTEGER                   VAR_NELS(NVARS)
       INTEGER                   VAR_NATTS(NVARS)
       CHARACTER*2               ATTNAME(MAX_NATTS,NVARS)
@@ -153,7 +155,7 @@
       INTEGER                   ATTTYPE(NGATTS,NVARS)
       INTEGER                   GATT_TYPE(NGATTS)
       INTEGER                   ATTLEN(MAX_NATTS,NVARS)
-      INTEGER                   GATT_LEN(NGATTS)
+      INTEGER(KIND=MPI_OFFSET_KIND) GATT_LEN(NGATTS)
 
 !    /* Miscellaneous global variables: */
       CHARACTER*80              PROGNAME        !/* name of the program */
@@ -162,6 +164,8 @@
       INTEGER                   NFAILSTOTAL
 
 !    /* Common blocks for global variables: */
+
+      COMMON	/OFFSETCOM/	DIM_LEN, VAR_SHAPE, GATT_LEN !/* MPI_OFFSET */
 
       COMMON    /MPICOM/        COMM
       COMMON    /LOGCOM/        CREATE_FILE,
@@ -178,17 +182,14 @@
 
       COMMON    /INTCOM/        NFAILS,         !/* number of failures in 
      *                                          ! * specific test */
-     *                          DIM_LEN,
      *                          VAR_TYPE,
      *                          VAR_RANK,
      *                          VAR_DIMID,
-     *                          VAR_SHAPE,
      *                          VAR_NELS,
      *                          VAR_NATTS,
      *                          ATTTYPE,
      *                          GATT_TYPE,
      *                          ATTLEN,
-     *                          GATT_LEN,
      *                          MAX_NMPT,
      *                          NFAILSTOTAL
 
@@ -202,7 +203,7 @@
       INTEGER           NATTS
       CHARACTER*2       ATT_NAME
       INTEGER           ATT_TYPE
-      INTEGER           ATT_LEN
+      INTEGER(KIND=MPI_OFFSET_KIND) ATT_LEN
 
 
       LOGICAL           INRANGE

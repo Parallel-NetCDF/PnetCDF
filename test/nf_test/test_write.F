@@ -109,7 +109,7 @@ C    check file: vars & atts
         character*(title_len)   title
         doubleprecision         var
         character*(NF_MAX_NAME) name
-        integer                 length
+        INTEGER(KIND=MPI_OFFSET_KIND)                 length
 
         title = 'Not funny'
 
@@ -162,19 +162,22 @@ C           /* tests using scratch file */
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
-        err = nfmpi_def_dim(ncid, 'abc', 8, dimid)
+	length = 8
+        err = nfmpi_def_dim(ncid, 'abc', length, dimid)
         if (err .ne. NF_ENOTINDEFINE)
      +      call errore('nfmpi_def_dim in define mode: ', err)
         err = nfmpi_redef(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_redef: ', err)
-        err = nfmpi_def_dim(ncid, 'abc', 8, dimid)
+	length = 8
+        err = nfmpi_def_dim(ncid, 'abc', length, dimid)
         if (err .ne. 0)
      +      call errore('nfmpi_def_dim: ', err)
         err = nfmpi_def_var(ncid, 'abc', NF_INT, 0, 0, vid)
         if (err .ne. 0)
      +      call errore('nfmpi_def_var: ', err)
-        err = nfmpi_put_att_text(ncid, NF_GLOBAL, 'title', len(title), 
+	length = len(title)
+        err = nfmpi_put_att_text(ncid, NF_GLOBAL, 'title', length, 
      +                        title)
         if (err .ne .0)
      +      call errore('nfmpi_put_att_text: ', err)
@@ -425,10 +428,11 @@ C    try to define a second unlimited dimension, check error
         integer err             !/* status */
         integer i
         integer dimid         !/* dimension id */
-        integer length
+        INTEGER(KIND=MPI_OFFSET_KIND) length
 
 C           /* BAD_ID test */
-        err = nfmpi_def_dim(BAD_ID, 'abc', 8, dimid)
+	length = 8
+        err = nfmpi_def_dim(BAD_ID, 'abc', length, dimid)
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
 
@@ -442,7 +446,8 @@ C           /* data mode test */
         err = nfmpi_enddef(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
-        err = nfmpi_def_dim(ncid, 'abc', 8, dimid)
+	length = 8
+        err = nfmpi_def_dim(ncid, 'abc', length, dimid)
         if (err .ne. NF_ENOTINDEFINE)
      +      call errore('bad ncid: ', err)
 
@@ -450,7 +455,8 @@ C           /* define-mode tests: unlimited dim */
         err = nfmpi_redef(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_redef: ', err)
-        err = nfmpi_def_dim(ncid, dim_name(1), NF_UNLIMITED, dimid)
+	length = NF_UNLIMITED
+        err = nfmpi_def_dim(ncid, dim_name(1), length, dimid)
         if (err .ne. 0) 
      +      call errore('nfmpi_def_dim: ', err)
         if (dimid .ne. 1) 
@@ -463,7 +469,8 @@ C           /* define-mode tests: unlimited dim */
         err = nfmpi_inq_dimlen(ncid, dimid, length)
         if (length .ne. 0) 
      +      call errori('Unexpected length: ', 0)
-        err = nfmpi_def_dim(ncid, 'abc', NF_UNLIMITED, dimid)
+	length = NF_UNLIMITED
+        err = nfmpi_def_dim(ncid, 'abc', length, dimid)
         if (err .ne. NF_EUNLIMIT)
      +      call errore('2nd unlimited dimension: ', err)
 
@@ -476,7 +483,8 @@ C           /* define-mode tests: remaining dims */
             err = nfmpi_def_dim(ncid, BAD_NAME, dim_len(i), dimid)
             if (err .ne. NF_EBADNAME)
      +          call errore('bad name: ', err)
-            err = nfmpi_def_dim(ncid, dim_name(i), NF_UNLIMITED-1, 
+	    length = NF_UNLIMITED - 1
+            err = nfmpi_def_dim(ncid, dim_name(i), length,
      +                       dimid)
             if (err .ne. NF_EINVAL)
      +          call errore('bad size: ', err)
@@ -765,7 +773,7 @@ C    try with same ncid for source and target, same variable
         integer j
         character*(NF_MAX_NAME) name    !/* of att */
         integer datatype                !/* of att */
-        integer length                  !/* of att */
+        INTEGER(KIND=MPI_OFFSET_KIND) length                  !/* of att */
         character*1     value
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -836,7 +844,8 @@ C           This will be used as source for following copies
         err = nfmpi_redef(ncid_out)
         if (err .ne. 0)
      +      call errore('nfmpi_redef: ', err)
-        err = nfmpi_put_att_text(ncid_out, NF_GLOBAL, 'a', 1, 'A')
+	length = 1
+        err = nfmpi_put_att_text(ncid_out, NF_GLOBAL, 'a', length, 'A')
         if (err .ne. 0)
      +      call errore('nfmpi_put_att_text: ', err)
 
@@ -921,9 +930,9 @@ C    try in data mode, check error
         integer nok             !/* count of valid comparisons */
         integer datatype
         integer attyp
-        integer length
-        integer attlength
-        integer ndx(1)
+        INTEGER(KIND=MPI_OFFSET_KIND) length
+        INTEGER(KIND=MPI_OFFSET_KIND) attlength
+        INTEGER(KIND=MPI_OFFSET_KIND) ndx(1)
         character*(MAX_NELS)    text
         doubleprecision value(MAX_NELS)
         doubleprecision expect
@@ -1210,7 +1219,8 @@ C    close file & create again for test using attribute _FillValue
         character*1 text
         doubleprecision value
         doubleprecision fill
-        integer index(MAX_RANK)
+        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
+        INTEGER(KIND=MPI_OFFSET_KIND) length
 
         nok = 0
         value = 0
@@ -1342,15 +1352,16 @@ C       /* close scratch & create again for test using attribute _FillValue */
 C           /* set _FillValue = 42 for all vars */
         fill = 42
         text = char(int(fill))
+	length = 1
         do 3, i = 1, NVARS
             if (var_type(i) .eq. NF_CHAR) then
-                err = nfmpi_put_att_text(ncid, i, '_FillValue', 1, 
+                err = nfmpi_put_att_text(ncid, i, '_FillValue', length, 
      +             text)
                 if (err .ne. 0)
      +              call errore('nfmpi_put_att_text: ', err)
             else
                 err = nfmpi_put_att_double(ncid, i, '_FillValue',
-     +                                  var_type(i),1,fill)
+     +                                  var_type(i),length,fill)
                 if (err .ne. 0)
      +              call errore('nfmpi_put_att_double: ', err)
             end if

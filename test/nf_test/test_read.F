@@ -254,6 +254,7 @@ C On exit, any open netCDF files are closed.
         integer recdim0
         integer did
         integer vid
+	INTEGER(KIND=MPI_OFFSET_KIND) length
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -315,7 +316,8 @@ C               /* Check that inquire still works in define mode */
                 end if
 
 C               /* Add dim, var, global att */
-                err = nfmpi_def_dim(ncid2, 'inqd', 1, did)
+		length = 1
+                err = nfmpi_def_dim(ncid2, 'inqd', length, did)
                 if (err .ne. 0)
      +              call errore('nfmpi_def_dim: ', err)
                 err = nfmpi_def_var(ncid2, 'inqv', NF_FLOAT, 
@@ -323,8 +325,9 @@ C               /* Add dim, var, global att */
                 if (err .ne. 0)
      +              call errore('nfmpi_def_var: ', err)
 
+		length = len('stuff')
                 err = nfmpi_put_att_text(ncid2, NF_GLOBAL, 'inqa', 
-     +                                len('stuff'), 'stuff')
+     +                                length, 'stuff')
                 if (err .ne. 0)
      +              call errore('nfmpi_put_att_text: ', err)
 
@@ -525,7 +528,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer err
         character*(NF_MAX_NAME) name
-        integer length
+        INTEGER(KIND=MPI_OFFSET_KIND) length
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -560,7 +563,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        integer length
+        INTEGER(KIND=MPI_OFFSET_KIND) length
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -871,7 +874,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer j
         integer err
         integer t
-        integer n
+        INTEGER(KIND=MPI_OFFSET_KIND) n
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
@@ -915,7 +918,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer j
         integer err
-        integer len
+        INTEGER(KIND=MPI_OFFSET_KIND) len
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
