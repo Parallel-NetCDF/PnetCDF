@@ -28,7 +28,7 @@ add_dim (test, idim)		/* add the dimension idim to the netcdf test */
 {
     static char pname[] = "add_dim";
 
-    if (test->ndims >= MAX_NC_DIMS) {
+    if (test->ndims >= NC_MAX_DIMS) {
 	(void)fprintf(stderr,
 		      "%s: too many dimensions (%d)", pname, test->ndims);
 	return;
