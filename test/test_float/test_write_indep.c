@@ -51,7 +51,7 @@
 
 #include <mpi.h>
 #include <stdio.h>
-#include <netcdf.h>
+#include <pnetcdf.h>
 #include <string.h>
 #include "testutils.h"
 

@@ -52,7 +52,7 @@
 
 #include <stdio.h>
 #include <mpi.h>
-#include <netcdf.h>
+#include <pnetcdf.h>
 #include <stdlib.h>
 #include "testutils.h"
 
