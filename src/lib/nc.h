@@ -117,7 +117,7 @@ extern NC_dim *
 ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
 
 extern int
-ncmpi_def_dim(int ncid, const char *name, size_t size, int *dimidp);
+ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp);
 
 extern int
 ncmpi_rename_dim( int ncid, int dimid, const char *newname);
@@ -126,13 +126,13 @@ extern int
 ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr);
 
 extern int
-ncmpi_inq_dim(int ncid, int dimid, char *name, size_t *sizep);
+ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep);
 
 extern int 
 ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
 extern int 
-ncmpi_inq_dimlen(int ncid, int dimid, size_t *lenp);
+ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 /* End defined in dim.c */
 
 /*
@@ -580,37 +580,37 @@ extern int
 ncmpii_get_att(int ncid, int varid, const char *name, void *value);
 
 extern int
-ncmpii_put_var1(int ncid, int varid, const size_t *index, const void *value);
+ncmpii_put_var1(int ncid, int varid, const MPI_Offset *index, const void *value);
 
 extern int
-ncmpii_get_var1(int ncid, int varid, const size_t *index, void *value);
+ncmpii_get_var1(int ncid, int varid, const MPI_Offset *index, void *value);
 
 extern int
 ncmpii_put_vara(int ncid, int varid,
-	 const size_t *start, const size_t *count, const void *value);
+	 const MPI_Offset *start, const MPI_Offset *count, const void *value);
 
 extern int
 ncmpii_get_vara(int ncid, int varid,
-	 const size_t *start, const size_t *count, void *value);
+	 const MPI_Offset *start, const MPI_Offset *count, void *value);
 
 extern int
 ncmpii_put_vars(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 const void * value);
 
 extern int
 ncmpii_get_vars(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 void * value);
 
 extern int
 ncmpii_put_varm(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 const ptrdiff_t * map, const void *value);
 
 extern int
 ncmpii_get_varm(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 const ptrdiff_t * map, void *value);
 
 #endif /* _NC_H_ */
