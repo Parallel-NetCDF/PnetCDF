@@ -4,6 +4,7 @@
  *   $Id$
  *********************************************************************/
 
+#include <unistd.h>
 #include "tests.h"
 
 /*
@@ -93,8 +94,6 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-    extern int optind;
-    extern int optopt;
     extern char *optarg;
     int c;
     int  nfailsTotal = 0;        /* total number of failures */
