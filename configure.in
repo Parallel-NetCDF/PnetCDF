@@ -11,7 +11,7 @@ FFLAGS=${FFLAGS-}
 
 AC_INIT(src/lib/ncconfig.in)
 UD_SRCDIR
-AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
+dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
 AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
 AC_CONFIG_AUX_DIR(./scripts)

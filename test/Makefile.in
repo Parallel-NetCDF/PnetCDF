@@ -6,5 +6,5 @@ all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
 
 clean:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
 
