@@ -464,7 +464,7 @@ static int
 x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int status = ENOERR;
  
   xp = (void *) xbuf;
   data = (void *) buf;
@@ -498,7 +498,7 @@ static int
 x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int status = ENOERR;
  
   xp = (void *) xbuf;
   data = (void *) buf;
@@ -532,7 +532,7 @@ static int
 x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int status = ENOERR;
  
   xp = (void *) xbuf;
   data = (void *) buf;
@@ -566,7 +566,7 @@ int
 x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int status = ENOERR;
  
   xp = (void *) xbuf; 
   data = (void *) buf;
@@ -632,7 +632,7 @@ static int
 x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int status = ENOERR;
 
   xp = (char *) xbuf;
   data = (char *) buf;
@@ -666,7 +666,7 @@ static int
 x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int status = ENOERR;
  
   xp = (char *) xbuf;
   data = (char *) buf;
@@ -700,7 +700,7 @@ static int
 x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int  status = ENOERR;
 
   xp = (char *) xbuf;
   data = (char *) buf;
@@ -734,7 +734,7 @@ static int
 x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
-  int lstatus, status = ENOERR;
+  int  status = ENOERR;
  
   xp = (char *) xbuf;
   data = (char *) buf;
