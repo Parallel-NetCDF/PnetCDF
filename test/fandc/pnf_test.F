@@ -83,7 +83,7 @@
 
       data reorder / .false. /
       data isperiodic / .false., .false., .false. /
-      data numpes / 0, 1, 1 /
+      data numpes / 1, 1, 0 /
       data TOTSIZ_3D / 256, 256, 256 /
 
 !     ----------------
@@ -119,11 +119,11 @@
 
 !     ===============
       call Find_Locnx
-     &  (TOTSIZ_3D(1), pe_coords(1), numpes(1), locsiz_3d(1), kstart)
+     &  (TOTSIZ_3D(1), pe_coords(1), numpes(1), locsiz_3d(1), istart)
       call Find_Locnx
      &  (TOTSIZ_3D(2), pe_coords(2), numpes(2), locsiz_3d(2), jstart)
       call Find_Locnx
-     &  (TOTSIZ_3D(3), pe_coords(3), numpes(3), locsiz_3d(3), istart)
+     &  (TOTSIZ_3D(3), pe_coords(3), numpes(3), locsiz_3d(3), kstart)
 !     ===============
 
 
@@ -283,9 +283,9 @@
 
 !      start_3d(1:3) = (/ kstart, jstart, istart /)
 !      count_3d(:)   = locsiz_3d(:)
-      start_3d(1) = kstart
+      start_3d(1) = istart
       start_3d(2) = jstart
-      start_3d(3) = istart
+      start_3d(3) = kstart
       count_3d(1) = locsiz_3d(1)
       count_3d(2) = locsiz_3d(2)
       count_3d(3) = locsiz_3d(3)
@@ -319,9 +319,9 @@
 !       ==================
 
 
-        dim_id(1) = lev_id
+        dim_id(1) = lon_id
         dim_id(2) = lat_id
-        dim_id(3) = lon_id
+        dim_id(3) = lev_id
 
 !       ==================
         call Nfmpi_Def_Var
@@ -429,9 +429,9 @@
 
 !     start_3d(1:3) = (/ kstart, jstart, istart /)
 !     count_3d(:)   = locsiz_3d(:)
-      start_3d(1) = kstart
+      start_3d(1) = istart
       start_3d(2) = jstart
-      start_3d(3) = istart
+      start_3d(3) = kstart
       count_3d(1) = locsiz_3d(1)
       count_3d(2) = locsiz_3d(2)
       count_3d(3) = locsiz_3d(3)
@@ -539,7 +539,7 @@
 
       if (mype < iremain) locnx = locnx + 1
 
-      ibegin = mype * (nx / totpes) + iremain
+      ibegin = mype * (nx / totpes) + iremain + 1
 
       if (mype < iremain) ibegin = ibegin + (mype - iremain)
 
@@ -584,13 +584,13 @@
       ind = 1
 
 
-      do kk = 1, locsiz_3d(1)
+      do kk = 1, locsiz_3d(3)
         do jj = 1, locsiz_3d(2)
-          do ii = 1, locsiz_3d(3)
+          do ii = 1, locsiz_3d(1)
 
              tt(ind) =
-     &         (istart +(ii - 1) + 1 + totsiz_3d(3)*(jstart + (jj - 1) +
-     &                            totsiz_3d(2)*(kstart+(kk-1)))) *
+     &         (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 + (jj - 1) +
+     &                            totsiz_3d(2)*(kstart-1 + (kk-1)))) *
      &         1.0d-3
              ind = ind + 1
 
