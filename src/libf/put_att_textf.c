@@ -25,7 +25,6 @@ FORTRAN_API void FORT_CALL nfmpi_put_att_text_ ( int *v1, int *v2, char *v3 FORT
     int l2 = *v2 - 1;
     char *p3;
     size_t l4 = (size_t)*v4;
-    char *p5;
 
     {char *p = v3 + d3 - 1;
      int  li;
@@ -35,16 +34,6 @@ FORTRAN_API void FORT_CALL nfmpi_put_att_text_ ( int *v1, int *v2, char *v3 FORT
         for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
         p3[li] = 0; 
     }
-
-    {char *p = v5 + d5 - 1;
-     int  li;
-        while (*p == ' ' && p > v5) p--;
-        p++;
-        p5 = (char *)malloc( p-v5 + 1 );
-        for (li=0; li<(p-v5); li++) { p5[li] = v5[li]; }
-        p5[li] = 0; 
-    }
-    *ierr = ncmpi_put_att_text( *v1, l2, p3, l4, p5 );
+    *ierr = ncmpi_put_att_text( *v1, l2, p3, l4, v5 );
     free( p3 );
-    free( p5 );
 }

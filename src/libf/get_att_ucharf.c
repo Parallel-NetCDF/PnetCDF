@@ -35,9 +35,4 @@ FORTRAN_API void FORT_CALL nfmpi_get_att_uchar_ ( int *v1, int *v2, char *v3 FOR
     }
     *ierr = ncmpi_get_att_uchar( *v1, l2, p3, v4 );
     free( p3 );
-
-    {char *p = v4;
-        while (*p) p++;
-        while ((p-v4) < d4) { *p++ = ' '; }
-    }
 }
