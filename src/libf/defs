@@ -1,0 +1,15 @@
+$routine_prefix = "ncmpi_";
+$routine_pattern = "[a-z0-9_]*";
+$out_prefix = "ncmpif_";
+$do_weak = 0;
+$do_profiling = 0;
+$tof77{"size_t"} = "int";
+$tof77{"int"} = "int *";
+$malloc = "malloc";
+$free   = "free";
+$header_file = "mpinetcdf_impl.h";
+%special_args = (
+	      'create' => 2, 'create-2' => 'in:addnull' ,
+	      'open' => 2, 'open-2' => 'in:addnull' 
+	      );
+return 1;

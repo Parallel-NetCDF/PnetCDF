@@ -1,9 +1,12 @@
 all:
 	cd lib && $(MAKE)
+	cd libf && $(MAKE)
 
 distclean: clean
 clean:
 	cd lib && $(MAKE) clean
+	cd libf && $(MAKE) clean
 
 install:
 	cd lib && $(MAKE) install
+	cd libf && $(MAKE) install

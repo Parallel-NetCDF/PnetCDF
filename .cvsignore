@@ -1,0 +1,7 @@
+config.cache
+config.log
+config.status
+configure
+Makefile
+macros.make
+*.log
