@@ -5,7 +5,7 @@
 
 include ../../macros.make
 
-INCLUDES = -I. -DUSE_MPIO
+INCLUDES = -I. 
 
 LIBRARY 	= libnetcdf.a
 PROGRAM		= ncvalid
