@@ -16,8 +16,11 @@ dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
 AC_CONFIG_AUX_DIR(./scripts)
 
+dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
+dnl preventing PATH_MAX from being defined for some of the test files,
+dnl and I was having a tough time figuring out how to get it back! -- RobR
 AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],
-CFLAGS="$CFLAGS -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast -ansi")
+CFLAGS="$CFLAGS -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast")
 AC_ARG_ENABLE(echo, 
 [--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
 
