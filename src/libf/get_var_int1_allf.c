@@ -23,6 +23,7 @@
 #include "mpifnetcdf.h"
 FORTRAN_API int FORT_CALL nfmpi_get_var_int1_all_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3) FORT_END_LEN(d3) ){
     int ierr;
-    ierr = ncmpi_get_var_schar_all( *v1, *v2, v3 );
+    int l2 = *v2 - 1;
+    ierr = ncmpi_get_var_schar_all( *v1, l2, v3 );
     return ierr;
 }
