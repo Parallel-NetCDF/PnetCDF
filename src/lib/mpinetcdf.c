@@ -1498,7 +1498,8 @@ ncmpi_put_var1(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes,
+			     MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
         int  errorStringLen;

@@ -10,52 +10,110 @@
 #include <mpi.h>
 #include "nc.h"
 
-/* Check for Fortran MPI Types to be supported */
-/* FIXME: if some MPI implementation choose to use enum-type for 
-	  MPI Predefined type constants, fixme!
-     Assume existing MPI Type constants won't coincide with following values
-*/
-#define NCMPI_HAVEALL_FORTRAN_MPITYPES defined(MPICH2)
-#if !NCMPI_HAVEALL_FORTRAN_MPITYPES
-#  ifndef MPI_CHARACTER
-#  define MPI_CHARACTER			(-1001)
-#  endif
-#  ifndef MPI_INTEGER1
-#  define MPI_INTEGER1			(-1001)
-#  endif
-#  ifndef MPI_INTEGER2
-#  define MPI_INTEGER2			(-1001)
-#  endif
-#  ifndef MPI_INTEGER4
-#  define MPI_INTEGER4			(-1001)
-#  endif
-#  ifndef MPI_INTEGER
-#  define MPI_INTEGER			(-1001)
-#  endif
-#  ifndef MPI_REAL
-#  define MPI_REAL			(-1001)
-#  endif
-#  ifndef MPI_REAL4
-#  define MPI_REAL4			(-1001)
-#  endif
-#  ifndef MPI_REAL8
-#  define MPI_REAL8			(-1001)
-#  endif
-#  ifndef MPI_DOUBLE_PRECISION
-#  define MPI_DOUBLE_PRECISION		(-1001)
-#  endif
+/*@
+  ncmpii_type_filter - Map a basic MPI datatype into one of the eight
+  that we process natively.
+
+  We unfortunately need to wrap all these types in case they aren't defined.
+
+  Return:
+  On success, one of MPI_CHAR, MPI_UNSIGNED_CHAR, MPI_BYTE, MPI_SHORT,
+  MPI_INT, MPI_LONG, MPI_FLOAT, and MPI_DOUBLE.
+  On failure, MPI_DATATYPE_NULL.
+@*/
+static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
+{
+    switch(type) {
+	/* char types */
+#ifdef HAVE_MPI_CHARACTER
+	case MPI_CHARACTER:
+#endif
+	case MPI_CHAR:
+	    return MPI_CHAR;
+
+	/* unsigned char types */
+	case MPI_UNSIGNED_CHAR:
+	    return MPI_UNSIGNED_CHAR;
+#ifdef HAVE_MPI_INTEGER1
+	case MPI_INTEGER1:
+#endif
+	case MPI_BYTE:
+	    return MPI_BYTE;
+
+	/* 2-byte integer types (only supported if MPI_SHORT is 2-bytes). */
+#if (SIZEOF_SHORT == 2)
+    #ifdef HAVE_MPI_INTEGER2
+	case MPI_INTEGER2:
+    #endif
+	case MPI_SHORT:
+	    return MPI_SHORT;
 #endif
 
-#define NCMPI_FORTRAN_TYPE_FILTER(ptype)				\
-( 									\
-  (ptype == MPI_CHARACTER) ? MPI_CHAR : (				\
-  (ptype == MPI_INTEGER1) ? MPI_BYTE : (				\
-  (ptype == MPI_INTEGER2) ? MPI_SHORT : (				\
-  (ptype == MPI_INTEGER4 || ptype == MPI_INTEGER) ? MPI_INT : (		\
-  (ptype == MPI_REAL || ptype == MPI_REAL4) ? MPI_FLOAT : (		\
-  (ptype == MPI_REAL8 || ptype == MPI_DOUBLE_PRECISION) ? MPI_DOUBLE : 	\
-   ptype )))))								\
-)
+	/* 4-byte integer types */
+#ifdef HAVE_MPI_INTEGER
+	case MPI_INTEGER:
+#endif
+#ifdef HAVE_MPI_INTEGER4
+	case MPI_INTEGER4:
+#endif
+#if (SIZEOF_LONG == 4)
+	case MPI_LONG:
+#endif
+#if (SIZEOF_INT == 4)
+	case MPI_INT:
+	    return MPI_INT;
+#elif (SIZEOF_SHORT == 4)
+	case MPI_SHORT:
+	    return MPI_SHORT;
+#else
+	    /* no 4-byte type? */
+	    return MPI_DATATYPE_NULL;
+#endif
+
+        /* 8-byte integer types (only supported if MPI_INT or MPI_LONG
+	 * is 8-bytes).
+	 */
+#if (SIZEOF_INT == 8) || (SIZEOF_LONG == 8)
+    #ifdef HAVE_MPI_INTEGER8
+	case MPI_INTEGER8:
+    #endif
+    #if (SIZEOF_INT == 8)
+	case MPI_INT:
+    #endif
+    #if (SIZEOF_LONG == 8)
+	case MPI_LONG:
+    #endif
+    #if (SIZEOF_INT == 8)
+	    return MPI_INT;
+    #else
+	    return MPI_LONG;
+    #endif
+#endif
+
+        /* 4-byte float types (we assume float is 4-bytes). */
+#ifdef HAVE_MPI_REAL
+	case MPI_REAL:
+#endif
+#ifdef HAVE_MPI_REAL4
+	case MPI_REAL4:
+#endif
+	case MPI_FLOAT:
+	    return MPI_FLOAT;
+
+        /* 8-byte float types (we assume double is 8-bytes). */
+#ifdef HAVE_MPI_REAL8
+	case MPI_REAL8:
+#endif
+#ifdef HAVE_MPI_DOUBLE_PRECISION
+	case MPI_DOUBLE_PRECISION:
+#endif
+	case MPI_DOUBLE:
+	    return MPI_DOUBLE;
+
+	default:
+	    return MPI_DATATYPE_NULL;
+    }
+}
 
 /*@
   ncmpi_darray_get_totalblock - Count the total number of blocks assigned
@@ -188,7 +246,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   if ( combiner == MPI_COMBINER_NAMED ) {	
     /* Predefined datatype */
     *nelems = 1;
-    *ptype = NCMPI_FORTRAN_TYPE_FILTER(dtype);
+    *ptype = ncmpii_type_filter(dtype);
     MPI_Type_size(dtype, el_size);
     *iscontig_of_ptypes = 1;
     return NC_NOERR;
