@@ -63,7 +63,9 @@ $header_file = "mpinetcdf_impl.h";
 	      'create' => 2, 'create-2' => 'in:addnull' ,
 	      'def_dim' => '2:3', 'def_dim-2' => 'in:addnull', 
 		'def_dim-3' => 'in:intToSizeT', 
-	      'def_var' => 2, 'def_var-2' => 'in:addnull', 
+	      'def_var' => '2:5', 
+		'def_var-2' => 'in:addnull', 
+		'def_var-5' => 'in:reorderIntArr:*v4',
 	      'del_att' => 3, 'del_att-3' => 'in:addnull',
 	      'get_att_double' => 3, 'get_att_double-3' => 'in:addnull',
 	      'get_att_float' => 3, 'get_att_float-3' => 'in:addnull',
@@ -96,38 +98,30 @@ $header_file = "mpinetcdf_impl.h";
 	      'get_vara' => '3:4', 
 		'get_vara-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-	      'get_vara_double_all' => '3:4:5', 
+	      'get_vara_double_all' => '3:4', 
 		'get_vara_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_double_all-5' => 'out:blankpad',
-	      'get_vara_double' => '3:4:5', 
+	      'get_vara_double' => '3:4', 
 		'get_vara_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_double-5' => 'out:blankpad',
-	      'get_vara_float_all' => '3:4:5', 
+	      'get_vara_float_all' => '3:4', 
 		'get_vara_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_float_all-5' => 'out:blankpad',
-	      'get_vara_float' => '3:4:5', 
+	      'get_vara_float' => '3:4', 
 		'get_vara_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_float-5' => 'out:blankpad',
-	      'get_vara_int_all' => '3:4:5', 
+	      'get_vara_int_all' => '3:4', 
 		'get_vara_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_int_all-5' => 'out:blankpad',
-	      'get_vara_int' => '3:4:5', 
+	      'get_vara_int' => '3:4', 
 		'get_vara_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_int-5' => 'out:blankpad',
-	      'get_vara_short_all' => '3:4:5', 
+	      'get_vara_short_all' => '3:4', 
 		'get_vara_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_short_all-5' => 'out:blankpad',
-	      'get_vara_short' => '3:4:5', 
+	      'get_vara_short' => '3:4', 
 		'get_vara_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
-		'get_vara_short-5' => 'out:blankpad',
 	      'get_vara_text_all' => '3:4:5', 
 		'get_vara_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
@@ -199,7 +193,11 @@ $header_file = "mpinetcdf_impl.h";
 	      'inq_dimid' => 2, 'inq_dimid-2' => 'in:addnull',
 	      'inq_dimlen' => 3, 'inq_dimlen-3' => 'out:sizetToInt',
 	      'inq_dimname' => 3, 'inq_dimname-3' => 'out:blankpad',
-	      'inq_var' => 3, 'inq_var-3' => 'in:addnull',
+	      'inq_var' => '3:6', 
+		'inq_var-3' => 'out:blankpad',
+		'inq_var-6' => 'out:reorderIntArrOut:ncxVardim(*v1,*v2)',
+	      'inq_vardimid' => 3, 
+		'inq_vardimid-3' => 'out:reorderIntArrOut:ncxVardim(*v1,*v2)',
 	      'inq_varid' => 2, 'inq_varid-2' => 'in:addnull',
 	      'inq_varname' => 3, 'inq_varname-3' => 'out:blankpad',
 	      'open' => 2, 'open-2' => 'in:addnull', 
@@ -340,6 +338,10 @@ $argsneedcast{'const size_t []'} = '(const size_t *)(ARG)';
 #    'Type_struct' => '3', 'Type_struct-3' => 'in:intToAintArr:*v1',
 # where *v1 will give the array size (the number is the number of the argument)
 
+# Set justCopy to 1 make a copy only when sizet and int are different sizes
+# Use 0 to always copy *and* invert order of elements
+$justCopy = 0;
+
 sub intToSizeTArr_in_decl {
     my $count = $_[0];
     print $OUTFD "    size_t *l$count;\n";
@@ -348,6 +350,7 @@ sub intToSizeTArr_ftoc {
     my $count = $_[0];
     # We use a local variable for the array size because we may need to	
     # call a function of some of the other arguments to get the array size
+    if ($justCopy) {
     print $OUTFD "
 #ifdef HAVE_SIZET_LARGER_THAN_FINT
     { int ln = $Array_size;
@@ -362,6 +365,18 @@ sub intToSizeTArr_ftoc {
 #else 
     l$count = v$count;
 #endif\n";
+    }
+    else {
+	# Always copy and invert order
+	print $OUTFD "
+    { int ln = $Array_size;
+    if (ln > 0) {
+        int li;
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l$count\[li\] = v$count\[ln-1-li\];
+    }\n";
+    }
 }
 sub intToSizeTArr_in_arg {
     my $count = $_[0];
@@ -371,12 +386,92 @@ sub intToSizeTArr_in_arg {
 sub intToSizeTArr_in_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
-    print $OUTFD "
+    if ($justCopy) {
+        print $OUTFD "
 #ifdef HAVE_SIZET_LARGER_THAN_FINT
     if ($lname) { $free($lname); }
 #endif\n";
+    } else {
+	print $OUTFD "
+    if ($lname) { $free($lname); }
+";
+    }
 }
+# -------------------------------------------------------------------------
+# Convert from an int array to an int array with the values reordered
+# usage is 
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderIntArr:*v1',
+# where *v1 will give the array size (the number is the number of the argument)
 
+sub reorderIntArr_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    int *l$count=0;\n";
+}
+sub reorderIntArr_ftoc {
+    my $count = $_[0];
+    # We use a local variable for the array size because we may need to	
+    # call a function of some of the other arguments to get the array size
+    # Always copy and invert order
+    print $OUTFD "
+    { int ln = $Array_size;
+    if (ln > 0) {
+        int li;
+        l$count = (size_t *)$malloc( ln * sizeof(int) );
+        for (li=0; li<ln; li++) 
+            l$count\[li\] = v$count\[ln-1-li\];
+    }\n";
+}
+sub reorderIntArr_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+# This routine is invoked even for the in case (to free the result)
+sub reorderIntArr_in_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    print $OUTFD "
+    if ($lname) { $free($lname); }
+";
+}
+# -------------------------------------------------------------------------
+# Convert from an int array to an int array with the values reordered
+# for an OUTPUT array
+# usage is 
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderIntArrOut:*v1',
+# where *v1 will give the array size (the number is the number of the argument)
+
+sub reorderIntArrOut_out_decl {
+    my $count = $_[0];
+    print $OUTFD "    int *l$count=0;\n";
+}
+sub reorderIntArrOut_out_ftoc {
+    my $count = $_[0];
+    # We use a local variable for the array size because we may need to	
+    # call a function of some of the other arguments to get the array size
+    # Always copy and invert order
+    print $OUTFD "
+    { int ln = $Array_size;
+    if (ln > 0) {
+        l$count = (size_t *)$malloc( ln * sizeof(int) );
+    }\n";
+}
+sub reorderIntArrOut_out_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+# This routine is invoked even for the in case (to free the result)
+sub reorderIntArrOut_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    print $OUTFD "
+    if ($lname) { 
+	int li
+        for (li=0; li<ln; li++) 
+            v$count\[li\] = l$count\[ln-1-li\];
+        $free($lname); }
+";
+}
+# -------------------------------------------------------------------------
 sub intToSizeT_in_decl {
     my $count = $_[0];
     print $OUTFD "    size_t l$count = (size_t)v$count;\n";
