@@ -33,7 +33,7 @@ LIB_CSRCS = \
 	var.c
 #	v1hpg.c
 #	ncio.c \
-#	putget.c \
+#	putget.c
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \
@@ -47,7 +47,7 @@ PACKING_LIST = \
 	pnetcdf.3 \
 	pnetcdf.h \
 	rnd.h 
-#	onstack.h \
+#	onstack.h
 
 LIB_OBJS = $(LIB_CSRCS:.c=.o)
 
