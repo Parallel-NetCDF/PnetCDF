@@ -6,6 +6,7 @@ $do_profiling = 0;
 $tof77{"size_t"} = "int *";
 $tof77{"size_t *"} = "int *";
 $tof77{"size_t*"} = "int *";
+$tof77{"size_t\[\]"} = "int *";
 $tof77{"int"} = "int *";
 $tof77{"nc_type"} = "int *";
 $tof77{"nc_type *"} = "int *";
