@@ -810,10 +810,12 @@ sub OffsetIndexIn_ctof {
 # Also, reverse the order of the array indices
 # usage is 
 #    'def_var' => '3', 'def_var-3' => 'in:OffsetIndexInArr',
-
+# Note:
+#   This used size_t instead of int for the type in the C call.
+#   This did not match the one use of this routine, in defA-var
 sub OffsetIndexInArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    size_t *l$count=0;\n    int ln$count;\n";
+    print $OUTFD "    int *l$count=0;\n    int ln$count;\n";
 }
 sub OffsetIndexInArr_ftoc {
     my $count = $_[0];
@@ -821,7 +823,7 @@ sub OffsetIndexInArr_ftoc {
     { ln$count = $Array_size;
     if (ln$count > 0) {
         int li;
-        l$count = (size_t *)$malloc( ln$count * sizeof(int) );
+        l$count = (int *)$malloc( ln$count * sizeof(int) );
         for (li=0; li<ln$count; li++) 
             l$count\[li\] = v$count\[ln$count-li-1\]-1;
       }}\n";
