@@ -1463,7 +1463,7 @@ NC_set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[
 	    MPI_Type_vector(subcount[0], varp->xsz, ncp->recsize,
 			    MPI_BYTE, &filetype);
 #else
-	    MPI_Type_create_vector(subcount[0], varp->xsz, ncp->recsize,
+	    MPI_Type_create_hvector(subcount[0], varp->xsz, ncp->recsize,
 				    MPI_BYTE, &filetype);
 #endif
 	    MPI_Type_commit(&filetype);
