@@ -128,8 +128,8 @@
 
 !    /* Global variables - filenames */
 
-      CHARACTER*80      testfile        !/* netCDF read-only test data */
-      CHARACTER*80      scratch         !/* netCDF test file for writing */
+      CHARACTER*80      testfile  !/* netCDF read-only test data */
+      CHARACTER*80      scratch   !/* netCDF test file for writing */
 
 !    /* Global variables - command-line arguments */
 
@@ -158,19 +158,20 @@
       NFMPI_OFFSET GATT_LEN(NGATTS)
 
 !    /* Miscellaneous global variables: */
-      CHARACTER*80              PROGNAME        !/* name of the program */
-      INTEGER                   COMM            !/* MPI communicator */
+      CHARACTER*80              PROGNAME   !/* name of the program */
+      INTEGER                   COMM       !/* MPI communicator */
 
       INTEGER                   NFAILSTOTAL
 
 !    /* Common blocks for global variables: */
 
-      COMMON	/OFFSETCOM/	DIM_LEN, VAR_SHAPE, GATT_LEN !/* MPI_OFFSET */
+!/* MPI_OFFSET */
+      COMMON	/OFFSETCOM/	DIM_LEN, VAR_SHAPE, GATT_LEN 
 
       COMMON    /MPICOM/        COMM
       COMMON    /LOGCOM/        CREATE_FILE,
-     *                          READONLY,       !/* don't try to change files */
-     *                          VERBOSE         !/* print details of tests */
+     *                          READONLY, !/* don't change files */
+     *                          VERBOSE   !/* print details of tests */
 
       COMMON    /TXTCOM/        TESTFILE,
      *                          SCRATCH,
@@ -180,8 +181,8 @@
      *                          GATT_NAME,
      *                          PROGNAME
 
-      COMMON    /INTCOM/        NFAILS,         !/* number of failures in 
-     *                                          ! * specific test */
+      COMMON    /INTCOM/        NFAILS,   !/* number of failures in 
+     *                                    ! * specific test */
      *                          VAR_TYPE,
      *                          VAR_RANK,
      *                          VAR_DIMID,

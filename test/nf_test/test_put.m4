@@ -641,6 +641,7 @@ C       /* Check correct error returned even when nothing to put */
         do 21, j = 1, var_rank(i)
             if (var_dimid(j,i) .gt. 1) then     ! skip record dim
                 start(j) = var_shape(j,i) + 1
+                edge(j) = 1 !/* By Jianwei, fix NF_EINVALCOORDS bug */
                 err = nfmpi_put_vara_$1_all(ncid, i, start,
      +                  edge, value)
                 if (.not. canConvert) then
@@ -651,6 +652,7 @@ C       /* Check correct error returned even when nothing to put */
      +                  call errore('bad start: ', err)
                 endif
                 start(j) = 1
+                edge(j) = 0 !/* By Jianwei, restore original value */
             endif
 21      continue
         err = nfmpi_put_vara_$1_all(ncid, i, start, edge, value)
@@ -979,7 +981,6 @@ define([TEST_NFMPI_PUT_VARM],dnl
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
 
-        err = nfmpi_begin_indep_data(ncid)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -993,12 +994,12 @@ define([TEST_NFMPI_PUT_VARM],dnl
                 stride(j) = 1
                 imap(j) = 1
 2           continue
-            err = nfmpi_put_varm_$1(BAD_ID, i, start,
+            err = nfmpi_put_varm_$1_all(BAD_ID, i, start,
      +                           edge, stride, imap, 
      +                           value)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            err = nfmpi_put_varm_$1(ncid, BAD_VARID, start,
+            err = nfmpi_put_varm_$1_all(ncid, BAD_VARID, start,
      +                           edge, stride, 
      +                           imap, value)
             if (err .ne. NF_ENOTVAR) 
@@ -1006,7 +1007,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .ne. RECDIM) then    !/* skip record dim */
                     start(j) = var_shape(j,i) + 1
-                    err = nfmpi_put_varm_$1(ncid, i, start,
+                    err = nfmpi_put_varm_$1_all(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value)
                     if (.not. canConvert) then
@@ -1018,7 +1019,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                     endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
-                    err = nfmpi_put_varm_$1(ncid, i, start,
+                    err = nfmpi_put_varm_$1_all(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value)
                     if (.not. canConvert) then
@@ -1030,7 +1031,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                     endif
                     edge(j) = 1
                     stride(j) = 0
-                    err = nfmpi_put_varm_$1(ncid, i, start,
+                    err = nfmpi_put_varm_$1_all(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value)
                     if (.not. canConvert) then
@@ -1114,7 +1115,7 @@ C*/
      +                      inRange3(val, var_type(i), 
      +                               NFT_ITYPE($1))
 11                  continue
-                    err = nfmpi_put_varm_$1(ncid,i,index,count,
+                    err = nfmpi_put_varm_$1_all(ncid,i,index,count,
      +                                   stride,imap,
      +                                   value)
                     if (canConvert) then
@@ -1132,7 +1133,6 @@ C*/
 7               continue
 5           continue
 1       continue
-        err = nfmpi_end_indep_data(ncid)
 
         err = nfmpi_close(ncid)
         if (err .ne. 0) 
@@ -1318,17 +1318,16 @@ TEST_NFMPI_PUT_VARS(int)
 TEST_NFMPI_PUT_VARS(real)
 TEST_NFMPI_PUT_VARS(double)
 
-dnl the 'varm' type is not implemented yet
-dnl TEST_NFMPI_PUT_VARM(text)
-dnl #ifdef NF_INT1_T
-dnl TEST_NFMPI_PUT_VARM(int1)
-dnl #endif
-dnl #ifdef NF_INT2_T
-dnl TEST_NFMPI_PUT_VARM(int2)
-dnl #endif
-dnl TEST_NFMPI_PUT_VARM(int)
-dnl TEST_NFMPI_PUT_VARM(real)
-dnl TEST_NFMPI_PUT_VARM(double)
+TEST_NFMPI_PUT_VARM(text)
+#ifdef NF_INT1_T
+TEST_NFMPI_PUT_VARM(int1)
+#endif
+#ifdef NF_INT2_T
+TEST_NFMPI_PUT_VARM(int2)
+#endif
+TEST_NFMPI_PUT_VARM(int)
+TEST_NFMPI_PUT_VARM(real)
+TEST_NFMPI_PUT_VARM(double)
 
         subroutine test_nfmpi_put_att_text()
         implicit        none

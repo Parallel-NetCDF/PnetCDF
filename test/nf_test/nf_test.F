@@ -159,7 +159,7 @@
         external        test_nfmpi_get_vars_int
         external        test_nfmpi_get_vars_real
         external        test_nfmpi_get_vars_double
-#if 0
+
         external        test_nfmpi_get_varm_text
 #if defined(NF_INT1_T)
         external        test_nfmpi_get_varm_int1
@@ -170,7 +170,7 @@
         external        test_nfmpi_get_varm_int
         external        test_nfmpi_get_varm_real
         external        test_nfmpi_get_varm_double
-#endif
+
         external        test_nfmpi_get_att_text
 #if defined(NF_INT1_T)
         external        test_nfmpi_get_att_int1
@@ -234,7 +234,7 @@
         external        test_nfmpi_put_vars_int
         external        test_nfmpi_put_vars_real
         external        test_nfmpi_put_vars_double
-#if 0
+
         external        test_nfmpi_put_varm_text
 #if defined(NF_INT1_T)
         external        test_nfmpi_put_varm_int1
@@ -245,7 +245,7 @@
         external        test_nfmpi_put_varm_int
         external        test_nfmpi_put_varm_real
         external        test_nfmpi_put_varm_double
-#endif
+
         external        test_nfmpi_rename_var
         external        test_nfmpi_put_att_text
 #if defined(NF_INT1_T)
@@ -392,7 +392,7 @@ C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_get_vars_int', test_nfmpi_get_vars_int)
         call test('nfmpi_get_vars_real', test_nfmpi_get_vars_real)
         call test('nfmpi_get_vars_double', test_nfmpi_get_vars_double)
-#if 0
+
         call test('nfmpi_get_varm_text', test_nfmpi_get_varm_text)
 #if defined(NF_INT1_T)
         call test('nfmpi_get_varm_int1', test_nfmpi_get_varm_int1)
@@ -403,7 +403,7 @@ C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_get_varm_int', test_nfmpi_get_varm_int)
         call test('nfmpi_get_varm_real', test_nfmpi_get_varm_real)
         call test('nfmpi_get_varm_double', test_nfmpi_get_varm_double)
-#endif
+
         call test('nfmpi_get_att_text', test_nfmpi_get_att_text)
 #if defined(NF_INT1_T)
         call test('nfmpi_get_att_int1', test_nfmpi_get_att_int1)
@@ -474,7 +474,7 @@ C           /* Test write functions */
             call test('nfmpi_put_vars_real', test_nfmpi_put_vars_real)
             call test('nfmpi_put_vars_double',
      +                 test_nfmpi_put_vars_double)
-#if 0
+
             call test('nfmpi_put_varm_text', test_nfmpi_put_varm_text)
 #if defined(NF_INT1_T)
             call test('nfmpi_put_varm_int1', test_nfmpi_put_varm_int1)
@@ -486,7 +486,7 @@ C           /* Test write functions */
             call test('nfmpi_put_varm_real', test_nfmpi_put_varm_real)
             call test('nfmpi_put_varm_double',
      +                 test_nfmpi_put_varm_double)
-#endif
+
             call test('nfmpi_rename_var', test_nfmpi_rename_var)
             call test('nfmpi_put_att_text', test_nfmpi_put_att_text)
 #if defined(NF_INT1_T)
