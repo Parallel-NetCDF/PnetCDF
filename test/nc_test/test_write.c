@@ -1929,3 +1929,22 @@ test_ncmpi_set_fill(void)
         error("remove of %s failed", scratch);
 #endif
 }
+
+/*
+ * Test ncmpi_delete
+ * 	create netcdf file 'scratch.nc' with no data, close it
+ * 	delete the file
+ */
+void
+test_ncmpi_delete(void)
+{
+    int err;
+    int ncid;
+
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    IF (err)
+	error("error creating scratch file %s, status = %d\n", scratch,err);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    IF (err)
+	error("remove of %s failed", scratch);
+}
