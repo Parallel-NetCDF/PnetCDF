@@ -1,12 +1,42 @@
-  To INSTALL parallel netCDF library:
+To INSTALL parallel netCDF library:
 
-    0. setting the environment variables:
+    1. autoconf (only necessary if you make changes to configure.in)
+
+    2. ./configure --prefix=<install dir> --with-mpi=/path/to/implementation
+	the --with-mpi argument should specify the prefix of where the mpi
+	implementation was installed.  If your mpicc is in
+	/usr/local/mpich-1.2.3/bin/mpicc then use the prefix
+	--with-mpi=/usr/local/mpich-1.2.3
+
+    NOTE: If configure cannot find your MPI implementation's C and/or
+	  Fortran compilers, define *both* the MPICC and MPIF77
+	  environment variables to be the name of those compilers.  The
+	  configure script will then use those values instead of trying
+	  to guess.
+
+    3. make 
+
+       We have tried to make the Makefiles platform-independent.
+       However, each platform has its own make quirks:  if you run into
+       problems, please send a report to the developers at
+       parallel-netcdf@mcs.anl.gov.  If you have GNU Make, try using
+       that.
+
+    4. make install
+
+IF THIS DOESN'T WORK:
+
+Autoconf should do the right thing: using the system compiler to perform
+autoconf tests and then use the MPI compilers to build parallel-netcdf.
+If you need to set specific flags for a platform, and autoconf does not
+set them for you, then you will have to set some environment variables
+to help out the configure script.   Here are some suggested settings:
 
        For Solaris
-            CC=mpicc
+            MPICC=mpicc
 
        For SGI Origin2000
-            CC = mpicc
+            MPICC = mpicc
             ------------ OR -------------
             CC='/bin/cc -64 -mips4 -lmpi'
             CPPFLAGS=-DNDEBUG
@@ -18,15 +48,15 @@
             CXXFLAGS=-O
 
        For Linux
-            CC=mpicc
+            MPICC=mpicc
             CPPFLAGS='-DNDEBUG -Df2cFortran'
             CFLAGS=-O
             CXX=g++
             FFLAGS='-O -W'
 
        For IBM SP-2
-            CC mpcc_r
-            FC /bin/mpxlf_r
+            MPICC mpcc_r
+            MPIF77 /bin/mpxlf_r
             F90 /bin/mpxlf90_r
             F90FLAGS -qsuffix=f=f90
             CXX /bin/mpxlC_r
@@ -42,22 +72,3 @@
             F90 = mpxlf90_r
             F90FLAGS = -qsuffix=f=f90
             CXX = mpxlC_r
-
-
-    1. autoconf
-
-    2. ./configure --prefix=<install dir> --with-mpi=/path/to/implementation
-	the --with-mpi argument should specify the prefix of where the mpi
-	implementation was installed.  If your mpicc is in
-	/usr/local/mpich-1.2.3/bin/mpicc then use the prefix
-	--with-mpi=/usr/local/mpich-1.2.3
-
-    NOTE: If configure cannot find your MPI implementation's C and/or Fortran
-	  compilers, define *both* the MPICC and MPIF77 environment variables
-	  to be the name of those compilers.  The configure script will then
-	  use those values instead of trying to guess.
-
-    3. make (on some systems, you make need to use gmake)
-
-    4. make install
-
