@@ -9,4 +9,4 @@ clean:
 
 install:
 	cd lib && $(MAKE) install
-	if [ @has_fortran@ = yes ] ; then && cd libf && $(MAKE) install ; fi
+	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) install ; fi
