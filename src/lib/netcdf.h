@@ -879,4 +879,25 @@ ncmpi_get_vars_double(int ncid, int varid,
 
 /* End {put,get}_vars */
 
+/* These macros are defined in serial netcdf (3.5.0) for backwards
+ * compatibility with older netcdf code.   We aren't concerned with backwards
+ * compatibility, so if your code doesn't compile with parallel-netcdf, maybe
+ * this is why: 
+ *
+ *
+ *  OLD NAME                 NEW NAME
+ *  ----------------------------------
+ *  FILL_BYTE       NC_FILL_BYTE
+ *  FILL_CHAR       NC_FILL_CHAR
+ *  FILL_SHORT      NC_FILL_SHORT
+ *  FILL_LONG       NC_FILL_INT
+ *  FILL_FLOAT      NC_FILL_FLOAT
+ *  FILL_DOUBLE     NC_FILL_DOUBLE
+ *
+ *  MAX_NC_DIMS     NC_MAX_DIMS
+ *  MAX_NC_ATTRS    NC_MAX_ATTRS
+ *  MAX_NC_VARS     NC_MAX_VARS
+ *  MAX_NC_NAME     NC_MAX_NAME
+ *  MAX_VAR_DIMS    NC_MAX_VAR_DIMS
+ */
 #endif /* _NETCDF_ */
