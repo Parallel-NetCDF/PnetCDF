@@ -628,7 +628,7 @@ static int
 hdr_check_buffer(bufferinfo *gbp, size_t nextread) {
   if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
     return ENOERR;
-  return hdr_fetch(gbp, nextread);
+  return hdr_fetch(gbp);
 }
 
 static int
