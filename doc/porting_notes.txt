@@ -32,3 +32,6 @@ becomes
 . pnetcdf does not support all types that serial netcdf supports. see
   src/lib/TODO for more specifics
 
+. If for some reason your code uses 'ptrdiff_t' types, consider using
+  MPI_Offset types
+
