@@ -21,7 +21,7 @@ vars_all     I   U      U    I     I   U    I      I
 ncmpi_put  text uchar schar short int long float double
 var1 [0]     I   U      U    I     I   U    I      I
 var          I   U      U    I     I   U    I      I     
-var_all      I   U      U    I     I   U    I      I     
+var_all [1] 
 vara         I   U      U    I     I   U    I      I     
 vara_all     I   U      U    I     I   U    I      I     
 vars         I   U      U    I     I   U    I      I     
@@ -33,8 +33,11 @@ vars_all     I   U      U    I     I   U    I      I
 
 [0] the var1 functions are all independent operations
 
-
-ncmpi_put  text uchar schar short int long float double
+[1] jianwei says "ncmpi_put_var_all does not exist at all, as all such
+    attempt would result in using ncmpi_put_vara_all, while
+    ncmpi_get_var_all is designed for a special case of optimization so
+    that all processes get the whole array but each process only reads a
+    subarray for example."
 
 OTHER FUNCTIONS:
 
