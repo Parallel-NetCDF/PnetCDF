@@ -109,7 +109,7 @@ C    check file: vars & atts
         character*(title_len)   title
         doubleprecision         var
         character*(NF_MAX_NAME) name
-        NFMPI_LONG_T                 length
+        NFMPI_OFFSET                 length
         integer                 intlen
 
         title = 'Not funny'
@@ -431,7 +431,7 @@ C    try to define a second unlimited dimension, check error
         integer err             !/* status */
         integer i
         integer dimid         !/* dimension id */
-        NFMPI_LONG_T length
+        NFMPI_OFFSET length
 
 C           /* BAD_ID test */
         length = 8
@@ -776,7 +776,7 @@ C    try with same ncid for source and target, same variable
         integer j
         character*(NF_MAX_NAME) name    !/* of att */
         integer datatype                !/* of att */
-        NFMPI_LONG_T length                  !/* of att */
+        NFMPI_OFFSET length                  !/* of att */
         character*1     value
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -933,9 +933,9 @@ C    try in data mode, check error
         integer nok             !/* count of valid comparisons */
         integer datatype
         integer attyp
-        NFMPI_LONG_T length
-        NFMPI_LONG_T attlength
-        NFMPI_LONG_T ndx(1)
+        NFMPI_OFFSET length
+        NFMPI_OFFSET attlength
+        NFMPI_OFFSET ndx(1)
         character*(MAX_NELS)    text
         doubleprecision value(MAX_NELS)
         doubleprecision expect
@@ -1222,8 +1222,8 @@ C    close file & create again for test using attribute _FillValue
         character*1 text
         doubleprecision value
         doubleprecision fill
-        NFMPI_LONG_T index(MAX_RANK)
-        NFMPI_LONG_T length
+        NFMPI_OFFSET index(MAX_RANK)
+        NFMPI_OFFSET length
 
         nok = 0
         value = 0
