@@ -828,7 +828,7 @@ yywrap(void)			/* returns 1 on EOF if no more input */
 /* Symbol table operations for ncgen tool */
 
 YYSTYPE lookup(       /* find sname in symbol table (linear search) */
-	char *sname)
+	const char *sname)
 {
     YYSTYPE sp;
     for (sp = symlist; sp != (YYSTYPE) 0; sp = sp -> next)
@@ -839,7 +839,7 @@ YYSTYPE lookup(       /* find sname in symbol table (linear search) */
 }
 
 YYSTYPE install(  /* install sname in symbol table */
-	char *sname)
+	const char *sname)
 {
     YYSTYPE sp;
 

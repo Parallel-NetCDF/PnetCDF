@@ -90,7 +90,7 @@ test_ncmpi_redef(void)
     int varid;         /* variable id */
     int varid1;        /* variable id */
     int err;
-    char * title = "Not funny";
+    const char * title = "Not funny";
     double var;
     char name[NC_MAX_NAME];
     MPI_Offset length;
@@ -1935,6 +1935,7 @@ test_ncmpi_set_fill(void)
    classic, 2 for 64-bit offset format, (someday) 3 for HDF5 format.
 */
 #define MAGIC_NUM_LEN 4
+static
 int
 ncmpi_get_file_version(char *path, int *version)
 {

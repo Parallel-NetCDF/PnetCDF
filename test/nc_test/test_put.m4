@@ -38,6 +38,7 @@ define(`HASH',dnl
 /*
  *  ensure hash value within range for internal TYPE
  */
+static
 double
 hash_$1(
     const ncmpi_type type,
@@ -69,6 +70,7 @@ define(`CHECK_VARS',dnl
 /* 
  *  check all vars in file which are (text/numeric) compatible with TYPE
  */
+static
 void
 check_vars_$1(const char *filename)
 {
@@ -170,6 +172,7 @@ define(`CHECK_ATTS',dnl
  *  check all attributes in file which are (text/numeric) compatible with TYPE
  *  ignore any attributes containing values outside range of TYPE
  */
+static
 void
 check_atts_$1(int  ncid)
 {

@@ -208,7 +208,7 @@ cstring(
  */
 static void
 gen_c(
-     char *filename)
+     const char *filename)
 {
     int idim, ivar, iatt, jatt, maxdims;
     int vector_atts;
@@ -437,7 +437,7 @@ gen_c(
 
 
 /* return Fortran type name for netCDF type, given type code */
-static char *
+static const char *
 ncftype(
      ncmpi_type type)		/* netCDF type code */
 {
@@ -473,7 +473,7 @@ ncftype(
 
 
 /* return Fortran type suffix for netCDF type, given type code */
-char *
+const char *
 nfstype(
      ncmpi_type type)		/* netCDF type code */
 {
@@ -501,7 +501,7 @@ nfstype(
 /* Return Fortran function suffix for netCDF type, given type code.
  * This should correspond to the Fortran type name in ncftype().
  */
-char *
+const char *
 nfftype(
      ncmpi_type type)		/* netCDF type code */
 {
@@ -532,7 +532,7 @@ nfftype(
 
 
 /* return FORTRAN name for netCDF type, given type code */
-static char *
+static const char *
 ftypename(
      ncmpi_type type)			/* netCDF type code */
 {
@@ -561,7 +561,7 @@ ftypename(
  */
 static void
 gen_fortran(
-     char *filename)
+     const char *filename)
 {
     int idim, ivar, iatt, jatt, itype, maxdims;
     int vector_atts;
@@ -871,7 +871,7 @@ fline(
 
 
 /* return C name for netCDF type, given type code */
-char *
+const char *
 nctype(
      ncmpi_type type)			/* netCDF type code */
 {
@@ -898,7 +898,7 @@ nctype(
 /*
  * Return C type name for netCDF type, given type code.
  */
-char *
+const char *
 ncctype(
      ncmpi_type type)			/* netCDF type code */
 {
@@ -926,7 +926,7 @@ ncctype(
 /*
  * Return C type name for netCDF type suffix, given type code.
  */
-char *
+const char *
 ncstype(
      ncmpi_type type)			/* netCDF type code */
 {
@@ -953,7 +953,7 @@ ncstype(
 /*
  * Return C type name for netCDF attribute container type, given type code.
  */
-char *
+const char *
 ncatype(
      ncmpi_type type)			/* netCDF type code */
 {
@@ -1273,7 +1273,7 @@ used_in_rec_var(
 
 
 /* Return name for Fortran fill constant of specified type */
-static char *
+static const char *
 f_fill_name(
     ncmpi_type type
     )
@@ -1693,6 +1693,7 @@ expe2d(
 
 
 /* Returns non-zero if n is a power of 2, 0 otherwise */
+static 
 int
 pow2(
      int n)

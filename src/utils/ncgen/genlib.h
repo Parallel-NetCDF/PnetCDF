@@ -21,18 +21,22 @@ extern "C" {
 
 extern void cline ( const char* stmnt );
 extern void fline ( const char* stmnt );
-extern char* nctype ( nc_type  type );
-extern char* ncctype ( nc_type  type );
-extern char* ncstype ( nc_type  type );
-extern char* ncatype ( nc_type  type );
-extern char* nfstype ( nc_type  type );
-extern char* nfftype ( nc_type  type );
+extern const char* nctype ( nc_type  type );
+extern const char* ncctype ( nc_type  type );
+extern const char* ncstype ( nc_type  type );
+extern const char* ncatype ( nc_type  type );
+extern const char* nfstype ( nc_type  type );
+extern const char* nfftype ( nc_type  type );
 extern char* fstring ( nc_type  type, void* valp, int num );
 extern char* cstrstr ( const char* valp, size_t len );
 extern char* fstrstr ( const char* str, size_t ilen );
 extern size_t nctypesize( nc_type type );
 
-extern void	derror ( const char *fmt, ... );
+extern void	derror ( const char *fmt, ... )
+#ifdef _GNUC_
+	__attribute__ ((format (printf, 1, 2)))
+#endif
+;
 extern void	check_err ( int status );
 extern void	*emalloc ( size_t size );
 extern void	*ecalloc ( size_t size );

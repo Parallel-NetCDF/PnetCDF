@@ -128,7 +128,7 @@ has_c_format_att(
  * Determine print format to use for each value for this variable.  Use value
  * of attribute C_format if it exists, otherwise a sensible default.
  */
-char *
+const char *
 get_fmt(
      int ncid,			/* netcdf id */
      int varid,			/* variable id */

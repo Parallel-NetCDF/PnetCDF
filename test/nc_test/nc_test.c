@@ -58,7 +58,7 @@ size_t gatt_len[NGATTS];
 /* 
  * command-line options
  */
-int  create_file;	/* if 1, create file test.nc */
+static int  create_file;	/* if 1, create file test.nc */
 int  read_only;		/* if 1, don't try to change files */
 int  verbose;		/* if 1, print details of tests */
 int  max_nmpt;		/* max. number of messages per test */
@@ -67,7 +67,7 @@ int  max_nmpt;		/* max. number of messages per test */
  * Misc. global variables
  */
 int  nfails;		/* number of failures in specific test */
-char *progname;
+static char *progname;
 char testfile[] = "test.nc";    /* read-only testfile */
 char scratch[] = "scratch.nc";  /* writable scratch file */
 MPI_Comm comm = MPI_COMM_WORLD; /* mpi communicator for parallel-netcdf */

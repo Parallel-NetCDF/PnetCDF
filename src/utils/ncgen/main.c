@@ -105,16 +105,38 @@ main(
     (void) par_io_init(32, 32);
 #endif
 
-    while ((c = getopt(argc, argv, "bcfno:v:x")) != EOF)
+    while ((c = getopt(argc, argv, "bcfl:no:v:x")) != EOF)
       switch(c) {
-	case 'c':		/* for c output */
+	case 'c':		/* for c output. old version of '-lc' */
 	  c_flag = 1;
 	  break;
-	case 'f':		/* for fortran output */
+	case 'f':		/* for fortran output. old version of '-lf' */
 	  fortran_flag = 1;
 	  break;
 	case 'b':		/* for binary netcdf output, ".nc" extension */
 	  netcdf_flag = 1;
+	  break;
+	case 'l':               /* specify language, instead of -c or -f */
+	  {
+               char *lang_name = (char *) emalloc(strlen(optarg)+1);
+               if (! lang_name) {
+                   derror ("%s: out of memory", progname);
+                   return(1);
+               }
+               (void)strcpy(lang_name, optarg);
+               if (strcmp(lang_name, "c") == 0 || strcmp(lang_name, "C") == 0) {
+                   c_flag = 1;
+               }
+               else if (strcmp(lang_name, "f77") == 0 || 
+                        strcmp(lang_name, "fortran77") == 0 ||
+                        strcmp(lang_name, "Fortran77") == 0) {
+                   fortran_flag = 1;
+               } else {     /* Fortran90, Java, C++, Perl, Python, Ruby, ... */
+                   derror("%s: output language %s not implemented", 
+                          progname, lang_name);
+                   return(1);
+               }
+           }
 	  break;
 	case 'n':		/* old version of -b, uses ".cdf" extension */
 	  netcdf_flag = -1;

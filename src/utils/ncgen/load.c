@@ -298,7 +298,7 @@ gen_load_c(
 static void
 fstrcat(
     char *s,			/* source string of stement being built */
-    char *t,			/* string to be appended to source */
+    const char *t,		/* string to be appended to source */
     size_t *slenp			/* pointer to length of source string */
     )
 {

@@ -50,7 +50,7 @@ inRange_uchar(const double value, const ncmpi_type datatype)
     return inRange(value, datatype);
 }
 
-int
+static int
 inRange_float(const double value, const ncmpi_type datatype)
 {
     double min, max;

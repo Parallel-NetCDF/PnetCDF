@@ -9,9 +9,19 @@ extern "C" {
 #endif
 
 /* Print error message to stderr, don't exit */
-extern void	error (const char *fmt, ...);
+extern void	error (const char *fmt, ...)
+#ifdef _GNUC_
+__attribute__ ((format (printf, 1, 2)))
+#endif
+;
 
-void print(const char *fmt, ...);
+
+void print(const char *fmt, ...)
+#ifdef _GNUC_
+__attribute__ ((format (printf, 1, 2)))
+#endif
+;
+
 
 extern int ifFail(const int expr, const int line, const char *file);
 

@@ -156,6 +156,7 @@ extern int  verbose;		/* if 1, print details of tests */
 extern int  nfails;		/* number of failures in specific test */
 extern int  use_cdf2;		/* if 1, use CDF-2 format (offset >2GB ) */
 extern int  extra_flags;	/* if using CDF-2, need extra flags for create*/
+extern in max_nmpt;		/* max number of messages per test */
 
 
     /* Global variables - test data */

@@ -726,7 +726,7 @@ vardata(
     static int initeps = 0;
 
     /* printf format used to print each value */
-    char *fmt = get_fmt(ncid, varid, vp->type);
+    const char *fmt = get_fmt(ncid, varid, vp->type);
 
     if (!initeps) {		/* make sure epsilons get initialized */
 	init_epsilons();
@@ -766,7 +766,7 @@ vardata(
 	 * the capacity of MSDOS platforms, for example), we break each row
 	 * into smaller chunks, if necessary.
 	 */
-	size_t corsav;
+	size_t corsav = 0;
 	int left = (int)ncols;
 	boolean lastrow;
 

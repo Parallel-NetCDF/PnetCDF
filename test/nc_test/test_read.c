@@ -17,9 +17,9 @@ test_ncmpi_strerror(void)
     int i;
     const char *message;
 
-    static struct {
+    static const struct {
 	int status;
-	char *msg;
+	const char *msg;
     } ncerrs[] = {
 	{NC_NOERR, "No error"},
 	{NC_EBADID, "Not a netCDF id"},
