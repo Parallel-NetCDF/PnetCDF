@@ -12,7 +12,7 @@
 #include <varargs.h>
 #endif
 
-#include <netcdf.h>
+#include <pnetcdf.h>
 #include "error.h"
 
 int	error_count = 0;

@@ -10,7 +10,7 @@
 #ifndef NO_FLOAT_H
 #include <float.h>		/* for FLT_EPSILON, DBL_EPSILON */
 #endif /* NO_FLOAT_H */
-#include <netcdf.h>
+#include <pnetcdf.h>
 #include "testcdf.h"		/* defines in-memory test cdf structure */
 #include "emalloc.h"
 #include "add.h"		/* functions to update in-memory netcdf */

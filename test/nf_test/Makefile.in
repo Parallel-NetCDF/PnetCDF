@@ -14,7 +14,7 @@ include ../../macros.make
 INCLUDES	= -I$(prefix)/include -I$(srcdir)
 
 FFLAGS	= $(INCLUDES)
-lib_netcdf	= ../libsrc/libnetcdf.a
+lib_netcdf	= $(prefix)/lib/libnetcdf.a
 # Don't use "-L../libsrc -lnetcdf" in the following because that doesn't
 # work on a CRAY T90 (sigh).
 ld_netcdf	= $(lib_netcdf)
@@ -33,7 +33,7 @@ FSRCS		= \
 		  util.F
 #
 
-CSRCS		= fortlib.c
+#CSRCS		= fortlib.c
 
 OBJS		= \
 		  test_get.o	\
@@ -42,8 +42,8 @@ OBJS		= \
 		  nf_test.o	\
 		  test_read.o	\
 		  test_write.o	\
-		  util.o	\
-		  fortlib.o
+		  util.o	
+		  #fortlib.o
 
 time_log	= times
 

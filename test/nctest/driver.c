@@ -4,7 +4,7 @@
  *   $Header$
  *********************************************************************/
 
-#include <netcdf.h>
+#include <pnetcdf.h>
 #include "tests.h"
 
   /*
