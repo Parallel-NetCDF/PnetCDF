@@ -53,7 +53,7 @@ saveCC="$CC"
 CC=$MPICC
 AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR],
 	AC_MSG_RESULT(yes),
-	AC_MSG_ERROR(mpi implementation does not support MPI-IO)
+	AC_MSG_ERROR([mpi implementation does not support MPI-IO])
 )
 CC="$saveCC"
 AC_SUBST(MPICC)
