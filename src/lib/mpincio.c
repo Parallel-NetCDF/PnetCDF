@@ -80,7 +80,7 @@ ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   ncio *nciop;
   int i;
   int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
-  int mpireturn, status; 
+  int mpireturn;
 
 
   fSet(ioflags, NC_WRITE);
@@ -128,7 +128,7 @@ ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   ncio *nciop;
   int i;
   int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
-  int mpireturn, status;
+  int mpireturn;
  
   if(path == NULL || *path == 0)
     return EINVAL;

@@ -116,6 +116,23 @@ dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref);
 extern NC_dim *
 elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
 
+extern int
+nc_def_dim(int ncid, const char *name, size_t size, int *dimidp);
+
+extern int
+nc_rename_dim( int ncid, int dimid, const char *newname);
+
+extern int
+nc_inq_dimid(int ncid, const char *name, int *dimid_ptr);
+
+extern int
+nc_inq_dim(int ncid, int dimid, char *name, size_t *sizep);
+
+extern int 
+nc_inq_dimname(int ncid, int dimid, char *name);
+
+extern int 
+nc_inq_dimlen(int ncid, int dimid, size_t *lenp);
 /* End defined in dim.c */
 
 /*
@@ -166,9 +183,59 @@ dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref);
 extern NC_attr *
 elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
 
+extern int
+nc_put_att_text(int ncid, int varid, const char *name,
+	size_t nelems, const char *value);
+
+extern int
+nc_get_att_text(int ncid, int varid, const char *name, char *str);
+
+extern int
+nc_put_att_schar(int ncid, int varid, const char *name,
+	nc_type type, size_t nelems, const signed char *value);
+
+extern int
+nc_get_att_schar(int ncid, int varid, const char *name, signed char *tp);
+
+extern int
+nc_put_att_uchar(int ncid, int varid, const char *name,
+	nc_type type, size_t nelems, const unsigned char *value);
+
+extern int
+nc_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp);
+
+extern int
+nc_put_att_short(int ncid, int varid, const char *name,
+	nc_type type, size_t nelems, const short *value);
+
+extern int
+nc_get_att_short(int ncid, int varid, const char *name, short *tp);
+
+extern int
+nc_put_att_int(int ncid, int varid, const char *name,
+	nc_type type, size_t nelems, const int *value);
+
+extern int
+nc_get_att_int(int ncid, int varid, const char *name, int *tp);
+
+extern int
+nc_put_att_long(int ncid, int varid, const char *name,
+	nc_type type, size_t nelems, const long *value);
+
+extern int
+nc_get_att_long(int ncid, int varid, const char *name, long *tp);
+
+extern int
+nc_put_att_float(int ncid, int varid, const char *name,
+	nc_type type, size_t nelems, const float *value);
+extern int
+nc_get_att_float(int ncid, int varid, const char *name, float *tp);
+extern int
+nc_put_att_double(int ncid, int varid, const char *name,
+	nc_type type, size_t nelems, const double *value);
+extern int
+nc_get_att_double(int ncid, int varid, const char *name, double *tp);
 /* End defined in attr.c */
-
-
 /*
  * NC variable: description and data
  */
@@ -225,6 +292,37 @@ NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);
 extern NC_var *
 NC_lookupvar(NC *ncp, int varid);
 
+extern int
+nc_def_var( int ncid, const char *name, nc_type type,
+	 int ndims, const int *dimids, int *varidp);
+
+extern int
+nc_rename_var(int ncid, int varid, const char *newname);
+
+extern int
+nc_inq_var(int ncid, int varid, char *name, nc_type *typep, 
+		int *ndimsp, int *dimids, int *nattsp);
+
+extern int
+nc_inq_varid(int ncid, const char *name, int *varid_ptr);
+
+extern int 
+nc_inq_varname(int ncid, int varid, char *name);
+
+extern int 
+nc_inq_vartype(int ncid, int varid, nc_type *typep);
+
+extern int 
+nc_inq_varndims(int ncid, int varid, int *ndimsp);
+
+extern int 
+nc_inq_vardimid(int ncid, int varid, int *dimids);
+
+extern int 
+nc_inq_varnatts(int ncid, int varid, int *nattsp);
+
+extern int
+nc_rename_var(int ncid, int varid, const char *newname);
 /* End defined in var.c */
 
 #define IS_RECVAR(vp) \
@@ -247,8 +345,8 @@ struct NC {
 	struct NC *old;
 	/* flags */
 #define NC_INDEP 1	/* in independent data mode, cleared by endindep */
-#define NC_CREAT 2	/* in create phase, cleared by ncendef */
-#define NC_INDEF 8	/* in define mode, cleared by ncendef */
+#define NC_CREAT 2	/* in create phase, cleared by ncenddef */
+#define NC_INDEF 8	/* in define mode, cleared by ncenddef */
 #define NC_NSYNC 0x10	/* synchronise numrecs on change */
 #define NC_HSYNC 0x20	/* synchronise whole header on change */
 #define NC_NDIRTY 0x40	/* numrecs has changed */
@@ -336,6 +434,38 @@ write_numrecs(NC *ncp);
 extern int
 NC_sync(NC *ncp);
 
+extern void
+free_NC(NC *ncp);
+
+extern void
+add_to_NCList(NC *ncp);
+
+extern void
+del_from_NCList(NC *ncp);
+
+extern int
+read_NC(NC *ncp);
+
+extern int 
+NC_enddef(NC *ncp);
+
+extern int 
+NC_close(NC *ncp);
+
+extern int
+nc_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
+
+extern int 
+nc_inq_ndims(int ncid, int *ndimsp);
+
+extern int 
+nc_inq_nvars(int ncid, int *nvarsp);
+
+extern int 
+nc_inq_natts(int ncid, int *nattsp);
+
+extern int 
+nc_inq_unlimdim(int ncid, int *xtendimp);
 /* End defined in nc.c */
 /* Begin defined in v1hpg.c */
 
@@ -365,6 +495,60 @@ nc_put_rec(int ncid, size_t recnum, void *const *datap);
 
 /* End defined in putget.c */
 
+/* Begin defined in header.c */
+typedef struct bufferinfo {
+  ncio *nciop;		
+  MPI_Offset offset;	/* current read/write offset in the file */
+  void *base;     	/* beginning of read/write buffer */
+  void *pos;      	/* current position in buffer */
+  size_t size;		/* size of the buffer */
+} bufferinfo;  
+
+extern int
+hdr_get_NC(NC *ncp);
+
+extern size_t 
+ncx_len_nctype(nc_type type);
+
+extern int
+hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
+
+extern size_t
+hdr_len_NC(const NC *ncp);
+
+extern int
+hdr_get_NC(NC *ncp);
+
+extern int 
+hdr_put_NC(NC *ncp, void *buf);
+
+extern int
+NC_computeshapes(NC *ncp);
+
+/* end defined in hader.c */
+
+/* begin defined in mpincio.c */
+extern int
+ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
+            ncio **nciopp);
+
+extern int
+ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
+          ncio **nciopp);
+extern int
+ncio_sync(ncio *nciop);
+
+extern int
+ncio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes);
+
+extern int
+NC_computeshapes(NC *ncp);
+
+/* end defined in mpincio.h */
+
+/* begin defined in error.c */
+const char * nc_strerror(int err);
+/* end defined in error.c */
 /*
  * These functions are used to support
  * interface version 2 backward compatiblity.

@@ -9,6 +9,7 @@
 #include "ncx.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <assert.h>
 
 const char *
@@ -853,8 +854,8 @@ NC_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
   if (!collective && !NC_indep(ncp))
     return NC_ENOTINDEP;
 
-  if (collective && !NC_collectiveFhOpened(ncp->nciop) 
-    || !collective && !NC_independentFhOpened(ncp->nciop)) {
+  if ( (collective && !NC_collectiveFhOpened(ncp->nciop)) 
+    || (!collective && !NC_independentFhOpened(ncp->nciop)) ) {
   
     int mpireturn;
     mpireturn = MPI_File_open(comm, (char *)ncp->nciop->path, ncp->nciop->mpiomode,
@@ -963,7 +964,6 @@ NC_set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[
 int
 NC_set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
   MPI_Offset offset;
-  int status;
 
   offset = varp->begin;
 
@@ -972,7 +972,7 @@ NC_set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
     MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
   } else {
     /* Record variable, Strided file view */
-    int dim, ndims;
+    int  ndims;
     MPI_Datatype filetype;  
     MPI_Aint stride;
     int blocklen;
@@ -1391,7 +1391,6 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
   NC *ncp;
   void *xbuf;
   int status;
-  int dim;
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;
@@ -1478,7 +1477,6 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   NC *ncp;
   void *xbuf;
   int status;
-  int dim;
   int nelems, nbytes;
   MPI_Status mpistatus;
   int words_bigendian = 0;
@@ -1582,7 +1580,6 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
   NC *ncp;
   void *xbuf;
   int status;
-  int dim;
   int nelems, nbytes;
   int words_bigendian = 0;
   MPI_Status mpistatus;

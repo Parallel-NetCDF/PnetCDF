@@ -225,9 +225,10 @@ ncx_howmany(nc_type type, size_t xbufsize)
 		return xbufsize/X_SIZEOF_FLOAT;
 	case NC_DOUBLE:
 		return xbufsize/X_SIZEOF_DOUBLE;
+	default:
+		assert("ncx_howmany: Bad type" == 0);
+		return(0);
 	}
-	assert("ncx_howmany: Bad type" == 0);
-	return(0);
 }
 
 #define	D_RNDUP(x, align) _RNDUP(x, (off_t)(align))
@@ -684,75 +685,6 @@ enddef(NC *ncp)
   return NC_NOERR;
 }
 
-
-/*
- *  End define mode.
- *  Common code for ncendef, ncclose(endef)
- *  Flushes I/O buffers.
- */
-static int
-NC_endef(NC *ncp,
-	size_t h_minfree, size_t v_align,
-	size_t v_minfree, size_t r_align)
-{
-	int status = NC_NOERR;
-
-	assert(!NC_readonly(ncp));
-	assert(NC_indef(ncp));
-
-	NC_begins(ncp, h_minfree, v_align, v_minfree, r_align);
-
-	if(ncp->old != NULL)
-	{
-		/* a plain redef, not a create */
-		assert(!NC_IsNew(ncp));
-		assert(fIsSet(ncp->flags, NC_INDEF));
-		assert(ncp->begin_rec >= ncp->old->begin_rec);
-		assert(ncp->begin_var >= ncp->old->begin_var);
-
-		if(ncp->vars.nelems != 0)
-		{
-		if(ncp->begin_rec > ncp->old->begin_rec)
-		{
-			status = move_recs_r(ncp, ncp->old);
-			if(status != NC_NOERR)
-				return status;
-			if(ncp->begin_var > ncp->old->begin_var)
-			{
-				status = move_vars_r(ncp, ncp->old);
-				if(status != NC_NOERR)
-					return status;
-			} 
-			/* else if (ncp->begin_var == ncp->old->begin_var) { NOOP } */
-		}
-		else
-		{	/* Even if (ncp->begin_rec == ncp->old->begin_rec)
-			   and     (ncp->begin_var == ncp->old->begin_var)
-			   might still have added a new record variable */
-		        if(ncp->recsize > ncp->old->recsize)
-			{
-			        status = move_recs_r(ncp, ncp->old);
-				if(status != NC_NOERR)
-				      return status;
-			}
-		}
-		}
-	}
-
-	status = write_NC(ncp);
-	if(status != NC_NOERR)
-		return status;
-
-	if(ncp->old != NULL)
-	{
-		free_NC(ncp->old);
-		ncp->old = NULL;
-	}
-
-	fClr(ncp->flags, NC_CREAT | NC_INDEF);
-
-	return ncp->nciop->sync(ncp->nciop);
-}
 
 #ifdef LOCKNUMREC
 static int
