@@ -12,7 +12,7 @@ SRCS		= test_read.c test_read_indep.c test_write.c test_write_indep.c
 OBJS		= $(SRCS:.c=.o)
 PROGS		= test_read test_read_indep test_write test_write_indep
 LDFLAGS		= -L$(NETCDF)/lib -L..//common @LDFLAGS@
-LIBS		= -lnetcdf -ltestutils @LIBS@
+LIBS		= -lpnetcdf -ltestutils @LIBS@
 
 .o:
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
