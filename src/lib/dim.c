@@ -310,14 +310,14 @@ ncmpi_def_dim(int ncid, const char *name, size_t size, int *dimidp)
 	int dimid;
 	NC_dim *dimp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
 	if(!NC_indef(ncp))
 		return NC_ENOTINDEFINE;
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -365,7 +365,7 @@ ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr)
 	NC *ncp;
 	int dimid;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -386,7 +386,7 @@ ncmpi_inq_dim(int ncid, int dimid, char *name, size_t *sizep)
 	NC *ncp;
 	NC_dim *dimp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -418,7 +418,7 @@ ncmpi_inq_dimname(int ncid, int dimid, char *name)
 	NC *ncp;
 	NC_dim *dimp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -444,7 +444,7 @@ ncmpi_inq_dimlen(int ncid, int dimid, size_t *lenp)
 	NC *ncp;
 	NC_dim *dimp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -471,14 +471,14 @@ ncmpi_rename_dim( int ncid, int dimid, const char *newname)
 	int existid;
 	NC_dim *dimp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
 	if(NC_readonly(ncp))
 		return NC_EPERM;
 
-	status = NC_check_name(newname);
+	status = ncmpii_NC_check_name(newname);
 	if(status != NC_NOERR)
 		return status;
 
@@ -511,7 +511,7 @@ ncmpi_rename_dim( int ncid, int dimid, const char *newname)
 
 	if(NC_doHsync(ncp))
 	{
-		status = NC_sync(ncp);
+		status = ncmpii_NC_sync(ncp);
 		if(status != NC_NOERR)
 			return status;
 	}

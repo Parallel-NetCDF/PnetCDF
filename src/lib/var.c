@@ -295,7 +295,7 @@ elem_NC_vararray(const NC_vararray *ncap, size_t elem)
 NC_hvarid
  */
 int
-NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
+ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
 {
 	NC_var **loc;
 	size_t slen;
@@ -357,10 +357,10 @@ ncx_szof(nc_type type)
 /*
  * 'compile' the shape and len of a variable
  *  Formerly
-NC_var_shape(var, dims)
+ncmpii_NC_var_shape(var, dims)
  */
 int
-NC_var_shape(NC_var *varp, const NC_dimarray *dims)
+ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims)
 {
 	size_t *shp, *dsp, *op;
 	int *ip;
@@ -436,7 +436,7 @@ out :
 NC_hlookupvar()
  */
 NC_var *
-NC_lookupvar(NC *ncp, int varid)
+ncmpii_NC_lookupvar(NC *ncp, int varid)
 {
 	NC_var *varp;
 
@@ -469,7 +469,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 	int varid;
 	NC_var *varp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -478,7 +478,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 		return NC_ENOTINDEFINE;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -497,7 +497,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 		return NC_EMAXVARS;
 	}
 
-	varid = NC_findvar(&ncp->vars, name, &varp);
+	varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
 	if(varid != -1)
 	{
 		return NC_ENAMEINUSE;
@@ -507,7 +507,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 	if(varp == NULL)
 		return NC_ENOMEM;
 
-	status = NC_var_shape(varp, &ncp->dims);
+	status = ncmpii_NC_var_shape(varp, &ncp->dims);
 	if(status != NC_NOERR)
 	{
 		ncmpii_free_NC_var(varp);
@@ -535,11 +535,11 @@ ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr)
 	NC_var *varp;
 	int varid;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
-	varid = NC_findvar(&ncp->vars, name, &varp);
+	varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
 	if(varid == -1)
 	{
 		return NC_ENOTVAR;
@@ -564,7 +564,7 @@ ncmpi_inq_var(int ncid,
 	NC_var *varp;
 	size_t ii;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -607,7 +607,7 @@ ncmpi_inq_varname(int ncid, int varid, char *name)
 	NC *ncp;
 	NC_var *varp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -631,7 +631,7 @@ ncmpi_inq_vartype(int ncid, int varid, nc_type *typep)
 	NC *ncp;
 	NC_var *varp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -652,7 +652,7 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 	NC *ncp;
 	NC_var *varp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -677,7 +677,7 @@ ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
 	NC_var *varp;
 	size_t ii;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -707,7 +707,7 @@ ncmpi_inq_varnatts(int ncid, int varid, int *nattsp)
 	if(varid == NC_GLOBAL)
 		return ncmpi_inq_natts(ncid, nattsp);
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -732,7 +732,7 @@ ncmpi_rename_var(int ncid, int varid, const char *newname)
 	NC_string *old, *newStr;
 	int other;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -741,18 +741,18 @@ ncmpi_rename_var(int ncid, int varid, const char *newname)
 		return NC_EPERM;
 	}
 
-	status = NC_check_name(newname);
+	status = ncmpii_NC_check_name(newname);
 	if(status != NC_NOERR)
 		return status;
 
 	/* check for name in use */
-	other = NC_findvar(&ncp->vars, newname, &varp);
+	other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
 	if(other != -1)
 	{
 		return NC_ENAMEINUSE;
 	}
 	
-	varp = NC_lookupvar(ncp, varid);
+	varp = ncmpii_NC_lookupvar(ncp, varid);
 	if(varp == NULL)
 	{
 		/* invalid varid */
@@ -779,7 +779,7 @@ ncmpi_rename_var(int ncid, int varid, const char *newname)
 
 	if(NC_doHsync(ncp))
 	{
-		status = NC_sync(ncp);
+		status = ncmpii_NC_sync(ncp);
 		if(status != NC_NOERR)
 			return status;
 	}

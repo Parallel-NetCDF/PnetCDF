@@ -32,7 +32,7 @@ static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
 #endif
 
 void
-add_to_NCList(NC *ncp)
+ncmpii_add_to_NCList(NC *ncp)
 {
 	assert(ncp != NULL);
 
@@ -44,7 +44,7 @@ add_to_NCList(NC *ncp)
 }
 
 void
-del_from_NCList(NC *ncp)
+ncmpii_del_from_NCList(NC *ncp)
 {
 	assert(ncp != NULL);
 
@@ -109,7 +109,7 @@ NC_check_def(MPI_Comm comm, void *buf, size_t nn) {
 }
 
 int
-NC_check_id(int ncid, NC **ncpp)
+ncmpii_NC_check_id(int ncid, NC **ncpp)
 {
 	NC *ncp;
 
@@ -352,7 +352,7 @@ fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 
  
 int
-read_numrecs(NC *ncp) {
+ncmpii_read_numrecs(NC *ncp) {
   int status = NC_NOERR, mpireturn;
   size_t nrecs;
   void *buf, *pos;
@@ -405,7 +405,7 @@ read_numrecs(NC *ncp) {
  */
 
 int
-write_numrecs(NC *ncp) {
+ncmpii_write_numrecs(NC *ncp) {
   int status = NC_NOERR, mpireturn;
   size_t nrecs;
   void *buf, *pos; 
@@ -563,7 +563,7 @@ write_NC(NC *ncp)
  * Write the header or the numrecs if necessary.
  */
 int
-NC_sync(NC *ncp)
+ncmpii_NC_sync(NC *ncp)
 {
   int mynumrecs, numrecs;
 
@@ -584,7 +584,7 @@ NC_sync(NC *ncp)
   /* else */
 
   if(NC_ndirty(ncp)) {
-    return write_numrecs(ncp);
+    return ncmpii_write_numrecs(ncp);
   }
   /* else */
 
@@ -657,7 +657,7 @@ move_vars_r(NC *ncp, NC *old) {
 }
  
 int 
-NC_enddef(NC *ncp) {
+ncmpii_NC_enddef(NC *ncp) {
   int status = NC_NOERR;
   MPI_Comm comm;
   int mpireturn;
@@ -775,11 +775,11 @@ enddef(NC *ncp)
 /* Public */
 
 int 
-NC_close(NC *ncp) {
+ncmpii_NC_close(NC *ncp) {
   int status = NC_NOERR;
 
   if(NC_indef(ncp)) {
-    status = NC_enddef(ncp); /* TODO: defaults */
+    status = ncmpii_NC_enddef(ncp); /* TODO: defaults */
     if(status != NC_NOERR ) {
       /* To do: Abort new definition, if any */
       if (ncp->old != NULL) {
@@ -790,7 +790,7 @@ NC_close(NC *ncp) {
     }
   }
   else if(!NC_readonly(ncp)) {
-    status = NC_sync(ncp);
+    status = ncmpii_NC_sync(ncp);
     if (status != NC_NOERR)
       return status;
   }
@@ -798,7 +798,7 @@ NC_close(NC *ncp) {
   (void) ncmpiio_close(ncp->nciop, 0);
   ncp->nciop = NULL;
  
-  del_from_NCList(ncp);
+  ncmpii_del_from_NCList(ncp);
  
   ncmpii_free_NC(ncp);
  
@@ -815,7 +815,7 @@ ncmpi_inq(int ncid,
 	int status;
 	NC *ncp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -837,7 +837,7 @@ ncmpi_inq_ndims(int ncid, int *ndimsp)
 	int status;
 	NC *ncp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -853,7 +853,7 @@ ncmpi_inq_nvars(int ncid, int *nvarsp)
 	int status;
 	NC *ncp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -869,7 +869,7 @@ ncmpi_inq_natts(int ncid, int *nattsp)
 	int status;
 	NC *ncp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -885,7 +885,7 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp)
 	int status;
 	NC *ncp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -902,7 +902,7 @@ nc_sync(int ncid)
 	int status;
 	NC *ncp;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -915,7 +915,7 @@ nc_sync(int ncid)
 	}
 	/* else, read/write */
 
-	status = NC_sync(ncp);
+	status = ncmpii_NC_sync(ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -931,7 +931,7 @@ nc_set_fill(int ncid,
 	NC *ncp;
 	int oldmode;
 
-	status = NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
@@ -952,7 +952,7 @@ nc_set_fill(int ncid,
 			 * We are changing back to fill mode
 			 * so do a sync
 			 */
-			status = NC_sync(ncp);
+			status = ncmpii_NC_sync(ncp);
 			if(status != NC_NOERR)
 				return status;
 		}

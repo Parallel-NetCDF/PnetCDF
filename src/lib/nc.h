@@ -64,7 +64,7 @@ extern void
 ncmpii_free_NC_string(NC_string *ncstrp);
 
 extern int
-NC_check_name(const char *name);
+ncmpii_NC_check_name(const char *name);
 
 extern NC_string *
 ncmpii_new_NC_string(size_t slen, const char *str);
@@ -167,7 +167,7 @@ ncmpii_new_x_NC_attr(
 	size_t nelems);
 
 extern NC_attr **
-NC_findattr(const NC_attrarray *ncap, const char *name);
+ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name);
 
 /* attrarray */
 
@@ -310,13 +310,13 @@ extern int
 ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref);
 
 extern int
-NC_var_shape(NC_var *varp, const NC_dimarray *dims);
+ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims);
 
 extern int
-NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);
+ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);
 
 extern NC_var *
-NC_lookupvar(NC *ncp, int varid);
+ncmpii_NC_lookupvar(NC *ncp, int varid);
 
 extern int
 ncmpi_def_var( int ncid, const char *name, nc_type type,
@@ -427,7 +427,7 @@ struct NC {
 /* Begin defined in nc.c */
 
 extern int
-NC_check_id(int ncid, NC **ncpp);
+ncmpii_NC_check_id(int ncid, NC **ncpp);
 
 extern int
 ncmpii_cktype(nc_type datatype);
@@ -436,31 +436,31 @@ extern size_t
 ncmpix_howmany(nc_type type, size_t xbufsize);
 
 extern int
-read_numrecs(NC *ncp);
+ncmpii_read_numrecs(NC *ncp);
 
 extern int
-write_numrecs(NC *ncp);
+ncmpii_write_numrecs(NC *ncp);
 
 extern int
-NC_sync(NC *ncp);
+ncmpii_NC_sync(NC *ncp);
 
 extern void
 ncmpii_free_NC(NC *ncp);
 
 extern void
-add_to_NCList(NC *ncp);
+ncmpii_add_to_NCList(NC *ncp);
 
 extern void
-del_from_NCList(NC *ncp);
+ncmpii_del_from_NCList(NC *ncp);
 
 extern int
 ncmpii_read_NC(NC *ncp);
 
 extern int 
-NC_enddef(NC *ncp);
+ncmpii_NC_enddef(NC *ncp);
 
 extern int 
-NC_close(NC *ncp);
+ncmpii_NC_close(NC *ncp);
 
 extern int
 ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);

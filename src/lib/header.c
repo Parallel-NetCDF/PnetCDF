@@ -84,7 +84,7 @@ ncmpii_NC_computeshapes(NC *ncp)
  
         for( /*NADA*/; vpp < end; vpp++)
         {
-                status = NC_var_shape(*vpp, &ncp->dims);
+                status = ncmpii_NC_var_shape(*vpp, &ncp->dims);
                 if(status != ENOERR)
                         return(status);
  
