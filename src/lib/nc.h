@@ -54,23 +54,23 @@ typedef struct {
 } NC_string;
 
 extern NC *
-new_NC(const size_t *chunkp);
+ncmpii_new_NC(const size_t *chunkp);
 
 extern NC *
-dup_NC(const NC *ref);
+ncmpii_dup_NC(const NC *ref);
 
 /* Begin defined in string.c */
 extern void
-free_NC_string(NC_string *ncstrp);
+ncmpii_free_NC_string(NC_string *ncstrp);
 
 extern int
 NC_check_name(const char *name);
 
 extern NC_string *
-new_NC_string(size_t slen, const char *str);
+ncmpii_new_NC_string(size_t slen, const char *str);
 
 extern int
-set_NC_string(NC_string *ncstrp, const char *str);
+ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
 
 /* End defined in string.c */
 
@@ -94,27 +94,27 @@ typedef struct NC_dimarray {
 /* Begin defined in dim.c */
 
 extern void
-free_NC_dim(NC_dim *dimp);
+ncmpii_free_NC_dim(NC_dim *dimp);
 
 extern NC_dim *
-new_x_NC_dim(NC_string *name);
+ncmpii_new_x_NC_dim(NC_string *name);
 
 extern int
-find_NC_Udim(const NC_dimarray *ncap, NC_dim **dimpp);
+ncmpii_find_NC_Udim(const NC_dimarray *ncap, NC_dim **dimpp);
 
 /* dimarray */
 
 extern void
-free_NC_dimarrayV0(NC_dimarray *ncap);
+ncmpii_free_NC_dimarrayV0(NC_dimarray *ncap);
 
 extern void
-free_NC_dimarrayV(NC_dimarray *ncap);
+ncmpii_free_NC_dimarrayV(NC_dimarray *ncap);
 
 extern int
-dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref);
+ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref);
 
 extern NC_dim *
-elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
+ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
 
 extern int
 ncmpi_def_dim(int ncid, const char *name, size_t size, int *dimidp);
@@ -158,10 +158,10 @@ typedef struct NC_attrarray {
 /* Begin defined in attr.c */
 
 extern void
-free_NC_attr(NC_attr *attrp);
+ncmpii_free_NC_attr(NC_attr *attrp);
 
 extern NC_attr *
-new_x_NC_attr(
+ncmpii_new_x_NC_attr(
 	NC_string *strp,
 	nc_type type,
 	size_t nelems);
@@ -172,16 +172,16 @@ NC_findattr(const NC_attrarray *ncap, const char *name);
 /* attrarray */
 
 extern void
-free_NC_attrarrayV0(NC_attrarray *ncap);
+ncmpii_free_NC_attrarrayV0(NC_attrarray *ncap);
 
 extern void
-free_NC_attrarrayV(NC_attrarray *ncap);
+ncmpii_free_NC_attrarrayV(NC_attrarray *ncap);
 
 extern int
-dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref);
+ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref);
 
 extern NC_attr *
-elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
+ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
 
 extern int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
@@ -291,23 +291,23 @@ typedef struct NC_vararray {
 /* Begin defined in var.c */
 
 extern void
-free_NC_var(NC_var *varp);
+ncmpii_free_NC_var(NC_var *varp);
 
 extern NC_var *
-new_x_NC_var(
+ncmpii_new_x_NC_var(
 	NC_string *strp,
 	size_t ndims);
 
 /* vararray */
 
 extern void
-free_NC_vararrayV0(NC_vararray *ncap);
+ncmpii_free_NC_vararrayV0(NC_vararray *ncap);
 
 extern void
-free_NC_vararrayV(NC_vararray *ncap);
+ncmpii_free_NC_vararrayV(NC_vararray *ncap);
 
 extern int
-dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref);
+ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref);
 
 extern int
 NC_var_shape(NC_var *varp, const NC_dimarray *dims);
@@ -445,7 +445,7 @@ extern int
 NC_sync(NC *ncp);
 
 extern void
-free_NC(NC *ncp);
+ncmpii_free_NC(NC *ncp);
 
 extern void
 add_to_NCList(NC *ncp);
@@ -454,7 +454,7 @@ extern void
 del_from_NCList(NC *ncp);
 
 extern int
-read_NC(NC *ncp);
+ncmpii_read_NC(NC *ncp);
 
 extern int 
 NC_enddef(NC *ncp);
@@ -494,7 +494,7 @@ nc_get_NC( NC *ncp);
 /* Begin defined in putget.c */
 
 extern int
-fill_NC_var(NC *ncp, const NC_var *varp, size_t recno);
+ncmpii_fill_NC_var(NC *ncp, const NC_var *varp, size_t recno);
 
 extern int
 ncmpii_inq_rec(int ncid, size_t *nrecvars, int *recvarids, size_t *recsizes);

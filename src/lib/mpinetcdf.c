@@ -63,7 +63,7 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
   int status = NC_NOERR;
   NC *ncp;
 
-  ncp = new_NC(NULL);
+  ncp = ncmpii_new_NC(NULL);
   if(ncp == NULL) 
     return NC_ENOMEM;
 
@@ -74,7 +74,7 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
 
   status = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
   if(status != NC_NOERR) {
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     return status;
   }
 
@@ -102,13 +102,13 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
   int status = NC_NOERR;
   NC *ncp;
   
-  ncp = new_NC(NULL);
+  ncp = ncmpii_new_NC(NULL);
   if(ncp == NULL)
     return NC_ENOMEM;
 
   status = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
   if(status != NC_NOERR) {
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     return status;
   } 
 
@@ -127,7 +127,7 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
 
   status = hdr_get_NC(ncp);
   if (status != NC_NOERR) {
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     return status;
   }
 
@@ -160,7 +160,7 @@ ncmpi_redef(int ncid) {
 
   if(fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
     /* read in from disk */
-    status = read_NC(ncp);
+    status = ncmpii_read_NC(ncp);
     if(status != NC_NOERR)
       return status;
   } else {
@@ -175,7 +175,7 @@ ncmpi_redef(int ncid) {
     }
   }
 
-  ncp->old = dup_NC(ncp);
+  ncp->old = ncmpii_dup_NC(ncp);
   if(ncp->old == NULL)
     return NC_ENOMEM;
 
@@ -282,7 +282,7 @@ ncmpi_sync(int ncid) {
     return NC_EINDEFINE;
 
   if(NC_readonly(ncp))
-    return read_NC(ncp);
+    return ncmpii_read_NC(ncp);
 
   /* else, read/write */
 
@@ -314,7 +314,7 @@ ncmpi_abort(int ncid) {
     /* a plain redef, not a create */
     assert(!NC_IsNew(ncp));
     assert(fIsSet(ncp->flags, NC_INDEF));
-    free_NC(ncp->old);
+    ncmpii_free_NC(ncp->old);
     ncp->old = NULL;
     fClr(ncp->flags, NC_INDEF);
   } 
@@ -330,7 +330,7 @@ ncmpi_abort(int ncid) {
 
   del_from_NCList(ncp);
 
-  free_NC(ncp);
+  ncmpii_free_NC(ncp);
 
   return NC_NOERR;
 }
