@@ -1,0 +1,10 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+SUBDIRS = test_double test_double_int test_float test_int
+
+all:
+	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i; done
+
+clean:
+	set -e; for i in $(SUBDIRS); do $(MAKE) -C $$i clean; done
+
