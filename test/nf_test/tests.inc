@@ -166,6 +166,7 @@
 
 !    /* Common blocks for global variables: */
 
+      COMMON    /MPICOM/        COMM
       COMMON    /LOGCOM/        CREATE_FILE,
      *                          READONLY,       !/* don't try to change files */
      *                          VERBOSE         !/* print details of tests */
