@@ -266,7 +266,7 @@ if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
 
     NFMPI_OFFSET="integer*$ac_cv_sizeof_MPI_Offset"
-    AC_MSG_CHECKING(for Fortran \"$NFMPI_OFFSET\")
+    AC_MSG_CHECKING(for Fortran \"$NFMPI_OFFSET\")  
 		cat >conftest.f <<EOF
 	subroutine sub(value)
 	$NFMPI_OFFSET value
@@ -277,7 +277,7 @@ EOF
         AC_MSG_RESULT(yes)
     else
 	AC_MSG_RESULT(no)
-        AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\")
+        AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\") 
     fi
     rm -f conftest*
 fi
@@ -299,7 +299,9 @@ AC_CHECK_HEADERS(unistd.h,
 		AC_MSG_RESULT(none))
 	)
 
-AC_CHECK_SIZEOF(off_t)
+dnl UD_CHECK_SIZEOF includes some extra headers not included in AC_CHECK_SIZEOF
+dnl don't change this to AC_CHECK_SIZEOF
+UD_CHECK_SIZEOF(off_t)
 dnl on some 64 bit platforms, the _LFS64_LARGEFILE define may not exist -- it
 dnl was, after all, designed for 32 bit systems trying to access large files.
 dnl If off_t is 8 bytes, then we *can* work on large files: do one last check
