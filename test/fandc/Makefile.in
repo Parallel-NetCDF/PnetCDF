@@ -1,0 +1,35 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+ALL: pnctestf pnctest csnap pnf_test
+
+INCDIR = $(srcdir)/../../src/lib
+INCDIRF = $(srcdir)/../../src/libf/
+LNKDIR = ../../src/lib
+
+MPICC = @MPICC@
+MPIF77 = @MPIF77@
+
+EXECS = pnctestf pnctest csnap
+
+pnctestf: pnctestf.F
+	$(MPIF77) -o pnctestf $(srcdir)/pnctestf.F -I$(INCDIRF) -L$(LNKDIR) -lpnetcdf -lm
+
+pnctest: pnctest.c
+	$(MPICC) -o pnctest $(srcdir)/pnctest.c -I$(INCDIR) -L$(LNKDIR) -lpnetcdf -lm
+
+csnap:  csnap.o
+	$(MPICC) -L$(LNKDIR) -o csnap csnap.o -lpnetcdf -lm
+
+csnap.o:  csnap.c
+	$(MPICC) -I$(INCDIR) -c $(srcdir)/csnap.c
+
+pnf_test:  pnf_test.o
+	$(MPIF77) -L$(LNKDIR) -o pnf_test pnf_test.o -lpnetcdf -lm
+
+pnf_test.o:  pnf_test.F
+	$(MPIF77) -I$(INCDIRF) -c $(srcdir)/pnf_test.F
+
+clean:
+	rm -f $(EXECS) *.o *.nc
+
