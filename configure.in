@@ -127,7 +127,7 @@ EOF
  esac
 fi
 
-dnl do the automagic mpi-compiler-checking if MPICC and MPIF77 are not set
+dnl do the automatic mpi-compiler-checking if MPICC and MPIF77 are not set
 if test x${MPICC} = x -a x${MPIF77} = x ; then
 	MPICC=$CC
 	AC_MSG_CHECKING(mpi implementation)
@@ -187,26 +187,29 @@ dnl Check that sizeof(size_t) == sizeof(int); bail otherwise.
 dnl
 dnl This is important because we do some casting in the Fortran
 dnl bindings based on this assumption. (Needed only for Fortran)
-if test "$enable_fortran" = "yes" ; then
-    AC_MSG_CHECKING(whether size_t and int size match)
-    AC_TRY_RUN([
-	#include <stdio.h>
-	
-	int main(void)
-	{
-		if (sizeof(size_t) == sizeof(int)) return 0; /* true */
-		else return 1; /* false */
-	}
-],pac_cv_size_t_within_int=yes,
-pac_cv_size_t_within_int=no)
-    AC_MSG_RESULT($pac_cv_size_t_within_int)
-    if test "$pac_cv_size_t_within_int" != yes ; then
-        AC_DEFINE(HAVE_SIZET_LARGER_THAN_INT,1,[Define if sizet is larger than int])
-	# For now, we require that a Fortran integer and a C int have the
-	# same size.
-        AC_DEFINE(HAVE_SIZET_LARGER_THAN_FINT,1,[Define if sizet is larger than a Fortran int])
-    fi
-fi
+
+dnl No need to check this since we don't use size_t in C interface any longer
+dnl
+dnl if test "$enable_fortran" = "yes" ; then
+dnl    AC_MSG_CHECKING(whether size_t and int size match)
+dnl    AC_TRY_RUN([
+dnl	#include <stdio.h>
+dnl	
+dnl	int main(void)
+dnl	{
+dnl		if (sizeof(size_t) == sizeof(int)) return 0; /* true */
+dnl		else return 1; /* false */
+dnl	}
+dnl ],pac_cv_size_t_within_int=yes,
+dnl pac_cv_size_t_within_int=no)
+dnl    AC_MSG_RESULT($pac_cv_size_t_within_int)
+dnl    if test "$pac_cv_size_t_within_int" != yes ; then
+dnl        AC_DEFINE(HAVE_SIZET_LARGER_THAN_INT,1,[Define if sizet is larger than int])
+dnl	# For now, we require that a Fortran integer and a C int have the
+dnl	# same size.
+dnl        AC_DEFINE(HAVE_SIZET_LARGER_THAN_FINT,1,[Define if sizet is larger than a Fortran int])
+dnl    fi
+dnl fi
 
 AC_TYPE_OFF_T
 AC_CHECK_TYPE(ssize_t, int)
@@ -220,8 +223,63 @@ AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(size_t)
+
+dnl Check the size of MPI_Offset
+dnl As some platforms don't allow running MPI-linked executives directly,
+dnl the test program is only compiled with MPICC inorder to know "mpi.h"
+dnl and is linked with CC to allow direct run in the script.
+AC_CACHE_CHECK([sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,
+[
+        cat >conftest.c <<EOF
+#include "mpi.h"
+#include <stdio.h>
+int main( int argc, char **argv )
+{
+     MPI_Offset a;
+     FILE *f = fopen("conftestval", "w" );
+     if (! f) exit(1);
+     fprintf( f, "%ld\n", (long)sizeof(MPI_Offset) );
+     fclose(f);
+     return 0;
+}
+EOF
+
+if $MPICC -c conftest.c && $CC -o conftest conftest.o ; then
+        if ./conftest ; then
+                 #success
+                 ac_cv_sizeof_MPI_Offset=`cat conftestval`
+        else
+                 # failure
+                 AC_MSG_WARN([Unable to run the program to determine sizeof MPI_Offset])
+                 echo "configure: failed program was:" >&AC_FD_CC
+                 cat conftest.c >&AC_FD_CC
+         fi
+         rm -f conftest*
+else
+         AC_MSG_ERROR([Unable to compile or link the test program])
+fi
+])
+
+AC_CHECK_SIZEOF(MPI_Offset)
+
 if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
+
+    NFMPI_LONG_T="integer*$ac_cv_sizeof_MPI_Offset"
+    AC_MSG_CHECKING(for Fortran \"$NFMPI_LONG_T\")
+		cat >conftest.f <<EOF
+	subroutine sub(value)
+	$NFMPI_LONG_T value
+	end
+EOF
+    doit='$FC -c ${FFLAGS} conftest.f'
+    if AC_TRY_EVAL(doit); then
+        AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+        AC_MSG_ERROR(F77 does not support \"$NFMPI_LONG_T\")
+    fi
+    rm -f conftest*
 fi
 UD_MAKEWHATIS
 
