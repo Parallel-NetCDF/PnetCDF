@@ -46,10 +46,7 @@ PACKING_LIST = \
 	netcdf.3 \
 	netcdf.h \
 	rnd.h 
-#	ffio.c \
-#	mpinetcdf.h \
 #	onstack.h \
-#	posixio.c \
 
 LIB_OBJS = $(LIB_CSRCS:.c=.o)
 
