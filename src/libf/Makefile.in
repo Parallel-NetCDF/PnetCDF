@@ -16,7 +16,7 @@ LIBRARY 	= ../lib/libpnetcdf.a
 PROGRAM		= 
 ld_netcdf	= -L../lib -lpnetcdf
 
-HEADER	= pnetcdf.inc
+HEADER_GENERATED	= pnetcdf.inc
 
 MANUAL	= 
 
@@ -78,7 +78,7 @@ DIST_GARBAGE	= ncconfig.h
 
 all:		$(LIBRARY) $(MANUAL) $(PROGRAM)
 
-install:	$(INCDIR)/$(HEADER) 
+install:	$(INCDIR)/$(HEADER_GENERATED) 
 
 uninstall:
 
