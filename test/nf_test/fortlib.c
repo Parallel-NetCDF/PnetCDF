@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
+#include <mpinetcdf_impl.h>
 
 
 #ifdef F77_NAME_UPPER
@@ -78,7 +79,7 @@ FORTRAN_API int FORT_CALL ud_shift_(int * value, int *amount) {
 		*value >>= -*amount;
 	else if (*amount > 0)
 		*value <<= *amount;
-	return value;
+	return *value;
 }
 
 #ifdef F77_NAME_UPPER
