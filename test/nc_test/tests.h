@@ -425,60 +425,6 @@ void check_atts(int  ncid);
 
 void check_file(char *filename);
 
-#if 0
-/*
- * These functions are defined in ../libsrc and are
- * used to support interface version 2 backward compatiblity.
- * They are not really public, but we wrote these tests before
- * we decided to hide them. 
- * N.B. there is potential for these declarations to get
- * out of sync with those in ../libsrc/nc.h and the definitions.
- */
-extern int
-nctypelen(ncmpi_type datatype);
-
-extern int
-ncmpi_put_att(int ncid, int varid, const char *name, ncmpi_type datatype,
-	size_t len, const void *value);
-
-extern int
-ncmpi_get_att(int ncid, int varid, const char *name, void *value);
-
-extern int
-ncmpi_put_var1(int ncid, int varid, const size_t *index, const void *value);
-
-extern int
-ncmpi_get_var1(int ncid, int varid, const size_t *index, void *value);
-
-extern int
-ncmpi_put_vara(int ncid, int varid,
-	 const size_t *start, const size_t *count, const void *value);
-
-extern int
-ncmpi_get_vara(int ncid, int varid,
-	 const size_t *start, const size_t *count, void *value);
-
-extern int
-ncmpi_put_vars(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
-	 const void * value);
-
-extern int
-ncmpi_get_vars(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
-	 void * value);
-
-extern int
-ncmpi_put_varm(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
-	 const ptrdiff_t * map, const void *value);
-
-extern int
-ncmpi_get_varm(int ncid, int varid,
-	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
-	 const ptrdiff_t * map, void *value);
-
-#endif
 #ifdef __cplusplus
 }
 #endif
