@@ -18,7 +18,7 @@
 
 #define NO_NETCDF_2 1
 
-#include "nfconfig.inc"
+!!!!!!!!!!!!!!! #include "nfconfig.inc"
 
 
 !/* Parameters of test data */
@@ -123,8 +123,8 @@
 
 #endif /* UD_TESTS_INC */
 
-
-#include "netcdf.inc"
+#include "mpif.h"
+#include "pnetcdf.inc"
 
 
 !    /* Global variables - filenames */
@@ -160,6 +160,8 @@
 
 !    /* Miscellaneous global variables: */
       CHARACTER*80              PROGNAME        !/* name of the program */
+      INTEGER                   COMM            !/* MPI communicator */
+
       INTEGER                   NFAILSTOTAL
 
 !    /* Common blocks for global variables: */

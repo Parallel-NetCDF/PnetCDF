@@ -608,14 +608,14 @@
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
-                err = nf_def_dim(ncid, dim_name(i), NF_UNLIMITED,
+                err = nfmpi_def_dim(ncid, dim_name(i), NF_UNLIMITED,
      +                           dimid)
             else
-                err = nf_def_dim(ncid, dim_name(i), dim_len(i),
+                err = nfmpi_def_dim(ncid, dim_name(i), dim_len(i),
      +                           dimid)
             end if
             if (err .ne. 0) then
-                call errore('nf_def_dim: ', err)
+                call errore('nfmpi_def_dim: ', err)
             end if
 1       continue
         end
@@ -632,10 +632,10 @@
         integer         var_id
 
         do 1, i = 1, NVARS
-            err = nf_def_var(ncid, var_name(i), var_type(i), 
+            err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
      +                       var_rank(i), var_dimid(1,i), var_id)
             if (err .ne. 0) then
-                call errore('nf_def_var: ', err)
+                call errore('nfmpi_def_var: ', err)
             end if
 1       continue
         end
@@ -676,11 +676,11 @@
                     catt(ATT_LEN(j,i)+1:ATT_LEN(j,i)+1) = char(1)
                     catt(ATT_LEN(j,i)+2:ATT_LEN(j,i)+2) = char(0)
 
-                    err = nf_put_att_text(ncid, varid(i), 
+                    err = nfmpi_put_att_text(ncid, varid(i), 
      +                                    ATT_NAME(j,i),
      +                                    ATT_LEN(j,i), catt)
                     if (err .ne. 0) then
-                        call errore('nf_put_att_text: ', err)
+                        call errore('nfmpi_put_att_text: ', err)
                     end if
                 else
                     allInRange = .true.
@@ -690,13 +690,13 @@
                         allInRange = allInRange .and.
      +                               inRange(att(k), ATT_TYPE(j,i))
 4                   continue
-                    err = nf_put_att_double(ncid, varid(i),
+                    err = nfmpi_put_att_double(ncid, varid(i),
      +                                      ATT_NAME(j,i),
      +                                      ATT_TYPE(j,i),
      +                                      ATT_LEN(j,i), att)
                     if (allInRange) then
                         if (err .ne. 0) then
-                            call errore('nf_put_att_double: ', err)
+                            call errore('nfmpi_put_att_double: ', err)
                         end if
                     else
                         if (err .ne. NF_ERANGE) then
@@ -758,17 +758,17 @@
 !                */
                 text(var_nels(i)+1:var_nels(i)+1) = char(1)
                 text(var_nels(i)+2:var_nels(i)+2) = char(0)
-                err = nf_put_vara_text(ncid, i, start, var_shape(1,i), 
-     +                                 text)
+                err = nfmpi_put_vara_text(ncid, i, start,
+     +                                    var_shape(1,i), text)
                 if (err .ne. 0) then
-                    call errore('nf_put_vara_text: ', err)
+                    call errore('nfmpi_put_vara_text: ', err)
                 end if
             else
-                err = nf_put_vara_double(ncid, i, start, var_shape(1,i),
-     +                                   value)
+                err = nfmpi_put_vara_double(ncid, i, start,
+     +                                      var_shape(1,i), value)
                 if (allInRange) then
                     if (err .ne. 0) then
-                        call errore('nf_put_vara_double: ', err)
+                        call errore('nfmpi_put_vara_double: ', err)
                     end if
                 else
                     if (err .ne. NF_ERANGE) then
@@ -791,23 +791,24 @@
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
 
-        err = nf_create(filename, NF_CLOBBER, ncid)
+        err = nfmpi_create(comm, filename, NF_CLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('nf_create: ', err)
+            call errore('nfmpi_create: ', err)
         end if
 
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
-        err = nf_enddef(ncid)
+        err = nfmpi_enddef(ncid)
         if (err .ne. 0) then
-            call errore('nf_enddef: ', err)
+            call errore('nfmpi_enddef: ', err)
         end if
         call put_vars(ncid)
 
-        err = nf_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0) then
-            call errore('nf_close: ', err)
+            call errore('nfmpi_close: ', err)
         end if
         end
 
@@ -826,9 +827,9 @@
         integer                 err           !/* netCDF status */
 
         do 1, i = 1, NDIMS
-            err = nf_inq_dim(ncid, i, name, length)
+            err = nfmpi_inq_dim(ncid, i, name, length)
             if (err .ne. 0) then
-                call errore('nf_inq_dim: ', err)
+                call errore('nfmpi_inq_dim: ', err)
             end if
             if (name .ne. dim_name(i)) then
                 call errori('Unexpected name of dimension ', i)
@@ -868,10 +869,10 @@
 
         do 1, i = 1, NVARS
             isChar = var_type(i) .eq. NF_CHAR
-            err = nf_inq_var(ncid, i, name, datatype, ndims, dimids, 
+            err = nfmpi_inq_var(ncid, i, name, datatype, ndims, dimids, 
      +          natt)
             if (err .ne. 0) then
-                call errore('nf_inq_var: ', err)
+                call errore('nfmpi_inq_var: ', err)
             end if
             if (name .ne. var_name(i)) then
                 call errori('Unexpected var_name for variable ', i)
@@ -883,9 +884,9 @@
                 call errori('Unexpected rank for variable ', i)
             end if
             do 2, j = 1, ndims
-                err = nf_inq_dim(ncid, dimids(j), name, length)
+                err = nfmpi_inq_dim(ncid, dimids(j), name, length)
                 if (err .ne. 0) then
-                    call errore('nf_inq_dim: ', err)
+                    call errore('nfmpi_inq_dim: ', err)
                 end if
                 if (length .ne. var_shape(j,i))  then
                     call errori('Unexpected shape for variable ', i)
@@ -900,9 +901,9 @@
                 end if
                 expect = hash(var_type(i), var_rank(i), index )
                 if (isChar) then
-                    err = nf_get_var1_text(ncid, i, index, text)
+                    err = nfmpi_get_var1_text(ncid, i, index, text)
                     if (err .ne. 0) then
-                        call errore('nf_get_var1_text: ', err)
+                        call errore('nfmpi_get_var1_text: ', err)
                     end if
                     if (ichar(text) .ne. expect) then
                         call errori(
@@ -911,10 +912,10 @@
                         nok = nok + 1
                     end if
                 else
-                    err = nf_get_var1_double(ncid, i, index, value)
+                    err = nfmpi_get_var1_double(ncid, i, index, value)
                     if (inRange(expect,var_type(i))) then
                         if (err .ne. 0) then
-                            call errore('nf_get_var1_double: ', err)
+                            call errore('nfmpi_get_var1_double: ', err)
                         else
                             if (.not. equal(value,expect,var_type(i),
      +                          NFT_DOUBLE)) then
@@ -960,30 +961,30 @@
             i = varid(vid)
 
             do 2, j = 1, NATTS(i)
-                err = nf_inq_attname(ncid, i, j, name)
+                err = nfmpi_inq_attname(ncid, i, j, name)
                 if (err .ne. 0) then
-                    call errore('nf_inq_attname: ', err)
+                    call errore('nfmpi_inq_attname: ', err)
                 end if
                 if (name .ne. ATT_NAME(j,i)) then
                     call errori(
-     +                  'nf_inq_attname: unexpected name for var ', i)
+     +                 'nfmpi_inq_attname: unexpected name for var ', i)
                 end if
-                err = nf_inq_att(ncid, i, name, datatype, length)
+                err = nfmpi_inq_att(ncid, i, name, datatype, length)
                 if (err .ne. 0) then
-                    call errore('nf_inq_att: ', err)
+                    call errore('nfmpi_inq_att: ', err)
                 end if
                 if (datatype .ne. ATT_TYPE(j,i)) then
-                    call errori('nf_inq_att: unexpected type for var ',
-     +                         i)
+                    call errori(
+     +                     'nfmpi_inq_att: unexpected type for var ', i)
                 end if
                 if (length .ne. ATT_LEN(j,i)) then
                     call errori(
-     +                  'nf_inq_att: unexpected length for var ', i)
+     +                  'nfmpi_inq_att: unexpected length for var ', i)
                 end if
                 if (datatype .eq. NF_CHAR) then
-                    err = nf_get_att_text(ncid, i, name, text)
+                    err = nfmpi_get_att_text(ncid, i, name, text)
                     if (err .ne. 0) then
-                        call errore('nf_get_att_text: ', err)
+                        call errore('nfmpi_get_att_text: ', err)
                     end if
                     do 3, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
@@ -991,19 +992,20 @@
      +                                                 ndx))
      +                  then
                             call errori(
-     +          'nf_get_att_text: unexpected value for var ', i)
+     +          'nfmpi_get_att_text: unexpected value for var ', i)
                         else
                             nok = nok + 1
                         end if
 3                   continue
                 else
-                    err = nf_get_att_double(ncid, i, name, value)
+                    err = nfmpi_get_att_double(ncid, i, name, value)
                     do 4, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
                         expect = hash(datatype, -1, ndx)
                         if (inRange(expect,ATT_TYPE(j,i))) then
                             if (err .ne. 0) then
-                                call errore('nf_get_att_double: ', err)
+                                call errore(
+     +                              'nfmpi_get_att_double: ', err)
                             end if
                             if (.not. equal(value(k), expect,
      +                          ATT_TYPE(j,i), NFT_DOUBLE)) then
@@ -1030,16 +1032,17 @@
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
 
-        err = nf_open(filename, NF_NOWRITE, ncid)
+        err = nfmpi_open(comm, filename, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid)
         if (err .ne. 0) then
-            call errore('nf_open: ', err)
+            call errore('nfmpi_open: ', err)
         else
             call check_dims(ncid)
             call check_vars(ncid)
             call check_atts(ncid)
-            err = nf_close (ncid)
+            err = nfmpi_close (ncid)
             if (err .ne. 0) then
-                call errore('nf_close: ', err)
+                call errore('nfmpi_close: ', err)
             end if
         end if
         end
@@ -1121,58 +1124,58 @@
         function internal_min(type)
         implicit        none
         integer         type
-	doubleprecision	min_schar
-	doubleprecision	min_short
-	doubleprecision	min_int
-	doubleprecision	min_long
-	doubleprecision	max_float
-	doubleprecision	max_double
+        doubleprecision min_schar
+        doubleprecision min_short
+        doubleprecision min_int
+        doubleprecision min_long
+        doubleprecision max_float
+        doubleprecision max_double
 #include "tests.inc"
 
         if (type .eq. NFT_CHAR) then
             internal_min = 0
         else if (type .eq. NFT_INT1) then
-#if NF_INT1_IS_C_SIGNED_CHAR
+#if defined NF_INT1_IS_C_SIGNED_CHAR
             internal_min = min_schar()
-#elif NF_INT1_IS_C_SHORT
+#elif defined NF_INT1_IS_C_SHORT
             internal_min = min_short()
-#elif NF_INT1_IS_C_INT
+#elif defined NF_INT1_IS_C_INT
             internal_min = min_int()
-#elif NF_INT1_IS_C_LONG
+#elif defined NF_INT1_IS_C_LONG
             internal_min = min_long()
 #else
 #include "No C equivalent to Fortran INTEGER*1"
 #endif
         else if (type .eq. NFT_INT2) then
-#if NF_INT2_IS_C_SHORT
+#if defined NF_INT2_IS_C_SHORT
             internal_min = min_short()
-#elif NF_INT2_IS_C_INT
+#elif defined NF_INT2_IS_C_INT
             internal_min = min_int()
-#elif NF_INT2_IS_C_LONG
+#elif defined NF_INT2_IS_C_LONG
             internal_min = min_long()
 #else
 #include "No C equivalent to Fortran INTEGER*2"
 #endif
         else if (type .eq. NFT_INT) then
-#if NF_INT_IS_C_INT
+#if defined NF_INT_IS_C_INT
             internal_min = min_int()
-#elif NF_INT_IS_C_LONG
+#elif defined NF_INT_IS_C_LONG
             internal_min = min_long()
 #else
 #include "No C equivalent to Fortran INTEGER"
 #endif
         else if (type .eq. NFT_REAL) then
-#if NF_REAL_IS_C_FLOAT
+#if defined NF_REAL_IS_C_FLOAT
             internal_min = -max_float()
-#elif NF_REAL_IS_C_DOUBLE
+#elif defined NF_REAL_IS_C_DOUBLE
             internal_min = -max_double()
 #else
 #include "No C equivalent to Fortran REAL"
 #endif
         else if (type .eq. NFT_DOUBLE) then
-#if NF_DOUBLEPRECISION_IS_C_DOUBLE
+#if defined NF_DOUBLEPRECISION_IS_C_DOUBLE
             internal_min = -max_double()
-#elif NF_DOUBLEPRECISION_IS_C_FLOAT
+#elif defined NF_DOUBLEPRECISION_IS_C_FLOAT
             internal_min = -max_float()
 #else
 #include "No C equivalent to Fortran DOUBLE"
@@ -1189,58 +1192,58 @@
         function internal_max(type)
         implicit        none
         integer         type
-	doubleprecision	max_schar
-	doubleprecision	max_short
-	doubleprecision	max_int
-	doubleprecision	max_long
-	doubleprecision	max_float
-	doubleprecision	max_double
+        doubleprecision max_schar
+        doubleprecision max_short
+        doubleprecision max_int
+        doubleprecision max_long
+        doubleprecision max_float
+        doubleprecision max_double
 #include "tests.inc"
 
         if (type .eq. NFT_CHAR) then
             internal_max = 255
         else if (type .eq. NFT_INT1) then
-#if NF_INT1_IS_C_SIGNED_CHAR
+#if defined NF_INT1_IS_C_SIGNED_CHAR
             internal_max = max_schar()
-#elif NF_INT1_IS_C_SHORT
+#elif defined NF_INT1_IS_C_SHORT
             internal_max = max_short()
-#elif NF_INT1_IS_C_INT
+#elif defined NF_INT1_IS_C_INT
             internal_max = max_int()
-#elif NF_INT1_IS_C_LONG
+#elif defined NF_INT1_IS_C_LONG
             internal_max = max_long()
 #else
 #include "No C equivalent to Fortran INTEGER*1"
 #endif
         else if (type .eq. NFT_INT2) then
-#if NF_INT2_IS_C_SHORT
+#if defined NF_INT2_IS_C_SHORT
             internal_max = max_short()
-#elif NF_INT2_IS_C_INT
+#elif defined NF_INT2_IS_C_INT
             internal_max = max_int()
-#elif NF_INT2_IS_C_LONG
+#elif defined NF_INT2_IS_C_LONG
             internal_max = max_long()
 #else
 #include "No C equivalent to Fortran INTEGER*2"
 #endif
         else if (type .eq. NFT_INT) then
-#if NF_INT_IS_C_INT
+#if defined NF_INT_IS_C_INT
             internal_max = max_int()
-#elif NF_INT_IS_C_LONG
+#elif defined NF_INT_IS_C_LONG
             internal_max = max_long()
 #else
 #include "No C equivalent to Fortran INTEGER"
 #endif
         else if (type .eq. NFT_REAL) then
-#if NF_REAL_IS_C_FLOAT
+#if defined NF_REAL_IS_C_FLOAT
             internal_max = max_float()
-#elif NF_REAL_IS_C_DOUBLE
+#elif defined NF_REAL_IS_C_DOUBLE
             internal_max = max_double()
 #else
 #include "No C equivalent to Fortran REAL"
 #endif
         else if (type .eq. NFT_DOUBLE) then
-#if NF_DOUBLEPRECISION_IS_C_DOUBLE
+#if defined NF_DOUBLEPRECISION_IS_C_DOUBLE
             internal_max = max_double()
-#elif NF_DOUBLEPRECISION_IS_C_FLOAT
+#elif defined NF_DOUBLEPRECISION_IS_C_FLOAT
             internal_max = max_float()
 #else
 #include "No C equivalent to Fortran DOUBLE"
