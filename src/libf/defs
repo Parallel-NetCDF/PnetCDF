@@ -71,6 +71,7 @@ $header_file = "mpinetcdf_impl.h";
 	      'rename_var' => 3, 'rename_var-3' => 'in:addnull',
 	      );
 $build_prototypes = 1;
+$buildMakefile = 0;
 $prototype_header_file = "mpifnetcdf.h";
 $argsneedcast{'const size_t []'} = '(const size_t *)(ARG)';
 return 1;
