@@ -60,6 +60,22 @@ $returnType   = "int";
 	'put_vars_short' => 'put_vars_int2',
 	'get_vars_short' => 'get_vars_int2',			
 	
+	'put_att_schar' => 'put_att_int1',
+	'get_att_schar' => 'get_att_int1',
+	'put_var1_schar' => 'put_var1_int1',
+	'get_var1_schar' => 'get_var1_int1',
+	'put_var_schar' => 'put_var_int1',
+	'get_var_schar' => 'get_var_int1',
+	'put_var_schar_all' => 'put_var_int1_all',
+	'get_var_schar_all' => 'get_var_int1_all',
+	'put_vara_schar_all' => 'put_vara_int1_all',
+	'get_vara_schar_all' => 'get_vara_int1_all',
+	'put_vara_schar' => 'put_vara_int1',
+	'get_vara_schar' => 'get_vara_int1',
+	'put_vars_schar_all' => 'put_vars_int1_all',
+	'get_vars_schar_all' => 'get_vars_int1_all',
+	'put_vars_schar' => 'put_vars_int1',
+	'get_vars_schar' => 'get_vars_int1'
 );
 #
 # We really need a easier way to force a default for a particular data type
