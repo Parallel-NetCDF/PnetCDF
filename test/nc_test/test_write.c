@@ -1944,6 +1944,9 @@ test_ncmpi_delete(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("error creating scratch file %s, status = %d\n", scratch,err);
+    err = ncmpi_close(ncid);
+    IF (err)
+        error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
 	error("remove of %s failed", scratch);
