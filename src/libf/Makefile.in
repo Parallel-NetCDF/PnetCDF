@@ -11,13 +11,13 @@ include ../../macros.make
 
 INCLUDES = -I. 
 
-LIBRARY 	= libnetcdf.a
-PROGRAM		= ncvalid
-ld_netcdf	= -L. -lnetcdf
+LIBRARY 	= ../lib/libnetcdf.a
+PROGRAM		= 
+ld_netcdf	= -L../lib -lnetcdf
 
-HEADER	= netcdf.h
+HEADER	= 
 
-MANUAL	= netcdf.3
+MANUAL	= 
 
 LIB_CSRCS = createf.c openf.c enddeff.c closef.c put_vara_int_allf.c \
 	put_vara_intf.c put_vara_float_allf.c put_vara_floatf.c \
