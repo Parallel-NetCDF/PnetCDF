@@ -152,7 +152,7 @@ check_vars_$1(const char *filename)
 }
 ')dnl
 
-dnl CHECK_VARS(text)
+CHECK_VARS(text)
 dnl CHECK_VARS(uchar)
 dnl CHECK_VARS(schar)
 CHECK_VARS(short)
@@ -338,7 +338,7 @@ test_ncmpi_put_var1_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_PUT_VAR1(text)
+TEST_NC_PUT_VAR1(text)
 dnl TEST_NC_PUT_VAR1(uchar)
 dnl TEST_NC_PUT_VAR1(schar)
 TEST_NC_PUT_VAR1(short)
@@ -426,13 +426,11 @@ test_ncmpi_put_var_$1(void)
     IF (err)
         error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     index[0] = NRECS-1;
-    #if 0
+    ncmpi_begin_indep_data(ncid);
     err = ncmpi_put_var1_text(ncid, varid, index, "x");
     IF (err)
         error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
-    #endif
 
-    ncmpi_begin_indep_data(ncid);
     for (i = 0; i < NVARS; i++) {
         if (var_dimid[i][0] == RECDIM) {  /* only test record variables here */
 	    canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
@@ -481,7 +479,7 @@ test_ncmpi_put_var_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_PUT_VAR(text)
+TEST_NC_PUT_VAR(text)
 dnl TEST_NC_PUT_VAR(uchar)
 dnl TEST_NC_PUT_VAR(schar)
 TEST_NC_PUT_VAR(short)
@@ -646,7 +644,7 @@ test_ncmpi_put_vara_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_PUT_VARA(text)
+TEST_NC_PUT_VARA(text)
 dnl TEST_NC_PUT_VARA(uchar)
 dnl TEST_NC_PUT_VARA(schar)
 TEST_NC_PUT_VARA(short)
@@ -819,7 +817,7 @@ test_ncmpi_put_vars_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_PUT_VARS(text)
+TEST_NC_PUT_VARS(text)
 dnl TEST_NC_PUT_VARS(uchar)
 dnl TEST_NC_PUT_VARS(schar)
 TEST_NC_PUT_VARS(short)

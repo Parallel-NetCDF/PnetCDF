@@ -204,9 +204,11 @@ test_ncmpi_redef(void)
 	error("Unexpected dim name");
     IF (length != sizehint) 
 	error("Unexpected dim length");
+    ncmpi_begin_indep_data(ncid);
     err = ncmpi_get_var1_double(ncid, varid, NULL, &var);
     IF (err)
         error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
+    ncmpi_end_indep_data(ncid);
     IF (var != 1.0)
         error("ncmpi_get_var1_double: unexpected value");
     err = ncmpi_close(ncid);
