@@ -626,7 +626,6 @@ put_vars(int ncid)
 	    IF (err)
 		error("ncmpi_put_vara_text_all: %s", ncmpi_strerror(err));
 	} else {
-	    ncmpi_begin_indep_data(ncid);
 	    err = ncmpi_put_vara_double_all(ncid, i, start, var_shape[i], value);
 	    if (allInRange) {
 		IF (err)
@@ -635,7 +634,6 @@ put_vars(int ncid)
 		IF (err != NC_ERANGE)
 		    error("type-conversion range error: status = %d", err);
 	    }
-	    ncmpi_end_indep_data(ncid);
 	}
     }
 }
