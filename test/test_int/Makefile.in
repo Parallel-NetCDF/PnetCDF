@@ -5,7 +5,7 @@ NETCDF		= @prefix@
 
 INCLUDES	= -I$(NETCDF)/include -I$(srcdir)/../common
 
-CC		= @CC@
+CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 
 
 SRCS		= test_read.c test_read_indep.c test_write.c test_write_indep.c
