@@ -45,14 +45,14 @@ typedef struct ncio ncio;	/* forward reference */
 	 * Indicate that you are done with the region which begins
 	 * at offset. Only reasonable flag value is RGN_MODIFIED.
 	 */
-typedef int ncio_relfunc(ncio *const nciop,
+typedef int ncmpiio_relfunc(ncio *const nciop,
 		 off_t offset, int rflags);
 
 	/*
 	 * Request that the region (offset, extent)
 	 * be made available through *vpp.
 	 */
-typedef int ncio_getfunc(ncio *const nciop,
+typedef int ncmpiio_getfunc(ncio *const nciop,
 			off_t offset, size_t extent,
 			int rflags,
 			void **const vpp);
@@ -61,21 +61,21 @@ typedef int ncio_getfunc(ncio *const nciop,
 	 * Like memmove(), safely move possibly overlapping data.
 	 * Only reasonable flag value is RGN_NOLOCK.
 	 */
-typedef int ncio_movefunc(ncio *const nciop, off_t to, off_t from,
+typedef int ncmpiio_movefunc(ncio *const nciop, off_t to, off_t from,
 			size_t nbytes, int rflags);
 
 	/*
 	 * Write out any dirty buffers to disk and
 	 * ensure that next read will get data from disk.
 	 */
-typedef int ncio_syncfunc(ncio *const nciop);
+typedef int ncmpiio_syncfunc(ncio *const nciop);
 
 	/*
 	 * Don't call this. 
 	 * Internal function called at close to
 	 * free up anything hanging off pvt;
 	 */
-typedef void ncio_freefunc(void *const pvt);
+typedef void ncmpiio_freefunc(void *const pvt);
 
 /* Get around cplusplus "const xxx in class ncio without constructor" error */
 #if defined(__cplusplus)
@@ -89,8 +89,8 @@ typedef void ncio_freefunc(void *const pvt);
  */
 struct ncio {
 	/*
-	 * A copy of the ioflags argument passed in to ncio_open()
-	 * or ncio_create().
+	 * A copy of the ioflags argument passed in to ncmpiio_open()
+	 * or ncmpiio_create().
 	 */
 	int ioflags;
 
@@ -129,19 +129,19 @@ struct ncio {
 
 	/* member functions do the work */
 
-	ncio_relfunc *NCIO_CONST rel;
+	ncmpiio_relfunc *NCIO_CONST rel;
 
-	ncio_getfunc *NCIO_CONST get;
+	ncmpiio_getfunc *NCIO_CONST get;
 
-	ncio_movefunc *NCIO_CONST move;
+	ncmpiio_movefunc *NCIO_CONST move;
 
-	ncio_syncfunc *NCIO_CONST sync;
+	ncmpiio_syncfunc *NCIO_CONST sync;
 
-	ncio_freefunc *NCIO_CONST free; /* Implementation private */
+	ncmpiio_freefunc *NCIO_CONST free; /* Implementation private */
 
 	/*
-	 * A copy of the 'path' argument passed in to ncio_open()
-	 * or ncio_create(). Used by ncabort() to remove (unlink)
+	 * A copy of the 'path' argument passed in to ncmpiio_open()
+	 * or ncmpiio_create(). Used by ncabort() to remove (unlink)
 	 * the file and by error messages.
 	 */
 	const char *path;
@@ -153,12 +153,12 @@ struct ncio {
 #undef NCIO_CONST
 
 extern ncio * 
-ncio_new(const char *path, int ioflags);
+ncmpiio_new(const char *path, int ioflags);
 
 extern void
-ncio_free(ncio *nciop);
+ncmpiio_free(ncio *nciop);
 
 extern int 
-ncio_close(ncio *nciop, int doUnlink);
+ncmpiio_close(ncio *nciop, int doUnlink);
 
 #endif /* _NCIO_H_ */

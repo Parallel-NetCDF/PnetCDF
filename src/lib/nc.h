@@ -542,17 +542,17 @@ NC_computeshapes(NC *ncp);
 
 /* begin defined in mpincio.c */
 extern int
-ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
+ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
             ncio **nciopp);
 
 extern int
-ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
+ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
           ncio **nciopp);
 extern int
-ncio_sync(ncio *nciop);
+ncmpiio_sync(ncio *nciop);
 
 extern int
-ncio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes);
+ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes);
 
 extern int
 NC_computeshapes(NC *ncp);
