@@ -61,6 +61,7 @@ define([TEST_NFMPI_GET_VAR1],[dnl
      +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
+        call nfmpi_begin_indep_data(ncid, err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -126,6 +127,7 @@ define([TEST_NFMPI_GET_VAR1],[dnl
                 end if
 4           continue
 1       continue
+        call nfmpi_end_indep_data(ncid, err)
         call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ',  err)
@@ -162,10 +164,10 @@ define([TEST_NFMPI_GET_VAR],[dnl
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
-            call nfmpi_get_var_$1(BAD_ID, i, value, err)
+            call nfmpi_get_var_$1_all(BAD_ID, i, value, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            call nfmpi_get_var_$1(ncid, BAD_VARID, value, err)
+            call nfmpi_get_var_$1_all(ncid, BAD_VARID, value, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             nels = 1
@@ -188,7 +190,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
                     allInExtRange = .false.
                 end if
 4           continue
-            call nfmpi_get_var_$1(ncid, i, value, err)
+            call nfmpi_get_var_$1_all(ncid, i, value, err)
             if (canConvert) then
                 if (allInExtRange) then
                     if (allInIntRange) then
@@ -272,23 +274,23 @@ define([TEST_NFMPI_GET_VARA],[dnl
                 start(j) = 1
                 edge(j) = 1
 2           continue
-            call nfmpi_get_vara_$1(BAD_ID, i, start,
+            call nfmpi_get_vara_$1_all(BAD_ID, i, start,
      +                  edge, value, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            call nfmpi_get_vara_$1(ncid, BAD_VARID, start, 
+            call nfmpi_get_vara_$1_all(ncid, BAD_VARID, start, 
      +                           edge, value, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
-                call nfmpi_get_vara_$1(ncid, i, start,
+                call nfmpi_get_vara_$1_all(ncid, i, start,
      +                               edge, value, err)
                 if (canConvert .and. err .ne. NF_EINVALCOORDS)
      +              call errore('bad index: ', err)
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                call nfmpi_get_vara_$1(ncid, i, start,
+                call nfmpi_get_vara_$1_all(ncid, i, start,
      +                               edge, value, err)
                 if (canConvert .and. err .ne. NF_EEDGE)
      +              call errore('bad edge: ', err)
@@ -301,25 +303,25 @@ C           /* there is nothing to get (edge(j).eq.0) */
                 do 10, j = 1, var_rank(i)
                     edge(j) = 0
 10              continue
-                call nfmpi_get_vara_$1(BAD_ID, i, start,
+                call nfmpi_get_vara_$1_all(BAD_ID, i, start,
      +                  edge, value, err)
                 if (err .ne. NF_EBADID) 
      +              call errore('bad ncid: ', err)
-                call nfmpi_get_vara_$1(ncid, BAD_VARID,
+                call nfmpi_get_vara_$1_all(ncid, BAD_VARID,
      +                  start, edge, value, err)
                 if (err .ne. NF_ENOTVAR) 
      +              call errore('bad var id: ', err)
                 do 11, j = 1, var_rank(i)
                     if (var_dimid(j,i) .gt. 1) then     !/* skip record dim */
                         start(j) = var_shape(j,i) + 1
-                        call nfmpi_get_vara_$1(ncid, i,
+                        call nfmpi_get_vara_$1_all(ncid, i,
      +                          start, edge, value, err)
                         if (canConvert .and. err .ne. NF_EINVALCOORDS)
      +                      call errore('bad start: ', err)
                         start(j) = 1
                     endif
 11              continue
-                call nfmpi_get_vara_$1(ncid, i, start,
+                call nfmpi_get_vara_$1_all(ncid, i, start,
      +                          edge, value, err)
                 if (canConvert) then
                     if (err .ne. 0) 
@@ -373,7 +375,7 @@ C           bits of k determine whether to get lower or upper part of dim
                         allInExtRange = .false.
                     end if
 7               continue
-                call nfmpi_get_vara_$1(ncid, i, start,
+                call nfmpi_get_vara_$1_all(ncid, i, start,
      +                          edge, value, err)
                 if (canConvert) then
                     if (allInExtRange) then
@@ -479,18 +481,18 @@ define([TEST_NFMPI_GET_VARS],dnl
                 edge(j) = 1
                 stride(j) = 1
 2           continue
-            call nfmpi_get_vars_$1(BAD_ID, i, start,
+            call nfmpi_get_vars_$1_all(BAD_ID, i, start,
      +                  edge, stride, value, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            call nfmpi_get_vars_$1(ncid, BAD_VARID,
+            call nfmpi_get_vars_$1_all(ncid, BAD_VARID,
      +                  start, edge, stride, 
      +                           value, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
-                call nfmpi_get_vars_$1(ncid, i, start,
+                call nfmpi_get_vars_$1_all(ncid, i, start,
      +                               edge, stride, 
      +                               value, err)
                 if (.not. canConvert) then
@@ -502,7 +504,7 @@ define([TEST_NFMPI_GET_VARS],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                call nfmpi_get_vars_$1(ncid, i, start,
+                call nfmpi_get_vars_$1_all(ncid, i, start,
      +                               edge, stride, 
      +                               value, err)
                 if (.not. canConvert) then
@@ -514,7 +516,7 @@ define([TEST_NFMPI_GET_VARS],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                call nfmpi_get_vars_$1(ncid, i, start,
+                call nfmpi_get_vars_$1_all(ncid, i, start,
      +                               edge, stride, 
      +                               value, err)
                 if (.not. canConvert) then
@@ -596,7 +598,7 @@ C    */
                             allInExtRange = .false.
                         end if
 9                   continue
-                    call nfmpi_get_vars_$1(ncid, i, index,
+                    call nfmpi_get_vars_$1_all(ncid, i, index,
      +                                   count, stride,
      +                                   value, err)
                     if (canConvert) then
@@ -654,6 +656,8 @@ C    */
 ])dnl
 
 
+dnl parallel-netcdf doesn't implement varm yet, so we haven't
+dnl parallel-netcdfified this all the way yet.
 dnl TEST_NFMPI_GET_VARM(TYPE)
 dnl
 define([TEST_NFMPI_GET_VARM],dnl

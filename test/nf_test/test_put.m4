@@ -325,7 +325,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         call nfmpi_enddef(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
-
+        call nfmpi_begin_indep_data(ncid, err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -377,7 +377,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                 end if
 4           continue
 1       continue
-
+        call nfmpi_end_indep_data(ncid, err)
         call nfmpi_close(ncid, err)
         if (err .ne. 0) 
      +      call errore('nfmpi_close: ', err)
@@ -422,7 +422,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         call nfmpi_enddef(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
-
+        call nfmpi_begin_indep_data(ncid, err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -475,7 +475,9 @@ C       Assumes variable cr is char vector with UNLIMITED dimension.
         if (err .ne. 0)
      +      call errore('nfmpi_inq_varid: ', err)
         index(1) = NRECS
+        call nfmpi_begin_indep_data(ncid, err)
         call nfmpi_put_var1_text(ncid, vid, index, 'x', err)
+        call nfmpi_end_indep_data(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_put_var1_text: ', err)
 
@@ -523,7 +525,7 @@ C           Only test record variables here
                 endif
             endif
 5       continue
-
+        call nfmpi_end_indep_data(ncid,err);
         call nfmpi_close(ncid, err)
         if (err .ne. 0) 
      +      call errore('nfmpi_close: ', err)
@@ -586,18 +588,18 @@ define([TEST_NFMPI_PUT_VARA],dnl
                 start(j) = 1
                 edge(j) = 1
 2           continue
-            call nfmpi_put_vara_$1(BAD_ID, i, start,
+            call nfmpi_put_vara_$1_all(BAD_ID, i, start,
      +                  edge, value, err)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            call nfmpi_put_vara_$1(ncid, BAD_VARID,
+            call nfmpi_put_vara_$1_all(ncid, BAD_VARID,
      +                  start, edge, value, err)
             if (err .ne. NF_ENOTVAR) 
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .ne. RECDIM) then    !/* skip record dim */
                     start(j) = var_shape(j,i) + 1
-                    call nfmpi_put_vara_$1(ncid, i, start, 
+                    call nfmpi_put_vara_$1_all(ncid, i, start, 
      +                                   edge, value, err)
                     if (.not. canConvert) then
                         if (err .ne. NF_ECHAR)
@@ -608,7 +610,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                     endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
-                    call nfmpi_put_vara_$1(ncid, i, start, 
+                    call nfmpi_put_vara_$1_all(ncid, i, start, 
      +                                   edge, value, err)
                     if (.not. canConvert) then
                         if (err .ne. NF_ECHAR)
@@ -625,18 +627,18 @@ C       /* Check correct error returned even when nothing to put */
         do 20, j = 1, var_rank(i)
               edge(j) = 0
 20      continue
-        call nfmpi_put_vara_$1(BAD_ID, i, start,
+        call nfmpi_put_vara_$1_all(BAD_ID, i, start,
      +          edge, value, err)
         if (err .ne. NF_EBADID) 
      +      call errore('bad ncid: ', err)
-        call nfmpi_put_vara_$1(ncid, BAD_VARID,
+        call nfmpi_put_vara_$1_all(ncid, BAD_VARID,
      +          start, edge, value, err)
         if (err .ne. NF_ENOTVAR) 
      +      call errore('bad var id: ', err)
         do 21, j = 1, var_rank(i)
             if (var_dimid(j,i) .gt. 1) then     ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                call nfmpi_put_vara_$1(ncid, i, start,
+                call nfmpi_put_vara_$1_all(ncid, i, start,
      +                  edge, value, err)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -648,7 +650,7 @@ C       /* Check correct error returned even when nothing to put */
                 start(j) = 1
             endif
 21      continue
-        call nfmpi_put_vara_$1(ncid, i, start, edge, value, err)
+        call nfmpi_put_vara_$1_all(ncid, i, start, edge, value, err)
         if (canConvert) then
             if (err .ne. 0) 
      +          call error(nfmpi_strerror(err))
@@ -696,7 +698,7 @@ C       /* Check correct error returned even when nothing to put */
                     allInExtRange = allInExtRange .and.
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
-                call nfmpi_put_vara_$1(ncid, i, start,
+                call nfmpi_put_vara_$1_all(ncid, i, start,
      +                  edge, value, err)
                 if (canConvert) then
                     if (allInExtRange) then
@@ -782,11 +784,11 @@ define([TEST_NFMPI_PUT_VARS],dnl
                 edge(j) = 1
                 stride(j) = 1
 2           continue
-            call nfmpi_put_vars_$1(BAD_ID, i, start,
+            call nfmpi_put_vars_$1_all(BAD_ID, i, start,
      +                  edge, stride, value, err)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            call nfmpi_put_vars_$1(ncid, BAD_VARID, start,
+            call nfmpi_put_vars_$1_all(ncid, BAD_VARID, start,
      +                           edge, stride, 
      +                           value, err)
             if (err .ne. NF_ENOTVAR) 
@@ -794,7 +796,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .ne. RECDIM) then    ! skip record dim
                     start(j) = var_shape(j,i) + 1
-                    call nfmpi_put_vars_$1(ncid, i, start,
+                    call nfmpi_put_vars_$1_all(ncid, i, start,
      +                                   edge, stride, 
      +                                   value, err)
                     if (.not. canConvert) then
@@ -806,7 +808,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                     endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
-                    call nfmpi_put_vars_$1(ncid, i, start,
+                    call nfmpi_put_vars_$1_all(ncid, i, start,
      +                                   edge, stride, 
      +                                   value, err)
                     if (.not. canConvert) then
@@ -818,7 +820,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                     endif
                     edge(j) = 1
                     stride(j) = 0
-                    call nfmpi_put_vars_$1(ncid, i, start,
+                    call nfmpi_put_vars_$1_all(ncid, i, start,
      +                                   edge, stride, 
      +                                   value, err)
                     if (.not. canConvert) then
@@ -895,7 +897,7 @@ C*/
      +                      inRange3(val, var_type(i), 
      +                               NFT_ITYPE($1))
 9                   continue
-                    call nfmpi_put_vars_$1(ncid, i, index,
+                    call nfmpi_put_vars_$1_all(ncid, i, index,
      +                                   count, stride,
      +                                   value, err)
                     if (canConvert) then
@@ -928,6 +930,8 @@ C*/
 ])dnl
 
 
+dnl  since parallel-netcdf doesn't have varm type, we haven't completed the
+dnl  parallel-netcdf-ification of these routines
 dnl TEST_NFMPI_PUT_VARM(TYPE)
 dnl
 define([TEST_NFMPI_PUT_VARM],dnl

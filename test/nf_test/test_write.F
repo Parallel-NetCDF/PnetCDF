@@ -150,9 +150,11 @@ C           /* tests using scratch file */
         if (err .ne. 0) 
      +      call errore('nfmpi_inq_varid: ', err)
         var = 1.0
+        call nfmpi_begin_indep_data(ncid, err)       
         call nfmpi_put_var1_double(ncid, vid, 0, var, err)
         if (err .ne. NF_EINDEFINE)
      +      call errore('nfmpi_put_var... in define mode: ', err)
+        call nfmpi_end_indep_data(ncid, err)
         call nfmpi_redef(ncid, err)
         if (err .ne. NF_EINDEFINE)
      +      call errore('nfmpi_redef in define mode: ', err)
@@ -180,9 +182,11 @@ C           /* tests using scratch file */
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
         var = 1.0
+        call nfmpi_begin_indep_data(ncid, err)
         call nfmpi_put_var1_double(ncid, vid, 0, var, err)
         if (err .ne. 0)
      +      call errore('nfmpi_put_var1_double: ', err)
+        call nfmpi_end_indep_data(ncid, err)       
         call nfmpi_close(ncid, err)
         if (err .ne. 0) 
      +      call errore('nfmpi_close: ', err)
@@ -200,6 +204,7 @@ C           /* check scratch file written as expected */
      +      call errori('Unexpected dim name in netCDF ', ncid)
         if (length .ne. 8) 
      +      call errori('Unexpected dim length: ', length)
+        call nfmpi_begin_indep_data(ncid, err)
         call nfmpi_get_var1_double(ncid, vid, 0, var, err)
         if (err .ne. 0)
      +      call errore('nfmpi_get_var1_double: ', err)
@@ -207,6 +212,7 @@ C           /* check scratch file written as expected */
      +      call errori(
      +          'nfmpi_get_var1_double: unexpected value in netCDF '
      +          , ncid)
+        call nfmpi_end_indep_data(ncid, err)
         call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
@@ -1179,7 +1185,8 @@ C           /* restore attributes. change to data mode. try to delete */
      +      call errori('delete of scratch file failed: ', err)
         end
 
-
+C parallel-netcdf doesn't implement set_fill, so i have not
+C    parallel-netcdfified this subroutine
 C Test nfmpi_set_fill
 C    try with bad netCDF handle, check error
 C    try in read-only mode, check error
