@@ -400,13 +400,13 @@ echar(nc_type nctype,MPI_Datatype mpitype) {
 
 static int
 need_convert(nc_type nctype,MPI_Datatype mpitype) {
-  return !( (nctype == NC_CHAR || mpitype == MPI_CHAR) ||
-           (nctype == NC_BYTE && mpitype == MPI_BYTE) ||
-           (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
-           (nctype == NC_INT && mpitype == MPI_INT) ||
-	   (nctype == NC_INT && mpitype == MPI_LONG && X_SIZEOF_INT == SIZEOF_LONG) ||
-           (nctype == NC_FLOAT && mpitype == MPI_FLOAT) ||
-           (nctype == NC_DOUBLE && mpitype == MPI_DOUBLE) );
+  return !( (nctype == NC_CHAR && mpitype == MPI_CHAR) ||
+            (nctype == NC_BYTE && mpitype == MPI_BYTE) ||
+            (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
+            (nctype == NC_INT && mpitype == MPI_INT) ||
+	    (nctype == NC_INT && mpitype == MPI_LONG && X_SIZEOF_INT == SIZEOF_LONG) ||
+            (nctype == NC_FLOAT && mpitype == MPI_FLOAT) ||
+            (nctype == NC_DOUBLE && mpitype == MPI_DOUBLE) );
 }
 
 static int 
