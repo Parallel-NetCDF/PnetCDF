@@ -116,7 +116,7 @@ test_ncmpi_get_var1_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_GET_VAR1(text)
+TEST_NC_GET_VAR1(text)
 dnl TEST_NC_GET_VAR1(uchar)
 dnl TEST_NC_GET_VAR1(schar)
 TEST_NC_GET_VAR1(short)
@@ -221,7 +221,7 @@ test_ncmpi_get_var_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_GET_VAR(text)
+TEST_NC_GET_VAR(text)
 dnl TEST_NC_GET_VAR(uchar)
 dnl TEST_NC_GET_VAR(schar)
 TEST_NC_GET_VAR(short)
@@ -401,7 +401,7 @@ test_ncmpi_get_vara_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_GET_VARA(text)
+TEST_NC_GET_VARA(text)
 dnl TEST_NC_GET_VARA(uchar)
 dnl TEST_NC_GET_VARA(schar)
 TEST_NC_GET_VARA(short)
@@ -591,7 +591,7 @@ test_ncmpi_get_vars_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_GET_VARS(text)
+TEST_NC_GET_VARS(text)
 dnl TEST_NC_GET_VARS(uchar)
 dnl TEST_NC_GET_VARS(schar)
 TEST_NC_GET_VARS(short)
@@ -891,7 +891,7 @@ test_ncmpi_get_att_$1(void)
 }
 ')dnl
 
-dnl TEST_NC_GET_ATT(text)
+TEST_NC_GET_ATT(text)
 TEST_NC_GET_ATT(uchar)
 TEST_NC_GET_ATT(schar)
 TEST_NC_GET_ATT(short)
