@@ -9,6 +9,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "nc.h"
 #include "ncx.h"
 
@@ -22,14 +25,6 @@
  */
 static const schar ncmagic[] = {'C', 'D', 'F', 0x01}; 
 
-typedef struct bufferinfo {
-  ncio *nciop;		
-  MPI_Offset offset;	/* current read/write offset in the file */
-  void *base;     	/* beginning of read/write buffer */
-  void *pos;      	/* current position in buffer */
-  size_t size;		/* size of the buffer */
-} bufferinfo;  
-
 /* Begin Of get NC */
 
 /*
@@ -37,7 +32,6 @@ typedef struct bufferinfo {
  */
 int
 val_fetch(bufferinfo *gbp, size_t fsize) {
-  int status;
   char *buf;
   ssize_t nn = 0, bufsize = 0;
 
@@ -55,7 +49,7 @@ val_fetch(bufferinfo *gbp, size_t fsize) {
   gbp->offset += bufsize; 
 
   if (bufsize < fsize) {
-    printf("Error @ [0x%8.8x]: \n\tUnexpected EOF, while ", gbp->offset);
+    printf("Error @ [0x%8.8Lx]: \n\tUnexpected EOF, while ", gbp->offset);
     return -1;
   }
     
@@ -151,7 +145,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
     return status;
   } 
   if (memcmp(gbp->pos, pad, padding) != 0) {
-    printf("Error @ [0x%8.8x]: \n\tPadding should be 0x00 for the name string alignment of ",
+    printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the name string alignment of ",
 	   (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size);
     free_NC_string(ncstrp);
     return EINVAL;
@@ -214,14 +208,14 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
 
   if(ncap->nelems == 0) {
     if (type != NC_DIMENSION && type != NC_UNSPECIFIED) {
-      printf("Error @ [0x%8.8x]: \n\tInvalid NC component type, while ",
+      printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
 	      (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T);
       printf("NC_DIMENSION or NC_UNSPECIFIED is expected for ");
       return EINVAL;
     }
   } else {
     if(type != NC_DIMENSION) {
-      printf("Error @ [0x%8.8x]: \n\tInvalid NC component type, while ",
+      printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
 	      (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T);
       printf("NC_DIMENSION is expected since number of dimensions is %d for ", ncap->nelems);
       return EINVAL;
@@ -268,7 +262,7 @@ val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
       && type != NC_INT
       && type != NC_FLOAT
       && type != NC_DOUBLE) {
-    printf("Error @ [0x%8.8x]: \n\tUnknown data type for the values of ",
+    printf("Error @ [0x%8.8Lx]: \n\tUnknown data type for the values of ",
 	   (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size - X_SIZEOF_INT);
     return EINVAL; 
   }
@@ -312,7 +306,7 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
  
   memset(pad, 0, X_ALIGN-1);
   if (memcmp(gbp->pos, pad, padding) != 0) {
-    printf("Error @ [0x%8.8x]: \n\tPadding should be 0x00 for the values alignment of ",
+    printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the values alignment of ",
            (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size); 
     return EINVAL;
   }
@@ -390,14 +384,14 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
 
   if(ncap->nelems == 0) {
     if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED) {
-      printf("Error @ [0x%8.8x]: \n\tInvalid NC component type, while ",
+      printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T);
       printf("NC_ATTRIBUTE or NC_UNSPECIFIED is expected for "); 
       return EINVAL;
     }
   } else {
     if(type != NC_ATTRIBUTE) {
-      printf("Error @ [0x%8.8x]: \n\tInvalid NC component type, while ",
+      printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T);
       printf("NC_ATTRIBUTE is expected since number of attributes is %d for ", ncap->nelems);  
       return EINVAL;
@@ -526,14 +520,14 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
  
   if(ncap->nelems == 0) {
     if (type != NC_VARIABLE && type != NC_UNSPECIFIED) {
-      printf("Error @ [0x%8.8x]: \n\tInvalid NC component type, while ",
+      printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T);
       printf("NC_VARIABLE or NC_UNSPECIFIED is expected for ");
       return EINVAL;
     }
   } else {
     if(type != NC_VARIABLE) {
-      printf("Error @ [0x%8.8x]: \n\tInvalid NC component type, while ",
+      printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (size_t)(gbp->pos - gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T);
       printf("NC_VARIABLE is expected since number of variables is %d for ", ncap->nelems);        
       return EINVAL;

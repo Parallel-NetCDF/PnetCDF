@@ -344,9 +344,10 @@ ncx_szof(nc_type type)
 		return X_SIZEOF_FLOAT;
 	case NC_DOUBLE : 
 		return X_SIZEOF_DOUBLE;
+	default:
+		assert("ncx_szof invalid type" == 0);
 	}
 	/* default */
-	assert("ncx_szof invalid type" == 0);
 	return 0;
 }
 

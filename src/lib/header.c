@@ -6,6 +6,8 @@
 
 #include <mpi.h>
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 #include "nc.h"
 #include "ncx.h"
 
@@ -18,14 +20,6 @@
  * "magic number" at beginning of file: 0x43444601 (big endian) 
  */
 static const schar ncmagic[] = {'C', 'D', 'F', 0x01}; 
-
-typedef struct bufferinfo {
-  ncio *nciop;		
-  MPI_Offset offset;	/* current read/write offset in the file */
-  void *base;     	/* beginning of read/write buffer */
-  void *pos;      	/* current position in buffer */
-  size_t size;		/* size of the buffer */
-} bufferinfo;  
 
 /*
  * Recompute the shapes of all variables
@@ -287,7 +281,6 @@ hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp) {
  */
 int
 hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
-  int status;
   void *value = attrp->xvalue;
 
   assert(pbp->size % XALIGN == 0);
@@ -530,7 +523,6 @@ hdr_put_NC(NC *ncp, void *buf) {
  */
 int
 hdr_fetch(bufferinfo *gbp) {
-  int status;
   int rank;
   MPI_Comm comm;
 
@@ -748,9 +740,9 @@ ncx_len_nctype(nc_type type) {
         return X_SIZEOF_FLOAT;
     case NC_DOUBLE:
         return X_SIZEOF_DOUBLE;
+    default: 
+	assert("ncx_len_nctype bad type" == 0);
   }
-  /* default */
-  assert("ncx_len_nctype bad type" == 0);
   return 0;                
 }
 
