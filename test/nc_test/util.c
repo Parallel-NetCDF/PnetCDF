@@ -622,12 +622,9 @@ put_vars(int ncid)
 	    }
 	}
 	if (var_name[i][0] == 'c') {
-#if 0
 	    err = ncmpi_put_vara_text(ncid, i, start, var_shape[i], text);
 	    IF (err)
 		error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
-#endif
-		fprintf(stderr, "text datatypes not supported yet\n");
 	} else {
 	    err = ncmpi_put_vara_double(ncid, i, start, var_shape[i], value);
 	    if (allInRange) {
@@ -735,7 +732,6 @@ check_vars(int  ncid)
 		error("error in toMixedBase 2");
 	    expect = hash( var_type[i], var_rank[i], index );
 	    if (isChar) {
-#if 0
 		err = ncmpi_get_var1_text(ncid, i, index, &text);
 		IF (err)
 		    error("ncmpi_get_var1_text: %s", ncmpi_strerror(err));
@@ -750,8 +746,6 @@ check_vars(int  ncid)
 #endif
 		    nok++;
 		}
-#endif
-		fprintf(stderr, "text data type not supported yet\n");
 	    } else {
 		err = ncmpi_get_var1_double(ncid, i, index, &value);
 		if (inRange(expect,var_type[i])) {
