@@ -53,6 +53,7 @@
 #include <mpi.h>
 #include <netcdf.h>
 #include <stdlib.h>
+#include "testutils.h"
 
 void handle_error(int status) {
   printf("%s\n", ncmpi_strerror(status));
@@ -63,7 +64,6 @@ int main(int argc, char **argv) {
   int i, j;
   int status;
   int ncid1, ncid2;
-  char *infname = "pvfs:../data/test_double.nc", *outfname = "pvfs:testread.nc";
   int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
   ncmpi_type type, vartypes[NC_MAX_VARS];
@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
   int vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS];
   int varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
   int isRecvar;
+  params opts;
 
   int rank;
   int nprocs;
@@ -82,10 +83,11 @@ int main(int argc, char **argv) {
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-if (rank == 0)
-  fprintf(stderr, "Testing read ... ");
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank); 
+  
+  if (rank == 0)
+	  fprintf(stderr, "Testing read ... ");
+  parse_read_args(argc, argv, rank, &opts);
 
   /**********  START OF NETCDF ACCESS **************/
 
@@ -101,10 +103,10 @@ if (rank == 0)
    *   Dataset API: Collective
    */
 
-  status = ncmpi_open(comm, infname, 0, MPI_INFO_NULL, &ncid1);
+  status = ncmpi_open(comm, opts.infname, 0, MPI_INFO_NULL, &ncid1);
   if (status != NC_NOERR) handle_error(status);
 
-  status = ncmpi_create(comm, outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid2);
+  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid2);
   if (status != NC_NOERR) handle_error(status);
 
 
@@ -394,7 +396,7 @@ if (rank == 0)
   /*******************  END OF NETCDF ACCESS  ****************/
 
 if (rank == 0)
-  fprintf(stderr, "OK\nInput file %s copied to: %s!\n", infname, outfname);
+  fprintf(stderr, "OK\nInput file %s copied to: %s!\n", opts.infname, opts.outfname);
 
   MPI_Finalize();
   return 0;
