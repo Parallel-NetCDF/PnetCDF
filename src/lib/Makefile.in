@@ -70,10 +70,18 @@ DIST_GARBAGE	= ncconfig.h
 
 all:		$(LIBRARY) $(MANUAL) $(PROGRAM)
 
-install:	$(LIBDIR)/$(LIBRARY)	\
-		$(INCDIR)/$(HEADER)	\
-		$(MANDIR)/man3/$(MANUAL)\
-		$(BINDIR)/$(PROGRAM)
+install:
+	install -d -m 755 $(LIBDIR)
+	install -m 644 $(LIBRARY) $(LIBDIR)/$(LIBRARY)
+
+	install -d -m 755 $(INCDIR)
+	install -m 644 $(srcdir)/$(HEADER) $(INCDIR)/$(HEADER)
+
+	install -d -m 755 $(MANDIR)/man3
+	install -m 644 $(MANUAL) $(MANDIR)/man3/$(MANUAL)
+
+	install -d $(BINDIR)
+	install -m 644 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
 uninstall:
 	-rm -f $(LIBDIR)/$(LIBRARY)
