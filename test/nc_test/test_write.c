@@ -93,7 +93,7 @@ test_ncmpi_redef(void)
     char * title = "Not funny";
     double var;
     char name[NC_MAX_NAME];
-    size_t length;
+    MPI_Offset length;
 
 	/* BAD_ID tests */
     err = ncmpi_redef(BAD_ID);
@@ -422,7 +422,7 @@ test_ncmpi_def_dim(void)
     int  err;             /* status */
     int  i;
     int  dimid;         /* dimension id */
-    size_t length;
+    MPI_Offset length;
 
         /* BAD_ID test */
     err = ncmpi_def_dim(BAD_ID, "abc", 8, &dimid);
@@ -664,7 +664,7 @@ test_ncmpi_put_var1(void)
     int i;
     int j;
     int err;
-    size_t index[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     double value;
     double buf[1];		/* (void *) buffer */
 
@@ -745,10 +745,10 @@ test_ncmpi_put_vara(void)
     int err;
     int nels;
     int nslabs;
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t mid[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
     double buf[MAX_NELS]; 	/* (void *) buffer */
     char *p;			/* (void *) pointer */
     double value;
@@ -868,14 +868,14 @@ test_ncmpi_put_vars(void)
     int nels;
     int nslabs;
     int nstarts;        /* number of different starts */
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t index2[MAX_RANK];
-    size_t mid[MAX_RANK];
-    size_t count[MAX_RANK];
-    size_t sstride[MAX_RANK];
-    ptrdiff_t stride[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset index2[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
+    MPI_Offset count[MAX_RANK];
+    MPI_Offset sstride[MAX_RANK];
+    MPI_Offset stride[MAX_RANK];
     double buf[MAX_NELS]; /* (void *) buffer */
     char *p;			/* (void *) pointer */
     double value;
@@ -1022,15 +1022,15 @@ test_ncmpi_put_varm(void)
     int err;
     int nslabs;
     int nstarts;        /* number of different starts */
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t mid[MAX_RANK];
-    size_t count[MAX_RANK];
-    size_t sstride[MAX_RANK];
-    ptrdiff_t stride[MAX_RANK];
-    ptrdiff_t imap[MAX_RANK];
-    ptrdiff_t imap2[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
+    MPI_Offset count[MAX_RANK];
+    MPI_Offset sstride[MAX_RANK];
+    MPI_Offset stride[MAX_RANK];
+    MPI_Offset imap[MAX_RANK];
+    MPI_Offset imap2[MAX_RANK];
     double buf[MAX_NELS];       /* (void *) buffer */
     char *p;			/* (void *) pointer */
     double value;
@@ -1254,7 +1254,7 @@ test_ncmpi_put_att(void)
     int varid;
     int i;
     int j;
-    size_t k;
+    MPI_Offset k;
     int err;
     double buf[MAX_NELS];       /* (void *) buffer */
     char *p;                    /* (void *) pointer */
@@ -1479,7 +1479,7 @@ test_ncmpi_rename_att(void)
     int err;
     int i;
     int j;
-    size_t  k;
+    MPI_Offset  k;
     int attnum;
     char *attname;
     char name[NC_MAX_NAME];
@@ -1763,7 +1763,7 @@ test_ncmpi_set_fill(void)
     char text = 0;
     double value = 0;
     double fill;
-    size_t index[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
 
 	/* bad ncid */
     err = ncmpi_set_fill(BAD_ID, NC_NOFILL, &old_fillmode);

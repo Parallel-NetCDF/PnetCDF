@@ -463,7 +463,7 @@ test_ncmpi_inq_dim(void)
     int i;
     int err;
     char name[NC_MAX_NAME];
-    size_t length;
+    MPI_Offset length;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
@@ -508,7 +508,7 @@ test_ncmpi_inq_dimlen(void)
     int ncid;
     int i;
     int err;
-    size_t length;
+    MPI_Offset length;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
@@ -826,7 +826,7 @@ test_ncmpi_get_var1(void)
     int i;
     int j;
     int err;
-    size_t index[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     double expect;
     int nok = 0;		/* count of valid comparisons */
     double buf[1];		/* (void *) buffer */
@@ -899,10 +899,10 @@ test_ncmpi_get_vara(void)
     int nels;
     int nslabs;
     int nok = 0;      /* count of valid comparisons */
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t mid[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
     double buf[MAX_NELS];	/* (void *) buffer */
     char *p;			/* (void *) pointer */
     double expect;
@@ -1022,14 +1022,14 @@ test_ncmpi_get_vars(void)
     int nstarts;	/* number of different starts */
     int nok = 0;	/* total count of valid comparisons */
     int n;		/* count of valid comparisons within var */
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t index2[MAX_RANK];
-    size_t mid[MAX_RANK];
-    size_t count[MAX_RANK];
-    size_t sstride[MAX_RANK];
-    ptrdiff_t stride[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset index2[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
+    MPI_Offset count[MAX_RANK];
+    MPI_Offset sstride[MAX_RANK];
+    MPI_Offset stride[MAX_RANK];
     double buf[MAX_NELS];     /* (void *) buffer */
     char *p;			/* (void *) pointer */
     double expect;
@@ -1188,15 +1188,15 @@ test_ncmpi_get_varm(void)
     int nslabs;
     int nstarts;	/* number of different starts */
     int nok = 0;	/* total count of valid comparisons */
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t mid[MAX_RANK];
-    size_t count[MAX_RANK];
-    size_t sstride[MAX_RANK];
-    ptrdiff_t stride[MAX_RANK];
-    ptrdiff_t imap[MAX_RANK];
-    ptrdiff_t imap2[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
+    MPI_Offset count[MAX_RANK];
+    MPI_Offset sstride[MAX_RANK];
+    MPI_Offset stride[MAX_RANK];
+    MPI_Offset imap[MAX_RANK];
+    MPI_Offset imap2[MAX_RANK];
     double buf[MAX_NELS];	/* (void *) buffer */
     char *p;			/* (void *) pointer */
     double expect;
@@ -1333,7 +1333,7 @@ test_ncmpi_get_att(void)
     int ncid;
     int i;
     int j;
-    size_t k;
+    MPI_Offset k;
     int err;
     double buf[MAX_NELS];	/* (void *) buffer */
     char *p;			/* (void *) pointer */
