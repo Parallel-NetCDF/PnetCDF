@@ -111,8 +111,8 @@ C On exit, any open netCDF files are closed.
         integer ncid2
         
 C       /* Try to open a nonexistent file */
-        err = nfmpi_open(comm, 'tooth-fairy.nc', NF_NOWRITE,
-     +                   MPI_INFO_NULL, ncid)!/* should fail */
+        call nfmpi_open(comm, 'tooth-fairy.nc', NF_NOWRITE,
+     +                   MPI_INFO_NULL, ncid, err)!/* should fail */
         if (err .eq. NF_NOERR)
      +      call error
      +      ('nfmpi_open of nonexistent file should have failed')
@@ -122,26 +122,26 @@ C       /* Try to open a nonexistent file */
      +   have returned system error')
 
 C       /* Open a file that is not a netCDF file. */
-        err = nfmpi_open(comm, 'tests.inc', NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)!/* should fail */
+        call nfmpi_open(comm, 'tests.inc', NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)!/* should fail */
         if (err .ne. NF_ENOTNC)
      +      call errore('nfmpi_open of non-netCDF file: ', err)
 
 C       /* Open a netCDF file in read-only mode, check that write fails */
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_redef(ncid)    !/* should fail */
+        call nfmpi_redef(ncid, err)    !/* should fail */
         if (err .ne. NF_EPERM)
      +      call error('nfmpi_redef of read-only file should fail')
 C       /* Opened OK, see if can open again and get a different netCDF ID */
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid2)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid2, err)
         if (err .ne. 0) then
             call errore('nfmpi_open: ', err)
         else
-            err = nfmpi_close(ncid2)
+            call nfmpi_close(ncid2, err)
         end if
         if (ncid2 .eq. ncid)
      +      call error(
@@ -149,26 +149,26 @@ C       /* Opened OK, see if can open again and get a different netCDF ID */
      +   nfmpi_open calls should differ')
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nfmpi_create(comm, scratch, NF_NOCLOBBER,
-     +                         MPI_INFO_NULL, ncid2)
+            call nfmpi_create(comm, scratch, NF_NOCLOBBER,
+     +                         MPI_INFO_NULL, ncid2, err)
             if (err .ne. 0) then
                 call errore('nfmpi_create: ', err)
             else 
-                err = nfmpi_close(ncid2)
+                call nfmpi_close(ncid2, err)
             end if
-            err = nfmpi_open(comm, scratch, NF_WRITE, MPI_INFO_NULL,
-     +                       ncid2)
+            call nfmpi_open(comm, scratch, NF_WRITE, MPI_INFO_NULL,
+     +                       ncid2, err)
             if (err .ne. 0) then
                 call errore('nfmpi_open: ', err)
             else 
-                err = nfmpi_close(ncid2)
+                call nfmpi_close(ncid2, err)
             end if
-            err = nfmpi_delete(scratch)
+            call nfmpi_delete(scratch, err)
             if (err .ne. 0) 
      +          call errorc('delete of scratch file failed', scratch)
         end if
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -186,44 +186,44 @@ C
         integer ncid
         integer err
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
 C       /* Close a netCDF file twice, second time should fail */
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close failed: ', err)
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. NF_EBADID)
      +      call error('nfmpi_close of closed file should have failed')
         
 C       /* Try with a bad netCDF ID */
-        err = nfmpi_close(BAD_ID)!/* should fail */
+        call nfmpi_close(BAD_ID, err)!/* should fail */
         if (err .ne. NF_EBADID)
      +      call errore(
      +         'nfmpi_close with bad netCDF ID returned wrong error: ', 
      +         err)
 
 C       /* Close in data mode */
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close in data mode failed: ', err)
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nfmpi_create(comm, scratch, NF_NOCLOBBER,
-     +                         MPI_INFO_NULL, ncid)
+            call nfmpi_create(comm, scratch, NF_NOCLOBBER,
+     +                         MPI_INFO_NULL, ncid, err)
             if (err .ne. 0) 
      +          call errore('nfmpi_create: ', err)
-            err = nfmpi_close(ncid)
+            call nfmpi_close(ncid, err)
             if (err .ne. 0)
      +          call errore('nfmpi_close in define mode: ', err)
-            err = nfmpi_delete(scratch)
+            call nfmpi_delete(scratch, err)
             if (err .ne. 0)
      +          call errorc('delete of scratch file failed: ', 
      +              scratch)
@@ -255,17 +255,17 @@ C On exit, any open netCDF files are closed.
         integer did
         integer vid
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         
 C       /* Try on bad handle */
-        err = nfmpi_inq(BAD_ID, ndims, nvars, ngatts, recdim)
+        call nfmpi_inq(BAD_ID, ndims, nvars, ngatts, recdim, err)
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
         
-        err = nfmpi_inq(ncid, ndims, nvars, ngatts, recdim)
+        call nfmpi_inq(ncid, ndims, nvars, ngatts, recdim, err)
         if (err .ne. 0) then
             call errore('nfmpi_inq: ', err)
         else if (ndims .ne. NDIMS) then
@@ -284,18 +284,19 @@ C       /* Try on bad handle */
         end if
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nfmpi_create(comm, scratch, NF_NOCLOBBER,
-     +                         MPI_INFO_NULL, ncid2)
+            call nfmpi_create(comm, scratch, NF_NOCLOBBER,
+     +                         MPI_INFO_NULL, ncid2, err)
             if (err .ne. 0) then
                 call errore('nfmpi_create: ', err)
             else                !/* add dim, var, gatt, check inq */
-                err = nfmpi_enddef(ncid2) !/* enter data mode */
-                err = nfmpi_inq(ncid2, ndims0, nvars0, ngatts0, recdim0)
+                call nfmpi_enddef(ncid2, err) !/* enter data mode */
+                call nfmpi_inq(ncid2, ndims0, nvars0, 
+     +              ngatts0, recdim0, err)
                 if (err .ne. 0)
      +              call errore('nfmpi_inq: ', err)
-                err = nfmpi_redef(ncid2) !/* enter define mode */
+                call nfmpi_redef(ncid2, err) !/* enter define mode */
 C               /* Check that inquire still works in define mode */
-                err = nfmpi_inq(ncid2, ndims, nvars, ngatts, recdim)
+                call nfmpi_inq(ncid2, ndims, nvars, ngatts, recdim, err)
                 if (err .ne. 0) then
                     call errore('nfmpi_inq in define mode: ', err)
                 else if (ndims .ne. ndims0) then
@@ -313,20 +314,21 @@ C               /* Check that inquire still works in define mode */
                 end if
 
 C               /* Add dim, var, global att */
-                err = nfmpi_def_dim(ncid2, 'inqd', 1, did)
+                call nfmpi_def_dim(ncid2, 'inqd', 1, did, err)
                 if (err .ne. 0)
      +              call errore('nfmpi_def_dim: ', err)
-                err = nfmpi_def_var(ncid2, 'inqv', NF_FLOAT, 0, 0, vid)
+                call nfmpi_def_var(ncid2, 'inqv', NF_FLOAT, 
+     +                0, 0, vid, err)
                 if (err .ne. 0)
      +              call errore('nfmpi_def_var: ', err)
 
-                err = nfmpi_put_att_text(ncid2, NF_GLOBAL, 'inqa', 
-     +                                len('stuff'), 'stuff')
+                call nfmpi_put_att_text(ncid2, NF_GLOBAL, 'inqa', 
+     +                                len('stuff'), 'stuff', err)
                 if (err .ne. 0)
      +              call errore('nfmpi_put_att_text: ', err)
 
 C               /* Make sure nfmpi_inq sees the additions while in define mode */
-                err = nfmpi_inq(ncid2, ndims, nvars, ngatts, recdim)
+                call nfmpi_inq(ncid2, ndims, nvars, ngatts, recdim, err)
                 if (err .ne. 0) then
                     call errore('nfmpi_inq in define mode: ', err)
                 else if (ndims .ne. ndims0 + 1) then
@@ -339,12 +341,12 @@ C               /* Make sure nfmpi_inq sees the additions while in define mode *
                     call errori
      +              ('nfmpi_inq in define mode: ngatts wrong, ', ngatts)
                 end if
-                err = nfmpi_enddef(ncid2)
+                call nfmpi_enddef(ncid2, err)
                 if (err .ne. 0)
      +              call errore('nfmpi_enddef: ', err)
 
 C               /* Make sure nfmpi_inq stills sees additions in data mode */
-                err = nfmpi_inq(ncid2, ndims, nvars, ngatts, recdim)
+                call nfmpi_inq(ncid2, ndims, nvars, ngatts, recdim, err)
                 if (err .ne. 0) then
                     call errore('nfmpi_inq failed in data mode: ',err)
                 else if (ndims .ne. ndims0 + 1) then
@@ -357,15 +359,15 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                     call errori
      +              ('nfmpi_inq in define mode: ngatts wrong, ', ngatts)
                 end if
-                err = nfmpi_close(ncid2)
-                err = nfmpi_delete(scratch)
+                call nfmpi_close(ncid2, err)
+                call nfmpi_delete(scratch, err)
                 if (err .ne. 0)
      +              call errorc('delete of scratch file failed:', 
      +                  scratch)
             end if
         end if
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -378,14 +380,14 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ngatts                  !/* number of global attributes */
         integer err
 
-        err = nfmpi_inq_natts(BAD_ID, ngatts)
+        call nfmpi_inq_natts(BAD_ID, ngatts, err)
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_inq_natts(ncid, ngatts)
+        call nfmpi_inq_natts(ncid, ngatts, err)
         if (err .ne. 0) then
             call errore('nfmpi_inq_natts: ', err)
         else if (ngatts .ne. NGATTS) then
@@ -393,7 +395,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +      ('nfmpi_inq_natts: wrong number of global atts returned, ',
      +        ngatts)
         end if
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -406,21 +408,21 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ndims
         integer err
 
-        err = nfmpi_inq_ndims(BAD_ID, ndims)
+        call nfmpi_inq_ndims(BAD_ID, ndims, err)
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_inq_ndims(ncid, ndims)
+        call nfmpi_inq_ndims(ncid, ndims, err)
         if (err .ne. 0) then
             call errore('nfmpi_inq_ndims: ', err)
         else if (ndims .ne. NDIMS) then
             call errori
      +      ('nfmpi_inq_ndims: wrong number returned, ', ndims)
         end if
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -433,21 +435,21 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer nvars
         integer err
 
-        err = nfmpi_inq_nvars(BAD_ID, nvars)
+        call nfmpi_inq_nvars(BAD_ID, nvars, err)
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_inq_nvars(ncid, nvars)
+        call nfmpi_inq_nvars(ncid, nvars, err)
         if (err .ne. 0) then
             call errore('nfmpi_inq_nvars: ', err)
         else if (nvars .ne. NVARS) then
             call errori
      +      ('nfmpi_inq_nvars: wrong number returned, ', nvars)
         end if
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -460,21 +462,21 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer unlimdim
         integer err
 
-        err = nfmpi_inq_unlimdim(BAD_ID, unlimdim)
+        call nfmpi_inq_unlimdim(BAD_ID, unlimdim, err)
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_inq_unlimdim(ncid, unlimdim)
+        call nfmpi_inq_unlimdim(ncid, unlimdim, err)
         if (err .ne. 0) then
             call errore('nfmpi_inq_unlimdim: ', err)
         else if (unlimdim .ne. RECDIM) then
             call errori
      +      ('nfmpi_inq_unlimdim: wrong number returned, ', unlimdim)
         end if
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -488,18 +490,18 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer err
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_inq_dimid(ncid, 'noSuch', dimid)
+        call nfmpi_inq_dimid(ncid, 'noSuch', dimid, err)
         if (err .ne. NF_EBADDIM)
      +      call errore('bad dim name: ', err)
         do 1, i = 1, NDIMS
-            err = nfmpi_inq_dimid(BAD_ID, dim_name(i), dimid)
+            call nfmpi_inq_dimid(BAD_ID, dim_name(i), dimid, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_dimid(ncid, dim_name(i), dimid)
+            call nfmpi_inq_dimid(ncid, dim_name(i), dimid, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_dimid: ', err)
             else if (dimid .ne. i) then
@@ -507,7 +509,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call errori('got ', dimid)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -522,18 +524,18 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         character*(NF_MAX_NAME) name
         integer length
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NDIMS
-            err = nfmpi_inq_dim(BAD_ID, i, name, length)
+            call nfmpi_inq_dim(BAD_ID, i, name, length, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_dim(ncid, BAD_DIMID, name, length)
+            call nfmpi_inq_dim(ncid, BAD_DIMID, name, length, err)
             if (err .ne. NF_EBADDIM)
      +          call errore('bad dimid: ', err)
-            err = nfmpi_inq_dim(ncid, i, name, length)
+            call nfmpi_inq_dim(ncid, i, name, length, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_dim: ', err)
             else if (dim_name(i) .ne. name)  then
@@ -542,7 +544,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call errori('size unexpected: ', length)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -556,25 +558,25 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer length
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NDIMS
-            err = nfmpi_inq_dimlen(BAD_ID, i, length)
+            call nfmpi_inq_dimlen(BAD_ID, i, length, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_dimlen(ncid, BAD_DIMID, length)
+            call nfmpi_inq_dimlen(ncid, BAD_DIMID, length, err)
             if (err .ne. NF_EBADDIM)
      +          call errore('bad dimid: ', err)
-            err = nfmpi_inq_dimlen(ncid, i, length)
+            call nfmpi_inq_dimlen(ncid, i, length, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_dimlen: ', err)
             else if (dim_len(i) .ne. length) then
                 call errori('size unexpected: ', length)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -588,25 +590,25 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         character*(NF_MAX_NAME)  name
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NDIMS
-            err = nfmpi_inq_dimname(BAD_ID, i, name)
+            call nfmpi_inq_dimname(BAD_ID, i, name, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_dimname(ncid, BAD_DIMID, name)
+            call nfmpi_inq_dimname(ncid, BAD_DIMID, name, err)
             if (err .ne. NF_EBADDIM)
      +          call errore('bad dimid: ', err)
-            err = nfmpi_inq_dimname(ncid, i, name)
+            call nfmpi_inq_dimname(ncid, i, name, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_dimname: ', err)
             else if (dim_name(i) .ne. name)  then
                 call errorc('name unexpected: ', name)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -620,20 +622,20 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer err
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
-        err = nfmpi_inq_varid(ncid, 'noSuch', vid)
+        call nfmpi_inq_varid(ncid, 'noSuch', vid, err)
         if (err .ne. NF_ENOTVAR)
      +      call errore('bad ncid: ', err)
 
         do 1, i = 1, NVARS
-            err = nfmpi_inq_varid(BAD_ID, var_name(i), vid)
+            call nfmpi_inq_varid(BAD_ID, var_name(i), vid, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_varid(ncid, var_name(i), vid)
+            call nfmpi_inq_varid(ncid, var_name(i), vid, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_varid: ', err)
             else if (vid .ne. i) then
@@ -641,7 +643,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
             endif
 1       continue
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -659,21 +661,21 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer dimids(MAX_RANK)
         integer na
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
-            err = nfmpi_inq_var(BAD_ID, i, name, datatype, ndims, dimids, 
-     +                       na)
+            call nfmpi_inq_var(BAD_ID, i, name, datatype, ndims, dimids,
+     +                       na, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_var(ncid,BAD_VARID,name,datatype,ndims,
-     +                       dimids,na)
+            call nfmpi_inq_var(ncid,BAD_VARID,name,datatype,ndims,
+     +                       dimids,na, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
-            err = nfmpi_inq_var(ncid, i, name, datatype, ndims, dimids, 
-     +                       na)
+            call nfmpi_inq_var(ncid, i, name, datatype, ndims, dimids, 
+     +                       na, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_var: ', err)
             else if (var_name(i) .ne. name)  then
@@ -688,7 +690,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call errori('natts unexpected: ', na)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -702,18 +704,18 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer dimids(MAX_RANK)
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
-            err = nfmpi_inq_vardimid(BAD_ID, i, dimids)
+            call nfmpi_inq_vardimid(BAD_ID, i, dimids, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_vardimid(ncid, BAD_VARID, dimids)
+            call nfmpi_inq_vardimid(ncid, BAD_VARID, dimids, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
-            err = nfmpi_inq_vardimid(ncid, i, dimids)
+            call nfmpi_inq_vardimid(ncid, i, dimids, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_vardimid: ', err)
             else if (.not.int_vec_eq(var_dimid(1,i), dimids, 
@@ -721,7 +723,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call error('unexpected dimid')
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -735,25 +737,25 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         character*(NF_MAX_NAME) name
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
-            err = nfmpi_inq_varname(BAD_ID, i, name)
+            call nfmpi_inq_varname(BAD_ID, i, name, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_varname(ncid, BAD_VARID, name)
+            call nfmpi_inq_varname(ncid, BAD_VARID, name, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
-            err = nfmpi_inq_varname(ncid, i, name)
+            call nfmpi_inq_varname(ncid, i, name, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_varname: ', err)
             else if (var_name(i) .ne. name)  then
                 call errorc('name unexpected: ', name)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -767,25 +769,25 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer na
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 0, NVARS	! start with global attributes
-            err = nfmpi_inq_varnatts(BAD_ID, i, na)
+            call nfmpi_inq_varnatts(BAD_ID, i, na, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_varnatts(ncid, BAD_VARID, na)
+            call nfmpi_inq_varnatts(ncid, BAD_VARID, na, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
-            err = nfmpi_inq_varnatts(ncid, VARID(i), na)
+            call nfmpi_inq_varnatts(ncid, VARID(i), na, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_varnatts: ', err)
             else if (NATTS(i) .ne. na) then	! works for global attributes
                 call errori('natts unexpected: ', na)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -799,25 +801,25 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer ndims
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
-            err = nfmpi_inq_varndims(BAD_ID, i, ndims)
+            call nfmpi_inq_varndims(BAD_ID, i, ndims, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_varndims(ncid, BAD_VARID, ndims)
+            call nfmpi_inq_varndims(ncid, BAD_VARID, ndims, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
-            err = nfmpi_inq_varndims(ncid, i, ndims)
+            call nfmpi_inq_varndims(ncid, i, ndims, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_varndims: ', err)
             else if (var_rank(i) .ne. ndims) then
                 call errori('ndims unexpected: ', ndims)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -831,25 +833,25 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer datatype
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
-            err = nfmpi_inq_vartype(BAD_ID, i, datatype)
+            call nfmpi_inq_vartype(BAD_ID, i, datatype, err)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_inq_vartype(ncid, BAD_VARID, datatype)
+            call nfmpi_inq_vartype(ncid, BAD_VARID, datatype, err)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
-            err = nfmpi_inq_vartype(ncid, i, datatype)
+            call nfmpi_inq_vartype(ncid, i, datatype, err)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_vartype: ', err)
             else if (var_type(i) .ne. datatype) then
                 call errori('type unexpected: ', datatype)
             end if
 1       continue
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -865,24 +867,24 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer t
         integer n
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0) 
      +      call errore('nfmpi_open: ', err)
 
         do 1, i = 0, NVARS
             do 2, j = 1, NATTS(i)
-                err = nfmpi_inq_att(BAD_ID, i, ATT_NAME(j,i), t, n)
+                call nfmpi_inq_att(BAD_ID, i, ATT_NAME(j,i), t, n, err)
                 if (err .ne. NF_EBADID) 
      +              call errore('bad ncid: ', err)
-                err = nfmpi_inq_att
-     +                     (ncid, BAD_VARID, ATT_NAME(j,i), t, n)
+                call nfmpi_inq_att
+     +                     (ncid, BAD_VARID, ATT_NAME(j,i), t, n, err)
                 if (err .ne. NF_ENOTVAR) 
      +              call errore('bad var id: ', err)
-                err = nfmpi_inq_att(ncid, i, 'noSuch', t, n)
+                call nfmpi_inq_att(ncid, i, 'noSuch', t, n, err)
                 if (err .ne. NF_ENOTATT) 
      +              call errore('Bad attribute name: ', err)
-                err = nfmpi_inq_att(ncid, i, ATT_NAME(j,i), t, n)
+                call nfmpi_inq_att(ncid, i, ATT_NAME(j,i), t, n, err)
                 if (err .ne. 0) then
                     call error(nfmpi_strerror(err))
                 else
@@ -894,7 +896,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 2           continue
 1       continue
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -909,24 +911,25 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer len
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
         do 1, i = 0, NVARS
-            err = nfmpi_inq_attlen(ncid, i, 'noSuch', len)
+            call nfmpi_inq_attlen(ncid, i, 'noSuch', len, err)
             if (err .ne. NF_ENOTATT)
      +          call errore('Bad attribute name: ', err)
             do 2, j = 1, NATTS(i)
-                err = nfmpi_inq_attlen(BAD_ID, i, ATT_NAME(j,i), len)
+                call nfmpi_inq_attlen(BAD_ID, i, 
+     +             ATT_NAME(j,i), len, err)
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_inq_attlen
-     +                (ncid, BAD_VARID, ATT_NAME(j,i), len)
+                call nfmpi_inq_attlen
+     +                (ncid, BAD_VARID, ATT_NAME(j,i), len, err)
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad varid: ', err)
-                err = nfmpi_inq_attlen(ncid, i, ATT_NAME(j,i), len)
+                call nfmpi_inq_attlen(ncid, i, ATT_NAME(j,i), len, err)
                 if (err .ne. 0) then
                     call error(nfmpi_strerror(err))
                 else
@@ -936,7 +939,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 2           continue
 1       continue
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -951,26 +954,26 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer datatype
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
         do 1, i = 0, NVARS
-            err = nfmpi_inq_atttype(ncid, i, 'noSuch', datatype)
+            call nfmpi_inq_atttype(ncid, i, 'noSuch', datatype, err)
             if (err .ne. NF_ENOTATT)
      +          call errore('Bad attribute name: ', err)
             do 2, j = 1, NATTS(i)
-                err = nfmpi_inq_atttype
-     +                (BAD_ID, i, ATT_NAME(j,i), datatype)
+                call nfmpi_inq_atttype
+     +                (BAD_ID, i, ATT_NAME(j,i), datatype, err)
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_inq_atttype(ncid, BAD_VARID, ATT_NAME(j,i), 
-     +                               datatype)
+                call nfmpi_inq_atttype(ncid, BAD_VARID, ATT_NAME(j,i), 
+     +                               datatype, err)
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad varid: ', err)
-                err = nfmpi_inq_atttype
-     +                (ncid, i, ATT_NAME(j,i), datatype)
+                call nfmpi_inq_atttype
+     +                (ncid, i, ATT_NAME(j,i), datatype, err)
                 if (err .ne. 0) then
                     call error(nfmpi_strerror(err))
                 else
@@ -980,7 +983,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 2           continue
 1       continue
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -995,26 +998,26 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         character*(NF_MAX_NAME) name
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
         do 1, i = 0, NVARS
-            err = nfmpi_inq_attname(ncid, i, BAD_ATTNUM, name)
+            call nfmpi_inq_attname(ncid, i, BAD_ATTNUM, name, err)
             if (err .ne. NF_ENOTATT)
      +          call errore('Bad attribute number: ', err)
-            err = nfmpi_inq_attname(ncid, i, NATTS(i)+1, name)
+            call nfmpi_inq_attname(ncid, i, NATTS(i)+1, name, err)
             if (err .ne. NF_ENOTATT)
      +          call errore('Bad attribute number: ', err)
             do 2, j = 1, NATTS(i)
-                err = nfmpi_inq_attname(BAD_ID, i, j, name)
+                call nfmpi_inq_attname(BAD_ID, i, j, name, err)
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_inq_attname(ncid, BAD_VARID, j, name)
+                call nfmpi_inq_attname(ncid, BAD_VARID, j, name, err)
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
-                err = nfmpi_inq_attname(ncid, i, j, name)
+                call nfmpi_inq_attname(ncid, i, j, name, err)
                 if (err .ne. 0) then
                     call error(nfmpi_strerror(err))
                 else
@@ -1024,7 +1027,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 2           continue
 1       continue
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
@@ -1039,24 +1042,26 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer err
         integer attnum
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
-     +                   ncid)
+        call nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+     +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
         do 1, i = 0, NVARS
-            err = nfmpi_inq_attid(ncid, i, 'noSuch', attnum)
+            call nfmpi_inq_attid(ncid, i, 'noSuch', attnum, err)
             if (err .ne. NF_ENOTATT)
      +          call errore('Bad attribute name: ', err)
             do 2, j = 1, NATTS(i)
-                err = nfmpi_inq_attid(BAD_ID, i, ATT_NAME(j,i), attnum)
+                call nfmpi_inq_attid(BAD_ID, i, 
+     +                ATT_NAME(j,i), attnum, err)
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
-                err = nfmpi_inq_attid(ncid, BAD_VARID, ATT_NAME(j,i), 
-     +                             attnum)
+                call nfmpi_inq_attid(ncid, BAD_VARID, ATT_NAME(j,i), 
+     +                             attnum, err)
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad varid: ', err)
-                err = nfmpi_inq_attid(ncid, i, ATT_NAME(j,i), attnum)
+                call nfmpi_inq_attid(ncid, i, 
+     +               ATT_NAME(j,i), attnum, err)
                 if (err .ne. 0) then
                     call error(nfmpi_strerror(err))
                 else
@@ -1066,7 +1071,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 2           continue
 1       continue
 
-        err = nfmpi_close(ncid)
+        call nfmpi_close(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
         end
