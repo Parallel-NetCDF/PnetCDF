@@ -3,14 +3,71 @@ $routine_pattern = "[a-z0-9_]*";
 $out_prefix = "nfmpi_";
 $do_weak = 0;
 $do_profiling = 0;
-$tof77{"size_t"} = "int";
+$tof77{"size_t"} = "int *";
+$tof77{"size_t *"} = "int *";
+$tof77{"size_t*"} = "int *";
 $tof77{"int"} = "int *";
+$tof77{"nc_type"} = "int *";
+$tof77{"nc_type *"} = "int *";
+$tof77{"nc_type*"} = "int *";
 $malloc = "malloc";
 $free   = "free";
 $header_file = "mpinetcdf_impl.h";
 %special_args = (
+	      'copy_att' => 3, 'copy_att-3' => 'in:addnull', 
 	      'create' => 2, 'create-2' => 'in:addnull' ,
-	      'open' => 2, 'open-2' => 'in:addnull' 
+	      'def_dim' => 2, 'def_dim-2' => 'in:addnull', 
+	      'def_var' => 2, 'def_var-2' => 'in:addnull', 
+	      'del_att' => 3, 'del_att-3' => 'in:addnull',
+	      'get_att_double' => 3, 'get_att_double-3' => 'in:addnull',
+	      'get_att_float' => 3, 'get_att_float-3' => 'in:addnull',
+	      'get_att_int' => 3, 'get_att_int-3' => 'in:addnull',
+	      'get_att_long' => 3, 'get_att_long-3' => 'in:addnull',
+	      'get_att_schar' => '3:4', 'get_att_schar-3' => 'in:addnull',
+	           'get_att_schar-4' => 'out:blankpad',
+	      'get_att_short' => '3', 'get_att_short-3' => 'in:addnull',
+	      'get_att_text' => '3:4', 'get_att_text-3' => 'in:addnull',
+	           'get_att_text-4' => 'out:blankpad',
+              'get_att_uchar' => '3:4', 'get_att_uchar-3' => 'in:addnull',
+	           'get_att_uchar-4' => 'out:blankpad',
+	      'get_var1_text' => 4, 'get_var1_text-4' => 'out:blankpad',
+	      'get_var_text_all' => 3, 'get_var_text_all-3' => 'out:blankpad',
+	      'get_var_text' => 3, 'get_var_text-3' => 'out:blankpad',
+	      'get_vara_text_all' => 5, 'get_vara_text_all-5' => 'out:blankpad',
+	      'get_vara_text' => 5, 'get_vara_text-5' => 'out:blankpad',
+	      'get_vars_text_all' => 6, 'get_vars_text_all-6' => 'out:blankpad',
+	      'get_vars_text' => 6, 'get_vars_text-6' => 'out:blankpad',
+	      'inq_att' => 3, 'inq_att-3' => 'in:addnull',
+	      'inq_attid' => 3, 'inq_attid-3' => 'in:addnull',
+	      'inq_attlen' => 3, 'inq_attlen-3' => 'in:addnull',
+	      'inq_attname' => 4, 'inq_attname-4' => 'out:blankpad',
+	      'inq_atttype' => 3, 'inq_atttype-3' => 'in:addnull',
+	      'inq_attdim' => 3, 'inq_attdim-3' => 'in:addnull',
+	      'inq_dimid' => 2, 'inq_dimid-2' => 'in:addnull',
+	      'inq_dimname' => 3, 'inq_dimname-3' => 'out:blankpad',
+	      'inq_var' => 3, 'inq_var-3' => 'in:addnull',
+	      'inq_varid' => 2, 'inq_varid-2' => 'in:addnull',
+	      'inq_varname' => 3, 'inq_varname-3' => 'out:blankpad',
+	      'open' => 2, 'open-2' => 'in:addnull', 
+	      'put_att_double' => 3, 'put_att_double-3' => 'in:addnull',
+	      'put_att_float' => 3, 'put_att_float-3' => 'in:addnull',
+	      'put_att_int' => 3, 'put_att_int-3' => 'in:addnull',
+	      'put_att_long' => 3, 'put_att_long-3' => 'in:addnull',
+	      'put_att_schar' => '3:6', 'put_att_schar-3' => 'in:addnull',
+			      'put_att_schar-6' => 'in:addnull',
+	      'put_att_short' => 3, 'put_att_short-3' => 'in:addnull',
+	      'put_att_text' => '3:5', 'put_att_text-3' => 'in:addnull',
+			     'put_att_text-5' => 'in:addnull',
+	      'put_att_uchar' => 3, 'put_att_uchar-3' => 'in:addnull',
+	      'put_var1_text' => 4, 'put_var1_text-4' => 'in:addnull',
+	      'put_var_text' => 3, 'put_var_text-3' => 'in:addnull',
+	      'put_vara_text_all' => 5, 'put_vara_text_all-5' => 'in:addnull',
+	      'put_vara_text' => 5, 'put_vara_text-5' => 'in:addnull',
+	      'put_vars_text_all' => 6, 'put_vars_text_all-6' => 'in:addnull',
+	      'put_vars_text' => 6, 'put_vars_text-6' => 'in:addnull',
+	      'rename_att' => 3, 'rename_att-3' => 'in:addnull',
+	      'rename_dim' => 3, 'rename_dim-3' => 'in:addnull',
+	      'rename_var' => 3, 'rename_var-3' => 'in:addnull',
 	      );
 $build_prototypes = 1;
 $prototype_header_file = "mpifnetcdf.h";

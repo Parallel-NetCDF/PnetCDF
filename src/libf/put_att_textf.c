@@ -21,6 +21,28 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_put_att_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int v4, char *v5 FORT_MIXED_LEN(d5), MPI_Fint *ierr FORT_END_LEN(d3) FORT_END_LEN(d5) ){
-    *ierr = ncmpi_put_att_text( *v1, *v2, v3, v4, v5 );
+FORTRAN_API void FORT_CALL nfmpi_put_att_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, char *v5 FORT_MIXED_LEN(d5), MPI_Fint *ierr FORT_END_LEN(d3) FORT_END_LEN(d5) ){
+    char *p3;
+    char *p5;
+
+    {char *p = v3 + d3 - 1;
+     int  li;
+        while (*p == ' ' && p > v3) p--;
+        p++;
+        p3 = (char *)malloc( p-v3 + 1 );
+        for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
+        p3[li] = 0; 
+    }
+
+    {char *p = v5 + d5 - 1;
+     int  li;
+        while (*p == ' ' && p > v5) p--;
+        p++;
+        p5 = (char *)malloc( p-v5 + 1 );
+        for (li=0; li<(p-v5); li++) { p5[li] = v5[li]; }
+        p5[li] = 0; 
+    }
+    *ierr = ncmpi_put_att_text( *v1, *v2, p3, *v4, p5 );
+    free( p3 );
+    free( p5 );
 }
