@@ -18,7 +18,7 @@
 
 #define NO_NETCDF_2 1
 
-#include "../fortran/nfconfig.inc"
+#include "nfconfig.inc"
 
 
 !/* Parameters of test data */
@@ -124,7 +124,7 @@
 #endif /* UD_TESTS_INC */
 
 
-#include "../fortran/netcdf.inc"
+#include "netcdf.inc"
 
 
 !    /* Global variables - filenames */
