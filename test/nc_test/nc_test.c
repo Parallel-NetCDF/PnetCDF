@@ -315,6 +315,8 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_set_fill);
     }
 
+    MPI_Finalize();
+
     print( "\nNOTE: parallel-netcdf expects to see 3 failures");
     print( "\nTotal number of failures: %d\n", nfailsTotal);
     return nfailsTotal > 0;
