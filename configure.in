@@ -18,7 +18,8 @@ AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
 UD_PROG_M4
 AC_PROG_CC
 AC_PROG_CXX
-AC_PROG_F77
+dnl AC_PROG_F77
+UC_PROG_FC
 dnl UD_PROG_CC
 UD_PROG_CC_MAKEDEPEND
 dnl need a --with-cxx=no and --with-fortran=no
@@ -27,7 +28,6 @@ dnl UD_PROG_F90
 # Checking for Fortran types also determines the Fortran name mangling
 # and places the value into FCALLSCSUB as a the C name corresponding
 # to the Fortran name SUB 
-UD_FORTRAN_TYPES
 UD_CHECK_LIB_MATH
 UD_PROG_AR()
 UD_PROG_NM()
@@ -143,6 +143,7 @@ AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 UD_CHECK_SIZEOF(off_t)
 UD_CHECK_SIZEOF(size_t)
+UD_FORTRAN_TYPES
 UD_MAKEWHATIS
 UD_FTPBINDIR
-AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nf_test/Makefile)
+AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile src/libf/netcdf.inc test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nf_test/Makefile)
