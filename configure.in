@@ -265,11 +265,11 @@ AC_CHECK_SIZEOF(MPI_Offset)
 if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
 
-    NFMPI_LONG_T="integer*$ac_cv_sizeof_MPI_Offset"
-    AC_MSG_CHECKING(for Fortran \"$NFMPI_LONG_T\")
+    NFMPI_OFFSET="integer*$ac_cv_sizeof_MPI_Offset"
+    AC_MSG_CHECKING(for Fortran \"$NFMPI_OFFSET\")
 		cat >conftest.f <<EOF
 	subroutine sub(value)
-	$NFMPI_LONG_T value
+	$NFMPI_OFFSET value
 	end
 EOF
     doit='$FC -c ${FFLAGS} conftest.f'
@@ -277,7 +277,7 @@ EOF
         AC_MSG_RESULT(yes)
     else
 	AC_MSG_RESULT(no)
-        AC_MSG_ERROR(F77 does not support \"$NFMPI_LONG_T\")
+        AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\")
     fi
     rm -f conftest*
 fi
