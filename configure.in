@@ -181,6 +181,6 @@ UD_FORTRAN_TYPES
 UD_MAKEWHATIS
 UD_FTPBINDIR
 
-chmod u+x scripts/install-sh
+chmod u+x ${srcdir}/scripts/install-sh
 
 AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nf_test/Makefile)
