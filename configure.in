@@ -175,17 +175,19 @@ AC_SUBST(MPIF77)
 AC_CHECK_HEADER(stdlib.h, ,AC_DEFINE(NO_STDLIB_H))
 AC_CHECK_HEADER(sys/types.h, ,AC_DEFINE(NO_SYS_TYPES_H))
 AC_CHECK_FUNC(strerror, ,AC_DEFINE(NO_STRERROR))
-UD_CHECK_FTRUNCATE
 AC_FUNC_ALLOCA
 AC_STRUCT_ST_BLKSIZE
 UD_CHECK_IEEE
 AC_TYPE_SIZE_T
 
-dnl Check for presence of various MPI_COMBINERs.  These could be
-dnl enums, so we have to do compile checks.
+dnl
+dnl *** SWITCHING TO USING MPICC ***
+dnl
 saveCC="$CC"
 CC=$MPICC
 
+dnl Check for presence of various MPI_COMBINERs.  These could be
+dnl enums, so we have to do compile checks.
 AC_MSG_CHECKING(if MPI includes MPI_COMBINER_DUP)
 AC_TRY_COMPILE([ #include <mpi.h> ],
   [ int combiner = MPI_COMBINER_DUP; ],
@@ -264,35 +266,126 @@ AC_TRY_COMPILE([ #include <mpi.h> ],
   AC_MSG_RESULT(no)
 )
 
+dnl Check for presence of Fortran types
+dnl
+dnl We do this for a couple of reasons.  First, the MPI might have been
+dnl built without Fortran support, in which case these types might not
+dnl exist.  Second, we need to map these types to corresponding C types
+dnl where possible to simplify processing at runtime.
+
+AC_MSG_CHECKING(if MPI includes MPI_CHARACTER)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_CHARACTER; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_CHARACTER, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_REAL)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_REAL; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_REAL, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_INTEGER)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_INTEGER; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_INTEGER, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_DOUBLE_PRECISION)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_DOUBLE_PRECISION; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMPLEX32, 1, available),
+  AC_MSG_RESULT(no)
+)
+
+AC_MSG_CHECKING(if MPI includes MPI_INTEGER1)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_INTEGER1; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_INTEGER1, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_INTEGER2)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_INTEGER2; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_INTEGER2, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_INTEGER4)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_INTEGER4; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_INTEGER4, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_INTEGER8)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_INTEGER8; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_INTEGER8, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_INTEGER16)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_INTEGER16; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_INTEGER16, 1, available),
+  AC_MSG_RESULT(no)
+)
+
+AC_MSG_CHECKING(if MPI includes MPI_REAL4)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_REAL4; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_REAL4, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_REAL8)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_REAL8; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_REAL8, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_REAL16)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_REAL16; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_REAL16, 1, available),
+  AC_MSG_RESULT(no)
+)
+
+AC_MSG_CHECKING(if MPI includes MPI_COMPLEX8)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_COMPLEX8; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMPLEX8, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMPLEX16)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_COMPLEX16; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMPLEX16, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMPLEX32)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int datatype = MPI_COMPLEX32; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMPLEX32, 1, available),
+  AC_MSG_RESULT(no)
+)
+
+dnl
+dnl *** GOING BACK TO REGULAR CC ***
+dnl
 CC="$saveCC"
-
-dnl Check that sizeof(size_t) == sizeof(int); bail otherwise.
-dnl
-dnl This is important because we do some casting in the Fortran
-dnl bindings based on this assumption. (Needed only for Fortran)
-
-dnl No need to check this since we don't use size_t in C interface any longer
-dnl
-dnl if test "$enable_fortran" = "yes" ; then
-dnl    AC_MSG_CHECKING(whether size_t and int size match)
-dnl    AC_TRY_RUN([
-dnl	#include <stdio.h>
-dnl	
-dnl	int main(void)
-dnl	{
-dnl		if (sizeof(size_t) == sizeof(int)) return 0; /* true */
-dnl		else return 1; /* false */
-dnl	}
-dnl ],pac_cv_size_t_within_int=yes,
-dnl pac_cv_size_t_within_int=no)
-dnl    AC_MSG_RESULT($pac_cv_size_t_within_int)
-dnl    if test "$pac_cv_size_t_within_int" != yes ; then
-dnl        AC_DEFINE(HAVE_SIZET_LARGER_THAN_INT,1,[Define if sizet is larger than int])
-dnl	# For now, we require that a Fortran integer and a C int have the
-dnl	# same size.
-dnl        AC_DEFINE(HAVE_SIZET_LARGER_THAN_FINT,1,[Define if sizet is larger than a Fortran int])
-dnl    fi
-dnl fi
 
 AC_TYPE_OFF_T
 AC_CHECK_TYPE(ssize_t, int)

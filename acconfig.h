@@ -1,6 +1,3 @@
-/* Define if you have the ftruncate function  */
-#undef HAVE_FTRUNCATE
-
 /* The number of bytes in a off_t */
 #undef SIZEOF_OFF_T
 
