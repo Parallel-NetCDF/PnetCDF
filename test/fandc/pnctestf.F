@@ -7,7 +7,7 @@ C Test program thanks to From: John Tannahill <tannahill1@llnl.gov>
 #      include "pnetcdf.inc"
 
 
-      NFMPI_LONG_T TOTSIZ_3D(3)
+      NFMPI_OFFSET TOTSIZ_3D(3)
 
 
       logical reorder
