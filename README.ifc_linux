@@ -1,0 +1,11 @@
+# here are the steps John Tannahill <tannahill1@llnl.gov> used when
+# building pnetcdf on the "mcr" cluster at LLNL.  It is a linux cluster
+# with the intel compilers.
+
+   setenv MPICC  mpiicc
+   setenv MPIF77 mpiifc
+   setenv F77    ifc
+   setenv FC     ifc
+   setenv CC     icc
+
+# then run the usual "configure; make ; make install"
