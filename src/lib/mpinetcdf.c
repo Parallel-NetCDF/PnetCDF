@@ -380,6 +380,8 @@ length_of_mpitype(MPI_Datatype datatype) {
 	return((int)sizeof(float));
     case MPI_DOUBLE:
 	return((int)sizeof(double));
+    default:
+	fprintf(stderr, "FIXME: unknown type passed to length_of_mpitype\n");
   }
 
   return -1;
@@ -997,6 +999,9 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
       blocklen = varp->xsz;
 
     stride = ncp->recsize;
+    
+    if (ncp->numrecs == 0)
+	    return(NC_NOERR);
 
 #if (MPI_VERSION < 2)
     MPI_Type_hvector(ncp->numrecs, blocklen, stride, MPI_BYTE, &filetype);
