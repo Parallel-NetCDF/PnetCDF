@@ -19,7 +19,7 @@ UD_PROG_M4
 AC_PROG_CC
 AC_PROG_CXX
 dnl AC_PROG_F77
-UC_PROG_FC
+UD_PROG_FC
 dnl UD_PROG_CC
 UD_PROG_CC_MAKEDEPEND
 dnl need a --with-cxx=no and --with-fortran=no
