@@ -314,6 +314,8 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_rename_att);
 	NC_TEST(ncmpi_del_att);
 	NC_TEST(ncmpi_set_fill);
+
+	NC_TEST(ncmpi_delete);
     }
 
     MPI_Finalize();
