@@ -2,6 +2,7 @@ config.cache
 config.log
 config.status
 configure
+autom4te.cache
 Makefile
 macros.make
 *.log
