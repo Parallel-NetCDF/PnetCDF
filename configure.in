@@ -13,7 +13,7 @@ AC_INIT(src/lib/ncconfig.in)
 UD_SRCDIR
 dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
-AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
+AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf.inc)
 AC_CONFIG_AUX_DIR(./scripts)
 
 AC_ARG_ENABLE(fortran,
@@ -43,6 +43,9 @@ if test "$enable_fortran" = "yes" ; then
     if test -z "$FC" -a -n "$F77" ; then
         FC="$F77"
     fi
+    dnl 'UD_PROG_FC' is quite elaborate and does a whole lot more than just 
+    dnl find a fortran compiler. it also checks fortran types and fortran
+    dnl calling convention.  So don't change this to AC_PROG_FC :>
     UD_PROG_FC
 fi
 UD_PROG_CC_MAKEDEPEND
@@ -245,7 +248,7 @@ has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 chmod u+x ${srcdir}/scripts/install-sh
 
-AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nc_test2/Makefile test/nf_test/Makefile test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile src/utils/ncgen/Makefile)
+AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  src/libf/pnetcdf.inc test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nc_test2/Makefile test/nf_test/Makefile test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile src/utils/ncgen/Makefile)
 
 if test "$enable_mpi_io_test" != "yes" ; then
 	AC_MSG_WARN([
