@@ -35,4 +35,6 @@ FORTRAN_API void FORT_CALL nfmpi_def_dim_ ( int *v1, char *v2 FORT_MIXED_LEN(d2)
     }
     *ierr = ncmpi_def_dim( *v1, p2, l3, v4 );
     free( p2 );
+
+    *v4 = *v4 + 1;
 }

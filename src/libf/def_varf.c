@@ -23,7 +23,7 @@
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, int *v4, MPI_Fint *v5, MPI_Fint *v6, MPI_Fint *ierr FORT_END_LEN(d2) ){
     char *p2;
-    int *l5=0;
+    int *l5=0, ln5;
 
     {char *p = v2 + d2 - 1;
      int  li;
@@ -34,15 +34,15 @@ FORTRAN_API void FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2)
         p2[li] = 0; 
     }
 
-    { int ln = *v4;
-    if (ln > 0) {
+    { ln5 = *v4;
+    if (ln5 > 0) {
         int li;
-        l5 = (size_t *)malloc( ln * sizeof(int) );
-        for (li=0; li<ln; li++) 
-            l5[li] = v5[ln-1-li];
-    }}
+        l5 = (size_t *)malloc( ln5 * sizeof(int) );
+        for (li=0; li<ln5; li++) 
+            l5[li] = v5[ln5-li-1]-1;
+      }}
     *ierr = ncmpi_def_var( *v1, p2, *v3, *v4, l5, v6 );
     free( p2 );
 
-    if (l5) { free(l5); }
+    *v6 = *v6 + 1;
 }

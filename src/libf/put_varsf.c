@@ -22,11 +22,12 @@
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[], int v5[], void*v6, int *v7, MPI_Fint *v8, MPI_Fint *ierr ){
+    int l2 = *v2 - 1;
     size_t *l3 = 0;
     size_t *l4 = 0;
     size_t *l5 = 0;
 
-    { int ln = ncmpixVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2-1);
     if (ln > 0) {
         int li;
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
@@ -40,7 +41,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[
     }
     }
 
-    { int ln = ncmpixVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2-1);
     if (ln > 0) {
         int li;
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
@@ -54,7 +55,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[
     }
     }
 
-    { int ln = ncmpixVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2-1);
     if (ln > 0) {
         int li;
         l5 = (size_t *)malloc( ln * sizeof(size_t) );
@@ -67,7 +68,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[
 	return;
     }
     }
-    *ierr = ncmpi_put_vars( *v1, *v2, l3, l4, l5, v6, *v7, (MPI_Datatype)(*v8) );
+    *ierr = ncmpi_put_vars( *v1, l2, l3, l4, l5, v6, *v7, (MPI_Datatype)(*v8) );
 
     if (l3) { free(l3); }
 
