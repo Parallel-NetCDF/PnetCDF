@@ -7,3 +7,5 @@ Makefile
 macros.make
 *.log
 *.mod
+cscope.files
+cscope.out
