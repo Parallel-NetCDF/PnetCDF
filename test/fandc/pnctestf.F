@@ -42,26 +42,26 @@ C    determined by MPI where a zero is specified
      &                      reorder, comm_cart, ierr)
 
 
-      call Nfmpi_Create (comm_cart, "pnf_test.nc", NF_CLOBBER,
-     &                   MPI_INFO_NULL, ncid, ierr)
+      ierr = Nfmpi_Create (comm_cart, "pnf_test.nc", NF_CLOBBER,
+     &                   MPI_INFO_NULL, ncid)
 
-      call Nfmpi_Def_Dim
-     &  (ncid, "level",     totsiz_3d(1), lev_id, ierr)
-      call Nfmpi_Def_Dim
-     &  (ncid, "latitude",  totsiz_3d(2), lat_id, ierr)
-      call Nfmpi_Def_Dim
-     &  (ncid, "longitude", totsiz_3d(3), lon_id, ierr)
+      ierr = Nfmpi_Def_Dim
+     &  (ncid, "level",     totsiz_3d(1), lev_id)
+      ierr = Nfmpi_Def_Dim
+     &  (ncid, "latitude",  totsiz_3d(2), lat_id)
+      ierr = Nfmpi_Def_Dim
+     &  (ncid, "longitude", totsiz_3d(3), lon_id)
 
       dim_id(1) = lev_id
       dim_id(2) = lat_id
       dim_id(3) = lon_id
 
-      call Nfmpi_Def_Var
-     &  (ncid, "tt", NF_FLOAT, 3, dim_id, tt_id, ierr)
+      ierr = Nfmpi_Def_Var
+     &  (ncid, "tt", NF_FLOAT, 3, dim_id, tt_id)
 
-      call Nfmpi_Enddef (ncid, ierr)
+      ierr = Nfmpi_Enddef (ncid)
 
-      call Nfmpi_Close (ncid, ierr)
+      ierr = Nfmpi_Close (ncid)
 
 
       call MPI_Comm_Free (comm_cart, ierr)
