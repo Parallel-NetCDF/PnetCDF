@@ -8,6 +8,10 @@ new file format (CDF-2) which uses an 8-byte value for the offset.
 We use his approach in parallel netcdf, though we have modified his
 patch against netcdf-3.5-beta1 to apply to our codebase.  
 
+I couldn't find a URL to Greg's original message, but here's Russ Rew's 
+followup: 
+http://www.unidata.ucar.edu/projects/coohl/mhonarc/MailArchives/netcdf/msg04811.html
+
 This means there are two different but compatable implementations of the
 CDF-2 file format.  We (the parallel netcdf developers) will make our
 best effort to keep our implementation compatable with the serial netcdf
