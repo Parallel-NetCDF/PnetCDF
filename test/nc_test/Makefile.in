@@ -24,8 +24,8 @@ SRCS		=   nc_test.c \
 
 OBJS		= $(SRCS:.c=.o)
 
-lib_netcdf	= $(prefix)/lib/libnetcdf.a
-ld_netcdf	= -L$(prefix)/lib -lnetcdf
+lib_netcdf	= $(prefix)/lib/libpnetcdf.a
+ld_netcdf	= -L$(prefix)/lib -lpnetcdf
 
 time_log	= times
 
