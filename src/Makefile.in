@@ -1,6 +1,6 @@
 all:
 	cd lib && $(MAKE)
-	cd libf && $(MAKE)
+	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) ; fi
 
 distclean: clean
 clean:
@@ -9,4 +9,4 @@ clean:
 
 install:
 	cd lib && $(MAKE) install
-	cd libf && $(MAKE) install
+	if [ @has_fortran@ = yes ] ; then && cd libf && $(MAKE) install ; fi
