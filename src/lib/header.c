@@ -580,11 +580,21 @@ hdr_fetch(bufferinfo *gbp) {
   int rank;
   MPI_Comm comm;
   int mpireturn;
+  size_t slack;		/* any leftover data in the buffer */
 
   assert(gbp->base != NULL);
   
   comm = gbp->nciop->comm;
   MPI_Comm_rank(comm, &rank);
+
+  /* XXX: this pointer math might not be good on 64 bit platforms */
+  slack = gbp->size - ((char *)gbp->pos - (char *)gbp->base);
+  /* . if gbp->pos and gbp->base are the same, there is no leftover buffer data
+   *   to worry about.  
+   * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then all
+   * data in the buffer has been consumed */
+
+  if (slack == gbp->size) slack = 0;
 
   (void) memset(gbp->base, 0, gbp->size);
   gbp->pos = gbp->base;
@@ -602,7 +612,7 @@ hdr_fetch(bufferinfo *gbp) {
 
   if (rank == 0) {
     MPI_Status mpistatus;
-    mpireturn = MPI_File_read_at(gbp->nciop->collective_fh, gbp->offset, gbp->base, 
+    mpireturn = MPI_File_read_at(gbp->nciop->collective_fh, (gbp->offset)-slack, gbp->base, 
 	             gbp->size, MPI_BYTE, &mpistatus);  
     if (mpireturn != MPI_SUCCESS) {
         char errorString[512];
@@ -614,7 +624,8 @@ hdr_fetch(bufferinfo *gbp) {
     }
 
   }
-  gbp->offset += gbp->size; 
+  /* we might have had to backtrack */
+  gbp->offset += (gbp->size - slack); 
 
   MPI_Bcast(gbp->base, gbp->size, MPI_BYTE, 0, comm);
 
