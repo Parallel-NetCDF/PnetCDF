@@ -48,7 +48,7 @@ extern void	lput ( const char *string );
 extern void	set_formats ( int flt_digs, int dbl_digs );
 
 /* Determine print format to use for each value for this variable. */
-char *		get_fmt ( int ncid, int varid, nc_type type );
+const char *		get_fmt ( int ncid, int varid, nc_type type );
 
 /* structure for list of variables specified with -v option */
 struct vnode

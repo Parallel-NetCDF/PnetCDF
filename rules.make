@@ -112,16 +112,16 @@ sunos5_shared_library:
 
 
 ################################################################################
-# Installation:
+# $(INSTALL)ation:
 
 $(INCDIR)/$(HEADER):	$(INCDIR) $(HEADER)
-	cp $(srcdir)/$(HEADER) $@
+	$(INSTALL) $(srcdir)/$(HEADER) $@
 $(INCDIR)/$(HEADER1):	$(INCDIR) $(HEADER1)
-	cp $(srcdir)/$(HEADER1) $@
+	$(INSTALL) $(srcdir)/$(HEADER1) $@
 $(INCDIR)/$(HEADER2):	$(INCDIR) $(HEADER2)
-	cp $(srcdir)/$(HEADER2) $@
+	$(INSTALL) $(srcdir)/$(HEADER2) $@
 $(INCDIR)/$(HEADER3):	$(INCDIR) $(HEADER3)
-	cp $(srcdir)/$(HEADER3) $@
+	$(INSTALL) $(srcdir)/$(HEADER3) $@
 
 $(INCDIR)/$(HEADER_GENERATED):	$(INCDIR) $(HEADER_GENERATED)
 	cp $(HEADER_GENERATED) $@
@@ -145,9 +145,9 @@ $(BINDIR)/$(PROGRAM):	$(BINDIR) $(PROGRAM)
 #	-test -d $@ || mkdir $@
 
 $(MANDIR)/man1/$(MANUAL):	$(MANDIR)/man1 $(MANUAL)
-	cp $(srcdir)/$(MANUAL) $@
+	$(INSTALL) $(srcdir)/$(MANUAL) $@
 $(MANDIR)/man3/$(MANUAL):	$(MANDIR)/man3 $(MANUAL)
-	cp $(srcdir)/$(MANUAL) $@
+	$(INSTALL) $(srcdir)/$(MANUAL) $@
 $(MANDIR)/man3f/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 				$(MANDIR)/man3f
 	rm -f $@

@@ -19,7 +19,7 @@
 
 static void usage(void);
 static char* name_path(const char* path);
-static char* type_name(ncmpi_type  type);
+static const char* type_name(ncmpi_type  type);
 static void tztrim(char* ss);
 static void pr_att_string(size_t len, const char* string);
 static void pr_att_vals(ncmpi_type  type, size_t len, const double* vals);
@@ -96,7 +96,7 @@ name_path(const char *path)
 }
 
 
-static char *
+static const char *
 type_name(ncmpi_type type)
 {
     switch (type) {
