@@ -1,7 +1,4 @@
 /* src/lib/ncconfig.in.  Generated from configure.in by autoheader.  */
-/* Define if you have the ftruncate function  */
-#undef HAVE_FTRUNCATE
-
 /* The number of bytes in a off_t */
 #undef SIZEOF_OFF_T
 
@@ -56,16 +53,31 @@
 #undef HAVE_MEMORY_H
 
 /* available */
+#undef HAVE_MPI_CHARACTER
+
+/* available */
 #undef HAVE_MPI_COMBINER_DARRAY
 
 /* available */
 #undef HAVE_MPI_COMBINER_DUP
 
 /* available */
+#undef HAVE_MPI_COMBINER_F90_COMPLEX
+
+/* available */
+#undef HAVE_MPI_COMBINER_F90_INTEGER
+
+/* available */
+#undef HAVE_MPI_COMBINER_F90_REAL
+
+/* available */
 #undef HAVE_MPI_COMBINER_HINDEDED_INTEGER
 
 /* available */
 #undef HAVE_MPI_COMBINER_HVECTOR_INTEGER
+
+/* available */
+#undef HAVE_MPI_COMBINER_INDEXED_BLOCK
 
 /* available */
 #undef HAVE_MPI_COMBINER_RESIZED
@@ -75,6 +87,45 @@
 
 /* available */
 #undef HAVE_MPI_COMBINER_SUBARRAY
+
+/* available */
+#undef HAVE_MPI_COMPLEX16
+
+/* available */
+#undef HAVE_MPI_COMPLEX32
+
+/* available */
+#undef HAVE_MPI_COMPLEX8
+
+/* available */
+#undef HAVE_MPI_INTEGER
+
+/* available */
+#undef HAVE_MPI_INTEGER1
+
+/* available */
+#undef HAVE_MPI_INTEGER16
+
+/* available */
+#undef HAVE_MPI_INTEGER2
+
+/* available */
+#undef HAVE_MPI_INTEGER4
+
+/* available */
+#undef HAVE_MPI_INTEGER8
+
+/* available */
+#undef HAVE_MPI_REAL
+
+/* available */
+#undef HAVE_MPI_REAL16
+
+/* available */
+#undef HAVE_MPI_REAL4
+
+/* available */
+#undef HAVE_MPI_REAL8
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
