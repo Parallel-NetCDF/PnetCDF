@@ -338,7 +338,7 @@
 
 
 !       =============================
-        call Nfmpi_Put_Vara_Float_All
+        call Nfmpi_Put_Vara_Real_All
 !       =============================
      &    (ncid, tt_id, start_3d, count_3d, tt, ierr)
 
@@ -464,7 +464,7 @@
 
 
 !       =============================
-        call Nfmpi_Get_Vara_Float_All
+        call Nfmpi_Get_Vara_Real_All
 !       =============================
      &    (ncid, tt_id, start_3d, count_3d, buf, ierr)
 
