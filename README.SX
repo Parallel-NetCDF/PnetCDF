@@ -1,3 +1,21 @@
+# Current notes
+
+. On the SX, integer*1 does not exist, so no "int1" interfaces will be built.
+  However, the declaration for the int1 functions still exist in pnetcdf.inc,
+  which the compiler does not like.  Add -Wl"-h nodefs" to the FFLAGS
+  environment variable to work around this problem.  In a future release, we
+  will generate pnetcdf.inc 
+
+. Our build process builds libpnetcdf.a from the objects in src/lib, then if
+  the fortran interface is being built, adds the objects in src/libf to the
+  already-existing library.  NEC's make implementation does not like this: it
+  sees that the .a file is newer than the .f files and thus skips adding the
+  object files to the library.
+
+  To work around this, do the usual "configure; make", but then change to
+  src/libf and run "make" a 2nd time.
+
+# older notes
 Date: Wed, 30 Jul 2003 16:59:46 +0200 (CEST)
 From: rene.redler <redler@ccrl-nece.de>
 To: Robert Latham <robl@mcs.anl.gov>
@@ -34,3 +52,6 @@ CXX=c++
 ARFLAGS=r
 
 ...
+
+
+
