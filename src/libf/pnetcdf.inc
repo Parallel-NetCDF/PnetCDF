@@ -175,8 +175,8 @@
 !
 ! miscellaneous routines:
 !
-      character*80   nf_inq_libvers
-      external       nf_inq_libvers
+      character*80   nfmpi_inq_libvers
+      external       nfmpi_inq_libvers
 
       character*80   nfmpi_strerror
 !                         (integer             ncerr)
@@ -189,346 +189,351 @@
 !
 ! control routines:
 !
-      integer         nf_inq_base_pe
+      integer         nfmpi_inq_base_pe
 !                         (integer             ncid,
 !                          integer             pe)
-      external        nf_inq_base_pe
+      external        nfmpi_inq_base_pe
 
-      integer         nf_set_base_pe
+      integer         nfmpi_set_base_pe
 !                         (integer             ncid,
 !                          integer             pe)
-      external        nf_set_base_pe
+      external        nfmpi_set_base_pe
 
-      integer         nf_create
+      integer         nfmpi_create
 !                         (character*(*)       path,
 !                          integer             cmode,
 !                          integer             ncid)
-      external        nf_create
+      external        nfmpi_create
 
-      integer         nf__create
+      integer         nfmpi__create
 !                         (character*(*)       path,
 !                          integer             cmode,
 !                          integer             initialsz,
 !                          integer             chunksizehint,
 !                          integer             ncid)
-      external        nf__create
+      external        nfmpi__create
 
-      integer         nf__create_mp
+      integer         nfmpi__create_mp
 !                         (character*(*)       path,
 !                          integer             cmode,
 !                          integer             initialsz,
 !                          integer             basepe,
 !                          integer             chunksizehint,
 !                          integer             ncid)
-      external        nf__create_mp
+      external        nfmpi__create_mp
 
-      integer         nf_open
+      integer         nfmpi_open
 !                         (character*(*)       path,
 !                          integer             mode,
 !                          integer             ncid)
-      external        nf_open
+      external        nfmpi_open
 
-      integer         nf__open
+      integer         nfmpi__open
 !                         (character*(*)       path,
 !                          integer             mode,
 !                          integer             chunksizehint,
 !                          integer             ncid)
-      external        nf__open
+      external        nfmpi__open
 
-      integer         nf__open_mp
+      integer         nfmpi__open_mp
 !                         (character*(*)       path,
 !                          integer             mode,
 !                          integer             basepe,
 !                          integer             chunksizehint,
 !                          integer             ncid)
-      external        nf__open_mp
+      external        nfmpi__open_mp
 
-      integer         nf_set_fill
+      integer         nfmpi_set_fill
 !                         (integer             ncid,
 !                          integer             fillmode,
 !                          integer             old_mode)
-      external        nf_set_fill
+      external        nfmpi_set_fill
 
-      integer         nf_redef
+      integer         nfmpi_redef
 !                         (integer             ncid)
-      external        nf_redef
+      external        nfmpi_redef
 
-      integer         nf_enddef
+      integer         nfmpi_enddef
 !                         (integer             ncid)
-      external        nf_enddef
+      external        nfmpi_enddef
 
-      integer         nf__enddef
+      integer         nfmpi__enddef
 !                         (integer             ncid,
 !                          integer             h_minfree,
 !                          integer             v_align,
 !                          integer             v_minfree,
 !                          integer             r_align)
-      external        nf__enddef
+      external        nfmpi__enddef
 
-      integer         nf_sync
+      integer         nfmpi_sync
 !                         (integer             ncid)
-      external        nf_sync
+      external        nfmpi_sync
 
-      integer         nf_abort
+      integer         nfmpi_abort
 !                         (integer             ncid)
-      external        nf_abort
+      external        nfmpi_abort
 
-      integer         nf_close
+      integer         nfmpi_close
 !                         (integer             ncid)
-      external        nf_close
-
-      integer         nf_delete
-!                         (character*(*)       ncid)
-      external        nf_delete
+      external        nfmpi_close
 
 !
 ! general inquiry routines:
 !
 
-      integer         nf_inq
+      integer         nfmpi_inq
 !                         (integer             ncid,
 !                          integer             ndims,
 !                          integer             nvars,
 !                          integer             ngatts,
 !                          integer             unlimdimid)
-      external        nf_inq
+      external        nfmpi_inq
 
-      integer         nf_inq_ndims
+      integer         nfmpi_inq_ndims
 !                         (integer             ncid,
 !                          integer             ndims)
-      external        nf_inq_ndims
+      external        nfmpi_inq_ndims
 
-      integer         nf_inq_nvars
+      integer         nfmpi_inq_nvars
 !                         (integer             ncid,
 !                          integer             nvars)
-      external        nf_inq_nvars
+      external        nfmpi_inq_nvars
 
-      integer         nf_inq_natts
+      integer         nfmpi_inq_natts
 !                         (integer             ncid,
 !                          integer             ngatts)
-      external        nf_inq_natts
+      external        nfmpi_inq_natts
 
-      integer         nf_inq_unlimdim
+      integer         nfmpi_inq_unlimdim
 !                         (integer             ncid,
 !                          integer             unlimdimid)
-      external        nf_inq_unlimdim
+      external        nfmpi_inq_unlimdim
 
 !
 ! dimension routines:
 !
 
-      integer         nf_def_dim
+      integer         nfmpi_def_dim
 !                         (integer             ncid,
 !                          character(*)        name,
 !                          integer             len,
 !                          integer             dimid)
-      external        nf_def_dim
+      external        nfmpi_def_dim
 
-      integer         nf_inq_dimid
+      integer         nfmpi_inq_dimid
 !                         (integer             ncid,
 !                          character(*)        name,
 !                          integer             dimid)
-      external        nf_inq_dimid
+      external        nfmpi_inq_dimid
 
-      integer         nf_inq_dim
+      integer         nfmpi_inq_dim
 !                         (integer             ncid,
 !                          integer             dimid,
 !                          character(*)        name,
 !                          integer             len)
-      external        nf_inq_dim
+      external        nfmpi_inq_dim
 
-      integer         nf_inq_dimname
+      integer         nfmpi_inq_dimname
 !                         (integer             ncid,
 !                          integer             dimid,
 !                          character(*)        name)
-      external        nf_inq_dimname
+      external        nfmpi_inq_dimname
 
-      integer         nf_inq_dimlen
+      integer         nfmpi_inq_dimlen
 !                         (integer             ncid,
 !                          integer             dimid,
 !                          integer             len)
-      external        nf_inq_dimlen
+      external        nfmpi_inq_dimlen
 
-      integer         nf_rename_dim
+      integer         nfmpi_rename_dim
 !                         (integer             ncid,
 !                          integer             dimid,
 !                          character(*)        name)
-      external        nf_rename_dim
+      external        nfmpi_rename_dim
 
 !
 ! general attribute routines:
 !
 
-      integer         nf_inq_att
+      integer         nfmpi_inq_att
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             xtype,
 !                          integer             len)
-      external        nf_inq_att
+      external        nfmpi_inq_att
 
-      integer         nf_inq_attid
+      integer         nfmpi_inq_attid
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             attnum)
-      external        nf_inq_attid
+      external        nfmpi_inq_attid
 
-      integer         nf_inq_atttype
+      integer         nfmpi_inq_atttype
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             xtype)
-      external        nf_inq_atttype
+      external        nfmpi_inq_atttype
 
-      integer         nf_inq_attlen
+      integer         nfmpi_inq_attlen
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             len)
-      external        nf_inq_attlen
+      external        nfmpi_inq_attlen
 
-      integer         nf_inq_attname
+      integer         nfmpi_inq_attname
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             attnum,
 !                          character(*)        name)
-      external        nf_inq_attname
+      external        nfmpi_inq_attname
 
-      integer         nf_copy_att
+      integer         nfmpi_copy_att
 !                         (integer             ncid_in,
 !                          integer             varid_in,
 !                          character(*)        name,
 !                          integer             ncid_out,
 !                          integer             varid_out)
-      external        nf_copy_att
+      external        nfmpi_copy_att
 
-      integer         nf_rename_att
+      integer         nfmpi_rename_att
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        curname,
 !                          character(*)        newname)
-      external        nf_rename_att
+      external        nfmpi_rename_att
 
-      integer         nf_del_att
+      integer         nfmpi_del_att
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name)
-      external        nf_del_att
+      external        nfmpi_del_att
 
 !
 ! attribute put/get routines:
 !
 
-      integer         nf_put_att_text
+      integer         nfmpi_put_att_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             len,
 !                          character(*)        text)
-      external        nf_put_att_text
+      external        nfmpi_put_att_text
 
-      integer         nf_get_att_text
+      integer         nfmpi_get_att_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          character(*)        text)
-      external        nf_get_att_text
+      external        nfmpi_get_att_text
 
-      integer         nf_put_att_int1
+      integer         nfmpi_put_att_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             xtype,
 !                          integer             len,
-!                          nf_int1_t           i1vals(1))
-      external        nf_put_att_int1
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_att_int1
 
-      integer         nf_get_att_int1
+      integer         nfmpi_get_att_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
-!                          nf_int1_t           i1vals(1))
-      external        nf_get_att_int1
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_att_int1
 
-      integer         nf_put_att_int2
+      integer         nfmpi_put_att_int2
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             xtype,
 !                          integer             len,
-!                          nf_int2_t           i2vals(1))
-      external        nf_put_att_int2
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_att_int2
 
-      integer         nf_get_att_int2
+      integer         nfmpi_get_att_int2
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
-!                          nf_int2_t           i2vals(1))
-      external        nf_get_att_int2
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_att_int2
 
-      integer         nf_put_att_int
+      integer         nfmpi_put_att_int
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             xtype,
 !                          integer             len,
 !                          integer             ivals(1))
-      external        nf_put_att_int
+      external        nfmpi_put_att_int
 
-      integer         nf_get_att_int
+      integer         nfmpi_get_att_int
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             ivals(1))
-      external        nf_get_att_int
+      external        nfmpi_get_att_int
 
-      integer         nf_put_att_real
+      integer         nfmpi_put_att_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             xtype,
 !                          integer             len,
 !                          real                rvals(1))
-      external        nf_put_att_real
+      external        nfmpi_put_att_real
 
-      integer         nf_get_att_real
+      integer         nfmpi_get_att_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          real                rvals(1))
-      external        nf_get_att_real
+      external        nfmpi_get_att_real
 
-      integer         nf_put_att_double
+      integer         nfmpi_put_att_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          integer             xtype,
 !                          integer             len,
 !                          double              dvals(1))
-      external        nf_put_att_double
+      external        nfmpi_put_att_double
 
-      integer         nf_get_att_double
+      integer         nfmpi_get_att_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
 !                          double              dvals(1))
-      external        nf_get_att_double
+      external        nfmpi_get_att_double
 
+!
+! independent data mode routines:
+!
+      integer        nfmpi_begin_indep_data
+!                          (integer          ncid)
+      external       nfmpi_begin_indep_data
+      integer        nfmpi_end_indep_data
+!                          (integer          ncid)
+      external       nfmpi_end_indep_data
 !
 ! general variable routines:
 !
 
-      integer         nf_def_var
+      integer         nfmpi_def_var
 !                         (integer             ncid,
 !                          character(*)        name,
 !                          integer             datatype,
 !                          integer             ndims,
 !                          integer             dimids(1),
 !                          integer             varid)
-      external        nf_def_var
+      external        nfmpi_def_var
 
-      integer         nf_inq_var
+      integer         nfmpi_inq_var
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name,
@@ -536,437 +541,713 @@
 !                          integer             ndims,
 !                          integer             dimids(1),
 !                          integer             natts)
-      external        nf_inq_var
+      external        nfmpi_inq_var
 
-      integer         nf_inq_varid
+      integer         nfmpi_inq_varid
 !                         (integer             ncid,
 !                          character(*)        name,
 !                          integer             varid)
-      external        nf_inq_varid
+      external        nfmpi_inq_varid
 
-      integer         nf_inq_varname
+      integer         nfmpi_inq_varname
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name)
-      external        nf_inq_varname
+      external        nfmpi_inq_varname
 
-      integer         nf_inq_vartype
+      integer         nfmpi_inq_vartype
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             xtype)
-      external        nf_inq_vartype
+      external        nfmpi_inq_vartype
 
-      integer         nf_inq_varndims
+      integer         nfmpi_inq_varndims
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             ndims)
-      external        nf_inq_varndims
+      external        nfmpi_inq_varndims
 
-      integer         nf_inq_vardimid
+      integer         nfmpi_inq_vardimid
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             dimids(1))
-      external        nf_inq_vardimid
+      external        nfmpi_inq_vardimid
 
-      integer         nf_inq_varnatts
+      integer         nfmpi_inq_varnatts
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             natts)
-      external        nf_inq_varnatts
+      external        nfmpi_inq_varnatts
 
-      integer         nf_rename_var
+      integer         nfmpi_rename_var
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        name)
-      external        nf_rename_var
+      external        nfmpi_rename_var
 
-      integer         nf_copy_var
+      integer         nfmpi_copy_var
 !                         (integer             ncid_in,
 !                          integer             varid,
 !                          integer             ncid_out)
-      external        nf_copy_var
+      external        nfmpi_copy_var
 
 !
 ! entire variable put/get routines:
 !
 
-      integer         nf_put_var_text
+      integer         nfmpi_put_var_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        text)
-      external        nf_put_var_text
+      external        nfmpi_put_var_text
 
-      integer         nf_get_var_text
+      integer         nfmpi_put_var_text_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          character(*)        text)
-      external        nf_get_var_text
+      external        nfmpi_put_var_text_all
 
-      integer         nf_put_var_int1
+      integer         nfmpi_get_var_text
 !                         (integer             ncid,
 !                          integer             varid,
-!                          nf_int1_t           i1vals(1))
-      external        nf_put_var_int1
+!                          character(*)        text)
+      external        nfmpi_get_var_text
 
-      integer         nf_get_var_int1
+      integer         nfmpi_get_var_text_all
 !                         (integer             ncid,
 !                          integer             varid,
-!                          nf_int1_t           i1vals(1))
-      external        nf_get_var_int1
+!                          character(*)        text)
+      external        nfmpi_get_var_text_all
 
-      integer         nf_put_var_int2
+      integer         nfmpi_put_var_int1
 !                         (integer             ncid,
 !                          integer             varid,
-!                          nf_int2_t           i2vals(1))
-      external        nf_put_var_int2
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_var_int1
 
-      integer         nf_get_var_int2
+      integer         nfmpi_put_var_int1_all
 !                         (integer             ncid,
 !                          integer             varid,
-!                          nf_int2_t           i2vals(1))
-      external        nf_get_var_int2
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_var_int1_all
 
-      integer         nf_put_var_int
+      integer         nfmpi_get_var_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_var_int1
+
+      integer         nfmpi_get_var_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_var_int1_all
+
+      integer         nfmpi_put_var_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_var_int2
+
+      integer         nfmpi_put_var_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_var_int2_all
+
+      integer         nfmpi_get_var_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_var_int2
+
+      integer         nfmpi_get_var_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_var_int2_all
+
+      integer         nfmpi_put_var_int
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             ivals(1))
-      external        nf_put_var_int
+      external        nfmpi_put_var_int
 
-      integer         nf_get_var_int
+      integer         nfmpi_put_var_int_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             ivals(1))
-      external        nf_get_var_int
+      external        nfmpi_put_var_int_all
 
-      integer         nf_put_var_real
+      integer         nfmpi_get_var_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             ivals(1))
+      external        nfmpi_get_var_int
+
+      integer         nfmpi_get_var_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             ivals(1))
+      external        nfmpi_get_var_int_all
+
+      integer         nfmpi_put_var_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          real                rvals(1))
-      external        nf_put_var_real
+      external        nfmpi_put_var_real
 
-      integer         nf_get_var_real
+      integer         nfmpi_put_var_real_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          real                rvals(1))
-      external        nf_get_var_real
+      external        nfmpi_put_var_real_all
 
-      integer         nf_put_var_double
+      integer         nfmpi_get_var_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          real                rvals(1))
+      external        nfmpi_get_var_real
+
+      integer         nfmpi_get_var_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          real                rvals(1))
+      external        nfmpi_get_var_real_all
+
+      integer         nfmpi_put_var_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          doubleprecision     dvals(1))
-      external        nf_put_var_double
+      external        nfmpi_put_var_double
 
-      integer         nf_get_var_double
+      integer         nfmpi_put_var_double_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          doubleprecision     dvals(1))
-      external        nf_get_var_double
+      external        nfmpi_put_var_double_all
+
+      integer         nfmpi_get_var_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_var_double
+
+      integer         nfmpi_get_var_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_var_double_all
 
 !
 ! single variable put/get routines:
 !
 
-      integer         nf_put_var1_text
+      integer         nfmpi_put_var1_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
 !                          character*1         text)
-      external        nf_put_var1_text
+      external        nfmpi_put_var1_text
 
-      integer         nf_get_var1_text
+      integer         nfmpi_get_var1_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
 !                          character*1         text)
-      external        nf_get_var1_text
+      external        nfmpi_get_var1_text
 
-      integer         nf_put_var1_int1
+      integer         nfmpi_put_var1_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
-!                          nf_int1_t           i1val)
-      external        nf_put_var1_int1
+!                          nfmpi_int1_t           i1val)
+      external        nfmpi_put_var1_int1
 
-      integer         nf_get_var1_int1
+      integer         nfmpi_get_var1_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
-!                          nf_int1_t           i1val)
-      external        nf_get_var1_int1
+!                          nfmpi_int1_t           i1val)
+      external        nfmpi_get_var1_int1
 
-      integer         nf_put_var1_int2
+      integer         nfmpi_put_var1_int2
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
-!                          nf_int2_t           i2val)
-      external        nf_put_var1_int2
+!                          nfmpi_int2_t           i2val)
+      external        nfmpi_put_var1_int2
 
-      integer         nf_get_var1_int2
+      integer         nfmpi_get_var1_int2
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
-!                          nf_int2_t           i2val)
-      external        nf_get_var1_int2
+!                          nfmpi_int2_t           i2val)
+      external        nfmpi_get_var1_int2
 
-      integer         nf_put_var1_int
-!                         (integer             ncid,
-!                          integer             varid,
-!                          integer             index(1),
-!                          integer             ival)
-      external        nf_put_var1_int
-
-      integer         nf_get_var1_int
+      integer         nfmpi_put_var1_int
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
 !                          integer             ival)
-      external        nf_get_var1_int
+      external        nfmpi_put_var1_int
 
-      integer         nf_put_var1_real
+      integer         nfmpi_get_var1_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             index(1),
+!                          integer             ival)
+      external        nfmpi_get_var1_int
+
+      integer         nfmpi_put_var1_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
 !                          real                rval)
-      external        nf_put_var1_real
+      external        nfmpi_put_var1_real
 
-      integer         nf_get_var1_real
+      integer         nfmpi_get_var1_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
 !                          real                rval)
-      external        nf_get_var1_real
+      external        nfmpi_get_var1_real
 
-      integer         nf_put_var1_double
+      integer         nfmpi_put_var1_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
 !                          doubleprecision     dval)
-      external        nf_put_var1_double
+      external        nfmpi_put_var1_double
 
-      integer         nf_get_var1_double
+      integer         nfmpi_get_var1_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             index(1),
 !                          doubleprecision     dval)
-      external        nf_get_var1_double
+      external        nfmpi_get_var1_double
 
 !
 ! variable array put/get routines:
 !
 
-      integer         nf_put_vara_text
+      integer         nfmpi_put_vara_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          character(*)        text)
-      external        nf_put_vara_text
+      external        nfmpi_put_vara_text
 
-      integer         nf_get_vara_text
+      integer         nfmpi_put_vara_text_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          character(*)        text)
-      external        nf_get_vara_text
+      external        nfmpi_put_vara_text_all
 
-      integer         nf_put_vara_int1
+      integer         nfmpi_get_vara_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
-!                          nf_int1_t           i1vals(1))
-      external        nf_put_vara_int1
+!                          character(*)        text)
+      external        nfmpi_get_vara_text
 
-      integer         nf_get_vara_int1
+      integer         nfmpi_get_vara_text_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
-!                          nf_int1_t           i1vals(1))
-      external        nf_get_vara_int1
+!                          character(*)        text)
+      external        nfmpi_get_vara_text_all
 
-      integer         nf_put_vara_int2
+      integer         nfmpi_put_vara_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
-!                          nf_int2_t           i2vals(1))
-      external        nf_put_vara_int2
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vara_int1
 
-      integer         nf_get_vara_int2
+      integer         nfmpi_put_vara_int1_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
-!                          nf_int2_t           i2vals(1))
-      external        nf_get_vara_int2
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vara_int1_all
 
-      integer         nf_put_vara_int
+      integer         nfmpi_get_vara_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vara_int1
+
+      integer         nfmpi_get_vara_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vara_int1_all
+
+      integer         nfmpi_put_vara_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vara_int2
+
+      integer         nfmpi_put_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vara_int2_all
+
+      integer         nfmpi_get_vara_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vara_int2
+
+      integer         nfmpi_get_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vara_int2_all
+
+      integer         nfmpi_put_vara_int
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             ivals(1))
-      external        nf_put_vara_int
+      external        nfmpi_put_vara_int
 
-      integer         nf_get_vara_int
+      integer         nfmpi_put_vara_int_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             ivals(1))
-      external        nf_get_vara_int
+      external        nfmpi_put_vara_int_all
 
-      integer         nf_put_vara_real
+      integer         nfmpi_get_vara_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vara_int
+
+      integer         nfmpi_get_vara_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vara_int_all
+
+      integer         nfmpi_put_vara_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          real                rvals(1))
-      external        nf_put_vara_real
+      external        nfmpi_put_vara_real
 
-      integer         nf_get_vara_real
+      integer         nfmpi_put_vara_real_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          real                rvals(1))
-      external        nf_get_vara_real
+      external        nfmpi_put_vara_real_all
 
-      integer         nf_put_vara_double
+      integer         nfmpi_get_vara_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vara_real
+
+      integer         nfmpi_get_vara_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vara_real_all
+
+      integer         nfmpi_put_vara_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          doubleprecision     dvals(1))
-      external        nf_put_vara_double
+      external        nfmpi_put_vara_double
 
-      integer         nf_get_vara_double
+      integer         nfmpi_put_vara_double_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          doubleprecision     dvals(1))
-      external        nf_get_vara_double
+      external        nfmpi_put_vara_double_all
+
+      integer         nfmpi_get_vara_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vara_double
+
+      integer         nfmpi_get_vara_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vara_double_all
 
 !
 ! strided variable put/get routines:
 !
 
-      integer         nf_put_vars_text
+      integer         nfmpi_put_vars_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          character(*)        text)
-      external        nf_put_vars_text
+      external        nfmpi_put_vars_text
 
-      integer         nf_get_vars_text
+      integer         nfmpi_put_vars_text_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          character(*)        text)
-      external        nf_get_vars_text
+      external        nfmpi_put_vars_text_all
 
-      integer         nf_put_vars_int1
+      integer         nfmpi_get_vars_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
-!                          nf_int1_t           i1vals(1))
-      external        nf_put_vars_int1
+!                          character(*)        text)
+      external        nfmpi_get_vars_text
 
-      integer         nf_get_vars_int1
+      integer         nfmpi_get_vars_text_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
-!                          nf_int1_t           i1vals(1))
-      external        nf_get_vars_int1
+!                          character(*)        text)
+      external        nfmpi_get_vars_text_all
 
-      integer         nf_put_vars_int2
+      integer         nfmpi_put_vars_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
-!                          nf_int2_t           i2vals(1))
-      external        nf_put_vars_int2
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vars_int1
 
-      integer         nf_get_vars_int2
+      integer         nfmpi_put_vars_int1_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
-!                          nf_int2_t           i2vals(1))
-      external        nf_get_vars_int2
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vars_int1_all
 
-      integer         nf_put_vars_int
+      integer         nfmpi_get_vars_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vars_int1
+
+      integer         nfmpi_get_vars_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vars_int1_all
+
+      integer         nfmpi_put_vars_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vars_int2
+
+      integer         nfmpi_put_vars_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vars_int2_all
+
+      integer         nfmpi_get_vars_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vars_int2
+
+      integer         nfmpi_get_vars_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vars_int2_all
+
+      integer         nfmpi_put_vars_int
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          integer             ivals(1))
-      external        nf_put_vars_int
+      external        nfmpi_put_vars_int
 
-      integer         nf_get_vars_int
+      integer         nfmpi_put_vars_int_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          integer             ivals(1))
-      external        nf_get_vars_int
+      external        nfmpi_put_vars_int_all
 
-      integer         nf_put_vars_real
+      integer         nfmpi_get_vars_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vars_int
+
+      integer         nfmpi_get_vars_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vars_int_all
+
+      integer         nfmpi_put_vars_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          real                rvals(1))
-      external        nf_put_vars_real
+      external        nfmpi_put_vars_real
 
-      integer         nf_get_vars_real
+      integer         nfmpi_put_vars_real_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          real                rvals(1))
-      external        nf_get_vars_real
+      external        nfmpi_put_vars_real_all
 
-      integer         nf_put_vars_double
+      integer         nfmpi_get_vars_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vars_real
+
+      integer         nfmpi_get_vars_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vars_real_all
+
+      integer         nfmpi_put_vars_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          doubleprecision     dvals(1))
-      external        nf_put_vars_double
+      external        nfmpi_put_vars_double
 
-      integer         nf_get_vars_double
+      integer         nfmpi_put_vars_double_all
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          doubleprecision     dvals(1))
-      external        nf_get_vars_double
+      external        nfmpi_put_vars_double_all
+
+      integer         nfmpi_get_vars_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vars_double
+
+      integer         nfmpi_get_vars_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vars_double_all
 
 !
 ! mapped variable put/get routines:
 !
 
-      integer         nf_put_varm_text
+      integer         nfmpi_put_varm_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
@@ -974,9 +1255,9 @@
 !                          integer             stride(1),
 !                          integer             imap(1),
 !                          character(*)        text)
-      external        nf_put_varm_text
+      external        nfmpi_put_varm_text
 
-      integer         nf_get_varm_text
+      integer         nfmpi_get_varm_text
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
@@ -984,59 +1265,49 @@
 !                          integer             stride(1),
 !                          integer             imap(1),
 !                          character(*)        text)
-      external        nf_get_varm_text
+      external        nfmpi_get_varm_text
 
-      integer         nf_put_varm_int1
+      integer         nfmpi_put_varm_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          integer             imap(1),
-!                          nf_int1_t           i1vals(1))
-      external        nf_put_varm_int1
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_varm_int1
 
-      integer         nf_get_varm_int1
+      integer         nfmpi_get_varm_int1
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          integer             imap(1),
-!                          nf_int1_t           i1vals(1))
-      external        nf_get_varm_int1
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_varm_int1
 
-      integer         nf_put_varm_int2
+      integer         nfmpi_put_varm_int2
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          integer             imap(1),
-!                          nf_int2_t           i2vals(1))
-      external        nf_put_varm_int2
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_varm_int2
 
-      integer         nf_get_varm_int2
+      integer         nfmpi_get_varm_int2
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
 !                          integer             count(1),
 !                          integer             stride(1),
 !                          integer             imap(1),
-!                          nf_int2_t           i2vals(1))
-      external        nf_get_varm_int2
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_varm_int2
 
-      integer         nf_put_varm_int
-!                         (integer             ncid,
-!                          integer             varid,
-!                          integer             start(1),
-!                          integer             count(1),
-!                          integer             stride(1),
-!                          integer             imap(1),
-!                          integer             ivals(1))
-      external        nf_put_varm_int
-
-      integer         nf_get_varm_int
+      integer         nfmpi_put_varm_int
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
@@ -1044,9 +1315,19 @@
 !                          integer             stride(1),
 !                          integer             imap(1),
 !                          integer             ivals(1))
-      external        nf_get_varm_int
+      external        nfmpi_put_varm_int
 
-      integer         nf_put_varm_real
+      integer         nfmpi_get_varm_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             start(1),
+!                          integer             count(1),
+!                          integer             stride(1),
+!                          integer             imap(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_varm_int
+
+      integer         nfmpi_put_varm_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
@@ -1054,9 +1335,9 @@
 !                          integer             stride(1),
 !                          integer             imap(1),
 !                          real                rvals(1))
-      external        nf_put_varm_real
+      external        nfmpi_put_varm_real
 
-      integer         nf_get_varm_real
+      integer         nfmpi_get_varm_real
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
@@ -1064,9 +1345,9 @@
 !                          integer             stride(1),
 !                          integer             imap(1),
 !                          real                rvals(1))
-      external        nf_get_varm_real
+      external        nfmpi_get_varm_real
 
-      integer         nf_put_varm_double
+      integer         nfmpi_put_varm_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
@@ -1074,9 +1355,9 @@
 !                          integer             stride(1),
 !                          integer             imap(1),
 !                          doubleprecision     dvals(1))
-      external        nf_put_varm_double
+      external        nfmpi_put_varm_double
 
-      integer         nf_get_varm_double
+      integer         nfmpi_get_varm_double
 !                         (integer             ncid,
 !                          integer             varid,
 !                          integer             start(1),
@@ -1084,7 +1365,7 @@
 !                          integer             stride(1),
 !                          integer             imap(1),
 !                          doubleprecision     dvals(1))
-      external        nf_get_varm_double
+      external        nfmpi_get_varm_double
 
 !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ! begin netcdf 2.4 backward compatibility:
