@@ -13,7 +13,6 @@
 #define ENOERR 0
 #endif
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
 #ifdef _MSC_VER /* Microsoft Compilers */
