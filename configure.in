@@ -16,6 +16,10 @@ dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
 AC_CONFIG_AUX_DIR(./scripts)
 
+AC_ARG_ENABLE(fortran,
+[--enable-fortran - Turn on support for the Fortran interface.  Turn this
+         off if you only need the C interface (on by default)],,enable_fortran=yes)
+
 dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
 dnl preventing PATH_MAX from being defined for some of the test files,
 dnl and I was having a tough time figuring out how to get it back! -- RobR
@@ -43,6 +47,9 @@ UD_CHECK_FCALLSCSUB
 UD_CHECK_LIB_MATH
 UD_PROG_AR()
 UD_PROG_NM()
+# We could use the PAC check for ranlib (it also makes sure that ranlib works,
+# which is not always true, particularly when GNU tools are installed on 
+# a system that doesn't have (or need) ranlib
 AC_PROG_RANLIB
 
 #
@@ -149,9 +156,10 @@ AC_TYPE_SIZE_T
 dnl Check that sizeof(size_t) == sizeof(int); bail otherwise.
 dnl
 dnl This is important because we do some casting in the Fortran
-dnl bindings based on this assumption.
-AC_MSG_CHECKING(whether size_t and int size match)
-AC_TRY_RUN([
+dnl bindings based on this assumption. (Needed only for Fortran)
+if test "$enable_fortran" = "yes" ; then
+    AC_MSG_CHECKING(whether size_t and int size match)
+    AC_TRY_RUN([
 	#include <stdio.h>
 	
 	int main(void)
@@ -159,10 +167,13 @@ AC_TRY_RUN([
 		if (sizeof(size_t) == sizeof(int)) return 0; /* true */
 		else return 1; /* false */
 	}
-],
-[AC_MSG_RESULT(yes)],
-[AC_MSG_RESULT(no)
-AC_MSG_ERROR(This is a critical error; please report this size mismatch to the developers!)])
+],pac_cv_size_t_within_int=yes,
+pac_cv_size_t_within_int=no)
+    AC_MSG_RESULT($pac_cv_size_t_within_int)
+    if test "$pac_cv_size_t_within_int" != yes ; then
+        AC_DEFINE(HAVE_SIZET_LARGER_THAN_INT,1,[Define if sizet is larger than int])
+    fi
+fi
 
 AC_TYPE_OFF_T
 AC_CHECK_TYPE(ssize_t, int)
