@@ -66,11 +66,13 @@ extern FORTRAN_API void FORT_CALL nfmpi_get_var1_ ( int *v1, int *v2, int v3[], 
 extern FORTRAN_API void FORT_CALL nfmpi_put_var1_text_ ( int *v1, int *v2, int v3[], char *v4 FORT_MIXED_LEN(d4), MPI_Fint *ierr FORT_END_LEN(d4) );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var1_int2_ ( int *v1, int *v2, int v3[], short*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var1_int_ ( int *v1, int *v2, int v3[], MPI_Fint *v4, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_put_var1_long_ ( int *v1, int *v2, int v3[], long*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var1_real_ ( int *v1, int *v2, int v3[], float*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var1_double_ ( int *v1, int *v2, int v3[], double*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var1_text_ ( int *v1, int *v2, int v3[], char *v4 FORT_MIXED_LEN(d4), MPI_Fint *ierr FORT_END_LEN(d4) );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var1_int2_ ( int *v1, int *v2, int v3[], short*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var1_int_ ( int *v1, int *v2, int v3[], MPI_Fint *v4, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_get_var1_long_ ( int *v1, int *v2, int v3[], long*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var1_real_ ( int *v1, int *v2, int v3[], float*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var1_double_ ( int *v1, int *v2, int v3[], double*v4, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var_ ( int *v1, int *v2, void*v3, int *v4, MPI_Fint *v5, MPI_Fint *ierr );
@@ -79,11 +81,13 @@ extern FORTRAN_API void FORT_CALL nfmpi_get_var_all_ ( int *v1, int *v2, void*v3
 extern FORTRAN_API void FORT_CALL nfmpi_put_var_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *ierr FORT_END_LEN(d3) );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var_int2_ ( int *v1, int *v2, short*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var_int_ ( int *v1, int *v2, MPI_Fint *v3, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_put_var_long_ ( int *v1, int *v2, long*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var_real_ ( int *v1, int *v2, float*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_var_double_ ( int *v1, int *v2, double*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *ierr FORT_END_LEN(d3) );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var_int2_ ( int *v1, int *v2, short*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var_int_ ( int *v1, int *v2, MPI_Fint *v3, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_get_var_long_ ( int *v1, int *v2, long*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var_real_ ( int *v1, int *v2, float*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var_double_ ( int *v1, int *v2, double*v3, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_var_text_all_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *ierr FORT_END_LEN(d3) );
@@ -101,6 +105,8 @@ extern FORTRAN_API void FORT_CALL nfmpi_put_vara_int2_all_ ( int *v1, int *v2, i
 extern FORTRAN_API void FORT_CALL nfmpi_put_vara_int2_ ( int *v1, int *v2, int v3[], int v4[], short*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vara_int_all_ ( int *v1, int *v2, int v3[], int v4[], MPI_Fint *v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vara_int_ ( int *v1, int *v2, int v3[], int v4[], MPI_Fint *v5, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_put_vara_long_all_ ( int *v1, int *v2, int v3[], int v4[], long*v5, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_put_vara_long_ ( int *v1, int *v2, int v3[], int v4[], long*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vara_real_all_ ( int *v1, int *v2, int v3[], int v4[], float*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vara_real_ ( int *v1, int *v2, int v3[], int v4[], float*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vara_double_all_ ( int *v1, int *v2, int v3[], int v4[], double*v5, MPI_Fint *ierr );
@@ -111,6 +117,8 @@ extern FORTRAN_API void FORT_CALL nfmpi_get_vara_int2_all_ ( int *v1, int *v2, i
 extern FORTRAN_API void FORT_CALL nfmpi_get_vara_int2_ ( int *v1, int *v2, int v3[], int v4[], short*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vara_int_all_ ( int *v1, int *v2, int v3[], int v4[], MPI_Fint *v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vara_int_ ( int *v1, int *v2, int v3[], int v4[], MPI_Fint *v5, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_get_vara_long_all_ ( int *v1, int *v2, int v3[], int v4[], long*v5, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_get_vara_long_ ( int *v1, int *v2, int v3[], int v4[], long*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vara_real_all_ ( int *v1, int *v2, int v3[], int v4[], float*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vara_real_ ( int *v1, int *v2, int v3[], int v4[], float*v5, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vara_double_all_ ( int *v1, int *v2, int v3[], int v4[], double*v5, MPI_Fint *ierr );
@@ -125,6 +133,8 @@ extern FORTRAN_API void FORT_CALL nfmpi_put_vars_int2_all_ ( int *v1, int *v2, i
 extern FORTRAN_API void FORT_CALL nfmpi_put_vars_int2_ ( int *v1, int *v2, int v3[], int v4[], int v5[], short*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vars_int_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], MPI_Fint *v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vars_int_ ( int *v1, int *v2, int v3[], int v4[], int v5[], MPI_Fint *v6, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_put_vars_long_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], long*v6, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_put_vars_long_ ( int *v1, int *v2, int v3[], int v4[], int v5[], long*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vars_real_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], float*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vars_real_ ( int *v1, int *v2, int v3[], int v4[], int v5[], float*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_put_vars_double_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], double*v6, MPI_Fint *ierr );
@@ -135,6 +145,8 @@ extern FORTRAN_API void FORT_CALL nfmpi_get_vars_int2_all_ ( int *v1, int *v2, i
 extern FORTRAN_API void FORT_CALL nfmpi_get_vars_int2_ ( int *v1, int *v2, int v3[], int v4[], int v5[], short*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vars_int_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], MPI_Fint *v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vars_int_ ( int *v1, int *v2, int v3[], int v4[], int v5[], MPI_Fint *v6, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_get_vars_long_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], long*v6, MPI_Fint *ierr );
+extern FORTRAN_API void FORT_CALL nfmpi_get_vars_long_ ( int *v1, int *v2, int v3[], int v4[], int v5[], long*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vars_real_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], float*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vars_real_ ( int *v1, int *v2, int v3[], int v4[], int v5[], float*v6, MPI_Fint *ierr );
 extern FORTRAN_API void FORT_CALL nfmpi_get_vars_double_all_ ( int *v1, int *v2, int v3[], int v4[], int v5[], double*v6, MPI_Fint *ierr );

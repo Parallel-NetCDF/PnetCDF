@@ -25,5 +25,5 @@ FORTRAN_API void FORT_CALL nfmpi_inq_dimlen_ ( int *v1, int *v2, int *v3, MPI_Fi
     int l2 = *v2 - 1;
     size_t l3=0;
     *ierr = ncmpi_inq_dimlen( *v1, l2, &l3 );
-    *v3 = (int)l3;
+    if (!*ierr) *v3 = (int)l3;
 }

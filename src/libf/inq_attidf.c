@@ -36,5 +36,5 @@ FORTRAN_API void FORT_CALL nfmpi_inq_attid_ ( int *v1, int *v2, char *v3 FORT_MI
     *ierr = ncmpi_inq_attid( *v1, l2, p3, v4 );
     free( p3 );
 
-    *v4 = *v4 + 1;
+    if (!*ierr) *v4 = *v4 + 1;
 }

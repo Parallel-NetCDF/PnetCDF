@@ -30,5 +30,5 @@ FORTRAN_API void FORT_CALL nfmpi_inq_dim_ ( int *v1, int *v2, char *v3 FORT_MIXE
         while (*p) p++;
         while ((p-v3) < d3) { *p++ = ' '; }
     }
-    *v4 = (int)l4;
+    if (!*ierr) *v4 = (int)l4;
 }
