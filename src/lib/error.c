@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include "pnetcdf.h"
-
+#include "nc.h"
 
 #ifndef NO_STRERROR
 #include <string.h> /* contains prototype for ansi libc function strerror() */

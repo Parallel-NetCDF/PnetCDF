@@ -11,6 +11,8 @@
 #include "ncx.h"
 #include "rnd.h"
 
+/* Prototypes for functions used only in this file */
+static size_t ncx_szof(nc_type type);
 
 /*
  * Free var
@@ -329,7 +331,7 @@ NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
 NC_xtypelen
  * See also ncx_len()
  */
-size_t
+static size_t
 ncx_szof(nc_type type)
 {
 	switch(type){
