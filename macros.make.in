@@ -29,7 +29,7 @@ CXXCPPFLAGS	= $(CPPFLAGS)
 
 
 # Compilation:
-CC		= @CC@
+CC		= @MPICC@
 CXX		= @CXX@
 FC		= @FC@
 F90		= @F90@
