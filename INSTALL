@@ -45,12 +45,19 @@
 
 
     1. autoconf
+
     2. ./configure --prefix=<install dir> --with-mpi=/path/to/implementation
 	the --with-mpi argument should specify the prefix of where the mpi
 	implementation was installed.  If your mpicc is in
 	/usr/local/mpich-1.2.3/bin/mpicc then use the prefix
 	--with-mpi=/usr/local/mpich-1.2.3
 
+    NOTE: If configure cannot find your MPI implementation's C and/or Fortran
+	  compilers, define *both* the MPICC and MPIF77 environment variables
+	  to be the name of those compilers.  The configure script will then
+	  use those values instead of trying to guess.
+
     3. make (on some systems, you make need to use gmake)
+
     4. make install
 
