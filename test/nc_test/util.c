@@ -622,18 +622,20 @@ put_vars(int ncid)
 	    }
 	}
 	if (var_name[i][0] == 'c') {
-	    err = ncmpi_put_vara_text(ncid, i, start, var_shape[i], text);
+	    err = ncmpi_put_vara_text_all(ncid, i, start, var_shape[i], text);
 	    IF (err)
-		error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
+		error("ncmpi_put_vara_text_all: %s", ncmpi_strerror(err));
 	} else {
-	    err = ncmpi_put_vara_double(ncid, i, start, var_shape[i], value);
+	    ncmpi_begin_indep_data(ncid);
+	    err = ncmpi_put_vara_double_all(ncid, i, start, var_shape[i], value);
 	    if (allInRange) {
 		IF (err)
-		    error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
+		    error("ncmpi_put_vara_double_all: %s", ncmpi_strerror(err));
 	    } else {
 		IF (err != NC_ERANGE)
 		    error("type-conversion range error: status = %d", err);
 	    }
+	    ncmpi_end_indep_data(ncid);
 	}
     }
 }
@@ -747,7 +749,8 @@ check_vars(int  ncid)
 		    nok++;
 		}
 	    } else {
-		err = ncmpi_get_var1_double(ncid, i, index, &value);
+		ncmpi_begin_indep_data(ncid);
+		err = ncmpi_get_var1_double(ncid, i, index, &value); 
 		if (inRange(expect,var_type[i])) {
 		    IF (err) {
 			error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
@@ -765,6 +768,7 @@ check_vars(int  ncid)
 			}
 		    }
 		}
+		ncmpi_end_indep_data(ncid);
 	    }
 	}
     }
