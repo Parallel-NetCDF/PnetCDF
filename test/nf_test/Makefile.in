@@ -11,7 +11,7 @@ include ../../macros.make
 # CC		= cc -fullwarn -woff 1209,1506
 
 
-INCLUDES	= -I$(srcdir) -I$(srcdir)/../../src/libf -I$(srcdir)/../../src/lib -I../../src/lib
+INCLUDES	= -I$(srcdir) -I$(srcdir)/../../src/libf -I../../src/libf -I$(srcdir)/../../src/lib -I../../src/lib
 
 FFLAGS	= $(INCLUDES) @FFLAGS@
 lib_netcdf	= ../../src/lib/libpnetcdf.a
