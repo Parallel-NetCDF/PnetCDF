@@ -167,6 +167,7 @@ int main(int argc, char **argv) {
         free(valuep);
         break;
       default:
+	;
 	/* handle unexpected types */
     }
   }
@@ -240,6 +241,7 @@ int main(int argc, char **argv) {
           free(valuep);
           break;
 	default:
+	  ;
 	/* handle unexpected types */
       }
     }
@@ -323,6 +325,7 @@ int main(int argc, char **argv) {
         free(valuep);
         break;
       default:
+	;
 	/* handle unexpected types */
     }
   }

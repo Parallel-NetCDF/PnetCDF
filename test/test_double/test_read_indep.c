@@ -168,6 +168,7 @@ int main(int argc, char **argv) {
         free(valuep);
         break;
       default:
+	;
 	/* handle unexpected errors */
     }
   }
@@ -241,6 +242,7 @@ int main(int argc, char **argv) {
           free(valuep);
           break;
 	default:
+	  ;
 	  /* handle unexpected errors */
       }
     }
@@ -338,6 +340,7 @@ int main(int argc, char **argv) {
         free(valuep);
         break;
       default:
+	;
 	/* handle unexpected errors */
     }
     else switch (vartypes[i]) {
@@ -383,6 +386,7 @@ int main(int argc, char **argv) {
         free(valuep);
         break;
       default:
+	;
 	/* handle unexpected errors */
     }
   }
