@@ -24,7 +24,8 @@
 FORTRAN_API int FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, int *v4, MPI_Fint *v5, MPI_Fint *v6 FORT_END_LEN(d2) ){
     int ierr;
     char *p2;
-    int *l5=0, ln5;
+    size_t *l5=0;
+    int ln5;
 
     {char *p = v2 + d2 - 1;
      int  li;

@@ -35,7 +35,7 @@ FORTRAN_API int FORT_CALL nfmpi_inq_att_ ( int *v1, int *v2, char *v3 FORT_MIXED
         for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
         p3[li] = 0; 
     }
-    ierr = ncmpi_inq_att( *v1, l2, p3, v4, &l5 );
+    ierr = ncmpi_inq_att( *v1, l2, p3, (nc_type *)(v4), &l5 );
     free( p3 );
     if (!ierr) *v5 = (int)l5;
     return ierr;
