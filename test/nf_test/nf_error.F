@@ -71,5 +71,5 @@ C
 #include "tests.inc"
 
         nfails = nfails + 1
-        call errorc(msg, nf_strerror(err))
+        call errorc(msg, nfmpi_strerror(err))
         end

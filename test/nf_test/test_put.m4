@@ -113,18 +113,19 @@ C
 
         nok = 0
 
-        err = nf_open(filename, NF_NOWRITE, ncid)
+        err = nfmpi_open(comm, filename, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid)
         if (err .ne. 0)
-     +      call errore('nf_open: ', err)
+     +      call errore('nfmpi_open: ', err)
 
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (canConvert)  then
-                err = nf_inq_var(ncid, i, name, datatype, ndims, dimids,
-     +                           ngatts)
+                err = nfmpi_inq_var(ncid, i, name, datatype, ndims,
+     +                              dimids, ngatts)
                 if (err .ne. 0)
-     +              call errore('nf_inq_var: ', err)
+     +              call errore('nfmpi_inq_var: ', err)
                 if (name .ne. var_name(i))
      +              call error('Unexpected var_name')
                 if (datatype .ne. var_type(i))
@@ -132,9 +133,9 @@ C
                 if (ndims .ne. var_rank(i))
      +              call error('Unexpected rank')
                 do 2, j = 1, ndims
-                    err = nf_inq_dim(ncid, dimids(j), name, length)
+                    err = nfmpi_inq_dim(ncid, dimids(j), name, length)
                     if (err .ne. 0)
-     +                  call errore('nf_inq_dim: ', err)
+     +                  call errore('nfmpi_inq_dim: ', err)
                     if (length .ne. var_shape(j,i))
      +                  call error('Unexpected shape')
 2               continue
@@ -145,12 +146,14 @@ C
      +                  call error('error in index2indexes()')
                     expect = hash4( var_type(i), var_rank(i), index, 
      +                             NFT_ITYPE($1))
-                    err = nf_get_var1_$1(ncid, i, index, value)
+                    err = nfmpi_get_var1_$1(ncid, i, index, value)
                     if (inRange3(expect,datatype,NFT_ITYPE($1)))  then
                         if (in_internal_range(NFT_ITYPE($1), 
      +                                        expect)) then
                             if (err .ne. 0)  then
-                                call errore('nf_get_var1_$1: ', err)
+                                call errore
+     +                         ('nfmpi_get_var1_$1: ',
+     +                          err)
                             else
                                 val = MAKE_ARITH($1,value)
                                 if (.not.equal(
@@ -180,9 +183,9 @@ C
 3               continue
             end if
 1       continue
-        err = nf_close (ncid)
+        err = nfmpi_close (ncid)
         if (err .ne. 0)
-     +      call errore('nf_close: ', err)
+     +      call errore('nfmpi_close: ', err)
         call print_nok(nok)
         end
 ])dnl
@@ -222,14 +225,14 @@ C */
                 canConvert = (ATT_TYPE(j,i) .eq. NF_CHAR) .eqv.
      +                       (NFT_ITYPE($1) .eq. NFT_TEXT)
                 if (canConvert) then
-                    err = nf_inq_att(ncid, i, ATT_NAME(j,i), datatype, 
-     +                               length)
+                    err = nfmpi_inq_att(ncid, i, ATT_NAME(j,i), 
+     +                               datatype, length)
                     if (err .ne. 0)
-     +                  call errore('nf_inq_att: ', err)
+     +                  call errore('nfmpi_inq_att: ', err)
                     if (datatype .ne. ATT_TYPE(j,i))
-     +                  call error('nf_inq_att: unexpected type')
+     +                  call error('nfmpi_inq_att: unexpected type')
                     if (length .ne. ATT_LEN(j,i))
-     +                  call error('nf_inq_att: unexpected length')
+     +                  call error('nfmpi_inq_att: unexpected length')
                     if (.not.(length .le. MAX_NELS))
      +                  stop 'assert(length .le. MAX_NELS)'
                     nInIntRange = 0
@@ -246,12 +249,12 @@ C */
      +                          nInIntRange = nInIntRange + 1
                         end if
 4                   continue
-                    err = nf_get_att_$1(ncid, i, 
+                    err = nfmpi_get_att_$1(ncid, i, 
      +                                  ATT_NAME(j,i), value)
                     if (nInExtRange .eq. length .and. 
      +                  nInIntRange .eq. length) then
                         if (err .ne. 0)
-     +                      call error(nf_strerror(err))
+     +                      call error(nfmpi_strerror(err))
                     else
                         if (err .ne. 0 .and. err .ne. NF_ERANGE)
      +                      call errore('OK or Range error: ', err)
@@ -291,11 +294,11 @@ C */
 ])dnl
 
 
-dnl TEST_NF_PUT_VAR1(TYPE)
+dnl TEST_NFMPI_PUT_VAR1(TYPE)
 dnl
-define([TEST_NF_PUT_VAR1],dnl
+define([TEST_NFMPI_PUT_VAR1],dnl
 [dnl
-        subroutine test_nf_put_var1_$1()
+        subroutine test_nfmpi_put_var1_$1()
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -309,16 +312,17 @@ define([TEST_NF_PUT_VAR1],dnl
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
-        err = nf_create(scratch, NF_CLOBBER, ncid)
+        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('nf_create: ', err)
+            call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf_enddef(ncid)
+        err = nfmpi_enddef(ncid)
         if (err .ne. 0)
-     +      call errore('nf_enddef: ', err)
+     +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -326,17 +330,17 @@ define([TEST_NF_PUT_VAR1],dnl
             do 2, j = 1, var_rank(i)
                 index(j) = 1
 2           continue
-            err = nf_put_var1_$1(BAD_ID, i, index, value)
+            err = nfmpi_put_var1_$1(BAD_ID, i, index, value)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            err = nf_put_var1_$1(ncid, BAD_VARID,
+            err = nfmpi_put_var1_$1(ncid, BAD_VARID,
      +                           index, value)
             if (err .ne. NF_ENOTVAR) 
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .gt. 1) then         !/* skip record dim */
                     index(j) = var_shape(j,i) + 1
-                    err = nf_put_var1_$1(ncid, i,
+                    err = nfmpi_put_var1_$1(ncid, i,
      +                                   index, value)
                     if (.not. canConvert) then
                         if (err .ne. NF_ECHAR)
@@ -355,12 +359,12 @@ define([TEST_NF_PUT_VAR1],dnl
      +              call error('error in index2indexes 1')
                 value = MAKE_TYPE($1, hash_$1(var_type(i),var_rank(i),
      +                            index, NFT_ITYPE($1)))
-                err = nf_put_var1_$1(ncid, i, index, value)
+                err = nfmpi_put_var1_$1(ncid, i, index, value)
                 if (canConvert) then
                     val = ARITH($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
                         if (err .ne. 0)
-     +                      call error(nf_strerror(err))
+     +                      call error(nfmpi_strerror(err))
                     else
                         if (err .ne. NF_ERANGE)
      +                      call errore('Range error: ', err)
@@ -372,13 +376,13 @@ define([TEST_NF_PUT_VAR1],dnl
 4           continue
 1       continue
 
-        err = nf_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0) 
-     +      call errore('nf_close: ', err)
+     +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf_delete(scratch)
+        err = nfmpi_delete(scratch)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
@@ -386,11 +390,11 @@ define([TEST_NF_PUT_VAR1],dnl
 ])dnl
 
 
-dnl TEST_NF_PUT_VAR(TYPE)
+dnl TEST_NFMPI_PUT_VAR(TYPE)
 dnl
-define([TEST_NF_PUT_VAR],dnl
+define([TEST_NFMPI_PUT_VAR],dnl
 [dnl
-        subroutine test_nf_put_var_$1()
+        subroutine test_nfmpi_put_var_$1()
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -405,24 +409,25 @@ define([TEST_NF_PUT_VAR],dnl
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision val
 
-        err = nf_create(scratch, NF_CLOBBER, ncid)
+        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('nf_create: ', err)
+            call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf_enddef(ncid)
+        err = nfmpi_enddef(ncid)
         if (err .ne. 0)
-     +      call errore('nf_enddef: ', err)
+     +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
-            err = nf_put_var_$1(BAD_ID, i, value)
+            err = nfmpi_put_var_$1(BAD_ID, i, value)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            err = nf_put_var_$1(ncid, BAD_VARID, value)
+            err = nfmpi_put_var_$1(ncid, BAD_VARID, value)
             if (err .ne. NF_ENOTVAR) 
      +          call errore('bad var id: ', err)
             nels = 1
@@ -442,11 +447,11 @@ define([TEST_NF_PUT_VAR],dnl
                 allInExtRange = allInExtRange .and.
      +              inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
-            err = nf_put_var_$1(ncid, i, value)
+            err = nfmpi_put_var_$1(ncid, i, value)
             if (canConvert) then
                 if (allInExtRange) then
                     if (err .ne. 0)
-     +                  call error(nf_strerror(err))
+     +                  call error(nfmpi_strerror(err))
                 else
                     if (err .ne. NF_ERANGE .and.
      +                      var_dimid(var_rank(i),i) .ne. RECDIM)
@@ -464,13 +469,13 @@ C       again with more than 0 records.
 C       Write record number NRECS to force writing of preceding records.
 C       Assumes variable cr is char vector with UNLIMITED dimension.
 
-        err = nf_inq_varid(ncid, "cr", vid)
+        err = nfmpi_inq_varid(ncid, "cr", vid)
         if (err .ne. 0)
-     +      call errore('nf_inq_varid: ', err)
+     +      call errore('nfmpi_inq_varid: ', err)
         index(1) = NRECS
-        err = nf_put_var1_text(ncid, vid, index, 'x')
+        err = nfmpi_put_var1_text(ncid, vid, index, 'x')
         if (err .ne. 0)
-     +      call errore('nf_put_var1_text: ', err)
+     +      call errore('nfmpi_put_var1_text: ', err)
 
         do 5 i = 1, NVARS
 C           Only test record variables here
@@ -482,7 +487,7 @@ C           Only test record variables here
      +              stop 'var_rank(i) .gt. MAX_RANK'
                 if (var_nels(i) .gt. MAX_NELS)
      +              stop 'var_nels(i) .gt. MAX_NELS'
-                err = nf_put_var_$1(BAD_ID, i, value)
+                err = nfmpi_put_var_$1(BAD_ID, i, value)
 
                 nels = 1
                 do 6 j = 1, var_rank(i)
@@ -501,11 +506,11 @@ C           Only test record variables here
                     allInExtRange = allInExtRange .and.
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
-                err = nf_put_var_$1(ncid, i, value)
+                err = nfmpi_put_var_$1(ncid, i, value)
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. 0)
-     +                      call error(nf_strerror(err))
+     +                      call error(nfmpi_strerror(err))
                     else
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
@@ -517,13 +522,13 @@ C           Only test record variables here
             endif
 5       continue
 
-        err = nf_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0) 
-     +      call errore('nf_close: ', err)
+     +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf_delete(scratch)
+        err = nfmpi_delete(scratch)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
@@ -531,11 +536,11 @@ C           Only test record variables here
 ])dnl
 
 
-dnl TEST_NF_PUT_VARA(TYPE)
+dnl TEST_NFMPI_PUT_VARA(TYPE)
 dnl
-define([TEST_NF_PUT_VARA],dnl
+define([TEST_NFMPI_PUT_VARA],dnl
 [dnl
-        subroutine test_nf_put_vara_$1()
+        subroutine test_nfmpi_put_vara_$1()
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -556,16 +561,17 @@ define([TEST_NF_PUT_VARA],dnl
         doubleprecision val
         integer udshift
 
-        err = nf_create(scratch, NF_CLOBBER, ncid)
+        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('nf_create: ', err)
+            call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf_enddef(ncid)
+        err = nfmpi_enddef(ncid)
         if (err .ne. 0)
-     +      call errore('nf_enddef: ', err)
+     +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -578,18 +584,18 @@ define([TEST_NF_PUT_VARA],dnl
                 start(j) = 1
                 edge(j) = 1
 2           continue
-            err = nf_put_vara_$1(BAD_ID, i, start,
+            err = nfmpi_put_vara_$1(BAD_ID, i, start,
      +                  edge, value)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            err = nf_put_vara_$1(ncid, BAD_VARID,
+            err = nfmpi_put_vara_$1(ncid, BAD_VARID,
      +                  start, edge, value)
             if (err .ne. NF_ENOTVAR) 
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .ne. RECDIM) then    !/* skip record dim */
                     start(j) = var_shape(j,i) + 1
-                    err = nf_put_vara_$1(ncid, i, start, 
+                    err = nfmpi_put_vara_$1(ncid, i, start, 
      +                                   edge, value)
                     if (.not. canConvert) then
                         if (err .ne. NF_ECHAR)
@@ -600,7 +606,7 @@ define([TEST_NF_PUT_VARA],dnl
                     endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
-                    err = nf_put_vara_$1(ncid, i, start, 
+                    err = nfmpi_put_vara_$1(ncid, i, start, 
      +                                   edge, value)
                     if (.not. canConvert) then
                         if (err .ne. NF_ECHAR)
@@ -617,18 +623,18 @@ C       /* Check correct error returned even when nothing to put */
         do 20, j = 1, var_rank(i)
               edge(j) = 0
 20      continue
-        err = nf_put_vara_$1(BAD_ID, i, start,
+        err = nfmpi_put_vara_$1(BAD_ID, i, start,
      +          edge, value)
         if (err .ne. NF_EBADID) 
      +      call errore('bad ncid: ', err)
-        err = nf_put_vara_$1(ncid, BAD_VARID,
+        err = nfmpi_put_vara_$1(ncid, BAD_VARID,
      +          start, edge, value)
         if (err .ne. NF_ENOTVAR) 
      +      call errore('bad var id: ', err)
         do 21, j = 1, var_rank(i)
             if (var_dimid(j,i) .gt. 1) then     ! skip record dim
                 start(j) = var_shape(j,i) + 1
-                err = nf_put_vara_$1(ncid, i, start,
+                err = nfmpi_put_vara_$1(ncid, i, start,
      +                  edge, value)
                 if (.not. canConvert) then
                     if (err .ne. NF_ECHAR)
@@ -640,10 +646,10 @@ C       /* Check correct error returned even when nothing to put */
                 start(j) = 1
             endif
 21      continue
-        err = nf_put_vara_$1(ncid, i, start, edge, value)
+        err = nfmpi_put_vara_$1(ncid, i, start, edge, value)
         if (canConvert) then
             if (err .ne. 0) 
-     +          call error(nf_strerror(err))
+     +          call error(nfmpi_strerror(err))
         else
             if (err .ne. NF_ECHAR)
      +          call errore('wrong type: ', err)
@@ -688,12 +694,12 @@ C       /* Check correct error returned even when nothing to put */
                     allInExtRange = allInExtRange .and.
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
-                err = nf_put_vara_$1(ncid, i, start,
+                err = nfmpi_put_vara_$1(ncid, i, start,
      +                  edge, value)
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. 0) 
-     +                      call error(nf_strerror(err))
+     +                      call error(nfmpi_strerror(err))
                     else
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
@@ -705,13 +711,13 @@ C       /* Check correct error returned even when nothing to put */
 5           continue
 1       continue
 
-        err = nf_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0) 
-     +      call errore('nf_close: ', err)
+     +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf_delete(scratch)
+        err = nfmpi_delete(scratch)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', 
      +          scratch)
@@ -719,11 +725,11 @@ C       /* Check correct error returned even when nothing to put */
 ])dnl
 
 
-dnl TEST_NF_PUT_VARS(TYPE)
+dnl TEST_NFMPI_PUT_VARS(TYPE)
 dnl
-define([TEST_NF_PUT_VARS],dnl
+define([TEST_NFMPI_PUT_VARS],dnl
 [dnl
-        subroutine test_nf_put_vars_$1()
+        subroutine test_nfmpi_put_vars_$1()
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -750,16 +756,17 @@ define([TEST_NF_PUT_VARS],dnl
         doubleprecision val
         integer udshift
 
-        err = nf_create(scratch, NF_CLOBBER, ncid)
+        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('nf_create: ', err)
+            call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf_enddef(ncid)
+        err = nfmpi_enddef(ncid)
         if (err .ne. 0)
-     +      call errore('nf_enddef: ', err)
+     +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -773,11 +780,11 @@ define([TEST_NF_PUT_VARS],dnl
                 edge(j) = 1
                 stride(j) = 1
 2           continue
-            err = nf_put_vars_$1(BAD_ID, i, start,
+            err = nfmpi_put_vars_$1(BAD_ID, i, start,
      +                  edge, stride, value)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            err = nf_put_vars_$1(ncid, BAD_VARID, start,
+            err = nfmpi_put_vars_$1(ncid, BAD_VARID, start,
      +                           edge, stride, 
      +                           value)
             if (err .ne. NF_ENOTVAR) 
@@ -785,7 +792,7 @@ define([TEST_NF_PUT_VARS],dnl
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .ne. RECDIM) then    ! skip record dim
                     start(j) = var_shape(j,i) + 1
-                    err = nf_put_vars_$1(ncid, i, start,
+                    err = nfmpi_put_vars_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   value)
                     if (.not. canConvert) then
@@ -797,7 +804,7 @@ define([TEST_NF_PUT_VARS],dnl
                     endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
-                    err = nf_put_vars_$1(ncid, i, start,
+                    err = nfmpi_put_vars_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   value)
                     if (.not. canConvert) then
@@ -809,7 +816,7 @@ define([TEST_NF_PUT_VARS],dnl
                     endif
                     edge(j) = 1
                     stride(j) = 0
-                    err = nf_put_vars_$1(ncid, i, start,
+                    err = nfmpi_put_vars_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   value)
                     if (.not. canConvert) then
@@ -886,13 +893,13 @@ C*/
      +                      inRange3(val, var_type(i), 
      +                               NFT_ITYPE($1))
 9                   continue
-                    err = nf_put_vars_$1(ncid, i, index,
+                    err = nfmpi_put_vars_$1(ncid, i, index,
      +                                   count, stride,
      +                                   value)
                     if (canConvert) then
                         if (allInExtRange) then
                             if (err .ne. 0) 
-     +                          call error(nf_strerror(err))
+     +                          call error(nfmpi_strerror(err))
                         else
                             if (err .ne. NF_ERANGE)
      +                          call errore('range error: ', err)
@@ -905,13 +912,13 @@ C*/
 5           continue
 1       continue
 
-        err = nf_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0) 
-     +      call errore('nf_close: ', err)
+     +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf_delete(scratch)
+        err = nfmpi_delete(scratch)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
@@ -919,11 +926,11 @@ C*/
 ])dnl
 
 
-dnl TEST_NF_PUT_VARM(TYPE)
+dnl TEST_NFMPI_PUT_VARM(TYPE)
 dnl
-define([TEST_NF_PUT_VARM],dnl
+define([TEST_NFMPI_PUT_VARM],dnl
 [dnl
-        subroutine test_nf_put_varm_$1()
+        subroutine test_nfmpi_put_varm_$1()
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -951,16 +958,17 @@ define([TEST_NF_PUT_VARM],dnl
         doubleprecision val
         integer udshift
 
-        err = nf_create(scratch, NF_CLOBBER, ncid)
+        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('nf_create: ', err)
+            call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
-        err = nf_enddef(ncid)
+        err = nfmpi_enddef(ncid)
         if (err .ne. 0)
-     +      call errore('nf_enddef: ', err)
+     +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -975,12 +983,12 @@ define([TEST_NF_PUT_VARM],dnl
                 stride(j) = 1
                 imap(j) = 1
 2           continue
-            err = nf_put_varm_$1(BAD_ID, i, start,
+            err = nfmpi_put_varm_$1(BAD_ID, i, start,
      +                           edge, stride, imap, 
      +                           value)
             if (err .ne. NF_EBADID) 
      +          call errore('bad ncid: ', err)
-            err = nf_put_varm_$1(ncid, BAD_VARID, start,
+            err = nfmpi_put_varm_$1(ncid, BAD_VARID, start,
      +                           edge, stride, 
      +                           imap, value)
             if (err .ne. NF_ENOTVAR) 
@@ -988,7 +996,7 @@ define([TEST_NF_PUT_VARM],dnl
             do 3, j = 1, var_rank(i)
                 if (var_dimid(j,i) .ne. RECDIM) then    !/* skip record dim */
                     start(j) = var_shape(j,i) + 1
-                    err = nf_put_varm_$1(ncid, i, start,
+                    err = nfmpi_put_varm_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value)
                     if (.not. canConvert) then
@@ -1000,7 +1008,7 @@ define([TEST_NF_PUT_VARM],dnl
                     endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
-                    err = nf_put_varm_$1(ncid, i, start,
+                    err = nfmpi_put_varm_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value)
                     if (.not. canConvert) then
@@ -1012,7 +1020,7 @@ define([TEST_NF_PUT_VARM],dnl
                     endif
                     edge(j) = 1
                     stride(j) = 0
-                    err = nf_put_varm_$1(ncid, i, start,
+                    err = nfmpi_put_varm_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value)
                     if (.not. canConvert) then
@@ -1096,13 +1104,13 @@ C*/
      +                      inRange3(val, var_type(i), 
      +                               NFT_ITYPE($1))
 11                  continue
-                    err = nf_put_varm_$1(ncid,i,index,count,
+                    err = nfmpi_put_varm_$1(ncid,i,index,count,
      +                                   stride,imap,
      +                                   value)
                     if (canConvert) then
                         if (allInExtRange) then
                             if (err .ne. 0)
-     +                          call error(nf_strerror(err))
+     +                          call error(nfmpi_strerror(err))
                         else
                             if (err .ne. NF_ERANGE)
      +                          call errore('range error: ', err)
@@ -1115,13 +1123,13 @@ C*/
 5           continue
 1       continue
 
-        err = nf_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0) 
-     +      call errore('nf_close: ', err)
+     +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
-        err = nf_delete(scratch)
+        err = nfmpi_delete(scratch)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
@@ -1129,11 +1137,11 @@ C*/
 ])dnl
 
 
-dnl TEST_NF_PUT_ATT(TYPE)         numeric only
+dnl TEST_NFMPI_PUT_ATT(TYPE)         numeric only
 dnl
-define([TEST_NF_PUT_ATT],dnl
+define([TEST_NFMPI_PUT_ATT],dnl
 [dnl
-        subroutine test_nf_put_att_$1()
+        subroutine test_nfmpi_put_att_$1()
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -1146,9 +1154,10 @@ define([TEST_NF_PUT_ATT],dnl
         logical allInExtRange  !/* all values within external range? */
         doubleprecision val
 
-        err = nf_create(scratch, NF_NOCLOBBER, ncid)
+        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('nf_create: ', err)
+            call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
@@ -1159,18 +1168,18 @@ define([TEST_NF_PUT_ATT],dnl
                 if (.not.(ATT_TYPE(j,i) .eq. NF_CHAR)) then
                     if (.not.((ATT_LEN(j,i) .le. MAX_NELS)))
      +                  stop 'assert(ATT_LEN(j,i) .le. MAX_NELS)'
-                    err = nf_put_att_$1(BAD_ID, i,
+                    err = nfmpi_put_att_$1(BAD_ID, i,
      +                                  ATT_NAME(j,i), 
      +                                  ATT_TYPE(j,i), 
      +                                  ATT_LEN(j,i), value)
                     if (err .ne. NF_EBADID)
      +                  call errore('bad ncid: ', err)
-                    err = nf_put_att_$1(ncid, BAD_VARID,
+                    err = nfmpi_put_att_$1(ncid, BAD_VARID,
      +                  ATT_NAME(j,i), 
      +                  ATT_TYPE(j,i), ATT_LEN(j,i), value)
                     if (err .ne. NF_ENOTVAR)
      +                  call errore('bad var id: ', err)
-                    err = nf_put_att_$1(ncid, i,
+                    err = nfmpi_put_att_$1(ncid, i,
      +                  ATT_NAME(j,i), BAD_TYPE, 
      +                  ATT_LEN(j,i), value)
                     if (err .ne. NF_EBADTYPE)
@@ -1185,12 +1194,12 @@ define([TEST_NF_PUT_ATT],dnl
      +                      inRange3(val, ATT_TYPE(j,i), 
      +                               NFT_ITYPE($1))
 3                   continue
-                    err = nf_put_att_$1(ncid, i, ATT_NAME(j,i), 
+                    err = nfmpi_put_att_$1(ncid, i, ATT_NAME(j,i), 
      +                                  ATT_TYPE(j,i), ATT_LEN(j,i), 
      +                                  value)
                     if (allInExtRange) then
                         if (err .ne. 0)
-     +                      call error(nf_strerror(err))
+     +                      call error(nfmpi_strerror(err))
                     else
                         if (err .ne. NF_ERANGE)
      +                      call errore('range error: ', err)
@@ -1200,11 +1209,11 @@ define([TEST_NF_PUT_ATT],dnl
 1       continue
 
         call check_atts_$1(ncid)
-        err = nf_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0)
-     +      call errore('nf_close: ', err)
+     +      call errore('nfmpi_close: ', err)
 
-        err = nf_delete(scratch)
+        err = nfmpi_delete(scratch)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
@@ -1254,62 +1263,63 @@ CHECK_ATTS(int)
 CHECK_ATTS(real)
 CHECK_ATTS(double)
 
-TEST_NF_PUT_VAR1(text)
+TEST_NFMPI_PUT_VAR1(text)
 #ifdef NF_INT1_T
-TEST_NF_PUT_VAR1(int1)
+TEST_NFMPI_PUT_VAR1(int1)
 #endif
 #ifdef NF_INT2_T
-TEST_NF_PUT_VAR1(int2)
+TEST_NFMPI_PUT_VAR1(int2)
 #endif
-TEST_NF_PUT_VAR1(int)
-TEST_NF_PUT_VAR1(real)
-TEST_NF_PUT_VAR1(double)
+TEST_NFMPI_PUT_VAR1(int)
+TEST_NFMPI_PUT_VAR1(real)
+TEST_NFMPI_PUT_VAR1(double)
 
-TEST_NF_PUT_VAR(text)
+TEST_NFMPI_PUT_VAR(text)
 #ifdef NF_INT1_T
-TEST_NF_PUT_VAR(int1)
+TEST_NFMPI_PUT_VAR(int1)
 #endif
 #ifdef NF_INT2_T
-TEST_NF_PUT_VAR(int2)
+TEST_NFMPI_PUT_VAR(int2)
 #endif
-TEST_NF_PUT_VAR(int)
-TEST_NF_PUT_VAR(real)
-TEST_NF_PUT_VAR(double)
+TEST_NFMPI_PUT_VAR(int)
+TEST_NFMPI_PUT_VAR(real)
+TEST_NFMPI_PUT_VAR(double)
 
-TEST_NF_PUT_VARA(text)
+TEST_NFMPI_PUT_VARA(text)
 #ifdef NF_INT1_T
-TEST_NF_PUT_VARA(int1)
+TEST_NFMPI_PUT_VARA(int1)
 #endif
 #ifdef NF_INT2_T
-TEST_NF_PUT_VARA(int2)
+TEST_NFMPI_PUT_VARA(int2)
 #endif
-TEST_NF_PUT_VARA(int)
-TEST_NF_PUT_VARA(real)
-TEST_NF_PUT_VARA(double)
+TEST_NFMPI_PUT_VARA(int)
+TEST_NFMPI_PUT_VARA(real)
+TEST_NFMPI_PUT_VARA(double)
 
-TEST_NF_PUT_VARS(text)
+TEST_NFMPI_PUT_VARS(text)
 #ifdef NF_INT1_T
-TEST_NF_PUT_VARS(int1)
+TEST_NFMPI_PUT_VARS(int1)
 #endif
 #ifdef NF_INT2_T
-TEST_NF_PUT_VARS(int2)
+TEST_NFMPI_PUT_VARS(int2)
 #endif
-TEST_NF_PUT_VARS(int)
-TEST_NF_PUT_VARS(real)
-TEST_NF_PUT_VARS(double)
+TEST_NFMPI_PUT_VARS(int)
+TEST_NFMPI_PUT_VARS(real)
+TEST_NFMPI_PUT_VARS(double)
 
-TEST_NF_PUT_VARM(text)
-#ifdef NF_INT1_T
-TEST_NF_PUT_VARM(int1)
-#endif
-#ifdef NF_INT2_T
-TEST_NF_PUT_VARM(int2)
-#endif
-TEST_NF_PUT_VARM(int)
-TEST_NF_PUT_VARM(real)
-TEST_NF_PUT_VARM(double)
+dnl the 'varm' type is not implemented yet
+dnl TEST_NFMPI_PUT_VARM(text)
+dnl #ifdef NF_INT1_T
+dnl TEST_NFMPI_PUT_VARM(int1)
+dnl #endif
+dnl #ifdef NF_INT2_T
+dnl TEST_NFMPI_PUT_VARM(int2)
+dnl #endif
+dnl TEST_NFMPI_PUT_VARM(int)
+dnl TEST_NFMPI_PUT_VARM(real)
+dnl TEST_NFMPI_PUT_VARM(double)
 
-        subroutine test_nf_put_att_text()
+        subroutine test_nfmpi_put_att_text()
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -1319,9 +1329,10 @@ TEST_NF_PUT_VARM(double)
         integer err
         character       value(MAX_NELS)
 
-        err = nf_create(scratch, NF_NOCLOBBER, ncid)
+        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
-            call errore('NF_create: ', err)
+            call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
@@ -1332,11 +1343,11 @@ TEST_NF_PUT_VARM(double)
                 if (ATT_TYPE(j,i) .eq. NF_CHAR) then
                     if (.not.(ATT_LEN(j,i) .le. MAX_NELS))
      +                  stop 'assert(ATT_LEN(j,i) .le. MAX_NELS)'
-                    err = nf_put_att_text(BAD_ID, i,
+                    err = nfmpi_put_att_text(BAD_ID, i,
      +                  ATT_NAME(j,i), ATT_LEN(j,i), value)
                     if (err .ne. NF_EBADID)
      +                  call errore('bad ncid: ', err)
-                    err = nf_put_att_text(ncid, BAD_VARID, 
+                    err = nfmpi_put_att_text(ncid, BAD_VARID, 
      +                                    ATT_NAME(j,i), 
      +                                    ATT_LEN(j,i), value)
                     if (err .ne. NF_ENOTVAR)
@@ -1344,31 +1355,31 @@ TEST_NF_PUT_VARM(double)
                     do 3, k = 1, ATT_LEN(j,i)
                         value(k) = char(int(hash(ATT_TYPE(j,i), -1, k)))
 3                   continue
-                    err = nf_put_att_text(ncid, i, ATT_NAME(j,i), 
+                    err = nfmpi_put_att_text(ncid, i, ATT_NAME(j,i), 
      +                  ATT_LEN(j,i), value)
                     if (err .ne. 0)
-     +                  call error(NF_strerror(err))
+     +                  call error(nfmpi_strerror(err))
                 end if
 2           continue
 1       continue
 
         call check_atts_text(ncid)
-        err = NF_close(ncid)
+        err = nfmpi_close(ncid)
         if (err .ne. 0)
-     +      call errore('NF_close: ', err)
+     +      call errore('nfmpi_close: ', err)
 
-        err = nf_delete(scratch)
+        err = nfmpi_delete(scratch)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
         end
 
 #ifdef NF_INT1_T
-TEST_NF_PUT_ATT(int1)
+TEST_NFMPI_PUT_ATT(int1)
 #endif
 #ifdef NF_INT2_T
-TEST_NF_PUT_ATT(int2)
+TEST_NFMPI_PUT_ATT(int2)
 #endif
-TEST_NF_PUT_ATT(int)
-TEST_NF_PUT_ATT(real)
-TEST_NF_PUT_ATT(double)
+TEST_NFMPI_PUT_ATT(int)
+TEST_NFMPI_PUT_ATT(real)
+TEST_NFMPI_PUT_ATT(double)
