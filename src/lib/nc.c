@@ -7,6 +7,7 @@
 #include "nc.h"
 #include "rnd.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include "ncx.h"
@@ -697,7 +698,7 @@ NC_enddef(NC *ncp) {
               return status;
           }
         }
-      } else {
+      } else { /* ... ncp->begin_rec > ncp->old->begin_rec */
         /* Even if (ncp->begin_rec == ncp->old->begin_rec)
          * and     (ncp->begin_var == ncp->old->begin_var)
          * might still have added a new record variable
@@ -709,7 +710,7 @@ NC_enddef(NC *ncp) {
         }
       }
     }
-  }
+  } /* ... ncp->old != NULL */
  
   status = write_NC(ncp);
   if (status != NC_NOERR)

@@ -258,6 +258,9 @@ nc_rename_att( int ncid, int varid, const char *name, const char *newname);
 
 extern int
 nc_del_att(int ncid, int varid, const char *name);
+
+extern int
+nc_inq_attname(int ncid, int varid, int attnum, char *name);
 /* End defined in attr.c */
 /*
  * NC variable: description and data
