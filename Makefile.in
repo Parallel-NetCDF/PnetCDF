@@ -28,7 +28,7 @@ install:	src/lib/install
 
 uninstall:	src/lib/uninstall
 
-clean:		src/lib/clean 
+clean:		src/lib/clean test/clean
 
 distclean:	src/lib/distclean \
 		clean_macros 
@@ -38,6 +38,8 @@ tests:
 clean_macros:
 	-cp macros.make.def macros.make
 
+# short names for making things in subdirs
+test/clean	\
 src/lib/all	\
 src/lib/test	\
 src/lib/install	\
