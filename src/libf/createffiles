@@ -6,7 +6,7 @@
 # NetCDF-specific descriptions in the file "defs".
 mpich2SourceDir=${MPICH2SRC:-/home/gropp/projects/mpich2}
 
-if [ ! -d $mpich2SourceDir ] ; then
+if [ ! -d "$mpich2SourceDir" ] ; then
     echo "Set the environment variable MPICH2SRC to the root directory for mpich2"
     exit 1
 fi
@@ -16,4 +16,4 @@ if [ ! -x $mpich2SourceDir/src/binding/f77/buildiface ] ; then
 fi
 
 # Build the files 
-$mpich2SourceDir/src/binding/f77/buildiface -infile=../lib/pnetcdf.h -deffile=defs
+$mpich2SourceDir/src/binding/f77/buildiface -infile=../lib/pnetcdf.h -deffile=defs $@
