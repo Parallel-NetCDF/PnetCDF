@@ -254,7 +254,7 @@ C On exit, any open netCDF files are closed.
         integer recdim0
         integer did
         integer vid
-        NFMPI_LONG_T length
+        NFMPI_OFFSET length
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -528,7 +528,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer err
         character*(NF_MAX_NAME) name
-        NFMPI_LONG_T length
+        NFMPI_OFFSET length
         integer intlen
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -565,7 +565,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        NFMPI_LONG_T length
+        NFMPI_OFFSET length
         integer intlen
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -878,7 +878,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer j
         integer err
         integer t
-        NFMPI_LONG_T n
+        NFMPI_OFFSET n
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
@@ -922,7 +922,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer j
         integer err
-        NFMPI_LONG_T len
+        NFMPI_OFFSET len
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
