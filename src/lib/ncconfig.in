@@ -1,94 +1,149 @@
-/* libsrc/ncconfig.in.  Generated automatically from configure.in by autoheader.  */
-/* $Id$ */
-#ifndef _NCCONFIG_H_
-#define _NCCONFIG_H_
-
-/* Define if type char is unsigned and you are not using gcc.  */
-#ifndef __CHAR_UNSIGNED__
-#undef __CHAR_UNSIGNED__
-#endif
-
-/* Define if your struct stat has st_blksize.  */
-#undef HAVE_ST_BLKSIZE
-
-/* Define to `long' if <sys/types.h> doesn't define.  */
-#undef off_t
-
-/* Define to `unsigned' if <sys/types.h> doesn't define.  */
-#undef size_t
-
-/* Define if your processor stores words with the most significant
-   byte first (like Motorola and SPARC, unlike Intel and VAX).  */
-#undef WORDS_BIGENDIAN
-
-/* Define if you don't have the <stdlib.h>.  */
-#undef NO_STDLIB_H
-
-/* Define if you don't have the <sys/types.h>.  */
-#undef NO_SYS_TYPES_H
-
+/* src/lib/ncconfig.in.  Generated from configure.in by autoheader.  */
 /* Define if you have the ftruncate function  */
 #undef HAVE_FTRUNCATE
-
-/* Define if you have alloca, as a function or macro.  */
-#undef HAVE_ALLOCA
-
-/* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
-#undef HAVE_ALLOCA_H
-
-/* Define if you don't have the strerror function  */
-#undef NO_STRERROR
-
-/* The number of bytes in a size_t */
-#undef SIZEOF_SIZE_T
 
 /* The number of bytes in a off_t */
 #undef SIZEOF_OFF_T
 
-/* Define to `int' if system doesn't define.  */
-#undef ssize_t
+/* The number of bytes in a size_t */
+#undef SIZEOF_SIZE_T
 
-/* Define to `int' if system doesn't define.  */
-#undef ptrdiff_t
-
-/* Define to `unsigned char' if system doesn't define.  */
-#undef uchar
-
-/* Define if the system does not use IEEE floating point representation */
+#undef NCBYTE_T
+#undef NCSHORT_T
+#undef NF_DOUBLEPRECISION_IS_C_
+#undef NF_INT1_IS_C_
+#undef NF_INT1_T
+#undef NF_INT2_IS_C_
+#undef NF_INT2_T
+#undef NF_INT_IS_C_
+#undef NF_REAL_IS_C_
 #undef NO_IEEE_FLOAT
+#undef NO_STDLIB_H
+#undef NO_STRERROR
+#undef NO_SYS_TYPES_H
 
-/* The number of bytes in a double.  */
-#undef SIZEOF_DOUBLE
+/* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
+   systems. This function is required for `alloca.c' support on those systems.
+   */
+#undef CRAY_STACKSEG_END
 
-/* The number of bytes in a float.  */
-#undef SIZEOF_FLOAT
+/* Define to 1 if using `alloca.c'. */
+#undef C_ALLOCA
 
-/* The number of bytes in a int.  */
-#undef SIZEOF_INT
-
-/* The number of bytes in a long.  */
-#undef SIZEOF_LONG
-
-/* The number of bytes in a short.  */
-#undef SIZEOF_SHORT
-
-/* Define if Fortran names are lowercase */
+/* Define if Fortran names are lower case */
 #undef F77_NAME_LOWER
 
-/* Define if Fortran names are lowercase with a trailing underscore */
-#undef F77_NAME_LOWER_USCORE
-
-/* Define if Fortran names containing an underscore have two trailing underscores */
+/* Define if Fortran names are lower case with two trailing underscore2 */
 #undef F77_NAME_LOWER_2USCORE
+
+/* Define if Fortran names are lower case with one trailing underscore */
+#undef F77_NAME_LOWER_USCORE
 
 /* Define if Fortran names are uppercase */
 #undef F77_NAME_UPPER
 
-/* Define if Fortran names preserve the original case */
-#undef F77_NAME_MIXED
+/* Define to 1 if you have `alloca', as a function or macro. */
+#undef HAVE_ALLOCA
 
-/* Define if Fortran names preserve the original case and add a trailing underscore */
-#undef F77_NAME_MIXED_USCORE
+/* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
+   */
+#undef HAVE_ALLOCA_H
 
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
 
-#endif /* !_NCCONFIG_H_ */
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if `st_blksize' is member of `struct stat'. */
+#undef HAVE_STRUCT_STAT_ST_BLKSIZE
+
+/* Define to 1 if your `struct stat' has `st_blksize'. Deprecated, use
+   `HAVE_STRUCT_STAT_ST_BLKSIZE' instead. */
+#undef HAVE_ST_BLKSIZE
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* The size of a `double', as computed by sizeof. */
+#undef SIZEOF_DOUBLE
+
+/* The size of a `float', as computed by sizeof. */
+#undef SIZEOF_FLOAT
+
+/* The size of a `int', as computed by sizeof. */
+#undef SIZEOF_INT
+
+/* The size of a `long', as computed by sizeof. */
+#undef SIZEOF_LONG
+
+/* The size of a `short', as computed by sizeof. */
+#undef SIZEOF_SHORT
+
+/* If using the C implementation of alloca, define if you know the
+   direction of stack growth for your system; otherwise it will be
+   automatically deduced at run-time.
+        STACK_DIRECTION > 0 => grows toward higher addresses
+        STACK_DIRECTION < 0 => grows toward lower addresses
+        STACK_DIRECTION = 0 => direction of growth unknown */
+#undef STACK_DIRECTION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define to 1 if your processor stores words with the most significant byte
+   first (like Motorola and SPARC, unlike Intel and VAX). */
+#undef WORDS_BIGENDIAN
+
+/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
+#ifndef __CHAR_UNSIGNED__
+# undef __CHAR_UNSIGNED__
+#endif
+
+/* Define to `long' if <sys/types.h> does not define. */
+#undef off_t
+
+/* Define to `int' if <sys/types.h> does not define. */
+#undef ptrdiff_t
+
+/* Define to `unsigned' if <sys/types.h> does not define. */
+#undef size_t
+
+/* Define to `int' if <sys/types.h> does not define. */
+#undef ssize_t
+
+/* Define to `unsigned char' if <sys/types.h> does not define. */
+#undef uchar

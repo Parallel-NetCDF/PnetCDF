@@ -1,4 +1,12 @@
+/* Define if you have the ftruncate function  */
 #undef HAVE_FTRUNCATE
+
+/* The number of bytes in a off_t */
+#undef SIZEOF_OFF_T
+
+/* The number of bytes in a size_t */
+#undef SIZEOF_SIZE_T
+
 #undef NCBYTE_T
 #undef NCSHORT_T
 #undef NF_DOUBLEPRECISION_IS_C_
@@ -12,5 +20,3 @@
 #undef NO_STDLIB_H
 #undef NO_STRERROR
 #undef NO_SYS_TYPES_H
-#undef SIZEOF_OFF_T
-#undef SIZEOF_SIZE_T
