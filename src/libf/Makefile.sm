@@ -1,0 +1,53 @@
+# DO NOT EDIT
+# This file created by buildiface -infile=../lib/pnetcdf.h -deffile=defs
+smvar_autoconf = autoconf:autoconf-2.52:/home/gropp/bin/linux/autoconf
+smvar_autoconf_version = 2.52
+smvar_do_dependencies = 0
+mpi_sources = createf.c openf.c enddeff.c redeff.c syncf.c abortf.c \
+	begin_indep_dataf.c end_indep_dataf.c closef.c def_dimf.c def_varf.c \
+	rename_dimf.c rename_varf.c inqf.c inq_ndimsf.c inq_nvarsf.c \
+	inq_nattsf.c inq_unlimdimf.c inq_dimidf.c inq_dimf.c inq_dimnamef.c \
+	inq_dimlenf.c inq_varf.c inq_varidf.c inq_varnamef.c inq_vartypef.c \
+	inq_varndimsf.c inq_vardimidf.c inq_varnattsf.c inq_attf.c inq_attidf.c \
+	inq_atttypef.c inq_attlenf.c inq_attnamef.c copy_attf.c rename_attf.c \
+	del_attf.c put_att_textf.c get_att_textf.c put_att_ucharf.c \
+	get_att_ucharf.c put_att_scharf.c get_att_scharf.c put_att_shortf.c \
+	get_att_shortf.c put_att_intf.c get_att_intf.c put_att_longf.c \
+	get_att_longf.c put_att_floatf.c get_att_floatf.c put_att_doublef.c \
+	get_att_doublef.c put_var1f.c get_var1f.c put_var1_textf.c \
+	put_var1_shortf.c put_var1_intf.c put_var1_floatf.c put_var1_doublef.c \
+	get_var1_textf.c get_var1_shortf.c get_var1_intf.c get_var1_floatf.c \
+	get_var1_doublef.c put_varf.c get_varf.c get_var_allf.c put_var_textf.c \
+	put_var_shortf.c put_var_intf.c put_var_floatf.c put_var_doublef.c \
+	get_var_textf.c get_var_shortf.c get_var_intf.c get_var_floatf.c \
+	get_var_doublef.c get_var_text_allf.c get_var_short_allf.c \
+	get_var_int_allf.c get_var_float_allf.c get_var_double_allf.c \
+	put_vara_allf.c get_vara_allf.c put_varaf.c get_varaf.c \
+	put_vara_text_allf.c put_vara_textf.c put_vara_short_allf.c \
+	put_vara_shortf.c put_vara_int_allf.c put_vara_intf.c \
+	put_vara_float_allf.c put_vara_floatf.c put_vara_double_allf.c \
+	put_vara_doublef.c get_vara_text_allf.c get_vara_textf.c \
+	get_vara_short_allf.c get_vara_shortf.c get_vara_int_allf.c \
+	get_vara_intf.c get_vara_float_allf.c get_vara_floatf.c \
+	get_vara_double_allf.c get_vara_doublef.c put_vars_allf.c \
+	get_vars_allf.c put_varsf.c get_varsf.c put_vars_text_allf.c \
+	put_vars_textf.c put_vars_short_allf.c put_vars_shortf.c \
+	put_vars_int_allf.c put_vars_intf.c put_vars_float_allf.c \
+	put_vars_floatf.c put_vars_double_allf.c put_vars_doublef.c \
+	get_vars_text_allf.c get_vars_textf.c get_vars_short_allf.c \
+	get_vars_shortf.c get_vars_int_allf.c get_vars_intf.c \
+	get_vars_float_allf.c get_vars_floatf.c get_vars_double_allf.c \
+	get_vars_doublef.c 
+lib${MPILIBNAME}_a_SOURCES = ${mpi_sources} setbotf.f 
+
+profilelib_${MPILIBNAME} = p${MPILIBNAME}
+INCLUDES = -I../../include -I${master_top_srcdir}/src/include
+maint-clean:
+	rm -f ${mpi_sources} fproto.h
+install_INCLUDE = mpif.h
+install_BIN     = mpif77
+install_ETC     = mpif77.conf
+distclean-local:
+	rm -f mpif_bottom.h
+	rm -f ../../../src/include/mpif.h
+	rm -f ../../../bin/mpif77
