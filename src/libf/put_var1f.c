@@ -21,6 +21,25 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_put_var1_ ( int *v1, int *v2, size_t v3[], void*v4, int *v5, MPI_Fint *v6, MPI_Fint *ierr ){
-    *ierr = ncmpi_put_var1( *v1, *v2, (const size_t *)(v3), v4, *v5, (MPI_Datatype)(*v6) );
+FORTRAN_API void FORT_CALL nfmpi_put_var1_ ( int *v1, int *v2, int v3[], void*v4, int *v5, MPI_Fint *v6, MPI_Fint *ierr ){
+    size_t *l3;
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = ncxVardim(*v1,*v2);
+    if (ln > 0) {
+        int li;
+        l3 = (size_t *)malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l3[li] = v3[li];
+    }
+    else l3 = 0;
+    }
+#else 
+    l3 = v3;
+#endif
+    *ierr = ncmpi_put_var1( *v1, *v2, l3, v4, *v5, (MPI_Datatype)(*v6) );
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    if (l3) { free(l3); }
+#endif
 }

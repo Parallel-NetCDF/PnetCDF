@@ -23,6 +23,7 @@
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_inq_attlen_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Fint *ierr FORT_END_LEN(d3) ){
     char *p3;
+    size_t l4;
 
     {char *p = v3 + d3 - 1;
      int  li;
@@ -32,6 +33,7 @@ FORTRAN_API void FORT_CALL nfmpi_inq_attlen_ ( int *v1, int *v2, char *v3 FORT_M
         for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
         p3[li] = 0; 
     }
-    *ierr = ncmpi_inq_attlen( *v1, *v2, p3, v4 );
+    *ierr = ncmpi_inq_attlen( *v1, *v2, p3, &l4 );
     free( p3 );
+    *v4 = (int)l4;
 }

@@ -21,8 +21,53 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, size_t v3[], size_t v4[], size_t v5[], char *v6 FORT_MIXED_LEN(d6), MPI_Fint *ierr FORT_END_LEN(d6) ){
+FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, int v3[], int v4[], int v5[], char *v6 FORT_MIXED_LEN(d6), MPI_Fint *ierr FORT_END_LEN(d6) ){
+    size_t *l3;
+    size_t *l4;
+    size_t *l5;
     char *p6;
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = ncxVardim(*v1,*v2);
+    if (ln > 0) {
+        int li;
+        l3 = (size_t *)malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l3[li] = v3[li];
+    }
+    else l3 = 0;
+    }
+#else 
+    l3 = v3;
+#endif
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = ncxVardim(*v1,*v2);
+    if (ln > 0) {
+        int li;
+        l4 = (size_t *)malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l4[li] = v4[li];
+    }
+    else l4 = 0;
+    }
+#else 
+    l4 = v4;
+#endif
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = ncxVardim(*v1,*v2);
+    if (ln > 0) {
+        int li;
+        l5 = (size_t *)malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l5[li] = v5[li];
+    }
+    else l5 = 0;
+    }
+#else 
+    l5 = v5;
+#endif
 
     {char *p = v6 + d6 - 1;
      int  li;
@@ -32,6 +77,18 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, size_t v3[],
         for (li=0; li<(p-v6); li++) { p6[li] = v6[li]; }
         p6[li] = 0; 
     }
-    *ierr = ncmpi_put_vars_text( *v1, *v2, (const size_t *)(v3), (const size_t *)(v4), (const size_t *)(v5), p6 );
+    *ierr = ncmpi_put_vars_text( *v1, *v2, l3, l4, l5, p6 );
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    if (l3) { free(l3); }
+#endif
     free( p6 );
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    if (l4) { free(l4); }
+#endif
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    if (l5) { free(l5); }
+#endif
 }

@@ -21,6 +21,49 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_get_vara_double_all_ ( int *v1, int *v2, size_t v3[], size_t v4[], double*v5, MPI_Fint *ierr ){
-    *ierr = ncmpi_get_vara_double_all( *v1, *v2, (const size_t *)(v3), (const size_t *)(v4), v5 );
+FORTRAN_API void FORT_CALL nfmpi_get_vara_double_all_ ( int *v1, int *v2, int v3[], int v4[], double*v5, MPI_Fint *ierr ){
+    size_t *l3;
+    size_t *l4;
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = ncxVardim(*v1,*v2);
+    if (ln > 0) {
+        int li;
+        l3 = (size_t *)malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l3[li] = v3[li];
+    }
+    else l3 = 0;
+    }
+#else 
+    l3 = v3;
+#endif
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = ncxVardim(*v1,*v2);
+    if (ln > 0) {
+        int li;
+        l4 = (size_t *)malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l4[li] = v4[li];
+    }
+    else l4 = 0;
+    }
+#else 
+    l4 = v4;
+#endif
+    *ierr = ncmpi_get_vara_double_all( *v1, *v2, l3, l4, v5 );
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    if (l3) { free(l3); }
+#endif
+
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    if (l4) { free(l4); }
+#endif
+
+    {char *p = v5;
+        while (*p) p++;
+        while ((p-v5) < d5) { *p++ = ' '; }
+    }
 }
