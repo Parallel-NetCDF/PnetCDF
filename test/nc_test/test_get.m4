@@ -117,8 +117,8 @@ test_ncmpi_get_var1_$1(void)
 ')dnl
 
 TEST_NC_GET_VAR1(text)
-dnl TEST_NC_GET_VAR1(uchar)
-dnl TEST_NC_GET_VAR1(schar)
+TEST_NC_GET_VAR1(uchar)
+TEST_NC_GET_VAR1(schar)
 TEST_NC_GET_VAR1(short)
 TEST_NC_GET_VAR1(int)
 TEST_NC_GET_VAR1(long)
@@ -222,8 +222,8 @@ test_ncmpi_get_var_$1(void)
 ')dnl
 
 TEST_NC_GET_VAR(text)
-dnl TEST_NC_GET_VAR(uchar)
-dnl TEST_NC_GET_VAR(schar)
+TEST_NC_GET_VAR(uchar)
+TEST_NC_GET_VAR(schar)
 TEST_NC_GET_VAR(short)
 TEST_NC_GET_VAR(int)
 TEST_NC_GET_VAR(long)
@@ -402,8 +402,8 @@ test_ncmpi_get_vara_$1(void)
 ')dnl
 
 TEST_NC_GET_VARA(text)
-dnl TEST_NC_GET_VARA(uchar)
-dnl TEST_NC_GET_VARA(schar)
+TEST_NC_GET_VARA(uchar)
+TEST_NC_GET_VARA(schar)
 TEST_NC_GET_VARA(short)
 TEST_NC_GET_VARA(int)
 TEST_NC_GET_VARA(long)
@@ -592,8 +592,8 @@ test_ncmpi_get_vars_$1(void)
 ')dnl
 
 TEST_NC_GET_VARS(text)
-dnl TEST_NC_GET_VARS(uchar)
-dnl TEST_NC_GET_VARS(schar)
+TEST_NC_GET_VARS(uchar)
+TEST_NC_GET_VARS(schar)
 TEST_NC_GET_VARS(short)
 TEST_NC_GET_VARS(int)
 TEST_NC_GET_VARS(long)
