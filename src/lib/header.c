@@ -1,21 +1,57 @@
-/*********************************************************************************
+/***********************************************************************
  *
- * This file is written by Northwestern University and Argonne National Laboratory
+ * This file is written by Northwestern University and Argonne National
+ * Laboratory
  *
- ********************************************************************************/
+ ***********************************************************************/
 
 #include <mpi.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "nc.h"
 #include "ncx.h"
 
-#undef MAX  /* system may define MAX somewhere and complain */
-#undef MIN  /* system may define MIN somewhere and complain */
+#ifndef MAX
 #define MAX(mm,nn) (((mm) > (nn)) ? (mm) : (nn))
+#endif
+#ifndef MIN
 #define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
+#endif
+
+/* Prototypes for functions used only in this file */
+static size_t hdr_len_NC_string(const NC_string *ncstrp);
+static size_t hdr_len_NC_dim(const NC_dim *dimp);
+static size_t hdr_len_NC_dimarray(const NC_dimarray *ncap);
+static size_t hdr_len_NC_attr(const NC_attr *attrp);
+static size_t hdr_len_NC_attrarray(const NC_attrarray *ncap);
+static size_t hdr_len_NC_var(const NC_var *varp);
+static size_t hdr_len_NC_vararray(const NC_vararray *ncap);
+static int hdr_put_NCtype(bufferinfo *pbp, NCtype type);
+static int hdr_put_nc_type(bufferinfo *pbp, const nc_type *typep);
+static int hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp);
+static int hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp);
+static int hdr_put_NC_dim(bufferinfo *pbp, const NC_dim *dimp);
+static int hdr_put_NC_attr(bufferinfo *pbp, const NC_attr *attrp);
+static int hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp);
+static int hdr_put_NC_dimarray(bufferinfo *pbp, const NC_dimarray *ncap);
+static int hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
+static int hdr_put_NC_vararray(bufferinfo *pbp, const NC_vararray *ncap);
+static int hdr_fetch(bufferinfo *gbp);
+static int hdr_check_buffer(bufferinfo *gbp, size_t nextread);
+static int hdr_get_NCtype(bufferinfo *gbp, NCtype *typep);
+static int hdr_get_size_t(bufferinfo *gbp, size_t *sp);
+static int hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp);
+static int hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp);
+static int hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap);
+static int hdr_get_nc_type(bufferinfo *gbp, nc_type *typep);
+static int hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp);
+static int hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp);
+static int hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap);
+static int hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp);
+static int hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap);
 
 /*
  * "magic number" at beginning of file: 0x43444601 (big endian) 
@@ -104,7 +140,7 @@ NC_computeshapes(NC *ncp)
 #define X_SIZEOF_NC_TYPE X_SIZEOF_INT
 #define X_SIZEOF_NCTYPE X_SIZEOF_INT
 
-size_t
+static size_t
 hdr_len_NC_string(const NC_string *ncstrp)
 {
         size_t sz = X_SIZEOF_SIZE_T; /* nchars */
@@ -117,7 +153,7 @@ hdr_len_NC_string(const NC_string *ncstrp)
         return sz;
 }
  
-size_t
+static size_t
 hdr_len_NC_dim(const NC_dim *dimp)
 {
         size_t sz;
@@ -130,7 +166,7 @@ hdr_len_NC_dim(const NC_dim *dimp)
         return(sz);
 }
  
-size_t
+static size_t
 hdr_len_NC_dimarray(const NC_dimarray *ncap)
 {
         size_t xlen = X_SIZEOF_NCTYPE;  /* type */
@@ -149,7 +185,7 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap)
         return xlen;
 } 
 
-size_t
+static size_t
 hdr_len_NC_attr(const NC_attr *attrp)
 {
         size_t sz;
@@ -164,7 +200,7 @@ hdr_len_NC_attr(const NC_attr *attrp)
         return(sz);
 }
  
-size_t
+static size_t
 hdr_len_NC_attrarray(const NC_attrarray *ncap)
 {
         size_t xlen = X_SIZEOF_NCTYPE;  /* type */
@@ -183,7 +219,7 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap)
         return xlen;
 }
  
-size_t
+static size_t
 hdr_len_NC_var(const NC_var *varp)
 {
         size_t sz;
@@ -201,7 +237,7 @@ hdr_len_NC_var(const NC_var *varp)
         return(sz);
 } 
 
-size_t
+static size_t
 hdr_len_NC_vararray(const NC_vararray *ncap)
 {
         size_t xlen = X_SIZEOF_NCTYPE;  /* type */
@@ -237,7 +273,7 @@ hdr_len_NC(const NC *ncp)
 
 /* Begin Of put NC */
 
-int
+static int
 hdr_put_NCtype(bufferinfo *pbp, NCtype type) {
   int status;
   const int itype = (int)type;
@@ -249,7 +285,7 @@ hdr_put_NCtype(bufferinfo *pbp, NCtype type) {
   return status;
 }
 
-int 
+static int 
 hdr_put_nc_type(bufferinfo *pbp, const nc_type *typep) {
   int status;
   const int itype = (int) *typep;
@@ -262,7 +298,7 @@ hdr_put_nc_type(bufferinfo *pbp, const nc_type *typep) {
   return status; 
 }
 
-int 
+static int 
 hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp) {
   int status;
 
@@ -280,7 +316,7 @@ hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp) {
 /*
  * Put the values of an attribute 
  */
-int
+static int
 hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
   void *value = attrp->xvalue;
   size_t padding, esz;
@@ -296,7 +332,7 @@ hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
   return ENOERR;
 }
 
-int 
+static int 
 hdr_put_NC_dim(bufferinfo *pbp, const NC_dim *dimp) {
   int status; 
 
@@ -311,7 +347,7 @@ hdr_put_NC_dim(bufferinfo *pbp, const NC_dim *dimp) {
   return ENOERR;
 }
 
-int
+static int
 hdr_put_NC_attr(bufferinfo *pbp, const NC_attr *attrp) {
   int status;
 
@@ -334,7 +370,7 @@ hdr_put_NC_attr(bufferinfo *pbp, const NC_attr *attrp) {
   return ENOERR;
 }
 
-int
+static int
 hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
   int status;
 
@@ -370,7 +406,7 @@ hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
   return ENOERR;
 }
 
-int 
+static int 
 hdr_put_NC_dimarray(bufferinfo *pbp, const NC_dimarray *ncap) {
   int status;
   
@@ -408,7 +444,7 @@ hdr_put_NC_dimarray(bufferinfo *pbp, const NC_dimarray *ncap) {
   return ENOERR;
 }
 
-int
+static int
 hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap) {
   int status;
 
@@ -446,7 +482,7 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap) {
   return ENOERR;
 }
 
-int
+static int
 hdr_put_NC_vararray(bufferinfo *pbp, const NC_vararray *ncap){
   int status;
 
@@ -526,7 +562,7 @@ hdr_put_NC(NC *ncp, void *buf) {
 /*
  * Fetch the next header chunk.
  */
-int
+static int
 hdr_fetch(bufferinfo *gbp) {
   int rank;
   MPI_Comm comm;
@@ -575,14 +611,14 @@ hdr_fetch(bufferinfo *gbp) {
 /*
  * Ensure that 'nextread' bytes are available.
  */
-int
+static int
 hdr_check_buffer(bufferinfo *gbp, size_t nextread) {
   if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
     return ENOERR;
   return hdr_fetch(gbp);
 }
 
-int
+static int
 hdr_get_NCtype(bufferinfo *gbp, NCtype *typep) {
   int type = 0;
   int status = hdr_check_buffer(gbp, X_SIZEOF_INT);
@@ -598,7 +634,7 @@ hdr_get_NCtype(bufferinfo *gbp, NCtype *typep) {
   return ENOERR;
 }
 
-int
+static int
 hdr_get_size_t(bufferinfo *gbp, size_t *sp) {
   int status = hdr_check_buffer(gbp, X_SIZEOF_SIZE_T);
   if (status != ENOERR)
@@ -607,7 +643,7 @@ hdr_get_size_t(bufferinfo *gbp, size_t *sp) {
   return ncx_get_size_t((const void **)(&gbp->pos), sp);
 }
 
-int
+static int
 hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   int status;
   size_t  nchars = 0, nbytes, padding, bufremain, strcount; 
@@ -664,7 +700,7 @@ hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   return ENOERR;  
 }
 
-int
+static int
 hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp) {
   int status;
   NC_string *ncstrp;
@@ -689,7 +725,7 @@ hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp) {
   return ENOERR;
 }
 
-int
+static int
 hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
   int status;
   NCtype type = NC_UNSPECIFIED; 
@@ -734,7 +770,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
   return ENOERR;
 }
 
-int
+static int
 hdr_get_nc_type(bufferinfo *gbp, nc_type *typep) {
   int type = 0;
   int status = hdr_check_buffer(gbp, X_SIZEOF_INT);
@@ -783,7 +819,7 @@ ncx_len_nctype(nc_type type) {
 /*
  * Get the values of an attribute  
  */
-int
+static int
 hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   int status;
   void *value = attrp->xvalue;
@@ -823,7 +859,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   return ENOERR;
 }
 
-int
+static int
 hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   NC_string *strp;
   int status;
@@ -864,7 +900,7 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   return ENOERR; 
 }
 
-int
+static int
 hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
   int status;
   NCtype type = NC_UNSPECIFIED;
@@ -909,7 +945,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
   return ENOERR;
 }
 
-int
+static int
 hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   NC_string *strp;
   int status;
@@ -980,7 +1016,7 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   return ENOERR;
 }
 
-int
+static int
 hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   int status;
   NCtype type = NC_UNSPECIFIED;
