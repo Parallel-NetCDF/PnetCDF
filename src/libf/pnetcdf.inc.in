@@ -1592,12 +1592,12 @@
       parameter (filfloat = 9.9692099683868690e+36)
       parameter (fildoub = 9.9692099683868690e+36)
 
-#if 0
-   Define the following NF_*_IS_C_* macros appropriatly for your system.
-   The "INT1", "INT2" and "INT" after the "NF_" refer to the NF_INT1_T
-   FORTRAN datatype, the NF_INT2_T FORTRAN datatype, and the INTEGER
-   FORTRAN datatype, respectively.  If the respective FORTRAN datatype
-   does not exist, then do not define the corresponding macro. 
+!
+!   Define the following NF_*_IS_C_* macros appropriatly for your system.
+!   The "INT1", "INT2" and "INT" after the "NF_" refer to the NF_INT1_T
+!   FORTRAN datatype, the NF_INT2_T FORTRAN datatype, and the INTEGER
+!   FORTRAN datatype, respectively.  If the respective FORTRAN datatype
+!   does not exist, then do not define the corresponding macro. 
 #undef NF_INT1_IS_C_SIGNED_CHAR
 #undef NF_INT1_IS_C_SHORT
 #undef NF_INT1_IS_C_INT
@@ -1611,4 +1611,3 @@
 #undef NF_REAL_IS_C_DOUBLE
 #undef NF_DOUBLEPRECISION_IS_C_DOUBLE
 #undef NF_DOUBLEPRECISION_IS_C_FLOAT
-#endif
