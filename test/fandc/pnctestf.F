@@ -30,7 +30,7 @@ C    determined by MPI where a zero is specified
       data totsiz_3d/10,20,30/
       data reorder /.false./
       data isperiodic /.false., .false., .false./
-      data numpes/0,1,1/
+      data numpes/1,1,0/
 
       call MPI_Init (ierr)
 
