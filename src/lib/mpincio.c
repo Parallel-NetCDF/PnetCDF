@@ -7,6 +7,7 @@
 #include "ncconfig.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 #ifndef ENOERR
 #define ENOERR 0
