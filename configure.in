@@ -76,6 +76,7 @@ if test "$enable_fortran" = yes ; then
     # Use essentially the same configure code that the original configure
     # used to determine SUB
     AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB_A\") 
+    		dnl "
 	    cat >conftest.f <<\EOF
               call sub_a()
               end
