@@ -198,6 +198,9 @@ pac_cv_size_t_within_int=no)
     AC_MSG_RESULT($pac_cv_size_t_within_int)
     if test "$pac_cv_size_t_within_int" != yes ; then
         AC_DEFINE(HAVE_SIZET_LARGER_THAN_INT,1,[Define if sizet is larger than int])
+	# For now, we require that a Fortran integer and a C int have the
+	# same size.
+        AC_DEFINE(HAVE_SIZET_LARGER_THAN_FINT,1,[Define if sizet is larger than a Fortran int])
     fi
 fi
 
