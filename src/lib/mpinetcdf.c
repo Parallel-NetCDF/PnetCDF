@@ -67,7 +67,7 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
   if(ncp == NULL) 
     return NC_ENOMEM;
 
-  assert(ncp->xsz = hdr_len_NC(ncp));
+  assert(ncp->xsz = ncmpii_hdr_len_NC(ncp));
   assert(ncp->flags == 0);
 
   fSet(ncp->flags, NC_NOFILL);
@@ -125,7 +125,7 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
     fSet(ncp->flags, NC_NSYNC);
   }
 
-  status = hdr_get_NC(ncp);
+  status = ncmpii_hdr_get_NC(ncp);
   if (status != NC_NOERR) {
     ncmpii_free_NC(ncp);
     return status;

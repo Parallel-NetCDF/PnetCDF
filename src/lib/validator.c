@@ -646,8 +646,8 @@ val_get_NC(NC *ncp) {
     return status; 
   }
 
-  ncp->xsz = hdr_len_NC(ncp); 
-  status = NC_computeshapes(ncp);
+  ncp->xsz = ncmpii_hdr_len_NC(ncp); 
+  status = ncmpii_NC_computeshapes(ncp);
   free(getbuf.base);
 
   return status;
