@@ -732,6 +732,7 @@ check_vars(int  ncid)
 		error("error in toMixedBase 2");
 	    expect = hash( var_type[i], var_rank[i], index );
 	    if (isChar) {
+		ncmpi_begin_indep_data(ncid);
 		err = ncmpi_get_var1_text(ncid, i, index, &text);
 		IF (err)
 		    error("ncmpi_get_var1_text: %s", ncmpi_strerror(err));
@@ -746,6 +747,7 @@ check_vars(int  ncid)
 #endif
 		    nok++;
 		}
+		ncmpi_end_indep_data(ncid);
 	    } else {
 		ncmpi_begin_indep_data(ncid);
 		err = ncmpi_get_var1_double(ncid, i, index, &value); 
