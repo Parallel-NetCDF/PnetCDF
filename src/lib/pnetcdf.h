@@ -214,7 +214,6 @@ int ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *n
 
 int ncmpi_delete(char * filename, MPI_Info info);
 
-
 int ncmpi_enddef(int ncid);
 
 
@@ -347,6 +346,7 @@ int ncmpi_put_att_text(int ncid, int varid, const char *name, size_t len,
 
 int ncmpi_get_att_text(int ncid, int varid, const char *name, char *ip);
 
+/* Begin Skip Prototypes for Fortran binding */
 
 int ncmpi_put_att_uchar(int ncid, int varid, const char *name,
                     nc_type xtype, size_t len, const unsigned char *op);
@@ -355,6 +355,7 @@ int ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 int ncmpi_get_att_uchar(int ncid, int varid, const char *name,
                     unsigned char *ip);
 
+/* End Skip Prototypes for Fortran binding */
 
 int ncmpi_put_att_schar(int ncid, int varid, const char *name,
                     nc_type xtype, size_t len, const signed char *op);
@@ -416,10 +417,11 @@ int ncmpi_get_var1(int ncid, int varid,
                MPI_Datatype datatype);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_put_var1_uchar(int ncid, int varid,
                     const MPI_Offset index[],
                     const unsigned char *op);
-
+/* End Skip Prototypes for Fortran binding */
 
 int ncmpi_put_var1_schar(int ncid, int varid,
                     const MPI_Offset index[],
@@ -456,10 +458,12 @@ int ncmpi_put_var1_double(int ncid, int varid,
                       const double *op);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_get_var1_uchar(int ncid, int varid,
                     const MPI_Offset index[],
                     unsigned char *ip);
 
+/* End Skip Prototypes for Fortran binding */
 
 int ncmpi_get_var1_schar(int ncid, int varid,
                     const MPI_Offset index[],
@@ -509,8 +513,10 @@ int ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
 int ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op);
 
+/* End Skip Prototypes for Fortran binding */
 
 int ncmpi_put_var_schar(int ncid, int varid, const signed char *op);
 
@@ -533,8 +539,10 @@ int ncmpi_put_var_float(int ncid, int varid, const float *op);
 int ncmpi_put_var_double(int ncid, int varid, const double *op);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip);
 
+/* End Skip Prototypes for Fortran binding */
 
 int ncmpi_get_var_schar(int ncid, int varid, signed char *ip);
 
@@ -557,7 +565,9 @@ int ncmpi_get_var_float(int ncid, int varid, float *ip);
 int ncmpi_get_var_double(int ncid, int varid, double *ip);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip);
+/* End Skip Prototypes for Fortran binding */
 
 
 int ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip);
@@ -609,6 +619,7 @@ int ncmpi_get_vara(int ncid, int varid,
                MPI_Datatype datatype);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_put_vara_uchar_all(int ncid, int varid,
                     const MPI_Offset start[], const MPI_Offset count[],
                     const unsigned char *op);
@@ -618,6 +629,7 @@ int ncmpi_put_vara_uchar(int ncid, int varid,
                     const MPI_Offset start[], const MPI_Offset count[],
                     const unsigned char *op);
 
+/* End Skip Prototypes for Fortran binding */
 
 int ncmpi_put_vara_schar_all(int ncid, int varid,
                     const MPI_Offset start[], const MPI_Offset count[],
@@ -689,6 +701,7 @@ int ncmpi_put_vara_double(int ncid, int varid,
                 const double *op);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_get_vara_uchar_all(int ncid, int varid,
                     const MPI_Offset start[], const MPI_Offset count[],
                     unsigned char *ip);
@@ -697,6 +710,7 @@ int ncmpi_get_vara_uchar_all(int ncid, int varid,
 int ncmpi_get_vara_uchar(int ncid, int varid,
                     const MPI_Offset start[], const MPI_Offset count[],
                     unsigned char *ip);
+/* End Skip Prototypes for Fortran binding */
 
 
 int ncmpi_get_vara_schar_all(int ncid, int varid,
@@ -805,6 +819,7 @@ int ncmpi_get_vars(int ncid, int varid,
                MPI_Datatype datatype);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_put_vars_uchar_all(int ncid, int varid,
                         const MPI_Offset start[],
                         const MPI_Offset count[],
@@ -817,6 +832,7 @@ int ncmpi_put_vars_uchar(int ncid, int varid,
                     const MPI_Offset count[],
                     const MPI_Offset stride[],
                     const unsigned char *op);
+/* End Skip Prototypes for Fortran binding */
 
 
 int ncmpi_put_vars_schar_all(int ncid, int varid,
@@ -917,6 +933,7 @@ int ncmpi_put_vars_double(int ncid, int varid,
                       const double *op);
 
 
+/* Begin Skip Prototypes for Fortran binding */
 int ncmpi_get_vars_uchar_all(int ncid, int varid,
                         const MPI_Offset start[],
                         const MPI_Offset count[],
@@ -930,6 +947,7 @@ int ncmpi_get_vars_uchar(int ncid, int varid,
                     const MPI_Offset stride[],
                     unsigned char *ip);
 
+/* End Skip Prototypes for Fortran binding */
 
 int ncmpi_get_vars_schar_all(int ncid, int varid,
                         const MPI_Offset start[],
