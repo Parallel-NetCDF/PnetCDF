@@ -58,7 +58,7 @@
           MIN = X_DOUBLE_MIN
           MAX = X_DOUBLE_MAX
       ELSE
-          CALL UDABORT
+          CALL UD_ABORT
       END IF
 
       INRANGE = (VALUE .GE. MIN) .AND. (VALUE .LE. MAX)
@@ -118,7 +118,7 @@
               MAX = X_DOUBLE_MAX
           END IF
       ELSE
-          CALL UDABORT
+          CALL UD_ABORT
       END IF
 
       IF (.NOT.((VALUE .GE. MIN) .AND. (VALUE .LE. MAX))) THEN
@@ -202,10 +202,10 @@
       integer   n
 #include "tests.inc"
 
-      doubleprecision   udrand
-      external          udrand
+      doubleprecision   ud_rand
+      external          ud_rand
 
-1     roll = (udrand(0) * (n-1)) + 0.5
+1     roll = (ud_rand(0) * (n-1)) + 0.5
       if (roll .ge. n) goto 1
       end
 
@@ -330,7 +330,7 @@
               else if (type .eq. NF_DOUBLE) then
                   hash = X_DOUBLE_MIN
               else
-                  call udabort
+                  call ud_abort
               end if
           else if (index(1) .eq. 2) then
               if (type .eq. NF_CHAR) then
@@ -346,7 +346,7 @@
               else if (type .eq. NF_DOUBLE) then
                   hash = X_DOUBLE_MAX
               else
-                  call udabort
+                  call ud_abort
               end if
           else if (index(1) .eq. 3) then
               if (type .eq. NF_CHAR) then
@@ -362,7 +362,7 @@
               else if (type .eq. NF_DOUBLE) then
                   hash = -1.0
               else
-                  call udabort
+                  call ud_abort
               end if
           else if (index(1) .eq. 4) then
               if (type .eq. NF_CHAR) then
@@ -378,7 +378,7 @@
               else if (type .eq. NF_DOUBLE) then
                   hash = 1.0
               else
-                  call udabort
+                  call ud_abort
               end if
           end if
       else
@@ -926,7 +926,8 @@
                         nok = nok + 1
                     end if
                 else
-                    call nfmpi_get_var1_double(ncid, i, index, value, err)
+                    call nfmpi_get_var1_double(ncid, i, index, 
+     +                     value, err)
                     if (inRange(expect,var_type(i))) then
                         if (err .ne. 0) then
                             call errore('nfmpi_get_var1_double: ', err)

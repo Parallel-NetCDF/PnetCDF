@@ -257,9 +257,9 @@
         external        test_nfmpi_rename_att
         external        test_nfmpi_del_att
         external        test_nfmpi_set_fill
-        external        ignorefpe
+        external        nc_ignorefpe
 
-        call ignorefpe(1)
+        call nc_ignorefpe(1)
 
         testfile = 'test.nc'
         scratch = 'scratch.nc'
@@ -298,12 +298,12 @@
                             go to 1
                         else
                             call usage
-                            call udexit(1)
+                            call ud_exit(1)
                         end if
     2           continue
                 else
                     call usage
-                    call udexit(1)
+                    call ud_exit(1)
                 end if
             end if
 1       continue
@@ -314,12 +314,12 @@ C       /* Initialize global variables defining test file */
         if ( create_file ) then
             call write_file(testfile)
             if (nfailsTotal .eq. 0)
-     +           call udexit(0)
-            call udexit(1)
+     +           call ud_exit(0)
+            call ud_exit(1)
         end if
 
 C       /* delete any existing scratch netCDF file */
-        if ( .not. readonly ) call remove(scratch)
+        if ( .not. readonly ) call nfmpi_delete(scratch)
 
 C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_strerror', test_nfmpi_strerror)
@@ -496,6 +496,6 @@ C           /* Test write functions */
 
         print *,'Total number of failures: ', nfailsTotal
         if (nfailsTotal .eq. 0)
-     +      call udexit(0)
-        call udexit(1)
+     +      call ud_exit(0)
+        call ud_exit(1)
         end

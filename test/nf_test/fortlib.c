@@ -110,6 +110,30 @@ FORTRAN_API double min_int_() {
 }
 
 #ifdef F77_NAME_UPPER
+#define min_schar_ MIN_SCHAR
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define min_schar_  min_schar__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define min_schar_  min_schar
+/* Else leave name alone */
+#endif
+FORTRAN_API double min_schar_() {
+	return SCHAR_MIN;
+}
+
+#ifdef F77_NAME_UPPER
+#define min_short_ MIN_SHORT
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define min_short_  min_short__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define min_short_  min_short
+/* Else leave name alone */
+#endif
+FORTRAN_API double min_short_() {
+	return SHRT_MIN;
+}
+
+#ifdef F77_NAME_UPPER
 #define max_int_ MAX_INT
 #elif defined(F77_NAME_LOWER_2USCORE)
 #define max_int_  max_int__
@@ -119,6 +143,30 @@ FORTRAN_API double min_int_() {
 #endif
 FORTRAN_API double max_int_() {
 	return INT_MAX;
+}
+
+#ifdef F77_NAME_UPPER
+#define max_schar_ MAX_SCHAR
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define max_schar_  max_schar__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define max_schar_  max_schar
+/* Else leave name alone */
+#endif
+FORTRAN_API double max_schar_() {
+	return SCHAR_MAX;
+}
+
+#ifdef F77_NAME_UPPER
+#define max_short_ MAX_SHORT
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define max_short_  max_short__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define max_short_  max_short
+/* Else leave name alone */
+#endif
+FORTRAN_API double max_short_() {
+	return SHRT_MAX;
 }
 
 #ifdef F77_NAME_UPPER
@@ -155,9 +203,24 @@ FORTRAN_API double max_double_() {
 #endif
 
 FORTRAN_API int nfmpi_issyserr_(int * A1) {
-	if *A1 > 0
+	if (*A1 > 0)
 		return 1;
 	else 
 		return 0;
+}
+
+#ifdef F77_NAME_UPPER
+#define nfmpi_delete_ NFMPI_DELETE
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define nfmpi_delete_  nfmpi_delete__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define nfmpi_delete_  nfmpi_delete
+/* Else leave name alone */
+#endif
+FORTRAN_API int nfmpi_delete_(char * name, int *err) {
+	if ( remove(name) != 0 )
+		*err = errno;
+	else
+		*err = 0;
 }
 

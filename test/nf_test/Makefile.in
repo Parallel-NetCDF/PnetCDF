@@ -33,7 +33,7 @@ FSRCS		= \
 		  util.F
 #
 
-#CSRCS		= fortlib.c
+CSRCS		= fortlib.c
 
 OBJS		= \
 		  test_get.o	\
