@@ -67,7 +67,7 @@ static char unknown[] = "Unknown Error";
 
 
 const char *
-nc_strerror(int err)
+ncmpi_strerror(int err)
 {
 
 #ifdef vms 

@@ -98,7 +98,7 @@ val_get_NCtype(bufferinfo *gbp, NCtype *typep) {
     return status;
   }
 
-  status =  ncx_get_int_int(gbp->pos, &type);
+  status =  ncmpix_get_int_int(gbp->pos, &type);
   gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT);
   if (status != ENOERR)
     return status;
@@ -113,7 +113,7 @@ val_get_size_t(bufferinfo *gbp, size_t *sp) {
     printf("size is expected for ");
     return status; 
   }
-  return ncx_get_size_t((const void **)(&gbp->pos), sp);
+  return ncmpix_get_size_t((const void **)(&gbp->pos), sp);
 }
 
 static int
@@ -272,7 +272,7 @@ val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
     return status;
   }
 
-  status =  ncx_get_int_int(gbp->pos, &type);
+  status =  ncmpix_get_int_int(gbp->pos, &type);
   if(status != ENOERR) 
     return status;
   gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT); 
@@ -303,7 +303,7 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   char pad[X_ALIGN-1]; 
   size_t nvalues = attrp->nelems, esz, padding, bufremain, attcount;
 
-  esz = ncx_len_nctype(attrp->type);
+  esz = ncmpix_len_nctype(attrp->type);
   padding = attrp->xsz - esz * nvalues;
   bufremain = gbp->size - (size_t)((char *)gbp->pos - (char *)gbp->base);
 
@@ -470,7 +470,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
       free_NC_var(varp);
       return status;
     }
-    status = ncx_getn_int_int((const void **)(&gbp->pos), 
+    status = ncmpix_getn_int_int((const void **)(&gbp->pos), 
                               1, varp->dimids + dim);
     if(status != ENOERR) {
       free_NC_var(varp);
@@ -505,7 +505,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     free_NC_var(varp);
     return status;
   }
-  status = ncx_get_off_t((const void **)&gbp->pos,
+  status = ncmpix_get_off_t((const void **)&gbp->pos,
                          &varp->begin);
   if(status != ENOERR) {
     free_NC_var(varp);
@@ -602,7 +602,7 @@ val_get_NC(NC *ncp) {
   /* Get the header from get buffer */
 
   (void) memset(magic, 0, sizeof(magic));
-  status = ncx_getn_schar_schar(
+  status = ncmpix_getn_schar_schar(
           (const void **)(&getbuf.pos), sizeof(magic), magic);
   if(memcmp(magic, ncmagic, sizeof(ncmagic)) != 0) {
     printf("Error @ [0x%8.8x]: \n\tUnknow magic number, while (C D F \\001) is expected!\n", (unsigned) 0);
@@ -616,7 +616,7 @@ val_get_NC(NC *ncp) {
     free(getbuf.base);
     return status;
   }
-  status = ncx_get_size_t((const void **)(&getbuf.pos), &nrecs);
+  status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs);
   if(status != ENOERR) {
     free(getbuf.base);
     return status;

@@ -117,22 +117,22 @@ extern NC_dim *
 elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
 
 extern int
-nc_def_dim(int ncid, const char *name, size_t size, int *dimidp);
+ncmpi_def_dim(int ncid, const char *name, size_t size, int *dimidp);
 
 extern int
-nc_rename_dim( int ncid, int dimid, const char *newname);
+ncmpi_rename_dim( int ncid, int dimid, const char *newname);
 
 extern int
-nc_inq_dimid(int ncid, const char *name, int *dimid_ptr);
+ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr);
 
 extern int
-nc_inq_dim(int ncid, int dimid, char *name, size_t *sizep);
+ncmpi_inq_dim(int ncid, int dimid, char *name, size_t *sizep);
 
 extern int 
-nc_inq_dimname(int ncid, int dimid, char *name);
+ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
 extern int 
-nc_inq_dimlen(int ncid, int dimid, size_t *lenp);
+ncmpi_inq_dimlen(int ncid, int dimid, size_t *lenp);
 /* End defined in dim.c */
 
 /*
@@ -184,83 +184,83 @@ extern NC_attr *
 elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
 
 extern int
-nc_put_att_text(int ncid, int varid, const char *name,
+ncmpi_put_att_text(int ncid, int varid, const char *name,
 	size_t nelems, const char *value);
 
 extern int
-nc_get_att_text(int ncid, int varid, const char *name, char *str);
+ncmpi_get_att_text(int ncid, int varid, const char *name, char *str);
 
 extern int
-nc_put_att_schar(int ncid, int varid, const char *name,
+ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const signed char *value);
 
 extern int
-nc_get_att_schar(int ncid, int varid, const char *name, signed char *tp);
+ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp);
 
 extern int
-nc_put_att_uchar(int ncid, int varid, const char *name,
+ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const unsigned char *value);
 
 extern int
-nc_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp);
+ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp);
 
 extern int
-nc_put_att_short(int ncid, int varid, const char *name,
+ncmpi_put_att_short(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const short *value);
 
 extern int
-nc_get_att_short(int ncid, int varid, const char *name, short *tp);
+ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp);
 
 extern int
-nc_put_att_int(int ncid, int varid, const char *name,
+ncmpi_put_att_int(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const int *value);
 
 extern int
-nc_get_att_int(int ncid, int varid, const char *name, int *tp);
+ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp);
 
 extern int
-nc_put_att_long(int ncid, int varid, const char *name,
+ncmpi_put_att_long(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const long *value);
 
 extern int
-nc_get_att_long(int ncid, int varid, const char *name, long *tp);
+ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp);
 
 extern int
-nc_put_att_float(int ncid, int varid, const char *name,
+ncmpi_put_att_float(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const float *value);
 extern int
-nc_get_att_float(int ncid, int varid, const char *name, float *tp);
+ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp);
 extern int
-nc_put_att_double(int ncid, int varid, const char *name,
+ncmpi_put_att_double(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const double *value);
 extern int
-nc_get_att_double(int ncid, int varid, const char *name, double *tp);
+ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp);
 
 extern int 
-nc_inq_attid(int ncid, int varid, const char *name, int *attnump);
+ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump);
 
 extern int 
-nc_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep);
+ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep);
 
 extern int 
-nc_inq_attlen(int ncid, int varid, const char *name, size_t *lenp);
+ncmpi_inq_attlen(int ncid, int varid, const char *name, size_t *lenp);
 
 extern int
-nc_inq_att(int ncid, int varid, const char *name, 
+ncmpi_inq_att(int ncid, int varid, const char *name, 
 	nc_type *datatypep, size_t *lenp);
 
 extern int
-nc_copy_att(int ncid_in, int varid_in, const char *name, 
+ncmpi_copy_att(int ncid_in, int varid_in, const char *name, 
 		int ncid_out, int ovarid);
 
 extern int
-nc_rename_att( int ncid, int varid, const char *name, const char *newname);
+ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname);
 
 extern int
-nc_del_att(int ncid, int varid, const char *name);
+ncmpi_del_att(int ncid, int varid, const char *name);
 
 extern int
-nc_inq_attname(int ncid, int varid, int attnum, char *name);
+ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
 /* End defined in attr.c */
 /*
  * NC variable: description and data
@@ -319,36 +319,36 @@ extern NC_var *
 NC_lookupvar(NC *ncp, int varid);
 
 extern int
-nc_def_var( int ncid, const char *name, nc_type type,
+ncmpi_def_var( int ncid, const char *name, nc_type type,
 	 int ndims, const int *dimids, int *varidp);
 
 extern int
-nc_rename_var(int ncid, int varid, const char *newname);
+ncmpi_rename_var(int ncid, int varid, const char *newname);
 
 extern int
-nc_inq_var(int ncid, int varid, char *name, nc_type *typep, 
+ncmpi_inq_var(int ncid, int varid, char *name, nc_type *typep, 
 		int *ndimsp, int *dimids, int *nattsp);
 
 extern int
-nc_inq_varid(int ncid, const char *name, int *varid_ptr);
+ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr);
 
 extern int 
-nc_inq_varname(int ncid, int varid, char *name);
+ncmpi_inq_varname(int ncid, int varid, char *name);
 
 extern int 
-nc_inq_vartype(int ncid, int varid, nc_type *typep);
+ncmpi_inq_vartype(int ncid, int varid, nc_type *typep);
 
 extern int 
-nc_inq_varndims(int ncid, int varid, int *ndimsp);
+ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
 
 extern int 
-nc_inq_vardimid(int ncid, int varid, int *dimids);
+ncmpi_inq_vardimid(int ncid, int varid, int *dimids);
 
 extern int 
-nc_inq_varnatts(int ncid, int varid, int *nattsp);
+ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
 extern int
-nc_rename_var(int ncid, int varid, const char *newname);
+ncmpi_rename_var(int ncid, int varid, const char *newname);
 /* End defined in var.c */
 
 #define IS_RECVAR(vp) \
@@ -430,10 +430,10 @@ extern int
 NC_check_id(int ncid, NC **ncpp);
 
 extern int
-nc_cktype(nc_type datatype);
+ncmpii_cktype(nc_type datatype);
 
 extern size_t
-ncx_howmany(nc_type type, size_t xbufsize);
+ncmpix_howmany(nc_type type, size_t xbufsize);
 
 extern int
 read_numrecs(NC *ncp);
@@ -463,19 +463,19 @@ extern int
 NC_close(NC *ncp);
 
 extern int
-nc_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
+ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
 
 extern int 
-nc_inq_ndims(int ncid, int *ndimsp);
+ncmpi_inq_ndims(int ncid, int *ndimsp);
 
 extern int 
-nc_inq_nvars(int ncid, int *nvarsp);
+ncmpi_inq_nvars(int ncid, int *nvarsp);
 
 extern int 
-nc_inq_natts(int ncid, int *nattsp);
+ncmpi_inq_natts(int ncid, int *nattsp);
 
 extern int 
-nc_inq_unlimdim(int ncid, int *xtendimp);
+ncmpi_inq_unlimdim(int ncid, int *xtendimp);
 /* End defined in nc.c */
 /* Begin defined in v1hpg.c */
 
@@ -489,19 +489,22 @@ extern int
 nc_get_NC( NC *ncp);
 
 /* End defined in v1hpg.c */
+
+#if 0
 /* Begin defined in putget.c */
 
 extern int
 fill_NC_var(NC *ncp, const NC_var *varp, size_t recno);
 
 extern int
-nc_inq_rec(int ncid, size_t *nrecvars, int *recvarids, size_t *recsizes);
+ncmpii_inq_rec(int ncid, size_t *nrecvars, int *recvarids, size_t *recsizes);
 
 extern int
-nc_get_rec(int ncid, size_t recnum, void **datap);
+ncmpii_get_rec(int ncid, size_t recnum, void **datap);
 
 extern int
-nc_put_rec(int ncid, size_t recnum, void *const *datap);
+ncmpii_put_rec(int ncid, size_t recnum, void *const *datap);
+#endif
 
 /* End defined in putget.c */
 
@@ -519,7 +522,7 @@ extern int
 hdr_get_NC(NC *ncp);
 
 extern size_t 
-ncx_len_nctype(nc_type type);
+ncmpix_len_nctype(nc_type type);
 
 #if 0
 extern int
@@ -571,43 +574,43 @@ const char * nc_strerror(int err);
  */
 
 extern int
-nc_put_att(int ncid, int varid, const char *name, nc_type datatype,
+ncmpii_put_att(int ncid, int varid, const char *name, nc_type datatype,
 	size_t len, const void *value);
 
 extern int
-nc_get_att(int ncid, int varid, const char *name, void *value);
+ncmpii_get_att(int ncid, int varid, const char *name, void *value);
 
 extern int
-nc_put_var1(int ncid, int varid, const size_t *index, const void *value);
+ncmpii_put_var1(int ncid, int varid, const size_t *index, const void *value);
 
 extern int
-nc_get_var1(int ncid, int varid, const size_t *index, void *value);
+ncmpii_get_var1(int ncid, int varid, const size_t *index, void *value);
 
 extern int
-nc_put_vara(int ncid, int varid,
+ncmpii_put_vara(int ncid, int varid,
 	 const size_t *start, const size_t *count, const void *value);
 
 extern int
-nc_get_vara(int ncid, int varid,
+ncmpii_get_vara(int ncid, int varid,
 	 const size_t *start, const size_t *count, void *value);
 
 extern int
-nc_put_vars(int ncid, int varid,
+ncmpii_put_vars(int ncid, int varid,
 	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
 	 const void * value);
 
 extern int
-nc_get_vars(int ncid, int varid,
+ncmpii_get_vars(int ncid, int varid,
 	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
 	 void * value);
 
 extern int
-nc_put_varm(int ncid, int varid,
+ncmpii_put_varm(int ncid, int varid,
 	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
 	 const ptrdiff_t * map, const void *value);
 
 extern int
-nc_get_varm(int ncid, int varid,
+ncmpii_get_varm(int ncid, int varid,
 	 const size_t *start, const size_t *count, const ptrdiff_t *stride,
 	 const ptrdiff_t * map, void *value);
 

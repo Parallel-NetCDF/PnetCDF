@@ -35,22 +35,22 @@ free_NC_attr(NC_attr *attrp)
  *  external representation (as the values of an attribute)?
  */
 static size_t
-ncx_len_NC_attrV(nc_type type, size_t nelems)
+ncmpix_len_NC_attrV(nc_type type, size_t nelems)
 {
 	switch(type) {
 	case NC_BYTE:
 	case NC_CHAR:
-		return ncx_len_char(nelems);
+		return ncmpix_len_char(nelems);
 	case NC_SHORT:
-		return ncx_len_short(nelems);
+		return ncmpix_len_short(nelems);
 	case NC_INT:
-		return ncx_len_int(nelems);
+		return ncmpix_len_int(nelems);
 	case NC_FLOAT:
-		return ncx_len_float(nelems);
+		return ncmpix_len_float(nelems);
 	case NC_DOUBLE:
-		return ncx_len_double(nelems);
+		return ncmpix_len_double(nelems);
 	default:
-		assert("ncx_len_NC_attr bad type" == 0);
+		assert("ncmpix_len_NC_attr bad type" == 0);
 	}
 	return 0;
 }
@@ -63,7 +63,7 @@ new_x_NC_attr(
 	size_t nelems)
 {
 	NC_attr *attrp;
-	const size_t xsz = ncx_len_NC_attrV(type, nelems);
+	const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 	size_t sz = M_RNDUP(sizeof(NC_attr));
 
 	assert(!(xsz == 0 && nelems != 0));
@@ -378,7 +378,7 @@ NC_lookupattr(int ncid,
 /* Public */
 
 int
-nc_inq_attname(int ncid, int varid, int attnum, char *name)
+ncmpi_inq_attname(int ncid, int varid, int attnum, char *name)
 {
 	int status;
 	NC *ncp;
@@ -405,7 +405,7 @@ nc_inq_attname(int ncid, int varid, int attnum, char *name)
 
 
 int 
-nc_inq_attid(int ncid, int varid, const char *name, int *attnump)
+ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
 {
 	int status;
 	NC *ncp;
@@ -432,7 +432,7 @@ nc_inq_attid(int ncid, int varid, const char *name, int *attnump)
 }
 
 int 
-nc_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
+ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
 {
 	int status;
 	NC_attr *attrp;
@@ -448,7 +448,7 @@ nc_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
 }
 
 int 
-nc_inq_attlen(int ncid, int varid, const char *name, size_t *lenp)
+ncmpi_inq_attlen(int ncid, int varid, const char *name, size_t *lenp)
 {
 	int status;
 	NC_attr *attrp;
@@ -464,7 +464,7 @@ nc_inq_attlen(int ncid, int varid, const char *name, size_t *lenp)
 }
 
 int
-nc_inq_att(int ncid,
+ncmpi_inq_att(int ncid,
 	int varid,
 	const char *name, /* input, attribute name */
 	nc_type *datatypep,
@@ -487,7 +487,7 @@ nc_inq_att(int ncid,
 
 
 int
-nc_rename_att( int ncid, int varid, const char *name, const char *newname)
+ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 {
 	int status;
 	NC *ncp;
@@ -556,7 +556,7 @@ nc_rename_att( int ncid, int varid, const char *name, const char *newname)
 
 
 int
-nc_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ovarid)
+ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ovarid)
 {
 	int status;
 	NC_attr *iattrp;
@@ -650,7 +650,7 @@ nc_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ovari
 
 
 int
-nc_del_att(int ncid, int varid, const char *name)
+ncmpi_del_att(int ncid, int varid, const char *name)
 {
 	int status;
 	NC *ncp;
@@ -705,315 +705,315 @@ nc_del_att(int ncid, int varid, const char *name)
 
 
 static int
-ncx_pad_putn_Iuchar(void **xpp, size_t nelems, const uchar *tp, nc_type type)
+ncmpix_pad_putn_Iuchar(void **xpp, size_t nelems, const uchar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_putn_schar_uchar(xpp, nelems, tp);
+		return ncmpix_pad_putn_schar_uchar(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_putn_short_uchar(xpp, nelems, tp);
+		return ncmpix_pad_putn_short_uchar(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_putn_int_uchar(xpp, nelems, tp);
+		return ncmpix_putn_int_uchar(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_putn_float_uchar(xpp, nelems, tp);
+		return ncmpix_putn_float_uchar(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_putn_double_uchar(xpp, nelems, tp);
+		return ncmpix_putn_double_uchar(xpp, nelems, tp);
 	default: 
-		assert("ncx_pad_putn_Iuchar invalid type" == 0);
+		assert("ncmpix_pad_putn_Iuchar invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
 
 static int
-ncx_pad_getn_Iuchar(const void **xpp, size_t nelems, uchar *tp, nc_type type)
+ncmpix_pad_getn_Iuchar(const void **xpp, size_t nelems, uchar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_getn_schar_uchar(xpp, nelems, tp);
+		return ncmpix_pad_getn_schar_uchar(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_getn_short_uchar(xpp, nelems, tp);
+		return ncmpix_pad_getn_short_uchar(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_getn_int_uchar(xpp, nelems, tp);
+		return ncmpix_getn_int_uchar(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_getn_float_uchar(xpp, nelems, tp);
+		return ncmpix_getn_float_uchar(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_getn_double_uchar(xpp, nelems, tp);
+		return ncmpix_getn_double_uchar(xpp, nelems, tp);
 	default:
-		assert("ncx_pad_getn_Iuchar invalid type" == 0);
-		return NC_EBADTYPE;
-	}
-}
-
-
-static int
-ncx_pad_putn_Ischar(void **xpp, size_t nelems, const schar *tp, nc_type type)
-{
-	switch(type) {
-	case NC_CHAR:
-		return NC_ECHAR;
-	case NC_BYTE:
-		return ncx_pad_putn_schar_schar(xpp, nelems, tp);
-	case NC_SHORT:
-		return ncx_pad_putn_short_schar(xpp, nelems, tp);
-	case NC_INT:
-		return ncx_putn_int_schar(xpp, nelems, tp);
-	case NC_FLOAT:
-		return ncx_putn_float_schar(xpp, nelems, tp);
-	case NC_DOUBLE:
-		return ncx_putn_double_schar(xpp, nelems, tp);
-	default:
-		assert("ncx_pad_putn_Ischar invalid type" == 0);
-		return NC_EBADTYPE;
-	}
-}
-
-static int
-ncx_pad_getn_Ischar(const void **xpp, size_t nelems, schar *tp, nc_type type)
-{
-	switch(type) {
-	case NC_CHAR:
-		return NC_ECHAR;
-	case NC_BYTE:
-		return ncx_pad_getn_schar_schar(xpp, nelems, tp);
-	case NC_SHORT:
-		return ncx_pad_getn_short_schar(xpp, nelems, tp);
-	case NC_INT:
-		return ncx_getn_int_schar(xpp, nelems, tp);
-	case NC_FLOAT:
-		return ncx_getn_float_schar(xpp, nelems, tp);
-	case NC_DOUBLE:
-		return ncx_getn_double_schar(xpp, nelems, tp);
-	default:
-		assert("ncx_pad_getn_Ischar invalid type" == 0);
+		assert("ncmpix_pad_getn_Iuchar invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
 
 
 static int
-ncx_pad_putn_Ishort(void **xpp, size_t nelems, const short *tp, nc_type type)
+ncmpix_pad_putn_Ischar(void **xpp, size_t nelems, const schar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_putn_schar_short(xpp, nelems, tp);
+		return ncmpix_pad_putn_schar_schar(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_putn_short_short(xpp, nelems, tp);
+		return ncmpix_pad_putn_short_schar(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_putn_int_short(xpp, nelems, tp);
+		return ncmpix_putn_int_schar(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_putn_float_short(xpp, nelems, tp);
+		return ncmpix_putn_float_schar(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_putn_double_short(xpp, nelems, tp);
+		return ncmpix_putn_double_schar(xpp, nelems, tp);
 	default:
-		assert("ncx_pad_putn_Ishort invalid type" == 0);
+		assert("ncmpix_pad_putn_Ischar invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
 
 static int
-ncx_pad_getn_Ishort(const void **xpp, size_t nelems, short *tp, nc_type type)
+ncmpix_pad_getn_Ischar(const void **xpp, size_t nelems, schar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_getn_schar_short(xpp, nelems, tp);
+		return ncmpix_pad_getn_schar_schar(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_getn_short_short(xpp, nelems, tp);
+		return ncmpix_pad_getn_short_schar(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_getn_int_short(xpp, nelems, tp);
+		return ncmpix_getn_int_schar(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_getn_float_short(xpp, nelems, tp);
+		return ncmpix_getn_float_schar(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_getn_double_short(xpp, nelems, tp);
+		return ncmpix_getn_double_schar(xpp, nelems, tp);
 	default:
-		assert("ncx_pad_getn_Ishort invalid type" == 0);
-		return NC_EBADTYPE;
-	}
-}
-
-
-static int
-ncx_pad_putn_Iint(void **xpp, size_t nelems, const int *tp, nc_type type)
-{
-	switch(type) {
-	case NC_CHAR:
-		return NC_ECHAR;
-	case NC_BYTE:
-		return ncx_pad_putn_schar_int(xpp, nelems, tp);
-	case NC_SHORT:
-		return ncx_pad_putn_short_int(xpp, nelems, tp);
-	case NC_INT:
-		return ncx_putn_int_int(xpp, nelems, tp);
-	case NC_FLOAT:
-		return ncx_putn_float_int(xpp, nelems, tp);
-	case NC_DOUBLE:
-		return ncx_putn_double_int(xpp, nelems, tp);
-	default:
-		assert("ncx_pad_putn_Iint invalid type" == 0);
-		return NC_EBADTYPE;
-	}
-}
-
-static int
-ncx_pad_getn_Iint(const void **xpp, size_t nelems, int *tp, nc_type type)
-{
-	switch(type) {
-	case NC_CHAR:
-		return NC_ECHAR;
-	case NC_BYTE:
-		return ncx_pad_getn_schar_int(xpp, nelems, tp);
-	case NC_SHORT:
-		return ncx_pad_getn_short_int(xpp, nelems, tp);
-	case NC_INT:
-		return ncx_getn_int_int(xpp, nelems, tp);
-	case NC_FLOAT:
-		return ncx_getn_float_int(xpp, nelems, tp);
-	case NC_DOUBLE:
-		return ncx_getn_double_int(xpp, nelems, tp);
-	default:
-		assert("ncx_pad_getn_Iint invalid type" == 0);
+		assert("ncmpix_pad_getn_Ischar invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
 
 
 static int
-ncx_pad_putn_Ilong(void **xpp, size_t nelems, const long *tp, nc_type type)
+ncmpix_pad_putn_Ishort(void **xpp, size_t nelems, const short *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_putn_schar_long(xpp, nelems, tp);
+		return ncmpix_pad_putn_schar_short(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_putn_short_long(xpp, nelems, tp);
+		return ncmpix_pad_putn_short_short(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_putn_int_long(xpp, nelems, tp);
+		return ncmpix_putn_int_short(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_putn_float_long(xpp, nelems, tp);
+		return ncmpix_putn_float_short(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_putn_double_long(xpp, nelems, tp);
+		return ncmpix_putn_double_short(xpp, nelems, tp);
 	default:
-		assert("ncx_pad_putn_Ilong invalid type" == 0);
+		assert("ncmpix_pad_putn_Ishort invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
 
 static int
-ncx_pad_getn_Ilong(const void **xpp, size_t nelems, long *tp, nc_type type)
+ncmpix_pad_getn_Ishort(const void **xpp, size_t nelems, short *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_getn_schar_long(xpp, nelems, tp);
+		return ncmpix_pad_getn_schar_short(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_getn_short_long(xpp, nelems, tp);
+		return ncmpix_pad_getn_short_short(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_getn_int_long(xpp, nelems, tp);
+		return ncmpix_getn_int_short(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_getn_float_long(xpp, nelems, tp);
+		return ncmpix_getn_float_short(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_getn_double_long(xpp, nelems, tp);
+		return ncmpix_getn_double_short(xpp, nelems, tp);
 	default:
-		assert("ncx_pad_getn_Ilong invalid type" == 0);
-		return NC_EBADTYPE;
-	}
-}
-
-
-static int
-ncx_pad_putn_Ifloat(void **xpp, size_t nelems, const float *tp, nc_type type)
-{
-	switch(type) {
-	case NC_CHAR:
-		return NC_ECHAR;
-	case NC_BYTE:
-		return ncx_pad_putn_schar_float(xpp, nelems, tp);
-	case NC_SHORT:
-		return ncx_pad_putn_short_float(xpp, nelems, tp);
-	case NC_INT:
-		return ncx_putn_int_float(xpp, nelems, tp);
-	case NC_FLOAT:
-		return ncx_putn_float_float(xpp, nelems, tp);
-	case NC_DOUBLE:
-		return ncx_putn_double_float(xpp, nelems, tp);
-	default:
-		assert("ncx_pad_putn_Ifloat invalid type" == 0);
-		return NC_EBADTYPE;
-	}
-}
-
-static int
-ncx_pad_getn_Ifloat(const void **xpp, size_t nelems, float *tp, nc_type type)
-{
-	switch(type) {
-	case NC_CHAR:
-		return NC_ECHAR;
-	case NC_BYTE:
-		return ncx_pad_getn_schar_float(xpp, nelems, tp);
-	case NC_SHORT:
-		return ncx_pad_getn_short_float(xpp, nelems, tp);
-	case NC_INT:
-		return ncx_getn_int_float(xpp, nelems, tp);
-	case NC_FLOAT:
-		return ncx_getn_float_float(xpp, nelems, tp);
-	case NC_DOUBLE:
-		return ncx_getn_double_float(xpp, nelems, tp);
-	default:
-		assert("ncx_pad_getn_Ifloat invalid type" == 0);
+		assert("ncmpix_pad_getn_Ishort invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
 
 
 static int
-ncx_pad_putn_Idouble(void **xpp, size_t nelems, const double *tp, nc_type type)
+ncmpix_pad_putn_Iint(void **xpp, size_t nelems, const int *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_putn_schar_double(xpp, nelems, tp);
+		return ncmpix_pad_putn_schar_int(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_putn_short_double(xpp, nelems, tp);
+		return ncmpix_pad_putn_short_int(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_putn_int_double(xpp, nelems, tp);
+		return ncmpix_putn_int_int(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_putn_float_double(xpp, nelems, tp);
+		return ncmpix_putn_float_int(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_putn_double_double(xpp, nelems, tp);
+		return ncmpix_putn_double_int(xpp, nelems, tp);
 	default:
-		assert("ncx_pad_putn_Idouble invalid type" == 0);
+		assert("ncmpix_pad_putn_Iint invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
 
 static int
-ncx_pad_getn_Idouble(const void **xpp, size_t nelems, double *tp, nc_type type)
+ncmpix_pad_getn_Iint(const void **xpp, size_t nelems, int *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
 		return NC_ECHAR;
 	case NC_BYTE:
-		return ncx_pad_getn_schar_double(xpp, nelems, tp);
+		return ncmpix_pad_getn_schar_int(xpp, nelems, tp);
 	case NC_SHORT:
-		return ncx_pad_getn_short_double(xpp, nelems, tp);
+		return ncmpix_pad_getn_short_int(xpp, nelems, tp);
 	case NC_INT:
-		return ncx_getn_int_double(xpp, nelems, tp);
+		return ncmpix_getn_int_int(xpp, nelems, tp);
 	case NC_FLOAT:
-		return ncx_getn_float_double(xpp, nelems, tp);
+		return ncmpix_getn_float_int(xpp, nelems, tp);
 	case NC_DOUBLE:
-		return ncx_getn_double_double(xpp, nelems, tp);
+		return ncmpix_getn_double_int(xpp, nelems, tp);
 	default:
-		assert("ncx_pad_getn_Idouble invalid type" == 0);
+		assert("ncmpix_pad_getn_Iint invalid type" == 0);
+		return NC_EBADTYPE;
+	}
+}
+
+
+static int
+ncmpix_pad_putn_Ilong(void **xpp, size_t nelems, const long *tp, nc_type type)
+{
+	switch(type) {
+	case NC_CHAR:
+		return NC_ECHAR;
+	case NC_BYTE:
+		return ncmpix_pad_putn_schar_long(xpp, nelems, tp);
+	case NC_SHORT:
+		return ncmpix_pad_putn_short_long(xpp, nelems, tp);
+	case NC_INT:
+		return ncmpix_putn_int_long(xpp, nelems, tp);
+	case NC_FLOAT:
+		return ncmpix_putn_float_long(xpp, nelems, tp);
+	case NC_DOUBLE:
+		return ncmpix_putn_double_long(xpp, nelems, tp);
+	default:
+		assert("ncmpix_pad_putn_Ilong invalid type" == 0);
+		return NC_EBADTYPE;
+	}
+}
+
+static int
+ncmpix_pad_getn_Ilong(const void **xpp, size_t nelems, long *tp, nc_type type)
+{
+	switch(type) {
+	case NC_CHAR:
+		return NC_ECHAR;
+	case NC_BYTE:
+		return ncmpix_pad_getn_schar_long(xpp, nelems, tp);
+	case NC_SHORT:
+		return ncmpix_pad_getn_short_long(xpp, nelems, tp);
+	case NC_INT:
+		return ncmpix_getn_int_long(xpp, nelems, tp);
+	case NC_FLOAT:
+		return ncmpix_getn_float_long(xpp, nelems, tp);
+	case NC_DOUBLE:
+		return ncmpix_getn_double_long(xpp, nelems, tp);
+	default:
+		assert("ncmpix_pad_getn_Ilong invalid type" == 0);
+		return NC_EBADTYPE;
+	}
+}
+
+
+static int
+ncmpix_pad_putn_Ifloat(void **xpp, size_t nelems, const float *tp, nc_type type)
+{
+	switch(type) {
+	case NC_CHAR:
+		return NC_ECHAR;
+	case NC_BYTE:
+		return ncmpix_pad_putn_schar_float(xpp, nelems, tp);
+	case NC_SHORT:
+		return ncmpix_pad_putn_short_float(xpp, nelems, tp);
+	case NC_INT:
+		return ncmpix_putn_int_float(xpp, nelems, tp);
+	case NC_FLOAT:
+		return ncmpix_putn_float_float(xpp, nelems, tp);
+	case NC_DOUBLE:
+		return ncmpix_putn_double_float(xpp, nelems, tp);
+	default:
+		assert("ncmpix_pad_putn_Ifloat invalid type" == 0);
+		return NC_EBADTYPE;
+	}
+}
+
+static int
+ncmpix_pad_getn_Ifloat(const void **xpp, size_t nelems, float *tp, nc_type type)
+{
+	switch(type) {
+	case NC_CHAR:
+		return NC_ECHAR;
+	case NC_BYTE:
+		return ncmpix_pad_getn_schar_float(xpp, nelems, tp);
+	case NC_SHORT:
+		return ncmpix_pad_getn_short_float(xpp, nelems, tp);
+	case NC_INT:
+		return ncmpix_getn_int_float(xpp, nelems, tp);
+	case NC_FLOAT:
+		return ncmpix_getn_float_float(xpp, nelems, tp);
+	case NC_DOUBLE:
+		return ncmpix_getn_double_float(xpp, nelems, tp);
+	default:
+		assert("ncmpix_pad_getn_Ifloat invalid type" == 0);
+		return NC_EBADTYPE;
+	}
+}
+
+
+static int
+ncmpix_pad_putn_Idouble(void **xpp, size_t nelems, const double *tp, nc_type type)
+{
+	switch(type) {
+	case NC_CHAR:
+		return NC_ECHAR;
+	case NC_BYTE:
+		return ncmpix_pad_putn_schar_double(xpp, nelems, tp);
+	case NC_SHORT:
+		return ncmpix_pad_putn_short_double(xpp, nelems, tp);
+	case NC_INT:
+		return ncmpix_putn_int_double(xpp, nelems, tp);
+	case NC_FLOAT:
+		return ncmpix_putn_float_double(xpp, nelems, tp);
+	case NC_DOUBLE:
+		return ncmpix_putn_double_double(xpp, nelems, tp);
+	default:
+		assert("ncmpix_pad_putn_Idouble invalid type" == 0);
+		return NC_EBADTYPE;
+	}
+}
+
+static int
+ncmpix_pad_getn_Idouble(const void **xpp, size_t nelems, double *tp, nc_type type)
+{
+	switch(type) {
+	case NC_CHAR:
+		return NC_ECHAR;
+	case NC_BYTE:
+		return ncmpix_pad_getn_schar_double(xpp, nelems, tp);
+	case NC_SHORT:
+		return ncmpix_pad_getn_short_double(xpp, nelems, tp);
+	case NC_INT:
+		return ncmpix_getn_int_double(xpp, nelems, tp);
+	case NC_FLOAT:
+		return ncmpix_getn_float_double(xpp, nelems, tp);
+	case NC_DOUBLE:
+		return ncmpix_getn_double_double(xpp, nelems, tp);
+	default:
+		assert("ncmpix_pad_getn_Idouble invalid type" == 0);
 		return NC_EBADTYPE;
 	}
 }
@@ -1021,7 +1021,7 @@ ncx_pad_getn_Idouble(const void **xpp, size_t nelems, double *tp, nc_type type)
 
 
 int
-nc_put_att_text(int ncid, int varid, const char *name,
+ncmpi_put_att_text(int ncid, int varid, const char *name,
 	size_t nelems, const char *value)
 {
 	int status;
@@ -1058,7 +1058,7 @@ nc_put_att_text(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(NC_CHAR, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(NC_CHAR, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1072,7 +1072,7 @@ nc_put_att_text(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_text(&xp, nelems, value);
+				status = ncmpix_pad_putn_text(&xp, nelems, value);
 				if(status != NC_NOERR)
 					return status;
 			}
@@ -1107,7 +1107,7 @@ nc_put_att_text(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_text(&xp, nelems, value);
+		status = ncmpix_pad_putn_text(&xp, nelems, value);
 		if(status != NC_NOERR)
 			return status;
 	}
@@ -1133,7 +1133,7 @@ nc_put_att_text(int ncid, int varid, const char *name,
 
 
 int
-nc_get_att_text(int ncid, int varid, const char *name, char *str)
+ncmpi_get_att_text(int ncid, int varid, const char *name, char *str)
 {
 	int status;
 	NC_attr *attrp;
@@ -1151,7 +1151,7 @@ nc_get_att_text(int ncid, int varid, const char *name, char *str)
 	/* else */
 	{
 		const void *xp = attrp->xvalue;
-		return ncx_pad_getn_text(&xp, attrp->nelems, str);
+		return ncmpix_pad_getn_text(&xp, attrp->nelems, str);
 	}
 }
 
@@ -1159,7 +1159,7 @@ nc_get_att_text(int ncid, int varid, const char *name, char *str)
 
 
 int
-nc_put_att_schar(int ncid, int varid, const char *name,
+ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const signed char *value)
 {
 	int status;
@@ -1180,7 +1180,7 @@ nc_put_att_schar(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1199,7 +1199,7 @@ nc_put_att_schar(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1213,7 +1213,7 @@ nc_put_att_schar(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_Ischar(&xp, nelems,
+				status = ncmpix_pad_putn_Ischar(&xp, nelems,
 					value, type);
 			}
 			
@@ -1224,7 +1224,7 @@ nc_put_att_schar(int ncid, int varid, const char *name,
 				const int lstatus = NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
-				 * set by ncx_pad_putn_Ischar
+				 * set by ncmpix_pad_putn_Ischar
 				 */
 				if(lstatus != ENOERR)
 					return lstatus;
@@ -1255,7 +1255,7 @@ nc_put_att_schar(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_Ischar(&xp, nelems,
+		status = ncmpix_pad_putn_Ischar(&xp, nelems,
 			value, type);
 	}
 
@@ -1270,7 +1270,7 @@ nc_put_att_schar(int ncid, int varid, const char *name,
 		const int lstatus = incr_NC_attrarray(ncap, attrp);
 		/*
 		 * N.B.: potentially overrides NC_ERANGE
-		 * set by ncx_pad_putn_Ischar
+		 * set by ncmpix_pad_putn_Ischar
 		 */
 		if(lstatus != NC_NOERR)
 		{
@@ -1283,7 +1283,7 @@ nc_put_att_schar(int ncid, int varid, const char *name,
 }
 
 int
-nc_get_att_schar(int ncid, int varid, const char *name, signed char *tp)
+ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1300,13 +1300,13 @@ nc_get_att_schar(int ncid, int varid, const char *name, signed char *tp)
 
 	{
 	const void *xp = attrp->xvalue;
-	return ncx_pad_getn_Ischar(&xp, attrp->nelems, tp, attrp->type);
+	return ncmpix_pad_getn_Ischar(&xp, attrp->nelems, tp, attrp->type);
 	}
 }
 
 
 int
-nc_put_att_uchar(int ncid, int varid, const char *name,
+ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const unsigned char *value)
 {
 	int status;
@@ -1327,7 +1327,7 @@ nc_put_att_uchar(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1346,7 +1346,7 @@ nc_put_att_uchar(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1360,7 +1360,7 @@ nc_put_att_uchar(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_Iuchar(&xp, nelems,
+				status = ncmpix_pad_putn_Iuchar(&xp, nelems,
 					value, type);
 			}
 			
@@ -1371,7 +1371,7 @@ nc_put_att_uchar(int ncid, int varid, const char *name,
 				const int lstatus = NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
-				 * set by ncx_pad_putn_Iuchar
+				 * set by ncmpix_pad_putn_Iuchar
 				 */
 				if(lstatus != ENOERR)
 					return lstatus;
@@ -1402,7 +1402,7 @@ nc_put_att_uchar(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_Iuchar(&xp, nelems,
+		status = ncmpix_pad_putn_Iuchar(&xp, nelems,
 			value, type);
 	}
 
@@ -1417,7 +1417,7 @@ nc_put_att_uchar(int ncid, int varid, const char *name,
 		const int lstatus = incr_NC_attrarray(ncap, attrp);
 		/*
 		 * N.B.: potentially overrides NC_ERANGE
-		 * set by ncx_pad_putn_Iuchar
+		 * set by ncmpix_pad_putn_Iuchar
 		 */
 		if(lstatus != NC_NOERR)
 		{
@@ -1430,7 +1430,7 @@ nc_put_att_uchar(int ncid, int varid, const char *name,
 }
 
 int
-nc_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp)
+ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1447,13 +1447,13 @@ nc_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp)
 
 	{
 	const void *xp = attrp->xvalue;
-	return ncx_pad_getn_Iuchar(&xp, attrp->nelems, tp, attrp->type);
+	return ncmpix_pad_getn_Iuchar(&xp, attrp->nelems, tp, attrp->type);
 	}
 }
 
 
 int
-nc_put_att_short(int ncid, int varid, const char *name,
+ncmpi_put_att_short(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const short *value)
 {
 	int status;
@@ -1474,7 +1474,7 @@ nc_put_att_short(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1493,7 +1493,7 @@ nc_put_att_short(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1507,7 +1507,7 @@ nc_put_att_short(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_Ishort(&xp, nelems,
+				status = ncmpix_pad_putn_Ishort(&xp, nelems,
 					value, type);
 			}
 			
@@ -1518,7 +1518,7 @@ nc_put_att_short(int ncid, int varid, const char *name,
 				const int lstatus = NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
-				 * set by ncx_pad_putn_Ishort
+				 * set by ncmpix_pad_putn_Ishort
 				 */
 				if(lstatus != ENOERR)
 					return lstatus;
@@ -1549,7 +1549,7 @@ nc_put_att_short(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_Ishort(&xp, nelems,
+		status = ncmpix_pad_putn_Ishort(&xp, nelems,
 			value, type);
 	}
 
@@ -1564,7 +1564,7 @@ nc_put_att_short(int ncid, int varid, const char *name,
 		const int lstatus = incr_NC_attrarray(ncap, attrp);
 		/*
 		 * N.B.: potentially overrides NC_ERANGE
-		 * set by ncx_pad_putn_Ishort
+		 * set by ncmpix_pad_putn_Ishort
 		 */
 		if(lstatus != NC_NOERR)
 		{
@@ -1577,7 +1577,7 @@ nc_put_att_short(int ncid, int varid, const char *name,
 }
 
 int
-nc_get_att_short(int ncid, int varid, const char *name, short *tp)
+ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1594,13 +1594,13 @@ nc_get_att_short(int ncid, int varid, const char *name, short *tp)
 
 	{
 	const void *xp = attrp->xvalue;
-	return ncx_pad_getn_Ishort(&xp, attrp->nelems, tp, attrp->type);
+	return ncmpix_pad_getn_Ishort(&xp, attrp->nelems, tp, attrp->type);
 	}
 }
 
 
 int
-nc_put_att_int(int ncid, int varid, const char *name,
+ncmpi_put_att_int(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const int *value)
 {
 	int status;
@@ -1621,7 +1621,7 @@ nc_put_att_int(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1640,7 +1640,7 @@ nc_put_att_int(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1654,7 +1654,7 @@ nc_put_att_int(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_Iint(&xp, nelems,
+				status = ncmpix_pad_putn_Iint(&xp, nelems,
 					value, type);
 			}
 			
@@ -1665,7 +1665,7 @@ nc_put_att_int(int ncid, int varid, const char *name,
 				const int lstatus = NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
-				 * set by ncx_pad_putn_Iint
+				 * set by ncmpix_pad_putn_Iint
 				 */
 				if(lstatus != ENOERR)
 					return lstatus;
@@ -1696,7 +1696,7 @@ nc_put_att_int(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_Iint(&xp, nelems,
+		status = ncmpix_pad_putn_Iint(&xp, nelems,
 			value, type);
 	}
 
@@ -1711,7 +1711,7 @@ nc_put_att_int(int ncid, int varid, const char *name,
 		const int lstatus = incr_NC_attrarray(ncap, attrp);
 		/*
 		 * N.B.: potentially overrides NC_ERANGE
-		 * set by ncx_pad_putn_Iint
+		 * set by ncmpix_pad_putn_Iint
 		 */
 		if(lstatus != NC_NOERR)
 		{
@@ -1724,7 +1724,7 @@ nc_put_att_int(int ncid, int varid, const char *name,
 }
 
 int
-nc_get_att_int(int ncid, int varid, const char *name, int *tp)
+ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1741,13 +1741,13 @@ nc_get_att_int(int ncid, int varid, const char *name, int *tp)
 
 	{
 	const void *xp = attrp->xvalue;
-	return ncx_pad_getn_Iint(&xp, attrp->nelems, tp, attrp->type);
+	return ncmpix_pad_getn_Iint(&xp, attrp->nelems, tp, attrp->type);
 	}
 }
 
 
 int
-nc_put_att_long(int ncid, int varid, const char *name,
+ncmpi_put_att_long(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const long *value)
 {
 	int status;
@@ -1768,7 +1768,7 @@ nc_put_att_long(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1787,7 +1787,7 @@ nc_put_att_long(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1801,7 +1801,7 @@ nc_put_att_long(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_Ilong(&xp, nelems,
+				status = ncmpix_pad_putn_Ilong(&xp, nelems,
 					value, type);
 			}
 			
@@ -1812,7 +1812,7 @@ nc_put_att_long(int ncid, int varid, const char *name,
 				const int lstatus = NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
-				 * set by ncx_pad_putn_Ilong
+				 * set by ncmpix_pad_putn_Ilong
 				 */
 				if(lstatus != ENOERR)
 					return lstatus;
@@ -1843,7 +1843,7 @@ nc_put_att_long(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_Ilong(&xp, nelems,
+		status = ncmpix_pad_putn_Ilong(&xp, nelems,
 			value, type);
 	}
 
@@ -1858,7 +1858,7 @@ nc_put_att_long(int ncid, int varid, const char *name,
 		const int lstatus = incr_NC_attrarray(ncap, attrp);
 		/*
 		 * N.B.: potentially overrides NC_ERANGE
-		 * set by ncx_pad_putn_Ilong
+		 * set by ncmpix_pad_putn_Ilong
 		 */
 		if(lstatus != NC_NOERR)
 		{
@@ -1871,7 +1871,7 @@ nc_put_att_long(int ncid, int varid, const char *name,
 }
 
 int
-nc_get_att_long(int ncid, int varid, const char *name, long *tp)
+ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1888,13 +1888,13 @@ nc_get_att_long(int ncid, int varid, const char *name, long *tp)
 
 	{
 	const void *xp = attrp->xvalue;
-	return ncx_pad_getn_Ilong(&xp, attrp->nelems, tp, attrp->type);
+	return ncmpix_pad_getn_Ilong(&xp, attrp->nelems, tp, attrp->type);
 	}
 }
 
 
 int
-nc_put_att_float(int ncid, int varid, const char *name,
+ncmpi_put_att_float(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const float *value)
 {
 	int status;
@@ -1915,7 +1915,7 @@ nc_put_att_float(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1934,7 +1934,7 @@ nc_put_att_float(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1948,7 +1948,7 @@ nc_put_att_float(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_Ifloat(&xp, nelems,
+				status = ncmpix_pad_putn_Ifloat(&xp, nelems,
 					value, type);
 			}
 			
@@ -1959,7 +1959,7 @@ nc_put_att_float(int ncid, int varid, const char *name,
 				const int lstatus = NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
-				 * set by ncx_pad_putn_Ifloat
+				 * set by ncmpix_pad_putn_Ifloat
 				 */
 				if(lstatus != ENOERR)
 					return lstatus;
@@ -1990,7 +1990,7 @@ nc_put_att_float(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_Ifloat(&xp, nelems,
+		status = ncmpix_pad_putn_Ifloat(&xp, nelems,
 			value, type);
 	}
 
@@ -2005,7 +2005,7 @@ nc_put_att_float(int ncid, int varid, const char *name,
 		const int lstatus = incr_NC_attrarray(ncap, attrp);
 		/*
 		 * N.B.: potentially overrides NC_ERANGE
-		 * set by ncx_pad_putn_Ifloat
+		 * set by ncmpix_pad_putn_Ifloat
 		 */
 		if(lstatus != NC_NOERR)
 		{
@@ -2018,7 +2018,7 @@ nc_put_att_float(int ncid, int varid, const char *name,
 }
 
 int
-nc_get_att_float(int ncid, int varid, const char *name, float *tp)
+ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -2035,13 +2035,13 @@ nc_get_att_float(int ncid, int varid, const char *name, float *tp)
 
 	{
 	const void *xp = attrp->xvalue;
-	return ncx_pad_getn_Ifloat(&xp, attrp->nelems, tp, attrp->type);
+	return ncmpix_pad_getn_Ifloat(&xp, attrp->nelems, tp, attrp->type);
 	}
 }
 
 
 int
-nc_put_att_double(int ncid, int varid, const char *name,
+ncmpi_put_att_double(int ncid, int varid, const char *name,
 	nc_type type, size_t nelems, const double *value)
 {
 	int status;
@@ -2062,7 +2062,7 @@ nc_put_att_double(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -2081,7 +2081,7 @@ nc_put_att_double(int ncid, int varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const size_t xsz = ncx_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -2095,7 +2095,7 @@ nc_put_att_double(int ncid, int varid, const char *name,
 			if(nelems != 0)
 			{
 				void *xp = attrp->xvalue;
-				status = ncx_pad_putn_Idouble(&xp, nelems,
+				status = ncmpix_pad_putn_Idouble(&xp, nelems,
 					value, type);
 			}
 			
@@ -2106,7 +2106,7 @@ nc_put_att_double(int ncid, int varid, const char *name,
 				const int lstatus = NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
-				 * set by ncx_pad_putn_Idouble
+				 * set by ncmpix_pad_putn_Idouble
 				 */
 				if(lstatus != ENOERR)
 					return lstatus;
@@ -2137,7 +2137,7 @@ nc_put_att_double(int ncid, int varid, const char *name,
 	if(nelems != 0)
 	{
 		void *xp = attrp->xvalue;
-		status = ncx_pad_putn_Idouble(&xp, nelems,
+		status = ncmpix_pad_putn_Idouble(&xp, nelems,
 			value, type);
 	}
 
@@ -2152,7 +2152,7 @@ nc_put_att_double(int ncid, int varid, const char *name,
 		const int lstatus = incr_NC_attrarray(ncap, attrp);
 		/*
 		 * N.B.: potentially overrides NC_ERANGE
-		 * set by ncx_pad_putn_Idouble
+		 * set by ncmpix_pad_putn_Idouble
 		 */
 		if(lstatus != NC_NOERR)
 		{
@@ -2165,7 +2165,7 @@ nc_put_att_double(int ncid, int varid, const char *name,
 }
 
 int
-nc_get_att_double(int ncid, int varid, const char *name, double *tp)
+ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -2182,7 +2182,7 @@ nc_get_att_double(int ncid, int varid, const char *name, double *tp)
 
 	{
 	const void *xp = attrp->xvalue;
-	return ncx_pad_getn_Idouble(&xp, attrp->nelems, tp, attrp->type);
+	return ncmpix_pad_getn_Idouble(&xp, attrp->nelems, tp, attrp->type);
 	}
 }
 
@@ -2190,7 +2190,7 @@ nc_get_att_double(int ncid, int varid, const char *name, double *tp)
 
 /* deprecated, used to support the 2.x interface */
 int
-nc_put_att(
+ncmpii_put_att(
 	int ncid,
 	int varid,
 	const char *name,
@@ -2200,27 +2200,27 @@ nc_put_att(
 {
 	switch (type) {
 	case NC_BYTE:
-		return nc_put_att_schar(ncid, varid, name, type, nelems,
+		return ncmpi_put_att_schar(ncid, varid, name, type, nelems,
 			(schar *)value);
 	case NC_CHAR:
-		return nc_put_att_text(ncid, varid, name, nelems,
+		return ncmpi_put_att_text(ncid, varid, name, nelems,
 			(char *)value);
 	case NC_SHORT:
-		return nc_put_att_short(ncid, varid, name, type, nelems,
+		return ncmpi_put_att_short(ncid, varid, name, type, nelems,
 			(short *)value);
 	case NC_INT:
 #if (SIZEOF_INT >= X_SIZEOF_INT)
-		return nc_put_att_int(ncid, varid, name, type, nelems,
+		return ncmpi_put_att_int(ncid, varid, name, type, nelems,
 			(int *)value);
 #elif SIZEOF_LONG == X_SIZEOF_INT
-		return nc_put_att_long(ncid, varid, name, type, nelems,
+		return ncmpi_put_att_long(ncid, varid, name, type, nelems,
 			(long *)value);
 #endif
 	case NC_FLOAT:
-		return nc_put_att_float(ncid, varid, name, type, nelems,
+		return ncmpi_put_att_float(ncid, varid, name, type, nelems,
 			(float *)value);
 	case NC_DOUBLE:
-		return nc_put_att_double(ncid, varid, name, type, nelems,
+		return ncmpi_put_att_double(ncid, varid, name, type, nelems,
 			(double *)value);
 	default:
 		return NC_EBADTYPE;
@@ -2230,7 +2230,7 @@ nc_put_att(
 
 /* deprecated, used to support the 2.x interface */
 int
-nc_get_att(int ncid, int varid, const char *name, void *value)
+ncmpii_get_att(int ncid, int varid, const char *name, void *value)
 {
 	int status;
 	NC_attr *attrp;
@@ -2241,27 +2241,27 @@ nc_get_att(int ncid, int varid, const char *name, void *value)
 
 	switch (attrp->type) {
 	case NC_BYTE:
-		return nc_get_att_schar(ncid, varid, name,
+		return ncmpi_get_att_schar(ncid, varid, name,
 			(schar *)value);
 	case NC_CHAR:
-		return nc_get_att_text(ncid, varid, name,
+		return ncmpi_get_att_text(ncid, varid, name,
 			(char *)value);
 	case NC_SHORT:
-		return nc_get_att_short(ncid, varid, name,
+		return ncmpi_get_att_short(ncid, varid, name,
 			(short *)value);
 	case NC_INT:
 #if (SIZEOF_INT >= X_SIZEOF_INT)
-		return nc_get_att_int(ncid, varid, name,
+		return ncmpi_get_att_int(ncid, varid, name,
 			(int *)value);
 #elif SIZEOF_LONG == X_SIZEOF_INT
-		return nc_get_att_long(ncid, varid, name,
+		return ncmpi_get_att_long(ncid, varid, name,
 			(long *)value);
 #endif
 	case NC_FLOAT:
-		return nc_get_att_float(ncid, varid, name,
+		return ncmpi_get_att_float(ncid, varid, name,
 			(float *)value);
 	case NC_DOUBLE:
-		return nc_get_att_double(ncid, varid, name,
+		return ncmpi_get_att_double(ncid, varid, name,
 			(double *)value);
 	default:
 		return NC_EBADTYPE;
