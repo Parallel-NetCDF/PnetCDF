@@ -55,7 +55,10 @@
 #include <string.h>
 #include "testutils.h"
 
-void handle_error(int status) {
+/* Prototype for functions used only in this file */
+static void handle_error(int status);
+
+static void handle_error(int status) {
   fprintf(stderr, "%s\n", ncmpi_strerror(status));
 }
 
