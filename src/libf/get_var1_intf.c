@@ -24,12 +24,12 @@
 FORTRAN_API int FORT_CALL nfmpi_get_var1_int_ ( int *v1, int *v2, int v3[], MPI_Fint *v4 ){
     int ierr;
     int l2 = *v2 - 1;
-    size_t *l3 = 0;
+    MPI_Offset *l3 = 0;
 
     { int ln = ncmpixVardim(*v1,*v2-1);
     if (ln > 0) {
         int li;
-        l3 = (size_t *)malloc( ln * sizeof(size_t) );
+        l3 = (MPI_Offset *)malloc( ln * sizeof(MPI_Offset) );
         for (li=0; li<ln; li++) 
             l3[li] = v3[ln-1-li] - 1;
     }

@@ -24,12 +24,12 @@
 FORTRAN_API int FORT_CALL nfmpi_inq_vardimid_ ( int *v1, int *v2, MPI_Fint *v3 ){
     int ierr;
     int l2 = *v2 - 1;
-    size_t *l3=0;
+    int *l3=0;
     int ln3;
 
     ln3 = ncmpixVardim(*v1,*v2-1);
     if (ln3 > 0) {
-        l3 = (size_t *)malloc( ln3 * sizeof(int) );
+        l3 = (int *)malloc( ln3 * sizeof(int) );
     }
     ierr = ncmpi_inq_vardimid( *v1, l2, l3 );
 

@@ -23,6 +23,6 @@
 #include "mpifnetcdf.h"
 FORTRAN_API int FORT_CALL nfmpi_get_vars_long_ ( int *v1, int *v2, int v3[], int v4[], int v5[], long*v6 ){
     int ierr;
-    ierr = ncmpi_get_vars_long( *v1, *v2, (const size_t *)(v3), (const size_t *)(v4), (const size_t *)(v5), v6 );
+    ierr = ncmpi_get_vars_long( *v1, *v2, (const MPI_Offset *)(v3), (const MPI_Offset *)(v4), (const MPI_Offset *)(v5), v6 );
     return ierr;
 }

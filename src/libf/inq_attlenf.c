@@ -25,7 +25,7 @@ FORTRAN_API int FORT_CALL nfmpi_inq_attlen_ ( int *v1, int *v2, char *v3 FORT_MI
     int ierr;
     int l2 = *v2 - 1;
     char *p3;
-    size_t l4=0;
+    MPI_Offset l4=0;
 
     {char *p = v3 + d3 - 1;
      int  li;
