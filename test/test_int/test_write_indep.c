@@ -52,12 +52,13 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <netcdf.h>
+#include <string.h>
 
 void handle_error(int status) {
-  fprintf(stderr, "%s\n", nc_strerror(status));
+  fprintf(stderr, "%s\n", ncmpi_strerror(status));
 }
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
   int i, j, k;
   int status;
@@ -102,7 +103,7 @@ if (rank == 0)
    *    :title = "example netCDF dataset";
    */
 
-  status = nc_put_att_text (ncid, NC_GLOBAL, "title",
+  status = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
                           strlen(title), title);
   if (status != NC_NOERR) handle_error(status);
 
@@ -111,13 +112,13 @@ if (rank == 0)
    *   x = 100, y = 100, z = 100, time = NC_UNLIMITED
    */
 
-  status = nc_def_dim(ncid, "x", 100L, &dimid1);
+  status = ncmpi_def_dim(ncid, "x", 100L, &dimid1);
   if (status != NC_NOERR) handle_error(status);
-  status = nc_def_dim(ncid, "y", 100L, &dimid2);
+  status = ncmpi_def_dim(ncid, "y", 100L, &dimid2);
   if (status != NC_NOERR) handle_error(status);
-  status = nc_def_dim(ncid, "z", 100L, &dimid3);
+  status = ncmpi_def_dim(ncid, "z", 100L, &dimid3);
   if (status != NC_NOERR) handle_error(status);
-  status = nc_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
+  status = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
   if (status != NC_NOERR) handle_error(status);
 
   /**
@@ -130,13 +131,13 @@ if (rank == 0)
   cube_dim[2] = dimid3;
   xytime_dim[0] = udimid;
   time_dim[0] = udimid;
-  status = nc_def_var (ncid, "square", NC_INT, 2, square_dim, &square_id);
+  status = ncmpi_def_var (ncid, "square", NC_INT, 2, square_dim, &square_id);
   if (status != NC_NOERR) handle_error(status);
-  status = nc_def_var (ncid, "cube", NC_INT, 3, cube_dim, &cube_id);
+  status = ncmpi_def_var (ncid, "cube", NC_INT, 3, cube_dim, &cube_id);
   if (status != NC_NOERR) handle_error(status);
-  status = nc_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
+  status = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
   if (status != NC_NOERR) handle_error(status);
-  status = nc_def_var (ncid, "xytime", NC_INT, 3, xytime_dim, &xytime_id);
+  status = ncmpi_def_var (ncid, "xytime", NC_INT, 3, xytime_dim, &xytime_id);
   if (status != NC_NOERR) handle_error(status);
 
   /**
@@ -145,7 +146,7 @@ if (rank == 0)
    */
 
 /*
-  status = nc_put_att_text (ncid, square_id, "description",
+  status = ncmpi_put_att_text (ncid, square_id, "description",
                           strlen(description), description);
   if (status != NC_NOERR) handle_error(status);
 */
@@ -216,7 +217,7 @@ if (rank == 0)
 
 status = ncmpi_redef(ncid);
 if (status != NC_NOERR) handle_error(status);
-status = nc_put_att_text (ncid, square_id, "description",
+status = ncmpi_put_att_text (ncid, square_id, "description",
                           strlen(description), description);
 if (status != NC_NOERR) handle_error(status);
 status = ncmpi_enddef(ncid);
@@ -236,5 +237,6 @@ if (rank == 0)
   fprintf(stderr, "OK\nFile written to: %s!\n", outfilename);
 
   MPI_Finalize();
+  return 0;
 }
 
