@@ -117,7 +117,7 @@ C
      +                   ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-
+        call nfmpi_begin_indep_data(ncid, err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -185,6 +185,7 @@ C
 3               continue
             end if
 1       continue
+        call nfmpi_end_indep_data(ncid, err)
         call nfmpi_close (ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
@@ -464,6 +465,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
      +              call errore('wrong type: ', err)
             endif
 1       continue
+        call nfmpi_end_indep_data(ncid, err)
 
 C       The preceeding has written nothing for record variables, now try
 C       again with more than 0 records.
@@ -477,7 +479,6 @@ C       Assumes variable cr is char vector with UNLIMITED dimension.
         index(1) = NRECS
         call nfmpi_begin_indep_data(ncid, err)
         call nfmpi_put_var1_text(ncid, vid, index, 'x', err)
-        call nfmpi_end_indep_data(ncid, err)
         if (err .ne. 0)
      +      call errore('nfmpi_put_var1_text: ', err)
 
@@ -976,6 +977,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
 
+        call nfmpi_begin_indep_data(ncid, err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -1128,6 +1130,7 @@ C*/
 7               continue
 5           continue
 1       continue
+        call nfmpi_end_indep_data(ncid, err)
 
         call nfmpi_close(ncid, err)
         if (err .ne. 0) 

@@ -744,6 +744,7 @@
             start(j) = 1
 1       continue
 
+        call nfmpi_begin_indep_data(ncid, err)
         do 2, i = 1, NVARS
             allInRange = .true.
             do 3, j = 1, var_nels(i)
@@ -793,6 +794,7 @@
                 end if
             end if
 2       continue
+        call nfmpi_end_indep_data(ncid, err)
         end
 
 
@@ -880,6 +882,7 @@
         integer                 nok             !/* count of valid comparisons */
 
         nok = 0
+        call nfmpi_begin_indep_data(ncid, err)
 
         do 1, i = 1, NVARS
             isChar = var_type(i) .eq. NF_CHAR
@@ -944,6 +947,7 @@
                 end if
 3           continue
 1       continue
+        call nfmpi_end_indep_data(ncid, err)
         call print_nok(nok)
         end
 
