@@ -197,10 +197,6 @@ typedef nc_type ncmpi_type;
 
 # define EXTERNL extern MSC_EXTRA
 
-#if defined(__cplusplus)
-}
-#endif
-
 #include <mpi.h>
 
 /* Begin Prototypes */
@@ -921,4 +917,9 @@ int ncmpi_get_vars_double(int ncid, int varid,
  *  MAX_NC_NAME     NC_MAX_NAME
  *  MAX_VAR_DIMS    NC_MAX_VAR_DIMS
  */
+
+#if defined(__cplusplus)
+}
+#endif
+
 #endif /* _NETCDF_ */

@@ -380,23 +380,15 @@ ncmpi_close(int ncid) {
 
 static int
 length_of_mpitype(MPI_Datatype datatype) {
-  switch(datatype) {
-    case MPI_BYTE:
-    case MPI_CHAR:
-	return ((int)sizeof(char));
-    case MPI_SHORT:
-	return (int)(sizeof(short));
-    case MPI_INT:
-	return((int)sizeof(int)); 
-    case MPI_LONG:
-	return((int)sizeof(long)); 
-    case MPI_FLOAT:
-	return((int)sizeof(float));
-    case MPI_DOUBLE:
-	return((int)sizeof(double));
-    default:
+  if (datatype == MPI_BYTE || datatype == MPI_CHAR)
+      return (int) sizeof(char);
+  else if (datatype == MPI_SHORT)  return (int) sizeof(short);
+  else if (datatype == MPI_INT)    return (int) sizeof(int);
+  else if (datatype == MPI_LONG)   return (int) sizeof(long);
+  else if (datatype == MPI_FLOAT)  return (int) sizeof(float);
+  else if (datatype == MPI_DOUBLE) return (int) sizeof(double);
+  else 
 	fprintf(stderr, "FIXME: unknown type passed to length_of_mpitype\n");
-  }
 
   return -1;
 }
@@ -452,26 +444,19 @@ x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   xp = (void *) xbuf;
   data = (void *) buf;
 
-  switch (datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-        break;
-    case MPI_SHORT:
-	status = ncmpix_putn_schar_short(&xp, nelems, (const short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_putn_schar_int(&xp, nelems, (const int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_putn_schar_long(&xp, nelems, (const long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_putn_schar_float(&xp, nelems, (const float *)data);
-        break;
-    case MPI_DOUBLE:
-	status = ncmpix_putn_schar_double(&xp, nelems, (const double *)data);
-        break;
-  }
+
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_putn_schar_short(&xp, nelems, (const short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_putn_schar_int(&xp, nelems, (const int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_putn_schar_long(&xp, nelems, (const long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_putn_schar_float(&xp, nelems, (const float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_putn_schar_double(&xp, nelems, (const double *)data);
 
   return status;
 }
@@ -486,26 +471,18 @@ x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   data = (void *) buf;
   datainc = length_of_mpitype(datatype);
  
-  switch (datatype) {
-    case MPI_CHAR:
-	status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_putn_short_short(&xp, nelems, (const short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_putn_short_int(&xp, nelems, (const int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_putn_short_long(&xp, nelems, (const long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_putn_short_float(&xp, nelems, (const float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_putn_short_double(&xp, nelems, (const double *)data);
-        break;
-  }
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (dattype == MPI_SHORT)
+      status = ncmpix_putn_short_short(&xp, nelems, (const short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_putn_short_int(&xp, nelems, (const int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_putn_short_long(&xp, nelems, (const long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_putn_short_float(&xp, nelems, (const float *)data);
+  else if (datatype == MPI_DOUBLE)
+     status = ncmpix_putn_short_double(&xp, nelems, (const double *)data);
 
   return status;
 } 
@@ -520,26 +497,18 @@ x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   data = (void *) buf;
   datainc = length_of_mpitype(datatype);
  
-  switch (datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_putn_int_short(&xp, nelems, (const short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_putn_int_int(&xp, nelems, (const int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_putn_int_long(&xp, nelems, (const long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_putn_int_float(&xp, nelems, (const float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_putn_int_double(&xp, nelems, (const double *)data);
-        break;
-  }
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_putn_int_short(&xp, nelems, (const short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_putn_int_int(&xp, nelems, (const int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_putn_int_long(&xp, nelems, (const long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_putn_int_float(&xp, nelems, (const float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_putn_int_double(&xp, nelems, (const double *)data);
 
   return status;
 } 
@@ -554,26 +523,18 @@ x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   data = (void *) buf;
   datainc = length_of_mpitype(datatype);
  
-  switch (datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_putn_float_short(&xp, nelems, (const short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_putn_float_int(&xp, nelems, (const int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_putn_float_long(&xp, nelems, (const long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_putn_float_float(&xp, nelems, (const float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_putn_float_double(&xp, nelems, (const double *)data);
-        break;
-  }
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_putn_float_short(&xp, nelems, (const short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_putn_float_int(&xp, nelems, (const int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_putn_float_long(&xp, nelems, (const long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_putn_float_float(&xp, nelems, (const float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_putn_float_double(&xp, nelems, (const double *)data);
 
   return status;
 } 
@@ -588,26 +549,18 @@ x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
   data = (void *) buf;
   datainc = length_of_mpitype(datatype);  
 
-  switch (datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_putn_double_short(&xp, nelems, (const short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_putn_double_int(&xp, nelems, (const int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_putn_double_long(&xp, nelems, (const long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_putn_double_float(&xp, nelems, (const float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_putn_double_double(&xp, nelems, (const double *)data);
-        break;
-  }
+  if (datatype ==MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_putn_double_short(&xp, nelems, (const short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_putn_double_int(&xp, nelems, (const int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_putn_double_long(&xp, nelems, (const long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_putn_double_float(&xp, nelems, (const float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_putn_double_double(&xp, nelems, (const double *)data);
 
   return status;
 } 
@@ -620,26 +573,18 @@ x_getn_schar(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   xp = (void *) xbuf;
   data = (void *) buf;
 
-  switch (datatype) {
-    case MPI_CHAR:
+  if (datatype == MPI_CHAR)
         status = NC_ECHAR;
-        break;
-    case MPI_SHORT:
-        status = ncmpix_getn_schar_short((const void **)&xp, nelems, (short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_getn_schar_int((const void **)&xp, nelems, (int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_getn_schar_long((const void **)&xp, nelems, (long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_getn_schar_float((const void **)&xp, nelems, (float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_getn_schar_double((const void **)&xp, nelems, (double *)data);
-        break;
-  }
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_getn_schar_short((const void **)&xp, nelems, (short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_getn_schar_int((const void **)&xp, nelems, (int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_getn_schar_long((const void **)&xp, nelems, (long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_getn_schar_float((const void **)&xp, nelems, (float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_getn_schar_double((const void **)&xp, nelems, (double *)data);
 
   return status;
 }
@@ -654,26 +599,18 @@ x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
-  switch(datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_getn_short_short((const void **)&xp, nelems, (short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_getn_short_int((const void **)&xp, nelems, (int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_getn_short_long((const void **)&xp, nelems, (long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_getn_short_float((const void **)&xp, nelems, (float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_getn_short_double((const void **)&xp, nelems, (double *)data);
-        break;
-  }
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_getn_short_short((const void **)&xp, nelems, (short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_getn_short_int((const void **)&xp, nelems, (int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_getn_short_long((const void **)&xp, nelems, (long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_getn_short_float((const void **)&xp, nelems, (float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_getn_short_double((const void **)&xp, nelems, (double *)data);
 
   return status;
 } 
@@ -688,26 +625,18 @@ x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
-  switch(datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_getn_int_short((const void **)&xp, nelems, (short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_getn_int_int((const void **)&xp, nelems, (int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_getn_int_long((const void **)&xp, nelems, (long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_getn_int_float((const void **)&xp, nelems, (float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_getn_int_double((const void **)&xp, nelems, (double *)data);
-        break;
-  }
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_getn_int_short((const void **)&xp, nelems, (short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_getn_int_int((const void **)&xp, nelems, (int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_getn_int_long((const void **)&xp, nelems, (long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_getn_int_float((const void **)&xp, nelems, (float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_getn_int_double((const void **)&xp, nelems, (double *)data);
 
   return status;
 } 
@@ -722,26 +651,18 @@ x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
  
-  switch(datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_getn_float_short((const void **)&xp, nelems, (short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_getn_float_int((const void **)&xp, nelems, (int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_getn_float_long((const void **)&xp, nelems, (long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_getn_float_float((const void **)&xp, nelems, (float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_getn_float_double((const void **)&xp, nelems, (double *)data);
-        break;
-  }
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_getn_float_short((const void **)&xp, nelems, (short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_getn_float_int((const void **)&xp, nelems, (int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_getn_float_long((const void **)&xp, nelems, (long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_getn_float_float((const void **)&xp, nelems, (float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_getn_float_double((const void **)&xp, nelems, (double *)data);
 
   return status;
 }
@@ -756,26 +677,18 @@ x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
   data = (char *) buf;
   datainc = length_of_mpitype(datatype);
                                                                                     
-  switch(datatype) {
-    case MPI_CHAR:
-        status = NC_ECHAR;
-	break;
-    case MPI_SHORT:
-        status = ncmpix_getn_double_short((const void **)&xp, nelems, (short *)data);
-        break;
-    case MPI_INT:
-        status = ncmpix_getn_double_int((const void **)&xp, nelems, (int *)data);
-        break;
-    case MPI_LONG:
-        status = ncmpix_getn_double_long((const void **)&xp, nelems, (long *)data);
-        break;
-    case MPI_FLOAT:
-        status = ncmpix_getn_double_float((const void **)&xp, nelems, (float *)data);
-        break;
-    case MPI_DOUBLE:
-        status = ncmpix_getn_double_double((const void **)&xp, nelems, (double *)data);
-        break;
-  }
+  if (datatype == MPI_CHAR)
+      status = NC_ECHAR;
+  else if (datatype == MPI_SHORT)
+      status = ncmpix_getn_double_short((const void **)&xp, nelems, (short *)data);
+  else if (datatype == MPI_INT)
+      status = ncmpix_getn_double_int((const void **)&xp, nelems, (int *)data);
+  else if (datatype == MPI_LONG)
+      status = ncmpix_getn_double_long((const void **)&xp, nelems, (long *)data);
+  else if (datatype == MPI_FLOAT)
+      status = ncmpix_getn_double_float((const void **)&xp, nelems, (float *)data);
+  else if (datatype == MPI_DOUBLE)
+      status = ncmpix_getn_double_double((const void **)&xp, nelems, (double *)data);
 
   return status;
 }
