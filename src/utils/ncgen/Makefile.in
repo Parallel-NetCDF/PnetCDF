@@ -1,16 +1,17 @@
-# Makefile for ncgen(1).
+# Makefile for ncmpigen(1).
 #
 # $Id$
 
 srcdir = @srcdir@
 VPATH = @srcdir@
+INSTALL = @INSTALL@
 
 include ../../../macros.make
 
-NCDUMP		= ../ncdump/ncdump
-PROGRAM		= ncgen
+NCDUMP		= ../ncdump/ncmpidump
+PROGRAM		= ncmpigen
 INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir) -I.
-MANUAL		= ncgen.1
+MANUAL		= ncmpigen.1
 GARBAGE		= $(PROGRAM) \
 		  pnetcdf.inc \
 		  c0.nc c1.cdl c1.nc c2.cdl \
@@ -24,7 +25,7 @@ ld_netcdf	= -L../../../src/lib -lpnetcdf
 PACKING_LIST	= Makefile.in depend escapes.c generic.h \
 		  ncgenyy.c ncgentab.c ncgentab.h \
 		  genlib.c genlib.h getfill.c init.c load.c \
-		  main.c ncgen.1 ncgen.h ncgen.l ncgen.y c0.cdl
+		  main.c ncmpigen.1 ncgen.h ncgen.l ncgen.y c0.cdl
 
 OBJS		= main.o load.o ncgentab.o escapes.o \
 		  getfill.o init.o genlib.o
@@ -41,7 +42,12 @@ all:		$(PROGRAM)
 #test:           $(PROGRAM) b-test c-test f-test FORCE
 test:           $(PROGRAM) b-test c-test FORCE
 
-install:	$(BINDIR)/$(PROGRAM) $(MANDIR)/man1/$(MANUAL)
+install:	
+	$(INSTALL) -d -m 755 $(MANDIR)/man1
+	$(INSTALL) -m 644 $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
+
+	$(INSTALL) -d $(BINDIR)
+	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
 uninstall:
 	-rm -f $(BINDIR)/$(PROGRAM)
