@@ -471,8 +471,8 @@ load_netcdf(
 {
     int idim;
     int stat;
-    size_t start[NC_MAX_VAR_DIMS];
-    size_t count[NC_MAX_VAR_DIMS];
+    MPI_Offset start[NC_MAX_VAR_DIMS];
+    MPI_Offset count[NC_MAX_VAR_DIMS];
     char *charvalp;
     short *shortvalp;
     int *intvalp;

@@ -32,26 +32,26 @@ static void printdval(char* sout, const char* fmt, const struct ncvar* varp,
 		      double val);
 static void lastdelim(boolean  more, boolean lastrow);
 static void annotate(const struct ncvar* vp, const struct fspec* fsp,
-		     const size_t* cor, long iel);
+		     const MPI_Offset* cor, long iel);
 static void pr_tvals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const char *vals,
-		     const struct fspec* fsp, const size_t *cor);
+		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_bvals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const signed char *vals,
-		     const struct fspec* fsp, const size_t *cor);
+		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_svals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const short *vals,
-		     const struct fspec* fsp, const size_t *cor);
+		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_ivals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const int *vals,
-		     const struct fspec* fsp, const size_t *cor);
+		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_fvals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const float *vals,
-		     const struct fspec* fsp, const size_t *cor);
+		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_dvals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const double *vals,
-		     const struct fspec* fsp, const size_t *cor);
-static int  upcorner(const size_t* dims, int ndims, size_t* odom,
+		     const struct fspec* fsp, const MPI_Offset *cor);
+static int  upcorner(const size_t* dims, int ndims, MPI_Offset* odom,
 		     const size_t* add);
 static void lastdelim2 (boolean more, boolean lastrow);
 
@@ -298,7 +298,7 @@ static void
 annotate(
      const struct ncvar *vp,	/* variable */
      const struct fspec* fsp,	/* formatting specs */
-     const size_t *cor,		/* corner coordinates */
+     const MPI_Offset *cor,		/* corner coordinates */
      long iel			/* which element in current row */
      )
 {
@@ -345,7 +345,7 @@ pr_tvals(
 				 * of "," */
      const char *vals,		/* pointer to block of values */
      const struct fspec* fsp,	/* formatting specs */
-     const size_t *cor		/* corner coordinates */
+     const MPI_Offset *cor 		/* corner coordinates */
      )
 {
     long iel;
@@ -399,14 +399,14 @@ pr_tvals(
 	if (fsp->full_data_cmnts) {
 	    Printf("\"");
 	    lastdelim (more, lastrow);
-	    annotate (vp, fsp,  (size_t *)cor, 0L);
+	    annotate (vp, fsp,  (MPI_Offset*)cor, 0L);
 	}
     } else {		/* use format from C_format attribute */
 	for (iel = 0; iel < len-1; iel++) {
 	    if (fsp->full_data_cmnts) {
 		Printf(fmt, *vals++);
 		Printf(", ");
-		annotate (vp, fsp,  (size_t *)cor, iel);
+		annotate (vp, fsp,  (MPI_Offset *)cor, iel);
 	    } else {
 		(void) sprintf(sout, fmt, *vals++);
 		(void) strcat(sout, ", ");
@@ -416,7 +416,7 @@ pr_tvals(
 	if (fsp->full_data_cmnts) {
 	    Printf(fmt, *vals++);
 	    lastdelim (more, lastrow);
-	    annotate (vp, fsp,  (size_t *)cor, iel);
+	    annotate (vp, fsp,  (MPI_Offset *)cor, iel);
 	} else {
 	    (void) sprintf(sout, fmt, *vals++);
 	    lput(sout);
@@ -447,7 +447,7 @@ pr_bvals(
 				 * of "," */
      const signed char *vals,	/* pointer to block of values */
      const struct fspec* fsp,	/* formatting specs */
-     const size_t *cor		/* corner coordinates */
+     const MPI_Offset *cor		/* corner coordinates */
      )
 {
     long iel;
@@ -495,7 +495,7 @@ pr_svals(
 				 * of "," */
      const short *vals,		/* pointer to block of values */
      const struct fspec* fsp,	/* formatting specs */
-     const size_t *cor		/* corner coordinates */
+     const MPI_Offset *cor		/* corner coordinates */
      )
 {
     long iel;
@@ -545,7 +545,7 @@ pr_ivals(
 				 * of "," */
      const int *vals,		/* pointer to block of values */
      const struct fspec* fsp,	/* formatting specs */
-     const size_t *cor		/* corner coordinates */
+     const MPI_Offset *cor		/* corner coordinates */
      )
 {
     long iel;
@@ -593,7 +593,7 @@ pr_fvals(
 				 * of "," */
      const float *vals,		/* pointer to block of values */
      const struct fspec* fsp,	/* formatting specs */
-     const size_t *cor		/* corner coordinates */
+     const MPI_Offset *cor		/* corner coordinates */
      )
 {
     long iel;
@@ -641,7 +641,7 @@ pr_dvals(
 				 * of "," */
      const double *vals,	/* pointer to block of values */
      const struct fspec* fsp,	/* formatting specs */
-     const size_t *cor		/* corner coordinates */
+     const MPI_Offset *cor		/* corner coordinates */
      )
 {
     long iel;
@@ -678,7 +678,7 @@ static int
 upcorner(
      const size_t *dims,	/* The "odometer" limits for each dimension */
      int ndims,			/* Number of dimensions */
-     size_t* odom,		/* The "odometer" vector to be updated */
+     MPI_Offset* odom,		/* The "odometer" vector to be updated */
      const size_t* add		/* A vector to "add" to odom on each update */
      )
 {
@@ -709,8 +709,8 @@ vardata(
      const struct fspec* fsp	/* formatting specs */
      )
 {
-    size_t cor[NC_MAX_DIMS];	/* corner coordinates */
-    size_t edg[NC_MAX_DIMS];	/* edges of hypercube */
+    MPI_Offset cor[NC_MAX_DIMS];	/* corner coordinates */
+    MPI_Offset edg[NC_MAX_DIMS];	/* edges of hypercube */
     size_t add[NC_MAX_DIMS];	/* "odometer" increment to next "row"  */
 #define VALBUFSIZ 1000
     double vals[VALBUFSIZ] ; /* aligned buffer */
