@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <float.h>
+#include <unistd.h>
 #include <mpinetcdf_impl.h>
 
 
@@ -217,10 +218,22 @@ FORTRAN_API int nfmpi_issyserr_(int * A1) {
 #define nfmpi_delete_  nfmpi_delete
 /* Else leave name alone */
 #endif
-FORTRAN_API int nfmpi_delete_(char * name, int *err) {
-	if ( remove(name) != 0 )
+FORTRAN_API void nfmpi_delete_(char * name, int *err, int d1) {
+    char *p1;
+
+    {char *p = name + d1 - 1;
+     int  li;
+        while (*p == ' ' && p > name) p--;
+        p++;
+        p1 = (char *)malloc( p-name + 1 );
+        for (li=0; li<(p-name); li++) { p1[li] = name[li]; }
+        p1[li] = 0; 
+    }
+
+	if ( unlink(p1) != 0 )
 		*err = errno;
 	else
 		*err = 0;
+	free(p1);
 }
 

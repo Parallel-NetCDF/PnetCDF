@@ -308,6 +308,7 @@ C               /* Check that inquire still works in define mode */
                 else if (ngatts .ne. ngatts0) then
                     call errori(
      +              'nfmpi_inq in define mode: ngatts wrong, ', ngatts)
+                    print *, ' expected ', ngatts0
                 else if (recdim .ne. recdim0) then
                     call errori
      +              ('nfmpi_inq in define mode: recdim wrong, ', recdim)
@@ -340,6 +341,7 @@ C               /* Make sure nfmpi_inq sees the additions while in define mode *
                 else if (ngatts .ne. ngatts0 + 1) then
                     call errori
      +              ('nfmpi_inq in define mode: ngatts wrong, ', ngatts)
+                    print *, ' expected (added attr)', ngatts0 + 1
                 end if
                 call nfmpi_enddef(ncid2, err)
                 if (err .ne. 0)
@@ -475,6 +477,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         else if (unlimdim .ne. RECDIM) then
             call errori
      +      ('nfmpi_inq_unlimdim: wrong number returned, ', unlimdim)
+            print *, 'expected ', RECDIM
         end if
         call nfmpi_close(ncid, err)
         if (err .ne. 0)
@@ -723,6 +726,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
             else if (.not.int_vec_eq(var_dimid(1,i), dimids, 
      +               var_rank(i))) then
                 call error('unexpected dimid')
+                print *, ' for variable ', i
             end if
 1       continue
         call nfmpi_close(ncid, err)
