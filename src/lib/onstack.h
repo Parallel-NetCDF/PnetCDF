@@ -46,16 +46,6 @@
 
 # define FREE_ONSTACK(name)
 
-#elif defined(_CRAYC) && !__cplusplus && __STDC__ > 1
-/*
- * Cray C allows sizing of arrays with non-constant values.
- */
-
-# define ALLOC_ONSTACK(name, type, nelems) \
-	type name[nelems]
-
-# define FREE_ONSTACK(name)
-
 #else
 /*
  * Default implementation. When all else fails, use malloc/free.

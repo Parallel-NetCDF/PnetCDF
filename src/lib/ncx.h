@@ -28,11 +28,6 @@
 #include <errno.h>
 #include <sys/types.h> /* off_t */
 
-#if defined(_CRAY) && !defined(_CRAYIEEE)
-#define CRAYFLOAT 1 /* CRAY Floating point */
-#elif defined(_SX) && defined(_FLOAT2)	/* NEC SUPER-UX in CRAY mode */
-#define CRAYFLOAT 1 /* CRAY Floating point */
-#endif
 
 /*
  * The integer return code for the conversion routines
@@ -92,13 +87,8 @@
 #define X_FLOAT_MAX	3.40282347e+38f
 #define X_FLOAT_MIN	(-X_FLOAT_MAX)
 #define X_FLT_MAX	X_FLOAT_MAX	/* alias compatible with limits.h */
-#if CRAYFLOAT
-/* ldexp(1. - ldexp(.5 , -46), 1024) */
-#define X_DOUBLE_MAX    1.79769313486230e+308
-#else
 /* scalb(1. - scalb(.5 , -52), 1024) */
 #define X_DOUBLE_MAX	1.7976931348623157e+308 
-#endif
 #define X_DOUBLE_MIN	(-X_DOUBLE_MAX)
 #define X_DBL_MAX	X_DOUBLE_MAX	/* alias compatible with limits.h */
 

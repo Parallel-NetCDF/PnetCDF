@@ -328,15 +328,6 @@ nc_rename_var(int ncid, int varid, const char *newname);
 #define IS_RECVAR(vp) \
 	((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
-#ifdef LOCKNUMREC
-/*
- * typedef SHMEM type
- * for whenever the SHMEM functions can handle other than shorts
- */
-typedef unsigned short int	ushmem_t;
-typedef short int		 shmem_t;
-#endif
-
 struct NC {
 	/* links to make list of open netcdf's */
 	struct NC *next;
@@ -399,21 +390,14 @@ struct NC {
 #define NC_doNsync(ncp) \
 	fIsSet((ncp)->flags, NC_NSYNC)
 
-#ifndef LOCKNUMREC
-#  define NC_get_numrecs(ncp) \
+#define NC_get_numrecs(ncp) \
 	((ncp)->numrecs)
 
-#  define NC_set_numrecs(ncp, nrecs) \
+#define NC_set_numrecs(ncp, nrecs) \
 	{((ncp)->numrecs = (nrecs));}
 
-#  define NC_increase_numrecs(ncp, nrecs) \
+#define NC_increase_numrecs(ncp, nrecs) \
 	{if((nrecs) > (ncp)->numrecs) ((ncp)->numrecs = (nrecs));}
-#else
-	size_t NC_get_numrecs(const NC *ncp);
-	void   NC_set_numrecs(NC *ncp, size_t nrecs);
-	void   NC_increase_numrecs(NC *ncp, size_t nrecs);
-#endif
-
 /* Begin defined in nc.c */
 
 extern int

@@ -10,10 +10,6 @@
 #include <string.h>
 #include <assert.h>
 #include "ncx.h"
-#if defined(LOCKNUMREC) /* && _CRAYMPP */
-#  include <mpp/shmem.h>
-#  include <intrinsics.h>
-#endif
 
 /* list of open netcdf's */
 static NC *NClist = NULL;
@@ -118,11 +114,7 @@ free_NC(NC *ncp)
 	free_NC_dimarrayV(&ncp->dims);
 	free_NC_attrarrayV(&ncp->attrs);
 	free_NC_vararrayV(&ncp->vars);
-#if _CRAYMPP && defined(LOCKNUMREC)
-	shfree(ncp);
-#else
 	free(ncp);
-#endif /* _CRAYMPP && LOCKNUMREC */
 }
 
 
@@ -132,11 +124,7 @@ new_NC(const size_t *chunkp)
 {
 	NC *ncp;
 
-#if _CRAYMPP && defined(LOCKNUMREC)
-	ncp = (NC *) shmalloc(sizeof(NC));
-#else
 	ncp = (NC *) malloc(sizeof(NC));
-#endif /* _CRAYMPP && LOCKNUMREC */
 	if(ncp == NULL)
 		return NULL;
 	(void) memset(ncp, 0, sizeof(NC));
@@ -156,11 +144,7 @@ dup_NC(const NC *ref)
 {
 	NC *ncp;
 
-#if _CRAYMPP && defined(LOCKNUMREC)
-	ncp = (NC *) shmalloc(sizeof(NC));
-#else
 	ncp = (NC *) malloc(sizeof(NC));
-#endif /* _CRAYMPP && LOCKNUMREC */
 	if(ncp == NULL)
 		return NULL;
 	(void) memset(ncp, 0, sizeof(NC));
@@ -686,21 +670,6 @@ enddef(NC *ncp)
 }
 
 
-#ifdef LOCKNUMREC
-static int
-NC_init_pe(NC *ncp, int basepe) {
-	if (basepe < 0 || basepe >= _num_pes()) {
-		return NC_EINVAL; /* invalid base pe */
-	}
-	/* initialize common values */
-	ncp->lock[LOCKNUMREC_VALUE] = 0;
-	ncp->lock[LOCKNUMREC_LOCK] = 0;
-	ncp->lock[LOCKNUMREC_SERVING] = 0;
-	ncp->lock[LOCKNUMREC_BASEPE] =  basepe;
-	return NC_NOERR;
-}
-#endif
-
 /* Public */
 
 int 
@@ -898,93 +867,4 @@ nc_set_fill(int ncid,
 	return NC_NOERR;
 }
 
-#ifdef LOCKNUMREC
-
-/* create function versions of the NC_*_numrecs macros */
-size_t NC_get_numrecs(const NC *ncp) {
-	shmem_t numrec;
-	shmem_short_get(&numrec, (shmem_t *) ncp->lock + LOCKNUMREC_VALUE, 1,
-		ncp->lock[LOCKNUMREC_BASEPE]);
-	return (size_t) numrec;
-}
-
-void NC_set_numrecs(NC *ncp, size_t nrecs) {
-	shmem_t numrec = (shmem_t) nrecs;
-	/* update local value too */
-	ncp->lock[LOCKNUMREC_VALUE] = (ushmem_t) numrec;
-	shmem_short_put((shmem_t *) ncp->lock + LOCKNUMREC_VALUE, &numrec, 1,
-		ncp->lock[LOCKNUMREC_BASEPE]);
-}
-
-void NC_increase_numrecs(NC *ncp, size_t nrecs) {
-	/* this is only called in one place that's already protected
-	 * by a lock ... so don't worry about it */
-	if (nrecs > NC_get_numrecs(ncp))
-		NC_set_numrecs(ncp, nrecs);
-}
-
-#endif /* LOCKNUMREC */
-
-/* everyone in communicator group will be executing this */
 /*ARGSUSED*/
-int
-nc_set_base_pe(int ncid, int pe)
-{
-#if _CRAYMPP && defined(LOCKNUMREC)
-	int status;
-	NC *ncp;
-	shmem_t numrecs;
-
-	if ((status = NC_check_id(ncid, &ncp)) != NC_NOERR) {
-		return status;
-	}
-	if (pe < 0 || pe >= _num_pes()) {
-		return NC_EINVAL; /* invalid base pe */
-	}
-
-	numrecs = (shmem_t) NC_get_numrecs(ncp);
-
-	ncp->lock[LOCKNUMREC_VALUE] = (ushmem_t) numrecs;
-
-	/* update serving & lock values for a "smooth" transition */
-	/* note that the "real" server will being doing this as well */
-	/* as all the rest in the group */
-	/* must have syncronization before & after this step */
-	shmem_short_get(
-		(shmem_t *) ncp->lock + LOCKNUMREC_SERVING,
-		(shmem_t *) ncp->lock + LOCKNUMREC_SERVING,
-		1, ncp->lock[LOCKNUMREC_BASEPE]);
-
-	shmem_short_get(
-		(shmem_t *) ncp->lock + LOCKNUMREC_LOCK,
-		(shmem_t *) ncp->lock + LOCKNUMREC_LOCK,
-		1, ncp->lock[LOCKNUMREC_BASEPE]);
-
-	/* complete transition */
-	ncp->lock[LOCKNUMREC_BASEPE] = (ushmem_t) pe;
-
-#endif /* _CRAYMPP && LOCKNUMREC */
-	return NC_NOERR;
-}
-
-/*ARGSUSED*/
-int
-nc_inq_base_pe(int ncid, int *pe)
-{
-#if _CRAYMPP && defined(LOCKNUMREC)
-	int status;
-	NC *ncp;
-
-	if ((status = NC_check_id(ncid, &ncp)) != NC_NOERR) {
-		return status;
-	}
-
-	*pe = (int) ncp->lock[LOCKNUMREC_BASEPE];
-#else
-	/*
-	 * !_CRAYMPP, only pe 0 is valid
-	 */
-	*pe = 0;
-#endif /* _CRAYMPP && LOCKNUMREC */
-	return NC_NOERR;
-}
