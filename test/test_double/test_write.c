@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <netcdf.h>
 #include <string.h>
+#include "testutils.h"
 
 void handle_error(int status) {
   fprintf(stderr, "%s\n", ncmpi_strerror(status));
@@ -63,7 +64,6 @@ int main(int argc, char **argv) {
   int i, j, k;
   int status;
   int ncid;
-  static char *outfilename = "pvfs:testwrite.nc";
   int dimid1, dimid2, dimid3, udimid;
   int square_dim[2], cube_dim[3], xytime_dim[3], time_dim[1];
   size_t square_start[2], cube_start[3] = {0, 0, 0};
@@ -80,13 +80,15 @@ int main(int argc, char **argv) {
   int rank;
   int nprocs;
   MPI_Comm comm = MPI_COMM_WORLD;
+  params opts;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-if (rank == 0) 
-  fprintf(stderr, "Testing write ... ");
+  if (rank == 0) 
+	  fprintf(stderr, "Testing write ... ");
+  parse_write_args(argc, argv, rank, &opts);
 
   /**********  START OF NETCDF ACCESS **************/
 
@@ -96,7 +98,7 @@ if (rank == 0)
    *   Dataset API: Collective
    */
 
-  status = ncmpi_create(comm, outfilename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid);
   if (status != NC_NOERR) handle_error(status);
 
 
@@ -230,7 +232,7 @@ if (rank == 0)
   /*******************  END OF NETCDF ACCESS  ****************/
 
 if (rank == 0)
-  fprintf(stderr, "OK\nFile written to: %s!\n", outfilename);
+  fprintf(stderr, "OK\nFile written to: %s!\n", opts.outfname);
 
   MPI_Finalize();
   return 0;
