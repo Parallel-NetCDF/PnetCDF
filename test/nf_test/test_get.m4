@@ -49,7 +49,7 @@ define([TEST_NFMPI_GET_VAR1],[dnl
         integer j
         integer err
         integer nok      
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
         doubleprecision expect
         logical canConvert     
         DATATYPE($1)    value
@@ -149,7 +149,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
         logical allInIntRange   
         integer nels
         integer nok      
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
         doubleprecision expect(MAX_NELS)
         logical canConvert     
         DATATYPE($1)    value(MAX_NELS)
@@ -249,10 +249,10 @@ define([TEST_NFMPI_GET_VARA],[dnl
         integer nels
         integer nslabs
         integer nok      
-        INTEGER(KIND=MPI_OFFSET_KIND) start(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) edge(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) mid(MAX_RANK)
+        NFMPI_LONG_T start(MAX_RANK)
+        NFMPI_LONG_T edge(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
+        NFMPI_LONG_T mid(MAX_RANK)
         logical canConvert     
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision expect(MAX_NELS)
@@ -451,14 +451,14 @@ define([TEST_NFMPI_GET_VARS],dnl
         integer nslabs
         integer nstarts         
         integer nok             
-        INTEGER(KIND=MPI_OFFSET_KIND) start(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) edge(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index2(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) mid(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) count(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) stride(MAX_RANK)
+        NFMPI_LONG_T start(MAX_RANK)
+        NFMPI_LONG_T edge(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
+        NFMPI_LONG_T index2(MAX_RANK)
+        NFMPI_LONG_T mid(MAX_RANK)
+        NFMPI_LONG_T count(MAX_RANK)
+        NFMPI_LONG_T sstride(MAX_RANK)
+        NFMPI_LONG_T stride(MAX_RANK)
         logical canConvert     
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision expect(MAX_NELS)
@@ -678,15 +678,15 @@ define([TEST_NFMPI_GET_VARM],dnl
         integer nslabs
         integer nstarts         
         integer nok             
-        INTEGER(KIND=MPI_OFFSET_KIND) start(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) edge(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index2(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) mid(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) count(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) stride(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) imap(MAX_RANK)
+        NFMPI_LONG_T start(MAX_RANK)
+        NFMPI_LONG_T edge(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
+        NFMPI_LONG_T index2(MAX_RANK)
+        NFMPI_LONG_T mid(MAX_RANK)
+        NFMPI_LONG_T count(MAX_RANK)
+        NFMPI_LONG_T sstride(MAX_RANK)
+        NFMPI_LONG_T stride(MAX_RANK)
+        NFMPI_LONG_T imap(MAX_RANK)
         logical canConvert     
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision expect(MAX_NELS)
@@ -905,7 +905,7 @@ define([TEST_NFMPI_GET_ATT],dnl
         integer j
         integer k
         integer err
-        INTEGER(KIND=MPI_OFFSET_KIND) ndx(1)
+        NFMPI_LONG_T ndx(1)
         logical allInExtRange
         logical allInIntRange
         logical canConvert     
