@@ -250,6 +250,11 @@ chmod u+x ${srcdir}/scripts/install-sh
 
 AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nc_test2/Makefile test/nf_test/Makefile test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile src/utils/ncgen/Makefile)
 
+dnl generate a f77-friendly pnetcdf.inc
+AC_OUTPUT_COMMANDS([ sed -e 's%/\*%C%' -e 's%\*/%%' <src/libf/pnetcdf.inc>pnetcdf.inc && mv pnetcdf.inc src/libf])
+dnl generate a f90-friendly pnetcdf.inc
+AC_OUTPUT_COMMANDS([ sed -e 's%/\*%!%' -e 's%\*/%%' <src/libf/pnetcdf.inc>pnetcdf.inc && mv pnetcdf.inc src/libf/pnetcdf90.inc])
+
 if test "$enable_mpi_io_test" != "yes" ; then
 	AC_MSG_WARN([
 "NOTE: disabling the MPI-IO test is a VERY bad idea. Please make sure you know what you are doing"])
