@@ -24,7 +24,7 @@
 FORTRAN_API int FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, int *v4, MPI_Fint *v5, MPI_Fint *v6 FORT_END_LEN(d2) ){
     int ierr;
     char *p2;
-    size_t *l5=0;
+    int *l5=0;
     int ln5;
 
     {char *p = v2 + d2 - 1;
@@ -39,7 +39,7 @@ FORTRAN_API int FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2),
     { ln5 = *v4;
     if (ln5 > 0) {
         int li;
-        l5 = (size_t *)malloc( ln5 * sizeof(int) );
+        l5 = (int *)malloc( ln5 * sizeof(int) );
         for (li=0; li<ln5; li++) 
             l5[li] = v5[ln5-li-1]-1;
       }}

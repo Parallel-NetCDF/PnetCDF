@@ -24,7 +24,7 @@
 FORTRAN_API int FORT_CALL nfmpi_def_dim_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, MPI_Fint *v4 FORT_END_LEN(d2) ){
     int ierr;
     char *p2;
-    size_t l3 = (size_t)*v3;
+    MPI_Offset l3 = (MPI_Offset)*v3;
 
     {char *p = v2 + d2 - 1;
      int  li;

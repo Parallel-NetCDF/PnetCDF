@@ -25,7 +25,7 @@ FORTRAN_API int FORT_CALL nfmpi_put_att_long_ ( int *v1, int *v2, char *v3 FORT_
     int ierr;
     int l2 = *v2 - 1;
     char *p3;
-    size_t l5 = (size_t)*v5;
+    MPI_Offset l5 = (MPI_Offset)*v5;
 
     {char *p = v3 + d3 - 1;
      int  li;

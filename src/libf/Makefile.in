@@ -23,8 +23,8 @@ MANUAL	=
 LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	createf.c def_dimf.c def_varf.c del_attf.c enddeff.c \
 	end_indep_dataf.c get_att_doublef.c get_att_realf.c \
-	get_att_intf.c get_att_longf.c get_att_scharf.c get_att_int2f.c \
-	get_att_textf.c get_att_ucharf.c get_var1_doublef.c \
+	get_att_intf.c get_att_longf.c get_att_int1f.c get_att_int2f.c \
+	get_att_textf.c get_var1_doublef.c \
 	get_var1f.c get_var1_realf.c get_var1_intf.c get_var1_int2f.c \
 	get_var1_textf.c get_vara_allf.c get_vara_double_allf.c \
 	get_vara_doublef.c get_varaf.c get_vara_real_allf.c \
@@ -44,8 +44,8 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	inq_unlimdimf.c inq_vardimidf.c inq_varf.c inq_varidf.c \
 	inq_varnamef.c inq_varnattsf.c inq_varndimsf.c inq_vartypef.c \
 	openf.c put_att_doublef.c put_att_realf.c put_att_intf.c \
-	put_att_longf.c put_att_scharf.c put_att_int2f.c put_att_textf.c \
-	put_att_ucharf.c put_var1_doublef.c put_var1f.c put_var1_realf.c \
+	put_att_longf.c put_att_int1f.c put_att_int2f.c put_att_textf.c \
+	put_var1_doublef.c put_var1f.c put_var1_realf.c \
 	put_var1_intf.c put_var1_int2f.c put_var1_textf.c put_vara_allf.c \
 	put_vara_double_allf.c put_vara_doublef.c put_varaf.c \
 	put_vara_real_allf.c put_vara_realf.c put_vara_int_allf.c \
@@ -58,15 +58,15 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	put_vars_int2f.c put_vars_text_allf.c put_vars_textf.c \
 	put_var_textf.c redeff.c rename_attf.c rename_dimf.c \
 	rename_varf.c syncf.c nfxutil.c xstrerrorf.c \
-	get_var1_scharf.c get_var1_ucharf.c get_var_schar_allf.c \
-	get_var_scharf.c get_var_uchar_allf.c get_var_ucharf.c \
-	get_vara_schar_allf.c get_vara_scharf.c get_vara_uchar_allf.c \
-	get_vara_ucharf.c get_vars_schar_allf.c get_vars_scharf.c \
-	get_vars_uchar_allf.c get_vars_ucharf.c put_var1_scharf.c \
-	put_var1_ucharf.c put_var_scharf.c put_var_ucharf.c \
-	put_vara_schar_allf.c put_vara_scharf.c put_vara_uchar_allf.c \
-	put_vara_ucharf.c put_vars_schar_allf.c put_vars_scharf.c \
-	put_vars_uchar_allf.c put_vars_ucharf.c
+	get_var1_int1f.c get_var_int1_allf.c \
+	get_var_int1f.c \
+	get_vara_int1_allf.c get_vara_int1f.c \
+	get_vars_int1_allf.c get_vars_int1f.c \
+	put_var1_int1f.c \
+	put_var_int1f.c \
+	put_vara_int1_allf.c put_vara_int1f.c \
+	put_vars_int1_allf.c put_vars_int1f.c
+	
 
 LIB_FSRCS = strerrorf.f
 PACKING_LIST = \
