@@ -589,9 +589,9 @@
           do ii = 1, locsiz_3d(1)
 
              tt(ind) =
-     &         (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 + (jj - 1) +
-     &                            totsiz_3d(2)*(kstart-1 + (kk-1)))) *
-     &         1.0d-3
+     &         (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 + 
+     &                 (jj - 1) + totsiz_3d(2)*(kstart-1 + 
+     &                 (kk-1)))) * 1.0d-3
              ind = ind + 1
 
           end do
