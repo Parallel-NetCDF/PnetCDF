@@ -236,13 +236,13 @@ int main( int argc, char **argv )
      MPI_Offset a;
      FILE *f = fopen("conftestval", "w" );
      if (! f) exit(1);
-     fprintf( f, "%ld\n", (long)sizeof(MPI_Offset) );
+     fprintf( f, "%ld\n", (long)sizeof(a) );
      fclose(f);
      return 0;
 }
 EOF
 
-if $MPICC -c conftest.c && $CC -o conftest conftest.o ; then
+if $MPICC -c conftest.c && $MPICC -o conftest conftest.o ; then
         if ./conftest ; then
                  #success
                  ac_cv_sizeof_MPI_Offset=`cat conftestval`
