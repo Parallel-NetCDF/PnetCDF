@@ -25,19 +25,13 @@ FORTRAN_API void FORT_CALL nfmpi_put_var1_text_ ( int *v1, int *v2, int v3[], ch
     size_t *l3;
     char *p4;
 
-#ifdef HAVE_SIZET_LARGER_THAN_FINT
     { int ln = ncxVardim(*v1,*v2);
     if (ln > 0) {
         int li;
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l3[li] = v3[li];
+            l3[li] = v3[ln-1-li];
     }
-    else l3 = 0;
-    }
-#else 
-    l3 = v3;
-#endif
 
     {char *p = v4 + d4 - 1;
      int  li;
@@ -49,8 +43,6 @@ FORTRAN_API void FORT_CALL nfmpi_put_var1_text_ ( int *v1, int *v2, int v3[], ch
     }
     *ierr = ncmpi_put_var1_text( *v1, *v2, l3, p4 );
 
-#ifdef HAVE_SIZET_LARGER_THAN_FINT
     if (l3) { free(l3); }
-#endif
     free( p4 );
 }
