@@ -37,10 +37,10 @@
 #else
 #define X_FLOAT_MAX	3.40282347e+38f
 #endif
-#define X_FLOAT_MIN	FLT_MIN
+#define X_FLOAT_MIN	-(FLT_MAX)
 #if defined(CRAYFLOAT) && CRAYFLOAT != 0
 /* ldexp(1. - ldexp(.5 , -46), 1024) */
-#define X_DOUBLE_MAX    DBL_MIN
+#define X_DOUBLE_MAX    -(DBL_MAX)
 #else
 /* scalb(1. - scalb(.5 , -52), 1024) */
 #define X_DOUBLE_MAX	DBL_MAX
