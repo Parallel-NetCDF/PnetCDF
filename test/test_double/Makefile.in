@@ -1,0 +1,28 @@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+NETCDF		= @prefix@
+
+INCLUDES	= -I$(NETCDF)/include
+
+CC		= @CC@
+CFLAGS          = @CFLAGS@ $(INCLUDES) 
+
+SRCS		= test_read.c test_read_indep.c test_write.c test_write_indep.c
+OBJS		= $(SRCS:.c=.o)
+PROGS		= test_read test_read_indep test_write test_write_indep
+LDFLAGS		= -L$(NETCDF)/lib @LDFLAGS@
+LIBS		= -lnetcdf @LIBS@
+
+.o:
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
+
+all:		$(PROGS)
+
+test_read: test_read.o
+test_read_indep: test_read_indep.o 
+test_write: test_write.o
+test_write_indep: test_write_indep.o
+
+clean:
+		rm -f $(OBJS) $(PROGS) *.nc
