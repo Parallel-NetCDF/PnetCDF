@@ -22,10 +22,11 @@
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_get_vara_int2_all_ ( int *v1, int *v2, int v3[], int v4[], short*v5, MPI_Fint *ierr ){
+    int l2 = *v2 - 1;
     size_t *l3 = 0;
     size_t *l4 = 0;
 
-    { int ln = ncmpixVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2-1);
     if (ln > 0) {
         int li;
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
@@ -39,7 +40,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vara_int2_all_ ( int *v1, int *v2, int v3[]
     }
     }
 
-    { int ln = ncmpixVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2-1);
     if (ln > 0) {
         int li;
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
@@ -52,7 +53,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vara_int2_all_ ( int *v1, int *v2, int v3[]
 	return;
     }
     }
-    *ierr = ncmpi_get_vara_short_all( *v1, *v2, l3, l4, v5 );
+    *ierr = ncmpi_get_vara_short_all( *v1, l2, l3, l4, v5 );
 
     if (l3) { free(l3); }
 
