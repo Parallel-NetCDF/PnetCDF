@@ -23,16 +23,5 @@
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_put_var_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *ierr FORT_END_LEN(d3) ){
     int l2 = *v2 - 1;
-    char *p3;
-
-    {char *p = v3 + d3 - 1;
-     int  li;
-        while (*p == ' ' && p > v3) p--;
-        p++;
-        p3 = (char *)malloc( p-v3 + 1 );
-        for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
-        p3[li] = 0; 
-    }
-    *ierr = ncmpi_put_var_text( *v1, l2, p3 );
-    free( p3 );
+    *ierr = ncmpi_put_var_text( *v1, l2, v3 );
 }
