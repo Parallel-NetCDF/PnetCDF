@@ -41,9 +41,9 @@ int main (int argc, char *argv[]) {
   ierr = ncmpi_create (comm_cart, "pnc_test.nc", NC_CLOBBER, MPI_INFO_NULL,
                        &ncid);
 
-  ierr = ncmpi_def_dim (ncid, "level",     (size_t) TOTSIZ_3D[0], &lev_id);
-  ierr = ncmpi_def_dim (ncid, "latitude",  (size_t) TOTSIZ_3D[1], &lat_id);
-  ierr = ncmpi_def_dim (ncid, "longitude", (size_t) TOTSIZ_3D[2], &lon_id);
+  ierr = ncmpi_def_dim (ncid, "level",     (MPI_Offset) TOTSIZ_3D[0], &lev_id);
+  ierr = ncmpi_def_dim (ncid, "latitude",  (MPI_Offset) TOTSIZ_3D[1], &lat_id);
+  ierr = ncmpi_def_dim (ncid, "longitude", (MPI_Offset) TOTSIZ_3D[2], &lon_id);
 
   dim_id[0] = lev_id;
   dim_id[1] = lat_id;

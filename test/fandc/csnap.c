@@ -28,11 +28,11 @@
 
 /*** Field parameters ***/
 
-const int totsiz_3d[3] = { 256, 256, 256 }; /* global sizes of 3D field */
-int totsiz_2d[2];                           /* global sizes of 2D field */
-int locsiz_3d[3];                           /* local sizes of 3D fields */
-int locsiz_2d[2];                           /* local sizes of 2D fields */
-int istart, jstart, kstart;                 /* offsets of 3D field */
+const MPI_Offset totsiz_3d[3] = { 256, 256, 256 }; /* global sizes of 3D field */
+MPI_Offset totsiz_2d[2];                           /* global sizes of 2D field */
+MPI_Offset locsiz_3d[3];                           /* local sizes of 3D fields */
+MPI_Offset locsiz_2d[2];                           /* local sizes of 2D fields */
+MPI_Offset istart, jstart, kstart;                 /* offsets of 3D field */
 
 const int random_fields = 0;                /* random fields? 1 or 0 */
 const int only_3d       = 1;                /* I/O 3D field only? 1 or 0 */
@@ -57,11 +57,11 @@ int pe_coords[3];                           /* Cartesian PE coords */
 
 /*** function prototypes ***/
 
-void find_locnx(int nx, int mype, int totpes, int *locnx, int *xbegin);
+void find_locnx(MPI_Offset nx, int mype, int totpes, MPI_Offset *locnx, MPI_Offset *xbegin);
 void write_file(char *filename, double *t);
 void read_file(char *filename, double *t);
 void get_fields(double *tt, double *smf);
-void compare_vec(double *a, double *b, int ndims, int *sizes, int corr_data);
+void compare_vec(double *a, double *b, int ndims, MPI_Offset *sizes, int corr_data);
 
 
 int main(int argc, char *argv[]) {
@@ -165,10 +165,10 @@ void write_file(char *filename, double *t) {
   int file_id;
   int t_id, smf_id;
   int ii;
-  size_t start_3d[3];
-  size_t count_3d[3];
-  size_t start_2d[2];
-  size_t count_2d[2];
+  MPI_Offset start_3d[3];
+  MPI_Offset count_3d[3];
+  MPI_Offset start_2d[2];
+  MPI_Offset count_2d[2];
 
   start_3d[0] = kstart;
   start_3d[1] = jstart;
@@ -202,9 +202,9 @@ void write_file(char *filename, double *t) {
 
 /*  ierr = nc_set_fill(file_id,fillmode,&old_fillmode); */
 
-    ierr = ncmpi_def_dim(file_id,"level",    (size_t) totsiz_3d[0],&lev_id);
-    ierr = ncmpi_def_dim(file_id,"latitude", (size_t) totsiz_3d[1],&lat_id);
-    ierr = ncmpi_def_dim(file_id,"longitude",(size_t) totsiz_3d[2],&lon_id);
+    ierr = ncmpi_def_dim(file_id,"level",    (MPI_Offset) totsiz_3d[0],&lev_id);
+    ierr = ncmpi_def_dim(file_id,"latitude", (MPI_Offset) totsiz_3d[1],&lat_id);
+    ierr = ncmpi_def_dim(file_id,"longitude",(MPI_Offset) totsiz_3d[2],&lon_id);
 
     dim_id[0] = lev_id; dim_id[1] = lat_id; dim_id[2] = lon_id;
 
@@ -253,10 +253,10 @@ void read_file(char *filename, double *t) {
   int vid_t, vid_smf;
   int i, j, k, ii, ierr;
 
-  size_t start_3d[3];
-  size_t count_3d[3];
-  size_t start_2d[2];
-  size_t count_2d[2];
+  MPI_Offset start_3d[3];
+  MPI_Offset count_3d[3];
+  MPI_Offset start_2d[2];
+  MPI_Offset count_2d[2];
 
   start_3d[0] = kstart;
   start_3d[1] = jstart;
@@ -334,8 +334,8 @@ void read_file(char *filename, double *t) {
 }
 
 
-void find_locnx(int nx, int mype, int totpes, int *locnx, int *xbegin) {
-  int xremain;
+void find_locnx(MPI_Offset nx, int mype, int totpes, MPI_Offset *locnx, MPI_Offset *xbegin) {
+  MPI_Offset xremain;
 
   *locnx = nx / totpes;
   xremain = nx - totpes*(*locnx);
@@ -377,10 +377,11 @@ void get_fields(double *tt, double *smf) {
 }
 
 
-void compare_vec(double *a, double *b, int ndims, int *sizes, int corr_data) {
+void compare_vec(double *a, double *b, int ndims, MPI_Offset *sizes, int corr_data) {
   double diff, delta, delmax, delmin;
   double ws[5], wr[5];
-  int totsiz, i;
+  MPI_Offset totsiz;
+  int i;
 
   if (corr_data) {
     totsiz = 1;
