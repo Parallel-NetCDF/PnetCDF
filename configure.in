@@ -207,13 +207,13 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
-UD_CHECK_SIZEOF(off_t)
 UD_CHECK_SIZEOF(size_t)
 if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
 fi
 UD_MAKEWHATIS
 
+UD_CHECK_SIZEOF(off_t)
 AC_CHECK_HEADERS(unistd.h, 
 	AC_MSG_CHECKING(for large file defines)
 	AC_TRY_COMPILE([
