@@ -41,9 +41,4 @@ FORTRAN_API void FORT_CALL nfmpi_get_var1_text_ ( int *v1, int *v2, int v3[], ch
     *ierr = ncmpi_get_var1_text( *v1, l2, l3, v4 );
 
     if (l3) { free(l3); }
-
-    {char *p = v4;
-        while (*p) p++;
-        while ((p-v4) < d4) { *p++ = ' '; }
-    }
 }

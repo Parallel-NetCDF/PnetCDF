@@ -114,7 +114,7 @@ $header_file = "mpinetcdf_impl.h";
 		'get_var1_short-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 	      'get_var1_text' => '2:3:4', 
 	        'get_var1_text-2' => 'in:OffsetIndexIn',
-	        'get_var1_text-4' => 'out:blankpad',
+	        'get_var1_text-4' => 'out:charBufferOut',
 		'get_var1_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 	      'get_var_double_all' => '2', 
 	        'get_var_double_all-2' => 'in:OffsetIndexIn',
@@ -134,10 +134,10 @@ $header_file = "mpinetcdf_impl.h";
 	        'get_var_short-2' => 'in:OffsetIndexIn',
 	      'get_var_text_all' => '2:3', 
 	        'get_var_text_all-2' => 'in:OffsetIndexIn',
-		'get_var_text_all-3' => 'out:blankpad',
+		'get_var_text_all-3' => 'out:charBufferOut',
 	      'get_var_text' => '2:3', 
 	        'get_var_text-2' => 'in:OffsetIndexIn',
-		'get_var_text-3' => 'out:blankpad',
+		'get_var_text-3' => 'out:charBufferOut',
 
 	      'get_vara_all' => '2:3:4', 
 	        'get_vara_all-2' => 'in:OffsetIndexIn',
@@ -183,12 +183,12 @@ $header_file = "mpinetcdf_impl.h";
 	        'get_vara_text_all-2' => 'in:OffsetIndexIn',
 		'get_vara_text_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'get_vara_text_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_text_all-5' => 'out:blankpad',
+		'get_vara_text_all-5' => 'out:charBufferOut',
 	      'get_vara_text' => '2:3:4:5', 
 	        'get_vara_text-2' => 'in:OffsetIndexIn',
 		'get_vara_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'get_vara_text-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_text-5' => 'out:blankpad',
+		'get_vara_text-5' => 'out:charBufferOut',
 	      'get_vars_all' => '2:3:4:5', 
 	        'get_vars_all-2' => 'in:OffsetIndexIn',
 		'get_vars_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
@@ -244,13 +244,13 @@ $header_file = "mpinetcdf_impl.h";
 		'get_vars_text_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'get_vars_text_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
 		'get_vars_text_all-5' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_text_all-6' => 'out:blankpad',
+		'get_vars_text_all-6' => 'out:charBufferOut',
 	      'get_vars_text' => '2:3:4:5:6', 
 	        'get_vars_text-2' => 'in:OffsetIndexIn',
 		'get_vars_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'get_vars_text-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
 		'get_vars_text-5' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_text-6' => 'out:blankpad',
+		'get_vars_text-6' => 'out:charBufferOut',
 	      'inq' => '5', 'inq-5' => 'out:OffsetIndex',
 	      'inq_att' => '2:3:5', 'inq_att-3' => 'in:addnull',
 	        'inq_att-2' => 'in:OffsetIndexIn',
@@ -342,7 +342,7 @@ $header_file = "mpinetcdf_impl.h";
 	      'put_var1_short' => '2:3',
 	        'put_var1_short-2' => 'in:OffsetIndexIn',
 		'put_var1_short-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
-	      'put_var1_text' => '2:3:4', 'put_var1_text-4' => 'in:addnull',
+	      'put_var1_text' => '2:3:4', 'put_var1_text-4' => 'in:charBufferIn',
 	        'put_var1_text-2' => 'in:OffsetIndexIn',
 		'put_var1_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 
@@ -362,10 +362,10 @@ $header_file = "mpinetcdf_impl.h";
 	        'put_var_short_all-2' => 'in:OffsetIndexIn',
 	      'put_var_short' => '2', 
 	        'put_var_short-2' => 'in:OffsetIndexIn',
-	      'put_var_text' => '2:3', 'put_var_text-3' => 'in:addnull',
+	      'put_var_text' => '2:3', 'put_var_text-3' => 'in:charBufferIn',
 	        'put_var_text-2' => 'in:OffsetIndexIn',
 	      'put_var_text_all' => '2:3', 
-                'put_var_text_all-3' => 'in:addnull',
+                'put_var_text_all-3' => 'in:charBufferIn',
 	        'put_var_text_all-2' => 'in:OffsetIndexIn',
 
 	      'put_vara_all' => '2:3:4', 
@@ -412,12 +412,12 @@ $header_file = "mpinetcdf_impl.h";
 	        'put_vara_text_all-2' => 'in:OffsetIndexIn',
 		'put_vara_text_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'put_vara_text_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_text_all-5' => 'in:addnull',
+		'put_vara_text_all-5' => 'in:charBufferIn',
 	      'put_vara_text' => '2:3:4:5', 
 	        'put_vara_text-2' => 'in:OffsetIndexIn',
 		'put_vara_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'put_vara_text-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_text-5' => 'in:addnull',
+		'put_vara_text-5' => 'in:charBufferIn',
 	      'put_vars_all' => '2:3:4:5', 
 	        'put_vars_all-2' => 'in:OffsetIndexIn',
 		'put_vars_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
@@ -473,13 +473,13 @@ $header_file = "mpinetcdf_impl.h";
 		'put_vars_text_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'put_vars_text_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
 		'put_vars_text_all-5' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_text_all-6' => 'in:addnull',
+		'put_vars_text_all-6' => 'in:charBufferIn',
 	      'put_vars_text' => '2:3:4:5:6', 
 	        'put_vars_text-2' => 'in:OffsetIndexIn',
 		'put_vars_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'put_vars_text-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
 		'put_vars_text-5' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_text-6' => 'in:addnull',
+		'put_vars_text-6' => 'in:charBufferIn',
 	      'rename_att' => '2:3:4', 'rename_att-3' => 'in:addnull',
 		 'rename_att-2' => 'in:OffsetIndexIn',
 		 'rename_att-4' => 'in:addnull',
@@ -828,6 +828,28 @@ sub OffsetIndexInArr_ctof {
     if ($lname) { $free($lname); }
 ";
 }
+# ---------------------------------------------------------------------------
+# charBufferIn and charBufferOut are basically no-ops.  They are provided
+# in case special processing is required for the character buffers.
+
+sub charBufferIn_in_decl {
+}
+sub charBufferIn_in_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+sub charBufferIn_ftoc {
+}
+# Output text buffers
+sub charBufferOut_out_decl {
+}
+sub charBufferOut_out_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+sub charBufferOut_ctof {
+}
+
 # ---------------------------------------------------------------------------
 # Functions to add routines that need special handling
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";

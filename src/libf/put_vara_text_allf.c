@@ -25,7 +25,6 @@ FORTRAN_API void FORT_CALL nfmpi_put_vara_text_all_ ( int *v1, int *v2, int v3[]
     int l2 = *v2 - 1;
     size_t *l3 = 0;
     size_t *l4 = 0;
-    char *p5;
 
     { int ln = ncmpixVardim(*v1,*v2-1);
     if (ln > 0) {
@@ -54,17 +53,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vara_text_all_ ( int *v1, int *v2, int v3[]
 	return;
     }
     }
-
-    {char *p = v5 + d5 - 1;
-     int  li;
-        while (*p == ' ' && p > v5) p--;
-        p++;
-        p5 = (char *)malloc( p-v5 + 1 );
-        for (li=0; li<(p-v5); li++) { p5[li] = v5[li]; }
-        p5[li] = 0; 
-    }
-    *ierr = ncmpi_put_vara_text_all( *v1, l2, l3, l4, p5 );
-    free( p5 );
+    *ierr = ncmpi_put_vara_text_all( *v1, l2, l3, l4, v5 );
 
     if (l3) { free(l3); }
 

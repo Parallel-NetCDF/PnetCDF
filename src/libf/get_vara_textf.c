@@ -58,9 +58,4 @@ FORTRAN_API void FORT_CALL nfmpi_get_vara_text_ ( int *v1, int *v2, int v3[], in
     if (l3) { free(l3); }
 
     if (l4) { free(l4); }
-
-    {char *p = v5;
-        while (*p) p++;
-        while ((p-v5) < d5) { *p++ = ' '; }
-    }
 }
