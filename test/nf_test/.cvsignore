@@ -3,3 +3,4 @@ test_get.F
 test_put.F
 *.nc
 nf_test
+*.log
