@@ -3,6 +3,6 @@
       character *(80) tmpstr
 C      
 C     Call a (C) routine that places the message into tmpstr
-      call nfmpi_xstrerror( err, tmpstr, ierr )
+      ierr = nfmpi_xstrerror( err, tmpstr )
       nfmpi_strerror = tmpstr
       end
