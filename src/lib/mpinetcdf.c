@@ -473,7 +473,7 @@ x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
  
   if (datatype == MPI_CHAR)
       status = NC_ECHAR;
-  else if (dattype == MPI_SHORT)
+  else if (datatype == MPI_SHORT)
       status = ncmpix_putn_short_short(&xp, nelems, (const short *)data);
   else if (datatype == MPI_INT)
       status = ncmpix_putn_short_int(&xp, nelems, (const int *)data);
