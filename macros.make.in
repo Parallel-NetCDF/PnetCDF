@@ -31,7 +31,7 @@ CXXCPPFLAGS	= $(CPPFLAGS)
 # Compilation:
 CC		= @MPICC@
 CXX		= @CXX@
-FC		= @MPIF77@
+FC		= @FC@
 F90		= @F90@
 CFLAGS		= @CFLAGS@
 CXXFLAGS	= @CXXFLAGS@
@@ -39,6 +39,13 @@ FFLAGS		= @FFLAGS@
 F90FLAGS	= @F90FLAGS@
 NETCDF.MOD	= @NETCDF_MOD@
 CC_MAKEDEPEND	= @CC_MAKEDEPEND@
+COMPILE.c	= $(CC) -c $(CFLAGS) $(CPPFLAGS)
+COMPILE.cxx	= $(CXX) -c $(CXXFLAGS) $(CXXCPPFLAGS)
+COMPILE.f	= $(FC) -c $(FFLAGS)
+COMPILE.F90	= $(F90) -c $(F90FLAGS)
+# The following command isn't available on some systems; therefore, the
+# `.F.o' rule is relatively complicated.
+COMPILE.F	= @COMPILE_F@
 
 
 # Linking:
@@ -47,6 +54,11 @@ FLIBS		= @FLIBS@
 F90LIBS		= @F90LIBS@
 LIBS		= @LIBS@
 F90LDFLAGS	= $(LDFLAGS)
+LINK.c		= $(CC) -o $@ $(CFLAGS) $(LDFLAGS)
+LINK.cxx	= $(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS)
+LINK.F		= $(FC) -o $@ $(FFLAGS) $(FLDFLAGS)
+LINK.f		= $(FC) -o $@ $(FFLAGS) $(FLDFLAGS)
+LINK.F90	= $(F90) -o $@ $(F90FLAGS) $(F90LDFLAGS)
 
 
 # Manual pages:
