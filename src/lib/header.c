@@ -1131,6 +1131,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
 	  getbuf.version = 1;
   } else if (magic[sizeof(ncmagic)-1] == 0x2) {
 	  getbuf.version = 2;
+	  fSet(ncp->flags, NC_64BIT_OFFSET);
 	  if (sizeof(off_t) != 8) {
 		  /* take the easy way out: if we can't support all CDF-2
 		   * files, return immediately */
