@@ -6,30 +6,30 @@
 DATA MODE FUNCTIONS: U == unimpplemented I == implemented
 
 ncmpi_get  text uchar schar short int long float double
-var1 [0]     I   U      U    I     I   I    I      I
-var          I   U      U    I     I   I    I      I     
-var_all      I   U      U    I     I   I    I      I     
-vara         I   U      U    I     I   I    I      I     
-vara_all     I   U      U    I     I   I    I      I     
-vars         I   U      U    I     I   I    I      I     
-vars_all     I   U      U    I     I   I    I      I     
+var1 [0]     I   I      I    I     I   I    I      I
+var          I   I      I    I     I   I    I      I     
+var_all      I   I      I    I     I   I    I      I     
+vara         I   I      I    I     I   I    I      I     
+vara_all     I   I      I    I     I   I    I      I     
+vars         I   I      I    I     I   I    I      I     
+vars_all     I   I      I    I     I   I    I      I     
 varm         U   U      U    U     U   I    U      U     
 varm_all     U   U      U    U     U   I    U      U     
-vars         I   U      U    I     I   I    I      I     
-vars_all     I   U      U    I     I   I    I      I     
+vars         I   I      I    I     I   I    I      I     
+vars_all     I   I      I    I     I   I    I      I     
 
 ncmpi_put  text uchar schar short int long float double
-var1 [0]     I   U      U    I     I   I    I      I
-var          I   U      U    I     I   I    I      I     
+var1 [0]     I   I      I    I     I   I    I      I
+var          I   I      I    I     I   I    I      I     
 var_all [1] 
-vara         I   U      U    I     I   I    I      I     
-vara_all     I   U      U    I     I   I    I      I     
-vars         I   U      U    I     I   I    I      I     
-vars_all     I   U      U    I     I   I    I      I     
+vara         I   I      I    I     I   I    I      I     
+vara_all     I   I      I    I     I   I    I      I     
+vars         I   I      I    I     I   I    I      I     
+vars_all     I   I      I    I     I   I    I      I     
 varm         U   U      U    U     U   I    U      U     
 varm_all     U   U      U    U     U   I    U      U     
-vars         I   U      U    I     I   I    I      I     
-vars_all     I   U      U    I     I   I    I      I  
+vars         I   I      I    I     I   I    I      I     
+vars_all     I   I      I    I     I   I    I      I  
 
 [0] the var1 functions are all independent operations
 
