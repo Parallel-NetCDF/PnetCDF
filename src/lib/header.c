@@ -283,13 +283,15 @@ hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp) {
 int
 hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
   void *value = attrp->xvalue;
+  size_t padding, esz;
 
-/*
-  assert(pbp->size % XALIGN == 0);
-*/
+  esz = ncx_len_nctype(attrp->type);
+  padding = attrp->xsz - esz * attrp->nelems;
 
-  (void) memcpy(pbp->pos, value, attrp->xsz);
-  pbp->pos = (void *)((char *)pbp->pos + attrp->xsz);
+  (void) memcpy(pbp->pos, value, esz * attrp->nelems);
+  pbp->pos = (void *)((char *)pbp->pos + esz * attrp->nelems);
+  (void) memset(pbp->pos, 0, padding);
+  pbp->pos = (void *)((char *)pbp->pos + padding);
     
   return ENOERR;
 }
@@ -537,6 +539,7 @@ hdr_fetch(bufferinfo *gbp) {
 
   (void) memset(gbp->base, 0, gbp->size);
   gbp->pos = gbp->base;
+  gbp->index = 0;
   mpireturn = MPI_File_set_view(gbp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, 
 		    "native", gbp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
@@ -588,6 +591,7 @@ hdr_get_NCtype(bufferinfo *gbp, NCtype *typep) {
 
   status =  ncx_get_int_int(gbp->pos, &type);
   gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT);
+  gbp->index += X_SIZEOF_INT;
   if (status != ENOERR)
     return status;
   *typep = (NCtype) type;
@@ -599,13 +603,14 @@ hdr_get_size_t(bufferinfo *gbp, size_t *sp) {
   int status = hdr_check_buffer(gbp, X_SIZEOF_SIZE_T);
   if (status != ENOERR)
     return status; 
+  gbp->index += X_SIZEOF_SIZE_T;
   return ncx_get_size_t((const void **)(&gbp->pos), sp);
 }
 
 int
 hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   int status;
-  size_t  nchars = 0, padding, bufremain, strcount; 
+  size_t  nchars = 0, nbytes, padding, bufremain, strcount; 
   NC_string *ncstrp;
   char *cpos;
   char pad[X_ALIGN-1];
@@ -615,20 +620,23 @@ hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
     return status;
 
   ncstrp = new_NC_string(nchars, NULL);
+
   if (ncstrp == NULL)
     return NC_ENOMEM;
 
+  nbytes = nchars * X_SIZEOF_CHAR;
   padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
             - X_SIZEOF_CHAR * ncstrp->nchars;
   bufremain = gbp->size - (size_t)((char *)gbp->pos - (char *)gbp->base);
   cpos = ncstrp->cp;
 
-  while (nchars > 0) {
+  while (nbytes > 0) {
     if (bufremain > 0) {
-      strcount = MIN(bufremain, X_SIZEOF_CHAR * nchars); 
+      strcount = MIN(bufremain, nbytes); 
       (void) memcpy(cpos, gbp->pos, strcount);
-      nchars -= strcount/X_SIZEOF_CHAR;
+      nbytes -= strcount;
       gbp->pos = (void *)((char *)gbp->pos + strcount);
+      gbp->index += strcount;
       cpos += strcount; 
       bufremain -= strcount;
     } else {
@@ -641,12 +649,15 @@ hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
     }
   }
 
-  memset(pad, 0, X_ALIGN-1);
-  if (memcmp(gbp->pos, pad, padding) != 0) {
-    free_NC_string(ncstrp);
-    return EINVAL;
+  if (padding > 0) {
+    (void) memset(pad, 0, X_ALIGN-1);
+    if (memcmp(gbp->pos, pad, padding) != 0) {
+      free_NC_string(ncstrp);
+      return EINVAL;
+    }
+    gbp->pos = (void *)((char *)gbp->pos + padding);
+    gbp->index += padding;
   }
-  gbp->pos = (void *)((char *)gbp->pos + padding);
   
   *ncstrpp = ncstrp;
   
@@ -732,6 +743,7 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *typep) {
 
   status =  ncx_get_int_int(gbp->pos, &type);
   gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT); 
+  gbp->index += X_SIZEOF_INT;
   if(status != ENOERR)
     return status;
 
@@ -776,18 +788,20 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   int status;
   void *value = attrp->xvalue;
   char pad[X_ALIGN-1]; 
-  size_t nvalues = attrp->nelems, esz, padding, bufremain, attcount;
+  size_t nbytes, esz, padding, bufremain, attcount;
 
   esz = ncx_len_nctype(attrp->type);
-  padding = attrp->xsz - esz * nvalues;
+  padding = attrp->xsz - esz * attrp->nelems;
   bufremain = gbp->size - (size_t)((char *)gbp->pos - (char *)gbp->base);
+  nbytes = esz * attrp->nelems;
 
-  while (nvalues > 0) {
+  while (nbytes > 0) {
     if (bufremain > 0) {
-      attcount = MIN(bufremain, esz * nvalues);
+      attcount = MIN(bufremain, nbytes);
       (void) memcpy(value, gbp->pos, attcount);
-      nvalues -= attcount/esz;
+      nbytes -= attcount;
       gbp->pos = (void *)((char *)gbp->pos + attcount);
+      gbp->index += attcount;
       value = (void *)((char *)value + attcount);
       bufremain -= attcount;
     } else {
@@ -798,10 +812,13 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
     }
   }
  
-  memset(pad, 0, X_ALIGN-1);
-  if (memcmp(gbp->pos, pad, padding) != 0) 
-    return EINVAL;
-  gbp->pos = (void *)((char *)gbp->pos + padding);
+  if (padding > 0) {
+    (void) memset(pad, 0, X_ALIGN-1);
+    if (memcmp(gbp->pos, pad, padding) != 0) 
+      return EINVAL;
+    gbp->pos = (void *)((char *)gbp->pos + padding);
+    gbp->index += padding;
+  }
 
   return ENOERR;
 }
@@ -1024,7 +1041,9 @@ hdr_get_NC(NC *ncp) {
   getbuf.size = _RNDUP( MAX(MIN_NC_XSZ, ncp->chunk), X_ALIGN );
   if (getbuf.size > 4096)
     getbuf.size = 4096;
+
   getbuf.pos = getbuf.base = (void *)malloc(getbuf.size);
+  getbuf.index = 0;
 
   status = hdr_fetch(&getbuf);
   
@@ -1033,6 +1052,7 @@ hdr_get_NC(NC *ncp) {
   (void) memset(magic, 0, sizeof(magic));
   status = ncx_getn_schar_schar(
           (const void **)(&getbuf.pos), sizeof(magic), magic);
+  getbuf.index += sizeof(magic);
   if(memcmp(magic, ncmagic, sizeof(ncmagic)) != 0) {
     free(getbuf.base);
     return NC_ENOTNC;
@@ -1044,6 +1064,7 @@ hdr_get_NC(NC *ncp) {
     return status;
   } 
   status = ncx_get_size_t((const void **)(&getbuf.pos), &nrecs);
+  getbuf.index += X_SIZEOF_SIZE_T;
   if(status != ENOERR) {
     free(getbuf.base);
     return status;
