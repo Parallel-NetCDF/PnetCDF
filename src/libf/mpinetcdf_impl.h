@@ -7,7 +7,7 @@
 #ifndef MPINETCDF_IMPL_H
 #define MPINETCDF_IMPL_H
 #include "../lib/ncconfig.h"
-#include "../lib/netcdf.h"
+#include "../lib/pnetcdf.h"
 
 /* Support Windows extension to specify calling convention */
 #ifdef USE_FORT_STDCALL
