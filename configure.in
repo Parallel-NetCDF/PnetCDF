@@ -69,10 +69,10 @@ EOF
 	    fi
 	    rm -f conftest*
     case "$FCALLSCSUBA" in 
-        sub__) 
+        sub_a__) 
 	AC_DEFINE(F77_NAME_LOWER_2USCORE,,[Define if Fortran names are lower case with two trailing underscore2])
 	;;
-	sub_)    
+	sub_a_)    
 	AC_DEFINE(F77_NAME_LOWER_USCORE,,[Define if Fortran names are lower case with one trailing underscore])
 	;;
 	*)
