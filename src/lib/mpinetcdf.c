@@ -12,6 +12,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
+/* Local prototypes */
+static int length_of_mpitype(MPI_Datatype);
+
 const char *
 ncmpi_inq_libvers(void) {
   return "version = 3.5.0 of Aug 30 2002 13:00:00 $";
@@ -605,7 +608,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
  *  Assume: MPI_Datatype and nc_type are both enumerable types
  */
 
-int
+static int
 length_of_mpitype(MPI_Datatype datatype) {
   switch(datatype) {
     case MPI_BYTE:
@@ -661,7 +664,7 @@ need_convert(nc_type nctype,MPI_Datatype mpitype) {
 
 int 
 need_swap(nc_type nctype,MPI_Datatype mpitype) {
-#if WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
   return 0;
 #else
   return ( (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
