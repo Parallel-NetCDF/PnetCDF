@@ -1,5 +1,0 @@
-/*
- * $Id$
- */
-
-#include "posixio.c"
