@@ -311,11 +311,11 @@
 
 !       ==================
         ierr = Nfmpi_Def_Dim
-     &    (ncid, "level",     totsiz_3d(1), lev_id)
+     &    (ncid, "level",     totsiz_3d(1), lon_id)
         ierr = Nfmpi_Def_Dim
      &    (ncid, "latitude",  totsiz_3d(2), lat_id)
         ierr = Nfmpi_Def_Dim
-     &    (ncid, "longitude", totsiz_3d(3), lon_id)
+     &    (ncid, "longitude", totsiz_3d(3), lev_id)
 !       ==================
 
 
