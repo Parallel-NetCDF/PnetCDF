@@ -13,7 +13,11 @@ AC_INIT(src/lib/ncconfig.in)
 UD_SRCDIR
 dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
-AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf.inc)
+AC_CONFIG_HEADER(
+	src/lib/ncconfig.h:src/lib/ncconfig.in 
+	src/libf/pnetcdf.inc 
+	src/libf/nfconfig.inc:src/libf/nfconfig.in
+)
 AC_CONFIG_AUX_DIR(./scripts)
 
 AC_ARG_ENABLE(fortran,
@@ -253,10 +257,9 @@ chmod u+x ${srcdir}/scripts/install-sh
 
 AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nc_test2/Makefile test/nf_test/Makefile test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile src/utils/ncgen/Makefile)
 
-dnl generate a f77-friendly pnetcdf.inc
-AC_OUTPUT_COMMANDS([ sed -e 's%/\*%C%' -e 's%\*/%%' <src/libf/pnetcdf.inc>pnetcdf.inc && mv pnetcdf.inc src/libf])
-dnl generate a f90-friendly pnetcdf.inc
-AC_OUTPUT_COMMANDS([ sed -e 's%/\*%!%' -e 's%\*/%%' <src/libf/pnetcdf.inc>pnetcdf.inc && mv pnetcdf.inc src/libf/pnetcdf90.inc])
+dnl generate a fortran-friendly pnetcdf.inc nfconfig.inc
+sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf.inc>pnetcdf.inc && mv pnetcdf.inc src/libf/pnetcdf.inc
+sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/nfconfig.inc>nfconfig.inc && mv nfconfig.inc src/libf/nfconfig.inc
 
 if test "$enable_mpi_io_test" != "yes" ; then
 	AC_MSG_WARN([
