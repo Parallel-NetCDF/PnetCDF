@@ -22,9 +22,9 @@
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_get_vars_int_ ( int *v1, int *v2, int v3[], int v4[], int v5[], MPI_Fint *v6, MPI_Fint *ierr ){
-    size_t *l3;
-    size_t *l4;
-    size_t *l5;
+    size_t *l3 = 0;
+    size_t *l4 = 0;
+    size_t *l5 = 0;
 
     { int ln = ncxVardim(*v1,*v2);
     if (ln > 0) {
@@ -32,7 +32,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vars_int_ ( int *v1, int *v2, int v3[], int
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l3[li] = v3[ln-1-li];
-    }
+    }}
 
     { int ln = ncxVardim(*v1,*v2);
     if (ln > 0) {
@@ -40,7 +40,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vars_int_ ( int *v1, int *v2, int v3[], int
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l4[li] = v4[ln-1-li];
-    }
+    }}
 
     { int ln = ncxVardim(*v1,*v2);
     if (ln > 0) {
@@ -48,7 +48,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vars_int_ ( int *v1, int *v2, int v3[], int
         l5 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l5[li] = v5[ln-1-li];
-    }
+    }}
     *ierr = ncmpi_get_vars_int( *v1, *v2, l3, l4, l5, v6 );
 
     if (l3) { free(l3); }

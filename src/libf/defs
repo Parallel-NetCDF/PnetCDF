@@ -344,7 +344,7 @@ $justCopy = 0;
 
 sub intToSizeTArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    size_t *l$count;\n";
+    print $OUTFD "    size_t *l$count = 0;\n";
 }
 sub intToSizeTArr_ftoc {
     my $count = $_[0];
@@ -375,7 +375,7 @@ sub intToSizeTArr_ftoc {
         l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\];
-    }\n";
+    }}\n";
     }
 }
 sub intToSizeTArr_in_arg {
@@ -419,7 +419,7 @@ sub reorderIntArr_ftoc {
         l$count = (size_t *)$malloc( ln * sizeof(int) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\];
-    }\n";
+    }}\n";
 }
 sub reorderIntArr_in_arg {
     my $count = $_[0];
@@ -442,7 +442,7 @@ sub reorderIntArr_in_ctof {
 
 sub reorderIntArrOut_out_decl {
     my $count = $_[0];
-    print $OUTFD "    int *l$count=0;\n";
+    print $OUTFD "    int *l$count=0, ln$count;\n";
 }
 sub reorderIntArrOut_out_ftoc {
     my $count = $_[0];
@@ -450,9 +450,9 @@ sub reorderIntArrOut_out_ftoc {
     # call a function of some of the other arguments to get the array size
     # Always copy and invert order
     print $OUTFD "
-    { int ln = $Array_size;
-    if (ln > 0) {
-        l$count = (size_t *)$malloc( ln * sizeof(int) );
+    ln$count = $Array_size;
+    if (ln$count > 0) {
+        l$count = (size_t *)$malloc( ln$count * sizeof(int) );
     }\n";
 }
 sub reorderIntArrOut_out_arg {
@@ -465,9 +465,9 @@ sub reorderIntArrOut_ctof {
     my $vname = $_[1];
     print $OUTFD "
     if ($lname) { 
-	int li
-        for (li=0; li<ln; li++) 
-            v$count\[li\] = l$count\[ln-1-li\];
+	int li;
+        for (li=0; li<ln$count; li++) 
+            v$count\[li\] = l$count\[ln$count-1-li\];
         $free($lname); }
 ";
 }
@@ -492,7 +492,7 @@ sub intToSizeT_in_ctof {
 # sizet as output
 sub sizetToInt_out_decl {
     my $count = $_[0];
-    print $OUTFD "    size_t l$count;\n";
+    print $OUTFD "    size_t l$count=0;\n";
 }
 sub sizetToInt_ftoc {
     my $count = $_[0];
@@ -540,8 +540,9 @@ sub ncfxutil {
     $files[$#files+1] = "nfxutil.c";
     print $OUTFD "
 #include \"nc.h\"
-int ncxVardim( int ncid, int varid ) {
-  NC_Var *varp;
+int ncxVardim( int ncid, int varid ) 
+{
+  NC_var *varp;
   NC     *ncp;
 
   NC_check_id(ncid, &ncp);

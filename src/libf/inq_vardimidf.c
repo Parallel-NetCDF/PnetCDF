@@ -22,17 +22,17 @@
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_inq_vardimid_ ( int *v1, int *v2, MPI_Fint *v3, MPI_Fint *ierr ){
-    int *l3=0;
+    int *l3=0, ln3;
 
-    { int ln = ncxVardim(*v1,*v2);
-    if (ln > 0) {
-        l3 = (size_t *)malloc( ln * sizeof(int) );
+    ln3 = ncxVardim(*v1,*v2);
+    if (ln3 > 0) {
+        l3 = (size_t *)malloc( ln3 * sizeof(int) );
     }
     *ierr = ncmpi_inq_vardimid( *v1, *v2, l3 );
 
     if (l3) { 
-	int li
-        for (li=0; li<ln; li++) 
-            v3[li] = l3[ln-1-li];
+	int li;
+        for (li=0; li<ln3; li++) 
+            v3[li] = l3[ln3-1-li];
         free(l3); }
 }
