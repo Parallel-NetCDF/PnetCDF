@@ -57,7 +57,16 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	put_vars_int_allf.c put_vars_intf.c put_vars_int2_allf.c \
 	put_vars_int2f.c put_vars_text_allf.c put_vars_textf.c \
 	put_var_textf.c redeff.c rename_attf.c rename_dimf.c \
-	rename_varf.c syncf.c nfxutil.c xstrerrorf.c
+	rename_varf.c syncf.c nfxutil.c xstrerrorf.c \
+	get_var1_scharf.c get_var1_ucharf.c get_var_schar_allf.c \
+	get_var_scharf.c get_var_uchar_allf.c get_var_ucharf.c \
+	get_vara_schar_allf.c get_vara_scharf.c get_vara_uchar_allf.c \
+	get_vara_ucharf.c get_vars_schar_allf.c get_vars_scharf.c \
+	get_vars_uchar_allf.c get_vars_ucharf.c put_var1_scharf.c \
+	put_var1_ucharf.c put_var_scharf.c put_var_ucharf.c \
+	put_vara_schar_allf.c put_vara_scharf.c put_vara_uchar_allf.c \
+	put_vara_ucharf.c put_vars_schar_allf.c put_vars_scharf.c \
+	put_vars_uchar_allf.c put_vars_ucharf.c
 
 LIB_FSRCS = strerrorf.f
 PACKING_LIST = \
