@@ -38,7 +38,7 @@
 #define X_FLOAT_MAX	3.40282347e+38f
 #endif
 #define X_FLOAT_MIN	(-X_FLOAT_MAX)
-#if CRAYFLOAT
+#if defined(CRAYFLOAT) && CRAYFLOAT != 0
 /* ldexp(1. - ldexp(.5 , -46), 1024) */
 #define X_DOUBLE_MAX    1.79769313486230e+308
 #else
@@ -48,7 +48,7 @@
 #define X_DOUBLE_MIN	(-X_DOUBLE_MAX)
 
 
-#if _SX /* NEC SUPER UX */
+#if defined(_SX) && _SX != 0 /* NEC SUPER UX */
 #if _INT64
 #undef  INT_MAX /* workaround cpp bug */
 #define INT_MAX  X_INT_MAX
