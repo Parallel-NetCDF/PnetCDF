@@ -21,6 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_get_var_long_ ( int *v1, int *v2, long*v3, MPI_Fint *ierr ){
-    *ierr = ncmpi_get_var_long( *v1, *v2, v3 );
+FORTRAN_API int FORT_CALL nfmpi_get_var_long_ ( int *v1, int *v2, long*v3 ){
+    int ierr;
+    ierr = ncmpi_get_var_long( *v1, *v2, v3 );
+    return ierr;
 }

@@ -21,7 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_get_vara_real_ ( int *v1, int *v2, int v3[], int v4[], float*v5, MPI_Fint *ierr ){
+FORTRAN_API int FORT_CALL nfmpi_get_vara_real_ ( int *v1, int *v2, int v3[], int v4[], float*v5 ){
+    int ierr;
     int l2 = *v2 - 1;
     size_t *l3 = 0;
     size_t *l4 = 0;
@@ -35,8 +36,8 @@ FORTRAN_API void FORT_CALL nfmpi_get_vara_real_ ( int *v1, int *v2, int v3[], in
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        ierr = ln; 
+	return ierr;
     }
     }
 
@@ -49,13 +50,14 @@ FORTRAN_API void FORT_CALL nfmpi_get_vara_real_ ( int *v1, int *v2, int v3[], in
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        ierr = ln; 
+	return ierr;
     }
     }
-    *ierr = ncmpi_get_vara_float( *v1, l2, l3, l4, v5 );
+    ierr = ncmpi_get_vara_float( *v1, l2, l3, l4, v5 );
 
     if (l3) { free(l3); }
 
     if (l4) { free(l4); }
+    return ierr;
 }

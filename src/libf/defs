@@ -15,6 +15,14 @@ $malloc = "malloc";
 $free   = "free";
 $header_file = "mpinetcdf_impl.h";
 
+# Error return handling
+$errparmtype = "";
+$errparm = "";
+$errparmlval = "ierr";
+$errparmrval = "ierr";
+$returnErrval = 1;
+$returnType   = "int";
+
 # Map some of the names from C to Fortran to replace float with real,
 # short with int2
 %CtoFName = (
@@ -526,8 +534,8 @@ sub intToSizeTArr_ftoc {
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        $errparmlval = ln; 
+	return $errparmrval;
     }
     else l$count = 0;
     }
@@ -547,8 +555,8 @@ sub intToSizeTArr_ftoc {
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        $errparmlval = ln; 
+	return $errparmrval;
     }
     }\n";
     }
@@ -605,8 +613,8 @@ sub intToSizeTOffsetArr_ftoc {
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        $errparmlval = ln; 
+	return $errparmrval;
     }
     else l$count = 0;
     }
@@ -626,8 +634,8 @@ sub intToSizeTOffsetArr_ftoc {
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        $errparmlval = ln; 
+	return $errparmrval;
     }
     }\n";
     }
@@ -711,7 +719,7 @@ sub reorderIntArrOut_ctof {
     print $OUTFD "
     if ($lname) { 
 	int li;
-	if (!*ierr) {
+	if (!$errparmrval) {
             for (li=0; li<ln$count; li++) 
                 v$count\[li\] = l$count\[ln$count-1-li\] + 1;
         }
@@ -752,7 +760,7 @@ sub sizetToInt_out_arg {
 sub sizetToInt_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
-    print $OUTFD "    if (!*ierr) *v$count = (int)l$count;\n";	
+    print $OUTFD "    if (!$errparmrval) *v$count = (int)l$count;\n";	
 }
 
 # -------------------------------------------------------------------------
@@ -774,7 +782,7 @@ sub OffsetIndex_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
-    if (!*ierr) *v$count = *v$count + 1;\n";
+    if (!$errparmrval) *v$count = *v$count + 1;\n";
 }
 # -------------------------------------------------------------------------
 # For input of indices, subtract one to the result
@@ -873,6 +881,7 @@ sub ncfxstrerror {
     }
     /* Blank pad */
     for (; i<d2; i++) v2[i] = ' ';
+    return 0;
 }\n";
     close ($OUTFD);
 

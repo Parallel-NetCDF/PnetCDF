@@ -21,12 +21,14 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_inq_dimname_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *ierr FORT_END_LEN(d3) ){
+FORTRAN_API int FORT_CALL nfmpi_inq_dimname_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3) FORT_END_LEN(d3) ){
+    int ierr;
     int l2 = *v2 - 1;
-    *ierr = ncmpi_inq_dimname( *v1, l2, v3 );
+    ierr = ncmpi_inq_dimname( *v1, l2, v3 );
 
     {char *p = v3;
         while (*p) p++;
         while ((p-v3) < d3) { *p++ = ' '; }
     }
+    return ierr;
 }

@@ -21,6 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_end_indep_data_ ( int *v1, MPI_Fint *ierr ){
-    *ierr = ncmpi_end_indep_data( *v1 );
+FORTRAN_API int FORT_CALL nfmpi_end_indep_data_ ( int *v1 ){
+    int ierr;
+    ierr = ncmpi_end_indep_data( *v1 );
+    return ierr;
 }

@@ -21,8 +21,10 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_inq_ ( int *v1, MPI_Fint *v2, MPI_Fint *v3, MPI_Fint *v4, MPI_Fint *v5, MPI_Fint *ierr ){
-    *ierr = ncmpi_inq( *v1, v2, v3, v4, v5 );
+FORTRAN_API int FORT_CALL nfmpi_inq_ ( int *v1, MPI_Fint *v2, MPI_Fint *v3, MPI_Fint *v4, MPI_Fint *v5 ){
+    int ierr;
+    ierr = ncmpi_inq( *v1, v2, v3, v4, v5 );
 
-    if (!*ierr) *v5 = *v5 + 1;
+    if (!ierr) *v5 = *v5 + 1;
+    return ierr;
 }
