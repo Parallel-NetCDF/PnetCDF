@@ -22,7 +22,8 @@
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_inq_dimlen_ ( int *v1, int *v2, int *v3, MPI_Fint *ierr ){
+    int l2 = *v2 - 1;
     size_t l3=0;
-    *ierr = ncmpi_inq_dimlen( *v1, *v2, &l3 );
+    *ierr = ncmpi_inq_dimlen( *v1, l2, &l3 );
     *v3 = (int)l3;
 }

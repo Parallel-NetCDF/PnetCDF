@@ -92,5 +92,13 @@ tags:		$(FSRCS) $(CSRCS) FORCE
 test_get.F:	test_get.m4
 test_put.F:	test_put.m4
 
+# This simple testing target ensures that the test files are present
+testing: test.nc nf_test
+	./nf_test
+
+test.nc: 
+	(cd ../nc_test && make nc_test && ./nc_test -c)
+	cp ../nc_test/test.nc .
+
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend

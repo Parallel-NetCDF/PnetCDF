@@ -84,12 +84,15 @@ $header_file = "mpinetcdf_impl.h";
 		'get_var1_double-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2)',
 	      'get_var1_float' => 3,
 		'get_var1_float-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2)',
-	      'get_var1_int' => 3, 
-		'get_var1_int-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2)',
+	      'get_var1_int' => '2:3', 
+	        'get_var1_int-2' => 'in:OffsetIndexIn',
+		'get_var1_int-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 	      'get_var1_short' => 3,
 		'get_var1_short-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2)',
-	      'get_var1_text' => '3:4', 'get_var1_text-4' => 'out:blankpad',
-		'get_var1_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2)',
+	      'get_var1_text' => '2:3:4', 
+	        'get_var1_text-2' => 'in:OffsetIndexIn',
+	        'get_var1_text-4' => 'out:blankpad',
+		'get_var1_text-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 	      'get_var_text_all' => 3, 'get_var_text_all-3' => 'out:blankpad',
 	      'get_var_text' => 3, 'get_var_text-3' => 'out:blankpad',
 	      'get_vara_all' => '3:4', 
@@ -180,6 +183,7 @@ $header_file = "mpinetcdf_impl.h";
 		'get_vars_text-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2)',
 		'get_vars_text-5' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2)',
 		'get_vars_text-6' => 'out:blankpad',
+	      'inq' => '5', 'inq-5' => 'out:OffsetIndex',
 	      'inq_att' => '3:5', 'inq_att-3' => 'in:addnull',
 		'inq_att-5' => 'out:sizetToInt',
 	      'inq_attid' => 3, 'inq_attid-3' => 'in:addnull',
@@ -188,18 +192,35 @@ $header_file = "mpinetcdf_impl.h";
 	      'inq_attname' => 4, 'inq_attname-4' => 'out:blankpad',
 	      'inq_atttype' => 3, 'inq_atttype-3' => 'in:addnull',
 	      'inq_attdim' => 3, 'inq_attdim-3' => 'in:addnull',
-	      'inq_dim' => '3:4', 'inq_dim-3' => 'out:blankpad',
+	      'inq_dim' => '2:3:4', 
+	        'inq_dim-2' => 'in:OffsetIndexIn',
+	        'inq_dim-3' => 'out:blankpad',
 		'inq_dim-4' => 'out:sizetToInt', 
-	      'inq_dimid' => 2, 'inq_dimid-2' => 'in:addnull',
-	      'inq_dimlen' => 3, 'inq_dimlen-3' => 'out:sizetToInt',
-	      'inq_dimname' => 3, 'inq_dimname-3' => 'out:blankpad',
-	      'inq_var' => '3:6', 
+	      'inq_dimid' => '2:3', 'inq_dimid-2' => 'in:addnull',
+	        'inq_dimid-3' => 'out:OffsetIndex', 
+	      'inq_dimlen' => '2:3', 
+	        'inq_dimlen-2' => 'in:OffsetIndexIn',
+	        'inq_dimlen-3' => 'out:sizetToInt',
+	      'inq_dimname' => '2:3', 
+	        'inq_dimname-2' => 'in:OffsetIndexIn',
+	        'inq_dimname-3' => 'out:blankpad',
+	      'inq_var' => '2:3:6', 
+	        'inq_var-2' => 'in:OffsetIndexIn',
 		'inq_var-3' => 'out:blankpad',
-		'inq_var-6' => 'out:reorderIntArrOut:ncmpixVardim(*v1,*v2)',
+		'inq_var-6' => 'out:reorderIntArrOut:ncmpixVardim(*v1,*v2-1)',
 	      'inq_vardimid' => 3, 
-		'inq_vardimid-3' => 'out:reorderIntArrOut:ncmpixVardim(*v1,*v2)',
-	      'inq_varid' => 2, 'inq_varid-2' => 'in:addnull',
-	      'inq_varname' => 3, 'inq_varname-3' => 'out:blankpad',
+		'inq_vardimid-3' => 'out:reorderIntArrOut:ncmpixVardim(*v1,*v2-1)',
+	      'inq_varid' => '2:3', 'inq_varid-2' => 'in:addnull',
+	           'inq_varid-3' => 'out:OffsetIndex',
+	      'inq_varname' => '2:3', 
+	        'inq_varname-2' => 'in:OffsetIndexIn',
+	        'inq_varname-3' => 'out:blankpad',
+	      'inq_varnatts' => '2', 
+	        'inq_varnatts-2' => 'in:OffsetIndexIn',
+	      'inq_varndims' => '2', 
+	        'inq_varndims-2' => 'in:OffsetIndexIn',
+              'inq_vartype' => '2', 
+	        'inq_vartype-2' => 'in:OffsetIndexIn',
 	      'open' => 2, 'open-2' => 'in:addnull', 
 	      'put_att_double' => '3:5', 'put_att_double-3' => 'in:addnull',
 		'put_att_double-5' => 'in:intToSizeT',
@@ -360,6 +381,11 @@ sub intToSizeTArr_ftoc {
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[li\];
     }
+    else if (ln < 0) {
+        /* Error return */
+        *ierr = ln; 
+	return;
+    }
     else l$count = 0;
     }
 #else 
@@ -375,7 +401,13 @@ sub intToSizeTArr_ftoc {
         l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\];
-    }}\n";
+    }
+    else if (ln < 0) {
+        /* Error return */
+        *ierr = ln; 
+	return;
+    }
+    }\n";
     }
 }
 sub intToSizeTArr_in_arg {
@@ -426,6 +458,11 @@ sub intToSizeTOffsetArr_ftoc {
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-li-1\] - 1;
     }
+    else if (ln < 0) {
+        /* Error return */
+        *ierr = ln; 
+	return;
+    }
     else l$count = 0;
     }
 #else 
@@ -441,7 +478,13 @@ sub intToSizeTOffsetArr_ftoc {
         l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\] - 1;
-    }}\n";
+    }
+    else if (ln < 0) {
+        /* Error return */
+        *ierr = ln; 
+	return;
+    }
+    }\n";
     }
 }
 sub intToSizeTOffsetArr_in_arg {
@@ -565,6 +608,47 @@ sub sizetToInt_ctof {
     print $OUTFD "    *v$count = (int)l$count;\n";	
 }
 
+# -------------------------------------------------------------------------
+# For output of indices, add one to the result
+# usage is 
+#    'inq_varid' => '3', 'inq_varid-3' => 'out:OffsetIndex',
+
+sub OffsetIndex_out_decl {
+    my $count = $_[0];
+}
+sub OffsetIndex_out_ftoc {
+    my $count = $_[0];
+}
+sub OffsetIndex_out_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+sub OffsetIndex_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    print $OUTFD "
+    *v$count = *v$count + 1;\n";
+}
+# -------------------------------------------------------------------------
+# For input of indices, add one to the result
+# usage is 
+#    'inq_dim' => '3', 'inq_dim-3' => 'out:OffsetIndexIn',
+
+sub OffsetIndexIn_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    int l$count = *v$count - 1;\n";
+}
+sub OffsetIndexIn_ftoc {
+    my $count = $_[0];
+}
+sub OffsetIndexIn_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+sub OffsetIndexIn_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+}
 # ---------------------------------------------------------------------------
 # Functions to add routines that need special handling
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";
@@ -592,6 +676,8 @@ sub ncfxstrerror {
     close ($OUTFD);
 
 }
+
+# Note that this works for errors because the Netcdf errors are negative
 sub ncfxutil {
     $OUTFD = "NCFXUTIL";
     open( $OUTFD, ">nfxutil.c" ) || die "Cannot open nfxutil.c\n";
@@ -603,9 +689,12 @@ int ncmpixVardim( int ncid, int varid )
 {
   NC_var *varp;
   NC     *ncp;
+  int    status;
 
-  ncmpii_NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if (status != NC_NOERR) return status;
   varp = ncmpii_NC_lookupvar(ncp, varid);
+  if (varp == NULL) return NC_ENOTVAR;
   return varp->ndims;
 }\n";
     close ($OUTFD);	

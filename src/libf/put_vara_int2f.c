@@ -31,7 +31,13 @@ FORTRAN_API void FORT_CALL nfmpi_put_vara_int2_ ( int *v1, int *v2, int v3[], in
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l3[li] = v3[ln-1-li] - 1;
-    }}
+    }
+    else if (ln < 0) {
+        /* Error return */
+        *ierr = ln; 
+	return;
+    }
+    }
 
     { int ln = ncmpixVardim(*v1,*v2);
     if (ln > 0) {
@@ -39,7 +45,13 @@ FORTRAN_API void FORT_CALL nfmpi_put_vara_int2_ ( int *v1, int *v2, int v3[], in
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l4[li] = v4[ln-1-li];
-    }}
+    }
+    else if (ln < 0) {
+        /* Error return */
+        *ierr = ln; 
+	return;
+    }
+    }
     *ierr = ncmpi_put_vara_short( *v1, *v2, l3, l4, v5 );
 
     if (l3) { free(l3); }
