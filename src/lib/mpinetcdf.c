@@ -45,14 +45,14 @@ static int x_getn_float(const void *xbuf, void *buf, int nelems,
 static int x_getn_double(const void *xbuf, void *buf, int nelems,
 			 MPI_Datatype datatype);
 static int set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
-			     const size_t index[]);
+			     const MPI_Offset index[]);
 static int set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp);
 static int set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
-			     const size_t start[], const size_t count[],
+			     const MPI_Offset start[], const MPI_Offset count[],
 			     int getnotput);
 static int set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
-			     const size_t start[], const size_t count[], 
-			     const size_t stride[], int getnotput);
+			     const MPI_Offset start[], const MPI_Offset count[], 
+			     const MPI_Offset stride[], int getnotput);
 static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 		       int collective);
 
@@ -786,9 +786,9 @@ check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
  * Check whether 'coord' values (indices) are valid for the variable.
  */
 static int
-NCcoordck(NC *ncp, const NC_var *varp, const size_t *coord)
+NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord)
 {
-        const size_t *ip;
+        const MPI_Offset *ip;
         size_t *up;
  
         if(varp->ndims == 0)
@@ -824,7 +824,7 @@ NCcoordck(NC *ncp, const NC_var *varp, const size_t *coord)
         for(; ip < coord + varp->ndims; ip++, up++)
         {
                 /* cast needed for braindead systems with signed size_t */
-                if((unsigned long) *ip >= (unsigned long) *up )
+                if( *ip >= (unsigned long)*up )
                         return NC_EINVALCOORDS;
         }
  
@@ -836,9 +836,9 @@ NCcoordck(NC *ncp, const NC_var *varp, const size_t *coord)
 /*ARGSUSED*/
 static int
 NCedgeck(const NC *ncp, const NC_var *varp,
-         const size_t *start, const size_t *edges)
+         const MPI_Offset *start, const MPI_Offset *edges)
 {
-  const size_t *const end = start + varp->ndims;
+  const MPI_Offset *const end = start + varp->ndims;
   const size_t *shp = varp->shape;
 
   if(varp->ndims == 0)
@@ -854,8 +854,7 @@ NCedgeck(const NC *ncp, const NC_var *varp,
   for(; start < end; start++, edges++, shp++)
   {
     /* cast needed for braindead systems with signed size_t */
-    if((unsigned long) *edges > *shp ||
-      (unsigned long) *start + (unsigned long) *edges > *shp)
+    if( *edges > (unsigned long)*shp || *start + *edges > (unsigned long)*shp)
     {
       return(NC_EEDGE);
     }
@@ -867,10 +866,10 @@ NCedgeck(const NC *ncp, const NC_var *varp,
 #if 0
 static int
 NCstrideedgeck(const NC *ncp, const NC_var *varp,
-         const size_t *start, const size_t *edges, const size_t *stride)
+         const MPI_Offset *start, const MPI_Offset *edges, const MPI_Offset *stride)
 {
-  const size_t *const end = start + varp->ndims;
-  const size_t *shp = varp->shape;
+  const MPI_Offset *const end = start + varp->ndims;
+  const MPI_Offset *shp = varp->shape;
 
   if(varp->ndims == 0)
     return NC_NOERR;  /* 'scalar' variable */
@@ -886,8 +885,7 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
   for(; start < end; start++, edges++, shp++, stride++)
   {
     /* cast needed for braindead systems with signed size_t */
-    if((unsigned long) *edges > *shp ||
-      (unsigned long) *start + (unsigned long) *edges * (unsigned long) *stride > *shp)
+    if( *edges > *shp || *start + *edges * *stride > *shp)
     {
       return(NC_EEDGE);
     }
@@ -898,7 +896,7 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 #endif
 
 static int
-set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t index[]) {
+set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset index[]) {
   MPI_Offset offset;
   int status;
   int dim, ndims;
@@ -1008,7 +1006,7 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
 }
 
 static int
-set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[], const size_t count[], int getnotput) {
+set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start[], const MPI_Offset count[], int getnotput) {
 
   MPI_Offset offset;
   int status;
@@ -1173,14 +1171,14 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const size_t start[], 
 
 static int
 set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
-		     const size_t start[], const size_t count[], 
-                     const size_t stride[], int getnotput) {
+		     const MPI_Offset start[], const MPI_Offset count[], 
+                     const MPI_Offset stride[], int getnotput) {
   MPI_Offset offset;
   int status;
   int mpireturn;
   int dim, ndims;
   MPI_Datatype *subtypes, *filetype;
-  size_t *blocklens = NULL, *blockstride = NULL, *blockcount = NULL;
+  MPI_Offset *blocklens = NULL, *blockstride = NULL, *blockcount = NULL;
   int rank;
 
   status = NCcoordck(ncp, varp, start);
@@ -1193,7 +1191,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   {
     if ( (stride != NULL && stride[dim] == 0) ||
         /* cast needed for braindead systems with signed size_t */
-        (unsigned long) stride[dim] >= X_INT_MAX)
+        stride[dim] >= X_INT_MAX)
     {
       return NC_ESTRIDE;
     }
@@ -1230,9 +1228,9 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   
   } else {  
 
-    blocklens = (size_t *) malloc(ndims * sizeof(size_t));
-    blockstride = (size_t *) malloc(ndims * sizeof(size_t));
-    blockcount = (size_t *) malloc(ndims * sizeof(size_t));
+    blocklens = (MPI_Offset *) malloc(ndims * sizeof(MPI_Offset));
+    blockstride = (MPI_Offset *) malloc(ndims * sizeof(MPI_Offset));
+    blockcount = (MPI_Offset *) malloc(ndims * sizeof(MPI_Offset));
 
     dim = 0;
     while (dim < ndims && count[dim] > 0) dim++;
@@ -1313,7 +1311,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 
 int
 ncmpi_put_var1(int ncid, int varid,
-               const size_t index[],
+               const MPI_Offset index[],
                const void *buf, int bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
@@ -1430,7 +1428,7 @@ ncmpi_put_var1(int ncid, int varid,
 
 int
 ncmpi_get_var1(int ncid, int varid,
-               const size_t index[],
+               const MPI_Offset index[],
                void *buf, int bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
@@ -1853,7 +1851,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
 
 int
 ncmpi_put_vara_all(int ncid, int varid,
-                   const size_t start[], const size_t count[],
+                   const MPI_Offset start[], const MPI_Offset count[],
                    const void *buf, int bufcount, 
                    MPI_Datatype datatype) {
 
@@ -1992,7 +1990,7 @@ ncmpi_put_vara_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_all(int ncid, int varid,
-                   const size_t start[], const size_t count[],
+                   const MPI_Offset start[], const MPI_Offset count[],
 		   void *buf, int bufcount,
                    MPI_Datatype datatype) {
 
@@ -2100,7 +2098,7 @@ ncmpi_get_vara_all(int ncid, int varid,
 
 int
 ncmpi_put_vara(int ncid, int varid,
-               const size_t start[], const size_t count[],
+               const MPI_Offset start[], const MPI_Offset count[],
                const void *buf, int bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
@@ -2221,7 +2219,7 @@ ncmpi_put_vara(int ncid, int varid,
 
 int
 ncmpi_get_vara(int ncid, int varid,
-               const size_t start[], const size_t count[],
+               const MPI_Offset start[], const MPI_Offset count[],
                void *buf, int bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
@@ -2328,9 +2326,9 @@ ncmpi_get_vara(int ncid, int varid,
 
 int
 ncmpi_put_vars_all(int ncid, int varid,
-                   const size_t start[], 
-		   const size_t count[],
-		   const size_t stride[],
+                   const MPI_Offset start[], 
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
                    const void *buf, int bufcount, 
                    MPI_Datatype datatype) {
   NC_var *varp;
@@ -2469,9 +2467,9 @@ ncmpi_put_vars_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_all(int ncid, int varid,
-                   const size_t start[], 
-		   const size_t count[],
-                   const size_t stride[],
+                   const MPI_Offset start[], 
+		   const MPI_Offset count[],
+                   const MPI_Offset stride[],
 		   void *buf, int bufcount,
                    MPI_Datatype datatype) {
 
@@ -2580,9 +2578,9 @@ ncmpi_get_vars_all(int ncid, int varid,
 
 int
 ncmpi_put_vars(int ncid, int varid,
-               const size_t start[], 
-	       const size_t count[],
-	       const size_t stride[],
+               const MPI_Offset start[], 
+	       const MPI_Offset count[],
+	       const MPI_Offset stride[],
                const void *buf, int bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
@@ -2704,9 +2702,9 @@ ncmpi_put_vars(int ncid, int varid,
 
 int
 ncmpi_get_vars(int ncid, int varid,
-               const size_t start[], 
-	       const size_t count[],
-               const size_t stride[],
+               const MPI_Offset start[], 
+	       const MPI_Offset count[],
+               const MPI_Offset stride[],
                void *buf, int bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
@@ -2814,7 +2812,7 @@ ncmpi_get_vars(int ncid, int varid,
 
 int
 ncmpi_put_var1_uchar(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
@@ -2834,7 +2832,7 @@ ncmpi_put_var1_uchar(int ncid, int varid,
 
 int
 ncmpi_put_var1_schar(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      const signed char *op) {
   NC_var *varp;
   NC *ncp;
@@ -2854,7 +2852,7 @@ ncmpi_put_var1_schar(int ncid, int varid,
 
 int
 ncmpi_put_var1_text(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      const char *op) {
   NC_var *varp;
   NC *ncp;
@@ -2875,7 +2873,7 @@ ncmpi_put_var1_text(int ncid, int varid,
 
 int
 ncmpi_put_var1_short(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
 		     const short *op) {
   NC_var *varp;
   NC *ncp;
@@ -2895,7 +2893,7 @@ ncmpi_put_var1_short(int ncid, int varid,
 
 int
 ncmpi_put_var1_int(int ncid, int varid,
-                   const size_t index[],
+                   const MPI_Offset index[],
                    const int *op) {
   NC_var *varp;
   NC *ncp;
@@ -2915,7 +2913,7 @@ ncmpi_put_var1_int(int ncid, int varid,
 
 int
 ncmpi_put_var1_long(int ncid, int varid,
-                   const size_t index[],
+                   const MPI_Offset index[],
                    const long *op) {
   NC_var *varp;
   NC *ncp;
@@ -2935,7 +2933,7 @@ ncmpi_put_var1_long(int ncid, int varid,
 
 int
 ncmpi_put_var1_float(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      const float *op) {
   NC_var *varp;
   NC *ncp;
@@ -2955,7 +2953,7 @@ ncmpi_put_var1_float(int ncid, int varid,
  
 int
 ncmpi_put_var1_double(int ncid, int varid,
-                      const size_t index[],
+                      const MPI_Offset index[],
                       const double *op) {
   NC_var *varp;
   NC *ncp;
@@ -2975,7 +2973,7 @@ ncmpi_put_var1_double(int ncid, int varid,
 
 int
 ncmpi_get_var1_uchar(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -2995,7 +2993,7 @@ ncmpi_get_var1_uchar(int ncid, int varid,
 
 int
 ncmpi_get_var1_schar(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      signed char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3015,7 +3013,7 @@ ncmpi_get_var1_schar(int ncid, int varid,
 
 int
 ncmpi_get_var1_text(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3035,7 +3033,7 @@ ncmpi_get_var1_text(int ncid, int varid,
 
 int
 ncmpi_get_var1_short(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      short *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3055,7 +3053,7 @@ ncmpi_get_var1_short(int ncid, int varid,
  
 int
 ncmpi_get_var1_int(int ncid, int varid,
-                   const size_t index[],
+                   const MPI_Offset index[],
                    int *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3075,7 +3073,7 @@ ncmpi_get_var1_int(int ncid, int varid,
  
 int
 ncmpi_get_var1_long(int ncid, int varid,
-                   const size_t index[],
+                   const MPI_Offset index[],
                    long *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3095,7 +3093,7 @@ ncmpi_get_var1_long(int ncid, int varid,
 
 int
 ncmpi_get_var1_float(int ncid, int varid,
-                     const size_t index[],
+                     const MPI_Offset index[],
                      float *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3115,7 +3113,7 @@ ncmpi_get_var1_float(int ncid, int varid,
  
 int
 ncmpi_get_var1_double(int ncid, int varid,
-                      const size_t index[],
+                      const MPI_Offset index[],
                       double *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4312,7 +4310,7 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
 
 int
 ncmpi_put_vara_uchar_all(int ncid, int varid,
-                         const size_t start[], const size_t count[],
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4339,7 +4337,7 @@ ncmpi_put_vara_uchar_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_uchar(int ncid, int varid,
-                     const size_t start[], const size_t count[],
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4366,7 +4364,7 @@ ncmpi_put_vara_uchar(int ncid, int varid,
 
 int
 ncmpi_put_vara_schar_all(int ncid, int varid,
-                         const size_t start[], const size_t count[],
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const signed char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4393,7 +4391,7 @@ ncmpi_put_vara_schar_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_schar(int ncid, int varid,
-                     const size_t start[], const size_t count[],
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const signed char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4420,7 +4418,7 @@ ncmpi_put_vara_schar(int ncid, int varid,
 
 int
 ncmpi_put_vara_text_all(int ncid, int varid,
-                         const size_t start[], const size_t count[],
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4447,7 +4445,7 @@ ncmpi_put_vara_text_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_text(int ncid, int varid,
-                     const size_t start[], const size_t count[],
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4474,7 +4472,7 @@ ncmpi_put_vara_text(int ncid, int varid,
 
 int
 ncmpi_put_vara_short_all(int ncid, int varid,
-                         const size_t start[], const size_t count[],
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const short *op) {
   NC_var *varp;
   NC *ncp;
@@ -4501,7 +4499,7 @@ ncmpi_put_vara_short_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_short(int ncid, int varid,
-                     const size_t start[], const size_t count[],
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const short *op) {
   NC_var *varp;
   NC *ncp;
@@ -4528,7 +4526,7 @@ ncmpi_put_vara_short(int ncid, int varid,
 
 int
 ncmpi_put_vara_int_all(int ncid, int varid, 
-                       const size_t start[], const size_t count[], 
+                       const MPI_Offset start[], const MPI_Offset count[], 
 		       const int *op) {
   NC_var *varp;
   NC *ncp;
@@ -4555,7 +4553,7 @@ ncmpi_put_vara_int_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_int(int ncid, int varid, 
-		const size_t start[], const size_t count[], 
+		const MPI_Offset start[], const MPI_Offset count[], 
 		const int *op) {
   NC_var *varp;
   NC *ncp;
@@ -4582,7 +4580,7 @@ ncmpi_put_vara_int(int ncid, int varid,
 
 int
 ncmpi_put_vara_long_all(int ncid, int varid,
-                       const size_t start[], const size_t count[],
+                       const MPI_Offset start[], const MPI_Offset count[],
                        const long *op) {
   NC_var *varp;
   NC *ncp;
@@ -4609,7 +4607,7 @@ ncmpi_put_vara_long_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_long(int ncid, int varid,
-                const size_t start[], const size_t count[],
+                const MPI_Offset start[], const MPI_Offset count[],
                 const long *op) {
   NC_var *varp;
   NC *ncp;
@@ -4636,7 +4634,7 @@ ncmpi_put_vara_long(int ncid, int varid,
 
 int
 ncmpi_put_vara_float_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     const float *op) {
   NC_var *varp;
   NC *ncp;
@@ -4663,7 +4661,7 @@ ncmpi_put_vara_float_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_float(int ncid, int varid,
-                const size_t start[], const size_t count[],
+                const MPI_Offset start[], const MPI_Offset count[],
                 const float *op) {
   NC_var *varp;
   NC *ncp;
@@ -4690,7 +4688,7 @@ ncmpi_put_vara_float(int ncid, int varid,
 
 int
 ncmpi_put_vara_double_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     const double *op) {
   NC_var *varp;
   NC *ncp;
@@ -4717,7 +4715,7 @@ ncmpi_put_vara_double_all(int ncid, int varid,
 
 int
 ncmpi_put_vara_double(int ncid, int varid,
-                const size_t start[], const size_t count[],
+                const MPI_Offset start[], const MPI_Offset count[],
                 const double *op) {
   NC_var *varp;
   NC *ncp;
@@ -4744,7 +4742,7 @@ ncmpi_put_vara_double(int ncid, int varid,
 
 int
 ncmpi_get_vara_uchar_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     unsigned char *ip) {
 
   NC_var *varp;
@@ -4772,7 +4770,7 @@ ncmpi_get_vara_uchar_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_uchar(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     unsigned char *ip) {
 
   NC_var *varp;
@@ -4800,7 +4798,7 @@ ncmpi_get_vara_uchar(int ncid, int varid,
 
 int
 ncmpi_get_vara_schar_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     signed char *ip) {
 
   NC_var *varp;
@@ -4828,7 +4826,7 @@ ncmpi_get_vara_schar_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_schar(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     signed char *ip) {
 
   NC_var *varp;
@@ -4856,7 +4854,7 @@ ncmpi_get_vara_schar(int ncid, int varid,
 
 int
 ncmpi_get_vara_text_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     char *ip) {
 
   NC_var *varp;
@@ -4884,7 +4882,7 @@ ncmpi_get_vara_text_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_text(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     char *ip) {
 
   NC_var *varp;
@@ -4912,7 +4910,7 @@ ncmpi_get_vara_text(int ncid, int varid,
 
 int
 ncmpi_get_vara_short_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     short *ip) {
  
   NC_var *varp;
@@ -4940,7 +4938,7 @@ ncmpi_get_vara_short_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_short(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     short *ip) {
  
   NC_var *varp;
@@ -4968,7 +4966,7 @@ ncmpi_get_vara_short(int ncid, int varid,
 
 int
 ncmpi_get_vara_int_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     int *ip) {
 
   NC_var *varp;
@@ -4996,7 +4994,7 @@ ncmpi_get_vara_int_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_int(int ncid, int varid,
-                const size_t start[], const size_t count[],
+                const MPI_Offset start[], const MPI_Offset count[],
                 int *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5023,7 +5021,7 @@ ncmpi_get_vara_int(int ncid, int varid,
 
 int
 ncmpi_get_vara_long_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     long *ip) {
 
   NC_var *varp;
@@ -5051,7 +5049,7 @@ ncmpi_get_vara_long_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_long(int ncid, int varid,
-                const size_t start[], const size_t count[],
+                const MPI_Offset start[], const MPI_Offset count[],
                 long *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5078,7 +5076,7 @@ ncmpi_get_vara_long(int ncid, int varid,
 
 int
 ncmpi_get_vara_float_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     float *ip) {
 
   NC_var *varp;
@@ -5106,7 +5104,7 @@ ncmpi_get_vara_float_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_float(int ncid, int varid,
-                const size_t start[], const size_t count[],
+                const MPI_Offset start[], const MPI_Offset count[],
                 float *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5133,7 +5131,7 @@ ncmpi_get_vara_float(int ncid, int varid,
 
 int
 ncmpi_get_vara_double_all(int ncid, int varid,
-                    const size_t start[], const size_t count[],
+                    const MPI_Offset start[], const MPI_Offset count[],
                     double *ip) {
 
   NC_var *varp;
@@ -5161,7 +5159,7 @@ ncmpi_get_vara_double_all(int ncid, int varid,
 
 int
 ncmpi_get_vara_double(int ncid, int varid,
-                const size_t start[], const size_t count[],
+                const MPI_Offset start[], const MPI_Offset count[],
                 double *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5188,9 +5186,9 @@ ncmpi_get_vara_double(int ncid, int varid,
 
 int
 ncmpi_put_vars_uchar_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
@@ -5217,9 +5215,9 @@ ncmpi_put_vars_uchar_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_uchar(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
@@ -5246,9 +5244,9 @@ ncmpi_put_vars_uchar(int ncid, int varid,
 
 int
 ncmpi_put_vars_schar_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const signed char *op) {
   NC_var *varp;
   NC *ncp;
@@ -5275,9 +5273,9 @@ ncmpi_put_vars_schar_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_schar(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const signed char *op) {
   NC_var *varp;
   NC *ncp;
@@ -5304,9 +5302,9 @@ ncmpi_put_vars_schar(int ncid, int varid,
 
 int
 ncmpi_put_vars_text_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const char *op) {
   NC_var *varp;
   NC *ncp;
@@ -5333,9 +5331,9 @@ ncmpi_put_vars_text_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_text(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const char *op) {
   NC_var *varp;
   NC *ncp;
@@ -5362,9 +5360,9 @@ ncmpi_put_vars_text(int ncid, int varid,
 
 int
 ncmpi_put_vars_short_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const short *op) {
   NC_var *varp;
   NC *ncp;
@@ -5391,9 +5389,9 @@ ncmpi_put_vars_short_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_short(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const short *op) {
   NC_var *varp;
   NC *ncp;
@@ -5420,9 +5418,9 @@ ncmpi_put_vars_short(int ncid, int varid,
 
 int
 ncmpi_put_vars_int_all(int ncid, int varid,
-                       const size_t start[],
-                       const size_t count[],
-                       const size_t stride[],
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        const int *op) {
   NC_var *varp;
   NC *ncp;
@@ -5449,9 +5447,9 @@ ncmpi_put_vars_int_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_int(int ncid, int varid,
-                   const size_t start[],
-                   const size_t count[],
-                   const size_t stride[],
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    const int *op) {
   NC_var *varp;
   NC *ncp;
@@ -5478,9 +5476,9 @@ ncmpi_put_vars_int(int ncid, int varid,
 
 int
 ncmpi_put_vars_long_all(int ncid, int varid,
-                       const size_t start[],
-                       const size_t count[],
-                       const size_t stride[],
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        const long *op) {
   NC_var *varp;
   NC *ncp;
@@ -5507,9 +5505,9 @@ ncmpi_put_vars_long_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_long(int ncid, int varid,
-                   const size_t start[],
-                   const size_t count[],
-                   const size_t stride[],
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    const long *op) {
   NC_var *varp;
   NC *ncp;
@@ -5536,9 +5534,9 @@ ncmpi_put_vars_long(int ncid, int varid,
 
 int
 ncmpi_put_vars_float_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const float *op) {
   NC_var *varp;
   NC *ncp;
@@ -5565,9 +5563,9 @@ ncmpi_put_vars_float_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_float(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const float *op) {
   NC_var *varp;
   NC *ncp;
@@ -5594,9 +5592,9 @@ ncmpi_put_vars_float(int ncid, int varid,
 
 int
 ncmpi_put_vars_double_all(int ncid, int varid,
-                          const size_t start[], 
-                          const size_t count[],
-                          const size_t stride[],
+                          const MPI_Offset start[], 
+                          const MPI_Offset count[],
+                          const MPI_Offset stride[],
                           const double *op) {
 
   NC_var *varp;
@@ -5625,9 +5623,9 @@ ncmpi_put_vars_double_all(int ncid, int varid,
 
 int
 ncmpi_put_vars_double(int ncid, int varid,
-                      const size_t start[],
-                      const size_t count[],
-                      const size_t stride[],
+                      const MPI_Offset start[],
+                      const MPI_Offset count[],
+                      const MPI_Offset stride[],
                       const double *op) {
 
   NC_var *varp;
@@ -5656,9 +5654,9 @@ ncmpi_put_vars_double(int ncid, int varid,
 
 int
 ncmpi_get_vars_uchar_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5685,9 +5683,9 @@ ncmpi_get_vars_uchar_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_uchar(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5714,9 +5712,9 @@ ncmpi_get_vars_uchar(int ncid, int varid,
 
 int
 ncmpi_get_vars_schar_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          signed char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5743,9 +5741,9 @@ ncmpi_get_vars_schar_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_schar(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      signed char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5772,9 +5770,9 @@ ncmpi_get_vars_schar(int ncid, int varid,
 
 int
 ncmpi_get_vars_text_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5801,9 +5799,9 @@ ncmpi_get_vars_text_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_text(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5830,9 +5828,9 @@ ncmpi_get_vars_text(int ncid, int varid,
 
 int
 ncmpi_get_vars_short_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          short *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5859,9 +5857,9 @@ ncmpi_get_vars_short_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_short(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      short *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5888,9 +5886,9 @@ ncmpi_get_vars_short(int ncid, int varid,
 
 int
 ncmpi_get_vars_int_all(int ncid, int varid,
-                       const size_t start[],
-                       const size_t count[],
-                       const size_t stride[],
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        int *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5917,9 +5915,9 @@ ncmpi_get_vars_int_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_int(int ncid, int varid,
-                   const size_t start[],
-                   const size_t count[],
-                   const size_t stride[],
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    int *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5946,9 +5944,9 @@ ncmpi_get_vars_int(int ncid, int varid,
 
 int
 ncmpi_get_vars_long_all(int ncid, int varid,
-                       const size_t start[],
-                       const size_t count[],
-                       const size_t stride[],
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        long *ip) {
   NC_var *varp;
   NC *ncp;
@@ -5975,9 +5973,9 @@ ncmpi_get_vars_long_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_long(int ncid, int varid,
-                   const size_t start[],
-                   const size_t count[],
-                   const size_t stride[],
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    long *ip) {
   NC_var *varp;
   NC *ncp;
@@ -6004,9 +6002,9 @@ ncmpi_get_vars_long(int ncid, int varid,
 
 int
 ncmpi_get_vars_float_all(int ncid, int varid,
-                         const size_t start[],
-                         const size_t count[],
-                         const size_t stride[],
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          float *ip) {
   NC_var *varp;
   NC *ncp;
@@ -6033,9 +6031,9 @@ ncmpi_get_vars_float_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_float(int ncid, int varid,
-                     const size_t start[],
-                     const size_t count[],
-                     const size_t stride[],
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      float *ip) {
   NC_var *varp;
   NC *ncp;
@@ -6062,9 +6060,9 @@ ncmpi_get_vars_float(int ncid, int varid,
 
 int
 ncmpi_get_vars_double_all(int ncid, int varid,
-                          const size_t start[], 
-			  const size_t count[],
-			  const size_t stride[],
+                          const MPI_Offset start[], 
+			  const MPI_Offset count[],
+			  const MPI_Offset stride[],
                           double *ip) {
 
   NC_var *varp;
@@ -6092,9 +6090,9 @@ ncmpi_get_vars_double_all(int ncid, int varid,
 
 int
 ncmpi_get_vars_double(int ncid, int varid,
-                      const size_t start[],
-                      const size_t count[],
-                      const size_t stride[],
+                      const MPI_Offset start[],
+                      const MPI_Offset count[],
+                      const MPI_Offset stride[],
                       double *ip) {
 
   NC_var *varp;

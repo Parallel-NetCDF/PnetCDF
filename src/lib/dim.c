@@ -47,7 +47,7 @@ ncmpii_new_x_NC_dim(NC_string *name)
 NC_new_dim(const char *name, long size)
  */
 static NC_dim *
-ncmpii_new_NC_dim(const char *name, size_t size)
+ncmpii_new_NC_dim(const char *name, MPI_Offset size)
 {
 	NC_string *strp;
 	NC_dim *dimp;
@@ -72,7 +72,7 @@ ncmpii_new_NC_dim(const char *name, size_t size)
 static NC_dim *
 dup_NC_dim(const NC_dim *dimp)
 {
-	return ncmpii_new_NC_dim(dimp->name->cp, dimp->size);
+	return ncmpii_new_NC_dim(dimp->name->cp, (MPI_Offset) dimp->size);
 }
 
 /*
@@ -303,7 +303,7 @@ ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem)
 /* Public */
 
 int
-ncmpi_def_dim(int ncid, const char *name, size_t size, int *dimidp)
+ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
 {
 	int status;
 	NC *ncp;
@@ -322,7 +322,7 @@ ncmpi_def_dim(int ncid, const char *name, size_t size, int *dimidp)
 		return status;
 
 		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) size > X_INT_MAX) /* Backward compat */
+	if(size > X_INT_MAX || size < 0) /* Backward compat */
 		return NC_EINVAL;
 
 	if(size == NC_UNLIMITED)
@@ -380,7 +380,7 @@ ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr)
 
 
 int
-ncmpi_inq_dim(int ncid, int dimid, char *name, size_t *sizep)
+ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep)
 {
 	int status;
 	NC *ncp;
@@ -438,7 +438,7 @@ ncmpi_inq_dimname(int ncid, int dimid, char *name)
 
 
 int 
-ncmpi_inq_dimlen(int ncid, int dimid, size_t *lenp)
+ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
 {
 	int status;
 	NC *ncp;
