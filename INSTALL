@@ -45,7 +45,12 @@
 
 
     1. autoconf
-    2. ./configure --prefix=<install dir>
+    2. ./configure --prefix=<install dir> --with-mpi=/path/to/implementation
+	the --with-mpi argument should specify the prefix of where the mpi
+	implementation was installed.  If your mpicc is in
+	/usr/local/mpich-1.2.3/bin/mpicc then use the prefix
+	--with-mpi=/usr/local/mpich-1.2.3
+
     3. make (on some systems, you make need to use gmake)
     4. make install
 
