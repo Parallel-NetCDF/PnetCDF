@@ -146,4 +146,4 @@ UD_CHECK_SIZEOF(size_t)
 UD_FORTRAN_TYPES
 UD_MAKEWHATIS
 UD_FTPBINDIR
-AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile src/libf/netcdf.inc test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nf_test/Makefile)
+AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile src/libf/pnetcdf.inc test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nf_test/Makefile)
