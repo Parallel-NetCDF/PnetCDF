@@ -155,7 +155,7 @@ ncmpii_new_NC(const size_t *chunkp)
 	(void) memset(ncp, 0, sizeof(NC));
 
 	ncp->xsz = MIN_NC_XSZ;
-	assert(ncp->xsz == hdr_len_NC(ncp));
+	assert(ncp->xsz == ncmpii_hdr_len_NC(ncp));
 	
 	ncp->chunk = chunkp != NULL ? *chunkp : NC_SIZEHINT_DEFAULT;
 
@@ -261,7 +261,7 @@ NC_begins(NC *ncp,
 	if(r_align == NC_ALIGN_CHUNK)
 		r_align = ncp->chunk;
 
-	ncp->xsz = hdr_len_NC(ncp);
+	ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
 	if(ncp->vars.nelems == 0) 
 		return;
@@ -491,7 +491,7 @@ ncmpii_read_NC(NC *ncp) {
   ncmpii_free_NC_attrarrayV(&ncp->attrs);
   ncmpii_free_NC_vararrayV(&ncp->vars); 
 
-  status = hdr_get_NC(ncp);
+  status = ncmpii_hdr_get_NC(ncp);
 
   if(status == NC_NOERR)
     fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
@@ -516,7 +516,7 @@ write_NC(NC *ncp)
   MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   buf = (void *)malloc(ncp->xsz);
-  status = hdr_put_NC(ncp, buf);
+  status = ncmpii_hdr_put_NC(ncp, buf);
   if(status != NC_NOERR) {
     free(buf);
     return status;

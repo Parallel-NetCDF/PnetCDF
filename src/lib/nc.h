@@ -518,9 +518,6 @@ typedef struct bufferinfo {
   size_t index;		/* index of current position in buffer */
 } bufferinfo;  
 
-extern int
-hdr_get_NC(NC *ncp);
-
 extern size_t 
 ncmpix_len_nctype(nc_type type);
 
@@ -530,18 +527,18 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
 #endif
 
 extern size_t
-hdr_len_NC(const NC *ncp);
+ncmpii_hdr_len_NC(const NC *ncp);
 
 extern int
-hdr_get_NC(NC *ncp);
+ncmpii_hdr_get_NC(NC *ncp);
 
 extern int 
-hdr_put_NC(NC *ncp, void *buf);
+ncmpii_hdr_put_NC(NC *ncp, void *buf);
 
 extern int
-NC_computeshapes(NC *ncp);
+ncmpii_NC_computeshapes(NC *ncp);
 
-/* end defined in hader.c */
+/* end defined in header.c */
 
 /* begin defined in mpincio.c */
 extern int

@@ -67,7 +67,7 @@ static const schar ncmagic[] = {'C', 'D', 'F', 0x01};
  * netcdf file.
  */ 
 int
-NC_computeshapes(NC *ncp)
+ncmpii_NC_computeshapes(NC *ncp)
 {
         NC_var **vpp = (NC_var **)ncp->vars.value;
         NC_var *const *const end = &vpp[ncp->vars.nelems];
@@ -257,7 +257,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap)
 }
  
 size_t
-hdr_len_NC(const NC *ncp)
+ncmpii_hdr_len_NC(const NC *ncp)
 {
         size_t xlen = sizeof(ncmagic);
  
@@ -521,7 +521,7 @@ hdr_put_NC_vararray(bufferinfo *pbp, const NC_vararray *ncap){
 }
 
 int 
-hdr_put_NC(NC *ncp, void *buf) {
+ncmpii_hdr_put_NC(NC *ncp, void *buf) {
   int status;
   bufferinfo putbuf;
   size_t nrecs; 
@@ -1062,7 +1062,7 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
 }
 
 int
-hdr_get_NC(NC *ncp) {
+ncmpii_hdr_get_NC(NC *ncp) {
   int status;
   bufferinfo getbuf;
   schar magic[sizeof(ncmagic)];
@@ -1127,8 +1127,8 @@ hdr_get_NC(NC *ncp) {
     return status; 
   }
 
-  ncp->xsz = hdr_len_NC(ncp); 
-  status = NC_computeshapes(ncp);
+  ncp->xsz = ncmpii_hdr_len_NC(ncp); 
+  status = ncmpii_NC_computeshapes(ncp);
   free(getbuf.base);
 
   return status;
