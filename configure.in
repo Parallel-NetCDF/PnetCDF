@@ -28,6 +28,8 @@ dnl UD_PROG_F90
 # Checking for Fortran types also determines the Fortran name mangling
 # and places the value into FCALLSCSUB as a the C name corresponding
 # to the Fortran name SUB 
+UD_FORTRANTYPES
+UD_CHECK_FCALLSCSUB
 UD_CHECK_LIB_MATH
 UD_PROG_AR()
 UD_PROG_NM()
