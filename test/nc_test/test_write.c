@@ -1341,7 +1341,7 @@ test_ncmpi_copy_att(void)
     int j;
     char *name;                 /* of att */
     ncmpi_type datatype;           /* of att */
-    size_t length;              /* of att */
+    MPI_Offset length;              /* of att */
     char  value;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid_in);
@@ -1488,7 +1488,7 @@ test_ncmpi_rename_att(void)
     int nok = 0;      /* count of valid comparisons */
     ncmpi_type datatype;
     ncmpi_type atttype;
-    size_t length;
+    MPI_Offset length;
     size_t attlength;
     char  text[MAX_NELS];
     double value[MAX_NELS];

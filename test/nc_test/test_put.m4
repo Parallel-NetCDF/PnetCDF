@@ -180,7 +180,7 @@ check_atts_$1(int  ncid)
     $1 value[MAX_NELS];
     ncmpi_type datatype;
     double expect[MAX_NELS];
-    size_t length;
+    MPI_Offset length;
     size_t nInExtRange;  /* number values within external range */
     size_t nInIntRange;  /* number values within internal range */
     int canConvert;     /* Both text or both numeric */
