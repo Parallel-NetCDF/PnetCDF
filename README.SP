@@ -1,6 +1,7 @@
 # John Tannahill <tannahill1@llnl.gov> reported success building
-# parallel-netcdf on the 'seaborg' cluster (an IBM-SP at NERSC) by setting
-# these environment variables:
+# parallel-netcdf on the 'seaborg' cluster (an IBM-SP at NERSC) and Tyce
+# Mclarty <mclarty3@llnl.gov> reported success on LLNL's 'frost' cluster by
+# setting these environment variables:
 
    setenv MPICC  mpcc_r
    setenv MPIF77 mpxlf_r
