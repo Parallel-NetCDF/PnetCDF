@@ -254,7 +254,7 @@ C On exit, any open netCDF files are closed.
         integer recdim0
         integer did
         integer vid
-	INTEGER(KIND=MPI_OFFSET_KIND) length
+        NFMPI_LONG_T length
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -316,7 +316,7 @@ C               /* Check that inquire still works in define mode */
                 end if
 
 C               /* Add dim, var, global att */
-		length = 1
+                length = 1
                 err = nfmpi_def_dim(ncid2, 'inqd', length, did)
                 if (err .ne. 0)
      +              call errore('nfmpi_def_dim: ', err)
@@ -325,7 +325,7 @@ C               /* Add dim, var, global att */
                 if (err .ne. 0)
      +              call errore('nfmpi_def_var: ', err)
 
-		length = len('stuff')
+                length = len('stuff')
                 err = nfmpi_put_att_text(ncid2, NF_GLOBAL, 'inqa', 
      +                                length, 'stuff')
                 if (err .ne. 0)
@@ -528,7 +528,8 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer err
         character*(NF_MAX_NAME) name
-        INTEGER(KIND=MPI_OFFSET_KIND) length
+        NFMPI_LONG_T length
+        integer intlen
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -548,7 +549,8 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call errorc('name unexpected: ', name)
                 print *, ' expected ', dim_name(i),' for the ',i,'entry'
             else if (dim_len(i) .ne. length) then
-                call errori('size unexpected: ', length)
+                intlen = length
+                call errori('size unexpected: ', intlen)
             end if
 1       continue
         err = nfmpi_close(ncid)
@@ -563,7 +565,8 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        INTEGER(KIND=MPI_OFFSET_KIND) length
+        NFMPI_LONG_T length
+        integer intlen
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -580,7 +583,8 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
             if (err .ne. 0) then
                 call errore('nfmpi_inq_dimlen: ', err)
             else if (dim_len(i) .ne. length) then
-                call errori('size unexpected: ', length)
+                intlen = length
+                call errori('size unexpected: ', intlen)
                 print *, 'expected ', dim_len(i),' for the ',i,'entry'
             end if
 1       continue
@@ -782,7 +786,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +                   ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 0, NVARS	! start with global attributes
+        do 1, i = 0, NVARS    ! start with global attributes
             err = nfmpi_inq_varnatts(BAD_ID, i, na)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
@@ -874,7 +878,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer j
         integer err
         integer t
-        INTEGER(KIND=MPI_OFFSET_KIND) n
+        NFMPI_LONG_T n
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
@@ -918,7 +922,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer i
         integer j
         integer err
-        INTEGER(KIND=MPI_OFFSET_KIND) len
+        NFMPI_LONG_T len
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)

@@ -68,7 +68,7 @@ C
 #include "tests.inc"
         integer type
         integer rank
-        INTEGER(KIND=MPI_OFFSET_KIND) index(1)
+        NFMPI_LONG_T index(1)
         integer itype
         doubleprecision minimum
         doubleprecision maximum
@@ -94,7 +94,7 @@ C
 #include "tests.inc"
         character*(*)   filename
         integer  ncid          !/* netCDF id */
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
         integer  err           !/* status */
         integer  d
         integer  i
@@ -106,10 +106,11 @@ C
         integer ngatts
         doubleprecision expect
         character*(NF_MAX_NAME) name
-        INTEGER(KIND=MPI_OFFSET_KIND) length
+        NFMPI_LONG_T length
         logical canConvert      !/* Both text or both numeric */
         integer nok             !/* count of valid comparisons */
         doubleprecision val
+        integer  intindex
 
         nok = 0
 
@@ -171,7 +172,8 @@ C
      +                                          var_name(i))
                                         call error('index:')
                                         do 4, d = 1, var_rank(i)
-                                            call errori(' ', index(d))
+                                            intindex = index(d)
+                                            call errori(' ', intindex)
 4                                       continue
                                         call errord('expect: ', expect)
                                         call errord('got: ',  val)
@@ -210,11 +212,11 @@ C */
         integer  i
         integer  j
         integer  k
-        INTEGER(KIND=MPI_OFFSET_KIND) ndx(1)
+        NFMPI_LONG_T ndx(1)
         DATATYPE($1)    value(MAX_NELS)
         integer datatype
         doubleprecision expect(MAX_NELS)
-        INTEGER(KIND=MPI_OFFSET_KIND) length
+        NFMPI_LONG_T length
         integer nInExtRange     !/* number values within external range */
         integer nInIntRange     !/* number values within internal range */
         logical canConvert      !/* Both text or both numeric */
@@ -308,7 +310,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         integer i
         integer j
         integer err
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         DATATYPE($1)    value
         doubleprecision val
@@ -406,7 +408,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         integer j
         integer err
         integer nels
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* All values within external range?*/
         DATATYPE($1)    value(MAX_NELS)
@@ -556,10 +558,10 @@ define([TEST_NFMPI_PUT_VARA],dnl
         integer err
         integer nslabs
         integer nels
-        INTEGER(KIND=MPI_OFFSET_KIND) start(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) edge(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) mid(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
+        NFMPI_LONG_T start(MAX_RANK)
+        NFMPI_LONG_T edge(MAX_RANK)
+        NFMPI_LONG_T mid(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1)    value(MAX_NELS)
@@ -747,14 +749,14 @@ define([TEST_NFMPI_PUT_VARS],dnl
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
-        INTEGER(KIND=MPI_OFFSET_KIND) start(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) edge(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index2(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) mid(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) count(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) stride(MAX_RANK)
+        NFMPI_LONG_T start(MAX_RANK)
+        NFMPI_LONG_T edge(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
+        NFMPI_LONG_T index2(MAX_RANK)
+        NFMPI_LONG_T mid(MAX_RANK)
+        NFMPI_LONG_T count(MAX_RANK)
+        NFMPI_LONG_T sstride(MAX_RANK)
+        NFMPI_LONG_T stride(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1)    value(MAX_NELS)
@@ -950,15 +952,15 @@ define([TEST_NFMPI_PUT_VARM],dnl
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
-        INTEGER(KIND=MPI_OFFSET_KIND) start(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) edge(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) index2(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) mid(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) count(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) sstride(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) stride(MAX_RANK)
-        INTEGER(KIND=MPI_OFFSET_KIND) imap(MAX_RANK)
+        NFMPI_LONG_T start(MAX_RANK)
+        NFMPI_LONG_T edge(MAX_RANK)
+        NFMPI_LONG_T index(MAX_RANK)
+        NFMPI_LONG_T index2(MAX_RANK)
+        NFMPI_LONG_T mid(MAX_RANK)
+        NFMPI_LONG_T count(MAX_RANK)
+        NFMPI_LONG_T sstride(MAX_RANK)
+        NFMPI_LONG_T stride(MAX_RANK)
+        NFMPI_LONG_T imap(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1) value(MAX_NELS)
@@ -1157,7 +1159,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
         integer i
         integer j
         integer k
-        INTEGER(KIND=MPI_OFFSET_KIND) ndx(1)
+        NFMPI_LONG_T ndx(1)
         integer err
         DATATYPE($1) value(MAX_NELS)
         logical allInExtRange  !/* all values within external range? */
@@ -1334,7 +1336,7 @@ dnl TEST_NFMPI_PUT_VARM(double)
         integer ncid
         integer i
         integer j
-        INTEGER(KIND=MPI_OFFSET_KIND) k
+        NFMPI_LONG_T k
         integer err
         character       value(MAX_NELS)
 
