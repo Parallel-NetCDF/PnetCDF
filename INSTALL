@@ -1,0 +1,51 @@
+  To INSTALL parallel netCDF library:
+
+    0. setting the environment variables:
+
+       For Solaris
+            CC=mpicc
+
+       For SGI Origin2000
+            CC = mpicc
+            ------------ OR -------------
+            CC='/bin/cc -64 -mips4 -lmpi'
+            CPPFLAGS=-DNDEBUG
+            CFLAGS=-O
+            FC='/bin/f90 -64'
+            FFLAGS=-O
+            F90='/bin/f90 -64'
+            CXX='/bin/CC -64'
+            CXXFLAGS=-O
+
+       For Linux
+            CC=mpicc
+            CPPFLAGS='-DNDEBUG -Df2cFortran'
+            CFLAGS=-O
+            CXX=g++
+            FFLAGS='-O -W'
+
+       For IBM SP-2
+            CC mpcc_r
+            FC /bin/mpxlf_r
+            F90 /bin/mpxlf90_r
+            F90FLAGS -qsuffix=f=f90
+            CXX /bin/mpxlC_r
+            ------------- OR -------------
+            CC xlc
+            FC /bin/xlf
+            F90 /bin/xlf90
+            F90FLAGS -qsuffix=f=f90
+            CXX /bin/xlC
+                then manually edit macros.make:
+            CC = mpcc_r
+            FC = mpxlf_r
+            F90 = mpxlf90_r
+            F90FLAGS = -qsuffix=f=f90
+            CXX = mpxlC_r
+
+
+    1. autoconf
+    2. ./configure --prefix=<install dir>
+    3. make (on some systems, you make need to use gmake)
+    4. make install
+
