@@ -213,7 +213,7 @@ if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
 fi
 UD_MAKEWHATIS
-UD_FTPBINDIR
+
 
 has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
