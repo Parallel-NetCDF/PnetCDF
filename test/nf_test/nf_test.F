@@ -95,6 +95,7 @@
         integer         lastopt
         logical         skiparg
         integer         status
+        integer         err                       
 
         external        test_nfmpi_strerror
         external        test_nfmpi_open
@@ -258,6 +259,9 @@
         external        test_nfmpi_del_att
         external        test_nfmpi_set_fill
         external        nc_ignorefpe
+
+        call MPI_INIT(err)                        
+        comm = MPI_COMM_WORLD;                    
 
         call nc_ignorefpe(1)
 
@@ -493,6 +497,7 @@ C           /* Test write functions */
             call test('nfmpi_del_att', test_nfmpi_del_att)
             call test('nfmpi_set_fill', test_nfmpi_set_fill)
         end if
+        call MPI_Finalize(err)
 
         print *,'Total number of failures: ', nfailsTotal
         if (nfailsTotal .eq. 0)
