@@ -134,9 +134,11 @@ test_ncmpi_redef(void)
     IF (err) 
 	error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     var = 1.0;
+    ncmpi_begin_indep_data(ncid);
     err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
     IF (err != NC_EINDEFINE)
         error("ncmpi_put_var... in define mode: status = %d", err);
+    ncmpi_end_indep_data(ncid);
     err = ncmpi_redef(ncid);
     IF (err != NC_EINDEFINE)
         error("ncmpi_redef in define mode: status = %d", err);
@@ -181,9 +183,11 @@ test_ncmpi_redef(void)
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     var = 1.0;
+    ncmpi_begin_indep_data(ncid);
     err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
     IF (err)
         error("ncmpi_put_var1_double: %s", ncmpi_strerror(err));
+    ncmpi_end_indep_data(ncid);
     err = ncmpi_close(ncid);
     IF (err) 
 	error("ncmpi_close: %s", ncmpi_strerror(err));
