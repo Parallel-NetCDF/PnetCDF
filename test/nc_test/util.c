@@ -7,6 +7,9 @@
 #include <math.h>
 #include "tests.h"
 
+/* Prototypes */
+int inRange_float(const double value, const ncmpi_type datatype);
+
 void
 print_nok(int nok)
 {
@@ -29,7 +32,10 @@ inRange(const double value, const ncmpi_type datatype)
 	case NC_INT:   min = X_INT_MIN;   max = X_INT_MAX; break;
 	case NC_FLOAT:  min = X_FLOAT_MIN;  max = X_FLOAT_MAX; break;
 	case NC_DOUBLE: min = X_DOUBLE_MIN; max = X_DOUBLE_MAX; break;
-	default:  assert(0);
+	default:
+	    min = 0.0;
+	    max = 0.0;
+	    assert(0);
     }
     return value >= min && value <= max;
 }
@@ -72,7 +78,10 @@ inRange_float(const double value, const ncmpi_type datatype)
 			max = X_DOUBLE_MAX;
 		}
 		break;
-	default:  assert(0);
+	default:
+	    min = 0.0;
+	    max = 0.0;
+	    assert(0);
     }
     if(!( value >= min && value <= max)) {
 #if 0	/* DEBUG */
@@ -306,7 +315,7 @@ double
 hash( const ncmpi_type type, const int rank, const size_t *index ) 
 {
     double base;
-    double result;
+    double result = 0.0;
     int  d;       /* index of dimension */
 
 	/* If vector then elements 0 & 1 are min & max. Elements 2 & 3 are */
@@ -362,7 +371,9 @@ hash( const ncmpi_type type, const int rank, const size_t *index )
 	    case NC_INT: base = -20; break;
 	    case NC_FLOAT: base = -9; break;
 	    case NC_DOUBLE: base = -10; break;
-	    default:  assert(0);
+	    default:
+		base = 0;
+		assert(0);
 	}
 	result = rank < 0 ? base * 7 : base * (rank + 1);
 	for (d = 0; d < abs(rank); d++)
