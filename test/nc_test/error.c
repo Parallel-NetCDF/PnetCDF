@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <mpi.h>
+
 extern int  nfails;             /* number of failures in specific test */
 extern int  max_nmpt;		/* max. number of messages per test */
 
@@ -16,7 +18,7 @@ extern int  max_nmpt;		/* max. number of messages per test */
 void error(const char *fmt, ...);
 void print(const char *fmt, ...);
 int ifFail(const int expr, const int line, const char *file);
-void print_n_size_t(size_t nelems, const size_t *array);
+void print_n_size_t(size_t nelems, const MPI_Offset *array);
 
 /*
  * Use for logging error conditions
@@ -64,7 +66,7 @@ ifFail(const int expr, const int line, const char *file)
  * "architecture" of this program.
  */
 void
-print_n_size_t(size_t nelems, const size_t *array)
+print_n_size_t(size_t nelems, const MPI_Offset *array)
 {
 	fprintf(stderr, "[");
 	while(nelems-- > 0)
