@@ -34,7 +34,8 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
   if(ncp == NULL) 
     return NC_ENOMEM;
 
-  assert(ncp->xsz = ncx_len_NC(ncp));
+  assert(ncp->xsz = hdr_len_NC(ncp));
+  assert(ncp->flags == 0);
 
   fSet(ncp->flags, NC_NOFILL);
 
@@ -44,7 +45,6 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
     return status;
   }
 
-  assert(ncp->flags == 0);
   fSet(ncp->flags, NC_CREAT);
 
   if(fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
