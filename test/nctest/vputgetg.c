@@ -41,10 +41,10 @@ test_varputgetg(cdfid)
     int id, ie, iv;		/* loop indices */
     int ne = 3;			/* number of test hypercubes for each var */
     struct cdfhc {		/* a hypercube with generic values */
-	long cor[MAX_NC_DIMS];	/* netcdf coordinates for lower corner */
-	long npts[MAX_NC_DIMS];	/* netcdf edge lengths to upper corner */
-	long strd[MAX_NC_DIMS];	/* external strides */
-	long imap[MAX_NC_DIMS];	/* internal, index mapping vector */
+	long cor[NC_MAX_DIMS];	/* netcdf coordinates for lower corner */
+	long npts[NC_MAX_DIMS];	/* netcdf edge lengths to upper corner */
+	long strd[NC_MAX_DIMS];	/* external strides */
+	long imap[NC_MAX_DIMS];	/* internal, index mapping vector */
 	long offset;		/* offset in bytes to I/O start corner */
 	void *vals;		/* pointer to block of values */
     } hc[3], tmp;		/* test hypercubes */
@@ -145,7 +145,7 @@ test_varputgetg(cdfid)
 				(id < test.vars[iv].ndims-1) ? ", " : "");
 		(void)fprintf(stderr,")\n");
 	    } else {
-		long	dsize[MAX_NC_DIMS];
+		long	dsize[NC_MAX_DIMS];
 
 		for (id = 0; id < test.vars[iv].ndims; id++)
 		    dsize[id]	= EXTNPTS(iv, id);
