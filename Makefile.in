@@ -24,7 +24,7 @@ PACKING_LIST	= \
 
 all:		src/lib/all
 
-install:	src/lib/install
+install:	src/lib/install src/util/install
 
 uninstall:	src/lib/uninstall
 
@@ -50,6 +50,8 @@ src/lib/install	\
 src/lib/uninstall	\
 src/lib/clean	\
 src/lib/distclean	\
+src/util/install \
+src/util/clean \
 :
 	@subdir=`echo $@ | sed 's,/.*,,'`; \
 	target=`echo $@ | sed 's,.*/,,'`; \
