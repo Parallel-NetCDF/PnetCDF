@@ -1,6 +1,6 @@
 $routine_prefix = "ncmpi_";
 $routine_pattern = "[a-z0-9_]*";
-$out_prefix = "ncmpif_";
+$out_prefix = "nfmpi_";
 $do_weak = 0;
 $do_profiling = 0;
 $tof77{"size_t"} = "int";
