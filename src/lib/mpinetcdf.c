@@ -1175,7 +1175,7 @@ check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
 /*
  * Check whether 'coord' values (indices) are valid for the variable.
  */
-int
+static int
 NCcoordck(NC *ncp, const NC_var *varp, const size_t *coord)
 {
         const size_t *ip;
