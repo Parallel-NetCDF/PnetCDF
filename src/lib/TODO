@@ -1,0 +1,65 @@
+#
+# Unimplemented functions, approaches we have to revisit, and other unfinished
+# tasks
+#
+
+FUNCTIONS:
+
+the following functions are just wrappers around netcdf implementations:
+
+. miscelaneous:
+	ncmpi_strerror()
+
+. the Define Mode functions:
+	ncmpi_def_dim()
+	ncmpi_def_var()
+	ncmpi_rename_dim()
+	ncmpi_rename_var()
+
+. the inquiry functions
+	ncmpi_inq()
+	ncmpi_inq_ndims()
+	ncmpi_inq_nvars()
+	ncmpi_inq_natts()
+	ncmpi_inq_unlimdim()
+	ncmpi_inq_dimid()
+	ncmpi_inq_dim()
+	ncmpi_inq_dimname()
+	ncmpi_inq_dimlen()
+	ncmpi_inq_var()
+	ncmpi_inq_varid()
+	ncmpi_inq_varname()
+	ncmpi_inq_vartype()
+	ncmpi_inq_varndims()
+	ncmpi_inq_vardimid()
+	ncmpi_inq_varnatts()
+
+. the Attribute functions
+	ncmpi_inq_att()
+	ncmpi_inq_attid()
+	ncmpi_inq_atttype()
+	ncmpi_inq_attlen()
+	ncmpi_inq_attname()
+	ncmpi_copy_att()
+	ncmpi_rename_att()
+	ncmpi_del_att()
+	ncmpi_put_att_text()
+	ncmpi_get_att_text()
+	ncmpi_put_att_uchar()
+	ncmpi_get_att_uchar()
+	ncmpi_put_att_schar()
+	ncmpi_get_att_schar()
+	ncmpi_put_att_short()
+	ncmpi_get_att_short()
+	ncmpi_put_att_int()
+	ncmpi_get_att_int()
+	ncmpi_put_att_long()
+	ncmpi_get_att_long()
+	ncmpi_put_att_float()
+	ncmpi_get_att_float()
+	ncmpi_put_att_double()
+	ncmpi_get_att_double()
+
+
+Implemented:
+. the flexible data mdoe and high-level data mode interfaces 
