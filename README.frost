@@ -4,7 +4,7 @@ here's how John Tannahill <tannahill1@llnl.gov> did it.
 As of parallel-netcdf-0.8.5, We have fixed configure.in and it is no longer
 necessary to edit it and run autoconf
 
-John Tanahill's message follows.
+John Tannahill's message follows.
 
 Just for the record, the following are the exact steps I had to
 follow to install parallel-netcdf-0.8.4 on the Frost machine at
