@@ -95,7 +95,7 @@ $returnType   = "int";
 	        'get_att_long-2' => 'in:OffsetIndexIn',
 	      'get_att_schar' => '2:3:4', 'get_att_schar-3' => 'in:addnull',
 	        'get_att_schar-2' => 'in:OffsetIndexIn',
-	           'get_att_schar-4' => 'out:blankpad',
+	           'get_att_schar-4' => 'out:charBufferOut',
 	      'get_att_short' => '2:3', 'get_att_short-3' => 'in:addnull',
 	        'get_att_short-2' => 'in:OffsetIndexIn',
 	      'get_att_text' => '2:3:4', 'get_att_text-3' => 'in:addnull',
@@ -324,7 +324,7 @@ $returnType   = "int";
 	      'put_att_schar' => '2:3:5:6', 'put_att_schar-3' => 'in:addnull',
 	        'put_att_schar-2' => 'in:OffsetIndexIn',
 			      'put_att_schar-5' => 'in:intToSizeT',
-			      'put_att_schar-6' => 'in:addnull',
+			      'put_att_schar-6' => 'in:charBufferIn',
 	      'put_att_short' => '2:3:5', 'put_att_short-3' => 'in:addnull',
 	        'put_att_short-2' => 'in:OffsetIndexIn',
 			      'put_att_short-5' => 'in:intToSizeT',
@@ -500,6 +500,7 @@ $build_prototypes = 1;
 $buildMakefile = 0;
 $prototype_header_file = "mpifnetcdf.h";
 $argsneedcast{'const size_t []'} = '(const size_t *)(ARG)';
+$argsneedcast{'nc_type *'} = '(nc_type *)(ARG)';
 
 #
 # Routines needed for special argument handling for size_t
@@ -658,7 +659,7 @@ sub intToSizeTOffsetArr_in_ctof {
 
 sub reorderIntArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    int *l$count=0;\n";
+    print $OUTFD "    size_t *l$count=0;\n";
 }
 sub reorderIntArr_ftoc {
     my $count = $_[0];
@@ -695,7 +696,7 @@ sub reorderIntArr_in_ctof {
 
 sub reorderIntArrOut_out_decl {
     my $count = $_[0];
-    print $OUTFD "    int *l$count=0, ln$count;\n";
+    print $OUTFD "    size_t *l$count=0;\n    int ln$count;\n";
 }
 sub reorderIntArrOut_out_ftoc {
     my $count = $_[0];
@@ -812,7 +813,7 @@ sub OffsetIndexIn_ctof {
 
 sub OffsetIndexInArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    int *l$count=0, ln$count;\n";
+    print $OUTFD "    size_t *l$count=0;\n    int ln$count;\n";
 }
 sub OffsetIndexInArr_ftoc {
     my $count = $_[0];

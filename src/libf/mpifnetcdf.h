@@ -93,6 +93,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_get_var_double_ ( int *v1, int *v2, doubl
 extern FORTRAN_API int FORT_CALL nfmpi_get_var_text_all_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3) FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_get_var_int2_all_ ( int *v1, int *v2, short*v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_get_var_int_all_ ( int *v1, int *v2, MPI_Fint *v3 );
+extern FORTRAN_API int FORT_CALL nfmpi_get_var_long_all_ ( int *v1, int *v2, long*v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_get_var_real_all_ ( int *v1, int *v2, float*v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_get_var_double_all_ ( int *v1, int *v2, double*v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_put_vara_all_ ( int *v1, int *v2, int v3[], int v4[], void*v5, int *v6, MPI_Fint *v7 );

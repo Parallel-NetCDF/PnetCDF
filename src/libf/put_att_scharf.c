@@ -26,7 +26,6 @@ FORTRAN_API int FORT_CALL nfmpi_put_att_schar_ ( int *v1, int *v2, char *v3 FORT
     int l2 = *v2 - 1;
     char *p3;
     size_t l5 = (size_t)*v5;
-    char *p6;
 
     {char *p = v3 + d3 - 1;
      int  li;
@@ -36,17 +35,7 @@ FORTRAN_API int FORT_CALL nfmpi_put_att_schar_ ( int *v1, int *v2, char *v3 FORT
         for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
         p3[li] = 0; 
     }
-
-    {char *p = v6 + d6 - 1;
-     int  li;
-        while (*p == ' ' && p > v6) p--;
-        p++;
-        p6 = (char *)malloc( p-v6 + 1 );
-        for (li=0; li<(p-v6); li++) { p6[li] = v6[li]; }
-        p6[li] = 0; 
-    }
-    ierr = ncmpi_put_att_schar( *v1, l2, p3, *v4, l5, p6 );
+    ierr = ncmpi_put_att_schar( *v1, l2, p3, *v4, l5, v6 );
     free( p3 );
-    free( p6 );
     return ierr;
 }

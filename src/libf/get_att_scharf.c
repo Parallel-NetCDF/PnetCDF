@@ -36,10 +36,5 @@ FORTRAN_API int FORT_CALL nfmpi_get_att_schar_ ( int *v1, int *v2, char *v3 FORT
     }
     ierr = ncmpi_get_att_schar( *v1, l2, p3, v4 );
     free( p3 );
-
-    {char *p = v4;
-        while (*p) p++;
-        while ((p-v4) < d4) { *p++ = ' '; }
-    }
     return ierr;
 }
