@@ -21,8 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_get_vars_text_all_ ( int *v1, int *v2, int * v3[], int * v4[], int * v5[], char *v6 FORT_MIXED_LEN(d6), MPI_Fint *ierr FORT_END_LEN(d6) ){
-    *ierr = ncmpi_get_vars_text_all( *v1, *v2, (const size_t *)(*v3), (const size_t *)(*v4), (const size_t *)(*v5), v6 );
+FORTRAN_API void FORT_CALL nfmpi_get_vars_text_all_ ( int *v1, int *v2, size_t v3[], size_t v4[], size_t v5[], char *v6 FORT_MIXED_LEN(d6), MPI_Fint *ierr FORT_END_LEN(d6) ){
+    *ierr = ncmpi_get_vars_text_all( *v1, *v2, (const size_t *)(v3), (const size_t *)(v4), (const size_t *)(v5), v6 );
 
     {char *p = v6;
         while (*p) p++;
