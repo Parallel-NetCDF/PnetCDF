@@ -1058,18 +1058,3 @@ main()
 	AC_MSG_RESULT(no)
     )
 ])
-
-
-dnl Set the binary distribution directory.
-dnl
-AC_DEFUN([UD_FTPBINDIR], [dnl
-    AC_MSG_CHECKING([binary distribution directory])
-    case ${FTPBINDIR-unset} in
-	unset)
-	    system=`(system) 2>/dev/null || echo dummy_system`
-	    FTPBINDIR=${FTPDIR-/home/ftp}/pub/binary/$system
-	    ;;
-    esac
-    AC_SUBST(FTPBINDIR)dnl
-    AC_MSG_RESULT($FTPBINDIR)
-])
