@@ -4,7 +4,7 @@ dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
 dnl Defaults:
-CPPFLAGS=${CPPFLAGS--DNDEBUG}
+CPPFLAGS=${CFLAGS}
 CFLAGS=${CFLAGS--O}
 FPPFLAGS=${FPPFLAGS-}
 FFLAGS=${FFLAGS-}
