@@ -3087,6 +3087,8 @@ ncmpi_put_var_text(int ncid, int varid, const char *op) {
 
   ndims = varp->ndims;
 
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3095,6 +3097,21 @@ ncmpi_put_var_text(int ncid, int varid, const char *op) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+  
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+  
+  /* End modification 20030311 */
 
   nbytes = nelems * sizeof(char);
 
@@ -3119,14 +3136,31 @@ ncmpi_put_var_short(int ncid, int varid, const short *op) {
 
   ndims = varp->ndims;
 
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
     nelems = 1;
-  if (IS_RECVAR(varp)) 
+  if (IS_RECVAR(varp))
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
 
   nbytes = nelems * sizeof(short);
  
@@ -3151,6 +3185,8 @@ ncmpi_put_var_int(int ncid, int varid, const int *op) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3159,6 +3195,21 @@ ncmpi_put_var_int(int ncid, int varid, const int *op) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(int);
  
@@ -3183,6 +3234,8 @@ ncmpi_put_var_float(int ncid, int varid, const float *op) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3191,7 +3244,22 @@ ncmpi_put_var_float(int ncid, int varid, const float *op) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
- 
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
   nbytes = nelems * sizeof(float);
  
   return ncmpi_put_var(ncid, varid, (const void *)op, nbytes, MPI_FLOAT);
@@ -3215,6 +3283,8 @@ ncmpi_put_var_double(int ncid, int varid, const double *op) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3223,6 +3293,21 @@ ncmpi_put_var_double(int ncid, int varid, const double *op) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(double);
  
@@ -3247,6 +3332,8 @@ ncmpi_get_var_text(int ncid, int varid, char *ip) {
 
   ndims = varp->ndims;
 
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3255,6 +3342,21 @@ ncmpi_get_var_text(int ncid, int varid, char *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
 
   nbytes = nelems * sizeof(char);
 
@@ -3279,6 +3381,8 @@ ncmpi_get_var_short(int ncid, int varid, short *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3287,6 +3391,21 @@ ncmpi_get_var_short(int ncid, int varid, short *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(short);
  
@@ -3311,6 +3430,8 @@ ncmpi_get_var_int(int ncid, int varid, int *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3319,6 +3440,21 @@ ncmpi_get_var_int(int ncid, int varid, int *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(int);
  
@@ -3343,6 +3479,8 @@ ncmpi_get_var_float(int ncid, int varid, float *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3351,6 +3489,21 @@ ncmpi_get_var_float(int ncid, int varid, float *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(float);
  
@@ -3375,6 +3528,8 @@ ncmpi_get_var_double(int ncid, int varid, double *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3383,6 +3538,21 @@ ncmpi_get_var_double(int ncid, int varid, double *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(double);
  
@@ -3407,6 +3577,8 @@ ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
 
   ndims = varp->ndims;
 
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3415,6 +3587,21 @@ ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
 
   nbytes = nelems * sizeof(char);
 
@@ -3439,6 +3626,8 @@ ncmpi_get_var_short_all(int ncid, int varid, short *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3447,6 +3636,21 @@ ncmpi_get_var_short_all(int ncid, int varid, short *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(short);
  
@@ -3471,6 +3675,8 @@ ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3479,6 +3685,21 @@ ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(int);
  
@@ -3503,6 +3724,8 @@ ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3511,6 +3734,21 @@ ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(float);
  
@@ -3535,6 +3773,8 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
  
   ndims = varp->ndims;
  
+/* Removed 20030311
+
   if (ndims > 1)
     nelems = varp->dsizes[1];
   else
@@ -3543,6 +3783,21 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
     nelems *= ncp->numrecs;
   else
     nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
  
   nbytes = nelems * sizeof(double);
  
