@@ -3,10 +3,10 @@ $routine_pattern = "[a-z0-9_]*";
 $out_prefix = "nfmpi_";
 $do_weak = 0;
 $do_profiling = 0;
-$tof77{"MPI_Offset"} = "int *";
-$tof77{"MPI_Offset *"} = "int *";
-$tof77{"MPI_Offset*"} = "int *";
-$tof77{"MPI_Offset\[\]"} = "int";
+$tof77{"size_t"} = "int *";
+$tof77{"size_t *"} = "int *";
+$tof77{"size_t*"} = "int *";
+$tof77{"size_t\[\]"} = "int";
 $tof77{"int"} = "int *";
 $tof77{"nc_type"} = "int *";
 $tof77{"nc_type *"} = "int *";
@@ -60,26 +60,10 @@ $returnType   = "int";
 	'put_vars_short' => 'put_vars_int2',
 	'get_vars_short' => 'get_vars_int2',			
 	
-	'put_att_schar' => 'put_att_int1',
-	'get_att_schar' => 'get_att_int1',
-	'put_var1_schar' => 'put_var1_int1',
-	'get_var1_schar' => 'get_var1_int1',
-	'put_var_schar' => 'put_var_int1',
-	'get_var_schar' => 'get_var_int1',			
-	'put_var_schar_all' => 'put_var_int1_all',
-	'get_var_schar_all' => 'get_var_int1_all',			
-	'put_vara_schar_all' => 'put_vara_int1_all',
-	'get_vara_schar_all' => 'get_vara_int1_all',			
-	'put_vara_schar' => 'put_vara_int1',
-	'get_vara_schar' => 'get_vara_int1',			
-	'put_vars_schar_all' => 'put_vars_int1_all',
-	'get_vars_schar_all' => 'get_vars_int1_all',			
-	'put_vars_schar' => 'put_vars_int1',
-	'get_vars_schar' => 'get_vars_int1'
 );
 #
 # We really need a easier way to force a default for a particular data type
-# (e.g., so that we can say "use 'in:intToSizeT' for MPI_Offset.  For arrays,
+# (e.g., so that we can say "use 'in:intToSizeT' for size_t.  For arrays,
 # we still need an argument for the array size
 #
 # Other transformations:
@@ -515,11 +499,11 @@ $returnType   = "int";
 $build_prototypes = 1;
 $buildMakefile = 0;
 $prototype_header_file = "mpifnetcdf.h";
-$argsneedcast{'const MPI_Offset []'} = '(const MPI_Offset *)(ARG)';
+$argsneedcast{'const size_t []'} = '(const size_t *)(ARG)';
 $argsneedcast{'nc_type *'} = '(nc_type *)(ARG)';
 
 #
-# Routines needed for special argument handling for MPI_Offset
+# Routines needed for special argument handling for size_t
 # ---------------------------------------------------------------------------
 # Convert from an int array to an Aint array for routines taking an Aint as 
 # input
@@ -533,7 +517,7 @@ $justCopy = 0;
 
 sub intToSizeTArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset *l$count = 0;\n";
+    print $OUTFD "    size_t *l$count = 0;\n";
 }
 sub intToSizeTArr_ftoc {
     my $count = $_[0];
@@ -545,7 +529,7 @@ sub intToSizeTArr_ftoc {
     { int ln = $Array_size;
     if (ln > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[li\];
     }
@@ -566,7 +550,7 @@ sub intToSizeTArr_ftoc {
     { int ln = $Array_size;
     if (ln > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\];
     }
@@ -624,7 +608,7 @@ sub intToSizeTOffsetArr_ftoc {
     { int ln = $Array_size;
     if (ln > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-li-1\] - 1;
     }
@@ -645,7 +629,7 @@ sub intToSizeTOffsetArr_ftoc {
     { int ln = $Array_size;
     if (ln > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\] - 1;
     }
@@ -675,7 +659,7 @@ sub intToSizeTOffsetArr_in_ctof {
 
 sub reorderIntArr_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset *l$count=0;\n";
+    print $OUTFD "    size_t *l$count=0;\n";
 }
 sub reorderIntArr_ftoc {
     my $count = $_[0];
@@ -686,7 +670,7 @@ sub reorderIntArr_ftoc {
     { int ln = $Array_size;
     if (ln > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(int) );
+        l$count = (size_t *)$malloc( ln * sizeof(int) );
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\];
     }}\n";
@@ -712,7 +696,7 @@ sub reorderIntArr_in_ctof {
 
 sub reorderIntArrOut_out_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset *l$count=0;\n    int ln$count;\n";
+    print $OUTFD "    size_t *l$count=0;\n    int ln$count;\n";
 }
 sub reorderIntArrOut_out_ftoc {
     my $count = $_[0];
@@ -722,7 +706,7 @@ sub reorderIntArrOut_out_ftoc {
     print $OUTFD "
     ln$count = $Array_size;
     if (ln$count > 0) {
-        l$count = (MPI_Offset *)$malloc( ln$count * sizeof(int) );
+        l$count = (size_t *)$malloc( ln$count * sizeof(int) );
     }\n";
 }
 sub reorderIntArrOut_out_arg {
@@ -746,7 +730,7 @@ sub reorderIntArrOut_ctof {
 # -------------------------------------------------------------------------
 sub intToSizeT_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset l$count = (MPI_Offset)*v$count;\n";
+    print $OUTFD "    size_t l$count = (size_t)*v$count;\n";
 }
 sub intToSizeT_ftoc {
     my $count = $_[0];
@@ -764,7 +748,7 @@ sub intToSizeT_in_ctof {
 # sizet as output
 sub sizetToInt_out_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset l$count=0;\n";
+    print $OUTFD "    size_t l$count=0;\n";
 }
 sub sizetToInt_ftoc {
     my $count = $_[0];
@@ -827,7 +811,7 @@ sub OffsetIndexIn_ctof {
 # usage is 
 #    'def_var' => '3', 'def_var-3' => 'in:OffsetIndexInArr',
 # Note:
-#   This used MPI_Offset instead of int for the type in the C call.
+#   This used size_t instead of int for the type in the C call.
 #   This did not match the one use of this routine, in defA-var
 sub OffsetIndexInArr_in_decl {
     my $count = $_[0];
