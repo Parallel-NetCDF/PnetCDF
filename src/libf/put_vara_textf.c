@@ -39,7 +39,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vara_text_ ( int *v1, int *v2, int v3[], in
         int li;
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l4[li] = v4[ln-1-li] - 1;
+            l4[li] = v4[ln-1-li];
     }}
 
     {char *p = v5 + d5 - 1;

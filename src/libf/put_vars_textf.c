@@ -40,7 +40,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, int v3[], in
         int li;
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l4[li] = v4[ln-1-li] - 1;
+            l4[li] = v4[ln-1-li];
     }}
 
     { int ln = ncxVardim(*v1,*v2);
@@ -48,7 +48,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_text_ ( int *v1, int *v2, int v3[], in
         int li;
         l5 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l5[li] = v5[ln-1-li] - 1;
+            l5[li] = v5[ln-1-li];
     }}
 
     {char *p = v6 + d6 - 1;

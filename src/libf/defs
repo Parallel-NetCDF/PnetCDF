@@ -79,104 +79,104 @@ $header_file = "mpinetcdf_impl.h";
               'get_att_uchar' => '3:4', 'get_att_uchar-3' => 'in:addnull',
 	           'get_att_uchar-4' => 'out:blankpad',
 	      'get_var1' => 3, 
-		'get_var1-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_var1-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'get_var1_double' => 3,
-		'get_var1_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_var1_double-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'get_var1_float' => 3,
-		'get_var1_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_var1_float-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'get_var1_int' => 3, 
-		'get_var1_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_var1_int-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'get_var1_short' => 3,
-		'get_var1_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_var1_short-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'get_var1_text' => '3:4', 'get_var1_text-4' => 'out:blankpad',
-		'get_var1_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_var1_text-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'get_var_text_all' => 3, 'get_var_text_all-3' => 'out:blankpad',
 	      'get_var_text' => 3, 'get_var_text-3' => 'out:blankpad',
 	      'get_vara_all' => '3:4', 
-		'get_vara_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara' => '3:4', 
-		'get_vara-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_double_all' => '3:4', 
-		'get_vara_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_double_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_double' => '3:4', 
-		'get_vara_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_double-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_float_all' => '3:4', 
-		'get_vara_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_float_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_float' => '3:4', 
-		'get_vara_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_float-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_int_all' => '3:4', 
-		'get_vara_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_int_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_int' => '3:4', 
-		'get_vara_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_int-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_short_all' => '3:4', 
-		'get_vara_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_short_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_short' => '3:4', 
-		'get_vara_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_short-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vara_text_all' => '3:4:5', 
-		'get_vara_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_text_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_text_all-5' => 'out:blankpad',
 	      'get_vara_text' => '3:4:5', 
-		'get_vara_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vara_text-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vara_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vara_text-5' => 'out:blankpad',
 	      'get_vars_all' => '3:4:5', 
-		'get_vars_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars' => '3:4:5', 
-		'get_vars-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_double_all' => '3:4:5', 
-		'get_vars_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_double_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_double_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_double' => '3:4:5', 
-		'get_vars_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_double-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_double-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_float_all' => '3:4:5', 
-		'get_vars_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_float_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_float_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_float' => '3:4:5', 
-		'get_vars_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_float-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_float-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_int_all' => '3:4:5', 
-		'get_vars_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_int_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_int_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_int' => '3:4:5', 
-		'get_vars_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_int-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_int-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_short_all' => '3:4:5', 
-		'get_vars_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_short_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_short_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_short' => '3:4:5', 
-		'get_vars_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_short-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_short-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'get_vars_text_all' => '3:4:5:6', 
-		'get_vars_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_text_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_text_all-6' => 'out:blankpad',
 	      'get_vars_text' => '3:4:5:6', 
-		'get_vars_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'get_vars_text-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'get_vars_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_text-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'get_vars_text-6' => 'out:blankpad',
@@ -220,103 +220,103 @@ $header_file = "mpinetcdf_impl.h";
 	      'put_att_uchar' => '3:5', 'put_att_uchar-3' => 'in:addnull',
 		'put_att_uchar-5' => 'in:intToSizeT',
 	      'put_var1' => 3, 
-		'put_var1-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_var1-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'put_var1_double' => 3,
-		'put_var1_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_var1_double-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'put_var1_float' => 3,
-		'put_var1_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_var1_float-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'put_var1_int' => 3,
-		'put_var1_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_var1_int-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'put_var1_short' => 3,
-		'put_var1_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_var1_short-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'put_var1_text' => '3:4', 'put_var1_text-4' => 'in:addnull',
-		'put_var1_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_var1_text-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 	      'put_var_text' => 3, 'put_var_text-3' => 'in:addnull',
 	      'put_vara_all' => '3:4', 
-		'put_vara_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara' => '3:4', 
-		'put_vara-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_double' => '3:4',
-		'put_vara_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_double-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_double_all' => '3:4',
-		'put_vara_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_double_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_float' => '3:4',
-		'put_vara_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_float-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_float_all' => '3:4',
-		'put_vara_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_float_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_int' => '3:4',
-		'put_vara_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_int-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_int_all' => '3:4',
-		'put_vara_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_int_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_short' => '3:4',
-		'put_vara_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_short-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_short_all' => '3:4',
-		'put_vara_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_short_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vara_text_all' => '3:4:5', 
-		'put_vara_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_text_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vara_text_all-5' => 'in:addnull',
 	      'put_vara_text' => '3:4:5', 
-		'put_vara_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vara_text-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vara_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vara_text-5' => 'in:addnull',
 	      'put_vars_all' => '3:4:5', 
-		'put_vars_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars' => '3:4:5', 
-		'put_vars-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_double_all' => '3:4:5', 
-		'put_vars_double_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_double_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_double_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_double_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_double' => '3:4:5', 
-		'put_vars_double-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_double-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_double-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_double-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_float_all' => '3:4:5', 
-		'put_vars_float_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_float_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_float_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_float_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_float' => '3:4:5', 
-		'put_vars_float-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_float-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_float-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_float-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_int_all' => '3:4:5', 
-		'put_vars_int_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_int_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_int_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_int_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_int' => '3:4:5', 
-		'put_vars_int-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_int-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_int-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_int-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_short_all' => '3:4:5', 
-		'put_vars_short_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_short_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_short_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_short_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_short' => '3:4:5', 
-		'put_vars_short-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_short-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_short-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_short-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 	      'put_vars_text_all' => '3:4:5:6', 
-		'put_vars_text_all-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text_all-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_text_all-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_text_all-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_text_all-6' => 'in:addnull',
 	      'put_vars_text' => '3:4:5:6', 
-		'put_vars_text-3' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
+		'put_vars_text-3' => 'in:intToSizeTOffsetArr:ncxVardim(*v1,*v2)',
 		'put_vars_text-4' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_text-5' => 'in:intToSizeTArr:ncxVardim(*v1,*v2)',
 		'put_vars_text-6' => 'in:addnull',
@@ -374,7 +374,7 @@ sub intToSizeTArr_ftoc {
         int li;
         l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-1-li\] - 1;
+            l$count\[li\] = v$count\[ln-1-li\];
     }}\n";
     }
 }
@@ -397,6 +397,63 @@ sub intToSizeTArr_in_ctof {
 ";
     }
 }
+# ---------------------------------------------------------------------------
+# Convert from an int array to an Aint array for routines taking an Aint as 
+# input
+# usage is 
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:intToAintArr:*v1',
+# where *v1 will give the array size (the number is the number of the argument)
+
+# Set justCopy to 1 make a copy only when sizet and int are different sizes
+# Use 0 to always copy *and* invert order of elements
+$justCopy = 0;
+
+sub intToSizeTOffsetArr_in_decl {
+    my $count = $_[0];
+    &intToSizeTArr_in_decl( $count );
+}
+sub intToSizeTOffsetArr_ftoc {
+    my $count = $_[0];
+    # We use a local variable for the array size because we may need to	
+    # call a function of some of the other arguments to get the array size
+    if ($justCopy) {
+    print $OUTFD "
+#ifdef HAVE_SIZET_LARGER_THAN_FINT
+    { int ln = $Array_size;
+    if (ln > 0) {
+        int li;
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l$count\[li\] = v$count\[ln-li-1\] - 1;
+    }
+    else l$count = 0;
+    }
+#else 
+    l$count = v$count;
+#endif\n";
+    }
+    else {
+	# Always copy and invert order
+	print $OUTFD "
+    { int ln = $Array_size;
+    if (ln > 0) {
+        int li;
+        l$count = (size_t *)$malloc( ln * sizeof(size_t) );
+        for (li=0; li<ln; li++) 
+            l$count\[li\] = v$count\[ln-1-li\] - 1;
+    }}\n";
+    }
+}
+sub intToSizeTOffsetArr_in_arg {
+    my $count = $_[0];
+    &intToSizeTArr_in_arg( $count );	
+}
+# This routine is invoked even for the in case (to free the result)
+sub intToSizeTOffsetArr_in_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    &intToSizeTArr_in_ctof( $lname, $vname );
+}
 # -------------------------------------------------------------------------
 # Convert from an int array to an int array with the values reordered
 # usage is 
@@ -418,7 +475,7 @@ sub reorderIntArr_ftoc {
         int li;
         l$count = (size_t *)$malloc( ln * sizeof(int) );
         for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-1-li\] - 1;
+            l$count\[li\] = v$count\[ln-1-li\];
     }}\n";
 }
 sub reorderIntArr_in_arg {
