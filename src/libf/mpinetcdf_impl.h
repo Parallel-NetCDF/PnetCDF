@@ -53,7 +53,7 @@
 #endif
 
 /* Utility functions */
-int ncxVardim( int, int );
+int ncmpixVardim( int, int );
 
 /* Define the internal values needed for Fortran support */
 

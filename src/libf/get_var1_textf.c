@@ -24,7 +24,7 @@
 FORTRAN_API void FORT_CALL nfmpi_get_var1_text_ ( int *v1, int *v2, int v3[], char *v4 FORT_MIXED_LEN(d4), MPI_Fint *ierr FORT_END_LEN(d4) ){
     size_t *l3 = 0;
 
-    { int ln = ncxVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2);
     if (ln > 0) {
         int li;
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
