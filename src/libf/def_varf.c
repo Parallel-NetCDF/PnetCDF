@@ -39,7 +39,7 @@ FORTRAN_API void FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2)
         int li;
         l5 = (size_t *)malloc( ln * sizeof(int) );
         for (li=0; li<ln; li++) 
-            l5[li] = v5[ln-1-li];
+            l5[li] = v5[ln-1-li] - 1;
     }}
     *ierr = ncmpi_def_var( *v1, p2, *v3, *v4, l5, v6 );
     free( p2 );

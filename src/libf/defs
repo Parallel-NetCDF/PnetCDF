@@ -374,7 +374,7 @@ sub intToSizeTArr_ftoc {
         int li;
         l$count = (size_t *)$malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-1-li\];
+            l$count\[li\] = v$count\[ln-1-li\] - 1;
     }}\n";
     }
 }
@@ -418,7 +418,7 @@ sub reorderIntArr_ftoc {
         int li;
         l$count = (size_t *)$malloc( ln * sizeof(int) );
         for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-1-li\];
+            l$count\[li\] = v$count\[ln-1-li\] - 1;
     }}\n";
 }
 sub reorderIntArr_in_arg {
@@ -467,7 +467,7 @@ sub reorderIntArrOut_ctof {
     if ($lname) { 
 	int li;
         for (li=0; li<ln$count; li++) 
-            v$count\[li\] = l$count\[ln$count-1-li\];
+            v$count\[li\] = l$count\[ln$count-1-li\] + 1;
         $free($lname); }
 ";
 }
