@@ -5,3 +5,4 @@ configure
 Makefile
 macros.make
 *.log
+*.mod
