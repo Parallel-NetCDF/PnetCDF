@@ -4,6 +4,20 @@
 !   $Id$
 !********************************************************************/
 
+#define NF_INT1_IS_C_SIGNED_CHAR 1
+#undef NF_INT1_IS_C_SHORT
+#undef NF_INT1_IS_C_INT
+#undef NF_INT1_IS_C_LONG
+#define NF_INT2_IS_C_SHORT 1
+#undef NF_INT2_IS_C_INT
+#undef NF_INT2_IS_C_LONG
+#define NF_INT_IS_C_INT 1
+#undef NF_INT_IS_C_LONG
+#define NF_REAL_IS_C_FLOAT 1
+#undef NF_REAL_IS_C_DOUBLE
+#define NF_DOUBLEPRECISION_IS_C_DOUBLE 1
+#undef NF_DOUBLEPRECISION_IS_C_FLOAT
+
 
       SUBROUTINE PRINT_NOK(NOK)
       IMPLICIT  NONE
