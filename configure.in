@@ -17,16 +17,19 @@ AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
 AC_CONFIG_AUX_DIR(./scripts)
 
 AC_ARG_ENABLE(fortran,
-[--enable-fortran - Turn on support for the Fortran interface.  Turn this
-         off if you only need the C interface (on by default)],,enable_fortran=yes)
+[  --enable-fortran        Turn on support for the Fortran interface.  Turn this
+                          off if you only need the C interface (on by default)],
+			  ,enable_fortran=yes)
 
 dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
 dnl preventing PATH_MAX from being defined for some of the test files,
 dnl and I was having a tough time figuring out how to get it back! -- RobR
-AC_ARG_ENABLE(strict,[--enable-strict - Turn on strict debugging with gcc],
+AC_ARG_ENABLE(strict,
+[  --enable-strict         Turn on strict debugging with gcc],
 CFLAGS="$CFLAGS -O2 -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast")
 AC_ARG_ENABLE(echo, 
-[--enable-echo  - Turn on strong echoing. The default is enable=no.] ,set -x)
+[  --enable-echo           Turn on strong echoing. The default is enable=no.] 
+,set -x)
 
 AC_PROG_INSTALL
 
@@ -142,14 +145,23 @@ if test x${MPICC} = x -a x${MPIF77} = x ; then
 fi
 
 
-AC_MSG_CHECKING(MPI-IO support in MPI implementation)
-saveCC="$CC"
-CC=$MPICC
-AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR;],
-	AC_MSG_RESULT(yes),
-	AC_MSG_ERROR([mpi implementation does not support MPI-IO])
-)
-CC="$saveCC"
+AC_ARG_ENABLE(mpi-io-test,
+[  --enable-mpi-io-test    Check for MPI-IO support in MPI implementation.  
+                          Turn this off if you know your MPI 
+                          implementation has MPI-IO support but the 
+                          configure test fails to find it (on by default)]
+				 ,,enable_mpi_io_test=yes )
+
+if test "$enable_mpi_io_test" = "yes" ; then
+	AC_MSG_CHECKING(MPI-IO support in MPI implementation)
+	saveCC="$CC"
+	CC=$MPICC
+	AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR;],
+		AC_MSG_RESULT(yes),
+		AC_MSG_ERROR([mpi implementation does not support MPI-IO])
+	)
+	CC="$saveCC"
+fi
 AC_SUBST(MPICC)
 AC_SUBST(MPIF77)
 
