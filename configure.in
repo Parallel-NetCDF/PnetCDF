@@ -13,10 +13,7 @@ AC_INIT(src/lib/ncconfig.in)
 UD_SRCDIR
 AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
-mkdir -p src/lib
-AC_CONFIG_HEADER(
-    src/lib/ncconfig.h:src/lib/ncconfig.in
-)
+AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
 UD_PROG_M4
 UD_PROG_CC
 UD_PROG_CC_MAKEDEPEND
@@ -51,8 +48,4 @@ UD_CHECK_SIZEOF(off_t)
 UD_CHECK_SIZEOF(size_t)
 UD_MAKEWHATIS
 UD_FTPBINDIR
-UD_OUTPUT(macros.make)
-AC_OUTPUT(Makefile)
-AC_OUTPUT(rules.make)
-AC_OUTPUT(src/Makefile)
-AC_OUTPUT(src/lib/Makefile)
+AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile)
