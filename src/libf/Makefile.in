@@ -15,7 +15,7 @@ LIBRARY 	= ../lib/libnetcdf.a
 PROGRAM		= 
 ld_netcdf	= -L../lib -lnetcdf
 
-HEADER	= 
+HEADER	= netcdf.inc
 
 MANUAL	= 
 
@@ -42,7 +42,7 @@ DIST_GARBAGE	= ncconfig.h
 
 all:		$(LIBRARY) $(MANUAL) $(PROGRAM)
 
-install:	
+install:	$(INCDIR)/$(HEADER)	
 
 uninstall:
 
