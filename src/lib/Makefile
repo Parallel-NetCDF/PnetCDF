@@ -1,0 +1,109 @@
+# $Id$
+#
+#	Makefile for netcdf libsrc
+#
+
+include ../../macros.make
+
+INCLUDES = -I. -DUSE_MPIO
+
+LIBRARY 	= libnetcdf.a
+PROGRAM		= ncvalid
+ld_netcdf	= -L. -lnetcdf
+
+HEADER	= netcdf.h
+
+MANUAL	= netcdf.3
+
+LIB_CSRCS = \
+	mpinetcdf.c \
+	header.c \
+	mpincio.c \
+	attr.c \
+	dim.c \
+	error.c \
+	nc.c \
+	ncx.c \
+	string.c \
+	var.c
+#	v1hpg.c
+#	ncio.c \
+#	putget.c \
+
+PACKING_LIST = \
+	$(LIB_CSRCS) \
+	depend \
+	fbits.h \
+	Makefile \
+	nc.h \
+	ncconfig.in \
+	ncio.h \
+	ncx.h \
+	netcdf.3 \
+	netcdf.h \
+	rnd.h 
+#	ffio.c \
+#	mpinetcdf.h \
+#	onstack.h \
+#	posixio.c \
+
+LIB_OBJS = $(LIB_CSRCS:.c=.o)
+
+PROG_CSRCS = \
+	validator.c \
+	header.c \
+	mpincio.c \
+	attr.c \
+	dim.c \
+	nc.c \
+	ncx.c \
+	string.c \
+	var.c
+
+PROG_OBJS = $(PROG_CSRCS:.c=.o)
+
+GARBAGE		= 
+
+DIST_GARBAGE	= ncconfig.h
+
+
+all:		$(LIBRARY) $(MANUAL) $(PROGRAM)
+
+install:	$(LIBDIR)/$(LIBRARY)	\
+		$(INCDIR)/$(HEADER)	\
+		$(MANDIR)/man3/$(MANUAL)\
+		$(BINDIR)/$(PROGRAM)
+
+uninstall:
+	-rm -f $(LIBDIR)/$(LIBRARY)
+	-rm -f $(INCDIR)/$(HEADER)
+	-rm -f $(MANDIR)/man3/$(MANUAL)
+	-rm -f $(BINDIR)/$(PROGRAM)
+
+
+
+# The rule for generating the manual page is here for completeness only.
+# The manual page is actually part of the distribution so that we don't
+# have to depend on the non-POSIX utility m4(1).
+#
+$(MANUAL):	../../man/netcdf.m4
+	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || rm $@
+
+$(PROGRAM):	$(PROG_OBJS)
+	$(LINK.c) $(PROG_OBJS) $(LIBS)
+
+include ../..//rules.make
+
+.SUFFIXES: .ln
+LINT = lint
+LINT.c = $(LINT) $(LINTFLAGS) $(CPPFLAGS)
+.c.ln:
+	$(LINT.c) -c $<
+
+llib-lnetcdf.ln: $(LIB_CSRCS)
+	$(LINT.c) $(LIB_CSRCS) -y -o netcdf
+
+lint: llib-lnetcdf.ln
+	$(LINT.c) t_nc.c llib-lnetcdf.ln
+
+include depend
