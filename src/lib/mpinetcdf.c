@@ -358,7 +358,16 @@ ncmpi_close(int ncid) {
 /* End Of Dataset Functions */
 
 /* Begin Of Define Mode Functions */
+/*@ ncmpi_def_dim - 
 
+    Input Parameters:
++ ncid - 
+. name -
+- len -
+
+    Output Parameter:
+. idp - 
+  @*/
 int
 ncmpi_def_dim(int ncid, const char *name, size_t len, int *idp) {
   return nc_def_dim(ncid, name, len, idp);
