@@ -622,11 +622,11 @@
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
-                call nfmpi_def_dim(ncid, dim_name(i), NF_UNLIMITED,
-     +                           dimid, err)
+                err = nfmpi_def_dim(ncid, dim_name(i), NF_UNLIMITED,
+     +                           dimid)
             else
-                call nfmpi_def_dim(ncid, dim_name(i), dim_len(i),
-     +                           dimid, err)
+                err = nfmpi_def_dim(ncid, dim_name(i), dim_len(i),
+     +                           dimid)
             end if
             if (err .ne. 0) then
                 call errore('nfmpi_def_dim: ', err)
@@ -646,8 +646,8 @@
         integer         var_id
 
         do 1, i = 1, NVARS
-            call nfmpi_def_var(ncid, var_name(i), var_type(i), 
-     +                       var_rank(i), var_dimid(1,i), var_id, err)
+            err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
+     +                       var_rank(i), var_dimid(1,i), var_id)
             if (err .ne. 0) then
                 call errore('nfmpi_def_var: ', err)
             end if
@@ -690,9 +690,9 @@
                     catt(ATT_LEN(j,i)+1:ATT_LEN(j,i)+1) = char(1)
                     catt(ATT_LEN(j,i)+2:ATT_LEN(j,i)+2) = char(0)
 
-                    call nfmpi_put_att_text(ncid, varid(i), 
+                    err = nfmpi_put_att_text(ncid, varid(i), 
      +                                    ATT_NAME(j,i),
-     +                                    ATT_LEN(j,i), catt, err)
+     +                                    ATT_LEN(j,i), catt)
                     if (err .ne. 0) then
                         call errore('nfmpi_put_att_text: ', err)
                     end if
@@ -704,10 +704,10 @@
                         allInRange = allInRange .and.
      +                               inRange(att(k), ATT_TYPE(j,i))
 4                   continue
-                    call nfmpi_put_att_double(ncid, varid(i),
+                    err = nfmpi_put_att_double(ncid, varid(i),
      +                                      ATT_NAME(j,i),
      +                                      ATT_TYPE(j,i),
-     +                                      ATT_LEN(j,i), att, err)
+     +                                      ATT_LEN(j,i), att)
                     if (allInRange) then
                         if (err .ne. 0) then
                             call errore('nfmpi_put_att_double: ', err)
@@ -744,7 +744,7 @@
             start(j) = 1
 1       continue
 
-        call nfmpi_begin_indep_data(ncid, err)
+        err = nfmpi_begin_indep_data(ncid)
         do 2, i = 1, NVARS
             allInRange = .true.
             do 3, j = 1, var_nels(i)
@@ -773,14 +773,14 @@
 !                */
                 text(var_nels(i)+1:var_nels(i)+1) = char(1)
                 text(var_nels(i)+2:var_nels(i)+2) = char(0)
-                call nfmpi_put_vara_text(ncid, i, start,
-     +                                    var_shape(1,i), text, err)
+                err = nfmpi_put_vara_text(ncid, i, start,
+     +                                    var_shape(1,i), text)
                 if (err .ne. 0) then
                     call errore('nfmpi_put_vara_text: ', err)
                 end if
             else
-                call nfmpi_put_vara_double(ncid, i, start,
-     +                                      var_shape(1,i), value, err)
+                err = nfmpi_put_vara_double(ncid, i, start,
+     +                                      var_shape(1,i), value)
                 if (allInRange) then
                     if (err .ne. 0) then
                         call errore('nfmpi_put_vara_double: ', err)
@@ -794,7 +794,7 @@
                 end if
             end if
 2       continue
-        call nfmpi_end_indep_data(ncid, err)
+        err = nfmpi_end_indep_data(ncid)
         end
 
 
@@ -807,8 +807,8 @@
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
 
-        call nfmpi_create(comm, filename, NF_CLOBBER, MPI_INFO_NULL,
-     +                     ncid, err)
+        err = nfmpi_create(comm, filename, NF_CLOBBER, MPI_INFO_NULL,
+     +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
         end if
@@ -816,13 +816,13 @@
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
-        call nfmpi_enddef(ncid, err)
+        err = nfmpi_enddef(ncid)
         if (err .ne. 0) then
             call errore('nfmpi_enddef: ', err)
         end if
         call put_vars(ncid)
 
-        call nfmpi_close(ncid, err)
+        err = nfmpi_close(ncid)
         if (err .ne. 0) then
             call errore('nfmpi_close: ', err)
         end if
@@ -843,7 +843,7 @@
         integer                 err           !/* netCDF status */
 
         do 1, i = 1, NDIMS
-            call nfmpi_inq_dim(ncid, i, name, length, err)
+            err = nfmpi_inq_dim(ncid, i, name, length)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_dim: ', err)
             end if
@@ -882,12 +882,12 @@
         integer                 nok             !/* count of valid comparisons */
 
         nok = 0
-        call nfmpi_begin_indep_data(ncid, err)
+        err = nfmpi_begin_indep_data(ncid)
 
         do 1, i = 1, NVARS
             isChar = var_type(i) .eq. NF_CHAR
-            call nfmpi_inq_var(ncid, i, name, datatype, ndims, dimids, 
-     +          natt, err)
+            err = nfmpi_inq_var(ncid, i, name, datatype, ndims, dimids, 
+     +          natt)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_var: ', err)
             end if
@@ -901,7 +901,7 @@
                 call errori('Unexpected rank for variable ', i)
             end if
             do 2, j = 1, ndims
-                call nfmpi_inq_dim(ncid, dimids(j), name, length, err)
+                err = nfmpi_inq_dim(ncid, dimids(j), name, length)
                 if (err .ne. 0) then
                     call errore('nfmpi_inq_dim: ', err)
                 end if
@@ -918,7 +918,7 @@
                 end if
                 expect = hash(var_type(i), var_rank(i), index )
                 if (isChar) then
-                    call nfmpi_get_var1_text(ncid, i, index, text, err)
+                    err = nfmpi_get_var1_text(ncid, i, index, text)
                     if (err .ne. 0) then
                         call errore('nfmpi_get_var1_text: ', err)
                     end if
@@ -929,8 +929,8 @@
                         nok = nok + 1
                     end if
                 else
-                    call nfmpi_get_var1_double(ncid, i, index, 
-     +                     value, err)
+                    err = nfmpi_get_var1_double(ncid, i, index, 
+     +                     value)
                     if (inRange(expect,var_type(i))) then
                         if (err .ne. 0) then
                             call errore('nfmpi_get_var1_double: ', err)
@@ -947,7 +947,7 @@
                 end if
 3           continue
 1       continue
-        call nfmpi_end_indep_data(ncid, err)
+        err = nfmpi_end_indep_data(ncid)
         call print_nok(nok)
         end
 
@@ -980,7 +980,7 @@
             i = varid(vid)
 
             do 2, j = 1, NATTS(i)
-                call nfmpi_inq_attname(ncid, i, j, name, err)
+                err = nfmpi_inq_attname(ncid, i, j, name)
                 if (err .ne. 0) then
                     call errore('nfmpi_inq_attname: ', err)
                 end if
@@ -988,7 +988,7 @@
                     call errori(
      +                 'nfmpi_inq_attname: unexpected name for var ', i)
                 end if
-                call nfmpi_inq_att(ncid, i, name, datatype, length, err)
+                err = nfmpi_inq_att(ncid, i, name, datatype, length)
                 if (err .ne. 0) then
                     call errore('nfmpi_inq_att: ', err)
                 end if
@@ -1001,7 +1001,7 @@
      +                  'nfmpi_inq_att: unexpected length for var ', i)
                 end if
                 if (datatype .eq. NF_CHAR) then
-                    call nfmpi_get_att_text(ncid, i, name, text, err)
+                    err = nfmpi_get_att_text(ncid, i, name, text)
                     if (err .ne. 0) then
                         call errore('nfmpi_get_att_text: ', err)
                     end if
@@ -1017,7 +1017,7 @@
                         end if
 3                   continue
                 else
-                    call nfmpi_get_att_double(ncid, i, name, value, err)
+                    err = nfmpi_get_att_double(ncid, i, name, value)
                     do 4, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
                         expect = hash(datatype, -1, ndx)
@@ -1051,15 +1051,15 @@
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
 
-        call nfmpi_open(comm, filename, NF_NOWRITE, MPI_INFO_NULL,
-     +                   ncid, err)
+        err = nfmpi_open(comm, filename, NF_NOWRITE, MPI_INFO_NULL,
+     +                   ncid)
         if (err .ne. 0) then
             call errore('nfmpi_open: ', err)
         else
             call check_dims(ncid)
             call check_vars(ncid)
             call check_atts(ncid)
-            call nfmpi_close (ncid, err)
+            err = nfmpi_close (ncid)
             if (err .ne. 0) then
                 call errore('nfmpi_close: ', err)
             end if
