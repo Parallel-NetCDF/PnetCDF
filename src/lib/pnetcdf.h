@@ -534,6 +534,9 @@ int ncmpi_get_var_short_all(int ncid, int varid, short *ip);
 int ncmpi_get_var_int_all(int ncid, int varid, int *ip);
 
 
+int ncmpi_get_var_long_all(int ncid, int varid, long *ip);
+
+
 int ncmpi_get_var_float_all(int ncid, int varid, float *ip);
 
 
