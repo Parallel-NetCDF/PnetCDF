@@ -133,7 +133,8 @@ C
                 if (ndims .ne. var_rank(i))
      +              call error('Unexpected rank')
                 do 2, j = 1, ndims
-                    call nfmpi_inq_dim(ncid, dimids(j), name, length, err)
+                    call nfmpi_inq_dim(ncid, dimids(j), name, 
+     +                   length, err)
                     if (err .ne. 0)
      +                  call errore('nfmpi_inq_dim: ', err)
                     if (length .ne. var_shape(j,i))
@@ -146,7 +147,8 @@ C
      +                  call error('error in index2indexes()')
                     expect = hash4( var_type(i), var_rank(i), index, 
      +                             NFT_ITYPE($1))
-                    call nfmpi_get_var1_$1(ncid, i, index, value, err)
+                    call nfmpi_get_var1_$1(ncid, i, index, 
+     +                      value, err)
                     if (inRange3(expect,datatype,NFT_ITYPE($1)))  then
                         if (in_internal_range(NFT_ITYPE($1), 
      +                                        expect)) then
