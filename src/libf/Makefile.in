@@ -21,12 +21,6 @@ HEADER	= pnetcdf.inc
 
 MANUAL	= 
 
-LIB_CSRCS = createf.c openf.c enddeff.c closef.c put_vara_int_allf.c \
-	put_vara_intf.c put_vara_real_allf.c put_vara_realf.c \
-	put_vara_double_allf.c put_vara_doublef.c get_vara_int_allf.c \
-	get_vara_intf.c get_vara_real_allf.c get_vara_realf.c \
-	get_vara_double_allf.c get_vara_doublef.c 
-
 LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	createf.c def_dimf.c def_varf.c del_attf.c enddeff.c \
 	end_indep_dataf.c get_att_doublef.c get_att_realf.c \
@@ -64,7 +58,7 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	put_vars_int_allf.c put_vars_intf.c put_vars_int2_allf.c \
 	put_vars_int2f.c put_vars_text_allf.c put_vars_textf.c \
 	put_var_textf.c redeff.c rename_attf.c rename_dimf.c \
-	rename_varf.c syncf.c nfxutil.c
+	rename_varf.c syncf.c nfxutil.c xstrerrorf.c
 
 LIB_FSRCS = strerrorf.f
 PACKING_LIST = \
