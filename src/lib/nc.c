@@ -200,7 +200,7 @@ NCcktype()
  * Sense of the return is changed.
  */
 int
-nc_cktype(nc_type type)
+ncmpii_cktype(nc_type type)
 {
 	switch((int)type){
 	case NC_BYTE:
@@ -220,7 +220,7 @@ nc_cktype(nc_type type)
  * will fit into xbufsize?
  */
 size_t
-ncx_howmany(nc_type type, size_t xbufsize)
+ncmpix_howmany(nc_type type, size_t xbufsize)
 {
 	switch(type){
 	case NC_BYTE:
@@ -235,7 +235,7 @@ ncx_howmany(nc_type type, size_t xbufsize)
 	case NC_DOUBLE:
 		return xbufsize/X_SIZEOF_DOUBLE;
 	default:
-		assert("ncx_howmany: Bad type" == 0);
+		assert("ncmpix_howmany: Bad type" == 0);
 		return(0);
 	}
 }
@@ -387,7 +387,7 @@ read_numrecs(NC *ncp) {
     return NC_EREAD;
   } 
 
-  status = ncx_get_size_t((const void **)&pos, &nrecs);
+  status = ncmpix_get_size_t((const void **)&pos, &nrecs);
   ncp->numrecs = nrecs;
  
   free(buf);
@@ -421,7 +421,7 @@ write_numrecs(NC *ncp) {
 
   nrecs = ncp->numrecs;
   pos = buf = (void *)malloc(X_SIZEOF_SIZE_T);
-  status = ncx_put_size_t(&pos, &nrecs);
+  status = ncmpix_put_size_t(&pos, &nrecs);
 
   if(NC_indep(ncp) && NC_independentFhOpened(ncp->nciop)) {
     mpireturn = MPI_File_sync(ncp->nciop->independent_fh);
@@ -806,7 +806,7 @@ NC_close(NC *ncp) {
 }
 
 int
-nc_inq(int ncid,
+ncmpi_inq(int ncid,
 	int *ndimsp,
 	int *nvarsp,
 	int *nattsp,
@@ -832,7 +832,7 @@ nc_inq(int ncid,
 }
 
 int 
-nc_inq_ndims(int ncid, int *ndimsp)
+ncmpi_inq_ndims(int ncid, int *ndimsp)
 {
 	int status;
 	NC *ncp;
@@ -848,7 +848,7 @@ nc_inq_ndims(int ncid, int *ndimsp)
 }
 
 int 
-nc_inq_nvars(int ncid, int *nvarsp)
+ncmpi_inq_nvars(int ncid, int *nvarsp)
 {
 	int status;
 	NC *ncp;
@@ -864,7 +864,7 @@ nc_inq_nvars(int ncid, int *nvarsp)
 }
 
 int 
-nc_inq_natts(int ncid, int *nattsp)
+ncmpi_inq_natts(int ncid, int *nattsp)
 {
 	int status;
 	NC *ncp;
@@ -880,7 +880,7 @@ nc_inq_natts(int ncid, int *nattsp)
 }
 
 int 
-nc_inq_unlimdim(int ncid, int *xtendimp)
+ncmpi_inq_unlimdim(int ncid, int *xtendimp)
 {
 	int status;
 	NC *ncp;
@@ -971,10 +971,4 @@ nc_set_fill(int ncid,
 #endif
 
 /*ARGSUSED*/
-
-
-
-
-
-
 

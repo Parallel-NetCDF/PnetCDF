@@ -461,7 +461,7 @@ NC_lookupvar(NC *ncp, int varid)
 /* Public */
 
 int
-nc_def_var( int ncid, const char *name, nc_type type,
+ncmpi_def_var( int ncid, const char *name, nc_type type,
 	 int ndims, const int *dimids, int *varidp)
 {
 	int status;
@@ -482,7 +482,7 @@ nc_def_var( int ncid, const char *name, nc_type type,
 	if(status != NC_NOERR)
 		return status;
 
-	status = nc_cktype(type);
+	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
 		return status;
 
@@ -528,7 +528,7 @@ nc_def_var( int ncid, const char *name, nc_type type,
 
 
 int
-nc_inq_varid(int ncid, const char *name, int *varid_ptr)
+ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr)
 {
 	int status;
 	NC *ncp;
@@ -551,7 +551,7 @@ nc_inq_varid(int ncid, const char *name, int *varid_ptr)
 
 
 int
-nc_inq_var(int ncid,
+ncmpi_inq_var(int ncid,
 	int varid,
 	char *name,
 	nc_type *typep,
@@ -601,7 +601,7 @@ nc_inq_var(int ncid,
 
 
 int 
-nc_inq_varname(int ncid, int varid, char *name)
+ncmpi_inq_varname(int ncid, int varid, char *name)
 {
 	int status;
 	NC *ncp;
@@ -625,7 +625,7 @@ nc_inq_varname(int ncid, int varid, char *name)
 }
 
 int 
-nc_inq_vartype(int ncid, int varid, nc_type *typep)
+ncmpi_inq_vartype(int ncid, int varid, nc_type *typep)
 {
 	int status;
 	NC *ncp;
@@ -646,7 +646,7 @@ nc_inq_vartype(int ncid, int varid, nc_type *typep)
 }
 
 int 
-nc_inq_varndims(int ncid, int varid, int *ndimsp)
+ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 {
 	int status;
 	NC *ncp;
@@ -670,7 +670,7 @@ nc_inq_varndims(int ncid, int varid, int *ndimsp)
 
 
 int 
-nc_inq_vardimid(int ncid, int varid, int *dimids)
+ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
 {
 	int status;
 	NC *ncp;
@@ -698,14 +698,14 @@ nc_inq_vardimid(int ncid, int varid, int *dimids)
 
 
 int 
-nc_inq_varnatts(int ncid, int varid, int *nattsp)
+ncmpi_inq_varnatts(int ncid, int varid, int *nattsp)
 {
 	int status;
 	NC *ncp;
 	NC_var *varp;
 
 	if(varid == NC_GLOBAL)
-		return  nc_inq_natts(ncid, nattsp);
+		return ncmpi_inq_natts(ncid, nattsp);
 
 	status = NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
@@ -724,7 +724,7 @@ nc_inq_varnatts(int ncid, int varid, int *nattsp)
 }
 
 int
-nc_rename_var(int ncid, int varid, const char *newname)
+ncmpi_rename_var(int ncid, int varid, const char *newname)
 {
 	int status;
 	NC *ncp;

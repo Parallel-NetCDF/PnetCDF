@@ -105,22 +105,22 @@
  */
 #define X_ALIGN			4	/* a.k.a. BYTES_PER_XDR_UNIT */
 
-#define ncx_len_char(nelems) \
+#define ncmpix_len_char(nelems) \
 	_RNDUP((nelems), X_ALIGN)
 
-#define ncx_len_short(nelems) \
+#define ncmpix_len_short(nelems) \
 	(((nelems) + (nelems)%2)  * X_SIZEOF_SHORT)
 
-#define ncx_len_int(nelems) \
+#define ncmpix_len_int(nelems) \
 	((nelems) * X_SIZEOF_INT)
 
-#define ncx_len_long(nelems) \
+#define ncmpix_len_long(nelems) \
 	((nelems) * X_SIZEOF_LONG)
 
-#define ncx_len_float(nelems) \
+#define ncmpix_len_float(nelems) \
 	((nelems) * X_SIZEOF_FLOAT)
 
-#define ncx_len_double(nelems) \
+#define ncmpix_len_double(nelems) \
 	((nelems) * X_SIZEOF_DOUBLE)
 
 /* End ncx_len */
@@ -185,159 +185,159 @@ typedef signed char schar;
 
 #if 0
 extern int
-ncx_get_schar_schar(const void *xp, schar *ip);
+ncmpix_get_schar_schar(const void *xp, schar *ip);
 extern int
-ncx_get_schar_uchar(const void *xp, uchar *ip);
+ncmpix_get_schar_uchar(const void *xp, uchar *ip);
 extern int
-ncx_get_schar_short(const void *xp, short *ip);
+ncmpix_get_schar_short(const void *xp, short *ip);
 extern int
-ncx_get_schar_int(const void *xp, int *ip);
+ncmpix_get_schar_int(const void *xp, int *ip);
 extern int
-ncx_get_schar_long(const void *xp, long *ip);
+ncmpix_get_schar_long(const void *xp, long *ip);
 extern int
-ncx_get_schar_float(const void *xp, float *ip);
+ncmpix_get_schar_float(const void *xp, float *ip);
 extern int
-ncx_get_schar_double(const void *xp, double *ip);
+ncmpix_get_schar_double(const void *xp, double *ip);
 
 extern int
-ncx_put_schar_schar(void *xp, const schar *ip);
+ncmpix_put_schar_schar(void *xp, const schar *ip);
 extern int
-ncx_put_schar_uchar(void *xp, const uchar *ip);
+ncmpix_put_schar_uchar(void *xp, const uchar *ip);
 extern int
-ncx_put_schar_short(void *xp, const short *ip);
+ncmpix_put_schar_short(void *xp, const short *ip);
 extern int
-ncx_put_schar_int(void *xp, const int *ip);
+ncmpix_put_schar_int(void *xp, const int *ip);
 extern int
-ncx_put_schar_long(void *xp, const long *ip);
+ncmpix_put_schar_long(void *xp, const long *ip);
 extern int
-ncx_put_schar_float(void *xp, const float *ip);
+ncmpix_put_schar_float(void *xp, const float *ip);
 extern int
-ncx_put_schar_double(void *xp, const double *ip);
+ncmpix_put_schar_double(void *xp, const double *ip);
 #endif
  
 
 extern int
-ncx_get_short_schar(const void *xp, schar *ip);
+ncmpix_get_short_schar(const void *xp, schar *ip);
 extern int
-ncx_get_short_uchar(const void *xp, uchar *ip);
+ncmpix_get_short_uchar(const void *xp, uchar *ip);
 extern int
-ncx_get_short_short(const void *xp, short *ip);
+ncmpix_get_short_short(const void *xp, short *ip);
 extern int
-ncx_get_short_int(const void *xp, int *ip);
+ncmpix_get_short_int(const void *xp, int *ip);
 extern int
-ncx_get_short_long(const void *xp, long *ip);
+ncmpix_get_short_long(const void *xp, long *ip);
 extern int
-ncx_get_short_float(const void *xp, float *ip);
+ncmpix_get_short_float(const void *xp, float *ip);
 extern int
-ncx_get_short_double(const void *xp, double *ip);
+ncmpix_get_short_double(const void *xp, double *ip);
 
 extern int
-ncx_put_short_schar(void *xp, const schar *ip);
+ncmpix_put_short_schar(void *xp, const schar *ip);
 extern int
-ncx_put_short_uchar(void *xp, const uchar *ip);
+ncmpix_put_short_uchar(void *xp, const uchar *ip);
 extern int
-ncx_put_short_short(void *xp, const short *ip);
+ncmpix_put_short_short(void *xp, const short *ip);
 extern int
-ncx_put_short_int(void *xp, const int *ip);
+ncmpix_put_short_int(void *xp, const int *ip);
 extern int
-ncx_put_short_long(void *xp, const long *ip);
+ncmpix_put_short_long(void *xp, const long *ip);
 extern int
-ncx_put_short_float(void *xp, const float *ip);
+ncmpix_put_short_float(void *xp, const float *ip);
 extern int
-ncx_put_short_double(void *xp, const double *ip);
+ncmpix_put_short_double(void *xp, const double *ip);
  
 
 extern int
-ncx_get_int_schar(const void *xp, schar *ip);
+ncmpix_get_int_schar(const void *xp, schar *ip);
 extern int
-ncx_get_int_uchar(const void *xp, uchar *ip);
+ncmpix_get_int_uchar(const void *xp, uchar *ip);
 extern int
-ncx_get_int_short(const void *xp, short *ip);
+ncmpix_get_int_short(const void *xp, short *ip);
 extern int
-ncx_get_int_int(const void *xp, int *ip);
+ncmpix_get_int_int(const void *xp, int *ip);
 extern int
-ncx_get_int_long(const void *xp, long *ip);
+ncmpix_get_int_long(const void *xp, long *ip);
 extern int
-ncx_get_int_float(const void *xp, float *ip);
+ncmpix_get_int_float(const void *xp, float *ip);
 extern int
-ncx_get_int_double(const void *xp, double *ip);
+ncmpix_get_int_double(const void *xp, double *ip);
 
 extern int
-ncx_put_int_schar(void *xp, const schar *ip);
+ncmpix_put_int_schar(void *xp, const schar *ip);
 extern int
-ncx_put_int_uchar(void *xp, const uchar *ip);
+ncmpix_put_int_uchar(void *xp, const uchar *ip);
 extern int
-ncx_put_int_short(void *xp, const short *ip);
+ncmpix_put_int_short(void *xp, const short *ip);
 extern int
-ncx_put_int_int(void *xp, const int *ip);
+ncmpix_put_int_int(void *xp, const int *ip);
 extern int
-ncx_put_int_long(void *xp, const long *ip);
+ncmpix_put_int_long(void *xp, const long *ip);
 extern int
-ncx_put_int_float(void *xp, const float *ip);
+ncmpix_put_int_float(void *xp, const float *ip);
 extern int
-ncx_put_int_double(void *xp, const double *ip);
+ncmpix_put_int_double(void *xp, const double *ip);
  
 
 extern int
-ncx_get_float_schar(const void *xp, schar *ip);
+ncmpix_get_float_schar(const void *xp, schar *ip);
 extern int
-ncx_get_float_uchar(const void *xp, uchar *ip);
+ncmpix_get_float_uchar(const void *xp, uchar *ip);
 extern int
-ncx_get_float_short(const void *xp, short *ip);
+ncmpix_get_float_short(const void *xp, short *ip);
 extern int
-ncx_get_float_int(const void *xp, int *ip);
+ncmpix_get_float_int(const void *xp, int *ip);
 extern int
-ncx_get_float_long(const void *xp, long *ip);
+ncmpix_get_float_long(const void *xp, long *ip);
 extern int
-ncx_get_float_float(const void *xp, float *ip);
+ncmpix_get_float_float(const void *xp, float *ip);
 extern int
-ncx_get_float_double(const void *xp, double *ip);
+ncmpix_get_float_double(const void *xp, double *ip);
 
 extern int
-ncx_put_float_schar(void *xp, const schar *ip);
+ncmpix_put_float_schar(void *xp, const schar *ip);
 extern int
-ncx_put_float_uchar(void *xp, const uchar *ip);
+ncmpix_put_float_uchar(void *xp, const uchar *ip);
 extern int
-ncx_put_float_short(void *xp, const short *ip);
+ncmpix_put_float_short(void *xp, const short *ip);
 extern int
-ncx_put_float_int(void *xp, const int *ip);
+ncmpix_put_float_int(void *xp, const int *ip);
 extern int
-ncx_put_float_long(void *xp, const long *ip);
+ncmpix_put_float_long(void *xp, const long *ip);
 extern int
-ncx_put_float_float(void *xp, const float *ip);
+ncmpix_put_float_float(void *xp, const float *ip);
 extern int
-ncx_put_float_double(void *xp, const double *ip);
+ncmpix_put_float_double(void *xp, const double *ip);
  
 
 extern int
-ncx_get_double_schar(const void *xp, schar *ip);
+ncmpix_get_double_schar(const void *xp, schar *ip);
 extern int
-ncx_get_double_uchar(const void *xp, uchar *ip);
+ncmpix_get_double_uchar(const void *xp, uchar *ip);
 extern int
-ncx_get_double_short(const void *xp, short *ip);
+ncmpix_get_double_short(const void *xp, short *ip);
 extern int
-ncx_get_double_int(const void *xp, int *ip);
+ncmpix_get_double_int(const void *xp, int *ip);
 extern int
-ncx_get_double_long(const void *xp, long *ip);
+ncmpix_get_double_long(const void *xp, long *ip);
 extern int
-ncx_get_double_float(const void *xp, float *ip);
+ncmpix_get_double_float(const void *xp, float *ip);
 extern int
-ncx_get_double_double(const void *xp, double *ip);
+ncmpix_get_double_double(const void *xp, double *ip);
 
 extern int
-ncx_put_double_schar(void *xp, const schar *ip);
+ncmpix_put_double_schar(void *xp, const schar *ip);
 extern int
-ncx_put_double_uchar(void *xp, const uchar *ip);
+ncmpix_put_double_uchar(void *xp, const uchar *ip);
 extern int
-ncx_put_double_short(void *xp, const short *ip);
+ncmpix_put_double_short(void *xp, const short *ip);
 extern int
-ncx_put_double_int(void *xp, const int *ip);
+ncmpix_put_double_int(void *xp, const int *ip);
 extern int
-ncx_put_double_long(void *xp, const long *ip);
+ncmpix_put_double_long(void *xp, const long *ip);
 extern int
-ncx_put_double_float(void *xp, const float *ip);
+ncmpix_put_double_float(void *xp, const float *ip);
 extern int
-ncx_put_double_double(void *xp, const double *ip);
+ncmpix_put_double_double(void *xp, const double *ip);
  
 
 /*
@@ -348,17 +348,17 @@ ncx_put_double_double(void *xp, const double *ip);
 
 /* ncx_get_int_size_t */
 extern int
-ncx_get_size_t(const void **xpp, size_t *ulp);
+ncmpix_get_size_t(const void **xpp, size_t *ulp);
 /* ncx_get_int_off_t */
 extern int
-ncx_get_off_t(const void **xpp, off_t *lp);
+ncmpix_get_off_t(const void **xpp, off_t *lp);
 
 /* ncx_put_int_size_t */
 extern int
-ncx_put_size_t(void **xpp, const size_t *ulp);
+ncmpix_put_size_t(void **xpp, const size_t *ulp);
 /* ncx_put_int_off_t */
 extern int
-ncx_put_off_t(void **xpp, const off_t *lp);
+ncmpix_put_off_t(void **xpp, const off_t *lp);
 
 
 /*
@@ -402,218 +402,218 @@ ncx_put_off_t(void **xpp, const off_t *lp);
  */
 
 extern int
-ncx_getn_schar_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_schar_schar(const void **xpp, size_t nelems, schar *ip);
 extern int
-ncx_getn_schar_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_schar_uchar(const void **xpp, size_t nelems, uchar *ip);
 extern int
-ncx_getn_schar_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_schar_short(const void **xpp, size_t nelems, short *ip);
 extern int
-ncx_getn_schar_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_schar_int(const void **xpp, size_t nelems, int *ip);
 extern int
-ncx_getn_schar_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_schar_long(const void **xpp, size_t nelems, long *ip);
 extern int
-ncx_getn_schar_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_schar_float(const void **xpp, size_t nelems, float *ip);
 extern int
-ncx_getn_schar_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_schar_double(const void **xpp, size_t nelems, double *ip);
 
 extern int
-ncx_pad_getn_schar_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_pad_getn_schar_schar(const void **xpp, size_t nelems, schar *ip);
 extern int
-ncx_pad_getn_schar_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_pad_getn_schar_uchar(const void **xpp, size_t nelems, uchar *ip);
 extern int
-ncx_pad_getn_schar_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_pad_getn_schar_short(const void **xpp, size_t nelems, short *ip);
 extern int
-ncx_pad_getn_schar_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_pad_getn_schar_int(const void **xpp, size_t nelems, int *ip);
 extern int
-ncx_pad_getn_schar_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_pad_getn_schar_long(const void **xpp, size_t nelems, long *ip);
 extern int
-ncx_pad_getn_schar_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_pad_getn_schar_float(const void **xpp, size_t nelems, float *ip);
 extern int
-ncx_pad_getn_schar_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_pad_getn_schar_double(const void **xpp, size_t nelems, double *ip);
 
 extern int
-ncx_putn_schar_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_schar_schar(void **xpp, size_t nelems, const schar *ip);
 extern int
-ncx_putn_schar_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_schar_uchar(void **xpp, size_t nelems, const uchar *ip);
 extern int
-ncx_putn_schar_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_schar_short(void **xpp, size_t nelems, const short *ip);
 extern int
-ncx_putn_schar_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_schar_int(void **xpp, size_t nelems, const int *ip);
 extern int
-ncx_putn_schar_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_schar_long(void **xpp, size_t nelems, const long *ip);
 extern int
-ncx_putn_schar_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_schar_float(void **xpp, size_t nelems, const float *ip);
 extern int
-ncx_putn_schar_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_schar_double(void **xpp, size_t nelems, const double *ip);
  
 extern int
-ncx_pad_putn_schar_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_pad_putn_schar_schar(void **xpp, size_t nelems, const schar *ip);
 extern int
-ncx_pad_putn_schar_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_pad_putn_schar_uchar(void **xpp, size_t nelems, const uchar *ip);
 extern int
-ncx_pad_putn_schar_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_pad_putn_schar_short(void **xpp, size_t nelems, const short *ip);
 extern int
-ncx_pad_putn_schar_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_pad_putn_schar_int(void **xpp, size_t nelems, const int *ip);
 extern int
-ncx_pad_putn_schar_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_pad_putn_schar_long(void **xpp, size_t nelems, const long *ip);
 extern int
-ncx_pad_putn_schar_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_pad_putn_schar_float(void **xpp, size_t nelems, const float *ip);
 extern int
-ncx_pad_putn_schar_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_pad_putn_schar_double(void **xpp, size_t nelems, const double *ip);
 
 
 extern int
-ncx_getn_short_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_short_schar(const void **xpp, size_t nelems, schar *ip);
 extern int
-ncx_getn_short_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_short_uchar(const void **xpp, size_t nelems, uchar *ip);
 extern int
-ncx_getn_short_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_short_short(const void **xpp, size_t nelems, short *ip);
 extern int
-ncx_getn_short_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_short_int(const void **xpp, size_t nelems, int *ip);
 extern int
-ncx_getn_short_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_short_long(const void **xpp, size_t nelems, long *ip);
 extern int
-ncx_getn_short_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_short_float(const void **xpp, size_t nelems, float *ip);
 extern int
-ncx_getn_short_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_short_double(const void **xpp, size_t nelems, double *ip);
 
 extern int
-ncx_pad_getn_short_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_pad_getn_short_schar(const void **xpp, size_t nelems, schar *ip);
 extern int
-ncx_pad_getn_short_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_pad_getn_short_uchar(const void **xpp, size_t nelems, uchar *ip);
 extern int
-ncx_pad_getn_short_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_pad_getn_short_short(const void **xpp, size_t nelems, short *ip);
 extern int
-ncx_pad_getn_short_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_pad_getn_short_int(const void **xpp, size_t nelems, int *ip);
 extern int
-ncx_pad_getn_short_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_pad_getn_short_long(const void **xpp, size_t nelems, long *ip);
 extern int
-ncx_pad_getn_short_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_pad_getn_short_float(const void **xpp, size_t nelems, float *ip);
 extern int
-ncx_pad_getn_short_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_pad_getn_short_double(const void **xpp, size_t nelems, double *ip);
 
 extern int
-ncx_putn_short_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_short_schar(void **xpp, size_t nelems, const schar *ip);
 extern int
-ncx_putn_short_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_short_uchar(void **xpp, size_t nelems, const uchar *ip);
 extern int
-ncx_putn_short_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_short_short(void **xpp, size_t nelems, const short *ip);
 extern int
-ncx_putn_short_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_short_int(void **xpp, size_t nelems, const int *ip);
 extern int
-ncx_putn_short_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_short_long(void **xpp, size_t nelems, const long *ip);
 extern int
-ncx_putn_short_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_short_float(void **xpp, size_t nelems, const float *ip);
 extern int
-ncx_putn_short_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_short_double(void **xpp, size_t nelems, const double *ip);
  
 extern int
-ncx_pad_putn_short_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_pad_putn_short_schar(void **xpp, size_t nelems, const schar *ip);
 extern int
-ncx_pad_putn_short_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_pad_putn_short_uchar(void **xpp, size_t nelems, const uchar *ip);
 extern int
-ncx_pad_putn_short_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_pad_putn_short_short(void **xpp, size_t nelems, const short *ip);
 extern int
-ncx_pad_putn_short_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_pad_putn_short_int(void **xpp, size_t nelems, const int *ip);
 extern int
-ncx_pad_putn_short_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_pad_putn_short_long(void **xpp, size_t nelems, const long *ip);
 extern int
-ncx_pad_putn_short_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_pad_putn_short_float(void **xpp, size_t nelems, const float *ip);
 extern int
-ncx_pad_putn_short_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_pad_putn_short_double(void **xpp, size_t nelems, const double *ip);
 
 
 extern int
-ncx_getn_int_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_int_schar(const void **xpp, size_t nelems, schar *ip);
 extern int
-ncx_getn_int_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_int_uchar(const void **xpp, size_t nelems, uchar *ip);
 extern int
-ncx_getn_int_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_int_short(const void **xpp, size_t nelems, short *ip);
 extern int
-ncx_getn_int_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_int_int(const void **xpp, size_t nelems, int *ip);
 extern int
-ncx_getn_int_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_int_long(const void **xpp, size_t nelems, long *ip);
 extern int
-ncx_getn_int_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_int_float(const void **xpp, size_t nelems, float *ip);
 extern int
-ncx_getn_int_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_int_double(const void **xpp, size_t nelems, double *ip);
 
 extern int
-ncx_putn_int_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_int_schar(void **xpp, size_t nelems, const schar *ip);
 extern int
-ncx_putn_int_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_int_uchar(void **xpp, size_t nelems, const uchar *ip);
 extern int
-ncx_putn_int_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_int_short(void **xpp, size_t nelems, const short *ip);
 extern int
-ncx_putn_int_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_int_int(void **xpp, size_t nelems, const int *ip);
 extern int
-ncx_putn_int_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_int_long(void **xpp, size_t nelems, const long *ip);
 extern int
-ncx_putn_int_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_int_float(void **xpp, size_t nelems, const float *ip);
 extern int
-ncx_putn_int_double(void **xpp, size_t nelems, const double *ip);
- 
-
-extern int
-ncx_getn_float_schar(const void **xpp, size_t nelems, schar *ip);
-extern int
-ncx_getn_float_uchar(const void **xpp, size_t nelems, uchar *ip);
-extern int
-ncx_getn_float_short(const void **xpp, size_t nelems, short *ip);
-extern int
-ncx_getn_float_int(const void **xpp, size_t nelems, int *ip);
-extern int
-ncx_getn_float_long(const void **xpp, size_t nelems, long *ip);
-extern int
-ncx_getn_float_float(const void **xpp, size_t nelems, float *ip);
-extern int
-ncx_getn_float_double(const void **xpp, size_t nelems, double *ip);
-
-extern int
-ncx_putn_float_schar(void **xpp, size_t nelems, const schar *ip);
-extern int
-ncx_putn_float_uchar(void **xpp, size_t nelems, const uchar *ip);
-extern int
-ncx_putn_float_short(void **xpp, size_t nelems, const short *ip);
-extern int
-ncx_putn_float_int(void **xpp, size_t nelems, const int *ip);
-extern int
-ncx_putn_float_long(void **xpp, size_t nelems, const long *ip);
-extern int
-ncx_putn_float_float(void **xpp, size_t nelems, const float *ip);
-extern int
-ncx_putn_float_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_int_double(void **xpp, size_t nelems, const double *ip);
  
 
 extern int
-ncx_getn_double_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_float_schar(const void **xpp, size_t nelems, schar *ip);
 extern int
-ncx_getn_double_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_float_uchar(const void **xpp, size_t nelems, uchar *ip);
 extern int
-ncx_getn_double_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_float_short(const void **xpp, size_t nelems, short *ip);
 extern int
-ncx_getn_double_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_float_int(const void **xpp, size_t nelems, int *ip);
 extern int
-ncx_getn_double_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_float_long(const void **xpp, size_t nelems, long *ip);
 extern int
-ncx_getn_double_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_float_float(const void **xpp, size_t nelems, float *ip);
 extern int
-ncx_getn_double_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_float_double(const void **xpp, size_t nelems, double *ip);
 
 extern int
-ncx_putn_double_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_float_schar(void **xpp, size_t nelems, const schar *ip);
 extern int
-ncx_putn_double_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_float_uchar(void **xpp, size_t nelems, const uchar *ip);
 extern int
-ncx_putn_double_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_float_short(void **xpp, size_t nelems, const short *ip);
 extern int
-ncx_putn_double_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_float_int(void **xpp, size_t nelems, const int *ip);
 extern int
-ncx_putn_double_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_float_long(void **xpp, size_t nelems, const long *ip);
 extern int
-ncx_putn_double_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_float_float(void **xpp, size_t nelems, const float *ip);
 extern int
-ncx_putn_double_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_float_double(void **xpp, size_t nelems, const double *ip);
+ 
+
+extern int
+ncmpix_getn_double_schar(const void **xpp, size_t nelems, schar *ip);
+extern int
+ncmpix_getn_double_uchar(const void **xpp, size_t nelems, uchar *ip);
+extern int
+ncmpix_getn_double_short(const void **xpp, size_t nelems, short *ip);
+extern int
+ncmpix_getn_double_int(const void **xpp, size_t nelems, int *ip);
+extern int
+ncmpix_getn_double_long(const void **xpp, size_t nelems, long *ip);
+extern int
+ncmpix_getn_double_float(const void **xpp, size_t nelems, float *ip);
+extern int
+ncmpix_getn_double_double(const void **xpp, size_t nelems, double *ip);
+
+extern int
+ncmpix_putn_double_schar(void **xpp, size_t nelems, const schar *ip);
+extern int
+ncmpix_putn_double_uchar(void **xpp, size_t nelems, const uchar *ip);
+extern int
+ncmpix_putn_double_short(void **xpp, size_t nelems, const short *ip);
+extern int
+ncmpix_putn_double_int(void **xpp, size_t nelems, const int *ip);
+extern int
+ncmpix_putn_double_long(void **xpp, size_t nelems, const long *ip);
+extern int
+ncmpix_putn_double_float(void **xpp, size_t nelems, const float *ip);
+extern int
+ncmpix_putn_double_double(void **xpp, size_t nelems, const double *ip);
  
 
 /*
@@ -622,30 +622,30 @@ ncx_putn_double_double(void **xpp, size_t nelems, const double *ip);
 
 /* read ASCII characters */
 extern int
-ncx_getn_text(const void **xpp, size_t nchars, char *cp);
+ncmpix_getn_text(const void **xpp, size_t nchars, char *cp);
 extern int
-ncx_pad_getn_text(const void **xpp, size_t nchars, char *cp);
+ncmpix_pad_getn_text(const void **xpp, size_t nchars, char *cp);
 
 /* write ASCII characters */
 extern int
-ncx_putn_text(void **xpp, size_t nchars, const char *cp);
+ncmpix_putn_text(void **xpp, size_t nchars, const char *cp);
 extern int
-ncx_pad_putn_text(void **xpp, size_t nchars, const char *cp);
+ncmpix_pad_putn_text(void **xpp, size_t nchars, const char *cp);
 
 /* for symmetry */
-#define ncx_getn_char_char(xpp, nelems, fillp) ncx_getn_text(xpp, nelems, fillp)
-#define ncx_putn_char_char(xpp, nelems, fillp) ncx_putn_text(xpp, nelems, fillp)
+#define ncmpix_getn_char_char(xpp, nelems, fillp) ncmpix_getn_text(xpp, nelems, fillp)
+#define ncmpix_putn_char_char(xpp, nelems, fillp) ncmpix_putn_text(xpp, nelems, fillp)
 
 /* read opaque data */
 extern int
-ncx_getn_void(const void **xpp, size_t nchars, void *vp);
+ncmpix_getn_void(const void **xpp, size_t nchars, void *vp);
 extern int
-ncx_pad_getn_void(const void **xpp, size_t nchars, void *vp);
+ncmpix_pad_getn_void(const void **xpp, size_t nchars, void *vp);
 
 /* write opaque data */
 extern int
-ncx_putn_void(void **xpp, size_t nchars, const void *vp);
+ncmpix_putn_void(void **xpp, size_t nchars, const void *vp);
 extern int
-ncx_pad_putn_void(void **xpp, size_t nchars, const void *vp);
+ncmpix_pad_putn_void(void **xpp, size_t nchars, const void *vp);
 
 #endif /* _NCX_H_ */

@@ -303,7 +303,7 @@ elem_NC_dimarray(const NC_dimarray *ncap, size_t elem)
 /* Public */
 
 int
-nc_def_dim(int ncid, const char *name, size_t size, int *dimidp)
+ncmpi_def_dim(int ncid, const char *name, size_t size, int *dimidp)
 {
 	int status;
 	NC *ncp;
@@ -359,7 +359,7 @@ nc_def_dim(int ncid, const char *name, size_t size, int *dimidp)
 
 
 int
-nc_inq_dimid(int ncid, const char *name, int *dimid_ptr)
+ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr)
 {
 	int status;
 	NC *ncp;
@@ -380,7 +380,7 @@ nc_inq_dimid(int ncid, const char *name, int *dimid_ptr)
 
 
 int
-nc_inq_dim(int ncid, int dimid, char *name, size_t *sizep)
+ncmpi_inq_dim(int ncid, int dimid, char *name, size_t *sizep)
 {
 	int status;
 	NC *ncp;
@@ -412,7 +412,7 @@ nc_inq_dim(int ncid, int dimid, char *name, size_t *sizep)
 
 
 int 
-nc_inq_dimname(int ncid, int dimid, char *name)
+ncmpi_inq_dimname(int ncid, int dimid, char *name)
 {
 	int status;
 	NC *ncp;
@@ -438,7 +438,7 @@ nc_inq_dimname(int ncid, int dimid, char *name)
 
 
 int 
-nc_inq_dimlen(int ncid, int dimid, size_t *lenp)
+ncmpi_inq_dimlen(int ncid, int dimid, size_t *lenp)
 {
 	int status;
 	NC *ncp;
@@ -464,7 +464,7 @@ nc_inq_dimlen(int ncid, int dimid, size_t *lenp)
 
 
 int
-nc_rename_dim( int ncid, int dimid, const char *newname)
+ncmpi_rename_dim( int ncid, int dimid, const char *newname)
 {
 	int status;
 	NC *ncp;
