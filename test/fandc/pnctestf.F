@@ -68,6 +68,9 @@ C    determined by MPI where a zero is specified
 
       call MPI_Finalize  (ierr)
 
+      Write (6,10)
+
+ 10   format(" No Errors")
 
       Stop
 
