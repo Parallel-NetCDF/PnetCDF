@@ -31,6 +31,9 @@ ncmpii_free_NC_string(NC_string *ncstrp)
  * Verify that a name string is valid
  * CDL syntax, eg, all the characters are
  * alphanumeric, '-', '_', or '.'.
+ * Also permit ':', '@', '(', or ')' in names for chemists currently making 
+ * use of these characters, but don't document until ncgen and ncdump can 
+ * also handle these characters in names.
  */
 int
 ncmpii_NC_check_name(const char *name)
@@ -47,6 +50,8 @@ ncmpii_NC_check_name(const char *name)
 		if(!isalnum(ch))
 		{
 			if(ch != '_' && ch != '-' && ch != '.')
+			if(ch != '_' && ch != '-' && ch != '.' && 
+			ch != ':' && ch != '@' && ch != '(' && ch != ')')
 				return NC_EBADNAME;
 		}
 	}
