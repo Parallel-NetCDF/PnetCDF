@@ -52,12 +52,13 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <netcdf.h>
+#include <string.h>
 
 void handle_error(int status) {
   fprintf(stderr, "%s\n", ncmpi_strerror(status));
 }
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
   int i, j, k;
   int status;
@@ -240,5 +241,6 @@ if (rank == 0) {
 }
 
   MPI_Finalize();
+  return 0;
 }
 
