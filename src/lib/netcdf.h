@@ -140,6 +140,7 @@ typedef nc_type ncmpi_type;
 
 #define NC_ENOTINDEP	(-26)	/* Operation not allowed in collective data mode */
 #define NC_EINDEP	(-27)	/* Operation not allowed in independent data mode */
+#define NC_EFILE	(-28)	/* Unknown error in file operation */
 #define NC_EREAD	(-29)	/* Unknown error in reading file */
 #define NC_EWRITE	(-30)	/* Unknown error in writting to file */
 #define NC_EMULTIDEFINE (-31)	/* NC definations on multiprocesses conflict */
