@@ -139,6 +139,7 @@ main(int argc, char *argv[])
 
     if ( create_file ) {
 	write_file(testfile);
+	MPI_Finalize();
 	return nfailsTotal > 0;
     }
 
