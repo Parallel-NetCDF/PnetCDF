@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_get_var_double_ ( int *v1, int *v2, double*v3, MPI_Fint *ierr ){
     *ierr = ncmpi_get_var_double( *v1, *v2, v3 );
 }

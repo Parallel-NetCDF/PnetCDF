@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
-FORTRAN_API void FORT_CALL nfmpi_get_vara_int_ ( int *v1, int *v2, int v3[], int v4[], int*v5, MPI_Fint *ierr ){
-    *ierr = ncmpi_get_vara_int( *v1, *v2, v3, v4, v5 );
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
+FORTRAN_API void FORT_CALL nfmpi_get_vara_int_ ( int *v1, int *v2, int v3[], int v4[], MPI_Fint *v5, MPI_Fint *ierr ){
+    *ierr = ncmpi_get_vara_int( *v1, *v2, (const size_t *)(v3), (const size_t *)(v4), v5 );
 }

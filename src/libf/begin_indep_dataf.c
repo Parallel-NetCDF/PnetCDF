@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_begin_indep_data_ ( int *v1, MPI_Fint *ierr ){
     *ierr = ncmpi_begin_indep_data( *v1 );
 }

@@ -12,4 +12,7 @@ $header_file = "mpinetcdf_impl.h";
 	      'create' => 2, 'create-2' => 'in:addnull' ,
 	      'open' => 2, 'open-2' => 'in:addnull' 
 	      );
+$build_prototypes = 1;
+$prototype_header_file = "mpifnetcdf.h";
+$argsneedcast{'const size_t []'} = '(const size_t *)(ARG)';
 return 1;

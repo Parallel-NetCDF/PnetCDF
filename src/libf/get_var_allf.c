@@ -18,6 +18,9 @@
 /* Else leave name alone */
 #endif
 
+
+/* Prototypes for the Fortran interfaces */
+#include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_get_var_all_ ( int *v1, int *v2, void*v3, int *v4, MPI_Fint *v5, MPI_Fint *ierr ){
-    *ierr = ncmpi_get_var_all( *v1, *v2, v3, *v4, *v5 );
+    *ierr = ncmpi_get_var_all( *v1, *v2, v3, *v4, (MPI_Datatype)(*v5) );
 }
