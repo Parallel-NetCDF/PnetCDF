@@ -14,17 +14,51 @@ UD_SRCDIR
 AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
 AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
+
 UD_PROG_M4
-UD_PROG_CC
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_F77
+dnl UD_PROG_CC
 UD_PROG_CC_MAKEDEPEND
-UD_PROG_CXX
-UD_PROG_FC
-UD_PROG_F90
+dnl need a --with-cxx=no and --with-fortran=no
+dnl UD_PROG_CXX
+dnl UD_PROG_FC
+dnl UD_PROG_F90
 UD_FORTRAN_TYPES
 UD_CHECK_LIB_MATH
 UD_PROG_AR()
 UD_PROG_NM()
 AC_PROG_RANLIB
+
+MPICC=$CC
+AC_MSG_CHECKING(looking for mpi implementation)
+AC_ARG_WITH(mpi, 
+[  --with-mpi              installation prefix for mpi implementation],
+	if test x$withval = xyes; then
+		AC_MSG_ERROR(--with-mpi must be given a pathname)
+	else
+		AC_MSG_RESULT(using $withval)
+		MPICC=${withval}/bin/mpicc
+		if test ! -x "${MPICC}"; then
+			AC_MSG_WARN($MPICC either does not exist or is not executable: falling back to $CC)
+			MPICC="$CC"
+		fi
+	fi
+)
+
+
+AC_MSG_CHECKING(looking for MPI-IO support in MPI implementation)
+saveCC="$CC"
+CC=$MPICC
+AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR],
+	AC_MSG_RESULT(yes),
+	AC_MSG_ERROR(mpi implementation does not support MPI-IO)
+)
+CC="$saveCC"
+AC_SUBST(MPICC)
+
+
 AC_CHECK_HEADER(stdlib.h, ,AC_DEFINE(NO_STDLIB_H))
 AC_CHECK_HEADER(sys/types.h, ,AC_DEFINE(NO_SYS_TYPES_H))
 AC_CHECK_FUNC(strerror, ,AC_DEFINE(NO_STRERROR))
