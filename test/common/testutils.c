@@ -34,7 +34,7 @@ void parse_write_args(int argc, char **argv, int rank, params *p)
 	int outlen;
 	if ( rank == 0 ) {
 		if (argc == 2 ) {
-			strncpy(p->outfname, argv[2], PATH_MAX);
+			strncpy(p->outfname, argv[1], PATH_MAX);
 		} else if (argc == 0) {
 			strncpy(p->outfname, "pvfs:testwrite.nc", PATH_MAX);
 		} else {
