@@ -374,6 +374,7 @@ test_ncmpi_put_var_$1(void)
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
+    ncmpi_begin_indep_data(ncid);
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
@@ -381,10 +382,10 @@ test_ncmpi_put_var_$1(void)
 	canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
-        err = ncmpi_put_var_$1_all(BAD_ID, i, value);
+        err = ncmpi_put_var_$1(BAD_ID, i, value);
         IF (err != NC_EBADID) 
 	    error("bad ncid: status = %d", err);
-        err = ncmpi_put_var_$1_all(ncid, BAD_VARID, value);
+        err = ncmpi_put_var_$1(ncid, BAD_VARID, value);
         IF (err != NC_ENOTVAR) 
 	    error("bad var id: status = %d", err);
 
@@ -400,7 +401,7 @@ test_ncmpi_put_var_$1(void)
 	    allInExtRange = allInExtRange 
 		&& inRange3(value[j], var_type[i], NCT_ITYPE($1));
 	}
-        err = ncmpi_put_var_$1_all(ncid, i, value);
+        err = ncmpi_put_var_$1(ncid, i, value);
 	if (canConvert) {
 	    if (allInExtRange) {
 		IF (err) 
@@ -414,6 +415,7 @@ test_ncmpi_put_var_$1(void)
 		error("wrong type: status = %d", err);
 	}
     }
+    ncmpi_end_indep_data(ncid);
 
         /* Preceeding has written nothing for record variables, now try */
         /* again with more than 0 records */
@@ -430,12 +432,13 @@ test_ncmpi_put_var_$1(void)
         error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
     #endif
 
+    ncmpi_begin_indep_data(ncid);
     for (i = 0; i < NVARS; i++) {
         if (var_dimid[i][0] == RECDIM) {  /* only test record variables here */
 	    canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
 	    assert(var_rank[i] <= MAX_RANK);
 	    assert(var_nels[i] <= MAX_NELS);
-	    err = ncmpi_put_var_$1_all(BAD_ID, i, value);
+	    err = ncmpi_put_var_$1(BAD_ID, i, value);
 
 	    nels = 1;
 	    for (j = 0; j < var_rank[i]; j++) {
@@ -449,7 +452,7 @@ test_ncmpi_put_var_$1(void)
 		allInExtRange = allInExtRange 
 		    && inRange3(value[j], var_type[i], NCT_ITYPE($1));
 	    }
-	    err = ncmpi_put_var_$1_all(ncid, i, value);
+	    err = ncmpi_put_var_$1(ncid, i, value);
 	    if (canConvert) {
 		if (allInExtRange) {
 		    IF (err) 
@@ -464,6 +467,7 @@ test_ncmpi_put_var_$1(void)
 	    }
         }
     }
+    ncmpi_end_indep_data(ncid);
 
     err = ncmpi_close(ncid);
     IF (err) 
