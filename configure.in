@@ -214,6 +214,20 @@ if test "$enable_fortran" = yes ; then
 fi
 UD_MAKEWHATIS
 
+AC_CHECK_HEADERS(unistd.h, 
+	AC_MSG_CHECKING(for large file defines)
+	AC_TRY_COMPILE([
+		#include <unistd.h>
+		], [
+		#ifndef _LFS64_LARGEFILE
+		#error no largefile defines
+		#endif
+		], 
+		CFLAGS="${CFLAGS} -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
+		AC_MSG_RESULT(yes),
+		AC_MSG_RESULT(none) )
+	)
+
 
 has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
