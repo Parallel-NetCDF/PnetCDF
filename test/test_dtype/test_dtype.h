@@ -1,3 +1,6 @@
+#ifndef TEST_DTYPE_H
+#define TEST_DTYPE_H
+
 /* This is the only two macros you may need to edit for various etypes */
 #define TEST_TYPE_INDEX 6 /* which type is used? [0..7] */
 #define TEST_NCTYPE NC_DOUBLE
@@ -37,6 +40,8 @@
 #define TEST_NATIVE_ETYPE double
 #define TEST_NATIVE_ETYPE_STR "double"
 #endif
+
+#define TEST_MAX_INT ( ~((int)(1) << (8*sizeof(int)-1)) )
 
 #define TEST_SET_NCMPI_ETYPE(nc_etype, mpi_etype) 		\
 { 								\
@@ -121,3 +126,11 @@
       printf(", %2d", (int)(list)[i]);				\
   }								\
 }
+
+#define TEST_EXIT(err_code)					\
+{								\
+  MPI_Finalize();						\
+  exit((err_code));						\
+}
+
+#endif
