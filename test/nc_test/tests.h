@@ -45,7 +45,7 @@
 /* scalb(1. - scalb(.5 , -52), 1024) */
 #define X_DOUBLE_MAX	DBL_MAX
 #endif
-#define X_DOUBLE_MIN	DBL_MIN
+#define X_DOUBLE_MIN	-(DBL_MAX)
 
 
 #if defined(_SX) && _SX != 0 /* NEC SUPER UX */

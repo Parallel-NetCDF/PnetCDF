@@ -92,11 +92,11 @@
 #define X_ULONG_MAX	4294967295U
 #endif
 #define X_FLOAT_MAX	FLT_MAX
-#define X_FLOAT_MIN	FLT_MIN
+#define X_FLOAT_MIN	-(FLT_MAX)
 #define X_FLT_MAX	X_FLOAT_MAX	/* alias compatible with limits.h */
 /* scalb(1. - scalb(.5 , -52), 1024) */
 #define X_DOUBLE_MAX	DBL_MAX
-#define X_DOUBLE_MIN	DBL_MIN
+#define X_DOUBLE_MIN	-(DBL_MAX)
 #define X_DBL_MAX	X_DOUBLE_MAX	/* alias compatible with limits.h */
 
 #define X_SIZE_MAX	X_INT_MAX	/* N.B., just uses the signed range */
