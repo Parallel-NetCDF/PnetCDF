@@ -15,6 +15,9 @@ AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
 AC_CONFIG_HEADER(src/lib/ncconfig.h:src/lib/ncconfig.in)
 
+AC_CONFIG_AUX_DIR(./scripts)
+AC_PROG_INSTALL
+
 UD_PROG_M4
 AC_PROG_CC
 AC_PROG_CXX
