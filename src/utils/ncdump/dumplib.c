@@ -97,7 +97,7 @@ has_c_format_att(
     )
 {
     ncmpi_type cfmt_type;
-    size_t cfmt_len;
+    MPI_Offset cfmt_len;
 #define C_FMT_NAME	"C_format" /* name of C format attribute */
 #define	MAX_CFMT_LEN	100	/* max length of C format attribute */
     static char cfmt[MAX_CFMT_LEN];
