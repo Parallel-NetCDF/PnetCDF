@@ -13,22 +13,22 @@ MPIF77 = @MPIF77@
 EXECS = pnctestf pnctest csnap pnf_test
 
 pnctestf: pnctestf.F
-	$(MPIF77) -o pnctestf $(srcdir)/pnctestf.F -I$(INCDIRF) -L$(LNKDIR) -lpnetcdf -lm
+	$(MPIF77) $(FFLAGS) -o pnctestf $(srcdir)/pnctestf.F -I$(INCDIRF) -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
 
 pnctest: pnctest.c
-	$(MPICC) -o pnctest $(srcdir)/pnctest.c -I$(INCDIR) -L$(LNKDIR) -lpnetcdf -lm
+	$(MPICC) -o pnctest $(srcdir)/pnctest.c -I$(INCDIR) -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
 
 csnap:  csnap.o
-	$(MPICC) -L$(LNKDIR) -o csnap csnap.o -lpnetcdf -lm
+	$(MPICC) -L$(LNKDIR) -o csnap csnap.o -lpnetcdf -lm $(LIBS)
 
 csnap.o:  csnap.c
 	$(MPICC) -I$(INCDIR) -c $(srcdir)/csnap.c
 
 pnf_test:  pnf_test.o
-	$(MPIF77) -L$(LNKDIR) -o pnf_test pnf_test.o -lpnetcdf -lm
+	$(MPIF77) $(FFLAGS) -L$(LNKDIR) -o pnf_test pnf_test.o -lpnetcdf -lm $(LIBS)
 
 pnf_test.o:  pnf_test.F
-	$(MPIF77) -I$(INCDIRF) -c $(srcdir)/pnf_test.F
+	$(MPIF77) $(FFLAGS) -I$(INCDIRF) -c $(srcdir)/pnf_test.F 
 
 clean:
 	rm -f $(EXECS) *.o *.nc
