@@ -5,3 +5,11 @@ csnap
 pnctest
 pnctestf
 pnf_test
+*.tar
+Makefile
+*.dump
+Makefile.F
+run_pnf_test
+pnf_test1.F
+run_csnap
+Makefile.c
