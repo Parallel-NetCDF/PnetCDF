@@ -13,6 +13,8 @@
     
 #include <pnetcdf.h>
 
+#include <unistd.h>
+
 #include "generic.h"
 #include "ncgen.h"
 #include "genlib.h"
