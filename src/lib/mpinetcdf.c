@@ -140,6 +140,7 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
 
   status = ncmpii_hdr_get_NC(ncp);
   if (status != NC_NOERR) {
+    ncmpiio_close(ncp->nciop, 0);
     ncmpii_free_NC(ncp);
     return status;
   }
