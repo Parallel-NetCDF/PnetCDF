@@ -1,0 +1,14 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+SUBDIRS = ncgen ncdump
+
+all: ncgen ncdump
+
+ncgen:
+	cd ncgen && $(MAKE)
+
+ncdump: ncgen
+	cd ncdump && $(MAKE)
+
+clean:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
