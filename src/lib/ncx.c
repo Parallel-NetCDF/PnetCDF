@@ -1376,7 +1376,7 @@ ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 	}
 	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
 	if (sizeof_off_t == 4 ) {
-		*cp++ = (uchar) ((*lp)               >> 24);
+		*cp++ = (uchar)(((*lp) & 0xff000000) >> 24);
 		*cp++ = (uchar)(((*lp) & 0x00ff0000) >> 16);
 		*cp++ = (uchar)(((*lp) & 0x0000ff00) >>  8);
 		*cp   = (uchar)( (*lp) & 0x000000ff);
@@ -1393,7 +1393,7 @@ ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 		*cp++ = (uchar)(((*lp) & 0x0000ff00) >>  8);
 		*cp   = (uchar)( (*lp) & 0x000000ff);
 #else
-		*cp++ = (uchar) ((*lp)                          >> 56);
+		*cp++ = (uchar)(((*lp) & 0xff00000000000000ULL) >> 56);
 		*cp++ = (uchar)(((*lp) & 0x00ff000000000000ULL) >> 48);
 		*cp++ = (uchar)(((*lp) & 0x0000ff0000000000ULL) >> 40);
 		*cp++ = (uchar)(((*lp) & 0x000000ff00000000ULL) >> 32);
