@@ -144,3 +144,20 @@ FORTRAN_API double max_float_() {
 FORTRAN_API double max_double_() {
 	return LONG_MAX;
 }
+
+#ifdef F77_NAME_UPPER
+#define nfmpi_issyserr_ NFMPI_ISSYSERR
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define nfmpi_issyserr_  nfmpi_issyserr__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define nfmpi_issyserr_  nfmpi_issyserr
+/* Else leave name alone */
+#endif
+
+FORTRAN_API int nfmpi_issyserr_(int * A1) {
+	if *A1 > 0
+		return 1;
+	else 
+		return 0;
+}
+
