@@ -574,6 +574,13 @@ ncmpii_hdr_put_NC(NC *ncp, void *buf) {
 
 /*
  * Fetch the next header chunk.  the chunk is 'gbp->size' bytes big
+ * Takes care to not overwrite leftover (unused) data in the buffer before
+ * fetching a new chunk: the current aproach is to re-read the extra data.  
+ *
+ * NOTE: An alternate approach (which we do not do) would be to save the old
+ *       data, read the next chunk and then copy the old data into the new
+ *       chunk.  This alternate aproach might help if it is important for reads
+ *       to be aligned.
  */
 static int
 hdr_fetch(bufferinfo *gbp) {
