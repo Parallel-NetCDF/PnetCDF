@@ -531,7 +531,7 @@ sub reorderIntArrOut_ctof {
 # -------------------------------------------------------------------------
 sub intToSizeT_in_decl {
     my $count = $_[0];
-    print $OUTFD "    size_t l$count = (size_t)v$count;\n";
+    print $OUTFD "    size_t l$count = (size_t)*v$count;\n";
 }
 sub intToSizeT_ftoc {
     my $count = $_[0];
