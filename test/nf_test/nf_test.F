@@ -81,6 +81,9 @@
 !	DIGITAL Visual Fortran needs DFPORT for iargc
 	USE DFPORT
         implicit        none
+#elif defined(NAGf90Fortran)
+        USE F90_UNIX_ENV, only : iargc, getarg
+        implicit none
 #else
         implicit        none
         integer         iargc
@@ -258,6 +261,9 @@
         external        test_nfmpi_rename_att
         external        test_nfmpi_del_att
         external        test_nfmpi_set_fill
+#if 0
+        external        test_nfmpi_set_default_format
+#endif
         external        nc_ignorefpe
 
         call MPI_INIT(err)                        
@@ -497,6 +503,10 @@ C           /* Test write functions */
             call test('nfmpi_rename_att', test_nfmpi_rename_att)
             call test('nfmpi_del_att', test_nfmpi_del_att)
             call test('nfmpi_set_fill', test_nfmpi_set_fill)
+#if 0
+            call test('nfmpi_set_default_format',
+     +                test_nfmpi_set_default_format);
+#endif
         end if
         call MPI_Finalize(err)
 

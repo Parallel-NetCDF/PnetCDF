@@ -165,6 +165,10 @@ ncmpi_strerror(int err)
 	    return "Numeric conversion not representable";
 	case NC_ENOMEM:
 	    return "Memory allocation (malloc) failure";
+	case NC_EVARSIZE:
+	    return "One or more variable sizes violate format constraints";
+	case NC_EDIMSIZE:
+	    return "Invalid dimension size";
 	}
 	/* default */
 	return unknown;

@@ -59,8 +59,11 @@
       integer nf_nofill
       integer nf_lock
       integer nf_share
+      integer nf_64bit_offset
       integer nf_sizehint_default
       integer nf_align_chunk
+      integer nf_format_classic
+      integer nf_format_64bit
 
       parameter (nf_nowrite = 0)
       parameter (nf_write = 1)
@@ -70,8 +73,11 @@
       parameter (nf_nofill = 256)
       parameter (nf_lock = 1024)
       parameter (nf_share = 2048)
+      parameter (nf_64bit_offset = 512)
       parameter (nf_sizehint_default = 0)
       parameter (nf_align_chunk = -1)
+      parameter (nf_format_classic = 1)
+      parameter (nf_format_64bit = 2)
 
 !
 ! size argument for defining an unlimited dimension:
@@ -132,6 +138,8 @@
       integer nf_ebadname
       integer nf_erange
       integer nf_enomem
+      integer nf_evarsize
+      integer nf_edimsize
 
       parameter (nf_noerr = 0)
       parameter (nf_ebadid = -33)
@@ -162,6 +170,8 @@
       parameter (nf_ebadname = -59)
       parameter (nf_erange = -60)
       parameter (nf_enomem = -61)
+      parameter (nf_evarsize = -62)
+      parameter (nf_edimsize = -63)
 
 !
 ! error handling modes:
@@ -248,6 +258,12 @@
 !                          integer             fillmode,
 !                          integer             old_mode)
       external        nfmpi_set_fill
+
+      integer         nfmpi_set_default_format
+!                          (integer            ncid,
+!                           integer            fillmode,
+!                           integer            old_mode)
+      external        nfmpi_set_default_format
 
       integer         nfmpi_redef
 !                         (integer             ncid)

@@ -321,9 +321,18 @@ ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
 	if(status != NC_NOERR)
 		return status;
 
-		/* cast needed for braindead systems with signed size_t */
-	if(size > X_INT_MAX || size < 0) /* Backward compat */
-		return NC_EINVAL;
+	/* MPI_Offset is usually a signed value, but serial netcdf uses 
+	 * size_t -- normally unsigned */
+	if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
+		/* CDF2 format and LFS */
+		if (size > X_UINT_MAX - 3 || (size < 0)) 
+			/* "-3" handles rounded-up size */
+			return NC_EDIMSIZE;
+	} else {
+		/* CDF1 format */
+		if (size > X_INT_MAX - 3 || (size < 0))
+			return NC_EDIMSIZE;
+	}
 
 	if(size == NC_UNLIMITED)
 	{

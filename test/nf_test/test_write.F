@@ -489,7 +489,7 @@ C           /* define-mode tests: remaining dims */
             length = NF_UNLIMITED - 1
             err = nfmpi_def_dim(ncid, dim_name(i), length,
      +                       dimid)
-            if (err .ne. NF_EINVAL)
+            if (err .ne. NF_EDIMSIZE)
      +          call errore('bad size: ', err)
             err = nfmpi_def_dim(ncid, dim_name(i), 
      &               dim_len(i), dimid)
@@ -1416,3 +1416,94 @@ C           /* get all variables & check all values equal 42 */
      +      call errori('delete of scratch file failed: ', err)
 #endif
         end
+
+#if 0
+C * Test nc_set_default_format
+C *    try with bad default format
+C *    try with NULL old_formatp
+C *    try in data mode, check error
+C *    check that proper set to NC_FILL works for record & non-record variables
+C *    (note that it is not possible to test NC_NOFILL mode!)
+C *    close file & create again for test using attribute _FillValue
+      subroutine test_nfmpi_set_default_format()
+      implicit none
+#include "tests.inc"
+      
+      integer ncid
+      integer err
+      integer i
+      integer version
+      integer old_format
+      integer nfmpi_get_file_version
+      
+C     /* bad format */
+      err = nfmpi_set_default_format(3, old_format)
+      IF (err .ne. NF_EINVAL)
+     +     call errore("bad default format: status = %d", err)
+     
+C    /* Cycle through available formats. */
+      do 1 i=1, 2
+         err = nfmpi_set_default_format(i, old_format)
+         if (err .ne. 0) 
+     +         call errore("setting classic format: status = %d", err)
+         err = nfmpi_create(comm, scratch, NF_CLOBBER, 
+     +                MPI_INFO_NULL, ncid)
+         if (err .ne. 0) 
+     +        call errore("bad nfmpi_create: status = %d", err)
+         err = nfmpi_put_att_text(ncid, NF_GLOBAL, "testatt", 
+     +        4, "blah")
+         if (err .ne. 0) call errore("bad put_att: status = %d", err)
+         err = nfmpi_close(ncid)
+         if (err .ne. 0) call errore("bad close: status = %d", err)
+         err = nfmpi_get_file_version(scratch, version)
+         if (err .ne. 0) call errore("bad file version = %d", err)
+         if (version .ne. i)
+     +        call errore("bad file version = %d", err)
+ 1    continue
+
+C    /* Remove the left-over file. */
+      err = nfmpi_delete(scratch)
+      if (err .ne. 0) call errore("remove failed", err)
+      end
+
+#endif
+
+C     This function looks in a file for the netCDF magic number.
+      integer function nfmpi_get_file_version(path, version)
+      implicit none
+#include "tests.inc"
+      
+      character*(*) path
+      integer version, iosnum
+      character magic*4
+      integer ver
+      integer f
+      parameter (f = 10)
+
+      open(f, file=path, status='OLD', form='UNFORMATTED',
+     +     access='DIRECT', recl=4)
+
+C     Assume this is not a netcdf file.
+      nfmpi_get_file_version = NF_ENOTNC
+      version = 0
+
+C     Read the magic number, the first 4 bytes of the file.
+      read(f, rec=1, err = 1) magic
+
+C     If the first three characters are not "CDF" we're done.
+      if (index(magic, 'CDF') .eq. 1) then
+         ver = ichar(magic(4:4))
+         if (ver .eq. 1) then
+            version = 1
+            nfmpi_get_file_version = NF_NOERR
+         elseif (ver .eq. 2) then
+            version = 2
+            nfmpi_get_file_version = NF_NOERR
+         endif
+      endif
+
+ 1    close(f)
+      return
+      end
+
+

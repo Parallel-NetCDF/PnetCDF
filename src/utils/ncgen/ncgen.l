@@ -91,7 +91,7 @@ FloatInf|-?Inff	{ /* missing value (pre-2.4 backward compatibility) */
                 }
 		return (FLOAT_CONST);
 		}
-[A-Za-z_][A-Z.@#\[\]a-z_0-9-]*	{
+[A-Za-z_][A-Z.@#\[\]a-z_0-9+-]*	{
                 if (STREQ((char *)yytext, FILL_STRING))
 		        return (FILLVALUE);
 		if ((yylval = lookup((char *)yytext)) == NULL) {

@@ -99,7 +99,7 @@
 #define X_DOUBLE_MIN	-(DBL_MAX)
 #define X_DBL_MAX	X_DOUBLE_MAX	/* alias compatible with limits.h */
 
-#define X_SIZE_MAX	X_INT_MAX	/* N.B., just uses the signed range */
+#define X_SIZE_MAX	X_UINT_MAX	
 #define X_OFF_MAX	X_INT_MAX
 
 

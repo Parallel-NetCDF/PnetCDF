@@ -17,3 +17,7 @@ ncx_len_NC_var       hdr_len_NC_var
 ncx_len_NC_vararray  hdr_len_NC_vararray
 check_v1hs           hdr_check_buffer
 struct v1hs      struct bufferinfo
+NC_*		 ncmpii_NC_*
+nc__
+ncx_*            ncmpix_*
+

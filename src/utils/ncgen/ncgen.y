@@ -100,6 +100,8 @@ ncdesc:	NETCDF
 		   {
 		       if (derror_count == 0)
 			 define_netcdf(netcdfname);
+		       if (derror_count > 0)
+		       	exit(6);
 		   }
 		datasection     /* data, variables loaded as encountered */
                 '}'
@@ -122,6 +124,17 @@ dimdecl:        dimd '=' INT_CONST
 			 derror("dimension length must be positive");
 		     dims[ndims].size = int_val;
 		     ndims++;
+		   }
+		| dimd '=' DOUBLE_CONST
+		   { /* for rare case where 2^31 < dimsize < 2^32 */
+		   	if (double_val <= 0)
+				derror("dimension length must be positive");
+			if (double_val > 4294967295.0)
+				derror("dimension too large");
+			if (double_val - (size_t) double_val > 0)
+				derror("dimension length must be an integer");
+			dims[ndims].size = (size_t) double_val;
+			ndims++;
 		   }
                 | dimd '=' NC_UNLIMITED_K
 		   {  if (rec_dim != -1)
@@ -381,6 +394,7 @@ attconst:      CHAR_CONST
 
 datasection:    /* empty */
 		| DATA datadecls
+		| DATA
 		;
 
 datadecls:      datadecl ';'
@@ -449,7 +463,8 @@ datadecl:       avar
 				    vars[varnum].fill_value);
 		       }
 		       /* put out var_len values */
-		       vars[varnum].nrecs = valnum / rec_len;
+		       /* vars[varnum].nrecs = valnum / rec_len; */
+		       vars[varnum].nrecs = var_len / rec_len;
 		       if (derror_count == 0)
 			   put_variable(rec_start);
 		       free ((char *) rec_start);

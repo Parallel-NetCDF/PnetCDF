@@ -472,7 +472,7 @@ test_ncmpi_def_dim(void)
 	IF (err != NC_EBADNAME)
 	    error("bad name: status = %d", err);
         err = ncmpi_def_dim(ncid, dim_name[i], NC_UNLIMITED-1, &dimid);
-	IF (err != NC_EINVAL)
+	IF (err != NC_EDIMSIZE)
 	    error("bad size: status = %d", err);
         err = ncmpi_def_dim(ncid, dim_name[i], dim_len[i], &dimid);
         IF (err) 
@@ -1929,6 +1929,95 @@ test_ncmpi_set_fill(void)
         error("remove of %s failed", scratch);
 #endif
 }
+
+
+/* This function gets the version of a netCDF file, 1 is for netCDF
+   classic, 2 for 64-bit offset format, (someday) 3 for HDF5 format.
+*/
+#define MAGIC_NUM_LEN 4
+int
+ncmpi_get_file_version(char *path, int *version)
+{
+   FILE *fp;
+   char magic[MAGIC_NUM_LEN];
+
+   /* Need two valid pointers - check for NULL. */
+   if (!version || !path)
+      return NC_EINVAL;
+
+   /* Figure out if this is a netcdf or hdf5 file. */
+   if (!(fp = fopen(path, "r")) ||
+       fread(magic, MAGIC_NUM_LEN, 1, fp) != 1)
+      return errno;
+   fclose(fp);
+   if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0)
+   {
+      if (magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CLASSIC || 
+         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_64BIT)
+        *version = magic[MAGIC_NUM_LEN-1];
+      else
+        return NC_ENOTNC;
+   }
+   /*   tomorrow, tomorrow, I love you tomorrow, you're always a day
+       away! */
+   /*if (magic[1] == 'H' && magic[2] == 'D' && magic[3] == 'F')
+      *version = 3;*/
+   return NC_NOERR;
+}
+
+/*
+ * Test nc_set_default_format
+ *    try with bad default format
+ *    try with NULL old_formatp
+ *    try in data mode, check error
+ *    check that proper set to NC_FILL works for record & non-record variables
+ *    (note that it is not possible to test NC_NOFILL mode!)
+ *    close file & create again for test using attribute _FillValue
+ */
+void
+test_ncmpi_set_default_format(void)
+{
+    int ncid;
+    int err;
+    int i;
+    int version;
+    int old_format;
+
+    /* bad format */
+    err = ncmpi_set_default_format(BAD_DEFAULT_FORMAT, &old_format);
+    IF (err != NC_EINVAL)
+       error("bad default format: status = %d", err);
+
+    /* NULL old_formatp */
+    err = ncmpi_set_default_format(NC_FORMAT_64BIT, NULL);
+    IF (err)
+       error("null old_fortmatp: status = %d", err);
+
+    /* Cycle through available formats. */
+    for(i=1; i<3; i++)
+    {
+       if ((err = ncmpi_set_default_format(i, NULL)))
+         error("setting classic format: status = %d", err);
+       if ((err=ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid)))
+         error("bad nc_create: status = %d", err);
+       if ((err=ncmpi_put_att_text(ncid, NC_GLOBAL, "testatt", 
+                               sizeof("blah"), "blah")))
+         error("bad put_att: status = %d", err);
+       if ( (err=ncmpi_close(ncid)))
+         error("bad close: status = %d", err);
+       if ( (err = ncmpi_get_file_version(scratch, &version)) )
+         error("bad file version = %d", err);
+       if (version != i)
+         error("bad file version = %d", err);
+    }
+
+    /* Remove the left-over file. */
+    if ((err = remove(scratch)))
+       error("remove of %s failed", scratch);
+}
+
+
+
 
 /*
  * Test ncmpi_delete

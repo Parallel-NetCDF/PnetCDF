@@ -66,7 +66,7 @@ dnl Set the top-level source-directory.
 dnl
 AC_DEFUN(UD_SRCDIR,
 [
-    AC_CHECKING(for top-level source-directory)
+    AC_MSG_CHECKING(for top-level source-directory)
     SRCDIR=`(cd $srcdir && pwd)`
     AC_MSG_RESULT($SRCDIR)
     AC_SUBST(SRCDIR)
@@ -412,7 +412,7 @@ EOF
 			integer, intent(in) :: bof
 			end subroutine bar
 EOF
-		    for f90 in xlf90 f90; do
+		    for f90 in xlf90 pgf90 f90; do
 			AC_CHECK_PROG(F90, $f90, $f90)
 			case "${F90}" in
 			    '')
@@ -542,7 +542,7 @@ EOF
 			    forts='f77 g77 fort77'
 			    ;;
 			Linux*)
-			    forts="f77 fort77 g77"
+			    forts="pgf90 f77 fort77 g77"
 			    ;;
 			OSF1*)
 			    # The use of f90(1) results in the following for
@@ -560,7 +560,7 @@ EOF
 			'SunOS 5'*)
 			    # SunOS's f90(1) has problems passing a C `char'
 			    # as a Fortran `integer*1' => use f77(1)
-			    forts="f77"
+			    forts="pgf90 f77"
 			    ;;
 			sn*|UNICOS*|unicos*)
 			    forts="fort77 cf77 f77 g77 f90"

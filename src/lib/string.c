@@ -49,9 +49,9 @@ ncmpii_NC_check_name(const char *name)
 		int ch = *cp;
 		if(!isalnum(ch))
 		{
-			if(ch != '_' && ch != '-' && ch != '.')
-			if(ch != '_' && ch != '-' && ch != '.' && 
-			ch != ':' && ch != '@' && ch != '(' && ch != ')')
+			if(ch != '_' && ch != '-' && ch != '+' && ch != '.' &&
+					ch != ':' && ch != '@' && ch != '(' && 
+					ch != ')')
 				return NC_EBADNAME;
 		}
 	}

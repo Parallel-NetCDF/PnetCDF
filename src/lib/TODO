@@ -15,8 +15,6 @@ vars         I   I      I    I     I   I    I      I
 vars_all     I   I      I    I     I   I    I      I     
 varm         U   U      U    U     U   I    U      U     
 varm_all     U   U      U    U     U   I    U      U     
-vars         I   I      I    I     I   I    I      I     
-vars_all     I   I      I    I     I   I    I      I     
 
 ncmpi_put  text uchar schar short int long float double
 var1 [0]     I   I      I    I     I   I    I      I
@@ -28,8 +26,6 @@ vars         I   I      I    I     I   I    I      I
 vars_all     I   I      I    I     I   I    I      I     
 varm         U   U      U    U     U   I    U      U     
 varm_all     U   U      U    U     U   I    U      U     
-vars         I   I      I    I     I   I    I      I     
-vars_all     I   I      I    I     I   I    I      I  
 
 [0] the var1 functions are all independent operations
 

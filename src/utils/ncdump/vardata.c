@@ -814,15 +814,10 @@ vardata(
 			 (char *) vals, fsp, cor);
 		break;
 	    case NC_BYTE:
-#if 0
 		NC_CHECK(
 		    ncmpi_get_vara_schar_all(ncid, varid, cor, edg, (signed char *)vals) );
 	        pr_bvals(vp, toget, fmt, left > toget, lastrow,
 			 (signed char *) vals, fsp, cor);
-#endif
-		    /* pnetcdf does not implement NC_BYTE: should this be just
-		     * a warning or more fatal?*/
-	        fprintf(stderr, "Warning: pnetcdf does not handle NC_BYTE yet");
 		break;
 	    case NC_SHORT:
 		NC_CHECK(

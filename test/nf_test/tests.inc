@@ -90,7 +90,7 @@
 #define BAD_ATTNUM -1
 #define BAD_TYPE 0
 #define BAD_FILLMODE -1
-#define BAD_NAME 'a+b'
+#define BAD_NAME 'a/b'
 
 
 !/*

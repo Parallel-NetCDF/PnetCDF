@@ -24,6 +24,8 @@ extern char *netcdf_name; /* output netCDF filename, if on command line. */
 extern int netcdf_flag;
 extern int c_flag;
 extern int fortran_flag;
+extern int giantfile_flag;
+extern int nofill_flag;
 
 int	lineno = 1;
 int	derror_count = 0;
@@ -38,10 +40,16 @@ gen_netcdf(
     int idim, ivar, iatt;
     int dimid;
     int varid;
+    int stat;
 
-    int stat = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, 
-		    MPI_INFO_NULL, &ncid);
-    check_err(stat);
+    if (!giantfile_flag) {
+	    stat = ncmpi_create(MPI_COMM_WORLD, filename, 
+			    NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
+	    check_err(stat);
+    } else {
+	    stat = ncmpi_create(MPI_COMM_WORLD, filename, 
+			    NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    }
 
     /* define dimensions from info in dims array */
     for (idim = 0; idim < ndims; idim++) {
@@ -99,6 +107,9 @@ gen_netcdf(
 	}
 	check_err(stat);
     }
+
+    /* serial netcdf calls nc_set_fill(NC_NOFILL) here, but we do not
+     * implement that routine (NC_NOFILL is our default and only behavior) */
 
     stat = ncmpi_enddef(ncid);
     check_err(stat);
@@ -224,6 +235,7 @@ gen_c(
 
     /* create necessary declarations */
     cline("");
+    cline("   int  stat;\t\t\t/* return status */");
     cline("   int  ncid;\t\t\t/* netCDF id */");
 
     if (ndims > 0) {
@@ -311,9 +323,15 @@ gen_c(
     cline("  int stat=0;");
     cline("   MPI_Init(&argc, &argv);");
     cline("   /* enter define mode */");
-    sprintf(stmnt,
-	    "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER, MPI_INFO_NULL, &ncid);",
+
+    if (!giantfile_flag) {
+	    sprintf(stmnt,
+		    "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER, MPI_INFO_NULL, &ncid);",
 	    filename);
+    } else {
+	    sprintf(stmnt, "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER|NC_64BIT_OFFSET, &ncid);", 
+			    filename);
+    }
     cline(stmnt);
     cline("   check_err(stat,__LINE__,__FILE__);");
     
@@ -409,6 +427,8 @@ gen_c(
 	    cline("   check_err(stat,__LINE__,__FILE__);");
 	}
     }
+    /* here's another place where serial netcdf would insert a call to
+     * setfill(NOFILL), but that's our only supported behavior, so skip */
     cline("");
     cline("   /* leave define mode */");
     cline("   stat = ncmpi_enddef (ncid);");
@@ -571,6 +591,10 @@ gen_fortran(
     fline("integer  iret");
     fline("* netCDF id");
     fline("integer  ncid");
+    if (nofill_flag) {
+	    fline(" * to save old fill mode before changing it temporarily");
+	    fline ("integer oldmode");
+    }
 
     if (ndims > 0) {
 	fline("* dimension ids");
@@ -694,7 +718,11 @@ gen_fortran(
 
     /* create netCDF file, uses NC_CLOBBER mode */
     fline("* enter define mode");
-    sprintf(stmnt, "iret = nfmpi_create(\'%s\', NF_CLOBBER, ncid)", filename);
+    if (!giantfile_flag) {
+	    sprintf(stmnt, "iret = nfmpi_create(\'%s\', NF_CLOBBER, ncid)", filename);
+    } else {
+	    sprintf(stmnt, "iret = nfmpi_create(\'%s\', OR(NF_CLOBBER|NF_64BIT_OFFSET), ncid)", filename);
+    }
     fline(stmnt);
     fline("call check_err(iret)");
     
@@ -786,6 +814,7 @@ gen_fortran(
 	    }
 	}
     }
+    /* skip the call to nfmpi_set_fill until we implement it */
     fline("* leave define mode");
     fline("iret = nfmpi_enddef(ncid)");
     fline("call check_err(iret)");
@@ -1561,6 +1590,7 @@ void
 check_err(int stat) {
     if (stat != NC_NOERR) {
 	fprintf(stderr, "ncgen: %s\n", ncmpi_strerror(stat));
+	derror_count++;
     }
 }
 

@@ -15,13 +15,24 @@
 /* list of open netcdf's */
 static NC *NClist = NULL;
 
+/* This is the default create format for ncmpi_create and nc__create. */
+static int default_create_format = NC_FORMAT_CLASSIC;
+
+/* These have to do with version numbers. */
+#define MAGIC_NUM_LEN 4
+#define VER_CLASSIC 1
+#define VER_64BIT_OFFSET 2
+#define VER_HDF5 3
+
+
+
 
 /* Prototypes for functions used only in this file */
 static int move_data_r(NC *ncp, NC *old);
 static int move_recs_r(NC *ncp, NC *old);
 static int move_vars_r(NC *ncp, NC *old);
 static int write_NC(NC *ncp);
-static void NC_begins(NC *ncp, size_t h_minfree, size_t v_align,
+static int NC_begins(NC *ncp, size_t h_minfree, size_t v_align,
 		      size_t v_minfree, size_t r_align);
 static int NC_check_def(MPI_Comm comm, void *buf, size_t nn);
 
@@ -162,6 +173,33 @@ ncmpii_new_NC(const size_t *chunkp)
 	return ncp;
 }
 
+/* This function sets a default create flag that will be logically
+   or'd to whatever flags are passed into nc_create for all future
+   calls to nc_create.
+   Valid default create flags are NC_64BIT_OFFSET, NC_CLOBBER,
+   NC_LOCK, NC_SHARE. */
+int
+ncmpi_set_default_format(int format, int *old_formatp)
+{
+    /* Return existing format if desired. */
+    if (old_formatp)
+      *old_formatp = default_create_format;
+
+    /* Make sure only valid format is set. */
+    if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT)
+      return NC_EINVAL;
+    default_create_format = format;
+    return NC_NOERR;
+}
+
+/* returns a value suituable for a create flag.  Will return one or more of the
+ * following values ORed together:
+ * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
+int
+ncmpii_get_default_format()
+{
+	return default_create_format;
+}
 
 /* static */
 NC *
@@ -246,7 +284,7 @@ ncmpix_howmany(nc_type type, size_t xbufsize)
  * Compute each variable's 'begin' offset,
  * update 'begin_rec' as well.
  */
-static void
+static int
 NC_begins(NC *ncp,
 	size_t h_minfree, size_t v_align,
 	size_t v_minfree, size_t r_align)
@@ -271,7 +309,7 @@ NC_begins(NC *ncp,
 	ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
 
 	if(ncp->vars.nelems == 0) 
-		return;
+		return NC_NOERR;
 
 	/* only (re)calculate begin_var if there is not sufficient space in header
 	   or start of non-record variables is not aligned as requested by valign */
@@ -299,6 +337,11 @@ NC_begins(NC *ncp,
 #if 0
 fprintf(stderr, "    VAR %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 #endif
+		if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+		{
+			return NC_EVARSIZE;
+		}
+
 		(*vpp)->begin = index;
 		index += (*vpp)->len;
 	}
@@ -332,8 +375,19 @@ fprintf(stderr, "    VAR %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 #if 0
 fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 #endif
+		if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+		{
+			return NC_EVARSIZE;
+		}
 		(*vpp)->begin = index;
 		index += (*vpp)->len;
+		/* check if record size must fit in 32-bits */
+#if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
+		if (ncp->recsize > X_UNIT_MAX - (*vpp)->len)
+		{
+			return NC_EVARSIZE;
+		}
+#endif
 		ncp->recsize += (*vpp)->len;
 		last = (*vpp);
 	}
@@ -347,6 +401,7 @@ fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 	if(NC_IsNew(ncp))
 		NC_set_numrecs(ncp, 0);
 
+	return NC_NOERR;
 }
 
 #define NC_NUMRECS_OFFSET 4
@@ -662,6 +717,89 @@ move_vars_r(NC *ncp, NC *old) {
   return ncmpiio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
                    old->begin_rec - old->begin_var); 
 }
+
+#if 0
+ /*
+ * Given a valid ncp, return NC_EVARSIZE if any variable has a bad len 
+ * (product of non-rec dim sizes too large), else return NC_NOERR.
+ */
+static int
+ncmpii_NC_check_vlens(NC *ncp)
+{
+    NC_var **vpp;
+    /* maximum permitted variable size (or size of one record's worth
+       of a record variable) in bytes.  This is different for format 1
+       and format 2. */
+    size_t vlen_max;
+    size_t ii;
+    size_t large_vars_count;
+    size_t rec_vars_count;
+    int last=-1;
+
+    if(ncp->vars.nelems == 0) 
+       return NC_NOERR;
+
+    if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
+       /* CDF2 format and LFS */
+       vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
+    } else {
+       /* CDF1 format */
+       vlen_max = X_INT_MAX - 3;
+    }
+    /* Loop through vars, first pass is for non-record variables.   */
+    large_vars_count = 0;
+    rec_vars_count = 0;
+    vpp = ncp->vars.value;
+    for (ii = 0; ii < ncp->vars.nelems; ii++, vpp++) {
+       if( !IS_RECVAR(*vpp) ) {
+           last = 0;
+           if( ncmpii_NC_check_vlen(*vpp, vlen_max) == 0 ) {
+               large_vars_count++;
+               last = 1;
+           }
+       } else {
+         rec_vars_count++;
+       }
+    }
+    /* OK if last non-record variable size too large, since not used to 
+       compute an offset */
+    if( large_vars_count > 1) { /* only one "too-large" variable allowed */
+      return NC_EVARSIZE;
+    }
+    /* and it has to be the last one */ 
+    if( large_vars_count == 1 && last == 0) { 
+      return NC_EVARSIZE;
+    }
+    if( rec_vars_count > 0 ) {
+       /* and if it's the last one, there can't be any record variables */
+       if( large_vars_count == 1 && last == 1) {
+           return NC_EVARSIZE;
+       }
+       /* Loop through vars, second pass is for record variables.   */
+       large_vars_count = 0;
+       vpp = ncp->vars.value;
+       for (ii = 0; ii < ncp->vars.nelems; ii++, vpp++) {
+           if( IS_RECVAR(*vpp) ) {
+               last = 0;
+               if( ncmpii_NC_check_vlen(*vpp, vlen_max) == 0 ) {
+                   large_vars_count++;
+                   last = 1;
+               }
+           }
+       }
+       /* OK if last record variable size too large, since not used to 
+          compute an offset */
+       if( large_vars_count > 1) { /* only one "too-large" variable allowed */
+           return NC_EVARSIZE;
+       }
+       /* and it has to be the last one */ 
+       if( large_vars_count == 1 && last == 0) { 
+           return NC_EVARSIZE;
+       }
+    }
+    return NC_NOERR;
+}
+#endif
  
 int 
 ncmpii_NC_enddef(NC *ncp) {
@@ -678,7 +816,9 @@ ncmpii_NC_enddef(NC *ncp) {
   MPI_Comm_rank(comm, &rank);
 
   NC_begins(ncp, 0, 1, 0, 1);
- 
+
+  /* serial netcdf calls a check on dimension lenghths here */
+
   /* To be updated */
   if(ncp->old != NULL) {
     /* a plain redef, not a create */
