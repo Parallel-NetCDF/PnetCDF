@@ -181,6 +181,63 @@ AC_STRUCT_ST_BLKSIZE
 UD_CHECK_IEEE
 AC_TYPE_SIZE_T
 
+dnl Check for presence of various MPI_COMBINERs.  These could be
+dnl enums, so we have to do compile checks.
+saveCC="$CC"
+CC=$MPICC
+
+AC_MSG_CHECKING(if MPI includes MPI_COMBINER_DUP)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int combiner = MPI_COMBINER_DUP; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMBINER_DUP, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMBINER_HVECTOR_INTEGER)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int combiner = MPI_COMBINER_HVECTOR_INTEGER; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMBINER_HVECTOR_INTEGER, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMBINER_HINDEXED_INTEGER)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int combiner = MPI_COMBINER_HINDEXED_INTEGER; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMBINER_HINDEDED_INTEGER, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMBINER_SUBARRAY)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int combiner = MPI_COMBINER_SUBARRAY; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMBINER_SUBARRAY, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMBINER_DARRAY)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int combiner = MPI_COMBINER_DARRAY; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMBINER_DARRAY, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMBINER_RESIZED)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int combiner = MPI_COMBINER_RESIZED; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMBINER_RESIZED, 1, available),
+  AC_MSG_RESULT(no)
+)
+AC_MSG_CHECKING(if MPI includes MPI_COMBINER_STRUCT_INTEGER)
+AC_TRY_COMPILE([ #include <mpi.h> ],
+  [ int combiner = MPI_COMBINER_STRUCT_INTEGER; ],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_MPI_COMBINER_STRUCT_INTEGER, 1, available),
+  AC_MSG_RESULT(no)
+)
+
+CC="$saveCC"
+
 dnl Check that sizeof(size_t) == sizeof(int); bail otherwise.
 dnl
 dnl This is important because we do some casting in the Fortran

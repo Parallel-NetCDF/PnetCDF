@@ -55,8 +55,26 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define if sizet is larger than int */
-#undef HAVE_SIZET_LARGER_THAN_INT
+/* available */
+#undef HAVE_MPI_COMBINER_DARRAY
+
+/* available */
+#undef HAVE_MPI_COMBINER_DUP
+
+/* available */
+#undef HAVE_MPI_COMBINER_HINDEDED_INTEGER
+
+/* available */
+#undef HAVE_MPI_COMBINER_HVECTOR_INTEGER
+
+/* available */
+#undef HAVE_MPI_COMBINER_RESIZED
+
+/* available */
+#undef HAVE_MPI_COMBINER_STRUCT_INTEGER
+
+/* available */
+#undef HAVE_MPI_COMBINER_SUBARRAY
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -113,15 +131,21 @@
 /* The size of a `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
+/* The size of a `MPI_Offset', as computed by sizeof. */
+#undef SIZEOF_MPI_OFFSET
+
 /* The size of a `short', as computed by sizeof. */
 #undef SIZEOF_SHORT
+
+/* The size of a `size_t', as computed by sizeof. */
+#undef SIZEOF_SIZE_T
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at run-time.
-        STACK_DIRECTION > 0 => grows toward higher addresses
-        STACK_DIRECTION < 0 => grows toward lower addresses
-        STACK_DIRECTION = 0 => direction of growth unknown */
+	STACK_DIRECTION > 0 => grows toward higher addresses
+	STACK_DIRECTION < 0 => grows toward lower addresses
+	STACK_DIRECTION = 0 => direction of growth unknown */
 #undef STACK_DIRECTION
 
 /* Define to 1 if you have the ANSI C header files. */
