@@ -70,10 +70,11 @@ int main(int argc, char **argv) {
   int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
   ncmpi_type type, vartypes[NC_MAX_VARS];
-  size_t len, shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
+  size_t attlen;
+  MPI_Offset dimlen, shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
   void *valuep;
   int dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
-  int vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS];
+  int vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS/16]; /* divided by 16 due to my memory limitation */
   int varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
   int isRecvar;
   params opts;
@@ -126,19 +127,49 @@ int main(int argc, char **argv) {
   for (i = 0; i < ngatts; i++) {
     status = ncmpi_inq_attname(ncid1, NC_GLOBAL, i, name);
     if (status != NC_NOERR) handle_error(status);
-    status = ncmpi_inq_att (ncid1, NC_GLOBAL, name, &type, &len);
+    status = ncmpi_inq_att (ncid1, NC_GLOBAL, name, &type, &attlen);
     if (status != NC_NOERR) handle_error(status);
     switch (type) {
       case NC_CHAR: 
-	valuep = (void *)malloc(len * sizeof(char));
+	valuep = (void *)malloc(attlen * sizeof(char));
 	status = ncmpi_get_att_text(ncid1, NC_GLOBAL, name, valuep);
 	if (status != NC_NOERR) handle_error(status);
-	status = ncmpi_put_att_text (ncid2, NC_GLOBAL, name, len, (char *)valuep);
+	status = ncmpi_put_att_text (ncid2, NC_GLOBAL, name, attlen, (char *)valuep);
 	if (status != NC_NOERR) handle_error(status);
 	free(valuep);
         break;
+      case NC_SHORT:
+        valuep = (void *)malloc(attlen * sizeof(short));
+        status = ncmpi_get_att_short(ncid1, NC_GLOBAL, name, valuep);
+        if (status != NC_NOERR) handle_error(status);
+        status = ncmpi_put_att_short (ncid2, NC_GLOBAL, name, type, attlen, (short *)valuep);
+        if (status != NC_NOERR) handle_error(status);
+        free(valuep);
+        break;
       case NC_INT:
-	break;
+        valuep = (void *)malloc(attlen * sizeof(int));
+        status = ncmpi_get_att_int(ncid1, NC_GLOBAL, name, valuep);
+        if (status != NC_NOERR) handle_error(status);
+        status = ncmpi_put_att_int (ncid2, NC_GLOBAL, name, type, attlen, (int *)valuep);
+        if (status != NC_NOERR) handle_error(status);
+        free(valuep);
+        break;
+      case NC_FLOAT:
+        valuep = (void *)malloc(attlen * sizeof(float));
+        status = ncmpi_get_att_float(ncid1, NC_GLOBAL, name, valuep);
+        if (status != NC_NOERR) handle_error(status);
+        status = ncmpi_put_att_float (ncid2, NC_GLOBAL, name, type, attlen, (float *)valuep);
+        if (status != NC_NOERR) handle_error(status);
+        free(valuep);
+        break;
+      case NC_DOUBLE:
+        valuep = (void *)malloc(attlen * sizeof(double));
+        status = ncmpi_get_att_double(ncid1, NC_GLOBAL, name, valuep);
+        if (status != NC_NOERR) handle_error(status);
+        status = ncmpi_put_att_double (ncid2, NC_GLOBAL, name, type, attlen, (double *)valuep);
+        if (status != NC_NOERR) handle_error(status);
+        free(valuep);
+        break;
       default:
 	; /* TODO: handle unexpected types */
     }
@@ -147,11 +178,11 @@ int main(int argc, char **argv) {
   /* Inquire dimension */
 
   for (i = 0; i < ndims; i++) {
-    status = ncmpi_inq_dim(ncid1, i, name, &len);
+    status = ncmpi_inq_dim(ncid1, i, name, &dimlen);
     if (status != NC_NOERR) handle_error(status);
     if (i == unlimdimid)
-      len = NC_UNLIMITED;
-    status = ncmpi_def_dim(ncid2, name, len, dimids+i);
+      dimlen = NC_UNLIMITED;
+    status = ncmpi_def_dim(ncid2, name, dimlen, dimids+i);
     if (status != NC_NOERR) handle_error(status);
   }
 
@@ -169,19 +200,49 @@ int main(int argc, char **argv) {
     for (j = 0; j < varnatts[i]; j++) {
       status = ncmpi_inq_attname(ncid1, varids[i], j, name);
       if (status != NC_NOERR) handle_error(status);
-      status = ncmpi_inq_att (ncid1, varids[i], name, &type, &len);
+      status = ncmpi_inq_att (ncid1, varids[i], name, &type, &attlen);
       if (status != NC_NOERR) handle_error(status);
       switch (type) {
         case NC_CHAR: 
-	  valuep = (void *)malloc(len * sizeof(char));
+	  valuep = (void *)malloc(attlen * sizeof(char));
 	  status = ncmpi_get_att_text(ncid1, varids[i], name, valuep);
 	  if (status != NC_NOERR) handle_error(status);
-	  status = ncmpi_put_att_text (ncid2, varids[i], name, len, (char *)valuep);
+	  status = ncmpi_put_att_text (ncid2, varids[i], name, attlen, (char *)valuep);
 	  if (status != NC_NOERR) handle_error(status);
 	  free(valuep);
           break;
+        case NC_SHORT:
+          valuep = (void *)malloc(attlen * sizeof(short));
+          status = ncmpi_get_att_short(ncid1, varids[i], name, valuep);
+          if (status != NC_NOERR) handle_error(status);
+          status = ncmpi_put_att_short (ncid2, varids[i], name, type, attlen, (short *)valuep);
+          if (status != NC_NOERR) handle_error(status);
+          free(valuep);
+          break;
         case NC_INT:
-	  break;
+          valuep = (void *)malloc(attlen * sizeof(int));
+          status = ncmpi_get_att_int(ncid1, varids[i], name, valuep);
+          if (status != NC_NOERR) handle_error(status);
+          status = ncmpi_put_att_int (ncid2, varids[i], name, type, attlen, (int *)valuep);
+          if (status != NC_NOERR) handle_error(status);
+          free(valuep);
+          break;
+        case NC_FLOAT:
+          valuep = (void *)malloc(attlen * sizeof(float));
+          status = ncmpi_get_att_float(ncid1, varids[i], name, valuep);
+          if (status != NC_NOERR) handle_error(status);
+          status = ncmpi_put_att_float (ncid2, varids[i], name, type, attlen, (float *)valuep);
+          if (status != NC_NOERR) handle_error(status);
+          free(valuep);
+          break;
+        case NC_DOUBLE:
+          valuep = (void *)malloc(attlen * sizeof(double));
+          status = ncmpi_get_att_double(ncid1, varids[i], name, valuep);
+          if (status != NC_NOERR) handle_error(status);
+          status = ncmpi_put_att_double (ncid2, varids[i], name, type, attlen, (double *)valuep);
+          if (status != NC_NOERR) handle_error(status);
+          free(valuep);
+          break;
 	default:
 	  ;
 	/* handle unexpected types */
