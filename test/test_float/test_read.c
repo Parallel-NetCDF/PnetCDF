@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
   ncmpi_type type, vartypes[NC_MAX_VARS];
-  size_t attlen;
+  MPI_Offset attlen;
   MPI_Offset dimlen, shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
   void *valuep;
   int dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
