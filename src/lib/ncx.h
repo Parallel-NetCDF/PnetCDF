@@ -58,10 +58,13 @@
 #define X_SIZEOF_DOUBLE		8
 
 /*
- * For now, netcdf is limited to 32 bit offsets and sizes,
+ * For now, netcdf is limited to 32 bit sizes. 
+ * If compiled with support for "large files" then 
+ * netcdf will use a 64 bit off_t and it can then write a file 
+ * using 64 bit offsets.
  *  see also X_SIZE_MAX, X_OFF_MAX below
  */
-#define X_SIZEOF_OFF_T		X_SIZEOF_INT
+#define X_SIZEOF_OFF_T		(sizeof(off_t))
 #define X_SIZEOF_SIZE_T		X_SIZEOF_INT
 
 /*
@@ -351,14 +354,14 @@ extern int
 ncmpix_get_size_t(const void **xpp, size_t *ulp);
 /* ncx_get_int_off_t */
 extern int
-ncmpix_get_off_t(const void **xpp, off_t *lp);
+ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t);
 
 /* ncx_put_int_size_t */
 extern int
 ncmpix_put_size_t(void **xpp, const size_t *ulp);
 /* ncx_put_int_off_t */
 extern int
-ncmpix_put_off_t(void **xpp, const off_t *lp);
+ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t);
 
 
 /*

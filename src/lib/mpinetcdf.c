@@ -61,16 +61,25 @@ static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 int 
 ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
+  size_t sizeof_off_t;
   NC *ncp;
 
   ncp = ncmpii_new_NC(NULL);
   if(ncp == NULL) 
     return NC_ENOMEM;
 
-  assert(ncp->xsz = ncmpii_hdr_len_NC(ncp));
   assert(ncp->flags == 0);
 
+  if (fIsSet(cmode, NC_64BIT_OFFSET)) {
+	  fSet(ncp->flags, NC_64BIT_OFFSET);
+	  sizeof_off_t = 8;
+  } else {
+	  sizeof_off_t = 4;
+  }
+  assert(ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t));
+
   fSet(ncp->flags, NC_NOFILL);
+  fSet(ncp->flags, NC_HSYNC);
 
   status = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
   if(status != NC_NOERR) {

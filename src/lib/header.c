@@ -27,8 +27,8 @@ static size_t hdr_len_NC_dim(const NC_dim *dimp);
 static size_t hdr_len_NC_dimarray(const NC_dimarray *ncap);
 static size_t hdr_len_NC_attr(const NC_attr *attrp);
 static size_t hdr_len_NC_attrarray(const NC_attrarray *ncap);
-static size_t hdr_len_NC_var(const NC_var *varp);
-static size_t hdr_len_NC_vararray(const NC_vararray *ncap);
+static size_t hdr_len_NC_var(const NC_var *varp, size_t sizeof_off_t);
+static size_t hdr_len_NC_vararray(const NC_vararray *ncap, size_t sizeof_off_t);
 static int hdr_put_NCtype(bufferinfo *pbp, NCtype type);
 static int hdr_put_nc_type(bufferinfo *pbp, const nc_type *typep);
 static int hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp);
@@ -56,7 +56,8 @@ static int hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap);
 /*
  * "magic number" at beginning of file: 0x43444601 (big endian) 
  */
-static const schar ncmagic[] = {'C', 'D', 'F', 0x01}; 
+static const schar ncmagic[] = {'C', 'D', 'F', 0x02}; 
+static const schar ncmagic1[] = {'C', 'D', 'F', 0x01}; 
 
 /*
  * Recompute the shapes of all variables
@@ -220,11 +221,12 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap)
 }
  
 static size_t
-hdr_len_NC_var(const NC_var *varp)
+hdr_len_NC_var(const NC_var *varp, size_t sizeof_off_t)
 {
         size_t sz;
  
         assert(varp != NULL);
+	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
  
         sz = hdr_len_NC_string(varp->name);
         sz += X_SIZEOF_SIZE_T; /* ndims */
@@ -232,13 +234,13 @@ hdr_len_NC_var(const NC_var *varp)
         sz += hdr_len_NC_attrarray(&varp->attrs);
         sz += X_SIZEOF_NC_TYPE; /* type */
         sz += X_SIZEOF_SIZE_T; /* len */
-        sz += X_SIZEOF_OFF_T; /* begin */
+        sz += sizeof_off_t; /* begin */
  
         return(sz);
 } 
 
 static size_t
-hdr_len_NC_vararray(const NC_vararray *ncap)
+hdr_len_NC_vararray(const NC_vararray *ncap, size_t sizeof_off_t)
 {
         size_t xlen = X_SIZEOF_NCTYPE;  /* type */
         xlen += X_SIZEOF_SIZE_T;        /* count */
@@ -250,14 +252,14 @@ hdr_len_NC_vararray(const NC_vararray *ncap)
                 const NC_var *const *const end = &vpp[ncap->nelems];
                 for( /*NADA*/; vpp < end; vpp++)
                 {
-                        xlen += hdr_len_NC_var(*vpp);
+                        xlen += hdr_len_NC_var(*vpp, sizeof_off_t);
                 }
         }
         return xlen;
 }
  
 size_t
-ncmpii_hdr_len_NC(const NC *ncp)
+ncmpii_hdr_len_NC(const NC *ncp, size_t sizeof_off_t)
 {
         size_t xlen = sizeof(ncmagic);
  
@@ -266,7 +268,7 @@ ncmpii_hdr_len_NC(const NC *ncp)
         xlen += X_SIZEOF_SIZE_T; /* numrecs */
         xlen += hdr_len_NC_dimarray(&ncp->dims);
         xlen += hdr_len_NC_attrarray(&ncp->attrs);
-        xlen += hdr_len_NC_vararray(&ncp->vars);
+        xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t);
  
         return xlen;
 } 
@@ -399,7 +401,7 @@ hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
   if (status != ENOERR)
     return status;
 
-  status = ncmpix_put_off_t(&pbp->pos, &varp->begin);
+  status = ncmpix_put_off_t(&pbp->pos, &varp->begin, pbp->version == 1 ? 4 : 8);
   if (status != ENOERR)
     return status;
 
@@ -531,7 +533,18 @@ ncmpii_hdr_put_NC(NC *ncp, void *buf) {
   putbuf.pos = putbuf.base = buf;
   putbuf.size = ncp->xsz;
 
-  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic), ncmagic);
+  if (ncp->flags & NC_64BIT_OFFSET)
+	  putbuf.version = 2;
+  else
+	  putbuf.version = 1;
+
+  if (putbuf.version == 2)
+	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic), ncmagic);
+  else
+	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic1), ncmagic1);
+
+  if (status != ENOERR)
+	  return status;
 
   nrecs = ncp->numrecs; 
   status = ncmpix_put_size_t(&putbuf.pos, &nrecs);
@@ -615,7 +628,7 @@ static int
 hdr_check_buffer(bufferinfo *gbp, size_t nextread) {
   if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
     return ENOERR;
-  return hdr_fetch(gbp);
+  return hdr_fetch(gbp, nextread);
 }
 
 static int
@@ -636,10 +649,10 @@ hdr_get_NCtype(bufferinfo *gbp, NCtype *typep) {
 
 static int
 hdr_get_size_t(bufferinfo *gbp, size_t *sp) {
-  int status = hdr_check_buffer(gbp, X_SIZEOF_SIZE_T);
+  int status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
   if (status != ENOERR)
     return status; 
-  gbp->index += X_SIZEOF_SIZE_T;
+  gbp->index += (gbp->version == 1 ? 4 : 8);
   return ncmpix_get_size_t((const void **)(&gbp->pos), sp);
 }
 
@@ -1000,13 +1013,13 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     return status;
   }
 
-  status = hdr_check_buffer(gbp, X_SIZEOF_OFF_T);
+  status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
   if(status != ENOERR) {
     ncmpii_free_NC_var(varp);
     return status;
   }
   status = ncmpix_get_off_t((const void **)&gbp->pos,
-                        &varp->begin);
+                        &varp->begin, (gbp->version == 1 ? 4 : 8));
   if(status != ENOERR) {
     ncmpii_free_NC_var(varp);
     return status;
@@ -1089,12 +1102,26 @@ ncmpii_hdr_get_NC(NC *ncp) {
   status = ncmpix_getn_schar_schar(
           (const void **)(&getbuf.pos), sizeof(magic), magic);
   getbuf.index += sizeof(magic);
-  if(memcmp(magic, ncmagic, sizeof(ncmagic)) != 0) {
+  /* don't need to worry about CDF-1 or CDF-2 
+   * 	if the first bits are not 'CDF-'  */
+  if(memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
     free(getbuf.base);
     return NC_ENOTNC;
   }
+  /* check version number in last byte of magic */
+  if (magic[sizeof(ncmagic)-1] == 0x1) {
+	  getbuf.version = 1;
+  } else if (magic[sizeof(ncmagic)-1] == 0x2) {
+	  getbuf.version = 2;
+	  if (sizeof(off_t) != 8) {
+		  fprintf(stderr, "PNETCDF WARNING: Version 2 database on 32-bit system\n");
+	  }
+  } else {
+	  free(getbuf.base);
+	  return NC_ENOTNC;
+  }
 
-  status = hdr_check_buffer(&getbuf, X_SIZEOF_SIZE_T);
+  status = hdr_check_buffer(&getbuf, (getbuf.version == 1) ? 4 : 8);
   if(status != ENOERR) {
     free(getbuf.base);
     return status;
@@ -1127,7 +1154,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
     return status; 
   }
 
-  ncp->xsz = ncmpii_hdr_len_NC(ncp); 
+  ncp->xsz = ncmpii_hdr_len_NC(ncp, (getbuf.version == 1) ? 4 : 8 );
   status = ncmpii_NC_computeshapes(ncp);
   free(getbuf.base);
 
