@@ -29,7 +29,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_var1_int2_ ( int *v1, int *v2, int v3[], sh
         int li;
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l3[li] = v3[ln-1-li];
+            l3[li] = v3[ln-1-li] - 1;
     }}
     *ierr = ncmpi_get_var1_short( *v1, *v2, l3, v4 );
 

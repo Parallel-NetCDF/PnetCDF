@@ -38,6 +38,6 @@ FORTRAN_API void FORT_CALL nfmpi_inq_var_ ( int *v1, int *v2, char *v3 FORT_MIXE
     if (l6) { 
 	int li;
         for (li=0; li<ln6; li++) 
-            v6[li] = l6[ln6-1-li];
+            v6[li] = l6[ln6-1-li] + 1;
         free(l6); }
 }
