@@ -122,9 +122,9 @@ typedef nc_type ncmpi_type;
  * applications and utilities.  However, nothing is statically allocated to
  * these sizes internally.
  */
-#define NC_MAX_DIMS	100	 /* max dimensions per file */
-#define NC_MAX_ATTRS	2000	 /* max global or per variable attributes */
-#define NC_MAX_VARS	2000	 /* max variables per file */
+#define NC_MAX_DIMS	512      /* max dimensions per file */
+#define NC_MAX_ATTRS	4096	 /* max global or per variable attributes */
+#define NC_MAX_VARS	4096	 /* max variables per file */
 #define NC_MAX_NAME	128	 /* max length of a name */
 #define NC_MAX_VAR_DIMS	NC_MAX_DIMS /* max per variable dimensions */
 
