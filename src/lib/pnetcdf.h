@@ -139,6 +139,7 @@ typedef nc_type ncmpi_type;
 
 #define	NC_NOERR	0	/* No Error */
 
+#define NC_ESMALL       (-25)   /* size of off_t too small for format */
 #define NC_ENOTINDEP	(-26)	/* Operation not allowed in collective data mode */
 #define NC_EINDEP	(-27)	/* Operation not allowed in independent data mode */
 #define NC_EFILE	(-28)	/* Unknown error in file operation */

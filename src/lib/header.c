@@ -1132,7 +1132,10 @@ ncmpii_hdr_get_NC(NC *ncp) {
   } else if (magic[sizeof(ncmagic)-1] == 0x2) {
 	  getbuf.version = 2;
 	  if (sizeof(off_t) != 8) {
-		  fprintf(stderr, "PNETCDF WARNING: Version 2 database on 32-bit system\n");
+		  /* take the easy way out: if we can't support all CDF-2
+		   * files, return immediately */
+		  free(getbuf.base);
+		  return NC_ESMALL;
 	  }
   } else {
 	  free(getbuf.base);

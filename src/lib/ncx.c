@@ -1358,11 +1358,10 @@ ncmpix_get_size_t(const void **xpp,  size_t *ulp)
 
 /* x_off_t */
 
-/* this gets a bit complicated:  we want to be able to do a few things
- * . read and write CDF-1 files
- * . if we can use 64 bit file offsets, read and write CDF-2 files
- * . if we cannot use 64 bit file offsets, but the CDF-2 file is smaller than
- *   2GB, still operate on the file
+/* A previous version of this function would try to let systems with a 4 byte
+ * off_t read and write the 8-byte offsets of a CDF-2 file.  For simplicity, we
+ * now ensure that platforms with a 4-byte off_t will never open a CDF-2 file
+ * no matter what the size. 
  */
 int
 ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
@@ -1381,18 +1380,6 @@ ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 		*cp++ = (uchar)(((*lp) & 0x0000ff00) >>  8);
 		*cp   = (uchar)( (*lp) & 0x000000ff);
 	} else {
-#if SIZEOF_OFF_T == 4
-		/* Write 64-bit offset on system with only a 32-bit offset */
-		*cp++ = (uchar)0;
-		*cp++ = (uchar)0;
-		*cp++ = (uchar)0;
-		*cp++ = (uchar)0;
-
-		*cp++ = (uchar)(((*lp) & 0xff000000) >> 24);
-		*cp++ = (uchar)(((*lp) & 0x00ff0000) >> 16);
-		*cp++ = (uchar)(((*lp) & 0x0000ff00) >>  8);
-		*cp   = (uchar)( (*lp) & 0x000000ff);
-#else
 		*cp++ = (uchar)(((*lp) & 0xff00000000000000ULL) >> 56);
 		*cp++ = (uchar)(((*lp) & 0x00ff000000000000ULL) >> 48);
 		*cp++ = (uchar)(((*lp) & 0x0000ff0000000000ULL) >> 40);
@@ -1401,14 +1388,12 @@ ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 		*cp++ = (uchar)(((*lp) & 0x0000000000ff0000ULL) >> 16);
 		*cp++ = (uchar)(((*lp) & 0x000000000000ff00ULL) >>  8);
 		*cp   = (uchar)( (*lp) & 0x00000000000000ffULL);
-#endif
 	}
 	*xpp = (void *)((char *)(*xpp) + sizeof_off_t);
 	return ENOERR;
 }
 
-/* see comments for ncmpix_put_off_t : a bit more complicated to achieve maximum
- * interoperability */
+/* see comments for ncmpix_put_off_t */
 int
 ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
 {
@@ -1423,27 +1408,6 @@ ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
                *lp |= (*cp++ <<  8);
                *lp |= *cp; 
        } else {
-#if SIZEOF_OFF_T == 4
-/* Read a 64-bit offset on a system with only a 32-bit offset */
-/* If the offset overflows, set an error code and return */
-               *lp =  ((off_t)(*cp++) << 24);
-               *lp |= ((off_t)(*cp++) << 16);
-               *lp |= ((off_t)(*cp++) <<  8);
-               *lp |= ((off_t)(*cp++));
-/*
- * lp now contains the upper 32-bits of the 64-bit offset.  if lp is
- * not zero, then the dataset is larger than can be represented
- * on this system.  Set an error code and return
- */
-               if (*lp != 0) {
-                 return ERANGE;
-               }
-
-               *lp  = ((off_t)(*cp++) << 24);
-               *lp |= ((off_t)(*cp++) << 16);
-               *lp |= ((off_t)(*cp++) <<  8);
-               *lp |=  (off_t)*cp;
-#else
                *lp =  ((off_t)(*cp++) << 56);
                *lp |= ((off_t)(*cp++) << 48);
                *lp |= ((off_t)(*cp++) << 40);
@@ -1452,7 +1416,6 @@ ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
                *lp |= ((off_t)(*cp++) << 16);
                *lp |= ((off_t)(*cp++) <<  8);
                *lp |=  (off_t)*cp;
-#endif
        }
        *xpp = (const void *)((const char *)(*xpp) + sizeof_off_t);
 
