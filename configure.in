@@ -32,9 +32,11 @@ AC_PROG_INSTALL
 
 UD_PROG_M4
 AC_PROG_CC
-AC_PROG_CXX
+dnl AC_PROG_CXX
 dnl AC_PROG_F77
-UD_PROG_FC
+if test "$enable_fortran" = "yes" ; then
+    UD_PROG_FC
+fi
 dnl UD_PROG_CC
 UD_PROG_CC_MAKEDEPEND
 dnl need a --with-cxx=no and --with-fortran=no
@@ -43,7 +45,9 @@ dnl UD_PROG_F90
 # Checking for Fortran types also determines the Fortran name mangling
 # and places the value into FCALLSCSUB as a the C name corresponding
 # to the Fortran name SUB 
-UD_CHECK_FCALLSCSUB
+if test "$enable_fortran" = yes ; then
+    UD_CHECK_FCALLSCSUB
+fi
 UD_CHECK_LIB_MATH
 UD_PROG_AR()
 UD_PROG_NM()
@@ -54,7 +58,8 @@ AC_PROG_RANLIB
 
 #
 # If we are building the Fortran interface, determine the correct name mapping
-case $FCALLSCSUB in 
+if test "$enable_fortran" = yes ; then
+ case $FCALLSCSUB in 
     SUB)
     AC_DEFINE(F77_NAME_UPPER,,[Define if Fortran names are uppercase])
     ;;
@@ -104,7 +109,8 @@ EOF
     *)
     AC_MSG_WARN([Unrecognized Fortran name mapping])
     ;;
-esac
+ esac
+fi
 
 dnl do the automagic mpi-compiler-checking if MPICC and MPIF77 are not set
 if test x${MPICC} = x -a x${MPIF77} = x ; then
@@ -136,7 +142,7 @@ fi
 AC_MSG_CHECKING(MPI-IO support in MPI implementation)
 saveCC="$CC"
 CC=$MPICC
-AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR],
+AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR;],
 	AC_MSG_RESULT(yes),
 	AC_MSG_ERROR([mpi implementation does not support MPI-IO])
 )
@@ -188,10 +194,14 @@ AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 UD_CHECK_SIZEOF(off_t)
 UD_CHECK_SIZEOF(size_t)
-UD_FORTRAN_TYPES
+if test "$enable_fortran" = yes ; then
+    UD_FORTRAN_TYPES
+fi
 UD_MAKEWHATIS
 UD_FTPBINDIR
 
+has_fortran=$enable_fortran
+AC_SUBST(has_fortran)
 chmod u+x ${srcdir}/scripts/install-sh
 
 AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/nc_test/Makefile test/nf_test/Makefile test/fandc/Makefile)
