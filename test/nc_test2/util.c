@@ -181,8 +181,8 @@ int roll( int n )
  *      Convert number to mixed base
  *
  *      E.g. to convert 41 inches to yards, feet and inches:
- *      size_t base[] = {1, 3, 12};
- *      size_t result[3];
+ *      MPI_Offset base[] = {1, 3, 12};
+ *      MPI_Offset result[3];
  *      status = toMixedBase(41, 3, base, result);
  *
  *      Author: Harvey Davies, Unidata/UCAR, Boulder, Colorado
@@ -191,8 +191,8 @@ int
 toMixedBase(
     size_t number,        /* number to be converted to mixed base */
     size_t length,
-    const size_t base[],        /* dimensioned [length], base[0] ignored */
-    size_t result[])      /* dimensioned [length] */
+    const MPI_Offset base[],        /* dimensioned [length], base[0] ignored */
+    MPI_Offset result[])      /* dimensioned [length] */
 {
     size_t i;
 
@@ -212,8 +212,8 @@ toMixedBase(
  *      Convert number from mixed base
  *
  *      E.g. to convert 1 yard, 0 feet, 5 inches to inches:
- *      size_t number[] = {1, 0, 5};
- *      size_t base[] = {1, 3, 12};
+ *      MPI_Offset number[] = {1, 0, 5};
+ *      MPI_Offset base[] = {1, 3, 12};
  *      inches = fromMixedBase(3, number, base);
  *
  *      Author: Harvey Davies, Unidata/UCAR, Boulder, Colorado
@@ -221,8 +221,8 @@ toMixedBase(
 size_t
 fromMixedBase(
     size_t length,
-    size_t number[],      /* dimensioned [length] */
-    size_t base[])        /* dimensioned [length], base[0] ignored */
+    MPI_Offset number[],      /* dimensioned [length] */
+    MPI_Offset base[])        /* dimensioned [length], base[0] ignored */
 {
     size_t i;
     size_t result = 0;
@@ -312,7 +312,7 @@ int dbl2nc ( const double d, const ncmpi_type datatype, void *p)
 
 /* Generate data values as function of type, rank (-1 for attribute), index */
 double
-hash( const ncmpi_type type, const int rank, const size_t *index ) 
+hash( const ncmpi_type type, const int rank, const MPI_Offset *index ) 
 {
     double base;
     double result = 0.0;
@@ -387,7 +387,7 @@ double
 hash4(
     const ncmpi_type type, 
     const int rank, 
-    const size_t *index, 
+    const MPI_Offset *index, 
     const nct_itype itype)
 {
     double result;
@@ -440,10 +440,10 @@ init_gatts(const char *type_letter)
 	}
 }
 
-static size_t
-product(size_t nn, const size_t *sp)
+static MPI_Offset
+product(size_t nn, const MPI_Offset *sp)
 {
-	size_t result = 1;
+	MPI_Offset result = 1;
 	while(nn-- > 0)
 		result *= *sp++;
 	return result;
@@ -458,7 +458,7 @@ product(size_t nn, const size_t *sp)
 void
 init_gvars (void)
 {
-	const size_t max_dim_len[MAX_RANK] = {
+	const MPI_Offset max_dim_len[MAX_RANK] = {
 		MAX_DIM_LEN +1,
 		MAX_DIM_LEN,
 		MAX_DIM_LEN
@@ -490,7 +490,7 @@ init_gvars (void)
 			for (tc = 0; tc < ntypes;
 			     tc++, vn++, xtype = (xtype + 1) % NTYPES)
 			{
-				size_t tmp[MAX_RANK];
+				MPI_Offset tmp[MAX_RANK];
 
 				var_name[vn][0] = type_letter[xtype];
 				var_type[vn] = char2type (type_letter[xtype]);
@@ -571,7 +571,7 @@ put_atts(int ncid)
 {
     int  err;             /* status */
     int  i;
-    size_t  k;
+    MPI_Offset  k;
     int  j;		/* index of attribute */
     int  allInRange;
     double att[MAX_NELS];
@@ -610,8 +610,8 @@ put_atts(int ncid)
 void                                                        
 put_vars(int ncid)
 {
-    size_t start[MAX_RANK];
-    size_t index[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     int  err;             /* status */
     int  i;
     size_t  j;
@@ -682,7 +682,7 @@ void
 check_dims(int  ncid)
 {
     char name[NC_MAX_NAME];
-    size_t length;
+    MPI_Offset length;
     int  i;
     int  err;           /* status */
 
@@ -704,7 +704,7 @@ check_dims(int  ncid)
 void
 check_vars(int  ncid)
 {
-    size_t index[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     int  err;		/* status */
     int  i;
     size_t  j;
@@ -716,7 +716,7 @@ check_vars(int  ncid)
     int isChar;
     double expect;
     char name[NC_MAX_NAME];
-    size_t length;
+    MPI_Offset length;
     int nok = 0;      /* count of valid comparisons */
 
     for (i = 0; i < NVARS; i++) {
@@ -796,10 +796,10 @@ check_atts(int  ncid)
     int  err;		/* status */
     int  i;
     int  j;
-    size_t  k;
+    MPI_Offset  k;
     ncmpi_type datatype;
     char name[NC_MAX_NAME];
-    size_t length;
+    MPI_Offset length;
     char  text[MAX_NELS];
     double value[MAX_NELS];
     double expect;

@@ -16,7 +16,7 @@ void print(const char *fmt, ...);
 extern int ifFail(const int expr, const int line, const char *file);
 
 extern void
-print_n_size_t(size_t nelems, const size_t *array);
+print_n_size_t(size_t nelems, const MPI_Offset *array);
 
 #ifdef __cplusplus
 }

@@ -42,7 +42,7 @@ double
 hash_$1(
     const ncmpi_type type,
     const int rank,
-    const size_t *index,
+    const MPI_Offset *index,
     const nct_itype itype)
 {
     const double min = $1_min;
@@ -73,18 +73,18 @@ void
 check_vars_$1(const char *filename)
 {
     int  ncid;                  /* netCDF id */
-    size_t index[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     int  err;           /* status */
     int  d;
     int  i;
-    size_t  j;
+    size_t j;
     $1 value;
     ncmpi_type datatype;
     int ndims;
     int dimids[MAX_RANK];
     double expect;
     char name[NC_MAX_NAME];
-    size_t length;
+    MPI_Offset length;
     int canConvert;     /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
 
@@ -176,11 +176,11 @@ check_atts_$1(int  ncid)
     int  err;           /* status */
     int  i;
     int  j;
-    size_t  k;
+    MPI_Offset  k;
     $1 value[MAX_NELS];
     ncmpi_type datatype;
     double expect[MAX_NELS];
-    size_t length;
+    MPI_Offset length;
     size_t nInExtRange;  /* number values within external range */
     size_t nInIntRange;  /* number values within internal range */
     int canConvert;     /* Both text or both numeric */
@@ -262,7 +262,7 @@ test_ncmpi_put_var1_$1(void)
     int i;
     int j;
     int err;
-    size_t index[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     int canConvert;	/* Both text or both numeric */
     $1 value = 5;	/* any value would do - only for error cases */
 
@@ -361,7 +361,7 @@ test_ncmpi_put_var_$1(void)
     int j;
     int err;
     int nels;
-    size_t index[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     int canConvert;	/* Both text or both numeric */
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
@@ -504,10 +504,10 @@ test_ncmpi_put_vara_$1(void)
     int err;
     int nslabs;
     int nels;
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t mid[MAX_RANK];
-    size_t index[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
     int canConvert;	/* Both text or both numeric */
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
@@ -671,14 +671,14 @@ test_ncmpi_put_vars_$1(void)
     int nels;
     int nslabs;
     int nstarts;        /* number of different starts */
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t index2[MAX_RANK];
-    size_t mid[MAX_RANK];
-    size_t count[MAX_RANK];
-    size_t sstride[MAX_RANK];
-    ptrdiff_t stride[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset index2[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
+    MPI_Offset count[MAX_RANK];
+    MPI_Offset sstride[MAX_RANK];
+    MPI_Offset stride[MAX_RANK];
     int canConvert;	/* Both text or both numeric */
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
@@ -844,15 +844,15 @@ test_ncmpi_put_varm_$1(void)
     int nels;
     int nslabs;
     int nstarts;        /* number of different starts */
-    size_t start[MAX_RANK];
-    size_t edge[MAX_RANK];
-    size_t index[MAX_RANK];
-    size_t index2[MAX_RANK];
-    size_t mid[MAX_RANK];
-    size_t count[MAX_RANK];
-    size_t sstride[MAX_RANK];
-    ptrdiff_t stride[MAX_RANK];
-    ptrdiff_t imap[MAX_RANK];
+    MPI_Offset start[MAX_RANK];
+    MPI_Offset edge[MAX_RANK];
+    MPI_Offset index[MAX_RANK];
+    MPI_Offset index2[MAX_RANK];
+    MPI_Offset mid[MAX_RANK];
+    MPI_Offset count[MAX_RANK];
+    MPI_Offset sstride[MAX_RANK];
+    MPI_Offset stride[MAX_RANK];
+    MPI_Offset imap[MAX_RANK];
     int canConvert;	/* Both text or both numeric */
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
@@ -1014,7 +1014,7 @@ test_ncmpi_put_att_text(void)
     int ncid;
     int i;
     int j;
-    size_t k;
+    MPI_Offset k;
     int err;
     text value[MAX_NELS];
 
@@ -1028,7 +1028,7 @@ test_ncmpi_put_att_text(void)
 
     {
 	const char *const tval = "value for bad name";
-	const size_t tval_len = strlen(tval);
+	const MPI_Offset tval_len = strlen(tval);
 	
 	err = ncmpi_put_att_text(ncid, 0, "", tval_len, tval);
 	IF (err != NC_EBADNAME)
@@ -1079,7 +1079,7 @@ test_ncmpi_put_att_$1(void)
     int ncid;
     int i;
     int j;
-    size_t k;
+    MPI_Offset k;
     int err;
     $1 value[MAX_NELS];
     int allInExtRange;  /* all values within external range? */

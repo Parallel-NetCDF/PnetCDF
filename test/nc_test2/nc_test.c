@@ -32,12 +32,12 @@
  * global variables (defined by function init_gvars) describing file test.nc
  */
 char dim_name[NDIMS][3];
-size_t dim_len[NDIMS];
+MPI_Offset dim_len[NDIMS];
 char var_name[NVARS][2+MAX_RANK];
 ncmpi_type var_type[NVARS];
 size_t var_rank[NVARS];
 int var_dimid[NVARS][MAX_RANK];
-size_t var_shape[NVARS][MAX_RANK];
+MPI_Offset var_shape[NVARS][MAX_RANK];
 size_t var_nels[NVARS];
 size_t var_natts[NVARS];
 char att_name[NVARS][MAX_NATTS][2];
