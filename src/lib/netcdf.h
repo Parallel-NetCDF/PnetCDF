@@ -471,6 +471,12 @@ ncmpi_get_var1(int ncid, int varid,
 
 EXTERNL
 int
+ncmpi_put_var1_text(int ncid, int varid,
+                    const size_t index[],
+                    const char *op);
+
+EXTERNL
+int
 ncmpi_put_var1_short(int ncid, int varid,
                      const size_t index[],
                      const short *op);
@@ -492,6 +498,12 @@ int
 ncmpi_put_var1_double(int ncid, int varid,
                       const size_t index[],
                       const double *op);
+
+EXTERNL
+int
+ncmpi_get_var1_text(int ncid, int varid,
+                    const size_t index[],
+                    char *ip);
 
 EXTERNL
 int
@@ -535,6 +547,10 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
 
 EXTERNL
 int
+ncmpi_put_var_text(int ncid, int varid, const char *op);
+
+EXTERNL
+int
 ncmpi_put_var_short(int ncid, int varid, const short *op);
 
 EXTERNL
@@ -551,6 +567,10 @@ ncmpi_put_var_double(int ncid, int varid, const double *op);
 
 EXTERNL
 int
+ncmpi_get_var_text(int ncid, int varid, char *ip);
+
+EXTERNL
+int
 ncmpi_get_var_short(int ncid, int varid, short *ip);
 
 EXTERNL
@@ -564,6 +584,10 @@ ncmpi_get_var_float(int ncid, int varid, float *ip);
 EXTERNL
 int
 ncmpi_get_var_double(int ncid, int varid, double *ip);
+
+EXTERNL
+int
+ncmpi_get_var_text_all(int ncid, int varid, char *ip);
 
 EXTERNL
 int
@@ -615,6 +639,18 @@ ncmpi_get_vara(int ncid, int varid,
 
 EXTERNL
 int
+ncmpi_put_vara_text_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    const char *op);
+
+EXTERNL
+int
+ncmpi_put_vara_text(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    const char *op);
+
+EXTERNL
+int
 ncmpi_put_vara_short_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const short *op);
@@ -660,6 +696,18 @@ int
 ncmpi_put_vara_double(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 const double *op);
+
+EXTERNL
+int
+ncmpi_get_vara_text_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    char *ip);
+
+EXTERNL
+int
+ncmpi_get_vara_text(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    char *ip);
 
 EXTERNL
 int
@@ -751,6 +799,22 @@ ncmpi_get_vars(int ncid, int varid,
 
 EXTERNL
 int
+ncmpi_put_vars_text_all(int ncid, int varid,
+                        const size_t start[],
+                        const size_t count[],
+                        const size_t stride[],
+                        const char *op);
+
+EXTERNL
+int
+ncmpi_put_vars_text(int ncid, int varid,
+                    const size_t start[],
+                    const size_t count[],
+                    const size_t stride[],
+                    const char *op);
+
+EXTERNL
+int
 ncmpi_put_vars_short_all(int ncid, int varid,
                          const size_t start[],
                          const size_t count[],
@@ -812,6 +876,22 @@ ncmpi_put_vars_double(int ncid, int varid,
                       const size_t count[],
                       const size_t stride[],
                       const double *op);
+
+EXTERNL
+int
+ncmpi_get_vars_text_all(int ncid, int varid,
+                        const size_t start[],
+                        const size_t count[],
+                        const size_t stride[],
+                        char *ip);
+
+EXTERNL
+int
+ncmpi_get_vars_text(int ncid, int varid,
+                    const size_t start[],
+                    const size_t count[],
+                    const size_t stride[],
+                    char *ip);
 
 EXTERNL
 int
