@@ -17,7 +17,7 @@ static int length_of_mpitype(MPI_Datatype);
 
 const char *
 ncmpi_inq_libvers(void) {
-  return "version = 3.5.0 of Aug 30 2002 13:00:00 $";
+  return "version = 0.9.3 of 12 Dec 2003";
 }
 
 /* Prototypes for functions used only in this file */
