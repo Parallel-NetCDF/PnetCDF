@@ -38,7 +38,7 @@ FORTRAN_API void FORT_CALL nfmpi_put_vara_ ( int *v1, int *v2, int v3[], int v4[
         int li;
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
         for (li=0; li<ln; li++) 
-            l4[li] = v4[ln-1-li] - 1;
+            l4[li] = v4[ln-1-li];
     }}
     *ierr = ncmpi_put_vara( *v1, *v2, l3, l4, v5, *v6, (MPI_Datatype)(*v7) );
 
