@@ -238,7 +238,7 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
     if(type != NC_DIMENSION) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
 	      (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
-      printf("NC_DIMENSION is expected since number of dimensions is %d for ", ncap->nelems);
+      printf("NC_DIMENSION is expected since number of dimensions is %d for ", (int)ncap->nelems);
       return EINVAL;
     }
 
@@ -414,7 +414,7 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
     if(type != NC_ATTRIBUTE) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
-      printf("NC_ATTRIBUTE is expected since number of attributes is %d for ", ncap->nelems);  
+      printf("NC_ATTRIBUTE is expected since number of attributes is %d for ", (int)ncap->nelems);  
       return EINVAL;
     }
 
@@ -466,7 +466,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   for (dim = 0; dim < ndims; dim++ ) {
     status = val_check_buffer(gbp, X_SIZEOF_INT);
     if(status != ENOERR) {
-      printf("the dimid[%d] is expected for \"%s\" - ", dim, strp->cp);
+      printf("the dimid[%d] is expected for \"%s\" - ", (int)dim, strp->cp);
       ncmpii_free_NC_var(varp);
       return status;
     }
@@ -550,7 +550,7 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
     if(type != NC_VARIABLE) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
-      printf("NC_VARIABLE is expected since number of variables is %d for ", ncap->nelems);        
+      printf("NC_VARIABLE is expected since number of variables is %d for ", (int)ncap->nelems);        
       return EINVAL;
     }
  
