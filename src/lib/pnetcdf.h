@@ -212,6 +212,8 @@ int ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int 
 
 int ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp);
 
+int ncmpi_delete(char * filename, MPI_Info info);
+
 
 int ncmpi_enddef(int ncid);
 

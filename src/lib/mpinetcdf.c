@@ -363,6 +363,25 @@ ncmpi_close(int ncid) {
   return ncmpii_NC_close(ncp);
 }
 
+/* ncmpi_delete:
+ * doesn't do anything to release resources, so call ncmpi_close before calling
+ * this function.
+ *
+ * filename: the name of the
+ * file we will remove.  info: mpi info, in case underlying file system needs
+ * hints.
+ */
+int
+ncmpi_delete(char *filename, MPI_Info info)
+{
+	int status = NC_NOERR;
+	status = MPI_File_delete(filename, MPI_INFO_NULL);
+	if (status != MPI_SUCCESS)
+		return NC_EFILE;
+	return NC_NOERR;
+}
+
+
 /* End Of Dataset Functions */
 
 /*
