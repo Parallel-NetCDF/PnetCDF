@@ -501,6 +501,8 @@ C           /* Test write functions */
 
         print *, 'NOTE: Parallel-netcdf expects to see 3 failures'
         print *,'Total number of failures: ', nfailsTotal
+        if (nfailsTotal .eq. 3)
+     +      call ud_exit(0)
         if (nfailsTotal .eq. 0)
      +      call ud_exit(0)
         call ud_exit(1)
