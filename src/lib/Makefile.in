@@ -102,7 +102,7 @@ $(MANUAL):	$(srcdir)/../../man/netcdf.m4
 $(PROGRAM):	$(PROG_OBJS)
 	$(LINK.c) $(PROG_OBJS) $(LIBS)
 
-include $(srcdir)/../..//rules.make
+include $(srcdir)/../../rules.make
 
 .SUFFIXES: .ln
 LINT = lint
