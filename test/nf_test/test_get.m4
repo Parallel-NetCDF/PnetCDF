@@ -314,11 +314,13 @@ C           /* there is nothing to get (edge(j).eq.0) */
                 do 11, j = 1, var_rank(i)
                     if (var_dimid(j,i) .gt. 1) then     !/* skip record dim */
                         start(j) = var_shape(j,i) + 1
+                        edge(j) = 1 !/* By Jianwei, fix NF_EINVALCOORDS bug */
                         err = nfmpi_get_vara_$1_all(ncid, i,
      +                          start, edge, value)
                         if (canConvert .and. err .ne. NF_EINVALCOORDS)
      +                      call errore('bad start: ', err)
                         start(j) = 1
+                        edge(j) = 0 !/* By Jianwei, restore original value */
                     endif
 11              continue
                 err = nfmpi_get_vara_$1_all(ncid, i, start,
@@ -710,19 +712,19 @@ define([TEST_NFMPI_GET_VARM],dnl
                 stride(j) = 1
                 imap(j) = 1
 2           continue
-            err = nfmpi_get_varm_$1(BAD_ID, i, start, edge,
+            err = nfmpi_get_varm_$1_all(BAD_ID, i, start, edge,
      +                           stride, imap, 
      +                           value)
             if (err .ne. NF_EBADID)
      +          call errore('bad ncid: ', err)
-            err = nfmpi_get_varm_$1(ncid, BAD_VARID, start,
+            err = nfmpi_get_varm_$1_all(ncid, BAD_VARID, start,
      +                           edge, stride, 
      +                           imap, value)
             if (err .ne. NF_ENOTVAR)
      +          call errore('bad var id: ', err)
             do 3, j = 1, var_rank(i)
                 start(j) = var_shape(j,i) + 1
-                err = nfmpi_get_varm_$1(ncid, i, start,
+                err = nfmpi_get_varm_$1_all(ncid, i, start,
      +                               edge, stride, 
      +                               imap, value)
                 if (.not. canConvert) then
@@ -734,7 +736,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                 endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
-                err = nfmpi_get_varm_$1(ncid, i, start,
+                err = nfmpi_get_varm_$1_all(ncid, i, start,
      +                               edge, stride, 
      +                               imap, value)
                 if (.not. canConvert) then
@@ -746,7 +748,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                 endif
                 edge(j) = 1
                 stride(j) = 0
-                err = nfmpi_get_varm_$1(ncid, i, start,
+                err = nfmpi_get_varm_$1_all(ncid, i, start,
      +                               edge, stride, 
      +                               imap, value)
                 if (.not. canConvert) then
@@ -835,7 +837,7 @@ C     */
                             allInExtRange = .false.
                         end if
 10                  continue
-                    err = nfmpi_get_varm_$1(ncid,i,index,count,
+                    err = nfmpi_get_varm_$1_all(ncid,i,index,count,
      +                                   stride,imap,
      +                                   value)
                     if (canConvert) then
@@ -1066,17 +1068,16 @@ TEST_NFMPI_GET_VARS(int)
 TEST_NFMPI_GET_VARS(real)
 TEST_NFMPI_GET_VARS(double)
 
-dnl the 'varm' type is not implemented yet
-dnl TEST_NFMPI_GET_VARM(text)
-dnl #ifdef NF_INT1_T
-dnl TEST_NFMPI_GET_VARM(int1)
-dnl #endif
-dnl #ifdef NF_INT2_T
-dnl TEST_NFMPI_GET_VARM(int2)
-dnl #endif
-dnl TEST_NFMPI_GET_VARM(int)
-dnl TEST_NFMPI_GET_VARM(real)
-dnl TEST_NFMPI_GET_VARM(double)
+TEST_NFMPI_GET_VARM(text)
+#ifdef NF_INT1_T
+TEST_NFMPI_GET_VARM(int1)
+#endif
+#ifdef NF_INT2_T
+TEST_NFMPI_GET_VARM(int2)
+#endif
+TEST_NFMPI_GET_VARM(int)
+TEST_NFMPI_GET_VARM(real)
+TEST_NFMPI_GET_VARM(double)
 
 TEST_NFMPI_GET_ATT(text)
 #ifdef NF_INT1_T
