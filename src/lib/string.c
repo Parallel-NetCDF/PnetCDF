@@ -19,7 +19,7 @@
 NC_free_string()
  */
 void
-free_NC_string(NC_string *ncstrp)
+ncmpii_free_NC_string(NC_string *ncstrp)
 {
 	if(ncstrp==NULL)
 		return;
@@ -64,7 +64,7 @@ NC_check_name(const char *name)
 NC_new_string(count, str)
  */
 NC_string *
-new_NC_string(size_t slen, const char *str)
+ncmpii_new_NC_string(size_t slen, const char *str)
 {
 	NC_string *ncstrp;
 	size_t sz = M_RNDUP(sizeof(NC_string)) + slen + 1;
@@ -99,7 +99,7 @@ new_NC_string(size_t slen, const char *str)
 NC_re_string()
  */
 int
-set_NC_string(NC_string *ncstrp, const char *str)
+ncmpii_set_NC_string(NC_string *ncstrp, const char *str)
 {
 	size_t slen;
 	size_t diff;

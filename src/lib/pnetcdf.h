@@ -256,6 +256,7 @@ int ncmpi_rename_var(int ncid, int varid, const char *name);
 
 /* Begin Inquiry Functions */
 
+const char *ncmpi_inq_libvers(void);
 
 int ncmpi_inq(int ncid, int *ndimsp, int *nvarsp,
           int *ngattsp, int *unlimdimidp); 
@@ -297,7 +298,6 @@ int ncmpi_inq_varname(int ncid, int varid, char *name);
 
 
 int ncmpi_inq_vartype(int ncid, int varid, nc_type *xtypep);
-
 
 int ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
 

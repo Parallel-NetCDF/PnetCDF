@@ -279,7 +279,7 @@ v1h_get_NC_string(v1hs *gsp, NC_string **ncstrpp)
 	if(status != ENOERR)
 		return status;
 
-	ncstrp = new_NC_string(nchars, NULL);
+	ncstrp = ncmpii_new_NC_string(nchars, NULL);
 	if(ncstrp == NULL)
 	{
 		return NC_ENOMEM;
@@ -307,7 +307,7 @@ v1h_get_NC_string(v1hs *gsp, NC_string **ncstrpp)
 	return ENOERR;
 
 unwind_alloc:
-	free_NC_string(ncstrp);
+	ncmpii_free_NC_string(ncstrp);
 	return status;
 	
 }
@@ -361,7 +361,7 @@ v1h_get_NC_dim(v1hs *gsp, NC_dim **dimpp)
 	if(status != ENOERR)
 		return status;
 
-	dimp = new_x_NC_dim(ncstrp);
+	dimp = ncmpii_new_x_NC_dim(ncstrp);
 	if(dimp == NULL)
 	{
 		status = NC_ENOMEM;
@@ -371,7 +371,7 @@ v1h_get_NC_dim(v1hs *gsp, NC_dim **dimpp)
 	status = v1h_get_size_t(gsp, &dimp->size);
 	if(status != ENOERR)
 	{
-		free_NC_dim(dimp); /* frees name */
+		ncmpii_free_NC_dim(dimp); /* frees name */
 		return status;
 	}
 
@@ -380,7 +380,7 @@ v1h_get_NC_dim(v1hs *gsp, NC_dim **dimpp)
 	return ENOERR;
 
 unwind_name:
-	free_NC_string(ncstrp);
+	ncmpii_free_NC_string(ncstrp);
 	return status;
 }
 
@@ -497,7 +497,7 @@ v1h_get_NC_dimarray(v1hs *gsp, NC_dimarray *ncap)
 			if(status)
 			{
 				ncap->nelems = dpp - ncap->value;
-				free_NC_dimarrayV(ncap);
+				ncmpii_free_NC_dimarrayV(ncap);
 				return status;
 			}
 		}
@@ -650,7 +650,7 @@ v1h_get_NC_attr(v1hs *gsp, NC_attr **attrpp)
 	if(status != ENOERR)
 		goto unwind_name;
 
-	attrp = new_x_NC_attr(strp, type, nelems);
+	attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
 	if(attrp == NULL)
 	{
 		status = NC_ENOMEM;
@@ -660,7 +660,7 @@ v1h_get_NC_attr(v1hs *gsp, NC_attr **attrpp)
 	status = v1h_get_NC_attrV(gsp, attrp);
 	if(status != ENOERR)
 	{
-		free_NC_attr(attrp); /* frees strp */
+		ncmpii_free_NC_attr(attrp); /* frees strp */
 		return status;
 	}
 
@@ -669,7 +669,7 @@ v1h_get_NC_attr(v1hs *gsp, NC_attr **attrpp)
 	return ENOERR;
 
 unwind_name:
-	free_NC_string(strp);
+	ncmpii_free_NC_string(strp);
 	return status;
 }
 
@@ -785,7 +785,7 @@ v1h_get_NC_attrarray(v1hs *gsp, NC_attrarray *ncap)
 			if(status)
 			{
 				ncap->nelems = app - ncap->value;
-				free_NC_attrarrayV(ncap);
+				ncmpii_free_NC_attrarrayV(ncap);
 				return status;
 			}
 		}
@@ -881,7 +881,7 @@ v1h_get_NC_var(v1hs *gsp, NC_var **varpp)
 	if(status != ENOERR)
 		goto unwind_name;
 
-	varp = new_x_NC_var(strp, ndims);
+	varp = ncmpii_new_x_NC_var(strp, ndims);
 	if(varp == NULL)
 	{
 		status = NC_ENOMEM;
@@ -920,11 +920,11 @@ v1h_get_NC_var(v1hs *gsp, NC_var **varpp)
 	return ENOERR;
 
 unwind_alloc:
-	free_NC_var(varp); /* frees name */
+	ncmpii_free_NC_var(varp); /* frees name */
 	return status;
 
 unwind_name:
-	free_NC_string(strp);
+	ncmpii_free_NC_string(strp);
 	return status;
 }
 
@@ -1041,7 +1041,7 @@ v1h_get_NC_vararray(v1hs *gsp, NC_vararray *ncap)
 			if(status)
 			{
 				ncap->nelems = vpp - ncap->value;
-				free_NC_vararrayV(ncap);
+				ncmpii_free_NC_vararrayV(ncap);
 				return status;
 			}
 		}

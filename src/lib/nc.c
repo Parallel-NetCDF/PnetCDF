@@ -132,20 +132,20 @@ NC_check_id(int ncid, NC **ncpp)
 
 /* static */
 void
-free_NC(NC *ncp)
+ncmpii_free_NC(NC *ncp)
 {
 	if(ncp == NULL)
 		return;
-	free_NC_dimarrayV(&ncp->dims);
-	free_NC_attrarrayV(&ncp->attrs);
-	free_NC_vararrayV(&ncp->vars);
+	ncmpii_free_NC_dimarrayV(&ncp->dims);
+	ncmpii_free_NC_attrarrayV(&ncp->attrs);
+	ncmpii_free_NC_vararrayV(&ncp->vars);
 	free(ncp);
 }
 
 
 /* static */
 NC *
-new_NC(const size_t *chunkp)
+ncmpii_new_NC(const size_t *chunkp)
 {
 	NC *ncp;
 
@@ -165,7 +165,7 @@ new_NC(const size_t *chunkp)
 
 /* static */
 NC *
-dup_NC(const NC *ref)
+ncmpii_dup_NC(const NC *ref)
 {
 	NC *ncp;
 
@@ -174,11 +174,11 @@ dup_NC(const NC *ref)
 		return NULL;
 	(void) memset(ncp, 0, sizeof(NC));
 
-	if(dup_NC_dimarrayV(&ncp->dims, &ref->dims) != NC_NOERR)
+	if(ncmpii_dup_NC_dimarrayV(&ncp->dims, &ref->dims) != NC_NOERR)
 		goto err;
-	if(dup_NC_attrarrayV(&ncp->attrs, &ref->attrs) != NC_NOERR)
+	if(ncmpii_dup_NC_attrarrayV(&ncp->attrs, &ref->attrs) != NC_NOERR)
 		goto err;
-	if(dup_NC_vararrayV(&ncp->vars, &ref->vars) != NC_NOERR)
+	if(ncmpii_dup_NC_vararrayV(&ncp->vars, &ref->vars) != NC_NOERR)
 		goto err;
 
 	ncp->xsz = ref->xsz;
@@ -188,7 +188,7 @@ dup_NC(const NC *ref)
 	NC_set_numrecs(ncp, NC_get_numrecs(ref));
 	return ncp;
 err:
-	free_NC(ncp);
+	ncmpii_free_NC(ncp);
 	return NULL;
 }
 
@@ -484,12 +484,12 @@ write_numrecs(NC *ncp) {
  */
 
 int
-read_NC(NC *ncp) {
+ncmpii_read_NC(NC *ncp) {
   int status = NC_NOERR;
 
-  free_NC_dimarrayV(&ncp->dims);
-  free_NC_attrarrayV(&ncp->attrs);
-  free_NC_vararrayV(&ncp->vars); 
+  ncmpii_free_NC_dimarrayV(&ncp->dims);
+  ncmpii_free_NC_attrarrayV(&ncp->attrs);
+  ncmpii_free_NC_vararrayV(&ncp->vars); 
 
   status = hdr_get_NC(ncp);
 
@@ -730,7 +730,7 @@ NC_enddef(NC *ncp) {
     return status;
  
   if(ncp->old != NULL) {
-    free_NC(ncp->old);
+    ncmpii_free_NC(ncp->old);
     ncp->old = NULL;
   }
  
@@ -761,7 +761,7 @@ enddef(NC *ncp)
 
   if(ncp->old != NULL)
   {
-    free_NC(ncp->old);
+    ncmpii_free_NC(ncp->old);
     ncp->old = NULL;
   }
 
@@ -783,7 +783,7 @@ NC_close(NC *ncp) {
     if(status != NC_NOERR ) {
       /* To do: Abort new definition, if any */
       if (ncp->old != NULL) {
-        free_NC(ncp->old);
+        ncmpii_free_NC(ncp->old);
         ncp->old = NULL;
         fClr(ncp->flags, NC_INDEF);
       }
@@ -800,7 +800,7 @@ NC_close(NC *ncp) {
  
   del_from_NCList(ncp);
  
-  free_NC(ncp);
+  ncmpii_free_NC(ncp);
  
   return status;
 }
@@ -826,7 +826,7 @@ ncmpi_inq(int ncid,
 	if(nattsp != NULL)
 		*nattsp = (int) ncp->attrs.nelems;
 	if(xtendimp != NULL)
-		*xtendimp = find_NC_Udim(&ncp->dims, NULL);
+		*xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
 
 	return NC_NOERR;
 }
@@ -890,7 +890,7 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp)
 		return status;
 
 	if(xtendimp != NULL)
-		*xtendimp = find_NC_Udim(&ncp->dims, NULL);
+		*xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
 
 	return NC_NOERR;
 }
@@ -911,7 +911,7 @@ nc_sync(int ncid)
 
 	if(NC_readonly(ncp))
 	{
-		return read_NC(ncp);
+		return ncmpii_read_NC(ncp);
 	}
 	/* else, read/write */
 

@@ -20,22 +20,22 @@ static size_t ncx_szof(nc_type type);
 NC_free_var(var)
  */
 void
-free_NC_var(NC_var *varp)
+ncmpii_free_NC_var(NC_var *varp)
 {
 	if(varp == NULL)
 		return;
-	free_NC_attrarrayV(&varp->attrs);
-	free_NC_string(varp->name);
+	ncmpii_free_NC_attrarrayV(&varp->attrs);
+	ncmpii_free_NC_string(varp->name);
 	free(varp);
 }
 
 
 /* 
- * Common code for new_NC_var() 
+ * Common code for ncmpii_new_NC_var() 
  * and ncx_get_NC_var()
  */
 NC_var *
-new_x_NC_var(
+ncmpii_new_x_NC_var(
 	NC_string *strp,
 	size_t ndims)
 {
@@ -78,20 +78,20 @@ new_x_NC_var(
 NC_new_var()
  */
 static NC_var *
-new_NC_var(const char *name, nc_type type,
+ncmpii_new_NC_var(const char *name, nc_type type,
 	size_t ndims, const int *dimids)
 {
 	NC_string *strp;
 	NC_var *varp;
 
-	strp = new_NC_string(strlen(name), name);
+	strp = ncmpii_new_NC_string(strlen(name), name);
 	if(strp == NULL)
 		return NULL;
 
-	varp = new_x_NC_var(strp, ndims);
+	varp = ncmpii_new_x_NC_var(strp, ndims);
 	if(varp == NULL )
 	{
-		free_NC_string(strp);
+		ncmpii_free_NC_string(strp);
 		return NULL;
 	}
 	
@@ -107,15 +107,15 @@ new_NC_var(const char *name, nc_type type,
 static NC_var *
 dup_NC_var(const NC_var *rvarp)
 {
-	NC_var *varp = new_NC_var(rvarp->name->cp, rvarp->type,
+	NC_var *varp = ncmpii_new_NC_var(rvarp->name->cp, rvarp->type,
 		 rvarp->ndims, rvarp->dimids);
 	if(varp == NULL)
 		return NULL;
 
 	
-	if(dup_NC_attrarrayV(&varp->attrs, &rvarp->attrs) != NC_NOERR)
+	if(ncmpii_dup_NC_attrarrayV(&varp->attrs, &rvarp->attrs) != NC_NOERR)
 	{
-		free_NC_var(varp);
+		ncmpii_free_NC_var(varp);
 		return NULL;
 	}
 
@@ -139,7 +139,7 @@ dup_NC_var(const NC_var *rvarp)
  * Leaves the array itself allocated.
  */
 void
-free_NC_vararrayV0(NC_vararray *ncap)
+ncmpii_free_NC_vararrayV0(NC_vararray *ncap)
 {
 	assert(ncap != NULL);
 
@@ -153,7 +153,7 @@ free_NC_vararrayV0(NC_vararray *ncap)
 		NC_var *const *const end = &vpp[ncap->nelems];
 		for( /*NADA*/; vpp < end; vpp++)
 		{
-			free_NC_var(*vpp);
+			ncmpii_free_NC_var(*vpp);
 			*vpp = NULL;
 		}
 	}
@@ -167,7 +167,7 @@ free_NC_vararrayV0(NC_vararray *ncap)
 NC_free_array()
  */
 void
-free_NC_vararrayV(NC_vararray *ncap)
+ncmpii_free_NC_vararrayV(NC_vararray *ncap)
 {
 	assert(ncap != NULL);
 	
@@ -176,7 +176,7 @@ free_NC_vararrayV(NC_vararray *ncap)
 
 	assert(ncap->value != NULL);
 
-	free_NC_vararrayV0(ncap);
+	ncmpii_free_NC_vararrayV0(ncap);
 
 	free(ncap->value);
 	ncap->value = NULL;
@@ -185,7 +185,7 @@ free_NC_vararrayV(NC_vararray *ncap)
 
 
 int
-dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
+ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 {
 	int status = NC_NOERR;
 
@@ -220,7 +220,7 @@ dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 
 	if(status != NC_NOERR)
 	{
-		free_NC_vararrayV(ncap);
+		ncmpii_free_NC_vararrayV(ncap);
 		return status;
 	}
 
@@ -384,7 +384,7 @@ NC_var_shape(NC_var *varp, const NC_dimarray *dims)
 		if(*ip < 0 || (size_t) (*ip) >= ((dims != NULL) ? dims->nelems : 1) )
 			return NC_EBADDIM;
 		
-		dimp = elem_NC_dimarray(dims, (size_t)*ip);
+		dimp = ncmpii_elem_NC_dimarray(dims, (size_t)*ip);
 		*op = dimp->size;
 		if(*op == NC_UNLIMITED && ip != varp->dimids)
 			return NC_EUNLIMPOS;
@@ -503,21 +503,21 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 		return NC_ENAMEINUSE;
 	}
 	
-	varp = new_NC_var(name, type, ndims, dimids);
+	varp = ncmpii_new_NC_var(name, type, ndims, dimids);
 	if(varp == NULL)
 		return NC_ENOMEM;
 
 	status = NC_var_shape(varp, &ncp->dims);
 	if(status != NC_NOERR)
 	{
-		free_NC_var(varp);
+		ncmpii_free_NC_var(varp);
 		return status;
 	}
 
 	status = incr_NC_vararray(&ncp->vars, varp);
 	if(status != NC_NOERR)
 	{
-		free_NC_var(varp);
+		ncmpii_free_NC_var(varp);
 		return status;
 	}
 
@@ -762,16 +762,16 @@ ncmpi_rename_var(int ncid, int varid, const char *newname)
 	old = varp->name;
 	if(NC_indef(ncp))
 	{
-		newStr = new_NC_string(strlen(newname),newname);
+		newStr = ncmpii_new_NC_string(strlen(newname),newname);
 		if(newStr == NULL)
 			return(-1);
 		varp->name = newStr;
-		free_NC_string(old);
+		ncmpii_free_NC_string(old);
 		return NC_NOERR;
 	}
 
 	/* else, not in define mode */
-	status = set_NC_string(varp->name, newname);
+	status = ncmpii_set_NC_string(varp->name, newname);
 	if(status != NC_NOERR)
 		return status;
 

@@ -13,6 +13,8 @@
 #include "fbits.h"
 #include "rnd.h"
 
+/* Prototypes of functions only used in this file */
+static NC_attr *elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
 
 /*
  * Free attr
@@ -20,12 +22,12 @@
 NC_free_attr()
  */
 void
-free_NC_attr(NC_attr *attrp)
+ncmpii_free_NC_attr(NC_attr *attrp)
 {
 
 	if(attrp == NULL)
 		return;
-	free_NC_string(attrp->name);
+	ncmpii_free_NC_string(attrp->name);
 	free(attrp);
 }
 
@@ -57,7 +59,7 @@ ncmpix_len_NC_attrV(nc_type type, size_t nelems)
 
 
 NC_attr *
-new_x_NC_attr(
+ncmpii_new_x_NC_attr(
 	NC_string *strp,
 	nc_type type,
 	size_t nelems)
@@ -93,7 +95,7 @@ new_x_NC_attr(
 NC_new_attr(name,type,count,value)
  */
 static NC_attr *
-new_NC_attr(
+ncmpii_new_NC_attr(
 	const char *name,
 	nc_type type,
 	size_t nelems)
@@ -103,14 +105,14 @@ new_NC_attr(
 
 	assert(name != NULL && *name != 0);
 
-	strp = new_NC_string(strlen(name), name);
+	strp = ncmpii_new_NC_string(strlen(name), name);
 	if(strp == NULL)
 		return NULL;
 	
-	attrp = new_x_NC_attr(strp, type, nelems);
+	attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
 	if(attrp == NULL)
 	{
-		free_NC_string(strp);
+		ncmpii_free_NC_string(strp);
 		return NULL;
 	}
 
@@ -121,7 +123,7 @@ new_NC_attr(
 static NC_attr *
 dup_NC_attr(const NC_attr *rattrp)
 {
-	NC_attr *attrp = new_NC_attr(rattrp->name->cp,
+	NC_attr *attrp = ncmpii_new_NC_attr(rattrp->name->cp,
 		 rattrp->type, rattrp->nelems);
 	if(attrp == NULL)
 		return NULL;
@@ -136,7 +138,7 @@ dup_NC_attr(const NC_attr *rattrp)
  * Leaves the array itself allocated.
  */
 void
-free_NC_attrarrayV0(NC_attrarray *ncap)
+ncmpii_free_NC_attrarrayV0(NC_attrarray *ncap)
 {
 	assert(ncap != NULL);
 
@@ -150,7 +152,7 @@ free_NC_attrarrayV0(NC_attrarray *ncap)
 		NC_attr *const *const end = &app[ncap->nelems];
 		for( /*NADA*/; app < end; app++)
 		{
-			free_NC_attr(*app);
+			ncmpii_free_NC_attr(*app);
 			*app = NULL;
 		}
 	}
@@ -164,7 +166,7 @@ free_NC_attrarrayV0(NC_attrarray *ncap)
 NC_free_array()
  */
 void
-free_NC_attrarrayV(NC_attrarray *ncap)
+ncmpii_free_NC_attrarrayV(NC_attrarray *ncap)
 {
 	assert(ncap != NULL);
 	
@@ -173,7 +175,7 @@ free_NC_attrarrayV(NC_attrarray *ncap)
 
 	assert(ncap->value != NULL);
 
-	free_NC_attrarrayV0(ncap);
+	ncmpii_free_NC_attrarrayV0(ncap);
 
 	free(ncap->value);
 	ncap->value = NULL;
@@ -182,7 +184,7 @@ free_NC_attrarrayV(NC_attrarray *ncap)
 
 
 int
-dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
+ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
 {
 	int status = NC_NOERR;
 
@@ -218,7 +220,7 @@ dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
 
 	if(status != NC_NOERR)
 	{
-		free_NC_attrarrayV(ncap);
+		ncmpii_free_NC_attrarrayV(ncap);
 		return status;
 	}
 
@@ -270,7 +272,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 }
 
 
-NC_attr *
+static NC_attr *
 elem_NC_attrarray(const NC_attrarray *ncap, size_t elem)
 {
 	assert(ncap != NULL);
@@ -530,15 +532,15 @@ ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 	old = attrp->name;
 	if(NC_indef(ncp))
 	{
-		newStr = new_NC_string(strlen(newname), newname);
+		newStr = ncmpii_new_NC_string(strlen(newname), newname);
 		if( newStr == NULL)
 			return NC_ENOMEM;
 		attrp->name = newStr;
-		free_NC_string(old);
+		ncmpii_free_NC_string(old);
 		return NC_NOERR;
 	}
 	/* else */
-	status = set_NC_string(old, newname);
+	status = ncmpii_set_NC_string(old, newname);
 	if( status != NC_NOERR)
 		return status;
 
@@ -622,7 +624,7 @@ ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ov
 			return NC_EMAXATTS;
 	}
 
-	attrp = new_NC_attr(name, iattrp->type, iattrp->nelems);
+	attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -633,14 +635,14 @@ ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ov
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
 		status = incr_NC_attrarray(ncap, attrp);
 		if(status != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return status;
 		}
 	}
@@ -698,7 +700,7 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 	/* decrement count */
 	ncap->nelems--;
 
-	free_NC_attr(old);
+	ncmpii_free_NC_attr(old);
 
 	return NC_NOERR;
 }
@@ -1100,7 +1102,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	attrp = new_NC_attr(name, NC_CHAR, nelems);
+	attrp = ncmpii_new_NC_attr(name, NC_CHAR, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -1116,14 +1118,14 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
 		status = incr_NC_attrarray(ncap, attrp);
 		if(status != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return status;
 		}
 	}
@@ -1248,7 +1250,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-	attrp = new_NC_attr(name, type, nelems);
+	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -1263,7 +1265,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
@@ -1274,7 +1276,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 		 */
 		if(lstatus != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return lstatus;
 		}
 	}
@@ -1395,7 +1397,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-	attrp = new_NC_attr(name, type, nelems);
+	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -1410,7 +1412,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
@@ -1421,7 +1423,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 		 */
 		if(lstatus != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return lstatus;
 		}
 	}
@@ -1542,7 +1544,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-	attrp = new_NC_attr(name, type, nelems);
+	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -1557,7 +1559,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
@@ -1568,7 +1570,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 		 */
 		if(lstatus != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return lstatus;
 		}
 	}
@@ -1689,7 +1691,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-	attrp = new_NC_attr(name, type, nelems);
+	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -1704,7 +1706,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
@@ -1715,7 +1717,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 		 */
 		if(lstatus != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return lstatus;
 		}
 	}
@@ -1836,7 +1838,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-	attrp = new_NC_attr(name, type, nelems);
+	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -1851,7 +1853,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
@@ -1862,7 +1864,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 		 */
 		if(lstatus != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return lstatus;
 		}
 	}
@@ -1983,7 +1985,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-	attrp = new_NC_attr(name, type, nelems);
+	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -1998,7 +2000,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
@@ -2009,7 +2011,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 		 */
 		if(lstatus != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return lstatus;
 		}
 	}
@@ -2130,7 +2132,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-	attrp = new_NC_attr(name, type, nelems);
+	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
 		return NC_ENOMEM;
 
@@ -2145,7 +2147,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 	{
 		assert(old != NULL);
 		*attrpp = attrp;
-		free_NC_attr(old);
+		ncmpii_free_NC_attr(old);
 	}
 	else
 	{
@@ -2156,7 +2158,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 		 */
 		if(lstatus != NC_NOERR)
 		{
-			free_NC_attr(attrp);
+			ncmpii_free_NC_attr(attrp);
 			return lstatus;
 		}
 	}

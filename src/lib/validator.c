@@ -130,7 +130,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
     return status;
   }
 
-  ncstrp = new_NC_string(nchars, NULL);
+  ncstrp = ncmpii_new_NC_string(nchars, NULL);
   if (ncstrp == NULL)
     return NC_ENOMEM;
 
@@ -151,7 +151,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
       status = val_fetch(gbp, MIN(gbp->size, X_SIZEOF_CHAR * nchars));
       if(status != ENOERR) {
 	printf("fetching the name string of ");
-        free_NC_string(ncstrp);
+        ncmpii_free_NC_string(ncstrp);
         return status;
       } 
       bufremain = gbp->size;
@@ -162,13 +162,13 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   status = val_check_buffer(gbp, padding);
   if(status != ENOERR) {
     printf("fetching padding for the name string of ");
-    free_NC_string(ncstrp);
+    ncmpii_free_NC_string(ncstrp);
     return status;
   } 
   if (memcmp(gbp->pos, pad, padding) != 0) {
     printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the name string alignment of ", (long long unsigned)
 	   (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size));
-    free_NC_string(ncstrp);
+    ncmpii_free_NC_string(ncstrp);
     return EINVAL;
   }
   gbp->pos = (void *)((char *)gbp->pos + padding);
@@ -188,14 +188,14 @@ val_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp) {
   if (status != ENOERR) 
     return status;
 
-  dimp = new_x_NC_dim(ncstrp);
+  dimp = ncmpii_new_x_NC_dim(ncstrp);
   if(dimp == NULL)
     return NC_ENOMEM;
 
   status = val_get_size_t(gbp, &dimp->size);
   if(status != ENOERR) {
     printf("\"%s\" - ", ncstrp->cp);
-    free_NC_dim(dimp); /* frees name */
+    ncmpii_free_NC_dim(dimp); /* frees name */
     return status;
   }
 
@@ -254,7 +254,7 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
       if (status != ENOERR) {
 	printf("dimension[%d] in ", dim);
         ncap->nelems = dpp - ncap->value;
-        free_NC_dimarrayV(ncap);
+        ncmpii_free_NC_dimarrayV(ncap);
         return status;
       }
     }
@@ -351,27 +351,27 @@ val_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   status = val_get_nc_type(gbp, &type);
   if(status != ENOERR) {
     printf("\"%s\" - ", strp->cp);
-    free_NC_string(strp);
+    ncmpii_free_NC_string(strp);
     return status;
   }
 
   status = val_get_size_t(gbp, &nelems); 
   if(status != ENOERR) {
     printf("the values of \"%s\" - ", strp->cp);
-    free_NC_string(strp);
+    ncmpii_free_NC_string(strp);
     return status;
   }
 
-  attrp = new_x_NC_attr(strp, type, nelems);
+  attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
   if(attrp == NULL) {
-    free_NC_string(strp);
+    ncmpii_free_NC_string(strp);
     return status;
   }
 
   status = val_get_NC_attrV(gbp, attrp);
   if(status != ENOERR) {
     printf("\"%s\" - ", strp->cp);
-    free_NC_attr(attrp); /* frees strp */ 
+    ncmpii_free_NC_attr(attrp); /* frees strp */ 
     return status;
   }
 
@@ -430,7 +430,7 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
       if (status != ENOERR) {
 	printf("attribute[%d] of ", att);
         ncap->nelems = app - ncap->value;
-        free_NC_attrarrayV(ncap);
+        ncmpii_free_NC_attrarrayV(ncap);
         return status;
       }
     }
@@ -453,13 +453,13 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   status = val_get_size_t(gbp, &ndims);
   if(status != ENOERR) {
      printf("the dimid list of \"%s\" - ", strp->cp);
-     free_NC_string(strp); 
+     ncmpii_free_NC_string(strp); 
      return status;
   }
 
-  varp = new_x_NC_var(strp, ndims);
+  varp = ncmpii_new_x_NC_var(strp, ndims);
   if(varp == NULL) {
-    free_NC_string(strp);
+    ncmpii_free_NC_string(strp);
     return NC_ENOMEM;
   }
 
@@ -467,13 +467,13 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     status = val_check_buffer(gbp, X_SIZEOF_INT);
     if(status != ENOERR) {
       printf("the dimid[%d] is expected for \"%s\" - ", dim, strp->cp);
-      free_NC_var(varp);
+      ncmpii_free_NC_var(varp);
       return status;
     }
     status = ncmpix_getn_int_int((const void **)(&gbp->pos), 
                               1, varp->dimids + dim);
     if(status != ENOERR) {
-      free_NC_var(varp);
+      ncmpii_free_NC_var(varp);
       return status;
     }
   }
@@ -481,34 +481,34 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   status = val_get_NC_attrarray(gbp, &varp->attrs);
   if(status != ENOERR) {
     printf("ATTRIBUTE list of \"%s\" - ", strp->cp);
-    free_NC_var(varp);
+    ncmpii_free_NC_var(varp);
     return status;
   }
 
   status = val_get_nc_type(gbp, &varp->type);
   if(status != ENOERR) {
     printf("\"%s\" - ", strp->cp);
-    free_NC_var(varp);
+    ncmpii_free_NC_var(varp);
     return status;
   } 
 
   status = val_get_size_t(gbp, &varp->len);
   if(status != ENOERR) {
     printf("the data of  \"%s\" - ", strp->cp);
-    free_NC_var(varp);
+    ncmpii_free_NC_var(varp);
     return status;
   }
 
   status = val_check_buffer(gbp, X_SIZEOF_OFF_T);
   if(status != ENOERR) {
     printf("offset is expected for the data of \"%s\" - ", strp->cp);
-    free_NC_var(varp);
+    ncmpii_free_NC_var(varp);
     return status;
   }
   status = ncmpix_get_off_t((const void **)&gbp->pos,
                          &varp->begin);
   if(status != ENOERR) {
-    free_NC_var(varp);
+    ncmpii_free_NC_var(varp);
     return status;
   }
 
@@ -566,7 +566,7 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
       if (status != ENOERR) {
         printf("variable[%d] in ", var);
         ncap->nelems = vpp - ncap->value;
-        free_NC_vararrayV(ncap);
+        ncmpii_free_NC_vararrayV(ncap);
         return status;
       }
     }
@@ -677,7 +677,7 @@ main(int argc, char **argv) {
 
   /* open the netCDF file */
 
-  ncp = new_NC(NULL);
+  ncp = ncmpii_new_NC(NULL);
   if(ncp == NULL) {
     printf("Not enough memory!\n");
     return 0; 
@@ -685,7 +685,7 @@ main(int argc, char **argv) {
 
   ncp->nciop = ncmpiio_new(ncfile, NC_NOWRITE);
   if(ncp->nciop == NULL) {
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     printf("Not enough memory!\n");
     return 0; 
   }
@@ -693,7 +693,7 @@ main(int argc, char **argv) {
   if ( (*((int *)&ncp->nciop->fd) = open(ncfile, O_RDONLY)) < 0 ) {
     printf("Can not open file: %s\n", ncfile);
     ncmpiio_free(ncp->nciop);
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     return 0;
   }
 
@@ -703,7 +703,7 @@ main(int argc, char **argv) {
   if (status !=  0) {
     close(ncp->nciop->fd);
     ncmpiio_free(ncp->nciop);
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     return 0;
   }
 
@@ -714,13 +714,13 @@ main(int argc, char **argv) {
     printf("Error: \n\tData size is larger than defined!\n");
     close(ncp->nciop->fd);
     ncmpiio_free(ncp->nciop);
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     return 0;  
   } else if ( ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) >= ncfilestat.st_size ) {
     printf("Error: \n\tData size is less than expected!\n");
     close(ncp->nciop->fd);
     ncmpiio_free(ncp->nciop);
-    free_NC(ncp);
+    ncmpii_free_NC(ncp);
     return 0;
   }
 
@@ -729,7 +729,7 @@ main(int argc, char **argv) {
 
   close(ncp->nciop->fd);
   ncmpiio_free(ncp->nciop);
-  free_NC(ncp);
+  ncmpii_free_NC(ncp);
 
   printf("The netCDF file is validated!\n");
 
