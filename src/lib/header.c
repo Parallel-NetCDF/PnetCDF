@@ -573,7 +573,7 @@ ncmpii_hdr_put_NC(NC *ncp, void *buf) {
 /* Begin Of get NC */
 
 /*
- * Fetch the next header chunk.
+ * Fetch the next header chunk.  the chunk is 'gbp->size' bytes big
  */
 static int
 hdr_fetch(bufferinfo *gbp) {
@@ -649,10 +649,10 @@ hdr_get_NCtype(bufferinfo *gbp, NCtype *typep) {
 
 static int
 hdr_get_size_t(bufferinfo *gbp, size_t *sp) {
-  int status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
+  int status = hdr_check_buffer(gbp, X_SIZEOF_SIZE_T);
   if (status != ENOERR)
     return status; 
-  gbp->index += (gbp->version == 1 ? 4 : 8);
+  gbp->index += X_SIZEOF_SIZE_T;
   return ncmpix_get_size_t((const void **)(&gbp->pos), sp);
 }
 
