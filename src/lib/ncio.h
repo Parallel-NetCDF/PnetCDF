@@ -9,7 +9,7 @@
 
 #include <stddef.h>	/* size_t */
 #include <sys/types.h>	/* off_t */
-#include "netcdf.h"
+#include "pnetcdf.h"
 
 #include <mpi.h>
 

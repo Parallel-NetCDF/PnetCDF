@@ -201,331 +201,267 @@ typedef nc_type ncmpi_type;
 
 #include <mpi.h>
 
-EXTERNL
+/* Begin Prototypes */
+
+
 const char *
 ncmpi_strerror(int err);
 
 /* Begin Dataset Functions */
 
-EXTERNL
-int
-ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp);
 
-EXTERNL
-int
-ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp);
+int ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp); 
 
-EXTERNL
-int
-ncmpi_enddef(int ncid);
+int ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp);
 
-EXTERNL
-int
-ncmpi_redef(int ncid);
 
-EXTERNL
-int
-ncmpi_sync(int ncid);
+int ncmpi_enddef(int ncid);
 
-EXTERNL
-int
-ncmpi_abort(int ncid);
 
-EXTERNL
-int
-ncmpi_begin_indep_data(int ncid);
+int ncmpi_redef(int ncid);
 
-EXTERNL
-int
-ncmpi_end_indep_data(int ncid);
 
-EXTERNL
-int
-ncmpi_close(int ncid);
+int ncmpi_sync(int ncid);
+
+
+int ncmpi_abort(int ncid);
+
+
+int ncmpi_begin_indep_data(int ncid);
+
+
+int ncmpi_end_indep_data(int ncid);
+
+
+int ncmpi_close(int ncid);
 
 /* End Dataset Functions */
 
 /* Begin Define Mode Functions */
 
-EXTERNL
-int
-ncmpi_def_dim(int ncid, const char *name, size_t len, int *idp);
 
-EXTERNL
-int
-ncmpi_def_var(int ncid, const char *name, nc_type xtype, 
+int ncmpi_def_dim(int ncid, const char *name, size_t len, int *idp);
+
+
+int ncmpi_def_var(int ncid, const char *name, nc_type xtype, 
               int ndims, const int *dimidsp, int *varidp);
 
-EXTERNL
-int
-ncmpi_rename_dim(int ncid, int dimid, const char *name);
 
-EXTERNL
-int
-ncmpi_rename_var(int ncid, int varid, const char *name);
+int ncmpi_rename_dim(int ncid, int dimid, const char *name);
+
+
+int ncmpi_rename_var(int ncid, int varid, const char *name);
 
 /* End Define Mode Functions */
 
 /* Begin Inquiry Functions */
 
-EXTERNL
-int
-ncmpi_inq(int ncid, int *ndimsp, int *nvarsp,
+
+int ncmpi_inq(int ncid, int *ndimsp, int *nvarsp,
           int *ngattsp, int *unlimdimidp); 
 
-EXTERNL
-int
-ncmpi_inq_ndims(int ncid, int *ndimsp);
 
-EXTERNL
-int
-ncmpi_inq_nvars(int ncid, int *nvarsp);
+int ncmpi_inq_ndims(int ncid, int *ndimsp);
 
-EXTERNL
-int
-ncmpi_inq_natts(int ncid, int *ngattsp);
 
-EXTERNL
-int
-ncmpi_inq_unlimdim(int ncid, int *unlimdimidp);
+int ncmpi_inq_nvars(int ncid, int *nvarsp);
 
-EXTERNL
-int
-ncmpi_inq_dimid(int ncid, const char *name, int *idp);
 
-EXTERNL
-int
-ncmpi_inq_dim(int ncid, int dimid, char *name, size_t *lenp);
+int ncmpi_inq_natts(int ncid, int *ngattsp);
 
-EXTERNL
-int
-ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
-EXTERNL
-int
-ncmpi_inq_dimlen(int ncid, int dimid, size_t *lenp);
+int ncmpi_inq_unlimdim(int ncid, int *unlimdimidp);
 
-EXTERNL
-int
-ncmpi_inq_var(int ncid, int varid, char *name,
+
+int ncmpi_inq_dimid(int ncid, const char *name, int *idp);
+
+
+int ncmpi_inq_dim(int ncid, int dimid, char *name, size_t *lenp);
+
+
+int ncmpi_inq_dimname(int ncid, int dimid, char *name);
+
+
+int ncmpi_inq_dimlen(int ncid, int dimid, size_t *lenp);
+
+
+int ncmpi_inq_var(int ncid, int varid, char *name,
               nc_type *xtypep, int *ndimsp, int *dimidsp,
               int *nattsp);
 
-EXTERNL
-int
-ncmpi_inq_varid(int ncid, const char *name, int *varidp);
 
-EXTERNL
-int
-ncmpi_inq_varname(int ncid, int varid, char *name);
+int ncmpi_inq_varid(int ncid, const char *name, int *varidp);
 
-EXTERNL
-int
-ncmpi_inq_vartype(int ncid, int varid, nc_type *xtypep);
 
-EXTERNL
-int
-ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
+int ncmpi_inq_varname(int ncid, int varid, char *name);
 
-EXTERNL
-int
-ncmpi_inq_vardimid(int ncid, int varid, int *dimidsp);
 
-EXTERNL
-int
-ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
+int ncmpi_inq_vartype(int ncid, int varid, nc_type *xtypep);
+
+
+int ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
+
+
+int ncmpi_inq_vardimid(int ncid, int varid, int *dimidsp);
+
+
+int ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
 /* End Inquiry Functions */
 
 /* Begin _att */
 
-EXTERNL
-int
-ncmpi_inq_att(int ncid, int varid, const char *name,
+
+int ncmpi_inq_att(int ncid, int varid, const char *name,
               nc_type *xtypep, size_t *lenp);
 
-EXTERNL
-int
-ncmpi_inq_attid(int ncid, int varid, const char *name, int *idp);
 
-EXTERNL
-int
-ncmpi_inq_atttype(int ncid, int varid, const char *name,
+int ncmpi_inq_attid(int ncid, int varid, const char *name, int *idp);
+
+
+int ncmpi_inq_atttype(int ncid, int varid, const char *name,
                   nc_type *xtypep);
 
-EXTERNL
-int
-ncmpi_inq_attlen(int ncid, int varid, const char *name,
+
+int ncmpi_inq_attlen(int ncid, int varid, const char *name,
                  size_t *lenp);
 
-EXTERNL
-int
-ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
 
-EXTERNL
-int
-ncmpi_copy_att(int ncid_in, int varid_in, const char *name,
+int ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
+
+
+int ncmpi_copy_att(int ncid_in, int varid_in, const char *name,
                int ncid_out, int varid_out);
 
-EXTERNL
-int
-ncmpi_rename_att(int ncid, int varid, const char *name,
+
+int ncmpi_rename_att(int ncid, int varid, const char *name,
                  const char *newname);
 
-EXTERNL
-int
-ncmpi_del_att(int ncid, int varid, const char *name);
 
-EXTERNL
-int
-ncmpi_put_att_text(int ncid, int varid, const char *name, size_t len,
+int ncmpi_del_att(int ncid, int varid, const char *name);
+
+
+int ncmpi_put_att_text(int ncid, int varid, const char *name, size_t len,
                    const char *op);
 
-EXTERNL
-int
-ncmpi_get_att_text(int ncid, int varid, const char *name, char *ip);
 
-EXTERNL
-int
-ncmpi_put_att_uchar(int ncid, int varid, const char *name,
+int ncmpi_get_att_text(int ncid, int varid, const char *name, char *ip);
+
+
+int ncmpi_put_att_uchar(int ncid, int varid, const char *name,
                     nc_type xtype, size_t len, const unsigned char *op);
 
-EXTERNL
-int
-ncmpi_get_att_uchar(int ncid, int varid, const char *name,
+
+int ncmpi_get_att_uchar(int ncid, int varid, const char *name,
                     unsigned char *ip);
 
-EXTERNL
-int
-ncmpi_put_att_schar(int ncid, int varid, const char *name,
+
+int ncmpi_put_att_schar(int ncid, int varid, const char *name,
                     nc_type xtype, size_t len, const signed char *op);
 
-EXTERNL
-int
-ncmpi_get_att_schar(int ncid, int varid, const char *name,
+
+int ncmpi_get_att_schar(int ncid, int varid, const char *name,
                     signed char *ip);
 
-EXTERNL
-int
-ncmpi_put_att_short(int ncid, int varid, const char *name,
+
+int ncmpi_put_att_short(int ncid, int varid, const char *name,
                     nc_type xtype, size_t len, const short *op);
 
-EXTERNL
-int
-ncmpi_get_att_short(int ncid, int varid, const char *name, short *ip);
 
-EXTERNL
-int
-ncmpi_put_att_int(int ncid, int varid, const char *name,
+int ncmpi_get_att_short(int ncid, int varid, const char *name, short *ip);
+
+
+int ncmpi_put_att_int(int ncid, int varid, const char *name,
                   nc_type xtype, size_t len, const int *op);
 
-EXTERNL
-int
-ncmpi_get_att_int(int ncid, int varid, const char *name, int *ip);
 
-EXTERNL
-int
-ncmpi_put_att_long(int ncid, int varid, const char *name,
+int ncmpi_get_att_int(int ncid, int varid, const char *name, int *ip);
+
+
+int ncmpi_put_att_long(int ncid, int varid, const char *name,
                    nc_type xtype, size_t len, const long *op);
 
-EXTERNL
-int
-ncmpi_get_att_long(int ncid, int varid, const char *name, long *ip);
 
-EXTERNL
-int
-ncmpi_put_att_float(int ncid, int varid, const char *name,
+int ncmpi_get_att_long(int ncid, int varid, const char *name, long *ip);
+
+
+int ncmpi_put_att_float(int ncid, int varid, const char *name,
                     nc_type xtype, size_t len, const float *op);
 
-EXTERNL
-int
-ncmpi_get_att_float(int ncid, int varid, const char *name, float *ip);
 
-EXTERNL
-int
-ncmpi_put_att_double(int ncid, int varid, const char *name,
+int ncmpi_get_att_float(int ncid, int varid, const char *name, float *ip);
+
+
+int ncmpi_put_att_double(int ncid, int varid, const char *name,
                      nc_type xtype, size_t len, const double *op);
 
-EXTERNL
-int
-ncmpi_get_att_double(int ncid, int varid, const char *name,
+
+int ncmpi_get_att_double(int ncid, int varid, const char *name,
                      double *ip);
 
 /* End _att */
 
 /* Begin {put,get}_var1 */
 
-EXTERNL
-int
-ncmpi_put_var1(int ncid, int varid,
+
+int ncmpi_put_var1(int ncid, int varid,
                const size_t index[],
                const void *buf, int bufcount,
                MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_get_var1(int ncid, int varid,
+
+int ncmpi_get_var1(int ncid, int varid,
                const size_t index[],
                void *buf, int bufcount,
                MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_var1_text(int ncid, int varid,
+
+int ncmpi_put_var1_text(int ncid, int varid,
                     const size_t index[],
                     const char *op);
 
-EXTERNL
-int
-ncmpi_put_var1_short(int ncid, int varid,
+
+int ncmpi_put_var1_short(int ncid, int varid,
                      const size_t index[],
                      const short *op);
 
-EXTERNL
-int
-ncmpi_put_var1_int(int ncid, int varid,
+
+int ncmpi_put_var1_int(int ncid, int varid,
                    const size_t index[],
                    const int *op);
 
-EXTERNL
-int
-ncmpi_put_var1_float(int ncid, int varid,
+
+int ncmpi_put_var1_float(int ncid, int varid,
                      const size_t index[],
                      const float *op);
 
-EXTERNL
-int
-ncmpi_put_var1_double(int ncid, int varid,
+
+int ncmpi_put_var1_double(int ncid, int varid,
                       const size_t index[],
                       const double *op);
 
-EXTERNL
-int
-ncmpi_get_var1_text(int ncid, int varid,
+
+int ncmpi_get_var1_text(int ncid, int varid,
                     const size_t index[],
                     char *ip);
 
-EXTERNL
-int
-ncmpi_get_var1_short(int ncid, int varid,
+
+int ncmpi_get_var1_short(int ncid, int varid,
                      const size_t index[],
                      short *ip);
 
-EXTERNL
-int
-ncmpi_get_var1_int(int ncid, int varid,
+
+int ncmpi_get_var1_int(int ncid, int varid,
                    const size_t index[],
                    int *ip);
 
-EXTERNL
-int
-ncmpi_get_var1_float(int ncid, int varid,
+
+int ncmpi_get_var1_float(int ncid, int varid,
                      const size_t index[],
                      float *ip);
 
-EXTERNL
-int
-ncmpi_get_var1_double(int ncid, int varid,
+
+int ncmpi_get_var1_double(int ncid, int varid,
                       const size_t index[],
                       double *ip);
 
@@ -533,227 +469,185 @@ ncmpi_get_var1_double(int ncid, int varid,
 
 /* Begin {put,get}_var */  
 
-EXTERNL
-int
-ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype);
+int ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_var_text(int ncid, int varid, const char *op);
+int ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_var_short(int ncid, int varid, const short *op);
 
-EXTERNL
-int
-ncmpi_put_var_int(int ncid, int varid, const int *op);
+int ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_var_float(int ncid, int varid, const float *op);
 
-EXTERNL
-int
-ncmpi_put_var_double(int ncid, int varid, const double *op);
+int ncmpi_put_var_text(int ncid, int varid, const char *op);
 
-EXTERNL
-int
-ncmpi_get_var_text(int ncid, int varid, char *ip);
 
-EXTERNL
-int
-ncmpi_get_var_short(int ncid, int varid, short *ip);
+int ncmpi_put_var_short(int ncid, int varid, const short *op);
 
-EXTERNL
-int
-ncmpi_get_var_int(int ncid, int varid, int *ip);
 
-EXTERNL
-int
-ncmpi_get_var_float(int ncid, int varid, float *ip);
+int ncmpi_put_var_int(int ncid, int varid, const int *op);
 
-EXTERNL
-int
-ncmpi_get_var_double(int ncid, int varid, double *ip);
 
-EXTERNL
-int
-ncmpi_get_var_text_all(int ncid, int varid, char *ip);
+int ncmpi_put_var_float(int ncid, int varid, const float *op);
 
-EXTERNL
-int
-ncmpi_get_var_short_all(int ncid, int varid, short *ip);
 
-EXTERNL
-int
-ncmpi_get_var_int_all(int ncid, int varid, int *ip);
+int ncmpi_put_var_double(int ncid, int varid, const double *op);
 
-EXTERNL
-int
-ncmpi_get_var_float_all(int ncid, int varid, float *ip);
 
-EXTERNL
-int
-ncmpi_get_var_double_all(int ncid, int varid, double *ip);
+int ncmpi_get_var_text(int ncid, int varid, char *ip);
+
+
+int ncmpi_get_var_short(int ncid, int varid, short *ip);
+
+
+int ncmpi_get_var_int(int ncid, int varid, int *ip);
+
+
+int ncmpi_get_var_float(int ncid, int varid, float *ip);
+
+
+int ncmpi_get_var_double(int ncid, int varid, double *ip);
+
+
+int ncmpi_get_var_text_all(int ncid, int varid, char *ip);
+
+
+int ncmpi_get_var_short_all(int ncid, int varid, short *ip);
+
+
+int ncmpi_get_var_int_all(int ncid, int varid, int *ip);
+
+
+int ncmpi_get_var_float_all(int ncid, int varid, float *ip);
+
+
+int ncmpi_get_var_double_all(int ncid, int varid, double *ip);
 
 /* End {put,get}_var */
 
 /* Begin {put,get}_vara */
 
-EXTERNL
-int
-ncmpi_put_vara_all(int ncid, int varid,
+
+int ncmpi_put_vara_all(int ncid, int varid,
                    const size_t start[], const size_t count[],
                    const void *buf, int bufcount,
                    MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_get_vara_all(int ncid, int varid,
+
+int ncmpi_get_vara_all(int ncid, int varid,
                    const size_t start[], const size_t count[],
                    void *buf, int bufcount,
                    MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_vara(int ncid, int varid,
+
+int ncmpi_put_vara(int ncid, int varid,
                const size_t start[], const size_t count[],
                const void *buf, int bufcount,
                MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_get_vara(int ncid, int varid,
+
+int ncmpi_get_vara(int ncid, int varid,
                const size_t start[], const size_t count[],
                void *buf, int bufcount,
                MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_vara_text_all(int ncid, int varid,
+
+int ncmpi_put_vara_text_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const char *op);
 
-EXTERNL
-int
-ncmpi_put_vara_text(int ncid, int varid,
+
+int ncmpi_put_vara_text(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const char *op);
 
-EXTERNL
-int
-ncmpi_put_vara_short_all(int ncid, int varid,
+
+int ncmpi_put_vara_short_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const short *op);
 
-EXTERNL
-int
-ncmpi_put_vara_short(int ncid, int varid,
+
+int ncmpi_put_vara_short(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const short *op);
 
-EXTERNL
-int
-ncmpi_put_vara_int_all(int ncid, int varid,
+
+int ncmpi_put_vara_int_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const int *op);
 
-EXTERNL
-int
-ncmpi_put_vara_int(int ncid, int varid,
+
+int ncmpi_put_vara_int(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 const int *op);
 
-EXTERNL
-int
-ncmpi_put_vara_float_all(int ncid, int varid,
+
+int ncmpi_put_vara_float_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const float *op);
 
-EXTERNL
-int
-ncmpi_put_vara_float(int ncid, int varid,
+
+int ncmpi_put_vara_float(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 const float *op);
 
-EXTERNL
-int
-ncmpi_put_vara_double_all(int ncid, int varid,
+
+int ncmpi_put_vara_double_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const double *op);
 
-EXTERNL
-int
-ncmpi_put_vara_double(int ncid, int varid,
+
+int ncmpi_put_vara_double(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 const double *op);
 
-EXTERNL
-int
-ncmpi_get_vara_text_all(int ncid, int varid,
+
+int ncmpi_get_vara_text_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     char *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_text(int ncid, int varid,
+
+int ncmpi_get_vara_text(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     char *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_short_all(int ncid, int varid,
+
+int ncmpi_get_vara_short_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     short *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_short(int ncid, int varid,
+
+int ncmpi_get_vara_short(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     short *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_int_all(int ncid, int varid,
+
+int ncmpi_get_vara_int_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     int *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_int(int ncid, int varid,
+
+int ncmpi_get_vara_int(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 int *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_float_all(int ncid, int varid,
+
+int ncmpi_get_vara_float_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     float *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_float(int ncid, int varid,
+
+int ncmpi_get_vara_float(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 float *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_double_all(int ncid, int varid,
+
+int ncmpi_get_vara_double_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     double *ip);
 
-EXTERNL
-int
-ncmpi_get_vara_double(int ncid, int varid,
+
+int ncmpi_get_vara_double(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 double *ip);
 
@@ -761,201 +655,179 @@ ncmpi_get_vara_double(int ncid, int varid,
 
 /* Begin {put,get}_vars */
 
-EXTERNL
-int
-ncmpi_put_vars_all(int ncid, int varid,
+
+int ncmpi_put_vars_all(int ncid, int varid,
                    const size_t start[],
                    const size_t count[],
                    const size_t stride[],
                    const void *buf, int bufcount,
                    MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_get_vars_all(int ncid, int varid,
+
+int ncmpi_get_vars_all(int ncid, int varid,
                    const size_t start[],
                    const size_t count[],
                    const size_t stride[],
                    void *buf, int bufcount,
                    MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_vars(int ncid, int varid,
+
+int ncmpi_put_vars(int ncid, int varid,
                const size_t start[],
                const size_t count[],
                const size_t stride[],
                const void *buf, int bufcount,
                MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_get_vars(int ncid, int varid,
+
+int ncmpi_get_vars(int ncid, int varid,
                const size_t start[],
                const size_t count[],
                const size_t stride[],
                void *buf, int bufcount,
                MPI_Datatype datatype);
 
-EXTERNL
-int
-ncmpi_put_vars_text_all(int ncid, int varid,
+
+int ncmpi_put_vars_text_all(int ncid, int varid,
                         const size_t start[],
                         const size_t count[],
                         const size_t stride[],
                         const char *op);
 
-EXTERNL
-int
-ncmpi_put_vars_text(int ncid, int varid,
+
+int ncmpi_put_vars_text(int ncid, int varid,
                     const size_t start[],
                     const size_t count[],
                     const size_t stride[],
                     const char *op);
 
-EXTERNL
-int
-ncmpi_put_vars_short_all(int ncid, int varid,
+
+int ncmpi_put_vars_short_all(int ncid, int varid,
                          const size_t start[],
                          const size_t count[],
                          const size_t stride[],
                          const short *op);
 
-EXTERNL
-int
-ncmpi_put_vars_short(int ncid, int varid,
+
+int ncmpi_put_vars_short(int ncid, int varid,
                      const size_t start[],
                      const size_t count[],
                      const size_t stride[],
                      const short *op);
 
-EXTERNL
-int
-ncmpi_put_vars_int_all(int ncid, int varid,
+
+int ncmpi_put_vars_int_all(int ncid, int varid,
                        const size_t start[],
                        const size_t count[],
                        const size_t stride[],
                        const int *op);
 
-EXTERNL
-int
-ncmpi_put_vars_int(int ncid, int varid,
+
+int ncmpi_put_vars_int(int ncid, int varid,
                    const size_t start[],
                    const size_t count[],
                    const size_t stride[],
                    const int *op);
 
-EXTERNL
-int
-ncmpi_put_vars_float_all(int ncid, int varid,
+
+int ncmpi_put_vars_float_all(int ncid, int varid,
                          const size_t start[],
                          const size_t count[],
                          const size_t stride[],
                          const float *op);
 
-EXTERNL
-int
-ncmpi_put_vars_float(int ncid, int varid,
+
+int ncmpi_put_vars_float(int ncid, int varid,
                      const size_t start[],
                      const size_t count[],
                      const size_t stride[],
                      const float *op);
 
-EXTERNL
-int
-ncmpi_put_vars_double_all(int ncid, int varid,
+
+int ncmpi_put_vars_double_all(int ncid, int varid,
                           const size_t start[],
                           const size_t count[],
                           const size_t stride[],
                           const double *op);
 
-EXTERNL
-int
-ncmpi_put_vars_double(int ncid, int varid,
+
+int ncmpi_put_vars_double(int ncid, int varid,
                       const size_t start[],
                       const size_t count[],
                       const size_t stride[],
                       const double *op);
 
-EXTERNL
-int
-ncmpi_get_vars_text_all(int ncid, int varid,
+
+int ncmpi_get_vars_text_all(int ncid, int varid,
                         const size_t start[],
                         const size_t count[],
                         const size_t stride[],
                         char *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_text(int ncid, int varid,
+
+int ncmpi_get_vars_text(int ncid, int varid,
                     const size_t start[],
                     const size_t count[],
                     const size_t stride[],
                     char *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_short_all(int ncid, int varid,
+
+int ncmpi_get_vars_short_all(int ncid, int varid,
                          const size_t start[],
                          const size_t count[],
                          const size_t stride[],
                          short *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_short(int ncid, int varid,
+
+int ncmpi_get_vars_short(int ncid, int varid,
                      const size_t start[],
                      const size_t count[],
                      const size_t stride[],
                      short *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_int_all(int ncid, int varid,
+
+int ncmpi_get_vars_int_all(int ncid, int varid,
                        const size_t start[],
                        const size_t count[],
                        const size_t stride[],
                        int *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_int(int ncid, int varid,
+
+int ncmpi_get_vars_int(int ncid, int varid,
                    const size_t start[],
                    const size_t count[],
                    const size_t stride[],
                    int *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_float_all(int ncid, int varid,
+
+int ncmpi_get_vars_float_all(int ncid, int varid,
                          const size_t start[],
                          const size_t count[],
                          const size_t stride[],
                          float *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_float(int ncid, int varid,
+
+int ncmpi_get_vars_float(int ncid, int varid,
                      const size_t start[],
                      const size_t count[],
                      const size_t stride[],
                      float *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_double_all(int ncid, int varid,
+
+int ncmpi_get_vars_double_all(int ncid, int varid,
                           const size_t start[],
                           const size_t count[],
                           const size_t stride[],
                           double *ip);
 
-EXTERNL
-int
-ncmpi_get_vars_double(int ncid, int varid,
+
+int ncmpi_get_vars_double(int ncid, int varid,
                       const size_t start[],
                       const size_t count[],
                       const size_t stride[],
                       double *ip);
+
+/* End Prototypes */
 
 /* End {put,get}_vars */
 

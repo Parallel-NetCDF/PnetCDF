@@ -38,10 +38,10 @@
 #define ENOERR 0
 #endif
 #ifndef NC_ERANGE
-#define NC_ERANGE (-60) /* N.B. must match value in netcdf.h */
+#define NC_ERANGE (-60) /* N.B. must match value in pnetcdf.h */
 #endif
 #ifndef NC_ENOMEM
-#define NC_ENOMEM (-61) /* N.B. must match value in netcdf.h */
+#define NC_ENOMEM (-61) /* N.B. must match value in pnetcdf.h */
 #endif
 
 
