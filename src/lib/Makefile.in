@@ -78,7 +78,7 @@ install:
 	$(INSTALL) -m 644 $(MANUAL) $(MANDIR)/man3/$(MANUAL)
 
 	$(INSTALL) -d $(BINDIR)
-	$(INSTALL) -m 644 $(PROGRAM) $(BINDIR)/$(PROGRAM)
+	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
 uninstall:
 	-rm -f $(LIBDIR)/$(LIBRARY)
