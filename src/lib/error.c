@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include "netcdf.h"
+#include "pnetcdf.h"
 
 
 #ifndef NO_STRERROR

@@ -11,13 +11,13 @@ include ../../macros.make
 
 INCLUDES = -I. 
 
-LIBRARY 	= libnetcdf.a
+LIBRARY 	= libpnetcdf.a
 PROGRAM		= ncvalid
-ld_netcdf	= -L. -lnetcdf
+ld_netcdf	= -L. -lpnetcdf
 
-HEADER	= netcdf.h
+HEADER	= pnetcdf.h
 
-MANUAL	= netcdf.3
+MANUAL	= pnetcdf.3
 
 LIB_CSRCS = \
 	mpinetcdf.c \
@@ -43,8 +43,8 @@ PACKING_LIST = \
 	ncconfig.in \
 	ncio.h \
 	ncx.h \
-	netcdf.3 \
-	netcdf.h \
+	pnetcdf.3 \
+	pnetcdf.h \
 	rnd.h 
 #	onstack.h \
 
@@ -101,10 +101,10 @@ LINT.c = $(LINT) $(LINTFLAGS) $(CPPFLAGS)
 .c.ln:
 	$(LINT.c) -c $<
 
-llib-lnetcdf.ln: $(LIB_CSRCS)
-	$(LINT.c) $(LIB_CSRCS) -y -o netcdf
+llib-lpnetcdf.ln: $(LIB_CSRCS)
+	$(LINT.c) $(LIB_CSRCS) -y -o pnetcdf
 
-lint: llib-lnetcdf.ln
-	$(LINT.c) t_nc.c llib-lnetcdf.ln
+lint: llib-lpnetcdf.ln
+	$(LINT.c) t_nc.c llib-lpnetcdf.ln
 
 include $(srcdir)/depend
