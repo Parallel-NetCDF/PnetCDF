@@ -1,5 +1,7 @@
 # $Id$
 
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include macros.make
 
@@ -142,4 +144,4 @@ $(FTPBINDIR)/$(PACKAGE)-$(VERSION).tar.Z:
 	    cd $(FTPBINDIR) || exit 1;
 
 
-include rules.make
+include $(srcdir)/rules.make
