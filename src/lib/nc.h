@@ -512,6 +512,7 @@ typedef struct bufferinfo {
   void *base;     	/* beginning of read/write buffer */
   void *pos;      	/* current position in buffer */
   size_t size;		/* size of the buffer */
+  size_t index;		/* index of current position in buffer */
 } bufferinfo;  
 
 extern int
