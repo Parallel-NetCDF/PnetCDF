@@ -115,13 +115,13 @@ sunos5_shared_library:
 # Installation:
 
 $(INCDIR)/$(HEADER):	$(INCDIR) $(HEADER)
-	cp $(HEADER) $@
+	cp $(srcdir)/$(HEADER) $@
 $(INCDIR)/$(HEADER1):	$(INCDIR) $(HEADER1)
-	cp $(HEADER1) $@
+	cp $(srcdir)/$(HEADER1) $@
 $(INCDIR)/$(HEADER2):	$(INCDIR) $(HEADER2)
-	cp $(HEADER2) $@
+	cp $(srcdir)/$(HEADER2) $@
 $(INCDIR)/$(HEADER3):	$(INCDIR) $(HEADER3)
-	cp $(HEADER3) $@
+	cp $(srcdir)/$(HEADER3) $@
 
 $(LIBDIR)/$(LIBRARY):	$(LIBDIR) $(LIBRARY)
 	cp $(LIBRARY) $@
@@ -142,9 +142,9 @@ $(MANDIR)/man3f90 :		$(MANDIR)
 	-test -d $@ || mkdir $@
 
 $(MANDIR)/man1/$(MANUAL):	$(MANDIR)/man1 $(MANUAL)
-	cp $(MANUAL) $@
+	cp $(srcdir)/$(MANUAL) $@
 $(MANDIR)/man3/$(MANUAL):	$(MANDIR)/man3 $(MANUAL)
-	cp $(MANUAL) $@
+	cp $(srcdir)/$(MANUAL) $@
 $(MANDIR)/man3f/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 				$(MANDIR)/man3f
 	rm -f $@

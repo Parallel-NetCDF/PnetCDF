@@ -3,7 +3,10 @@
 #	Makefile for netcdf libsrc
 #
 
-include ../../macros.make
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(srcdir)/../../macros.make
 
 INCLUDES = -I. 
 
@@ -86,13 +89,13 @@ uninstall:
 # The manual page is actually part of the distribution so that we don't
 # have to depend on the non-POSIX utility m4(1).
 #
-$(MANUAL):	../../man/netcdf.m4
+$(MANUAL):	$(srcdir)/../../man/netcdf.m4
 	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || rm $@
 
 $(PROGRAM):	$(PROG_OBJS)
 	$(LINK.c) $(PROG_OBJS) $(LIBS)
 
-include ../..//rules.make
+include $(srcdir)/../..//rules.make
 
 .SUFFIXES: .ln
 LINT = lint
@@ -106,4 +109,4 @@ llib-lnetcdf.ln: $(LIB_CSRCS)
 lint: llib-lnetcdf.ln
 	$(LINT.c) t_nc.c llib-lnetcdf.ln
 
-include depend
+include $(srcdir)/depend
