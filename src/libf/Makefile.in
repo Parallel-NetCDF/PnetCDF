@@ -11,9 +11,9 @@ include ../../macros.make
 
 INCLUDES = -I. -I$(srcdir)/../lib -I../lib
 
-LIBRARY 	= ../lib/libnetcdf.a
+LIBRARY 	= ../lib/libpnetcdf.a
 PROGRAM		= 
-ld_netcdf	= -L../lib -lnetcdf
+ld_netcdf	= -L../lib -lpnetcdf
 
 HEADER	= pnetcdf.inc
 #HEADER1 = nfconfig.inc
