@@ -80,12 +80,13 @@ FORTRAN_API int FORT_CALL ud_shift_(int * value, int *amount) {
 		*value <<= *amount;
 	return value;
 }
+
 #ifdef F77_NAME_UPPER
-#define nc_ignorefpe_ UD_SHIFT
+#define nc_ignorefpe_ NC_IGNOREFPE
 #elif defined(F77_NAME_LOWER_2USCORE)
-#define nc_ignorefpe_  ud_shift__
+#define nc_ignorefpe_  nc_ignorefpe__
 #elif !defined(F77_NAME_LOWER_USCORE)
-#define nc_ignorefpe_  ud_shift
+#define nc_ignorefpe_  nc_ignorefpe
 /* Else leave name alone */
 #endif
 #include <signal.h>
@@ -93,4 +94,52 @@ FORTRAN_API void FORT_CALL nc_ignorefpe_(int *doit)
 {
 	if(doit)
 		(void) signal(SIGFPE, SIG_IGN);
+}
+
+#ifdef F77_NAME_UPPER
+#define min_int_ MIN_INT
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define min_int_  min_int__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define min_int_  min_int
+/* Else leave name alone */
+#endif
+FORTRAN_API double min_int_() {
+	return INT_MIN;
+}
+
+#ifdef F77_NAME_UPPER
+#define max_int_ MAX_INT
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define max_int_  max_int__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define max_int_  max_int
+/* Else leave name alone */
+#endif
+FORTRAN_API double max_int_() {
+	return INT_MAX;
+}
+
+#ifdef F77_NAME_UPPER
+#define max_float_ MAX_FLOAT
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define max_float_  max_float__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define max_float_  max_float
+/* Else leave name alone */
+#endif
+FORTRAN_API double max_float_() {
+	return FLT_MAX;
+}
+
+#ifdef F77_NAME_UPPER
+#define max_double_ MAX_DOUBLE
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define max_double_  max_double__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define max_double_  max_double
+/* Else leave name alone */
+#endif
+FORTRAN_API double max_double_() {
+	return LONG_MAX;
 }
