@@ -89,7 +89,7 @@ EOF
 esac
 
 dnl do the automagic mpi-compiler-checking if MPICC and MPIF77 are not set
-if test x${MPICC} = x -a -x${MPIF77} = x ; then
+if test x${MPICC} = x -a x${MPIF77} = x ; then
 	MPICC=$CC
 	AC_MSG_CHECKING(mpi implementation)
 	AC_ARG_WITH(mpi, 
