@@ -8,7 +8,7 @@ INSTALL = @INSTALL@
 
 include ../../../macros.make
 
-NCGEN		= ../ncgen/ncgen
+NCGEN		= ../ncgen/ncmpigen
 INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir)
 
 c_sources	= ncdump.c vardata.c dumplib.c
