@@ -1,6 +1,7 @@
 
 #include "nc.h"
-int ncxVardim( int ncid, int varid ) 
+#include "mpinetcdf_impl.h"
+int ncmpixVardim( int ncid, int varid ) 
 {
   NC_var *varp;
   NC     *ncp;

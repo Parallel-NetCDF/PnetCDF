@@ -24,7 +24,7 @@
 FORTRAN_API void FORT_CALL nfmpi_put_var1_ ( int *v1, int *v2, int v3[], void*v4, int *v5, MPI_Fint *v6, MPI_Fint *ierr ){
     size_t *l3 = 0;
 
-    { int ln = ncxVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2);
     if (ln > 0) {
         int li;
         l3 = (size_t *)malloc( ln * sizeof(size_t) );

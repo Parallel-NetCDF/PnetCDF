@@ -26,7 +26,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vars_text_all_ ( int *v1, int *v2, int v3[]
     size_t *l4 = 0;
     size_t *l5 = 0;
 
-    { int ln = ncxVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2);
     if (ln > 0) {
         int li;
         l3 = (size_t *)malloc( ln * sizeof(size_t) );
@@ -34,7 +34,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vars_text_all_ ( int *v1, int *v2, int v3[]
             l3[li] = v3[ln-1-li] - 1;
     }}
 
-    { int ln = ncxVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2);
     if (ln > 0) {
         int li;
         l4 = (size_t *)malloc( ln * sizeof(size_t) );
@@ -42,7 +42,7 @@ FORTRAN_API void FORT_CALL nfmpi_get_vars_text_all_ ( int *v1, int *v2, int v3[]
             l4[li] = v4[ln-1-li];
     }}
 
-    { int ln = ncxVardim(*v1,*v2);
+    { int ln = ncmpixVardim(*v1,*v2);
     if (ln > 0) {
         int li;
         l5 = (size_t *)malloc( ln * sizeof(size_t) );
