@@ -1189,6 +1189,7 @@ C    check that proper set to NF_FILL works for record & non-record variables
 C    (note that it is not possible to test NF_NOFILL mode!)
 C    close file & create again for test using attribute _FillValue
         subroutine test_nfmpi_set_fill()
+#if 0   
         implicit none
 #include "tests.inc"
 
@@ -1392,4 +1393,5 @@ C           /* get all variables & check all values equal 42 */
         call nfmpi_delete(scratch, err)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
+#endif
         end

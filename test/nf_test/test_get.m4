@@ -255,7 +255,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision expect(MAX_NELS)
         doubleprecision val
-        integer udshift
+        integer ud_shift
 
         nok = 0
 
@@ -344,7 +344,7 @@ C           bits of k determine whether to get lower or upper part of dim
             do 5, k = 1, nslabs
                 nels = 1
                 do 6, j = 1, var_rank(i)
-                    if (mod(udshift((k-1), -(j-1)), 2) .eq. 1) then
+                    if (mod(ud_shift((k-1), -(j-1)), 2) .eq. 1) then
                         start(j) = 1
                         edge(j) = mid(j)
                     else
@@ -461,7 +461,7 @@ define([TEST_NFMPI_GET_VARS],dnl
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision expect(MAX_NELS)
         doubleprecision val
-        integer udshift
+        integer ud_shift
 
         nok = 0
 
@@ -538,7 +538,7 @@ C               choose random stride from 1 to edge
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
-                    if (mod(udshift(k-1, j-1), 2) .eq. 1) then
+                    if (mod(ud_shift(k-1, j-1), 2) .eq. 1) then
                         start(j) = 1
                         edge(j) = mid(j)
                     else
@@ -687,7 +687,7 @@ define([TEST_NFMPI_GET_VARM],dnl
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision expect(MAX_NELS)
         doubleprecision val
-        integer udshift
+        integer ud_shift
 
         nok = 0
 
@@ -767,7 +767,7 @@ C                * choose random stride from 1 to edge */
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
-                    if (mod(udshift((k-1), -(j-1)), 2) .ne. 0) then
+                    if (mod(ud_shift((k-1), -(j-1)), 2) .ne. 0) then
                         start(j) = 1
                         edge(j) = mid(j)
                     else

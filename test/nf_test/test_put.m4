@@ -561,7 +561,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision val
-        integer udshift
+        integer ud_shift
 
         call nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid, err)
@@ -672,7 +672,7 @@ C       /* Check correct error returned even when nothing to put */
             do 5, k = 1, nslabs
                 nels = 1
                 do 6, j = 1, var_rank(i)
-                    if (mod(udshift(k-1, -(j-1)), 2) .eq. 1) then
+                    if (mod(ud_shift(k-1, -(j-1)), 2) .eq. 1) then
                         start(j) = 1
                         edge(j) = mid(j)
                     else
@@ -756,7 +756,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1)    value(MAX_NELS)
         doubleprecision val
-        integer udshift
+        integer ud_shift
 
         call nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid, err)
@@ -843,7 +843,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
-                    if (mod(udshift(k-1, -(j-1)), 2) .eq. 1) then
+                    if (mod(ud_shift(k-1, -(j-1)), 2) .eq. 1) then
                         start(j) = 1
                         edge(j) = mid(j)
                     else
@@ -958,7 +958,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         logical allInExtRange   !/* all values within external range? */
         DATATYPE($1) value(MAX_NELS)
         doubleprecision val
-        integer udshift
+        integer ud_shift
 
         call nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid, err)
@@ -1047,7 +1047,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
-                    if (mod(udshift(k-1, -(j-1)), 2) .eq. 1) then
+                    if (mod(ud_shift(k-1, -(j-1)), 2) .eq. 1) then
                         start(j) = 1
                         edge(j) = mid(j)
                     else
