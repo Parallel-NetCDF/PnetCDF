@@ -10,7 +10,7 @@ include ../../macros.make
 # CC		= cc -fullwarn -woff 1209,1506
 
 
-INCLUDES	= -I$(prefix)/include
+INCLUDES	= -I$(prefix)/include -I$(srcdir)
 
 ld_math		= $(MATHLIB)
 

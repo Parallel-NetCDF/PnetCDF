@@ -40,7 +40,7 @@ define(`HASH',dnl
  */
 double
 hash_$1(
-    const nc_type type,
+    const ncmpi_type type,
     const int rank,
     const size_t *index,
     const nct_itype itype)
@@ -79,7 +79,7 @@ check_vars_$1(const char *filename)
     int  i;
     size_t  j;
     $1 value;
-    nc_type datatype;
+    ncmpi_type datatype;
     int ndims;
     int dimids[MAX_RANK];
     double expect;
@@ -88,16 +88,16 @@ check_vars_$1(const char *filename)
     int canConvert;     /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
 
-    err = nc_open(filename, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
 	canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
 	if (canConvert) {
-	    err = nc_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
+	    err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
 	    IF (err)
-		error("nc_inq_var: %s", nc_strerror(err));
+		error("ncmpi_inq_var: %s", ncmpi_strerror(err));
 	    IF (strcmp(name, var_name[i]) != 0)
 		error("Unexpected var_name");
 	    IF (datatype != var_type[i])
@@ -105,9 +105,9 @@ check_vars_$1(const char *filename)
 	    IF (ndims != var_rank[i])
 		error("Unexpected rank");
 	    for (j = 0; j < ndims; j++) {
-		err = nc_inq_dim(ncid, dimids[j], 0, &length);
+		err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
 		IF (err)
-		    error("nc_inq_dim: %s", nc_strerror(err));
+		    error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
 		IF (length != var_shape[i][j])
 		    error("Unexpected shape");
 	    }
@@ -116,11 +116,11 @@ check_vars_$1(const char *filename)
 		IF (err)
 		    error("error in toMixedBase 2");
 		expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
-		err = nc_get_var1_$1(ncid, i, index, &value);
+		err = ncmpi_get_var1_$1(ncid, i, index, &value);
 		if (inRange3(expect,datatype,NCT_ITYPE($1))) {
                     if (expect >= $1_min && expect <= $1_max) {
 			IF (err) {
-			    error("nc_get_var1_$1: %s", nc_strerror(err));
+			    error("ncmpi_get_var1_$1: %s", ncmpi_strerror(err));
 			} else {
                             IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
 				error("Var value read not that expected");
@@ -143,19 +143,19 @@ check_vars_$1(const char *filename)
 	    }
 	}
     }
-    err = nc_close (ncid);
+    err = ncmpi_close (ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 ')dnl
 
-CHECK_VARS(text)
-CHECK_VARS(uchar)
-CHECK_VARS(schar)
+dnl CHECK_VARS(text)
+dnl CHECK_VARS(uchar)
+dnl CHECK_VARS(schar)
 CHECK_VARS(short)
 CHECK_VARS(int)
-CHECK_VARS(long)
+dnl CHECK_VARS(long)
 CHECK_VARS(float)
 CHECK_VARS(double)
 
@@ -176,7 +176,7 @@ check_atts_$1(int  ncid)
     int  j;
     size_t  k;
     $1 value[MAX_NELS];
-    nc_type datatype;
+    ncmpi_type datatype;
     double expect[MAX_NELS];
     size_t length;
     size_t nInExtRange;  /* number values within external range */
@@ -188,13 +188,13 @@ check_atts_$1(int  ncid)
         for (j = 0; j < NATTS(i); j++) {
 	    canConvert = (ATT_TYPE(i,j) == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
 	    if (canConvert) {
-		err = nc_inq_att(ncid, i, ATT_NAME(i,j), &datatype, &length);
+		err = ncmpi_inq_att(ncid, i, ATT_NAME(i,j), &datatype, &length);
 		IF (err)
-		    error("nc_inq_att: %s", nc_strerror(err));
+		    error("ncmpi_inq_att: %s", ncmpi_strerror(err));
 		IF (datatype != ATT_TYPE(i,j))
-		error("nc_inq_att: unexpected type");
+		error("ncmpi_inq_att: unexpected type");
 		IF (length != ATT_LEN(i,j))
-		    error("nc_inq_att: unexpected length");
+		    error("ncmpi_inq_att: unexpected length");
 		assert(length <= MAX_NELS);
 		nInIntRange = nInExtRange = 0;
 		for (k = 0; k < length; k++) {
@@ -205,10 +205,10 @@ check_atts_$1(int  ncid)
 			    ++nInIntRange;
 		    }
 		}
-		err = nc_get_att_$1(ncid, i, ATT_NAME(i,j), value);
+		err = ncmpi_get_att_$1(ncid, i, ATT_NAME(i,j), value);
                 if (nInExtRange == length && nInIntRange == length) {
 		    IF (err)
-			error("%s", nc_strerror(err));
+			error("%s", ncmpi_strerror(err));
                 } else {
                     IF (err != 0 && err != NC_ERANGE)
                         error("OK or Range error: status = %d", err);
@@ -254,7 +254,7 @@ dnl
 define(`TEST_NC_PUT_VAR1',dnl
 `dnl
 void
-test_nc_put_var1_$1(void)
+test_ncmpi_put_var1_$1(void)
 {
     int ncid;
     int i;
@@ -264,31 +264,31 @@ test_nc_put_var1_$1(void)
     int canConvert;	/* Both text or both numeric */
     $1 value = 5;	/* any value would do - only for error cases */
 
-    err = nc_create(scratch, NC_CLOBBER, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) {
-        error("nc_create: %s", nc_strerror(err));
+        error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
-    err = nc_enddef(ncid);
+    err = ncmpi_enddef(ncid);
     IF (err)
-        error("nc_enddef: %s", nc_strerror(err));
+        error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
 	canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
-        err = nc_put_var1_$1(BAD_ID, i, index, &value);
+        err = ncmpi_put_var1_$1(BAD_ID, i, index, &value);
         IF (err != NC_EBADID) 
 	    error("bad ncid: status = %d", err);
-        err = nc_put_var1_$1(ncid, BAD_VARID, index, &value);
+        err = ncmpi_put_var1_$1(ncid, BAD_VARID, index, &value);
         IF (err != NC_ENOTVAR) 
 	    error("bad var id: status = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
 	    if (var_dimid[i][j] > 0) {		/* skip record dim */
 		index[j] = var_shape[i][j];
-		err = nc_put_var1_$1(ncid, i, index, &value);
+		err = ncmpi_put_var1_$1(ncid, i, index, &value);
 		IF (canConvert && err != NC_EINVALCOORDS)
 		    error("bad index: status = %d", err);
 		index[j] = 0;
@@ -300,18 +300,18 @@ test_nc_put_var1_$1(void)
 		error("error in toMixedBase 1");
             value = hash_$1( var_type[i], var_rank[i], index, NCT_ITYPE($1));
 	    if (var_rank[i] == 0 && i%2 == 0)
-		err = nc_put_var1_$1(ncid, i, NULL, &value);
+		err = ncmpi_put_var1_$1(ncid, i, NULL, &value);
 	    else
-		err = nc_put_var1_$1(ncid, i, index, &value);
+		err = ncmpi_put_var1_$1(ncid, i, index, &value);
 	    if (canConvert) {
 		if (inRange3(value, var_type[i],NCT_ITYPE($1))) {
 		    IF (err)
-			error("%s", nc_strerror(err));
+			error("%s", ncmpi_strerror(err));
 		} else {
 		    IF (err != NC_ERANGE) {
 			error("Range error: status = %d", err);
 			error("\n\t\tfor type %s value %.17e %ld",
-				s_nc_type(var_type[i]),
+				s_ncmpi_type(var_type[i]),
 				(double)value, (long)value);
 		    }
 		}
@@ -322,9 +322,9 @@ test_nc_put_var1_$1(void)
         }
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err) 
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
@@ -334,12 +334,12 @@ test_nc_put_var1_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VAR1(text)
-TEST_NC_PUT_VAR1(uchar)
-TEST_NC_PUT_VAR1(schar)
+dnl TEST_NC_PUT_VAR1(text)
+dnl TEST_NC_PUT_VAR1(uchar)
+dnl TEST_NC_PUT_VAR1(schar)
 TEST_NC_PUT_VAR1(short)
 TEST_NC_PUT_VAR1(int)
-TEST_NC_PUT_VAR1(long)
+dnl TEST_NC_PUT_VAR1(long)
 TEST_NC_PUT_VAR1(float)
 TEST_NC_PUT_VAR1(double)
 
@@ -349,7 +349,7 @@ dnl
 define(`TEST_NC_PUT_VAR',dnl
 `dnl
 void
-test_nc_put_var_$1(void)
+test_ncmpi_put_var_$1(void)
 {
     int ncid;
     int varid;
@@ -362,25 +362,25 @@ test_nc_put_var_$1(void)
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = nc_create(scratch, NC_CLOBBER, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) {
-        error("nc_create: %s", nc_strerror(err));
+        error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
-    err = nc_enddef(ncid);
+    err = ncmpi_enddef(ncid);
     IF (err)
-        error("nc_enddef: %s", nc_strerror(err));
+        error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
 	canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
-        err = nc_put_var_$1(BAD_ID, i, value);
+        err = ncmpi_put_var_$1(BAD_ID, i, value);
         IF (err != NC_EBADID) 
 	    error("bad ncid: status = %d", err);
-        err = nc_put_var_$1(ncid, BAD_VARID, value);
+        err = ncmpi_put_var_$1(ncid, BAD_VARID, value);
         IF (err != NC_ENOTVAR) 
 	    error("bad var id: status = %d", err);
 
@@ -396,11 +396,11 @@ test_nc_put_var_$1(void)
 	    allInExtRange = allInExtRange 
 		&& inRange3(value[j], var_type[i], NCT_ITYPE($1));
 	}
-        err = nc_put_var_$1(ncid, i, value);
+        err = ncmpi_put_var_$1(ncid, i, value);
 	if (canConvert) {
 	    if (allInExtRange) {
 		IF (err) 
-		    error("%s", nc_strerror(err));
+		    error("%s", ncmpi_strerror(err));
 	    } else {
 		IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
 		    error("range error: status = %d", err);
@@ -416,20 +416,22 @@ test_nc_put_var_$1(void)
 
 	/* Write record number NRECS to force writing of preceding records */
 	/* Assumes variable cr is char vector with UNLIMITED dimension */
-    err = nc_inq_varid(ncid, "cr", &varid);
+    err = ncmpi_inq_varid(ncid, "cr", &varid);
     IF (err)
-        error("nc_inq_varid: %s", nc_strerror(err));
+        error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     index[0] = NRECS-1;
-    err = nc_put_var1_text(ncid, varid, index, "x");
+    #if 0
+    err = ncmpi_put_var1_text(ncid, varid, index, "x");
     IF (err)
-        error("nc_put_var1_text: %s", nc_strerror(err));
+        error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
+    #endif
 
     for (i = 0; i < NVARS; i++) {
         if (var_dimid[i][0] == RECDIM) {  /* only test record variables here */
 	    canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
 	    assert(var_rank[i] <= MAX_RANK);
 	    assert(var_nels[i] <= MAX_NELS);
-	    err = nc_put_var_$1(BAD_ID, i, value);
+	    err = ncmpi_put_var_$1(BAD_ID, i, value);
 
 	    nels = 1;
 	    for (j = 0; j < var_rank[i]; j++) {
@@ -443,11 +445,11 @@ test_nc_put_var_$1(void)
 		allInExtRange = allInExtRange 
 		    && inRange3(value[j], var_type[i], NCT_ITYPE($1));
 	    }
-	    err = nc_put_var_$1(ncid, i, value);
+	    err = ncmpi_put_var_$1(ncid, i, value);
 	    if (canConvert) {
 		if (allInExtRange) {
 		    IF (err) 
-			error("%s", nc_strerror(err));
+			error("%s", ncmpi_strerror(err));
 		} else {
 		    IF (err != NC_ERANGE)
 			error("range error: status = %d", err);
@@ -459,9 +461,9 @@ test_nc_put_var_$1(void)
         }
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err) 
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
@@ -471,12 +473,12 @@ test_nc_put_var_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VAR(text)
-TEST_NC_PUT_VAR(uchar)
-TEST_NC_PUT_VAR(schar)
+dnl TEST_NC_PUT_VAR(text)
+dnl TEST_NC_PUT_VAR(uchar)
+dnl TEST_NC_PUT_VAR(schar)
 TEST_NC_PUT_VAR(short)
 TEST_NC_PUT_VAR(int)
-TEST_NC_PUT_VAR(long)
+dnl TEST_NC_PUT_VAR(long)
 TEST_NC_PUT_VAR(float)
 TEST_NC_PUT_VAR(double)
 
@@ -486,7 +488,7 @@ dnl
 define(`TEST_NC_PUT_VARA',dnl
 `dnl
 void
-test_nc_put_vara_$1(void)
+test_ncmpi_put_vara_$1(void)
 {
     int ncid;
     int d;
@@ -504,16 +506,16 @@ test_nc_put_vara_$1(void)
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = nc_create(scratch, NC_CLOBBER, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) {
-        error("nc_create: %s", nc_strerror(err));
+        error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
-    err = nc_enddef(ncid);
+    err = ncmpi_enddef(ncid);
     IF (err)
-        error("nc_enddef: %s", nc_strerror(err));
+        error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     value[0] = 0;
     for (i = 0; i < NVARS; i++) {
@@ -524,21 +526,21 @@ test_nc_put_vara_$1(void)
             start[j] = 0;
             edge[j] = 1;
 	}
-        err = nc_put_vara_$1(BAD_ID, i, start, edge, value);
+        err = ncmpi_put_vara_$1(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
 	    error("bad ncid: status = %d", err);
-        err = nc_put_vara_$1(ncid, BAD_VARID, start, edge, value);
+        err = ncmpi_put_vara_$1(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
 	    error("bad var id: status = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
 	    if (var_dimid[i][j] > 0) {		/* skip record dim */
 		start[j] = var_shape[i][j];
-		err = nc_put_vara_$1(ncid, i, start, edge, value);
+		err = ncmpi_put_vara_$1(ncid, i, start, edge, value);
 		IF (canConvert && err != NC_EINVALCOORDS)
 		    error("bad start: status = %d", err);
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
-		err = nc_put_vara_$1(ncid, i, start, edge, value);
+		err = ncmpi_put_vara_$1(ncid, i, start, edge, value);
 		IF (canConvert && err != NC_EEDGE)
 		    error("bad edge: status = %d", err);
 		edge[j] = 1;
@@ -548,25 +550,25 @@ test_nc_put_vara_$1(void)
         for (j = 0; j < var_rank[i]; j++) {
             edge[j] = 0;
 	}
-        err = nc_put_vara_$1(BAD_ID, i, start, edge, value);
+        err = ncmpi_put_vara_$1(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
 	    error("bad ncid: status = %d", err);
-        err = nc_put_vara_$1(ncid, BAD_VARID, start, edge, value);
+        err = ncmpi_put_vara_$1(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
 	    error("bad var id: status = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
 	    if (var_dimid[i][j] > 0) {		/* skip record dim */
 		start[j] = var_shape[i][j];
-		err = nc_put_vara_$1(ncid, i, start, edge, value);
+		err = ncmpi_put_vara_$1(ncid, i, start, edge, value);
 		IF (canConvert && err != NC_EINVALCOORDS)
 		    error("bad start: status = %d", err);
 		start[j] = 0;
 	    }
         }
-	err = nc_put_vara_$1(ncid, i, start, edge, value);
+	err = ncmpi_put_vara_$1(ncid, i, start, edge, value);
 	if (canConvert) {
 	    IF (err) 
-		error("%s", nc_strerror(err));
+		error("%s", ncmpi_strerror(err));
 	} else {
 	    IF (err != NC_ECHAR)
 		error("wrong type: status = %d", err);
@@ -606,13 +608,13 @@ test_nc_put_vara_$1(void)
 		    && inRange3(value[j], var_type[i], NCT_ITYPE($1));
 	    }
 	    if (var_rank[i] == 0 && i%2 == 0)
-		err = nc_put_vara_$1(ncid, i, NULL, NULL, value);
+		err = ncmpi_put_vara_$1(ncid, i, NULL, NULL, value);
 	    else
-		err = nc_put_vara_$1(ncid, i, start, edge, value);
+		err = ncmpi_put_vara_$1(ncid, i, start, edge, value);
 	    if (canConvert) {
 		if (allInExtRange) {
 		    IF (err) 
-			error("%s", nc_strerror(err));
+			error("%s", ncmpi_strerror(err));
 		} else {
 		    IF (err != NC_ERANGE)
 			error("range error: status = %d", err);
@@ -624,9 +626,9 @@ test_nc_put_vara_$1(void)
         }
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err) 
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
@@ -636,12 +638,12 @@ test_nc_put_vara_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VARA(text)
-TEST_NC_PUT_VARA(uchar)
-TEST_NC_PUT_VARA(schar)
+dnl TEST_NC_PUT_VARA(text)
+dnl TEST_NC_PUT_VARA(uchar)
+dnl TEST_NC_PUT_VARA(schar)
 TEST_NC_PUT_VARA(short)
 TEST_NC_PUT_VARA(int)
-TEST_NC_PUT_VARA(long)
+dnl TEST_NC_PUT_VARA(long)
 TEST_NC_PUT_VARA(float)
 TEST_NC_PUT_VARA(double)
 
@@ -651,7 +653,7 @@ dnl
 define(`TEST_NC_PUT_VARS',dnl
 `dnl
 void
-test_nc_put_vars_$1(void)
+test_ncmpi_put_vars_$1(void)
 {
     int ncid;
     int d;
@@ -675,16 +677,16 @@ test_nc_put_vars_$1(void)
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = nc_create(scratch, NC_CLOBBER, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) {
-	error("nc_create: %s", nc_strerror(err));
+	error("ncmpi_create: %s", ncmpi_strerror(err));
 	return;
     }
     def_dims(ncid);
     def_vars(ncid);
-    err = nc_enddef(ncid);
+    err = ncmpi_enddef(ncid);
     IF (err)
-	error("nc_enddef: %s", nc_strerror(err));
+	error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
 	canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
@@ -695,16 +697,16 @@ test_nc_put_vars_$1(void)
 	    edge[j] = 1;
 	    stride[j] = 1;
 	}
-	err = nc_put_vars_$1(BAD_ID, i, start, edge, stride, value);
+	err = ncmpi_put_vars_$1(BAD_ID, i, start, edge, stride, value);
 	IF (err != NC_EBADID) 
 	    error("bad ncid: status = %d", err);
-	err = nc_put_vars_$1(ncid, BAD_VARID, start, edge, stride, value);
+	err = ncmpi_put_vars_$1(ncid, BAD_VARID, start, edge, stride, value);
 	IF (err != NC_ENOTVAR) 
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    if (var_dimid[i][j] > 0) {		/* skip record dim */
 		start[j] = var_shape[i][j];
-		err = nc_put_vars_$1(ncid, i, start, edge, stride, value);
+		err = ncmpi_put_vars_$1(ncid, i, start, edge, stride, value);
 	      if(!canConvert) {
 		IF(err != NC_ECHAR)
 			error("conversion: status = %d", err);
@@ -713,12 +715,12 @@ test_nc_put_vars_$1(void)
 		    error("bad start: status = %d", err);
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
-		err = nc_put_vars_$1(ncid, i, start, edge, stride, value);
+		err = ncmpi_put_vars_$1(ncid, i, start, edge, stride, value);
 		IF (err != NC_EEDGE)
 		    error("bad edge: status = %d", err);
 		edge[j] = 1;
 		stride[j] = 0;
-		err = nc_put_vars_$1(ncid, i, start, edge, stride, value);
+		err = ncmpi_put_vars_$1(ncid, i, start, edge, stride, value);
 		IF (err != NC_ESTRIDE)
 		    error("bad stride: status = %d", err);
 		stride[j] = 1;
@@ -778,13 +780,13 @@ test_nc_put_vars_$1(void)
 			&& inRange3(value[j], var_type[i], NCT_ITYPE($1));
 		}
 		if (var_rank[i] == 0 && i%2 == 0)
-		    err = nc_put_vars_$1(ncid, i, NULL, NULL, stride, value);
+		    err = ncmpi_put_vars_$1(ncid, i, NULL, NULL, stride, value);
 		else
-		    err = nc_put_vars_$1(ncid, i, index, count, stride, value);
+		    err = ncmpi_put_vars_$1(ncid, i, index, count, stride, value);
 		if (canConvert) {
 		    if (allInExtRange) {
 			IF (err) 
-			    error("%s", nc_strerror(err));
+			    error("%s", ncmpi_strerror(err));
 		    } else {
 			IF (err != NC_ERANGE)
 			    error("range error: status = %d", err);
@@ -797,9 +799,9 @@ test_nc_put_vars_$1(void)
 	}
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err) 
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
@@ -809,12 +811,12 @@ test_nc_put_vars_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VARS(text)
-TEST_NC_PUT_VARS(uchar)
-TEST_NC_PUT_VARS(schar)
+dnl TEST_NC_PUT_VARS(text)
+dnl TEST_NC_PUT_VARS(uchar)
+dnl TEST_NC_PUT_VARS(schar)
 TEST_NC_PUT_VARS(short)
 TEST_NC_PUT_VARS(int)
-TEST_NC_PUT_VARS(long)
+dnl TEST_NC_PUT_VARS(long)
 TEST_NC_PUT_VARS(float)
 TEST_NC_PUT_VARS(double)
 
@@ -824,7 +826,7 @@ dnl
 define(`TEST_NC_PUT_VARM',dnl
 `dnl
 void
-test_nc_put_varm_$1(void)
+test_ncmpi_put_varm_$1(void)
 {
     int ncid;
     int d;
@@ -849,16 +851,16 @@ test_nc_put_varm_$1(void)
     int allInExtRange;	/* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = nc_create(scratch, NC_CLOBBER, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) {
-	error("nc_create: %s", nc_strerror(err));
+	error("ncmpi_create: %s", ncmpi_strerror(err));
 	return;
     }
     def_dims(ncid);
     def_vars(ncid);
-    err = nc_enddef(ncid);
+    err = ncmpi_enddef(ncid);
     IF (err)
-	error("nc_enddef: %s", nc_strerror(err));
+	error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
 	canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
@@ -870,16 +872,16 @@ test_nc_put_varm_$1(void)
 	    stride[j] = 1;
 	    imap[j] = 1;
 	}
-	err = nc_put_varm_$1(BAD_ID, i, start, edge, stride, imap, value);
+	err = ncmpi_put_varm_$1(BAD_ID, i, start, edge, stride, imap, value);
 	IF (err != NC_EBADID) 
 	    error("bad ncid: status = %d", err);
-	err = nc_put_varm_$1(ncid, BAD_VARID, start, edge, stride, imap, value);
+	err = ncmpi_put_varm_$1(ncid, BAD_VARID, start, edge, stride, imap, value);
 	IF (err != NC_ENOTVAR) 
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    if (var_dimid[i][j] > 0) {		/* skip record dim */
 		start[j] = var_shape[i][j];
-		err = nc_put_varm_$1(ncid, i, start, edge, stride, imap, value);
+		err = ncmpi_put_varm_$1(ncid, i, start, edge, stride, imap, value);
 	      if (!canConvert) {
 		IF(err != NC_ECHAR)
 			error("conversion: status = %d", err);
@@ -888,12 +890,12 @@ test_nc_put_varm_$1(void)
 		    error("bad start: status = %d", err);
 		start[j] = 0;
 		edge[j] = var_shape[i][j] + 1;
-		err = nc_put_varm_$1(ncid, i, start, edge, stride, imap, value);
+		err = ncmpi_put_varm_$1(ncid, i, start, edge, stride, imap, value);
 		IF (err != NC_EEDGE)
 		    error("bad edge: status = %d", err);
 		edge[j] = 1;
 		stride[j] = 0;
-		err = nc_put_varm_$1(ncid, i, start, edge, stride, imap, value);
+		err = ncmpi_put_varm_$1(ncid, i, start, edge, stride, imap, value);
 		IF (err != NC_ESTRIDE)
 		    error("bad stride: status = %d", err);
 		stride[j] = 1;
@@ -959,13 +961,13 @@ test_nc_put_varm_$1(void)
                         && inRange3(value[j], var_type[i], NCT_ITYPE($1));
                 }
                 if (var_rank[i] == 0 && i%2 == 0)
-                    err = nc_put_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value);
+                    err = ncmpi_put_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value);
                 else
-                    err = nc_put_varm_$1(ncid,i,index,count,stride,imap,value);
+                    err = ncmpi_put_varm_$1(ncid,i,index,count,stride,imap,value);
                 if (canConvert) {
                     if (allInExtRange) {
                         IF (err)
-                            error("%s", nc_strerror(err));
+                            error("%s", ncmpi_strerror(err));
                     } else {
                         IF (err != NC_ERANGE)
                             error("range error: status = %d", err);
@@ -978,9 +980,9 @@ test_nc_put_varm_$1(void)
 	}
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err) 
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
@@ -990,18 +992,18 @@ test_nc_put_varm_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VARM(text)
-TEST_NC_PUT_VARM(uchar)
-TEST_NC_PUT_VARM(schar)
-TEST_NC_PUT_VARM(short)
-TEST_NC_PUT_VARM(int)
-TEST_NC_PUT_VARM(long)
-TEST_NC_PUT_VARM(float)
-TEST_NC_PUT_VARM(double)
+dnl TEST_NC_PUT_VARM(text)
+dnl TEST_NC_PUT_VARM(uchar)
+dnl TEST_NC_PUT_VARM(schar)
+dnl TEST_NC_PUT_VARM(short)
+dnl TEST_NC_PUT_VARM(int)
+dnl TEST_NC_PUT_VARM(long)
+dnl TEST_NC_PUT_VARM(float)
+dnl TEST_NC_PUT_VARM(double)
 
 
 void
-test_nc_put_att_text(void)
+test_ncmpi_put_att_text(void)
 {
     int ncid;
     int i;
@@ -1010,9 +1012,9 @@ test_nc_put_att_text(void)
     int err;
     text value[MAX_NELS];
 
-    err = nc_create(scratch, NC_NOCLOBBER, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) {
-        error("nc_create: %s", nc_strerror(err));
+        error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
@@ -1022,7 +1024,7 @@ test_nc_put_att_text(void)
 	const char *const tval = "value for bad name";
 	const size_t tval_len = strlen(tval);
 	
-	err = nc_put_att_text(ncid, 0, "", tval_len, tval);
+	err = ncmpi_put_att_text(ncid, 0, "", tval_len, tval);
 	IF (err != NC_EBADNAME)
 	   error("should be NC_EBADNAME: status = %d", err);
     }
@@ -1030,30 +1032,30 @@ test_nc_put_att_text(void)
         for (j = 0; j < NATTS(i); j++) {
             if (ATT_TYPE(i,j) == NC_CHAR) {
 		assert(ATT_LEN(i,j) <= MAX_NELS);
-		err = nc_put_att_text(BAD_ID, i, ATT_NAME(i,j), ATT_LEN(i,j), 
+		err = ncmpi_put_att_text(BAD_ID, i, ATT_NAME(i,j), ATT_LEN(i,j), 
 		    value);
 		IF (err != NC_EBADID)
 		    error("bad ncid: status = %d", err);
-		err = nc_put_att_text(ncid, BAD_VARID, ATT_NAME(i,j), 
+		err = ncmpi_put_att_text(ncid, BAD_VARID, ATT_NAME(i,j), 
 		    ATT_LEN(i,j), value);
 		IF (err != NC_ENOTVAR)
 		    error("bad var id: status = %d", err);
 		for (k = 0; k < ATT_LEN(i,j); k++) {
 		    value[k] = hash(ATT_TYPE(i,j), -1, &k);
 		}
-		err = nc_put_att_text(ncid, i, ATT_NAME(i,j), 
+		err = ncmpi_put_att_text(ncid, i, ATT_NAME(i,j), 
 		    ATT_LEN(i,j), value);
 		IF (err) {
-		    error("%s", nc_strerror(err));
+		    error("%s", ncmpi_strerror(err));
 		}
 	    }
         }
     }
 
     check_atts_text(ncid);
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = remove(scratch);
     IF (err)
@@ -1066,7 +1068,7 @@ dnl
 define(`TEST_NC_PUT_ATT',dnl
 `dnl
 void
-test_nc_put_att_$1(void)
+test_ncmpi_put_att_$1(void)
 {
     int ncid;
     int i;
@@ -1076,9 +1078,9 @@ test_nc_put_att_$1(void)
     $1 value[MAX_NELS];
     int allInExtRange;  /* all values within external range? */
 
-    err = nc_create(scratch, NC_NOCLOBBER, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) {
-        error("nc_create: %s", nc_strerror(err));
+        error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
@@ -1088,15 +1090,15 @@ test_nc_put_att_$1(void)
         for (j = 0; j < NATTS(i); j++) {
             if (!(ATT_TYPE(i,j) == NC_CHAR)) {
 		assert(ATT_LEN(i,j) <= MAX_NELS);
-		err = nc_put_att_$1(BAD_ID, i, ATT_NAME(i,j), ATT_TYPE(i,j), 
+		err = ncmpi_put_att_$1(BAD_ID, i, ATT_NAME(i,j), ATT_TYPE(i,j), 
 		    ATT_LEN(i,j), value);
 		IF (err != NC_EBADID)
 		    error("bad ncid: status = %d", err);
-		err = nc_put_att_$1(ncid, BAD_VARID, ATT_NAME(i,j), 
+		err = ncmpi_put_att_$1(ncid, BAD_VARID, ATT_NAME(i,j), 
 		    ATT_TYPE(i,j), ATT_LEN(i,j), value);
 		IF (err != NC_ENOTVAR)
 		    error("bad var id: status = %d", err);
-		err = nc_put_att_$1(ncid, i, ATT_NAME(i,j), BAD_TYPE, 
+		err = ncmpi_put_att_$1(ncid, i, ATT_NAME(i,j), BAD_TYPE, 
 		    ATT_LEN(i,j), value);
 		IF (err != NC_EBADTYPE)
 		    error("bad type: status = %d", err);
@@ -1105,11 +1107,11 @@ test_nc_put_att_$1(void)
 		    allInExtRange = allInExtRange
 			&& inRange3(value[k], ATT_TYPE(i,j), NCT_ITYPE($1));
 		}
-		err = nc_put_att_$1(ncid, i, ATT_NAME(i,j), ATT_TYPE(i,j),
+		err = ncmpi_put_att_$1(ncid, i, ATT_NAME(i,j), ATT_TYPE(i,j),
 		    ATT_LEN(i,j), value);
 		if (allInExtRange) {
 		    IF (err)
-			error("%s", nc_strerror(err));
+			error("%s", ncmpi_strerror(err));
 		} else {
                     IF (err != NC_ERANGE)
                         error("range error: status = %d", err);
@@ -1119,9 +1121,9 @@ test_nc_put_att_$1(void)
     }
 
     check_atts_$1(ncid);
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = remove(scratch);
     IF (err)

@@ -7,12 +7,12 @@
 #include "tests.h"
 
 /* 
- * Test nc_strerror.
+ * Test ncmpi_strerror.
  *    Try on a bad error status.
  *    Test for each defined error status.
  */
 void
-test_nc_strerror(void)
+test_ncmpi_strerror(void)
 {
     int i;
     const char *message;
@@ -44,7 +44,7 @@ test_nc_strerror(void)
 	{NC_ESTS, "In Fortran, string too short"},
 	{NC_EMAXNAME, "NC_MAX_NAME exceeded"},
 	{NC_EUNLIMIT, "NC_UNLIMITED size already in use"},
-	{NC_ENORECVARS, "nc_rec op when there are no record vars"},
+	{NC_ENORECVARS, "ncmpi_rec op when there are no record vars"},
 	{NC_ECHAR, "Attempt to convert between text & numbers"},
 	{NC_EEDGE, "Edge+start exceeds dimension bound"},
 	{NC_ESTRIDE, "Illegal stride"},
@@ -54,133 +54,133 @@ test_nc_strerror(void)
     };
 
     /* Try on a bad error status */
-    message = nc_strerror(-666);/* should fail */
+    message = ncmpi_strerror(-666);/* should fail */
     IF (strcmp(message, "Unknown Error") != 0)
-	error("nc_strerror on bad error status returned: %s", message);
+	error("ncmpi_strerror on bad error status returned: %s", message);
 
     /* Try on each legitimate error status */
     for (i=0; i<LEN_OF(ncerrs); i++) {
-	const char *message = nc_strerror(ncerrs[i].status);
+	const char *message = ncmpi_strerror(ncerrs[i].status);
 	IF (strcmp(message, ncerrs[i].msg) != 0)
-	    error("nc_strerror(%d) should return `%s', not `%s'",
+	    error("ncmpi_strerror(%d) should return `%s', not `%s'",
 		  ncerrs[i].status, ncerrs[i].msg, message);
     }
 }
 
 
 /* 
- * Test nc_open.
+ * Test ncmpi_open.
  * If in read-only section of tests,
  *    Try to open a non-existent netCDF file, check error return.
  *    Open a file that is not a netCDF file, check error return.
  *    Open a netCDF file with a bad mode argument, check error return.
- *    Open a netCDF file with NC_NOWRITE mode, try to write, check error.
+ *    Open a netCDF file with NC_NOWRITE, MPI_INFO_NULL mode, try to write, check error.
  *    Try to open a netcdf twice, check whether returned netcdf ids different.
  * If in writable section of tests,
  *    Open a netCDF file with NC_WRITE mode, write something, close it.
  * On exit, any open netCDF files are closed.
  */
 void
-test_nc_open(void)
+test_ncmpi_open(void)
 {
     int err;
     int ncid;
     int ncid2;
     
     /* Try to open a nonexistent file */
-    err = nc_open("tooth-fairy.nc", NC_NOWRITE, &ncid);/* should fail */
+    err = ncmpi_open(comm, "tooth-fairy.nc", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
     IF (err == NC_NOERR)
-	error("nc_open of nonexistent file should have failed");
+	error("ncmpi_open of nonexistent file should have failed");
     IF (! NC_ISSYSERR(err))
-	error("nc_open of nonexistent file should have returned system error");
+	error("ncmpi_open of nonexistent file should have returned system error");
 
     /* Open a file that is not a netCDF file. */
-    err = nc_open("tests.h", NC_NOWRITE, &ncid);/* should fail */
+    err = ncmpi_open(comm, "tests.h", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
     IF (err != NC_ENOTNC)
-	error("nc_open of non-netCDF file: status = %d", err);
+	error("ncmpi_open of non-netCDF file: status = %d", err);
 
     /* Open a netCDF file in read-only mode, check that write fails */
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
-    err = nc_redef(ncid);	/* should fail */
+	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_redef(ncid);	/* should fail */
     IF (err != NC_EPERM)
-	error("nc_redef of read-only file should fail");
+	error("ncmpi_redef of read-only file should fail");
     /* Opened OK, see if can open again and get a different netCDF ID */
-    err = nc_open(testfile, NC_NOWRITE, &ncid2);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid2);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     else {
-	(void) nc_close(ncid2);
+	(void) ncmpi_close(ncid2);
     }
     IF (ncid2 == ncid)
-	error("netCDF IDs for first and second nc_open calls should differ");
+	error("netCDF IDs for first and second ncmpi_open calls should differ");
 
     if (! read_only) {		/* tests using netCDF scratch file */
-	err = nc_create(scratch, NC_NOCLOBBER, &ncid2);
+	err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid2);
 	IF (err) 
-	    error("nc_create: %s", nc_strerror(err));
+	    error("ncmpi_create: %s", ncmpi_strerror(err));
 	else 
-	    (void) nc_close(ncid2);
-	err = nc_open(scratch, NC_WRITE, &ncid2);
+	    (void) ncmpi_close(ncid2);
+	err = ncmpi_open(comm, scratch, NC_WRITE, MPI_INFO_NULL, &ncid2);
 	IF (err) 
-	    error("nc_open: %s", nc_strerror(err));
+	    error("ncmpi_open: %s", ncmpi_strerror(err));
 	else 
-	    (void) nc_close(ncid2);
+	    (void) ncmpi_close(ncid2);
 	err = remove(scratch);
 	IF (err) 
 	    error("remove of %s failed", scratch);
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 /* 
- * Test nc_close.
+ * Test ncmpi_close.
  *    Try to close a netCDF file twice, check whether second close fails.
  *    Try on bad handle, check error return.
  *    Try in define mode and data mode.
  */
 void
-test_nc_close(void)
+test_ncmpi_close(void)
 {
     int ncid;
-    int err = nc_open(testfile, NC_NOWRITE, &ncid);
+    int err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
 
     /* Close a netCDF file twice, second time should fail */
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close failed: %s", nc_strerror(err));
-    err = nc_close(ncid);
+	error("ncmpi_close failed: %s", ncmpi_strerror(err));
+    err = ncmpi_close(ncid);
     IF (err != NC_EBADID)
-	error("nc_close of closed file should have failed");
+	error("ncmpi_close of closed file should have failed");
     
     /* Try with a bad netCDF ID */
-    err = nc_close(BAD_ID);/* should fail */
+    err = ncmpi_close(BAD_ID);/* should fail */
     IF (err != NC_EBADID)
-	error("nc_close with bad netCDF ID returned wrong error (%d)", err);
+	error("ncmpi_close with bad netCDF ID returned wrong error (%d)", err);
 
     /* Close in data mode */
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
-    err = nc_close(ncid);
+	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close in data mode failed: %s", nc_strerror(err));
+	error("ncmpi_close in data mode failed: %s", ncmpi_strerror(err));
 
     if (! read_only) {		/* tests using netCDF scratch file */
-        err = nc_create(scratch, NC_NOCLOBBER, &ncid);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid);
         IF (err) 
-            error("nc_create: %s", nc_strerror(err));
-	err = nc_close(ncid);
+            error("ncmpi_create: %s", ncmpi_strerror(err));
+	err = ncmpi_close(ncid);
 	IF (err)
-	    error("nc_close in define mode: %s", nc_strerror(err));
+	    error("ncmpi_close in define mode: %s", ncmpi_strerror(err));
         err = remove(scratch);
         IF (err)
             error("remove of %s failed", scratch);
@@ -189,7 +189,7 @@ test_nc_close(void)
 
 
 /* 
- * Test nc_inq.
+ * Test ncmpi_inq.
  *    Try on bad handle, check error return.
  *    Try in data mode, check returned values.
  *    Try asking for subsets of info.
@@ -198,266 +198,266 @@ test_nc_close(void)
  * On exit, any open netCDF files are closed.
  */
 void
-test_nc_inq(void)
+test_ncmpi_inq(void)
 {
     int ncid;
     int ndims;			/* number of dimensions */
     int nvars;			/* number of variables */
     int ngatts;			/* number of global attributes */
     int recdim;			/* id of unlimited dimension */
-    int err = nc_open(testfile, NC_NOWRITE, &ncid);
+    int err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
 
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     
     /* Try on bad handle */
-    err = nc_inq(BAD_ID, 0, 0, 0, 0);
+    err = ncmpi_inq(BAD_ID, 0, 0, 0, 0);
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
     
-    err = nc_inq(ncid, &ndims, &nvars, &ngatts, &recdim);
+    err = ncmpi_inq(ncid, &ndims, &nvars, &ngatts, &recdim);
     IF (err)
-	error("nc_inq: %s", nc_strerror(err));
+	error("ncmpi_inq: %s", ncmpi_strerror(err));
     else IF (ndims != NDIMS)
-	error("nc_inq: wrong number of dimensions returned, %d", ndims);
+	error("ncmpi_inq: wrong number of dimensions returned, %d", ndims);
     else IF (nvars != NVARS)
-	error("nc_inq: wrong number of variables returned, %d", nvars);
+	error("ncmpi_inq: wrong number of variables returned, %d", nvars);
     else IF (ngatts != NGATTS)
-	error("nc_inq: wrong number of global atts returned, %d", ngatts);
+	error("ncmpi_inq: wrong number of global atts returned, %d", ngatts);
     else IF (recdim != RECDIM)
-	error("nc_inq: wrong record dimension ID returned, %d", recdim);
+	error("ncmpi_inq: wrong record dimension ID returned, %d", recdim);
     
     /* Inguire for no info (useless, but should still work) */
-    err = nc_inq(ncid, 0, 0, 0, 0);
+    err = ncmpi_inq(ncid, 0, 0, 0, 0);
     IF (err)
-	error("nc_inq for no info failed: %s", nc_strerror(err));
+	error("ncmpi_inq for no info failed: %s", ncmpi_strerror(err));
 
     /* Inguire for subsets of info */
     ngatts = NGATTS - 1;	/* wipe out previous correct value */
-    err = nc_inq(ncid, 0, 0, &ngatts, 0);
+    err = ncmpi_inq(ncid, 0, 0, &ngatts, 0);
     IF (err)
-	error("nc_inq for one item failed: %s", nc_strerror(err));
+	error("ncmpi_inq for one item failed: %s", ncmpi_strerror(err));
     else IF (ngatts != NGATTS)
-	error("nc_inq subset: wrong number of global atts returned, %d", ngatts);
+	error("ncmpi_inq subset: wrong number of global atts returned, %d", ngatts);
     ndims = NDIMS - 1;
     nvars = NVARS - 1;
-    err = nc_inq(ncid, &ndims, &nvars, 0, 0);
+    err = ncmpi_inq(ncid, &ndims, &nvars, 0, 0);
     IF (err)
-	error("nc_inq for two items failed: %s", nc_strerror(err));
+	error("ncmpi_inq for two items failed: %s", ncmpi_strerror(err));
     else IF (ndims != NDIMS)
-	error("nc_inq subset: wrong number of dimensions returned, %d", ndims);
+	error("ncmpi_inq subset: wrong number of dimensions returned, %d", ndims);
     else IF (nvars != NVARS)
-	error("nc_inq subset: wrong number of variables returned, %d", nvars);
+	error("ncmpi_inq subset: wrong number of variables returned, %d", nvars);
 
     if (! read_only) {		/* tests using netCDF scratch file */
 	int ncid2;		/* for scratch netCDF dataset */
 
-        err = nc_create(scratch, NC_NOCLOBBER, &ncid2);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER, MPI_INFO_NULL, &ncid2);
         IF (err) {
-            error("nc_create: %s", nc_strerror(err));
+            error("ncmpi_create: %s", ncmpi_strerror(err));
 	} else {		/* add dim, var, gatt, check inq */
 	    int ndims0;
 	    int nvars0;
 	    int ngatts0;
 	    int recdim0;
-	    err = nc_enddef(ncid2); /* enter data mode */
-	    err = nc_inq(ncid2, &ndims0, &nvars0, &ngatts0, &recdim0);
+	    err = ncmpi_enddef(ncid2); /* enter data mode */
+	    err = ncmpi_inq(ncid2, &ndims0, &nvars0, &ngatts0, &recdim0);
 	    IF (err)
-		error("nc_inq: %s", nc_strerror(err));
-	    err = nc_redef(ncid2); /* enter define mode */
+		error("ncmpi_inq: %s", ncmpi_strerror(err));
+	    err = ncmpi_redef(ncid2); /* enter define mode */
 	    /* Check that inquire still works in define mode */
-	    err = nc_inq(ncid2, &ndims, &nvars, &ngatts, &recdim);
+	    err = ncmpi_inq(ncid2, &ndims, &nvars, &ngatts, &recdim);
 	    IF (err)
-		error("nc_inq in define mode: %s", nc_strerror(err));
+		error("ncmpi_inq in define mode: %s", ncmpi_strerror(err));
 	    else IF (ndims != ndims0)
-		error("nc_inq in define mode: ndims wrong, %d", ndims);
+		error("ncmpi_inq in define mode: ndims wrong, %d", ndims);
 	    else IF (nvars != nvars0)
-		error("nc_inq in define mode: nvars wrong, %d", nvars);
+		error("ncmpi_inq in define mode: nvars wrong, %d", nvars);
 	    else IF (ngatts != ngatts0)
-		error("nc_inq in define mode: ngatts wrong, %d", ngatts);
+		error("ncmpi_inq in define mode: ngatts wrong, %d", ngatts);
 	    else IF (recdim != recdim0)
-		error("nc_inq in define mode: recdim wrong, %d", recdim);
+		error("ncmpi_inq in define mode: recdim wrong, %d", recdim);
 
 	    {
 		int did, vid;
 		/* Add dim, var, global att */
-		err = nc_def_dim(ncid2, "inqd", 1L, &did);
+		err = ncmpi_def_dim(ncid2, "inqd", 1L, &did);
 		IF (err)
-		    error("nc_def_dim: %s", nc_strerror(err));
-		err = nc_def_var(ncid2, "inqv", NC_FLOAT, 0, 0, &vid);
+		    error("ncmpi_def_dim: %s", ncmpi_strerror(err));
+		err = ncmpi_def_var(ncid2, "inqv", NC_FLOAT, 0, 0, &vid);
 		IF (err)
-		    error("nc_def_var: %s", nc_strerror(err));
+		    error("ncmpi_def_var: %s", ncmpi_strerror(err));
 	    }
-	    err = nc_put_att_text(ncid2, NC_GLOBAL, "inqa", 1+strlen("stuff"),
+	    err = ncmpi_put_att_text(ncid2, NC_GLOBAL, "inqa", 1+strlen("stuff"),
 				   "stuff");
 	    IF (err)
-		error("nc_put_att_text: %s", nc_strerror(err));
+		error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
 
-	    /* Make sure nc_inq sees the additions while in define mode */
-	    err = nc_inq(ncid2, &ndims, &nvars, &ngatts, &recdim);
+	    /* Make sure ncmpi_inq sees the additions while in define mode */
+	    err = ncmpi_inq(ncid2, &ndims, &nvars, &ngatts, &recdim);
 	    IF (err)
-		error("nc_inq in define mode: %s", nc_strerror(err));
+		error("ncmpi_inq in define mode: %s", ncmpi_strerror(err));
 	    else IF (ndims != ndims0 + 1)
-		error("nc_inq in define mode: ndims wrong, %d", ndims);
+		error("ncmpi_inq in define mode: ndims wrong, %d", ndims);
 	    else IF (nvars != nvars0 + 1)
-		error("nc_inq in define mode: nvars wrong, %d", nvars);
+		error("ncmpi_inq in define mode: nvars wrong, %d", nvars);
 	    else IF (ngatts != ngatts0 + 1)
-		error("nc_inq in define mode: ngatts wrong, %d", ngatts);
-	    err = nc_enddef(ncid2);
+		error("ncmpi_inq in define mode: ngatts wrong, %d", ngatts);
+	    err = ncmpi_enddef(ncid2);
 	    IF (err)
-		error("nc_enddef: %s", nc_strerror(err));
+		error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
-	    /* Make sure nc_inq stills sees additions in data mode */
-	    err = nc_inq(ncid2, &ndims, &nvars, &ngatts, &recdim);
+	    /* Make sure ncmpi_inq stills sees additions in data mode */
+	    err = ncmpi_inq(ncid2, &ndims, &nvars, &ngatts, &recdim);
 	    IF (err)
-		error("nc_inq failed in data mode: %s", nc_strerror(err));
+		error("ncmpi_inq failed in data mode: %s", ncmpi_strerror(err));
 	    else IF (ndims != ndims0 + 1)
-		error("nc_inq in define mode: ndims wrong, %d", ndims);
+		error("ncmpi_inq in define mode: ndims wrong, %d", ndims);
 	    else IF (nvars != nvars0 + 1)
-		error("nc_inq in define mode: nvars wrong, %d", nvars);
+		error("ncmpi_inq in define mode: nvars wrong, %d", nvars);
 	    else IF (ngatts != ngatts0 + 1)
-		error("nc_inq in define mode: ngatts wrong, %d", ngatts);
-	    (void) nc_close(ncid2);
+		error("ncmpi_inq in define mode: ngatts wrong, %d", ngatts);
+	    (void) ncmpi_close(ncid2);
 	    err = remove(scratch);
 	    IF (err)
 		error("remove of %s failed", scratch);
 	}
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_natts(void)
+test_ncmpi_inq_natts(void)
 {
     int ncid;
     int ngatts;			/* number of global attributes */
     int err;
 
-    err = nc_inq_natts(BAD_ID, &ngatts);
+    err = ncmpi_inq_natts(BAD_ID, &ngatts);
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
-    err = nc_inq_natts(ncid, &ngatts);
+	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_inq_natts(ncid, &ngatts);
     IF (err)
-	error("nc_inq_natts: %s", nc_strerror(err));
+	error("ncmpi_inq_natts: %s", ncmpi_strerror(err));
     else IF (ngatts != NGATTS)
-	error("nc_inq_natts: wrong number of global atts returned, %d", ngatts);
-    err = nc_close(ncid);
+	error("ncmpi_inq_natts: wrong number of global atts returned, %d", ngatts);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_ndims(void)
+test_ncmpi_inq_ndims(void)
 {
     int ncid;
     int ndims;
     int err;
 
-    err = nc_inq_ndims(BAD_ID, &ndims);
+    err = ncmpi_inq_ndims(BAD_ID, &ndims);
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
-    err = nc_inq_ndims(ncid, &ndims);
+	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_inq_ndims(ncid, &ndims);
     IF (err)
-	error("nc_inq_ndims: %s", nc_strerror(err));
+	error("ncmpi_inq_ndims: %s", ncmpi_strerror(err));
     else IF (ndims != NDIMS)
-	error("nc_inq_ndims: wrong number returned, %d", ndims);
-    err = nc_close(ncid);
+	error("ncmpi_inq_ndims: wrong number returned, %d", ndims);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_nvars(void)
+test_ncmpi_inq_nvars(void)
 {
     int ncid;
     int nvars;
     int err;
 
-    err = nc_inq_nvars(BAD_ID, &nvars);
+    err = ncmpi_inq_nvars(BAD_ID, &nvars);
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
-    err = nc_inq_nvars(ncid, &nvars);
+	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_inq_nvars(ncid, &nvars);
     IF (err)
-	error("nc_inq_nvars: %s", nc_strerror(err));
+	error("ncmpi_inq_nvars: %s", ncmpi_strerror(err));
     else IF (nvars != NVARS)
-	error("nc_inq_nvars: wrong number returned, %d", nvars);
-    err = nc_close(ncid);
+	error("ncmpi_inq_nvars: wrong number returned, %d", nvars);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_unlimdim(void)
+test_ncmpi_inq_unlimdim(void)
 {
     int ncid;
     int unlimdim;
     int err;
 
-    err = nc_inq_unlimdim(BAD_ID, &unlimdim);
+    err = ncmpi_inq_unlimdim(BAD_ID, &unlimdim);
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
-    err = nc_inq_unlimdim(ncid, &unlimdim);
+	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_inq_unlimdim(ncid, &unlimdim);
     IF (err)
-	error("nc_inq_unlimdim: %s", nc_strerror(err));
+	error("ncmpi_inq_unlimdim: %s", ncmpi_strerror(err));
     else IF (unlimdim != RECDIM)
-	error("nc_inq_unlimdim: wrong number returned, %d", unlimdim);
-    err = nc_close(ncid);
+	error("ncmpi_inq_unlimdim: wrong number returned, %d", unlimdim);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_dimid(void)
+test_ncmpi_inq_dimid(void)
 {
     int ncid;
     int dimid;
     int i;
     int err;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
-    err = nc_inq_dimid(ncid, "noSuch", &dimid);
+	error("ncmpi_open: %s", ncmpi_strerror(err));
+    err = ncmpi_inq_dimid(ncid, "noSuch", &dimid);
     IF (err != NC_EBADDIM)
 	error("bad dim name: status = %d", err);
     for (i = 0; i < NDIMS; i++) {
-	err = nc_inq_dimid(BAD_ID, dim_name[i], &dimid);
+	err = ncmpi_inq_dimid(BAD_ID, dim_name[i], &dimid);
 	IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_dimid(ncid, dim_name[i], &dimid);
+	err = ncmpi_inq_dimid(ncid, dim_name[i], &dimid);
 	IF (err)
-	    error("nc_inq_dimid: %s", nc_strerror(err));
+	    error("ncmpi_inq_dimid: %s", ncmpi_strerror(err));
 	else IF (dimid != i)
 	    error("expected %d, got %d", i, dimid);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_dim(void)
+test_ncmpi_inq_dim(void)
 {
     int ncid;
     int i;
@@ -465,164 +465,164 @@ test_nc_inq_dim(void)
     char name[NC_MAX_NAME];
     size_t length;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NDIMS; i++) {
-	err = nc_inq_dim(BAD_ID, i, name, &length);
+	err = ncmpi_inq_dim(BAD_ID, i, name, &length);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_dim(ncid, BAD_DIMID, name, &length);
+	err = ncmpi_inq_dim(ncid, BAD_DIMID, name, &length);
         IF (err != NC_EBADDIM)
 	    error("bad dimid: status = %d", err);
-	err = nc_inq_dim(ncid, i, 0, 0);
+	err = ncmpi_inq_dim(ncid, i, 0, 0);
 	IF (err)
-	    error("nc_inq_dim: %s", nc_strerror(err));
-	err = nc_inq_dim(ncid, i, name, &length);
+	    error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
+	err = ncmpi_inq_dim(ncid, i, name, &length);
 	IF (err)
-	    error("nc_inq_dim: %s", nc_strerror(err));
+	    error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
 	else IF (strcmp(dim_name[i],name)) 
 	    error("name expected: %s, got: %s",dim_name[i],name);
 	else IF (dim_len[i] != length)
 	    error("size expected: %d, got: %d",dim_len[i],length);
-	err = nc_inq_dim(ncid, i, name, 0);
+	err = ncmpi_inq_dim(ncid, i, name, 0);
         IF (err)
-	    error("nc_inq_dim: %s", nc_strerror(err));
+	    error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
 	else IF (strcmp(dim_name[i],name)) 
 	    error("name expected: %s, got: %s",dim_name[i],name);
-	err = nc_inq_dim(ncid, i, 0, &length);
+	err = ncmpi_inq_dim(ncid, i, 0, &length);
         IF (err)
-	    error("nc_inq_dim: %s", nc_strerror(err));
+	    error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
 	else IF (dim_len[i] != length)
 	    error("size expected: %d, got: %d",dim_len[i],length);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_dimlen(void)
+test_ncmpi_inq_dimlen(void)
 {
     int ncid;
     int i;
     int err;
     size_t length;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NDIMS; i++) {
-	err = nc_inq_dimlen(BAD_ID, i, &length);
+	err = ncmpi_inq_dimlen(BAD_ID, i, &length);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_dimlen(ncid, BAD_DIMID, &length);
+	err = ncmpi_inq_dimlen(ncid, BAD_DIMID, &length);
         IF (err != NC_EBADDIM)
 	    error("bad dimid: status = %d", err);
-	err = nc_inq_dimlen(ncid, i, &length);
+	err = ncmpi_inq_dimlen(ncid, i, &length);
 	IF (err)
-	    error("nc_inq_dimlen: %s", nc_strerror(err));
+	    error("ncmpi_inq_dimlen: %s", ncmpi_strerror(err));
 	else IF (dim_len[i] != length)
 	    error("size expected: %d, got: %d",dim_len[i],length);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_dimname(void)
+test_ncmpi_inq_dimname(void)
 {
     int ncid;
     int i;
     int err;
     char name[NC_MAX_NAME];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NDIMS; i++) {
-	err = nc_inq_dimname(BAD_ID, i, name);
+	err = ncmpi_inq_dimname(BAD_ID, i, name);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_dimname(ncid, BAD_DIMID, name);
+	err = ncmpi_inq_dimname(ncid, BAD_DIMID, name);
         IF (err != NC_EBADDIM)
 	    error("bad dimid: status = %d", err);
-	err = nc_inq_dimname(ncid, i, name);
+	err = ncmpi_inq_dimname(ncid, i, name);
 	IF (err)
-	    error("nc_inq_dimname: %s", nc_strerror(err));
+	    error("ncmpi_inq_dimname: %s", ncmpi_strerror(err));
 	else IF (strcmp(dim_name[i],name)) 
 	    error("name expected: %s, got: %s",dim_name[i],name);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_varid(void)
+test_ncmpi_inq_varid(void)
 {
     int ncid;
     int varid;
     int i;
     int err;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    err = nc_inq_varid(ncid, "noSuch", &varid);
+    err = ncmpi_inq_varid(ncid, "noSuch", &varid);
     IF (err != NC_ENOTVAR)
 	error("bad ncid: status = %d", err);
 
     for (i = 0; i < NVARS; i++) {
-	err = nc_inq_varid(BAD_ID, var_name[i], &varid);
+	err = ncmpi_inq_varid(BAD_ID, var_name[i], &varid);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_varid(ncid, var_name[i], &varid);
+	err = ncmpi_inq_varid(ncid, var_name[i], &varid);
         IF (err)
-	    error("nc_inq_varid: %s", nc_strerror(err));
+	    error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
 	else IF (varid != i)
 	    error("expected %d, got %d", i, varid);
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_var(void)
+test_ncmpi_inq_var(void)
 {
     int ncid;
     int i;
     int err;
     char name[NC_MAX_NAME];
-    nc_type datatype;
+    ncmpi_type datatype;
     int ndims;
     int dimids[MAX_RANK];
     int natts;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
-	err = nc_inq_var(BAD_ID, i, name, &datatype, &ndims, dimids, &natts);
+	err = ncmpi_inq_var(BAD_ID, i, name, &datatype, &ndims, dimids, &natts);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_var(ncid,BAD_VARID,name,&datatype,&ndims,dimids,&natts);
+	err = ncmpi_inq_var(ncid,BAD_VARID,name,&datatype,&ndims,dimids,&natts);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
-	err = nc_inq_var(ncid, i, 0, 0, 0, 0, 0);
+	err = ncmpi_inq_var(ncid, i, 0, 0, 0, 0, 0);
 	IF (err)
-	    error("nc_inq_var: %s", nc_strerror(err));
-	err = nc_inq_var(ncid, i, name, &datatype, &ndims, dimids, &natts);
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
+	err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, &natts);
 	IF (err)
-	    error("nc_inq_var: %s", nc_strerror(err));
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
 	else IF (strcmp(var_name[i],name)) 
 	    error("name expected: %s, got: %s",var_name[i],name);
 	else IF (var_type[i] != datatype)
@@ -633,194 +633,194 @@ test_nc_inq_var(void)
 	    error("unexpected dimid");
 	else IF (var_natts[i] != natts)
 	    error("natts expected: %d, got: %d",var_natts[i],natts);
-	err = nc_inq_var(ncid, i, name, 0, 0, 0, 0);
+	err = ncmpi_inq_var(ncid, i, name, 0, 0, 0, 0);
         IF (err)
-	    error("nc_inq_var: %s", nc_strerror(err));
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
 	else IF (strcmp(var_name[i],name)) 
 	    error("name expected: %s, got: %s",var_name[i],name);
-	err = nc_inq_var(ncid, i, 0, &datatype, 0, 0, 0);
+	err = ncmpi_inq_var(ncid, i, 0, &datatype, 0, 0, 0);
         IF (err)
-	    error("nc_inq_var: %s", nc_strerror(err));
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
         else IF (var_type[i] != datatype)
             error("type expected: %d, got: %d",var_type[i],datatype);
-	err = nc_inq_var(ncid, i, 0, 0, &ndims, 0, 0);
+	err = ncmpi_inq_var(ncid, i, 0, 0, &ndims, 0, 0);
         IF (err)
-	    error("nc_inq_var: %s", nc_strerror(err));
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
         else IF (var_rank[i] != ndims)
             error("ndims expected: %d, got: %d",var_rank[i],ndims);
-	err = nc_inq_var(ncid, i, 0, 0, 0, dimids, 0);
+	err = ncmpi_inq_var(ncid, i, 0, 0, 0, dimids, 0);
         IF (err)
-	    error("nc_inq_var: %s", nc_strerror(err));
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
         else IF (!int_vec_eq(var_dimid[i],dimids,ndims))
             error("unexpected dimid");
-	err = nc_inq_var(ncid, i, 0, 0, 0, 0, &natts);
+	err = ncmpi_inq_var(ncid, i, 0, 0, 0, 0, &natts);
         IF (err)
-	    error("nc_inq_var: %s", nc_strerror(err));
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
         else IF (var_natts[i] != natts)
             error("natts expected: %d, got: %d",var_natts[i],natts);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_vardimid(void)
+test_ncmpi_inq_vardimid(void)
 {
     int ncid;
     int i;
     int err;
     int dimids[MAX_RANK];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
-	err = nc_inq_vardimid(BAD_ID, i, dimids);
+	err = ncmpi_inq_vardimid(BAD_ID, i, dimids);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_vardimid(ncid, BAD_VARID, dimids);
+	err = ncmpi_inq_vardimid(ncid, BAD_VARID, dimids);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
-	err = nc_inq_vardimid(ncid, i, dimids);
+	err = ncmpi_inq_vardimid(ncid, i, dimids);
 	IF (err)
-	    error("nc_inq_vardimid: %s", nc_strerror(err));
+	    error("ncmpi_inq_vardimid: %s", ncmpi_strerror(err));
 	else IF (!int_vec_eq(var_dimid[i], dimids, var_rank[i]))
 	    error("unexpected dimid");
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_varname(void)
+test_ncmpi_inq_varname(void)
 {
     int ncid;
     int i;
     int err;
     char name[NC_MAX_NAME];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
-	err = nc_inq_varname(BAD_ID, i, name);
+	err = ncmpi_inq_varname(BAD_ID, i, name);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_varname(ncid, BAD_VARID, name);
+	err = ncmpi_inq_varname(ncid, BAD_VARID, name);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
-	err = nc_inq_varname(ncid, i, name);
+	err = ncmpi_inq_varname(ncid, i, name);
 	IF (err)
-	    error("nc_inq_varname: %s", nc_strerror(err));
+	    error("ncmpi_inq_varname: %s", ncmpi_strerror(err));
 	else IF (strcmp(var_name[i],name)) 
 	    error("name expected: %s, got: %s",var_name[i],name);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_varnatts(void)
+test_ncmpi_inq_varnatts(void)
 {
     int ncid;
     int i;
     int err;
     int natts;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = -1; i < NVARS; i++) {
-	err = nc_inq_varnatts(BAD_ID, i, &natts);
+	err = ncmpi_inq_varnatts(BAD_ID, i, &natts);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_varnatts(ncid, BAD_VARID, &natts);
+	err = ncmpi_inq_varnatts(ncid, BAD_VARID, &natts);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
-	err = nc_inq_varnatts(ncid, VARID(i), &natts);
+	err = ncmpi_inq_varnatts(ncid, VARID(i), &natts);
 	IF (err)
-	    error("nc_inq_varnatts: %s", nc_strerror(err));
+	    error("ncmpi_inq_varnatts: %s", ncmpi_strerror(err));
         else IF (NATTS(i) != natts)
             error("natts expected: %d, got: %d",NATTS(i),natts);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_varndims(void)
+test_ncmpi_inq_varndims(void)
 {
     int ncid;
     int i;
     int err;
     int ndims;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
-	err = nc_inq_varndims(BAD_ID, i, &ndims);
+	err = ncmpi_inq_varndims(BAD_ID, i, &ndims);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_varndims(ncid, BAD_VARID, &ndims);
+	err = ncmpi_inq_varndims(ncid, BAD_VARID, &ndims);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
-	err = nc_inq_varndims(ncid, i, &ndims);
+	err = ncmpi_inq_varndims(ncid, i, &ndims);
 	IF (err)
-	    error("nc_inq_varndims: %s", nc_strerror(err));
+	    error("ncmpi_inq_varndims: %s", ncmpi_strerror(err));
         else IF (var_rank[i] != ndims)
             error("ndims expected: %d, got: %d",var_rank[i],ndims);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_vartype(void)
+test_ncmpi_inq_vartype(void)
 {
     int ncid;
     int i;
     int err;
-    nc_type datatype;
+    ncmpi_type datatype;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
-	err = nc_inq_vartype(BAD_ID, i, &datatype);
+	err = ncmpi_inq_vartype(BAD_ID, i, &datatype);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-	err = nc_inq_vartype(ncid, BAD_VARID, &datatype);
+	err = ncmpi_inq_vartype(ncid, BAD_VARID, &datatype);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
-	err = nc_inq_vartype(ncid, i, &datatype);
+	err = ncmpi_inq_vartype(ncid, i, &datatype);
 	IF (err)
-	    error("nc_inq_vartype: %s", nc_strerror(err));
+	    error("ncmpi_inq_vartype: %s", ncmpi_strerror(err));
         else IF (var_type[i] != datatype)
             error("type expected: %d, got: %d", var_type[i], datatype);
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 #ifdef TEST_VOIDSTAR
 /*
- * Test nc_put_var1
+ * Test ncmpi_put_var1
  */
 void
-test_nc_get_var1(void)
+test_ncmpi_get_var1(void)
 {
     int ncid;
     int i;
@@ -832,21 +832,21 @@ test_nc_get_var1(void)
     double buf[1];		/* (void *) buffer */
     double value;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
 	for (j = 0; j < var_rank[i]; j++)
 	    index[j] = 0;
-        err = nc_get_var1(BAD_ID, i, index, buf);
+        err = ncmpi_get_var1(BAD_ID, i, index, buf);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-        err = nc_get_var1(ncid, BAD_VARID, index, buf);
+        err = ncmpi_get_var1(ncid, BAD_VARID, index, buf);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    index[j] = var_shape[i][j];
-	    err = nc_get_var1(ncid, i, index, buf);
+	    err = ncmpi_get_var1(ncid, i, index, buf);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
 	    index[j] = 0;
@@ -857,11 +857,11 @@ test_nc_get_var1(void)
 		error("error in toMixedBase 2");
 	    expect = hash( var_type[i], var_rank[i], index );
             if (var_rank[i] == 0 && i%2 )
-		err = nc_get_var1(ncid, i, NULL, buf);
+		err = ncmpi_get_var1(ncid, i, NULL, buf);
 	    else
-		err = nc_get_var1(ncid, i, index, buf);
+		err = ncmpi_get_var1(ncid, i, index, buf);
 	    IF (err)
-		error("%s", nc_strerror(err));
+		error("%s", ncmpi_strerror(err));
 	    err = nc2dbl( var_type[i], buf, &value );
 	    IF (err)
 		error("error in nc2dbl");
@@ -874,21 +874,21 @@ test_nc_get_var1(void)
 	    }
         }
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 
 
 /*
- * Test nc_get_vara
+ * Test ncmpi_get_vara
  * Choose a random point dividing each dim into 2 parts
  * Get 2^rank (nslabs) slabs so defined
  * Each get overwrites buffer, so check after each get.
  */
 void
-test_nc_get_vara(void)
+test_ncmpi_get_vara(void)
 {
     int ncid;
     int d;
@@ -908,9 +908,9 @@ test_nc_get_vara(void)
     double expect;
     double got;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -918,20 +918,20 @@ test_nc_get_vara(void)
             start[j] = 0;
             edge[j] = 1;
         }
-        err = nc_get_vara(BAD_ID, i, start, edge, buf);
+        err = ncmpi_get_vara(BAD_ID, i, start, edge, buf);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-        err = nc_get_vara(ncid, BAD_VARID, start, edge, buf);
+        err = ncmpi_get_vara(ncid, BAD_VARID, start, edge, buf);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    start[j] = var_shape[i][j];
-	    err = nc_get_vara(ncid, i, start, edge, buf);
+	    err = ncmpi_get_vara(ncid, i, start, edge, buf);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
 	    start[j] = 0;
 	    edge[j] = var_shape[i][j] + 1;
-	    err = nc_get_vara(ncid, i, start, edge, buf);
+	    err = ncmpi_get_vara(ncid, i, start, edge, buf);
             IF (err != NC_EEDGE)
 		error("bad edge: status = %d", err);
 	    edge[j] = 1;
@@ -957,11 +957,11 @@ test_nc_get_vara(void)
                 nels *= edge[j];
             }
             if (var_rank[i] == 0 && i%2 )
-		err = nc_get_vara(ncid, i, NULL, NULL, buf);
+		err = ncmpi_get_vara(ncid, i, NULL, NULL, buf);
 	    else
-		err = nc_get_vara(ncid, i, start, edge, buf);
+		err = ncmpi_get_vara(ncid, i, start, edge, buf);
 	    IF (err) {
-		error("%s", nc_strerror(err));
+		error("%s", ncmpi_strerror(err));
 	    } else {
 		for (j = 0; j < nels; j++) {
                     p = (char *) buf;
@@ -994,21 +994,21 @@ test_nc_get_vara(void)
 	    }
 	}
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 
 
 /*
- * Test nc_get_vars
+ * Test ncmpi_get_vars
  * Choose a random point dividing each dim into 2 parts
  * Get 2^rank (nslabs) slabs so defined
  * Each get overwrites buffer, so check after each get.
  */
 void
-test_nc_get_vars(void)
+test_ncmpi_get_vars(void)
 {
     int ncid;
     int d;
@@ -1035,9 +1035,9 @@ test_nc_get_vars(void)
     double expect;
     double got;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -1046,25 +1046,25 @@ test_nc_get_vars(void)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = nc_get_vars(BAD_ID, i, start, edge, stride, buf);
+        err = ncmpi_get_vars(BAD_ID, i, start, edge, stride, buf);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-        err = nc_get_vars(ncid, BAD_VARID, start, edge, stride, buf);
+        err = ncmpi_get_vars(ncid, BAD_VARID, start, edge, stride, buf);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    start[j] = var_shape[i][j];
-	    err = nc_get_vars(ncid, i, start, edge, stride, buf);
+	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
 	    start[j] = 0;
 	    edge[j] = var_shape[i][j] + 1;
-	    err = nc_get_vars(ncid, i, start, edge, stride, buf);
+	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf);
             IF (err != NC_EEDGE)
 		error("bad edge: status = %d", err);
 	    edge[j] = 1;
 	    stride[j] = 0;
-	    err = nc_get_vars(ncid, i, start, edge, stride, buf);
+	    err = ncmpi_get_vars(ncid, i, start, edge, stride, buf);
             IF (err != NC_ESTRIDE)
 		error("bad stride: status = %d", err);
 	    stride[j] = 1;
@@ -1112,11 +1112,11 @@ test_nc_get_vars(void)
 		}
  */
 		if (var_rank[i] == 0 && i%2 )
-		    err = nc_get_vars(ncid, i, NULL, NULL, NULL, buf);
+		    err = ncmpi_get_vars(ncid, i, NULL, NULL, NULL, buf);
 		else
-		    err = nc_get_vars(ncid, i, index, count, stride, buf);
+		    err = ncmpi_get_vars(ncid, i, index, count, stride, buf);
 		IF (err) {
-		    error("%s", nc_strerror(err));
+		    error("%s", ncmpi_strerror(err));
 		} else {
 		    for (j = 0; j < nels; j++) {
 			p = (char *) buf;
@@ -1161,15 +1161,15 @@ test_nc_get_vars(void)
 	    }
 	}
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 
 
 /*
- * Test nc_get_varm
+ * Test ncmpi_get_varm
  * Choose a random point dividing each dim into 2 parts
  * Get 2^rank (nslabs) slabs so defined
  * Choose random stride from 1 to edge
@@ -1177,7 +1177,7 @@ test_nc_get_vars(void)
  * So all gets for a variable store in different elements of buffer
  */
 void
-test_nc_get_varm(void)
+test_ncmpi_get_varm(void)
 {
     int ncid;
     int i;
@@ -1202,9 +1202,9 @@ test_nc_get_varm(void)
     double expect;
     double got;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -1219,25 +1219,25 @@ test_nc_get_varm(void)
             for (; j > 0; j--)
                 imap[j-1] = imap[j] * var_shape[i][j];
         }
-        err = nc_get_varm(BAD_ID, i, start, edge, stride, imap, buf);
+        err = ncmpi_get_varm(BAD_ID, i, start, edge, stride, imap, buf);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-        err = nc_get_varm(ncid, BAD_VARID, start, edge, stride, imap, buf);
+        err = ncmpi_get_varm(ncid, BAD_VARID, start, edge, stride, imap, buf);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    start[j] = var_shape[i][j];
-	    err = nc_get_varm(ncid, i, start, edge, stride, imap, buf);
+	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf);
             IF (err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
 	    start[j] = 0;
 	    edge[j] = var_shape[i][j] + 1;
-	    err = nc_get_varm(ncid, i, start, edge, stride, imap, buf);
+	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf);
             IF (err != NC_EEDGE)
 		error("bad edge: status = %d", err);
 	    edge[j] = 1;
 	    stride[j] = 0;
-	    err = nc_get_varm(ncid, i, start, edge, stride, imap, buf);
+	    err = ncmpi_get_varm(ncid, i, start, edge, stride, imap, buf);
             IF (err != NC_ESTRIDE)
 		error("bad stride: status = %d", err);
 	    stride[j] = 1;
@@ -1267,7 +1267,7 @@ test_nc_get_varm(void)
             }
 	    for (m = 0; m < nstarts; m++) {
 		if (var_rank[i] == 0 && i%2 ) {
-		    err = nc_get_varm(ncid, i, NULL, NULL, NULL, NULL, buf);
+		    err = ncmpi_get_varm(ncid, i, NULL, NULL, NULL, NULL, buf);
 		} else {
 		    err = toMixedBase(m, var_rank[i], sstride, index);
 		    IF (err)
@@ -1287,10 +1287,10 @@ test_nc_get_varm(void)
  */
 		    j = fromMixedBase(var_rank[i], index, var_shape[i]);
 		    p = (char *) buf + j * nctypelen(var_type[i]);
-		    err = nc_get_varm(ncid, i, index, count, stride, imap2, p);
+		    err = ncmpi_get_varm(ncid, i, index, count, stride, imap2, p);
 		}
 		IF (err)
-		    error("%s", nc_strerror(err));
+		    error("%s", ncmpi_strerror(err));
 	    }
 	}
         p = (char *) buf;
@@ -1320,15 +1320,15 @@ test_nc_get_varm(void)
             p += nctypelen(var_type[i]);
 	}
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 
 
 void
-test_nc_get_att(void)
+test_ncmpi_get_att(void)
 {
     int ncid;
     int i;
@@ -1341,24 +1341,24 @@ test_nc_get_att(void)
     double got;
     int nok = 0;      /* count of valid comparisons */
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err) 
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < NVARS; i++) {
         for (j = 0; j < NATTS(i); j++) {
-	    err = nc_get_att(BAD_ID, i, ATT_NAME(i,j), buf);
+	    err = ncmpi_get_att(BAD_ID, i, ATT_NAME(i,j), buf);
 	    IF (err != NC_EBADID) 
 		error("bad ncid: status = %d", err);
-	    err = nc_get_att(ncid, BAD_VARID, ATT_NAME(i,j), buf);
+	    err = ncmpi_get_att(ncid, BAD_VARID, ATT_NAME(i,j), buf);
 	    IF (err != NC_ENOTVAR) 
 		error("bad var id: status = %d", err);
-	    err = nc_get_att(ncid, i, "noSuch", buf);
+	    err = ncmpi_get_att(ncid, i, "noSuch", buf);
 	    IF (err != NC_ENOTATT) 
 		error("Bad attribute name: status = %d", err);
-	    err = nc_get_att(ncid, i, ATT_NAME(i,j), buf);
+	    err = ncmpi_get_att(ncid, i, ATT_NAME(i,j), buf);
 	    IF (err) {
-		error("%s", nc_strerror(err));
+		error("%s", ncmpi_strerror(err));
 	    } else {
 		for (k = 0; k < ATT_LEN(i,j); k++) {
 		    expect = hash(ATT_TYPE(i,j), -1, &k );
@@ -1389,42 +1389,42 @@ test_nc_get_att(void)
 	}
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 #endif /* TEST_VOIDSTAR */
 
 
 void
-test_nc_inq_att(void)
+test_ncmpi_inq_att(void)
 {
     int ncid;
     int i;
     int j;
     int err;
-    nc_type t;
+    ncmpi_type t;
     size_t n;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err) 
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < NVARS; i++) {
         for (j = 0; j < NATTS(i); j++) {
-	    err = nc_inq_att(BAD_ID, i, ATT_NAME(i,j), &t, &n);
+	    err = ncmpi_inq_att(BAD_ID, i, ATT_NAME(i,j), &t, &n);
 	    IF (err != NC_EBADID) 
 		error("bad ncid: status = %d", err);
-	    err = nc_inq_att(ncid, BAD_VARID, ATT_NAME(i,j), &t, &n);
+	    err = ncmpi_inq_att(ncid, BAD_VARID, ATT_NAME(i,j), &t, &n);
 	    IF (err != NC_ENOTVAR) 
 		error("bad var id: status = %d", err);
-	    err = nc_inq_att(ncid, i, "noSuch", &t, &n);
+	    err = ncmpi_inq_att(ncid, i, "noSuch", &t, &n);
 	    IF (err != NC_ENOTATT) 
 		error("Bad attribute name: status = %d", err);
-	    err = nc_inq_att(ncid, i, ATT_NAME(i,j), &t, &n);
+	    err = ncmpi_inq_att(ncid, i, ATT_NAME(i,j), &t, &n);
 	    IF (err) {
-		error("%s", nc_strerror(err));
+		error("%s", ncmpi_strerror(err));
 	    } else {
 		IF (t != ATT_TYPE(i,j))
 		    error("type not that expected");
@@ -1434,14 +1434,14 @@ test_nc_inq_att(void)
 	}
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_attlen(void)
+test_ncmpi_inq_attlen(void)
 {
     int ncid;
     int i;
@@ -1449,24 +1449,24 @@ test_nc_inq_attlen(void)
     int err;
     size_t len;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < NVARS; i++) {
-	err = nc_inq_attlen(ncid, i, "noSuch", &len);
+	err = ncmpi_inq_attlen(ncid, i, "noSuch", &len);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute name: status = %d", err);
         for (j = 0; j < NATTS(i); j++) {
-            err = nc_inq_attlen(BAD_ID, i, ATT_NAME(i,j), &len);
+            err = ncmpi_inq_attlen(BAD_ID, i, ATT_NAME(i,j), &len);
             IF (err != NC_EBADID)
                 error("bad ncid: status = %d", err);
-            err = nc_inq_attlen(ncid, BAD_VARID, ATT_NAME(i,j), &len);
+            err = ncmpi_inq_attlen(ncid, BAD_VARID, ATT_NAME(i,j), &len);
             IF (err != NC_ENOTVAR)
                 error("bad varid: status = %d", err);
-            err = nc_inq_attlen(ncid, i, ATT_NAME(i,j), &len);
+            err = ncmpi_inq_attlen(ncid, i, ATT_NAME(i,j), &len);
             IF (err) {
-                error("%s", nc_strerror(err));
+                error("%s", ncmpi_strerror(err));
             } else {
 		IF (len != ATT_LEN(i,j))
 		    error("len not that expected");
@@ -1474,39 +1474,39 @@ test_nc_inq_attlen(void)
         }
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_atttype(void)
+test_ncmpi_inq_atttype(void)
 {
     int ncid;
     int i;
     int j;
     int err;
-    nc_type datatype;
+    ncmpi_type datatype;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < NVARS; i++) {
-	err = nc_inq_atttype(ncid, i, "noSuch", &datatype);
+	err = ncmpi_inq_atttype(ncid, i, "noSuch", &datatype);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute name: status = %d", err);
         for (j = 0; j < NATTS(i); j++) {
-            err = nc_inq_atttype(BAD_ID, i, ATT_NAME(i,j), &datatype);
+            err = ncmpi_inq_atttype(BAD_ID, i, ATT_NAME(i,j), &datatype);
             IF (err != NC_EBADID)
                 error("bad ncid: status = %d", err);
-            err = nc_inq_atttype(ncid, BAD_VARID, ATT_NAME(i,j), &datatype);
+            err = ncmpi_inq_atttype(ncid, BAD_VARID, ATT_NAME(i,j), &datatype);
             IF (err != NC_ENOTVAR)
                 error("bad varid: status = %d", err);
-            err = nc_inq_atttype(ncid, i, ATT_NAME(i,j), &datatype);
+            err = ncmpi_inq_atttype(ncid, i, ATT_NAME(i,j), &datatype);
             IF (err) {
-                error("%s", nc_strerror(err));
+                error("%s", ncmpi_strerror(err));
             } else {
 		IF (datatype != ATT_TYPE(i,j))
 		    error("type not that expected");
@@ -1514,14 +1514,14 @@ test_nc_inq_atttype(void)
         }
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_attname(void)
+test_ncmpi_inq_attname(void)
 {
     int ncid;
     int i;
@@ -1529,27 +1529,27 @@ test_nc_inq_attname(void)
     int err;
     char name[NC_MAX_NAME];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < NVARS; i++) {
-	err = nc_inq_attname(ncid, i, BAD_ATTNUM, name);
+	err = ncmpi_inq_attname(ncid, i, BAD_ATTNUM, name);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute number: status = %d", err);
-	err = nc_inq_attname(ncid, i, NATTS(i), name);
+	err = ncmpi_inq_attname(ncid, i, NATTS(i), name);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute number: status = %d", err);
         for (j = 0; j < NATTS(i); j++) {
-            err = nc_inq_attname(BAD_ID, i, j, name);
+            err = ncmpi_inq_attname(BAD_ID, i, j, name);
             IF (err != NC_EBADID)
                 error("bad ncid: status = %d", err);
-            err = nc_inq_attname(ncid, BAD_VARID, j, name);
+            err = ncmpi_inq_attname(ncid, BAD_VARID, j, name);
             IF (err != NC_ENOTVAR)
                 error("bad var id: status = %d", err);
-            err = nc_inq_attname(ncid, i, j, name);
+            err = ncmpi_inq_attname(ncid, i, j, name);
             IF (err) {
-                error("%s", nc_strerror(err));
+                error("%s", ncmpi_strerror(err));
             } else {
 		IF (strcmp(ATT_NAME(i,j), name) != 0)
 		    error("name not that expected");
@@ -1557,14 +1557,14 @@ test_nc_inq_attname(void)
         }
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
 void
-test_nc_inq_attid(void)
+test_ncmpi_inq_attid(void)
 {
     int ncid;
     int i;
@@ -1572,24 +1572,24 @@ test_nc_inq_attid(void)
     int err;
     int attnum;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < NVARS; i++) {
-	err = nc_inq_attid(ncid, i, "noSuch", &attnum);
+	err = ncmpi_inq_attid(ncid, i, "noSuch", &attnum);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute name: status = %d", err);
         for (j = 0; j < NATTS(i); j++) {
-            err = nc_inq_attid(BAD_ID, i, ATT_NAME(i,j), &attnum);
+            err = ncmpi_inq_attid(BAD_ID, i, ATT_NAME(i,j), &attnum);
             IF (err != NC_EBADID)
                 error("bad ncid: status = %d", err);
-            err = nc_inq_attid(ncid, BAD_VARID, ATT_NAME(i,j), &attnum);
+            err = ncmpi_inq_attid(ncid, BAD_VARID, ATT_NAME(i,j), &attnum);
             IF (err != NC_ENOTVAR)
                 error("bad varid: status = %d", err);
-            err = nc_inq_attid(ncid, i, ATT_NAME(i,j), &attnum);
+            err = ncmpi_inq_attid(ncid, i, ATT_NAME(i,j), &attnum);
             IF (err) {
-                error("%s", nc_strerror(err));
+                error("%s", ncmpi_strerror(err));
             } else {
 		IF (attnum != j)
 		    error("attnum not that expected");
@@ -1597,8 +1597,8 @@ test_nc_inq_attid(void)
         }
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
