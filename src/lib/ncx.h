@@ -125,7 +125,7 @@
 
 /* End ncx_len */
 
-#if __CHAR_UNSIGNED__
+#ifdef __CHAR_UNSIGNED__
 	/* 'char' is unsigned, declare ncbyte as 'signed char' */
 typedef signed char schar;
 

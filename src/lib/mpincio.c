@@ -26,7 +26,7 @@
 #include "rnd.h"
 
 /* #define INSTRUMENT 1 */
-#if INSTRUMENT /* debugging */
+#ifdef INSTRUMENT /* debugging */
 #undef NDEBUG
 #include <stdio.h>
 #include "instr.h"
