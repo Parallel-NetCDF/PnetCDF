@@ -23,7 +23,6 @@ dnl UD_PROG_CC
 UD_PROG_CC_MAKEDEPEND
 dnl need a --with-cxx=no and --with-fortran=no
 dnl UD_PROG_CXX
-dnl UD_PROG_FC
 dnl UD_PROG_F90
 # Checking for Fortran types also determines the Fortran name mangling
 # and places the value into FCALLSCSUB as a the C name corresponding
@@ -45,7 +44,7 @@ case $FCALLSCSUB in
     # an underscore, in which case it gets two trailing underscores.
     # Use essentially the same configure code that the original configure
     # used to determine SUB
-    AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB_A\")
+    AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB_A\") 
 	    cat >conftest.f <<\EOF
               call sub_a()
               end
@@ -102,6 +101,12 @@ AC_ARG_WITH(mpi,
 			AC_MSG_WARN($MPICC either does not exist or is not executable: falling back to $CC)
 			MPICC="$CC"
 		fi
+		MPIF77=${withval}/bin/mpif77
+		if test ! -x "${MPIF77}"; then
+			AC_MSG_WARN($MPIF77 either does not exist or is not executable: falling back to $FC)
+			MPIF77="$FC"
+		fi
+
 	fi
 )
 
@@ -115,7 +120,7 @@ AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR],
 )
 CC="$saveCC"
 AC_SUBST(MPICC)
-
+AC_SUBST(MPIF77)
 
 AC_CHECK_HEADER(stdlib.h, ,AC_DEFINE(NO_STDLIB_H))
 AC_CHECK_HEADER(sys/types.h, ,AC_DEFINE(NO_SYS_TYPES_H))
