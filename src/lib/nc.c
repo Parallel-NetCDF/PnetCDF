@@ -55,8 +55,6 @@ del_from_NCList(NC *ncp)
 	ncp->prev = NULL;
 }
 
-#ifdef USE_MPIO /* Following interface added by Jianwei Li */
-
 /*
  * Check the data set definitions across all processes by
  * comparing the header buffer streams of all processes.
@@ -88,8 +86,6 @@ NC_check_def(MPI_Comm comm, void *buf, size_t nn) {
   else 
     return NC_NOERR;
 }
-
-#endif /* USE_MPIO */
 
 int
 NC_check_id(int ncid, NC **ncpp)
@@ -345,7 +341,6 @@ fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
  * (A relatively expensive way to do things.)
  */
 
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */
  
 int
 read_numrecs(NC *ncp) {
@@ -377,43 +372,10 @@ read_numrecs(NC *ncp) {
   return status;
 }
  
-#else /* Following interface modified as above by Jianwei Li */
-
-int
-read_numrecs(NC *ncp)
-{
-	int status = NC_NOERR;
-	const void *xp;
-	size_t nrecs = NC_get_numrecs(ncp);
-
-	assert(!NC_indef(ncp));
-
-	status = ncp->nciop->get(ncp->nciop,
-		 NC_NUMRECS_OFFSET, NC_NUMRECS_EXTENT, 0, (void **)&xp);
-					/* cast away const */
-	if(status != NC_NOERR)
-		return status;
-
-	status = ncx_get_size_t(&xp, &nrecs);
-
-	(void) ncp->nciop->rel(ncp->nciop, NC_NUMRECS_OFFSET, 0);
-
-	if(status == NC_NOERR)
-	{
-		NC_set_numrecs(ncp, nrecs);
-		fClr(ncp->flags, NC_NDIRTY);
-	}
-
-	return status;
-}
-
-#endif
-
 /*
  * Write out just the numrecs member.
  * (A relatively expensive way to do things.)
  */
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */ 
 
 /*
  * Collective operation implicit
@@ -467,42 +429,10 @@ write_numrecs(NC *ncp) {
   return status;
 }
 
-#else /* Following interface modified as above by Jianwei Li */ 
-
-int
-write_numrecs(NC *ncp)
-{
-	int status = NC_NOERR;
-	void *xp;
-
-	assert(!NC_readonly(ncp));
-	assert(!NC_indef(ncp));
-
-	status = ncp->nciop->get(ncp->nciop,
-		 NC_NUMRECS_OFFSET, NC_NUMRECS_EXTENT, RGN_WRITE, &xp);
-	if(status != NC_NOERR)
-		return status;
-
-	{
-		const size_t nrecs = NC_get_numrecs(ncp);
-		status = ncx_put_size_t(&xp, &nrecs);
-	}
-
-	(void) ncp->nciop->rel(ncp->nciop, NC_NUMRECS_OFFSET, RGN_MODIFIED);
-
-	if(status == NC_NOERR)
-		fClr(ncp->flags, NC_NDIRTY);
-
-	return status;
-}
-
-#endif /* USE_MPIO */
-
 /*
  * Read in the header
  * It is expensive.
  */
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */
 
 int
 read_NC(NC *ncp) {
@@ -520,32 +450,9 @@ read_NC(NC *ncp) {
   return status;
 }
 
-#else /* Following interface modified as above by Jianwei Li */
-
-/* static */
-int
-read_NC(NC *ncp)
-{
-	int status = NC_NOERR;
-
-	free_NC_dimarrayV(&ncp->dims);
-	free_NC_attrarrayV(&ncp->attrs);
-	free_NC_vararrayV(&ncp->vars);
-
-	status = nc_get_NC(ncp);
-
-	if(status == NC_NOERR)
-		fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
-
-	return status;
-}
-
-#endif /* USE_MPIO */
-
 /*
  * Write out the header
  */
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */
 
 int
 write_NC(NC *ncp)
@@ -585,26 +492,6 @@ write_NC(NC *ncp)
  
   return status;
 } 
-
-#else /* Following interface modified as above by Jianwei Li */
-
-static int
-write_NC(NC *ncp)
-{
-	int status = NC_NOERR;
-
-	assert(!NC_readonly(ncp));
-
-	status = ncx_put_NC(ncp, NULL, 0, 0);
-
-	if(status == NC_NOERR)
-		fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
-
-	return status;
-}
-
-#endif /* USE_MPIO */
-
 /*
  * Write the header or the numrecs if necessary.
  */
@@ -638,106 +525,10 @@ NC_sync(NC *ncp)
 }
 
 
-#ifndef USE_MPIO /* out-of-date code removed by Jianwei Li */
-
-/*
- * Initialize the 'non-record' variables.
- */
-static int
-fillerup(NC *ncp)
-{
-	int status = NC_NOERR;
-	size_t ii;
-	NC_var **varpp;
-
-	assert(!NC_readonly(ncp));
-	assert(NC_dofill(ncp));
-
-	/* loop thru vars */
-	varpp = ncp->vars.value;
-	for(ii = 0; ii < ncp->vars.nelems; ii++, varpp++)
-	{
-		if(IS_RECVAR(*varpp))
-		{
-			/* skip record variables */
-			continue;
-		}
-
-		status = fill_NC_var(ncp, *varpp, 0);
-		if(status != NC_NOERR)
-			break;
-	}
-	return status;
-}
-
-/* Begin endef */
-
-/*
- */
-static int
-fill_added_recs(NC *gnu, NC *old)
-{
-	NC_var ** const gnu_varpp = (NC_var **)gnu->vars.value;
-
-	const int old_nrecs = (int) NC_get_numrecs(old);
-	int recno = 0;
-	for(; recno < old_nrecs; recno++)
-	{
-		int varid = (int)old->vars.nelems;
-		for(; varid < (int)gnu->vars.nelems; varid++)
-		{
-			const NC_var *const gnu_varp = *(gnu_varpp + varid);
-			if(!IS_RECVAR(gnu_varp))
-			{
-				/* skip non-record variables */
-				continue;
-			}
-			/* else */
-			{
-			const int status = fill_NC_var(gnu, gnu_varp, recno);
-			if(status != NC_NOERR)
-				return status;
-			}
-		}
-	}
-
-	return NC_NOERR;
-}
-
-/*
- */
-static int
-fill_added(NC *gnu, NC *old)
-{
-	NC_var ** const gnu_varpp = (NC_var **)gnu->vars.value;
-	int varid = (int)old->vars.nelems;
-
-	for(; varid < (int)gnu->vars.nelems; varid++)
-	{
-		const NC_var *const gnu_varp = *(gnu_varpp + varid);
-		if(IS_RECVAR(gnu_varp))
-		{
-			/* skip record variables */
-			continue;
-		}
-		/* else */
-		{
-		const int status = fill_NC_var(gnu, gnu_varp, 0);
-		if(status != NC_NOERR)
-			return status;
-		}
-	}
-
-	return NC_NOERR;
-}
-
-#endif /* USE_MPIO */
-
 /*
  * Move the records "out". 
  * Fill as needed.
  */
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */
 
 int
 move_data_r(NC *ncp, NC *old) {
@@ -786,68 +577,11 @@ move_recs_r(NC *ncp, NC *old) {
   return NC_NOERR;
 }
 
-#else /* Following interface modified as above by Jianwei Li */
-
-/* static */
-int
-move_recs_r(NC *gnu, NC *old)
-{
-	int status;
-	int recno;
-	int varid;
-	NC_var **gnu_varpp = (NC_var **)gnu->vars.value;
-	NC_var **old_varpp = (NC_var **)old->vars.value;
-	NC_var *gnu_varp;
-	NC_var *old_varp;
-	off_t gnu_off;
-	off_t old_off;
-	const size_t old_nrecs = NC_get_numrecs(old);
-	
-	/* Don't parallelize this loop */
-	for(recno = (int)old_nrecs -1; recno >= 0; recno--)
-	{
-	/* Don't parallelize this loop */
-	for(varid = (int)old->vars.nelems -1; varid >= 0; varid--)
-	{
-		gnu_varp = *(gnu_varpp + varid);
-		if(!IS_RECVAR(gnu_varp))
-		{
-			/* skip non-record variables on this pass */
-			continue;
-		}
-		/* else */
-
-		/* else, a pre-existing variable */
-		old_varp = *(old_varpp + varid);
-		gnu_off = gnu_varp->begin + (off_t)(gnu->recsize * recno);
-		old_off = old_varp->begin + (off_t)(old->recsize * recno);
-
-		if(gnu_off == old_off)
-			continue; 	/* nothing to do */
-
-		assert(gnu_off > old_off);
-	
-		status = gnu->nciop->move(gnu->nciop, gnu_off, old_off,
-			 old_varp->len, 0);
-
-		if(status != NC_NOERR)
-			return status;
-		
-	}
-	}
-
-	NC_set_numrecs(gnu, old_nrecs);
-
-	return NC_NOERR;
-}
-
-#endif /* USE_MPIO */
 
 /*
  * Move the "non record" variables "out". 
  * Fill as needed.
  */
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */
 
 int
 move_vars_r(NC *ncp, NC *old) {
@@ -855,57 +589,6 @@ move_vars_r(NC *ncp, NC *old) {
                    old->begin_rec - old->begin_var); 
 }
  
-#else /* Following interface modified as above by Jianwei Li */   
-
-/* static */
-int
-move_vars_r(NC *gnu, NC *old)
-{
-	int status;
-	int varid;
-	NC_var **gnu_varpp = (NC_var **)gnu->vars.value;
-	NC_var **old_varpp = (NC_var **)old->vars.value;
-	NC_var *gnu_varp;
-	NC_var *old_varp;
-	off_t gnu_off;
-	off_t old_off;
-	
-	/* Don't parallelize this loop */
-	for(varid = (int)old->vars.nelems -1;
-		 varid >= 0; varid--)
-	{
-		gnu_varp = *(gnu_varpp + varid);
-		if(IS_RECVAR(gnu_varp))
-		{
-			/* skip record variables on this pass */
-			continue;
-		}
-		/* else */
-
-		old_varp = *(old_varpp + varid);
-		gnu_off = gnu_varp->begin;
-		old_off = old_varp->begin;
-	
-		if(gnu_off == old_off)
-			continue; 	/* nothing to do */
-
-		assert(gnu_off > old_off);
-
-		status = gnu->nciop->move(gnu->nciop, gnu_off, old_off,
-			 old_varp->len, 0);
-
-		if(status != NC_NOERR)
-			return status;
-		
-	}
-
-	return NC_NOERR;
-}
-
-#endif /* USE_MPIO */
-
-#ifdef USE_MPIO /* function below added by Jianwei Li */
-
 int 
 NC_enddef(NC *ncp) {
   int status = NC_NOERR;
@@ -1001,7 +684,6 @@ enddef(NC *ncp)
   return NC_NOERR;
 }
 
-#endif
 
 /*
  *  End define mode.
@@ -1061,30 +743,6 @@ NC_endef(NC *ncp,
 	if(status != NC_NOERR)
 		return status;
 
-#ifndef USE_MPIO /* out-of-date code removed by Jianwei Li */
-
-	if(NC_dofill(ncp))
-	{
-		if(NC_IsNew(ncp))
-		{
-			status = fillerup(ncp);
-			if(status != NC_NOERR)
-				return status;
-			
-		}
-		else if(ncp->vars.nelems > ncp->old->vars.nelems)
-		{
-			status = fill_added(ncp, ncp->old);
-			if(status != NC_NOERR)
-				return status;
-			status = fill_added_recs(ncp, ncp->old);
-			if(status != NC_NOERR)
-				return status;
-		}
-	}
-
-#endif /* USE_MPIO */
-
 	if(ncp->old != NULL)
 	{
 		free_NC(ncp->old);
@@ -1112,8 +770,6 @@ NC_init_pe(NC *ncp, int basepe) {
 #endif
 
 /* Public */
-
-#ifdef USE_MPIO /* This section is added by Jianwei Li */
 
 int 
 NC_close(NC *ncp) {
@@ -1145,43 +801,6 @@ NC_close(NC *ncp) {
  
   return status;
 }
-
-#else
-
-int
-nc_close(int ncid)
-{
-	int status = NC_NOERR;
-	NC *ncp; 
-
-	status = NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
-
-	if(NC_indef(ncp))
-	{
-		status = NC_endef(ncp, 0, 1, 0, 1); /* TODO: defaults */
-		if(status != NC_NOERR )
-		{
-			(void) nc_abort(ncid);
-			return status;
-		}
-	}
-	else if(!NC_readonly(ncp))
-	{
-		status = NC_sync(ncp);
-	}
-
-	(void) ncio_close(ncp->nciop, 0);
-	ncp->nciop = NULL;
-
-	del_from_NCList(ncp);
-
-	free_NC(ncp);
-
-	return status;
-}
-#endif /* #ifdef USE_MPI */
 
 int
 nc_inq(int ncid,

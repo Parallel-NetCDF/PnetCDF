@@ -45,39 +45,15 @@
 #undef X_ALIGN
 #endif
 
-#ifdef USE_MPIO /* Following code add by Jianwei Li */
-
 #define MAX_NC_ID 1024
 
 static unsigned char IDalloc[MAX_NC_ID];
-
-#endif /* USE_MPIO */
-
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */ 
 
 void
 ncio_free(ncio *nciop) {
   if (nciop != NULL)
     free(nciop);
 }
-
-#else /* Following interface modified as above by Jianwei Li */
-
-static void
-ncio_free(ncio *nciop)
-{
-	if(nciop == NULL)
-		return;
-
-	if(nciop->free != NULL)
-		nciop->free(nciop->pvt);
-	
-	free(nciop);
-}
-
-#endif /* USE_MPIO */
-
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */  
 
 ncio *
 ncio_new(const char *path, int ioflags)
@@ -97,50 +73,6 @@ ncio_new(const char *path, int ioflags)
 
   return nciop;
 }
-
-#else /* Following interface modified as above by Jianwei Li */
-
-static ncio *
-ncio_new(const char *path, int ioflags)
-{
-	size_t sz_ncio = M_RNDUP(sizeof(ncio));
-	size_t sz_path = M_RNDUP(strlen(path) +1);
-	size_t sz_ncio_pvt;
-	ncio *nciop;
- 
-#if ALWAYS_NC_SHARE /* DEBUG */
-	fSet(ioflags, NC_SHARE);
-#endif
-
-	if(fIsSet(ioflags, NC_SHARE))
-		sz_ncio_pvt = sizeof(ncio_spx);
-	else
-		sz_ncio_pvt = sizeof(ncio_px);
-
-	nciop = (ncio *) malloc(sz_ncio + sz_path + sz_ncio_pvt);
-	if(nciop == NULL)
-		return NULL;
-	
-	nciop->ioflags = ioflags;
-	*((int *)&nciop->fd) = -1; /* cast away const */
-
-	nciop->path = (char *) ((char *)nciop + sz_ncio);
-	(void) strcpy((char *)nciop->path, path); /* cast away const */
-
-				/* cast away const */
-	*((void **)&nciop->pvt) = (void *)(nciop->path + sz_path);
-
-	if(fIsSet(ioflags, NC_SHARE))
-		ncio_spx_init(nciop);
-	else
-		ncio_px_init(nciop);
-
-	return nciop;
-}
-
-#endif /* USE_MPIO */
-
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */
 
 int
 ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info, 
@@ -190,107 +122,6 @@ ncio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   return ENOERR;  
 }
 
-#else /* Following interface modified as above by Jianwei Li */
-
-int
-ncio_create(const char *path, int ioflags,
-	size_t initialsz,
-	off_t igeto, size_t igetsz, size_t *sizehintp,
-	ncio **nciopp, void **const igetvpp)
-{
-	ncio *nciop;
-	int oflags = (O_RDWR|O_CREAT);
-	int fd;
-	int status;
-
-	if(initialsz < (size_t)igeto + igetsz)
-		initialsz = (size_t)igeto + igetsz;
-
-	fSet(ioflags, NC_WRITE);
-
-	if(path == NULL || *path == 0)
-		return EINVAL;
-
-	nciop = ncio_new(path, ioflags);
-	if(nciop == NULL)
-		return ENOMEM;
-
-	if(fIsSet(ioflags, NC_NOCLOBBER))
-		fSet(oflags, O_EXCL);
-	else
-		fSet(oflags, O_TRUNC);
-#ifdef O_BINARY
-	fSet(oflags, O_BINARY);
-#endif
-#ifdef vms
-	fd = open(path, oflags, NC_DEFAULT_CREAT_MODE, "ctx=stm");
-#else
-	/* Should we mess with the mode based on NC_SHARE ?? */
-	fd = open(path, oflags, NC_DEFAULT_CREAT_MODE);
-#endif
-#if 0
-	(void) fprintf(stderr, "ncio_create(): path=\"%s\"\n", path);
-	(void) fprintf(stderr, "ncio_create(): oflags=0x%x\n", oflags);
-#endif
-	if(fd < 0)
-	{
-		status = errno;
-		goto unwind_new;
-	}
-	*((int *)&nciop->fd) = fd; /* cast away const */
-
-	if(*sizehintp < NCIO_MINBLOCKSIZE || *sizehintp > NCIO_MAXBLOCKSIZE)
-	{
-		/* Use default */
-		*sizehintp = blksize(fd);
-	}
-	else
-	{
-		*sizehintp = M_RNDUP(*sizehintp);
-	}
-
-	if(fIsSet(nciop->ioflags, NC_SHARE))
-		status = ncio_spx_init2(nciop, sizehintp);
-	else
-		status = ncio_px_init2(nciop, sizehintp, 1);
-
-	if(status != ENOERR)
-		goto unwind_open;
-
-	if(initialsz != 0)
-	{
-		status = fgrow(fd, (off_t)initialsz);
-		if(status != ENOERR)
-			goto unwind_open;
-	}
-
-	if(igetsz != 0)
-	{
-		status = nciop->get(nciop,
-				igeto, igetsz,
-                        	RGN_WRITE,
-                        	igetvpp);
-		if(status != ENOERR)
-			goto unwind_open;
-	}
-
-	*nciopp = nciop;
-	return ENOERR;
-
-unwind_open:
-	(void) close(fd);
-	/* ?? unlink */
-	/*FALLTHRU*/
-unwind_new:
-	ncio_free(nciop);
-	return status;
-}
-
-#endif /* USE_MPIO */
-
-
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */
-
 int
 ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
           ncio **nciopp) {
@@ -331,84 +162,6 @@ ncio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   return ENOERR; 
 }
 
-#else /* Following interface modified as above by Jianwei Li */
-
-int
-ncio_open(const char *path,
-	int ioflags,
-	off_t igeto, size_t igetsz, size_t *sizehintp,
-	ncio **nciopp, void **const igetvpp)
-{
-	ncio *nciop;
-	int oflags = fIsSet(ioflags, NC_WRITE) ? O_RDWR : O_RDONLY;
-	int fd;
-	int status;
-
-	if(path == NULL || *path == 0)
-		return EINVAL;
-
-	nciop = ncio_new(path, ioflags);
-	if(nciop == NULL)
-		return ENOMEM;
-
-#ifdef O_BINARY
-	fSet(oflags, O_BINARY);
-#endif
-#ifdef vms
-	fd = open(path, oflags, 0, "ctx=stm");
-#else
-	fd = open(path, oflags, 0);
-#endif
-	if(fd < 0)
-	{
-		status = errno;
-		goto unwind_new;
-	}
-	*((int *)&nciop->fd) = fd; /* cast away const */
-
-	if(*sizehintp < NCIO_MINBLOCKSIZE || *sizehintp > NCIO_MAXBLOCKSIZE)
-	{
-		/* Use default */
-		*sizehintp = blksize(fd);
-	}
-	else
-	{
-		*sizehintp = M_RNDUP(*sizehintp);
-	}
-
-	if(fIsSet(nciop->ioflags, NC_SHARE))
-		status = ncio_spx_init2(nciop, sizehintp);
-	else
-		status = ncio_px_init2(nciop, sizehintp, 0);
-
-	if(status != ENOERR)
-		goto unwind_open;
-
-	if(igetsz != 0)
-	{
-		status = nciop->get(nciop,
-				igeto, igetsz,
-                        	0,
-                        	igetvpp);
-		if(status != ENOERR)
-			goto unwind_open;
-	}
-
-	*nciopp = nciop;
-	return ENOERR;
-
-unwind_open:
-	(void) close(fd);
-	/*FALLTHRU*/
-unwind_new:
-	ncio_free(nciop);
-	return status;
-}
-
-#endif /* USE_MPIO */
-
-#ifdef USE_MPIO /* Following interface rewritten by Jianwei Li */ 
-
 int
 ncio_sync(ncio *nciop) {
   if(NC_independentFhOpened(nciop))
@@ -442,32 +195,6 @@ ncio_close(ncio *nciop, int doUnlink) {
 
   return status;
 }
-
-#else /* Following interface modified as above by Jianwei Li */
-
-int 
-ncio_close(ncio *nciop, int doUnlink)
-{
-	int status = ENOERR;
-
-	if(nciop == NULL)
-		return EINVAL;
-
-	status = nciop->sync(nciop);
-
-	(void) close(nciop->fd);
-	
-	if(doUnlink)
-		(void) unlink(nciop->path);
-
-	ncio_free(nciop);
-
-	return status;
-}
-
-#endif /* USE_MPIO */
-
-#ifdef USE_MPIO /* Following interface added by Jianwei Li */
 
 int
 ncio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
@@ -550,5 +277,3 @@ ncio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
   free(buf);
   return NC_NOERR;
 }
-
-#endif /* USE_MPIO */

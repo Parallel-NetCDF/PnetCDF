@@ -11,9 +11,7 @@
 #include <sys/types.h>	/* off_t */
 #include "netcdf.h"
 
-#ifdef USE_MPIO	/* for mpio, added by Jianwei Li */
 #include <mpi.h>
-#endif
 
 typedef struct ncio ncio;	/* forward reference */
 
@@ -102,7 +100,6 @@ struct ncio {
 	 */
 	NCIO_CONST int fd;
 
-#ifdef USE_MPIO /* added by Jianwei Li */
 	/* 
 	 * The MPI File handle and the communicator 
 	 * Added by Jianwei Li
@@ -129,7 +126,6 @@ struct ncio {
 	MPI_Comm comm;
 	MPI_Info mpiinfo;
 	int mpioflags;
-#endif
 
 	/* member functions do the work */
 
@@ -161,30 +157,6 @@ ncio_new(const char *path, int ioflags);
 
 extern void
 ncio_free(ncio *nciop);
-
-#ifdef USE_MPIO /* Following interface changed by Jianwei Li */
-
-#else 
-
-extern int
-ncio_create(const char *path, int ioflags,
-	size_t initialsz,
-	off_t igeto, size_t igetsz, size_t *sizehintp,
-	ncio **nciopp, void **const igetvpp);
-
-#endif /* USE_MPIO */
-
-#ifdef USE_MPIO /* Following interface changed by Jianwei Li */
- 
-#else  
-
-extern int
-ncio_open(const char *path,
-	int ioflags,
-	off_t igeto, size_t igetsz, size_t *sizehintp,
-	ncio **nciopp, void **const igetvpp);
-
-#endif /* USE_MPIO */
 
 extern int 
 ncio_close(ncio *nciop, int doUnlink);
