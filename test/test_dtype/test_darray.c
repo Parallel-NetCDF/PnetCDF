@@ -8,9 +8,9 @@
 
 /* Configurable test parameters: edit it as you wish */
 #define TEST_DEFAULT_FILE "test_darray.nc" /* file to be written/read */
-#define TEST_DIMS 5 /* number of dimensions */
-#define TEST_N 11 /* size for the shortest dimension of the array */
-#define TEST_M 0.7 /* size of each dimension is increasingly multiplied by M */
+#define TEST_DIMS 3 /* number of dimensions */
+#define TEST_N 64 /* size for the shortest dimension of the array */
+#define TEST_M 0.9 /* size of each dimension is increasingly multiplied by M */
 #define TEST_ARRAY_ORDER MPI_ORDER_C
 
 int ndims = TEST_DIMS;
