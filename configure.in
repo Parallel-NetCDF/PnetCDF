@@ -215,7 +215,7 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
-UD_CHECK_SIZEOF(size_t)
+AC_CHECK_SIZEOF(size_t)
 if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
 fi
@@ -237,7 +237,7 @@ AC_CHECK_HEADERS(unistd.h,
 		AC_MSG_RESULT(none))
 	)
 
-UD_CHECK_SIZEOF(off_t)
+AC_CHECK_SIZEOF(off_t)
 dnl on some 64 bit platforms, the _LFS64_LARGEFILE define may not exist -- it
 dnl was, after all, designed for 32 bit systems trying to access large files.
 dnl If off_t is 8 bytes, then we *can* work on large files: do one last check
