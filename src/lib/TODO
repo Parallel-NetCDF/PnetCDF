@@ -7,8 +7,8 @@ DATA MODE FUNCTIONS: U == unimpplemented I == implemented
 
 ncmpi_get  text uchar schar short int long float double
 var1 [0]     I   U      U    I     I   U    I      I
-var          I   U      U    I     I   U    I      I     
-var_all      I   U      U    I     I   U    I      I     
+var          I   U      U    I     I   I    I      I     
+var_all      I   U      U    I     I   I    I      I     
 vara         I   U      U    I     I   U    I      I     
 vara_all     I   U      U    I     I   U    I      I     
 vars         I   U      U    I     I   U    I      I     
