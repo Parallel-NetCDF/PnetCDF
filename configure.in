@@ -12,6 +12,8 @@ FFLAGS=${FFLAGS-}
 AC_INIT(src/lib/ncconfig.in)
 UD_SRCDIR
 AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
+
+mkdir -p src/lib
 AC_CONFIG_HEADER(
     src/lib/ncconfig.h:src/lib/ncconfig.in
 )
@@ -50,3 +52,7 @@ UD_CHECK_SIZEOF(size_t)
 UD_MAKEWHATIS
 UD_FTPBINDIR
 UD_OUTPUT(macros.make)
+AC_OUTPUT(Makefile)
+AC_OUTPUT(rules.make)
+AC_OUTPUT(src/Makefile)
+AC_OUTPUT(src/lib/Makefile)
