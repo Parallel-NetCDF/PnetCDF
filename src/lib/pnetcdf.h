@@ -32,8 +32,8 @@
  */
 /* "$Id$" */
 
-#ifndef _NETCDF_
-#define _NETCDF_
+#ifndef _PNETCDF_
+#define _PNETCDF_
 
 #include <stddef.h> /* size_t, ptrdiff_t */
 #include <errno.h>  /* netcdf functions sometimes return system errors */
