@@ -450,7 +450,7 @@ ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
 }
 
 int 
-ncmpi_inq_attlen(int ncid, int varid, const char *name, size_t *lenp)
+ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset  *lenp)
 {
 	int status;
 	NC_attr *attrp;
@@ -470,7 +470,7 @@ ncmpi_inq_att(int ncid,
 	int varid,
 	const char *name, /* input, attribute name */
 	nc_type *datatypep,
-	size_t *lenp)
+	MPI_Offset  *lenp)
 {
 	int status;
 	NC_attr *attrp;
@@ -660,7 +660,7 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 	NC_attr **attrpp;
 	NC_attr *old = NULL;
 	int attrid;
-	size_t slen;
+	MPI_Offset  slen;
 
 	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
@@ -1024,7 +1024,7 @@ ncmpix_pad_getn_Idouble(const void **xpp, size_t nelems, double *tp, nc_type typ
 
 int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
-	size_t nelems, const char *value)
+	MPI_Offset  nelems, const char *value)
 {
 	int status;
 	NC *ncp;
@@ -1162,7 +1162,7 @@ ncmpi_get_att_text(int ncid, int varid, const char *name, char *str)
 
 int
 ncmpi_put_att_schar(int ncid, int varid, const char *name,
-	nc_type type, size_t nelems, const signed char *value)
+	nc_type type, MPI_Offset nelems, const signed char *value)
 {
 	int status;
 	NC *ncp;
@@ -1309,7 +1309,7 @@ ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp)
 
 int
 ncmpi_put_att_uchar(int ncid, int varid, const char *name,
-	nc_type type, size_t nelems, const unsigned char *value)
+	nc_type type, MPI_Offset nelems, const unsigned char *value)
 {
 	int status;
 	NC *ncp;
@@ -1456,7 +1456,7 @@ ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp)
 
 int
 ncmpi_put_att_short(int ncid, int varid, const char *name,
-	nc_type type, size_t nelems, const short *value)
+	nc_type type, MPI_Offset nelems, const short *value)
 {
 	int status;
 	NC *ncp;
@@ -1603,7 +1603,7 @@ ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp)
 
 int
 ncmpi_put_att_int(int ncid, int varid, const char *name,
-	nc_type type, size_t nelems, const int *value)
+	nc_type type, MPI_Offset nelems, const int *value)
 {
 	int status;
 	NC *ncp;
@@ -1750,7 +1750,7 @@ ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp)
 
 int
 ncmpi_put_att_long(int ncid, int varid, const char *name,
-	nc_type type, size_t nelems, const long *value)
+	nc_type type, MPI_Offset nelems, const long *value)
 {
 	int status;
 	NC *ncp;
@@ -1897,7 +1897,7 @@ ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp)
 
 int
 ncmpi_put_att_float(int ncid, int varid, const char *name,
-	nc_type type, size_t nelems, const float *value)
+	nc_type type, MPI_Offset nelems, const float *value)
 {
 	int status;
 	NC *ncp;
@@ -2044,7 +2044,7 @@ ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp)
 
 int
 ncmpi_put_att_double(int ncid, int varid, const char *name,
-	nc_type type, size_t nelems, const double *value)
+	nc_type type, MPI_Offset nelems, const double *value)
 {
 	int status;
 	NC *ncp;
