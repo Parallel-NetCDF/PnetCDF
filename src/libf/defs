@@ -573,6 +573,7 @@ $ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
 sub ncfxstrerror {
     $OUTFD = "NCFXSTRERRORFD";
     open( $OUTFD, ">xstrerrorf.c" ) || die "Cannot open xstrerrorf.c\n";
+    $out_prefix = "nfmpi_";
     $files[$#files+1] = "xstrerrorf.c";
     $args = "int *, char *";	
     &print_header( "ncfmpi_xstrerror", "xstrerror", $args );
