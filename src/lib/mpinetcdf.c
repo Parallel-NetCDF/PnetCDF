@@ -78,7 +78,7 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
 
   fSet(ncp->flags, NC_NOFILL);
 
-  status = ncio_create(comm, path, cmode, info, &ncp->nciop);  
+  status = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
   if(status != NC_NOERR) {
     free_NC(ncp);
     return status;
@@ -112,7 +112,7 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
   if(ncp == NULL)
     return NC_ENOMEM;
 
-  status = ncio_open(comm, path, omode, info, &ncp->nciop);
+  status = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
   if(status != NC_NOERR) {
     free_NC(ncp);
     return status;
@@ -296,13 +296,13 @@ ncmpi_sync(int ncid) {
   if(status != NC_NOERR)
     return status;
 
-  return ncio_sync(ncp->nciop);
+  return ncmpiio_sync(ncp->nciop);
 }
 
 int
 ncmpi_abort(int ncid) {
  /*
-  * In data mode, same as ncio_close.
+  * In data mode, same as ncmpiio_close.
   * In define mode, descard new definition.
   * In create, remove the file.
   */
@@ -331,7 +331,7 @@ ncmpi_abort(int ncid) {
       return status;
   }
 
-  (void) ncio_close(ncp->nciop, doUnlink);
+  (void) ncmpiio_close(ncp->nciop, doUnlink);
   ncp->nciop = NULL;
 
   del_from_NCList(ncp);

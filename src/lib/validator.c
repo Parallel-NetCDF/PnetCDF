@@ -662,7 +662,7 @@ main(int argc, char **argv) {
     return 0; 
   }
 
-  ncp->nciop = ncio_new(ncfile, NC_NOWRITE);
+  ncp->nciop = ncmpiio_new(ncfile, NC_NOWRITE);
   if(ncp->nciop == NULL) {
     free_NC(ncp);
     printf("Not enough memory!\n");
@@ -671,7 +671,7 @@ main(int argc, char **argv) {
 
   if ( (*((int *)&ncp->nciop->fd) = open(ncfile, O_RDONLY)) < 0 ) {
     printf("Can not open file: %s\n", ncfile);
-    ncio_free(ncp->nciop);
+    ncmpiio_free(ncp->nciop);
     free_NC(ncp);
     return 0;
   }
@@ -681,7 +681,7 @@ main(int argc, char **argv) {
   status = val_get_NC(ncp);
   if (status !=  0) {
     close(ncp->nciop->fd);
-    ncio_free(ncp->nciop);
+    ncmpiio_free(ncp->nciop);
     free_NC(ncp);
     return 0;
   }
@@ -692,13 +692,13 @@ main(int argc, char **argv) {
   if ( ncp->begin_rec + ncp->recsize * ncp->numrecs < ncfilestat.st_size ) {
     printf("Error: \n\tData size is larger than defined!\n");
     close(ncp->nciop->fd);
-    ncio_free(ncp->nciop);
+    ncmpiio_free(ncp->nciop);
     free_NC(ncp);
     return 0;  
   } else if ( ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) >= ncfilestat.st_size ) {
     printf("Error: \n\tData size is less than expected!\n");
     close(ncp->nciop->fd);
-    ncio_free(ncp->nciop);
+    ncmpiio_free(ncp->nciop);
     free_NC(ncp);
     return 0;
   }
@@ -707,7 +707,7 @@ main(int argc, char **argv) {
   /* close the file */
 
   close(ncp->nciop->fd);
-  ncio_free(ncp->nciop);
+  ncmpiio_free(ncp->nciop);
   free_NC(ncp);
 
   printf("The netCDF file is validated!\n");

@@ -588,7 +588,7 @@ int
 move_data_r(NC *ncp, NC *old) {
   /* no new variable inserted, move the whole contiguous data part */
   ncp->numrecs = old->numrecs;
-  return ncio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
+  return ncmpiio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
               old->begin_rec - old->begin_var + old->recsize * old->numrecs);
 }
 
@@ -608,7 +608,7 @@ move_recs_r(NC *ncp, NC *old) {
     
     /* No new rec var inserted, move all rec vars as a whole */
 
-    status = ncio_move(ncp->nciop, ncp_off, old_off, 
+    status = ncmpiio_move(ncp->nciop, ncp_off, old_off, 
                        old_recsize * old_nrecs);
     if(status != NC_NOERR)
       return status;
@@ -617,7 +617,7 @@ move_recs_r(NC *ncp, NC *old) {
     /* else, new rec var inserted, to be moved one record at a time */
 
     for (recno = (int)old_nrecs -1; recno >= 0; recno--) {
-      status = ncio_move(ncp->nciop, 
+      status = ncmpiio_move(ncp->nciop, 
                          ncp_off+recno*ncp_recsize, 
                          old_off+recno*old_recsize, 
                          old_recsize);
@@ -639,7 +639,7 @@ move_recs_r(NC *ncp, NC *old) {
 
 int
 move_vars_r(NC *ncp, NC *old) {
-  return ncio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
+  return ncmpiio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
                    old->begin_rec - old->begin_var); 
 }
  
@@ -781,7 +781,7 @@ NC_close(NC *ncp) {
       return status;
   }
  
-  (void) ncio_close(ncp->nciop, 0);
+  (void) ncmpiio_close(ncp->nciop, 0);
   ncp->nciop = NULL;
  
   del_from_NCList(ncp);
