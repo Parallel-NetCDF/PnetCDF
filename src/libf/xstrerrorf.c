@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2), MPI_Fint *ierr FORT_END_LEN(d2) ){
+FORTRAN_API int FORT_CALL nfmpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2) FORT_END_LEN(d2) ){
     const char *p = ncmpi_strerror( *v1 );
     int i;
     /* d2 is the length of the string passed into the routine */
@@ -30,4 +30,5 @@ FORTRAN_API void FORT_CALL nfmpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_
     }
     /* Blank pad */
     for (; i<d2; i++) v2[i] = ' ';
+    return 0;
 }

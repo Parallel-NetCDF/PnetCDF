@@ -21,7 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[], int v5[], void*v6, int *v7, MPI_Fint *v8, MPI_Fint *ierr ){
+FORTRAN_API int FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[], int v5[], void*v6, int *v7, MPI_Fint *v8 ){
+    int ierr;
     int l2 = *v2 - 1;
     size_t *l3 = 0;
     size_t *l4 = 0;
@@ -36,8 +37,8 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        ierr = ln; 
+	return ierr;
     }
     }
 
@@ -50,8 +51,8 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        ierr = ln; 
+	return ierr;
     }
     }
 
@@ -64,15 +65,16 @@ FORTRAN_API void FORT_CALL nfmpi_put_vars_ ( int *v1, int *v2, int v3[], int v4[
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        ierr = ln; 
+	return ierr;
     }
     }
-    *ierr = ncmpi_put_vars( *v1, l2, l3, l4, l5, v6, *v7, (MPI_Datatype)(*v8) );
+    ierr = ncmpi_put_vars( *v1, l2, l3, l4, l5, v6, *v7, (MPI_Datatype)(*v8) );
 
     if (l3) { free(l3); }
 
     if (l4) { free(l4); }
 
     if (l5) { free(l5); }
+    return ierr;
 }

@@ -21,7 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_inq_var_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Fint *v5, MPI_Fint *v6, MPI_Fint *v7, MPI_Fint *ierr FORT_END_LEN(d3) ){
+FORTRAN_API int FORT_CALL nfmpi_inq_var_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Fint *v5, MPI_Fint *v6, MPI_Fint *v7 FORT_END_LEN(d3) ){
+    int ierr;
     int l2 = *v2 - 1;
     int *l6=0, ln6;
 
@@ -29,7 +30,7 @@ FORTRAN_API void FORT_CALL nfmpi_inq_var_ ( int *v1, int *v2, char *v3 FORT_MIXE
     if (ln6 > 0) {
         l6 = (size_t *)malloc( ln6 * sizeof(int) );
     }
-    *ierr = ncmpi_inq_var( *v1, l2, v3, v4, v5, l6, v7 );
+    ierr = ncmpi_inq_var( *v1, l2, v3, v4, v5, l6, v7 );
 
     {char *p = v3;
         while (*p) p++;
@@ -38,9 +39,10 @@ FORTRAN_API void FORT_CALL nfmpi_inq_var_ ( int *v1, int *v2, char *v3 FORT_MIXE
 
     if (l6) { 
 	int li;
-	if (!*ierr) {
+	if (!ierr) {
             for (li=0; li<ln6; li++) 
                 v6[li] = l6[ln6-1-li] + 1;
         }
         free(l6); }
+    return ierr;
 }

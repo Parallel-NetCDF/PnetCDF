@@ -21,7 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_copy_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, int *v5, MPI_Fint *ierr FORT_END_LEN(d3) ){
+FORTRAN_API int FORT_CALL nfmpi_copy_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, int *v5 FORT_END_LEN(d3) ){
+    int ierr;
     int l2 = *v2 - 1;
     char *p3;
     int l5 = *v5 - 1;
@@ -34,6 +35,7 @@ FORTRAN_API void FORT_CALL nfmpi_copy_att_ ( int *v1, int *v2, char *v3 FORT_MIX
         for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
         p3[li] = 0; 
     }
-    *ierr = ncmpi_copy_att( *v1, l2, p3, *v4, l5 );
+    ierr = ncmpi_copy_att( *v1, l2, p3, *v4, l5 );
     free( p3 );
+    return ierr;
 }

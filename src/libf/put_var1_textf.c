@@ -21,7 +21,8 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API void FORT_CALL nfmpi_put_var1_text_ ( int *v1, int *v2, int v3[], char *v4 FORT_MIXED_LEN(d4), MPI_Fint *ierr FORT_END_LEN(d4) ){
+FORTRAN_API int FORT_CALL nfmpi_put_var1_text_ ( int *v1, int *v2, int v3[], char *v4 FORT_MIXED_LEN(d4) FORT_END_LEN(d4) ){
+    int ierr;
     int l2 = *v2 - 1;
     size_t *l3 = 0;
 
@@ -34,11 +35,12 @@ FORTRAN_API void FORT_CALL nfmpi_put_var1_text_ ( int *v1, int *v2, int v3[], ch
     }
     else if (ln < 0) {
         /* Error return */
-        *ierr = ln; 
-	return;
+        ierr = ln; 
+	return ierr;
     }
     }
-    *ierr = ncmpi_put_var1_text( *v1, l2, l3, v4 );
+    ierr = ncmpi_put_var1_text( *v1, l2, l3, v4 );
 
     if (l3) { free(l3); }
+    return ierr;
 }
