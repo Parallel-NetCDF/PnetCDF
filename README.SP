@@ -8,3 +8,5 @@
    setenv FC     xlf
    setenv CC     xlc
    setenv CXX    xlC
+
+# after setting these variables, configure/make/make install should "just work"
