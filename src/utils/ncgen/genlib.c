@@ -1262,8 +1262,9 @@ f_fill_name(
 	return "NF_FILL_FLOAT";
     case NC_DOUBLE:
 	return "NF_FILL_DOUBLE";
+    default:
+	derror("f_fill_name: bad type code");
     }
-    derror("f_fill_name: bad type code");
     return 0;
 }
 
