@@ -23,7 +23,7 @@
 #include "mpifnetcdf.h"
 FORTRAN_API void FORT_CALL nfmpi_put_att_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, char *v5 FORT_MIXED_LEN(d5), MPI_Fint *ierr FORT_END_LEN(d3) FORT_END_LEN(d5) ){
     char *p3;
-    size_t l4 = (size_t)v4;
+    size_t l4 = (size_t)*v4;
     char *p5;
 
     {char *p = v3 + d3 - 1;
