@@ -914,3 +914,9 @@ int ncmpixVardim( int ncid, int varid )
 }
 
 return 1;
+
+# Local variables:
+#  mode: perl
+# End:
+#
+# vim:ft=perl
