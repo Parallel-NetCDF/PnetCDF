@@ -91,7 +91,7 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
     fSet(ncp->flags, NC_NSYNC);
   }
 
-  add_to_NCList(ncp);
+  ncmpii_add_to_NCList(ncp);
   *ncidp = ncp->nciop->fd;
 
   return status;
@@ -131,7 +131,7 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
     return status;
   }
 
-  add_to_NCList(ncp);
+  ncmpii_add_to_NCList(ncp);
 
   *ncidp = ncp->nciop->fd;
  
@@ -144,7 +144,7 @@ ncmpi_redef(int ncid) {
   NC *ncp;
   int mynumrecs, numrecs;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR) 
     return status; 
 
@@ -191,7 +191,7 @@ ncmpi_begin_indep_data(int ncid) {
   NC *ncp;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if (status != NC_NOERR)
     return status;
 
@@ -226,7 +226,7 @@ ncmpi_end_indep_data(int ncid) {
   NC *ncp;
   int rank;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if (status != NC_NOERR)
     return status; 
 
@@ -259,14 +259,14 @@ ncmpi_enddef(int ncid) {
   int status = NC_NOERR;
   NC *ncp;
 
-  status = NC_check_id(ncid, &ncp); 
+  status = ncmpii_NC_check_id(ncid, &ncp); 
   if(status != NC_NOERR)
     return status;
 
   if(!NC_indef(ncp))
     return(NC_ENOTINDEFINE);
 
-  return NC_enddef(ncp);
+  return ncmpii_NC_enddef(ncp);
 }
 
 int
@@ -274,7 +274,7 @@ ncmpi_sync(int ncid) {
   int status = NC_NOERR;
   NC *ncp;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
@@ -286,7 +286,7 @@ ncmpi_sync(int ncid) {
 
   /* else, read/write */
 
-  status = NC_sync(ncp);
+  status = ncmpii_NC_sync(ncp);
   if(status != NC_NOERR)
     return status;
 
@@ -304,7 +304,7 @@ ncmpi_abort(int ncid) {
   NC *ncp;
   int doUnlink = 0;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
@@ -320,7 +320,7 @@ ncmpi_abort(int ncid) {
   } 
   else if (!NC_readonly(ncp) && !NC_indef(ncp)) {
     /* data mode, write */
-    status = NC_sync(ncp);
+    status = ncmpii_NC_sync(ncp);
     if (status != NC_NOERR)
       return status;
   }
@@ -328,7 +328,7 @@ ncmpi_abort(int ncid) {
   (void) ncmpiio_close(ncp->nciop, doUnlink);
   ncp->nciop = NULL;
 
-  del_from_NCList(ncp);
+  ncmpii_del_from_NCList(ncp);
 
   ncmpii_free_NC(ncp);
 
@@ -340,13 +340,13 @@ ncmpi_close(int ncid) {
   int status = NC_NOERR;
   NC *ncp;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
   /* release NC object, close the file and write Dirty numrecs if necessary */
 
-  return NC_close(ncp);
+  return ncmpii_NC_close(ncp);
 }
 
 /* End Of Dataset Functions */
@@ -915,7 +915,7 @@ NCcoordck(NC *ncp, const NC_var *varp, const size_t *coord)
                         /* else */
                         {
                                 /* Update from disk and check again */
-                                const int status = read_numrecs(ncp);
+                                const int status = ncmpii_read_numrecs(ncp);
                                 if(status != NC_NOERR)
                                         return status;
                                 if(*coord >= ncp->numrecs)
@@ -1432,7 +1432,7 @@ ncmpi_put_var1(int ncid, int varid,
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -1450,7 +1450,7 @@ ncmpi_put_var1(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -1549,7 +1549,7 @@ ncmpi_get_var1(int ncid, int varid,
   int mpireturn;
   int rank;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -1564,7 +1564,7 @@ ncmpi_get_var1(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -1649,7 +1649,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -1664,7 +1664,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -1750,7 +1750,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -1768,7 +1768,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR; 
  
@@ -1868,7 +1868,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -1883,7 +1883,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -1975,7 +1975,7 @@ ncmpi_put_vara_all(int ncid, int varid,
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -1994,7 +1994,7 @@ ncmpi_put_vara_all(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2085,7 +2085,7 @@ ncmpi_put_vara_all(int ncid, int varid,
       if (ncp->numrecs < max_numrecs) {
         ncp->numrecs = max_numrecs;
         if (rank == 0) {
-          status = write_numrecs(ncp); /* call subroutine from nc.c */
+          status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
           if(status != NC_NOERR)
             return status;
         }
@@ -2113,7 +2113,7 @@ ncmpi_get_vara_all(int ncid, int varid,
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -2128,7 +2128,7 @@ ncmpi_get_vara_all(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2220,7 +2220,7 @@ ncmpi_put_vara(int ncid, int varid,
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -2238,7 +2238,7 @@ ncmpi_put_vara(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2341,7 +2341,7 @@ ncmpi_get_vara(int ncid, int varid,
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -2356,7 +2356,7 @@ ncmpi_get_vara(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2451,7 +2451,7 @@ ncmpi_put_vars_all(int ncid, int varid,
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -2470,7 +2470,7 @@ ncmpi_put_vars_all(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2562,7 +2562,7 @@ ncmpi_put_vars_all(int ncid, int varid,
       if (ncp->numrecs < max_numrecs) {
         ncp->numrecs = max_numrecs;
         if (rank == 0) {
-          status = write_numrecs(ncp); /* call subroutine from nc.c */
+          status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
           if(status != NC_NOERR)
             return status;
         }
@@ -2592,7 +2592,7 @@ ncmpi_get_vars_all(int ncid, int varid,
   int mpireturn;
   int rank;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -2607,7 +2607,7 @@ ncmpi_get_vars_all(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2702,7 +2702,7 @@ ncmpi_put_vars(int ncid, int varid,
   int mpireturn;
   int rank;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -2720,7 +2720,7 @@ ncmpi_put_vars(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2826,7 +2826,7 @@ ncmpi_get_vars(int ncid, int varid,
   int mpireturn;
   int rank;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
@@ -2841,7 +2841,7 @@ ncmpi_get_vars(int ncid, int varid,
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2927,11 +2927,11 @@ ncmpi_put_var1_text(int ncid, int varid,
   NC *ncp;
   int status;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -2948,11 +2948,11 @@ ncmpi_put_var1_short(int ncid, int varid,
   NC *ncp;
   int status;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -2968,11 +2968,11 @@ ncmpi_put_var1_int(int ncid, int varid,
   NC *ncp;
   int status;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -2988,11 +2988,11 @@ ncmpi_put_var1_float(int ncid, int varid,
   NC *ncp;
   int status;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3008,11 +3008,11 @@ ncmpi_put_var1_double(int ncid, int varid,
   NC *ncp;
   int status;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3028,11 +3028,11 @@ ncmpi_get_var1_text(int ncid, int varid,
   NC *ncp;
   int status;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -3048,11 +3048,11 @@ ncmpi_get_var1_short(int ncid, int varid,
   NC *ncp;
   int status;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR; 
 
@@ -3068,11 +3068,11 @@ ncmpi_get_var1_int(int ncid, int varid,
   NC *ncp;
   int status;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3088,11 +3088,11 @@ ncmpi_get_var1_float(int ncid, int varid,
   NC *ncp;
   int status;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3108,11 +3108,11 @@ ncmpi_get_var1_double(int ncid, int varid,
   NC *ncp;
   int status;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3128,11 +3128,11 @@ ncmpi_put_var_text(int ncid, int varid, const char *op) {
   int ndims;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -3177,11 +3177,11 @@ ncmpi_put_var_short(int ncid, int varid, const short *op) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR; 
 
@@ -3226,11 +3226,11 @@ ncmpi_put_var_int(int ncid, int varid, const int *op) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3275,11 +3275,11 @@ ncmpi_put_var_float(int ncid, int varid, const float *op) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3324,11 +3324,11 @@ ncmpi_put_var_double(int ncid, int varid, const double *op) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3373,11 +3373,11 @@ ncmpi_get_var_text(int ncid, int varid, char *ip) {
   int ndims;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -3422,11 +3422,11 @@ ncmpi_get_var_short(int ncid, int varid, short *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3471,11 +3471,11 @@ ncmpi_get_var_int(int ncid, int varid, int *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3520,11 +3520,11 @@ ncmpi_get_var_float(int ncid, int varid, float *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3569,11 +3569,11 @@ ncmpi_get_var_double(int ncid, int varid, double *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3618,11 +3618,11 @@ ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
   int ndims;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -3667,11 +3667,11 @@ ncmpi_get_var_short_all(int ncid, int varid, short *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3716,11 +3716,11 @@ ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3765,11 +3765,11 @@ ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3814,11 +3814,11 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
   int ndims;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3865,11 +3865,11 @@ ncmpi_put_vara_text_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -3892,11 +3892,11 @@ ncmpi_put_vara_text(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -3919,11 +3919,11 @@ ncmpi_put_vara_short_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3946,11 +3946,11 @@ ncmpi_put_vara_short(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -3973,11 +3973,11 @@ ncmpi_put_vara_int_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;                                                                  
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR; 
 
@@ -4000,11 +4000,11 @@ ncmpi_put_vara_int(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4027,11 +4027,11 @@ ncmpi_put_vara_float_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4054,11 +4054,11 @@ ncmpi_put_vara_float(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4081,11 +4081,11 @@ ncmpi_put_vara_double_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4108,11 +4108,11 @@ ncmpi_put_vara_double(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4136,11 +4136,11 @@ ncmpi_get_vara_text_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4164,11 +4164,11 @@ ncmpi_get_vara_text(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4192,11 +4192,11 @@ ncmpi_get_vara_short_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4220,11 +4220,11 @@ ncmpi_get_vara_short(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4248,11 +4248,11 @@ ncmpi_get_vara_int_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4275,11 +4275,11 @@ ncmpi_get_vara_int(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4303,11 +4303,11 @@ ncmpi_get_vara_float_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4330,11 +4330,11 @@ ncmpi_get_vara_float(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4358,11 +4358,11 @@ ncmpi_get_vara_double_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4385,11 +4385,11 @@ ncmpi_get_vara_double(int ncid, int varid,
   int dim;
   int nelems, nbytes;
  
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
  
@@ -4414,11 +4414,11 @@ ncmpi_put_vars_text_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4443,11 +4443,11 @@ ncmpi_put_vars_text(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4472,11 +4472,11 @@ ncmpi_put_vars_short_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4501,11 +4501,11 @@ ncmpi_put_vars_short(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4530,11 +4530,11 @@ ncmpi_put_vars_int_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4559,11 +4559,11 @@ ncmpi_put_vars_int(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
   
@@ -4588,11 +4588,11 @@ ncmpi_put_vars_float_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4617,11 +4617,11 @@ ncmpi_put_vars_float(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4647,11 +4647,11 @@ ncmpi_put_vars_double_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4678,11 +4678,11 @@ ncmpi_put_vars_double(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4708,11 +4708,11 @@ ncmpi_get_vars_text_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4737,11 +4737,11 @@ ncmpi_get_vars_text(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4766,11 +4766,11 @@ ncmpi_get_vars_short_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4795,11 +4795,11 @@ ncmpi_get_vars_short(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4824,11 +4824,11 @@ ncmpi_get_vars_int_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4853,11 +4853,11 @@ ncmpi_get_vars_int(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4882,11 +4882,11 @@ ncmpi_get_vars_float_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4911,11 +4911,11 @@ ncmpi_get_vars_float(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4941,11 +4941,11 @@ ncmpi_get_vars_double_all(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
  
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -4971,11 +4971,11 @@ ncmpi_get_vars_double(int ncid, int varid,
   int dim;
   int nelems, nbytes;
 
-  status = NC_check_id(ncid, &ncp);
+  status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
 
-  varp = NC_lookupvar(ncp, varid);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 

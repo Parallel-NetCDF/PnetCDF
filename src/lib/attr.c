@@ -318,7 +318,7 @@ NC_attrarray0( NC *ncp, int varid)
  *  return match or NULL if Not Found.
  */
 NC_attr **
-NC_findattr(const NC_attrarray *ncap, const char *name)
+ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name)
 {
 	NC_attr **attrpp;
 	size_t attrid;
@@ -359,7 +359,7 @@ NC_lookupattr(int ncid,
 	NC_attrarray *ncap;
 	NC_attr **tmp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -367,7 +367,7 @@ NC_lookupattr(int ncid,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	tmp = NC_findattr(ncap, name);
+	tmp = ncmpii_NC_findattr(ncap, name);
 	if(tmp == NULL)
 		return NC_ENOTATT;
 
@@ -387,7 +387,7 @@ ncmpi_inq_attname(int ncid, int varid, int attnum, char *name)
 	NC_attrarray *ncap;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -414,7 +414,7 @@ ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -423,7 +423,7 @@ ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
 		return NC_ENOTVAR;
 	
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp == NULL)
 		return NC_ENOTATT;
 
@@ -499,7 +499,7 @@ ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 	NC_string *newStr, *old;
 
 			/* sortof inline clone of NC_lookupattr() */
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -511,19 +511,19 @@ ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 		return NC_ENOTVAR;
 
 /* bugs found by Jianwei Li
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 */
-	status = NC_check_name(newname);
+	status = ncmpii_NC_check_name(newname);
 	if(status != NC_NOERR)
 		return status;
 
-	tmp = NC_findattr(ncap, name);
+	tmp = ncmpii_NC_findattr(ncap, name);
 	if(tmp == NULL)
 		return NC_ENOTATT;
 	attrp = *tmp;
 			/* end inline clone NC_lookupattr() */
 
-	if(NC_findattr(ncap, newname) != NULL)
+	if(ncmpii_NC_findattr(ncap, newname) != NULL)
 	{
 		/* name in use */
 		return NC_ENAMEINUSE;
@@ -548,7 +548,7 @@ ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 
 	if(NC_doHsync(ncp))
 	{
-		status = NC_sync(ncp);
+		status = ncmpii_NC_sync(ncp);
 		if(status != NC_NOERR)
 			return status;
 	}
@@ -572,7 +572,7 @@ ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ov
 	if(status != NC_NOERR)
 		return status;
 
-	status = NC_check_id(ncid_out, &ncp);
+	status = ncmpii_NC_check_id(ncid_out, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -583,7 +583,7 @@ ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ov
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -605,7 +605,7 @@ ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ov
 
 			if(NC_doHsync(ncp))
 			{
-				status = NC_sync(ncp);
+				status = ncmpii_NC_sync(ncp);
 				if(status != NC_NOERR)
 					return status;
 			}
@@ -662,7 +662,7 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 	int attrid;
 	size_t slen;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -673,7 +673,7 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-			/* sortof inline NC_findattr() */
+			/* sortof inline ncmpii_NC_findattr() */
 	slen = strlen(name);
 
 	attrpp = (NC_attr **) ncap->value;
@@ -1033,7 +1033,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1044,7 +1044,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1055,7 +1055,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -1083,7 +1083,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				status = NC_sync(ncp);
+				status = ncmpii_NC_sync(ncp);
 				if(status != NC_NOERR)
 					return status;
 			}
@@ -1171,7 +1171,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1196,7 +1196,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -1223,7 +1223,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ischar
@@ -1246,7 +1246,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1318,7 +1318,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1343,7 +1343,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -1370,7 +1370,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Iuchar
@@ -1393,7 +1393,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1465,7 +1465,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1490,7 +1490,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -1517,7 +1517,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ishort
@@ -1540,7 +1540,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1612,7 +1612,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1637,7 +1637,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -1664,7 +1664,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Iint
@@ -1687,7 +1687,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1759,7 +1759,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1784,7 +1784,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -1811,7 +1811,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ilong
@@ -1834,7 +1834,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1906,7 +1906,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -1931,7 +1931,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -1958,7 +1958,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ifloat
@@ -1981,7 +1981,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 
@@ -2053,7 +2053,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 	NC_attr *old = NULL;
 	NC_attr *attrp;
 
-	status = NC_check_id(ncid, &ncp);
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -2078,7 +2078,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
 
-	attrpp = NC_findattr(ncap, name);
+	attrpp = ncmpii_NC_findattr(ncap, name);
 	if(attrpp != NULL) /* name in use */
 	{
 		if(!NC_indef(ncp) )
@@ -2105,7 +2105,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Idouble
@@ -2128,7 +2128,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = NC_check_name(name);
+	status = ncmpii_NC_check_name(name);
 	if(status != NC_NOERR)
 		return status;
 

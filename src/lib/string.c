@@ -33,7 +33,7 @@ ncmpii_free_NC_string(NC_string *ncstrp)
  * alphanumeric, '-', '_', or '.'.
  */
 int
-NC_check_name(const char *name)
+ncmpii_NC_check_name(const char *name)
 {
 	const char *cp = name;
 	assert(name != NULL);
