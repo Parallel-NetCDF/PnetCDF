@@ -32,8 +32,7 @@ LIB_CSRCS = \
 	string.c \
 	var.c
 #	v1hpg.c
-#	ncio.c \
-#	putget.c
+#	ncio.c 
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \
