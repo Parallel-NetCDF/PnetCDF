@@ -191,7 +191,7 @@ FORTRAN_API double max_float_() {
 /* Else leave name alone */
 #endif
 FORTRAN_API double max_double_() {
-	return LONG_MAX;
+	return DBL_MAX;
 }
 
 #ifdef F77_NAME_UPPER
