@@ -283,7 +283,9 @@ int
 hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
   void *value = attrp->xvalue;
 
+/*
   assert(pbp->size % XALIGN == 0);
+*/
 
   (void) memcpy(pbp->pos, value, attrp->xsz);
   pbp->pos = (void *)((char *)pbp->pos + attrp->xsz);
