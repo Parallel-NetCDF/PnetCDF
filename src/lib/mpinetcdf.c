@@ -374,6 +374,8 @@ length_of_mpitype(MPI_Datatype datatype) {
 	return (int)(sizeof(short));
     case MPI_INT:
 	return((int)sizeof(int)); 
+    case MPI_LONG:
+	return((int)sizeof(long)); 
     case MPI_FLOAT:
 	return((int)sizeof(float));
     case MPI_DOUBLE:
@@ -394,6 +396,7 @@ need_convert(nc_type nctype,MPI_Datatype mpitype) {
            (nctype == NC_BYTE && mpitype == MPI_BYTE) ||
            (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
            (nctype == NC_INT && mpitype == MPI_INT) ||
+	   (nctype == NC_INT && mpitype == MPI_LONG && X_SIZEOF_INT == SIZEOF_LONG) ||
            (nctype == NC_FLOAT && mpitype == MPI_FLOAT) ||
            (nctype == NC_DOUBLE && mpitype == MPI_DOUBLE) );
 }
@@ -405,6 +408,7 @@ need_swap(nc_type nctype,MPI_Datatype mpitype) {
 #else
   return ( (nctype == NC_SHORT && mpitype == MPI_SHORT) ||
           (nctype == NC_INT && mpitype == MPI_INT) ||
+	  (nctype == NC_INT && mpitype == MPI_LONG && X_SIZEOF_INT == SIZEOF_LONG) ||
           (nctype == NC_FLOAT && mpitype == MPI_FLOAT) ||
           (nctype == NC_DOUBLE && mpitype == MPI_DOUBLE) );
 #endif
@@ -442,6 +446,9 @@ x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
     case MPI_INT:
         status = ncmpix_putn_schar_int(&xp, nelems, (const int *)data);
         break;
+    case MPI_LONG:
+        status = ncmpix_putn_schar_long(&xp, nelems, (const long *)data);
+        break;
     case MPI_FLOAT:
         status = ncmpix_putn_schar_float(&xp, nelems, (const float *)data);
         break;
@@ -455,12 +462,12 @@ x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 
 static int
 x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
-  char *xp, *data;
+  void *xp, *data;
   int datainc;
   int lstatus, status = ENOERR;
  
-  xp = (char *) xbuf;
-  data = (char *) buf;
+  xp = (void *) xbuf;
+  data = (void *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch (datatype) {
@@ -468,33 +475,20 @@ x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 	status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_put_short_short(xp, (const short *)data);
-	  if(lstatus != ENOERR)
-	    status = lstatus;
-	}
-	break;
+        status = ncmpix_putn_short_short(&xp, nelems, (const short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_put_short_int(xp, (const int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_short_int(&xp, nelems, (const int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_putn_short_long(&xp, nelems, (const long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_put_short_float(xp, (const float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_short_float(&xp, nelems, (const float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_put_short_double(xp, (const double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_short_double(&xp, nelems, (const double *)data);
+        break;
   }
 
   return status;
@@ -502,12 +496,12 @@ x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 
 static int
 x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
-  char *xp, *data;
+  void *xp, *data;
   int datainc;
   int lstatus, status = ENOERR;
  
-  xp = (char *) xbuf;
-  data = (char *) buf;
+  xp = (void *) xbuf;
+  data = (void *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch (datatype) {
@@ -515,33 +509,20 @@ x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
         status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_put_int_short(xp, (const short *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_int_short(&xp, nelems, (const short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_put_int_int(xp, (const int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_int_int(&xp, nelems, (const int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_putn_int_long(&xp, nelems, (const long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_put_int_float(xp, (const float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_int_float(&xp, nelems, (const float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_put_int_double(xp, (const double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_int_double(&xp, nelems, (const double *)data);
+        break;
   }
 
   return status;
@@ -549,12 +530,12 @@ x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 
 static int
 x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
-  char *xp, *data;
+  void *xp, *data;
   int datainc;
   int lstatus, status = ENOERR;
  
-  xp = (char *) xbuf;
-  data = (char *) buf;
+  xp = (void *) xbuf;
+  data = (void *) buf;
   datainc = length_of_mpitype(datatype);
  
   switch (datatype) {
@@ -562,33 +543,20 @@ x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
         status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_put_float_short(xp, (const short *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_float_short(&xp, nelems, (const short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_put_float_int(xp, (const int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_float_int(&xp, nelems, (const int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_putn_float_long(&xp, nelems, (const long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_put_float_float(xp, (const float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_float_float(&xp, nelems, (const float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_put_float_double(xp, (const double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_float_double(&xp, nelems, (const double *)data);
+        break;
   }
 
   return status;
@@ -596,12 +564,12 @@ x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 
 int
 x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
-  char *xp, *data;
+  void *xp, *data;
   int datainc;
   int lstatus, status = ENOERR;
  
-  xp = (char *) xbuf; 
-  data = (char *) buf;
+  xp = (void *) xbuf; 
+  data = (void *) buf;
   datainc = length_of_mpitype(datatype);  
 
   switch (datatype) {
@@ -609,33 +577,20 @@ x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
         status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-          lstatus = ncmpix_put_double_short(xp, (const short *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_double_short(&xp, nelems, (const short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-          lstatus = ncmpix_put_double_int(xp, (const int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_double_int(&xp, nelems, (const int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_putn_double_long(&xp, nelems, (const long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-          lstatus = ncmpix_put_double_float(xp, (const float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_double_float(&xp, nelems, (const float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-          lstatus = ncmpix_put_double_double(xp, (const double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_putn_double_double(&xp, nelems, (const double *)data);
+        break;
   }
 
   return status;
@@ -658,6 +613,9 @@ x_getn_schar(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
         break;
     case MPI_INT:
         status = ncmpix_getn_schar_int((const void **)&xp, nelems, (int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_getn_schar_long((const void **)&xp, nelems, (long *)data);
         break;
     case MPI_FLOAT:
         status = ncmpix_getn_schar_float((const void **)&xp, nelems, (float *)data);
@@ -685,33 +643,20 @@ x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
         status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_get_short_short(xp, (short *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_short_short((const void **)&xp, nelems, (short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_get_short_int(xp, (int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_short_int((const void **)&xp, nelems, (int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_getn_short_long((const void **)&xp, nelems, (long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_get_short_float(xp, (float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_short_float((const void **)&xp, nelems, (float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, data += datainc) {
-          lstatus = ncmpix_get_short_double(xp, (double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_short_double((const void **)&xp, nelems, (double *)data);
+        break;
   }
 
   return status;
@@ -732,33 +677,20 @@ x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
         status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_get_int_short(xp, (short *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_int_short((const void **)&xp, nelems, (short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_get_int_int(xp, (int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_int_int((const void **)&xp, nelems, (int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_getn_int_long((const void **)&xp, nelems, (long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_get_int_float(xp, (float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_int_float((const void **)&xp, nelems, (float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, data += datainc) {
-          lstatus = ncmpix_get_int_double(xp, (double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_int_double((const void **)&xp, nelems, (double *)data);
+        break;
   }
 
   return status;
@@ -779,33 +711,20 @@ x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
         status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_get_float_short(xp, (short *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_float_short((const void **)&xp, nelems, (short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_get_float_int(xp, (int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_float_int((const void **)&xp, nelems, (int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_getn_float_long((const void **)&xp, nelems, (long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_get_float_float(xp, (float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_float_float((const void **)&xp, nelems, (float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, data += datainc) {
-          lstatus = ncmpix_get_float_double(xp, (double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_float_double((const void **)&xp, nelems, (double *)data);
+        break;
   }
 
   return status;
@@ -826,33 +745,20 @@ x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
         status = NC_ECHAR;
 	break;
     case MPI_SHORT:
-	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-	  lstatus = ncmpix_get_double_short(xp, (short *)data);
-	  if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_double_short((const void **)&xp, nelems, (short *)data);
+        break;
     case MPI_INT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-          lstatus = ncmpix_get_double_int(xp, (int *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_double_int((const void **)&xp, nelems, (int *)data);
+        break;
+    case MPI_LONG:
+        status = ncmpix_getn_double_long((const void **)&xp, nelems, (long *)data);
+        break;
     case MPI_FLOAT:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-          lstatus = ncmpix_get_double_float(xp, (float *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_double_float((const void **)&xp, nelems, (float *)data);
+        break;
     case MPI_DOUBLE:
-        for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, data += datainc) {
-          lstatus = ncmpix_get_double_double(xp, (double *)data);
-          if(lstatus != ENOERR)
-            status = lstatus;
-        }
-	break;
+        status = ncmpix_getn_double_double((const void **)&xp, nelems, (double *)data);
+        break;
   }
 
   return status;
@@ -2981,6 +2887,26 @@ ncmpi_put_var1_int(int ncid, int varid,
 }
 
 int
+ncmpi_put_var1_long(int ncid, int varid,
+                   const size_t index[],
+                   const long *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  return ncmpi_put_var1(ncid, varid, index,
+                        (const void *)op, sizeof(long), MPI_LONG);
+}
+
+int
 ncmpi_put_var1_float(int ncid, int varid,
                      const size_t index[],
                      const float *op) {
@@ -3080,6 +3006,26 @@ ncmpi_get_var1_int(int ncid, int varid,
                         (void *)ip, sizeof(int), MPI_INT);  
 }
  
+int
+ncmpi_get_var1_long(int ncid, int varid,
+                   const size_t index[],
+                   long *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  return ncmpi_get_var1(ncid, varid, index,
+                        (void *)ip, sizeof(long), MPI_LONG); 
+}
+
 int
 ncmpi_get_var1_float(int ncid, int varid,
                      const size_t index[],
@@ -3266,6 +3212,55 @@ ncmpi_put_var_int(int ncid, int varid, const int *op) {
  
   return ncmpi_put_var(ncid, varid, (const void *)op, nbytes, MPI_INT);
 } 
+
+int
+ncmpi_put_var_long(int ncid, int varid, const long *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(long);
+
+  return ncmpi_put_var(ncid, varid, (const void *)op, nbytes, MPI_LONG);
+}
 
 int
 ncmpi_put_var_float(int ncid, int varid, const float *op) {
@@ -3513,6 +3508,55 @@ ncmpi_get_var_int(int ncid, int varid, int *ip) {
 } 
 
 int
+ncmpi_get_var_long(int ncid, int varid, long *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(long);
+
+  return ncmpi_get_var(ncid, varid, (void *)ip, nbytes, MPI_LONG);
+}
+
+int
 ncmpi_get_var_float(int ncid, int varid, float *ip) {
   NC_var *varp;
   NC *ncp;
@@ -3756,6 +3800,55 @@ ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
  
   return ncmpi_get_var_all(ncid, varid, (void *)ip, nbytes, MPI_INT);
 } 
+
+int
+ncmpi_get_var_long_all(int ncid, int varid, long *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int ndims;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  ndims = varp->ndims;
+
+/* Removed 20030311
+
+  if (ndims > 1)
+    nelems = varp->dsizes[1];
+  else
+    nelems = 1;
+  if (IS_RECVAR(varp))
+    nelems *= ncp->numrecs;
+  else
+    nelems *= varp->shape[0];
+
+*/
+
+  /* Begin modification 20030311 to fix bug of 0-dimensional variables */
+
+  if (ndims == 0)
+    nelems = 1;
+  else if (!IS_RECVAR(varp))
+    nelems = varp->dsizes[0];
+  else if (ndims > 1)
+    nelems = ncp->numrecs * varp->dsizes[1];
+  else
+    nelems = ncp->numrecs;
+
+  /* End modification 20030311 */
+
+  nbytes = nelems * sizeof(long);
+
+  return ncmpi_get_var_all(ncid, varid, (void *)ip, nbytes, MPI_LONG);
+}
 
 int
 ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
@@ -4015,6 +4108,60 @@ ncmpi_put_vara_int(int ncid, int varid,
  
   return ncmpi_put_vara(ncid, varid, start, count,
                         (const void *)op, nbytes, MPI_INT);
+}
+
+int
+ncmpi_put_vara_long_all(int ncid, int varid,
+                       const size_t start[], const size_t count[],
+                       const long *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_put_vara_all(ncid, varid, start, count,
+                            (const void *)op, nbytes, MPI_LONG);
+}
+
+int
+ncmpi_put_vara_long(int ncid, int varid,
+                const size_t start[], const size_t count[],
+                const long *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_put_vara(ncid, varid, start, count,
+                        (const void *)op, nbytes, MPI_LONG);
 }
 
 int
@@ -4290,6 +4437,61 @@ ncmpi_get_vara_int(int ncid, int varid,
  
   return ncmpi_get_vara(ncid, varid, start, count,
                         (void *)ip, nbytes, MPI_INT);
+}
+
+int
+ncmpi_get_vara_long_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    long *ip) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_get_vara_all(ncid, varid, start, count,
+                            (void *)ip, nbytes, MPI_LONG);
+}
+
+int
+ncmpi_get_vara_long(int ncid, int varid,
+                const size_t start[], const size_t count[],
+                long *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_get_vara(ncid, varid, start, count,
+                        (void *)ip, nbytes, MPI_LONG);
 }
 
 int
@@ -4575,6 +4777,64 @@ ncmpi_put_vars_int(int ncid, int varid,
   return ncmpi_put_vars(ncid, varid, start, count, stride,
                         (const void *)op, nbytes, MPI_INT);
 } 
+
+int
+ncmpi_put_vars_long_all(int ncid, int varid,
+                       const size_t start[],
+                       const size_t count[],
+                       const size_t stride[],
+                       const long *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_put_vars_all(ncid, varid, start, count, stride,
+                            (const void *)op, nbytes, MPI_LONG);
+}
+
+int
+ncmpi_put_vars_long(int ncid, int varid,
+                   const size_t start[],
+                   const size_t count[],
+                   const size_t stride[],
+                   const long *op) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_put_vars(ncid, varid, start, count, stride,
+                        (const void *)op, nbytes, MPI_LONG);
+}
 
 int
 ncmpi_put_vars_float_all(int ncid, int varid,
@@ -4868,6 +5128,64 @@ ncmpi_get_vars_int(int ncid, int varid,
 
   return ncmpi_get_vars(ncid, varid, start, count, stride,
                         (void *)ip, nbytes, MPI_INT);
+}
+
+int
+ncmpi_get_vars_long_all(int ncid, int varid,
+                       const size_t start[],
+                       const size_t count[],
+                       const size_t stride[],
+                       long *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_get_vars_all(ncid, varid, start, count, stride,
+                            (void *)ip, nbytes, MPI_LONG);
+}
+
+int
+ncmpi_get_vars_long(int ncid, int varid,
+                   const size_t start[],
+                   const size_t count[],
+                   const size_t stride[],
+                   long *ip) {
+  NC_var *varp;
+  NC *ncp;
+  int status;
+  int dim;
+  int nelems, nbytes;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  nelems = 1;
+  for (dim = 0; dim < varp->ndims; dim++)
+    nelems *= count[dim];
+  nbytes = (int)sizeof(long) * nelems;
+
+  return ncmpi_get_vars(ncid, varid, start, count, stride,
+                        (void *)ip, nbytes, MPI_LONG);
 }
 
 int

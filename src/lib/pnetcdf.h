@@ -431,6 +431,11 @@ int ncmpi_put_var1_int(int ncid, int varid,
                    const int *op);
 
 
+int ncmpi_put_var1_long(int ncid, int varid,
+                   const size_t index[],
+                   const long *ip);
+
+
 int ncmpi_put_var1_float(int ncid, int varid,
                      const size_t index[],
                      const float *op);
@@ -454,6 +459,11 @@ int ncmpi_get_var1_short(int ncid, int varid,
 int ncmpi_get_var1_int(int ncid, int varid,
                    const size_t index[],
                    int *ip);
+
+
+int ncmpi_get_var1_long(int ncid, int varid,
+                   const size_t index[],
+                   long *ip);
 
 
 int ncmpi_get_var1_float(int ncid, int varid,
@@ -488,6 +498,9 @@ int ncmpi_put_var_short(int ncid, int varid, const short *op);
 int ncmpi_put_var_int(int ncid, int varid, const int *op);
 
 
+int ncmpi_put_var_long(int ncid, int varid, const long *op);
+
+
 int ncmpi_put_var_float(int ncid, int varid, const float *op);
 
 
@@ -501,6 +514,9 @@ int ncmpi_get_var_short(int ncid, int varid, short *ip);
 
 
 int ncmpi_get_var_int(int ncid, int varid, int *ip);
+
+
+int ncmpi_get_var_long(int ncid, int varid, long *ip);
 
 
 int ncmpi_get_var_float(int ncid, int varid, float *ip);
@@ -582,6 +598,16 @@ int ncmpi_put_vara_int(int ncid, int varid,
                 const int *op);
 
 
+int ncmpi_put_vara_long_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    const long *op);
+
+
+int ncmpi_put_vara_long(int ncid, int varid,
+                const size_t start[], const size_t count[],
+                const long *op);
+
+
 int ncmpi_put_vara_float_all(int ncid, int varid,
                     const size_t start[], const size_t count[],
                     const float *op);
@@ -630,6 +656,16 @@ int ncmpi_get_vara_int_all(int ncid, int varid,
 int ncmpi_get_vara_int(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 int *ip);
+
+
+int ncmpi_get_vara_long_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    long *ip);
+
+
+int ncmpi_get_vara_long(int ncid, int varid,
+                const size_t start[], const size_t count[],
+                long *ip);
 
 
 int ncmpi_get_vara_float_all(int ncid, int varid,
@@ -730,6 +766,20 @@ int ncmpi_put_vars_int(int ncid, int varid,
                    const int *op);
 
 
+int ncmpi_put_vars_long_all(int ncid, int varid,
+                       const size_t start[],
+                       const size_t count[],
+                       const size_t stride[],
+                       const long *op);
+
+
+int ncmpi_put_vars_long(int ncid, int varid,
+                   const size_t start[],
+                   const size_t count[],
+                   const size_t stride[],
+                   const long *op);
+
+
 int ncmpi_put_vars_float_all(int ncid, int varid,
                          const size_t start[],
                          const size_t count[],
@@ -798,6 +848,20 @@ int ncmpi_get_vars_int(int ncid, int varid,
                    const size_t count[],
                    const size_t stride[],
                    int *ip);
+
+
+int ncmpi_get_vars_long_all(int ncid, int varid,
+                       const size_t start[],
+                       const size_t count[],
+                       const size_t stride[],
+                       long *ip);
+
+
+int ncmpi_get_vars_long(int ncid, int varid,
+                   const size_t start[],
+                   const size_t count[],
+                   const size_t stride[],
+                   long *ip);
 
 
 int ncmpi_get_vars_float_all(int ncid, int varid,
