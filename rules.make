@@ -10,38 +10,6 @@
 ################################################################################
 # Compilation (including preprocessing):
 
-.c.o:
-	$(COMPILE.c) $<
-
-.c.i:
-	$(CPP) $(CPPFLAGS) $< >$@
-
-.cpp.o:
-	$(COMPILE.cxx) $<
-
-# Not all FORTRAN compilers support C-preprocessing of *.F files; ergo, a 
-# relatively complicated rule ensues.
-.F.o:
-	@case "$(COMPILE.F)" in	\
-	    '')	\
-		set -x;	\
-		$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*-tmp.f || 	\
-		    (rm $*-tmp.f ; exit 1);	\
-		$(COMPILE.f) -o $@ $*-tmp.f || (rm $*-tmp.f; exit 1);	\
-		rm $*-tmp.f;	\
-		;;	\
-	    *)	\
-		set -x;	\
-		$(COMPILE.F) $<;	\
-		;;	\
-	esac
-
-.f.o:
-	$(COMPILE.f) $<
-
-#.F.f:
-#	$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*.f || (rm $*.f; exit 1)
-
 .m4.c:
 	$(M4) $(M4FLAGS) $< >$@
 
