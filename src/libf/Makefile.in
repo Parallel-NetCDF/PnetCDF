@@ -17,7 +17,6 @@ PROGRAM		=
 ld_netcdf	= -L../lib -lpnetcdf
 
 HEADER	= pnetcdf.inc
-#HEADER1 = nfconfig.inc
 
 MANUAL	= 
 
