@@ -2,3 +2,5 @@ Makefile
 *.o
 ncconfig.h
 ncvalid
+tags
+cscope.out
