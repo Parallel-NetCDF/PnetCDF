@@ -18,7 +18,7 @@ print_nok(int nok)
 
 /* Is value within external type range? */
 int
-inRange(const double value, const nc_type datatype)
+inRange(const double value, const ncmpi_type datatype)
 {
     double min, max;
 
@@ -35,7 +35,7 @@ inRange(const double value, const nc_type datatype)
 }
 
 static int
-inRange_uchar(const double value, const nc_type datatype)
+inRange_uchar(const double value, const ncmpi_type datatype)
 {
     if (datatype == NC_BYTE) {
 	return(value >= 0 && value <= 255);
@@ -45,7 +45,7 @@ inRange_uchar(const double value, const nc_type datatype)
 }
 
 int
-inRange_float(const double value, const nc_type datatype)
+inRange_float(const double value, const ncmpi_type datatype)
 {
     double min, max;
 
@@ -100,7 +100,7 @@ inRange_float(const double value, const nc_type datatype)
 int
 inRange3(
     const double value, 
-    const nc_type datatype,
+    const ncmpi_type datatype,
     const nct_itype itype)
 {
     switch (itype) {
@@ -123,7 +123,7 @@ int
 equal(
     const double x, 
     const double y, 
-    nc_type extType, 	/* external data type */
+    ncmpi_type extType, 	/* external data type */
     nct_itype itype)
 {
     const double flt_epsilon = 1.19209290E-07;
@@ -228,8 +228,8 @@ fromMixedBase(
 }
 
 
-/* Convert any nc_type to double */
-int nc2dbl ( const nc_type datatype, const void *p, double *result)
+/* Convert any ncmpi_type to double */
+int nc2dbl ( const ncmpi_type datatype, const void *p, double *result)
 {
     if ( ! p ) return 2;
     if ( ! result ) return 3;
@@ -252,8 +252,8 @@ int nc2dbl ( const nc_type datatype, const void *p, double *result)
 }
 
 
-/* Convert double to any nc_type */
-int dbl2nc ( const double d, const nc_type datatype, void *p)
+/* Convert double to any ncmpi_type */
+int dbl2nc ( const double d, const ncmpi_type datatype, void *p)
 {
     double r;   /* rounded value */
 
@@ -303,7 +303,7 @@ int dbl2nc ( const double d, const nc_type datatype, void *p)
 
 /* Generate data values as function of type, rank (-1 for attribute), index */
 double
-hash( const nc_type type, const int rank, const size_t *index ) 
+hash( const ncmpi_type type, const int rank, const size_t *index ) 
 {
     double base;
     double result;
@@ -374,7 +374,7 @@ hash( const nc_type type, const int rank, const size_t *index )
 /* wrapper for hash to handle special NC_BYTE/uchar adjustment */
 double
 hash4(
-    const nc_type type, 
+    const ncmpi_type type, 
     const int rank, 
     const size_t *index, 
     const nct_itype itype)
@@ -387,7 +387,7 @@ hash4(
     return result;
 }
 
-static nc_type
+static ncmpi_type
 char2type(char letter) {
     switch (letter) {
         case 'c': return NC_CHAR;
@@ -531,9 +531,9 @@ def_dims(int ncid)
     int  dimid;		/* dimension id */
 
     for (i = 0; i < NDIMS; i++) {
-	err = nc_def_dim(ncid, dim_name[i], i==0 ? NC_UNLIMITED : dim_len[i],
+	err = ncmpi_def_dim(ncid, dim_name[i], i==0 ? NC_UNLIMITED : dim_len[i],
 	    &dimid);
-	IF (err) error("nc_def_dim: %s", nc_strerror(err));
+	IF (err) error("ncmpi_def_dim: %s", ncmpi_strerror(err));
     }
 }
 
@@ -547,9 +547,9 @@ def_vars(int ncid)
     int var_id;
 
     for (i = 0; i < NVARS; i++) {
-	err = nc_def_var(ncid, var_name[i], var_type[i], var_rank[i],
+	err = ncmpi_def_var(ncid, var_name[i], var_type[i], var_rank[i],
 	    var_dimid[i], &var_id);
-	IF (err) error("nc_def_var: %s", nc_strerror(err));
+	IF (err) error("ncmpi_def_var: %s", ncmpi_strerror(err));
     }
 }
 
@@ -572,20 +572,20 @@ put_atts(int ncid)
 		for (k = 0; k < ATT_LEN(i,j); k++) {
 		    catt[k] = hash(ATT_TYPE(i,j), -1, &k);
 		}
-		err = nc_put_att_text(ncid, i, ATT_NAME(i,j),
+		err = ncmpi_put_att_text(ncid, i, ATT_NAME(i,j),
 		    ATT_LEN(i,j), catt);
 		IF (err) 
-		    error("nc_put_att_text: %s", nc_strerror(err));
+		    error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
 	    } else {
 		for (allInRange = 1, k = 0; k < ATT_LEN(i,j); k++) {
 		    att[k] = hash(ATT_TYPE(i,j), -1, &k);
 		    allInRange = allInRange && inRange(att[k], ATT_TYPE(i,j));
 		}
-		err = nc_put_att_double(ncid, i, ATT_NAME(i,j),
+		err = ncmpi_put_att_double(ncid, i, ATT_NAME(i,j),
 		    ATT_TYPE(i,j), ATT_LEN(i,j), att);
                 if (allInRange) {
                     IF (err)
-                        error("nc_put_att_double: %s", nc_strerror(err));
+                        error("ncmpi_put_att_double: %s", ncmpi_strerror(err));
                 } else {
                     IF (err != NC_ERANGE)
 			error("type-conversion range error: status = %d", err);
@@ -622,14 +622,17 @@ put_vars(int ncid)
 	    }
 	}
 	if (var_name[i][0] == 'c') {
-	    err = nc_put_vara_text(ncid, i, start, var_shape[i], text);
+#if 0
+	    err = ncmpi_put_vara_text(ncid, i, start, var_shape[i], text);
 	    IF (err)
-		error("nc_put_att_text: %s", nc_strerror(err));
+		error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
+#endif
+		fprintf(stderr, "text datatypes not supported yet\n");
 	} else {
-	    err = nc_put_vara_double(ncid, i, start, var_shape[i], value);
+	    err = ncmpi_put_vara_double(ncid, i, start, var_shape[i], value);
 	    if (allInRange) {
 		IF (err)
-		    error("nc_put_att_text: %s", nc_strerror(err));
+		    error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
 	    } else {
 		IF (err != NC_ERANGE)
 		    error("type-conversion range error: status = %d", err);
@@ -646,21 +649,21 @@ write_file(char *filename)
     int  ncid;			/* netCDF id */
     int  err;		/* status */
 
-    err = nc_create(filename, NC_CLOBBER, &ncid);
+    err = ncmpi_create(comm, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     IF (err) 
-	error("nc_create: %s", nc_strerror(err));
+	error("ncmpi_create: %s", ncmpi_strerror(err));
 
     def_dims(ncid);
     def_vars(ncid);
     put_atts(ncid);
-    err = nc_enddef(ncid);
+    err = ncmpi_enddef(ncid);
     IF (err) 
-	error("nc_enddef: %s", nc_strerror(err));
+	error("ncmpi_enddef: %s", ncmpi_strerror(err));
     put_vars(ncid);
 
-    err = nc_close (ncid);
+    err = ncmpi_close (ncid);
     IF (err) 
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
@@ -676,9 +679,9 @@ check_dims(int  ncid)
     int  err;           /* status */
 
     for (i = 0; i < NDIMS; i++) {
-	err = nc_inq_dim(ncid, i, name, &length);
+	err = ncmpi_inq_dim(ncid, i, name, &length);
 	IF (err)
-	    error("nc_inq_dim: %s", nc_strerror(err));
+	    error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
 	IF (strcmp(name, dim_name[i]) != 0)
 	    error("Unexpected name of dimension %d", i);
 	IF (length != dim_len[i])
@@ -699,7 +702,7 @@ check_vars(int  ncid)
     size_t  j;
     char  text;
     double value;
-    nc_type datatype;
+    ncmpi_type datatype;
     int ndims;
     int dimids[MAX_RANK];
     int isChar;
@@ -710,9 +713,9 @@ check_vars(int  ncid)
 
     for (i = 0; i < NVARS; i++) {
         isChar = var_type[i] == NC_CHAR;
-	err = nc_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
+	err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
 	IF (err) 
-	    error("nc_inq_var: %s", nc_strerror(err));
+	    error("ncmpi_inq_var: %s", ncmpi_strerror(err));
 	IF (strcmp(name, var_name[i]) != 0) 
 	    error("Unexpected var_name");
 	IF (datatype != var_type[i]) 
@@ -720,9 +723,9 @@ check_vars(int  ncid)
 	IF (ndims != var_rank[i]) 
 	    error("Unexpected rank");
 	for (j = 0; j < ndims; j++) {
-	    err = nc_inq_dim(ncid, dimids[j], 0, &length);
+	    err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
 	    IF (err) 
-		error("nc_inq_dim: %s", nc_strerror(err));
+		error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
 	    IF (length != var_shape[i][j]) 
 		error("Unexpected shape");
 	}
@@ -732,9 +735,10 @@ check_vars(int  ncid)
 		error("error in toMixedBase 2");
 	    expect = hash( var_type[i], var_rank[i], index );
 	    if (isChar) {
-		err = nc_get_var1_text(ncid, i, index, &text);
+#if 0
+		err = ncmpi_get_var1_text(ncid, i, index, &text);
 		IF (err)
-		    error("nc_get_var1_text: %s", nc_strerror(err));
+		    error("ncmpi_get_var1_text: %s", ncmpi_strerror(err));
 		IF (text != expect) {
 		    error("Var %s value read 0x%02x not that expected 0x%02x ",
 			var_name[i], text, (char)expect);
@@ -746,11 +750,13 @@ check_vars(int  ncid)
 #endif
 		    nok++;
 		}
+#endif
+		fprintf(stderr, "text data type not supported yet\n");
 	    } else {
-		err = nc_get_var1_double(ncid, i, index, &value);
+		err = ncmpi_get_var1_double(ncid, i, index, &value);
 		if (inRange(expect,var_type[i])) {
 		    IF (err) {
-			error("nc_get_var1_double: %s", nc_strerror(err));
+			error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
 		    } else {
 			IF (!equal(value,expect,var_type[i], NCT_DOUBLE)) {
 	error("Var %s value read % 12.5e not that expected % 12.7e ",
@@ -782,7 +788,7 @@ check_atts(int  ncid)
     int  i;
     int  j;
     size_t  k;
-    nc_type datatype;
+    ncmpi_type datatype;
     char name[NC_MAX_NAME];
     size_t length;
     char  text[MAX_NELS];
@@ -792,36 +798,36 @@ check_atts(int  ncid)
 
     for (i = -1; i < NVARS; i++) {
 	for (j = 0; j < NATTS(i); j++) {
-            err = nc_inq_attname(ncid, i, j, name);
+            err = ncmpi_inq_attname(ncid, i, j, name);
             IF (err) 
-                error("nc_inq_attname: %s", nc_strerror(err));
+                error("ncmpi_inq_attname: %s", ncmpi_strerror(err));
             IF (strcmp(name, ATT_NAME(i,j)) != 0)
-                error("nc_inq_attname: unexpected name");
-	    err = nc_inq_att(ncid, i, name, &datatype, &length);
+                error("ncmpi_inq_attname: unexpected name");
+	    err = ncmpi_inq_att(ncid, i, name, &datatype, &length);
 	    IF (err) 
-		error("nc_inq_att: %s", nc_strerror(err));
+		error("ncmpi_inq_att: %s", ncmpi_strerror(err));
 	    IF (datatype != ATT_TYPE(i,j))
-		error("nc_inq_att: unexpected type");
+		error("ncmpi_inq_att: unexpected type");
 	    IF (length != ATT_LEN(i,j))
-		error("nc_inq_att: unexpected length");
+		error("ncmpi_inq_att: unexpected length");
 	    if (datatype == NC_CHAR) {
-		err = nc_get_att_text(ncid, i, name, text);
+		err = ncmpi_get_att_text(ncid, i, name, text);
 		IF (err)
-		    error("nc_get_att_text: %s", nc_strerror(err));
+		    error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
 		for (k = 0; k < ATT_LEN(i,j); k++) {
 		    IF (text[k] != hash(datatype, -1, &k)) {
-			error("nc_get_att_text: unexpected value");
+			error("ncmpi_get_att_text: unexpected value");
                     } else {
                         nok++;
                     }
 		}
 	    } else {
-		err = nc_get_att_double(ncid, i, name, value);
+		err = ncmpi_get_att_double(ncid, i, name, value);
 		for (k = 0; k < ATT_LEN(i,j); k++) {
 		    expect = hash(datatype, -1, &k);
 		    if (inRange(expect,ATT_TYPE(i,j))) {
 			IF (err)
-			    error("nc_get_att_double: %s", nc_strerror(err));
+			    error("ncmpi_get_att_double: %s", ncmpi_strerror(err));
 			IF (!equal(value[k], expect, ATT_TYPE(i,j), NCT_DOUBLE)) {
 			    error("Att value read not that expected");
 			} else {
@@ -843,22 +849,22 @@ check_file(char *filename)
     int  ncid;		/* netCDF id */
     int  err;		/* status */
 
-    err = nc_open(filename, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err) {
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
     } else {
 	check_dims(ncid);
 	check_vars(ncid);
 	check_atts(ncid);
-	err = nc_close (ncid);
+	err = ncmpi_close (ncid);
 	IF (err) 
-	    error("nc_close: %s", nc_strerror(err));
+	    error("ncmpi_close: %s", ncmpi_strerror(err));
     }
 }
 
 /* TODO: Maybe this function belongs in the netcdf library. */
 const char *
-s_nc_type(nc_type type)
+s_ncmpi_type(ncmpi_type type)
 {
 	switch((int)type){
 	case NC_BYTE:

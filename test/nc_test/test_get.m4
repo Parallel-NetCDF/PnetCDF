@@ -36,7 +36,7 @@ dnl
 define(`TEST_NC_GET_VAR1',dnl
 `dnl
 void
-test_nc_get_var1_$1(void)
+test_ncmpi_get_var1_$1(void)
 {
     int ncid;
     int i;
@@ -48,22 +48,22 @@ test_nc_get_var1_$1(void)
     int canConvert;     /* Both text or both numeric */
     $1 value;
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
 	for (j = 0; j < var_rank[i]; j++)
 	    index[j] = 0;
-        err = nc_get_var1_$1(BAD_ID, i, index, &value);
+        err = ncmpi_get_var1_$1(BAD_ID, i, index, &value);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-        err = nc_get_var1_$1(ncid, BAD_VARID, index, &value);
+        err = ncmpi_get_var1_$1(ncid, BAD_VARID, index, &value);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    index[j] = var_shape[i][j];
-	    err = nc_get_var1_$1(ncid, i, index, &value);
+	    err = ncmpi_get_var1_$1(ncid, i, index, &value);
 	    if(!canConvert) {
 		IF(err != NC_ECHAR)
 			error("conversion: status = %d", err);
@@ -77,14 +77,14 @@ test_nc_get_var1_$1(void)
 		error("error in toMixedBase 1");
 	    expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1) );
 	    if (var_rank[i] == 0 && i%2 )
-		err = nc_get_var1_$1(ncid, i, NULL, &value);
+		err = ncmpi_get_var1_$1(ncid, i, NULL, &value);
 	    else
-		err = nc_get_var1_$1(ncid, i, index, &value);
+		err = ncmpi_get_var1_$1(ncid, i, index, &value);
             if (canConvert) {
 		if (inRange3(expect,var_type[i], NCT_ITYPE($1))) {
 		    if (expect >= $1_min && expect <= $1_max) {
 			IF (err) {
-			    error("%s", nc_strerror(err));
+			    error("%s", ncmpi_strerror(err));
 			} else {
 			    IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
 				error("expected: %G, got: %G", expect,
@@ -107,19 +107,19 @@ test_nc_get_var1_$1(void)
 	    }
 	}
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 ')dnl
 
-TEST_NC_GET_VAR1(text)
-TEST_NC_GET_VAR1(uchar)
-TEST_NC_GET_VAR1(schar)
+dnl TEST_NC_GET_VAR1(text)
+dnl TEST_NC_GET_VAR1(uchar)
+dnl TEST_NC_GET_VAR1(schar)
 TEST_NC_GET_VAR1(short)
 TEST_NC_GET_VAR1(int)
-TEST_NC_GET_VAR1(long)
+dnl TEST_NC_GET_VAR1(long)
 TEST_NC_GET_VAR1(float)
 TEST_NC_GET_VAR1(double)
 
@@ -129,7 +129,7 @@ dnl
 define(`TEST_NC_GET_VAR',dnl
 `dnl
 void
-test_nc_get_var_$1(void)
+test_ncmpi_get_var_$1(void)
 {
     int ncid;
     int i;
@@ -144,17 +144,17 @@ test_nc_get_var_$1(void)
     $1 value[MAX_NELS];
     double expect[MAX_NELS];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
-        err = nc_get_var_$1(BAD_ID, i, value);
+        err = ncmpi_get_var_$1(BAD_ID, i, value);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-        err = nc_get_var_$1(ncid, BAD_VARID, value);
+        err = ncmpi_get_var_$1(ncid, BAD_VARID, value);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
 
@@ -175,12 +175,12 @@ test_nc_get_var_$1(void)
 		allInExtRange = 0;
 	    }
 	}
-	err = nc_get_var_$1(ncid, i, value);
+	err = ncmpi_get_var_$1(ncid, i, value);
 	if (canConvert) {
 	    if (allInExtRange) {
 		if (allInIntRange) {
 		    IF (err)
-			error("%s", nc_strerror(err));
+			error("%s", ncmpi_strerror(err));
 		} else {
 		    IF (err != NC_ERANGE)
 			error("Range error: status = %d", err);
@@ -212,19 +212,19 @@ test_nc_get_var_$1(void)
 		error("wrong type: status = %d", err);
 	}
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 ')dnl
 
-TEST_NC_GET_VAR(text)
-TEST_NC_GET_VAR(uchar)
-TEST_NC_GET_VAR(schar)
+dnl TEST_NC_GET_VAR(text)
+dnl TEST_NC_GET_VAR(uchar)
+dnl TEST_NC_GET_VAR(schar)
 TEST_NC_GET_VAR(short)
 TEST_NC_GET_VAR(int)
-TEST_NC_GET_VAR(long)
+dnl TEST_NC_GET_VAR(long)
 TEST_NC_GET_VAR(float)
 TEST_NC_GET_VAR(double)
 
@@ -234,7 +234,7 @@ dnl
 define(`TEST_NC_GET_VARA',dnl
 `dnl
 void
-test_nc_get_vara_$1(void)
+test_ncmpi_get_vara_$1(void)
 {
     int ncid;
     int d;
@@ -255,9 +255,9 @@ test_nc_get_vara_$1(void)
     $1 value[MAX_NELS];
     double expect[MAX_NELS];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
@@ -266,20 +266,20 @@ test_nc_get_vara_$1(void)
 	    start[j] = 0;
 	    edge[j] = 1;
 	}
-        err = nc_get_vara_$1(BAD_ID, i, start, edge, value);
+        err = ncmpi_get_vara_$1(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
-        err = nc_get_vara_$1(ncid, BAD_VARID, start, edge, value);
+        err = ncmpi_get_vara_$1(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR)
 	    error("bad var id: status = %d", err);
 	for (j = 0; j < var_rank[i]; j++) {
 	    start[j] = var_shape[i][j];
-	    err = nc_get_vara_$1(ncid, i, start, edge, value);
+	    err = ncmpi_get_vara_$1(ncid, i, start, edge, value);
             IF (canConvert && err != NC_EINVALCOORDS)
                 error("bad index: status = %d", err);
 	    start[j] = 0;
 	    edge[j] = var_shape[i][j] + 1;
-	    err = nc_get_vara_$1(ncid, i, start, edge, value);
+	    err = ncmpi_get_vara_$1(ncid, i, start, edge, value);
             IF (canConvert && err != NC_EEDGE)
 		error("bad edge: status = %d", err);
 	    edge[j] = 1;
@@ -290,25 +290,25 @@ test_nc_get_vara_$1(void)
 	    for (j = 0; j < var_rank[i]; j++) {
 		edge[j] = 0;
 	    }
-	    err = nc_get_vara_$1(BAD_ID, i, start, edge, value);
+	    err = ncmpi_get_vara_$1(BAD_ID, i, start, edge, value);
 	    IF (err != NC_EBADID) 
 		error("bad ncid: status = %d", err);
-	    err = nc_get_vara_$1(ncid, BAD_VARID, start, edge, value);
+	    err = ncmpi_get_vara_$1(ncid, BAD_VARID, start, edge, value);
 	    IF (err != NC_ENOTVAR) 
 		error("bad var id: status = %d", err);
 	    for (j = 0; j < var_rank[i]; j++) {
 		if (var_dimid[i][j] > 0) {		/* skip record dim */
 		    start[j] = var_shape[i][j];
-		    err = nc_get_vara_$1(ncid, i, start, edge, value);
+		    err = ncmpi_get_vara_$1(ncid, i, start, edge, value);
 		    IF (canConvert && err != NC_EINVALCOORDS)
 			error("bad start: status = %d", err);
 		    start[j] = 0;
 		}
 	    }
-	    err = nc_get_vara_$1(ncid, i, start, edge, value);
+	    err = ncmpi_get_vara_$1(ncid, i, start, edge, value);
 	    if (canConvert) {
 		IF (err) 
-		    error("%s", nc_strerror(err));
+		    error("%s", ncmpi_strerror(err));
 	    } else {
 		IF (err != NC_ECHAR)
 		    error("wrong type: status = %d", err);
@@ -352,14 +352,14 @@ test_nc_get_vara_$1(void)
 		}
 	    }
             if (var_rank[i] == 0 && i%2)
-		err = nc_get_vara_$1(ncid, i, NULL, NULL, value);
+		err = ncmpi_get_vara_$1(ncid, i, NULL, NULL, value);
 	    else
-		err = nc_get_vara_$1(ncid, i, start, edge, value);
+		err = ncmpi_get_vara_$1(ncid, i, start, edge, value);
             if (canConvert) {
 		if (allInExtRange) {
 		    if (allInIntRange) {
 			IF (err)
-			    error("%s", nc_strerror(err));
+			    error("%s", ncmpi_strerror(err));
 		    } else {
 			IF (err != NC_ERANGE)
 			    error("Range error: status = %d", err);
@@ -392,19 +392,19 @@ test_nc_get_vara_$1(void)
             }
         }
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 ')dnl
 
-TEST_NC_GET_VARA(text)
-TEST_NC_GET_VARA(uchar)
-TEST_NC_GET_VARA(schar)
+dnl TEST_NC_GET_VARA(text)
+dnl TEST_NC_GET_VARA(uchar)
+dnl TEST_NC_GET_VARA(schar)
 TEST_NC_GET_VARA(short)
 TEST_NC_GET_VARA(int)
-TEST_NC_GET_VARA(long)
+dnl TEST_NC_GET_VARA(long)
 TEST_NC_GET_VARA(float)
 TEST_NC_GET_VARA(double)
 
@@ -414,7 +414,7 @@ dnl
 define(`TEST_NC_GET_VARS',dnl
 `dnl
 void
-test_nc_get_vars_$1(void)
+test_ncmpi_get_vars_$1(void)
 {
     int ncid;
     int d;
@@ -441,9 +441,9 @@ test_nc_get_vars_$1(void)
     $1 value[MAX_NELS];
     double expect[MAX_NELS];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
@@ -453,15 +453,15 @@ test_nc_get_vars_$1(void)
             edge[j] = 1;
             stride[j] = 1;
         }
-        err = nc_get_vars_$1(BAD_ID, i, start, edge, stride, value);
+        err = ncmpi_get_vars_$1(BAD_ID, i, start, edge, stride, value);
         IF (err != NC_EBADID)
             error("bad ncid: status = %d", err);
-        err = nc_get_vars_$1(ncid, BAD_VARID, start, edge, stride, value);
+        err = ncmpi_get_vars_$1(ncid, BAD_VARID, start, edge, stride, value);
         IF (err != NC_ENOTVAR)
             error("bad var id: status = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = nc_get_vars_$1(ncid, i, start, edge, stride, value);
+            err = ncmpi_get_vars_$1(ncid, i, start, edge, stride, value);
 	  if(!canConvert) {
 		IF (err != NC_ECHAR)
                	    error("conversion: status = %d", err);
@@ -470,12 +470,12 @@ test_nc_get_vars_$1(void)
                 error("bad index: status = %d", err);
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;
-            err = nc_get_vars_$1(ncid, i, start, edge, stride, value);
+            err = ncmpi_get_vars_$1(ncid, i, start, edge, stride, value);
             IF (err != NC_EEDGE)
                 error("bad edge: status = %d", err);
             edge[j] = 1;
             stride[j] = 0;
-            err = nc_get_vars_$1(ncid, i, start, edge, stride, value);
+            err = ncmpi_get_vars_$1(ncid, i, start, edge, stride, value);
             IF (err != NC_ESTRIDE)
                 error("bad stride: status = %d", err);
             stride[j] = 1;
@@ -539,14 +539,14 @@ test_nc_get_vars_$1(void)
 		    }
 		}
                 if (var_rank[i] == 0 && i%2 )
-                    err = nc_get_vars_$1(ncid, i, NULL, NULL, NULL, value);
+                    err = ncmpi_get_vars_$1(ncid, i, NULL, NULL, NULL, value);
                 else
-                    err = nc_get_vars_$1(ncid, i, index, count, stride, value);
+                    err = ncmpi_get_vars_$1(ncid, i, index, count, stride, value);
 		if (canConvert) {
 		    if (allInExtRange) {
 			if (allInIntRange) {
 			    IF (err)
-				error("%s", nc_strerror(err));
+				error("%s", ncmpi_strerror(err));
 			} else {
 			    IF (err != NC_ERANGE)
 				error("Range error: status = %d", err);
@@ -582,19 +582,19 @@ test_nc_get_vars_$1(void)
 	}
 
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 ')dnl
 
-TEST_NC_GET_VARS(text)
-TEST_NC_GET_VARS(uchar)
-TEST_NC_GET_VARS(schar)
+dnl TEST_NC_GET_VARS(text)
+dnl TEST_NC_GET_VARS(uchar)
+dnl TEST_NC_GET_VARS(schar)
 TEST_NC_GET_VARS(short)
 TEST_NC_GET_VARS(int)
-TEST_NC_GET_VARS(long)
+dnl TEST_NC_GET_VARS(long)
 TEST_NC_GET_VARS(float)
 TEST_NC_GET_VARS(double)
 
@@ -604,7 +604,7 @@ dnl
 define(`TEST_NC_GET_VARM',dnl
 `dnl
 void
-test_nc_get_varm_$1(void)
+test_ncmpi_get_varm_$1(void)
 {
     int ncid;
     int d;
@@ -632,9 +632,9 @@ test_nc_get_varm_$1(void)
     $1 value[MAX_NELS];
     double expect[MAX_NELS];
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
-        error("nc_open: %s", nc_strerror(err));
+        error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NVARS; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
@@ -645,15 +645,15 @@ test_nc_get_varm_$1(void)
             stride[j] = 1;
             imap[j] = 1;
         }
-        err = nc_get_varm_$1(BAD_ID, i, start, edge, stride, imap, value);
+        err = ncmpi_get_varm_$1(BAD_ID, i, start, edge, stride, imap, value);
         IF (err != NC_EBADID)
             error("bad ncid: status = %d", err);
-        err = nc_get_varm_$1(ncid, BAD_VARID, start, edge, stride, imap, value);
+        err = ncmpi_get_varm_$1(ncid, BAD_VARID, start, edge, stride, imap, value);
         IF (err != NC_ENOTVAR)
             error("bad var id: status = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             start[j] = var_shape[i][j];
-            err = nc_get_varm_$1(ncid, i, start, edge, stride, imap, value);
+            err = ncmpi_get_varm_$1(ncid, i, start, edge, stride, imap, value);
 	  if(!canConvert) {
 		IF (err != NC_ECHAR)
                	    error("conversion: status = %d", err);
@@ -662,12 +662,12 @@ test_nc_get_varm_$1(void)
                 error("bad index: status = %d", err);
             start[j] = 0;
             edge[j] = var_shape[i][j] + 1;
-            err = nc_get_varm_$1(ncid, i, start, edge, stride, imap, value);
+            err = ncmpi_get_varm_$1(ncid, i, start, edge, stride, imap, value);
             IF (err != NC_EEDGE)
                 error("bad edge: status = %d", err);
             edge[j] = 1;
             stride[j] = 0;
-            err = nc_get_varm_$1(ncid, i, start, edge, stride, imap, value);
+            err = ncmpi_get_varm_$1(ncid, i, start, edge, stride, imap, value);
             IF (err != NC_ESTRIDE)
                 error("bad stride: status = %d", err);
             stride[j] = 1;
@@ -737,14 +737,14 @@ test_nc_get_varm_$1(void)
                     }
                 }
                 if (var_rank[i] == 0 && i%2 )
-                    err = nc_get_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value);
+                    err = ncmpi_get_varm_$1(ncid,i,NULL,NULL,NULL,NULL,value);
                 else
-                    err = nc_get_varm_$1(ncid,i,index,count,stride,imap,value);
+                    err = ncmpi_get_varm_$1(ncid,i,index,count,stride,imap,value);
                 if (canConvert) {
                     if (allInExtRange) {
                         if (allInIntRange) {
                             IF (err)
-                                error("%s", nc_strerror(err));
+                                error("%s", ncmpi_strerror(err));
                         } else {
                             IF (err != NC_ERANGE)
                                 error("Range error: status = %d", err);
@@ -780,21 +780,21 @@ test_nc_get_varm_$1(void)
             }
         }
     }
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-        error("nc_close: %s", nc_strerror(err));
+        error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 ')dnl
 
-TEST_NC_GET_VARM(text)
-TEST_NC_GET_VARM(uchar)
-TEST_NC_GET_VARM(schar)
-TEST_NC_GET_VARM(short)
-TEST_NC_GET_VARM(int)
-TEST_NC_GET_VARM(long)
-TEST_NC_GET_VARM(float)
-TEST_NC_GET_VARM(double)
+dnl TEST_NC_GET_VARM(text)
+dnl TEST_NC_GET_VARM(uchar)
+dnl TEST_NC_GET_VARM(schar)
+dnl TEST_NC_GET_VARM(short)
+dnl TEST_NC_GET_VARM(int)
+dnl TEST_NC_GET_VARM(long)
+dnl TEST_NC_GET_VARM(float)
+dnl TEST_NC_GET_VARM(double)
 
 
 dnl TEST_NC_GET_ATT(TYPE)
@@ -802,7 +802,7 @@ dnl
 define(`TEST_NC_GET_ATT',dnl
 `dnl
 void
-test_nc_get_att_$1(void)
+test_ncmpi_get_att_$1(void)
 {
     int ncid;
     int i;
@@ -816,20 +816,20 @@ test_nc_get_att_$1(void)
     double expect[MAX_NELS];
     int nok = 0;      /* count of valid comparisons */
 
-    err = nc_open(testfile, NC_NOWRITE, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err) 
-	error("nc_open: %s", nc_strerror(err));
+	error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < NVARS; i++) {
         for (j = 0; j < NATTS(i); j++) {
 	    canConvert = (ATT_TYPE(i,j) == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
-	    err = nc_get_att_$1(BAD_ID, i, ATT_NAME(i,j), value);
+	    err = ncmpi_get_att_$1(BAD_ID, i, ATT_NAME(i,j), value);
 	    IF (err != NC_EBADID) 
 		error("bad ncid: status = %d", err);
-	    err = nc_get_att_$1(ncid, BAD_VARID, ATT_NAME(i,j), value);
+	    err = ncmpi_get_att_$1(ncid, BAD_VARID, ATT_NAME(i,j), value);
 	    IF (err != NC_ENOTVAR) 
 		error("bad var id: status = %d", err);
-	    err = nc_get_att_$1(ncid, i, "noSuch", value);
+	    err = ncmpi_get_att_$1(ncid, i, "noSuch", value);
 	    IF (err != NC_ENOTATT) 
 		error("Bad attribute name: status = %d", err);
 	    allInExtRange = allInIntRange = 1;
@@ -842,12 +842,12 @@ test_nc_get_att_$1(void)
                     allInExtRange = 0;
                 }
 	    }
-	    err = nc_get_att_$1(ncid, i, ATT_NAME(i,j), value);
+	    err = ncmpi_get_att_$1(ncid, i, ATT_NAME(i,j), value);
             if (canConvert || ATT_LEN(i,j) == 0) {
                 if (allInExtRange) {
                     if (allInIntRange) {
                         IF (err)
-                            error("%s", nc_strerror(err));
+                            error("%s", ncmpi_strerror(err));
                     } else {
                         IF (err != NC_ERANGE)
                             error("Range error: status = %d", err);
@@ -882,14 +882,14 @@ test_nc_get_att_$1(void)
 	}
     }
 
-    err = nc_close(ncid);
+    err = ncmpi_close(ncid);
     IF (err)
-	error("nc_close: %s", nc_strerror(err));
+	error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
 ')dnl
 
-TEST_NC_GET_ATT(text)
+dnl TEST_NC_GET_ATT(text)
 TEST_NC_GET_ATT(uchar)
 TEST_NC_GET_ATT(schar)
 TEST_NC_GET_ATT(short)
