@@ -414,6 +414,16 @@ int ncmpi_get_var1(int ncid, int varid,
                MPI_Datatype datatype);
 
 
+int ncmpi_put_var1_uchar(int ncid, int varid,
+                    const size_t index[],
+                    const unsigned char *op);
+
+
+int ncmpi_put_var1_schar(int ncid, int varid,
+                    const size_t index[],
+                    const signed char *op);
+
+
 int ncmpi_put_var1_text(int ncid, int varid,
                     const size_t index[],
                     const char *op);
@@ -442,6 +452,16 @@ int ncmpi_put_var1_float(int ncid, int varid,
 int ncmpi_put_var1_double(int ncid, int varid,
                       const size_t index[],
                       const double *op);
+
+
+int ncmpi_get_var1_uchar(int ncid, int varid,
+                    const size_t index[],
+                    unsigned char *ip);
+
+
+int ncmpi_get_var1_schar(int ncid, int varid,
+                    const size_t index[],
+                    signed char *ip);
 
 
 int ncmpi_get_var1_text(int ncid, int varid,
@@ -487,6 +507,12 @@ int ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
 int ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype);
 
 
+int ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op);
+
+
+int ncmpi_put_var_schar(int ncid, int varid, const signed char *op);
+
+
 int ncmpi_put_var_text(int ncid, int varid, const char *op);
 
 
@@ -505,6 +531,12 @@ int ncmpi_put_var_float(int ncid, int varid, const float *op);
 int ncmpi_put_var_double(int ncid, int varid, const double *op);
 
 
+int ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip);
+
+
+int ncmpi_get_var_schar(int ncid, int varid, signed char *ip);
+
+
 int ncmpi_get_var_text(int ncid, int varid, char *ip);
 
 
@@ -521,6 +553,12 @@ int ncmpi_get_var_float(int ncid, int varid, float *ip);
 
 
 int ncmpi_get_var_double(int ncid, int varid, double *ip);
+
+
+int ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip);
+
+
+int ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip);
 
 
 int ncmpi_get_var_text_all(int ncid, int varid, char *ip);
@@ -567,6 +605,26 @@ int ncmpi_get_vara(int ncid, int varid,
                const size_t start[], const size_t count[],
                void *buf, int bufcount,
                MPI_Datatype datatype);
+
+
+int ncmpi_put_vara_uchar_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    const unsigned char *op);
+
+
+int ncmpi_put_vara_uchar(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    const unsigned char *op);
+
+
+int ncmpi_put_vara_schar_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    const signed char *op);
+
+
+int ncmpi_put_vara_schar(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    const signed char *op);
 
 
 int ncmpi_put_vara_text_all(int ncid, int varid,
@@ -627,6 +685,26 @@ int ncmpi_put_vara_double_all(int ncid, int varid,
 int ncmpi_put_vara_double(int ncid, int varid,
                 const size_t start[], const size_t count[],
                 const double *op);
+
+
+int ncmpi_get_vara_uchar_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    unsigned char *ip);
+
+
+int ncmpi_get_vara_uchar(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    unsigned char *ip);
+
+
+int ncmpi_get_vara_schar_all(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    signed char *ip);
+
+
+int ncmpi_get_vara_schar(int ncid, int varid,
+                    const size_t start[], const size_t count[],
+                    signed char *ip);
 
 
 int ncmpi_get_vara_text_all(int ncid, int varid,
@@ -725,6 +803,34 @@ int ncmpi_get_vars(int ncid, int varid,
                MPI_Datatype datatype);
 
 
+int ncmpi_put_vars_uchar_all(int ncid, int varid,
+                        const size_t start[],
+                        const size_t count[],
+                        const size_t stride[],
+                        const unsigned char *op);
+
+
+int ncmpi_put_vars_uchar(int ncid, int varid,
+                    const size_t start[],
+                    const size_t count[],
+                    const size_t stride[],
+                    const unsigned char *op);
+
+
+int ncmpi_put_vars_schar_all(int ncid, int varid,
+                        const size_t start[],
+                        const size_t count[],
+                        const size_t stride[],
+                        const signed char *op);
+
+
+int ncmpi_put_vars_schar(int ncid, int varid,
+                    const size_t start[],
+                    const size_t count[],
+                    const size_t stride[],
+                    const signed char *op);
+
+
 int ncmpi_put_vars_text_all(int ncid, int varid,
                         const size_t start[],
                         const size_t count[],
@@ -807,6 +913,34 @@ int ncmpi_put_vars_double(int ncid, int varid,
                       const size_t count[],
                       const size_t stride[],
                       const double *op);
+
+
+int ncmpi_get_vars_uchar_all(int ncid, int varid,
+                        const size_t start[],
+                        const size_t count[],
+                        const size_t stride[],
+                        unsigned char *ip);
+
+
+int ncmpi_get_vars_uchar(int ncid, int varid,
+                    const size_t start[],
+                    const size_t count[],
+                    const size_t stride[],
+                    unsigned char *ip);
+
+
+int ncmpi_get_vars_schar_all(int ncid, int varid,
+                        const size_t start[],
+                        const size_t count[],
+                        const size_t stride[],
+                        signed char *ip);
+
+
+int ncmpi_get_vars_schar(int ncid, int varid,
+                    const size_t start[],
+                    const size_t count[],
+                    const size_t stride[],
+                    signed char *ip);
 
 
 int ncmpi_get_vars_text_all(int ncid, int varid,
