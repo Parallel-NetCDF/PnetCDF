@@ -88,28 +88,31 @@ EOF
     ;;
 esac
 
-MPICC=$CC
-AC_MSG_CHECKING(mpi implementation)
-AC_ARG_WITH(mpi, 
-[  --with-mpi=/path/to/implementation
-                          installation prefix for mpi implementation],
-	if test x$withval = xyes; then
-		AC_MSG_ERROR(--with-mpi must be given a pathname)
-	else
-		AC_MSG_RESULT(using $withval)
-		MPICC=${withval}/bin/mpicc
-		if test ! -x "${MPICC}"; then
-			AC_MSG_WARN($MPICC either does not exist or is not executable: falling back to $CC)
-			MPICC="$CC"
-		fi
-		MPIF77=${withval}/bin/mpif77
-		if test ! -x "${MPIF77}"; then
-			AC_MSG_WARN($MPIF77 either does not exist or is not executable: falling back to $FC)
-			MPIF77="$FC"
-		fi
+dnl do the automagic mpi-compiler-checking if MPICC and MPIF77 are not set
+if test x${MPICC} = x -a -x${MPIF77} = x ; then
+	MPICC=$CC
+	AC_MSG_CHECKING(mpi implementation)
+	AC_ARG_WITH(mpi, 
+	[  --with-mpi=/path/to/implementation
+				  installation prefix for mpi implementation],
+		if test x$withval = xyes; then
+			AC_MSG_ERROR(--with-mpi must be given a pathname)
+		else
+			AC_MSG_RESULT(using $withval)
+			MPICC=${withval}/bin/mpicc
+			if test ! -x "${MPICC}"; then
+				AC_MSG_WARN($MPICC either does not exist or is not executable: falling back to $CC)
+				MPICC="$CC"
+			fi
+			MPIF77=${withval}/bin/mpif77
+			if test ! -x "${MPIF77}"; then
+				AC_MSG_WARN($MPIF77 either does not exist or is not executable: falling back to $FC)
+				MPIF77="$FC"
+			fi
 
-	fi
-)
+		fi
+	)
+fi
 
 
 AC_MSG_CHECKING(MPI-IO support in MPI implementation)
