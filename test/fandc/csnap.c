@@ -165,11 +165,22 @@ void write_file(char *filename, double *t) {
   int file_id;
   int t_id, smf_id;
   int ii;
-  size_t start_3d[3] = { kstart, jstart, istart };
-  size_t count_3d[3] = { locsiz_3d[0], locsiz_3d[1], locsiz_3d[2] };
-  size_t start_2d[2] = { jstart, istart };
-  size_t count_2d[2] = { locsiz_2d[0], locsiz_2d[1] };
+  size_t start_3d[3];
+  size_t count_3d[3];
+  size_t start_2d[2];
+  size_t count_2d[2];
 
+  start_3d[0] = kstart;
+  start_3d[1] = jstart;
+  start_3d[2] = istart;
+  count_3d[0] = locsiz_3d[0];
+  count_3d[1] = locsiz_3d[1];
+  count_3d[2] = locsiz_3d[2];
+  start_2d[0] = jstart;
+  start_2d[1] = istart;
+  count_2d[0] = locsiz_2d[0];
+  count_2d[1] = locsiz_2d[1];
+  
   tt = malloc(locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]*sizeof(double));
 
   if (has_2d)
@@ -241,11 +252,22 @@ void read_file(char *filename, double *t) {
   int ncid;
   int vid_t, vid_smf;
   int i, j, k, ii, ierr;
-  size_t start_3d[3] = { kstart, jstart, istart };
-  size_t count_3d[3] = { locsiz_3d[0], locsiz_3d[1], locsiz_3d[2] };
-  size_t start_2d[2] = { jstart, istart };
-  size_t count_2d[2] = { locsiz_2d[0], locsiz_2d[1] };
 
+  size_t start_3d[3];
+  size_t count_3d[3];
+  size_t start_2d[2];
+  size_t count_2d[2];
+
+  start_3d[0] = kstart;
+  start_3d[1] = jstart;
+  start_3d[2] = istart;
+  count_3d[0] = locsiz_3d[0];
+  count_3d[1] = locsiz_3d[1];
+  count_3d[2] = locsiz_3d[2];
+  start_2d[0] = jstart;
+  start_2d[1] = istart;
+  count_2d[0] = locsiz_2d[0];
+  count_2d[1] = locsiz_2d[1];
 
   tt = malloc(locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]*sizeof(double));
 
