@@ -12,6 +12,12 @@
 extern int  nfails;             /* number of failures in specific test */
 extern int  max_nmpt;		/* max. number of messages per test */
 
+/* Prototypes */
+void error(const char *fmt, ...);
+void print(const char *fmt, ...);
+int ifFail(const int expr, const int line, const char *file);
+void print_n_size_t(size_t nelems, const size_t *array);
+
 /*
  * Use for logging error conditions
  */
