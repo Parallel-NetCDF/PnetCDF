@@ -95,7 +95,7 @@ test_ncmpi_open(void)
 	error("ncmpi_open of nonexistent file should have returned system error");
 
     /* Open a file that is not a netCDF file. */
-    err = ncmpi_open(comm, "tests.h", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
+    err = ncmpi_open(comm, "test_get.c", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
     IF (err != NC_ENOTNC)
 	error("ncmpi_open of non-netCDF file: status = %d", err);
 
