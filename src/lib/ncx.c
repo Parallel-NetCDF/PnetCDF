@@ -55,7 +55,7 @@
 # define X_FLOAT_MIN (-X_FLOAT_MAX)
 #endif
 
-#if _SX /* NEC SUPER UX */
+#if defined(_SX) && _SX != 0 /* NEC SUPER UX */
 #if _INT64
 #undef  INT_MAX /* workaround cpp bug */
 #define INT_MAX  X_INT_MAX
@@ -1944,7 +1944,7 @@ ncx_getn_short_uchar(const void **xpp, size_t nelems, uchar *tp)
 int
 ncx_getn_short_short(const void **xpp, size_t nelems, short *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, nelems * sizeof(short));
 # else
 	swapn2b(tp, *xpp, nelems);
@@ -2234,7 +2234,7 @@ ncx_putn_short_uchar(void **xpp, size_t nelems, const uchar *tp)
 int
 ncx_putn_short_short(void **xpp, size_t nelems, const short *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_SHORT);
 # else
 	swapn2b(*xpp, tp, nelems);
@@ -2565,7 +2565,7 @@ ncx_getn_int_short(const void **xpp, size_t nelems, short *tp)
 int
 ncx_getn_int_int(const void **xpp, size_t nelems, int *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, nelems * sizeof(int));
 # else
 	swapn4b(tp, *xpp, nelems);
@@ -2597,7 +2597,7 @@ ncx_getn_int_int(const void **xpp, size_t nelems, int *tp)
 int
 ncx_getn_int_long(const void **xpp, size_t nelems, long *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, nelems * sizeof(long));
 # else
 	swapn4b(tp, *xpp, nelems);
@@ -2715,7 +2715,7 @@ ncx_putn_int_short(void **xpp, size_t nelems, const short *tp)
 int
 ncx_putn_int_int(void **xpp, size_t nelems, const int *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_INT);
 # else
 	swapn4b(*xpp, tp, nelems);
@@ -2747,7 +2747,7 @@ ncx_putn_int_int(void **xpp, size_t nelems, const int *tp)
 int
 ncx_putn_int_long(void **xpp, size_t nelems, const long *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_INT);
 # else
 	swapn4b(*xpp, tp, nelems);
@@ -2902,7 +2902,7 @@ ncx_getn_float_long(const void **xpp, size_t nelems, long *tp)
 int
 ncx_getn_float_float(const void **xpp, size_t nelems, float *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, nelems * sizeof(float));
 # else
 	swapn4b(tp, *xpp, nelems);
@@ -3097,7 +3097,7 @@ ncx_putn_float_long(void **xpp, size_t nelems, const long *tp)
 int
 ncx_putn_float_float(void **xpp, size_t nelems, const float *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_FLOAT);
 # else
 	swapn4b(*xpp, tp, nelems);
@@ -3311,7 +3311,7 @@ ncx_getn_double_float(const void **xpp, size_t nelems, float *tp)
 int
 ncx_getn_double_double(const void **xpp, size_t nelems, double *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(tp, *xpp, nelems * sizeof(double));
 # else
 	swapn8b(tp, *xpp, nelems);
@@ -3503,7 +3503,7 @@ ncx_putn_double_float(void **xpp, size_t nelems, const float *tp)
 int
 ncx_putn_double_double(void **xpp, size_t nelems, const double *tp)
 {
-# if WORDS_BIGENDIAN
+# ifdef WORDS_BIGENDIAN
 	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_DOUBLE);
 # else
 	swapn8b(*xpp, tp, nelems);

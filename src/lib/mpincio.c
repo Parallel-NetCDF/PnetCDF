@@ -22,6 +22,7 @@
 #include <unistd.h>
 #endif
 
+#include "nc.h"
 #include "ncio.h"
 #include "fbits.h"
 #include "rnd.h"

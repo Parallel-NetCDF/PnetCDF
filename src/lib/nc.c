@@ -15,7 +15,22 @@
 /* list of open netcdf's */
 static NC *NClist = NULL;
 
-/* static */
+
+/* Prototypes for functions used only in this file */
+static int move_data_r(NC *ncp, NC *old);
+static int move_recs_r(NC *ncp, NC *old);
+static int move_vars_r(NC *ncp, NC *old);
+static int write_NC(NC *ncp);
+static void NC_begins(NC *ncp, size_t h_minfree, size_t v_align,
+		      size_t v_minfree, size_t r_align);
+static int NC_check_def(MPI_Comm comm, void *buf, size_t nn);
+
+#if 0
+static int enddef(NC *ncp);
+static int nc_sync(int ncid);
+static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
+#endif
+
 void
 add_to_NCList(NC *ncp)
 {
@@ -28,7 +43,6 @@ add_to_NCList(NC *ncp)
 	NClist = ncp;
 }
 
-/* static */
 void
 del_from_NCList(NC *ncp)
 {
@@ -56,7 +70,7 @@ del_from_NCList(NC *ncp)
  * Check the data set definitions across all processes by
  * comparing the header buffer streams of all processes.
  */
-int
+static int
 NC_check_def(MPI_Comm comm, void *buf, size_t nn) {
   int rank;
   int errcheck, compare = 0;
@@ -232,8 +246,7 @@ ncx_howmany(nc_type type, size_t xbufsize)
  * Compute each variable's 'begin' offset,
  * update 'begin_rec' as well.
  */
-/* static */
-void
+static void
 NC_begins(NC *ncp,
 	size_t h_minfree, size_t v_align,
 	size_t v_minfree, size_t r_align)
@@ -490,7 +503,7 @@ read_NC(NC *ncp) {
  * Write out the header
  */
 
-int
+static int
 write_NC(NC *ncp)
 {
   int status = NC_NOERR, mpireturn;
@@ -584,7 +597,7 @@ NC_sync(NC *ncp)
  * Fill as needed.
  */
 
-int
+static int
 move_data_r(NC *ncp, NC *old) {
   /* no new variable inserted, move the whole contiguous data part */
   ncp->numrecs = old->numrecs;
@@ -592,7 +605,7 @@ move_data_r(NC *ncp, NC *old) {
               old->begin_rec - old->begin_var + old->recsize * old->numrecs);
 }
 
-int
+static int
 move_recs_r(NC *ncp, NC *old) {
   int status;
   int recno;
@@ -637,7 +650,7 @@ move_recs_r(NC *ncp, NC *old) {
  * Fill as needed.
  */
 
-int
+static int
 move_vars_r(NC *ncp, NC *old) {
   return ncmpiio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
                    old->begin_rec - old->begin_var); 
@@ -736,8 +749,8 @@ NC_enddef(NC *ncp) {
   return NC_NOERR;
 }
 
-
-int 
+#if 0
+static int 
 enddef(NC *ncp)
 {
   assert(!NC_readonly(ncp));
@@ -756,6 +769,7 @@ enddef(NC *ncp)
 
   return NC_NOERR;
 }
+#endif
 
 
 /* Public */
@@ -881,8 +895,8 @@ nc_inq_unlimdim(int ncid, int *xtendimp)
 	return NC_NOERR;
 }
 
-
-int
+#if 0
+static int
 nc_sync(int ncid)
 {
 	int status;
@@ -909,7 +923,7 @@ nc_sync(int ncid)
 }
 
 
-int
+static int
 nc_set_fill(int ncid,
 	int fillmode, int *old_mode_ptr)
 {
@@ -954,5 +968,13 @@ nc_set_fill(int ncid,
 
 	return NC_NOERR;
 }
+#endif
 
 /*ARGSUSED*/
+
+
+
+
+
+
+

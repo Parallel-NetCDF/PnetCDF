@@ -10,12 +10,12 @@
  *	netcdf library 'private' data structures, objects and interfaces
  */
 
-#include	"ncconfig.h"
-#include	<stddef.h>	/* size_t */
-#include	<sys/types.h>	/* off_t */
-#include	"pnetcdf.h"
-#include	"ncio.h"	/* ncio */
-#include	"fbits.h"
+#include "ncconfig.h"
+#include <stddef.h>	/* size_t */
+#include <sys/types.h>	/* off_t */
+#include "pnetcdf.h"
+#include "ncio.h"	/* ncio */
+#include "fbits.h"
 
 
 #ifndef NC_ARRAY_GROWBY
