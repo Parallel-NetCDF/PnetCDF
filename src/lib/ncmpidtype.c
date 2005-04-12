@@ -23,96 +23,119 @@
 @*/
 static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 {
-    switch(type) {
-	/* char types */
+    /* char types */
 #ifdef HAVE_MPI_CHARACTER
-	case MPI_CHARACTER:
+    if (type == MPI_CHARACTER) 
+        return MPI_CHAR;
 #endif
-	case MPI_CHAR:
-	    return MPI_CHAR;
+    if (type == MPI_CHAR)
+        return MPI_CHAR;
 
-	/* unsigned char types */
-	case MPI_UNSIGNED_CHAR:
-	    return MPI_UNSIGNED_CHAR;
+    /* unsigned char types */
+    if (type == MPI_UNSIGNED_CHAR)
+        return MPI_UNSIGNED_CHAR;
 #ifdef HAVE_MPI_INTEGER1
-	case MPI_INTEGER1:
+    if (type == MPI_INTEGER1)
+        return MPI_BYTE;
 #endif
-	case MPI_BYTE:
-	    return MPI_BYTE;
+    if (type == MPI_BYTE)
+        return MPI_BYTE;
 
-	/* 2-byte integer types (only supported if MPI_SHORT is 2-bytes). */
+    /* 2-byte integer types (only supported if MPI_SHORT is 2-bytes). */
 #if (SIZEOF_SHORT == 2)
-    #ifdef HAVE_MPI_INTEGER2
-	case MPI_INTEGER2:
-    #endif
-	case MPI_SHORT:
-	    return MPI_SHORT;
+  #ifdef HAVE_MPI_INTEGER2
+    if (type == MPI_INTEGER2)
+        return MPI_SHORT;
+  #endif
+    if (type == MPI_SHORT)
+        return MPI_SHORT;
 #endif
 
-	/* 4-byte integer types */
+    /* 4-byte integer types */
+  {
+    MPI_Datatype int_4byte;
+#if (SIZEOF_INT == 4)
+    int_4byte = MPI_INT;
+#elif (SIZEOF_SHORT == 4)
+    int_4byte = MPI_SHORT;
+#else
+    int_4byte = MPI_DATATYPE_NULL; /* no 4-byte type? */
+#endif
+
 #ifdef HAVE_MPI_INTEGER
-	case MPI_INTEGER:
+    if (type == MPI_INTEGER)
+        return int_4byte;
 #endif
 #ifdef HAVE_MPI_INTEGER4
-	case MPI_INTEGER4:
+    if (type == MPI_INTEGER4)
+        return int_4byte;
 #endif
 #if (SIZEOF_LONG == 4)
-	case MPI_LONG:
+    if (type == MPI_LONG)
+        return int_4byte;
 #endif
 #if (SIZEOF_INT == 4)
-	case MPI_INT:
-	    return MPI_INT;
+    if (type == MPI_INT)
+        return MPI_INT;
 #elif (SIZEOF_SHORT == 4)
-	case MPI_SHORT:
-	    return MPI_SHORT;
-#else
-	    /* no 4-byte type? */
-	    return MPI_DATATYPE_NULL;
+    if (type == MPI_SHORT)
+        return MPI_SHORT;
 #endif
+  }
 
-        /* 8-byte integer types (only supported if MPI_INT or MPI_LONG
-	 * is 8-bytes).
-	 */
+     /* 8-byte integer types (only supported if MPI_INT or MPI_LONG
+      * is 8-bytes).
+      */
 #if (SIZEOF_INT == 8) || (SIZEOF_LONG == 8)
-    #ifdef HAVE_MPI_INTEGER8
-	case MPI_INTEGER8:
-    #endif
-    #if (SIZEOF_INT == 8)
-	case MPI_INT:
-    #endif
-    #if (SIZEOF_LONG == 8)
-	case MPI_LONG:
-    #endif
-    #if (SIZEOF_INT == 8)
-	    return MPI_INT;
-    #else
-	    return MPI_LONG;
-    #endif
+  #ifdef HAVE_MPI_INTEGER8
+    if (type == MPI_INTEGER8)
+      #if (SIZEOF_INT == 8)
+        return MPI_INT;
+      #else
+        return MPI_LONG;
+      #endif
+  #endif
+
+  #if (SIZEOF_INT == 8)
+    if (type == MPI_INT)
+        return MPI_INT;
+  #endif
+  #if (SIZEOF_LONG == 8)
+    if (type == MPI_LONG)
+      #if (SIZEOF_INT == 8)
+	return MPI_INT;
+      #else
+	return MPI_LONG;
+      #endif
+  #endif
 #endif
 
-        /* 4-byte float types (we assume float is 4-bytes). */
+    /* 4-byte float types (we assume float is 4-bytes). */
 #ifdef HAVE_MPI_REAL
-	case MPI_REAL:
+    if (type == MPI_REAL)
+        return MPI_FLOAT;
 #endif
 #ifdef HAVE_MPI_REAL4
-	case MPI_REAL4:
+    if (type == MPI_REAL4)
+        return MPI_FLOAT;
 #endif
-	case MPI_FLOAT:
-	    return MPI_FLOAT;
+    if (type == MPI_FLOAT)
+        return MPI_FLOAT;
 
-        /* 8-byte float types (we assume double is 8-bytes). */
+    /* 8-byte float types (we assume double is 8-bytes). */
 #ifdef HAVE_MPI_REAL8
-	case MPI_REAL8:
+    if (type == MPI_REAL8)
+        return MPI_DOUBLE;
 #endif
 #ifdef HAVE_MPI_DOUBLE_PRECISION
-	case MPI_DOUBLE_PRECISION:
+    if (type == MPI_DOUBLE_PRECISION)
+        return MPI_DOUBLE;
 #endif
-	case MPI_DOUBLE:
-	    return MPI_DOUBLE;
+    if (type == MPI_DOUBLE)
+        return MPI_DOUBLE;
 
-	default:
-	    return MPI_DATATYPE_NULL;
-    }
+/* default */
+    return MPI_DATATYPE_NULL;
 }
 
 /*@
@@ -246,7 +269,8 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   if ( combiner == MPI_COMBINER_NAMED ) {	
     /* Predefined datatype */
     *nelems = 1;
-    *ptype = ncmpii_type_filter(dtype);
+    if ( (*ptype = ncmpii_type_filter(dtype)) == MPI_DATATYPE_NULL )
+      return NC_EUNSPTETYPE;
     MPI_Type_size(dtype, el_size);
     *iscontig_of_ptypes = 1;
     return NC_NOERR;
@@ -418,112 +442,6 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     free(arraybuf);
 
   return status;
-}
-
-/**
- * ncmpii_get_ptype - only purpose is to extract out the single primitive
- * datatype used to construct the derived datatype
- *
- * (Deprecated, no use so far )
- */
-
-int ncmpii_dtype_get_ptype(MPI_Datatype dtype, 
-			   MPI_Datatype *ptype,
-			   int *iscontig_of_ptypes) 
-{
-
-  int i;
-  int num_ints, num_adds, num_dtypes, tmpnum_dtypes, combiner;
-  int *array_of_ints;
-  MPI_Aint *array_of_adds;
-  MPI_Datatype *array_of_dtypes;
-  void *arraybuf;
-  int memsz, oldmemsz;
-  int typesz;
-
-  if (dtype == MPI_DATATYPE_NULL) {
-    /* ERROR */
-    *ptype = MPI_DATATYPE_NULL;
-    *iscontig_of_ptypes = 1;
-    return NC_NOERR;
-  }
-
-  oldmemsz = 0;
-
-  *ptype = dtype;
-  MPI_Type_get_envelope(*ptype, &num_ints, &num_adds, &num_dtypes, &combiner);
-  *iscontig_of_ptypes = 1;
-
-  while (combiner != MPI_COMBINER_NAMED) {
-
-#ifdef HAVE_MPI_COMBINER_DUP
-    if (combiner != MPI_COMBINER_CONTIGUOUS && combiner != MPI_COMBINER_DUP)
-#else
-    if (combiner != MPI_COMBINER_CONTIGUOUS)
-#endif
-      *iscontig_of_ptypes = 0;
-
-    memsz = num_ints*sizeof(int) 
-	  + num_adds*sizeof(MPI_Aint) 
-	  + num_dtypes*sizeof(MPI_Datatype);
-    if (oldmemsz < memsz) {
-      if (oldmemsz > 0) free(arraybuf);
-      arraybuf = (void *)malloc(memsz);
-      oldmemsz = memsz;
-    }
-    array_of_ints = (int *)(arraybuf);
-    array_of_adds = (MPI_Aint *)(array_of_ints + num_ints);
-    array_of_dtypes = (MPI_Datatype *)(array_of_adds + num_adds);
-    MPI_Type_get_contents(*ptype, num_ints, num_adds, num_dtypes,
-                          array_of_ints, array_of_adds, array_of_dtypes);
-
-    if (*ptype != dtype)
-      MPI_Type_free(ptype);
-
-    /* assuming there's only one bottom level primitive datatype */
-    /* so, every path leads to that same final primitive datatype */
-    /* TODO: do we need error checking for multiple primitive datatypes? */
-
-    /* skip null/marker types */
-    for (i=0, typesz=0; i<num_dtypes && typesz==0; i++) {
-      *ptype = array_of_dtypes[i];
-      if (*ptype != MPI_DATATYPE_NULL) {
-        MPI_Type_size(*ptype, &typesz);
-	if ( typesz == 0 ) {
-          MPI_Type_get_envelope(*ptype,
-	  		        &num_ints, &num_adds, &tmpnum_dtypes, 
-			        &combiner);
-          if ( combiner != MPI_COMBINER_NAMED)
-            MPI_Type_free(array_of_dtypes+i);
-        }
-      }
-    }
-
-    while (i<num_dtypes) {
-      if (array_of_dtypes[i] != MPI_DATATYPE_NULL) {
-        MPI_Type_get_envelope(array_of_dtypes[i], 
-	  		      &num_ints, &num_adds, &tmpnum_dtypes, 
-			      &combiner);
-        if (combiner != MPI_COMBINER_NAMED) 
-          MPI_Type_free(array_of_dtypes+i);
-      }
-      i++;
-    }
-
-    if (typesz == 0) {
-      /* something wrong, end in a NULL type */
-      *ptype = MPI_DATATYPE_NULL;
-      break;
-    } else {
-      MPI_Type_get_envelope(*ptype,
-	  		    &num_ints, &num_adds, &num_dtypes, 
-			    &combiner);
-    }
-  }
-
-  if (oldmemsz > 0) free(arraybuf);
-
-  return NC_NOERR;
 }
 
 /*@

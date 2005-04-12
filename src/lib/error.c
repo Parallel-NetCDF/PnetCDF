@@ -175,6 +175,8 @@ ncmpi_strerror(int err)
 	    return "Input/Output data amount mismatch";
 	case NC_ENEGATIVECNT:
 	    return "Negative count is prohibited";
+	case NC_EUNSPTETYPE:
+	    return "Unsupported etype is used in MPI datatype for memory data";
 	default:
 	    return unknown;
 	}
