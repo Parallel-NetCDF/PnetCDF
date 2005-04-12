@@ -189,6 +189,7 @@ typedef nc_type ncmpi_type;
 #define NC_EMULTITYPES  (-70)	/* Multiple types used in memory data */
 #define NC_EIOMISMATCH  (-71)	/* Input/Output data amount mismatch */
 #define NC_ENEGATIVECNT (-72)	/* Negative count is specified */
+#define NC_EUNSPTETYPE  (-73)   /* Unsupported etype in memory MPI datatype */
 
 /*
  * The Interface
