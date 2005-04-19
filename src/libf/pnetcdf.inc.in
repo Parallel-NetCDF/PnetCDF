@@ -1333,7 +1333,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          character(*)        text)
       external        nfmpi_put_varm
 
@@ -1343,7 +1343,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          character(*)        text)
       external        nfmpi_put_varm_all
 
@@ -1353,7 +1353,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          character(*)        text)
       external        nfmpi_get_varm
 
@@ -1363,7 +1363,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)            imap(1),
 !                          character(*)        text)
       external        nfmpi_get_varm_all
 
@@ -1373,7 +1373,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          character(*)        text)
       external        nfmpi_put_varm_text
 
@@ -1383,7 +1383,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          character(*)        text)
       external        nfmpi_put_varm_text_all
 
@@ -1393,7 +1393,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          character(*)        text)
       external        nfmpi_get_varm_text
 
@@ -1403,7 +1403,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          character(*)        text)
       external        nfmpi_get_varm_text_all
 
@@ -1413,7 +1413,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int1_t           i1vals(1))
       external        nfmpi_put_varm_int1
 
@@ -1423,7 +1423,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int1_t           i1vals(1))
       external        nfmpi_put_varm_int1_all
 
@@ -1433,7 +1433,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int1_t           i1vals(1))
       external        nfmpi_get_varm_int1
 
@@ -1443,7 +1443,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int1_t           i1vals(1))
       external        nfmpi_get_varm_int1_all
 
@@ -1453,7 +1453,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int2_t           i2vals(1))
       external        nfmpi_put_varm_int2
 
@@ -1463,7 +1463,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int2_t           i2vals(1))
       external        nfmpi_put_varm_int2_all
 
@@ -1473,7 +1473,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int2_t           i2vals(1))
       external        nfmpi_get_varm_int2
 
@@ -1483,7 +1483,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
 !                          nfmpi_int2_t           i2vals(1))
       external        nfmpi_get_varm_int2_all
 
@@ -1493,7 +1493,6 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
 !                          integer             ivals(1))
       external        nfmpi_put_varm_int
 
@@ -1503,7 +1502,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          integer             ivals(1))
       external        nfmpi_put_varm_int_all
 
@@ -1513,7 +1512,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          integer             ivals(1))
       external        nfmpi_get_varm_int
 
@@ -1523,7 +1522,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          integer             ivals(1))
       external        nfmpi_get_varm_int_all
 
@@ -1533,7 +1532,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          real                rvals(1))
       external        nfmpi_put_varm_real
 
@@ -1543,7 +1542,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          real                rvals(1))
       external        nfmpi_put_varm_real_all
 
@@ -1553,7 +1552,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          real                rvals(1))
       external        nfmpi_get_varm_real
 
@@ -1563,7 +1562,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          real                rvals(1))
       external        nfmpi_get_varm_real_all
 
@@ -1573,7 +1572,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          doubleprecision     dvals(1))
       external        nfmpi_put_varm_double
 
@@ -1583,7 +1582,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          doubleprecision     dvals(1))
       external        nfmpi_put_varm_double_all
 
@@ -1593,7 +1592,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          doubleprecision     dvals(1))
       external        nfmpi_get_varm_double
 
@@ -1603,7 +1602,7 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
-!			   INTEGER(KIND=MPI_OFFSET_KIND)	     imap(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          doubleprecision     dvals(1))
       external        nfmpi_get_varm_double_all
 
