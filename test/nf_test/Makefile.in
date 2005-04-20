@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES	= -I$(srcdir) -I$(srcdir)/../../src/libf -I../../src/libf -I$(srcdir)/../../src/lib -I../../src/lib
 
-FFLAGS	= $(INCLUDES) @FFLAGS@ -w
+FFLAGS	= $(INCLUDES) @FFLAGS@ 
 lib_netcdf	= ../../src/lib/libpnetcdf.a
 # Don't use "-L../libsrc -lnetcdf" in the following because that doesn't
 # work on a CRAY T90 (sigh).
