@@ -88,6 +88,9 @@
         implicit        none
         integer         iargc
 #endif
+#if defined(__crayx1)
+        integer         ipxfargc 
+#endif
 #include "tests.inc"
 
         integer         argc
@@ -282,7 +285,11 @@
         max_nmpt = 8
         skiparg = .false.
 
+#if defined(__crayx1)
+        argc = ipxfargc()
+#else
         argc = iargc()
+#endif
         do 1, iarg = 1, argc
             if (skiparg) then
                 skiparg = .false.
