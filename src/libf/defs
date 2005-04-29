@@ -788,6 +788,22 @@ $argsneedcast{'nc_type *'} = '(nc_type *)(ARG)';
 # Special handling for integer*1 routines
 $declarg{'put_att_int1-6'} = 'const signed char *';
 $declarg{'get_att_int1-4'} = 'signed char *';
+$declarg{'get_var1_int1-4'} = 'signed char *';
+$declarg{'get_var_int1_all-3'} = 'signed char *';
+$declarg{'get_var_int1-3'} = 'signed char *';
+$declarg{'get_vara_int1_all-5'} = 'signed char *';
+$declarg{'get_vars_int1_all-6'} = 'signed char *';
+$declarg{'get_vars_int1-6'} = 'signed char *';
+$declarg{'put_var1_int1-4'} = 'const signed char *';
+$declarg{'put_var_int1-3'} = 'const signed char *';
+$declarg{'put_vara_int1_all-5'} = 'const signed char *';
+$declarg{'put_vara_int1-5'} = 'const signed char *';
+$declarg{'put_vars_int1_all-6'} = 'const signed char *';
+$declarg{'put_vars_int1-6'} = 'const signed char *';
+$declarg{'get_varm_int1_all-7'} = 'signed char *';
+$declarg{'get_varm_int1-7'} = 'signed char *';
+$declarg{'put_varm_int1_all-7'} = 'const signed char *';
+$declarg{'put_varm_int1-7'} = 'const signed char *';
 
 # Special argument handling 
 # Special routines are used whose names are created from the name
