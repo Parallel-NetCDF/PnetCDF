@@ -130,7 +130,8 @@ $returnType   = "int";
 
 	      'get_att_schar' => '2:3:4', 'get_att_schar-3' => 'in:addnull',
 	        'get_att_schar-2' => 'in:OffsetIndexIn',
-	           'get_att_schar-4' => 'out:charBufferOut',
+#	           'get_att_schar-4' => 'out:charBufferOut',
+	           'get_att_schar-4' => 'out:int1toschar',
 	      'get_att_short' => '2:3', 'get_att_short-3' => 'in:addnull',
 	        'get_att_short-2' => 'in:OffsetIndexIn',
 	      'get_att_text' => '2:3:4', 'get_att_text-3' => 'in:addnull',
@@ -786,6 +787,7 @@ $argsneedcast{'nc_type *'} = '(nc_type *)(ARG)';
 
 # Special handling for integer*1 routines
 $declarg{'put_att_int1-6'} = 'const signed char *';
+$declarg{'get_att_int1-4'} = 'signed char *';
 
 # Special argument handling 
 # Special routines are used whose names are created from the name
@@ -1171,6 +1173,9 @@ sub int1toschar_out_arg {
     print $OUTFD "v$count";
 }
 sub int1toschar_in_decl {
+    my $count = $_[0];
+}
+sub int1toschar_out_decl {
     my $count = $_[0];
 }
 sub int1toschar_ftoc {

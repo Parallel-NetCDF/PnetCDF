@@ -50,7 +50,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_del_att_ ( int *v1, int *v2, char *v3 FOR
 extern FORTRAN_API int FORT_CALL nfmpi_put_att_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Offset *v4, char *v5 FORT_MIXED_LEN(d5) FORT_END_LEN(d3) FORT_END_LEN(d5) );
 extern FORTRAN_API int FORT_CALL nfmpi_get_att_text_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), char *v4 FORT_MIXED_LEN(d4) FORT_END_LEN(d3) FORT_END_LEN(d4) );
 extern FORTRAN_API int FORT_CALL nfmpi_put_att_int1_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Offset *v5, const signed char * v6 FORT_END_LEN(d3) );
-extern FORTRAN_API int FORT_CALL nfmpi_get_att_int1_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), char *v4 FORT_MIXED_LEN(d4) FORT_END_LEN(d3) FORT_END_LEN(d4) );
+extern FORTRAN_API int FORT_CALL nfmpi_get_att_int1_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), signed char * v4 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_put_att_int2_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Offset *v5, short*v6 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_get_att_int2_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), short*v4 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_put_att_int_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Offset *v5, MPI_Fint *v6 FORT_END_LEN(d3) );
