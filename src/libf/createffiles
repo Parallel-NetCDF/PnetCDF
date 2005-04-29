@@ -17,3 +17,11 @@ fi
 
 # Build the files 
 $mpich2SourceDir/src/binding/f77/buildiface -infile=../lib/pnetcdf.h -deffile=defs $@
+# Update to the old name
+for file in *f.c ; do
+    if grep FORT_DLL_SPEC $file >/dev/null 2>&1 ; then 
+	rm -f .tmp
+        sed -e 's/FORT_DLL_SPEC/FORTRAN_API/g' $file > .tmp
+	mv .tmp $file
+    fi
+done
