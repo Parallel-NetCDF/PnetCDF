@@ -486,7 +486,8 @@ $returnType   = "int";
 	        'put_att_schar-2' => 'in:OffsetIndexIn',
 ## Already MPI_Offset match, no need of type cast
 #			      'put_att_schar-5' => 'in:intToSizeT',
-			      'put_att_schar-6' => 'in:charBufferIn',
+#			      'put_att_schar-6' => 'in:charBufferIn',
+			      'put_att_schar-6' => 'in:int1toschar',
 	      'put_att_short' => '2:3', 'put_att_short-3' => 'in:addnull',
 	        'put_att_short-2' => 'in:OffsetIndexIn',
 ## Already MPI_Offset match, no need of type cast
@@ -783,6 +784,27 @@ $prototype_header_file = "mpifnetcdf.h";
 $argsneedcast{'const MPI_Offset []'} = '(const MPI_Offset *)(ARG)';
 $argsneedcast{'nc_type *'} = '(nc_type *)(ARG)';
 
+# Special handling for integer*1 routines
+$declarg{'put_att_int1-6'} = 'const signed char *';
+
+# Special argument handling 
+# Special routines are used whose names are created from the name
+# used in the hashes above (routinename-position) and these special routine
+# names.
+# void foo( MPI_Fint *v1, etc )
+# {
+# /* Special declarations needed for the variables */
+# <name>_<direction>_decl( <argnum> )
+# /* Special processing need for in variables */
+# <name>_ftoc( <argnum> )
+# /* Call the function.  Replace special arguments with the output from */
+# <name>_<direction>_arg( <argnum> )
+# /* Special post call processing (for out variables) */
+# <name>_ctof( l$count, v$count ) /* local (C) variable name, fortran var name */
+# Not all routines must be provided
+#    use $declarg{routine-position} to replace the handling of input 
+#    arguments (in the definition)
+#    E.g., $declarg{'put_att_schar-6'} = 'const signed char *';
 #
 # Routines needed for special argument handling for MPI_Offset
 # ---------------------------------------------------------------------------
@@ -1140,6 +1162,27 @@ sub charBufferOut_out_arg {
     print $OUTFD "v$count";
 }
 sub charBufferOut_ctof {
+}
+# -----------------------------------------------------------------------------
+# integer*1 in Fortran to signed char in C
+# FIXME: Not done yet
+sub int1toschar_out_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+sub int1toschar_in_decl {
+    my $count = $_[0];
+}
+sub int1toschar_ftoc {
+    my $count = $_[0];
+}
+sub int1toschar_in_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+sub int1toschar_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
 }
 
 # ---------------------------------------------------------------------------
