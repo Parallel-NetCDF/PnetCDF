@@ -9,6 +9,7 @@ prompt:$ export CC=cc
 prompt:$ export FC=ftn
 prompt:$ export MPIF77=$FC
 prompt:$ export MPICC=$CC
+prompt:$ export FFLAGS="-eh"
 prompt:$ ./configure --prefix=/path/to/install
 # note: configure takes a fairly long time. 
 prompt:$ make
