@@ -25,7 +25,7 @@
 	@case "$(COMPILE.F)" in	\
 	    '')	\
 		set -x;	\
-		$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*-tmp.f || 	\
+		$(FPP) $(FPPFLAGS) -C $*.F | grep -v '^#' >$*-tmp.f || 	\
 		    (rm $*-tmp.f ; exit 1);	\
 		$(COMPILE.f) -o $@ $*-tmp.f || (rm $*-tmp.f; exit 1);	\
 		rm $*-tmp.f;	\
