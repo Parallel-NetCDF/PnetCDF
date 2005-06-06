@@ -397,7 +397,7 @@ ncmpi_delete(char *filename, MPI_Info info)
 int
 ncmpi_set_fill(int ncid, int fillmode, int *old_mode_ptr)
 {
-	int status = NC_NOERR
+	int status = NC_NOERR;
 	if (fillmode != NC_NOFILL)
 		status = NC_EINVAL;
 	return status;
