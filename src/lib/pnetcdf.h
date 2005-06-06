@@ -247,6 +247,7 @@ int ncmpi_end_indep_data(int ncid);
 
 int ncmpi_close(int ncid);
 
+int ncmpi_set_fill(int ncid, int fillmode, int *old_modep);
 /* End Dataset Functions */
 
 /* Begin Define Mode Functions */
@@ -268,7 +269,8 @@ int ncmpi_rename_var(int ncid, int varid, const char *name);
 
 /* Begin Inquiry Functions */
 
-const char *ncmpi_inq_libvers(void);
+const char *
+ncmpi_inq_libvers(void);
 
 int ncmpi_inq(int ncid, int *ndimsp, int *nvarsp,
           int *ngattsp, int *unlimdimidp); 
