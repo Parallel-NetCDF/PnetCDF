@@ -20,7 +20,7 @@ static int length_of_mpitype(MPI_Datatype);
 
 const char *
 ncmpi_inq_libvers(void) {
-  return "version = 1.0.0-pre2 of 02 MAY 2005";
+  return "version = 1.0.0 of XXX";
 }
 
 /* Prototypes for functions used only in this file */
@@ -388,6 +388,22 @@ ncmpi_delete(char *filename, MPI_Info info)
 	return NC_NOERR;
 }
 
+/* ncmpi_set_fill:
+ * not actually implemented.  Anything other than NC_NOFILL is not supported.
+ * Many codes use NC_NOFILL anyway, so this just gets us more source-portable
+ * with existings serial netcdf codes.   Also provides a placeholder if someday
+ * someone wants to implement all of set_fill 
+ */
+int
+ncmpi_set_fill(int ncid, int fillmode, int *old_mode_ptr)
+{
+	int status = NC_NOERR
+	if (fillmode != NC_NOFILL)
+		status = NC_EINVAL;
+	return status;
+
+}
+		
 
 /* End Of Dataset Functions */
 
