@@ -19,6 +19,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_abort_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_begin_indep_data_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_end_indep_data_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_close_ ( int *v1 );
+extern FORTRAN_API int FORT_CALL nfmpi_set_fill_ ( int *v1, int *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_def_dim_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), MPI_Offset *v3, MPI_Fint *v4 FORT_END_LEN(d2) );
 extern FORTRAN_API int FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, int *v4, MPI_Fint *v5, MPI_Fint *v6 FORT_END_LEN(d2) );
 extern FORTRAN_API int FORT_CALL nfmpi_rename_dim_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3) FORT_END_LEN(d3) );
