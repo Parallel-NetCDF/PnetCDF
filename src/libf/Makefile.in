@@ -57,7 +57,7 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	put_vars_int_allf.c put_vars_intf.c put_vars_int2_allf.c \
 	put_vars_int2f.c put_vars_text_allf.c put_vars_textf.c \
 	put_var_textf.c redeff.c rename_attf.c rename_dimf.c \
-	rename_varf.c syncf.c nfxutil.c xstrerrorf.c \
+	rename_varf.c syncf.c nfxutil.c xstrerrorf.c xinq_libversf.c\
 	get_var1_int1f.c get_var_int1_allf.c \
 	get_var_int1f.c \
 	get_vara_int1_allf.c get_vara_int1f.c \
@@ -95,7 +95,7 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	put_varm_text_allf.c \
 	put_varm_textf.c
 
-LIB_FSRCS = strerrorf.f
+LIB_FSRCS = strerrorf.f inq_libversf.f
 PACKING_LIST = \
 	$(LIB_CSRCS) $(LIB_FSRCS)\
 	Makefile 
