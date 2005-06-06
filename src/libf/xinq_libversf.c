@@ -21,14 +21,14 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_xinq_libvers_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2) FORT_END_LEN(d2) ){
+FORTRAN_API int FORT_CALL nfmpi_xinq_libvers_ ( char *v1 FORT_MIXED_LEN(d1) FORT_END_LEN(d1) ){
     const char *p = ncmpi_inq_libvers();
     int i;
-    /* d2 is the length of the string passed into the routine */
-    for (i=0; i<d2 && *p; i++) {
-	v2[i] = *p++;
+    /* d1 is the length of the string passed into the routine */
+    for (i=0; i<d1 && *p; i++) {
+	v1[i] = *p++;
     }
     /* Blank pad */
-    for (; i<d2; i++) v2[i] = ' ';
+    for (; i<d1; i++) v1[i] = ' ';
     return 0;
 }

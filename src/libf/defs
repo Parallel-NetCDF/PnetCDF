@@ -1263,7 +1263,7 @@ sub ncfxinqlibvers {
     $OUTFD = "NCFXINQLIBVERSFD";
     open( $OUTFD, ">xinq_libversf.c" ) || die "Cannot open xinq_libversf.c\n";
     $out_prefix = "nfmpi_";
-    $args = "int *, char *";
+    $args = "char *";
     $files[$#files+1] = "xinq_libversf.c";
     &print_header( "ncfmpi_xinq_libvers", "xinq_libvers", $args );
     &print_routine_type_decl( $OUTFD, "xinq_libvers" );
@@ -1271,12 +1271,12 @@ sub ncfxinqlibvers {
     print $OUTFD "{
     const char *p = ncmpi_inq_libvers();
     int i;
-    /* d2 is the length of the string passed into the routine */
-    for (i=0; i<d2 && *p; i++) {
-	v2[i] = *p++;
+    /* d1 is the length of the string passed into the routine */
+    for (i=0; i<d1 && *p; i++) {
+	v1[i] = *p++;
     }
     /* Blank pad */
-    for (; i<d2; i++) v2[i] = ' ';
+    for (; i<d1; i++) v1[i] = ' ';
     return 0;
 }\n";
     close ($OUTFD);
