@@ -1210,6 +1210,7 @@ sub int1toschar_ctof {
 # Functions to add routines that need special handling
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
+$ExtraRoutines[$#ExtraRoutines+1] = "ncfxinqlibvers";
 
 sub ncfxstrerror {
     $OUTFD = "NCFXSTRERRORFD";
@@ -1257,6 +1258,31 @@ int ncmpixVardim( int ncid, int varid )
 }\n";
     close ($OUTFD);	
 }
+
+sub ncfxinqlibvers {
+    $OUTFD = "NCFXINQLIBVERSFD";
+    open( $OUTFD, ">xinq_libversf.c" ) || die "Cannot open xinq_libversf.c\n";
+    $out_prefix = "nfmpi_";
+    $args = "int *, char *";
+    $files[$#files+1] = "xinq_libversf.c";
+    &print_header( "ncfmpi_xinq_libvers", "xinq_libvers", $args );
+    &print_routine_type_decl( $OUTFD, "xinq_libvers" );
+    &print_args( $OUTFD, $args, 0, "xinq_libvers" );
+    print $OUTFD "{
+    const char *p = ncmpi_inq_libvers();
+    int i;
+    /* d2 is the length of the string passed into the routine */
+    for (i=0; i<d2 && *p; i++) {
+	v2[i] = *p++;
+    }
+    /* Blank pad */
+    for (; i<d2; i++) v2[i] = ' ';
+    return 0;
+}\n";
+    close ($OUTFD);
+
+}
+
 
 return 1;
 
