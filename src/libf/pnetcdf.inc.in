@@ -199,59 +199,17 @@
 !
 ! control routines:
 !
-      integer         nfmpi_inq_base_pe
-!                         (integer             ncid,
-!                          integer             pe)
-      external        nfmpi_inq_base_pe
-
-      integer         nfmpi_set_base_pe
-!                         (integer             ncid,
-!                          integer             pe)
-      external        nfmpi_set_base_pe
-
       integer         nfmpi_create
 !                         (character*(*)       path,
 !                          integer             cmode,
 !                          integer             ncid)
       external        nfmpi_create
 
-      integer         nfmpi__create
-!                         (character*(*)       path,
-!                          integer             cmode,
-!                          integer             initialsz,
-!                          integer             chunksizehint,
-!                          integer             ncid)
-      external        nfmpi__create
-
-      integer         nfmpi__create_mp
-!                         (character*(*)       path,
-!                          integer             cmode,
-!                          integer             initialsz,
-!                          integer             basepe,
-!                          integer             chunksizehint,
-!                          integer             ncid)
-      external        nfmpi__create_mp
-
       integer         nfmpi_open
 !                         (character*(*)       path,
 !                          integer             mode,
 !                          integer             ncid)
       external        nfmpi_open
-
-      integer         nfmpi__open
-!                         (character*(*)       path,
-!                          integer             mode,
-!                          integer             chunksizehint,
-!                          integer             ncid)
-      external        nfmpi__open
-
-      integer         nfmpi__open_mp
-!                         (character*(*)       path,
-!                          integer             mode,
-!                          integer             basepe,
-!                          integer             chunksizehint,
-!                          integer             ncid)
-      external        nfmpi__open_mp
 
       integer         nfmpi_set_fill
 !                         (integer             ncid,
@@ -272,14 +230,6 @@
       integer         nfmpi_enddef
 !                         (integer             ncid)
       external        nfmpi_enddef
-
-      integer         nfmpi__enddef
-!                         (integer             ncid,
-!                          integer             h_minfree,
-!                          integer             v_align,
-!                          integer             v_minfree,
-!                          integer             r_align)
-      external        nfmpi__enddef
 
       integer         nfmpi_sync
 !                         (integer             ncid)
@@ -600,12 +550,6 @@
 !                          integer             varid,
 !                          character(*)        name)
       external        nfmpi_rename_var
-
-      integer         nfmpi_copy_var
-!                         (integer             ncid_in,
-!                          integer             varid,
-!                          integer             ncid_out)
-      external        nfmpi_copy_var
 
 !
 ! entire variable put/get routines:
@@ -1613,24 +1557,6 @@
 !      
 ! functions in the fortran interface
 !
-      integer nccre
-      integer ncopn
-      integer ncddef
-      integer ncdid
-      integer ncvdef
-      integer ncvid
-      integer nctlen
-      integer ncsfil
-
-      external nccre
-      external ncopn
-      external ncddef
-      external ncdid
-      external ncvdef
-      external ncvid
-      external nctlen
-      external ncsfil
-
 
       integer ncrdwr
       integer nccreat
