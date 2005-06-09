@@ -14,6 +14,4 @@
 #undef NF_INT_IS_C_
 #undef NF_REAL_IS_C_
 #undef NO_IEEE_FLOAT
-#undef NO_STDLIB_H
 #undef NO_STRERROR
-#undef NO_SYS_TYPES_H

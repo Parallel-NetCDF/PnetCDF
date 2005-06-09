@@ -5,13 +5,16 @@
  *
  ***********************************************************************/
 
+#include "nc.h"
+
 #include <mpi.h>
 #include <assert.h>
 #include <string.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <stdio.h>
 
-#include "nc.h"
 #include "ncx.h"
 
 #ifndef MAX

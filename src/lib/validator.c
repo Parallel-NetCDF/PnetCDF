@@ -4,6 +4,7 @@
  * Laboratory
  *
  **************************************************************************/
+#include "nc.h"
 #include <mpi.h>
 #include <assert.h>
 #include <sys/types.h>
@@ -12,8 +13,9 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#include "nc.h"
+#endif
 #include "ncx.h"
 
 #ifndef MAX

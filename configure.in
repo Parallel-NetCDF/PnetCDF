@@ -172,8 +172,8 @@ fi
 AC_SUBST(MPICC)
 AC_SUBST(MPIF77)
 
-AC_CHECK_HEADER(stdlib.h, ,AC_DEFINE(NO_STDLIB_H))
-AC_CHECK_HEADER(sys/types.h, ,AC_DEFINE(NO_SYS_TYPES_H))
+AC_CHECK_HEADERS(stdlib.h sys/types.h)
+
 AC_CHECK_FUNC(strerror, ,AC_DEFINE(NO_STRERROR))
 AC_FUNC_ALLOCA
 AC_STRUCT_ST_BLKSIZE
@@ -413,7 +413,7 @@ int main( int argc, char **argv )
 {
      MPI_Offset a;
      FILE *f = fopen("conftestval", "w" );
-     if (! f) exit(1);
+     if (! f) return 1;
      fprintf( f, "%ld\n", (long)sizeof(a) );
      fclose(f);
      return 0;
@@ -436,7 +436,9 @@ else
 fi
 ])
 
-AC_CHECK_SIZEOF(MPI_Offset)
+dnl This was causing errors, so I've left it out.  Is that ok? -- RobR, 06/09/2005
+dnl
+dnl AC_CHECK_SIZEOF(MPI_Offset)
 
 if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES

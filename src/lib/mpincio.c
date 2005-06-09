@@ -7,7 +7,9 @@
 
 #include "ncconfig.h"
 #include <assert.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <stdio.h>
 #include <errno.h>
 #ifndef ENOERR
