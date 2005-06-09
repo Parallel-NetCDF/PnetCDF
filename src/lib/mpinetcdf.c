@@ -5,12 +5,14 @@
  *
  ********************************************************************************/
 
-#include <mpi.h>
 #include "nc.h"
 #include "ncx.h"
+#include <mpi.h>
 #include <stdio.h>
 #include <unistd.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <assert.h>
 
 #include "ncmpidtype.h"
@@ -913,9 +915,9 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
   for(; start < end; start++, edges++, shp++, stride++)
   {
     /* cast needed for braindead systems with signed size_t */
-    if( *edges > (unsigned long)*shp || 
-	*edges > 0 && *start+1 + (*edges-1) * *stride > (unsigned long)*shp ||
-	*edges == 0 && *start > (unsigned long)*shp )
+    if( (*edges > (unsigned long)*shp) || 
+	(*edges > 0 && *start+1 + (*edges-1) * *stride > (unsigned long)*shp) ||
+	(*edges == 0 && *start > (unsigned long)*shp) )
     {
       return(NC_EEDGE);
     }
@@ -1059,8 +1061,8 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
 
   /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
   status = NCedgeck(ncp, varp, start, count);
-  if( status != NC_NOERR ||
-      getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp) ) 
+  if( (status != NC_NOERR) ||
+      (getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp)) ) 
   {
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR)
@@ -1238,8 +1240,8 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 
   /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
   status = NCedgeck(ncp, varp, start, count);
-  if( status != NC_NOERR ||
-      getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp) )
+  if( (status != NC_NOERR) ||
+      (getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp)) )
   {
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR)
@@ -1253,8 +1255,8 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
     return status;
 
   if( getnotput && IS_RECVAR(varp) && 
-     ( *count > 0 && *start+1 + (*count-1) * *stride > NC_get_numrecs(ncp) ||
-       *count == 0 && *start > NC_get_numrecs(ncp) ) )
+     ( (*count > 0 && *start+1 + (*count-1) * *stride > NC_get_numrecs(ncp)) ||
+       (*count == 0 && *start > NC_get_numrecs(ncp)) ) )
     return NC_EEDGE;
 
 /* Removed to fix NC_EINVALCOORDS bug 
@@ -4333,7 +4335,7 @@ ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4344,19 +4346,6 @@ ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4380,7 +4369,7 @@ ncmpi_put_var_schar(int ncid, int varid, const signed char *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4391,19 +4380,6 @@ ncmpi_put_var_schar(int ncid, int varid, const signed char *op) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4428,7 +4404,7 @@ ncmpi_put_var_text(int ncid, int varid, const char *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4439,19 +4415,6 @@ ncmpi_put_var_text(int ncid, int varid, const char *op) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
   
@@ -4475,7 +4438,7 @@ ncmpi_put_var_short(int ncid, int varid, const short *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4486,19 +4449,6 @@ ncmpi_put_var_short(int ncid, int varid, const short *op) {
     return NC_ENOTVAR; 
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4522,7 +4472,7 @@ ncmpi_put_var_int(int ncid, int varid, const int *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4534,19 +4484,6 @@ ncmpi_put_var_int(int ncid, int varid, const int *op) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -4569,7 +4506,7 @@ ncmpi_put_var_long(int ncid, int varid, const long *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4580,19 +4517,6 @@ ncmpi_put_var_long(int ncid, int varid, const long *op) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4616,7 +4540,7 @@ ncmpi_put_var_float(int ncid, int varid, const float *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4628,19 +4552,6 @@ ncmpi_put_var_float(int ncid, int varid, const float *op) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -4663,7 +4574,7 @@ ncmpi_put_var_double(int ncid, int varid, const double *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4675,19 +4586,6 @@ ncmpi_put_var_double(int ncid, int varid, const double *op) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -4710,7 +4608,7 @@ ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4721,19 +4619,6 @@ ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4757,7 +4642,7 @@ ncmpi_get_var_schar(int ncid, int varid, signed char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4768,19 +4653,6 @@ ncmpi_get_var_schar(int ncid, int varid, signed char *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4804,7 +4676,7 @@ ncmpi_get_var_text(int ncid, int varid, char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4815,19 +4687,6 @@ ncmpi_get_var_text(int ncid, int varid, char *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4851,7 +4710,7 @@ ncmpi_get_var_short(int ncid, int varid, short *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4863,19 +4722,6 @@ ncmpi_get_var_short(int ncid, int varid, short *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -4898,7 +4744,7 @@ ncmpi_get_var_int(int ncid, int varid, int *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4910,19 +4756,6 @@ ncmpi_get_var_int(int ncid, int varid, int *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -4945,7 +4778,7 @@ ncmpi_get_var_long(int ncid, int varid, long *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4956,19 +4789,6 @@ ncmpi_get_var_long(int ncid, int varid, long *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -4992,7 +4812,7 @@ ncmpi_get_var_float(int ncid, int varid, float *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5004,19 +4824,6 @@ ncmpi_get_var_float(int ncid, int varid, float *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -5039,7 +4846,7 @@ ncmpi_get_var_double(int ncid, int varid, double *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5051,19 +4858,6 @@ ncmpi_get_var_double(int ncid, int varid, double *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -5086,7 +4880,7 @@ ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5097,19 +4891,6 @@ ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -5133,7 +4914,7 @@ ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5144,19 +4925,6 @@ ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -5180,7 +4948,7 @@ ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5191,19 +4959,6 @@ ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -5227,7 +4982,7 @@ ncmpi_get_var_short_all(int ncid, int varid, short *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5239,19 +4994,6 @@ ncmpi_get_var_short_all(int ncid, int varid, short *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -5274,7 +5016,7 @@ ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5286,19 +5028,6 @@ ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -5321,7 +5050,7 @@ ncmpi_get_var_long_all(int ncid, int varid, long *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5332,19 +5061,6 @@ ncmpi_get_var_long_all(int ncid, int varid, long *ip) {
     return NC_ENOTVAR;
 
   ndims = varp->ndims;
-
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
 
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
@@ -5368,7 +5084,7 @@ ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5380,19 +5096,6 @@ ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -5415,7 +5118,7 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5427,19 +5130,6 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
  
   ndims = varp->ndims;
  
-/* Removed 20030311
-
-  if (ndims > 1)
-    nelems = varp->dsizes[1];
-  else
-    nelems = 1;
-  if (IS_RECVAR(varp))
-    nelems *= ncp->numrecs;
-  else
-    nelems *= varp->shape[0];
-
-*/
-
   /* Begin modification 20030311 to fix bug of 0-dimensional variables */
 
   if (ndims == 0)
@@ -5464,7 +5154,7 @@ ncmpi_put_vara_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5490,7 +5180,7 @@ ncmpi_put_vara_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5516,7 +5206,7 @@ ncmpi_put_vara_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5542,7 +5232,7 @@ ncmpi_put_vara_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5568,7 +5258,7 @@ ncmpi_put_vara_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5594,7 +5284,7 @@ ncmpi_put_vara_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5620,7 +5310,7 @@ ncmpi_put_vara_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5646,7 +5336,7 @@ ncmpi_put_vara_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5672,7 +5362,7 @@ ncmpi_put_vara_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5698,7 +5388,7 @@ ncmpi_put_vara_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5724,7 +5414,7 @@ ncmpi_put_vara_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5750,7 +5440,7 @@ ncmpi_put_vara_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5776,7 +5466,7 @@ ncmpi_put_vara_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5802,7 +5492,7 @@ ncmpi_put_vara_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5828,7 +5518,7 @@ ncmpi_put_vara_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5854,7 +5544,7 @@ ncmpi_put_vara_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5881,7 +5571,7 @@ ncmpi_get_vara_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5908,7 +5598,7 @@ ncmpi_get_vara_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5935,7 +5625,7 @@ ncmpi_get_vara_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5962,7 +5652,7 @@ ncmpi_get_vara_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5989,7 +5679,7 @@ ncmpi_get_vara_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6016,7 +5706,7 @@ ncmpi_get_vara_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6043,7 +5733,7 @@ ncmpi_get_vara_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6070,7 +5760,7 @@ ncmpi_get_vara_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6097,7 +5787,7 @@ ncmpi_get_vara_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6123,7 +5813,7 @@ ncmpi_get_vara_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6150,7 +5840,7 @@ ncmpi_get_vara_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6176,7 +5866,7 @@ ncmpi_get_vara_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6203,7 +5893,7 @@ ncmpi_get_vara_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6229,7 +5919,7 @@ ncmpi_get_vara_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6256,7 +5946,7 @@ ncmpi_get_vara_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6282,7 +5972,7 @@ ncmpi_get_vara_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6310,7 +6000,7 @@ ncmpi_put_vars_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6338,7 +6028,7 @@ ncmpi_put_vars_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6366,7 +6056,7 @@ ncmpi_put_vars_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6394,7 +6084,7 @@ ncmpi_put_vars_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6422,7 +6112,7 @@ ncmpi_put_vars_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6450,7 +6140,7 @@ ncmpi_put_vars_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6478,7 +6168,7 @@ ncmpi_put_vars_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6506,7 +6196,7 @@ ncmpi_put_vars_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6534,7 +6224,7 @@ ncmpi_put_vars_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6562,7 +6252,7 @@ ncmpi_put_vars_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6590,7 +6280,7 @@ ncmpi_put_vars_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6618,7 +6308,7 @@ ncmpi_put_vars_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6646,7 +6336,7 @@ ncmpi_put_vars_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6674,7 +6364,7 @@ ncmpi_put_vars_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6703,7 +6393,7 @@ ncmpi_put_vars_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6733,7 +6423,7 @@ ncmpi_put_vars_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6762,7 +6452,7 @@ ncmpi_get_vars_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6790,7 +6480,7 @@ ncmpi_get_vars_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6818,7 +6508,7 @@ ncmpi_get_vars_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6846,7 +6536,7 @@ ncmpi_get_vars_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6874,7 +6564,7 @@ ncmpi_get_vars_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6902,7 +6592,7 @@ ncmpi_get_vars_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6930,7 +6620,7 @@ ncmpi_get_vars_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6958,7 +6648,7 @@ ncmpi_get_vars_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6986,7 +6676,7 @@ ncmpi_get_vars_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7014,7 +6704,7 @@ ncmpi_get_vars_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7042,7 +6732,7 @@ ncmpi_get_vars_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7070,7 +6760,7 @@ ncmpi_get_vars_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7098,7 +6788,7 @@ ncmpi_get_vars_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7126,7 +6816,7 @@ ncmpi_get_vars_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7155,7 +6845,7 @@ ncmpi_get_vars_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7184,7 +6874,7 @@ ncmpi_get_vars_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7214,7 +6904,7 @@ ncmpi_put_varm_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7244,7 +6934,7 @@ ncmpi_put_varm_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7274,7 +6964,7 @@ ncmpi_put_varm_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7304,7 +6994,7 @@ ncmpi_put_varm_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7334,7 +7024,7 @@ ncmpi_put_varm_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7364,7 +7054,7 @@ ncmpi_put_varm_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7394,7 +7084,7 @@ ncmpi_put_varm_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7424,7 +7114,7 @@ ncmpi_put_varm_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7454,7 +7144,7 @@ ncmpi_put_varm_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7484,7 +7174,7 @@ ncmpi_put_varm_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7514,7 +7204,7 @@ ncmpi_put_varm_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7544,7 +7234,7 @@ ncmpi_put_varm_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7574,7 +7264,7 @@ ncmpi_put_varm_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7604,7 +7294,7 @@ ncmpi_put_varm_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7634,7 +7324,7 @@ ncmpi_put_varm_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7664,7 +7354,7 @@ ncmpi_put_varm_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7694,7 +7384,7 @@ ncmpi_get_varm_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7724,7 +7414,7 @@ ncmpi_get_varm_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7754,7 +7444,7 @@ ncmpi_get_varm_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7784,7 +7474,7 @@ ncmpi_get_varm_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7814,7 +7504,7 @@ ncmpi_get_varm_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7844,7 +7534,7 @@ ncmpi_get_varm_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7874,7 +7564,7 @@ ncmpi_get_varm_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7904,7 +7594,7 @@ ncmpi_get_varm_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7934,7 +7624,7 @@ ncmpi_get_varm_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7964,7 +7654,7 @@ ncmpi_get_varm_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7994,7 +7684,7 @@ ncmpi_get_varm_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -8024,7 +7714,7 @@ ncmpi_get_varm_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -8054,7 +7744,7 @@ ncmpi_get_varm_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -8084,7 +7774,7 @@ ncmpi_get_varm_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -8114,7 +7804,7 @@ ncmpi_get_varm_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -8144,7 +7834,7 @@ ncmpi_get_varm_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems, nbytes;
+  int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)

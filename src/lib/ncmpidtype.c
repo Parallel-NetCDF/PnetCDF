@@ -6,9 +6,12 @@
  ****************************************************************************/
 
 
+#include "nc.h"
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #include <stdio.h>
 #include <mpi.h>
-#include "nc.h"
 
 /*@
   ncmpii_type_filter - Map a basic MPI datatype into one of the eight
