@@ -110,7 +110,20 @@
 ! error codes:
 !
       integer nf_noerr
+
+      integer nf_esmall
+      integer nf_enotindep
+      integer nf_eindep
+      integer nf_efile
+      integer nf_eread
+      integer nf_ewrite
+      integer nf_emultidefine
+      integer nf_eofile
+
       integer nf_ebadid
+
+      integer nf_enfile
+
       integer nf_eexist
       integer nf_einval
       integer nf_eperm
@@ -141,8 +154,26 @@
       integer nf_evarsize
       integer nf_edimsize
 
+      integer nf_emultitypes
+      integer nf_eiomismatch
+      integer nf_enegativecnt
+      integer nf_eunsptetype
+
       parameter (nf_noerr = 0)
+
+      parameter (nf_esmall = -25)
+      parameter (nf_enotindep = -26)
+      parameter (nf_eindep = -27)
+      parameter (nf_efile = -28)
+      parameter (nf_eread = -29)
+      parameter (nf_ewrite = -30)
+      parameter (nf_emultidefine = -31)
+      parameter (nf_eofile = -32)
+      
       parameter (nf_ebadid = -33)
+
+      parameter (nf_enfile = -34)
+
       parameter (nf_eexist = -35)
       parameter (nf_einval = -36)
       parameter (nf_eperm = -37)
@@ -173,6 +204,10 @@
       parameter (nf_evarsize = -62)
       parameter (nf_edimsize = -63)
 
+      parameter (nf_emultitypes = -70)
+      parameter (nf_eiomismatch = -71)
+      parameter (nf_enegativecnt = -72)
+      parameter (nf_eunsptetype = -73)
 !
 ! error handling modes:
 !
