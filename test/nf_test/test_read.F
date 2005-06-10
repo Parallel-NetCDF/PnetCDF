@@ -124,7 +124,7 @@ C       /* Try to open a nonexistent file */
 C       /* Open a file that is not a netCDF file. */
         err = nfmpi_open(comm, 'test_get.F', NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)!/* should fail */
-        if (err .ne. NF_ENOTNC)
+        if (err .ne. NF_ENOTNC .and. err .ne. NF_EOFILE)
      +      call errore('nfmpi_open of non-netCDF file: ', err)
 
 C       /* Open a netCDF file in read-only mode, check that write fails */
