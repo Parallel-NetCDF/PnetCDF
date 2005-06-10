@@ -424,6 +424,7 @@ if $MPICC -c conftest.c && $MPICC -o conftest conftest.o ; then
         if ./conftest ; then
                  #success
                  ac_cv_sizeof_MPI_Offset=`cat conftestval`
+		 AC_DEFINE_UNQUOTED(SIZEOF_MPI_OFFSET, $ac_cv_sizeof_MPI_Offset, [The number of bytes in an MPI_Offset])
         else
                  # failure
                  AC_MSG_WARN([Unable to run the program to determine sizeof MPI_Offset])
