@@ -887,8 +887,8 @@ AC_DEFUN([UD_FORTRAN_TYPES],
 	;;
     *)
 	AC_REQUIRE([UD_CHECK_FCALLSCSUB])
-	UD_CHECK_FORTRAN_TYPE(NF_INT1_T, byte integer*1 "integer(kind(1))")
-	UD_CHECK_FORTRAN_TYPE(NF_INT2_T, integer*2 "integer(kind(2))")
+	UD_CHECK_FORTRAN_TYPE(NF_INT1_T, byte integer*1 "integer(kind=1)")
+	UD_CHECK_FORTRAN_TYPE(NF_INT2_T, integer*2 "integer(kind=2)")
 
 	case "${NF_INT1_T}" in
 	    '') ;;
