@@ -99,7 +99,7 @@ test_ncmpi_open(void)
 
     /* Open a file that is not a netCDF file. */
     err = ncmpi_open(comm, "test_get.c", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
-    IF (err != NC_ENOTNC)
+    IF (err != NC_ENOTNC && err != NC_EOFILE)
 	error("ncmpi_open of non-netCDF file: status = %d", err);
 
     /* Open a netCDF file in read-only mode, check that write fails */
