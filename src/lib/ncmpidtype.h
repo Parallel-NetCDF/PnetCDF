@@ -14,10 +14,6 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 			int *nelems,
 			int *iscontig_of_ptypes);
 
-int ncmpii_dtype_get_ptype(MPI_Datatype dtype, 
-			   MPI_Datatype *ptype,
-			   int *iscontig_of_ptypes);
-
 int ncmpii_data_repack(void *inbuf,
                        int incount,
                        MPI_Datatype intype,
