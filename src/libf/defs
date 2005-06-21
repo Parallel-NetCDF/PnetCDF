@@ -1211,6 +1211,7 @@ sub int1toschar_ctof {
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxinqlibvers";
+$ExtraRoutines[$#ExtraRoutines+1] = "ncfissyserr";
 
 sub ncfxstrerror {
     $OUTFD = "NCFXSTRERRORFD";
@@ -1278,6 +1279,25 @@ sub ncfxinqlibvers {
     /* Blank pad */
     for (; i<d1; i++) v1[i] = ' ';
     return 0;
+}\n";
+    close ($OUTFD);
+
+}
+
+sub ncfissyserr {
+    $OUTFD = "NCFISSYSERRFD";
+    open( $OUTFD, ">issyserrf.c" ) || die "Cannot open issyserrf.c\n";
+    $out_prefix = "nfmpi_";
+    $args = "int *";
+    $files[$#files+1] = "issyserrf.c";
+    &print_header( "ncfmpi_issyserr", "issyserr", $args );
+    &print_routine_type_decl( $OUTFD, "issyserr" );
+    &print_args( $OUTFD, $args, 0, "issyserr" );
+    print $OUTFD "{
+    if (*v1 > 0)
+      return 1;
+    else
+      return 0;
 }\n";
     close ($OUTFD);
 
