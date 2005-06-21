@@ -194,6 +194,8 @@ FORTRAN_API double max_double_() {
 	return DBL_MAX;
 }
 
+#if 0 /* this is implemented in library src now */
+
 #ifdef F77_NAME_UPPER
 #define nfmpi_issyserr_ NFMPI_ISSYSERR
 #elif defined(F77_NAME_LOWER_2USCORE)
@@ -209,6 +211,8 @@ FORTRAN_API int nfmpi_issyserr_(int * A1) {
 	else 
 		return 0;
 }
+
+#endif
 
 #ifdef F77_NAME_UPPER
 #define nfmpi_delete_ NFMPI_DELETE
