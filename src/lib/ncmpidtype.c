@@ -228,6 +228,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 			MPI_Datatype *ptype, 
 			int *el_size,
 			int *nelems, 
+			int *isderived,
 			int *iscontig_of_ptypes)
 {
   int i;
@@ -243,6 +244,8 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   int ndims;
   int status = NC_NOERR;
 
+  *isderived = 0;
+  
   if (dtype == MPI_DATATYPE_NULL) {
     *nelems = 0;
     *ptype = dtype;
@@ -322,11 +325,13 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 #endif
 
 	status = ncmpii_dtype_decode(array_of_dtypes[0], ptype, el_size, 
-				     nelems, iscontig_of_ptypes);
-	if (*ptype != array_of_dtypes[0]) 
+				     nelems, isderived, iscontig_of_ptypes);
+	if (*isderived)
 	  MPI_Type_free(array_of_dtypes);
 
 	break;
+
+    /* multiple etypes */
 
     case MPI_COMBINER_STRUCT:
 #ifdef HAVE_MPI_COMBINER_STRUCT_INTEGER
@@ -340,10 +345,11 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 				       ptype,
 				       el_size, 
 				       nelems, 
+				       isderived,
 				       iscontig_of_ptypes);
 	  if (status != NC_NOERR)
 	    return status;
-	  if (*ptype != array_of_dtypes[i]) 
+	  if (*isderived)
 	    MPI_Type_free(array_of_dtypes+i);
 	  if (*el_size > 0)
 	    *nelems *= array_of_ints[1+i];
@@ -353,10 +359,11 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 				       &tmpptype,
 				       &tmpel_size, 
 				       &tmpnelems, 
+				       isderived,
 				       iscontig_of_ptypes);
 	  if (status != NC_NOERR)
 	    return status;
-	  if (tmpptype != array_of_dtypes[i]) 
+	  if (*isderived)
 	    MPI_Type_free(array_of_dtypes+i);
 	  if (tmpel_size > 0) {
 	    if (tmpptype != *ptype)
@@ -372,6 +379,8 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     default:
 	break;
   }
+
+  *isderived = 1;
 
   switch (combiner) {
 
