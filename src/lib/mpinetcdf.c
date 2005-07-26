@@ -1405,7 +1405,7 @@ ncmpi_put_var1(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -1430,7 +1430,7 @@ ncmpi_put_var1(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status; 
 
@@ -1559,7 +1559,7 @@ ncmpi_get_var1(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -1581,7 +1581,7 @@ ncmpi_get_var1(int ncid, int varid,
     return NC_ENOTVAR;
 
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status; 
 
@@ -1702,7 +1702,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -1724,7 +1724,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -1854,7 +1854,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -1879,7 +1879,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
     return NC_ENOTVAR; 
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -2015,7 +2015,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2037,7 +2037,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -2172,7 +2172,7 @@ ncmpi_put_vara_all(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2198,7 +2198,7 @@ ncmpi_put_vara_all(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -2350,7 +2350,7 @@ ncmpi_get_vara_all(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2372,7 +2372,7 @@ ncmpi_get_vara_all(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -2503,7 +2503,7 @@ ncmpi_put_vara(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2528,7 +2528,7 @@ ncmpi_put_vara(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -2663,7 +2663,7 @@ ncmpi_get_vara(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2685,7 +2685,7 @@ ncmpi_get_vara(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -2819,7 +2819,7 @@ ncmpi_put_vars_all(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2845,7 +2845,7 @@ ncmpi_put_vars_all(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -2999,7 +2999,7 @@ ncmpi_get_vars_all(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -3021,7 +3021,7 @@ ncmpi_get_vars_all(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -3155,7 +3155,7 @@ ncmpi_put_vars(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -3180,7 +3180,7 @@ ncmpi_put_vars(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -3318,7 +3318,7 @@ ncmpi_get_vars(int ncid, int varid,
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -3340,7 +3340,7 @@ ncmpi_get_vars(int ncid, int varid,
     return NC_ENOTVAR;
  
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &cnelems, &iscontig_of_ptypes);
+			       &cnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -3495,7 +3495,7 @@ ncmpi_put_varm_all(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int lnelems, cnelems, el_size;
   MPI_Datatype ptype, tmptype, imaptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
 
   if (imap == NULL) {
@@ -3536,7 +3536,7 @@ ncmpi_put_varm_all(int ncid, int varid,
   } /* else imap gives non-contiguous layout, and need pack/unpack */
 
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &lnelems, &iscontig_of_ptypes);
+			       &lnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -3620,7 +3620,7 @@ ncmpi_get_varm_all(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int lnelems, cnelems, el_size;
   MPI_Datatype ptype, tmptype, imaptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
 
   if (imap == NULL) {
@@ -3661,7 +3661,7 @@ ncmpi_get_varm_all(int ncid, int varid,
   } /* else imap gives non-contiguous layout, and need pack/unpack */
 
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &lnelems, &iscontig_of_ptypes);
+			       &lnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -3761,7 +3761,7 @@ ncmpi_put_varm(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int lnelems, cnelems, el_size;
   MPI_Datatype ptype, tmptype, imaptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
 
   if (imap == NULL) {
@@ -3802,7 +3802,7 @@ ncmpi_put_varm(int ncid, int varid,
   } /* else imap gives non-contiguous layout, and need pack/unpack */
 
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &lnelems, &iscontig_of_ptypes);
+			       &lnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
@@ -3886,7 +3886,7 @@ ncmpi_get_varm(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int lnelems, cnelems, el_size;
   MPI_Datatype ptype, tmptype, imaptype;
-  int iscontig_of_ptypes;
+  int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
 
   if (imap == NULL) {
@@ -3927,7 +3927,7 @@ ncmpi_get_varm(int ncid, int varid,
   } /* else imap gives non-contiguous layout, and need pack/unpack */
 
   status = ncmpii_dtype_decode(datatype, &ptype, &el_size,
-			       &lnelems, &iscontig_of_ptypes);
+			       &lnelems, &isderived, &iscontig_of_ptypes);
   if (status != NC_NOERR)
     return status;
 
