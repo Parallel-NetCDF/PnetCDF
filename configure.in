@@ -478,9 +478,8 @@ AC_CHECK_HEADERS(unistd.h,
 		AC_MSG_RESULT(none))
 	)
 
-dnl UD_CHECK_SIZEOF includes some extra headers not included in AC_CHECK_SIZEOF
-dnl don't change this to AC_CHECK_SIZEOF
-UD_CHECK_SIZEOF(off_t)
+dnl sometimes AC_CHECK_SIZEOF wasn't good...  check this on several platforms
+AC_CHECK_SIZEOF(off_t)
 dnl on some 64 bit platforms, the _LFS64_LARGEFILE define may not exist -- it
 dnl was, after all, designed for 32 bit systems trying to access large files.
 dnl If off_t is 8 bytes, then we *can* work on large files: do one last check
