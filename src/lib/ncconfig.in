@@ -180,8 +180,11 @@
 /* The size of a `long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
-/* The size of a `MPI_Offset', as computed by sizeof. */
+/* The number of bytes in an MPI_Offset */
 #undef SIZEOF_MPI_OFFSET
+
+/* The size of a `off_t', as computed by sizeof. */
+#undef SIZEOF_OFF_T
 
 /* The size of a `short', as computed by sizeof. */
 #undef SIZEOF_SHORT
