@@ -424,7 +424,6 @@ if $MPICC -c conftest.c && $MPICC -o conftest conftest.o ; then
         if ./conftest ; then
                  #success
                  ac_cv_sizeof_MPI_Offset=`cat conftestval`
-		 AC_DEFINE_UNQUOTED(SIZEOF_MPI_OFFSET, $ac_cv_sizeof_MPI_Offset, [The number of bytes in an MPI_Offset])
         else
                  # failure
                  AC_MSG_WARN([Unable to run the program to determine sizeof MPI_Offset])
@@ -437,9 +436,8 @@ else
 fi
 ])
 
-dnl This was causing errors, so I've left it out.  Is that ok? -- RobR, 06/09/2005
-dnl
-dnl AC_CHECK_SIZEOF(MPI_Offset)
+dnl according to autoconf-2.57, this is the correct way to use AC_CACHE_CHECK: call AC_DEFINE after AC_CACHE_CHECK
+AC_DEFINE_UNQUOTED(SIZEOF_MPI_OFFSET, $ac_cv_sizeof_MPI_Offset, [The number of bytes in an MPI_Offset])
 
 if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
