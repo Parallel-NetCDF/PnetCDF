@@ -1,0 +1,28 @@
+# 5 October 2005
+# Building parallel-netcdf on BGL
+
+First, re-generate the configure script.  This may not be necessary anymore,
+but at one time, the BGL-provided autotools had some modifications to make
+things work better.
+
+Next, set a few environment variables before calling configure:
+
+export CC=mpicc
+export MPICC=mpicc
+export CXX=mpicxx
+export MPICXX=mpicxx
+export FC=mpif77
+export F77=mpif77
+export MPIF77=mpif77
+ 
+export ac_cv_sizeof_MPI_Offset=8
+
+Lastly, run configure with the --build and --host flags to put it in "cross
+copile mode".  This will make configure use compile-only tests, insted of the
+usual compile-and-run tests (running tests on the bgl login node won't work as
+the compute nodes are totaly different).
+
+configure --build powerpc32-unknown-gnu --host powerpc-suse-linux
+
+As of this writing (5 October) nc_test does not run completley, hitting a seg
+fault deep inside romio.
