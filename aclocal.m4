@@ -301,7 +301,7 @@ main()
 #endif
 }],ac_cv_c_ieeefloat=yes, ac_cv_c_ieeefloat=no, :)
 AC_MSG_RESULT($ac_cv_c_ieeefloat)
-if test $ac_cv_c_ieeefloat = no; then
+if test x$ac_cv_c_ieeefloat = xno; then
   AC_DEFINE(NO_IEEE_FLOAT)
 fi
 ])
