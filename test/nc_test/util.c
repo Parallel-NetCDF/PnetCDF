@@ -8,7 +8,7 @@
 #include "tests.h"
 
 /* Prototypes */
-int inRange_float(const double value, const ncmpi_type datatype);
+static int inRange_float(const double value, const ncmpi_type datatype);
 
 void
 print_nok(int nok)
