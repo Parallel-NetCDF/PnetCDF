@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <pnetcdf.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "test_dtype.h"
 
