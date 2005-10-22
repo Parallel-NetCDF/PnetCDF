@@ -1445,6 +1445,42 @@ int ncmpi_get_varm_double(int ncid, int varid,
 
 /* Begin non-blocking data access functions */
 
+int
+ncmpi_wait(NCMPI_Request *request);
+
+int
+ncmpi_waitall(int count, NCMPI_Request array_of_requests[]);
+
+int
+ncmpi_waitany(int count, NCMPI_Request array_of_requests[], int *index);
+
+int
+ncmpi_waitsome(int count, NCMPI_Request array_of_requests[],
+               int *outcount, int array_of_indices[]);
+
+int
+ncmpi_test(NCMPI_Request *request, int *flag);
+
+int
+ncmpi_testall(int count, NCMPI_Request array_of_requests[], int *flag);
+
+int
+ncmpi_testany(int count, NCMPI_Request array_of_requests[],
+              int *index, int *flag);
+
+int
+ncmpi_testsome(int count, NCMPI_Request array_of_requests[],
+               int *outcount, int array_of_indices[]);
+
+int
+ncmpi_request_get_status(NCMPI_Request request, int *flag);
+
+int
+ncmpi_request_free(NCMPI_Request *request);
+
+int
+ncmpi_cancel(NCMPI_Request *request);
+
 /* Begin {put,get}_var1 */
 
 
