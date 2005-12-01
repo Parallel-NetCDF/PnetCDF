@@ -198,7 +198,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
  * following values ORed together:
  * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
 int
-ncmpii_get_default_format()
+ncmpii_get_default_format(void)
 {
 	return default_create_format;
 }
