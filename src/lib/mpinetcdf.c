@@ -8427,7 +8427,6 @@ ncmpi_iget_var1(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
@@ -8543,7 +8542,6 @@ ncmpi_iput_var(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
@@ -8711,7 +8709,6 @@ ncmpi_iget_var(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
@@ -8838,7 +8835,6 @@ ncmpi_iput_vara(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
@@ -9004,7 +9000,6 @@ ncmpi_iget_vara(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
@@ -9131,7 +9126,6 @@ ncmpi_iput_vars(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
@@ -9300,7 +9294,6 @@ ncmpi_iget_vars(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   int rank;
   MPI_Datatype ptype;
