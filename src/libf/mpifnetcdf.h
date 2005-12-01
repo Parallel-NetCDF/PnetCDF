@@ -112,7 +112,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_put_vara_real_ ( int *v1, int *v2, MPI_Of
 extern FORTRAN_API int FORT_CALL nfmpi_put_vara_double_all_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], double*v5 );
 extern FORTRAN_API int FORT_CALL nfmpi_put_vara_double_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], double*v5 );
 extern FORTRAN_API int FORT_CALL nfmpi_get_vara_int1_all_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], signed char * v5 );
-extern FORTRAN_API int FORT_CALL nfmpi_get_vara_int1_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], char *v5 FORT_MIXED_LEN(d5) FORT_END_LEN(d5) );
+extern FORTRAN_API int FORT_CALL nfmpi_get_vara_int1_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], signed char * v5 );
 extern FORTRAN_API int FORT_CALL nfmpi_get_vara_text_all_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], char *v5 FORT_MIXED_LEN(d5) FORT_END_LEN(d5) );
 extern FORTRAN_API int FORT_CALL nfmpi_get_vara_text_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], char *v5 FORT_MIXED_LEN(d5) FORT_END_LEN(d5) );
 extern FORTRAN_API int FORT_CALL nfmpi_get_vara_int2_all_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], short*v5 );
