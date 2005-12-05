@@ -610,7 +610,7 @@ gen_fortran(
 	}
 	for (idim = 0; idim < ndims; idim++) {
 	    if (dims[idim].size == NC_UNLIMITED) {
-		sprintf(stmnt, "parameter (%s_len = NF_UNLIMITED)",
+		sprintf(stmnt, "parameter (%s_len = NFMPI_UNLIMITED)",
 			dims[idim].lname);
 	    } else {
 		sprintf(stmnt, "parameter (%s_len = %lu)",
@@ -731,7 +731,7 @@ gen_fortran(
         fline("* define dimensions");
     for (idim = 0; idim < ndims; idim++) {
 	if (dims[idim].size == NC_UNLIMITED)
-            sprintf(stmnt, "iret = nfmpi_def_dim(ncid, \'%s\', NF_UNLIMITED, %s_dim)",
+            sprintf(stmnt, "iret = nfmpi_def_dim(ncid, \'%s\', NFMPI_UNLIMITED, %s_dim)",
                     dims[idim].name, dims[idim].lname);
 	else
             sprintf(stmnt, "iret = nfmpi_def_dim(ncid, \'%s\', %lu, %s_dim)",
