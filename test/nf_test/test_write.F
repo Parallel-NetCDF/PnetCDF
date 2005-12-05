@@ -458,7 +458,7 @@ C           /* define-mode tests: unlimited dim */
         err = nfmpi_redef(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_redef: ', err)
-        length = NF_UNLIMITED
+        length = NFMPI_UNLIMITED
         err = nfmpi_def_dim(ncid, dim_name(1), length, dimid)
         if (err .ne. 0) 
      +      call errore('nfmpi_def_dim: ', err)
@@ -472,7 +472,7 @@ C           /* define-mode tests: unlimited dim */
         err = nfmpi_inq_dimlen(ncid, dimid, length)
         if (length .ne. 0) 
      +      call errori('Unexpected length: ', 0)
-        length = NF_UNLIMITED
+        length = NFMPI_UNLIMITED
         err = nfmpi_def_dim(ncid, 'abc', length, dimid)
         if (err .ne. NF_EUNLIMIT)
      +      call errore('2nd unlimited dimension: ', err)
@@ -486,7 +486,7 @@ C           /* define-mode tests: remaining dims */
             err = nfmpi_def_dim(ncid, BAD_NAME, dim_len(i), dimid)
             if (err .ne. NF_EBADNAME)
      +          call errore('bad name: ', err)
-            length = NF_UNLIMITED - 1
+            length = NFMPI_UNLIMITED - 1
             err = nfmpi_def_dim(ncid, dim_name(i), length,
      +                       dimid)
             if (err .ne. NF_EDIMSIZE)

@@ -24,6 +24,6 @@
 FORTRAN_API int FORT_CALL nfmpi_issyserr_ ( MPI_Fint *v1 ){
     if (*v1 > 0)
       return 1;
-    else 
+    else
       return 0;
 }

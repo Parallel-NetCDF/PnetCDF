@@ -11,6 +11,11 @@ Release Notes:
       corresponding to MPI_Offset type in the C routines).  Declare those
       parameters as 'integer(kind=MPI_OFFSET_KIND)'
 
+    - In places where you might use NF_UNLIMITED to define an unlimited
+      dimension in one of the nfmpi_ routines, use NFMPI_UNLIMITED.
+      NFMPI_UNLIMITED will be defined as the proper type for nfmpi_def_dim,
+      whereas nf_unlimited might be too small
+      
     - Parallel-NetCDF relies on MPI-IO.  ROMIO, the most common MPI-IO
       implementation, can make use of a prefix in front of the file name to
       specify the underlying file system and override ROMIO's autodetection. A

@@ -613,7 +613,7 @@
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
-                length = NF_UNLIMITED
+                length = NFMPI_UNLIMITED
                 err = nfmpi_def_dim(ncid, dim_name(i), length,
      +                           dimid)
             else
