@@ -24,6 +24,7 @@ the compute nodes are totaly different).
 
 configure --build powerpc32-unknown-gnu --host powerpc-suse-linux
 
-As of this writing (5 October) nc_test does not run completley, hitting a seg
-fault deep inside romio.  This appears to be an issue with IBM's "Driver 202"
-MPI and may be fixed in a later release.
+As of this writing, nc_test does not run completley, hitting a seg fault deep
+inside romio.  We first noticed this in IBM's "Driver 202" MPI and also in
+"V1R1M1_253_2005-051003".  We have told IBM developers about the problem.  Code
+that makes use of the ncmpi_get_vara_*all will likely trigger a seg fault.
