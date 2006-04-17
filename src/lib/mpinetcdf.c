@@ -8038,7 +8038,7 @@ ncmpi_waitall(int count, NCMPI_Request array_of_requests[]) {
   int mpireturn = MPI_SUCCESS;
   MPI_Request *array_of_mpireqs;
 
-  array_of_mpireqs = (int *)malloc(count * sizeof(int));
+  array_of_mpireqs = (MPI_Request *)malloc(count * sizeof(int));
   for (i=0; i<count; i++) {
     if (array_of_requests[i] != NCMPI_REQUEST_NULL)
       array_of_mpireqs[i] = array_of_requests[i]->mpi_req;
@@ -8064,7 +8064,7 @@ ncmpi_waitany(int count, NCMPI_Request array_of_requests[], int *index) {
   int mpireturn = MPI_SUCCESS;
   MPI_Request *array_of_mpireqs;
 
-  array_of_mpireqs = (int *)malloc(count * sizeof(int));
+  array_of_mpireqs = (MPI_Request *)malloc(count * sizeof(int));
   for (i=0; i<count; i++) {
     if (array_of_requests[i] != NCMPI_REQUEST_NULL)
       array_of_mpireqs[i] = array_of_requests[i]->mpi_req;
@@ -8090,7 +8090,7 @@ ncmpi_waitsome(int count, NCMPI_Request array_of_requests[],
   int mpireturn = MPI_SUCCESS;
   MPI_Request *array_of_mpireqs;
 
-  array_of_mpireqs = (int *)malloc(count * sizeof(int));
+  array_of_mpireqs = (MPI_Request *)malloc(count * sizeof(int));
   for (i=0; i<count; i++) {
     if (array_of_requests[i] != NCMPI_REQUEST_NULL)
       array_of_mpireqs[i] = array_of_requests[i]->mpi_req;
@@ -8133,7 +8133,7 @@ ncmpi_testall(int count, NCMPI_Request array_of_requests[], int *flag) {
   int mpireturn = MPI_SUCCESS;
   MPI_Request *array_of_mpireqs;
 
-  array_of_mpireqs = (int *)malloc(count * sizeof(int));
+  array_of_mpireqs = (MPI_Request *)malloc(count * sizeof(int));
   for (i=0; i<count; i++) {
     if (array_of_requests[i] != NCMPI_REQUEST_NULL) 
       array_of_mpireqs[i] = array_of_requests[i]->mpi_req;
@@ -8163,7 +8163,7 @@ ncmpi_testany(int count, NCMPI_Request array_of_requests[],
   int mpireturn = MPI_SUCCESS;
   MPI_Request *array_of_mpireqs;
 
-  array_of_mpireqs = (int *)malloc(count * sizeof(int));
+  array_of_mpireqs = (MPI_Request *)malloc(count * sizeof(int));
   for (i=0; i<count; i++) {
     if (array_of_requests[i] != NCMPI_REQUEST_NULL)
       array_of_mpireqs[i] = array_of_requests[i]->mpi_req;
@@ -8190,7 +8190,7 @@ ncmpi_testsome(int count, NCMPI_Request array_of_requests[],
   int mpireturn = MPI_SUCCESS;
   MPI_Request *array_of_mpireqs;
 
-  array_of_mpireqs = (int *)malloc(count * sizeof(int));
+  array_of_mpireqs = (MPI_Request *)malloc(count * sizeof(int));
   for (i=0; i<count; i++) {
     if (array_of_requests[i] != NCMPI_REQUEST_NULL)
       array_of_mpireqs[i] = array_of_requests[i]->mpi_req;
