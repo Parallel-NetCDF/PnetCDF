@@ -161,7 +161,7 @@ $(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 # Cleanup:
 
 clean:		FORCE
-	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) ncgentab.*
+	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) ncgentab.* pnetcdf.3
 
 distclean:	FORCE
 	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
