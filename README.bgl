@@ -48,5 +48,7 @@ this in IBM's "Driver 202" MPI and also in "V1R1M1_253_2005-051003" and
 that makes use of the ncmpi_get_vara_*_all or ncmpi_put_vara_*_all routines
 will likely trigger a seg fault.  IBM has provided a workaround:  if your code
 seg-faults, try setting the "BGLMPIO_TUNEBLOCKING" environment variable to 0.
-With this environment variable set, nc_tests runs to completion and passes. 
-
+With this environment variable set, nc_tests runs to completion and passes.
+For one real-world example, the FLASH-IO benchmark with 8 processors sees a 5%
+performance hit when writing out plotfiles.  That increases to 22% with 16
+processors.  
