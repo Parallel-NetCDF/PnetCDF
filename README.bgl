@@ -41,14 +41,20 @@ export ac_cv_sizeof_MPI_Offset=8
 
 configure --build powerpc32-unknown-gnu --host powerpc-suse-linux
 
-As of this writing, nc_test does not run completley without setting a special
-environment variable, hitting a seg fault deep inside ROMIO.  We first noticed
-this in IBM's "Driver 202" MPI and also in "V1R1M1_253_2005-051003" and
-"V1R2M1_020_2006-060110"  We have told IBM developers about the problem.  Code
-that makes use of the ncmpi_get_vara_*_all or ncmpi_put_vara_*_all routines
-will likely trigger a seg fault.  IBM has provided a workaround:  if your code
-seg-faults, try setting the "BGLMPIO_TUNEBLOCKING" environment variable to 0.
-With this environment variable set, nc_tests runs to completion and passes.
-For one real-world example, the FLASH-IO benchmark with 8 processors sees a 5%
-performance hit when writing out plotfiles.  That increases to 22% with 16
-processors.  
+Several early versions of IBM's MPI-IO implementation would segfault under
+certain workloads.  If you are running driver version "V1R3M0_240_2006-060623"
+or newer, the segfault issue should be resolved.  If you are running an older
+driver, read on:
+
+When built against some older BlueGene drivers,  nc_test does not run
+completley without setting a special environment variable, hitting a seg fault
+deep inside ROMIO.  We first noticed this in IBM's "Driver 202" MPI and also in
+"V1R1M1_253_2005-051003" and "V1R2M1_020_2006-060110"  We have told IBM
+developers about the problem.  Code that makes use of the ncmpi_get_vara_*_all
+or ncmpi_put_vara_*_all routines will likely trigger a seg fault.  IBM has
+provided a workaround:  if your code seg-faults, try setting the
+"BGLMPIO_TUNEBLOCKING" environment variable to 0.  With this environment
+variable set, nc_tests runs to completion and passes.  For one real-world
+example, the FLASH-IO benchmark with 8 processors sees a 5% performance hit
+when writing out plotfiles.  That increases to 22% with 16 processors.   Again, upgrading to the latest BlueGene drivers should fix this issue.
+
