@@ -1242,6 +1242,7 @@ cl_c(void)
 {
     cline("   stat = ncmpi_close(ncid);");
     cline("   check_err(stat,__LINE__,__FILE__);");
+    cline("   MPI_Finalize();");
 #ifndef vms
     cline("   return 0;");
 #else

@@ -27,7 +27,7 @@
 #endif
 
 FORTRAN_API void FORT_CALL ud_exit_(int *v1) {
-	exit (*v1);
+	MPI_Abort(MPI_COMM_WORLD, *v1);
 	return;
 }
 
@@ -41,7 +41,7 @@ FORTRAN_API void FORT_CALL ud_exit_(int *v1) {
 #endif
 
 FORTRAN_API void FORT_CALL ud_abort_(int *v1) {
-	abort();
+	MPI_Abort(MPI_COMM_WORLD, *v1);
 	return;
 }
 

@@ -722,6 +722,8 @@ main(int argc, char *argv[])
 	if (argc > 0)
 	  do_ncdump(argv[i], &fspec);
     } while (++i < argc);
+
+    MPI_Finalize();
 #ifdef vms
     exit(EXIT_SUCCESS);
 #else

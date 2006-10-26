@@ -78,6 +78,7 @@ main(
     extern int opterr;
     extern char *optarg;
     int c;
+    int ret;
     FILE *fp;
 
     MPI_Init(&argc, &argv);
@@ -206,5 +207,7 @@ main(
 	cdlname = argv[0];
     }
     yyin = fp;
-    return (yyparse());
+    ret = yyparse();
+    MPI_Finalize();
+    return (ret());
 }
