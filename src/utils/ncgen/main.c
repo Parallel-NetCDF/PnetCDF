@@ -209,5 +209,5 @@ main(
     yyin = fp;
     ret = yyparse();
     MPI_Finalize();
-    return (ret());
+    return ret;
 }
