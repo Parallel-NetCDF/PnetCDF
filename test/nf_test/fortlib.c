@@ -27,6 +27,10 @@
 #endif
 
 FORTRAN_API void FORT_CALL ud_exit_(int *v1) {
+	if (*v1 == 0) {
+		MPI_Finalize();
+		exit(0);
+	}
 	MPI_Abort(MPI_COMM_WORLD, *v1);
 	return;
 }
