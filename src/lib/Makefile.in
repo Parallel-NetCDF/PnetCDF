@@ -58,6 +58,7 @@ PROG_CSRCS = \
 	nc.c \
 	ncx.c \
 	string.c \
+	error.c \
 	var.c
 
 PROG_OBJS = $(PROG_CSRCS:.c=.o)

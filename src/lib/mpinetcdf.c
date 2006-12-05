@@ -226,10 +226,7 @@ ncmpi_begin_indep_data(int ncid) {
   if(!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
     mpireturn = MPI_File_sync(ncp->nciop->collective_fh);   /* collective */
     if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
         MPI_Finalize();
         return NC_EFILE;
     }
@@ -261,10 +258,7 @@ ncmpi_end_indep_data(int ncid) {
   if(!NC_readonly(ncp) && NC_independentFhOpened(ncp->nciop)) {
     mpireturn = MPI_File_sync(ncp->nciop->independent_fh); /* independent */
     if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
         MPI_Finalize();
         return NC_EFILE;
     }
@@ -789,10 +783,9 @@ check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
     mpireturn = MPI_File_open(comm, (char *)ncp->nciop->path, ncp->nciop->mpiomode,
                               ncp->nciop->mpiinfo, mpifh);
     if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("check_mpifh() calliing MPI_File_open error = %s\n", errorString);
+      int rank;
+      MPI_Comm_rank(comm, &rank);
+      ncmpii_handle_error(rank, mpireturn, "check_mpifh(): MPI_File_open");
       return NC_ENFILE;
       /* To be determined the return error code ???????????? */
     }
@@ -970,10 +963,7 @@ set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset index
 
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
   }
 
@@ -994,10 +984,7 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
     /* Contiguous file view */
     mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
     if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
     }
 
@@ -1028,10 +1015,7 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
 
     mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, filetype, "native", ncp->nciop->mpiinfo);
     if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
     }
 
@@ -1200,10 +1184,7 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
 		    filetype, "native", ncp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
   }
 
@@ -1361,10 +1342,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
                     *filetype, "native", ncp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
   }
 
@@ -1519,10 +1497,7 @@ ncmpi_put_var1(int ncid, int varid,
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes,
 			     MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
  
@@ -1635,10 +1610,7 @@ ncmpi_get_var1(int ncid, int varid,
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
  
@@ -1787,10 +1759,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
 
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
  
@@ -1975,10 +1944,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
 
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
  
@@ -2099,10 +2065,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
  
@@ -2293,10 +2256,7 @@ ncmpi_put_vara_all(int ncid, int varid,
 
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write_all error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
 
@@ -2432,10 +2392,7 @@ ncmpi_get_vara_all(int ncid, int varid,
 
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
 
@@ -2622,10 +2579,7 @@ ncmpi_put_vara(int ncid, int varid,
 
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         return NC_EWRITE;
   }
 
@@ -2745,10 +2699,7 @@ ncmpi_get_vara(int ncid, int varid,
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
 
@@ -2940,10 +2891,7 @@ ncmpi_put_vars_all(int ncid, int varid,
 
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write_all error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
 
@@ -3082,10 +3030,7 @@ ncmpi_get_vars_all(int ncid, int varid,
 
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read_all error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
 
@@ -3275,10 +3220,7 @@ ncmpi_put_vars(int ncid, int varid,
 
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
 
@@ -3401,10 +3343,7 @@ ncmpi_get_vars(int ncid, int varid,
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
  
@@ -8388,10 +8327,7 @@ ncmpi_iput_var1(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, nbytes,
 			      MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
  
@@ -8509,10 +8445,7 @@ ncmpi_iget_var1(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
  
@@ -8669,10 +8602,7 @@ ncmpi_iput_var(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, 
 			      nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write error");
         status = NC_EWRITE;
   }
  
@@ -8799,10 +8729,7 @@ ncmpi_iget_var(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
  
@@ -8960,10 +8887,7 @@ ncmpi_iput_vara(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, 
 			      nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         return NC_EWRITE;
   }
 
@@ -9088,10 +9012,7 @@ ncmpi_iget_vara(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
 
@@ -9252,10 +9173,7 @@ ncmpi_iput_vars(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, 
 			      nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
 
@@ -9383,10 +9301,7 @@ ncmpi_iget_vars(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
  

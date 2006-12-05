@@ -185,3 +185,11 @@ ncmpi_strerror(int err)
 	/* default */
 	return unknown;
 }
+
+void ncmpii_handle_error(int rank, int mpi_status, char * msg)
+{
+	char errorString[MPI_MAX_ERROR_STRING];
+	int errorStringLen;
+	MPI_Error_string(mpi_status, errorString, &errorStringLen);
+	printf("%2d: %s : %s\n", rank, msg, errorString);
+}

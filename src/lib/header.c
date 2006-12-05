@@ -612,10 +612,7 @@ hdr_fetch(bufferinfo *gbp) {
   mpireturn = MPI_File_set_view(gbp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, 
 		    "native", gbp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         MPI_Finalize();
         return NC_EREAD;
   }
@@ -625,10 +622,7 @@ hdr_fetch(bufferinfo *gbp) {
     mpireturn = MPI_File_read_at(gbp->nciop->collective_fh, (gbp->offset)-slack, gbp->base, 
 	             gbp->size, MPI_BYTE, &mpistatus);  
     if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read_at error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
         MPI_Finalize();
         return NC_EREAD;
     }

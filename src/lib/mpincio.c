@@ -122,11 +122,8 @@ ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
 
   mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
   if (mpireturn != MPI_SUCCESS) {
-    char errorString[512];
-    int  errorStringLen;
     ncmpiio_free(nciop);
-    MPI_Error_string(mpireturn, errorString, &errorStringLen);
-    printf("%2d: MPI_File_open error = %s\n", rank, errorString);
+    ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
     return NC_EOFILE;  
   }
 
@@ -169,11 +166,8 @@ ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
  
   mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
   if (mpireturn != MPI_SUCCESS) {
-    char errorString[512];
-    int  errorStringLen;
     ncmpiio_free(nciop);
-    MPI_Error_string(mpireturn, errorString, &errorStringLen);
-    printf("%2d: MPI_File_open error = %s\n", rank, errorString);
+    ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
     return NC_EOFILE;
   }
  
@@ -201,10 +195,7 @@ ncmpiio_sync(ncio *nciop) {
   if(NC_independentFhOpened(nciop)) {
     mpireturn = MPI_File_sync(nciop->independent_fh);
     if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+      ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
       return NC_EFILE;
     }
   }
@@ -213,10 +204,7 @@ ncmpiio_sync(ncio *nciop) {
   if(NC_collectiveFhOpened(nciop)) {
     mpireturn = MPI_File_sync(nciop->collective_fh); 
     if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_sync error = %s\n", rank, errorString);
+      ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
       return NC_EFILE;
     }
   }
@@ -241,10 +229,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
   if(NC_independentFhOpened(nciop)) {
     mpireturn = MPI_File_close(&(nciop->independent_fh));
     if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_close error = %s\n", rank, errorString);
+      ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
       return NC_EFILE;
     }
   }
@@ -253,10 +238,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
   if(NC_collectiveFhOpened(nciop)) {
     mpireturn = MPI_File_close(&(nciop->collective_fh));  
     if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_close error = %s\n", rank, errorString);
+      ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
       return NC_EFILE;
     }
   }
@@ -316,11 +298,8 @@ ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
     mpireturn = MPI_File_set_view(nciop->collective_fh, 0, MPI_BYTE,
                                   MPI_BYTE, "native", nciop->mpiinfo);
     if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
       free(buf);
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+      ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
       return NC_EREAD;
     }
     if (rank < grpsize) {
@@ -329,11 +308,8 @@ ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
                                    from+movesize+rank*bufsize,
                                    buf, bufcount, MPI_BYTE, &mpistatus);
       if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
         mpierr = 1;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_read_at error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
       }
     }
     MPI_Allreduce(&mpierr, &errcheck, 1, MPI_INT, MPI_LOR, comm);
@@ -348,11 +324,8 @@ ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
     mpireturn = MPI_File_set_view(nciop->collective_fh, 0, MPI_BYTE,
                                   MPI_BYTE, "native", nciop->mpiinfo);
     if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
       free(buf);
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_set_view error = %s\n", rank, errorString);
+      ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
       return NC_EWRITE;
     }
     if (rank < grpsize) {
@@ -361,11 +334,8 @@ ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
                                     to+movesize+rank*bufsize,
                                    buf, bufcount, MPI_BYTE, &mpistatus);
       if (mpireturn != MPI_SUCCESS) {
-        char errorString[512];
-        int  errorStringLen;
         mpierr = 1;
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);
-        printf("%2d: MPI_File_write_at error = %s\n", rank, errorString);
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
       }
     }
     MPI_Allreduce(&mpierr, &errcheck, 1, MPI_INT, MPI_LOR, comm);
