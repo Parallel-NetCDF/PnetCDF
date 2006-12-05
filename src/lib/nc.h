@@ -575,6 +575,8 @@ NC_computeshapes(NC *ncp);
 
 /* begin defined in error.c */
 const char * nc_strerror(int err);
+
+void ncmpii_handle_error(int rank, int mpi_status, char *msg);
 /* end defined in error.c */
 /*
  * These functions are used to support
@@ -624,5 +626,6 @@ extern int
 ncmpii_get_varm(int ncid, int varid,
 	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 const ptrdiff_t * map, void *value);
+
 
 #endif /* _NC_H_ */
