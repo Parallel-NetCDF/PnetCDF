@@ -271,6 +271,10 @@ ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes) {
   MPI_Comm comm;
   MPI_Status mpistatus;
 
+
+  if (buf == NULL)
+	  return NC_ENOMEM;
+
   comm = nciop->comm;
   MPI_Comm_size(comm, &grpsize);
   MPI_Comm_rank(comm, &rank);
