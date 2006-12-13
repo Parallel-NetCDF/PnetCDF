@@ -6,12 +6,12 @@
 
 /*LINTLIBRARY*/
 
-#include "ncconfig.h"
 #include <stdio.h>
 #include <stdarg.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include "ncconfig.h"
 #include "pnetcdf.h"
 #include "nc.h"
 
