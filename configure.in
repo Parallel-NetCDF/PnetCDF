@@ -388,9 +388,7 @@ dnl
 CC="$saveCC"
 
 AC_TYPE_OFF_T
-AC_CHECK_TYPE(ssize_t, int)
-AC_CHECK_TYPE(ptrdiff_t, int)
-AC_CHECK_TYPE(uchar, unsigned char)
+AC_CHECK_TYPES([ssize_t, ptrdiff_t, uchar])
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
 AC_CHECK_SIZEOF(short)
