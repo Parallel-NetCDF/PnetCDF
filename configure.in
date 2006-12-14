@@ -10,6 +10,7 @@ FPPFLAGS=${FPPFLAGS-}
 FFLAGS=${FFLAGS-}
 
 AC_INIT(src/lib/ncconfig.in)
+AC_PREREQ(2.59)
 UD_SRCDIR
 dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
