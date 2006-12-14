@@ -187,6 +187,32 @@ dnl
 saveCC="$CC"
 CC=$MPICC
 
+dnl compile-only check for size of MPI_Offset (thanks Christopher Subich
+dnl <csubich@math.uwaterloo.ca>)
+
+AC_DEFUN(UD_MPI_OFFSET, [
+	if test ! $ac_cv_sizeof_MPI_Offset; then
+		AC_MSG_CHECKING(if MPI_Offset is size $1)
+		AC_COMPILE_IFELSE([
+		#include "mpi.h"
+		#include <stdio.h>
+		int main (int argc, char **argv)
+		{
+		static int test_array [[sizeof (MPI_Offset) == $1 ? 1 : -1 ]];
+		return 0;
+		}], AC_MSG_RESULT(yes)
+		ac_cv_sizeof_MPI_Offset=$1,
+		AC_MSG_RESULT(no))
+	fi
+])
+
+UD_MPI_OFFSET(8)
+UD_MPI_OFFSET(4)
+UD_MPI_OFFSET(16)
+		
+	
+
+
 dnl Check for presence of various MPI_COMBINERs.  These could be
 dnl enums, so we have to do compile checks.
 AC_MSG_CHECKING(if MPI includes MPI_COMBINER_DUP)
@@ -474,6 +500,13 @@ AC_CHECK_HEADERS(unistd.h,
 		large_file_support="yes",
 		AC_MSG_RESULT(none))
 	)
+
+SAVECC=$CC
+CC=$MPICC
+AC_SEARCH_LIBS(MPI_File_sync, mpio hpmpio,,
+	AC_MSG_ERROR(Cannot find MPI-IO library)
+)
+CC=$SAVECC
 
 dnl sometimes AC_CHECK_SIZEOF wasn't good...  check this on several platforms
 AC_CHECK_SIZEOF(off_t)
