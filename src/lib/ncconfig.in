@@ -125,6 +125,12 @@
 /* available */
 #undef HAVE_MPI_REAL8
 
+/* Define to 1 if the system has the type `ptrdiff_t'. */
+#undef HAVE_PTRDIFF_T
+
+/* Define to 1 if the system has the type `ssize_t'. */
+#undef HAVE_SSIZE_T
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -149,6 +155,9 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if the system has the type `uchar'. */
+#undef HAVE_UCHAR
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
@@ -219,14 +228,5 @@
 /* Define to `long' if <sys/types.h> does not define. */
 #undef off_t
 
-/* Define to `int' if <sys/types.h> does not define. */
-#undef ptrdiff_t
-
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
-
-/* Define to `int' if <sys/types.h> does not define. */
-#undef ssize_t
-
-/* Define to `unsigned char' if <sys/types.h> does not define. */
-#undef uchar

@@ -29,7 +29,7 @@
 #include <limits.h>
 #include <float.h>
 #include "ncconfig.h" /* output of 'configure' */
-
+#include "nctypes.h"
 
 /*
  * The integer return code for the conversion routines
