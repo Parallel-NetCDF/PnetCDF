@@ -7796,6 +7796,7 @@ ncmpi_get_varm_double(int ncid, int varid,
 
 /* End {put,get}_var */
 
+#ifdef ENABLE_NONBLOCKING
 /* #################################################################### */
 /* Begin non-blocking data access functions */
 
@@ -11940,3 +11941,4 @@ ncmpi_iget_varm_double(int ncid, int varid,
 
 /* End non-blocking data access functions */
 /* #################################################################### */
+#endif

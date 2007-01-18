@@ -1443,6 +1443,7 @@ int ncmpi_get_varm_double(int ncid, int varid,
 /* #################################################################### */
 /* Begin: more prototypes to be included for fortran binding conversion */
 
+#ifdef ENABLE_NONBLOCKING
 /* Begin non-blocking data access functions */
 
 int
@@ -2087,6 +2088,7 @@ int ncmpi_iget_varm_double(int ncid, int varid,
 /* End {put,get}_varm */
 
 /* End non-blocking data access functions */
+#endif
 
 /* End: more prototypes to be included for fortran binding conversion */
 /* ################################################################## */
