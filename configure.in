@@ -209,9 +209,16 @@ AC_DEFUN(UD_MPI_OFFSET, [
 UD_MPI_OFFSET(8)
 UD_MPI_OFFSET(4)
 UD_MPI_OFFSET(16)
-		
-	
 
+# the nonblocking routines need these functions
+enable_nonblocking=yes
+AC_CHECK_FUNCS(MPI_Request_get_status MPI_Type_dup,,
+  enable_nonblocking=no
+)
+	
+if test $enable_nonblocking = "yes" ; then
+	AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
+fi
 
 dnl Check for presence of various MPI_COMBINERs.  These could be
 dnl enums, so we have to do compile checks.
@@ -545,4 +552,9 @@ if test "$enable_fortran" = "yes" ; then
 	echo ". parallel-netcdf configured WITH fortran bindings"
 else
 	echo ". parallel-netcdf configured WITHOUT fortran bindings"
+fi
+if test "$enable_nonblocking" = "yes" ; then
+	echo ". parallel-netcdf configured WITH nonblocking routines"
+else
+	echo ". parallel-netcdf configured WITHOUT nonblocking routines" 
 fi
