@@ -89,11 +89,28 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
 		(((a) >>  8) & 0x0000ff00) | \
 		(((a) >> 24) & 0x000000ff) )
 
+/* netcdf-3.6.2beta5 added loop unrolling to many of these routines.  Could
+ * confer a 22% performance increase on little endian platforms if compiler
+ * does not already aggressively unroll loops */
+
 static void
 swapn2b(void *dst, const void *src, size_t nn)
 {
 	char *op = dst;
 	const char *ip = src;
+
+	while(nn > 3)
+	{
+		*op++ = *(++ip);
+		*op++ = *(ip++ -1);
+		*op++ = *(++ip);
+		*op++ = *(ip++ -1);
+		*op++ = *(++ip);
+		*op++ = *(ip++ -1);
+		*op++ = *(++ip);
+		*op++ = *(ip++ -1);
+		nn -= 4;
+	}
 	while(nn-- != 0)
 	{
 		*op++ = *(++ip);
@@ -119,6 +136,29 @@ swapn4b(void *dst, const void *src, size_t nn)
 {
 	char *op = dst;
 	const char *ip = src;
+
+	while(nn > 3)
+	{
+		op[0] = ip[3];
+		op[1] = ip[2];
+		op[2] = ip[1];
+		op[3] = ip[0];
+		op[4] = ip[7];
+		op[5] = ip[6];
+		op[6] = ip[5];
+		op[7] = ip[4];
+		op[8] = ip[11];
+		op[9] = ip[10];
+		op[10] = ip[9];
+		op[11] = ip[8];
+		op[12] = ip[15];
+		op[13] = ip[14];
+		op[14] = ip[13];
+		op[15] = ip[12];
+		op += 16;
+		ip += 16;
+		nn -= 4;
+	}
 	while(nn-- != 0)
 	{
 		op[0] = ip[3];
@@ -153,6 +193,29 @@ swapn8b(void *dst, const void *src, size_t nn)
 {
 	char *op = dst;
 	const char *ip = src;
+
+	while(nn > 1)
+	{
+		op[0] = ip[7];
+		op[1] = ip[6];
+		op[2] = ip[5];
+		op[3] = ip[4];
+		op[4] = ip[3];
+		op[5] = ip[2];
+		op[6] = ip[1];
+		op[7] = ip[0];
+		op[8] = ip[15];
+		op[9] = ip[14];
+		op[10] = ip[13];
+		op[11] = ip[12];
+		op[12] = ip[11];
+		op[13] = ip[10];
+		op[14] = ip[9];
+		op[15] = ip[8];
+		op += 16;
+		ip += 16;
+		nn -= 2;
+	}
 	while(nn-- != 0)
 	{
 		op[0] = ip[7];
