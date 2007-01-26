@@ -130,7 +130,7 @@ ncmpii_NC_computeshapes(NC *ncp)
         }
  
         assert(ncp->begin_var > 0);
-        assert(ncp->xsz <= (size_t)ncp->begin_var);
+        assert(ncp->xsz <= ncp->begin_var);
         assert(ncp->begin_rec > 0);
         assert(ncp->begin_var <= ncp->begin_rec);
  

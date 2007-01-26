@@ -375,7 +375,7 @@ struct NC {
 	int flags;
 	ncio *nciop;
 	size_t chunk;	/* largest extent this layer will request from ncio->get() */
-	size_t xsz;	/* external size of this header, <= var[0].begin */
+	MPI_Offset xsz;	/* external size of this header, <= var[0].begin */
 	MPI_Offset begin_var; /* position of the first (non-record) var */
 	MPI_Offset begin_rec; /* position of the first 'record' */
 	/* don't constrain maximu sinze of record unnecessarily */
