@@ -277,7 +277,7 @@ typedef struct {
 	NC_attrarray attrs;
 	nc_type type;		/* the discriminant */
 	size_t len;		/* the total length originally allocated */
-	off_t begin;
+	MPI_Offset begin;
 } NC_var;
 
 typedef struct NC_vararray {
@@ -376,14 +376,10 @@ struct NC {
 	ncio *nciop;
 	size_t chunk;	/* largest extent this layer will request from ncio->get() */
 	size_t xsz;	/* external size of this header, <= var[0].begin */
-	off_t begin_var; /* position of the first (non-record) var */
-	off_t begin_rec; /* position of the first 'record' */
+	MPI_Offset begin_var; /* position of the first (non-record) var */
+	MPI_Offset begin_rec; /* position of the first 'record' */
 	/* don't constrain maximu sinze of record unnecessarily */
-#if SIZEOF_OFF_T > SIZEOF_SIZE_T
-	off_t recsize;	/* length of 'record' */	
-#else
-	size_t recsize; /* length of 'record' */
-#endif
+	MPI_Offset recsize;	/* length of 'record' */	
 	/* below gets xdr'd */
 	size_t numrecs; /* number of 'records' allocated */
 	NC_dimarray dims;
