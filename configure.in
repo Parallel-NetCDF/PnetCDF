@@ -492,21 +492,7 @@ EOF
 fi
 UD_MAKEWHATIS
 
-large_file_support="no"
-AC_CHECK_HEADERS(unistd.h, 
-	AC_MSG_CHECKING(for large file defines)
-	AC_TRY_COMPILE([
-		#include <unistd.h>
-		], [
-		#ifndef _LFS64_LARGEFILE
-		#error no largefile defines
-		#endif
-		], 
-		CFLAGS="${CFLAGS} -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
-		AC_MSG_RESULT(yes)
-		large_file_support="yes",
-		AC_MSG_RESULT(none))
-	)
+AC_SYS_LARGEFILE
 
 SAVECC=$CC
 CC=$MPICC
@@ -543,7 +529,7 @@ fi
 
 echo ""
 echo "parallel-netCDF features:"
-if test "$large_file_support" = "yes" ; then
+if test "$ac_cv_sizeof_off_t" -gt 4 ; then
 	echo ". parallel-netcdf configured WITH support for large files"
 else
 	echo ". parallel-netcdf configured WITHOUT support for large files"
