@@ -1,30 +1,16 @@
 # 5 October 2005
 # Building parallel-netcdf on BGL
 
-First, re-generate the configure script.  This may not be necessary anymore,
-but at one time, the BGL-provided autotools had some modifications to make
-things work better.
-
-Next, set a few environment variables before calling configure:
-
-export CC=mpicc
-export MPICC=mpicc
-export CXX=mpicxx
-export MPICXX=mpicxx
-export FC=mpif77
-export F77=mpif77
-export MPIF77=mpif77
- 
-export ac_cv_sizeof_MPI_Offset=8
-
-Lastly, run configure with the --build and --host flags to put it in "cross
+Be sure to run configure with the --build and --host flags to put it in "cross
 copile mode".  This will make configure use compile-only tests, insted of the
 usual compile-and-run tests (running tests on the bgl login node won't work as
 the compute nodes are totaly different).
 
-configure --build powerpc32-unknown-gnu --host powerpc-suse-linux
+configure --build powerpc32-unknown-gnu --host powerpc-suse-linux  \
+	--with-mpi=/bgl/BlueLight/ppcfloor/bglsys/
 
-It's possible to build pnetcdf with the IBM xl compilers:
+It's possible to build pnetcdf with the IBM xl compilers, but you have to set
+quite a few environment variables
 
 export CC=blrts_xlc
 export MPICC=blrts_xlc
@@ -36,8 +22,6 @@ export MPIFF77=blrts_xlf
 
 export CFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
 export LIBS="-L/bgl/BlueLight/ppcfloor/bglsys/lib -lmpich.rts -lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts -lrts.rts"
-
-export ac_cv_sizeof_MPI_Offset=8
 
 configure --build powerpc32-unknown-gnu --host powerpc-suse-linux
 
