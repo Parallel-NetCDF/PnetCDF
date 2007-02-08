@@ -191,7 +191,7 @@ dnl compile-only check for size of MPI_Offset (thanks Christopher Subich
 dnl <csubich@math.uwaterloo.ca>)
 
 AC_DEFUN(UD_MPI_OFFSET, [
-	if test ! $ac_cv_sizeof_MPI_Offset; then
+	if test ! "$ac_cv_sizeof_MPI_Offset"; then
 		AC_MSG_CHECKING(if MPI_Offset is size $1)
 		AC_COMPILE_IFELSE([
 		#include "mpi.h"
