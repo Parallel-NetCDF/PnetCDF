@@ -18,7 +18,7 @@ export CXX=blrts_xlC
 export MPICXX=blrts_xlC
 export FC=blrts_xlf
 export F77=blrts_xlf
-export MPIFF77=blrts_xlf
+export MPIF77=blrts_xlf
 
 export CFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
 export LIBS="-L/bgl/BlueLight/ppcfloor/bglsys/lib -lmpich.rts -lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts -lrts.rts"
