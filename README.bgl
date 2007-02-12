@@ -2,7 +2,7 @@
 # Building parallel-netcdf on BGL
 
 Be sure to run configure with the --build and --host flags to put it in "cross
-copile mode".  This will make configure use compile-only tests, insted of the
+compile mode".  This will make configure use compile-only tests, insted of the
 usual compile-and-run tests (running tests on the bgl login node won't work as
 the compute nodes are totaly different).
 
