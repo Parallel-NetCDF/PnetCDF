@@ -133,7 +133,7 @@ if test x${MPICC} = x -a x${MPIF77} = x ; then
 	AC_ARG_WITH(mpi, 
 	[  --with-mpi=/path/to/implementation
 				  installation prefix for mpi implementation],
-		if test x$withval = xyes; then
+		if test x"$withval" = xyes; then
 			AC_MSG_ERROR(--with-mpi must be given a pathname)
 		else
 			AC_MSG_RESULT(using $withval)
@@ -216,7 +216,7 @@ AC_CHECK_FUNCS(MPI_Request_get_status MPI_Type_dup,,
   enable_nonblocking=no
 )
 	
-if test $enable_nonblocking = "yes" ; then
+if test "$enable_nonblocking" = "yes" ; then
 	AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
 fi
 
