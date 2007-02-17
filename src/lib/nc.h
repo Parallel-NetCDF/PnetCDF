@@ -10,9 +10,10 @@
  *	netcdf library 'private' data structures, objects and interfaces
  */
 
+#include "ncconfig.h"
+
 #include <stddef.h>	/* size_t */
 #include <sys/types.h>	/* off_t */
-#include "ncconfig.h"
 #include "pnetcdf.h"
 #include "ncio.h"	/* ncio */
 #include "fbits.h"

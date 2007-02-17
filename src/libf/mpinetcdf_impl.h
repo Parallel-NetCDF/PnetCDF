@@ -6,8 +6,9 @@
 
 #ifndef MPINETCDF_IMPL_H
 #define MPINETCDF_IMPL_H
-#include <stdlib.h>
 #include "ncconfig.h"
+
+#include <stdlib.h>
 #include "pnetcdf.h"
 
 /* Support Windows extension to specify calling convention */

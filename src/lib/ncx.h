@@ -22,13 +22,13 @@
  * 
  */
 
+#include "ncconfig.h" /* output of 'configure' */
 #include "rnd.h"
 #include <stddef.h> /* size_t */
 #include <errno.h>
 #include <sys/types.h> /* off_t */
 #include <limits.h>
 #include <float.h>
-#include "ncconfig.h" /* output of 'configure' */
 #include "nctypes.h"
 
 /*

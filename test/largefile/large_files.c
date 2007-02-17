@@ -19,7 +19,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FILE_NAME "/sandbox/large_files.nc"
+#define FILE_NAME "/tmp/large_files.nc"
 
 void
 check_err(const int stat, const int line, const char *file) {
