@@ -5,6 +5,8 @@
  *
  *************************************************************************/
 
+#include "ncconfig.h"
+
 #include <assert.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -23,7 +25,6 @@
 #include <unistd.h>
 #endif
 
-#include "ncconfig.h"
 #include "nc.h"
 #include "ncio.h"
 #include "fbits.h"
