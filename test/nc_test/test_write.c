@@ -56,7 +56,7 @@ test_ncmpi_create(void)
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_EEXIST)
 	error("attempt to overwrite file: status = %d", err);
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
 	error("remove of %s failed", scratch);
 }
@@ -215,7 +215,7 @@ test_ncmpi_redef(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -291,7 +291,7 @@ test_ncmpi_sync(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -333,7 +333,7 @@ test_ncmpi_abort(void)
     err = ncmpi_close(ncid);	/* should already be closed */
     IF (err != NC_EBADID)
         error("bad ncid: status = %d", err);
-    err = remove(scratch);	/* should already be deleted */
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);	/* should already be deleted */
     IF (!err)
         error("file %s should not exist", scratch);
 
@@ -399,7 +399,7 @@ test_ncmpi_abort(void)
     IF (err != NC_EBADID)
         error("bad ncid: status = %d", err);
     check_file(scratch);
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -494,7 +494,7 @@ test_ncmpi_def_dim(void)
     err = ncmpi_close(ncid);
     IF (err)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -542,7 +542,7 @@ test_ncmpi_rename_dim(void)
     err = ncmpi_close(ncid);
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -618,7 +618,7 @@ test_ncmpi_def_var(void)
     err = ncmpi_close(ncid);
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 
@@ -647,7 +647,7 @@ test_ncmpi_def_var(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -721,7 +721,7 @@ test_ncmpi_put_var1(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -841,7 +841,7 @@ test_ncmpi_put_vara(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -996,7 +996,7 @@ test_ncmpi_put_vars(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1157,7 +1157,7 @@ test_ncmpi_put_varm(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1240,7 +1240,7 @@ test_ncmpi_rename_var(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1311,7 +1311,7 @@ test_ncmpi_put_att(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1456,7 +1456,7 @@ test_ncmpi_copy_att(void)
     err = ncmpi_close(ncid_out);
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1617,7 +1617,7 @@ test_ncmpi_rename_att(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1732,7 +1732,7 @@ test_ncmpi_del_att(void)
     err = ncmpi_close(ncid);
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1924,7 +1924,7 @@ test_ncmpi_set_fill(void)
     err = ncmpi_close(ncid);
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 #endif
@@ -2013,7 +2013,7 @@ test_ncmpi_set_default_format(void)
     }
 
     /* Remove the left-over file. */
-    if ((err = remove(scratch)))
+    if ((err = ncmpi_delete(scratch, MPI_INFO_NULL)))
        error("remove of %s failed", scratch);
 }
 

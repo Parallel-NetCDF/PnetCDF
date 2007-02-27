@@ -130,7 +130,7 @@ test_ncmpi_open(void)
 	    error("ncmpi_open: %s", ncmpi_strerror(err));
 	else 
 	    (void) ncmpi_close(ncid2);
-	err = remove(scratch);
+	err = ncmpi_delete(scratch, MPI_INFO_NULL);
 	IF (err) 
 	    error("remove of %s failed", scratch);
     }
@@ -184,7 +184,7 @@ test_ncmpi_close(void)
 	err = ncmpi_close(ncid);
 	IF (err)
 	    error("ncmpi_close in define mode: %s", ncmpi_strerror(err));
-        err = remove(scratch);
+        err = ncmpi_delete(scratch, MPI_INFO_NULL);
         IF (err)
             error("remove of %s failed", scratch);
     }
@@ -321,7 +321,7 @@ test_ncmpi_inq(void)
 	    else IF (ngatts != ngatts0 + 1)
 		error("ncmpi_inq in define mode: ngatts wrong, %d", ngatts);
 	    (void) ncmpi_close(ncid2);
-	    err = remove(scratch);
+	    err = ncmpi_delete(scratch, MPI_INFO_NULL);
 	    IF (err)
 		error("remove of %s failed", scratch);
 	}
