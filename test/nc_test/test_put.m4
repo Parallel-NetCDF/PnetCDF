@@ -335,7 +335,7 @@ test_ncmpi_put_var1_$1(void)
 
     check_vars_$1(scratch);
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -476,7 +476,7 @@ test_ncmpi_put_var_$1(void)
 
     check_vars_$1(scratch);
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -643,7 +643,7 @@ test_ncmpi_put_vara_$1(void)
 
     check_vars_$1(scratch);
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -816,7 +816,7 @@ test_ncmpi_put_vars_$1(void)
 
     check_vars_$1(scratch);
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
 	error("remove of %s failed", scratch);
 }
@@ -997,7 +997,7 @@ test_ncmpi_put_varm_$1(void)
 
     check_vars_$1(scratch);
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1068,7 +1068,7 @@ test_ncmpi_put_att_text(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
@@ -1136,7 +1136,7 @@ test_ncmpi_put_att_$1(void)
     IF (err)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = remove(scratch);
+    err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
         error("remove of %s failed", scratch);
 }
