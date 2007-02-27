@@ -68,8 +68,8 @@ int  max_nmpt;		/* max. number of messages per test */
  */
 int  nfails;		/* number of failures in specific test */
 static char *progname;
-char testfile[] = "test.nc";    /* read-only testfile */
-char scratch[] = "scratch.nc";  /* writable scratch file */
+char testfile[] = "pvfs2:/pvfs2/test.nc";    /* read-only testfile */
+char scratch[] = "pvfs2:/pvfs2/scratch.nc";  /* writable scratch file */
 MPI_Comm comm = MPI_COMM_WORLD; /* mpi communicator for parallel-netcdf */
 
 static void
@@ -158,7 +158,7 @@ main(int argc, char *argv[])
 
     /* delete any existing scratch netCDF file */
     if ( ! read_only )
-	(void) remove(scratch);
+	ncmpi_delete(scratch, MPI_INFO_NULL);
 
     /* Test read-only functions, using pregenerated test-file */
     NC_TEST(ncmpi_strerror);
