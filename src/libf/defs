@@ -26,6 +26,18 @@ $errparmrval = "ierr";
 $returnErrval = 1;
 $returnType   = "int";
 
+#%
+#% Change the handling of input MPI handles
+%argsneedcast = ( 'MPI_Request *' => '(fixme][)(ARG)',
+		  'MPI_Status *'  => '(MPI_Status *)(ARG)',
+		  'MPI_File' => 'MPI_File_f2c(ARG)',
+		  'MPI_Comm' => 'MPI_Comm_f2c(ARG)',
+		  'MPI_Comm *' => '(fixme][)(ARG)',
+                  'MPI_Datatype' => 'MPI_Type_f2c(ARG)',
+                  'MPI_Datatype *' => '(fixme][ *)(ARG)',
+		  'MPI_Info *' => '(fixme][)(ARG)',
+		  'MPI_Info' => 'MPI_Info_f2c(ARG)' );
+
 # Map some of the names from C to Fortran to replace float with real,
 # short with int2
 %CtoFName = (
