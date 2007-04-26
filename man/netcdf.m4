@@ -326,42 +326,42 @@ $1(float)
 $1(double)>>)
 
 divert(0)dnl
-.TH NETCDF 3 "18 April 1997" "Printed: \n(yr.\n(mo.\n(dy" "UNIDATA LIBRARY FUNCTIONS"
+.TH PNETCDF 1.0  "Printed: \n(yr.\n(mo.\n(dy" "UNIDATA LIBRARY FUNCTIONS"
 .SH N<<>>AME
-netcdf \- Unidata Network Common Data Form (netCDF) library, version 3 interface
+pnetcdf \- Parallel Network Common Data Form (P-netCDF) library, version 3 interface
 .SH SYNOPSIS
 .ft B
 .na
 .nh
-INCLUDE(netcdf)
+INCLUDE(pnetcdf)
 .sp
 ifelse(API,C,,
 .SS Most Systems:)
-COMPILER() ... -lnetcdf
+COMPILER() ... -lpnetcdf
 ifelse(API,C,,
 .sp
 .SS CRAY PVP Systems:
-f90 -dp -i64 ... -lnetcdf
+f90 -dp -i64 ... -lpnetcdf
 )
 .ad
 .hy
 .SH "LIBRARY VERSION"
 .LP
-This document describes version 3 of Unidata netCDF data-access interface
+This document describes the Parallel-NetCDF interface, a parallel version of Unidata's netCDF data-access interface
 for the LANGUAGE() programming language.
 .HP
 DECL(RETSTR(), inq_libvers, (VOID_ARG))
 .sp
-Returns a string identifying the version of the netCDF library, and
+Returns a string identifying the version of the pnetCDF library, and
 when it was built, like: "3.1a of Aug 22 1996 12:57:47 $".
 .LP
 The RCS \fBident(1)\fP command will find a string like
-"$\|Id: @\|(#) netcdf library version 3.1a of Sep  6 1996 15:56:26 $"
+"$\|Id: @\|(#) pnetcdf library version 3.1a of Sep  6 1996 15:56:26 $"
 in the library. The SCCS \fBwhat(1)\fP command will find a string like
-"netcdf library version 3.1a of Aug 23 1996 16:07:40 $".
+"pnetcdf library version 3.1a of Aug 23 1996 16:07:40 $".
 .SH "RETURN VALUES"
 .LP
-All netCDF functions (except
+All pnetCDF functions (except
 FREF(inq_libvers) and FREF(strerror)) return an integer status.
 This behavior replaces the
 ifelse(API,C, <<CODE(ncerr()) function>>, <<CODE(rcode)>> argument)
@@ -370,7 +370,7 @@ If this returned status value is not equal to
 MACRO(NOERR) (zero), it
 indicates that an error occurred. The possible status values are defined in 
 ifelse(API,C, system <<<<include>>>> file <errno.h> and in )<<>>dnl
-ifelse(API,C,")HEADER_FILE(netcdf)<<>>ifelse(API,C,").
+ifelse(API,C,")HEADER_FILE(pnetcdf)<<>>ifelse(API,C,").
 .HP
 DECL(RETSTR(), strerror, (ISTATUS()))
 .sp
