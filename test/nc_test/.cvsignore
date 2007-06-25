@@ -1,6 +1,0 @@
-Makefile
-*.o
-test_get.c
-test_put.c
-nc_test
-*.nc
