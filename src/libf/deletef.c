@@ -33,7 +33,7 @@ FORTRAN_API int FORT_CALL nfmpi_delete_ ( char *v1 FORT_MIXED_LEN(d1), MPI_Fint 
         for (li=0; li<(p-v1); li++) { p1[li] = v1[li]; }
         p1[li] = 0; 
     }
-    ierr = ncmpi_delete( p1, (MPI_Info)(*v2) );
+    ierr = ncmpi_delete( p1, MPI_Info_f2c(*v2) );
     free( p1 );
     return ierr;
 }

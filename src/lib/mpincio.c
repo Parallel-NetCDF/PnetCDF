@@ -87,9 +87,7 @@ ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   int i;
   int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
   int mpireturn;
-  int rank;
-
-  MPI_Comm_rank(comm, &rank);
+  int do_zero_file_size = 0;
 
   fSet(ioflags, NC_WRITE);
 
@@ -103,30 +101,22 @@ ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   nciop->mpiomode = MPI_MODE_RDWR;
   nciop->mpioflags = 0;
   nciop->comm = comm;
-  nciop->mpiinfo = info;
+  MPI_Info_dup(info, &nciop->mpiinfo);
 
   if (fIsSet(ioflags, NC_NOCLOBBER))
     fSet(mpiomode, MPI_MODE_EXCL);
-  else {
-    mpireturn = MPI_File_delete((char *)path, info);
-/*
-    if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_delete error = %s\n", rank, errorString);
-      return NC_EFILE;
-    }
-*/
-  }
-
+  else
+    do_zero_file_size = 1;
 
   mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
   if (mpireturn != MPI_SUCCESS) {
+    int rank;
+    MPI_Comm_rank(comm, &rank);
     ncmpiio_free(nciop);
     ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
     return NC_EOFILE;  
   }
+  if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
 
   for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
   if (i == MAX_NC_ID) {
@@ -149,9 +139,6 @@ ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   int i;
   int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
   int mpireturn;
-  int rank;
-
-  MPI_Comm_rank(comm, &rank);
 
   if(path == NULL || *path == 0)
     return EINVAL;
@@ -163,10 +150,12 @@ ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   nciop->mpiomode = mpiomode;
   nciop->mpioflags = 0;
   nciop->comm = comm;
-  nciop->mpiinfo = info;
+  MPI_Info_dup(info, &nciop->mpiinfo);
  
   mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
   if (mpireturn != MPI_SUCCESS) {
+    int rank;
+    MPI_Comm_rank(comm, &rank);
     ncmpiio_free(nciop);
     ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
     return NC_EOFILE;
@@ -189,22 +178,22 @@ ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
 int
 ncmpiio_sync(ncio *nciop) {
   int mpireturn;
-  int rank;
-
-  MPI_Comm_rank(nciop->comm, &rank);
 
   if(NC_independentFhOpened(nciop)) {
     mpireturn = MPI_File_sync(nciop->independent_fh);
     if (mpireturn != MPI_SUCCESS) {
+      int rank;
+      MPI_Comm_rank(nciop->comm, &rank);
       ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
       return NC_EFILE;
     }
   }
-
  
   if(NC_collectiveFhOpened(nciop)) {
     mpireturn = MPI_File_sync(nciop->collective_fh); 
     if (mpireturn != MPI_SUCCESS) {
+      int rank;
+      MPI_Comm_rank(nciop->comm, &rank);
       ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
       return NC_EFILE;
     }
@@ -220,9 +209,6 @@ int
 ncmpiio_close(ncio *nciop, int doUnlink) {
   int status = ENOERR;
   int mpireturn;
-  int rank;
-
-  MPI_Comm_rank(nciop->comm, &rank);
 
   if (nciop == NULL)
     return EINVAL;
@@ -230,6 +216,8 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
   if(NC_independentFhOpened(nciop)) {
     mpireturn = MPI_File_close(&(nciop->independent_fh));
     if (mpireturn != MPI_SUCCESS) {
+      int rank;
+      MPI_Comm_rank(nciop->comm, &rank);
       ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
       return NC_EFILE;
     }
@@ -239,6 +227,8 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
   if(NC_collectiveFhOpened(nciop)) {
     mpireturn = MPI_File_close(&(nciop->collective_fh));  
     if (mpireturn != MPI_SUCCESS) {
+      int rank;
+      MPI_Comm_rank(nciop->comm, &rank);
       ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
       return NC_EFILE;
     }
@@ -250,6 +240,8 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     if (mpireturn != MPI_SUCCESS) {
       char errorString[512];
       int  errorStringLen;
+      int rank;
+      MPI_Comm_rank(nciop->comm, &rank);
       MPI_Error_string(mpireturn, errorString, &errorStringLen);
       printf("%2d: MPI_File_delete error = %s\n", rank, errorString);
       return NC_EFILE;

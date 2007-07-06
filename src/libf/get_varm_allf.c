@@ -84,7 +84,7 @@ FORTRAN_API int FORT_CALL nfmpi_get_varm_all_ ( int *v1, int *v2, MPI_Offset v3[
 	return ierr;
     }
     }
-    ierr = ncmpi_get_varm_all( *v1, l2, l3, l4, l5, l6, v7, *v8, (MPI_Datatype)(*v9) );
+    ierr = ncmpi_get_varm_all( *v1, l2, l3, l4, l5, l6, v7, *v8, MPI_Type_f2c(*v9) );
 
     if (l3) { free(l3); }
 

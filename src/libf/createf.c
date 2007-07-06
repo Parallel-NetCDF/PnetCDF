@@ -33,7 +33,7 @@ FORTRAN_API int FORT_CALL nfmpi_create_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(
         for (li=0; li<(p-v2); li++) { p2[li] = v2[li]; }
         p2[li] = 0; 
     }
-    ierr = ncmpi_create( (MPI_Comm)(*v1), p2, *v3, (MPI_Info)(*v4), v5 );
+    ierr = ncmpi_create( MPI_Comm_f2c(*v1), p2, *v3, MPI_Info_f2c(*v4), v5 );
     free( p2 );
     return ierr;
 }

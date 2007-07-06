@@ -36,7 +36,7 @@ struct ncatt {			/* attribute */
     int var;
     char name[NC_MAX_NAME];
     nc_type type;
-    MPI_Offset len;
+    int len;
     char *string;		/* for text attributes (type = NC_CHAR) */
     double *vals;		/* for numeric attributes of all types */
 };
