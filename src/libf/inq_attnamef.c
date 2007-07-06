@@ -25,11 +25,14 @@ FORTRAN_API int FORT_CALL nfmpi_inq_attname_ ( int *v1, int *v2, int *v3, char *
     int ierr;
     int l2 = *v2 - 1;
     int l3 = *v3 - 1;
-    ierr = ncmpi_inq_attname( *v1, l2, l3, v4 );
+    char *p4;
+    p4 = (char *)malloc( d4 + 1 );
+    ierr = ncmpi_inq_attname( *v1, l2, l3, p4 );
 
-    {char *p = v4;
-        while (*p) p++;
+    {char *p = v4, *pc=p4;
+        while (*pc) {*p++ = *pc++;}
         while ((p-v4) < d4) { *p++ = ' '; }
     }
+    free( p4 );
     return ierr;
 }
