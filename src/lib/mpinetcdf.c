@@ -162,6 +162,29 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
 }
 
 int
+ncmpi_get_file_info(int ncid, MPI_Info *info_used) {
+  int status = NC_NOERR;
+  int mpireturn;
+  NC *ncp;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if (status != NC_NOERR)
+    return status;
+
+  mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
+  if (mpireturn != MPI_SUCCESS) {
+      int rank;
+      char errorString[512];
+      int  errorStringLen;
+      MPI_Comm_rank(ncp->nciop->comm, &rank);
+      MPI_Error_string(mpireturn, errorString, &errorStringLen);
+      printf("%2d: MPI_File_get_info error = %s\n", rank, errorString);
+      return NC_EFILE;
+  }
+  return status;
+}
+
+int
 ncmpi_redef(int ncid) {
   int status;
   NC *ncp;
@@ -212,7 +235,6 @@ ncmpi_begin_indep_data(int ncid) {
   int status = NC_NOERR;
   int mpireturn;
   NC *ncp;
-  int rank;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if (status != NC_NOERR)
@@ -221,11 +243,11 @@ ncmpi_begin_indep_data(int ncid) {
   if (NC_indep(ncp))
     return NC_EINDEP;
  
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
-
   if(!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
     mpireturn = MPI_File_sync(ncp->nciop->collective_fh);   /* collective */
     if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
         MPI_Finalize();
         return NC_EFILE;
@@ -244,7 +266,6 @@ ncmpi_end_indep_data(int ncid) {
   int status = NC_NOERR;
   int mpireturn;
   NC *ncp;
-  int rank;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if (status != NC_NOERR)
@@ -253,11 +274,11 @@ ncmpi_end_indep_data(int ncid) {
   if (!NC_indep(ncp))
     return NC_ENOTINDEP;
 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
-
   if(!NC_readonly(ncp) && NC_independentFhOpened(ncp->nciop)) {
     mpireturn = MPI_File_sync(ncp->nciop->independent_fh); /* independent */
     if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
         MPI_Finalize();
         return NC_EFILE;
@@ -930,9 +951,6 @@ set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset index
   int status;
   int dim, ndims;
   int mpireturn;
-  int rank;
-
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   status = NCcoordck(ncp, varp, index);
   if (status != NC_NOERR)
@@ -963,6 +981,8 @@ set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset index
 
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
   }
@@ -974,9 +994,6 @@ static int
 set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
   MPI_Offset offset;
   int mpireturn;
-  int rank;
-
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   offset = varp->begin;
 
@@ -984,6 +1001,8 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
     /* Contiguous file view */
     mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
     if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
     }
@@ -1015,6 +1034,8 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
 
     mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, filetype, "native", ncp->nciop->mpiinfo);
     if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
     }
@@ -1035,9 +1056,6 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
   MPI_Datatype rectype;
   MPI_Datatype filetype;
   int mpireturn;
-  int rank;
-
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   offset = varp->begin;
   
@@ -1074,6 +1092,10 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
     /* scalar variable */
     filetype = MPI_BYTE;
 
+  } else if (ndims == 1) {
+    /* wkliao: if ndims == 1, no need to use MPI_Type_create_subarray() */
+    offset += start[0];
+    filetype = MPI_BYTE;
   } else {
 
     /* if ndims == 0, all below pointers would be null */
@@ -1177,22 +1199,22 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
 
         MPI_Type_commit(&filetype);
       }
-
     }
   }
 
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
 		    filetype, "native", ncp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
   }
 
+  if (filetype != MPI_BYTE)
+    MPI_Type_free(&filetype);
 
-  if (ndims > 0) {
-    if (filetype != MPI_BYTE)
-      MPI_Type_free(&filetype);
-
+  if (ndims > 1) {
     free(shape);
     free(subcount);
     free(substart);
@@ -1211,7 +1233,6 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   int dim, ndims;
   MPI_Datatype *subtypes, *filetype;
   MPI_Offset *blocklens = NULL, *blockstride = NULL, *blockcount = NULL;
-  int rank;
 
   ndims = varp->ndims;
 
@@ -1269,8 +1290,6 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
      (unsigned long)*start + (unsigned long)*count > NC_get_numrecs(ncp))
       return NC_EEDGE;
 */
-
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   offset = varp->begin;
   
@@ -1342,6 +1361,8 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
                     *filetype, "native", ncp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         return NC_EFILE;
   }
@@ -1381,7 +1402,6 @@ ncmpi_put_var1(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -1394,8 +1414,6 @@ ncmpi_put_var1(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
 
   /* check to see that the desired mpi file handle is opened */
  
@@ -1497,6 +1515,8 @@ ncmpi_put_var1(int ncid, int varid,
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes,
 			     MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
@@ -1532,7 +1552,6 @@ ncmpi_get_var1(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
  
@@ -1543,8 +1562,6 @@ ncmpi_get_var1(int ncid, int varid,
   if(NC_indef(ncp))
     return NC_EINDEFINE;
  
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
-
   /* check to see that the desired mpi file handle is opened */
  
   status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
@@ -1610,6 +1627,8 @@ ncmpi_get_var1(int ncid, int varid,
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
@@ -1672,7 +1691,6 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -1682,8 +1700,6 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -1759,6 +1775,8 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
 
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
@@ -1821,7 +1839,6 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -1834,8 +1851,6 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -1944,6 +1959,8 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
 
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
@@ -1979,7 +1996,6 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -1989,8 +2005,6 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2065,6 +2079,8 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
@@ -2133,7 +2149,6 @@ ncmpi_put_vara_all(int ncid, int varid,
   MPI_Status mpistatus;
   MPI_Comm comm;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -2142,7 +2157,6 @@ ncmpi_put_vara_all(int ncid, int varid,
     return status;
  
   comm = ncp->nciop->comm;
-  MPI_Comm_rank(comm, &rank);
  
   if(NC_readonly(ncp))
     return NC_EPERM;
@@ -2256,6 +2270,8 @@ ncmpi_put_vara_all(int ncid, int varid,
 
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
@@ -2280,6 +2296,8 @@ ncmpi_put_vara_all(int ncid, int varid,
       MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_INT, MPI_MAX, comm );
  
       if (ncp->numrecs < max_numrecs) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
         ncp->numrecs = max_numrecs;
         if (rank == 0) {
           status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
@@ -2308,7 +2326,6 @@ ncmpi_get_vara_all(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -2318,8 +2335,6 @@ ncmpi_get_vara_all(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2392,6 +2407,8 @@ ncmpi_get_vara_all(int ncid, int varid,
 
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
@@ -2458,7 +2475,6 @@ ncmpi_put_vara(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -2471,8 +2487,6 @@ ncmpi_put_vara(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2579,6 +2593,8 @@ ncmpi_put_vara(int ncid, int varid,
 
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         return NC_EWRITE;
   }
@@ -2615,7 +2631,6 @@ ncmpi_get_vara(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -2625,8 +2640,6 @@ ncmpi_get_vara(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -2699,6 +2712,8 @@ ncmpi_get_vara(int ncid, int varid,
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
@@ -2768,7 +2783,6 @@ ncmpi_put_vars_all(int ncid, int varid,
   MPI_Status mpistatus;
   MPI_Comm comm;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -2777,7 +2791,6 @@ ncmpi_put_vars_all(int ncid, int varid,
     return status;
  
   comm = ncp->nciop->comm;
-  MPI_Comm_rank(comm, &rank);
  
   if(NC_readonly(ncp))
     return NC_EPERM;
@@ -2891,6 +2904,8 @@ ncmpi_put_vars_all(int ncid, int varid,
 
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
@@ -2915,6 +2930,8 @@ ncmpi_put_vars_all(int ncid, int varid,
       MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_INT, MPI_MAX, comm );
  
       if (ncp->numrecs < max_numrecs) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
         ncp->numrecs = max_numrecs;
         if (rank == 0) {
           status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
@@ -2945,7 +2962,6 @@ ncmpi_get_vars_all(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -2955,8 +2971,6 @@ ncmpi_get_vars_all(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -3030,6 +3044,8 @@ ncmpi_get_vars_all(int ncid, int varid,
 
   mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
@@ -3098,7 +3114,6 @@ ncmpi_put_vars(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
  
@@ -3111,8 +3126,6 @@ ncmpi_put_vars(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -3220,6 +3233,8 @@ ncmpi_put_vars(int ncid, int varid,
 
   mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
@@ -3258,7 +3273,6 @@ ncmpi_get_vars(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
  
@@ -3268,8 +3282,6 @@ ncmpi_get_vars(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -3343,6 +3355,8 @@ ncmpi_get_vars(int ncid, int varid,
 
   mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
@@ -8210,7 +8224,6 @@ ncmpi_iput_var1(int ncid, int varid,
   int nelems, cnelems, el_size, nbytes;
   MPI_Status mpistatus;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -8224,8 +8237,6 @@ ncmpi_iput_var1(int ncid, int varid,
   if(NC_indef(ncp))
     return NC_EINDEFINE;
  
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
-
   /* check to see that the desired mpi file handle is opened */
  
   status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
@@ -8328,6 +8339,8 @@ ncmpi_iput_var1(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, nbytes,
 			      MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
@@ -8365,7 +8378,6 @@ ncmpi_iget_var1(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int nelems, cnelems, el_size, nbytes;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
  
@@ -8376,8 +8388,6 @@ ncmpi_iget_var1(int ncid, int varid,
   if(NC_indef(ncp))
     return NC_EINDEFINE;
  
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
-
   /* check to see that the desired mpi file handle is opened */
  
   status = check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0);
@@ -8446,6 +8456,8 @@ ncmpi_iget_var1(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
@@ -8477,7 +8489,6 @@ ncmpi_iput_var(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int nelems, cnelems, el_size, nbytes;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -8490,8 +8501,6 @@ ncmpi_iput_var(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -8603,6 +8612,8 @@ ncmpi_iput_var(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, 
 			      nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write error");
         status = NC_EWRITE;
   }
@@ -8641,7 +8652,6 @@ ncmpi_iget_var(int ncid, int varid,
   int status = NC_NOERR, warning = NC_NOERR;
   int nelems, cnelems, el_size, nbytes;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -8651,8 +8661,6 @@ ncmpi_iget_var(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -8730,6 +8738,8 @@ ncmpi_iget_var(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
@@ -8764,7 +8774,6 @@ ncmpi_iput_vara(int ncid, int varid,
   int dim;
   int nelems, cnelems, el_size, nbytes;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -8777,8 +8786,6 @@ ncmpi_iput_vara(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -8888,6 +8895,8 @@ ncmpi_iput_vara(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, 
 			      nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         return NC_EWRITE;
   }
@@ -8926,7 +8935,6 @@ ncmpi_iget_vara(int ncid, int varid,
   int dim;
   int nelems, cnelems, el_size, nbytes;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
 
@@ -8936,8 +8944,6 @@ ncmpi_iget_vara(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -9013,6 +9019,8 @@ ncmpi_iget_vara(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
@@ -9049,7 +9057,6 @@ ncmpi_iput_vars(int ncid, int varid,
   int dim;
   int nelems, cnelems, el_size, nbytes;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
  
@@ -9062,8 +9069,6 @@ ncmpi_iput_vars(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -9174,6 +9179,8 @@ ncmpi_iput_vars(int ncid, int varid,
   mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, 
 			      nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
@@ -9214,7 +9221,6 @@ ncmpi_iget_vars(int ncid, int varid,
   int dim;
   int nelems, cnelems, el_size, nbytes;
   int mpireturn;
-  int rank;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
  
@@ -9224,8 +9230,6 @@ ncmpi_iget_vars(int ncid, int varid,
  
   if(NC_indef(ncp))
     return NC_EINDEFINE;
- 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   /* check to see that the desired mpi file handle is opened */
  
@@ -9302,6 +9306,8 @@ ncmpi_iget_vars(int ncid, int varid,
   mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
 			     nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }

@@ -54,7 +54,7 @@ FORTRAN_API int FORT_CALL nfmpi_get_vara_ ( int *v1, int *v2, MPI_Offset v3[], M
 	return ierr;
     }
     }
-    ierr = ncmpi_get_vara( *v1, l2, l3, l4, v5, *v6, (MPI_Datatype)(*v7) );
+    ierr = ncmpi_get_vara( *v1, l2, l3, l4, v5, *v6, MPI_Type_f2c(*v7) );
 
     if (l3) { free(l3); }
 

@@ -186,54 +186,54 @@ ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
 
 extern int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
-	MPI_Offset nelems, const char *value);
+	int nelems, const char *value);
 
 extern int
 ncmpi_get_att_text(int ncid, int varid, const char *name, char *str);
 
 extern int
 ncmpi_put_att_schar(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const signed char *value);
+	nc_type type, int nelems, const signed char *value);
 
 extern int
 ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp);
 
 extern int
 ncmpi_put_att_uchar(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const unsigned char *value);
+	nc_type type, int nelems, const unsigned char *value);
 
 extern int
 ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp);
 
 extern int
 ncmpi_put_att_short(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const short *value);
+	nc_type type, int nelems, const short *value);
 
 extern int
 ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp);
 
 extern int
 ncmpi_put_att_int(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const int *value);
+	nc_type type, int nelems, const int *value);
 
 extern int
 ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp);
 
 extern int
 ncmpi_put_att_long(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const long *value);
+	nc_type type, int nelems, const long *value);
 
 extern int
 ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp);
 
 extern int
 ncmpi_put_att_float(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const float *value);
+	nc_type type, int nelems, const float *value);
 extern int
 ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp);
 extern int
 ncmpi_put_att_double(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const double *value);
+	nc_type type, int nelems, const double *value);
 extern int
 ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp);
 
@@ -244,11 +244,11 @@ extern int
 ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep);
 
 extern int 
-ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp);
+ncmpi_inq_attlen(int ncid, int varid, const char *name, int *lenp);
 
 extern int
 ncmpi_inq_att(int ncid, int varid, const char *name, 
-	nc_type *datatypep, MPI_Offset *lenp);
+	nc_type *datatypep, int *lenp);
 
 extern int
 ncmpi_copy_att(int ncid_in, int varid_in, const char *name, 

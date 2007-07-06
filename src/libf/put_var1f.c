@@ -39,7 +39,7 @@ FORTRAN_API int FORT_CALL nfmpi_put_var1_ ( int *v1, int *v2, MPI_Offset v3[], v
 	return ierr;
     }
     }
-    ierr = ncmpi_put_var1( *v1, l2, l3, v4, *v5, (MPI_Datatype)(*v6) );
+    ierr = ncmpi_put_var1( *v1, l2, l3, v4, *v5, MPI_Type_f2c(*v6) );
 
     if (l3) { free(l3); }
     return ierr;
