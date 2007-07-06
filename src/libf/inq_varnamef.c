@@ -24,11 +24,14 @@
 FORTRAN_API int FORT_CALL nfmpi_inq_varname_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3) FORT_END_LEN(d3) ){
     int ierr;
     int l2 = *v2 - 1;
-    ierr = ncmpi_inq_varname( *v1, l2, v3 );
+    char *p3;
+    p3 = (char *)malloc( d3 + 1 );
+    ierr = ncmpi_inq_varname( *v1, l2, p3 );
 
-    {char *p = v3;
-        while (*p) p++;
+    {char *p = v3, *pc=p3;
+        while (*pc) {*p++ = *pc++;}
         while ((p-v3) < d3) { *p++ = ' '; }
     }
+    free( p3 );
     return ierr;
 }

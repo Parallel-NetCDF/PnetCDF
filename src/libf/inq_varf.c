@@ -24,19 +24,22 @@
 FORTRAN_API int FORT_CALL nfmpi_inq_var_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Fint *v5, MPI_Fint *v6, MPI_Fint *v7 FORT_END_LEN(d3) ){
     int ierr;
     int l2 = *v2 - 1;
+    char *p3;
     int *l6=0;
     int ln6;
+    p3 = (char *)malloc( d3 + 1 );
 
     ln6 = ncmpixVardim(*v1,*v2-1);
     if (ln6 > 0) {
         l6 = (int *)malloc( ln6 * sizeof(int) );
     }
-    ierr = ncmpi_inq_var( *v1, l2, v3, (nc_type *)(v4), v5, l6, v7 );
+    ierr = ncmpi_inq_var( *v1, l2, p3, (nc_type *)(v4), v5, l6, v7 );
 
-    {char *p = v3;
-        while (*p) p++;
+    {char *p = v3, *pc=p3;
+        while (*pc) {*p++ = *pc++;}
         while ((p-v3) < d3) { *p++ = ' '; }
     }
+    free( p3 );
 
     if (l6) { 
 	int li;

@@ -10,7 +10,7 @@
 
 extern FORTRAN_API int FORT_CALL nfmpi_create_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, MPI_Fint *v4, MPI_Fint *v5 FORT_END_LEN(d2) );
 extern FORTRAN_API int FORT_CALL nfmpi_open_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, MPI_Fint *v4, MPI_Fint *v5 FORT_END_LEN(d2) );
-extern FORTRAN_API int FORT_CALL nfmpi_get_file_info_ ( MPI_Fint *v1, MPI_Fint *v2 );
+extern FORTRAN_API int FORT_CALL nfmpi_get_file_info_ ( int *v1, MPI_Fint *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_delete_ ( char *v1 FORT_MIXED_LEN(d1), MPI_Fint *v2 FORT_END_LEN(d1) );
 extern FORTRAN_API int FORT_CALL nfmpi_enddef_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_redef_ ( int *v1 );
@@ -41,10 +41,10 @@ extern FORTRAN_API int FORT_CALL nfmpi_inq_vartype_ ( int *v1, int *v2, int *v3 
 extern FORTRAN_API int FORT_CALL nfmpi_inq_varndims_ ( int *v1, int *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_vardimid_ ( int *v1, int *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_varnatts_ ( int *v1, int *v2, MPI_Fint *v3 );
-extern FORTRAN_API int FORT_CALL nfmpi_inq_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, int *v5 FORT_END_LEN(d3) );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Fint *v5 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_attid_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *v4 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_atttype_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4 FORT_END_LEN(d3) );
-extern FORTRAN_API int FORT_CALL nfmpi_inq_attlen_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4 FORT_END_LEN(d3) );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_attlen_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *v4 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_attname_ ( int *v1, int *v2, int *v3, char *v4 FORT_MIXED_LEN(d4) FORT_END_LEN(d4) );
 extern FORTRAN_API int FORT_CALL nfmpi_copy_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, int *v5 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_rename_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), char *v4 FORT_MIXED_LEN(d4) FORT_END_LEN(d3) FORT_END_LEN(d4) );
