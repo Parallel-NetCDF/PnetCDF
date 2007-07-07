@@ -1225,6 +1225,7 @@ $ExtraRoutines[$#ExtraRoutines+1] = "ncfxstrerror";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxutil";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfxinqlibvers";
 $ExtraRoutines[$#ExtraRoutines+1] = "ncfissyserr";
+$ExtraRoutines[$#ExtraRoutines+1] = "get_file_info";
 
 sub ncfxstrerror {
     $OUTFD = "NCFXSTRERRORFD";
@@ -1311,6 +1312,27 @@ sub ncfissyserr {
       return 1;
     else
       return 0;
+}\n";
+    close ($OUTFD);
+
+}
+
+sub get_file_info {
+    $OUTFD = "GETFILEINFOFD";
+    open( $OUTFD, ">get_file_infof.c" ) || die "Cannot open get_file_infof.c\n";
+    $out_prefix = "nfmpi_";
+    $files[$#files+1] = "get_file_infof.c";
+    $args = "int *, int *";	
+    &print_header( "ncfmpi_get_file_info", "get_file_info", $args );
+    &print_routine_type_decl( $OUTFD, "get_file_info" );
+    &print_args( $OUTFD, $args, 0, "get_file_info" );
+    print $OUTFD "{
+    int ierr;
+    MPI_Info info;
+
+    ierr = ncmpi_get_file_info( *v1, &info );
+    *v2 = MPI_Info_c2f(info);
+    return ierr;
 }\n";
     close ($OUTFD);
 

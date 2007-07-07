@@ -23,6 +23,9 @@
 #include "mpifnetcdf.h"
 FORTRAN_API int FORT_CALL nfmpi_get_file_info_ ( int *v1, MPI_Fint *v2 ){
     int ierr;
-    ierr = ncmpi_get_file_info( *v1, (fixme][)(v2) );
+    MPI_Info info;
+
+    ierr = ncmpi_get_file_info( *v1, &info );
+    *v2 = MPI_Info_c2f(info);
     return ierr;
 }
