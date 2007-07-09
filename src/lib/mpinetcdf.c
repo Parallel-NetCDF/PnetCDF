@@ -173,12 +173,8 @@ ncmpi_get_file_info(int ncid, MPI_Info *info_used) {
 
   mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
   if (mpireturn != MPI_SUCCESS) {
-      int rank;
-      char errorString[512];
-      int  errorStringLen;
       MPI_Comm_rank(ncp->nciop->comm, &rank);
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_get_info error = %s\n", rank, errorString);
+      ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
       return NC_EFILE;
   }
   return status;
