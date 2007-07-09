@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_get_file_info_ ( int *v1, MPI_Fint *v2 ){
+FORTRAN_API int FORT_CALL nfmpi_get_file_info_ ( MPI_Fint *v1, MPI_Fint *v2 ){
     int ierr;
     MPI_Info info;
 
