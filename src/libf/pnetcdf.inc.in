@@ -235,36 +235,43 @@
 ! control routines:
 !
       integer         nfmpi_create
-!                         (character*(*)       path,
+!                         (integer             mpi_comm,
+!                          character*(*)       path,
 !                          integer             cmode,
+!                          integer             mpi_info,
 !                          integer             ncid)
       external        nfmpi_create
 
       integer         nfmpi_open
-!                         (character*(*)       path,
+!                         (integer             mpi_comm,
+!                          character*(*)       path,
 !                          integer             mode,
+!                          integer             mpi_info,
 !                          integer             ncid)
       external        nfmpi_open
 
-      integer         nfmpi_set_fill
-!                         (integer             ncid,
-!                          integer             fillmode,
-!                          integer             old_mode)
-      external        nfmpi_set_fill
+      integer         nfmpi_get_file_info
+!                          integer             ncid,
+!                          integer             mpi_info)
+      external        nfmpi_get_file_info
 
-      integer         nfmpi_set_default_format
-!                          (integer            ncid,
-!                           integer            fillmode,
-!                           integer            old_mode)
-      external        nfmpi_set_default_format
+      integer         nfmpi_delete
+!                          character*(*)       path,
+!                          integer             mpi_info)
+      external        nfmpi_delete
+
+      integer         nfmpi_enddef
+!                         (integer             ncid)
+      external        nfmpi_enddef
 
       integer         nfmpi_redef
 !                         (integer             ncid)
       external        nfmpi_redef
 
-      integer         nfmpi_enddef
-!                         (integer             ncid)
-      external        nfmpi_enddef
+      integer         nfmpi_set_default_format
+!                          (integer            fillmode,
+!                           integer            old_mode)
+      external        nfmpi_set_default_format
 
       integer         nfmpi_sync
 !                         (integer             ncid)
@@ -277,6 +284,12 @@
       integer         nfmpi_close
 !                         (integer             ncid)
       external        nfmpi_close
+
+      integer         nfmpi_set_fill
+!                         (integer             ncid,
+!                          integer             fillmode,
+!                          integer             old_mode)
+      external        nfmpi_set_fill
 
 !
 ! general inquiry routines:
@@ -518,6 +531,7 @@
       integer        nfmpi_begin_indep_data
 !                          (integer          ncid)
       external       nfmpi_begin_indep_data
+
       integer        nfmpi_end_indep_data
 !                          (integer          ncid)
       external       nfmpi_end_indep_data
