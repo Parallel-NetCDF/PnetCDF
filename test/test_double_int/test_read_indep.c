@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
   int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
   ncmpi_type type, vartypes[NC_MAX_VARS];
-  int attlen, dimlen;
+  MPI_Offset attlen, dimlen;
   MPI_Offset shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
   void *valuep;
   int dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
@@ -285,9 +285,7 @@ int main(int argc, char **argv) {
     isRecvar = 0;
     varsize = 1;
     for (j = 0; j < varndims[i]; j++) {
-      int dim_size;
-      status = ncmpi_inq_dim(ncid1, vardims[i][j], name, &dim_size);
-      shape[j] = dim_size;
+      status = ncmpi_inq_dim(ncid1, vardims[i][j], name, shape + j);
       if (status != NC_NOERR) handle_error(status);
       if (j == 0) {
         shape[j] /= nprocs;

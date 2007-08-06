@@ -466,7 +466,7 @@ test_ncmpi_inq_dim(void)
     int i;
     int err;
     char name[NC_MAX_NAME];
-    int length;
+    MPI_Offset length;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
@@ -511,7 +511,7 @@ test_ncmpi_inq_dimlen(void)
     int ncid;
     int i;
     int err;
-    int length;
+    MPI_Offset  length;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
@@ -1408,7 +1408,7 @@ test_ncmpi_inq_att(void)
     int j;
     int err;
     ncmpi_type t;
-    int n;
+    MPI_Offset n;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err) 
@@ -1450,7 +1450,7 @@ test_ncmpi_inq_attlen(void)
     int i;
     int j;
     int err;
-    int len;
+    MPI_Offset len;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
