@@ -682,7 +682,7 @@ void
 check_dims(int  ncid)
 {
     char name[NC_MAX_NAME];
-    MPI_Offset length;
+    int length;
     int  i;
     int  err;           /* status */
 
@@ -716,7 +716,7 @@ check_vars(int  ncid)
     int isChar;
     double expect;
     char name[NC_MAX_NAME];
-    MPI_Offset length;
+    int length;
     int nok = 0;      /* count of valid comparisons */
 
     for (i = 0; i < NVARS; i++) {
@@ -799,7 +799,7 @@ check_atts(int  ncid)
     MPI_Offset  k;
     ncmpi_type datatype;
     char name[NC_MAX_NAME];
-    MPI_Offset length;
+    int length;
     char  text[MAX_NELS];
     double value[MAX_NELS];
     double expect;

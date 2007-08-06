@@ -86,7 +86,7 @@ check_vars_$1(const char *filename)
     int dimids[MAX_RANK];
     double expect;
     char name[NC_MAX_NAME];
-    MPI_Offset length;
+    int length;
     int canConvert;     /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
 
@@ -183,7 +183,7 @@ check_atts_$1(int  ncid)
     $1 value[MAX_NELS];
     ncmpi_type datatype;
     double expect[MAX_NELS];
-    MPI_Offset length;
+    int length;
     size_t nInExtRange;  /* number values within external range */
     size_t nInIntRange;  /* number values within internal range */
     int canConvert;     /* Both text or both numeric */
