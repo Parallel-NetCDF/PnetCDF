@@ -625,13 +625,13 @@ int ncmpi_rename_var(int ncid, int varid, const char *name);
 
 \begin{verbatim}
 int ncmpi_inq_att(int ncid, int varid, const char *name, nc_type *xtypep,
-                  int *lenp);
+                  MPI_Offset *lenp);
 
 int ncmpi_inq_attid(int ncid, int varid, const char *name, int *idp);
 
 int ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *xtypep);
 
-int ncmpi_inq_attlen(int ncid, int varid, const char *name, int *lenp);
+int ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp);
 
 int ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
 
@@ -642,43 +642,43 @@ int ncmpi_rename_att(int ncid, int varid, const char *name, const char *newname)
 
 int ncmpi_del_att(int ncid, int varid, const char *name);
 
-int ncmpi_put_att_text(int ncid, int varid, const char *name, int len,
+int ncmpi_put_att_text(int ncid, int varid, const char *name, MPI_Offset len,
                        const char *op);
 
 int ncmpi_get_att_text(int ncid, int varid, const char *name, char *ip);
 
 int ncmpi_put_att_uchar(int ncid, int varid, const char *name, nc_type xtype,
-                        int len, const unsigned char *op);
+                        MPI_Offset len, const unsigned char *op);
 
 int ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *ip);
 
 int ncmpi_put_att_schar(int ncid, int varid, const char *name, nc_type xtype, 
-                        int len, const signed char *op);
+                        MPI_Offset len, const signed char *op);
 
 int ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *ip);
 
 int ncmpi_put_att_short(int ncid, int varid, const char *name, nc_type xtype,
-                        int len, const short *op);
+                        MPI_Offset len, const short *op);
 
 int ncmpi_get_att_short(int ncid, int varid, const char *name, short *ip);
 
 int ncmpi_put_att_int(int ncid, int varid, const char *name, nc_type xtype, 
-                      int len, const int *op);
+                      MPI_Offset len, const int *op);
 
 int ncmpi_get_att_int(int ncid, int varid, const char *name, int *ip);
 
 int ncmpi_put_att_long(int ncid, int varid, const char *name,
-                       nc_type xtype, int len, const long *op);
+                       nc_type xtype, MPI_Offset len, const long *op);
 
 int ncmpi_get_att_long(int ncid, int varid, const char *name, long *ip);
 
 int ncmpi_put_att_float(int ncid, int varid, const char *name,
-                        nc_type xtype, int len, const float *op);
+                        nc_type xtype, MPI_Offset len, const float *op);
 
 int ncmpi_get_att_float(int ncid, int varid, const char *name, float *ip);
 
 int ncmpi_put_att_double(int ncid, int varid, const char *name, nc_type xtype,
-                         int len, const double *op);
+                         MPI_Offset len, const double *op);
 
 
 int ncmpi_get_att_double(int ncid, int varid, const char *name, double *ip);
