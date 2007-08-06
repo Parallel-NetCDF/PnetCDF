@@ -93,7 +93,7 @@ test_ncmpi_redef(void)
     const char * title = "Not funny";
     double var;
     char name[NC_MAX_NAME];
-    MPI_Offset length;
+    int length;
 
 	/* BAD_ID tests */
     err = ncmpi_redef(BAD_ID);
@@ -422,7 +422,7 @@ test_ncmpi_def_dim(void)
     int  err;             /* status */
     int  i;
     int  dimid;         /* dimension id */
-    MPI_Offset length;
+    int length;
 
         /* BAD_ID test */
     err = ncmpi_def_dim(BAD_ID, "abc", 8, &dimid);
@@ -1341,7 +1341,7 @@ test_ncmpi_copy_att(void)
     int j;
     char *name;                 /* of att */
     ncmpi_type datatype;           /* of att */
-    MPI_Offset length;              /* of att */
+    int length;              /* of att */
     char  value;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid_in);
@@ -1488,7 +1488,7 @@ test_ncmpi_rename_att(void)
     int nok = 0;      /* count of valid comparisons */
     ncmpi_type datatype;
     ncmpi_type atttype;
-    MPI_Offset length;
+    int length;
     size_t attlength;
     char  text[MAX_NELS];
     double value[MAX_NELS];
