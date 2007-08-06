@@ -321,13 +321,13 @@ int ncmpi_inq_unlimdim(int ncid, int *unlimdimidp);
 int ncmpi_inq_dimid(int ncid, const char *name, int *idp);
 
 
-int ncmpi_inq_dim(int ncid, int dimid, char *name, int *lenp);
+int ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *lenp);
 
 
 int ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
 
-int ncmpi_inq_dimlen(int ncid, int dimid, int *lenp);
+int ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 
 
 int ncmpi_inq_var(int ncid, int varid, char *name,
@@ -357,7 +357,7 @@ int ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
 
 int ncmpi_inq_att(int ncid, int varid, const char *name,
-              nc_type *xtypep, int *lenp);
+              nc_type *xtypep, MPI_Offset *lenp);
 
 
 int ncmpi_inq_attid(int ncid, int varid, const char *name, int *idp);
@@ -368,7 +368,7 @@ int ncmpi_inq_atttype(int ncid, int varid, const char *name,
 
 
 int ncmpi_inq_attlen(int ncid, int varid, const char *name,
-                 int *lenp);
+                 MPI_Offset *lenp);
 
 
 int ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
@@ -385,7 +385,7 @@ int ncmpi_rename_att(int ncid, int varid, const char *name,
 int ncmpi_del_att(int ncid, int varid, const char *name);
 
 
-int ncmpi_put_att_text(int ncid, int varid, const char *name, int len,
+int ncmpi_put_att_text(int ncid, int varid, const char *name, MPI_Offset len,
                    const char *op);
 
 
@@ -394,7 +394,7 @@ int ncmpi_get_att_text(int ncid, int varid, const char *name, char *ip);
 /* Begin Skip Prototypes for Fortran binding */
 
 int ncmpi_put_att_uchar(int ncid, int varid, const char *name,
-                    nc_type xtype, int len, const unsigned char *op);
+                    nc_type xtype, MPI_Offset len, const unsigned char *op);
 
 
 int ncmpi_get_att_uchar(int ncid, int varid, const char *name,
@@ -403,7 +403,7 @@ int ncmpi_get_att_uchar(int ncid, int varid, const char *name,
 /* End Skip Prototypes for Fortran binding */
 
 int ncmpi_put_att_schar(int ncid, int varid, const char *name,
-                    nc_type xtype, int len, const signed char *op);
+                    nc_type xtype, MPI_Offset len, const signed char *op);
 
 
 int ncmpi_get_att_schar(int ncid, int varid, const char *name,
@@ -411,14 +411,14 @@ int ncmpi_get_att_schar(int ncid, int varid, const char *name,
 
 
 int ncmpi_put_att_short(int ncid, int varid, const char *name,
-                    nc_type xtype, int len, const short *op);
+                    nc_type xtype, MPI_Offset len, const short *op);
 
 
 int ncmpi_get_att_short(int ncid, int varid, const char *name, short *ip);
 
 
 int ncmpi_put_att_int(int ncid, int varid, const char *name,
-                  nc_type xtype, int len, const int *op);
+                  nc_type xtype, MPI_Offset len, const int *op);
 
 
 int ncmpi_get_att_int(int ncid, int varid, const char *name, int *ip);
@@ -427,7 +427,7 @@ int ncmpi_get_att_int(int ncid, int varid, const char *name, int *ip);
 /* Begin Skip Prototypes for Fortran binding */
 
 int ncmpi_put_att_long(int ncid, int varid, const char *name,
-                   nc_type xtype, int len, const long *op);
+                   nc_type xtype, MPI_Offset len, const long *op);
 
 int ncmpi_get_att_long(int ncid, int varid, const char *name, long *ip);
 
@@ -435,14 +435,14 @@ int ncmpi_get_att_long(int ncid, int varid, const char *name, long *ip);
 
 
 int ncmpi_put_att_float(int ncid, int varid, const char *name,
-                    nc_type xtype, int len, const float *op);
+                    nc_type xtype, MPI_Offset len, const float *op);
 
 
 int ncmpi_get_att_float(int ncid, int varid, const char *name, float *ip);
 
 
 int ncmpi_put_att_double(int ncid, int varid, const char *name,
-                     nc_type xtype, int len, const double *op);
+                     nc_type xtype, MPI_Offset len, const double *op);
 
 
 int ncmpi_get_att_double(int ncid, int varid, const char *name,
