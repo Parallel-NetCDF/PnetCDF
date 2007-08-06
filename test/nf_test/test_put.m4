@@ -387,7 +387,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
 
         call check_vars_$1(scratch)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
@@ -535,7 +535,7 @@ C           Only test record variables here
 
         call check_vars_$1(scratch)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
@@ -726,7 +726,7 @@ C       /* Check correct error returned even when nothing to put */
 
         call check_vars_$1(scratch)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', 
      +          scratch)
@@ -927,7 +927,7 @@ C*/
 
         call check_vars_$1(scratch)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
@@ -1140,7 +1140,7 @@ C*/
 
         call check_vars_$1(scratch)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
@@ -1224,7 +1224,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
@@ -1378,7 +1378,7 @@ TEST_NFMPI_PUT_VARM(double)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)

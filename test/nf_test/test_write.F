@@ -73,7 +73,7 @@ C On exit, delete this file
         if (err .ne. NF_EEXIST) then
             call errore('attempt to overwrite file: ', err)
         end if
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0) then
             call errori('delete of scratch file failed: ', err)
         end if
@@ -223,7 +223,7 @@ C           /* check scratch file written as expected */
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete failed for netCDF: ', err)
         end
@@ -299,7 +299,7 @@ C           /* close both handles */
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
         end
@@ -342,7 +342,7 @@ C           /* create scratch file & try nfmpi_abort in define mode */
         err = nfmpi_close(ncid)    !/* should already be closed */
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
-        call nfmpi_delete(scratch, err)    !/* should already be deleted */
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)    !/* should already be deleted */
         if (err .eq. 0)
      +      call errori('scratch file should not exist: ', err)
 
@@ -409,7 +409,7 @@ C           /* try nfmpi_abort in data mode - should just close */
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
         call check_file(scratch)
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
         end
@@ -512,7 +512,7 @@ C           /* Check all dims */
         err = nfmpi_close(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
         end
@@ -560,7 +560,7 @@ C           /* main tests */
         err = nfmpi_close(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
         end
@@ -638,7 +638,7 @@ C           /* scalar tests */
         err = nfmpi_close(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', scratch)
 
@@ -668,7 +668,7 @@ C           /* try bad dim ids */
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', scratch)
         end
@@ -748,7 +748,7 @@ C           /* Try making names even longer. Then restore original names */
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed: ', scratch)
         end
@@ -902,7 +902,7 @@ C           /* Reopen & check */
         err = nfmpi_close(ncid_out)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed', scratch)
         end
@@ -1072,7 +1072,7 @@ C           /* Try making names even longer. Then restore original names */
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
 
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
         end
@@ -1192,7 +1192,7 @@ C           /* restore attributes. change to data mode. try to delete */
         err = nfmpi_close(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
         end
@@ -1411,7 +1411,7 @@ C           /* get all variables & check all values equal 42 */
         err = nfmpi_close(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        call nfmpi_delete(scratch, err)
+        err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
 #endif
