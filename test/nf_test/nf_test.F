@@ -336,7 +336,8 @@ C       /* Initialize global variables defining test file */
         end if
 
 C       /* delete any existing scratch netCDF file */
-        if ( .not. readonly ) call nfmpi_delete(scratch, err)
+        if ( .not. readonly )
+     +      err = nfmpi_delete(scratch, MPI_COMM_WORLD)
 
 C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_strerror', test_nfmpi_strerror)

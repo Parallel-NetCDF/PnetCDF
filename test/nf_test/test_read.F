@@ -163,7 +163,7 @@ C       /* Opened OK, see if can open again and get a different netCDF ID */
             else 
                 err = nfmpi_close(ncid2)
             end if
-            call nfmpi_delete(scratch, err)
+            err = nfmpi_delete(scratch, MPI_INFO_NULL)
             if (err .ne. 0) 
      +          call errorc('delete of scratch file failed: ', scratch)
         end if
@@ -223,7 +223,7 @@ C       /* Close in data mode */
             err = nfmpi_close(ncid)
             if (err .ne. 0)
      +          call errore('nfmpi_close in define mode: ', err)
-            call nfmpi_delete(scratch, err)
+            err = nfmpi_delete(scratch, MPI_INFO_NULL)
             if (err .ne. 0)
      +          call errorc('delete of scratch file failed: ', 
      +              scratch)
@@ -365,7 +365,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +              ('nfmpi_inq in define mode: ngatts wrong, ', ngatts)
                 end if
                 err = nfmpi_close(ncid2)
-                call nfmpi_delete(scratch, err)
+                err = nfmpi_delete(scratch, MPI_INFO_NULL)
                 if (err .ne. 0)
      +              call errorc('delete of scratch file failed: ', 
      +                  scratch)
