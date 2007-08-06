@@ -321,13 +321,13 @@ int ncmpi_inq_unlimdim(int ncid, int *unlimdimidp);
 int ncmpi_inq_dimid(int ncid, const char *name, int *idp);
 
 
-int ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *lenp);
+int ncmpi_inq_dim(int ncid, int dimid, char *name, int *lenp);
 
 
 int ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
 
-int ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
+int ncmpi_inq_dimlen(int ncid, int dimid, int *lenp);
 
 
 int ncmpi_inq_var(int ncid, int varid, char *name,
