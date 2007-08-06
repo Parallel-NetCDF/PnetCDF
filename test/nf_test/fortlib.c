@@ -216,7 +216,6 @@ FORTRAN_API int nfmpi_issyserr_(int * A1) {
 		return 0;
 }
 
-#endif
 
 #ifdef F77_NAME_UPPER
 #define nfmpi_delete_ NFMPI_DELETE
@@ -245,3 +244,4 @@ FORTRAN_API void nfmpi_delete_(char * name, int *err, int d1) {
 	free(p1);
 }
 
+#endif
