@@ -12,7 +12,7 @@ CFLAGS          = @CFLAGS@ $(INCLUDES)
 SRCS		= test_read.c test_read_indep.c test_write.c test_write_indep.c
 OBJS		= $(SRCS:.c=.o)
 PROGS		= test_read test_read_indep test_write test_write_indep
-LDFLAGS		= -L$(LIBDIR) -L..//common @LDFLAGS@
+LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
 LIBS		= -lpnetcdf -ltestutils @LIBS@
 
 .c.o:
