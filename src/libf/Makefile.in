@@ -97,7 +97,8 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	set_fillf.c \
 	set_default_formatf.c \
 	issyserrf.c \
-	get_file_infof.c
+	get_file_infof.c \
+	deletef.c
 
 LIB_FSRCS = strerrorf.f inq_libversf.f
 PACKING_LIST = \
