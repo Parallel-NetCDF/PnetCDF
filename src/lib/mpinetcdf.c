@@ -1089,10 +1089,6 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
     /* scalar variable */
     filetype = MPI_BYTE;
 
-  } else if (ndims == 1) {
-    /* wkliao: if ndims == 1, no need to use MPI_Type_create_subarray() */
-    offset += start[0];
-    filetype = MPI_BYTE;
   } else {
 
     /* if ndims == 0, all below pointers would be null */
@@ -1208,10 +1204,10 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
         return NC_EFILE;
   }
 
-  if (filetype != MPI_BYTE)
-    MPI_Type_free(&filetype);
+  if (ndims > 0) {
+    if (filetype != MPI_BYTE)
+      MPI_Type_free(&filetype);
 
-  if (ndims > 1) {
     free(shape);
     free(subcount);
     free(substart);
