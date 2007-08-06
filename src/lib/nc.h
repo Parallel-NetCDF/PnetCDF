@@ -127,13 +127,13 @@ extern int
 ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr);
 
 extern int
-ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep);
+ncmpi_inq_dim(int ncid, int dimid, char *name, int *sizep);
 
 extern int 
 ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
 extern int 
-ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
+ncmpi_inq_dimlen(int ncid, int dimid, int *lenp);
 /* End defined in dim.c */
 
 /*
