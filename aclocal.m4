@@ -495,10 +495,10 @@ EOF
 		    case `uname -sr` in
 			AIX*)
 			    # xlf90(1) thinks fortran/ftest.F has bad syntax.
-			    forts="xlf f77"
+			    forts="xlf f77 gfortran"
 			    ;;
 			BSD/OS*|FreeBSD*)
-			    forts="f77 fort77 g77"
+			    forts="f77 fort77 g77 gfortran"
 			    ;;
 			HP-UX*)
 			    # f77(1) doesn't have the -L option.
@@ -510,10 +510,10 @@ EOF
 			    forts=f77
 			    ;;
 			IRIX64*)
-			    forts='f77 g77 fort77'
+			    forts='f77 g77 gfortran fort77 '
 			    ;;
 			Linux*)
-			    forts="pgf90 f77 fort77 g77"
+			    forts="pgf90 f77 fort77 g77 gfortran"
 			    ;;
 			OSF1*)
 			    # The use of f90(1) results in the following for
@@ -523,10 +523,10 @@ EOF
 			    # Last chance handler: pc = 0xa971b8, 
 			    # sp = 0x3fece0, ra = 0xa971b8
 			    # Last chance handler: internal exception: unwinding
-			    forts="f77"
+			    forts="f77 gfortran"
 			    ;;
 			'SunOS 4'*)
-			    forts='f77 g77 fort77'
+			    forts='f77 g77 gfortran fort77'
 			    ;;
 			'SunOS 5'*)
 			    # SunOS's f90(1) has problems passing a C `char'
@@ -534,10 +534,10 @@ EOF
 			    forts="pgf90 f77"
 			    ;;
 			sn*|UNICOS*|unicos*)
-			    forts="fort77 cf77 f77 g77 f90"
+			    forts="fort77 cf77 f77 g77 gfortran f90"
 			    ;;
 			*)
-			    forts="xlf fort77 ghf77 f77 cf77 g77 xlf90 f90"
+			    forts="xlf fort77 ghf77 f77 cf77 g77 gfortran xlf90 f90"
 			    ;;
 		    esac
 		    for fc in $forts; do
