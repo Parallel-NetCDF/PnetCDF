@@ -12,6 +12,9 @@
 #endif
 #include <stdio.h>
 #include <mpi.h>
+#ifdef HAVE_MPIO_H
+#include <mpio.h>
+#endif
 
 /*@
   ncmpii_type_filter - Map a basic MPI datatype into one of the eight
