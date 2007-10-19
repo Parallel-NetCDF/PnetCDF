@@ -8,6 +8,9 @@
 #include "nc.h"
 
 #include <mpi.h>
+#ifdef HAVE_MPIO_H
+#include <mpio.h>
+#endif
 #include <assert.h>
 #include <string.h>
 #ifdef HAVE_STDLIB_H
