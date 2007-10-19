@@ -1425,7 +1425,7 @@ ncmpix_get_size_t(const void **xpp,  size_t *ulp)
  * no matter what the size. 
  */
 int
-ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
+ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, size_t sizeof_off_t)
 {
 	/* similar to put_ix_int() */
 	uchar *cp = (uchar *) *xpp;
@@ -1456,7 +1456,7 @@ ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 
 /* see comments for ncmpix_put_off_t */
 int
-ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
+ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, size_t sizeof_off_t)
 {
 	/* similar to get_ix_int() */
 	const uchar *cp = (const uchar *) *xpp;

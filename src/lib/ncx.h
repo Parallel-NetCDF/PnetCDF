@@ -31,6 +31,11 @@
 #include <float.h>
 #include "nctypes.h"
 
+#include <mpi.h>
+#ifdef HAVE_MPIO_H
+#include <mpio.h>
+#endif
+
 /*
  * The integer return code for the conversion routines
  * is 0 (ENOERR) when no error occured, or NC_ERANGE as appropriate
@@ -358,14 +363,14 @@ extern int
 ncmpix_get_size_t(const void **xpp, size_t *ulp);
 /* ncx_get_int_off_t */
 extern int
-ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t);
+ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, size_t sizeof_off_t);
 
 /* ncx_put_int_size_t */
 extern int
 ncmpix_put_size_t(void **xpp, const size_t *ulp);
 /* ncx_put_int_off_t */
 extern int
-ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t);
+ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, size_t sizeof_off_t);
 
 
 /*
