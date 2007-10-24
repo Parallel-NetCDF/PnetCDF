@@ -239,6 +239,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
       return NC_EFILE;
     }
   }
+  IDalloc[*((int *)&nciop->fd)] = 0;
 
   if (doUnlink) {
     mpireturn = MPI_File_delete((char *)nciop->path, nciop->mpiinfo);
