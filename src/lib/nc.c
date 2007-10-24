@@ -793,7 +793,9 @@ ncmpii_NC_enddef(NC *ncp) {
 
   MPI_Comm_rank(comm, &rank);
 
-  NC_begins(ncp, 0, 1, 0, 1);
+  /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
+   * acomplish the same thing with calls to NC_begins */
+  NC_begins(ncp, 0, 512, 0, 512);
 
   /* serial netcdf calls a check on dimension lenghths here */
 
