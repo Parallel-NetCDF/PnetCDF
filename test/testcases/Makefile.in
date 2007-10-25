@@ -9,7 +9,7 @@ INCLUDES	= -I$(INCDIR)
 CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 
 
-SRCS		= ncmpi_vars_null_stride.c
+SRCS		= $(srcdir)/ncmpi_vars_null_stride.c
 OBJS		= $(SRCS:.c=.o)
 PROGS		= ncmpi_vars_null_stride
 LDFLAGS		= -L$(LIBDIR) @LDFLAGS@
@@ -20,7 +20,7 @@ LIBS		= -lpnetcdf @LIBS@
 
 all:		$(PROGS)
 
-ncmpi_vars_null_stride: ncmpi_vars_null_stride
+ncmpi_vars_null_stride: ncmpi_vars_null_stride.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 clean:
 		rm -f $(OBJS) $(PROGS) *.nc
