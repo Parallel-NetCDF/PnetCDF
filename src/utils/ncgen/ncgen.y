@@ -60,6 +60,14 @@ static float *float_valp;
 static double *double_valp;
 static void *rec_cur;		/* pointer to where next data value goes */
 static void *rec_start;		/* start of space for data */
+
+/* function prototypes */
+#ifdef vms                                                                     
+void                                                                           
+#else                                                                          
+int                                                                            
+#endif                                                                         
+yyerror( char *s);
 %}
 
 /* DECLARATIONS */
