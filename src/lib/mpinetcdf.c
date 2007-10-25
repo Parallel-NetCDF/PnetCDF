@@ -2778,6 +2778,7 @@ ncmpi_put_vars_all(int ncid, int varid,
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
+  MPI_Offset *stride_was_null=NULL, *stride_ptr;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2828,10 +2829,20 @@ ncmpi_put_vars_all(int ncid, int varid,
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
+  /* NULL stride is legal and means (1,1,1,..1) */
+  stride_ptr = stride;
+  if (stride == NULL) {
+	  stride_was_null=(MPI_Offset*)malloc(varp->ndims*sizeof(MPI_Offset));
+	  for (dim=0; dim < varp->ndims; dim++) {
+		  stride_was_null[dim] = 1;
+	  }
+	  stride_ptr = stride_was_null;
+  }
+
   /* set the mpi file view */
  
   status = set_vars_fileview(ncp, &(ncp->nciop->collective_fh), 
-                                varp, start, count, stride, 0);
+                                varp, start, count, stride_ptr, 0);
   if(status != NC_NOERR)
     return status;
  
@@ -2914,7 +2925,7 @@ ncmpi_put_vars_all(int ncid, int varid,
         and write it back to file header, if necessary
     */
     int newnumrecs, max_numrecs;
-    newnumrecs = start[0] + (count[0] - 1) * stride[0] + 1;
+    newnumrecs = start[0] + (count[0] - 1) * stride_ptr[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
@@ -2934,6 +2945,7 @@ ncmpi_put_vars_all(int ncid, int varid,
       }
     }
   }
+  if (stride_was_null != NULL) free(stride_was_null);
  
   return ((warning != NC_NOERR) ? warning : status);
 }
