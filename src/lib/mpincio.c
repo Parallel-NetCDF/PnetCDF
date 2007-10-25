@@ -104,7 +104,11 @@ ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   if (info == MPI_INFO_NULL)
     nciop->mpiinfo = MPI_INFO_NULL;
   else
+#ifdef HAVE_MPI_INFO_DUP
     MPI_Info_dup(info, &nciop->mpiinfo);
+#else
+    nciop->mpiinfo = info;
+#endif
 
   if (fIsSet(ioflags, NC_NOCLOBBER))
     fSet(mpiomode, MPI_MODE_EXCL);
@@ -156,7 +160,11 @@ ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
   if (info == MPI_INFO_NULL)
     nciop->mpiinfo = MPI_INFO_NULL;
   else
+#ifdef HAVE_MPI_INFO_DUP
     MPI_Info_dup(info, &nciop->mpiinfo);
+#else
+    nciop->mpiinfo = info;
+#endif
  
   mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
   if (mpireturn != MPI_SUCCESS) {

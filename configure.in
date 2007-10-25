@@ -215,6 +215,8 @@ enable_nonblocking=yes
 AC_CHECK_FUNCS(MPI_Request_get_status MPI_Type_dup,,
   enable_nonblocking=no
 )
+
+AC_CHECK_FUNCS(MPI_Info_dup,,)
 	
 if test "$enable_nonblocking" = "yes" ; then
 	AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
