@@ -101,6 +101,9 @@
 /* available */
 #undef HAVE_MPI_COMPLEX8
 
+/* Define to 1 if you have the `MPI_Info_dup' function. */
+#undef HAVE_MPI_INFO_DUP
+
 /* available */
 #undef HAVE_MPI_INTEGER
 
