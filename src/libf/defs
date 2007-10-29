@@ -796,6 +796,7 @@ $buildMakefile = 0;
 $prototype_header_file = "mpifnetcdf.h";
 $argsneedcast{'const MPI_Offset []'} = '(const MPI_Offset *)(ARG)';
 $argsneedcast{'nc_type *'} = '(nc_type *)(ARG)';
+$argsneedcast{'nc_type'} = '(nc_type)(ARG)';
 
 # Special handling for integer*1 routines
 $declarg{'put_att_int1-6'} = 'const signed char *';
