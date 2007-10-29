@@ -34,7 +34,7 @@ FORTRAN_API int FORT_CALL nfmpi_put_att_int_ ( int *v1, int *v2, char *v3 FORT_M
         for (li=0; li<(p-v3); li++) { p3[li] = v3[li]; }
         p3[li] = 0; 
     }
-    ierr = ncmpi_put_att_int( *v1, l2, p3, *v4, *v5, v6 );
+    ierr = ncmpi_put_att_int( *v1, l2, p3, (nc_type)(*v4), *v5, v6 );
     free( p3 );
     return ierr;
 }
