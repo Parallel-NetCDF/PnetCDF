@@ -2830,7 +2830,7 @@ ncmpi_put_vars_all(int ncid, int varid,
     return NC_ENEGATIVECNT;
 
   /* NULL stride is legal and means (1,1,1,..1) */
-  stride_ptr = stride;
+  stride_ptr = (MPI_Offset *)stride;
   if (stride == NULL) {
 	  stride_was_null=(MPI_Offset*)malloc(varp->ndims*sizeof(MPI_Offset));
 	  for (dim=0; dim < varp->ndims; dim++) {
