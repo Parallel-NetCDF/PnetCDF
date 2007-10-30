@@ -19,6 +19,22 @@ AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf.inc sr
 
 AC_CONFIG_AUX_DIR(./scripts)
 
+dnl these used to live in acconfig.h
+AH_TEMPLATE([SIZEOF_OFF_T], [Number of bytes in a off_t])
+AH_TEMPLATE([SIZEOF_SIZE_T], [Number of bytes in a size_t])
+AH_TEMPLATE([NCBYTE_T], [Type of NC_BYTE])
+AH_TEMPLATE([NCSHORT_T], [Type of NC_SHORT])
+AH_TEMPLATE([NF_DOUBLEPRECISION_IS_C_], [C type for Fortran dobule])
+AH_TEMPLATE([NF_INT1_IS_C_], [C type for Fortran INT1])
+AH_TEMPLATE([NF_INT1_T], [Type for Fortran INT1])
+AH_TEMPLATE([NF_INT2_IS_C_], [C type for Fortran INT2])
+AH_TEMPLATE([NF_INT2_T], [Type for Fortran INT2])
+AH_TEMPLATE([NF_INT_IS_C_], [C type for Fortran INT])
+AH_TEMPLATE([NF_REAL_IS_C_], [C type for Fortran REAL])
+AH_TEMPLATE([NO_IEEE_FLOAT], [Does sytem have IEEE FLOAT])
+AH_TEMPLATE([NO_STRERROR], [Define if system lacks strerror])
+
+ 
 AC_ARG_ENABLE(fortran,
 [  --enable-fortran        Turn on support for the Fortran interface.  Turn this
                           off if you only need the C interface (on by default)],
@@ -190,7 +206,7 @@ CC=$MPICC
 dnl compile-only check for size of MPI_Offset (thanks Christopher Subich
 dnl <csubich@math.uwaterloo.ca>)
 
-AC_DEFUN(UD_MPI_OFFSET, [
+AC_DEFUN([UD_MPI_OFFSET], [
 	if test ! "$ac_cv_sizeof_MPI_Offset"; then
 		AC_MSG_CHECKING(if MPI_Offset is size $1)
 		AC_COMPILE_IFELSE([
