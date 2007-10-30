@@ -392,7 +392,7 @@ do_ncdump(const char *path, struct fspec* specp)
     for (dimid = 0; dimid < ndims; dimid++) {
 	NC_CHECK( ncmpi_inq_dim(ncid, dimid, dims[dimid].name, &dims[dimid].size) );
 	if (dimid == xdimid)
-	  Printf ("\t%s = %s ; // (%u currently)\n",dims[dimid].name,
+	  Printf ("\t%s = %s ; // (%ld currently)\n",dims[dimid].name,
 		  "UNLIMITED", dims[dimid].size);
 	else
 	  Printf ("\t%s = %ld ;\n", dims[dimid].name, dims[dimid].size);
