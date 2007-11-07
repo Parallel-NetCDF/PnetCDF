@@ -16,6 +16,8 @@
 #include <mpio.h>
 #endif
 
+#include "ncmpidtype.h"
+
 /*@
   ncmpii_type_filter - Map a basic MPI datatype into one of the eight
   that we process natively.
@@ -181,7 +183,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 . total number of blocks assigned from the distrubted array
 @*/
 
-int ncmpii_darray_get_totalblks(int rank,
+static int ncmpii_darray_get_totalblks(int rank,
 				int ndims,
                                 int array_of_gsizes[],
                                 int array_of_distribs[],
