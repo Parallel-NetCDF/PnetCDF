@@ -5,6 +5,9 @@
  *********************************************************************/
 
 /* yacc source for "ncgen", a netCDL parser and netCDF generator */
+/* there is a shift-reduce conflict in this definition but does not appear to
+ * be critical */
+%expect 1
 
 %{
 #ifndef lint
@@ -68,6 +71,7 @@ void
 int                                                                            
 #endif                                                                         
 yyerror( char *s);
+int yylex(void);
 %}
 
 /* DECLARATIONS */
