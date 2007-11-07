@@ -57,8 +57,8 @@
 int ncmpixVardim( int, int );
 
 extern FORTRAN_API int FORT_CALL nfmpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2) FORT_END_LEN(d2) );
-extern FORTRAN_API int FORT_CALL nfmpi_xinq_libvers_ ( char *v1 FORT_MIXED_LEN(d1) FORT_END_LEN(d1) ){
-extern FORTRAN_API int FORT_CALL nfmpi_issyserr_ ( MPI_Fint *v1 ){
+extern FORTRAN_API int FORT_CALL nfmpi_xinq_libvers_ ( char *v1 FORT_MIXED_LEN(d1) FORT_END_LEN(d1) );
+extern FORTRAN_API int FORT_CALL nfmpi_issyserr_ ( MPI_Fint *v1 );
 /* Define the internal values needed for Fortran support */
 
 /* Fortran logicals */
