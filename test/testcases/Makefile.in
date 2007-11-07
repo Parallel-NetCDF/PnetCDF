@@ -24,3 +24,9 @@ ncmpi_vars_null_stride: ncmpi_vars_null_stride.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 clean:
 		rm -f $(OBJS) $(PROGS) *.nc
+
+test: ncmpi_vars_null_stride
+	./ncmpi_vars_null_stride test.nc
+	@echo '*** Success ***'
+
+testing: test
