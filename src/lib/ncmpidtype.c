@@ -140,6 +140,24 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
     if (type == MPI_DOUBLE)
         return MPI_DOUBLE;
 
+/* HP-MPI for example needs to handle MPI_LB and MPI_UB */
+#ifdef HAVE_MPI_LB
+    if (type == MPI_LB) {
+        if (SIZEOF_SIZE_T == 8) 
+            return MPI_DOUBLE;
+	    if (SIZEOF_SIZE_T == 4) 
+            return MPI_DOUBLE;
+    }
+#endif
+#ifdef HAVE_MPI_UB
+    if (type == MPI_UB) {
+        if (SIZEOF_SIZE_T == 8) 
+            return MPI_DOUBLE;
+	    if (SIZEOF_SIZE_T == 4) 
+            return MPI_DOUBLE;
+    }
+#endif
+
 /* default */
     return MPI_DATATYPE_NULL;
 }
