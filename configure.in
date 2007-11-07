@@ -240,83 +240,29 @@ fi
 
 dnl Check for presence of various MPI_COMBINERs.  These could be
 dnl enums, so we have to do compile checks.
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_DUP)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_DUP; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_DUP, 1, available),
-  AC_MSG_RESULT(no)
+
+AC_DEFUN([UD_HAS_MPI_COMBINER], [
+	AC_MSG_CHECKING(if MPI includes $1)
+	AC_TRY_COMPILE([ #include <mpi.h> ],
+		[int combiner = $1; ],
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_$1, 1, available),
+		AC_MSG_RESULT(no)
+	)
+	] 
 )
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_HVECTOR_INTEGER)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_HVECTOR_INTEGER; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_HVECTOR_INTEGER, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_HINDEXED_INTEGER)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_HINDEXED_INTEGER; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_HINDEDED_INTEGER, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_SUBARRAY)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_SUBARRAY; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_SUBARRAY, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_DARRAY)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_DARRAY; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_DARRAY, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_RESIZED)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_RESIZED; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_RESIZED, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_STRUCT_INTEGER)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_STRUCT_INTEGER; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_STRUCT_INTEGER, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_INDEXED_BLOCK)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_INDEXED_BLOCK; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_INDEXED_BLOCK, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_F90_REAL)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_F90_REAL; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_F90_REAL, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_F90_INTEGER)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_F90_INTEGER; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_F90_INTEGER, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMBINER_F90_COMPLEX)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int combiner = MPI_COMBINER_F90_COMPLEX; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMBINER_F90_COMPLEX, 1, available),
-  AC_MSG_RESULT(no)
-)
+
+UD_HAS_MPI_COMBINER(MPI_COMBINER_DUP)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_HVECTOR_INTEGER)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_HINDEXED_INTEGER)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_SUBARRAY)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_DARRAY)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_RESIZED)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_STRUCT_INTEGER)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_INDEXED_BLOCK)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_REAL)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_INTEGER)
+UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_COMPLEX)
 
 dnl Check for presence of Fortran types
 dnl
@@ -325,114 +271,34 @@ dnl built without Fortran support, in which case these types might not
 dnl exist.  Second, we need to map these types to corresponding C types
 dnl where possible to simplify processing at runtime.
 
-AC_MSG_CHECKING(if MPI includes MPI_CHARACTER)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_CHARACTER; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_CHARACTER, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_REAL)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_REAL; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_REAL, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_INTEGER)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_INTEGER; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_INTEGER, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_DOUBLE_PRECISION)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_DOUBLE_PRECISION; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMPLEX32, 1, available),
-  AC_MSG_RESULT(no)
+AC_DEFUN([UD_HAS_MPI_TYPE], [
+	AC_MSG_CHECKING(if MPI includes $1)
+	AC_TRY_COMPILE([ #include <mpi.h> ],
+		[int datatype = $1; ],
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_$1, 1, available),
+		AC_MSG_RESULT(no)
+	)
+	] 
 )
 
-AC_MSG_CHECKING(if MPI includes MPI_INTEGER1)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_INTEGER1; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_INTEGER1, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_INTEGER2)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_INTEGER2; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_INTEGER2, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_INTEGER4)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_INTEGER4; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_INTEGER4, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_INTEGER8)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_INTEGER8; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_INTEGER8, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_INTEGER16)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_INTEGER16; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_INTEGER16, 1, available),
-  AC_MSG_RESULT(no)
-)
-
-AC_MSG_CHECKING(if MPI includes MPI_REAL4)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_REAL4; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_REAL4, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_REAL8)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_REAL8; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_REAL8, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_REAL16)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_REAL16; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_REAL16, 1, available),
-  AC_MSG_RESULT(no)
-)
-
-AC_MSG_CHECKING(if MPI includes MPI_COMPLEX8)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_COMPLEX8; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMPLEX8, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMPLEX16)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_COMPLEX16; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMPLEX16, 1, available),
-  AC_MSG_RESULT(no)
-)
-AC_MSG_CHECKING(if MPI includes MPI_COMPLEX32)
-AC_TRY_COMPILE([ #include <mpi.h> ],
-  [ int datatype = MPI_COMPLEX32; ],
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(HAVE_MPI_COMPLEX32, 1, available),
-  AC_MSG_RESULT(no)
-)
+UD_HAS_MPI_TYPE(MPI_CHARACTER)
+UD_HAS_MPI_TYPE(MPI_REAL)
+UD_HAS_MPI_TYPE(MPI_INTEGER)
+UD_HAS_MPI_TYPE(MPI_DOUBLE_PRECISION)
+UD_HAS_MPI_TYPE(MPI_INTEGER1)
+UD_HAS_MPI_TYPE(MPI_INTEGER2)
+UD_HAS_MPI_TYPE(MPI_INTEGER4)
+UD_HAS_MPI_TYPE(MPI_INTEGER8)
+UD_HAS_MPI_TYPE(MPI_INTEGER16)
+UD_HAS_MPI_TYPE(MPI_REAL4)
+UD_HAS_MPI_TYPE(MPI_REAL8)
+UD_HAS_MPI_TYPE(MPI_REAL16)
+UD_HAS_MPI_TYPE(MPI_COMPLEX8)
+UD_HAS_MPI_TYPE(MPI_COMPLEX16)
+UD_HAS_MPI_TYPE(MPI_COMPLEX32)
+UD_HAS_MPI_TYPE(MPI_UB)
+UD_HAS_MPI_TYPE(MPI_LB)
 
 dnl
 dnl *** GOING BACK TO REGULAR CC ***
