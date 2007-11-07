@@ -101,9 +101,11 @@ main(
     giantfile_flag = 0;
     nofill_flag = 0;
 
+#if 0
 #if _CRAYMPP && 0
     /* initialize CRAY MPP parallel-I/O library */
     (void) par_io_init(32, 32);
+#endif
 #endif
 
     while ((c = getopt(argc, argv, "bcfl:no:v:x")) != EOF)

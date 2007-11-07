@@ -7819,14 +7819,14 @@ ncmpi_get_varm_double(int ncid, int varid,
 /* #################################################################### */
 /* Begin non-blocking data access functions */
 
-void ncmpii_postwrite(void *xbuf, void *cbuf, void *buf) {
+static void ncmpii_postwrite(void *xbuf, void *cbuf, void *buf) {
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
   if (cbuf != buf && cbuf != NULL)
     free(cbuf);
 }
 
-int ncmpii_postread(nc_type vartype,
+static int ncmpii_postread(nc_type vartype,
 		    void *xbuf, 
 		    void *cbuf, 
 		    int nelems, 
@@ -7877,14 +7877,14 @@ int ncmpii_postread(nc_type vartype,
   return status;
 }
 
-void ncmpii_postmwrite(void *cbuf, void *lbuf, int iscontig_of_ptypes) {
+static void ncmpii_postmwrite(void *cbuf, void *lbuf, int iscontig_of_ptypes) {
   if (!iscontig_of_ptypes && lbuf != NULL)
     free(lbuf);
   if (cbuf != NULL)
     free(cbuf);
 }
 
-int ncmpii_postmread(void *cbuf,
+static int ncmpii_postmread(void *cbuf,
 		     void *lbuf,
 		     int cnelems,
 		     int lnelems,
@@ -7917,7 +7917,7 @@ int ncmpii_postmread(void *cbuf,
   return status;
 }
 
-int 
+static int 
 ncmpii_postprocess(NCMPI_Request *request) {
   int status = NC_NOERR;
 

@@ -194,14 +194,16 @@ ncmpi_set_default_format(int format, int *old_formatp)
     return NC_NOERR;
 }
 
+#if 0
 /* returns a value suituable for a create flag.  Will return one or more of the
  * following values ORed together:
  * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
-int
+static int
 ncmpii_get_default_format(void)
 {
 	return default_create_format;
 }
+#endif
 
 /* static */
 NC *
