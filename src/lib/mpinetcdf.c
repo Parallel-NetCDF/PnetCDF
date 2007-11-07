@@ -8227,7 +8227,6 @@ ncmpi_iput_var1(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int nelems, cnelems, el_size, nbytes;
-  MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
