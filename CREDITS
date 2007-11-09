@@ -12,11 +12,19 @@ help from the community.  A partial list follows.  Thanks everyone!
 - John Tannahill <tannahill1@llnl.gov> contributed a great deal of effort
   testing and improving our Fortran bindings
 
+- Richard Hedges <richard-hedges@llnl.gov> was another early adopter and
+  offered a lot of configuration tips, particularly for IFC
+
+- Renier Vogelsang <reiner@sgi.com> provided valuable assistance with the IRIX
+  port
+
 - Greg Sjaardema's <gdsjaar@sandia.gov> CDF-2 patch gave us and serial NetCDF
   large file support
 
 - Jim Edwards <jedwards@ucar.edu> provided a great deal of assitance with our
   AIX port
+
+- Tyce Mclarty <mclarty3@llnl.gov> also did a lot of AIX work for us
 
 - Christopher Subich <csubich@math.uwaterloo.ca> contributed several configure
   fixes, improving our handling of cross-compile environments.
