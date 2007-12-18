@@ -1432,8 +1432,6 @@ cl_fortran(void)
         for (ivar = 0; ivar < nvars; ivar++) {
             struct vars *v = &vars[ivar];
             if (v->ndims > 0 && v->dims[0] == rec_dim) {
-                char *sp;
-	    
                 fline(" ");
                 sprintf(stmnt, "integer  %s_nr", v->lname);
                 fline(stmnt);
@@ -1446,6 +1444,7 @@ cl_fortran(void)
                 }
                 fline(stmnt);
 		if (v->type != NC_CHAR) {
+		    char *sp;
 		    sprintf(stmnt, "%s  %s(", ncftype(v->type),
 			    v->lname);
 		    /* reverse dimensions for FORTRAN */
