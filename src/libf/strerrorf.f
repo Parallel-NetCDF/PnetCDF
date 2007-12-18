@@ -1,3 +1,6 @@
+      integer nfmpi_xstrerror
+      external nfmpi_xstrerror
+
       character *80 function nfmpi_strerror( err )
       integer err, ierr
       character *(80) tmpstr
