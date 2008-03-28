@@ -402,32 +402,40 @@ ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims)
 			shp--, dsp--)
 	{
 		if(!(shp == varp->shape && IS_RECVAR(varp)))
-			product *= *shp;
+		{
+			if( *shp <= X_UINT_MAX / product)
+			{
+				product *= *shp;
+			} else
+			{
+				product = X_UINT_MAX;
+			}
+		}
 		*dsp = product;
 	}
 
 
 out :
-	if (varp->xsz <= X_UINT_MAX / product) /* if int. mult won't overflow */
+	if (varp->xsz <= (X_UINT_MAX - 1)/ product) /* if int. mult won't overflow */
 	{
 		varp->len = product * varp->xsz;
+		switch(varp->type) {
+			case NC_BYTE :
+			case NC_CHAR : 
+			case NC_SHORT :
+				if( varp->len%4 != 0 )
+				{
+					varp->len += 4 - varp->len%4; /* round up */
+					/*		*dsp += 4 - *dsp%4; */
+				}
+				break;
+			default:
+				/* already aligned */
+				break;
+		}
 	} else
 	{ /* ok for last var to be "too big", indicated by this special len */
 		varp->len = X_UINT_MAX;
-	}
-	switch(varp->type) {
-	case NC_BYTE :
-	case NC_CHAR :
-	case NC_SHORT :
-		if( varp->len%4 != 0 )
-		{
-			varp->len += 4 - varp->len%4; /* round up */
-	/*		*dsp += 4 - *dsp%4; */
-		}
-		break;
-	default:
-		/* already aligned */
-		break;
 	}
 #if 0
 	arrayp("\tshape", varp->ndims, varp->shape);
