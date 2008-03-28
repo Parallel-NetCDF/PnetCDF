@@ -4,8 +4,7 @@
 
       integer nfmpi_xstrerror
       external nfmpi_xstrerror
-C      
-C     Call a (C) routine that places the message into tmpstr
+
       ierr = nfmpi_xstrerror( err, tmpstr )
       nfmpi_strerror = tmpstr
       end
