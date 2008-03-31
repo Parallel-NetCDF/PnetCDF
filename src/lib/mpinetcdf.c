@@ -3507,7 +3507,7 @@ ncmpi_put_varm_all(int ncid, int varid,
     status = ncmpii_data_repack((void *)buf, bufcount, datatype,
                                 lbuf, lnelems, ptype);
     if (status != NC_NOERR)
-      return status;
+      goto fn_exit;
 
   } else {
 
@@ -3515,16 +3515,20 @@ ncmpi_put_varm_all(int ncid, int varid,
 
   }
 
-  if (count[dim] < 0)
-    return NC_ENEGATIVECNT;
+  if (count[dim] < 0) {
+    status = NC_ENEGATIVECNT;
+    goto fn_exit;
+  }
   MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
                   ptype, &imaptype);
   MPI_Type_commit(&imaptype);
   cnelems = imap_contig_blocklen*count[dim];
   for (dim--; dim>=0; dim--) {
 
-    if (count[dim] < 0)
-      return NC_ENEGATIVECNT;
+    if (count[dim] < 0) {
+      status = NC_ENEGATIVECNT;
+      goto fn_exit;
+    }
 
 #if (MPI_VERSION < 2)
     MPI_Type_hvector(count[dim], 1, imap[dim]*el_size, imaptype, &tmptype);
@@ -3545,15 +3549,16 @@ ncmpi_put_varm_all(int ncid, int varid,
   status = ncmpii_data_repack(lbuf, 1, imaptype,
 			      cbuf, cnelems, ptype);
   if (status != NC_NOERR)
-    return status;
+    goto fn_exit;
 
   MPI_Type_free(&imaptype);
 
   status = ncmpi_put_vars_all(ncid, varid, start, count, stride,
                               cbuf, cnelems, ptype);
   if (status != NC_NOERR)
-    return status;
+    goto fn_exit;
 
+fn_exit:
   if (!iscontig_of_ptypes && lbuf != NULL)
     free(lbuf);
   if (cbuf != NULL)
@@ -3632,7 +3637,7 @@ ncmpi_get_varm_all(int ncid, int varid,
     status = ncmpii_data_repack((void *)buf, bufcount, datatype,
                                 lbuf, lnelems, ptype);
     if (status != NC_NOERR)
-      return status;
+      goto fn_exit;
  
   } else {
  
@@ -3640,16 +3645,21 @@ ncmpi_get_varm_all(int ncid, int varid,
  
   }
 
-  if (count[dim] < 0)
-    return NC_ENEGATIVECNT;
+  if (count[dim] < 0) {
+    status = NC_ENEGATIVECNT;
+    goto fn_exit;
+  }
+
   MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
 		  ptype, &imaptype);
   MPI_Type_commit(&imaptype);
   cnelems = imap_contig_blocklen * count[dim];
   for (dim--; dim>=0; dim--) {
 
-    if (count[dim] < 0)
-      return NC_ENEGATIVECNT;
+    if (count[dim] < 0) {
+      status = NC_ENEGATIVECNT;
+      goto fn_exit;
+    }
 
 #if (MPI_VERSION < 2)
     MPI_Type_hvector(count[dim], 1, imap[dim]*el_size, imaptype, &tmptype);
@@ -3672,14 +3682,14 @@ ncmpi_get_varm_all(int ncid, int varid,
     if (status == NC_ERANGE && warning == NC_NOERR) 
       warning = status; /* to satisfy the nc_test logic */
     else
-      return status;
+      goto fn_exit;
   }
 
   /* layout cbuf to lbuf based on imap */
   status = ncmpii_data_repack(cbuf, cnelems, ptype,
 			      lbuf, 1, imaptype);
   if (status != NC_NOERR)
-    return status;
+    goto fn_exit;
 
   MPI_Type_free(&imaptype);
 
@@ -3690,15 +3700,15 @@ ncmpi_get_varm_all(int ncid, int varid,
     status = ncmpii_data_repack(lbuf, lnelems, ptype,
 				(void *)buf, bufcount, datatype);
     if (status != NC_NOERR)
-      return status;
-
-    if (lbuf != NULL)
-      free(lbuf);
+      goto fn_exit;
 
   }
 
+fn_exit:
+  if (!iscontig_of_ptypes && lbuf != NULL)
+      free(lbuf);
   if (cbuf != NULL)
-    free(cbuf);
+      free(cbuf);
     
   return ((warning != NC_NOERR) ? warning : status);
 }
@@ -3773,7 +3783,7 @@ ncmpi_put_varm(int ncid, int varid,
     status = ncmpii_data_repack((void *)buf, bufcount, datatype,
                                 lbuf, lnelems, ptype);
     if (status != NC_NOERR)
-      return status;
+      goto fn_exit;
 
   } else {
 
@@ -3781,16 +3791,20 @@ ncmpi_put_varm(int ncid, int varid,
 
   }
 
-  if (count[dim] < 0)
-    return NC_ENEGATIVECNT;
+  if (count[dim] < 0) {
+    status = NC_ENEGATIVECNT;
+    goto fn_exit;
+  }
   MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
                   ptype, &imaptype);
   MPI_Type_commit(&imaptype);
   cnelems = imap_contig_blocklen*count[dim];
   for (dim--; dim>=0; dim--) {
 
-    if (count[dim] < 0)
-      return NC_ENEGATIVECNT;
+    if (count[dim] < 0) {
+      status = NC_ENEGATIVECNT;
+      goto fn_exit;
+    }
   
 #if (MPI_VERSION < 2)
     MPI_Type_hvector(count[dim], 1, imap[dim]*el_size, imaptype, &tmptype);
@@ -3811,15 +3825,16 @@ ncmpi_put_varm(int ncid, int varid,
   status = ncmpii_data_repack(lbuf, 1, imaptype,
 			      cbuf, cnelems, ptype);
   if (status != NC_NOERR)
-    return status;
+    goto fn_exit;
 
   MPI_Type_free(&imaptype);
 
   status = ncmpi_put_vars(ncid, varid, start, count, stride,
                           cbuf, cnelems, ptype);
   if (status != NC_NOERR)
-    return status;
+    goto fn_exit;
 
+fn_exit:
   if (!iscontig_of_ptypes && lbuf != NULL)
     free(lbuf);
   if (cbuf != NULL)
