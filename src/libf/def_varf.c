@@ -45,6 +45,7 @@ FORTRAN_API int FORT_CALL nfmpi_def_var_ ( int *v1, char *v2 FORT_MIXED_LEN(d2),
       }}
     ierr = ncmpi_def_var( *v1, p2, (nc_type)(*v3), *v4, l5, v6 );
     free( p2 );
+    free( l5);
 
     if (!ierr) *v6 = *v6 + 1;
     return ierr;
