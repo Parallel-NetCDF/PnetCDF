@@ -1009,6 +1009,7 @@ sub reorderIntArr_ftoc {
         for (li=0; li<ln; li++) 
             l$count\[li\] = v$count\[ln-1-li\];
     }}\n";
+    $clean_up .= "    $free( l$count );\n";
 }
 sub reorderIntArr_in_arg {
     my $count = $_[0];
@@ -1162,6 +1163,7 @@ sub OffsetIndexInArr_ftoc {
         for (li=0; li<ln$count; li++) 
             l$count\[li\] = v$count\[ln$count-li-1\]-1;
       }}\n";
+      $clean_up .= "    $free( l$count);\n";
 }
 sub OffsetIndexInArr_in_arg {
     my $count = $_[0];
