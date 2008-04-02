@@ -203,6 +203,8 @@ $returnType   = "int";
 	      'get_var_text' => '2:3', 
 	        'get_var_text-2' => 'in:OffsetIndexIn',
 		'get_var_text-3' => 'out:charBufferOut',
+	      'get_var' => '2',
+	        'get_var-2' => 'in:OffsetIndexIn',
 	      'get_var_all' => '2',
 	        'get_var_all-2' => 'in:OffsetIndexIn',
 
@@ -565,7 +567,8 @@ $returnType   = "int";
 	      'put_var_text_all' => '2:3', 
                 'put_var_text_all-3' => 'in:charBufferIn',
 	        'put_var_text_all-2' => 'in:OffsetIndexIn',
-
+	      'put_var' => '2',
+	         'put_var-2' => 'in:OffsetIndexIn',
 	      'put_vara_all' => '2:3:4', 
 	        'put_vara_all-2' => 'in:OffsetIndexIn',
 		'put_vara_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
