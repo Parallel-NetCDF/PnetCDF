@@ -203,6 +203,8 @@ $returnType   = "int";
 	      'get_var_text' => '2:3', 
 	        'get_var_text-2' => 'in:OffsetIndexIn',
 		'get_var_text-3' => 'out:charBufferOut',
+	      'get_var_all' => '2',
+	        'get_var_all-2' => 'in:OffsetIndexIn',
 
 	      'get_vara_all' => '2:3:4', 
 	        'get_vara_all-2' => 'in:OffsetIndexIn',
