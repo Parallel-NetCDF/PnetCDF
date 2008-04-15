@@ -346,7 +346,10 @@ fprintf(stderr, "    VAR %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 			return NC_EVARSIZE;
 		}
 
-		(*vpp)->begin = index;
+		/* this will pad out non-record variables with zero to the
+		 * requested alignment.  record variables are a bit trickier.
+		 * we don't do anything special with them */
+		(*vpp)->begin = D_RNDUP(index, v_align);
 		index += (*vpp)->len;
 	}
 
@@ -785,8 +788,11 @@ int
 ncmpii_NC_enddef(NC *ncp) {
   int status = NC_NOERR;
   MPI_Comm comm;
+  MPI_Info info;
   int mpireturn;
   int rank;
+  char value[MPI_MAX_INFO_VAL];
+  int flag, alignment=0;
 
   assert(!NC_readonly(ncp));
   assert(NC_indef(ncp)); 
@@ -795,9 +801,18 @@ ncmpii_NC_enddef(NC *ncp) {
 
   MPI_Comm_rank(comm, &rank);
 
+  MPI_File_get_info(ncp->nciop->collective_fh, &info);
+  MPI_Info_get(info, "striping_unit", MPI_MAX_INFO_VAL-1, value, &flag);
+  if (flag) 
+	  alignment=atoi(value);
+  /* negative or zero alignment? can't imagine what that would even mean.  just
+   * align to nearest byte (no alignment) */
+  if (alignment <= 0)
+	  alignment = 1;
+
   /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
    * acomplish the same thing with calls to NC_begins */
-  NC_begins(ncp, 0, 512, 0, 512);
+  NC_begins(ncp, 0, alignment, 0, alignment);
 
   /* serial netcdf calls a check on dimension lenghths here */
 
