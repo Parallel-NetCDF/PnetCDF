@@ -20,6 +20,8 @@
 
 
 #ifndef NC_ARRAY_GROWBY
+/* XXX: this seems really low.  do we end up spending a ton of time mallocing?
+ * could we reduce that by increasing this to something 21st century? */
 #define NC_ARRAY_GROWBY 4
 #endif
 
