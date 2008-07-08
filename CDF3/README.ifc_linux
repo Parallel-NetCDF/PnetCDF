@@ -1,0 +1,18 @@
+# here are the steps John Tannahill <tannahill1@llnl.gov> used when
+# building pnetcdf on the "mcr" cluster at LLNL.  It is a linux cluster
+# with the intel compilers.
+
+   setenv MPICC  mpiicc
+   setenv MPIF77 mpiifc
+   setenv F77    ifc
+   setenv FC     ifc
+   setenv CC     icc
+
+# then run the usual "configure; make ; make install"
+
+On 5 October 2005, Richard Hedges reported that FFLAGS and CFLAGS needed the -O
+and -mp options or the test suite would report errors in the
+n[c,f]mpi_put_var*_float routines:
+
+FFLAGS = -O -mp
+CFLAGS = -O -mp

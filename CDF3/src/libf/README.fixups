@@ -1,0 +1,11 @@
+the fortran bindings are automatically generated from the c header file.  This
+is nifty, but not flawless.  Compliation under 'gcc -Wall' will give some
+warnings.  
+
+If you regenerate the fortran interface, remember to fix the folowing things by hand:
+
+nfmpi_create_:
+. include <stdlib.h>
+
+nfmpi_open_:
+. include <stdlib.h>
