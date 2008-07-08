@@ -1,0 +1,32 @@
+# ;cat ~/.soft
+# # 
+# # This is the .soft file.
+# # It is used to customize your environment by setting up environment
+# # variables such as PATH and MANPATH.
+# # To learn what can be in this file, use 'man softenv'.
+# #
+# #
+# @default
+# +pbs
+# +intel-7.0
+# 
+# ---
+# 
+# ;which mpicc
+# /soft/apps/packages/mpich-gm-1.2.5..9-pre6-gm-1.6.3-intel-7.0/bin/mpicc
+# ;which mpif77
+# /soft/apps/packages/mpich-gm-1.2.5..9-pre6-gm-1.6.3-intel-7.0/bin/mpif77
+# ;which icc
+# /soft/com/packages/intel-7/compiler70/ia32/bin/icc
+# ;which ifc
+# /soft/com/packages/intel-7/compiler70/ia32/bin/ifc
+# 
+# ---
+
+setenv CC icc
+setenv FC ifc
+setenv F90 ifc
+setenv CXX icc
+setenv MPICC mpicc
+setenv MPIF77 mpif77
+

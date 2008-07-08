@@ -1,0 +1,19 @@
+These examples test reading into or writing from noncontiguous memory data
+specified by MPI derived datatypes and/or array index mapping.
+
+test_subarray:
+	.Test for subarray memory layout
+	.Test for collective subarray netcdf access
+	.Test for whole array netcdf access
+	.Test for mapped subarray netcdf access
+
+test_darray:
+	.Test for darray memory layout
+	.Test for collective strided subarray netcdf access
+
+TEST CONFIGURATIONS:
+	.the tests will run with defaults automatically.
+	.edit "test_dtype.h" as described inside.
+	.run test with option [-h] or [-help] to get commandline argument help.
+	.for more test flexibility, please program the src code by 
+	 following the testing logic indicated in the src comments.

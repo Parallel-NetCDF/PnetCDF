@@ -1,0 +1,98 @@
+#
+# Unimplemented functions, approaches we have to revisit, and other unfinished
+# tasks
+#
+
+DATA MODE FUNCTIONS: U == unimpplemented I == implemented
+
+ncmpi_get  text uchar schar short int long float double
+var1 [0]     I   I      I    I     I   I    I      I
+var          I   I      I    I     I   I    I      I     
+var_all      I   I      I    I     I   I    I      I     
+vara         I   I      I    I     I   I    I      I     
+vara_all     I   I      I    I     I   I    I      I     
+vars         I   I      I    I     I   I    I      I     
+vars_all     I   I      I    I     I   I    I      I     
+varm         I   I      I    I     I   I    I      I     
+varm_all     I   I      I    I     I   I    I      I     
+
+ncmpi_put  text uchar schar short int long float double
+var1 [0]     I   I      I    I     I   I    I      I
+var          I   I      I    I     I   I    I      I     
+var_all [1] 
+vara         I   I      I    I     I   I    I      I     
+vara_all     I   I      I    I     I   I    I      I     
+vars         I   I      I    I     I   I    I      I     
+vars_all     I   I      I    I     I   I    I      I     
+varm         I   I      I    I     I   I    I      I     
+varm_all     I   I      I    I     I   I    I      I     
+
+[0] the var1 functions are all independent operations
+
+[1] jianwei says "ncmpi_put_var_all does not exist at all, as all such
+    attempt would result in using ncmpi_put_vara_all, while
+    ncmpi_get_var_all is designed for a special case of optimization so
+    that all processes get the whole array but each process only reads a
+    subarray for example."
+
+OTHER FUNCTIONS:
+
+the following functions are just wrappers around netcdf implementations:
+
+. miscelaneous:
+	ncmpi_strerror()
+
+. the Define Mode functions:
+	ncmpi_def_dim()
+	ncmpi_def_var()
+	ncmpi_rename_dim()
+	ncmpi_rename_var()
+
+. the inquiry functions
+	ncmpi_inq()
+	ncmpi_inq_ndims()
+	ncmpi_inq_nvars()
+	ncmpi_inq_natts()
+	ncmpi_inq_unlimdim()
+	ncmpi_inq_dimid()
+	ncmpi_inq_dim()
+	ncmpi_inq_dimname()
+	ncmpi_inq_dimlen()
+	ncmpi_inq_var()
+	ncmpi_inq_varid()
+	ncmpi_inq_varname()
+	ncmpi_inq_vartype()
+	ncmpi_inq_varndims()
+	ncmpi_inq_vardimid()
+	ncmpi_inq_varnatts()
+
+. the Attribute functions
+	ncmpi_inq_att()
+	ncmpi_inq_attid()
+	ncmpi_inq_atttype()
+	ncmpi_inq_attlen()
+	ncmpi_inq_attname()
+	ncmpi_copy_att()
+	ncmpi_rename_att()
+	ncmpi_del_att()
+	ncmpi_put_att_text()
+	ncmpi_get_att_text()
+	ncmpi_put_att_uchar()
+	ncmpi_get_att_uchar()
+	ncmpi_put_att_schar()
+	ncmpi_get_att_schar()
+	ncmpi_put_att_short()
+	ncmpi_get_att_short()
+	ncmpi_put_att_int()
+	ncmpi_get_att_int()
+	ncmpi_put_att_long()
+	ncmpi_get_att_long()
+	ncmpi_put_att_float()
+	ncmpi_get_att_float()
+	ncmpi_put_att_double()
+	ncmpi_get_att_double()
+
+
+Implemented:
+. the flexible data mode and high-level data mode interfaces for many types
+  using MPI derived datatype to specify memory data layout

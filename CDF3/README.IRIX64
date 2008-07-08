@@ -1,0 +1,8 @@
+The pnetcdf library should build fine under IRIX.  There are just a few
+issues not directly related to the library:
+
+. The IRIX compiler does not like the cnap.c test.  gcc compiles the
+  file without any warnings, even when the tests are configured with
+  "--enable-strict".  Renier Vogelsang <reiner@sgi.com> reports that the
+  latest MIPSpro compiler release fixes this issue, so upgrade if
+  possible.

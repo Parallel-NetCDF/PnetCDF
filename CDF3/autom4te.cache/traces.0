@@ -1,0 +1,734 @@
+m4trace:configure.in:12: -1- AC_INIT([src/lib/ncconfig.in])
+m4trace:configure.in:12: -1- m4_pattern_forbid([^_?A[CHUM]_])
+m4trace:configure.in:12: -1- m4_pattern_forbid([_AC_])
+m4trace:configure.in:12: -1- m4_pattern_forbid([^LIBOBJS$], [do not use LIBOBJS directly, use AC_LIBOBJ (see section `AC_LIBOBJ vs LIBOBJS'])
+m4trace:configure.in:12: -1- m4_pattern_allow([^AS_FLAGS$])
+m4trace:configure.in:12: -1- m4_pattern_forbid([^_?m4_])
+m4trace:configure.in:12: -1- m4_pattern_forbid([^dnl$])
+m4trace:configure.in:12: -1- m4_pattern_forbid([^_?AS_])
+m4trace:configure.in:12: -1- AC_SUBST([SHELL], [${CONFIG_SHELL-/bin/sh}])
+m4trace:configure.in:12: -1- AC_SUBST([PATH_SEPARATOR])
+m4trace:configure.in:12: -1- AC_SUBST([PACKAGE_NAME], [m4_ifdef([AC_PACKAGE_NAME],      ['AC_PACKAGE_NAME'])])
+m4trace:configure.in:12: -1- AC_SUBST([PACKAGE_TARNAME], [m4_ifdef([AC_PACKAGE_TARNAME],   ['AC_PACKAGE_TARNAME'])])
+m4trace:configure.in:12: -1- AC_SUBST([PACKAGE_VERSION], [m4_ifdef([AC_PACKAGE_VERSION],   ['AC_PACKAGE_VERSION'])])
+m4trace:configure.in:12: -1- AC_SUBST([PACKAGE_STRING], [m4_ifdef([AC_PACKAGE_STRING],    ['AC_PACKAGE_STRING'])])
+m4trace:configure.in:12: -1- AC_SUBST([PACKAGE_BUGREPORT], [m4_ifdef([AC_PACKAGE_BUGREPORT], ['AC_PACKAGE_BUGREPORT'])])
+m4trace:configure.in:12: -1- AC_SUBST([exec_prefix], [NONE])
+m4trace:configure.in:12: -1- AC_SUBST([prefix], [NONE])
+m4trace:configure.in:12: -1- AC_SUBST([program_transform_name], [s,x,x,])
+m4trace:configure.in:12: -1- AC_SUBST([bindir], ['${exec_prefix}/bin'])
+m4trace:configure.in:12: -1- AC_SUBST([sbindir], ['${exec_prefix}/sbin'])
+m4trace:configure.in:12: -1- AC_SUBST([libexecdir], ['${exec_prefix}/libexec'])
+m4trace:configure.in:12: -1- AC_SUBST([datadir], ['${prefix}/share'])
+m4trace:configure.in:12: -1- AC_SUBST([sysconfdir], ['${prefix}/etc'])
+m4trace:configure.in:12: -1- AC_SUBST([sharedstatedir], ['${prefix}/com'])
+m4trace:configure.in:12: -1- AC_SUBST([localstatedir], ['${prefix}/var'])
+m4trace:configure.in:12: -1- AC_SUBST([libdir], ['${exec_prefix}/lib'])
+m4trace:configure.in:12: -1- AC_SUBST([includedir], ['${prefix}/include'])
+m4trace:configure.in:12: -1- AC_SUBST([oldincludedir], ['/usr/include'])
+m4trace:configure.in:12: -1- AC_SUBST([infodir], ['${prefix}/info'])
+m4trace:configure.in:12: -1- AC_SUBST([mandir], ['${prefix}/man'])
+m4trace:configure.in:12: -1- AC_DEFINE_TRACE_LITERAL([PACKAGE_NAME])
+m4trace:configure.in:12: -1- AH_OUTPUT([PACKAGE_NAME], [/* Define to the full name of this package. */
+#undef PACKAGE_NAME])
+m4trace:configure.in:12: -1- AC_DEFINE_TRACE_LITERAL([PACKAGE_TARNAME])
+m4trace:configure.in:12: -1- AH_OUTPUT([PACKAGE_TARNAME], [/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME])
+m4trace:configure.in:12: -1- AC_DEFINE_TRACE_LITERAL([PACKAGE_VERSION])
+m4trace:configure.in:12: -1- AH_OUTPUT([PACKAGE_VERSION], [/* Define to the version of this package. */
+#undef PACKAGE_VERSION])
+m4trace:configure.in:12: -1- AC_DEFINE_TRACE_LITERAL([PACKAGE_STRING])
+m4trace:configure.in:12: -1- AH_OUTPUT([PACKAGE_STRING], [/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING])
+m4trace:configure.in:12: -1- AC_DEFINE_TRACE_LITERAL([PACKAGE_BUGREPORT])
+m4trace:configure.in:12: -1- AH_OUTPUT([PACKAGE_BUGREPORT], [/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT])
+m4trace:configure.in:12: -1- AC_SUBST([build_alias])
+m4trace:configure.in:12: -1- AC_SUBST([host_alias])
+m4trace:configure.in:12: -1- AC_SUBST([target_alias])
+m4trace:configure.in:12: -1- AC_SUBST([DEFS])
+m4trace:configure.in:12: -1- AC_SUBST([ECHO_C])
+m4trace:configure.in:12: -1- AC_SUBST([ECHO_N])
+m4trace:configure.in:12: -1- AC_SUBST([ECHO_T])
+m4trace:configure.in:12: -1- AC_SUBST([LIBS])
+m4trace:configure.in:14: -1- AC_SUBST([SRCDIR])
+m4trace:configure.in:18: -1- AC_CONFIG_HEADERS([src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf.inc src/libf/nfconfig.inc:src/libf/nfconfig.in ])
+m4trace:configure.in:20: -1- AC_CONFIG_AUX_DIR([./scripts])
+m4trace:configure.in:23: -1- AH_OUTPUT([SIZEOF_OFF_T], [/* Number of bytes in a off_t */
+#undef SIZEOF_OFF_T])
+m4trace:configure.in:24: -1- AH_OUTPUT([SIZEOF_SIZE_T], [/* Number of bytes in a size_t */
+#undef SIZEOF_SIZE_T])
+m4trace:configure.in:25: -1- AH_OUTPUT([NCBYTE_T], [/* Type of NC_BYTE */
+#undef NCBYTE_T])
+m4trace:configure.in:26: -1- AH_OUTPUT([NCSHORT_T], [/* Type of NC_SHORT */
+#undef NCSHORT_T])
+m4trace:configure.in:27: -1- AH_OUTPUT([NF_DOUBLEPRECISION_IS_C_], [/* C type for Fortran dobule */
+#undef NF_DOUBLEPRECISION_IS_C_])
+m4trace:configure.in:28: -1- AH_OUTPUT([NF_INT1_IS_C_], [/* C type for Fortran INT1 */
+#undef NF_INT1_IS_C_])
+m4trace:configure.in:29: -1- AH_OUTPUT([NF_INT1_T], [/* Type for Fortran INT1 */
+#undef NF_INT1_T])
+m4trace:configure.in:30: -1- AH_OUTPUT([NF_INT2_IS_C_], [/* C type for Fortran INT2 */
+#undef NF_INT2_IS_C_])
+m4trace:configure.in:31: -1- AH_OUTPUT([NF_INT2_T], [/* Type for Fortran INT2 */
+#undef NF_INT2_T])
+m4trace:configure.in:32: -1- AH_OUTPUT([NF_INT_IS_C_], [/* C type for Fortran INT */
+#undef NF_INT_IS_C_])
+m4trace:configure.in:33: -1- AH_OUTPUT([NF_REAL_IS_C_], [/* C type for Fortran REAL */
+#undef NF_REAL_IS_C_])
+m4trace:configure.in:34: -1- AH_OUTPUT([NO_IEEE_FLOAT], [/* Does sytem have IEEE FLOAT */
+#undef NO_IEEE_FLOAT])
+m4trace:configure.in:35: -1- AH_OUTPUT([NO_STRERROR], [/* Define if system lacks strerror */
+#undef NO_STRERROR])
+m4trace:configure.in:53: -1- AC_PROG_INSTALL
+m4trace:configure.in:53: -1- AC_SUBST([INSTALL_PROGRAM])
+m4trace:configure.in:53: -1- AC_SUBST([INSTALL_SCRIPT])
+m4trace:configure.in:53: -1- AC_SUBST([INSTALL_DATA])
+m4trace:configure.in:54: -1- AC_PROG_YACC
+m4trace:configure.in:54: -1- AC_SUBST([YACC])
+m4trace:configure.in:55: -1- AC_PROG_LEX
+m4trace:configure.in:55: -1- AC_SUBST([LEX])
+m4trace:configure.in:55: -1- AC_CHECK_LIB([fl], [yywrap], [LEXLIB="-lfl"], [AC_CHECK_LIB(l, yywrap, LEXLIB="-ll")])
+m4trace:configure.in:55: -1- AC_PROG_CC
+m4trace:configure.in:55: -1- AC_SUBST([CC])
+m4trace:configure.in:55: -1- AC_SUBST([CFLAGS])
+m4trace:configure.in:55: -1- AC_SUBST([LDFLAGS])
+m4trace:configure.in:55: -1- AC_SUBST([CPPFLAGS])
+m4trace:configure.in:55: -1- AC_SUBST([CC])
+m4trace:configure.in:55: -1- AC_SUBST([ac_ct_CC])
+m4trace:configure.in:55: -1- AC_SUBST([CC])
+m4trace:configure.in:55: -1- AC_SUBST([ac_ct_CC])
+m4trace:configure.in:55: -1- AC_SUBST([CC])
+m4trace:configure.in:55: -1- AC_SUBST([CC])
+m4trace:configure.in:55: -1- AC_SUBST([ac_ct_CC])
+m4trace:configure.in:55: -1- AC_SUBST([EXEEXT], [$ac_cv_exeext])
+m4trace:configure.in:55: -1- AC_SUBST([OBJEXT], [$ac_cv_objext])
+m4trace:configure.in:55: -1- AC_CHECK_LIB([l], [yywrap], [LEXLIB="-ll"])
+m4trace:configure.in:55: -1- AC_SUBST([LEXLIB])
+m4trace:configure.in:55: -1- AC_SUBST([LEX_OUTPUT_ROOT], [$ac_cv_prog_lex_root])
+m4trace:configure.in:55: -1- AC_DEFINE_TRACE_LITERAL([YYTEXT_POINTER])
+m4trace:configure.in:55: -1- AH_OUTPUT([YYTEXT_POINTER], [/* Define to 1 if `lex\' declares `yytext\' as a `char *\' by default, not a
+   `char[]\'. */
+#undef YYTEXT_POINTER])
+m4trace:configure.in:57: -1- _m4_warn([obsolete], [The macro `AC_CHECKING' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:1966: AC_CHECKING is expanded from...
+aclocal.m4:26: UD_PROG_M4 is expanded from...
+configure.in:57: the top level])
+m4trace:configure.in:57: -1- AC_SUBST([M4])
+m4trace:configure.in:57: -1- AC_SUBST([M4])
+m4trace:configure.in:57: -1- AC_SUBST([M4FLAGS])
+m4trace:configure.in:58: -1- AC_PROG_CC
+m4trace:configure.in:58: -1- AC_SUBST([CC])
+m4trace:configure.in:58: -1- AC_SUBST([CFLAGS])
+m4trace:configure.in:58: -1- AC_SUBST([LDFLAGS])
+m4trace:configure.in:58: -1- AC_SUBST([CPPFLAGS])
+m4trace:configure.in:58: -1- AC_SUBST([CC])
+m4trace:configure.in:58: -1- AC_SUBST([ac_ct_CC])
+m4trace:configure.in:58: -1- AC_SUBST([CC])
+m4trace:configure.in:58: -1- AC_SUBST([ac_ct_CC])
+m4trace:configure.in:58: -1- AC_SUBST([CC])
+m4trace:configure.in:58: -1- AC_SUBST([CC])
+m4trace:configure.in:58: -1- AC_SUBST([ac_ct_CC])
+m4trace:configure.in:68: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking user-defined Fortran-77 compiler \"$FC\"], [aclocal.m4:636: UD_PROG_FC is expanded from...
+configure.in:68: the top level])
+m4trace:configure.in:68: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking user-defined Fortran-77 compiler \"$FC\"... ], [aclocal.m4:636: UD_PROG_FC is expanded from...
+configure.in:68: the top level])
+m4trace:configure.in:68: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking \"$FC\" as Fortran-77 compiler], [aclocal.m4:636: UD_PROG_FC is expanded from...
+configure.in:68: the top level])
+m4trace:configure.in:68: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking \"$FC\" as Fortran-77 compiler... ], [aclocal.m4:636: UD_PROG_FC is expanded from...
+configure.in:68: the top level])
+m4trace:configure.in:68: -1- AC_SUBST([FC])
+m4trace:configure.in:68: -1- AC_SUBST([FC])
+m4trace:configure.in:68: -1- AC_SUBST([FFLAGS])
+m4trace:configure.in:68: -1- AC_SUBST([FLIBS])
+m4trace:configure.in:68: -1- AC_PROG_CPP
+m4trace:configure.in:68: -1- AC_SUBST([CPP])
+m4trace:configure.in:68: -1- AC_SUBST([CPPFLAGS])
+m4trace:configure.in:68: -1- AC_SUBST([CPP])
+m4trace:configure.in:68: -1- AC_SUBST([FPP])
+m4trace:configure.in:68: -1- AC_SUBST([COMPILE_F])
+m4trace:configure.in:68: -1- AC_SUBST([FPPFLAGS])
+m4trace:configure.in:70: -1- AC_SUBST([CC_MAKEDEPEND])
+m4trace:configure.in:78: -1- _m4_warn([obsolete], [The macro `AC_CHECKING' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:1966: AC_CHECKING is expanded from...
+aclocal.m4:62: UD_PROG_NM is expanded from...
+configure.in:78: UD_PROG_NM is required by...
+aclocal.m4:797: UD_CHECK_FCALLSCSUB is expanded from...
+configure.in:78: the top level])
+m4trace:configure.in:78: -1- AC_SUBST([NM])
+m4trace:configure.in:78: -1- AC_SUBST([NM])
+m4trace:configure.in:78: -1- AC_SUBST([NMFLAGS])
+m4trace:configure.in:78: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking for C-equivalent to Fortran routine \"SUB\"], [aclocal.m4:797: UD_CHECK_FCALLSCSUB is expanded from...
+configure.in:78: the top level])
+m4trace:configure.in:78: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking for C-equivalent to Fortran routine \"SUB\"... ], [aclocal.m4:797: UD_CHECK_FCALLSCSUB is expanded from...
+configure.in:78: the top level])
+m4trace:configure.in:80: -1- _m4_warn([obsolete], [The macro `AC_CHECKING' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:1966: AC_CHECKING is expanded from...
+aclocal.m4:972: UD_CHECK_LIB_MATH is expanded from...
+configure.in:80: the top level])
+m4trace:configure.in:80: -2- AC_CHECK_LIB([m], [tanh], [MATHLIB=-lm], [MATHLIB=])
+m4trace:configure.in:80: -1- AC_CHECK_LIB([c], [tanh], [MATHLIB=], [echo "$as_me:$LINENO: checking for tanh in -lm" >&5
+echo $ECHO_N "checking for tanh in -lm... $ECHO_C" >&6
+if test "${ac_cv_lib_m_tanh+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lm  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char tanh ();
+int
+main ()
+{
+tanh ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_m_tanh=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_m_tanh=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_m_tanh" >&5
+echo "${ECHO_T}$ac_cv_lib_m_tanh" >&6
+if test $ac_cv_lib_m_tanh = yes; then
+  MATHLIB=-lm
+else
+  MATHLIB=
+fi
+])
+m4trace:configure.in:80: -1- AC_SUBST([MATHLIB])
+m4trace:configure.in:81: -1- _m4_warn([obsolete], [The macro `AC_CHECKING' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:1966: AC_CHECKING is expanded from...
+aclocal.m4:44: UD_PROG_AR is expanded from...
+configure.in:81: the top level])
+m4trace:configure.in:81: -1- AC_SUBST([AR])
+m4trace:configure.in:81: -1- AC_SUBST([AR])
+m4trace:configure.in:81: -1- AC_SUBST([ARFLAGS])
+m4trace:configure.in:82: -1- _m4_warn([obsolete], [The macro `AC_CHECKING' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:1966: AC_CHECKING is expanded from...
+aclocal.m4:62: UD_PROG_NM is expanded from...
+configure.in:82: the top level])
+m4trace:configure.in:82: -1- AC_SUBST([NM])
+m4trace:configure.in:82: -1- AC_SUBST([NM])
+m4trace:configure.in:82: -1- AC_SUBST([NMFLAGS])
+m4trace:configure.in:86: -1- AC_PROG_RANLIB
+m4trace:configure.in:86: -1- AC_SUBST([RANLIB])
+m4trace:configure.in:86: -1- AC_SUBST([ac_ct_RANLIB])
+m4trace:configure.in:93: -1- AC_DEFINE_TRACE_LITERAL([F77_NAME_UPPER])
+m4trace:configure.in:93: -1- AH_OUTPUT([F77_NAME_UPPER], [/* Define if Fortran names are uppercase */
+#undef F77_NAME_UPPER])
+m4trace:configure.in:100: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking for C-equivalent to Fortran routine \"SUB_A\"], [])
+m4trace:configure.in:100: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking for C-equivalent to Fortran routine \"SUB_A\"... ], [])
+m4trace:configure.in:126: -1- AC_DEFINE_TRACE_LITERAL([F77_NAME_LOWER_2USCORE])
+m4trace:configure.in:126: -1- AH_OUTPUT([F77_NAME_LOWER_2USCORE], [/* Define if Fortran names are lower case with two trailing underscore2 */
+#undef F77_NAME_LOWER_2USCORE])
+m4trace:configure.in:129: -1- AC_DEFINE_TRACE_LITERAL([F77_NAME_LOWER_USCORE])
+m4trace:configure.in:129: -1- AH_OUTPUT([F77_NAME_LOWER_USCORE], [/* Define if Fortran names are lower case with one trailing underscore */
+#undef F77_NAME_LOWER_USCORE])
+m4trace:configure.in:137: -1- AC_DEFINE_TRACE_LITERAL([F77_NAME_LOWER])
+m4trace:configure.in:137: -1- AH_OUTPUT([F77_NAME_LOWER], [/* Define if Fortran names are lower case */
+#undef F77_NAME_LOWER])
+m4trace:configure.in:186: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:186: the top level])
+m4trace:configure.in:189: -1- AC_SUBST([MPICC])
+m4trace:configure.in:190: -1- AC_SUBST([MPIF77])
+m4trace:configure.in:192: -1- AC_CHECK_HEADERS([stdlib.h sys/types.h mpio.h])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_STDLIB_H], [/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_SYS_TYPES_H], [/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_MPIO_H], [/* Define to 1 if you have the <mpio.h> header file. */
+#undef HAVE_MPIO_H])
+m4trace:configure.in:192: -1- AC_HEADER_STDC
+m4trace:configure.in:192: -1- AC_SUBST([EGREP])
+m4trace:configure.in:192: -1- AC_DEFINE_TRACE_LITERAL([STDC_HEADERS])
+m4trace:configure.in:192: -1- AH_OUTPUT([STDC_HEADERS], [/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS])
+m4trace:configure.in:192: -1- AC_CHECK_HEADERS([sys/types.h sys/stat.h stdlib.h string.h memory.h strings.h \
+		  inttypes.h stdint.h unistd.h], [], [], [$ac_includes_default])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_SYS_TYPES_H], [/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_SYS_STAT_H], [/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_STDLIB_H], [/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_STRING_H], [/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_MEMORY_H], [/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_STRINGS_H], [/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_INTTYPES_H], [/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_STDINT_H], [/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H])
+m4trace:configure.in:192: -1- AH_OUTPUT([HAVE_UNISTD_H], [/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H])
+m4trace:configure.in:194: -2- AC_DEFINE_TRACE_LITERAL([NO_STRERROR])
+m4trace:configure.in:195: -1- AC_FUNC_ALLOCA
+m4trace:configure.in:195: -1- AC_DEFINE_TRACE_LITERAL([HAVE_ALLOCA_H])
+m4trace:configure.in:195: -1- AH_OUTPUT([HAVE_ALLOCA_H], [/* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
+   */
+#undef HAVE_ALLOCA_H])
+m4trace:configure.in:195: -1- AC_DEFINE_TRACE_LITERAL([HAVE_ALLOCA])
+m4trace:configure.in:195: -1- AH_OUTPUT([HAVE_ALLOCA], [/* Define to 1 if you have `alloca\', as a function or macro. */
+#undef HAVE_ALLOCA])
+m4trace:configure.in:195: -1- AC_LIBSOURCE([alloca.c])
+m4trace:configure.in:195: -1- AC_SUBST([ALLOCA], [alloca.$ac_objext])
+m4trace:configure.in:195: -1- AC_DEFINE_TRACE_LITERAL([C_ALLOCA])
+m4trace:configure.in:195: -1- AH_OUTPUT([C_ALLOCA], [/* Define to 1 if using `alloca.c\'. */
+#undef C_ALLOCA])
+m4trace:configure.in:195: -1- AC_DEFINE_TRACE_LITERAL([CRAY_STACKSEG_END])
+m4trace:configure.in:195: -1- AH_OUTPUT([CRAY_STACKSEG_END], [/* Define to one of `_getb67\', `GETB67\', `getb67\' for Cray-2 and Cray-YMP
+   systems. This function is required for `alloca.c\' support on those systems.
+   */
+#undef CRAY_STACKSEG_END])
+m4trace:configure.in:195: -1- AH_OUTPUT([STACK_DIRECTION], [/* If using the C implementation of alloca, define if you know the
+   direction of stack growth for your system; otherwise it will be
+   automatically deduced at run-time.
+	STACK_DIRECTION > 0 => grows toward higher addresses
+	STACK_DIRECTION < 0 => grows toward lower addresses
+	STACK_DIRECTION = 0 => direction of growth unknown */
+@%:@undef STACK_DIRECTION])
+m4trace:configure.in:195: -1- AC_DEFINE_TRACE_LITERAL([STACK_DIRECTION])
+m4trace:configure.in:196: -1- _m4_warn([obsolete], [The macro `AC_STRUCT_ST_BLKSIZE' is obsolete.
+You should run autoupdate.], [autoconf/types.m4:527: AC_STRUCT_ST_BLKSIZE is expanded from...
+configure.in:196: the top level])
+m4trace:configure.in:196: -1- _m4_warn([obsolete], [AC_STRUCT_ST_BLKSIZE:
+	your code should no longer depend upon `HAVE_ST_BLKSIZE', but
+	`HAVE_STRUCT_STAT_ST_BLKSIZE'.  Remove this warning and
+	the `AC_DEFINE' when you adjust the code.], [autoconf/types.m4:527: AC_STRUCT_ST_BLKSIZE is expanded from...
+configure.in:196: the top level])
+m4trace:configure.in:196: -1- AC_CHECK_MEMBERS([struct stat.st_blksize], [AC_DEFINE(HAVE_ST_BLKSIZE, 1,
+			    [Define to 1 if your `struct stat' has
+			     `st_blksize'.  Deprecated, use
+			     `HAVE_STRUCT_STAT_ST_BLKSIZE' instead.])])
+m4trace:configure.in:196: -1- AC_DEFINE_TRACE_LITERAL([HAVE_STRUCT_STAT_ST_BLKSIZE])
+m4trace:configure.in:196: -1- AH_OUTPUT([HAVE_STRUCT_STAT_ST_BLKSIZE], [/* Define to 1 if `st_blksize\' is member of `struct stat\'. */
+#undef HAVE_STRUCT_STAT_ST_BLKSIZE])
+m4trace:configure.in:196: -1- AC_DEFINE_TRACE_LITERAL([HAVE_ST_BLKSIZE])
+m4trace:configure.in:196: -1- AH_OUTPUT([HAVE_ST_BLKSIZE], [/* Define to 1 if your `struct stat\' has `st_blksize\'. Deprecated, use
+   `HAVE_STRUCT_STAT_ST_BLKSIZE\' instead. */
+#undef HAVE_ST_BLKSIZE])
+m4trace:configure.in:197: -1- _m4_warn([obsolete], [The macro `AC_TRY_RUN' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2289: AC_TRY_RUN is expanded from...
+aclocal.m4:278: UD_CHECK_IEEE is expanded from...
+configure.in:197: the top level])
+m4trace:configure.in:197: -1- AC_DEFINE_TRACE_LITERAL([NO_IEEE_FLOAT])
+m4trace:configure.in:198: -1- AC_TYPE_SIZE_T
+m4trace:configure.in:198: -1- AC_DEFINE_TRACE_LITERAL([size_t])
+m4trace:configure.in:198: -1- AH_OUTPUT([size_t], [/* Define to `unsigned\' if <sys/types.h> does not define. */
+#undef size_t])
+m4trace:configure.in:233: -1- AC_CHECK_FUNCS([MPI_Request_get_status MPI_Type_dup], [], [enable_nonblocking=no
+])
+m4trace:configure.in:233: -1- AH_OUTPUT([HAVE_MPI_REQUEST_GET_STATUS], [/* Define to 1 if you have the `MPI_Request_get_status\' function. */
+#undef HAVE_MPI_REQUEST_GET_STATUS])
+m4trace:configure.in:233: -1- AH_OUTPUT([HAVE_MPI_TYPE_DUP], [/* Define to 1 if you have the `MPI_Type_dup\' function. */
+#undef HAVE_MPI_TYPE_DUP])
+m4trace:configure.in:235: -1- AC_CHECK_FUNCS([MPI_Info_dup], [], [])
+m4trace:configure.in:235: -1- AH_OUTPUT([HAVE_MPI_INFO_DUP], [/* Define to 1 if you have the `MPI_Info_dup\' function. */
+#undef HAVE_MPI_INFO_DUP])
+m4trace:configure.in:238: -1- AC_DEFINE_TRACE_LITERAL([ENABLE_NONBLOCKING])
+m4trace:configure.in:238: -1- AH_OUTPUT([ENABLE_NONBLOCKING], [/* Define if able to support nonblocking routines */
+#undef ENABLE_NONBLOCKING])
+m4trace:configure.in:255: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_DUP])
+m4trace:configure.in:255: -2- AH_OUTPUT([HAVE_MPI_COMBINER_DUP], [/* available */
+#undef HAVE_MPI_COMBINER_DUP])
+m4trace:configure.in:255: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:255: the top level])
+m4trace:configure.in:256: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_HVECTOR_INTEGER])
+m4trace:configure.in:256: -2- AH_OUTPUT([HAVE_MPI_COMBINER_HVECTOR_INTEGER], [/* available */
+#undef HAVE_MPI_COMBINER_HVECTOR_INTEGER])
+m4trace:configure.in:256: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:256: the top level])
+m4trace:configure.in:257: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_HINDEXED_INTEGER])
+m4trace:configure.in:257: -2- AH_OUTPUT([HAVE_MPI_COMBINER_HINDEXED_INTEGER], [/* available */
+#undef HAVE_MPI_COMBINER_HINDEXED_INTEGER])
+m4trace:configure.in:257: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:257: the top level])
+m4trace:configure.in:258: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_SUBARRAY])
+m4trace:configure.in:258: -2- AH_OUTPUT([HAVE_MPI_COMBINER_SUBARRAY], [/* available */
+#undef HAVE_MPI_COMBINER_SUBARRAY])
+m4trace:configure.in:258: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:258: the top level])
+m4trace:configure.in:259: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_DARRAY])
+m4trace:configure.in:259: -2- AH_OUTPUT([HAVE_MPI_COMBINER_DARRAY], [/* available */
+#undef HAVE_MPI_COMBINER_DARRAY])
+m4trace:configure.in:259: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:259: the top level])
+m4trace:configure.in:260: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_RESIZED])
+m4trace:configure.in:260: -2- AH_OUTPUT([HAVE_MPI_COMBINER_RESIZED], [/* available */
+#undef HAVE_MPI_COMBINER_RESIZED])
+m4trace:configure.in:260: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:260: the top level])
+m4trace:configure.in:261: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_STRUCT_INTEGER])
+m4trace:configure.in:261: -2- AH_OUTPUT([HAVE_MPI_COMBINER_STRUCT_INTEGER], [/* available */
+#undef HAVE_MPI_COMBINER_STRUCT_INTEGER])
+m4trace:configure.in:261: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:261: the top level])
+m4trace:configure.in:262: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_INDEXED_BLOCK])
+m4trace:configure.in:262: -2- AH_OUTPUT([HAVE_MPI_COMBINER_INDEXED_BLOCK], [/* available */
+#undef HAVE_MPI_COMBINER_INDEXED_BLOCK])
+m4trace:configure.in:262: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:262: the top level])
+m4trace:configure.in:263: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_F90_REAL])
+m4trace:configure.in:263: -2- AH_OUTPUT([HAVE_MPI_COMBINER_F90_REAL], [/* available */
+#undef HAVE_MPI_COMBINER_F90_REAL])
+m4trace:configure.in:263: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:263: the top level])
+m4trace:configure.in:264: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_F90_INTEGER])
+m4trace:configure.in:264: -2- AH_OUTPUT([HAVE_MPI_COMBINER_F90_INTEGER], [/* available */
+#undef HAVE_MPI_COMBINER_F90_INTEGER])
+m4trace:configure.in:264: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:264: the top level])
+m4trace:configure.in:265: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMBINER_F90_COMPLEX])
+m4trace:configure.in:265: -2- AH_OUTPUT([HAVE_MPI_COMBINER_F90_COMPLEX], [/* available */
+#undef HAVE_MPI_COMBINER_F90_COMPLEX])
+m4trace:configure.in:265: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:253: UD_HAS_MPI_COMBINER is expanded from...
+configure.in:265: the top level])
+m4trace:configure.in:285: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_CHARACTER])
+m4trace:configure.in:285: -2- AH_OUTPUT([HAVE_MPI_CHARACTER], [/* available */
+#undef HAVE_MPI_CHARACTER])
+m4trace:configure.in:285: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:285: the top level])
+m4trace:configure.in:286: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_REAL])
+m4trace:configure.in:286: -2- AH_OUTPUT([HAVE_MPI_REAL], [/* available */
+#undef HAVE_MPI_REAL])
+m4trace:configure.in:286: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:286: the top level])
+m4trace:configure.in:287: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_INTEGER])
+m4trace:configure.in:287: -2- AH_OUTPUT([HAVE_MPI_INTEGER], [/* available */
+#undef HAVE_MPI_INTEGER])
+m4trace:configure.in:287: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:287: the top level])
+m4trace:configure.in:288: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_DOUBLE_PRECISION])
+m4trace:configure.in:288: -2- AH_OUTPUT([HAVE_MPI_DOUBLE_PRECISION], [/* available */
+#undef HAVE_MPI_DOUBLE_PRECISION])
+m4trace:configure.in:288: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:288: the top level])
+m4trace:configure.in:289: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_INTEGER1])
+m4trace:configure.in:289: -2- AH_OUTPUT([HAVE_MPI_INTEGER1], [/* available */
+#undef HAVE_MPI_INTEGER1])
+m4trace:configure.in:289: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:289: the top level])
+m4trace:configure.in:290: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_INTEGER2])
+m4trace:configure.in:290: -2- AH_OUTPUT([HAVE_MPI_INTEGER2], [/* available */
+#undef HAVE_MPI_INTEGER2])
+m4trace:configure.in:290: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:290: the top level])
+m4trace:configure.in:291: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_INTEGER4])
+m4trace:configure.in:291: -2- AH_OUTPUT([HAVE_MPI_INTEGER4], [/* available */
+#undef HAVE_MPI_INTEGER4])
+m4trace:configure.in:291: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:291: the top level])
+m4trace:configure.in:292: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_INTEGER8])
+m4trace:configure.in:292: -2- AH_OUTPUT([HAVE_MPI_INTEGER8], [/* available */
+#undef HAVE_MPI_INTEGER8])
+m4trace:configure.in:292: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:292: the top level])
+m4trace:configure.in:293: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_INTEGER16])
+m4trace:configure.in:293: -2- AH_OUTPUT([HAVE_MPI_INTEGER16], [/* available */
+#undef HAVE_MPI_INTEGER16])
+m4trace:configure.in:293: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:293: the top level])
+m4trace:configure.in:294: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_REAL4])
+m4trace:configure.in:294: -2- AH_OUTPUT([HAVE_MPI_REAL4], [/* available */
+#undef HAVE_MPI_REAL4])
+m4trace:configure.in:294: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:294: the top level])
+m4trace:configure.in:295: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_REAL8])
+m4trace:configure.in:295: -2- AH_OUTPUT([HAVE_MPI_REAL8], [/* available */
+#undef HAVE_MPI_REAL8])
+m4trace:configure.in:295: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:295: the top level])
+m4trace:configure.in:296: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_REAL16])
+m4trace:configure.in:296: -2- AH_OUTPUT([HAVE_MPI_REAL16], [/* available */
+#undef HAVE_MPI_REAL16])
+m4trace:configure.in:296: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:296: the top level])
+m4trace:configure.in:297: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMPLEX8])
+m4trace:configure.in:297: -2- AH_OUTPUT([HAVE_MPI_COMPLEX8], [/* available */
+#undef HAVE_MPI_COMPLEX8])
+m4trace:configure.in:297: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:297: the top level])
+m4trace:configure.in:298: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMPLEX16])
+m4trace:configure.in:298: -2- AH_OUTPUT([HAVE_MPI_COMPLEX16], [/* available */
+#undef HAVE_MPI_COMPLEX16])
+m4trace:configure.in:298: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:298: the top level])
+m4trace:configure.in:299: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_COMPLEX32])
+m4trace:configure.in:299: -2- AH_OUTPUT([HAVE_MPI_COMPLEX32], [/* available */
+#undef HAVE_MPI_COMPLEX32])
+m4trace:configure.in:299: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:299: the top level])
+m4trace:configure.in:300: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_UB])
+m4trace:configure.in:300: -2- AH_OUTPUT([HAVE_MPI_UB], [/* available */
+#undef HAVE_MPI_UB])
+m4trace:configure.in:300: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:300: the top level])
+m4trace:configure.in:301: -2- AC_DEFINE_TRACE_LITERAL([HAVE_MPI_LB])
+m4trace:configure.in:301: -2- AH_OUTPUT([HAVE_MPI_LB], [/* available */
+#undef HAVE_MPI_LB])
+m4trace:configure.in:301: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:2180: AC_TRY_COMPILE is expanded from...
+configure.in:283: UD_HAS_MPI_TYPE is expanded from...
+configure.in:301: the top level])
+m4trace:configure.in:308: -1- AC_TYPE_OFF_T
+m4trace:configure.in:308: -1- AC_DEFINE_TRACE_LITERAL([off_t])
+m4trace:configure.in:308: -1- AH_OUTPUT([off_t], [/* Define to `long\' if <sys/types.h> does not define. */
+#undef off_t])
+m4trace:configure.in:309: -1- AC_CHECK_TYPES([ssize_t, ptrdiff_t, uchar])
+m4trace:configure.in:309: -1- AC_DEFINE_TRACE_LITERAL([HAVE_SSIZE_T])
+m4trace:configure.in:309: -1- AH_OUTPUT([HAVE_SSIZE_T], [/* Define to 1 if the system has the type `ssize_t\'. */
+#undef HAVE_SSIZE_T])
+m4trace:configure.in:309: -1- AC_DEFINE_TRACE_LITERAL([HAVE_PTRDIFF_T])
+m4trace:configure.in:309: -1- AH_OUTPUT([HAVE_PTRDIFF_T], [/* Define to 1 if the system has the type `ptrdiff_t\'. */
+#undef HAVE_PTRDIFF_T])
+m4trace:configure.in:309: -1- AC_DEFINE_TRACE_LITERAL([HAVE_UCHAR])
+m4trace:configure.in:309: -1- AH_OUTPUT([HAVE_UCHAR], [/* Define to 1 if the system has the type `uchar\'. */
+#undef HAVE_UCHAR])
+m4trace:configure.in:310: -1- AH_OUTPUT([__CHAR_UNSIGNED__], [/* Define to 1 if type `char\' is unsigned and you are not using gcc.  */
+#ifndef __CHAR_UNSIGNED__
+# undef __CHAR_UNSIGNED__
+#endif])
+m4trace:configure.in:310: -1- AC_DEFINE_TRACE_LITERAL([__CHAR_UNSIGNED__])
+m4trace:configure.in:311: -1- AC_DEFINE_TRACE_LITERAL([WORDS_BIGENDIAN])
+m4trace:configure.in:311: -1- AH_OUTPUT([WORDS_BIGENDIAN], [/* Define to 1 if your processor stores words with the most significant byte
+   first (like Motorola and SPARC, unlike Intel and VAX). */
+#undef WORDS_BIGENDIAN])
+m4trace:configure.in:312: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_SHORT])
+m4trace:configure.in:312: -1- AH_OUTPUT([SIZEOF_SHORT], [/* The size of a `short\', as computed by sizeof. */
+#undef SIZEOF_SHORT])
+m4trace:configure.in:313: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_INT])
+m4trace:configure.in:313: -1- AH_OUTPUT([SIZEOF_INT], [/* The size of a `int\', as computed by sizeof. */
+#undef SIZEOF_INT])
+m4trace:configure.in:314: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_LONG])
+m4trace:configure.in:314: -1- AH_OUTPUT([SIZEOF_LONG], [/* The size of a `long\', as computed by sizeof. */
+#undef SIZEOF_LONG])
+m4trace:configure.in:315: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_FLOAT])
+m4trace:configure.in:315: -1- AH_OUTPUT([SIZEOF_FLOAT], [/* The size of a `float\', as computed by sizeof. */
+#undef SIZEOF_FLOAT])
+m4trace:configure.in:316: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_DOUBLE])
+m4trace:configure.in:316: -1- AH_OUTPUT([SIZEOF_DOUBLE], [/* The size of a `double\', as computed by sizeof. */
+#undef SIZEOF_DOUBLE])
+m4trace:configure.in:317: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_SIZE_T])
+m4trace:configure.in:317: -1- AH_OUTPUT([SIZEOF_SIZE_T], [/* The size of a `size_t\', as computed by sizeof. */
+#undef SIZEOF_SIZE_T])
+m4trace:configure.in:353: -1- _m4_warn([obsolete], [The macro `AC_FD_CC' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:376: AC_FD_CC is expanded from...
+autoconf/general.m4:1799: AC_CACHE_VAL is expanded from...
+autoconf/general.m4:1808: AC_CACHE_CHECK is expanded from...
+configure.in:353: the top level])
+m4trace:configure.in:353: -1- _m4_warn([obsolete], [The macro `AC_FD_CC' is obsolete.
+You should run autoupdate.], [autoconf/general.m4:376: AC_FD_CC is expanded from...
+autoconf/general.m4:1799: AC_CACHE_VAL is expanded from...
+autoconf/general.m4:1808: AC_CACHE_CHECK is expanded from...
+configure.in:353: the top level])
+m4trace:configure.in:356: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_MPI_OFFSET])
+m4trace:configure.in:356: -1- AH_OUTPUT([SIZEOF_MPI_OFFSET], [/* The number of bytes in an MPI_Offset */
+#undef SIZEOF_MPI_OFFSET])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking for Fortran \"$ftype\"], [aclocal.m4:758: UD_CHECK_FORTRAN_TYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking for Fortran \"$ftype\"... ], [aclocal.m4:758: UD_CHECK_FORTRAN_TYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- AC_DEFINE_TRACE_LITERAL([NF_INT1_T])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking for Fortran \"$ftype\"], [aclocal.m4:758: UD_CHECK_FORTRAN_TYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking for Fortran \"$ftype\"... ], [aclocal.m4:758: UD_CHECK_FORTRAN_TYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- AC_DEFINE_TRACE_LITERAL([NF_INT2_T])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"$NF_INT1_T\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"$NF_INT2_T\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"$NF_INT2_T\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"$NF_INT2_T\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"$NF_INT2_T\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"$NF_INT2_T\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"$NF_INT2_T\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"integer\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"integer\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"real\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"real\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking if Fortran \"doubleprecision\" is C \"$ctype\"], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking if Fortran \"doubleprecision\" is C \"$ctype\"... ], [aclocal.m4:848: UD_CHECK_CTYPE_FORTRAN is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking for Fortran-equivalent to netCDF \"byte\"], [aclocal.m4:676: UD_CHECK_FORTRAN_NCTYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking for Fortran-equivalent to netCDF \"byte\"... ], [aclocal.m4:676: UD_CHECK_FORTRAN_NCTYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- AC_DEFINE_TRACE_LITERAL([NCBYTE_T])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking for Fortran-equivalent to netCDF \"short\"], [aclocal.m4:676: UD_CHECK_FORTRAN_NCTYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking for Fortran-equivalent to netCDF \"short\"... ], [aclocal.m4:676: UD_CHECK_FORTRAN_NCTYPE is expanded from...
+aclocal.m4:898: UD_FORTRAN_TYPES is expanded from...
+configure.in:359: the top level])
+m4trace:configure.in:359: -1- AC_DEFINE_TRACE_LITERAL([NCSHORT_T])
+m4trace:configure.in:362: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: checking for Fortran \"$NFMPI_OFFSET\"], [])
+m4trace:configure.in:362: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: checking for Fortran \"$NFMPI_OFFSET\"... ], [])
+m4trace:configure.in:373: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me:$LINENO: error: F77 does not support \"$NFMPI_OFFSET\"], [])
+m4trace:configure.in:373: -1- _m4_warn([obsolete], [back quotes and double quotes must not be escaped in: $as_me: error: F77 does not support \"$NFMPI_OFFSET\"], [])
+m4trace:configure.in:377: -1- AC_SUBST([prog])
+m4trace:configure.in:377: -1- AC_SUBST([WHATIS])
+m4trace:configure.in:377: -1- AC_SUBST([MAKEWHATIS_CMD])
+m4trace:configure.in:379: -1- AC_DEFINE_TRACE_LITERAL([_FILE_OFFSET_BITS])
+m4trace:configure.in:379: -1- AH_OUTPUT([_FILE_OFFSET_BITS], [/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS])
+m4trace:configure.in:379: -1- AC_DEFINE_TRACE_LITERAL([_LARGE_FILES])
+m4trace:configure.in:379: -1- AH_OUTPUT([_LARGE_FILES], [/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES])
+m4trace:configure.in:389: -1- AC_DEFINE_TRACE_LITERAL([SIZEOF_OFF_T])
+m4trace:configure.in:389: -1- AH_OUTPUT([SIZEOF_OFF_T], [/* The size of a `off_t\', as computed by sizeof. */
+#undef SIZEOF_OFF_T])
+m4trace:configure.in:400: -1- AC_SUBST([has_fortran])
+m4trace:configure.in:403: -1- AC_CONFIG_FILES([macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/test_dtype/Makefile test/nc_test/Makefile test/nf_test/Makefile test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile src/utils/ncgen/Makefile test/testcases/Makefile])
+m4trace:configure.in:403: -1- _m4_warn([obsolete], [AC_OUTPUT should be used without arguments.
+You should run autoupdate.], [])
+m4trace:configure.in:403: -1- AC_SUBST([LIB@&t@OBJS], [$ac_libobjs])
+m4trace:configure.in:403: -1- AC_SUBST([LTLIBOBJS], [$ac_ltlibobjs])

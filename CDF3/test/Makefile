@@ -1,0 +1,15 @@
+srcdir = .
+
+SUBDIRS = common test_double test_double_int test_float test_int test_dtype nc_test fandc nf_test
+
+all:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
+
+clean:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
+
+# Eventually, this target will run all of the relevant tests
+testing:
+	cd nc_test && make testing
+	if [ yes = yes ] ; then cd nf_test && make testing ; fi
+

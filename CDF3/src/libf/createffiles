@@ -1,0 +1,27 @@
+#! /bin/sh
+# -*- Mode: shell-script-mode; -*-
+#
+# This is a simple script that creates the Fortran interface files.
+# It makes use of an interface builder developed for MPICH2 and a set of 
+# NetCDF-specific descriptions in the file "defs".
+mpich2SourceDir=${MPICH2SRC:-/home/kgao/mpich2-1.0.6p1}
+
+if [ ! -d "$mpich2SourceDir" ] ; then
+    echo "Set the environment variable MPICH2SRC to the root directory for mpich2"
+    exit 1
+fi
+if [ ! -x $mpich2SourceDir/src/binding/f77/buildiface ] ; then
+    echo "Cannot find $mpich2SourceDir/src/binding/f77/buildiface"
+    exit 1
+fi
+
+# Build the files 
+$mpich2SourceDir/src/binding/f77/buildiface -infile=../lib/pnetcdf.h -deffile=defs $@
+# Update to the old name
+for file in *f.c mpifnetcdf.h ; do
+    if grep FORT_DLL_SPEC $file >/dev/null 2>&1 ; then 
+	rm -f .tmp
+        sed -e 's/FORT_DLL_SPEC/FORTRAN_API/g' $file > .tmp
+	mv .tmp $file
+    fi
+done

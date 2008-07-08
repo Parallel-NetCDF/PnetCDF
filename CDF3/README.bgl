@@ -1,0 +1,44 @@
+# 5 October 2005
+# Building parallel-netcdf on BGL
+
+Be sure to run configure with the --build and --host flags to put it in "cross
+compile mode".  This will make configure use compile-only tests, insted of the
+usual compile-and-run tests (running tests on the bgl login node won't work as
+the compute nodes are totaly different).
+
+configure --build powerpc32-unknown-gnu --host powerpc-suse-linux  \
+	--with-mpi=/bgl/BlueLight/ppcfloor/bglsys/
+
+It's possible to build pnetcdf with the IBM xl compilers, but you have to set
+quite a few environment variables
+
+export CC=blrts_xlc
+export MPICC=blrts_xlc
+export CXX=blrts_xlC
+export MPICXX=blrts_xlC
+export FC=blrts_xlf
+export F77=blrts_xlf
+export MPIF77=blrts_xlf
+
+export CFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
+export LIBS="-L/bgl/BlueLight/ppcfloor/bglsys/lib -lmpich.rts -lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts -lrts.rts"
+
+configure --build powerpc32-unknown-gnu --host powerpc-suse-linux
+
+Several early versions of IBM's MPI-IO implementation would segfault under
+certain workloads.  If you are running driver version "V1R3M0_240_2006-060623"
+or newer, the segfault issue should be resolved.  If you are running an older
+driver, read on:
+
+When built against some older BlueGene drivers,  nc_test does not run
+completley without setting a special environment variable, hitting a seg fault
+deep inside ROMIO.  We first noticed this in IBM's "Driver 202" MPI and also in
+"V1R1M1_253_2005-051003" and "V1R2M1_020_2006-060110"  We have told IBM
+developers about the problem.  Code that makes use of the ncmpi_get_vara_*_all
+or ncmpi_put_vara_*_all routines will likely trigger a seg fault.  IBM has
+provided a workaround:  if your code seg-faults, try setting the
+"BGLMPIO_TUNEBLOCKING" environment variable to 0.  With this environment
+variable set, nc_tests runs to completion and passes.  For one real-world
+example, the FLASH-IO benchmark with 8 processors sees a 5% performance hit
+when writing out plotfiles.  That increases to 22% with 16 processors.   Again, upgrading to the latest BlueGene drivers should fix this issue.
+
