@@ -188,6 +188,6 @@ main(int argc, char **argv) {
 
    /* Delete the file. */
    (void) remove(FILE_NAME);
-
+   MPI_Finalize();
    return 0;
 }
