@@ -422,6 +422,8 @@ ncmpii_NC_var_shape64(NC_var *varp, const NC_dimarray *dims)
 
 
 out :
+		varp->len = product * varp->xsz;
+#if 0
 	if (varp->xsz <= X_UINT_MAX / product) /* if int. mult won't overflow */
 	{
 		varp->len = product * varp->xsz;
@@ -429,6 +431,7 @@ out :
 	{ /* ok for last var to be "too big", indicated by this special len */
 		varp->len = X_UINT_MAX;
 	}
+#endif
 	switch(varp->type) {
 	case NC_BYTE :
 	case NC_CHAR :
