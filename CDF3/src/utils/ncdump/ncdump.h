@@ -19,15 +19,15 @@ enum {false=0, true=1};
 
 struct ncdim {			/* dimension */
     char name[NC_MAX_NAME];
-    MPI_Offset size;
+    int64_t size;
 };
 
 struct ncvar {			/* variable */
     char name[NC_MAX_NAME];
     nc_type type;
-    int ndims;
-    int dims[NC_MAX_VAR_DIMS];
-    int natts;
+    int64_t ndims;
+    int64_t dims[NC_MAX_VAR_DIMS];
+    int64_t natts;
     boolean has_fillval;
     double fillval;
 };
@@ -36,7 +36,7 @@ struct ncatt {			/* attribute */
     int var;
     char name[NC_MAX_NAME];
     nc_type type;
-    MPI_Offset len;
+    int64_t len;
     char *string;		/* for text attributes (type = NC_CHAR) */
     double *vals;		/* for numeric attributes of all types */
 };
