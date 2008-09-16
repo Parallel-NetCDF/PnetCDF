@@ -359,7 +359,7 @@ ncx_szof(nc_type type)
 /*
  * 'compile' the shape and len of a variable
  *  Formerly
-ncmpii_NC_var_shape(var, dims)
+ *   ncmpii_NC_var_shape(var, dims)
  */
 #include <stdio.h>
 int
