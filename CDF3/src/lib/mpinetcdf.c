@@ -844,7 +844,7 @@ NCcoordck(NC *ncp, const NC_var *varp, const int64_t *coord)
         if(IS_RECVAR(varp))
         {
 		
-                if(*coord > X_INT_MAX)
+                if(*coord > X_INT64_T_MAX)
                         return NC_EINVALCOORDS; /* sanity check */
                 if(NC_readonly(ncp) && *coord >= ncp->numrecs)
                 {
@@ -872,7 +872,7 @@ NCcoordck(NC *ncp, const NC_var *varp, const int64_t *coord)
         for(; ip < coord + varp->ndims; ip++, up++)
         {
                 /* cast needed for braindead systems with signed int64_t */
-                if( *ip >= (unsigned long)*up )
+                if( *ip >= (uint64_t)*up )
                         return NC_EINVALCOORDS;
         }
  
@@ -902,7 +902,7 @@ NCedgeck(const NC *ncp, const NC_var *varp,
   for(; start < end; start++, edges++, shp++)
   {
     /* cast needed for braindead systems with signed int64_t */
-    if( *edges > (unsigned long)*shp || *start + *edges > (unsigned long)*shp)
+    if( *edges > (uint64_t)*shp || *start + *edges > (uint64_t)*shp)
     {
       return(NC_EEDGE);
     }
@@ -925,7 +925,7 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 
   if(IS_RECVAR(varp))
   {
-    if ( *stride == 0 || *stride >= X_INT_MAX)
+    if ( *stride == 0 || *stride >= X_INT64_T_MAX)
       /* cast needed for braindead systems with signed int64_t */
       return NC_ESTRIDE;
 
@@ -938,14 +938,14 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
   for(; start < end; start++, edges++, shp++, stride++)
   {
     /* cast needed for braindead systems with signed int64_t */
-    if( (*edges > (unsigned long)*shp) || 
-	(*edges > 0 && *start+1 + (*edges-1) * *stride > (unsigned long)*shp) ||
-	(*edges == 0 && *start > (unsigned long)*shp) )
+    if( (*edges > (uint64_t)*shp) || 
+	(*edges > 0 && *start+1 + (*edges-1) * *stride > (uint64_t)*shp) ||
+	(*edges == 0 && *start > (uint64_t)*shp) )
     {
       return(NC_EEDGE);
     }
 
-    if ( *stride == 0 || *stride >= X_INT_MAX)
+    if ( *stride == 0 || *stride >= X_INT64_T_MAX)
       /* cast needed for braindead systems with signed int64_t */
       return NC_ESTRIDE;
   }
@@ -1062,9 +1062,17 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const int64_t start[],
   int status;
   int64_t dim, ndims;
   int *shape = NULL, *subcount = NULL, *substart = NULL; /* all in bytes */
+  int64_t *shape64 = NULL, *subcount64 = NULL, *substart64 = NULL;
   MPI_Datatype rectype;
   MPI_Datatype filetype;
   int mpireturn;
+  MPI_Datatype types[3];
+  MPI_Datatype type1;
+  int64_t size, disps[3];
+  int blklens[3];
+  int tag = 0;
+  int i;
+  
 
   offset = varp->begin;
   
@@ -1186,24 +1194,116 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const int64_t start[],
         }
 
       } else {
-
+        
         /* non record variable */
+       tag = 0;
+         for (dim=0; dim< ndims-1; dim++){
+           if  (varp->shape[dim] > 2147483647){ /* if shape > 2^31-1 */
+                tag = 1;
+                break;
+           }
+         }
+       if ((varp->shape[dim]*varp->xsz)  > 2147483647)
+          tag = 1;
+       if (tag == 0 ){
+          for (dim = 0; dim < ndims-1; dim++ ) {
+            shape[dim] = varp->shape[dim];
+            subcount[dim] = count[dim];
+            substart[dim] = start[dim];
+          } 
 
-        for (dim = 0; dim < ndims-1; dim++ ) {
-          shape[dim] = varp->shape[dim];
-          subcount[dim] = count[dim];
-          substart[dim] = start[dim];
-        }
+          shape[dim] = varp->xsz * varp->shape[dim];
+          subcount[dim] = varp->xsz * count[dim];
+          substart[dim] = varp->xsz * start[dim];
+  
+          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+  		         MPI_ORDER_C, MPI_BYTE, &filetype); 
+  
+          MPI_Type_commit(&filetype);
+        } else {
+shape64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
+          subcount64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
+          substart64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
 
-        shape[dim] = varp->xsz * varp->shape[dim];
-        subcount[dim] = varp->xsz * count[dim];
-        substart[dim] = varp->xsz * start[dim];
+          if (ndims == 1){  // for 64-bit support,  added July 23, 2008
+            shape64[0] = varp->shape[0];
+            subcount64[0] = count[0];
+            substart64[0] = start[0];
 
-        MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-		         MPI_ORDER_C, MPI_BYTE, &filetype); 
+            offset += start[0]*varp->xsz;
 
-        MPI_Type_commit(&filetype);
-      }
+            MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
+            MPI_Type_commit(&type1);
+
+          #if (MPI_VERSION < 2)
+            MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
+                            MPI_BYTE, &filetype);
+          #else
+            MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
+                                    type1, &filetype);
+          #endif
+            MPI_Type_commit(&filetype);
+            MPI_Type_free(&type1);
+
+       } else {
+          for (dim = 0; dim < ndims-1; dim++ ) {
+            shape64[dim] = varp->shape[dim];
+            subcount64[dim] = count[dim];
+            substart64[dim] = start[dim];
+          }
+
+          shape64[dim] = varp->xsz * varp->shape[dim];
+          subcount64[dim] = varp->xsz * count[dim];
+          substart64[dim] = varp->xsz * start[dim];
+          MPI_Type_hvector(subcount64[dim-1],
+                             subcount64[dim],
+                             varp->xsz * varp->shape[dim],
+                             MPI_BYTE,
+                             &type1);
+          MPI_Type_commit(&type1);
+          size = shape[dim];
+          for (i=dim-2; i>=0; i--) {
+                size *= shape[i+1];
+                MPI_Type_hvector(subcount64[i],
+                                 1,
+                                 size,
+                                 type1,
+                                 &filetype);
+                MPI_Type_commit(&filetype);
+
+                MPI_Type_free(&type1);
+                type1 = filetype;
+          }
+          disps[1] = substart64[dim];
+          size = 1;
+          for (i=dim-1; i>=0; i--) {
+            size *= shape64[i+1];
+            disps[1] += size*substart64[i];
+          }
+          disps[2] = 1;
+          for (i=0; i<ndims; i++) disps[2] *= shape64[i];
+
+          disps[0] = 0;
+          blklens[0] = blklens[1] = blklens[2] = 1;
+          types[0] = MPI_LB;
+          types[1] = type1;
+          types[2] = MPI_UB;
+
+          MPI_Type_struct(3,
+                    blklens,
+                    disps,
+                    types,
+                    &filetype);
+
+          MPI_Type_free(&type1);
+         }
+
+         free(shape64);
+         free(subcount64);
+         free(substart64);
+       }
+     }
+ 
     }
   }
 
@@ -1278,7 +1378,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   for (dim = 0; dim < ndims; dim++)
   {
     if ( (stride != NULL && stride[dim] == 0) ||
-        stride[dim] >= X_INT_MAX)
+        stride[dim] >= X_LONG_MAX)
     {
       return NC_ESTRIDE;
     }
@@ -1292,7 +1392,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
     return status;
 
  if(getnotput && IS_RECVAR(varp) &&
-     (unsigned long)*start + (unsigned long)*count > NC_get_numrecs(ncp))
+     (uint64_t)*start + (uint64_t)*count > NC_get_numrecs(ncp))
       return NC_EEDGE;
 */
 

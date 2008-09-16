@@ -331,8 +331,8 @@ ncmpi_def_dim(int ncid, const char *name, int64_t size, int64_t *dimidp)
 			/* "-3" handles rounded-up size */
 			return NC_EDIMSIZE;
 	} else if ((ncp->flags & NC_64BIT_DATA)) {
-		/* CDF3 format*/
-		if (size > X_UINT_MAX - 3 || (size < 0)) 
+		/* CDF5 format*/
+		if (size < 0) 
 			/* "-3" handles rounded-up size */
 			return NC_EDIMSIZE;
 	} else {
