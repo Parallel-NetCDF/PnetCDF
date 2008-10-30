@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_inq_dimid_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), int64_t*v3 FORT_END_LEN(d2) ){
+FORTRAN_API int FORT_CALL nfmpi_inq_dimid_ ( int *v1, char *v2 FORT_MIXED_LEN(d2), MPI_Fint *v3 FORT_END_LEN(d2) ){
     int ierr;
     char *p2;
 

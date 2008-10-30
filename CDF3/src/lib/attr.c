@@ -16,7 +16,7 @@
 #include "rnd.h"
 
 /* Prototypes of functions only used in this file */
-static NC_attr *elem_NC_attrarray(const NC_attrarray *ncap, int64_t elem);
+static NC_attr *elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
 
 /*
  * Free attr
@@ -38,8 +38,8 @@ ncmpii_free_NC_attr(NC_attr *attrp)
  * How much space will 'nelems' of 'type' take in
  *  external representation (as the values of an attribute)?
  */
-static int64_t
-ncmpix_len_NC_attrV(nc_type type, int64_t nelems)
+static size_t
+ncmpix_len_NC_attrV(nc_type type, size_t nelems)
 {
 	switch(type) {
 	case NC_BYTE:
@@ -64,11 +64,11 @@ NC_attr *
 ncmpii_new_x_NC_attr(
 	NC_string *strp,
 	nc_type type,
-	int64_t nelems)
+	MPI_Offset nelems)
 {
 	NC_attr *attrp;
-	const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
-	int64_t sz = M_RNDUP(sizeof(NC_attr));
+	const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
+	size_t sz = M_RNDUP(sizeof(NC_attr));
 
 	assert(!(xsz == 0 && nelems != 0));
 
@@ -100,7 +100,7 @@ static NC_attr *
 ncmpii_new_NC_attr(
 	const char *name,
 	nc_type type,
-	int64_t nelems)
+	MPI_Offset nelems)
 {
 	NC_string *strp;
 	NC_attr *attrp;
@@ -195,7 +195,7 @@ ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
 
 	if(ref->nelems != 0)
 	{
-		const int64_t sz = ref->nelems * sizeof(NC_attr *);
+		const size_t sz = ref->nelems * sizeof(NC_attr *);
 		ncap->value = (NC_attr **) malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
@@ -275,10 +275,10 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 
 
 static NC_attr *
-elem_NC_attrarray(const NC_attrarray *ncap, int64_t elem)
+elem_NC_attrarray(const NC_attrarray *ncap, size_t elem)
 {
 	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t*/
 	if(ncap->nelems == 0 || (unsigned long) elem >= ncap->nelems)
 		return NULL;
 
@@ -294,7 +294,7 @@ elem_NC_attrarray(const NC_attrarray *ncap, int64_t elem)
  *  else NULL on error
  */
 static NC_attrarray *
-NC_attrarray0( NC *ncp, int64_t varid)
+NC_attrarray0( NC *ncp, int varid)
 {
 	NC_attrarray *ap;
 
@@ -302,7 +302,7 @@ NC_attrarray0( NC *ncp, int64_t varid)
 	{
 		ap = &ncp->attrs;
 	}
-	else if(varid >= 0 && (int64_t) varid < ncp->vars.nelems)
+	else if(varid >= 0 && (size_t) varid < ncp->vars.nelems)
 	{
 		NC_var **vpp;
 		vpp = (NC_var **)ncp->vars.value;
@@ -323,8 +323,8 @@ NC_attr **
 ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name)
 {
 	NC_attr **attrpp;
-	int64_t attrid;
-	int64_t slen;
+	size_t attrid;
+	size_t slen;
 
 	assert(ncap != NULL);
 
@@ -352,7 +352,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name)
  */
 static int 
 NC_lookupattr(int ncid,
-	int64_t varid,
+	int varid,
 	const char *name, /* attribute name */
 	NC_attr **attrpp) /* modified on return */
 {
@@ -382,7 +382,7 @@ NC_lookupattr(int ncid,
 /* Public */
 
 int
-ncmpi_inq_attname(int ncid, int64_t varid, int64_t attnum, char *name)
+ncmpi_inq_attname(int ncid, int varid, int attnum, char *name)
 
 {
 	int status;
@@ -398,7 +398,7 @@ ncmpi_inq_attname(int ncid, int64_t varid, int64_t attnum, char *name)
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	attrp = elem_NC_attrarray(ncap, (int64_t)attnum);
+	attrp = elem_NC_attrarray(ncap, (size_t)attnum);
 	if(attrp == NULL)
 		return NC_ENOTATT;
 
@@ -410,7 +410,7 @@ ncmpi_inq_attname(int ncid, int64_t varid, int64_t attnum, char *name)
 
 
 int 
-ncmpi_inq_attid(int ncid, int64_t varid, const char *name, int64_t *attnump)
+ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
 {
 	int status;
 	NC *ncp;
@@ -431,13 +431,13 @@ ncmpi_inq_attid(int ncid, int64_t varid, const char *name, int64_t *attnump)
 		return NC_ENOTATT;
 
 	if(attnump != NULL)
-		*attnump = (int64_t)(attrpp - ncap->value);
+		*attnump = (int)(attrpp - ncap->value);
 
 	return NC_NOERR;
 }
 
 int 
-ncmpi_inq_atttype(int ncid, int64_t varid, const char *name, nc_type *datatypep)
+ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
 {
 	int status;
 	NC_attr *attrp;
@@ -453,7 +453,7 @@ ncmpi_inq_atttype(int ncid, int64_t varid, const char *name, nc_type *datatypep)
 }
 
 int 
-ncmpi_inq_attlen(int ncid, int64_t varid, const char *name, int64_t *lenp)
+ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp)
 {
 	int status;
 	NC_attr *attrp;
@@ -470,10 +470,10 @@ ncmpi_inq_attlen(int ncid, int64_t varid, const char *name, int64_t *lenp)
 
 int
 ncmpi_inq_att(int ncid,
-	int64_t varid,
+	int varid,
 	const char *name, /* input, attribute name */
 	nc_type *datatypep,
-	int64_t *lenp)
+	MPI_Offset *lenp)
 {
 	int status;
 	NC_attr *attrp;
@@ -492,7 +492,7 @@ ncmpi_inq_att(int ncid,
 
 
 int
-ncmpi_rename_att( int ncid, int64_t varid, const char *name, const char *newname)
+ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 {
 	int status;
 	NC *ncp;
@@ -561,7 +561,7 @@ ncmpi_rename_att( int ncid, int64_t varid, const char *name, const char *newname
 
 
 int
-ncmpi_copy_att(int ncid_in, int64_t varid_in, const char *name, int64_t ncid_out, int64_t ovarid)
+ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ovarid)
 {
 	int status;
 	NC_attr *iattrp;
@@ -655,7 +655,7 @@ ncmpi_copy_att(int ncid_in, int64_t varid_in, const char *name, int64_t ncid_out
 
 
 int
-ncmpi_del_att(int ncid, int64_t varid, const char *name)
+ncmpi_del_att(int ncid, int varid, const char *name)
 {
 	int status;
 	NC *ncp;
@@ -663,7 +663,7 @@ ncmpi_del_att(int ncid, int64_t varid, const char *name)
 	NC_attr **attrpp;
 	NC_attr *old = NULL;
 	int attrid;
-	int64_t slen;
+	MPI_Offset slen;
 
 	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
@@ -680,7 +680,7 @@ ncmpi_del_att(int ncid, int64_t varid, const char *name)
 	slen = strlen(name);
 
 	attrpp = (NC_attr **) ncap->value;
-	for(attrid = 0; (int64_t) attrid < ncap->nelems; attrid++, attrpp++)
+	for(attrid = 0; (size_t) attrid < ncap->nelems; attrid++, attrpp++)
 	{
 		if( slen == (*attrpp)->name->nchars &&
 			strncmp(name, (*attrpp)->name->cp, slen) == 0)
@@ -689,12 +689,12 @@ ncmpi_del_att(int ncid, int64_t varid, const char *name)
 			break;
 		}
 	}
-	if( (int64_t) attrid == ncap->nelems )
+	if( (size_t) attrid == ncap->nelems )
 		return NC_ENOTATT;
 			/* end inline NC_findattr() */
 
 	/* shuffle down */
-	for(attrid++; (int64_t) attrid < ncap->nelems; attrid++)
+	for(attrid++; (size_t) attrid < ncap->nelems; attrid++)
 	{
 		*attrpp = *(attrpp + 1);
 		attrpp++;
@@ -710,7 +710,7 @@ ncmpi_del_att(int ncid, int64_t varid, const char *name)
 
 
 static int
-ncmpix_pad_putn_Iuchar(void **xpp, int64_t nelems, const uchar *tp, nc_type type)
+ncmpix_pad_putn_Iuchar(void **xpp, MPI_Offset nelems, const uchar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -732,7 +732,7 @@ ncmpix_pad_putn_Iuchar(void **xpp, int64_t nelems, const uchar *tp, nc_type type
 }
 
 static int
-ncmpix_pad_getn_Iuchar(const void **xpp, int64_t nelems, uchar *tp, nc_type type)
+ncmpix_pad_getn_Iuchar(const void **xpp, MPI_Offset nelems, uchar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -755,7 +755,7 @@ ncmpix_pad_getn_Iuchar(const void **xpp, int64_t nelems, uchar *tp, nc_type type
 
 
 static int
-ncmpix_pad_putn_Ischar(void **xpp, int64_t nelems, const schar *tp, nc_type type)
+ncmpix_pad_putn_Ischar(void **xpp, MPI_Offset nelems, const schar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -777,7 +777,7 @@ ncmpix_pad_putn_Ischar(void **xpp, int64_t nelems, const schar *tp, nc_type type
 }
 
 static int
-ncmpix_pad_getn_Ischar(const void **xpp, int64_t nelems, schar *tp, nc_type type)
+ncmpix_pad_getn_Ischar(const void **xpp, MPI_Offset nelems, schar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -800,7 +800,7 @@ ncmpix_pad_getn_Ischar(const void **xpp, int64_t nelems, schar *tp, nc_type type
 
 
 static int
-ncmpix_pad_putn_Ishort(void **xpp, int64_t nelems, const short *tp, nc_type type)
+ncmpix_pad_putn_Ishort(void **xpp, MPI_Offset nelems, const short *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -822,7 +822,7 @@ ncmpix_pad_putn_Ishort(void **xpp, int64_t nelems, const short *tp, nc_type type
 }
 
 static int
-ncmpix_pad_getn_Ishort(const void **xpp, int64_t nelems, short *tp, nc_type type)
+ncmpix_pad_getn_Ishort(const void **xpp, MPI_Offset nelems, short *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -845,7 +845,7 @@ ncmpix_pad_getn_Ishort(const void **xpp, int64_t nelems, short *tp, nc_type type
 
 
 static int
-ncmpix_pad_putn_Iint(void **xpp, int64_t nelems, const int *tp, nc_type type)
+ncmpix_pad_putn_Iint(void **xpp, MPI_Offset nelems, const int *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -867,7 +867,7 @@ ncmpix_pad_putn_Iint(void **xpp, int64_t nelems, const int *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Iint(const void **xpp, int64_t nelems, int *tp, nc_type type)
+ncmpix_pad_getn_Iint(const void **xpp, MPI_Offset nelems, int *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -890,7 +890,7 @@ ncmpix_pad_getn_Iint(const void **xpp, int64_t nelems, int *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Ilong(void **xpp, int64_t nelems, const long *tp, nc_type type)
+ncmpix_pad_putn_Ilong(void **xpp, MPI_Offset nelems, const long *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -912,7 +912,7 @@ ncmpix_pad_putn_Ilong(void **xpp, int64_t nelems, const long *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Ilong(const void **xpp, int64_t nelems, long *tp, nc_type type)
+ncmpix_pad_getn_Ilong(const void **xpp, MPI_Offset nelems, long *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -935,7 +935,7 @@ ncmpix_pad_getn_Ilong(const void **xpp, int64_t nelems, long *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Ifloat(void **xpp, int64_t nelems, const float *tp, nc_type type)
+ncmpix_pad_putn_Ifloat(void **xpp, MPI_Offset nelems, const float *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -957,7 +957,7 @@ ncmpix_pad_putn_Ifloat(void **xpp, int64_t nelems, const float *tp, nc_type type
 }
 
 static int
-ncmpix_pad_getn_Ifloat(const void **xpp, int64_t nelems, float *tp, nc_type type)
+ncmpix_pad_getn_Ifloat(const void **xpp, MPI_Offset nelems, float *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -980,7 +980,7 @@ ncmpix_pad_getn_Ifloat(const void **xpp, int64_t nelems, float *tp, nc_type type
 
 
 static int
-ncmpix_pad_putn_Idouble(void **xpp, int64_t nelems, const double *tp, nc_type type)
+ncmpix_pad_putn_Idouble(void **xpp, MPI_Offset nelems, const double *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -1002,7 +1002,7 @@ ncmpix_pad_putn_Idouble(void **xpp, int64_t nelems, const double *tp, nc_type ty
 }
 
 static int
-ncmpix_pad_getn_Idouble(const void **xpp, int64_t nelems, double *tp, nc_type type)
+ncmpix_pad_getn_Idouble(const void **xpp, MPI_Offset nelems, double *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -1026,8 +1026,8 @@ ncmpix_pad_getn_Idouble(const void **xpp, int64_t nelems, double *tp, nc_type ty
 
 
 int
-ncmpi_put_att_text(int ncid, int64_t varid, const char *name,
-	int64_t nelems, const char *value)
+ncmpi_put_att_text(int ncid, int varid, const char *name,
+	MPI_Offset nelems, const char *value)
 {
 	int status;
 	NC *ncp;
@@ -1051,7 +1051,7 @@ ncmpi_put_att_text(int ncid, int64_t varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t */
 	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
@@ -1063,7 +1063,7 @@ ncmpi_put_att_text(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(NC_CHAR, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(NC_CHAR, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1138,7 +1138,7 @@ ncmpi_put_att_text(int ncid, int64_t varid, const char *name,
 
 
 int
-ncmpi_get_att_text(int ncid, int64_t varid, const char *name, char *str)
+ncmpi_get_att_text(int ncid, int varid, const char *name, char *str)
 {
 	int status;
 	NC_attr *attrp;
@@ -1164,8 +1164,8 @@ ncmpi_get_att_text(int ncid, int64_t varid, const char *name, char *str)
 
 
 int
-ncmpi_put_att_schar(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const signed char *value)
+ncmpi_put_att_schar(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const signed char *value)
 {
 	int status;
 	NC *ncp;
@@ -1192,7 +1192,7 @@ ncmpi_put_att_schar(int ncid, int64_t varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t */
 	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
@@ -1204,7 +1204,7 @@ ncmpi_put_att_schar(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1288,7 +1288,7 @@ ncmpi_put_att_schar(int ncid, int64_t varid, const char *name,
 }
 
 int
-ncmpi_get_att_schar(int ncid, int64_t varid, const char *name, signed char *tp)
+ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1311,8 +1311,8 @@ ncmpi_get_att_schar(int ncid, int64_t varid, const char *name, signed char *tp)
 
 
 int
-ncmpi_put_att_uchar(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const unsigned char *value)
+ncmpi_put_att_uchar(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const unsigned char *value)
 {
 	int status;
 	NC *ncp;
@@ -1339,7 +1339,7 @@ ncmpi_put_att_uchar(int ncid, int64_t varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t */
 	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
@@ -1351,7 +1351,7 @@ ncmpi_put_att_uchar(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1435,7 +1435,7 @@ ncmpi_put_att_uchar(int ncid, int64_t varid, const char *name,
 }
 
 int
-ncmpi_get_att_uchar(int ncid, int64_t varid, const char *name, unsigned char *tp)
+ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1458,8 +1458,8 @@ ncmpi_get_att_uchar(int ncid, int64_t varid, const char *name, unsigned char *tp
 
 
 int
-ncmpi_put_att_short(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const short *value)
+ncmpi_put_att_short(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const short *value)
 {
 	int status;
 	NC *ncp;
@@ -1486,7 +1486,7 @@ ncmpi_put_att_short(int ncid, int64_t varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t */
 	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
@@ -1498,7 +1498,7 @@ ncmpi_put_att_short(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1582,7 +1582,7 @@ ncmpi_put_att_short(int ncid, int64_t varid, const char *name,
 }
 
 int
-ncmpi_get_att_short(int ncid, int64_t varid, const char *name, short *tp)
+ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1605,8 +1605,8 @@ ncmpi_get_att_short(int ncid, int64_t varid, const char *name, short *tp)
 
 
 int
-ncmpi_put_att_int(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const int *value)
+ncmpi_put_att_int(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const int *value)
 {
 	int status;
 	NC *ncp;
@@ -1633,7 +1633,7 @@ ncmpi_put_att_int(int ncid, int64_t varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t */
 	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
@@ -1645,7 +1645,7 @@ ncmpi_put_att_int(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1729,7 +1729,7 @@ ncmpi_put_att_int(int ncid, int64_t varid, const char *name,
 }
 
 int
-ncmpi_get_att_int(int ncid, int64_t varid, const char *name, int *tp)
+ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1752,8 +1752,8 @@ ncmpi_get_att_int(int ncid, int64_t varid, const char *name, int *tp)
 
 
 int
-ncmpi_put_att_long(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const long *value)
+ncmpi_put_att_long(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const long *value)
 {
 	int status;
 	NC *ncp;
@@ -1780,7 +1780,7 @@ ncmpi_put_att_long(int ncid, int64_t varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t */
 	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
@@ -1792,7 +1792,7 @@ ncmpi_put_att_long(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -1876,7 +1876,7 @@ ncmpi_put_att_long(int ncid, int64_t varid, const char *name,
 }
 
 int
-ncmpi_get_att_long(int ncid, int64_t varid, const char *name, long *tp)
+ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -1899,8 +1899,8 @@ ncmpi_get_att_long(int ncid, int64_t varid, const char *name, long *tp)
 
 
 int
-ncmpi_put_att_float(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const float *value)
+ncmpi_put_att_float(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const float *value)
 {
 	int status;
 	NC *ncp;
@@ -1927,7 +1927,7 @@ ncmpi_put_att_float(int ncid, int64_t varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed int64_t */
+		/* cast needed for braindead systems with signed size_t */
 	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
@@ -1939,7 +1939,7 @@ ncmpi_put_att_float(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -2023,7 +2023,7 @@ ncmpi_put_att_float(int ncid, int64_t varid, const char *name,
 }
 
 int
-ncmpi_get_att_float(int ncid, int64_t varid, const char *name, float *tp)
+ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -2046,8 +2046,8 @@ ncmpi_get_att_float(int ncid, int64_t varid, const char *name, float *tp)
 
 
 int
-ncmpi_put_att_double(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const double *value)
+ncmpi_put_att_double(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const double *value)
 {
 	int status;
 	NC *ncp;
@@ -2074,9 +2074,9 @@ ncmpi_put_att_double(int ncid, int64_t varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed int64_t */
-	if((unsigned long long) nelems > X_INT_MAX) /* backward compat */
-		return NC_EINVAL; /* Invalid nelems */
+		/* cast needed for braindead systems with signed size_t */
+	/* if((unsigned long long) nelems > X_INT_MAX) /* backward compat */
+        /*		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
@@ -2086,7 +2086,7 @@ ncmpi_put_att_double(int ncid, int64_t varid, const char *name,
 	{
 		if(!NC_indef(ncp) )
 		{
-			const int64_t xsz = ncmpix_len_NC_attrV(type, nelems);
+			const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
 			attrp = *attrpp; /* convenience */
 	
 			if(xsz > attrp->xsz)
@@ -2169,7 +2169,7 @@ ncmpi_put_att_double(int ncid, int64_t varid, const char *name,
 }
 
 int
-ncmpi_get_att_double(int ncid, int64_t varid, const char *name, double *tp)
+ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp)
 {
 	int status;
 	NC_attr *attrp;
@@ -2196,10 +2196,10 @@ ncmpi_get_att_double(int ncid, int64_t varid, const char *name, double *tp)
 int
 ncmpii_put_att(
 	int ncid,
-	int64_t varid,
+	int varid,
 	const char *name,
 	nc_type type,
-	int64_t nelems,
+	MPI_Offset nelems,
 	const void *value)
 {
 	switch (type) {
@@ -2234,7 +2234,7 @@ ncmpii_put_att(
 
 /* deprecated, used to support the 2.x interface */
 int
-ncmpii_get_att(int ncid, int64_t varid, const char *name, void *value)
+ncmpii_get_att(int ncid, int varid, const char *name, void *value)
 {
 	int status;
 	NC_attr *attrp;

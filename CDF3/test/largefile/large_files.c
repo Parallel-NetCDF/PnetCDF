@@ -19,7 +19,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FILE_NAME "/pvfs2/kgao/large_files.nc"
+#define FILE_NAME "./large_files.nc"
 
 void
 check_err(const int stat, const int line, const char *file) {
@@ -38,11 +38,11 @@ main(int argc, char **argv) {
    signed char x[] = {42, 21};
 
    /* dimension ids */
-   int64_t rec_dim;
-   int64_t i_dim;
-   int64_t j_dim;
-   int64_t k_dim;
-   int64_t n_dim;
+   int rec_dim;
+   int i_dim;
+   int j_dim;
+   int k_dim;
+   int n_dim;
  
 #define NUMRECS 1
 #define I_LEN 4104
@@ -51,23 +51,23 @@ main(int argc, char **argv) {
 #define N_LEN 2
 
    /* dimension lengths */
-   int64_t rec_len = NC_UNLIMITED;
-   int64_t i_len = I_LEN;
-   int64_t j_len = J_LEN;
-   int64_t k_len = K_LEN;
-   int64_t n_len = N_LEN;
+   MPI_Offset rec_len = NC_UNLIMITED;
+   MPI_Offset i_len = I_LEN;
+   MPI_Offset j_len = J_LEN;
+   MPI_Offset k_len = K_LEN;
+   MPI_Offset n_len = N_LEN;
 
    /* variable ids */
-   int64_t var1_id;
-   int64_t x_id;
+   int var1_id;
+   int x_id;
 
    /* rank (number of dimensions) for each variable */
 #  define RANK_var1 4
 #  define RANK_x 2
 
    /* variable shapes */
-   int64_t var1_dims[RANK_var1];
-   int64_t x_dims[RANK_x];
+   int var1_dims[RANK_var1];
+   int x_dims[RANK_x];
 
     printf("\n*** Testing large files, slowly.\n");
 
@@ -116,10 +116,10 @@ main(int argc, char **argv) {
    {			/* store var1 */
        int n = 0;
        static signed char var1[J_LEN][K_LEN];
-       static int64_t var1_start[RANK_var1] = {0, 0, 0, 0};
-       static int64_t var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
-       static int64_t x_start[RANK_x] = {0, 0};
-       static int64_t x_count[RANK_x] = {1, N_LEN};
+       static MPI_Offset var1_start[RANK_var1] = {0, 0, 0, 0};
+       static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
+       static MPI_Offset x_start[RANK_x] = {0, 0};
+       static MPI_Offset x_count[RANK_x] = {1, N_LEN};
        for(rec=0; rec<NUMRECS; rec++) {
 	   var1_start[0] = rec;
 	   x_start[0] = rec;
@@ -151,10 +151,10 @@ main(int argc, char **argv) {
    {			/* read var1 */
        int n = 0;
        static signed char var1[J_LEN][K_LEN];
-       static int64_t var1_start[RANK_var1] = {0, 0, 0, 0};
-       static int64_t var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
-       static int64_t x_start[RANK_x] = {0, 0};
-       static int64_t x_count[RANK_x] = {1, N_LEN};
+       static MPI_Offset var1_start[RANK_var1] = {0, 0, 0, 0};
+       static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
+       static MPI_Offset x_start[RANK_x] = {0, 0};
+       static MPI_Offset x_count[RANK_x] = {1, N_LEN};
        for(rec=0; rec<NUMRECS; rec++) {
 	   var1_start[0] = rec;
 	   x_start[0] = rec;

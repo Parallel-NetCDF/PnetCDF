@@ -19,12 +19,12 @@ int main (int argc, char *argv[]) {
 
   MPI_Comm comm_cart;
   int ierr;
-  int64_t lat_id, lev_id, lon_id;
+  int lat_id, lev_id, lon_id;
   int ncid;
   int totpes;
-  int64_t tt_id;
+  int tt_id;
 
-  int64_t dim_id[3];
+  int dim_id[3];
 
   int numpes[3] = { 0, 1, 1 };  /* number of PEs along axes;
                                    determined by MPI where a
@@ -41,9 +41,9 @@ int main (int argc, char *argv[]) {
   ierr = ncmpi_create (comm_cart, "pnc_test.nc", NC_CLOBBER, MPI_INFO_NULL,
                        &ncid);
 
-  ierr = ncmpi_def_dim (ncid, "level",     (int64_t) TOTSIZ_3D[0], &lev_id);
-  ierr = ncmpi_def_dim (ncid, "latitude",  (int64_t) TOTSIZ_3D[1], &lat_id);
-  ierr = ncmpi_def_dim (ncid, "longitude", (int64_t) TOTSIZ_3D[2], &lon_id);
+  ierr = ncmpi_def_dim (ncid, "level",     (MPI_Offset) TOTSIZ_3D[0], &lev_id);
+  ierr = ncmpi_def_dim (ncid, "latitude",  (MPI_Offset) TOTSIZ_3D[1], &lat_id);
+  ierr = ncmpi_def_dim (ncid, "longitude", (MPI_Offset) TOTSIZ_3D[2], &lon_id);
 
   dim_id[0] = lev_id;
   dim_id[1] = lat_id;

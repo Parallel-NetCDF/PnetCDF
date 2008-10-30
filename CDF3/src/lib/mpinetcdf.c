@@ -29,35 +29,35 @@ ncmpi_inq_libvers(void) {
 static int echar(nc_type nctype,MPI_Datatype mpitype);
 static int need_convert(nc_type nctype,MPI_Datatype mpitype);
 static int need_swap(nc_type nctype,MPI_Datatype mpitype);
-static int x_putn_schar(void *xbuf, const void *buf, int64_t nelems,
+static int x_putn_schar(void *xbuf, const void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_putn_short(void *xbuf, const void *buf, int64_t nelems,
+static int x_putn_short(void *xbuf, const void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_putn_int(void *xbuf, const void *buf, int64_t nelems,
+static int x_putn_int(void *xbuf, const void *buf, MPI_Offset nelems,
 		      MPI_Datatype datatype);
-static int x_putn_float(void *xbuf, const void *buf, int64_t nelems,
+static int x_putn_float(void *xbuf, const void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_putn_double(void *xbuf, const void *buf, int64_t nelems,
+static int x_putn_double(void *xbuf, const void *buf, MPI_Offset nelems,
 			 MPI_Datatype datatype);
-static int x_getn_schar(const void *xbuf, void *buf, int64_t nelems,
+static int x_getn_schar(const void *xbuf, void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_getn_short(const void *xbuf, void *buf, int64_t nelems,
+static int x_getn_short(const void *xbuf, void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_getn_int(const void *xbuf, void *buf, int64_t nelems,
+static int x_getn_int(const void *xbuf, void *buf, MPI_Offset nelems,
 		      MPI_Datatype datatype);
-static int x_getn_float(const void *xbuf, void *buf, int64_t nelems,
+static int x_getn_float(const void *xbuf, void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_getn_double(const void *xbuf, void *buf, int64_t nelems,
+static int x_getn_double(const void *xbuf, void *buf, MPI_Offset nelems,
 			 MPI_Datatype datatype);
 static int set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
-			     const int64_t index[]);
+			     const MPI_Offset index[]);
 static int set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp);
 static int set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
-			     const int64_t start[], const int64_t count[],
+			     const MPI_Offset start[], const MPI_Offset count[],
 			     int getnotput);
 static int set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
-			     const int64_t start[], const int64_t count[], 
-			     const int64_t stride[], int getnotput);
+			     const MPI_Offset start[], const MPI_Offset count[], 
+			     const MPI_Offset stride[], int getnotput);
 static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 		       int collective);
 
@@ -66,8 +66,8 @@ static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 int 
 ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
-  int64_t sizeof_off_t = 0;
-  int64_t chunksize=4098;	/* might be a good thing to hint later */
+  MPI_Offset sizeof_off_t = 0;
+  MPI_Offset chunksize=4098;	/* might be a good thing to hint later */
   NC *ncp;
 
   ncp = ncmpii_new_NC(&chunksize);
@@ -127,7 +127,7 @@ int
 ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
   NC *ncp;
-  int64_t chunksize=4098;	/* might be a good thing to hint later */
+  MPI_Offset chunksize=4098;	/* might be a good thing to hint later */
   
   ncp = ncmpii_new_NC(&chunksize);
   if(ncp == NULL)
@@ -194,7 +194,7 @@ int
 ncmpi_redef(int ncid) {
   int status;
   NC *ncp;
-  int64_t mynumrecs, numrecs;
+  MPI_Offset mynumrecs, numrecs;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR) 
@@ -220,7 +220,7 @@ ncmpi_redef(int ncid) {
     /* collect and set the max numrecs */
 
     mynumrecs = ncp->numrecs;
-    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG, MPI_MAX, ncp->nciop->comm);
+    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
     if (numrecs > ncp->numrecs) {
       ncp->numrecs = numrecs;
       set_NC_ndirty(ncp);
@@ -493,7 +493,7 @@ need_swap(nc_type nctype,MPI_Datatype mpitype) {
 }
 
 static void
-swapn(void *dst, const void *src, int64_t nn, int xsize)
+swapn(void *dst, const void *src, MPI_Offset nn, int xsize)
 {
   int i;
   char *op = dst;
@@ -507,7 +507,7 @@ swapn(void *dst, const void *src, int64_t nn, int xsize)
 }
 
 static int
-x_putn_schar(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_putn_schar(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int status = ENOERR;
 
@@ -532,7 +532,7 @@ x_putn_schar(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype)
 }
 
 static int
-x_putn_short(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_putn_short(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -562,7 +562,7 @@ x_putn_short(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype)
 } 
 
 static int
-x_putn_int(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_putn_int(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -592,7 +592,7 @@ x_putn_int(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype) {
 } 
 
 static int
-x_putn_float(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_putn_float(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -622,7 +622,7 @@ x_putn_float(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype)
 } 
 
 int
-x_putn_double(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_putn_double(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -652,7 +652,7 @@ x_putn_double(void *xbuf, const void *buf, int64_t nelems, MPI_Datatype datatype
 } 
 
 static int
-x_getn_schar(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_getn_schar(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int status = ENOERR;
 
@@ -676,7 +676,7 @@ x_getn_schar(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype)
 }
 
 static int
-x_getn_short(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_getn_short(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -706,7 +706,7 @@ x_getn_short(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype)
 } 
 
 static int 
-x_getn_int(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_getn_int(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -736,7 +736,7 @@ x_getn_int(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype) {
 } 
 
 static int
-x_getn_float(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_getn_float(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int  status = ENOERR;
@@ -766,7 +766,7 @@ x_getn_float(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype)
 }
 
 static int
-x_getn_double(const void *xbuf, void *buf, int64_t nelems, MPI_Datatype datatype) {
+x_getn_double(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int  status = ENOERR;
@@ -832,10 +832,10 @@ check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
  * Check whether 'coord' values (indices) are valid for the variable.
  */
 static int
-NCcoordck(NC *ncp, const NC_var *varp, const int64_t *coord)
+NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord)
 {
-        const int64_t *ip;
-        int64_t *up;
+        const MPI_Offset *ip;
+        MPI_Offset *up;
  
         if(varp->ndims == 0)
                 return NC_NOERR;        /* 'scalar' variable */
@@ -844,7 +844,7 @@ NCcoordck(NC *ncp, const NC_var *varp, const int64_t *coord)
         if(IS_RECVAR(varp))
         {
 		
-                if(*coord > X_INT64_T_MAX)
+/*                if(*coord > X_INT64_T_MAX)
                         return NC_EINVALCOORDS; /* sanity check */
                 if(NC_readonly(ncp) && *coord >= ncp->numrecs)
                 {
@@ -871,8 +871,8 @@ NCcoordck(NC *ncp, const NC_var *varp, const int64_t *coord)
  
         for(; ip < coord + varp->ndims; ip++, up++)
         {
-                /* cast needed for braindead systems with signed int64_t */
-                if( *ip >= (uint64_t)*up )
+                /* cast needed for braindead systems with signed MPI_Offset */
+                if( *ip >= (MPI_Offset)*up )
                         return NC_EINVALCOORDS;
         }
  
@@ -884,10 +884,10 @@ NCcoordck(NC *ncp, const NC_var *varp, const int64_t *coord)
 /*ARGSUSED*/
 static int
 NCedgeck(const NC *ncp, const NC_var *varp,
-         const int64_t *start, const int64_t *edges)
+         const MPI_Offset *start, const MPI_Offset *edges)
 {
-  const int64_t *const end = start + varp->ndims;
-  const int64_t *shp = varp->shape;
+  const MPI_Offset *const end = start + varp->ndims;
+  const MPI_Offset *shp = varp->shape;
 
   if(varp->ndims == 0)
     return NC_NOERR;  /* 'scalar' variable */
@@ -901,8 +901,8 @@ NCedgeck(const NC *ncp, const NC_var *varp,
 
   for(; start < end; start++, edges++, shp++)
   {
-    /* cast needed for braindead systems with signed int64_t */
-    if( *edges > (uint64_t)*shp || *start + *edges > (uint64_t)*shp)
+    /* cast needed for braindead systems with signed MPI_Offset */
+    if( *edges > (MPI_Offset)*shp || *start + *edges > (MPI_Offset)*shp)
     {
       return(NC_EEDGE);
     }
@@ -915,18 +915,18 @@ NCedgeck(const NC *ncp, const NC_var *varp,
 /* enabled by Jianwei, 12/21/2004. why disable this? */
 static int
 NCstrideedgeck(const NC *ncp, const NC_var *varp,
-         const int64_t *start, const int64_t *edges, const int64_t *stride)
+         const MPI_Offset *start, const MPI_Offset *edges, const MPI_Offset *stride)
 {
-  const int64_t *const end = start + varp->ndims;
-  const int64_t *shp = varp->shape; /* use int64_t for now :( */
+  const MPI_Offset *const end = start + varp->ndims;
+  const MPI_Offset *shp = varp->shape; /* use MPI_Offset for now :( */
 
   if(varp->ndims == 0)
     return NC_NOERR;  /* 'scalar' variable */
 
   if(IS_RECVAR(varp))
   {
-    if ( *stride == 0 || *stride >= X_INT64_T_MAX)
-      /* cast needed for braindead systems with signed int64_t */
+    if ( *stride == 0 ) /*|| *stride >= X_INT64_T_MAX)*/
+      /* cast needed for braindead systems with signed MPI_Offset */
       return NC_ESTRIDE;
 
     start++;
@@ -937,16 +937,16 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 
   for(; start < end; start++, edges++, shp++, stride++)
   {
-    /* cast needed for braindead systems with signed int64_t */
-    if( (*edges > (uint64_t)*shp) || 
-	(*edges > 0 && *start+1 + (*edges-1) * *stride > (uint64_t)*shp) ||
-	(*edges == 0 && *start > (uint64_t)*shp) )
+    /* cast needed for braindead systems with signed MPI_Offset */
+    if( (*edges > (MPI_Offset)*shp) || 
+	(*edges > 0 && *start+1 + (*edges-1) * *stride > (MPI_Offset)*shp) ||
+	(*edges == 0 && *start > (MPI_Offset)*shp) )
     {
       return(NC_EEDGE);
     }
 
-    if ( *stride == 0 || *stride >= X_INT64_T_MAX)
-      /* cast needed for braindead systems with signed int64_t */
+    if ( *stride == 0)/* || *stride >= X_INT64_T_MAX)*/
+      /* cast needed for braindead systems with signed MPI_Offset */
       return NC_ESTRIDE;
   }
 
@@ -955,10 +955,10 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 #endif
 
 static int
-set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const int64_t index[]) {
-  int64_t offset;
+set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset index[]) {
+  MPI_Offset offset;
   int status;
-  int64_t dim, ndims;
+  int dim, ndims;
   int mpireturn;
 
   status = NCcoordck(ncp, varp, index);
@@ -1001,7 +1001,7 @@ set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const int64_t index[])
 
 static int
 set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
-  int64_t offset;
+  MPI_Offset offset;
   int mpireturn;
 
   offset = varp->begin;
@@ -1056,19 +1056,19 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
 }
 
 static int
-set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const int64_t start[], const int64_t count[], int getnotput) {
+set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start[], const MPI_Offset count[], int getnotput) {
 
-  int64_t offset;
+  MPI_Offset offset;
   int status;
-  int64_t dim, ndims;
+  int dim, ndims;
   int *shape = NULL, *subcount = NULL, *substart = NULL; /* all in bytes */
-  int64_t *shape64 = NULL, *subcount64 = NULL, *substart64 = NULL;
+  MPI_Offset *shape64 = NULL, *subcount64 = NULL, *substart64 = NULL;
   MPI_Datatype rectype;
   MPI_Datatype filetype;
   int mpireturn;
   MPI_Datatype types[3];
   MPI_Datatype type1;
-  int64_t size, disps[3];
+  MPI_Offset size, disps[3];
   int blklens[3];
   int tag = 0;
   int i;
@@ -1221,9 +1221,9 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const int64_t start[],
   
           MPI_Type_commit(&filetype);
         } else {
-shape64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
-          subcount64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
-          substart64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
+shape64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
+          subcount64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
+          substart64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
 
           if (ndims == 1){  // for 64-bit support,  added July 23, 2008
             shape64[0] = varp->shape[0];
@@ -1291,7 +1291,7 @@ shape64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
 
           MPI_Type_struct(3,
                     blklens,
-                    disps,
+                    (MPI_Aint*) disps,
                     types,
                     &filetype);
 
@@ -1330,14 +1330,14 @@ shape64 = (int64_t *)malloc(sizeof(int64_t) * ndims);
 
 static int
 set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, 
-		     const int64_t start[], const int64_t count[], 
-                     const int64_t stride[], int getnotput) {
-  int64_t offset;
+		     const MPI_Offset start[], const MPI_Offset count[], 
+                     const MPI_Offset stride[], int getnotput) {
+  MPI_Offset offset;
   int status;
   int mpireturn;
-  int64_t dim, ndims;
+  int dim, ndims;
   MPI_Datatype *subtypes, *filetype;
-  int64_t *blocklens = NULL, *blockstride = NULL, *blockcount = NULL;
+  MPI_Offset *blocklens = NULL, *blockstride = NULL, *blockcount = NULL;
 
   ndims = varp->ndims;
 
@@ -1392,7 +1392,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
     return status;
 
  if(getnotput && IS_RECVAR(varp) &&
-     (uint64_t)*start + (uint64_t)*count > NC_get_numrecs(ncp))
+     (MPI_Offset)*start + (MPI_Offset)*count > NC_get_numrecs(ncp))
       return NC_EEDGE;
 */
 
@@ -1407,9 +1407,9 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   
   } else {  
 
-    blocklens = (int64_t *) malloc(ndims * sizeof(int64_t));
-    blockstride = (int64_t *) malloc(ndims * sizeof(int64_t));
-    blockcount = (int64_t *) malloc(ndims * sizeof(int64_t));
+    blocklens = (MPI_Offset *) malloc(ndims * sizeof(MPI_Offset));
+    blockstride = (MPI_Offset *) malloc(ndims * sizeof(MPI_Offset));
+    blockcount = (MPI_Offset *) malloc(ndims * sizeof(MPI_Offset));
 
     dim = 0;
     while (dim < ndims && count[dim] > 0) dim++;
@@ -1496,15 +1496,15 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 */
 
 int
-ncmpi_put_var1(int ncid, int64_t varid,
-               const int64_t index[],
-               const void *buf, int64_t bufcount,
+ncmpi_put_var1(int ncid, int varid,
+               const MPI_Offset index[],
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -1635,7 +1635,7 @@ ncmpi_put_var1(int ncid, int64_t varid,
   if ( status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = index[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -1647,15 +1647,15 @@ ncmpi_put_var1(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_var1(int ncid, int64_t varid,
-               const int64_t index[],
-               void *buf, int64_t bufcount,
+ncmpi_get_var1(int ncid, int varid,
+               const MPI_Offset index[],
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes; 
+  MPI_Offset nelems, cnelems, nbytes; 
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -1790,12 +1790,12 @@ ncmpi_get_var1(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_var_all(int ncid, int64_t varid, void *buf, int64_t bufcount, MPI_Datatype datatype) {
+ncmpi_get_var_all(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -1939,12 +1939,12 @@ ncmpi_get_var_all(int ncid, int64_t varid, void *buf, int64_t bufcount, MPI_Data
 }
 
 int
-ncmpi_put_var(int ncid, int64_t varid, const void *buf, int64_t bufcount, MPI_Datatype datatype) {
+ncmpi_put_var(int ncid, int varid, const void *buf, MPI_Offset bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -2082,7 +2082,7 @@ ncmpi_put_var(int ncid, int64_t varid, const void *buf, int64_t bufcount, MPI_Da
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     if (varp->ndims > 1)
       newnumrecs = nelems / varp->dsizes[1];
     else
@@ -2097,12 +2097,12 @@ ncmpi_put_var(int ncid, int64_t varid, const void *buf, int64_t bufcount, MPI_Da
 }
 
 int
-ncmpi_get_var(int ncid, int64_t varid, void *buf, int64_t bufcount, MPI_Datatype datatype) {
+ncmpi_get_var(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -2245,17 +2245,17 @@ ncmpi_get_var(int ncid, int64_t varid, void *buf, int64_t bufcount, MPI_Datatype
 } 
 
 int
-ncmpi_put_vara_all(int ncid, int64_t varid,
-                   const int64_t start[], const int64_t count[],
-                   const void *buf, int64_t bufcount, 
+ncmpi_put_vara_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount, 
                    MPI_Datatype datatype) {
 
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   MPI_Comm comm;
@@ -2397,14 +2397,14 @@ ncmpi_put_vara_all(int ncid, int64_t varid,
     /* update the number of records in NC
         and write it back to file header, if necessary
     */
-    int64_t newnumrecs, max_numrecs;
+    MPI_Offset newnumrecs, max_numrecs;
     newnumrecs = start[0] + count[0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG, MPI_MAX, comm );
+      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
  
       if (ncp->numrecs < max_numrecs) {
         int rank;
@@ -2424,17 +2424,17 @@ ncmpi_put_vara_all(int ncid, int64_t varid,
 
 
 int
-ncmpi_get_vara_all(int ncid, int64_t varid,
-                   const int64_t start[], const int64_t count[],
-		   void *buf, int64_t bufcount,
+ncmpi_get_vara_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+		   void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype) {
 
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -2575,16 +2575,16 @@ ncmpi_get_vara_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara(int ncid, int64_t varid,
-               const int64_t start[], const int64_t count[],
-               const void *buf, int64_t bufcount,
+ncmpi_put_vara(int ncid, int varid,
+               const MPI_Offset start[], const MPI_Offset count[],
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL,  *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -2720,7 +2720,7 @@ ncmpi_put_vara(int ncid, int64_t varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + count[0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -2732,16 +2732,16 @@ ncmpi_put_vara(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_get_vara(int ncid, int64_t varid,
-               const int64_t start[], const int64_t count[],
-               void *buf, int64_t bufcount,
+ncmpi_get_vara(int ncid, int varid,
+               const MPI_Offset start[], const MPI_Offset count[],
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -2882,25 +2882,25 @@ ncmpi_get_vara(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_put_vars_all(int ncid, int64_t varid,
-                   const int64_t start[], 
-		   const int64_t count[],
-		   const int64_t stride[],
-                   const void *buf, int64_t bufcount, 
+ncmpi_put_vars_all(int ncid, int varid,
+                   const MPI_Offset start[], 
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+                   const void *buf, MPI_Offset bufcount, 
                    MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   MPI_Comm comm;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
-  int64_t *stride_was_null=NULL, *stride_ptr;
+  MPI_Offset *stride_was_null=NULL, *stride_ptr;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -2952,9 +2952,9 @@ ncmpi_put_vars_all(int ncid, int64_t varid,
     return NC_ENEGATIVECNT;
 
   /* NULL stride is legal and means (1,1,1,..1) */
-  stride_ptr = (int64_t *)stride;
+  stride_ptr = (MPI_Offset *)stride;
   if (stride == NULL) {
-	  stride_was_null=(int64_t*)malloc(varp->ndims*sizeof(int64_t));
+	  stride_was_null=(MPI_Offset*)malloc(varp->ndims*sizeof(MPI_Offset));
 	  for (dim=0; dim < varp->ndims; dim++) {
 		  stride_was_null[dim] = 1;
 	  }
@@ -3046,14 +3046,14 @@ ncmpi_put_vars_all(int ncid, int64_t varid,
     /* update the number of records in NC
         and write it back to file header, if necessary
     */
-    int64_t newnumrecs, max_numrecs;
+    MPI_Offset newnumrecs, max_numrecs;
     newnumrecs = start[0] + (count[0] - 1) * stride_ptr[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG, MPI_MAX, comm );
+      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
  
       if (ncp->numrecs < max_numrecs) {
         int rank;
@@ -3074,19 +3074,19 @@ ncmpi_put_vars_all(int ncid, int64_t varid,
 
 
 int
-ncmpi_get_vars_all(int ncid, int64_t varid,
-                   const int64_t start[], 
-		   const int64_t count[],
-                   const int64_t stride[],
-		   void *buf, int64_t bufcount,
+ncmpi_get_vars_all(int ncid, int varid,
+                   const MPI_Offset start[], 
+		   const MPI_Offset count[],
+                   const MPI_Offset stride[],
+		   void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype) {
 
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -3228,18 +3228,18 @@ ncmpi_get_vars_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars(int ncid, int64_t varid,
-               const int64_t start[], 
-	       const int64_t count[],
-	       const int64_t stride[],
-               const void *buf, int64_t bufcount,
+ncmpi_put_vars(int ncid, int varid,
+               const MPI_Offset start[], 
+	       const MPI_Offset count[],
+	       const MPI_Offset stride[],
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -3376,7 +3376,7 @@ ncmpi_put_vars(int ncid, int64_t varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + (count[0] - 1) * stride[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -3388,18 +3388,18 @@ ncmpi_put_vars(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_get_vars(int ncid, int64_t varid,
-               const int64_t start[], 
-	       const int64_t count[],
-               const int64_t stride[],
-               void *buf, int64_t bufcount,
+ncmpi_get_vars(int ncid, int varid,
+               const MPI_Offset start[], 
+	       const MPI_Offset count[],
+               const MPI_Offset stride[],
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -3563,20 +3563,20 @@ ncmpi_get_vars(int ncid, int64_t varid,
 */
 
 int
-ncmpi_put_varm_all(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
-		   const void *buf, int64_t bufcount,
+ncmpi_put_varm_all(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
+		   const void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int64_t ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t lnelems, cnelems;
+  MPI_Offset lnelems, cnelems;
   int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
@@ -3689,20 +3689,20 @@ ncmpi_put_varm_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_all(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
-		   void *buf, int64_t bufcount,
+ncmpi_get_varm_all(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
+		   void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int64_t ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t lnelems, cnelems; 
+  MPI_Offset lnelems, cnelems; 
   int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
@@ -3831,20 +3831,20 @@ ncmpi_get_varm_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm(int ncid, int64_t varid,
-	       const int64_t start[],
-	       const int64_t count[],
-	       const int64_t stride[],
-	       const int64_t imap[],
-	       const void *buf, int64_t bufcount,
+ncmpi_put_varm(int ncid, int varid,
+	       const MPI_Offset start[],
+	       const MPI_Offset count[],
+	       const MPI_Offset stride[],
+	       const MPI_Offset imap[],
+	       const void *buf, MPI_Offset bufcount,
 	       MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int64_t ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t lnelems, cnelems;
+  MPI_Offset lnelems, cnelems;
   int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
@@ -3957,20 +3957,20 @@ ncmpi_put_varm(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
-		   void *buf, int64_t bufcount,
+ncmpi_get_varm(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
+		   void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int64_t ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t lnelems, cnelems;
+  MPI_Offset lnelems, cnelems;
   int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
@@ -4099,8 +4099,8 @@ ncmpi_get_varm(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_var1_uchar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_put_var1_uchar(int ncid, int varid,
+                     const MPI_Offset index[],
                      const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4119,8 +4119,8 @@ ncmpi_put_var1_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_var1_schar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_put_var1_schar(int ncid, int varid,
+                     const MPI_Offset index[],
                      const signed char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4139,8 +4139,8 @@ ncmpi_put_var1_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_var1_text(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_put_var1_text(int ncid, int varid,
+                     const MPI_Offset index[],
                      const char *op) {
   NC_var *varp;
   NC *ncp;
@@ -4160,8 +4160,8 @@ ncmpi_put_var1_text(int ncid, int64_t varid,
 
 
 int
-ncmpi_put_var1_short(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_put_var1_short(int ncid, int varid,
+                     const MPI_Offset index[],
 		     const short *op) {
   NC_var *varp;
   NC *ncp;
@@ -4180,8 +4180,8 @@ ncmpi_put_var1_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_var1_int(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_put_var1_int(int ncid, int varid,
+                   const MPI_Offset index[],
                    const int *op) {
   NC_var *varp;
   NC *ncp;
@@ -4200,8 +4200,8 @@ ncmpi_put_var1_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_var1_long(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_put_var1_long(int ncid, int varid,
+                   const MPI_Offset index[],
                    const long *op) {
   NC_var *varp;
   NC *ncp;
@@ -4220,8 +4220,8 @@ ncmpi_put_var1_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_var1_float(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_put_var1_float(int ncid, int varid,
+                     const MPI_Offset index[],
                      const float *op) {
   NC_var *varp;
   NC *ncp;
@@ -4240,8 +4240,8 @@ ncmpi_put_var1_float(int ncid, int64_t varid,
 }
  
 int
-ncmpi_put_var1_double(int ncid, int64_t varid,
-                      const int64_t index[],
+ncmpi_put_var1_double(int ncid, int varid,
+                      const MPI_Offset index[],
                       const double *op) {
   NC_var *varp;
   NC *ncp;
@@ -4260,8 +4260,8 @@ ncmpi_put_var1_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_var1_uchar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_get_var1_uchar(int ncid, int varid,
+                     const MPI_Offset index[],
                      unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4280,8 +4280,8 @@ ncmpi_get_var1_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_var1_schar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_get_var1_schar(int ncid, int varid,
+                     const MPI_Offset index[],
                      signed char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4300,8 +4300,8 @@ ncmpi_get_var1_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_var1_text(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_get_var1_text(int ncid, int varid,
+                     const MPI_Offset index[],
                      char *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4320,8 +4320,8 @@ ncmpi_get_var1_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_var1_short(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_get_var1_short(int ncid, int varid,
+                     const MPI_Offset index[],
                      short *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4340,8 +4340,8 @@ ncmpi_get_var1_short(int ncid, int64_t varid,
 }
  
 int
-ncmpi_get_var1_int(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_get_var1_int(int ncid, int varid,
+                   const MPI_Offset index[],
                    int *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4360,8 +4360,8 @@ ncmpi_get_var1_int(int ncid, int64_t varid,
 }
  
 int
-ncmpi_get_var1_long(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_get_var1_long(int ncid, int varid,
+                   const MPI_Offset index[],
                    long *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4380,8 +4380,8 @@ ncmpi_get_var1_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_var1_float(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_get_var1_float(int ncid, int varid,
+                     const MPI_Offset index[],
                      float *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4400,8 +4400,8 @@ ncmpi_get_var1_float(int ncid, int64_t varid,
 }
  
 int
-ncmpi_get_var1_double(int ncid, int64_t varid,
-                      const int64_t index[],
+ncmpi_get_var1_double(int ncid, int varid,
+                      const MPI_Offset index[],
                       double *ip) {
   NC_var *varp;
   NC *ncp;
@@ -4420,12 +4420,12 @@ ncmpi_get_var1_double(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_put_var_uchar(int ncid, int64_t varid, const unsigned char *op) {
+ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4454,12 +4454,12 @@ ncmpi_put_var_uchar(int ncid, int64_t varid, const unsigned char *op) {
 }
 
 int
-ncmpi_put_var_schar(int ncid, int64_t varid, const signed char *op) {
+ncmpi_put_var_schar(int ncid, int varid, const signed char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4489,12 +4489,12 @@ ncmpi_put_var_schar(int ncid, int64_t varid, const signed char *op) {
 
 
 int
-ncmpi_put_var_text(int ncid, int64_t varid, const char *op) {
+ncmpi_put_var_text(int ncid, int varid, const char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4523,12 +4523,12 @@ ncmpi_put_var_text(int ncid, int64_t varid, const char *op) {
 }
 
 int
-ncmpi_put_var_short(int ncid, int64_t varid, const short *op) {
+ncmpi_put_var_short(int ncid, int varid, const short *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4557,12 +4557,12 @@ ncmpi_put_var_short(int ncid, int64_t varid, const short *op) {
 }
 
 int
-ncmpi_put_var_int(int ncid, int64_t varid, const int *op) {
+ncmpi_put_var_int(int ncid, int varid, const int *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4591,12 +4591,12 @@ ncmpi_put_var_int(int ncid, int64_t varid, const int *op) {
 } 
 
 int
-ncmpi_put_var_long(int ncid, int64_t varid, const long *op) {
+ncmpi_put_var_long(int ncid, int varid, const long *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4625,12 +4625,12 @@ ncmpi_put_var_long(int ncid, int64_t varid, const long *op) {
 }
 
 int
-ncmpi_put_var_float(int ncid, int64_t varid, const float *op) {
+ncmpi_put_var_float(int ncid, int varid, const float *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4659,12 +4659,12 @@ ncmpi_put_var_float(int ncid, int64_t varid, const float *op) {
 } 
 
 int
-ncmpi_put_var_double(int ncid, int64_t varid, const double *op) {
+ncmpi_put_var_double(int ncid, int varid, const double *op) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4693,12 +4693,12 @@ ncmpi_put_var_double(int ncid, int64_t varid, const double *op) {
 } 
 
 int
-ncmpi_get_var_uchar(int ncid, int64_t varid, unsigned char *ip) {
+ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4727,12 +4727,12 @@ ncmpi_get_var_uchar(int ncid, int64_t varid, unsigned char *ip) {
 }
 
 int
-ncmpi_get_var_schar(int ncid, int64_t varid, signed char *ip) {
+ncmpi_get_var_schar(int ncid, int varid, signed char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4761,12 +4761,12 @@ ncmpi_get_var_schar(int ncid, int64_t varid, signed char *ip) {
 }
 
 int
-ncmpi_get_var_text(int ncid, int64_t varid, char *ip) {
+ncmpi_get_var_text(int ncid, int varid, char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4795,12 +4795,12 @@ ncmpi_get_var_text(int ncid, int64_t varid, char *ip) {
 }
 
 int
-ncmpi_get_var_short(int ncid, int64_t varid, short *ip) {
+ncmpi_get_var_short(int ncid, int varid, short *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4829,12 +4829,12 @@ ncmpi_get_var_short(int ncid, int64_t varid, short *ip) {
 }
 
 int
-ncmpi_get_var_int(int ncid, int64_t varid, int *ip) {
+ncmpi_get_var_int(int ncid, int varid, int *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4863,12 +4863,12 @@ ncmpi_get_var_int(int ncid, int64_t varid, int *ip) {
 } 
 
 int
-ncmpi_get_var_long(int ncid, int64_t varid, long *ip) {
+ncmpi_get_var_long(int ncid, int varid, long *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4897,12 +4897,12 @@ ncmpi_get_var_long(int ncid, int64_t varid, long *ip) {
 }
 
 int
-ncmpi_get_var_float(int ncid, int64_t varid, float *ip) {
+ncmpi_get_var_float(int ncid, int varid, float *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4931,12 +4931,12 @@ ncmpi_get_var_float(int ncid, int64_t varid, float *ip) {
 } 
 
 int
-ncmpi_get_var_double(int ncid, int64_t varid, double *ip) {
+ncmpi_get_var_double(int ncid, int varid, double *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4965,12 +4965,12 @@ ncmpi_get_var_double(int ncid, int64_t varid, double *ip) {
 } 
 
 int
-ncmpi_get_var_uchar_all(int ncid, int64_t varid, unsigned char *ip) {
+ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4999,12 +4999,12 @@ ncmpi_get_var_uchar_all(int ncid, int64_t varid, unsigned char *ip) {
 }
 
 int
-ncmpi_get_var_schar_all(int ncid, int64_t varid, signed char *ip) {
+ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5033,12 +5033,12 @@ ncmpi_get_var_schar_all(int ncid, int64_t varid, signed char *ip) {
 }
 
 int
-ncmpi_get_var_text_all(int ncid, int64_t varid, char *ip) {
+ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5067,12 +5067,12 @@ ncmpi_get_var_text_all(int ncid, int64_t varid, char *ip) {
 }
 
 int
-ncmpi_get_var_short_all(int ncid, int64_t varid, short *ip) {
+ncmpi_get_var_short_all(int ncid, int varid, short *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5101,12 +5101,12 @@ ncmpi_get_var_short_all(int ncid, int64_t varid, short *ip) {
 }
 
 int
-ncmpi_get_var_int_all(int ncid, int64_t varid, int *ip) {
+ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5135,12 +5135,12 @@ ncmpi_get_var_int_all(int ncid, int64_t varid, int *ip) {
 } 
 
 int
-ncmpi_get_var_long_all(int ncid, int64_t varid, long *ip) {
+ncmpi_get_var_long_all(int ncid, int varid, long *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5169,12 +5169,12 @@ ncmpi_get_var_long_all(int ncid, int64_t varid, long *ip) {
 }
 
 int
-ncmpi_get_var_float_all(int ncid, int64_t varid, float *ip) {
+ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5203,12 +5203,12 @@ ncmpi_get_var_float_all(int ncid, int64_t varid, float *ip) {
 } 
 
 int
-ncmpi_get_var_double_all(int ncid, int64_t varid, double *ip) {
+ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5237,14 +5237,14 @@ ncmpi_get_var_double_all(int ncid, int64_t varid, double *ip) {
 } 
 
 int
-ncmpi_put_vara_uchar_all(int ncid, int64_t varid,
-                         const int64_t start[], const int64_t count[],
+ncmpi_put_vara_uchar_all(int ncid, int varid,
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5263,14 +5263,14 @@ ncmpi_put_vara_uchar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_uchar(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_put_vara_uchar(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5289,14 +5289,14 @@ ncmpi_put_vara_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_schar_all(int ncid, int64_t varid,
-                         const int64_t start[], const int64_t count[],
+ncmpi_put_vara_schar_all(int ncid, int varid,
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const signed char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5315,14 +5315,14 @@ ncmpi_put_vara_schar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_schar(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_put_vara_schar(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const signed char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5341,14 +5341,14 @@ ncmpi_put_vara_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_text_all(int ncid, int64_t varid,
-                         const int64_t start[], const int64_t count[],
+ncmpi_put_vara_text_all(int ncid, int varid,
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5367,14 +5367,14 @@ ncmpi_put_vara_text_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_text(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_put_vara_text(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5393,14 +5393,14 @@ ncmpi_put_vara_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_short_all(int ncid, int64_t varid,
-                         const int64_t start[], const int64_t count[],
+ncmpi_put_vara_short_all(int ncid, int varid,
+                         const MPI_Offset start[], const MPI_Offset count[],
                          const short *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5419,14 +5419,14 @@ ncmpi_put_vara_short_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_short(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_put_vara_short(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const short *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5445,14 +5445,14 @@ ncmpi_put_vara_short(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_put_vara_int_all(int ncid, int64_t varid, 
-                       const int64_t start[], const int64_t count[], 
+ncmpi_put_vara_int_all(int ncid, int varid, 
+                       const MPI_Offset start[], const MPI_Offset count[], 
 		       const int *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5471,14 +5471,14 @@ ncmpi_put_vara_int_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_int(int ncid, int64_t varid, 
-		const int64_t start[], const int64_t count[], 
+ncmpi_put_vara_int(int ncid, int varid, 
+		const MPI_Offset start[], const MPI_Offset count[], 
 		const int *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5497,14 +5497,14 @@ ncmpi_put_vara_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_long_all(int ncid, int64_t varid,
-                       const int64_t start[], const int64_t count[],
+ncmpi_put_vara_long_all(int ncid, int varid,
+                       const MPI_Offset start[], const MPI_Offset count[],
                        const long *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5523,14 +5523,14 @@ ncmpi_put_vara_long_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_long(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_put_vara_long(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 const long *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5549,14 +5549,14 @@ ncmpi_put_vara_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_float_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_put_vara_float_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     const float *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5575,14 +5575,14 @@ ncmpi_put_vara_float_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_float(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_put_vara_float(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 const float *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5601,14 +5601,14 @@ ncmpi_put_vara_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_double_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_put_vara_double_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     const double *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5627,14 +5627,14 @@ ncmpi_put_vara_double_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vara_double(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_put_vara_double(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 const double *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5653,15 +5653,15 @@ ncmpi_put_vara_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_uchar_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_uchar_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     unsigned char *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5680,15 +5680,15 @@ ncmpi_get_vara_uchar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_uchar(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_uchar(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     unsigned char *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5707,15 +5707,15 @@ ncmpi_get_vara_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_schar_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_schar_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     signed char *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5733,15 +5733,15 @@ ncmpi_get_vara_schar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_schar(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_schar(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     signed char *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5760,15 +5760,15 @@ ncmpi_get_vara_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_text_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_text_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     char *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5787,15 +5787,15 @@ ncmpi_get_vara_text_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_text(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_text(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     char *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5814,15 +5814,15 @@ ncmpi_get_vara_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_short_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_short_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     short *ip) {
  
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5841,15 +5841,15 @@ ncmpi_get_vara_short_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_short(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_short(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     short *ip) {
  
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5868,15 +5868,15 @@ ncmpi_get_vara_short(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_get_vara_int_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_int_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     int *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5895,14 +5895,14 @@ ncmpi_get_vara_int_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_int(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_get_vara_int(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 int *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5921,15 +5921,15 @@ ncmpi_get_vara_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_long_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_long_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     long *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5948,14 +5948,14 @@ ncmpi_get_vara_long_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_long(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_get_vara_long(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 long *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5974,15 +5974,15 @@ ncmpi_get_vara_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_float_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_float_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     float *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6001,14 +6001,14 @@ ncmpi_get_vara_float_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_float(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_get_vara_float(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 float *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6027,15 +6027,15 @@ ncmpi_get_vara_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_double_all(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_get_vara_double_all(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     double *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6054,14 +6054,14 @@ ncmpi_get_vara_double_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vara_double(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_get_vara_double(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 double *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6080,16 +6080,16 @@ ncmpi_get_vara_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_uchar_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_put_vars_uchar_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6108,16 +6108,16 @@ ncmpi_put_vars_uchar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_uchar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_put_vars_uchar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const unsigned char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6136,16 +6136,16 @@ ncmpi_put_vars_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_schar_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_put_vars_schar_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const signed char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6164,16 +6164,16 @@ ncmpi_put_vars_schar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_schar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_put_vars_schar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const signed char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6192,16 +6192,16 @@ ncmpi_put_vars_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_text_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_put_vars_text_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6220,16 +6220,16 @@ ncmpi_put_vars_text_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_text(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_put_vars_text(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const char *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6248,16 +6248,16 @@ ncmpi_put_vars_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_short_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_put_vars_short_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const short *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6276,16 +6276,16 @@ ncmpi_put_vars_short_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_short(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_put_vars_short(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const short *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6304,16 +6304,16 @@ ncmpi_put_vars_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_int_all(int ncid, int64_t varid,
-                       const int64_t start[],
-                       const int64_t count[],
-                       const int64_t stride[],
+ncmpi_put_vars_int_all(int ncid, int varid,
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        const int *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6332,16 +6332,16 @@ ncmpi_put_vars_int_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_int(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_put_vars_int(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    const int *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6360,16 +6360,16 @@ ncmpi_put_vars_int(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_put_vars_long_all(int ncid, int64_t varid,
-                       const int64_t start[],
-                       const int64_t count[],
-                       const int64_t stride[],
+ncmpi_put_vars_long_all(int ncid, int varid,
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        const long *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6388,16 +6388,16 @@ ncmpi_put_vars_long_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_long(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_put_vars_long(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    const long *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6416,16 +6416,16 @@ ncmpi_put_vars_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_float_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_put_vars_float_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          const float *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6444,16 +6444,16 @@ ncmpi_put_vars_float_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_float(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_put_vars_float(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const float *op) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6472,17 +6472,17 @@ ncmpi_put_vars_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_double_all(int ncid, int64_t varid,
-                          const int64_t start[], 
-                          const int64_t count[],
-                          const int64_t stride[],
+ncmpi_put_vars_double_all(int ncid, int varid,
+                          const MPI_Offset start[], 
+                          const MPI_Offset count[],
+                          const MPI_Offset stride[],
                           const double *op) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6502,17 +6502,17 @@ ncmpi_put_vars_double_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_vars_double(int ncid, int64_t varid,
-                      const int64_t start[],
-                      const int64_t count[],
-                      const int64_t stride[],
+ncmpi_put_vars_double(int ncid, int varid,
+                      const MPI_Offset start[],
+                      const MPI_Offset count[],
+                      const MPI_Offset stride[],
                       const double *op) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6532,16 +6532,16 @@ ncmpi_put_vars_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_uchar_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_get_vars_uchar_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6560,16 +6560,16 @@ ncmpi_get_vars_uchar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_uchar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_get_vars_uchar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      unsigned char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6588,16 +6588,16 @@ ncmpi_get_vars_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_schar_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_get_vars_schar_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          signed char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6616,16 +6616,16 @@ ncmpi_get_vars_schar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_schar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_get_vars_schar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      signed char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6644,16 +6644,16 @@ ncmpi_get_vars_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_text_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_get_vars_text_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6672,16 +6672,16 @@ ncmpi_get_vars_text_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_text(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_get_vars_text(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      char *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6700,16 +6700,16 @@ ncmpi_get_vars_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_short_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_get_vars_short_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          short *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6728,16 +6728,16 @@ ncmpi_get_vars_short_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_short(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_get_vars_short(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      short *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6756,16 +6756,16 @@ ncmpi_get_vars_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_int_all(int ncid, int64_t varid,
-                       const int64_t start[],
-                       const int64_t count[],
-                       const int64_t stride[],
+ncmpi_get_vars_int_all(int ncid, int varid,
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        int *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6784,16 +6784,16 @@ ncmpi_get_vars_int_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_int(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_get_vars_int(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    int *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6812,16 +6812,16 @@ ncmpi_get_vars_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_long_all(int ncid, int64_t varid,
-                       const int64_t start[],
-                       const int64_t count[],
-                       const int64_t stride[],
+ncmpi_get_vars_long_all(int ncid, int varid,
+                       const MPI_Offset start[],
+                       const MPI_Offset count[],
+                       const MPI_Offset stride[],
                        long *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6840,16 +6840,16 @@ ncmpi_get_vars_long_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_long(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_get_vars_long(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    long *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6868,16 +6868,16 @@ ncmpi_get_vars_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_float_all(int ncid, int64_t varid,
-                         const int64_t start[],
-                         const int64_t count[],
-                         const int64_t stride[],
+ncmpi_get_vars_float_all(int ncid, int varid,
+                         const MPI_Offset start[],
+                         const MPI_Offset count[],
+                         const MPI_Offset stride[],
                          float *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6896,16 +6896,16 @@ ncmpi_get_vars_float_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_float(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_get_vars_float(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      float *ip) {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6924,17 +6924,17 @@ ncmpi_get_vars_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_double_all(int ncid, int64_t varid,
-                          const int64_t start[], 
-			  const int64_t count[],
-			  const int64_t stride[],
+ncmpi_get_vars_double_all(int ncid, int varid,
+                          const MPI_Offset start[], 
+			  const MPI_Offset count[],
+			  const MPI_Offset stride[],
                           double *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6953,17 +6953,17 @@ ncmpi_get_vars_double_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_vars_double(int ncid, int64_t varid,
-                      const int64_t start[],
-                      const int64_t count[],
-                      const int64_t stride[],
+ncmpi_get_vars_double(int ncid, int varid,
+                      const MPI_Offset start[],
+                      const MPI_Offset count[],
+                      const MPI_Offset stride[],
                       double *ip) {
 
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6982,18 +6982,18 @@ ncmpi_get_vars_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_uchar_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_put_varm_uchar_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 const unsigned char *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7012,18 +7012,18 @@ ncmpi_put_varm_uchar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_uchar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_put_varm_uchar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const unsigned char *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7042,18 +7042,18 @@ ncmpi_put_varm_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_schar_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_put_varm_schar_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 const signed char *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7072,18 +7072,18 @@ ncmpi_put_varm_schar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_schar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_put_varm_schar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const signed char *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7102,18 +7102,18 @@ ncmpi_put_varm_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_text_all(int ncid, int64_t varid,
-			const int64_t start[],
-			const int64_t count[],
-			const int64_t stride[],
-			const int64_t imap[],
+ncmpi_put_varm_text_all(int ncid, int varid,
+			const MPI_Offset start[],
+			const MPI_Offset count[],
+			const MPI_Offset stride[],
+			const MPI_Offset imap[],
 			const char *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7132,18 +7132,18 @@ ncmpi_put_varm_text_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_text(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_put_varm_text(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    const char *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7162,18 +7162,18 @@ ncmpi_put_varm_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_short_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_put_varm_short_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 const short *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7192,18 +7192,18 @@ ncmpi_put_varm_short_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_short(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_put_varm_short(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const short *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7222,18 +7222,18 @@ ncmpi_put_varm_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_int_all(int ncid, int64_t varid,
-		       const int64_t start[],
-		       const int64_t count[],
-		       const int64_t stride[],
-		       const int64_t imap[],
+ncmpi_put_varm_int_all(int ncid, int varid,
+		       const MPI_Offset start[],
+		       const MPI_Offset count[],
+		       const MPI_Offset stride[],
+		       const MPI_Offset imap[],
 		       const int *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7252,18 +7252,18 @@ ncmpi_put_varm_int_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_int(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
+ncmpi_put_varm_int(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
 		   const int *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7282,18 +7282,18 @@ ncmpi_put_varm_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_long_all(int ncid, int64_t varid,
-			const int64_t start[],
-			const int64_t count[],
-			const int64_t stride[],
-			const int64_t imap[],
+ncmpi_put_varm_long_all(int ncid, int varid,
+			const MPI_Offset start[],
+			const MPI_Offset count[],
+			const MPI_Offset stride[],
+			const MPI_Offset imap[],
 			const long *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7312,18 +7312,18 @@ ncmpi_put_varm_long_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_long(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_put_varm_long(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    const long *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7342,18 +7342,18 @@ ncmpi_put_varm_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_float_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_put_varm_float_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 const float *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7372,18 +7372,18 @@ ncmpi_put_varm_float_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_float(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_put_varm_float(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const float *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7402,18 +7402,18 @@ ncmpi_put_varm_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_double_all(int ncid, int64_t varid,
-			  const int64_t start[],
-			  const int64_t count[],
-			  const int64_t stride[],
-			  const int64_t imap[],
+ncmpi_put_varm_double_all(int ncid, int varid,
+			  const MPI_Offset start[],
+			  const MPI_Offset count[],
+			  const MPI_Offset stride[],
+			  const MPI_Offset imap[],
 			  const double *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7432,18 +7432,18 @@ ncmpi_put_varm_double_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_put_varm_double(int ncid, int64_t varid,
-		      const int64_t start[],
-		      const int64_t count[],
-		      const int64_t stride[],
-		      const int64_t imap[],
+ncmpi_put_varm_double(int ncid, int varid,
+		      const MPI_Offset start[],
+		      const MPI_Offset count[],
+		      const MPI_Offset stride[],
+		      const MPI_Offset imap[],
 		      const double *op)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7462,18 +7462,18 @@ ncmpi_put_varm_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_uchar_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_get_varm_uchar_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 unsigned char *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7492,18 +7492,18 @@ ncmpi_get_varm_uchar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_uchar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_get_varm_uchar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     unsigned char *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7522,18 +7522,18 @@ ncmpi_get_varm_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_schar_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_get_varm_schar_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 signed char *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7552,18 +7552,18 @@ ncmpi_get_varm_schar_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_schar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_get_varm_schar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     signed char *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7582,18 +7582,18 @@ ncmpi_get_varm_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_text_all(int ncid, int64_t varid,
-			const int64_t start[],
-			const int64_t count[],
-			const int64_t stride[],
-			const int64_t imap[],
+ncmpi_get_varm_text_all(int ncid, int varid,
+			const MPI_Offset start[],
+			const MPI_Offset count[],
+			const MPI_Offset stride[],
+			const MPI_Offset imap[],
 			char *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7612,18 +7612,18 @@ ncmpi_get_varm_text_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_text(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_get_varm_text(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    char *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7642,18 +7642,18 @@ ncmpi_get_varm_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_short_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_get_varm_short_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 short *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7672,18 +7672,18 @@ ncmpi_get_varm_short_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_short(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_get_varm_short(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     short *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7702,18 +7702,18 @@ ncmpi_get_varm_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_int_all(int ncid, int64_t varid,
-		       const int64_t start[],
-		       const int64_t count[],
-		       const int64_t stride[],
-		       const int64_t imap[],
+ncmpi_get_varm_int_all(int ncid, int varid,
+		       const MPI_Offset start[],
+		       const MPI_Offset count[],
+		       const MPI_Offset stride[],
+		       const MPI_Offset imap[],
 		       int *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7732,18 +7732,18 @@ ncmpi_get_varm_int_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_int(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
+ncmpi_get_varm_int(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
 		   int *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7762,18 +7762,18 @@ ncmpi_get_varm_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_long_all(int ncid, int64_t varid,
-			const int64_t start[],
-			const int64_t count[],
-			const int64_t stride[],
-			const int64_t imap[],
+ncmpi_get_varm_long_all(int ncid, int varid,
+			const MPI_Offset start[],
+			const MPI_Offset count[],
+			const MPI_Offset stride[],
+			const MPI_Offset imap[],
 			long *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7792,18 +7792,18 @@ ncmpi_get_varm_long_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_long(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_get_varm_long(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    long *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7822,18 +7822,18 @@ ncmpi_get_varm_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_float_all(int ncid, int64_t varid,
-			 const int64_t start[],
-			 const int64_t count[],
-			 const int64_t stride[],
-			 const int64_t imap[],
+ncmpi_get_varm_float_all(int ncid, int varid,
+			 const MPI_Offset start[],
+			 const MPI_Offset count[],
+			 const MPI_Offset stride[],
+			 const MPI_Offset imap[],
 			 float *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7852,18 +7852,18 @@ ncmpi_get_varm_float_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_float(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_get_varm_float(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     float *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7882,18 +7882,18 @@ ncmpi_get_varm_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_double_all(int ncid, int64_t varid,
-			  const int64_t start[],
-			  const int64_t count[],
-			  const int64_t stride[],
-			  const int64_t imap[],
+ncmpi_get_varm_double_all(int ncid, int varid,
+			  const MPI_Offset start[],
+			  const MPI_Offset count[],
+			  const MPI_Offset stride[],
+			  const MPI_Offset imap[],
 			  double *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7912,18 +7912,18 @@ ncmpi_get_varm_double_all(int ncid, int64_t varid,
 }
 
 int
-ncmpi_get_varm_double(int ncid, int64_t varid,
-		      const int64_t start[],
-		      const int64_t count[],
-		      const int64_t stride[],
-		      const int64_t imap[],
+ncmpi_get_varm_double(int ncid, int varid,
+		      const MPI_Offset start[],
+		      const MPI_Offset count[],
+		      const MPI_Offset stride[],
+		      const MPI_Offset imap[],
 		      double *ip)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7957,7 +7957,7 @@ static void ncmpii_postwrite(void *xbuf, void *cbuf, void *buf) {
 static int ncmpii_postread(nc_type vartype,
 		    void *xbuf, 
 		    void *cbuf, 
-		    int64_t nelems, 
+		    MPI_Offset nelems, 
 		    int cnelems, 
 		    int iscontig_of_ptypes,
 		    void *buf, 
@@ -8344,9 +8344,9 @@ ncmpi_cancel(NCMPI_Request *request) {
 
 
 int
-ncmpi_iput_var1(int ncid, int64_t varid,
-               const int64_t index[],
-               const void *buf, int64_t bufcount,
+ncmpi_iput_var1(int ncid, int varid,
+               const MPI_Offset index[],
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -8354,7 +8354,7 @@ ncmpi_iput_var1(int ncid, int64_t varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -8487,7 +8487,7 @@ ncmpi_iput_var1(int ncid, int64_t varid,
   if ( status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = index[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -8499,9 +8499,9 @@ ncmpi_iput_var1(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_var1(int ncid, int64_t varid,
-               const int64_t index[],
-               void *buf, int64_t bufcount,
+ncmpi_iget_var1(int ncid, int varid,
+               const MPI_Offset index[],
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request) 
 {
@@ -8509,7 +8509,7 @@ ncmpi_iget_var1(int ncid, int64_t varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -8613,15 +8613,15 @@ ncmpi_iget_var1(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_var(int ncid, int64_t varid, 
-	       const void *buf, int64_t bufcount, MPI_Datatype datatype,
+ncmpi_iput_var(int ncid, int varid, 
+	       const void *buf, MPI_Offset bufcount, MPI_Datatype datatype,
 	       NCMPI_Request *request) 
 {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -8762,7 +8762,7 @@ ncmpi_iput_var(int ncid, int64_t varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     if (varp->ndims > 1)
       newnumrecs = nelems / varp->dsizes[1];
     else
@@ -8777,15 +8777,15 @@ ncmpi_iput_var(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_var(int ncid, int64_t varid, 
-	       void *buf, int64_t bufcount, MPI_Datatype datatype, 
+ncmpi_iget_var(int ncid, int varid, 
+	       void *buf, MPI_Offset bufcount, MPI_Datatype datatype, 
 	       NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -8897,9 +8897,9 @@ ncmpi_iget_var(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iput_vara(int ncid, int64_t varid,
-               const int64_t start[], const int64_t count[],
-               const void *buf, int64_t bufcount,
+ncmpi_iput_vara(int ncid, int varid,
+               const MPI_Offset start[], const MPI_Offset count[],
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -8907,8 +8907,8 @@ ncmpi_iput_vara(int ncid, int64_t varid,
   NC *ncp;
   void *xbuf = NULL,  *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -9047,7 +9047,7 @@ ncmpi_iput_vara(int ncid, int64_t varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + count[0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -9059,9 +9059,9 @@ ncmpi_iput_vara(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iget_vara(int ncid, int64_t varid,
-               const int64_t start[], const int64_t count[],
-               void *buf, int64_t bufcount,
+ncmpi_iget_vara(int ncid, int varid,
+               const MPI_Offset start[], const MPI_Offset count[],
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -9069,8 +9069,8 @@ ncmpi_iget_vara(int ncid, int64_t varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -9180,11 +9180,11 @@ ncmpi_iget_vara(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iput_vars(int ncid, int64_t varid,
-               const int64_t start[], 
-	       const int64_t count[],
-	       const int64_t stride[],
-               const void *buf, int64_t bufcount,
+ncmpi_iput_vars(int ncid, int varid,
+               const MPI_Offset start[], 
+	       const MPI_Offset count[],
+	       const MPI_Offset stride[],
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -9192,8 +9192,8 @@ ncmpi_iput_vars(int ncid, int64_t varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -9333,7 +9333,7 @@ ncmpi_iput_vars(int ncid, int64_t varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int64_t newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + (count[0] - 1) * stride[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -9345,11 +9345,11 @@ ncmpi_iput_vars(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iget_vars(int ncid, int64_t varid,
-               const int64_t start[], 
-	       const int64_t count[],
-               const int64_t stride[],
-               void *buf, int64_t bufcount,
+ncmpi_iget_vars(int ncid, int varid,
+               const MPI_Offset start[], 
+	       const MPI_Offset count[],
+               const MPI_Offset stride[],
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -9357,8 +9357,8 @@ ncmpi_iget_vars(int ncid, int64_t varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t dim;
-  int64_t nelems, cnelems, nbytes;
+  int dim;
+  MPI_Offset nelems, cnelems, nbytes;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -9469,21 +9469,21 @@ ncmpi_iget_vars(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iput_varm(int ncid, int64_t varid,
-	       const int64_t start[],
-	       const int64_t count[],
-	       const int64_t stride[],
-	       const int64_t imap[],
-	       const void *buf, int64_t bufcount,
+ncmpi_iput_varm(int ncid, int varid,
+	       const MPI_Offset start[],
+	       const MPI_Offset count[],
+	       const MPI_Offset stride[],
+	       const MPI_Offset imap[],
+	       const void *buf, MPI_Offset bufcount,
 	       MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
-  int64_t ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t lnelems, cnelems; 
+  MPI_Offset lnelems, cnelems; 
   int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
@@ -9596,21 +9596,21 @@ ncmpi_iput_varm(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
-		   void *buf, int64_t bufcount,
+ncmpi_iget_varm(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
+		   void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype,
 		   NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
-  int64_t ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int64_t lnelems, cnelems; 
+  MPI_Offset lnelems, cnelems; 
   int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
@@ -9727,8 +9727,8 @@ ncmpi_iget_varm(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_var1_uchar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iput_var1_uchar(int ncid, int varid,
+                     const MPI_Offset index[],
                      const unsigned char *op,
 		     NCMPI_Request *request)
 {
@@ -9749,8 +9749,8 @@ ncmpi_iput_var1_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_var1_schar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iput_var1_schar(int ncid, int varid,
+                     const MPI_Offset index[],
                      const signed char *op,
 		     NCMPI_Request *request)
 {
@@ -9771,8 +9771,8 @@ ncmpi_iput_var1_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_var1_text(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iput_var1_text(int ncid, int varid,
+                     const MPI_Offset index[],
                      const char *op,
 		     NCMPI_Request *request)
 {
@@ -9794,8 +9794,8 @@ ncmpi_iput_var1_text(int ncid, int64_t varid,
 
 
 int
-ncmpi_iput_var1_short(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iput_var1_short(int ncid, int varid,
+                     const MPI_Offset index[],
 		     const short *op,
 		     NCMPI_Request *request)
 {
@@ -9816,8 +9816,8 @@ ncmpi_iput_var1_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_var1_int(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_iput_var1_int(int ncid, int varid,
+                   const MPI_Offset index[],
                    const int *op,
 		     NCMPI_Request *request)
 {
@@ -9838,8 +9838,8 @@ ncmpi_iput_var1_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_var1_long(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_iput_var1_long(int ncid, int varid,
+                   const MPI_Offset index[],
                    const long *op,
 		     NCMPI_Request *request)
 {
@@ -9860,8 +9860,8 @@ ncmpi_iput_var1_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_var1_float(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iput_var1_float(int ncid, int varid,
+                     const MPI_Offset index[],
                      const float *op,
 		     NCMPI_Request *request)
 {
@@ -9882,8 +9882,8 @@ ncmpi_iput_var1_float(int ncid, int64_t varid,
 }
  
 int
-ncmpi_iput_var1_double(int ncid, int64_t varid,
-                      const int64_t index[],
+ncmpi_iput_var1_double(int ncid, int varid,
+                      const MPI_Offset index[],
                       const double *op,
 		     NCMPI_Request *request)
 {
@@ -9904,8 +9904,8 @@ ncmpi_iput_var1_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_var1_uchar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iget_var1_uchar(int ncid, int varid,
+                     const MPI_Offset index[],
                      unsigned char *ip,
 		     NCMPI_Request *request)
 {
@@ -9926,8 +9926,8 @@ ncmpi_iget_var1_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_var1_schar(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iget_var1_schar(int ncid, int varid,
+                     const MPI_Offset index[],
                      signed char *ip,
 		     NCMPI_Request *request)
 {
@@ -9948,8 +9948,8 @@ ncmpi_iget_var1_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_var1_text(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iget_var1_text(int ncid, int varid,
+                     const MPI_Offset index[],
                      char *ip,
 		     NCMPI_Request *request)
 {
@@ -9970,8 +9970,8 @@ ncmpi_iget_var1_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_var1_short(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iget_var1_short(int ncid, int varid,
+                     const MPI_Offset index[],
                      short *ip,
 		     NCMPI_Request *request)
 {
@@ -9992,8 +9992,8 @@ ncmpi_iget_var1_short(int ncid, int64_t varid,
 }
  
 int
-ncmpi_iget_var1_int(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_iget_var1_int(int ncid, int varid,
+                   const MPI_Offset index[],
                    int *ip,
 		     NCMPI_Request *request)
 {
@@ -10014,8 +10014,8 @@ ncmpi_iget_var1_int(int ncid, int64_t varid,
 }
  
 int
-ncmpi_iget_var1_long(int ncid, int64_t varid,
-                   const int64_t index[],
+ncmpi_iget_var1_long(int ncid, int varid,
+                   const MPI_Offset index[],
                    long *ip,
 		     NCMPI_Request *request)
 {
@@ -10036,8 +10036,8 @@ ncmpi_iget_var1_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_var1_float(int ncid, int64_t varid,
-                     const int64_t index[],
+ncmpi_iget_var1_float(int ncid, int varid,
+                     const MPI_Offset index[],
                      float *ip,
 		     NCMPI_Request *request)
 {
@@ -10058,8 +10058,8 @@ ncmpi_iget_var1_float(int ncid, int64_t varid,
 }
  
 int
-ncmpi_iget_var1_double(int ncid, int64_t varid,
-                      const int64_t index[],
+ncmpi_iget_var1_double(int ncid, int varid,
+                      const MPI_Offset index[],
                       double *ip,
 		     NCMPI_Request *request)
 {
@@ -10080,14 +10080,14 @@ ncmpi_iget_var1_double(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iput_var_uchar(int ncid, int64_t varid, const unsigned char *op,
+ncmpi_iput_var_uchar(int ncid, int varid, const unsigned char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10116,14 +10116,14 @@ ncmpi_iput_var_uchar(int ncid, int64_t varid, const unsigned char *op,
 }
 
 int
-ncmpi_iput_var_schar(int ncid, int64_t varid, const signed char *op,
+ncmpi_iput_var_schar(int ncid, int varid, const signed char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10153,14 +10153,14 @@ ncmpi_iput_var_schar(int ncid, int64_t varid, const signed char *op,
 
 
 int
-ncmpi_iput_var_text(int ncid, int64_t varid, const char *op,
+ncmpi_iput_var_text(int ncid, int varid, const char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10189,14 +10189,14 @@ ncmpi_iput_var_text(int ncid, int64_t varid, const char *op,
 }
 
 int
-ncmpi_iput_var_short(int ncid, int64_t varid, const short *op,
+ncmpi_iput_var_short(int ncid, int varid, const short *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10225,14 +10225,14 @@ ncmpi_iput_var_short(int ncid, int64_t varid, const short *op,
 }
 
 int
-ncmpi_iput_var_int(int ncid, int64_t varid, const int *op,
+ncmpi_iput_var_int(int ncid, int varid, const int *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10261,14 +10261,14 @@ ncmpi_iput_var_int(int ncid, int64_t varid, const int *op,
 } 
 
 int
-ncmpi_iput_var_long(int ncid, int64_t varid, const long *op,
+ncmpi_iput_var_long(int ncid, int varid, const long *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10297,14 +10297,14 @@ ncmpi_iput_var_long(int ncid, int64_t varid, const long *op,
 }
 
 int
-ncmpi_iput_var_float(int ncid, int64_t varid, const float *op,
+ncmpi_iput_var_float(int ncid, int varid, const float *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10333,14 +10333,14 @@ ncmpi_iput_var_float(int ncid, int64_t varid, const float *op,
 } 
 
 int
-ncmpi_iput_var_double(int ncid, int64_t varid, const double *op,
+ncmpi_iput_var_double(int ncid, int varid, const double *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10369,14 +10369,14 @@ ncmpi_iput_var_double(int ncid, int64_t varid, const double *op,
 } 
 
 int
-ncmpi_iget_var_uchar(int ncid, int64_t varid, unsigned char *ip,
+ncmpi_iget_var_uchar(int ncid, int varid, unsigned char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10405,14 +10405,14 @@ ncmpi_iget_var_uchar(int ncid, int64_t varid, unsigned char *ip,
 }
 
 int
-ncmpi_iget_var_schar(int ncid, int64_t varid, signed char *ip,
+ncmpi_iget_var_schar(int ncid, int varid, signed char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10441,14 +10441,14 @@ ncmpi_iget_var_schar(int ncid, int64_t varid, signed char *ip,
 }
 
 int
-ncmpi_iget_var_text(int ncid, int64_t varid, char *ip,
+ncmpi_iget_var_text(int ncid, int varid, char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10477,14 +10477,14 @@ ncmpi_iget_var_text(int ncid, int64_t varid, char *ip,
 }
 
 int
-ncmpi_iget_var_short(int ncid, int64_t varid, short *ip,
+ncmpi_iget_var_short(int ncid, int varid, short *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10513,14 +10513,14 @@ ncmpi_iget_var_short(int ncid, int64_t varid, short *ip,
 }
 
 int
-ncmpi_iget_var_int(int ncid, int64_t varid, int *ip,
+ncmpi_iget_var_int(int ncid, int varid, int *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10549,14 +10549,14 @@ ncmpi_iget_var_int(int ncid, int64_t varid, int *ip,
 } 
 
 int
-ncmpi_iget_var_long(int ncid, int64_t varid, long *ip,
+ncmpi_iget_var_long(int ncid, int varid, long *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10585,14 +10585,14 @@ ncmpi_iget_var_long(int ncid, int64_t varid, long *ip,
 }
 
 int
-ncmpi_iget_var_float(int ncid, int64_t varid, float *ip,
+ncmpi_iget_var_float(int ncid, int varid, float *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10621,14 +10621,14 @@ ncmpi_iget_var_float(int ncid, int64_t varid, float *ip,
 } 
 
 int
-ncmpi_iget_var_double(int ncid, int64_t varid, double *ip,
+ncmpi_iget_var_double(int ncid, int varid, double *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
   int ndims;
-  int64_t nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10657,16 +10657,16 @@ ncmpi_iget_var_double(int ncid, int64_t varid, double *ip,
 } 
 
 int
-ncmpi_iput_vara_uchar(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_iput_vara_uchar(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const unsigned char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10685,16 +10685,16 @@ ncmpi_iput_vara_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vara_schar(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_iput_vara_schar(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const signed char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10713,16 +10713,16 @@ ncmpi_iput_vara_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vara_text(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_iput_vara_text(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10741,16 +10741,16 @@ ncmpi_iput_vara_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vara_short(int ncid, int64_t varid,
-                     const int64_t start[], const int64_t count[],
+ncmpi_iput_vara_short(int ncid, int varid,
+                     const MPI_Offset start[], const MPI_Offset count[],
                      const short *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10769,16 +10769,16 @@ ncmpi_iput_vara_short(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iput_vara_int(int ncid, int64_t varid, 
-		const int64_t start[], const int64_t count[], 
+ncmpi_iput_vara_int(int ncid, int varid, 
+		const MPI_Offset start[], const MPI_Offset count[], 
 		const int *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10797,16 +10797,16 @@ ncmpi_iput_vara_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vara_long(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_iput_vara_long(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 const long *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10825,16 +10825,16 @@ ncmpi_iput_vara_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vara_float(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_iput_vara_float(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 const float *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10853,16 +10853,16 @@ ncmpi_iput_vara_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vara_double(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_iput_vara_double(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 const double *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10881,8 +10881,8 @@ ncmpi_iput_vara_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vara_uchar(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_uchar(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     unsigned char *ip,
 		     NCMPI_Request *request)
 {
@@ -10890,8 +10890,8 @@ ncmpi_iget_vara_uchar(int ncid, int64_t varid,
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10910,8 +10910,8 @@ ncmpi_iget_vara_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vara_schar(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_schar(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     signed char *ip,
 		     NCMPI_Request *request)
 {
@@ -10919,8 +10919,8 @@ ncmpi_iget_vara_schar(int ncid, int64_t varid,
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10939,8 +10939,8 @@ ncmpi_iget_vara_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vara_text(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_text(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     char *ip,
 		     NCMPI_Request *request)
 {
@@ -10948,8 +10948,8 @@ ncmpi_iget_vara_text(int ncid, int64_t varid,
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10968,8 +10968,8 @@ ncmpi_iget_vara_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vara_short(int ncid, int64_t varid,
-                    const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_short(int ncid, int varid,
+                    const MPI_Offset start[], const MPI_Offset count[],
                     short *ip,
 		     NCMPI_Request *request)
 {
@@ -10977,8 +10977,8 @@ ncmpi_iget_vara_short(int ncid, int64_t varid,
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10997,16 +10997,16 @@ ncmpi_iget_vara_short(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iget_vara_int(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_int(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 int *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11025,16 +11025,16 @@ ncmpi_iget_vara_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vara_long(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_long(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 long *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11053,16 +11053,16 @@ ncmpi_iget_vara_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vara_float(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_float(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 float *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11081,16 +11081,16 @@ ncmpi_iget_vara_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vara_double(int ncid, int64_t varid,
-                const int64_t start[], const int64_t count[],
+ncmpi_iget_vara_double(int ncid, int varid,
+                const MPI_Offset start[], const MPI_Offset count[],
                 double *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11109,18 +11109,18 @@ ncmpi_iget_vara_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vars_uchar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iput_vars_uchar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const unsigned char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11139,18 +11139,18 @@ ncmpi_iput_vars_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vars_schar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iput_vars_schar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const signed char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11169,18 +11169,18 @@ ncmpi_iput_vars_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vars_text(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iput_vars_text(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11199,18 +11199,18 @@ ncmpi_iput_vars_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vars_short(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iput_vars_short(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const short *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11229,18 +11229,18 @@ ncmpi_iput_vars_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vars_int(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_iput_vars_int(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    const int *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11259,18 +11259,18 @@ ncmpi_iput_vars_int(int ncid, int64_t varid,
 } 
 
 int
-ncmpi_iput_vars_long(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_iput_vars_long(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    const long *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11289,18 +11289,18 @@ ncmpi_iput_vars_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vars_float(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iput_vars_float(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      const float *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11319,10 +11319,10 @@ ncmpi_iput_vars_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_vars_double(int ncid, int64_t varid,
-                      const int64_t start[],
-                      const int64_t count[],
-                      const int64_t stride[],
+ncmpi_iput_vars_double(int ncid, int varid,
+                      const MPI_Offset start[],
+                      const MPI_Offset count[],
+                      const MPI_Offset stride[],
                       const double *op,
 		     NCMPI_Request *request)
 {
@@ -11330,8 +11330,8 @@ ncmpi_iput_vars_double(int ncid, int64_t varid,
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11351,18 +11351,18 @@ ncmpi_iput_vars_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_uchar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iget_vars_uchar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      unsigned char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11381,18 +11381,18 @@ ncmpi_iget_vars_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_schar(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iget_vars_schar(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      signed char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11411,18 +11411,18 @@ ncmpi_iget_vars_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_text(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iget_vars_text(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11441,18 +11441,18 @@ ncmpi_iget_vars_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_short(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iget_vars_short(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      short *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11471,18 +11471,18 @@ ncmpi_iget_vars_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_int(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_iget_vars_int(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    int *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11501,18 +11501,18 @@ ncmpi_iget_vars_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_long(int ncid, int64_t varid,
-                   const int64_t start[],
-                   const int64_t count[],
-                   const int64_t stride[],
+ncmpi_iget_vars_long(int ncid, int varid,
+                   const MPI_Offset start[],
+                   const MPI_Offset count[],
+                   const MPI_Offset stride[],
                    long *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11531,18 +11531,18 @@ ncmpi_iget_vars_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_float(int ncid, int64_t varid,
-                     const int64_t start[],
-                     const int64_t count[],
-                     const int64_t stride[],
+ncmpi_iget_vars_float(int ncid, int varid,
+                     const MPI_Offset start[],
+                     const MPI_Offset count[],
+                     const MPI_Offset stride[],
                      float *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11561,10 +11561,10 @@ ncmpi_iget_vars_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_vars_double(int ncid, int64_t varid,
-                      const int64_t start[],
-                      const int64_t count[],
-                      const int64_t stride[],
+ncmpi_iget_vars_double(int ncid, int varid,
+                      const MPI_Offset start[],
+                      const MPI_Offset count[],
+                      const MPI_Offset stride[],
                       double *ip,
 		     NCMPI_Request *request)
 {
@@ -11572,8 +11572,8 @@ ncmpi_iget_vars_double(int ncid, int64_t varid,
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11592,19 +11592,19 @@ ncmpi_iget_vars_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_uchar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iput_varm_uchar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const unsigned char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11623,19 +11623,19 @@ ncmpi_iput_varm_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_schar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iput_varm_schar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const signed char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11654,19 +11654,19 @@ ncmpi_iput_varm_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_text(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_iput_varm_text(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    const char *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11685,19 +11685,19 @@ ncmpi_iput_varm_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_short(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iput_varm_short(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const short *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11716,19 +11716,19 @@ ncmpi_iput_varm_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_int(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
+ncmpi_iput_varm_int(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
 		   const int *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11747,18 +11747,18 @@ ncmpi_iput_varm_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_long(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_iput_varm_long(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    const long *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
+  int dim;
   long int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
@@ -11778,19 +11778,19 @@ ncmpi_iput_varm_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_float(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iput_varm_float(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     const float *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11809,19 +11809,19 @@ ncmpi_iput_varm_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iput_varm_double(int ncid, int64_t varid,
-		      const int64_t start[],
-		      const int64_t count[],
-		      const int64_t stride[],
-		      const int64_t imap[],
+ncmpi_iput_varm_double(int ncid, int varid,
+		      const MPI_Offset start[],
+		      const MPI_Offset count[],
+		      const MPI_Offset stride[],
+		      const MPI_Offset imap[],
 		      const double *op,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11840,19 +11840,19 @@ ncmpi_iput_varm_double(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_uchar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iget_varm_uchar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     unsigned char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11871,19 +11871,19 @@ ncmpi_iget_varm_uchar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_schar(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iget_varm_schar(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     signed char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11902,19 +11902,19 @@ ncmpi_iget_varm_schar(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_text(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_iget_varm_text(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    char *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11933,19 +11933,19 @@ ncmpi_iget_varm_text(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_short(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iget_varm_short(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     short *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11964,19 +11964,19 @@ ncmpi_iget_varm_short(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_int(int ncid, int64_t varid,
-		   const int64_t start[],
-		   const int64_t count[],
-		   const int64_t stride[],
-		   const int64_t imap[],
+ncmpi_iget_varm_int(int ncid, int varid,
+		   const MPI_Offset start[],
+		   const MPI_Offset count[],
+		   const MPI_Offset stride[],
+		   const MPI_Offset imap[],
 		   int *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11995,19 +11995,19 @@ ncmpi_iget_varm_int(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_long(int ncid, int64_t varid,
-		    const int64_t start[],
-		    const int64_t count[],
-		    const int64_t stride[],
-		    const int64_t imap[],
+ncmpi_iget_varm_long(int ncid, int varid,
+		    const MPI_Offset start[],
+		    const MPI_Offset count[],
+		    const MPI_Offset stride[],
+		    const MPI_Offset imap[],
 		    long *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -12026,19 +12026,19 @@ ncmpi_iget_varm_long(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_float(int ncid, int64_t varid,
-		     const int64_t start[],
-		     const int64_t count[],
-		     const int64_t stride[],
-		     const int64_t imap[],
+ncmpi_iget_varm_float(int ncid, int varid,
+		     const MPI_Offset start[],
+		     const MPI_Offset count[],
+		     const MPI_Offset stride[],
+		     const MPI_Offset imap[],
 		     float *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -12057,19 +12057,19 @@ ncmpi_iget_varm_float(int ncid, int64_t varid,
 }
 
 int
-ncmpi_iget_varm_double(int ncid, int64_t varid,
-		      const int64_t start[],
-		      const int64_t count[],
-		      const int64_t stride[],
-		      const int64_t imap[],
+ncmpi_iget_varm_double(int ncid, int varid,
+		      const MPI_Offset start[],
+		      const MPI_Offset count[],
+		      const MPI_Offset stride[],
+		      const MPI_Offset imap[],
 		      double *ip,
 		     NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   int status;
-  int64_t dim;
-  int64_t nelems;
+  int dim;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)

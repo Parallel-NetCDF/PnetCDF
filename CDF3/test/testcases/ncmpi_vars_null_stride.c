@@ -12,10 +12,10 @@ static void handle_error(int status)
 int main(int argc, char **argv)
 {
 	int ret, ncfile;
-        int64_t dimid, varid, ndims=NDIMS;
+        int dimid, varid, ndims=NDIMS;
 	int i, nprocs, rank;
-	int64_t start[NDIMS] = {0};
-	int64_t count[NDIMS] = {0};
+	MPI_Offset start[NDIMS] = {0};
+	MPI_Offset count[NDIMS] = {0};
 	int buf[512];
 
 	MPI_Init(&argc, &argv);

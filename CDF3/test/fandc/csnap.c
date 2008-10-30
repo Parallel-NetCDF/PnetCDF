@@ -159,16 +159,16 @@ void write_file(char *filename, double *t) {
   double *tt = NULL;
   double *smf = NULL;
   double t1, t2, t3;
-  int64_t dim_id[3];
-  int64_t lon_id, lat_id, lev_id;
+  int dim_id[3];
+  int lon_id, lat_id, lev_id;
   int ierr;
   int file_id;
-  int64_t t_id, smf_id;
+  int t_id, smf_id;
   int ii;
-  int64_t start_3d[3];
-  int64_t count_3d[3];
-  int64_t start_2d[2];
-  int64_t count_2d[2];
+  MPI_Offset start_3d[3];
+  MPI_Offset count_3d[3];
+  MPI_Offset start_2d[2];
+  MPI_Offset count_2d[2];
 
   start_3d[0] = kstart;
   start_3d[1] = jstart;
@@ -202,9 +202,9 @@ void write_file(char *filename, double *t) {
 
 /*  ierr = nc_set_fill(file_id,fillmode,&old_fillmode); */
 
-    ierr = ncmpi_def_dim(file_id,"level",    (int64_t) totsiz_3d[0],&lev_id);
-    ierr = ncmpi_def_dim(file_id,"latitude", (int64_t) totsiz_3d[1],&lat_id);
-    ierr = ncmpi_def_dim(file_id,"longitude",(int64_t) totsiz_3d[2],&lon_id);
+    ierr = ncmpi_def_dim(file_id,"level",    (MPI_Offset) totsiz_3d[0],&lev_id);
+    ierr = ncmpi_def_dim(file_id,"latitude", (MPI_Offset) totsiz_3d[1],&lat_id);
+    ierr = ncmpi_def_dim(file_id,"longitude",(MPI_Offset) totsiz_3d[2],&lon_id);
 
     dim_id[0] = lev_id; dim_id[1] = lat_id; dim_id[2] = lon_id;
 
@@ -250,13 +250,13 @@ void read_file(char *filename, double *t) {
   double t1, t2, t3;
   double dt1, dt2;
   int ncid;
-  int64_t vid_t, vid_smf;
+  int vid_t, vid_smf;
   int i, j, k, ii, ierr;
 
-  int64_t start_3d[3];
-  int64_t count_3d[3];
-  int64_t start_2d[2];
-  int64_t count_2d[2];
+  MPI_Offset start_3d[3];
+  MPI_Offset count_3d[3];
+  MPI_Offset start_2d[2];
+  MPI_Offset count_2d[2];
 
   start_3d[0] = kstart;
   start_3d[1] = jstart;

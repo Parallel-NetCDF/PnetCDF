@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_inq_ ( int *v1, int64_t*v2, int64_t*v3, int64_t*v4, int64_t*v5 ){
+FORTRAN_API int FORT_CALL nfmpi_inq_ ( int *v1, MPI_Fint *v2, MPI_Fint *v3, MPI_Fint *v4, MPI_Fint *v5 ){
     int ierr;
     ierr = ncmpi_inq( *v1, v2, v3, v4, v5 );
 

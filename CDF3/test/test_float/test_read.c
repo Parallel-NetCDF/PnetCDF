@@ -68,15 +68,15 @@ int main(int argc, char **argv) {
   int i, j;
   int status;
   int ncid1, ncid2;
-  int64_t ndims, nvars, ngatts, unlimdimid;
+  int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
   ncmpi_type type, vartypes[NC_MAX_VARS];
-  int64_t attlen;
-  int64_t dimlen, shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
+  MPI_Offset attlen;
+  MPI_Offset dimlen, shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
   void *valuep;
-  int64_t dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
-  int64_t vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS/16]; /* divided by 16 due to my memory limitation */
-  int64_t varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
+  int dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
+  int vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS/16]; /* divided by 16 due to my memory limitation */
+  int varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
   int isRecvar;
   params opts;
 

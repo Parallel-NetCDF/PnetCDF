@@ -12,8 +12,8 @@
 
 #include "ncconfig.h"
 
-#include <stddef.h>	/* int64_t */
-#include <sys/types.h>	/* int64_t */
+#include <stddef.h>	/* MPI_Offset */
+#include <sys/types.h>	/* MPI_Offset */
 #include "pnetcdf.h"
 #include "ncio.h"	/* ncio */
 #include "fbits.h"
@@ -50,12 +50,12 @@ typedef enum {
  */
 typedef struct {
 	/* all xdr'd */
-	int64_t nchars;
+	MPI_Offset nchars;
 	char *cp;
 } NC_string;
 
 extern NC *
-ncmpii_new_NC(const int64_t *chunkp);
+ncmpii_new_NC(const MPI_Offset *chunkp);
 
 extern NC *
 ncmpii_dup_NC(const NC *ref);
@@ -68,7 +68,7 @@ extern int
 ncmpii_NC_check_name(const char *name);
 
 extern NC_string *
-ncmpii_new_NC_string(int64_t slen, const char *str);
+ncmpii_new_NC_string(MPI_Offset slen, const char *str);
 
 extern int
 ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
@@ -81,14 +81,14 @@ ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
 typedef struct {
 	/* all xdr'd */
 	NC_string *name;
-	int64_t size;
+	MPI_Offset size;
 } NC_dim;
 
 typedef struct NC_dimarray {
-	int64_t nalloc;		/* number allocated >= nelems */
+	size_t nalloc;		/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_DIMENSION */
-	int64_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	NC_dim **value;
 } NC_dimarray;
 
@@ -115,44 +115,44 @@ extern int
 ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref);
 
 extern NC_dim *
-ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, int64_t elem);
+ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
 
 extern int
-ncmpi_def_dim(int ncid, const char *name, int64_t size, int64_t *dimidp);
+ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp);
 
 extern int
-ncmpi_rename_dim( int ncid, int64_t dimid, const char *newname);
+ncmpi_rename_dim( int ncid, int dimid, const char *newname);
 
 extern int
-ncmpi_inq_dimid(int ncid, const char *name, int64_t *dimid_ptr);
+ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr);
 
 extern int
-ncmpi_inq_dim(int ncid, int64_t dimid, char *name, int64_t *sizep);
+ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep);
 
 extern int 
-ncmpi_inq_dimname(int ncid, int64_t dimid, char *name);
+ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
 extern int 
-ncmpi_inq_dimlen(int ncid, int64_t dimid, int64_t *lenp);
+ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 /* End defined in dim.c */
 
 /*
  * NC attribute
  */
 typedef struct {
-	int64_t xsz;		/* amount of space at xvalue */
+	MPI_Offset xsz;		/* amount of space at xvalue */
 	/* below gets xdr'd */
 	NC_string *name;
 	nc_type type;		/* the discriminant */
-	int64_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	void *xvalue;		/* the actual data, in external representation */
 } NC_attr;
 
 typedef struct NC_attrarray {
-	int64_t nalloc;		/* number allocated >= nelems */
+	MPI_Offset nalloc;		/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_ATTRIBUTE */
-	int64_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	NC_attr **value;
 } NC_attrarray;
 
@@ -165,7 +165,7 @@ extern NC_attr *
 ncmpii_new_x_NC_attr(
 	NC_string *strp,
 	nc_type type,
-	int64_t nelems);
+	MPI_Offset nelems);
 
 extern NC_attr **
 ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name);
@@ -182,110 +182,110 @@ extern int
 ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref);
 
 extern NC_attr *
-ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, int64_t elem);
+ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, int elem);
 
 extern int
-ncmpi_put_att_text(int ncid, int64_t varid, const char *name,
-	int64_t nelems, const char *value);
+ncmpi_put_att_text(int ncid, int varid, const char *name,
+	MPI_Offset nelems, const char *value);
 
 extern int
-ncmpi_get_att_text(int ncid, int64_t varid, const char *name, char *str);
+ncmpi_get_att_text(int ncid, int varid, const char *name, char *str);
 
 extern int
-ncmpi_put_att_schar(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const signed char *value);
+ncmpi_put_att_schar(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const signed char *value);
 
 extern int
-ncmpi_get_att_schar(int ncid, int64_t varid, const char *name, signed char *tp);
+ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp);
 
 extern int
-ncmpi_put_att_uchar(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const unsigned char *value);
+ncmpi_put_att_uchar(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const unsigned char *value);
 
 extern int
-ncmpi_get_att_uchar(int ncid, int64_t varid, const char *name, unsigned char *tp);
+ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp);
 
 extern int
-ncmpi_put_att_short(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const short *value);
+ncmpi_put_att_short(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const short *value);
 
 extern int
-ncmpi_get_att_short(int ncid, int64_t varid, const char *name, short *tp);
+ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp);
 
 extern int
-ncmpi_put_att_int(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const int *value);
+ncmpi_put_att_int(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const int *value);
 
 extern int
-ncmpi_get_att_int(int ncid, int64_t varid, const char *name, int *tp);
+ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp);
 
 extern int
-ncmpi_put_att_long(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const long *value);
+ncmpi_put_att_long(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const long *value);
 
 extern int
-ncmpi_get_att_long(int ncid, int64_t varid, const char *name, long *tp);
+ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp);
 
 extern int
-ncmpi_put_att_float(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const float *value);
+ncmpi_put_att_float(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const float *value);
 extern int
-ncmpi_get_att_float(int ncid, int64_t varid, const char *name, float *tp);
+ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp);
 extern int
-ncmpi_put_att_double(int ncid, int64_t varid, const char *name,
-	nc_type type, int64_t nelems, const double *value);
+ncmpi_put_att_double(int ncid, int varid, const char *name,
+	nc_type type, MPI_Offset nelems, const double *value);
 extern int
-ncmpi_get_att_double(int ncid, int64_t varid, const char *name, double *tp);
-
-extern int 
-ncmpi_inq_attid(int ncid, int64_t varid, const char *name, int64_t *attnump);
+ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp);
 
 extern int 
-ncmpi_inq_atttype(int ncid, int64_t varid, const char *name, nc_type *datatypep);
+ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump);
 
 extern int 
-ncmpi_inq_attlen(int ncid, int64_t varid, const char *name, int64_t *lenp);
+ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep);
+
+extern int 
+ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp);
 
 extern int
-ncmpi_inq_att(int ncid, int64_t varid, const char *name, 
-	nc_type *datatypep, int64_t *lenp);
+ncmpi_inq_att(int ncid, int varid, const char *name, 
+	nc_type *datatypep, MPI_Offset *lenp);
 
 extern int
-ncmpi_copy_att(int ncid_in, int64_t varid_in, const char *name, 
-		int64_t ncid_out, int64_t ovarid);
+ncmpi_copy_att(int ncid_in, int varid_in, const char *name, 
+		int ncid_out, int ovarid);
 
 extern int
-ncmpi_rename_att( int ncid, int64_t varid, const char *name, const char *newname);
+ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname);
 
 extern int
-ncmpi_del_att(int ncid, int64_t varid, const char *name);
+ncmpi_del_att(int ncid, int varid, const char *name);
 
 extern int
-ncmpi_inq_attname(int ncid, int64_t varid, int64_t attnum, char *name);
+ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
 /* End defined in attr.c */
 /*
  * NC variable: description and data
  */
 typedef struct {
-	int64_t xsz;		/* xszof 1 element */
-	int64_t *shape; /* compiled info: dim->size of each dim */
-	int64_t *dsizes; /* compiled info: the right to left product of shape */
+	MPI_Offset xsz;		/* xszof 1 element */
+	MPI_Offset *shape; /* compiled info: dim->size of each dim */
+	MPI_Offset *dsizes; /* compiled info: the right to left product of shape */
 	/* below gets xdr'd */
 	NC_string *name;
 	/* next two: formerly NC_iarray *assoc */ /* user definition */
-	int64_t ndims;	/* assoc->count */
-	int64_t *dimids;	/* assoc->value */
+	size_t ndims;	/* assoc->count */
+	int *dimids;	/* assoc->value */
 	NC_attrarray attrs;
 	nc_type type;		/* the discriminant */
-	int64_t len;		/* the total length originally allocated */
-	int64_t begin;
+	MPI_Offset len;		/* the total length originally allocated */
+	MPI_Offset begin;
 } NC_var;
 
 typedef struct NC_vararray {
-	int64_t nalloc;		/* number allocated >= nelems */
+	MPI_Offset nalloc;		/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_VARIABLE */
-	int64_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	NC_var **value;
 } NC_vararray;
 
@@ -297,7 +297,7 @@ ncmpii_free_NC_var(NC_var *varp);
 extern NC_var *
 ncmpii_new_x_NC_var(
 	NC_string *strp,
-	int64_t ndims
+	size_t ndims
         );
 
 /* vararray */
@@ -318,42 +318,42 @@ extern int
 ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);
 
 extern int
-ncmpii_NC_check_vlen(NC_var *varp, int64_t vlen_max);
+ncmpii_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);
 
 extern NC_var *
-ncmpii_NC_lookupvar(NC *ncp, int64_t varid);
+ncmpii_NC_lookupvar(NC *ncp, int varid);
 
 extern int
 ncmpi_def_var( int ncid, const char *name, nc_type type,
-              int64_t ndims, const int64_t *dimidsp, int64_t *varidp);
+              int ndims, const int *dimidsp, int *varidp);
 
 extern int
-ncmpi_rename_var(int ncid, int64_t varid, const char *newname);
+ncmpi_rename_var(int ncid, int varid, const char *newname);
 
 extern int
-ncmpi_inq_var(int ncid, int64_t varid, char *name, nc_type *typep, 
-		int64_t *ndimsp, int64_t *dimids, int64_t *nattsp);
+ncmpi_inq_var(int ncid, int varid, char *name, nc_type *typep, 
+		int *ndimsp, int *dimids, int *nattsp);
 
 extern int
-ncmpi_inq_varid(int ncid, const char *name, int64_t *varid_ptr);
+ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr);
 
 extern int 
-ncmpi_inq_varname(int ncid, int64_t varid, char *name);
+ncmpi_inq_varname(int ncid, int varid, char *name);
 
 extern int 
-ncmpi_inq_vartype(int ncid, int64_t varid, nc_type *typep);
+ncmpi_inq_vartype(int ncid, int varid, nc_type *typep);
 
 extern int 
-ncmpi_inq_varndims(int ncid, int64_t varid, int64_t *ndimsp);
+ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
 
 extern int 
-ncmpi_inq_vardimid(int ncid, int64_t varid, int64_t *dimids);
+ncmpi_inq_vardimid(int ncid, int varid, int *dimids);
 
 extern int 
-ncmpi_inq_varnatts(int ncid, int64_t varid, int64_t *nattsp);
+ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
 extern int
-ncmpi_rename_var(int ncid, int64_t varid, const char *newname);
+ncmpi_rename_var(int ncid, int varid, const char *newname);
 /* End defined in var.c */
 
 #define IS_RECVAR(vp) \
@@ -376,14 +376,14 @@ struct NC {
 /*	NC_NOFILL in netcdf.h, historical interface */
 	int flags;
 	ncio *nciop;
-	int64_t chunk;	/* largest extent this layer will request from ncio->get() */
-	int64_t xsz;	/* external size of this header, <= var[0].begin */
-	int64_t begin_var; /* position of the first (non-record) var */
-	int64_t begin_rec; /* position of the first 'record' */
+	MPI_Offset chunk;	/* largest extent this layer will request from ncio->get() */
+	MPI_Offset xsz;	/* external size of this header, <= var[0].begin */
+	MPI_Offset begin_var; /* position of the first (non-record) var */
+	MPI_Offset begin_rec; /* position of the first 'record' */
 	/* don't constrain maximu sinze of record unnecessarily */
-	int64_t recsize;	/* length of 'record' */	
+	MPI_Offset recsize;	/* length of 'record' */	
 	/* below gets xdr'd */
-	int64_t numrecs; /* number of 'records' allocated */
+	MPI_Offset numrecs; /* number of 'records' allocated */
 	NC_dimarray dims;
 	NC_attrarray attrs;
 	NC_vararray vars;
@@ -438,8 +438,8 @@ ncmpii_NC_check_id(int ncid, NC **ncpp);
 extern int
 ncmpii_cktype(nc_type datatype);
 
-extern int64_t
-ncmpix_howmany(nc_type type, int64_t xbufsize);
+extern MPI_Offset
+ncmpix_howmany(nc_type type, MPI_Offset xbufsize);
 
 extern int
 ncmpii_read_numrecs(NC *ncp);
@@ -469,19 +469,19 @@ extern int
 ncmpii_NC_close(NC *ncp);
 
 extern int
-ncmpi_inq(int ncid, int64_t *ndimsp, int64_t *nvarsp, int64_t *nattsp, int64_t *xtendimp);
+ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
 
 extern int 
-ncmpi_inq_ndims(int ncid, int64_t *ndimsp);
+ncmpi_inq_ndims(int ncid, int *ndimsp);
 
 extern int 
-ncmpi_inq_nvars(int ncid, int64_t *nvarsp);
+ncmpi_inq_nvars(int ncid, int *nvarsp);
 
 extern int 
-ncmpi_inq_natts(int ncid, int64_t *nattsp);
+ncmpi_inq_natts(int ncid, int *nattsp);
 
 extern int 
-ncmpi_inq_unlimdim(int ncid, int64_t *xtendimp);
+ncmpi_inq_unlimdim(int ncid, int *xtendimp);
 
 extern int
 ncmpi_get_default_format(void);
@@ -490,10 +490,10 @@ ncmpi_get_default_format(void);
 /* Begin defined in v1hpg.c */
 
 extern size_t
-ncx_len_NC(const NC *ncp, int64_t sizeof_off_t);
+ncx_len_NC(const NC *ncp, MPI_Offset sizeof_off_t);
 
 extern int
-ncx_put_NC(const NC *ncp, void **xpp, int64_t offset, int64_t extent);
+ncx_put_NC(const NC *ncp, void **xpp, MPI_Offset offset, MPI_Offset extent);
 
 extern int
 nc_get_NC( NC *ncp);
@@ -504,16 +504,16 @@ nc_get_NC( NC *ncp);
 /* Begin defined in putget.c */
 
 extern int
-ncmpii_fill_NC_var(NC *ncp, const NC_var *varp, int64_t recno);
+ncmpii_fill_NC_var(NC *ncp, const NC_var *varp, MPI_Offset recno);
 
 extern int
-ncmpii_inq_rec(int ncid, int64_t *nrecvars, int64_t *recvarids, int64_t *recsizes);
+ncmpii_inq_rec(int ncid, MPI_Offset *nrecvars, MPI_Offset *recvarids, MPI_Offset *recsizes);
 
 extern int
-ncmpii_get_rec(int ncid, int64_t recnum, void **datap);
+ncmpii_get_rec(int ncid, MPI_Offset recnum, void **datap);
 
 extern int
-ncmpii_put_rec(int ncid, int64_t recnum, void *const *datap);
+ncmpii_put_rec(int ncid, MPI_Offset recnum, void *const *datap);
 #endif
 
 /* End defined in putget.c */
@@ -521,16 +521,16 @@ ncmpii_put_rec(int ncid, int64_t recnum, void *const *datap);
 /* Begin defined in header.c */
 typedef struct bufferinfo {
   ncio *nciop;		
-  int64_t offset;	/* current read/write offset in the file */
+  MPI_Offset offset;	/* current read/write offset in the file */
   int version;		/* either 1 for normal netcdf or 
 			   2 for 8-byte offset version */
   void *base;     	/* beginning of read/write buffer */
   void *pos;      	/* current position in buffer */
-  int64_t size;		/* size of the buffer */
-  int64_t index;		/* index of current position in buffer */
+  MPI_Offset size;		/* size of the buffer */
+  MPI_Offset index;		/* index of current position in buffer */
 } bufferinfo;  
 
-extern int64_t 
+extern MPI_Offset 
 ncmpix_len_nctype(nc_type type);
 
 #if 0
@@ -538,8 +538,8 @@ extern int
 hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
 #endif
 
-extern int64_t
-ncmpii_hdr_len_NC(const NC *ncp, int64_t sizeof_off_t);
+extern MPI_Offset
+ncmpii_hdr_len_NC(const NC *ncp, MPI_Offset sizeof_off_t);
 
 extern int
 ncmpii_hdr_get_NC(NC *ncp);
@@ -548,7 +548,7 @@ extern int
 ncmpii_hdr_put_NC(NC *ncp, void *buf);
 
 extern int
-ncmpii_NC_computeshapes(NC *ncp, int sizeof_t);
+ncmpii_NC_computeshapes(NC *ncp);
 
 /* end defined in header.c */
 
@@ -564,7 +564,7 @@ extern int
 ncmpiio_sync(ncio *nciop);
 
 extern int
-ncmpiio_move(ncio *const nciop, int64_t to, int64_t from, int64_t nbytes);
+ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from, MPI_Offset nbytes);
 
 extern int
 NC_computeshapes(NC *ncp);
@@ -585,44 +585,44 @@ void ncmpii_handle_error(int rank, int mpi_status, char *msg);
  */
 
 extern int
-ncmpii_put_att(int ncid, int64_t varid, const char *name, nc_type datatype,
-	int64_t len, const void *value);
+ncmpii_put_att(int ncid, int varid, const char *name, nc_type datatype,
+	MPI_Offset len, const void *value);
 
 extern int
-ncmpii_get_att(int ncid, int64_t varid, const char *name, void *value);
+ncmpii_get_att(int ncid, int varid, const char *name, void *value);
 
 extern int
-ncmpii_put_var1(int ncid, int64_t varid, const int64_t *index, const void *value);
+ncmpii_put_var1(int ncid, int varid, const MPI_Offset *index, const void *value);
 
 extern int
-ncmpii_get_var1(int ncid, int64_t varid, const int64_t *index, void *value);
+ncmpii_get_var1(int ncid, int varid, const MPI_Offset *index, void *value);
 
 extern int
-ncmpii_put_vara(int ncid, int64_t varid,
-	 const int64_t *start, const int64_t *count, const void *value);
+ncmpii_put_vara(int ncid, int varid,
+	 const MPI_Offset *start, const MPI_Offset *count, const void *value);
 
 extern int
-ncmpii_get_vara(int ncid, int64_t varid,
-	 const int64_t *start, const int64_t *count, void *value);
+ncmpii_get_vara(int ncid, int varid,
+	 const MPI_Offset *start, const MPI_Offset *count, void *value);
 
 extern int
-ncmpii_put_vars(int ncid, int64_t varid,
-	 const int64_t *start, const int64_t *count, const ptrdiff_t *stride,
+ncmpii_put_vars(int ncid, int varid,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 const void * value);
 
 extern int
-ncmpii_get_vars(int ncid, int64_t varid,
-	 const int64_t *start, const int64_t *count, const ptrdiff_t *stride,
+ncmpii_get_vars(int ncid, int varid,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 void * value);
 
 extern int
-ncmpii_put_varm(int ncid, int64_t varid,
-	 const int64_t *start, const int64_t *count, const ptrdiff_t *stride,
+ncmpii_put_varm(int ncid, int varid,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 const ptrdiff_t * map, const void *value);
 
 extern int
-ncmpii_get_varm(int ncid, int64_t varid,
-	 const int64_t *start, const int64_t *count, const ptrdiff_t *stride,
+ncmpii_get_varm(int ncid, int varid,
+	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
 	 const ptrdiff_t * map, void *value);
 
 
