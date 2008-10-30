@@ -539,7 +539,7 @@ def_dims(int ncid)
 {
     int  err;             /* status */
     int  i;
-    int64_t  dimid;		/* dimension id */
+    int  dimid;		/* dimension id */
 
     for (i = 0; i < NDIMS; i++) {
 	err = ncmpi_def_dim(ncid, dim_name[i], i==0 ? NC_UNLIMITED : dim_len[i],
@@ -555,7 +555,7 @@ def_vars(int ncid)
 {
     int  err;             /* status */
     int  i;
-    int64_t var_id;
+    int var_id;
 
     for (i = 0; i < NVARS; i++) {
 	err = ncmpi_def_var(ncid, var_name[i], var_type[i], var_rank[i],

@@ -22,8 +22,8 @@ static char* name_path(const char* path);
 static const char* type_name(ncmpi_type  type);
 static void tztrim(char* ss);
 static void pr_att_string(size_t len, const char* string);
-static void pr_att_vals(ncmpi_type  type, int64_t len, const double* vals);
-static void pr_att(int ncid, int64_t varid, const char *varname, int64_t ia);
+static void pr_att_vals(ncmpi_type  type, size_t len, const double* vals);
+static void pr_att(int ncid, int varid, const char *varname, int ia);
 static void do_ncdump(const char* path, struct fspec* specp);
 static void make_lvars(char* optarg, struct fspec* fspecp);
 static void set_sigdigs( const char* optarg);
@@ -215,7 +215,7 @@ pr_att_string(
 static void
 pr_att_vals(
      ncmpi_type type,
-     int64_t len,
+     size_t len,
      const double *vals
      )
 {
@@ -293,9 +293,9 @@ pr_att_vals(
 static void
 pr_att(
     int ncid,
-    int64_t varid,
+    int varid,
     const char *varname,
-    int64_t ia
+    int ia
     )
 {
     struct ncatt att;		/* attribute */
@@ -341,19 +341,19 @@ pr_att(
 static void
 do_ncdump(const char *path, struct fspec* specp)
 {
-    int64_t ndims;			/* number of dimensions */
-    int64_t nvars;			/* number of variables */
-    int64_t ngatts;			/* number of global attributes */
-    int64_t xdimid;			/* id of unlimited dimension */
-    int64_t dimid;			/* dimension id */
-    int64_t varid;			/* variable id */
+    int ndims;			/* number of dimensions */
+    int nvars;			/* number of variables */
+    int ngatts;			/* number of global attributes */
+    int xdimid;			/* id of unlimited dimension */
+    int dimid;			/* dimension id */
+    int varid;			/* variable id */
     struct ncdim dims[NC_MAX_DIMS]; /* dimensions */
     size_t vdims[NC_MAX_DIMS];	/* dimension sizes for a single variable */
     struct ncvar var;		/* variable */
     struct ncatt att;		/* attribute */
-    int64_t id;			/* dimension number per variable */
-    int64_t ia;			/* attribute number */
-    int64_t iv;			/* variable number */
+    int id;			/* dimension number per variable */
+    int ia;			/* attribute number */
+    int iv;			/* variable number */
     int is_coord;		/* true if variable is a coordinate variable */
     int ncid;			/* netCDF id */
     vnode* vlist = 0;		/* list for vars specified with -v option */

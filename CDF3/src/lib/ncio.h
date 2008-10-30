@@ -8,7 +8,7 @@
 #define _NCIO_H_
 
 #include <stddef.h>	/* size_t */
-#include <sys/types.h>	/* int64_t */
+#include <sys/types.h>	/* MPI_Offset */
 #include "pnetcdf.h"
 
 #include <mpi.h>
@@ -49,7 +49,7 @@ typedef struct ncio ncio;	/* forward reference */
 	 * at offset. Only reasonable flag value is RGN_MODIFIED.
 	 */
 typedef int ncmpiio_relfunc(ncio *const nciop,
-		 int64_t offset, int rflags);
+		 MPI_Offset offset, int rflags);
 
 	/*
 	 * Request that the region (offset, extent)
@@ -64,7 +64,7 @@ typedef int ncmpiio_getfunc(ncio *const nciop,
 	 * Like memmove(), safely move possibly overlapping data.
 	 * Only reasonable flag value is RGN_NOLOCK.
 	 */
-typedef int ncmpiio_movefunc(ncio *const nciop, int64_t to, int64_t from,
+typedef int ncmpiio_movefunc(ncio *const nciop, MPI_Offset to, MPI_Offset from,
 			size_t nbytes, int rflags);
 
 	/*

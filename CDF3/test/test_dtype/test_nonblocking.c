@@ -14,7 +14,7 @@
 #define TEST_M 3 /* size of each dimension is increasingly multiplied by M */
 #define TEST_ARRAY_ORDER MPI_ORDER_C
 
-int64_t ndims = TEST_DIMS;
+int ndims = TEST_DIMS;
 char *filename = TEST_DEFAULT_FILE;
 int test_n = TEST_N;
 double test_m = TEST_M;
@@ -89,10 +89,10 @@ void parse_args(int argc, char **argv, int rank) {
   return;
 }
 
-void partition_array(int64_t ndims, 
-		     int64_t *total_sizes, 
-		     int64_t *local_subsizes, 
-		     int64_t *local_starts, 
+void partition_array(int ndims, 
+		     int *total_sizes, 
+		     int *local_subsizes, 
+		     int *local_starts, 
 		     int nprocs, 
 		     int myrank)
 {
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
   double power_M;
   int *array_of_sizes, *array_of_subsizes, *array_of_starts;
   int ncid, *dimids, varid_1, varid_2;
-  int64_t *local_starts, *local_edges, *stride, *imap;
+  MPI_Offset *local_starts, *local_edges, *stride, *imap;
   char dimname[20];
   ncmpi_type nc_etype;
   MPI_Datatype mpi_etype, mpi_subarray;
@@ -174,11 +174,11 @@ int main(int argc, char** argv) {
   TEST_HANDLE_ERR(status);
 
   array_of_sizes = (int *)
-		   malloc(sizeof(int)*ndims*4 + sizeof(int64_t)*ndims*4);
+		   malloc(sizeof(int)*ndims*4 + sizeof(MPI_Offset)*ndims*4);
   array_of_subsizes = array_of_sizes + ndims;
   array_of_starts = array_of_subsizes + ndims;
   dimids = array_of_starts + ndims;
-  local_starts = (int64_t *)(dimids + ndims);
+  local_starts = (MPI_Offset *)(dimids + ndims);
   local_edges = local_starts + ndims;
   stride = local_edges + ndims;
   imap = stride + ndims;
@@ -202,7 +202,7 @@ int main(int argc, char** argv) {
     total_sz *= array_of_sizes[i];
     sprintf(dimname, "dim_%d", i);
     status = ncmpi_def_dim(ncid, dimname,
-			   (int64_t)array_of_sizes[i], dimids+i);
+			   (MPI_Offset)array_of_sizes[i], dimids+i);
     TEST_HANDLE_ERR(status);
   }
 
@@ -257,14 +257,14 @@ int main(int argc, char** argv) {
   local_sz = 1;
   for (i=0; i<ndims; i++) {
     local_sz *= array_of_subsizes[i];
-    local_edges[i] = (int64_t)array_of_subsizes[i];
-    local_starts[i] = (int64_t)array_of_starts[i];
+    local_edges[i] = (MPI_Offset)array_of_subsizes[i];
+    local_starts[i] = (MPI_Offset)array_of_starts[i];
   }
 
   if (order == MPI_ORDER_FORTRAN) {
     /* reverse the filearray dimension, since NC always use C ORDER */
-    TEST_REVERSE(local_edges, ndims, int64_t);
-    TEST_REVERSE(local_starts, ndims, int64_t);
+    TEST_REVERSE(local_edges, ndims, MPI_Offset);
+    TEST_REVERSE(local_starts, ndims, MPI_Offset);
   }
 
  /* CREATE local subarray memory view */

@@ -71,10 +71,10 @@ ncmpii_NC_check_name(const char *name)
 NC_new_string(count, str)
  */
 NC_string *
-ncmpii_new_NC_string(int64_t slen, const char *str)
+ncmpii_new_NC_string(MPI_Offset slen, const char *str)
 {
 	NC_string *ncstrp;
-	int64_t sz = M_RNDUP(sizeof(NC_string)) + slen + 1;
+	MPI_Offset sz = M_RNDUP(sizeof(NC_string)) + slen + 1;
 
 #if 0
 	sz = _RNDUP(sz, X_ALIGN);
@@ -108,8 +108,8 @@ NC_re_string()
 int
 ncmpii_set_NC_string(NC_string *ncstrp, const char *str)
 {
-	int64_t slen;
-	int64_t diff;
+	MPI_Offset slen;
+	MPI_Offset diff;
 
 	assert(str != NULL && *str != 0);
 

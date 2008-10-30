@@ -32,7 +32,7 @@ static const schar ncmagic[] = {'C', 'D', 'F', 0x01};
 
 /* Prototypes for functions used only in this file */
 static int val_get_NCtype(bufferinfo *gbp, NCtype *typep);
-static int val_get_size_t(bufferinfo *gbp, int64_t *sp);
+static int val_get_size_t(bufferinfo *gbp, MPI_Offset *sp);
 static int val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp);
 static int val_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp);
 static int val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap);
@@ -44,8 +44,8 @@ static int val_get_NC_var(bufferinfo *gbp, NC_var **varpp);
 static int val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap);
 static int val_get_NC(NC *ncp);
 
-static int val_fetch(bufferinfo *gbp, int64_t fsize);
-static int val_check_buffer(bufferinfo *gbp, int64_t nextread);
+static int val_fetch(bufferinfo *gbp, MPI_Offset fsize);
+static int val_check_buffer(bufferinfo *gbp, MPI_Offset nextread);
 
 /* Begin Of get NC */
 
@@ -53,7 +53,7 @@ static int val_check_buffer(bufferinfo *gbp, int64_t nextread);
  * Fetch the next header chunk.
  */
 static int
-val_fetch(bufferinfo *gbp, int64_t fsize) {
+val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
   char *buf;
   ssize_t nn = 0, bufsize = 0;
 
@@ -85,7 +85,7 @@ val_fetch(bufferinfo *gbp, int64_t fsize) {
  * Ensure that 'nextread' bytes are available.
  */
 static int
-val_check_buffer(bufferinfo *gbp, int64_t nextread) {
+val_check_buffer(bufferinfo *gbp, MPI_Offset nextread) {
   if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
     return ENOERR;
   return val_fetch(gbp, MIN(gbp->size, nextread));
@@ -109,8 +109,8 @@ val_get_NCtype(bufferinfo *gbp, NCtype *typep) {
 }
 
 static int
-val_get_size_t(bufferinfo *gbp, int64_t *sp) {
-  int sizeof_t = gbp->version == 3 ? 8 : 4; 
+val_get_size_t(bufferinfo *gbp, MPI_Offset *sp) {
+  int sizeof_t = gbp->version == 5 ? 8 : 4; 
   int status = val_check_buffer(gbp, sizeof_t);
   if (status != ENOERR) {
     printf("size is expected for ");
@@ -122,7 +122,7 @@ val_get_size_t(bufferinfo *gbp, int64_t *sp) {
 static int
 val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   int status;
-  int64_t  nchars = 0, padding, bufremain, strcount; 
+  MPI_Offset  nchars = 0, padding, bufremain, strcount; 
   NC_string *ncstrp;
   char *cpos;
   char pad[X_ALIGN-1];
@@ -304,7 +304,7 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   int status;
   void *value = attrp->xvalue;
   char pad[X_ALIGN-1]; 
-  int64_t nvalues = attrp->nelems, esz, padding, bufremain, attcount;
+  MPI_Offset nvalues = attrp->nelems, esz, padding, bufremain, attcount;
 
   esz = ncmpix_len_nctype(attrp->type);
   padding = attrp->xsz - esz * nvalues;
@@ -344,7 +344,7 @@ val_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   NC_string *strp;
   int status;
   nc_type type; 
-  int64_t nelems;
+  MPI_Offset nelems;
   NC_attr *attrp;
 
   status = val_get_NC_string(gbp, &strp);
@@ -446,7 +446,8 @@ static int
 val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   NC_string *strp;
   int status;
-  int64_t ndims, dim;
+  MPI_Offset ndims, tmp_dim;
+  int dim;
   NC_var *varp;
 
   status = val_get_NC_string(gbp, &strp);
@@ -467,14 +468,15 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   }
 
   for (dim = 0; dim < ndims; dim++ ) {
-    status = val_check_buffer(gbp, (gbp->version == 3 ? 8 : 4));
+    status = val_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
     if(status != ENOERR) {
       printf("the dimid[%d] is expected for \"%s\" - ", (int)dim, strp->cp);
       ncmpii_free_NC_var(varp);
       return status;
     }
+    tmp_dim = (MPI_Offset) varp->dimids + dim;
     status = ncmpix_getn_long_long((const void **)(&gbp->pos), 
-                              1, varp->dimids + dim);
+                              1, &tmp_dim);
     if(status != ENOERR) {
       ncmpii_free_NC_var(varp);
       return status;
@@ -502,7 +504,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     return status;
   }
 
-  status = val_check_buffer(gbp, (gbp->version == 3 ? 8 : 4));
+  status = val_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
   if(status != ENOERR) {
     printf("offset is expected for the data of \"%s\" - ", strp->cp);
     ncmpii_free_NC_var(varp);
@@ -583,7 +585,7 @@ val_get_NC(NC *ncp) {
   int status;
   bufferinfo getbuf;
   schar magic[sizeof(ncmagic)];
-  int64_t nrecs = 0;
+  MPI_Offset nrecs = 0;
 
   assert(ncp != NULL);
 
@@ -619,7 +621,7 @@ val_get_NC(NC *ncp) {
     free(getbuf.base);
     return status;
   }
-  status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, getbuf.version == 3 ? 8 : 4);
+  status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, getbuf.version == 5 ? 8 : 4);
   if(status != ENOERR) {
     free(getbuf.base);
     return status;
@@ -650,7 +652,7 @@ val_get_NC(NC *ncp) {
   }
 
   ncp->xsz = ncmpii_hdr_len_NC(ncp, (getbuf.version == 1 ? 4 : 8)); 
-  status = ncmpii_NC_computeshapes(ncp, (getbuf.version == 3 ? 8 : 4));
+  status = ncmpii_NC_computeshapes(ncp);
   free(getbuf.base);
 
   return status;

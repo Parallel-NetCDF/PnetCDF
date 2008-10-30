@@ -270,10 +270,10 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
 }
 
 int
-ncmpiio_move(ncio *const nciop, int64_t to, int64_t from, int64_t nbytes) {
+ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from, MPI_Offset nbytes) {
   int mpireturn, mpierr = 0, errcheck;
-  const int64_t bufsize = 4096;
-  int64_t movesize, bufcount;
+  const MPI_Offset bufsize = 4096;
+  MPI_Offset movesize, bufcount;
   int rank, grpsize;
   void *buf = malloc(bufsize);
   MPI_Comm comm;

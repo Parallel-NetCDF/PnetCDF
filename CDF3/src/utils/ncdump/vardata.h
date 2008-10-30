@@ -16,9 +16,9 @@ extern "C" {
 
 /* Output the data for a single variable, in CDL syntax. */
 extern int vardata ( const struct ncvar*, /* variable */
-		     int64_t [], /* variable dimension lengths */
+		     size_t [], /* variable dimension lengths */
 		     int, /* netcdf id */
-		     int64_t, /* variable id */
+		     int, /* variable id */
 		     const struct fspec* /* formatting specs */
     );
 
