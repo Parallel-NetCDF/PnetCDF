@@ -75,14 +75,15 @@ int
 main(int argc, char ** argv)
 {
    /* IDs for the netCDF file, dimensions, and variables. */
+   int nprocs, rank;
    int ncid;
-   int64_t lon_dimid, lat_dimid, lvl_dimid, rec_dimid;
-   int64_t lat_varid, lon_varid, pres_varid, temp_varid;
-   int64_t dimids[NDIMS];
+   int lon_dimid, lat_dimid, lvl_dimid, rec_dimid;
+   int lat_varid, lon_varid, pres_varid, temp_varid;
+   int dimids[NDIMS];
 
    /* The start and count arrays will tell the netCDF library where to
       write our data. */
-   int64_t start[NDIMS], count[NDIMS];
+   MPI_Offset start[NDIMS], count[NDIMS];
 
    /* Program variables to hold the data we will write out. We will only
       need enough space to hold one timestep of data; one record. */
@@ -99,6 +100,8 @@ main(int argc, char ** argv)
    int retval;
 
    MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 
    /* Create some pretend data. If this wasn't an example program, we
@@ -185,6 +188,7 @@ main(int argc, char ** argv)
    if ((retval = ncmpi_enddef(ncid)))
       check_err(retval,__LINE__,__FILE__);
 
+  retval = ncmpi_begin_indep_data(ncid);
    /* Write the coordinate variable data. This will put the latitudes
       and longitudes of our data grid into the netCDF file. */
    if ((retval = ncmpi_put_var_float(ncid, lat_varid, &lats[0]))){
@@ -193,7 +197,7 @@ main(int argc, char ** argv)
       }
    if ((retval = ncmpi_put_var_float(ncid, lon_varid, &lons[0])))
       check_err(retval,__LINE__,__FILE__);
-
+  retval = ncmpi_end_indep_data(ncid);
 
    /* These settings tell netcdf to write one timestep of data. (The
      setting of start[0] inside the loop below tells netCDF which
@@ -227,6 +231,7 @@ main(int argc, char ** argv)
       check_err(retval,__LINE__,__FILE__);
    
    printf("*** SUCCESS writing example file %s!\n", FILE_NAME);
+   MPI_Finalize();
 
 
    return 0;
