@@ -86,7 +86,7 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
 	  fSet(ncp->flags, NC_64BIT_OFFSET);
 	  sizeof_off_t = 8;
   } else if (fIsSet(cmode, NC_64BIT_DATA)) {
-	  if (sizeof(off_t) != 8)
+	  if (sizeof(MPI_Offset) <  8)
 		  return NC_ESMALL;
 	  fSet(ncp->flags, NC_64BIT_DATA);
 	  sizeof_off_t = 8;
