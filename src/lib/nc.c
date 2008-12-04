@@ -810,6 +810,8 @@ ncmpii_NC_enddef(NC *ncp) {
   if (alignment <= 0)
 	  alignment = 1;
 
+  MPI_Info_free(&info);
+
   /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
    * acomplish the same thing with calls to NC_begins */
   NC_begins(ncp, 0, alignment, 0, alignment);
