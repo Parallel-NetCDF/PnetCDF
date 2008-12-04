@@ -1139,6 +1139,10 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
 
           /* more than one record variables */
 
+		/* TODO: would it make sense here to automatically set the
+		 * cb_buffer size to one record? We have all the information 
+		 * needed to do so..*/
+
           offset += start[0] * ncp->recsize;
           if (varp->ndims == 1) {
 #if (MPI_VERSION < 2)
