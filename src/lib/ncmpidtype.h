@@ -11,15 +11,15 @@
 int ncmpii_dtype_decode(MPI_Datatype dtype,
 			MPI_Datatype *ptype,
 			int *el_size,
-			int *nelems,
+			MPI_Offset *nelems,
 			int *isderived,
 			int *iscontig_of_ptypes);
 
 int ncmpii_data_repack(void *inbuf,
-                       int incount,
+                       MPI_Offset incount,
                        MPI_Datatype intype,
                        void *outbuf,
-                       int outcount,
+                       MPI_Offset outcount,
                        MPI_Datatype outtype);
 
 #endif

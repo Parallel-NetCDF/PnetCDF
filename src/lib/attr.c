@@ -64,7 +64,7 @@ NC_attr *
 ncmpii_new_x_NC_attr(
 	NC_string *strp,
 	nc_type type,
-	size_t nelems)
+	MPI_Offset nelems)
 {
 	NC_attr *attrp;
 	const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
@@ -100,7 +100,7 @@ static NC_attr *
 ncmpii_new_NC_attr(
 	const char *name,
 	nc_type type,
-	size_t nelems)
+	MPI_Offset nelems)
 {
 	NC_string *strp;
 	NC_attr *attrp;
@@ -278,7 +278,7 @@ static NC_attr *
 elem_NC_attrarray(const NC_attrarray *ncap, size_t elem)
 {
 	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed size_t */
+		/* cast needed for braindead systems with signed size_t*/
 	if(ncap->nelems == 0 || (unsigned long) elem >= ncap->nelems)
 		return NULL;
 
@@ -383,6 +383,7 @@ NC_lookupattr(int ncid,
 
 int
 ncmpi_inq_attname(int ncid, int varid, int attnum, char *name)
+
 {
 	int status;
 	NC *ncp;
@@ -709,7 +710,7 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 
 
 static int
-ncmpix_pad_putn_Iuchar(void **xpp, size_t nelems, const uchar *tp, nc_type type)
+ncmpix_pad_putn_Iuchar(void **xpp, MPI_Offset nelems, const uchar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -731,7 +732,7 @@ ncmpix_pad_putn_Iuchar(void **xpp, size_t nelems, const uchar *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Iuchar(const void **xpp, size_t nelems, uchar *tp, nc_type type)
+ncmpix_pad_getn_Iuchar(const void **xpp, MPI_Offset nelems, uchar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -754,7 +755,7 @@ ncmpix_pad_getn_Iuchar(const void **xpp, size_t nelems, uchar *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Ischar(void **xpp, size_t nelems, const schar *tp, nc_type type)
+ncmpix_pad_putn_Ischar(void **xpp, MPI_Offset nelems, const schar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -776,7 +777,7 @@ ncmpix_pad_putn_Ischar(void **xpp, size_t nelems, const schar *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Ischar(const void **xpp, size_t nelems, schar *tp, nc_type type)
+ncmpix_pad_getn_Ischar(const void **xpp, MPI_Offset nelems, schar *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -799,7 +800,7 @@ ncmpix_pad_getn_Ischar(const void **xpp, size_t nelems, schar *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Ishort(void **xpp, size_t nelems, const short *tp, nc_type type)
+ncmpix_pad_putn_Ishort(void **xpp, MPI_Offset nelems, const short *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -821,7 +822,7 @@ ncmpix_pad_putn_Ishort(void **xpp, size_t nelems, const short *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Ishort(const void **xpp, size_t nelems, short *tp, nc_type type)
+ncmpix_pad_getn_Ishort(const void **xpp, MPI_Offset nelems, short *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -844,7 +845,7 @@ ncmpix_pad_getn_Ishort(const void **xpp, size_t nelems, short *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Iint(void **xpp, size_t nelems, const int *tp, nc_type type)
+ncmpix_pad_putn_Iint(void **xpp, MPI_Offset nelems, const int *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -866,7 +867,7 @@ ncmpix_pad_putn_Iint(void **xpp, size_t nelems, const int *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Iint(const void **xpp, size_t nelems, int *tp, nc_type type)
+ncmpix_pad_getn_Iint(const void **xpp, MPI_Offset nelems, int *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -889,7 +890,7 @@ ncmpix_pad_getn_Iint(const void **xpp, size_t nelems, int *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Ilong(void **xpp, size_t nelems, const long *tp, nc_type type)
+ncmpix_pad_putn_Ilong(void **xpp, MPI_Offset nelems, const long *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -911,7 +912,7 @@ ncmpix_pad_putn_Ilong(void **xpp, size_t nelems, const long *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Ilong(const void **xpp, size_t nelems, long *tp, nc_type type)
+ncmpix_pad_getn_Ilong(const void **xpp, MPI_Offset nelems, long *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -934,7 +935,7 @@ ncmpix_pad_getn_Ilong(const void **xpp, size_t nelems, long *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Ifloat(void **xpp, size_t nelems, const float *tp, nc_type type)
+ncmpix_pad_putn_Ifloat(void **xpp, MPI_Offset nelems, const float *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -956,7 +957,7 @@ ncmpix_pad_putn_Ifloat(void **xpp, size_t nelems, const float *tp, nc_type type)
 }
 
 static int
-ncmpix_pad_getn_Ifloat(const void **xpp, size_t nelems, float *tp, nc_type type)
+ncmpix_pad_getn_Ifloat(const void **xpp, MPI_Offset nelems, float *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -979,7 +980,7 @@ ncmpix_pad_getn_Ifloat(const void **xpp, size_t nelems, float *tp, nc_type type)
 
 
 static int
-ncmpix_pad_putn_Idouble(void **xpp, size_t nelems, const double *tp, nc_type type)
+ncmpix_pad_putn_Idouble(void **xpp, MPI_Offset nelems, const double *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -1001,7 +1002,7 @@ ncmpix_pad_putn_Idouble(void **xpp, size_t nelems, const double *tp, nc_type typ
 }
 
 static int
-ncmpix_pad_getn_Idouble(const void **xpp, size_t nelems, double *tp, nc_type type)
+ncmpix_pad_getn_Idouble(const void **xpp, MPI_Offset nelems, double *tp, nc_type type)
 {
 	switch(type) {
 	case NC_CHAR:
@@ -2074,8 +2075,8 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 		return NC_ECHAR;
 
 		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
-		return NC_EINVAL; /* Invalid nelems */
+	/* if((unsigned long long) nelems > X_INT_MAX) /* backward compat */
+        /*		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
@@ -2164,7 +2165,6 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 			return lstatus;
 		}
 	}
-
 	return status;
 }
 
@@ -2199,7 +2199,7 @@ ncmpii_put_att(
 	int varid,
 	const char *name,
 	nc_type type,
-	size_t nelems,
+	MPI_Offset nelems,
 	const void *value)
 {
 	switch (type) {

@@ -14,7 +14,7 @@
 #include "rnd.h"
 
 /* Prototypes for functions used only in this file */
-static size_t ncx_szof(nc_type type);
+static MPI_Offset ncx_szof(nc_type type);
 
 /*
  * Free var
@@ -42,10 +42,10 @@ ncmpii_new_x_NC_var(
 	size_t ndims)
 {
 	NC_var *varp;
-	const size_t o1 = M_RNDUP(ndims * sizeof(int));
-	const size_t o2 = M_RNDUP(ndims * sizeof(size_t));
-	const size_t sz =  M_RNDUP(sizeof(NC_var)) +
-		 o1 + o2 + ndims * sizeof(size_t);
+	const MPI_Offset o1 = M_RNDUP(ndims * sizeof(MPI_Offset));
+	const MPI_Offset o2 = M_RNDUP(ndims * sizeof(MPI_Offset));
+	const MPI_Offset sz =  M_RNDUP(sizeof(NC_var)) +
+		 o1 + o2 + ndims * sizeof(MPI_Offset);
 
 	varp = (NC_var *) malloc(sz);
 	if(varp == NULL )
@@ -63,9 +63,10 @@ ncmpii_new_x_NC_var(
 		 * We use the M_RNDUP() macro to get the proper alignment.
 		 */
 		varp->dimids = (int *)((char *)varp + M_RNDUP(sizeof(NC_var)));
-		varp->shape = (size_t *)((char *)varp->dimids + o1);
-		varp->dsizes = (size_t *)((char *)varp->shape + o2);
+		varp->shape = (MPI_Offset *)((char *)varp->dimids + o1);
+		varp->dsizes = (MPI_Offset *)((char *)varp->shape + o2);
 	}
+
 
 	varp->xsz = 0;
 	varp->len = 0;
@@ -105,7 +106,6 @@ ncmpii_new_NC_var(const char *name, nc_type type,
 	return(varp);
 }
 
-
 static NC_var *
 dup_NC_var(const NC_var *rvarp)
 {
@@ -122,9 +122,9 @@ dup_NC_var(const NC_var *rvarp)
 	}
 
 	(void) memcpy(varp->shape, rvarp->shape,
-			 rvarp->ndims * sizeof(size_t));
+			 rvarp->ndims * sizeof(MPI_Offset));
 	(void) memcpy(varp->dsizes, rvarp->dsizes,
-			 rvarp->ndims * sizeof(size_t));
+			 rvarp->ndims * sizeof(MPI_Offset));
 	varp->xsz = rvarp->xsz;
 	varp->len = rvarp->len;
 	varp->begin = rvarp->begin;
@@ -196,7 +196,7 @@ ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 
 	if(ref->nelems != 0)
 	{
-		const size_t sz = ref->nelems * sizeof(NC_var *);
+		const MPI_Offset sz = ref->nelems * sizeof(NC_var *);
 		ncap->value = (NC_var **) malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
@@ -273,10 +273,10 @@ incr_NC_vararray(NC_vararray *ncap, NC_var *newelemp)
 
 
 static NC_var *
-elem_NC_vararray(const NC_vararray *ncap, size_t elem)
+elem_NC_vararray(const NC_vararray *ncap, MPI_Offset elem)
 {
 	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed size_t */
+		/* cast needed for braindead systems with signed MPI_Offset */
 	if(ncap->nelems == 0 || (unsigned long)elem >= ncap->nelems)
 		return NULL;
 
@@ -300,7 +300,7 @@ int
 ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
 {
 	NC_var **loc;
-	size_t slen;
+	MPI_Offset slen;
 	int varid;
 
 	assert(ncap != NULL);
@@ -312,7 +312,7 @@ ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
 
 	slen = strlen(name);
 
-	for(varid = 0; (size_t) varid < ncap->nelems; varid++, loc++)
+	for(varid = 0; (MPI_Offset) varid < ncap->nelems; varid++, loc++)
 	{
 		if(strlen((*loc)->name->cp) == slen &&
 			strncmp((*loc)->name->cp, name, slen) == 0)
@@ -333,7 +333,7 @@ ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
 NC_xtypelen
  * See also ncx_len()
  */
-static size_t
+static MPI_Offset
 ncx_szof(nc_type type)
 {
 	switch(type){
@@ -359,16 +359,23 @@ ncx_szof(nc_type type)
 /*
  * 'compile' the shape and len of a variable
  *  Formerly
-ncmpii_NC_var_shape(var, dims)
+ *   ncmpii_NC_var_shape(var, dims)
  */
+#include <stdio.h>
 int
-ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims)
+ncmpii_NC_var_shape64(NC_var *varp, const NC_dimarray *dims)
 {
-	size_t *shp, *dsp, *op;
+	MPI_Offset *shp, *dsp, *op;
 	int *ip;
 	const NC_dim *dimp;
-	size_t product = 1;
-	
+	MPI_Offset product = 1;
+        int i,j;
+/*
+	int *shp, *dsp, *op;
+	int *ip;
+	const NC_dim *dimp;
+	int product = 1;
+*/	
 	varp->xsz = ncx_szof(varp->type);
 
 	if(varp->ndims == 0)
@@ -380,13 +387,22 @@ ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims)
 	 * use the user supplied dimension indices
 	 * to determine the shape
 	 */
-	for(ip = varp->dimids, op = varp->shape
+/* 	for (i=0; i<varp->ndims;i++){
+  		   
+                   printf("ncmpii_NC_var_shape64: varp->dimids[%d]:%d, varp->shape[%d]:%d\n",i, varp->dimids[i],i, varp->shape[i]);
+
+        };
+*/
+        for(ip = varp->dimids, op = varp->shape
 		; ip < &varp->dimids[varp->ndims]; ip++, op++)
 	{
-		if(*ip < 0 || (size_t) (*ip) >= ((dims != NULL) ? dims->nelems : 1) )
+		if(*ip < 0 || (*ip) >= ((dims != NULL) ? dims->nelems : 1) ){
+#ifdef DEBUG
+		        printf("return NC_EBADDIM, *ip:%d\n", *ip);
+#endif
 			return NC_EBADDIM;
-		
-		dimp = ncmpii_elem_NC_dimarray(dims, (size_t)*ip);
+		}
+		dimp = ncmpii_elem_NC_dimarray(dims, *ip);
 		*op = dimp->size;
 		if(*op == NC_UNLIMITED && ip != varp->dimids)
 			return NC_EUNLIMPOS;
@@ -416,23 +432,11 @@ ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims)
 
 
 out :
-		varp->len = product * varp->xsz;
-		switch(varp->type) {
-			case NC_BYTE :
-			case NC_CHAR : 
-			case NC_SHORT :
-				if( varp->len%4 != 0 )
-				{
-					varp->len += 4 - varp->len%4; /* round up */
-					/*		*dsp += 4 - *dsp%4; */
-				}
-				break;
-			default:
-				/* already aligned */
-				break;
-		}
-#if 0
-	if (varp->xsz <= (X_UINT_MAX - 1)/ product) /* if int. mult won't overflow */
+
+	/* with new CDF-5 variable sizes, we might be able to avoid the bug
+	 * from serial netcdf.  not sure. need to double check */
+	if (varp->xsz <= X_UINT_MAX - 1/ product) 
+		/* if int. mult won't overflow ...*/
 	{
 		varp->len = product * varp->xsz;
 		switch(varp->type) {
@@ -453,11 +457,13 @@ out :
 	{ /* ok for last var to be "too big", indicated by this special len */
 		varp->len = X_UINT_MAX;
 	}
+#if 0
 	arrayp("\tshape", varp->ndims, varp->shape);
 	arrayp("\tdsizes", varp->ndims, varp->dsizes);
 #endif
 	return NC_NOERR;
 }
+
 /*
  * Check whether variable size is less than or equal to vlen_max,
  * without overflowing in arithmetic calculations.  If OK, return 1,
@@ -466,8 +472,8 @@ out :
  * systems with LFS it should be 2^32 - 4.
  */
 int
-ncmpii_NC_check_vlen(NC_var *varp, size_t vlen_max) {
-    size_t prod=varp->xsz;     /* product of xsz and dimensions so far */
+ncmpii_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max) {
+    MPI_Offset prod=varp->xsz;     /* product of xsz and dimensions so far */
 
     int ii;
 
@@ -487,7 +493,7 @@ ncmpii_NC_check_vlen(NC_var *varp, size_t vlen_max) {
 NC_hlookupvar()
  */
 NC_var *
-ncmpii_NC_lookupvar(NC *ncp, int varid)
+ncmpii_NC_lookupvar(NC *ncp,  int varid)
 {
 	NC_var *varp;
 
@@ -497,7 +503,7 @@ ncmpii_NC_lookupvar(NC *ncp, int varid)
 		return(NULL);
 	}
 
-	varp = elem_NC_vararray(&ncp->vars, (size_t)varid);
+	varp = elem_NC_vararray(&ncp->vars, varid);
 	if(varp == NULL)
 	{
 		return NULL;
@@ -520,9 +526,12 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 	int varid;
 	NC_var *varp;
 
+	MPI_Offset i;
+	
 	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
+
 
 	if(!NC_indef(ncp))
 	{
@@ -537,8 +546,8 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 	if(status != NC_NOERR)
 		return status;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) ndims > X_INT_MAX) /* Backward compat */
+		/* cast needed for braindead systems with signed MPI_Offset */
+	if((unsigned long long) ndims > X_INT_MAX) /* Backward compat */
 	{
 		return NC_EINVAL;
 	} 
@@ -554,11 +563,15 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 		return NC_ENAMEINUSE;
 	}
 	
+
+	
 	varp = ncmpii_new_NC_var(name, type, ndims, dimids);
 	if(varp == NULL)
 		return NC_ENOMEM;
 
-	status = ncmpii_NC_var_shape(varp, &ncp->dims);
+	
+
+	status = ncmpii_NC_var_shape64(varp, &ncp->dims);
 	if(status != NC_NOERR)
 	{
 		ncmpii_free_NC_var(varp);
@@ -613,13 +626,13 @@ ncmpi_inq_var(int ncid,
 	int status;
 	NC *ncp;
 	NC_var *varp;
-	size_t ii;
+	MPI_Offset ii;
 
 	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
-	varp = elem_NC_vararray(&ncp->vars, (size_t)varid);
+	varp = elem_NC_vararray(&ncp->vars, varid);
 	if(varp == NULL)
 		return NC_ENOTVAR;
 
@@ -633,7 +646,7 @@ ncmpi_inq_var(int ncid,
 		*typep = varp->type;
 	if(ndimsp != 0)
 	{
-		*ndimsp = (int) varp->ndims;
+		*ndimsp = varp->ndims;
 	}
 	if(dimids != 0)
 	{
@@ -652,7 +665,7 @@ ncmpi_inq_var(int ncid,
 
 
 int 
-ncmpi_inq_varname(int ncid, int varid, char *name)
+ncmpi_inq_varname(int ncid,  int varid, char *name)
 {
 	int status;
 	NC *ncp;
@@ -662,7 +675,7 @@ ncmpi_inq_varname(int ncid, int varid, char *name)
 	if(status != NC_NOERR)
 		return status;
 
-	varp = elem_NC_vararray(&ncp->vars, (size_t)varid);
+	varp = elem_NC_vararray(&ncp->vars, varid);
 	if(varp == NULL)
 		return NC_ENOTVAR;
 
@@ -676,7 +689,7 @@ ncmpi_inq_varname(int ncid, int varid, char *name)
 }
 
 int 
-ncmpi_inq_vartype(int ncid, int varid, nc_type *typep)
+ncmpi_inq_vartype(int ncid,  int varid, nc_type *typep)
 {
 	int status;
 	NC *ncp;
@@ -686,7 +699,7 @@ ncmpi_inq_vartype(int ncid, int varid, nc_type *typep)
 	if(status != NC_NOERR)
 		return status;
 
-	varp = elem_NC_vararray(&ncp->vars, (size_t)varid);
+	varp = elem_NC_vararray(&ncp->vars, varid);
 	if(varp == NULL)
 		return NC_ENOTVAR;
 
@@ -697,7 +710,7 @@ ncmpi_inq_vartype(int ncid, int varid, nc_type *typep)
 }
 
 int 
-ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
+ncmpi_inq_varndims(int ncid,  int varid, int *ndimsp)
 {
 	int status;
 	NC *ncp;
@@ -707,7 +720,7 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 	if(status != NC_NOERR)
 		return status;
 
-	varp = elem_NC_vararray(&ncp->vars, (size_t)varid);
+	varp = elem_NC_vararray(&ncp->vars, varid);
 	if(varp == NULL)
 		return NC_ENOTVAR; /* TODO: is this the right error code? */
 
@@ -721,18 +734,18 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 
 
 int 
-ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
+ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
 {
 	int status;
 	NC *ncp;
 	NC_var *varp;
-	size_t ii;
+	MPI_Offset ii;
 
 	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
 
-	varp = elem_NC_vararray(&ncp->vars, (size_t)varid);
+	varp = elem_NC_vararray(&ncp->vars, varid);
 	if(varp == NULL)
 		return NC_ENOTVAR; /* TODO: is this the right error code? */
 
@@ -749,7 +762,7 @@ ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
 
 
 int 
-ncmpi_inq_varnatts(int ncid, int varid, int *nattsp)
+ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
 {
 	int status;
 	NC *ncp;
@@ -762,7 +775,7 @@ ncmpi_inq_varnatts(int ncid, int varid, int *nattsp)
 	if(status != NC_NOERR)
 		return status;
 
-	varp = elem_NC_vararray(&ncp->vars, (size_t)varid);
+	varp = elem_NC_vararray(&ncp->vars, varid);
 	if(varp == NULL)
 		return NC_ENOTVAR; /* TODO: is this the right error code? */
 
@@ -775,7 +788,7 @@ ncmpi_inq_varnatts(int ncid, int varid, int *nattsp)
 }
 
 int
-ncmpi_rename_var(int ncid, int varid, const char *newname)
+ncmpi_rename_var(int ncid,  int varid, const char *newname)
 {
 	int status;
 	NC *ncp;

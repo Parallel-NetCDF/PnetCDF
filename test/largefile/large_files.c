@@ -19,7 +19,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FILE_NAME "/tmp/large_files.nc"
+#define FILE_NAME "./large_files.nc"
 
 void
 check_err(const int stat, const int line, const char *file) {
@@ -43,7 +43,7 @@ main(int argc, char **argv) {
    int j_dim;
    int k_dim;
    int n_dim;
-
+ 
 #define NUMRECS 1
 #define I_LEN 4104
 #define J_LEN 1023
@@ -51,11 +51,11 @@ main(int argc, char **argv) {
 #define N_LEN 2
 
    /* dimension lengths */
-   size_t rec_len = NC_UNLIMITED;
-   size_t i_len = I_LEN;
-   size_t j_len = J_LEN;
-   size_t k_len = K_LEN;
-   size_t n_len = N_LEN;
+   MPI_Offset rec_len = NC_UNLIMITED;
+   MPI_Offset i_len = I_LEN;
+   MPI_Offset j_len = J_LEN;
+   MPI_Offset k_len = K_LEN;
+   MPI_Offset n_len = N_LEN;
 
    /* variable ids */
    int var1_id;
@@ -79,7 +79,7 @@ main(int argc, char **argv) {
    stat = ncmpi_create(MPI_COMM_WORLD, FILE_NAME, NC_CLOBBER|NC_64BIT_OFFSET, 
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
-
+ 
    /* define dimensions */
    stat = ncmpi_def_dim(ncid, "rec", rec_len, &rec_dim);
    check_err(stat,__LINE__,__FILE__);
@@ -188,6 +188,6 @@ main(int argc, char **argv) {
 
    /* Delete the file. */
    (void) remove(FILE_NAME);
-
+   MPI_Finalize();
    return 0;
 }

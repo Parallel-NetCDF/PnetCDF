@@ -714,14 +714,14 @@ vardata(
     size_t add[NC_MAX_DIMS];	/* "odometer" increment to next "row"  */
 #define VALBUFSIZ 1000
     double vals[VALBUFSIZ] ; /* aligned buffer */
-
+ 
     int gulp = VALBUFSIZ;
 
     int id;
     int ir;
-    size_t nels;
-    size_t ncols;
-    size_t nrows;
+    MPI_Offset nels;
+    MPI_Offset ncols;
+    MPI_Offset nrows;
     int vrank = vp->ndims;
     static int initeps = 0;
 

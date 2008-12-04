@@ -42,7 +42,8 @@ C    determined by MPI where a zero is specified
      &                      reorder, comm_cart, ierr)
 
 
-      ierr = Nfmpi_Create (comm_cart, "pnf_test.nc", NF_CLOBBER,
+      ierr = Nfmpi_Create (comm_cart, "pnf_test.nc", 
+     &                   NF_CLOBBER,
      &                   MPI_INFO_NULL, ncid)
 
       ierr = Nfmpi_Def_Dim

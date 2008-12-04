@@ -24,12 +24,13 @@
 
 #include "ncconfig.h" /* output of 'configure' */
 #include "rnd.h"
-#include <stddef.h> /* size_t */
+#include <stddef.h> 
 #include <errno.h>
 #include <sys/types.h> /* off_t */
 #include <limits.h>
 #include <float.h>
 #include "nctypes.h"
+#include <stdint.h>
 
 #include <mpi.h>
 #ifdef HAVE_MPIO_H
@@ -58,9 +59,9 @@
 #define X_SIZEOF_CHAR		1
 #define X_SIZEOF_SHORT		2
 #define X_SIZEOF_INT		4	/* xdr_int */
-#if 0
-#define X_SIZEOF_LONG		8 */	/* xdr_long_long */
-#endif
+/*#if 0*/
+#define X_SIZEOF_LONG		8	/* xdr_long_long */
+/*#endif*/
 #define X_SIZEOF_FLOAT		4
 #define X_SIZEOF_DOUBLE		8
 
@@ -107,6 +108,8 @@
 #define X_SIZE_MAX	X_UINT_MAX	
 #define X_OFF_MAX	X_INT_MAX
 
+#define X_INT64_T_MAX	9223372036854775808
+#define X_UINT64_T_MAX	18446744073709551616U
 
 /* Begin ncx_len */
 
@@ -360,17 +363,17 @@ ncmpix_put_double_double(void *xp, const double *ip);
 
 /* ncx_get_int_size_t */
 extern int
-ncmpix_get_size_t(const void **xpp, size_t *ulp);
+ncmpix_get_size_t(const void **xpp, MPI_Offset *ulp, MPI_Offset sizeof_off_t);
 /* ncx_get_int_off_t */
 extern int
-ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, size_t sizeof_off_t);
+ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, MPI_Offset sizeof_off_t);
 
 /* ncx_put_int_size_t */
 extern int
-ncmpix_put_size_t(void **xpp, const size_t *ulp);
+ncmpix_put_size_t(void **xpp, const MPI_Offset *ulp, MPI_Offset sizeof_off_t);
 /* ncx_put_int_off_t */
 extern int
-ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, size_t sizeof_off_t);
+ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, MPI_Offset sizeof_off_t);
 
 
 /*
@@ -414,218 +417,220 @@ ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, size_t sizeof_off_t);
  */
 
 extern int
-ncmpix_getn_schar_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *ip);
 extern int
-ncmpix_getn_schar_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *ip);
 extern int
-ncmpix_getn_schar_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_schar_short(const void **xpp, MPI_Offset nelems, short *ip);
 extern int
-ncmpix_getn_schar_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_schar_int(const void **xpp, MPI_Offset nelems, int *ip);
 extern int
-ncmpix_getn_schar_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_schar_long(const void **xpp, MPI_Offset nelems, long *ip);
 extern int
-ncmpix_getn_schar_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_schar_float(const void **xpp, MPI_Offset nelems, float *ip);
 extern int
-ncmpix_getn_schar_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_schar_double(const void **xpp, MPI_Offset nelems, double *ip);
 
 extern int
-ncmpix_pad_getn_schar_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_pad_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *ip);
 extern int
-ncmpix_pad_getn_schar_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_pad_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *ip);
 extern int
-ncmpix_pad_getn_schar_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_pad_getn_schar_short(const void **xpp, MPI_Offset nelems, short *ip);
 extern int
-ncmpix_pad_getn_schar_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_pad_getn_schar_int(const void **xpp, MPI_Offset nelems, int *ip);
 extern int
-ncmpix_pad_getn_schar_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_pad_getn_schar_long(const void **xpp, MPI_Offset nelems, long *ip);
 extern int
-ncmpix_pad_getn_schar_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_pad_getn_schar_float(const void **xpp, MPI_Offset nelems, float *ip);
 extern int
-ncmpix_pad_getn_schar_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_pad_getn_schar_double(const void **xpp, MPI_Offset nelems, double *ip);
 
 extern int
-ncmpix_putn_schar_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *ip);
 extern int
-ncmpix_putn_schar_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *ip);
 extern int
-ncmpix_putn_schar_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_schar_short(void **xpp, MPI_Offset nelems, const short *ip);
 extern int
-ncmpix_putn_schar_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_schar_int(void **xpp, MPI_Offset nelems, const int *ip);
 extern int
-ncmpix_putn_schar_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_schar_long(void **xpp, MPI_Offset nelems, const long *ip);
 extern int
-ncmpix_putn_schar_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_schar_float(void **xpp, MPI_Offset nelems, const float *ip);
 extern int
-ncmpix_putn_schar_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_schar_double(void **xpp, MPI_Offset nelems, const double *ip);
  
 extern int
-ncmpix_pad_putn_schar_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_pad_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *ip);
 extern int
-ncmpix_pad_putn_schar_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_pad_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *ip);
 extern int
-ncmpix_pad_putn_schar_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_pad_putn_schar_short(void **xpp, MPI_Offset nelems, const short *ip);
 extern int
-ncmpix_pad_putn_schar_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_pad_putn_schar_int(void **xpp, MPI_Offset nelems, const int *ip);
 extern int
-ncmpix_pad_putn_schar_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_pad_putn_schar_long(void **xpp, MPI_Offset nelems, const long *ip);
 extern int
-ncmpix_pad_putn_schar_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_pad_putn_schar_float(void **xpp, MPI_Offset nelems, const float *ip);
 extern int
-ncmpix_pad_putn_schar_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_pad_putn_schar_double(void **xpp, MPI_Offset nelems, const double *ip);
 
 
 extern int
-ncmpix_getn_short_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_short_schar(const void **xpp, MPI_Offset nelems, schar *ip);
 extern int
-ncmpix_getn_short_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_short_uchar(const void **xpp, MPI_Offset nelems, uchar *ip);
 extern int
-ncmpix_getn_short_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_short_short(const void **xpp, MPI_Offset nelems, short *ip);
 extern int
-ncmpix_getn_short_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_short_int(const void **xpp, MPI_Offset nelems, int *ip);
 extern int
-ncmpix_getn_short_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_short_long(const void **xpp, MPI_Offset nelems, long *ip);
 extern int
-ncmpix_getn_short_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_short_float(const void **xpp, MPI_Offset nelems, float *ip);
 extern int
-ncmpix_getn_short_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_short_double(const void **xpp, MPI_Offset nelems, double *ip);
 
 extern int
-ncmpix_pad_getn_short_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_pad_getn_short_schar(const void **xpp, MPI_Offset nelems, schar *ip);
 extern int
-ncmpix_pad_getn_short_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_pad_getn_short_uchar(const void **xpp, MPI_Offset nelems, uchar *ip);
 extern int
-ncmpix_pad_getn_short_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_pad_getn_short_short(const void **xpp, MPI_Offset nelems, short *ip);
 extern int
-ncmpix_pad_getn_short_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_pad_getn_short_int(const void **xpp, MPI_Offset nelems, int *ip);
 extern int
-ncmpix_pad_getn_short_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_pad_getn_short_long(const void **xpp, MPI_Offset nelems, long *ip);
 extern int
-ncmpix_pad_getn_short_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_pad_getn_short_float(const void **xpp, MPI_Offset nelems, float *ip);
 extern int
-ncmpix_pad_getn_short_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_pad_getn_short_double(const void **xpp, MPI_Offset nelems, double *ip);
 
 extern int
-ncmpix_putn_short_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_short_schar(void **xpp, MPI_Offset nelems, const schar *ip);
 extern int
-ncmpix_putn_short_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_short_uchar(void **xpp, MPI_Offset nelems, const uchar *ip);
 extern int
-ncmpix_putn_short_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_short_short(void **xpp, MPI_Offset nelems, const short *ip);
 extern int
-ncmpix_putn_short_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_short_int(void **xpp, MPI_Offset nelems, const int *ip);
 extern int
-ncmpix_putn_short_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_short_long(void **xpp, MPI_Offset nelems, const long *ip);
 extern int
-ncmpix_putn_short_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_short_float(void **xpp, MPI_Offset nelems, const float *ip);
 extern int
-ncmpix_putn_short_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_short_double(void **xpp, MPI_Offset nelems, const double *ip);
  
 extern int
-ncmpix_pad_putn_short_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_pad_putn_short_schar(void **xpp, MPI_Offset nelems, const schar *ip);
 extern int
-ncmpix_pad_putn_short_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_pad_putn_short_uchar(void **xpp, MPI_Offset nelems, const uchar *ip);
 extern int
-ncmpix_pad_putn_short_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_pad_putn_short_short(void **xpp, MPI_Offset nelems, const short *ip);
 extern int
-ncmpix_pad_putn_short_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_pad_putn_short_int(void **xpp, MPI_Offset nelems, const int *ip);
 extern int
-ncmpix_pad_putn_short_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_pad_putn_short_long(void **xpp, MPI_Offset nelems, const long *ip);
 extern int
-ncmpix_pad_putn_short_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_pad_putn_short_float(void **xpp, MPI_Offset nelems, const float *ip);
 extern int
-ncmpix_pad_putn_short_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_pad_putn_short_double(void **xpp, MPI_Offset nelems, const double *ip);
 
 
 extern int
-ncmpix_getn_int_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_int_schar(const void **xpp, MPI_Offset nelems, schar *ip);
 extern int
-ncmpix_getn_int_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_int_uchar(const void **xpp, MPI_Offset nelems, uchar *ip);
 extern int
-ncmpix_getn_int_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_int_short(const void **xpp, MPI_Offset nelems, short *ip);
 extern int
-ncmpix_getn_int_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_int_int(const void **xpp, MPI_Offset nelems, int *ip);
 extern int
-ncmpix_getn_int_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_int_long(const void **xpp, MPI_Offset nelems, long *ip);
 extern int
-ncmpix_getn_int_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_long_long(const void **xpp, MPI_Offset nelems, MPI_Offset *ip);
 extern int
-ncmpix_getn_int_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_int_float(const void **xpp, MPI_Offset nelems, float *ip);
+extern int
+ncmpix_getn_int_double(const void **xpp, MPI_Offset nelems, double *ip);
 
 extern int
-ncmpix_putn_int_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_int_schar(void **xpp, MPI_Offset nelems, const schar *ip);
 extern int
-ncmpix_putn_int_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_int_uchar(void **xpp, MPI_Offset nelems, const uchar *ip);
 extern int
-ncmpix_putn_int_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_int_short(void **xpp, MPI_Offset nelems, const short *ip);
 extern int
-ncmpix_putn_int_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_int_int(void **xpp, MPI_Offset nelems, const int *ip);
 extern int
-ncmpix_putn_int_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_int_long(void **xpp, MPI_Offset nelems, const long *ip);
 extern int
-ncmpix_putn_int_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_int_float(void **xpp, MPI_Offset nelems, const float *ip);
 extern int
-ncmpix_putn_int_double(void **xpp, size_t nelems, const double *ip);
- 
-
-extern int
-ncmpix_getn_float_schar(const void **xpp, size_t nelems, schar *ip);
-extern int
-ncmpix_getn_float_uchar(const void **xpp, size_t nelems, uchar *ip);
-extern int
-ncmpix_getn_float_short(const void **xpp, size_t nelems, short *ip);
-extern int
-ncmpix_getn_float_int(const void **xpp, size_t nelems, int *ip);
-extern int
-ncmpix_getn_float_long(const void **xpp, size_t nelems, long *ip);
-extern int
-ncmpix_getn_float_float(const void **xpp, size_t nelems, float *ip);
-extern int
-ncmpix_getn_float_double(const void **xpp, size_t nelems, double *ip);
-
-extern int
-ncmpix_putn_float_schar(void **xpp, size_t nelems, const schar *ip);
-extern int
-ncmpix_putn_float_uchar(void **xpp, size_t nelems, const uchar *ip);
-extern int
-ncmpix_putn_float_short(void **xpp, size_t nelems, const short *ip);
-extern int
-ncmpix_putn_float_int(void **xpp, size_t nelems, const int *ip);
-extern int
-ncmpix_putn_float_long(void **xpp, size_t nelems, const long *ip);
-extern int
-ncmpix_putn_float_float(void **xpp, size_t nelems, const float *ip);
-extern int
-ncmpix_putn_float_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_int_double(void **xpp, MPI_Offset nelems, const double *ip);
  
 
 extern int
-ncmpix_getn_double_schar(const void **xpp, size_t nelems, schar *ip);
+ncmpix_getn_float_schar(const void **xpp, MPI_Offset nelems, schar *ip);
 extern int
-ncmpix_getn_double_uchar(const void **xpp, size_t nelems, uchar *ip);
+ncmpix_getn_float_uchar(const void **xpp, MPI_Offset nelems, uchar *ip);
 extern int
-ncmpix_getn_double_short(const void **xpp, size_t nelems, short *ip);
+ncmpix_getn_float_short(const void **xpp, MPI_Offset nelems, short *ip);
 extern int
-ncmpix_getn_double_int(const void **xpp, size_t nelems, int *ip);
+ncmpix_getn_float_int(const void **xpp, MPI_Offset nelems, int *ip);
 extern int
-ncmpix_getn_double_long(const void **xpp, size_t nelems, long *ip);
+ncmpix_getn_float_long(const void **xpp, MPI_Offset nelems, long *ip);
 extern int
-ncmpix_getn_double_float(const void **xpp, size_t nelems, float *ip);
+ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *ip);
 extern int
-ncmpix_getn_double_double(const void **xpp, size_t nelems, double *ip);
+ncmpix_getn_float_double(const void **xpp, MPI_Offset nelems, double *ip);
 
 extern int
-ncmpix_putn_double_schar(void **xpp, size_t nelems, const schar *ip);
+ncmpix_putn_float_schar(void **xpp, MPI_Offset nelems, const schar *ip);
 extern int
-ncmpix_putn_double_uchar(void **xpp, size_t nelems, const uchar *ip);
+ncmpix_putn_float_uchar(void **xpp, MPI_Offset nelems, const uchar *ip);
 extern int
-ncmpix_putn_double_short(void **xpp, size_t nelems, const short *ip);
+ncmpix_putn_float_short(void **xpp, MPI_Offset nelems, const short *ip);
 extern int
-ncmpix_putn_double_int(void **xpp, size_t nelems, const int *ip);
+ncmpix_putn_float_int(void **xpp, MPI_Offset nelems, const int *ip);
 extern int
-ncmpix_putn_double_long(void **xpp, size_t nelems, const long *ip);
+ncmpix_putn_float_long(void **xpp, MPI_Offset nelems, const long *ip);
 extern int
-ncmpix_putn_double_float(void **xpp, size_t nelems, const float *ip);
+ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *ip);
 extern int
-ncmpix_putn_double_double(void **xpp, size_t nelems, const double *ip);
+ncmpix_putn_float_double(void **xpp, MPI_Offset nelems, const double *ip);
+ 
+
+extern int
+ncmpix_getn_double_schar(const void **xpp, MPI_Offset nelems, schar *ip);
+extern int
+ncmpix_getn_double_uchar(const void **xpp, MPI_Offset nelems, uchar *ip);
+extern int
+ncmpix_getn_double_short(const void **xpp, MPI_Offset nelems, short *ip);
+extern int
+ncmpix_getn_double_int(const void **xpp, MPI_Offset nelems, int *ip);
+extern int
+ncmpix_getn_double_long(const void **xpp, MPI_Offset nelems, long *ip);
+extern int
+ncmpix_getn_double_float(const void **xpp, MPI_Offset nelems, float *ip);
+extern int
+ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *ip);
+
+extern int
+ncmpix_putn_double_schar(void **xpp, MPI_Offset nelems, const schar *ip);
+extern int
+ncmpix_putn_double_uchar(void **xpp, MPI_Offset nelems, const uchar *ip);
+extern int
+ncmpix_putn_double_short(void **xpp, MPI_Offset nelems, const short *ip);
+extern int
+ncmpix_putn_double_int(void **xpp, MPI_Offset nelems, const int *ip);
+extern int
+ncmpix_putn_double_long(void **xpp, MPI_Offset nelems, const long *ip);
+extern int
+ncmpix_putn_double_float(void **xpp, MPI_Offset nelems, const float *ip);
+extern int
+ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *ip);
  
 
 /*
@@ -634,15 +639,15 @@ ncmpix_putn_double_double(void **xpp, size_t nelems, const double *ip);
 
 /* read ASCII characters */
 extern int
-ncmpix_getn_text(const void **xpp, size_t nchars, char *cp);
+ncmpix_getn_text(const void **xpp, MPI_Offset nchars, char *cp);
 extern int
-ncmpix_pad_getn_text(const void **xpp, size_t nchars, char *cp);
+ncmpix_pad_getn_text(const void **xpp, MPI_Offset nchars, char *cp);
 
 /* write ASCII characters */
 extern int
-ncmpix_putn_text(void **xpp, size_t nchars, const char *cp);
+ncmpix_putn_text(void **xpp, MPI_Offset nchars, const char *cp);
 extern int
-ncmpix_pad_putn_text(void **xpp, size_t nchars, const char *cp);
+ncmpix_pad_putn_text(void **xpp, MPI_Offset nchars, const char *cp);
 
 /* for symmetry */
 #define ncmpix_getn_char_char(xpp, nelems, fillp) ncmpix_getn_text(xpp, nelems, fillp)
@@ -650,14 +655,14 @@ ncmpix_pad_putn_text(void **xpp, size_t nchars, const char *cp);
 
 /* read opaque data */
 extern int
-ncmpix_getn_void(const void **xpp, size_t nchars, void *vp);
+ncmpix_getn_void(const void **xpp, MPI_Offset nchars, void *vp);
 extern int
-ncmpix_pad_getn_void(const void **xpp, size_t nchars, void *vp);
+ncmpix_pad_getn_void(const void **xpp, MPI_Offset nchars, void *vp);
 
 /* write opaque data */
 extern int
-ncmpix_putn_void(void **xpp, size_t nchars, const void *vp);
+ncmpix_putn_void(void **xpp, MPI_Offset nchars, const void *vp);
 extern int
-ncmpix_pad_putn_void(void **xpp, size_t nchars, const void *vp);
+ncmpix_pad_putn_void(void **xpp, MPI_Offset nchars, const void *vp);
 
 #endif /* _NCX_H_ */

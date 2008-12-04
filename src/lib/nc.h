@@ -12,16 +12,16 @@
 
 #include "ncconfig.h"
 
-#include <stddef.h>	/* size_t */
-#include <sys/types.h>	/* off_t */
+#include <stddef.h>	/* MPI_Offset */
+#include <sys/types.h>	/* MPI_Offset */
 #include "pnetcdf.h"
 #include "ncio.h"	/* ncio */
 #include "fbits.h"
 
 
-#ifndef NC_ARRAY_GROWBY
 /* XXX: this seems really low.  do we end up spending a ton of time mallocing?
  * could we reduce that by increasing this to something 21st century? */
+#ifndef NC_ARRAY_GROWBY
 #define NC_ARRAY_GROWBY 4
 #endif
 
@@ -52,12 +52,12 @@ typedef enum {
  */
 typedef struct {
 	/* all xdr'd */
-	size_t nchars;
+	MPI_Offset nchars;
 	char *cp;
 } NC_string;
 
 extern NC *
-ncmpii_new_NC(const size_t *chunkp);
+ncmpii_new_NC(const MPI_Offset *chunkp);
 
 extern NC *
 ncmpii_dup_NC(const NC *ref);
@@ -70,7 +70,7 @@ extern int
 ncmpii_NC_check_name(const char *name);
 
 extern NC_string *
-ncmpii_new_NC_string(size_t slen, const char *str);
+ncmpii_new_NC_string(MPI_Offset slen, const char *str);
 
 extern int
 ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
@@ -83,14 +83,14 @@ ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
 typedef struct {
 	/* all xdr'd */
 	NC_string *name;
-	size_t size;
+	MPI_Offset size;
 } NC_dim;
 
 typedef struct NC_dimarray {
 	size_t nalloc;		/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_DIMENSION */
-	size_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	NC_dim **value;
 } NC_dimarray;
 
@@ -142,19 +142,19 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
  * NC attribute
  */
 typedef struct {
-	size_t xsz;		/* amount of space at xvalue */
+	MPI_Offset xsz;		/* amount of space at xvalue */
 	/* below gets xdr'd */
 	NC_string *name;
 	nc_type type;		/* the discriminant */
-	size_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	void *xvalue;		/* the actual data, in external representation */
 } NC_attr;
 
 typedef struct NC_attrarray {
-	size_t nalloc;		/* number allocated >= nelems */
+	MPI_Offset nalloc;		/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_ATTRIBUTE */
-	size_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	NC_attr **value;
 } NC_attrarray;
 
@@ -167,7 +167,7 @@ extern NC_attr *
 ncmpii_new_x_NC_attr(
 	NC_string *strp,
 	nc_type type,
-	size_t nelems);
+	MPI_Offset nelems);
 
 extern NC_attr **
 ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name);
@@ -184,7 +184,7 @@ extern int
 ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref);
 
 extern NC_attr *
-ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
+ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, int elem);
 
 extern int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
@@ -269,9 +269,9 @@ ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
  * NC variable: description and data
  */
 typedef struct {
-	size_t xsz;		/* xszof 1 element */
-	size_t *shape; /* compiled info: dim->size of each dim */
-	size_t *dsizes; /* compiled info: the right to left product of shape */
+	MPI_Offset xsz;		/* xszof 1 element */
+	MPI_Offset *shape; /* compiled info: dim->size of each dim */
+	MPI_Offset *dsizes; /* compiled info: the right to left product of shape */
 	/* below gets xdr'd */
 	NC_string *name;
 	/* next two: formerly NC_iarray *assoc */ /* user definition */
@@ -279,15 +279,15 @@ typedef struct {
 	int *dimids;	/* assoc->value */
 	NC_attrarray attrs;
 	nc_type type;		/* the discriminant */
-	size_t len;		/* the total length originally allocated */
+	MPI_Offset len;		/* the total length originally allocated */
 	MPI_Offset begin;
 } NC_var;
 
 typedef struct NC_vararray {
-	size_t nalloc;		/* number allocated >= nelems */
+	MPI_Offset nalloc;		/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_VARIABLE */
-	size_t nelems;		/* length of the array */
+	MPI_Offset nelems;		/* length of the array */
 	NC_var **value;
 } NC_vararray;
 
@@ -299,7 +299,8 @@ ncmpii_free_NC_var(NC_var *varp);
 extern NC_var *
 ncmpii_new_x_NC_var(
 	NC_string *strp,
-	size_t ndims);
+	size_t ndims
+        );
 
 /* vararray */
 
@@ -319,14 +320,14 @@ extern int
 ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);
 
 extern int
-ncmpii_NC_check_vlen(NC_var *varp, size_t vlen_max);
+ncmpii_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);
 
 extern NC_var *
 ncmpii_NC_lookupvar(NC *ncp, int varid);
 
 extern int
 ncmpi_def_var( int ncid, const char *name, nc_type type,
-	 int ndims, const int *dimids, int *varidp);
+              int ndims, const int *dimidsp, int *varidp);
 
 extern int
 ncmpi_rename_var(int ncid, int varid, const char *newname);
@@ -377,14 +378,14 @@ struct NC {
 /*	NC_NOFILL in netcdf.h, historical interface */
 	int flags;
 	ncio *nciop;
-	size_t chunk;	/* largest extent this layer will request from ncio->get() */
+	MPI_Offset chunk;	/* largest extent this layer will request from ncio->get() */
 	MPI_Offset xsz;	/* external size of this header, <= var[0].begin */
 	MPI_Offset begin_var; /* position of the first (non-record) var */
 	MPI_Offset begin_rec; /* position of the first 'record' */
 	/* don't constrain maximu sinze of record unnecessarily */
 	MPI_Offset recsize;	/* length of 'record' */	
 	/* below gets xdr'd */
-	size_t numrecs; /* number of 'records' allocated */
+	MPI_Offset numrecs; /* number of 'records' allocated */
 	NC_dimarray dims;
 	NC_attrarray attrs;
 	NC_vararray vars;
@@ -439,8 +440,8 @@ ncmpii_NC_check_id(int ncid, NC **ncpp);
 extern int
 ncmpii_cktype(nc_type datatype);
 
-extern size_t
-ncmpix_howmany(nc_type type, size_t xbufsize);
+extern MPI_Offset
+ncmpix_howmany(nc_type type, MPI_Offset xbufsize);
 
 extern int
 ncmpii_read_numrecs(NC *ncp);
@@ -491,10 +492,10 @@ ncmpi_get_default_format(void);
 /* Begin defined in v1hpg.c */
 
 extern size_t
-ncx_len_NC(const NC *ncp, size_t sizeof_off_t);
+ncx_len_NC(const NC *ncp, MPI_Offset sizeof_off_t);
 
 extern int
-ncx_put_NC(const NC *ncp, void **xpp, off_t offset, size_t extent);
+ncx_put_NC(const NC *ncp, void **xpp, MPI_Offset offset, MPI_Offset extent);
 
 extern int
 nc_get_NC( NC *ncp);
@@ -505,16 +506,16 @@ nc_get_NC( NC *ncp);
 /* Begin defined in putget.c */
 
 extern int
-ncmpii_fill_NC_var(NC *ncp, const NC_var *varp, size_t recno);
+ncmpii_fill_NC_var(NC *ncp, const NC_var *varp, MPI_Offset recno);
 
 extern int
-ncmpii_inq_rec(int ncid, size_t *nrecvars, int *recvarids, size_t *recsizes);
+ncmpii_inq_rec(int ncid, MPI_Offset *nrecvars, MPI_Offset *recvarids, MPI_Offset *recsizes);
 
 extern int
-ncmpii_get_rec(int ncid, size_t recnum, void **datap);
+ncmpii_get_rec(int ncid, MPI_Offset recnum, void **datap);
 
 extern int
-ncmpii_put_rec(int ncid, size_t recnum, void *const *datap);
+ncmpii_put_rec(int ncid, MPI_Offset recnum, void *const *datap);
 #endif
 
 /* End defined in putget.c */
@@ -527,11 +528,11 @@ typedef struct bufferinfo {
 			   2 for 8-byte offset version */
   void *base;     	/* beginning of read/write buffer */
   void *pos;      	/* current position in buffer */
-  size_t size;		/* size of the buffer */
-  size_t index;		/* index of current position in buffer */
+  MPI_Offset size;		/* size of the buffer */
+  MPI_Offset index;		/* index of current position in buffer */
 } bufferinfo;  
 
-extern size_t 
+extern MPI_Offset 
 ncmpix_len_nctype(nc_type type);
 
 #if 0
@@ -539,8 +540,8 @@ extern int
 hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
 #endif
 
-extern size_t
-ncmpii_hdr_len_NC(const NC *ncp, size_t sizeof_off_t);
+extern MPI_Offset
+ncmpii_hdr_len_NC(const NC *ncp, MPI_Offset sizeof_off_t);
 
 extern int
 ncmpii_hdr_get_NC(NC *ncp);
@@ -565,7 +566,7 @@ extern int
 ncmpiio_sync(ncio *nciop);
 
 extern int
-ncmpiio_move(ncio *const nciop, off_t to, off_t from, size_t nbytes);
+ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from, MPI_Offset nbytes);
 
 extern int
 NC_computeshapes(NC *ncp);
@@ -587,7 +588,7 @@ void ncmpii_handle_error(int rank, int mpi_status, char *msg);
 
 extern int
 ncmpii_put_att(int ncid, int varid, const char *name, nc_type datatype,
-	size_t len, const void *value);
+	MPI_Offset len, const void *value);
 
 extern int
 ncmpii_get_att(int ncid, int varid, const char *name, void *value);

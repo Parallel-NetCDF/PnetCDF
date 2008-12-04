@@ -4,7 +4,7 @@
  * out to another netCDF file, using the parallel netCDF 
  * library using MPI-IO. The two files should be identical. 
  *
- * Input File: "../data/test_double.nc"  generated from original netcdf-3.
+ * Input File: "../data/test_int.nc"  generated from original netcdf-3.
  * Output File: "testread.nc"
  *
  *  The CDL notation for the test dataset is shown below:
@@ -18,14 +18,14 @@
  *
  *       variables:  // variable types, names, shapes, attributes
  *
- *            double square(x, y);
+ *            int   square(x, y);
  *                     squre: description = "2-D integer array";
  *
- *            double cube(x,y,z);
+ *            int   cube(x,y,z);
  *
- *            double time(time);  // coordinate & record variable
+ *            int   time(time);  // coordinate & record variable
  *
- *            double xytime(time, x, y);  // record variable
+ *            int   xytime(time, x, y);  // record variable
  *
  *
  *      // global attributes
@@ -42,8 +42,8 @@
  *
  *
  *
- * This test uses non-collective APIs to read/write variable data and 
- * only deals with double variables. 
+ * This test uses collective APIs to read/write variable data and 
+ * only deals with integer variables. 
  *
  * This test assume # of processors = 4
  *
@@ -55,7 +55,7 @@
 #include <stdlib.h>
 #include "testutils.h"
 
-/* Prototypes for functions used only in this file */
+/* Prototype for functions used only in this file */
 static void handle_error(int status);
 
 static void handle_error(int status) {
@@ -70,18 +70,19 @@ int main(int argc, char **argv) {
   int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
   ncmpi_type type, vartypes[NC_MAX_VARS];
-  MPI_Offset attlen, dimlen;
-  MPI_Offset shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
-  MPI_Offset stride[NC_MAX_VAR_DIMS];
+  MPI_Offset attlen;
+  MPI_Offset dimlen, shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
   void *valuep;
   int dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
   int vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS/16]; /* divided by 16 due to my memory limitation */
+//  MPI_Offset vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS]; /* divided by 16 due to my memory limitation */
   int varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
   int isRecvar;
   params opts;
 
   int rank;
   int nprocs;
+  int NC_mode;
   MPI_Comm comm = MPI_COMM_WORLD;
   
 
@@ -90,7 +91,7 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (rank == 0)
-	  fprintf(stderr, "Testing independent read ... ");
+	  fprintf(stderr, "Testing read ... ");
   parse_read_args(argc, argv, rank, &opts);
 
   /**********  START OF NETCDF ACCESS **************/
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
 
   /**
    * Open the input dataset - ncid1:
-   *   File name: "../data/test_double.nc"
+   *   File name: "../data/test_int.nc"
    *   Dataset API: Collective
    * And create the output dataset - ncid2:
    *   File name: "testread.nc"
@@ -110,7 +111,10 @@ int main(int argc, char **argv) {
   status = ncmpi_open(comm, opts.infname, 0, MPI_INFO_NULL, &ncid1);
   if (status != NC_NOERR) handle_error(status);
 
-  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid2);
+  status = ncmpi_inq_version(ncid1, &NC_mode);
+
+  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_mode, MPI_INFO_NULL, &ncid2);
+//  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid2);
   if (status != NC_NOERR) handle_error(status);
 
 
@@ -121,6 +125,7 @@ int main(int argc, char **argv) {
 
   status = ncmpi_inq(ncid1, &ndims, &nvars, &ngatts, &unlimdimid);
   if (status != NC_NOERR) handle_error(status);
+
 
 
   /* Inquire global attributes, assume CHAR attributes. */
@@ -173,7 +178,7 @@ int main(int argc, char **argv) {
         break;
       default:
 	;
-	/* handle unexpected errors */
+	/* handle unexpected types */
     }
   }
 
@@ -193,7 +198,8 @@ int main(int argc, char **argv) {
   for (i = 0; i < nvars; i++) {
     status = ncmpi_inq_var (ncid1, i, name, vartypes+i, varndims+i, vardims[i], varnatts+i);
     if (status != NC_NOERR) handle_error(status);
-
+    
+    
     status = ncmpi_def_var(ncid2, name, vartypes[i], varndims[i], vardims[i], varids+i);
     if (status != NC_NOERR) handle_error(status);
 
@@ -247,7 +253,7 @@ int main(int argc, char **argv) {
           break;
 	default:
 	  ;
-	  /* handle unexpected errors */
+	/* handle unexpected types */
       }
     }
   }
@@ -268,16 +274,11 @@ int main(int argc, char **argv) {
    *  Data Partition (Assume 4 processors):
    *   square: 2-D, (Block, *), 25*100 from 100*100
    *   cube:   3-D, (Block, *, *), 25*100*100 from 100*100*100
-   *   xytime: 3-D, (Cyclic, *, *), 25*100*100 from 100*100*100
-   *   time:   1-D, Cyclic, 25 from 100
+   *   xytime: 3-D, (Block, *, *), 25*100*100 from 100*100*100
+   *   time:   1-D, Block-wise, 25 from 100
    *
-   *  Data Mode API: non-collective
+   *  Data Mode API: collective
    */
-
-  status = ncmpi_begin_indep_data(ncid1);
-  if (status != NC_NOERR) handle_error(status);
-  status =ncmpi_begin_indep_data(ncid2);
-  if (status != NC_NOERR) handle_error(status);
 
   for (i = 0; i < NC_MAX_VAR_DIMS; i++)
     start[i] = 0;
@@ -289,116 +290,58 @@ int main(int argc, char **argv) {
       if (status != NC_NOERR) handle_error(status);
       if (j == 0) {
         shape[j] /= nprocs;
-        if (vardims[i][j] == unlimdimid) {
-          isRecvar = 1;
-          start[j] = rank;
-          stride[j] = nprocs;
-        } else {
-          start[j] = shape[j] * rank;
-        }
-      } else {
-        stride[j] = 1;
+	start[j] = shape[j] * rank;
       }
       varsize *= shape[j];
+      if (vardims[i][j] == unlimdimid)
+	isRecvar = 1;
     }
-    if (isRecvar) switch (vartypes[i]) {
-
-      /* strided access for record variables */
-
-      case NC_CHAR:
+ 
+    switch (vartypes[i]) {
+      case NC_CHAR: 
         break;
       case NC_SHORT:
         valuep = (void *)malloc(varsize * sizeof(short));
-        status = ncmpi_get_vars_short(ncid1, i, start, shape, stride, (short *)valuep);
+        status = ncmpi_get_vara_short_all(ncid1, i, start, shape, (short *)valuep);
         if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vars_short(ncid2, varids[i],
-                                     start, shape, stride, (short *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        free(valuep);
-        break;
-      case NC_INT:
-        valuep = (void *)malloc(varsize * sizeof(int));
-        status = ncmpi_get_vars_int(ncid1, i, start, shape, stride, (int *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vars_int(ncid2, varids[i],
-                                     start, shape, stride, (int *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        free(valuep);
-        break;
-      case NC_FLOAT:
-        valuep = (void *)malloc(varsize * sizeof(float));
-        status = ncmpi_get_vars_float(ncid1, i, start, shape, stride, (float *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vars_float(ncid2, varids[i],
-                                     start, shape, stride, (float *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        free(valuep);
-        break;
-      case NC_DOUBLE:
-        valuep = (void *)malloc(varsize * sizeof(double));
-        status = ncmpi_get_vars_double(ncid1, i, start, shape, stride, (double *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vars_double(ncid2, varids[i],
-                                     start, shape, stride, (double *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        free(valuep);
-        break;
-      default:
-	;
-	/* handle unexpected errors */
-    }
-    else switch (vartypes[i]) {
-
-      /* subarray access for non-record variable */
-
-      case NC_CHAR:
-        break;
-      case NC_SHORT:
-        valuep = (void *)malloc(varsize * sizeof(short));
-        status = ncmpi_get_vara_short(ncid1, i, start, shape, (short *)valuep);
-        if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vara_short(ncid2, varids[i],
+        status = ncmpi_put_vara_short_all(ncid2, varids[i],
                                      start, shape, (short *)valuep);
         if (status != NC_NOERR) handle_error(status);
         free(valuep);
-        break;
+        break; 
       case NC_INT:
-        valuep = (void *)malloc(varsize * sizeof(int));
-        status = ncmpi_get_vara_int(ncid1, i, start, shape, (int *)valuep);
+	valuep = (void *)malloc(varsize * sizeof(int));
+        status = ncmpi_get_vara_int_all(ncid1, i, start, shape, (int *)valuep);
         if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vara_int(ncid2, varids[i],
+        status = ncmpi_put_vara_int_all(ncid2, varids[i],
                                      start, shape, (int *)valuep);
         if (status != NC_NOERR) handle_error(status);
+
         free(valuep);
-        break;
+	break;
       case NC_FLOAT:
         valuep = (void *)malloc(varsize * sizeof(float));
-        status = ncmpi_get_vara_float(ncid1, i, start, shape, (float *)valuep);
+        status = ncmpi_get_vara_float_all(ncid1, i, start, shape, (float *)valuep);
         if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vara_float(ncid2, varids[i],
+        status = ncmpi_put_vara_float_all(ncid2, varids[i],
                                      start, shape, (float *)valuep);
         if (status != NC_NOERR) handle_error(status);
         free(valuep);
         break;
       case NC_DOUBLE:
         valuep = (void *)malloc(varsize * sizeof(double));
-        status = ncmpi_get_vara_double(ncid1, i, start, shape, (double *)valuep);
+        status = ncmpi_get_vara_double_all(ncid1, i, start, shape, (double *)valuep);
         if (status != NC_NOERR) handle_error(status);
-        status = ncmpi_put_vara_double(ncid2, varids[i],
+        status = ncmpi_put_vara_double_all(ncid2, varids[i],
                                      start, shape, (double *)valuep);
         if (status != NC_NOERR) handle_error(status);
         free(valuep);
         break;
       default:
 	;
-	/* handle unexpected errors */
+	/* handle unexpected types */
     }
   }
-
-  status = ncmpi_end_indep_data(ncid1);
-  if (status != NC_NOERR) handle_error(status);
-  status =ncmpi_end_indep_data(ncid2);
-  if (status != NC_NOERR) handle_error(status);
 
   /**
    * Close the datasets

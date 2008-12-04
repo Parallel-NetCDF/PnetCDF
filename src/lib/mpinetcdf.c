@@ -29,25 +29,25 @@ ncmpi_inq_libvers(void) {
 static int echar(nc_type nctype,MPI_Datatype mpitype);
 static int need_convert(nc_type nctype,MPI_Datatype mpitype);
 static int need_swap(nc_type nctype,MPI_Datatype mpitype);
-static int x_putn_schar(void *xbuf, const void *buf, int nelems,
+static int x_putn_schar(void *xbuf, const void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_putn_short(void *xbuf, const void *buf, int nelems,
+static int x_putn_short(void *xbuf, const void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_putn_int(void *xbuf, const void *buf, int nelems,
+static int x_putn_int(void *xbuf, const void *buf, MPI_Offset nelems,
 		      MPI_Datatype datatype);
-static int x_putn_float(void *xbuf, const void *buf, int nelems,
+static int x_putn_float(void *xbuf, const void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_putn_double(void *xbuf, const void *buf, int nelems,
+static int x_putn_double(void *xbuf, const void *buf, MPI_Offset nelems,
 			 MPI_Datatype datatype);
-static int x_getn_schar(const void *xbuf, void *buf, int nelems,
+static int x_getn_schar(const void *xbuf, void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_getn_short(const void *xbuf, void *buf, int nelems,
+static int x_getn_short(const void *xbuf, void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_getn_int(const void *xbuf, void *buf, int nelems,
+static int x_getn_int(const void *xbuf, void *buf, MPI_Offset nelems,
 		      MPI_Datatype datatype);
-static int x_getn_float(const void *xbuf, void *buf, int nelems,
+static int x_getn_float(const void *xbuf, void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
-static int x_getn_double(const void *xbuf, void *buf, int nelems,
+static int x_getn_double(const void *xbuf, void *buf, MPI_Offset nelems,
 			 MPI_Datatype datatype);
 static int set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 			     const MPI_Offset index[]);
@@ -66,8 +66,8 @@ static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 int 
 ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
-  size_t sizeof_off_t = 0;
-  size_t chunksize=4098;	/* might be a good thing to hint later */
+  MPI_Offset sizeof_off_t = 0;
+  MPI_Offset chunksize=4098;	/* might be a good thing to hint later */
   NC *ncp;
 
   ncp = ncmpii_new_NC(&chunksize);
@@ -84,6 +84,11 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
 	  if (sizeof(off_t) != 8)
 		  return NC_ESMALL;
 	  fSet(ncp->flags, NC_64BIT_OFFSET);
+	  sizeof_off_t = 8;
+  } else if (fIsSet(cmode, NC_64BIT_DATA)) {
+	  if (sizeof(MPI_Offset) <  8)
+		  return NC_ESMALL;
+	  fSet(ncp->flags, NC_64BIT_DATA);
 	  sizeof_off_t = 8;
   } else {
 	  sizeof_off_t = 4;
@@ -122,7 +127,7 @@ int
 ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp) {
   int status = NC_NOERR;
   NC *ncp;
-  size_t chunksize=4098;	/* might be a good thing to hint later */
+  MPI_Offset chunksize=4098;	/* might be a good thing to hint later */
   
   ncp = ncmpii_new_NC(&chunksize);
   if(ncp == NULL)
@@ -148,16 +153,20 @@ ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp
   }
 
   status = ncmpii_hdr_get_NC(ncp);
+
   if (status != NC_NOERR) {
     ncmpiio_close(ncp->nciop, 0);
     ncmpii_free_NC(ncp);
     return status;
   }
+	
 
   ncmpii_add_to_NCList(ncp);
 
+
   *ncidp = ncp->nciop->fd;
  
+
   return status;
 }
 
@@ -185,7 +194,7 @@ int
 ncmpi_redef(int ncid) {
   int status;
   NC *ncp;
-  int mynumrecs, numrecs;
+  MPI_Offset mynumrecs, numrecs;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR) 
@@ -211,7 +220,7 @@ ncmpi_redef(int ncid) {
     /* collect and set the max numrecs */
 
     mynumrecs = ncp->numrecs;
-    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_INT, MPI_MAX, ncp->nciop->comm);
+    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
     if (numrecs > ncp->numrecs) {
       ncp->numrecs = numrecs;
       set_NC_ndirty(ncp);
@@ -297,6 +306,7 @@ ncmpi_enddef(int ncid) {
   status = ncmpii_NC_check_id(ncid, &ncp); 
   if(status != NC_NOERR)
     return status;
+
 
   if(!NC_indef(ncp))
     return(NC_ENOTINDEFINE);
@@ -483,7 +493,7 @@ need_swap(nc_type nctype,MPI_Datatype mpitype) {
 }
 
 static void
-swapn(void *dst, const void *src, size_t nn, int xsize)
+swapn(void *dst, const void *src, MPI_Offset nn, int xsize)
 {
   int i;
   char *op = dst;
@@ -497,7 +507,7 @@ swapn(void *dst, const void *src, size_t nn, int xsize)
 }
 
 static int
-x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
+x_putn_schar(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int status = ENOERR;
 
@@ -522,7 +532,7 @@ x_putn_schar(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 }
 
 static int
-x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
+x_putn_short(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -552,7 +562,7 @@ x_putn_short(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 } 
 
 static int
-x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
+x_putn_int(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -582,7 +592,7 @@ x_putn_int(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 } 
 
 static int
-x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
+x_putn_float(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -612,7 +622,7 @@ x_putn_float(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 } 
 
 int
-x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
+x_putn_double(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -642,7 +652,7 @@ x_putn_double(void *xbuf, const void *buf, int nelems, MPI_Datatype datatype) {
 } 
 
 static int
-x_getn_schar(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
+x_getn_schar(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
   int status = ENOERR;
 
@@ -666,7 +676,7 @@ x_getn_schar(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
 }
 
 static int
-x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
+x_getn_short(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -696,7 +706,7 @@ x_getn_short(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
 } 
 
 static int 
-x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
+x_getn_int(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int status = ENOERR;
@@ -726,7 +736,7 @@ x_getn_int(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
 } 
 
 static int
-x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
+x_getn_float(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int  status = ENOERR;
@@ -756,7 +766,7 @@ x_getn_float(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
 }
 
 static int
-x_getn_double(const void *xbuf, void *buf, int nelems, MPI_Datatype datatype) {
+x_getn_double(const void *xbuf, void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   char *xp, *data;
   int datainc;
   int  status = ENOERR;
@@ -825,14 +835,16 @@ static int
 NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord)
 {
         const MPI_Offset *ip;
-        size_t *up;
+        MPI_Offset *up;
  
         if(varp->ndims == 0)
                 return NC_NOERR;        /* 'scalar' variable */
  
+
         if(IS_RECVAR(varp))
         {
-                if(*coord > X_INT_MAX)
+		
+/*                if(*coord > X_INT64_T_MAX)
                         return NC_EINVALCOORDS; /* sanity check */
                 if(NC_readonly(ncp) && *coord >= ncp->numrecs)
                 {
@@ -859,8 +871,8 @@ NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord)
  
         for(; ip < coord + varp->ndims; ip++, up++)
         {
-                /* cast needed for braindead systems with signed size_t */
-                if( *ip >= (unsigned long)*up )
+                /* cast needed for braindead systems with signed MPI_Offset */
+                if( *ip >= (MPI_Offset)*up )
                         return NC_EINVALCOORDS;
         }
  
@@ -875,7 +887,7 @@ NCedgeck(const NC *ncp, const NC_var *varp,
          const MPI_Offset *start, const MPI_Offset *edges)
 {
   const MPI_Offset *const end = start + varp->ndims;
-  const size_t *shp = varp->shape;
+  const MPI_Offset *shp = varp->shape;
 
   if(varp->ndims == 0)
     return NC_NOERR;  /* 'scalar' variable */
@@ -889,8 +901,8 @@ NCedgeck(const NC *ncp, const NC_var *varp,
 
   for(; start < end; start++, edges++, shp++)
   {
-    /* cast needed for braindead systems with signed size_t */
-    if( *edges > (unsigned long)*shp || *start + *edges > (unsigned long)*shp)
+    /* cast needed for braindead systems with signed MPI_Offset */
+    if( *edges > (MPI_Offset)*shp || *start + *edges > (MPI_Offset)*shp)
     {
       return(NC_EEDGE);
     }
@@ -906,15 +918,15 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
          const MPI_Offset *start, const MPI_Offset *edges, const MPI_Offset *stride)
 {
   const MPI_Offset *const end = start + varp->ndims;
-  const size_t *shp = varp->shape; /* use size_t for now :( */
+  const MPI_Offset *shp = varp->shape; /* use MPI_Offset for now :( */
 
   if(varp->ndims == 0)
     return NC_NOERR;  /* 'scalar' variable */
 
   if(IS_RECVAR(varp))
   {
-    if ( *stride == 0 || *stride >= X_INT_MAX)
-      /* cast needed for braindead systems with signed size_t */
+    if ( *stride == 0 ) /*|| *stride >= X_INT64_T_MAX)*/
+      /* cast needed for braindead systems with signed MPI_Offset */
       return NC_ESTRIDE;
 
     start++;
@@ -925,16 +937,16 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 
   for(; start < end; start++, edges++, shp++, stride++)
   {
-    /* cast needed for braindead systems with signed size_t */
-    if( (*edges > (unsigned long)*shp) || 
-	(*edges > 0 && *start+1 + (*edges-1) * *stride > (unsigned long)*shp) ||
-	(*edges == 0 && *start > (unsigned long)*shp) )
+    /* cast needed for braindead systems with signed MPI_Offset */
+    if( (*edges > (MPI_Offset)*shp) || 
+	(*edges > 0 && *start+1 + (*edges-1) * *stride > (MPI_Offset)*shp) ||
+	(*edges == 0 && *start > (MPI_Offset)*shp) )
     {
       return(NC_EEDGE);
     }
 
-    if ( *stride == 0 || *stride >= X_INT_MAX)
-      /* cast needed for braindead systems with signed size_t */
+    if ( *stride == 0)/* || *stride >= X_INT64_T_MAX)*/
+      /* cast needed for braindead systems with signed MPI_Offset */
       return NC_ESTRIDE;
   }
 
@@ -1050,9 +1062,17 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
   int status;
   int dim, ndims;
   int *shape = NULL, *subcount = NULL, *substart = NULL; /* all in bytes */
+  MPI_Offset *shape64 = NULL, *subcount64 = NULL, *substart64 = NULL;
   MPI_Datatype rectype;
   MPI_Datatype filetype;
   int mpireturn;
+  MPI_Datatype types[3];
+  MPI_Datatype type1;
+  MPI_Offset size, disps[3];
+  int blklens[3];
+  int tag = 0;
+  int i;
+  
 
   offset = varp->begin;
   
@@ -1139,10 +1159,6 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
 
           /* more than one record variables */
 
-		/* TODO: would it make sense here to automatically set the
-		 * cb_buffer size to one record? We have all the information 
-		 * needed to do so..*/
-
           offset += start[0] * ncp->recsize;
           if (varp->ndims == 1) {
 #if (MPI_VERSION < 2)
@@ -1178,24 +1194,116 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
         }
 
       } else {
-
+        
         /* non record variable */
+       tag = 0;
+         for (dim=0; dim< ndims-1; dim++){
+           if  (varp->shape[dim] > 2147483647){ /* if shape > 2^31-1 */
+                tag = 1;
+                break;
+           }
+         }
+       if ((varp->shape[dim]*varp->xsz)  > 2147483647)
+          tag = 1;
+       if (tag == 0 ){
+          for (dim = 0; dim < ndims-1; dim++ ) {
+            shape[dim] = varp->shape[dim];
+            subcount[dim] = count[dim];
+            substart[dim] = start[dim];
+          } 
 
-        for (dim = 0; dim < ndims-1; dim++ ) {
-          shape[dim] = varp->shape[dim];
-          subcount[dim] = count[dim];
-          substart[dim] = start[dim];
-        }
+          shape[dim] = varp->xsz * varp->shape[dim];
+          subcount[dim] = varp->xsz * count[dim];
+          substart[dim] = varp->xsz * start[dim];
+  
+          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+  		         MPI_ORDER_C, MPI_BYTE, &filetype); 
+  
+          MPI_Type_commit(&filetype);
+        } else {
+shape64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
+          subcount64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
+          substart64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
 
-        shape[dim] = varp->xsz * varp->shape[dim];
-        subcount[dim] = varp->xsz * count[dim];
-        substart[dim] = varp->xsz * start[dim];
+          if (ndims == 1){  // for 64-bit support,  added July 23, 2008
+            shape64[0] = varp->shape[0];
+            subcount64[0] = count[0];
+            substart64[0] = start[0];
 
-        MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-		         MPI_ORDER_C, MPI_BYTE, &filetype); 
+            offset += start[0]*varp->xsz;
 
-        MPI_Type_commit(&filetype);
-      }
+            MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
+            MPI_Type_commit(&type1);
+
+          #if (MPI_VERSION < 2)
+            MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
+                            MPI_BYTE, &filetype);
+          #else
+            MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
+                                    type1, &filetype);
+          #endif
+            MPI_Type_commit(&filetype);
+            MPI_Type_free(&type1);
+
+       } else {
+          for (dim = 0; dim < ndims-1; dim++ ) {
+            shape64[dim] = varp->shape[dim];
+            subcount64[dim] = count[dim];
+            substart64[dim] = start[dim];
+          }
+
+          shape64[dim] = varp->xsz * varp->shape[dim];
+          subcount64[dim] = varp->xsz * count[dim];
+          substart64[dim] = varp->xsz * start[dim];
+          MPI_Type_hvector(subcount64[dim-1],
+                             subcount64[dim],
+                             varp->xsz * varp->shape[dim],
+                             MPI_BYTE,
+                             &type1);
+          MPI_Type_commit(&type1);
+          size = shape[dim];
+          for (i=dim-2; i>=0; i--) {
+                size *= shape[i+1];
+                MPI_Type_hvector(subcount64[i],
+                                 1,
+                                 size,
+                                 type1,
+                                 &filetype);
+                MPI_Type_commit(&filetype);
+
+                MPI_Type_free(&type1);
+                type1 = filetype;
+          }
+          disps[1] = substart64[dim];
+          size = 1;
+          for (i=dim-1; i>=0; i--) {
+            size *= shape64[i+1];
+            disps[1] += size*substart64[i];
+          }
+          disps[2] = 1;
+          for (i=0; i<ndims; i++) disps[2] *= shape64[i];
+
+          disps[0] = 0;
+          blklens[0] = blklens[1] = blklens[2] = 1;
+          types[0] = MPI_LB;
+          types[1] = type1;
+          types[2] = MPI_UB;
+
+          MPI_Type_struct(3,
+                    blklens,
+                    (MPI_Aint*) disps,
+                    types,
+                    &filetype);
+
+          MPI_Type_free(&type1);
+         }
+
+         free(shape64);
+         free(subcount64);
+         free(substart64);
+       }
+     }
+ 
     }
   }
 
@@ -1270,7 +1378,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   for (dim = 0; dim < ndims; dim++)
   {
     if ( (stride != NULL && stride[dim] == 0) ||
-        stride[dim] >= X_INT_MAX)
+        stride[dim] >= X_LONG_MAX)
     {
       return NC_ESTRIDE;
     }
@@ -1284,7 +1392,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
     return status;
 
  if(getnotput && IS_RECVAR(varp) &&
-     (unsigned long)*start + (unsigned long)*count > NC_get_numrecs(ncp))
+     (MPI_Offset)*start + (MPI_Offset)*count > NC_get_numrecs(ncp))
       return NC_EEDGE;
 */
 
@@ -1390,13 +1498,14 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 int
 ncmpi_put_var1(int ncid, int varid,
                const MPI_Offset index[],
-               const void *buf, int bufcount,
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -1457,7 +1566,7 @@ ncmpi_put_var1(int ncid, int varid,
     status = ncmpii_data_repack((void *)buf, bufcount, datatype, 
 				cbuf, cnelems, ptype);
     if (status != NC_NOERR)
-      return status;
+      goto fn_exit;
  
   } else {
    
@@ -1518,6 +1627,7 @@ ncmpi_put_var1(int ncid, int varid,
         status = NC_EWRITE;
   }
  
+fn_exit:
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
   if (cbuf != buf && cbuf != NULL)
@@ -1526,7 +1636,7 @@ ncmpi_put_var1(int ncid, int varid,
   if ( status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = index[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -1540,13 +1650,14 @@ ncmpi_put_var1(int ncid, int varid,
 int
 ncmpi_get_var1(int ncid, int varid,
                const MPI_Offset index[],
-               void *buf, int bufcount,
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes; 
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -1680,12 +1791,13 @@ ncmpi_get_var1(int ncid, int varid,
 }
 
 int
-ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype) {
+ncmpi_get_var_all(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -1828,12 +1940,13 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, int bufcount, MPI_Datatype dat
 }
 
 int
-ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype datatype) {
+ncmpi_put_var(int ncid, int varid, const void *buf, MPI_Offset bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -1970,7 +2083,7 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     if (varp->ndims > 1)
       newnumrecs = nelems / varp->dsizes[1];
     else
@@ -1985,12 +2098,13 @@ ncmpi_put_var(int ncid, int varid, const void *buf, int bufcount, MPI_Datatype d
 }
 
 int
-ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatype) {
+ncmpi_get_var(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -2134,7 +2248,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, int bufcount, MPI_Datatype datatyp
 int
 ncmpi_put_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
-                   const void *buf, int bufcount, 
+                   const void *buf, MPI_Offset bufcount, 
                    MPI_Datatype datatype) {
 
   NC_var *varp;
@@ -2142,7 +2256,8 @@ ncmpi_put_vara_all(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   MPI_Comm comm;
   int mpireturn;
@@ -2283,14 +2398,14 @@ ncmpi_put_vara_all(int ncid, int varid,
     /* update the number of records in NC
         and write it back to file header, if necessary
     */
-    int newnumrecs, max_numrecs;
+    MPI_Offset newnumrecs, max_numrecs;
     newnumrecs = start[0] + count[0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_INT, MPI_MAX, comm );
+      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
  
       if (ncp->numrecs < max_numrecs) {
         int rank;
@@ -2312,7 +2427,7 @@ ncmpi_put_vara_all(int ncid, int varid,
 int
 ncmpi_get_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
-		   void *buf, int bufcount,
+		   void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype) {
 
   NC_var *varp;
@@ -2320,7 +2435,8 @@ ncmpi_get_vara_all(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -2462,14 +2578,15 @@ ncmpi_get_vara_all(int ncid, int varid,
 int
 ncmpi_put_vara(int ncid, int varid,
                const MPI_Offset start[], const MPI_Offset count[],
-               const void *buf, int bufcount,
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL,  *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -2604,7 +2721,7 @@ ncmpi_put_vara(int ncid, int varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + count[0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -2618,14 +2735,15 @@ ncmpi_put_vara(int ncid, int varid,
 int
 ncmpi_get_vara(int ncid, int varid,
                const MPI_Offset start[], const MPI_Offset count[],
-               void *buf, int bufcount,
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -2769,14 +2887,15 @@ ncmpi_put_vars_all(int ncid, int varid,
                    const MPI_Offset start[], 
 		   const MPI_Offset count[],
 		   const MPI_Offset stride[],
-                   const void *buf, int bufcount, 
+                   const void *buf, MPI_Offset bufcount, 
                    MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   MPI_Comm comm;
   int mpireturn;
@@ -2928,14 +3047,14 @@ ncmpi_put_vars_all(int ncid, int varid,
     /* update the number of records in NC
         and write it back to file header, if necessary
     */
-    int newnumrecs, max_numrecs;
+    MPI_Offset newnumrecs, max_numrecs;
     newnumrecs = start[0] + (count[0] - 1) * stride_ptr[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_INT, MPI_MAX, comm );
+      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
  
       if (ncp->numrecs < max_numrecs) {
         int rank;
@@ -2960,7 +3079,7 @@ ncmpi_get_vars_all(int ncid, int varid,
                    const MPI_Offset start[], 
 		   const MPI_Offset count[],
                    const MPI_Offset stride[],
-		   void *buf, int bufcount,
+		   void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype) {
 
   NC_var *varp;
@@ -2968,7 +3087,8 @@ ncmpi_get_vars_all(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -3113,14 +3233,15 @@ ncmpi_put_vars(int ncid, int varid,
                const MPI_Offset start[], 
 	       const MPI_Offset count[],
 	       const MPI_Offset stride[],
-               const void *buf, int bufcount,
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -3256,7 +3377,7 @@ ncmpi_put_vars(int ncid, int varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + (count[0] - 1) * stride[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -3272,14 +3393,15 @@ ncmpi_get_vars(int ncid, int varid,
                const MPI_Offset start[], 
 	       const MPI_Offset count[],
                const MPI_Offset stride[],
-               void *buf, int bufcount,
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype) {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype ptype;
@@ -3447,15 +3569,16 @@ ncmpi_put_varm_all(int ncid, int varid,
 		   const MPI_Offset count[],
 		   const MPI_Offset stride[],
 		   const MPI_Offset imap[],
-		   const void *buf, int bufcount,
+		   const void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int lnelems, cnelems, el_size;
+  MPI_Offset lnelems, cnelems;
+  int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
@@ -3577,15 +3700,16 @@ ncmpi_get_varm_all(int ncid, int varid,
 		   const MPI_Offset count[],
 		   const MPI_Offset stride[],
 		   const MPI_Offset imap[],
-		   void *buf, int bufcount,
+		   void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int lnelems, cnelems, el_size;
+  MPI_Offset lnelems, cnelems; 
+  int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
@@ -3653,7 +3777,6 @@ ncmpi_get_varm_all(int ncid, int varid,
     status = NC_ENEGATIVECNT;
     goto fn_exit;
   }
-
   MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
 		  ptype, &imaptype);
   MPI_Type_commit(&imaptype);
@@ -3687,6 +3810,7 @@ ncmpi_get_varm_all(int ncid, int varid,
       warning = status; /* to satisfy the nc_test logic */
     else
       goto fn_exit;
+
   }
 
   /* layout cbuf to lbuf based on imap */
@@ -3712,7 +3836,9 @@ fn_exit:
   if (!iscontig_of_ptypes && lbuf != NULL)
       free(lbuf);
   if (cbuf != NULL)
-      free(cbuf);
+    free(cbuf);
+  if (imaptype != MPI_DATATYPE_NULL)
+	  MPI_Type_free(&imaptype);
     
   return ((warning != NC_NOERR) ? warning : status);
 }
@@ -3723,15 +3849,16 @@ ncmpi_put_varm(int ncid, int varid,
 	       const MPI_Offset count[],
 	       const MPI_Offset stride[],
 	       const MPI_Offset imap[],
-	       const void *buf, int bufcount,
+	       const void *buf, MPI_Offset bufcount,
 	       MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int lnelems, cnelems, el_size;
+  MPI_Offset lnelems, cnelems;
+  int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
@@ -3853,15 +3980,16 @@ ncmpi_get_varm(int ncid, int varid,
 		   const MPI_Offset count[],
 		   const MPI_Offset stride[],
 		   const MPI_Offset imap[],
-		   void *buf, int bufcount,
+		   void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype) 
 {
   NC_var *varp;
   NC *ncp;
-  int ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int lnelems, cnelems, el_size;
+  MPI_Offset lnelems, cnelems;
+  int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
@@ -4315,7 +4443,7 @@ ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4349,7 +4477,7 @@ ncmpi_put_var_schar(int ncid, int varid, const signed char *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4384,7 +4512,7 @@ ncmpi_put_var_text(int ncid, int varid, const char *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4418,7 +4546,7 @@ ncmpi_put_var_short(int ncid, int varid, const short *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4452,7 +4580,7 @@ ncmpi_put_var_int(int ncid, int varid, const int *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4486,7 +4614,7 @@ ncmpi_put_var_long(int ncid, int varid, const long *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4520,7 +4648,7 @@ ncmpi_put_var_float(int ncid, int varid, const float *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4554,7 +4682,7 @@ ncmpi_put_var_double(int ncid, int varid, const double *op) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4588,7 +4716,7 @@ ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4622,7 +4750,7 @@ ncmpi_get_var_schar(int ncid, int varid, signed char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4656,7 +4784,7 @@ ncmpi_get_var_text(int ncid, int varid, char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4690,7 +4818,7 @@ ncmpi_get_var_short(int ncid, int varid, short *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4724,7 +4852,7 @@ ncmpi_get_var_int(int ncid, int varid, int *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4758,7 +4886,7 @@ ncmpi_get_var_long(int ncid, int varid, long *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4792,7 +4920,7 @@ ncmpi_get_var_float(int ncid, int varid, float *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4826,7 +4954,7 @@ ncmpi_get_var_double(int ncid, int varid, double *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4860,7 +4988,7 @@ ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4894,7 +5022,7 @@ ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4928,7 +5056,7 @@ ncmpi_get_var_text_all(int ncid, int varid, char *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4962,7 +5090,7 @@ ncmpi_get_var_short_all(int ncid, int varid, short *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -4996,7 +5124,7 @@ ncmpi_get_var_int_all(int ncid, int varid, int *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5030,7 +5158,7 @@ ncmpi_get_var_long_all(int ncid, int varid, long *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5064,7 +5192,7 @@ ncmpi_get_var_float_all(int ncid, int varid, float *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5098,7 +5226,7 @@ ncmpi_get_var_double_all(int ncid, int varid, double *ip) {
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5134,7 +5262,7 @@ ncmpi_put_vara_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5160,7 +5288,7 @@ ncmpi_put_vara_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5186,7 +5314,7 @@ ncmpi_put_vara_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5212,7 +5340,7 @@ ncmpi_put_vara_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5238,7 +5366,7 @@ ncmpi_put_vara_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5264,7 +5392,7 @@ ncmpi_put_vara_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5290,7 +5418,7 @@ ncmpi_put_vara_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5316,7 +5444,7 @@ ncmpi_put_vara_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5342,7 +5470,7 @@ ncmpi_put_vara_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5368,7 +5496,7 @@ ncmpi_put_vara_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5394,7 +5522,7 @@ ncmpi_put_vara_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5420,7 +5548,7 @@ ncmpi_put_vara_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5446,7 +5574,7 @@ ncmpi_put_vara_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5472,7 +5600,7 @@ ncmpi_put_vara_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5498,7 +5626,7 @@ ncmpi_put_vara_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5524,7 +5652,7 @@ ncmpi_put_vara_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5551,7 +5679,7 @@ ncmpi_get_vara_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5578,7 +5706,7 @@ ncmpi_get_vara_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5605,12 +5733,11 @@ ncmpi_get_vara_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-
   varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
@@ -5632,7 +5759,7 @@ ncmpi_get_vara_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5659,7 +5786,7 @@ ncmpi_get_vara_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5686,7 +5813,7 @@ ncmpi_get_vara_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5713,7 +5840,7 @@ ncmpi_get_vara_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5740,7 +5867,7 @@ ncmpi_get_vara_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5767,7 +5894,7 @@ ncmpi_get_vara_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5793,7 +5920,7 @@ ncmpi_get_vara_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5820,7 +5947,7 @@ ncmpi_get_vara_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5846,7 +5973,7 @@ ncmpi_get_vara_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5873,7 +6000,7 @@ ncmpi_get_vara_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5899,7 +6026,7 @@ ncmpi_get_vara_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5926,7 +6053,7 @@ ncmpi_get_vara_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5952,7 +6079,7 @@ ncmpi_get_vara_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -5980,7 +6107,7 @@ ncmpi_put_vars_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6008,7 +6135,7 @@ ncmpi_put_vars_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6036,7 +6163,7 @@ ncmpi_put_vars_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6064,7 +6191,7 @@ ncmpi_put_vars_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6092,7 +6219,7 @@ ncmpi_put_vars_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6120,7 +6247,7 @@ ncmpi_put_vars_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6148,7 +6275,7 @@ ncmpi_put_vars_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6176,7 +6303,7 @@ ncmpi_put_vars_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6204,7 +6331,7 @@ ncmpi_put_vars_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6232,7 +6359,7 @@ ncmpi_put_vars_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6260,7 +6387,7 @@ ncmpi_put_vars_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6288,7 +6415,7 @@ ncmpi_put_vars_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6316,7 +6443,7 @@ ncmpi_put_vars_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6344,7 +6471,7 @@ ncmpi_put_vars_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6373,7 +6500,7 @@ ncmpi_put_vars_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6403,7 +6530,7 @@ ncmpi_put_vars_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6432,7 +6559,7 @@ ncmpi_get_vars_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6460,7 +6587,7 @@ ncmpi_get_vars_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6488,7 +6615,7 @@ ncmpi_get_vars_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6516,7 +6643,7 @@ ncmpi_get_vars_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6544,7 +6671,7 @@ ncmpi_get_vars_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6572,7 +6699,7 @@ ncmpi_get_vars_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6600,7 +6727,7 @@ ncmpi_get_vars_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6628,7 +6755,7 @@ ncmpi_get_vars_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6656,7 +6783,7 @@ ncmpi_get_vars_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6684,7 +6811,7 @@ ncmpi_get_vars_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6712,7 +6839,7 @@ ncmpi_get_vars_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6740,7 +6867,7 @@ ncmpi_get_vars_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6768,7 +6895,7 @@ ncmpi_get_vars_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6796,7 +6923,7 @@ ncmpi_get_vars_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6825,7 +6952,7 @@ ncmpi_get_vars_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6854,7 +6981,7 @@ ncmpi_get_vars_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6884,7 +7011,7 @@ ncmpi_put_varm_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6914,7 +7041,7 @@ ncmpi_put_varm_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6944,7 +7071,7 @@ ncmpi_put_varm_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -6974,7 +7101,7 @@ ncmpi_put_varm_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7004,7 +7131,7 @@ ncmpi_put_varm_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7034,7 +7161,7 @@ ncmpi_put_varm_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7064,7 +7191,7 @@ ncmpi_put_varm_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7094,7 +7221,7 @@ ncmpi_put_varm_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7124,7 +7251,7 @@ ncmpi_put_varm_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7154,7 +7281,7 @@ ncmpi_put_varm_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7184,7 +7311,7 @@ ncmpi_put_varm_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7214,7 +7341,7 @@ ncmpi_put_varm_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7244,7 +7371,7 @@ ncmpi_put_varm_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7274,7 +7401,7 @@ ncmpi_put_varm_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7304,7 +7431,7 @@ ncmpi_put_varm_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7334,7 +7461,7 @@ ncmpi_put_varm_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7364,7 +7491,7 @@ ncmpi_get_varm_uchar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7394,7 +7521,7 @@ ncmpi_get_varm_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7424,7 +7551,7 @@ ncmpi_get_varm_schar_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7454,7 +7581,7 @@ ncmpi_get_varm_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7484,7 +7611,7 @@ ncmpi_get_varm_text_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7514,7 +7641,7 @@ ncmpi_get_varm_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7544,7 +7671,7 @@ ncmpi_get_varm_short_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7574,7 +7701,7 @@ ncmpi_get_varm_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7604,7 +7731,7 @@ ncmpi_get_varm_int_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7634,7 +7761,7 @@ ncmpi_get_varm_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7664,7 +7791,7 @@ ncmpi_get_varm_long_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7694,7 +7821,7 @@ ncmpi_get_varm_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7724,7 +7851,7 @@ ncmpi_get_varm_float_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7754,7 +7881,7 @@ ncmpi_get_varm_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7784,7 +7911,7 @@ ncmpi_get_varm_double_all(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7814,7 +7941,7 @@ ncmpi_get_varm_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -7848,7 +7975,7 @@ static void ncmpii_postwrite(void *xbuf, void *cbuf, void *buf) {
 static int ncmpii_postread(nc_type vartype,
 		    void *xbuf, 
 		    void *cbuf, 
-		    int nelems, 
+		    MPI_Offset nelems, 
 		    int cnelems, 
 		    int iscontig_of_ptypes,
 		    void *buf, 
@@ -8237,7 +8364,7 @@ ncmpi_cancel(NCMPI_Request *request) {
 int
 ncmpi_iput_var1(int ncid, int varid,
                const MPI_Offset index[],
-               const void *buf, int bufcount,
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -8245,7 +8372,8 @@ ncmpi_iput_var1(int ncid, int varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -8377,7 +8505,7 @@ ncmpi_iput_var1(int ncid, int varid,
   if ( status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = index[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -8391,7 +8519,7 @@ ncmpi_iput_var1(int ncid, int varid,
 int
 ncmpi_iget_var1(int ncid, int varid,
                const MPI_Offset index[],
-               void *buf, int bufcount,
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request) 
 {
@@ -8399,7 +8527,8 @@ ncmpi_iget_var1(int ncid, int varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -8503,14 +8632,15 @@ ncmpi_iget_var1(int ncid, int varid,
 
 int
 ncmpi_iput_var(int ncid, int varid, 
-	       const void *buf, int bufcount, MPI_Datatype datatype,
+	       const void *buf, MPI_Offset bufcount, MPI_Datatype datatype,
 	       NCMPI_Request *request) 
 {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -8650,7 +8780,7 @@ ncmpi_iput_var(int ncid, int varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     if (varp->ndims > 1)
       newnumrecs = nelems / varp->dsizes[1];
     else
@@ -8666,14 +8796,15 @@ ncmpi_iput_var(int ncid, int varid,
 
 int
 ncmpi_iget_var(int ncid, int varid, 
-	       void *buf, int bufcount, MPI_Datatype datatype, 
+	       void *buf, MPI_Offset bufcount, MPI_Datatype datatype, 
 	       NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -8786,7 +8917,7 @@ ncmpi_iget_var(int ncid, int varid,
 int
 ncmpi_iput_vara(int ncid, int varid,
                const MPI_Offset start[], const MPI_Offset count[],
-               const void *buf, int bufcount,
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -8795,7 +8926,8 @@ ncmpi_iput_vara(int ncid, int varid,
   void *xbuf = NULL,  *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -8933,7 +9065,7 @@ ncmpi_iput_vara(int ncid, int varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + count[0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -8947,7 +9079,7 @@ ncmpi_iput_vara(int ncid, int varid,
 int
 ncmpi_iget_vara(int ncid, int varid,
                const MPI_Offset start[], const MPI_Offset count[],
-               void *buf, int bufcount,
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -8956,7 +9088,8 @@ ncmpi_iget_vara(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -9069,7 +9202,7 @@ ncmpi_iput_vars(int ncid, int varid,
                const MPI_Offset start[], 
 	       const MPI_Offset count[],
 	       const MPI_Offset stride[],
-               const void *buf, int bufcount,
+               const void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -9078,7 +9211,8 @@ ncmpi_iput_vars(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -9217,7 +9351,7 @@ ncmpi_iput_vars(int ncid, int varid,
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
  
-    int newnumrecs;
+    MPI_Offset newnumrecs;
     newnumrecs = start[0] + (count[0] - 1) * stride[0] + 1;
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
@@ -9233,7 +9367,7 @@ ncmpi_iget_vars(int ncid, int varid,
                const MPI_Offset start[], 
 	       const MPI_Offset count[],
                const MPI_Offset stride[],
-               void *buf, int bufcount,
+               void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
@@ -9242,7 +9376,8 @@ ncmpi_iget_vars(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int nelems, cnelems, el_size, nbytes;
+  MPI_Offset nelems, cnelems, nbytes;
+  int el_size;
   int mpireturn;
   MPI_Datatype ptype;
   int isderived, iscontig_of_ptypes;
@@ -9357,16 +9492,17 @@ ncmpi_iput_varm(int ncid, int varid,
 	       const MPI_Offset count[],
 	       const MPI_Offset stride[],
 	       const MPI_Offset imap[],
-	       const void *buf, int bufcount,
+	       const void *buf, MPI_Offset bufcount,
 	       MPI_Datatype datatype,
 	       NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
-  int ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int lnelems, cnelems, el_size;
+  MPI_Offset lnelems, cnelems; 
+  int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
@@ -9483,16 +9619,17 @@ ncmpi_iget_varm(int ncid, int varid,
 		   const MPI_Offset count[],
 		   const MPI_Offset stride[],
 		   const MPI_Offset imap[],
-		   void *buf, int bufcount,
+		   void *buf, MPI_Offset bufcount,
 		   MPI_Datatype datatype,
 		   NCMPI_Request *request)
 {
   NC_var *varp;
   NC *ncp;
-  int ndims, dim;
+  MPI_Offset ndims, dim;
   void *lbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  int lnelems, cnelems, el_size;
+  MPI_Offset lnelems, cnelems; 
+  int el_size;
   MPI_Datatype ptype, tmptype, imaptype;
   int isderived, iscontig_of_ptypes;
   int imap_contig_blocklen;
@@ -9968,7 +10105,7 @@ ncmpi_iput_var_uchar(int ncid, int varid, const unsigned char *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10004,7 +10141,7 @@ ncmpi_iput_var_schar(int ncid, int varid, const signed char *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10041,7 +10178,7 @@ ncmpi_iput_var_text(int ncid, int varid, const char *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10077,7 +10214,7 @@ ncmpi_iput_var_short(int ncid, int varid, const short *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10113,7 +10250,7 @@ ncmpi_iput_var_int(int ncid, int varid, const int *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10149,7 +10286,7 @@ ncmpi_iput_var_long(int ncid, int varid, const long *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10185,7 +10322,7 @@ ncmpi_iput_var_float(int ncid, int varid, const float *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10221,7 +10358,7 @@ ncmpi_iput_var_double(int ncid, int varid, const double *op,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10257,7 +10394,7 @@ ncmpi_iget_var_uchar(int ncid, int varid, unsigned char *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10293,7 +10430,7 @@ ncmpi_iget_var_schar(int ncid, int varid, signed char *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10329,7 +10466,7 @@ ncmpi_iget_var_text(int ncid, int varid, char *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10365,7 +10502,7 @@ ncmpi_iget_var_short(int ncid, int varid, short *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10401,7 +10538,7 @@ ncmpi_iget_var_int(int ncid, int varid, int *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10437,7 +10574,7 @@ ncmpi_iget_var_long(int ncid, int varid, long *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10473,7 +10610,7 @@ ncmpi_iget_var_float(int ncid, int varid, float *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10509,7 +10646,7 @@ ncmpi_iget_var_double(int ncid, int varid, double *ip,
   NC *ncp;
   int status;
   int ndims;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10547,7 +10684,7 @@ ncmpi_iput_vara_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10575,7 +10712,7 @@ ncmpi_iput_vara_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10603,7 +10740,7 @@ ncmpi_iput_vara_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10631,7 +10768,7 @@ ncmpi_iput_vara_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10659,7 +10796,7 @@ ncmpi_iput_vara_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10687,7 +10824,7 @@ ncmpi_iput_vara_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10715,7 +10852,7 @@ ncmpi_iput_vara_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10743,7 +10880,7 @@ ncmpi_iput_vara_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10772,7 +10909,7 @@ ncmpi_iget_vara_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10801,7 +10938,7 @@ ncmpi_iget_vara_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10830,7 +10967,7 @@ ncmpi_iget_vara_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10859,7 +10996,7 @@ ncmpi_iget_vara_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10887,7 +11024,7 @@ ncmpi_iget_vara_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10915,7 +11052,7 @@ ncmpi_iget_vara_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10943,7 +11080,7 @@ ncmpi_iget_vara_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -10971,7 +11108,7 @@ ncmpi_iget_vara_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11001,7 +11138,7 @@ ncmpi_iput_vars_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11031,7 +11168,7 @@ ncmpi_iput_vars_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11061,7 +11198,7 @@ ncmpi_iput_vars_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11091,7 +11228,7 @@ ncmpi_iput_vars_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11121,7 +11258,7 @@ ncmpi_iput_vars_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11151,7 +11288,7 @@ ncmpi_iput_vars_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11181,7 +11318,7 @@ ncmpi_iput_vars_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11212,7 +11349,7 @@ ncmpi_iput_vars_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11243,7 +11380,7 @@ ncmpi_iget_vars_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11273,7 +11410,7 @@ ncmpi_iget_vars_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11303,7 +11440,7 @@ ncmpi_iget_vars_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11333,7 +11470,7 @@ ncmpi_iget_vars_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11363,7 +11500,7 @@ ncmpi_iget_vars_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11393,7 +11530,7 @@ ncmpi_iget_vars_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11423,7 +11560,7 @@ ncmpi_iget_vars_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11454,7 +11591,7 @@ ncmpi_iget_vars_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11485,7 +11622,7 @@ ncmpi_iput_varm_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11516,7 +11653,7 @@ ncmpi_iput_varm_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11547,7 +11684,7 @@ ncmpi_iput_varm_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11578,7 +11715,7 @@ ncmpi_iput_varm_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11609,7 +11746,7 @@ ncmpi_iput_varm_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11640,7 +11777,7 @@ ncmpi_iput_varm_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  long int nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11671,7 +11808,7 @@ ncmpi_iput_varm_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11702,7 +11839,7 @@ ncmpi_iput_varm_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11733,7 +11870,7 @@ ncmpi_iget_varm_uchar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11764,7 +11901,7 @@ ncmpi_iget_varm_schar(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11795,7 +11932,7 @@ ncmpi_iget_varm_text(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11826,7 +11963,7 @@ ncmpi_iget_varm_short(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11857,7 +11994,7 @@ ncmpi_iget_varm_int(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11888,7 +12025,7 @@ ncmpi_iget_varm_long(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11919,7 +12056,7 @@ ncmpi_iget_varm_float(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -11950,7 +12087,7 @@ ncmpi_iget_varm_double(int ncid, int varid,
   NC *ncp;
   int status;
   int dim;
-  int nelems;
+  MPI_Offset nelems;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
