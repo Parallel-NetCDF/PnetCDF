@@ -184,7 +184,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 @*/
 
 static int ncmpii_darray_get_totalblks(int rank,
-				int ndims,
+				MPI_Offset ndims,
                                 int array_of_gsizes[],
                                 int array_of_distribs[],
                                 int array_of_dargs[],
@@ -250,12 +250,13 @@ static int ncmpii_darray_get_totalblks(int rank,
 int ncmpii_dtype_decode(MPI_Datatype dtype, 
 			MPI_Datatype *ptype, 
 			int *el_size,
-			int *nelems, 
+			MPI_Offset *nelems, 
 			int *isderived,
 			int *iscontig_of_ptypes)
 {
   int i;
-  int tmpnelems, tmpel_size, total_blocks;
+  MPI_Offset tmpnelems, total_blocks;
+  int tmpel_size;
   MPI_Datatype tmpptype;
   int num_ints, num_adds, num_dtypes, combiner;
   int *array_of_ints;
@@ -263,7 +264,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   MPI_Datatype *array_of_dtypes;
   void *arraybuf;
   int memsz;
-  int count;
+  MPI_Offset count;
   int ndims;
   int status = NC_NOERR;
 
@@ -492,10 +493,10 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 @*/  
 
 int ncmpii_data_repack(void *inbuf, 
-		       int incount,
+		       MPI_Offset incount,
 		       MPI_Datatype intype, 
 		       void *outbuf,
-		       int outcount,
+		       MPI_Offset outcount,
 		       MPI_Datatype outtype) 
 {
   int intypesz, outtypesz;

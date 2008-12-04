@@ -28,13 +28,13 @@
 #endif
 
 /* Prototypes for functions used only in this file */
-static size_t hdr_len_NC_string(const NC_string *ncstrp);
-static size_t hdr_len_NC_dim(const NC_dim *dimp);
-static size_t hdr_len_NC_dimarray(const NC_dimarray *ncap);
-static size_t hdr_len_NC_attr(const NC_attr *attrp);
-static size_t hdr_len_NC_attrarray(const NC_attrarray *ncap);
-static size_t hdr_len_NC_var(const NC_var *varp, size_t sizeof_off_t);
-static size_t hdr_len_NC_vararray(const NC_vararray *ncap, size_t sizeof_off_t);
+static MPI_Offset hdr_len_NC_string(const NC_string *ncstrp, MPI_Offset sizeof_t);
+static MPI_Offset hdr_len_NC_dim(const NC_dim *dimp, MPI_Offset sizeof_t);
+static MPI_Offset hdr_len_NC_dimarray(const NC_dimarray *ncap, MPI_Offset sizeof_t);
+static MPI_Offset hdr_len_NC_attr(const NC_attr *attrp, MPI_Offset sizeof_t);
+static MPI_Offset hdr_len_NC_attrarray(const NC_attrarray *ncap, MPI_Offset sizeof_t);
+static MPI_Offset hdr_len_NC_var(const NC_var *varp, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t);
+static MPI_Offset hdr_len_NC_vararray(const NC_vararray *ncap, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t);
 static int hdr_put_NCtype(bufferinfo *pbp, NCtype type);
 static int hdr_put_nc_type(bufferinfo *pbp, const nc_type *typep);
 static int hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp);
@@ -46,9 +46,9 @@ static int hdr_put_NC_dimarray(bufferinfo *pbp, const NC_dimarray *ncap);
 static int hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
 static int hdr_put_NC_vararray(bufferinfo *pbp, const NC_vararray *ncap);
 static int hdr_fetch(bufferinfo *gbp);
-static int hdr_check_buffer(bufferinfo *gbp, size_t nextread);
+static int hdr_check_buffer(bufferinfo *gbp, MPI_Offset nextread);
 static int hdr_get_NCtype(bufferinfo *gbp, NCtype *typep);
-static int hdr_get_size_t(bufferinfo *gbp, size_t *sp);
+static int hdr_get_size_t(bufferinfo *gbp, MPI_Offset *sp);
 static int hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp);
 static int hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp);
 static int hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap);
@@ -64,6 +64,7 @@ static int hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap);
  */
 static const schar ncmagic[] = {'C', 'D', 'F', 0x02}; 
 static const schar ncmagic1[] = {'C', 'D', 'F', 0x01}; 
+static const schar ncmagic2[] = {'C', 'D', 'F', 0x05}; 
 
 /*
  * Recompute the shapes of all variables
@@ -82,16 +83,21 @@ ncmpii_NC_computeshapes(NC *ncp)
         NC_var *first_rec = NULL;       /* first "record" var */
         int status;
  
-        ncp->begin_var = (off_t) ncp->xsz;
-        ncp->begin_rec = (off_t) ncp->xsz;
+        ncp->begin_var = (MPI_Offset) ncp->xsz;
+        ncp->begin_rec = (MPI_Offset) ncp->xsz;
         ncp->recsize = 0;
  
         if(ncp->vars.nelems == 0)
                 return(0);
- 
+
+
+
+
         for( /*NADA*/; vpp < end; vpp++)
-        {
-                status = ncmpii_NC_var_shape(*vpp, &ncp->dims);
+        {	
+                status = ncmpii_NC_var_shape64(*vpp, &ncp->dims);
+
+
                 if(status != ENOERR)
                         return(status);
  
@@ -108,7 +114,7 @@ ncmpii_NC_computeshapes(NC *ncp)
                          * Overwritten each time thru.
                          * Usually overwritten in first_rec != NULL clause.
                          */
-                        ncp->begin_rec = (*vpp)->begin + (off_t)(*vpp)->len;
+                        ncp->begin_rec = (*vpp)->begin + (MPI_Offset)(*vpp)->len;
                 }
         }
  
@@ -131,7 +137,7 @@ ncmpii_NC_computeshapes(NC *ncp)
         {
                 ncp->begin_var = ncp->begin_rec;
         }
- 
+
         assert(ncp->begin_var > 0);
         assert(ncp->xsz <= ncp->begin_var);
         assert(ncp->begin_rec > 0);
@@ -147,10 +153,11 @@ ncmpii_NC_computeshapes(NC *ncp)
 #define X_SIZEOF_NC_TYPE X_SIZEOF_INT
 #define X_SIZEOF_NCTYPE X_SIZEOF_INT
 
-static size_t
-hdr_len_NC_string(const NC_string *ncstrp)
+static MPI_Offset
+hdr_len_NC_string(const NC_string *ncstrp, MPI_Offset sizeof_t)
 {
-        size_t sz = X_SIZEOF_SIZE_T; /* nchars */
+//      MPI_Offset sz = X_SIZEOF_SIZE_T; /* nchars */
+        int sz = sizeof_t; /* nchars */
  
         assert(ncstrp != NULL);
  
@@ -160,24 +167,26 @@ hdr_len_NC_string(const NC_string *ncstrp)
         return sz;
 }
  
-static size_t
-hdr_len_NC_dim(const NC_dim *dimp)
+static MPI_Offset
+hdr_len_NC_dim(const NC_dim *dimp, MPI_Offset sizeof_t)
 {
-        size_t sz;
+        MPI_Offset sz;
  
         assert(dimp != NULL);
  
-        sz = hdr_len_NC_string(dimp->name);
-        sz += X_SIZEOF_SIZE_T;
+        sz = hdr_len_NC_string(dimp->name, sizeof_t);
+//        sz += X_SIZEOF_SIZE_T;
+        sz += sizeof_t;
  
         return(sz);
 }
  
-static size_t
-hdr_len_NC_dimarray(const NC_dimarray *ncap)
+static MPI_Offset
+hdr_len_NC_dimarray(const NC_dimarray *ncap, MPI_Offset sizeof_t)
 {
-        size_t xlen = X_SIZEOF_NCTYPE;  /* type */
-        xlen += X_SIZEOF_SIZE_T;        /* count */
+        MPI_Offset xlen = X_SIZEOF_NCTYPE;  /* type */
+//        xlen += X_SIZEOF_SIZE_T;        /* count */
+        xlen += sizeof_t;        /* count */
         if(ncap == NULL)
                 return xlen;
         /* else */
@@ -186,32 +195,34 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap)
                 const NC_dim *const *const end = &dpp[ncap->nelems];
                 for(  /*NADA*/; dpp < end; dpp++)
                 {
-                        xlen += hdr_len_NC_dim(*dpp);
+                        xlen += hdr_len_NC_dim(*dpp, sizeof_t);
                 }
         }
         return xlen;
 } 
 
-static size_t
-hdr_len_NC_attr(const NC_attr *attrp)
+static MPI_Offset
+hdr_len_NC_attr(const NC_attr *attrp, MPI_Offset sizeof_t)
 {
-        size_t sz;
+        MPI_Offset sz;
  
         assert(attrp != NULL);
  
-        sz = hdr_len_NC_string(attrp->name);
+        sz = hdr_len_NC_string(attrp->name, sizeof_t);
         sz += X_SIZEOF_NC_TYPE; /* type */
-        sz += X_SIZEOF_SIZE_T; /* nelems */
+//        sz += X_SIZEOF_SIZE_T; /* nelems */
+        sz += sizeof_t; /* nelems */
         sz += attrp->xsz;
  
         return(sz);
 }
  
-static size_t
-hdr_len_NC_attrarray(const NC_attrarray *ncap)
+static MPI_Offset
+hdr_len_NC_attrarray(const NC_attrarray *ncap, MPI_Offset sizeof_t)
 {
-        size_t xlen = X_SIZEOF_NCTYPE;  /* type */
-        xlen += X_SIZEOF_SIZE_T;        /* count */
+        MPI_Offset xlen = X_SIZEOF_NCTYPE;  /* type */
+//        xlen += X_SIZEOF_SIZE_T;        /* count */
+        xlen += sizeof_t;        /* count */
         if(ncap == NULL)
                 return xlen;
         /* else */
@@ -220,36 +231,42 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap)
                 const NC_attr *const *const end = &app[ncap->nelems];
                 for( /*NADA*/; app < end; app++)
                 {
-                        xlen += hdr_len_NC_attr(*app);
+                        xlen += hdr_len_NC_attr(*app, sizeof_t);
                 }
         }
         return xlen;
 }
  
-static size_t
-hdr_len_NC_var(const NC_var *varp, size_t sizeof_off_t)
+static MPI_Offset
+hdr_len_NC_var(const NC_var *varp, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t)
 {
-        size_t sz;
+        MPI_Offset sz;
  
         assert(varp != NULL);
 	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
  
-        sz = hdr_len_NC_string(varp->name);
-        sz += X_SIZEOF_SIZE_T; /* ndims */
-        sz += ncmpix_len_int(varp->ndims); /* dimids */
-        sz += hdr_len_NC_attrarray(&varp->attrs);
+        sz = hdr_len_NC_string(varp->name,sizeof_off_t);
+//      sz += X_SIZEOF_SIZE_T; /* ndims */
+        sz += sizeof_t; /* ndims */
+        if (sizeof_t == 8)
+		sz += ncmpix_len_long(varp->ndims); /* dimids */
+        else
+		sz += ncmpix_len_int(varp->ndims); /* dimids */
+        sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_off_t);
         sz += X_SIZEOF_NC_TYPE; /* type */
-        sz += X_SIZEOF_SIZE_T; /* len */
+//      sz += X_SIZEOF_SIZE_T; /* len */
+        sz += sizeof_t; /* len */
         sz += sizeof_off_t; /* begin */
  
         return(sz);
 } 
 
-static size_t
-hdr_len_NC_vararray(const NC_vararray *ncap, size_t sizeof_off_t)
+static MPI_Offset
+hdr_len_NC_vararray(const NC_vararray *ncap, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t)
 {
-        size_t xlen = X_SIZEOF_NCTYPE;  /* type */
-        xlen += X_SIZEOF_SIZE_T;        /* count */
+        MPI_Offset xlen = X_SIZEOF_NCTYPE;  /* type */
+//      xlen += X_SIZEOF_SIZE_T;        /* count */
+        xlen += sizeof_t;           /* count */
         if(ncap == NULL)
                 return xlen;
         /* else */
@@ -258,23 +275,31 @@ hdr_len_NC_vararray(const NC_vararray *ncap, size_t sizeof_off_t)
                 const NC_var *const *const end = &vpp[ncap->nelems];
                 for( /*NADA*/; vpp < end; vpp++)
                 {
-                        xlen += hdr_len_NC_var(*vpp, sizeof_off_t);
+                        xlen += hdr_len_NC_var(*vpp, sizeof_off_t, sizeof_t);
                 }
         }
         return xlen;
 }
  
-size_t
-ncmpii_hdr_len_NC(const NC *ncp, size_t sizeof_off_t)
+MPI_Offset
+ncmpii_hdr_len_NC(const NC *ncp, MPI_Offset sizeof_off_t)
 {
-        size_t xlen = sizeof(ncmagic);
+        MPI_Offset xlen = sizeof(ncmagic);
  
         assert(ncp != NULL);
- 
-        xlen += X_SIZEOF_SIZE_T; /* numrecs */
-        xlen += hdr_len_NC_dimarray(&ncp->dims);
-        xlen += hdr_len_NC_attrarray(&ncp->attrs);
-        xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t);
+	if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+	        xlen += X_SIZEOF_LONG; /* numrecs */
+                xlen += hdr_len_NC_dimarray(&ncp->dims, 8);/* int-> long????????*/
+                xlen += hdr_len_NC_attrarray(&ncp->attrs, 8);
+                xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 8);
+	} else {
+	        xlen += X_SIZEOF_SIZE_T;
+                xlen += hdr_len_NC_dimarray(&ncp->dims, 4);
+                xlen += hdr_len_NC_attrarray(&ncp->attrs, 4);
+                xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 4);
+	}
+
+//        xlen += hdr_len_NC_dimarray(&ncp->dims, sizeof_off_t);/* int-> long????????*/
  
         return xlen;
 } 
@@ -310,7 +335,7 @@ static int
 hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp) {
   int status;
 
-  status = ncmpix_put_size_t(&pbp->pos, &ncstrp->nchars);
+  status = ncmpix_put_size_t(&pbp->pos, &ncstrp->nchars, pbp->version == 5 ? 8 : 4);
   if (status != ENOERR)
     return status;
 
@@ -327,7 +352,7 @@ hdr_put_NC_string(bufferinfo *pbp, const NC_string *ncstrp) {
 static int
 hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
   void *value = attrp->xvalue;
-  size_t padding, esz;
+  MPI_Offset padding, esz;
 
   esz = ncmpix_len_nctype(attrp->type);
   padding = attrp->xsz - esz * attrp->nelems;
@@ -348,7 +373,7 @@ hdr_put_NC_dim(bufferinfo *pbp, const NC_dim *dimp) {
   if (status != ENOERR)
     return status;
 
-  status = ncmpix_put_size_t(&pbp->pos, &dimp->size);
+  status = ncmpix_put_size_t(&pbp->pos, &dimp->size, pbp->version == 5 ? 8 : 4);
   if (status != ENOERR)
     return status;
   
@@ -367,7 +392,7 @@ hdr_put_NC_attr(bufferinfo *pbp, const NC_attr *attrp) {
   if (status != ENOERR)
     return status;
 
-  status = ncmpix_put_size_t(&pbp->pos, &attrp->nelems);
+  status = ncmpix_put_size_t(&pbp->pos, &attrp->nelems, pbp->version == 5 ? 8 : 4);
   if (status != ENOERR)
     return status;
 
@@ -381,19 +406,35 @@ hdr_put_NC_attr(bufferinfo *pbp, const NC_attr *attrp) {
 static int
 hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
   int status;
-
+  int i;
+  MPI_Offset tmp_ndims;
   status = hdr_put_NC_string(pbp, varp->name);
   if (status != ENOERR)
     return status;
 
-  status = ncmpix_put_size_t(&pbp->pos, &varp->ndims);
+  tmp_ndims = varp->ndims;
+  status = ncmpix_put_size_t(&pbp->pos, &tmp_ndims, pbp->version == 5 ? 8 : 4);
   if (status != ENOERR)
     return status;
 
+  for (i=0; i< varp->ndims; i++){  
+        const MPI_Offset dim_id  = (const MPI_Offset) varp->dimids[i];
+ 	status = ncmpix_put_size_t(&pbp->pos, &dim_id, pbp->version == 5 ? 8 : 4);
+  }
+/*
+ if (pbp->version == 1)
   status = ncmpix_putn_int_int(&pbp->pos,
                         varp->ndims, varp->dimids);
+  else
+  status = ncmpix_putn_int_long(&pbp->pos,
+                        varp->ndims, varp->dimids);
+*/
   if (status != ENOERR)
     return status;
+
+
+  for (i=0; i< varp->ndims; i++){
+  }
 
   status = hdr_put_NC_attrarray(pbp, &varp->attrs);
   if (status != ENOERR)
@@ -403,7 +444,7 @@ hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
   if (status != ENOERR)
     return status;
 
-  status = ncmpix_put_size_t(&pbp->pos, &varp->len); 
+  status = ncmpix_put_size_t(&pbp->pos, &varp->len, pbp->version == 5 ? 8 : 4); 
   if (status != ENOERR)
     return status;
 
@@ -422,12 +463,12 @@ hdr_put_NC_dimarray(bufferinfo *pbp, const NC_dimarray *ncap) {
   
   if (ncap == NULL || ncap->nelems == 0) {
      /* ABSENT */
-    const size_t nosz = 0;
+    const MPI_Offset nosz = 0;
     status = hdr_put_NCtype(pbp, NC_UNSPECIFIED);
     if (status != ENOERR)
       return status;
 
-    status = ncmpix_put_size_t(&pbp->pos, &nosz);
+    status = ncmpix_put_size_t(&pbp->pos, &nosz, pbp->version == 5 ? 8 : 4);
     if (status != ENOERR)
       return status;
   } else {
@@ -438,7 +479,7 @@ hdr_put_NC_dimarray(bufferinfo *pbp, const NC_dimarray *ncap) {
     if (status != ENOERR)
       return status;
 
-    status = ncmpix_put_size_t(&pbp->pos, &ncap->nelems);
+    status = ncmpix_put_size_t(&pbp->pos, &ncap->nelems, pbp->version == 5 ? 8 : 4);
     if (status != ENOERR)
       return status;
 
@@ -460,12 +501,12 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap) {
 
   if (ncap == NULL || ncap->nelems == 0) {
      /* ABSENT */
-    const size_t nosz = 0;
+    const MPI_Offset nosz = 0;
     status = hdr_put_NCtype(pbp, NC_UNSPECIFIED);
     if (status != ENOERR)
       return status;
 
-    status = ncmpix_put_size_t(&pbp->pos, &nosz);
+    status = ncmpix_put_size_t(&pbp->pos, &nosz, pbp->version == 5 ? 8 : 4);
     if (status != ENOERR)
       return status;
   } else {
@@ -476,7 +517,7 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap) {
     if (status != ENOERR)
       return status;
 
-    status = ncmpix_put_size_t(&pbp->pos, &ncap->nelems);
+    status = ncmpix_put_size_t(&pbp->pos, &ncap->nelems, pbp->version == 5 ? 8 : 4);
     if (status != ENOERR)
       return status;
   
@@ -498,12 +539,12 @@ hdr_put_NC_vararray(bufferinfo *pbp, const NC_vararray *ncap){
 
   if (ncap == NULL || ncap->nelems == 0) {
      /* ABSENT */
-    const size_t nosz = 0;
+    const MPI_Offset nosz = 0;
     status = hdr_put_NCtype(pbp, NC_UNSPECIFIED);
     if (status != ENOERR)
       return status;
 
-    status = ncmpix_put_size_t(&pbp->pos, &nosz);
+    status = ncmpix_put_size_t(&pbp->pos, &nosz, pbp->version == 5 ? 8 : 4);
     if (status != ENOERR)
       return status;
   } else { 
@@ -514,7 +555,7 @@ hdr_put_NC_vararray(bufferinfo *pbp, const NC_vararray *ncap){
     if (status != ENOERR)
       return status;
 
-    status = ncmpix_put_size_t(&pbp->pos, &ncap->nelems);
+    status = ncmpix_put_size_t(&pbp->pos, &ncap->nelems, pbp->version == 5 ? 8 : 4);
     if (status != ENOERR)
       return status;
 
@@ -532,19 +573,23 @@ int
 ncmpii_hdr_put_NC(NC *ncp, void *buf) {
   int status;
   bufferinfo putbuf;
-  size_t nrecs; 
+  MPI_Offset nrecs; 
 
   putbuf.nciop = NULL;
   putbuf.offset = 0;
   putbuf.pos = putbuf.base = buf;
   putbuf.size = ncp->xsz;
 
-  if (ncp->flags & NC_64BIT_OFFSET)
+  if (ncp->flags & NC_64BIT_DATA)
+	  putbuf.version = 5;
+  else if (ncp->flags & NC_64BIT_OFFSET)
 	  putbuf.version = 2;
   else
 	  putbuf.version = 1;
 
-  if (putbuf.version == 2)
+  if (putbuf.version == 5)
+	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic2), ncmagic2);
+  else if (putbuf.version == 2)
 	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic), ncmagic);
   else
 	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic1), ncmagic1);
@@ -553,7 +598,7 @@ ncmpii_hdr_put_NC(NC *ncp, void *buf) {
 	  return status;
 
   nrecs = ncp->numrecs; 
-  status = ncmpix_put_size_t(&putbuf.pos, &nrecs);
+  status = ncmpix_put_size_t(&putbuf.pos, &nrecs, putbuf.version == 5 ? 8 : 4);
   if (status != ENOERR)
     return status;
 
@@ -593,7 +638,7 @@ hdr_fetch(bufferinfo *gbp) {
   int rank;
   MPI_Comm comm;
   int mpireturn;
-  size_t slack;		/* any leftover data in the buffer */
+  MPI_Offset slack;		/* any leftover data in the buffer */
 
   assert(gbp->base != NULL);
   
@@ -643,7 +688,7 @@ hdr_fetch(bufferinfo *gbp) {
  * Ensure that 'nextread' bytes are available.
  */
 static int
-hdr_check_buffer(bufferinfo *gbp, size_t nextread) {
+hdr_check_buffer(bufferinfo *gbp, MPI_Offset nextread) {
   if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
     return ENOERR;
   return hdr_fetch(gbp);
@@ -652,7 +697,9 @@ hdr_check_buffer(bufferinfo *gbp, size_t nextread) {
 static int
 hdr_get_NCtype(bufferinfo *gbp, NCtype *typep) {
   int type = 0;
-  int status = hdr_check_buffer(gbp, X_SIZEOF_INT);
+//  int sizeof_t = (gbp->version == 5) ? 8 : 4;
+  int sizeof_t = 4;
+  int status = hdr_check_buffer(gbp, sizeof_t);
   if (status != ENOERR)
     return status;
 
@@ -666,18 +713,19 @@ hdr_get_NCtype(bufferinfo *gbp, NCtype *typep) {
 }
 
 static int
-hdr_get_size_t(bufferinfo *gbp, size_t *sp) {
-  int status = hdr_check_buffer(gbp, X_SIZEOF_SIZE_T);
+hdr_get_size_t(bufferinfo *gbp, MPI_Offset *sp) {
+  MPI_Offset sizeof_t = (gbp->version == 5) ? 8 : 4;
+  int status = hdr_check_buffer(gbp, sizeof_t);
   if (status != ENOERR)
     return status; 
-  gbp->index += X_SIZEOF_SIZE_T;
-  return ncmpix_get_size_t((const void **)(&gbp->pos), sp);
+  gbp->index += sizeof_t;
+  return ncmpix_get_size_t((const void **)(&gbp->pos), sp, sizeof_t);
 }
 
 static int
 hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   int status;
-  size_t  nchars = 0, nbytes, padding, bufremain, strcount; 
+  MPI_Offset  nchars = 0, nbytes, padding, bufremain, strcount; 
   NC_string *ncstrp;
   char *cpos;
   char pad[X_ALIGN-1];
@@ -694,7 +742,7 @@ hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   nbytes = nchars * X_SIZEOF_CHAR;
   padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
             - X_SIZEOF_CHAR * ncstrp->nchars;
-  bufremain = gbp->size - (size_t)((char *)gbp->pos - (char *)gbp->base);
+  bufremain = gbp->size - (MPI_Offset)((char *)gbp->pos - (char *)gbp->base);
   cpos = ncstrp->cp;
 
   while (nbytes > 0) {
@@ -773,6 +821,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
   status = hdr_get_size_t(gbp, &ncap->nelems);
   if(status != ENOERR)
     return status;
+ 
 
   if(ncap->nelems == 0) {
     if (type != NC_DIMENSION && type != NC_UNSPECIFIED)
@@ -827,7 +876,7 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *typep) {
   return ENOERR;
 }
 
-size_t 
+MPI_Offset 
 ncmpix_len_nctype(nc_type type) {
   switch(type) {
     case NC_BYTE:
@@ -855,11 +904,11 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   int status;
   void *value = attrp->xvalue;
   char pad[X_ALIGN-1]; 
-  size_t nbytes, esz, padding, bufremain, attcount;
+  MPI_Offset nbytes, esz, padding, bufremain, attcount;
 
   esz = ncmpix_len_nctype(attrp->type);
   padding = attrp->xsz - esz * attrp->nelems;
-  bufremain = gbp->size - (size_t)((char *)gbp->pos - (char *)gbp->base);
+  bufremain = gbp->size - (MPI_Offset)((char *)gbp->pos - (char *)gbp->base);
   nbytes = esz * attrp->nelems;
 
   while (nbytes > 0) {
@@ -895,7 +944,7 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   NC_string *strp;
   int status;
   nc_type type; 
-  size_t nelems;
+  MPI_Offset nelems;
   NC_attr *attrp;
 
   status = hdr_get_NC_string(gbp, &strp);
@@ -980,8 +1029,10 @@ static int
 hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   NC_string *strp;
   int status;
-  size_t ndims, dim;
+  MPI_Offset ndims, dim;
+  MPI_Offset tmp_dimids;
   NC_var *varp;
+  int i;
 
   status = hdr_get_NC_string(gbp, &strp);
   if(status != ENOERR)
@@ -992,7 +1043,7 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
      ncmpii_free_NC_string(strp); 
      return status;
   }
-
+ 
   varp = ncmpii_new_x_NC_var(strp, ndims);
   if(varp == NULL) {
     ncmpii_free_NC_string(strp);
@@ -1000,17 +1051,34 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   }
 
   for (dim = 0; dim < ndims; dim++ ) {
-    status = hdr_check_buffer(gbp, X_SIZEOF_INT);
+    status = hdr_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
     if(status != ENOERR) {
       ncmpii_free_NC_var(varp);
       return status;
     }
-    status = ncmpix_getn_int_int((const void **)(&gbp->pos), 
-                              1, varp->dimids + dim);
+    status = hdr_get_size_t(gbp, &tmp_dimids);
+    varp->dimids[dim] = (int)tmp_dimids;
+    if(status != ENOERR) {
+     return status;
+    }
+
+/*  
+    if (gbp->version == 5) {
+	status = ncmpix_getn_long_long((const void **)(&gbp->pos), 
+                              1, (MPI_Offset*)varp->dimids + dim);
+    } else {
+	status = ncmpix_getn_int_int((const void **)(&gbp->pos), 
+                              1, (int*) varp->dimids + dim);
+    }
+
     if(status != ENOERR) {
       ncmpii_free_NC_var(varp);
       return status;
     }
+*/
+  }
+
+  for (i=0; i< varp->ndims; i++){
   }
 
   status = hdr_get_NC_attrarray(gbp, &varp->attrs);
@@ -1030,7 +1098,7 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     ncmpii_free_NC_var(varp);
     return status;
   }
-
+  
   status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
   if(status != ENOERR) {
     ncmpii_free_NC_var(varp);
@@ -1052,6 +1120,7 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   int status;
   NCtype type = NC_UNSPECIFIED;
   NC_var **vpp, **end;
+  int i, j;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);
@@ -1071,7 +1140,6 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   } else {
     if(type != NC_VARIABLE)
       return EINVAL;
- 
     ncap->value = (NC_var **) malloc(ncap->nelems * sizeof(NC_var *));
     if(ncap->value == NULL)
       return NC_ENOMEM; 
@@ -1079,6 +1147,8 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
 
     vpp = ncap->value;
     end = &vpp[ncap->nelems];
+
+
     for( /*NADA*/; vpp < end; vpp++) {
       status = hdr_get_NC_var(gbp, vpp);
       if (status != ENOERR) {
@@ -1088,6 +1158,8 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
       }
     }
   }
+	
+
 
   return ENOERR;
 }
@@ -1097,7 +1169,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
   int status;
   bufferinfo getbuf;
   schar magic[sizeof(ncmagic)];
-  size_t nrecs = 0;
+  MPI_Offset nrecs = 0;
 
   assert(ncp != NULL);
 
@@ -1138,18 +1210,31 @@ ncmpii_hdr_get_NC(NC *ncp) {
 		  free(getbuf.base);
 		  return NC_ESMALL;
 	  }
+  } else if (magic[sizeof(ncmagic)-1] == 0x5) {
+	  getbuf.version = 5;
+	  fSet(ncp->flags, NC_64BIT_DATA);
+	  if (sizeof(MPI_Offset) != 8) {
+		  free(getbuf.base);
+		  return NC_ESMALL;
+	  }
   } else {
 	  free(getbuf.base);
 	  return NC_ENOTNC;
   }
+  
 
   status = hdr_check_buffer(&getbuf, (getbuf.version == 1) ? 4 : 8);
   if(status != ENOERR) {
     free(getbuf.base);
     return status;
   } 
-  status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs);
-  getbuf.index += X_SIZEOF_SIZE_T;
+  status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, (getbuf.version == 5) ? 8 : 4);
+
+  if (getbuf.version == 5) {
+	getbuf.index += X_SIZEOF_LONG;
+  } else {
+	getbuf.index += X_SIZEOF_SIZE_T;
+  }
   if(status != ENOERR) {
     free(getbuf.base);
     return status;
@@ -1163,6 +1248,8 @@ ncmpii_hdr_get_NC(NC *ncp) {
     free(getbuf.base);
     return status;
   }
+	
+ 
 
   status = hdr_get_NC_attrarray(&getbuf, &ncp->attrs); 
   if(status != ENOERR) {
@@ -1170,16 +1257,19 @@ ncmpii_hdr_get_NC(NC *ncp) {
     return status;
   }
 
+
   status = hdr_get_NC_vararray(&getbuf, &ncp->vars);
   if(status != ENOERR) {
     free(getbuf.base);
     return status; 
   }
-
+ 
+  
   ncp->xsz = ncmpii_hdr_len_NC(ncp, (getbuf.version == 1) ? 4 : 8 );
   status = ncmpii_NC_computeshapes(ncp);
   free(getbuf.base);
-
+  
+  
   return status;
 }
 

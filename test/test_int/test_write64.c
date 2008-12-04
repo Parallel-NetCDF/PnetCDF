@@ -64,7 +64,7 @@ static void handle_error(int status) {
 
 int main(int argc, char **argv) {
 
-  MPI_Offset i, j, k;
+  long long int i, j, k;
   int status;
   int ncid;
   int dimid1, dimid2, dimid3, udimid;
@@ -84,10 +84,11 @@ int main(int argc, char **argv) {
   double TotalWriteTime;
   params opts;
 
+
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
+	
   if (rank == 0) 
 	  fprintf(stderr, "Testing write ... ");
   parse_write_args(argc, argv, rank, &opts);
@@ -103,9 +104,9 @@ int main(int argc, char **argv) {
    *   Dataset API: Collective
    */
 
-  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
+  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid);
   if (status != NC_NOERR) handle_error(status);
-
+ 
 
   /**
    * Create a global attribute:
@@ -135,10 +136,6 @@ int main(int argc, char **argv) {
    *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)  
    */
 
-  printf("dimid1:%ld\n", dimid1);
-  printf("dimid2:%ld\n", dimid2);
-  printf("dimid3:%ld\n", dimid3);
-  printf("udimid:%ld\n", udimid);
   square_dim[0] = cube_dim[0] = xytime_dim[1] = dimid1;
   square_dim[1] = cube_dim[1] = xytime_dim[2] = dimid2;
   cube_dim[2] = dimid3;
@@ -165,10 +162,11 @@ int main(int argc, char **argv) {
   /**
    * End Define Mode (switch to data mode)
    *   Dataset API: Collective
-   */
-
+   */    
+        
   status = ncmpi_enddef(ncid);
   if (status != NC_NOERR) handle_error(status);
+  MPI_Barrier(MPI_COMM_WORLD); 
 
   /**
    * Data Partition (Assume 4 processors):
@@ -195,6 +193,7 @@ int main(int argc, char **argv) {
   for ( i = 0; i < 100; i++ )
     for ( j = square_start[0]; j < square_start[0]+square_count[0]; j++ )
       for ( k = square_start[1]; k < square_start[1]+square_count[1]; k++ )
+//        data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
         data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
 
   /**
@@ -206,10 +205,12 @@ int main(int argc, char **argv) {
   status = ncmpi_put_vara_int_all(ncid, square_id,
                     square_start, square_count,
                     &data[0][0][0]);
+  MPI_Barrier(MPI_COMM_WORLD); 
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_put_vara_int_all(ncid, cube_id,
                     cube_start, cube_count,
                     &data[0][0][0]);
+  MPI_Barrier(MPI_COMM_WORLD); 
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_put_vara_int_all(ncid, time_id,
                     time_start, time_count,
@@ -240,7 +241,7 @@ if (status != NC_NOERR) handle_error(status);
   if (status != NC_NOERR) handle_error(status);
 
   /*******************  END OF NETCDF ACCESS  ****************/
-
+ 
 MPI_Barrier(MPI_COMM_WORLD); 
 TotalWriteTime = MPI_Wtime() - TotalWriteTime;
 

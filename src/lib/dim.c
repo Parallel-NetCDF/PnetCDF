@@ -74,7 +74,7 @@ ncmpii_new_NC_dim(const char *name, MPI_Offset size)
 static NC_dim *
 dup_NC_dim(const NC_dim *dimp)
 {
-	return ncmpii_new_NC_dim(dimp->name->cp, (MPI_Offset) dimp->size);
+	return ncmpii_new_NC_dim(dimp->name->cp, dimp->size);
 }
 
 /*
@@ -96,7 +96,7 @@ ncmpii_find_NC_Udim(const NC_dimarray *ncap, NC_dim **dimpp)
 	int dimid = 0;
 	NC_dim **loc = ncap->value;
 
-	for(; (size_t) dimid < ncap->nelems
+	for(; (MPI_Offset) dimid < ncap->nelems
 			 && (*loc)->size != NC_UNLIMITED; dimid++, loc++)
 	{
 		/*EMPTY*/
@@ -128,11 +128,11 @@ NC_finddim(const NC_dimarray *ncap, const char *name, NC_dim **dimpp)
 		return -1;
 
 	{
-	size_t slen = strlen(name);
+	MPI_Offset slen = strlen(name);
 	int dimid = 0;
 	NC_dim **loc = (NC_dim **) ncap->value;
 
-	for(; (size_t) dimid < ncap->nelems
+	for(; (MPI_Offset) dimid < ncap->nelems
 			&& (strlen((*loc)->name->cp) != slen
 				|| strncmp((*loc)->name->cp, name, slen) != 0);
 		 dimid++, loc++)
@@ -212,7 +212,7 @@ ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref)
 
 	if(ref->nelems != 0)
 	{
-		const size_t sz = ref->nelems * sizeof(NC_dim *);
+		const MPI_Offset sz = ref->nelems * sizeof(NC_dim *);
 		ncap->value = (NC_dim **) malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
@@ -292,8 +292,8 @@ NC_dim *
 ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem)
 {
 	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed size_t */
-	if(ncap->nelems == 0 || (unsigned long) elem >= ncap->nelems)
+		/* cast needed for braindead systems with signed MPI_Offset */
+	if(ncap->nelems == 0 || (unsigned long long) elem >= ncap->nelems)
 		return NULL;
 
 	assert(ncap->value != NULL);
@@ -324,10 +324,15 @@ ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
 		return status;
 
 	/* MPI_Offset is usually a signed value, but serial netcdf uses 
-	 * size_t -- normally unsigned */
+	 * MPI_Offset -- normally unsigned */
 	if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
 		/* CDF2 format and LFS */
 		if (size > X_UINT_MAX - 3 || (size < 0)) 
+			/* "-3" handles rounded-up size */
+			return NC_EDIMSIZE;
+	} else if ((ncp->flags & NC_64BIT_DATA)) {
+		/* CDF5 format*/
+		if (size < 0) 
 			/* "-3" handles rounded-up size */
 			return NC_EDIMSIZE;
 	} else {
@@ -401,7 +406,7 @@ ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep)
 	if(status != NC_NOERR)
 		return status;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)dimid);
+	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
 	if(dimp == NULL)
 		return NC_EBADDIM;
 
@@ -433,7 +438,7 @@ ncmpi_inq_dimname(int ncid, int dimid, char *name)
 	if(status != NC_NOERR)
 		return status;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)dimid);
+	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
 	if(dimp == NULL)
 		return NC_EBADDIM;
 
@@ -459,7 +464,7 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
 	if(status != NC_NOERR)
 		return status;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)dimid);
+	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
 	if(dimp == NULL)
 		return NC_EBADDIM;
 
@@ -497,7 +502,7 @@ ncmpi_rename_dim( int ncid, int dimid, const char *newname)
 	if(existid != -1)
 		return NC_ENAMEINUSE;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)dimid);
+	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
 	if(dimp == NULL)
 		return NC_EBADDIM;
 

@@ -25,6 +25,7 @@ static int default_create_format = NC_FORMAT_CLASSIC;
 #define VER_CLASSIC 1
 #define VER_64BIT_OFFSET 2
 #define VER_HDF5 3
+#define VER_64BIT_DATA 5
 
 
 
@@ -34,9 +35,9 @@ static int move_data_r(NC *ncp, NC *old);
 static int move_recs_r(NC *ncp, NC *old);
 static int move_vars_r(NC *ncp, NC *old);
 static int write_NC(NC *ncp);
-static int NC_begins(NC *ncp, size_t h_minfree, size_t v_align,
-		      size_t v_minfree, size_t r_align);
-static int NC_check_def(MPI_Comm comm, void *buf, size_t nn);
+static int NC_begins(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
+		      MPI_Offset v_minfree, MPI_Offset r_align);
+static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
 
 #if 0
 static int enddef(NC *ncp);
@@ -84,20 +85,23 @@ ncmpii_del_from_NCList(NC *ncp)
  * comparing the header buffer streams of all processes.
  */
 static int
-NC_check_def(MPI_Comm comm, void *buf, size_t nn) {
+NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   int rank;
-  int errcheck, compare = 0;
+  int errcheck;
+  MPI_Offset compare = 0;
   void *cmpbuf;
-  int max_size;
+  MPI_Offset max_size;
 
   MPI_Comm_rank(comm, &rank);
 
   if (rank == 0)
     max_size = nn;
-  MPI_Bcast(&max_size, 1, MPI_INT, 0, comm);
+  MPI_Bcast(&max_size, 1, MPI_LONG_LONG_INT, 0, comm);
 
   compare = max_size - nn;
-  MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
+
+  MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
+
   if (errcheck)
     return NC_EMULTIDEFINE;
 
@@ -113,12 +117,13 @@ NC_check_def(MPI_Comm comm, void *buf, size_t nn) {
     free(cmpbuf);
   }
 
-  MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
+  MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
 
-  if (errcheck)
+  if (errcheck){
     return NC_EMULTIDEFINE;
-  else 
+  }else{ 
     return NC_NOERR;
+  }
 }
 
 int
@@ -158,7 +163,7 @@ ncmpii_free_NC(NC *ncp)
 
 /* static */
 NC *
-ncmpii_new_NC(const size_t *chunkp)
+ncmpii_new_NC(const MPI_Offset *chunkp)
 {
 	NC *ncp;
 
@@ -167,7 +172,12 @@ ncmpii_new_NC(const size_t *chunkp)
 		return NULL;
 	(void) memset(ncp, 0, sizeof(NC));
 
-	ncp->xsz = MIN_NC_XSZ;
+	if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+		ncp->xsz = MIN_NC_XSZ+28; /*Kgao*/
+	} else {
+		ncp->xsz = MIN_NC_XSZ; 
+	}
+
 	assert(ncp->xsz == ncmpii_hdr_len_NC(ncp, 0)); 
 	
 	ncp->chunk = chunkp != NULL ? *chunkp : NC_SIZEHINT_DEFAULT;
@@ -188,8 +198,10 @@ ncmpi_set_default_format(int format, int *old_formatp)
       *old_formatp = default_create_format;
 
     /* Make sure only valid format is set. */
-    if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT)
+    if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT && format != NC_FORMAT_64BIT_DATA  ){
+      printf("Error NC_FORMAT_CLASSIC\n");
       return NC_EINVAL;
+    }
     default_create_format = format;
     return NC_NOERR;
 }
@@ -261,8 +273,8 @@ ncmpii_cktype(nc_type type)
  * How many objects of 'type'
  * will fit into xbufsize?
  */
-size_t
-ncmpix_howmany(nc_type type, size_t xbufsize)
+MPI_Offset
+ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
 {
 	switch(type){
 	case NC_BYTE:
@@ -290,11 +302,11 @@ ncmpix_howmany(nc_type type, size_t xbufsize)
  */
 static int
 NC_begins(NC *ncp,
-	size_t h_minfree, size_t v_align,
-	size_t v_minfree, size_t r_align)
+	MPI_Offset h_minfree, MPI_Offset v_align,
+	MPI_Offset v_minfree, MPI_Offset r_align)
 {
-	size_t ii;
-	size_t sizeof_off_t;
+	MPI_Offset ii;
+	MPI_Offset sizeof_off_t;
 	off_t index = 0;
 	NC_var **vpp;
 	NC_var *last = NULL;
@@ -304,13 +316,14 @@ NC_begins(NC *ncp,
 	if(r_align == NC_ALIGN_CHUNK)
 		r_align = ncp->chunk;
 
-	if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
+	if ((fIsSet(ncp->flags, NC_64BIT_OFFSET))||(fIsSet(ncp->flags, NC_64BIT_DATA))) {
 		sizeof_off_t = 8;
 	} else {
 		sizeof_off_t = 4;
 	}
 
 	ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
+	
 
 	if(ncp->vars.nelems == 0) 
 		return NC_NOERR;
@@ -345,11 +358,12 @@ fprintf(stderr, "    VAR %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 		{
 			return NC_EVARSIZE;
 		}
-
 		/* this will pad out non-record variables with zero to the
 		 * requested alignment.  record variables are a bit trickier.
 		 * we don't do anything special with them */
 		(*vpp)->begin = D_RNDUP(index, v_align);
+
+		(*vpp)->begin = index;
 		index += (*vpp)->len;
 	}
 
@@ -423,16 +437,23 @@ fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 int
 ncmpii_read_numrecs(NC *ncp) {
   int status = NC_NOERR, mpireturn;
-  size_t nrecs;
+  MPI_Offset nrecs;
   void *buf, *pos;
   MPI_Status mpistatus;
   int rank;
+  int sizeof_t;
 
   MPI_Comm_rank(ncp->nciop->comm, &rank);
  
   assert(!NC_indef(ncp));
+
+  if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+		sizeof_t = X_SIZEOF_LONG;
+  } else {
+ 		sizeof_t = X_SIZEOF_SIZE_T;
+  }
  
-  pos = buf = (void *)malloc(X_SIZEOF_SIZE_T);
+  pos = buf = (void *)malloc(sizeof_t);
 
   /* reset the file view */
   mpireturn = MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE,
@@ -441,16 +462,21 @@ ncmpii_read_numrecs(NC *ncp) {
     ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
     return NC_EREAD;
   }
- 
-  mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
-                               buf, X_SIZEOF_SIZE_T, MPI_BYTE, &mpistatus);
+
+  if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+ 	mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET+4,
+                               buf, sizeof_t, MPI_BYTE, &mpistatus);
+  } else {
+ 	mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
+                               buf, sizeof_t, MPI_BYTE, &mpistatus);
+  } 
  
   if (mpireturn != MPI_SUCCESS) {
     ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
     return NC_EREAD;
   } 
 
-  status = ncmpix_get_size_t((const void **)&pos, &nrecs);
+  status = ncmpix_get_size_t((const void **)&pos, &nrecs, sizeof_t);
   ncp->numrecs = nrecs;
  
   free(buf);
@@ -470,7 +496,7 @@ ncmpii_read_numrecs(NC *ncp) {
 int
 ncmpii_write_numrecs(NC *ncp) {
   int status = NC_NOERR, mpireturn;
-  size_t nrecs;
+  MPI_Offset nrecs;
   void *buf, *pos; 
   MPI_Status mpistatus;
   MPI_Comm comm;
@@ -483,8 +509,13 @@ ncmpii_write_numrecs(NC *ncp) {
   MPI_Comm_rank(comm, &rank);
 
   nrecs = ncp->numrecs;
-  pos = buf = (void *)malloc(X_SIZEOF_SIZE_T);
-  status = ncmpix_put_size_t(&pos, &nrecs);
+  if (ncp->flags & NC_64BIT_DATA){
+    pos = buf = (void *)malloc(X_SIZEOF_LONG);
+    status = ncmpix_put_size_t(&pos, &nrecs, 8);
+  }else {
+    pos = buf = (void *)malloc(X_SIZEOF_SIZE_T);
+    status = ncmpix_put_size_t(&pos, &nrecs, 4);
+  }
 
   if(NC_indep(ncp) && NC_independentFhOpened(ncp->nciop)) {
     mpireturn = MPI_File_sync(ncp->nciop->independent_fh);
@@ -504,8 +535,14 @@ ncmpii_write_numrecs(NC *ncp) {
   }
 
   if (rank == 0) {
-    mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
+    if (ncp->flags & NC_64BIT_DATA){
+    	mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
+				  buf, X_SIZEOF_LONG, MPI_BYTE, &mpistatus); 
+    } else {
+    	mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
 				  buf, X_SIZEOF_SIZE_T, MPI_BYTE, &mpistatus); 
+	
+    }
   } 
 
   MPI_Bcast(&mpireturn, 1, MPI_INT, 0, comm);
@@ -561,6 +598,7 @@ write_NC(NC *ncp)
   void *buf;
   MPI_Status mpistatus;
   int rank;
+  int i;
  
   assert(!NC_readonly(ncp));
  
@@ -572,6 +610,7 @@ write_NC(NC *ncp)
     free(buf);
     return status;
   }
+	
   status = NC_check_def(ncp->nciop->comm, buf, ncp->xsz);
   if (status != NC_NOERR) {
     free(buf);
@@ -585,7 +624,6 @@ write_NC(NC *ncp)
     ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
     return NC_EWRITE;
   }
-
   if (rank == 0) {
     mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf, 
 			          ncp->xsz, MPI_BYTE, &mpistatus);
@@ -610,14 +648,14 @@ write_NC(NC *ncp)
 int
 ncmpii_NC_sync(NC *ncp)
 {
-  int mynumrecs, numrecs;
+  MPI_Offset mynumrecs, numrecs;
 
   assert(!NC_readonly(ncp));
 
   /* collect and set the max numrecs due to difference by independent write */
 
   mynumrecs = ncp->numrecs;
-  MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_INT, MPI_MAX, ncp->nciop->comm);
+  MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
   if (numrecs > ncp->numrecs) {
     ncp->numrecs = numrecs;
     set_NC_ndirty(ncp);
@@ -653,10 +691,10 @@ move_data_r(NC *ncp, NC *old) {
 static int
 move_recs_r(NC *ncp, NC *old) {
   int status;
-  int recno;
-  const size_t old_nrecs = old->numrecs;
-  const size_t ncp_recsize = ncp->recsize;
-  const size_t old_recsize = old->recsize;
+  MPI_Offset recno;
+  const MPI_Offset old_nrecs = old->numrecs;
+  const MPI_Offset ncp_recsize = ncp->recsize;
+  const MPI_Offset old_recsize = old->recsize;
   const off_t ncp_off = ncp->begin_rec;
   const off_t old_off = old->begin_rec;
 
@@ -674,7 +712,7 @@ move_recs_r(NC *ncp, NC *old) {
 
     /* else, new rec var inserted, to be moved one record at a time */
 
-    for (recno = (int)old_nrecs -1; recno >= 0; recno--) {
+    for (recno = (MPI_Offset)old_nrecs -1; recno >= 0; recno--) {
       status = ncmpiio_move(ncp->nciop, 
                          ncp_off+recno*ncp_recsize, 
                          old_off+recno*old_recsize, 
@@ -713,10 +751,10 @@ ncmpii_NC_check_vlens(NC *ncp)
     /* maximum permitted variable size (or size of one record's worth
        of a record variable) in bytes.  This is different for format 1
        and format 2. */
-    size_t vlen_max;
-    size_t ii;
-    size_t large_vars_count;
-    size_t rec_vars_count;
+    MPI_Offset vlen_max;
+    MPI_Offset ii;
+    MPI_Offset large_vars_count;
+    MPI_Offset rec_vars_count;
     int last=-1;
 
     if(ncp->vars.nelems == 0) 
@@ -724,6 +762,8 @@ ncmpii_NC_check_vlens(NC *ncp)
 
     if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
        /* CDF2 format and LFS */
+       vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
+    } else if ((ncp->flags & NC_64BIT_DATA) && sizeof(off_t) > 4) {
        vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
     } else {
        /* CDF1 format */
@@ -797,6 +837,7 @@ ncmpii_NC_enddef(NC *ncp) {
   assert(!NC_readonly(ncp));
   assert(NC_indef(ncp)); 
 
+
   comm = ncp->nciop->comm;
 
   MPI_Comm_rank(comm, &rank);
@@ -815,7 +856,7 @@ ncmpii_NC_enddef(NC *ncp) {
   /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
    * acomplish the same thing with calls to NC_begins */
   NC_begins(ncp, 0, alignment, 0, alignment);
-
+ 
   /* serial netcdf calls a check on dimension lenghths here */
 
   /* To be updated */
@@ -918,6 +959,7 @@ int
 ncmpii_NC_close(NC *ncp) {
   int status = NC_NOERR;
 
+
   if(NC_indef(ncp)) {
     status = ncmpii_NC_enddef(ncp); /* TODO: defaults */
     if(status != NC_NOERR ) {
@@ -945,6 +987,7 @@ ncmpii_NC_close(NC *ncp) {
   return status;
 }
 
+
 int
 ncmpi_inq(int ncid,
 	int *ndimsp,
@@ -970,6 +1013,29 @@ ncmpi_inq(int ncid,
 
 	return NC_NOERR;
 }
+
+int
+ncmpi_inq_version(int ncid, int *NC_mode)
+{
+	int status;
+        NC *ncp;
+
+        status = ncmpii_NC_check_id(ncid, &ncp);
+        if(status != NC_NOERR)
+                return status;
+	
+
+       if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+          *NC_mode = NC_64BIT_DATA;
+       } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
+          *NC_mode = NC_64BIT_OFFSET;
+       } else {
+          *NC_mode = 0;
+       }
+	
+}
+
+
 
 int 
 ncmpi_inq_ndims(int ncid, int *ndimsp)

@@ -10,20 +10,19 @@
 
 
 #ifdef F77_NAME_UPPER
-#define nfmpi_get_var_all_ NFMPI_GET_VAR_ALL
+#define nfmpi_inq_version_ NFMPI_INQ_VERSION
 #elif defined(F77_NAME_LOWER_2USCORE)
-#define nfmpi_get_var_all_ nfmpi_get_var_all__
+#define nfmpi_inq_version_ nfmpi_inq_version__
 #elif !defined(F77_NAME_LOWER_USCORE)
-#define nfmpi_get_var_all_ nfmpi_get_var_all
+#define nfmpi_inq_version_ nfmpi_inq_version
 /* Else leave name alone */
 #endif
 
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_get_var_all_ ( int *v1, int *v2, void*v3, MPI_Offset *v4, MPI_Fint *v5 ){
+FORTRAN_API int FORT_CALL nfmpi_inq_version_ ( int *v1, MPI_Fint *v2 ){
     int ierr;
-    int l2 = *v2 - 1;
-    ierr = ncmpi_get_var_all( *v1, l2, v3, *v4, MPI_Type_f2c(*v5) );
+    ierr = ncmpi_inq_version( *v1, v2 );
     return ierr;
 }
