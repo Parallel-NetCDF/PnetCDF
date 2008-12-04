@@ -226,6 +226,18 @@ UD_MPI_OFFSET(8)
 UD_MPI_OFFSET(4)
 UD_MPI_OFFSET(16)
 
+dnl ok, now we know how big MPI_Offset is.  If it's less than 8 bytes 
+dnl we have to disable the new "CDF-5" (variables larger than 4gb) support
+
+enable_cdf5=yes
+if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
+	AC_MSG_WARN("Unable to support CDF-5 format");
+	enable_cdf5=no
+fi
+if test "$enable_cdf5" = "yes" ; then
+	AC_DEFINE(ENABLE_CDF5,,[Define if able to support CDF-5 file format])
+fi
+
 # the nonblocking routines need these functions
 enable_nonblocking=yes
 AC_CHECK_FUNCS(MPI_Request_get_status MPI_Type_dup,,
@@ -427,4 +439,10 @@ if test "$enable_nonblocking" = "yes" ; then
 	echo ". parallel-netcdf configured WITH nonblocking routines"
 else
 	echo ". parallel-netcdf configured WITHOUT nonblocking routines" 
+fi
+
+if test "$enable_cdf5" = "yes" ; then
+	echo ". parallel-netcdf configured WITH giant variable support"
+else
+	echo ". parallel-netcdf configured WITHOUT giant variable (CDF-5) support"
 fi
