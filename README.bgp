@@ -1,0 +1,21 @@
+# 4 December 2008
+# Building parallel-netcdf on BGP
+
+Building for BGP is not so different from BGL: front end node is still a cross compile host for the back end.  
+
+Be sure to run configure with the --build and --host flags to put it in "cross
+compile mode".  This will make configure use compile-only tests, insted of the
+usual compile-and-run tests (running tests on the bgp login node won't work as
+the compute nodes are totaly different).
+
+configure --build powerpc-bgp-linux  --host powerpc64-suse-linux  \
+	--with-mpi=/bgsys/drivers/ppcfloor/comm
+
+It's possible to build pnetcdf with the IBM xl compilers:
+
+./configure --build powerpc-bgp-linux --host powerpc64-suse-linux \
+	CC=mpixlc MPICC=mpixlc FC=mpixlf90 \
+	MPIF77=mpixlf90 F77=mpixlf90 F90=mpixlf90
+
+As far as we know, there are no issues with pnetcdf on BGP, but should you find any, email parallel-netcdf@mcs.anl.gov
+
