@@ -314,7 +314,7 @@ extern int
 ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref);
 
 extern int
-ncmpii_NC_var_shape(NC_var *varp, const NC_dimarray *dims);
+ncmpii_NC_var_shape64(NC_var *varp, const NC_dimarray *dims);
 
 extern int
 ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);

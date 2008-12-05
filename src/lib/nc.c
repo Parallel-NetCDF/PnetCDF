@@ -598,7 +598,6 @@ write_NC(NC *ncp)
   void *buf;
   MPI_Status mpistatus;
   int rank;
-  int i;
  
   assert(!NC_readonly(ncp));
  
@@ -1032,7 +1031,7 @@ ncmpi_inq_version(int ncid, int *NC_mode)
        } else {
           *NC_mode = 0;
        }
-	
+       return 0;
 }
 
 

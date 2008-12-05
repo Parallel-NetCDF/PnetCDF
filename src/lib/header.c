@@ -573,7 +573,7 @@ int
 ncmpii_hdr_put_NC(NC *ncp, void *buf) {
   int status;
   bufferinfo putbuf;
-  MPI_Offset nrecs; 
+  MPI_Offset nrecs=0; 
 
   putbuf.nciop = NULL;
   putbuf.offset = 0;
@@ -944,7 +944,7 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   NC_string *strp;
   int status;
   nc_type type; 
-  MPI_Offset nelems;
+  MPI_Offset nelems=0;
   NC_attr *attrp;
 
   status = hdr_get_NC_string(gbp, &strp);
@@ -1029,8 +1029,8 @@ static int
 hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   NC_string *strp;
   int status;
-  MPI_Offset ndims, dim;
-  MPI_Offset tmp_dimids;
+  MPI_Offset ndims=0, dim;
+  MPI_Offset tmp_dimids=0;
   NC_var *varp;
   int i;
 
@@ -1120,7 +1120,6 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   int status;
   NCtype type = NC_UNSPECIFIED;
   NC_var **vpp, **end;
-  int i, j;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);

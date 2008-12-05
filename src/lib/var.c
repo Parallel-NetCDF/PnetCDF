@@ -369,7 +369,6 @@ ncmpii_NC_var_shape64(NC_var *varp, const NC_dimarray *dims)
 	int *ip;
 	const NC_dim *dimp;
 	MPI_Offset product = 1;
-        int i,j;
 /*
 	int *shp, *dsp, *op;
 	int *ip;
@@ -526,8 +525,6 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 	int varid;
 	NC_var *varp;
 
-	MPI_Offset i;
-	
 	status = ncmpii_NC_check_id(ncid, &ncp); 
 	if(status != NC_NOERR)
 		return status;
