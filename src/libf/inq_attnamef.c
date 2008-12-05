@@ -26,7 +26,7 @@ FORTRAN_API int FORT_CALL nfmpi_inq_attname_ ( int *v1, int *v2, int *v3, char *
     int l2 = *v2 - 1;
     int l3 = *v3 - 1;
     char *p4;
-    p4 = (char *)malloc( d4 + 1 );
+    p4 = (char *)calloc( d4 + 1,1 );
     ierr = ncmpi_inq_attname( *v1, l2, l3, p4 );
 
     {char *p = v4, *pc=p4;
