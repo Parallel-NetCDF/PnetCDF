@@ -845,7 +845,7 @@ NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord)
         {
 		
 /*                if(*coord > X_INT64_T_MAX)
-                        return NC_EINVALCOORDS; /* sanity check */
+                        return NC_EINVALCOORDS; *//* sanity check */
                 if(NC_readonly(ncp) && *coord >= ncp->numrecs)
                 {
                         if(!NC_doNsync(ncp))

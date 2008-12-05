@@ -2075,8 +2075,11 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 		return NC_ECHAR;
 
 		/* cast needed for braindead systems with signed size_t */
-	/* if((unsigned long long) nelems > X_INT_MAX) /* backward compat */
-        /*		return NC_EINVAL; /* Invalid nelems */
+#if 0
+	/*commented out because new file format could result in a lot of elements*/
+	 if((unsigned long long) nelems > X_INT_MAX) /* backward compat */
+        		return NC_EINVAL; /* Invalid nelems */
+#endif
 
 	if(nelems != 0 && value == NULL)
 		return NC_EINVAL; /* Null arg */
