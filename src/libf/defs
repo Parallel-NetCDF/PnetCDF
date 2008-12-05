@@ -17,6 +17,7 @@ $tof77{"nc_type"} = "int *";
 $tof77{"nc_type *"} = "int *";
 $tof77{"nc_type*"} = "int *";
 $malloc = "malloc";
+$calloc = "calloc";
 $free   = "free";
 $header_file = "mpinetcdf_impl.h";
 
@@ -1228,6 +1229,15 @@ sub int1toschar_in_arg {
 sub int1toschar_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
+}
+
+# will this overrride buildiface?
+sub blankpad_out_ftoc {
+    my $count = $_[0];
+
+    # Allocate space to hold the C version of the output
+    $strlen = "d$count";
+    print $OUTFD "    p$count = (char *)$calloc( $strlen + 1,1 );\n";
 }
 
 # ---------------------------------------------------------------------------

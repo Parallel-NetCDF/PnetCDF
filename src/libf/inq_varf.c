@@ -27,7 +27,7 @@ FORTRAN_API int FORT_CALL nfmpi_inq_var_ ( int *v1, int *v2, char *v3 FORT_MIXED
     char *p3;
     int *l6=0;
     int ln6;
-    p3 = (char *)malloc( d3 + 1 );
+    p3 = (char *)calloc( d3 + 1,1 );
 
     ln6 = ncmpixVardim(*v1,*v2-1);
     if (ln6 > 0) {
