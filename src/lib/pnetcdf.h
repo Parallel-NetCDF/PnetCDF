@@ -2124,6 +2124,26 @@ int ncmpi_iget_varm_double(int ncid, int varid,
  *  MAX_VAR_DIMS    NC_MAX_VAR_DIMS
  */
 
+/* random utilities */
+int ncmpii_dtype_decode(MPI_Datatype dtype, 
+			MPI_Datatype *ptype, 
+			int *el_size,
+			MPI_Offset *nelems, 
+			int *isderived,
+			int *iscontig_of_ptypes);
+int ncmpiii_data_encode(MPI_Offset cnelems, int el_size, 
+        int iscontig_of_ptypes, 
+        const void *buf, void **cbufp, void **xbufp, 
+        MPI_Offset bufcount, MPI_Datatype datatype,
+        MPI_Datatype ptype,
+        nc_type type, MPI_Offset nbytes, MPI_Offset nelems);
+
+int ncmpiii_data_decode(MPI_Offset cnelems, int el_size, 
+        int iscontig_of_ptypes, 
+        void *buf, void *cbuf, void *xbuf, 
+        MPI_Offset bufcount, MPI_Datatype datatype,
+        MPI_Datatype ptype,
+        nc_type type, MPI_Offset nbytes, MPI_Offset nelems);
 #if defined(__cplusplus)
 }
 #endif
