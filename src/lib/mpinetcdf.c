@@ -2525,7 +2525,6 @@ ncmpi_get_vara_all(int ncid, int varid,
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
-
   if ( need_convert(varp->type, ptype) ) {
 
     /* automatic numeric datatype conversion */
@@ -2573,6 +2572,141 @@ ncmpi_get_vara_all(int ncid, int varid,
     free(cbuf);
 
   return ((warning != NC_NOERR) ? warning : status);
+}
+
+/* encode 'buf' into netcdf format, both in terms of type (the 'type') and
+ * endianess */
+int ncmpiii_data_encode(MPI_Offset cnelems, int el_size, 
+        int iscontig_of_ptypes, 
+        const void *buf, void **cbufp, void **xbufp, 
+        MPI_Offset bufcount, MPI_Datatype datatype,
+        MPI_Datatype ptype,
+        nc_type type, MPI_Offset nbytes, MPI_Offset nelems)
+{ 
+    int status;
+
+    void *cbuf, *xbuf;
+    cbuf = *cbufp;
+    xbuf = *xbufp;
+
+    if (!iscontig_of_ptypes) {
+
+        /* handling for derived datatype: pack into a contiguous buffer */
+
+        cbuf = (void *)malloc( cnelems * el_size );
+        status = ncmpii_data_repack((void *)buf, bufcount, datatype,
+                cbuf, cnelems, ptype);
+        if (status != NC_NOERR)
+            return status;
+
+    } else {
+
+        cbuf = (void *)buf;
+
+    }
+
+    /* assign or allocate MPI buffer */
+
+    if ( need_convert(type, ptype) ) {
+
+        /* allocate new buffer */
+
+        xbuf = (void *)malloc(nbytes);
+
+        /* automatic numeric datatype conversion */
+
+        switch( type ) {
+            case NC_BYTE:
+                status = x_putn_schar(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_SHORT:
+                status = x_putn_short(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_INT:
+                status = x_putn_int(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_FLOAT:
+                status = x_putn_float(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_DOUBLE:
+                status = x_putn_double(xbuf, cbuf, cnelems, ptype);
+                break;
+            default:
+                break;
+        }
+
+    } else if ( need_swap(type, ptype) ) {
+
+        /* allocate new buffer */
+        xbuf = (void *)malloc(nbytes);
+
+        swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(type));
+
+    } else {
+
+        /* else, just assign contiguous buffer */
+        xbuf = (void *)cbuf;
+
+    }
+
+    *xbufp = xbuf;
+    *cbufp = cbuf;
+    return NC_NOERR;
+}
+
+/* slightly different from ncmpiii_data_encode in that it operates on an
+ * already-allocated buffer. it would be nice to fix that so these two routines
+ * behave the same...  */
+
+/* decode data from netcdf format in xbuf into user's format in 'buf' */
+int ncmpiii_data_decode(MPI_Offset cnelems, int el_size, 
+        int iscontig_of_ptypes, 
+        void *buf, void *cbuf, void *xbuf, 
+        MPI_Offset bufcount, MPI_Datatype datatype,
+        MPI_Datatype ptype,
+        nc_type type, MPI_Offset nbytes, MPI_Offset nelems)
+{ 
+    int status;
+
+
+    if ( need_convert(type, ptype) ) {
+
+        /* automatic numeric datatype conversion */
+
+        switch( type ) {
+            case NC_BYTE:
+                status = x_getn_schar(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_SHORT:
+                status = x_getn_short(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_INT:
+                status = x_getn_int(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_FLOAT:
+                status = x_getn_float(xbuf, cbuf, cnelems, ptype);
+                break;
+            case NC_DOUBLE:
+                status = x_getn_double(xbuf, cbuf, cnelems, ptype);
+                break;
+            default:
+                break;
+        }
+
+    } else if ( need_swap(type, ptype) ) {
+
+        swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(type));
+    }
+    if (!iscontig_of_ptypes) {
+    /* handling for derived datatype: unpack from the contiguous buffer */
+ 
+    status = ncmpii_data_repack(cbuf, cnelems, ptype, 
+				(void *)buf, bufcount, datatype);
+    if (status != NC_NOERR)
+      return status;
+    }
+ 
+    return NC_NOERR;
 }
 
 int
@@ -2832,7 +2966,6 @@ ncmpi_get_vara(int ncid, int varid,
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
-
   if ( need_convert(varp->type, ptype) ) {
 
     /* automatic numeric datatype conversion */
