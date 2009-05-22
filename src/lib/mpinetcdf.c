@@ -12280,9 +12280,6 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, const 
   offset[i] = varp[i]->begin;
   ndims[i] = varp[i]->ndims;
 
-  //nprintf("-offset[%d]:%ld, varp->begin:%d, ndims[%d]:%ld\n", i, offset[i], varp[i]->begin, i, varp[i]->ndims);
-  //printf("i:%d, varp[i]:%d\n",i, varp[i]);
-  //printf("count:%ld, %ld, start:%ld, %ld\n", count[0], count[1], start[0], start[1]);
   /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
   status = NCedgeck(ncp, varp[i], start[i], count[i]);
   if( (status != NC_NOERR) ||
@@ -12355,7 +12352,6 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, const 
 	    substart[dim] = varp[i]->xsz * start[i][dim];
           }
           offset[i] += start[i][0] * ncp->recsize;
-          //nprintf("-=offset[%d]:%d, start[%d][0]:%ld, ncp->recsize:%d\n", i, offset[i], i, start[i][0], ncp->recsize);
 
           MPI_Type_create_subarray(ndims[i], shape, subcount, substart, 
 				    MPI_ORDER_C, MPI_BYTE, &filetype[i]); 
@@ -12365,7 +12361,6 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, const 
           /* more than one record variables */
 
           offset[i] += start[i][0] * ncp->recsize;
-          //printf("---===offset[%d]:%d, start[%d][0]:%ld, ncp->recsize:%d\n", i, offset[i], i, start[i][0], ncp->recsize);
           if (varp[i]->ndims == 1) {
 #if (MPI_VERSION < 2)
 	    MPI_Type_hvector(subcount[0], varp[i]->xsz, ncp->recsize,
@@ -12406,15 +12401,11 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, const 
           shape[dim] = varp[i]->shape[dim];
           subcount[dim] = count[i][dim];
           substart[dim] = start[i][dim];
-//	printf("ndims:%d, shape[%d]:%d, subcount[%d]:%d, substart[%d]:%d\n", ndims[i], dim, shape[dim], dim, subcount[dim], dim, substart[dim]);
         }
 
         shape[dim] = varp[i]->xsz * varp[i]->shape[dim];
         subcount[dim] = varp[i]->xsz * count[i][dim];
         substart[dim] = varp[i]->xsz * start[i][dim];
-
-	//printf("ndims:%d, shape[%d]:%d, subcount[%d]:%d, substart[%d]:%d\n", ndims[i], dim, shape[dim], dim, subcount[dim], dim, substart[dim]);
-	
 
         MPI_Type_create_subarray(ndims[i], shape, subcount, substart, 
 		         MPI_ORDER_C, MPI_BYTE, &filetype[i]); 
@@ -12427,7 +12418,6 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, const 
     free(shape);
     free(subcount);
     free(substart);
-    //printf("00000000000000000000000000offset[%d]:%d\n", i, offset[i]);
   }/*end for loop*/
 
   MPI_Type_create_struct(nvars, blocklen, (MPI_Aint *)offset, filetype, &full_filetype);
@@ -12527,8 +12517,6 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
   varp[i] = ncmpii_NC_lookupvar(ncp, varid[i]);
   if(varp[i] == NULL)
     return NC_ENOTVAR;
-  //printf("000000000 varp[%d]->ndims:%d, varp[%d]->begin:%ld\n", i, varp[i]->ndims,i, varp[i]->begin);
- // printf("1-------------------------------------------------------------------------------------datatype[%d]:%d\n", i, datatype[i]);
 
   MPI_Type_size(datatype[i], &size);
   status = ncmpii_dtype_decode(datatype[i], &ptype[i], &el_size[i],
@@ -12750,9 +12738,7 @@ ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
     if (status != NC_NOERR)
       return status;
     
-  printf("2-------------------------------------------------------------------------------------\n");
     MPI_Type_size(datatype[i], &size);
-    printf("datatype[%d]:%d\n", i, size);
  
     if ( echar(varp[i]->type, ptype[i]) )
     return NC_ECHAR;
@@ -12913,7 +12899,6 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
   MPI_Aint *displacement, a0, ai;
   int size;
 
-  printf("start mvar~~~~~~~~~~~~~~~~~~~~~~\n");
   MPI_Barrier(MPI_COMM_WORLD);
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -12929,18 +12914,9 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
 
   /* check to see that the desired mpi file handle is opened */
 
-  printf("start mvar~~~~~~~~~~~~~~~~~~~~~~count[0][0]:%d\n", count[0][0]);
   status = check_mpifh(ncp, &(ncp->nciop->collective_fh), comm, 1);
   if(status != NC_NOERR)
     return status;
-
-  for (i=0; i<nvars; i++){
-    printf("start[%d]:%d, %d, %d\n",i, start[i][0], start[i][1], start[i][2]);
-    printf("count[%d]:%d, %d, %d\n", i, count[i][0], count[i][1], count[i][2]);
-    printf("bufcount[%d]:%d\n", i, bufcount[i]);
- }
-
-
 
   varp = (NC_var **)malloc(nvars*sizeof(NC_var *));
   if (varp==NULL) printf("varp is NULL!!!\n");
@@ -12969,16 +12945,11 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
   varp[i] = ncmpii_NC_lookupvar(ncp, varid[i]);
   if(varp[i] == NULL)
     return NC_ENOTVAR;
-  printf("01010101010101010 varp[%d]->ndims:%d, varp[%d]->begin:%ld\n", i, varp[i]->ndims,i, varp[i]->begin);
-
-  printf("4-------------------------------------------------------------------------------------datatype[%d]:%d\n", i, datatype[i]);
   MPI_Type_size(datatype[i], &size);
-  fprintf(stderr, "MPI_Type_size of datatype_list[%d] size (%d).\n", i, size);fflush(stderr);
   status = ncmpii_dtype_decode(datatype[i], &ptype[i], &el_size[i],
                                &cnelems[i], &isderived, &iscontig_of_ptypes[i]);
   if (status != NC_NOERR)
     return status;
-//  printf("mvara_all datatype[%d]:%d, varp[i]->type:%d, ptype[i]:%d\n", i, datatype[i], varp[i]->type, ptype[i]);
 
   if ( echar(varp[i]->type, ptype[i]) )
     return NC_ECHAR;
@@ -12986,15 +12957,11 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
   cnelems[i] *= bufcount[i];
 
   nelems[i] = 1;
-  //printf("11111111111 varp[%d]->ndims:%d, varp[%d]->begin:%ld\n", i, varp[i]->ndims,i, varp[i]->begin);
-  //printf("bufcount[%d]:%d\n", i, bufcount[i]);
   for (dim = 0; dim < varp[i]->ndims; dim++) {
     if (count[i][dim] < 0)
       return NC_ENEGATIVECNT;
     nelems[i] *= count[i][dim];
-    //printf("nelems[%d]:%d, count[%d][%d]:%d\n", i,nelems[i], i, dim, count[i][dim]);
   }
-  //printf("nelems[%d]:%d, cnelems[%d]:%d\n", i, nelems[i], i, cnelems[i]);
  /* if (nelems[i] != cnelems[i]) {
  *     if (warning == NC_NOERR)
  *           warning = NC_EIOMISMATCH;
@@ -13030,14 +12997,11 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
 
     }
 
-    //printf("cbuf:%d\n", cbuf[0]);
-    //  printf("cbuf:%d, %d, %d, %d\n", cbuf[0][0], cbuf[0][1], cbuf[0][2], cbuf[0][3]);
     /* assign or allocate MPI buffer */
 
     if ( need_convert(varp[i]->type, ptype[i]) ) {
 
       /* allocate new buffer */
-      printf("-----------------------0----------------------------------\n");
       xbuf[i] = (void *)malloc(nbytes[i]);
       if (xbuf[i]==NULL) printf("xubf[%d] is NULL\n", i);
 
@@ -13065,22 +13029,16 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
       }
 
     } else  if ( need_swap(varp[i]->type, ptype[i]) ) {
-      printf("-----------------------1----------------------------------\n");
 
       xbuf[i] = (void *)malloc(nbytes[i]);
       if (xbuf[i]==NULL) printf("xbuf[%d] is NULL\n", i);
-      //printf("need_swap nbytes[%d]:%d, sizeof(xbuf[i]):%d\n", i, nbytes[i],sizeof(xbuf[i]));
       swapn(xbuf[i], cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
 
     } else {
-      printf("-----------------------2----------------------------------\n");
-
       /* else, just assign contiguous buffer */
       xbuf[i] = (void *)cbuf[i];
-
     }
     total_nbytes = total_nbytes + nbytes[i];
-    //printf("xbuf[%d]:%ld\n", i, xbuf[i]);
     if (i==0){
          displacement[i] = 0;
          MPI_Get_address( &(xbuf[i][0]), &a0 );
@@ -13089,14 +13047,10 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
          displacement[i] = (MPI_Aint) (ai-a0);
     }
   }
-  //printf("temp_xbuf:%d\n",temp_xbuf);
 
   if (ncp->recsize <= varp[0]->len) {
     MPI_Type_create_hindexed(nvars, nbytes, displacement, MPI_BYTE, &buf_type);
   } else {
-    for (i=0; i<nvars; i++){
-      printf("xbuf[%d]:%ld, displacement[%d]:%ld, nbytes[i]:%d, sizeof(xbuf[i]):%d\n", i, xbuf[i], i, displacement[i], nbytes[i], sizeof(xbuf[i]));
-    }
     for (i=0; i<nvars; i++){
         nbytes[i]=nbytes[i]/count[i][0];
     }
@@ -13108,9 +13062,6 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
     }
     MPI_Type_create_hindexed(nvars*count[0][0], nbytes, displacement, MPI_BYTE, &buf_type);
   }
- // MPI_Type_create_hindexed(nvars, nbytes, displacement, MPI_BYTE, &buf_type);
-  printf("MPI_File_write_all total_nbytes:%d\n", total_nbytes);
-//  mpireturn = MPI_File_write_at_all(ncp->nciop->collective_fh, 0, &(xbuf[0][0]), 1, buf_type, &mpistatus);
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, &(xbuf[0][0]), 1, buf_type, &mpistatus);
 
   if (mpireturn != MPI_SUCCESS) {
@@ -13133,12 +13084,10 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
 
     int newnumrecs, max_numrecs;
     newnumrecs = start[i][0] + count[i][0];
-    printf("*************newnumrecs:%d, ncp->numrecs:%d\n", newnumrecs, ncp->numrecs);
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
     }
-    printf("-------------newnumrecs:%d, ncp->numrecs:%d\n", newnumrecs, ncp->numrecs);
     if (NC_doNsync(ncp)) {
       MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_INT, MPI_MAX, comm );
 
@@ -13275,7 +13224,6 @@ ncmpi_coll_waitall(int count, NCMPI_Request array_of_requests[]) {
   MPI_Datatype *datatype;
   int ndim;
 
-  printf("start ncmpi_coll_wait_all\n");
   ncid = array_of_requests[0]->ncid;
   nvars = count;
   varids = (int *)malloc(count*sizeof(int));
@@ -13297,14 +13245,12 @@ ncmpi_coll_waitall(int count, NCMPI_Request array_of_requests[]) {
         buf[i] = array_of_requests[i]->buf;
 	bufcount[i] = array_of_requests[i]->bufcount;
 	datatype[i] = array_of_requests[i]->vartype;
-	printf("%d:start:%d, %d, %d, counts:%d, %d, %d, bufcount:%d\n", i,starts[i][0], starts[i][1], starts[i][2], counts[i][0], counts[i][1], counts[i][2],bufcount[i]);
   }
 
   ncmpi_put_mvara_all(ncid, count, varids,
                    starts, counts,
                    buf, bufcount,
                    datatype);
-  printf("finish ncmpi_coll_wait_all\n");
   return NC_NOERR;
 }
 /* End non-blocking data access functions */
