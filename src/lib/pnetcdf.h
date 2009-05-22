@@ -65,6 +65,7 @@ typedef nc_type ncmpi_type;
 struct NCMPI_Req {
   int reqtype;
   MPI_Request mpi_req;
+  int indep;
   nc_type vartype;
   void *xbuf;
   void *cbuf;
@@ -79,6 +80,11 @@ struct NCMPI_Req {
   MPI_Datatype ptype;
   MPI_Datatype imaptype;
   struct NCMPI_Req *next_req;
+  int ncid;
+  int varid;
+  int ndim;
+  MPI_Offset* start;
+  MPI_Offset* count;
 };
 typedef struct NCMPI_Req * NCMPI_Request;
 #define NCMPI_REQUEST_NULL ((NCMPI_Request)NULL)
@@ -280,6 +286,10 @@ int ncmpi_end_indep_data(int ncid);
 
 
 int ncmpi_close(int ncid);
+
+int ncmpi_wait(NCMPI_Request *request);
+
+int ncmpi_waitall(int count, NCMPI_Request array_of_requests[]);
 
 int ncmpi_set_fill(int ncid, int fillmode, int *old_modep);
 /* End Dataset Functions */
@@ -674,12 +684,25 @@ int ncmpi_put_vara_all(int ncid, int varid,
                    const void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype);
 
+int ncmpi_put_mvara_all(int ncid, int nvars, int varid[],
+                   const MPI_Offset *start[], const MPI_Offset *count[],
+                   const void **buf, MPI_Offset *bufcount,
+                   MPI_Datatype *datatype);
+int
+ncmpi_iput_vara_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   MPI_Datatype datatype, NCMPI_Request *request);
 
 int ncmpi_get_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
                    void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype);
 
+int ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
+                   const MPI_Offset *start[], const MPI_Offset *count[],
+                   const void **buf, MPI_Offset *bufcount,
+                   MPI_Datatype *datatype);
 
 int ncmpi_put_vara(int ncid, int varid,
                const MPI_Offset start[], const MPI_Offset count[],
@@ -1454,11 +1477,6 @@ int ncmpi_get_varm_double(int ncid, int varid,
 #ifdef ENABLE_NONBLOCKING
 /* Begin non-blocking data access functions */
 
-int
-ncmpi_wait(NCMPI_Request *request);
-
-int
-ncmpi_waitall(int count, NCMPI_Request array_of_requests[]);
 
 int
 ncmpi_waitany(int count, NCMPI_Request array_of_requests[], int *index);
