@@ -8258,7 +8258,7 @@ int
 ncmpi_wait(NCMPI_Request *request) {
   int mpireturn = MPI_SUCCESS;
 
-  if((*request)->indep==0) {
+  if((*request)->indep==1) {
   if (*request != NCMPI_REQUEST_NULL) {
     mpireturn = MPI_Wait(&((*request)->mpi_req), MPI_STATUS_IGNORE);
     ncmpii_postprocess(request);
@@ -8280,7 +8280,7 @@ ncmpi_waitall(int count, NCMPI_Request array_of_requests[]) {
   int mpireturn = MPI_SUCCESS;
   MPI_Request *array_of_mpireqs;
 
-  if(array_of_requests[0]->indep==0) {
+  if(array_of_requests[0]->indep==1) {
   array_of_mpireqs = (MPI_Request *)malloc(count * sizeof(int));
   for (i=0; i<count; i++) {
     if (array_of_requests[i] != NCMPI_REQUEST_NULL)
@@ -9208,7 +9208,7 @@ ncmpi_iput_vara(int ncid, int varid,
   (*request)->cbuf = cbuf;
   (*request)->buf = (void *)buf;
   (*request)->next_req = NCMPI_REQUEST_NULL;
-    (*request)->indep = 0;
+    (*request)->indep = 1;
 
   if (status == NC_NOERR && IS_RECVAR(varp)) {
     /* update the number of records in NC */
@@ -13182,7 +13182,7 @@ ncmpi_iput_vara_all(int ncid, int varid,
 
   *request = (NCMPI_Request)malloc(sizeof(struct NCMPI_Req));
   if (*request == NULL) printf("no memory buffer\n");
-  (*request)->indep = 1;
+  (*request)->indep = 0;
   (*request)->ncid = ncid;
   (*request)->varid = varid;
   (*request)->ndim = varp->ndims;
