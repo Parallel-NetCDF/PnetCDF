@@ -352,7 +352,7 @@ NC_begins(NC *ncp,
 			continue;
 		}
 #if 0
-fprintf(stderr, "    VAR %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
+fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
 #endif
 		if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
 		{
@@ -362,9 +362,7 @@ fprintf(stderr, "    VAR %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 		 * requested alignment.  record variables are a bit trickier.
 		 * we don't do anything special with them */
 		(*vpp)->begin = D_RNDUP(index, v_align);
-
-		(*vpp)->begin = index;
-		index += (*vpp)->len;
+		index = (*vpp)->begin + (*vpp)->len;
 	}
 
 	/* only (re)calculate begin_rec if there is not sufficient
@@ -394,12 +392,16 @@ fprintf(stderr, "    VAR %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 		}
 
 #if 0
-fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
+fprintf(stderr, "    REC %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
 #endif
 		if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
 		{
 			return NC_EVARSIZE;
 		}
+		/* A few attempts at aligning record variables have failed
+		 * (either with range error or 'value read not that expected',
+		 * or with an error in ncmpi_redef )).  Not sufficent to align
+		 * 'begin', but haven't figured out what else to adjust */
 		(*vpp)->begin = index;
 		index += (*vpp)->len;
 		/* check if record size must fit in 32-bits */
@@ -416,6 +418,8 @@ fprintf(stderr, "    REC %d %s: %ld\n", ii, (*vpp)->name->cp, (long)index);
 	/*
 	 * for special case of exactly one record variable, pack value
 	 */
+	/* if there is exactly one record variable, then there is no need to
+	 * pad for alignment -- there's nothing after it */
 	if(last != NULL && ncp->recsize == last->len)
 		ncp->recsize = *last->dsizes * last->xsz;
 
