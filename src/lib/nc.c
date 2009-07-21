@@ -845,8 +845,22 @@ ncmpii_NC_enddef(NC *ncp) {
 
   MPI_Comm_rank(comm, &rank);
 
+  /* info hints can come from the file system but can also come from
+   * user-specified hints.  the MPI implementation probably should merge the
+   * two, but some implementaitons not only ignore hints they don't understand,
+   * but also fail to incorporate those hints into the info struct. 
+   *
+   * Our policy will be to use the implementation's info first (perhaps the
+   * implementaiton knows something about the underlying file system), and then
+   * consult user-supplied hints should we not find the hint in the info
+   * associated with the MPI file descriptor */
+
   MPI_File_get_info(ncp->nciop->collective_fh, &info);
   MPI_Info_get(info, "striping_unit", MPI_MAX_INFO_VAL-1, value, &flag);
+  if (!flag)  {
+  	MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", 
+			MPI_MAX_INFO_VAL-1, value, &flag);
+  }
   if (flag) 
 	  alignment=atoi(value);
   /* negative or zero alignment? can't imagine what that would even mean.  just
