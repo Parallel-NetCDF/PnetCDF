@@ -37,6 +37,7 @@ static int move_vars_r(NC *ncp, NC *old);
 static int write_NC(NC *ncp);
 static int NC_begins(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
 		      MPI_Offset v_minfree, MPI_Offset r_align);
+static int NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp);
 static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
 
 #if 0
@@ -85,6 +86,64 @@ ncmpii_del_from_NCList(NC *ncp)
  * comparing the header buffer streams of all processes.
  */
 static int
+NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp) {
+  int rank;
+  int errcheck;
+  MPI_Offset compare = 0;
+  void *cmpbuf;
+  MPI_Offset max_size;
+  bufferinfo gbp;
+  int status = NC_NOERR;
+  int errflag;
+
+  MPI_Comm_rank(comm, &rank);
+
+  if (rank == 0)
+    max_size = nn;
+  MPI_Bcast(&max_size, 1, MPI_LONG_LONG_INT, 0, comm);
+
+  if (rank == 0) 
+    cmpbuf = buf;
+  else
+    cmpbuf = (void *)malloc(nn);
+
+  MPI_Bcast(cmpbuf, nn, MPI_BYTE, 0, comm);
+
+   compare = memcmp(buf, cmpbuf, nn);
+  
+   MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
+
+   if (errcheck == 0) {
+      free(cmpbuf);
+      return NC_NOERR;
+   }
+
+//    gbp.nciop = NULL;
+    gbp.nciop = ncp->nciop;
+    gbp.offset = 0;    /* read from start of the file */
+    gbp.size = nn;
+    gbp.index = 0;
+    gbp.pos=gbp.base = cmpbuf;
+
+    status = ncmpii_hdr_check_NC(&gbp, ncp);
+    if (rank!=0){
+      free(cmpbuf);
+    }
+   
+    if (status!=NC_NOERR) errflag = 1;
+    MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_SUM, ncp->nciop->comm);
+    if (errcheck != NC_NOERR){
+  	if (status != NC_NOERR ){
+		return status;
+	} else {
+	return NC_EMULTIDEFINE; 
+	}
+    }
+  return NC_NOERR;
+}
+
+
+static int
 NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   int rank;
   int errcheck;
@@ -105,7 +164,7 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   if (errcheck)
     return NC_EMULTIDEFINE;
 
-  if (rank == 0) 
+  if (rank == 0)
     cmpbuf = buf;
   else
     cmpbuf = (void *)malloc(nn);
@@ -121,7 +180,7 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
 
   if (errcheck){
     return NC_EMULTIDEFINE;
-  }else{ 
+  }else{
     return NC_NOERR;
   }
 }
@@ -199,7 +258,6 @@ ncmpi_set_default_format(int format, int *old_formatp)
 
     /* Make sure only valid format is set. */
     if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT && format != NC_FORMAT_64BIT_DATA  ){
-      printf("Error NC_FORMAT_CLASSIC\n");
       return NC_EINVAL;
     }
     default_create_format = format;
@@ -613,8 +671,8 @@ write_NC(NC *ncp)
     free(buf);
     return status;
   }
-	
-  status = NC_check_def(ncp->nciop->comm, buf, ncp->xsz);
+
+  status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
   if (status != NC_NOERR) {
     free(buf);
     return status;

@@ -1,0 +1,5 @@
+header check
+1. fatal error:
+	mpiexec -n 4 test_check_header test.nc
+2. warning:
+	mpiexec -n 4 test_check_header1 test.nc

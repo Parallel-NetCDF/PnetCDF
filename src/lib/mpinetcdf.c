@@ -301,6 +301,8 @@ ncmpi_end_indep_data(int ncid) {
 int
 ncmpi_enddef(int ncid) {
   int status = NC_NOERR;
+  int errcheck = 0;
+  int errflag = 0;
   NC *ncp;
 
   status = ncmpii_NC_check_id(ncid, &ncp); 

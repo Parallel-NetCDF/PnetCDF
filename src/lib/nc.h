@@ -525,7 +525,8 @@ typedef struct bufferinfo {
   ncio *nciop;		
   MPI_Offset offset;	/* current read/write offset in the file */
   int version;		/* either 1 for normal netcdf or 
-			   2 for 8-byte offset version */
+			   2 for 8-byte offset version, 
+			   5 for NC_FORMAT_64BIT_DATA version */
   void *base;     	/* beginning of read/write buffer */
   void *pos;      	/* current position in buffer */
   MPI_Offset size;		/* size of the buffer */
