@@ -180,6 +180,25 @@ ncmpi_strerror(int err)
 	    return "Negative count is prohibited";
 	case NC_EUNSPTETYPE:
 	    return "Unsupported etype is used in MPI datatype for memory data";
+	case NC_EDIMS_NELEMS_MULTIDEFINE:
+	    return "Number of dimnations of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_EDIMS_SIZE_MULTIDEFINE:
+	    return "Dimination size of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_EVARS_NELEMS_MULTIDEFINE:
+	    return "Number of variables about NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_EVARS_NDIMS_MULTIDEFINE:
+	    return "Number of diminations about variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_EVARS_DIMIDS_MULTIDEFINE:
+	    return "Dimid of variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_EVARS_TYPE_MULTIDEFINE:
+	    return "Type of variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_EVARS_LEN_MULTIDEFINE:
+	    return "Lenght of variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_EVARS_BEGIN_MULTIDEFINE:
+	    return "Begin offset of variables definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	case NC_ENUMRECS_MULTIDEFINE:
+	    return "Number of records on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	
 	default:
 	    return unknown;
 	}

@@ -228,6 +228,15 @@ typedef struct NCMPI_Req * NCMPI_Request;
 #define NC_EIOMISMATCH  (-71)	/* Input/Output data amount mismatch */
 #define NC_ENEGATIVECNT (-72)	/* Negative count is specified */
 #define NC_EUNSPTETYPE  (-73)   /* Unsupported etype in memory MPI datatype */
+#define NC_EDIMS_NELEMS_MULTIDEFINE	(-74)	/* Different number of dim defines on multiprocesses conflict */
+#define NC_EDIMS_SIZE_MULTIDEFINE	(-75)	/* Different size of dim defines on multiprocesses conflict */
+#define NC_EVARS_NELEMS_MULTIDEFINE	(-76)	/* Different number of var defines on multiprocesses conflict */
+#define NC_EVARS_NDIMS_MULTIDEFINE	(-77)	/* Different dim number of var defines on multiprocesses conflict */
+#define NC_EVARS_DIMIDS_MULTIDEFINE	(-78)	/* Different dimid defines on multiprocesses conflict */
+#define NC_EVARS_TYPE_MULTIDEFINE	(-79)	/* Different type of var defines on multiprocesses conflict */
+#define NC_EVARS_LEN_MULTIDEFINE	(-80)	/* Different var lenght defines size on multiprocesses conflict */
+#define NC_EVARS_BEGIN_MULTIDEFINE	(-81)	/* Different var begin defines size on multiprocesses conflict */
+#define NC_ENUMRECS_MULTIDEFINE	(-82)	/* Different number records on multiprocesses conflict */
 
 /*
  * The Interface

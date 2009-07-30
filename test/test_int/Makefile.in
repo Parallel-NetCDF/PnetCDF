@@ -10,9 +10,8 @@ CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 
 
 SRCS		= test_read.c test_read_indep.c test_write.c test_write_indep.c test_write64.c test_read64.c
-SRCS		= test_read.c test_read_indep.c test_write.c test_write_indep.c test_write64.c test2.c
 OBJS		= $(SRCS:.c=.o)
-PROGS		= test_read test_read_indep test_write test_write_indep test_write64 test_read64 test2.c
+PROGS		= test_read test_read_indep test_write test_write_indep test_write64 test_read64 test_read64.c
 LDFLAGS		= -L$(LIBDIR) -L..//common @LDFLAGS@
 LIBS		= -lpnetcdf -ltestutils @LIBS@
 
@@ -32,8 +31,6 @@ test_write_indep: test_write_indep.o
 test_write64: test_write64.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 test_read64: test_read64.o
-	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
-test_read2: test_read2.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:

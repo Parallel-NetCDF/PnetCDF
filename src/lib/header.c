@@ -372,7 +372,7 @@ hdr_put_NC_dim(bufferinfo *pbp, const NC_dim *dimp) {
   status = hdr_put_NC_string(pbp, dimp->name);
   if (status != ENOERR)
     return status;
-
+ 
   status = ncmpix_put_size_t(&pbp->pos, &dimp->size, pbp->version == 5 ? 8 : 4);
   if (status != ENOERR)
     return status;
@@ -498,7 +498,6 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap) {
   int status;
 
   assert(pbp != NULL);
-
   if (ncap == NULL || ncap->nelems == 0) {
      /* ABSENT */
     const MPI_Offset nosz = 0;
@@ -800,7 +799,6 @@ hdr_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp) {
   }
 
   *dimpp = dimp;
-
   return ENOERR;
 }
 
@@ -837,6 +835,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
 
     dpp = ncap->value;
     end = &dpp[ncap->nelems];
+
     for( /*NADA*/; dpp < end; dpp++) {
       status = hdr_get_NC_dim(gbp, dpp);
       if (status != ENOERR) {
@@ -1037,7 +1036,7 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   status = hdr_get_NC_string(gbp, &strp);
   if(status != ENOERR)
     return status;
-
+   
   status = hdr_get_size_t(gbp, &ndims);
   if(status != ENOERR) {
      ncmpii_free_NC_string(strp); 
@@ -1120,6 +1119,7 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   int status;
   NCtype type = NC_UNSPECIFIED;
   NC_var **vpp, **end;
+  int i;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);
@@ -1143,7 +1143,6 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
     if(ncap->value == NULL)
       return NC_ENOMEM; 
     ncap->nalloc = ncap->nelems;
-
     vpp = ncap->value;
     end = &vpp[ncap->nelems];
 
@@ -1157,11 +1156,10 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
       }
     }
   }
-	
-
 
   return ENOERR;
 }
+
 
 int
 ncmpii_hdr_get_NC(NC *ncp) {
@@ -1273,3 +1271,198 @@ ncmpii_hdr_get_NC(NC *ncp) {
 }
 
 /* End Of get NC */
+
+int ncmpii_comp_dims(NC_dimarray *nc_dim1, NC_dimarray *nc_dim2){
+	int i;
+	if (nc_dim1->nelems != nc_dim2->nelems){
+           return NC_EDIMS_NELEMS_MULTIDEFINE;
+	} else {	
+           for (i=0; i<nc_dim1->nelems; i++){
+	      if (nc_dim1->value[i]->size != nc_dim2->value[i]->size){
+		return NC_EDIMS_SIZE_MULTIDEFINE;
+	      } else {
+        	   if ((nc_dim1->value[i]->name->nchars != nc_dim1->value[i]->name->nchars)||(strcmp(nc_dim1->value[i]->name->cp, nc_dim2->value[i]->name->cp)!=0)){
+	              printf("Warning: The dimination name of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+		   } 
+	     }
+	   } 
+
+        }
+	return NC_NOERR;
+}
+
+int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
+	int i;
+	if (nc_attr1->nelems != nc_attr2->nelems){
+           printf("Warning: The number of attributes of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+	} else {
+		for (i=0; i<nc_attr1->nelems; i++){
+		   if (nc_attr1->value[i]->xsz != nc_attr2->value[i]->xsz){
+                       printf("Warning: The size of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+		   }
+		   if ((nc_attr1->value[i]->name->nchars != nc_attr2->value[i]->name->nchars)||(strcmp(nc_attr1->value[i]->name->cp, nc_attr2->value[i]->name->cp))){
+                       printf("Warning: The name of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+	           }
+                   if (strcmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue)){
+                    printf("Warning: The value of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+		   }	
+		   if (nc_attr1->value[i]->type != nc_attr2->value[i]->type){
+                    printf("Warning: The type of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+		   }
+		   if (nc_attr1->value[i]->nelems != nc_attr2->value[i]->nelems){
+                    printf("Warning: The length of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+		   }
+		}
+	}	
+    return NC_NOERR;
+}
+
+int ncmpii_comp_vars(NC_vararray *nc_var1, NC_vararray *nc_var2){
+       int i, j;
+	if (nc_var1->nelems != nc_var2->nelems){
+           return NC_EVARS_NELEMS_MULTIDEFINE;
+	} else {
+		for (i=0; i<nc_var1->nelems; i++){
+		   if ((nc_var1->value[i]->name->nchars !=  nc_var2->value[i]->name->nchars)||strcmp(nc_var1->value[i]->name->cp,nc_var2->value[i]->name->cp))
+		   {
+                    printf("Warning: The name of variable of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+		   }
+		   if ((nc_var1->value[i]->ndims != nc_var2->value[i]->ndims)){
+           		return NC_EVARS_NDIMS_MULTIDEFINE;
+		   }
+                   for (j=0; j<nc_var1->value[i]->ndims; j++){
+		     if (nc_var1->value[i]->dimids[j] != nc_var2->value[i]->dimids[j]){
+           		return NC_EVARS_DIMIDS_MULTIDEFINE;
+		     }
+		   }
+		   if (nc_var1->value[i]->type != nc_var2->value[i]->type){
+           		return NC_EVARS_TYPE_MULTIDEFINE;
+		   }
+		   if (nc_var1->value[i]->len != nc_var2->value[i]->len){
+           		return NC_EVARS_LEN_MULTIDEFINE;
+		   }
+		   if (nc_var1->value[i]->begin != nc_var2->value[i]->begin){
+           		return NC_EVARS_BEGIN_MULTIDEFINE;
+                   }
+		   ncmpii_comp_attrs(&nc_var1->value[i]->attrs, &nc_var2->value[i]->attrs);
+		}
+	}
+      return NC_NOERR;
+};
+
+int
+ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
+  int status;
+  schar magic[sizeof(ncmagic)];
+  NC *temp_ncp;
+  MPI_Offset nrecs = 0;
+  int rank;
+  MPI_Offset chunksize = 4096;
+
+  temp_ncp = ncmpii_new_NC(&chunksize);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  assert(ncp != NULL);
+  (void) memset(magic, 0, sizeof(magic));
+  status = ncmpix_getn_schar_schar(
+          (const void **)&getbuf->pos, sizeof(magic), magic);
+  getbuf->index += sizeof(magic);
+  /* don't need to worry about CDF-1 or CDF-2
+ *    *    if the first bits are not 'CDF-'  */
+  if(memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
+    free(getbuf->base);
+    return NC_ENOTNC;
+  }
+  /* check version number in last byte of magic */
+  if (magic[sizeof(ncmagic)-1] == 0x1) {
+          getbuf->version = 1;
+  } else if (magic[sizeof(ncmagic)-1] == 0x2) {
+          getbuf->version = 2;
+          fSet(temp_ncp->flags, NC_64BIT_OFFSET);
+          if (sizeof(MPI_Offset) != 8) {
+                  /* take the easy way out: if we can't support all CDF-2
+ *                    * files, return immediately */
+                  free(getbuf->base);
+                  return NC_ESMALL;
+          }
+  } else if (magic[sizeof(ncmagic)-1] == 0x5) {
+          getbuf->version = 5;
+          fSet(temp_ncp->flags, NC_64BIT_DATA);
+          if (sizeof(MPI_Offset) != 8) {
+                  free(getbuf->base);
+                  return NC_ESMALL;
+          }
+  } else {
+          free(getbuf->base);
+          return NC_ENOTNC;
+  }
+
+
+  status = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+
+  status = ncmpix_get_size_t((const void **)(&getbuf->pos), &nrecs, (getbuf->version == 5) ? 8 : 4);
+
+  if (getbuf->version == 5) {
+        getbuf->index += X_SIZEOF_LONG;
+  } else {
+        getbuf->index += X_SIZEOF_SIZE_T;
+  }
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+  temp_ncp->numrecs = nrecs;
+
+  if (temp_ncp->numrecs != ncp->numrecs){
+     return NC_ENUMRECS_MULTIDEFINE;
+  }
+
+  assert((char *)getbuf->pos < (char *)getbuf->base + getbuf->size);
+
+  status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+
+  status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+
+  status = hdr_get_NC_attrarray(getbuf, &temp_ncp->attrs);
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+
+  status = ncmpii_comp_attrs(&temp_ncp->attrs, &ncp->attrs);
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+
+  status = hdr_get_NC_vararray(getbuf, &temp_ncp->vars);
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+
+  status = ncmpii_comp_vars(&temp_ncp->vars, &ncp->vars);
+  if(status != ENOERR) {
+    free(getbuf->base);
+    return status;
+  }
+
+  temp_ncp->xsz = ncmpii_hdr_len_NC(temp_ncp, (getbuf->version == 1) ? 4 : 8 );
+  status = ncmpii_NC_computeshapes(temp_ncp);
+
+  
+  ncmpii_free_NC(temp_ncp);
+  return status;
+}
+
