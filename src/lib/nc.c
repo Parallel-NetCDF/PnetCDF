@@ -893,7 +893,7 @@ ncmpii_NC_enddef(NC *ncp) {
   int mpireturn;
   int rank;
   char value[MPI_MAX_INFO_VAL];
-  int flag, alignment=0;
+  int flag=0, alignment=0;
 
   assert(!NC_readonly(ncp));
   assert(NC_indef(ncp)); 
@@ -906,17 +906,20 @@ ncmpii_NC_enddef(NC *ncp) {
   /* info hints can come from the file system but can also come from
    * user-specified hints.  the MPI implementation probably should merge the
    * two, but some implementaitons not only ignore hints they don't understand,
-   * but also fail to incorporate those hints into the info struct. 
+   * but also fail to incorporate those hints into the info struct (this is
+   * unfortunate for us, but entirely standards compilant). 
    *
    * Our policy will be to use the implementation's info first (perhaps the
    * implementaiton knows something about the underlying file system), and then
    * consult user-supplied hints should we not find the hint in the info
    * associated with the MPI file descriptor */
 
+  /* first check the hint from the MPI library ... */
   MPI_File_get_info(ncp->nciop->collective_fh, &info);
   if (info != MPI_INFO_NULL) 
 	  MPI_Info_get(info, "striping_unit", MPI_MAX_INFO_VAL-1, value, &flag);
   if (!flag)  {
+	/* ... then check the hint passed in through ncmpi_create */
   	if (ncp->nciop->mpiinfo != MPI_INFO_NULL) {
 		MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", 
 			MPI_MAX_INFO_VAL-1, value, &flag);
