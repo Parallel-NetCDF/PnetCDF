@@ -914,10 +914,13 @@ ncmpii_NC_enddef(NC *ncp) {
    * associated with the MPI file descriptor */
 
   MPI_File_get_info(ncp->nciop->collective_fh, &info);
-  MPI_Info_get(info, "striping_unit", MPI_MAX_INFO_VAL-1, value, &flag);
+  if (info != MPI_INFO_NULL) 
+	  MPI_Info_get(info, "striping_unit", MPI_MAX_INFO_VAL-1, value, &flag);
   if (!flag)  {
-  	MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", 
+  	if (ncp->nciop->mpiinfo != MPI_INFO_NULL) {
+		MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", 
 			MPI_MAX_INFO_VAL-1, value, &flag);
+	}
   }
   if (flag) 
 	  alignment=atoi(value);
@@ -926,7 +929,7 @@ ncmpii_NC_enddef(NC *ncp) {
   if (alignment <= 0)
 	  alignment = 1;
 
-  MPI_Info_free(&info);
+  if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
   /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
    * acomplish the same thing with calls to NC_begins */
