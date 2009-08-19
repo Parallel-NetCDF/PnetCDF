@@ -1,6 +1,6 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
-SUBDIRS = common test_double test_double_int test_float test_int test_dtype nc_test fandc nf_test
+SUBDIRS = common test_double test_double_int test_float test_int test_dtype nc_test fandc nf_test largefile C mcoll_test test_check_header
 
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done

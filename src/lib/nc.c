@@ -114,6 +114,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp) {
    MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
 
    if (errcheck == 0) {
+    if (rank!=0)
       free(cmpbuf);
       return NC_NOERR;
    }

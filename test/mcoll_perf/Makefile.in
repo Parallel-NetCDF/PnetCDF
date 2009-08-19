@@ -1,0 +1,29 @@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+INCDIR		= $(srcdir)/../../src/lib
+LIBDIR		= ../../src/lib
+
+INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common
+
+CC		= @MPICC@
+CFLAGS          = @CFLAGS@ $(INCLUDES) 
+
+SRCS		= mcoll_perf.c single_mcoll_perf_record.c
+OBJS		= $(SRCS:.c=.o)
+PROGS		= mcoll_perf single_mcoll_perf_record
+LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
+LIBS		= -lpnetcdf -ltestutils @LIBS@
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+all:		$(PROGS)
+
+mcoll_perf: mcoll_perf.o
+	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+single_mcoll_perf_record: single_mcoll_perf_record.o
+	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+
+clean:
+		rm -f $(OBJS) $(PROGS) *.nc
