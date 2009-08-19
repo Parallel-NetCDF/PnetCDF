@@ -1,19 +1,19 @@
-srcdir		= .
-
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 INCDIR		= $(srcdir)/../../src/lib
 LIBDIR		= ../../src/lib
 
 INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common
 
-CC		= /usr/local//bin/mpicc
-CFLAGS          = -g -O2 $(INCLUDES) 
+CC		= @MPICC@
+CFLAGS          = @CFLAGS@ $(INCLUDES) 
 
 SRCS		= test_check_header.c test_check_header1.c
 OBJS		= $(SRCS:.c=.o)
 PROGS		= test_check_header test_check_header1
-LDFLAGS		= -L$(LIBDIR) -L../common 
-LIBS		= -lpnetcdf -ltestutils 
+LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
+LIBS		= -lpnetcdf -ltestutils @LIBS@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
