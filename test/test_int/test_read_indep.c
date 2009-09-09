@@ -78,6 +78,7 @@ int main(int argc, char **argv) {
   int varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
   int isRecvar;
   params opts;
+  int NC_mode;
 
   int rank;
   int nprocs;
@@ -109,7 +110,10 @@ int main(int argc, char **argv) {
   status = ncmpi_open(comm, opts.infname, 0, MPI_INFO_NULL, &ncid1);
   if (status != NC_NOERR) handle_error(status);
 
-  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid2);
+  status = ncmpi_inq_version(ncid1, &NC_mode);
+
+  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_mode, MPI_INFO_NULL, &ncid2);
+
   if (status != NC_NOERR) handle_error(status);
 
 
