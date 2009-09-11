@@ -245,14 +245,14 @@ hdr_len_NC_var(const NC_var *varp, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t)
         assert(varp != NULL);
 	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
  
-        sz = hdr_len_NC_string(varp->name,sizeof_off_t);
+        sz = hdr_len_NC_string(varp->name,sizeof_t);
 //      sz += X_SIZEOF_SIZE_T; /* ndims */
         sz += sizeof_t; /* ndims */
         if (sizeof_t == 8)
 		sz += ncmpix_len_long(varp->ndims); /* dimids */
         else
 		sz += ncmpix_len_int(varp->ndims); /* dimids */
-        sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_off_t);
+        sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_t);
         sz += X_SIZEOF_NC_TYPE; /* type */
 //      sz += X_SIZEOF_SIZE_T; /* len */
         sz += sizeof_t; /* len */
