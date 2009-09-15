@@ -694,8 +694,8 @@ int ncmpi_put_vara_all(int ncid, int varid,
                    MPI_Datatype datatype);
 
 int ncmpi_put_mvara_all(int ncid, int nvars, int varid[],
-                   const MPI_Offset *start[], const MPI_Offset *count[],
-                   const void **buf, MPI_Offset *bufcount,
+                   MPI_Offset *start[], MPI_Offset *count[],
+                   void **buf, MPI_Offset *bufcount,
                    MPI_Datatype *datatype);
 int
 ncmpi_iput_vara_all(int ncid, int varid,
@@ -709,8 +709,8 @@ int ncmpi_get_vara_all(int ncid, int varid,
                    MPI_Datatype datatype);
 
 int ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
-                   const MPI_Offset *start[], const MPI_Offset *count[],
-                   const void **buf, MPI_Offset *bufcount,
+                   MPI_Offset *start[], MPI_Offset *count[],
+                   void **buf, MPI_Offset *bufcount,
                    MPI_Datatype *datatype);
 
 int ncmpi_put_vara(int ncid, int varid,
