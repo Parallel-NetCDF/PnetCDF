@@ -12260,7 +12260,7 @@ ncmpi_iget_varm_double(int ncid, int varid,
 }
 
 static int
-set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, const MPI_Offset *start[], const MPI_Offset *count[], int getnotput) {
+set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Offset *start[], MPI_Offset *count[], int getnotput) {
 
   MPI_Offset *offset;
   int status;
@@ -12451,8 +12451,8 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, const 
 }
 int
 ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
-                   const MPI_Offset *start[], const MPI_Offset *count[],
-                   const void **buf, int *bufcount, 
+                   MPI_Offset *start[], MPI_Offset *count[],
+                   void **buf, MPI_Offset *bufcount, 
                    MPI_Datatype *datatype) {
 
   NC_var **varp;
@@ -12462,7 +12462,8 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
   void *t_xbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int *nelems, *cnelems, *el_size, *nbytes;
+  MPI_Offset *nelems, *cnelems; 
+  int *el_size, *nbytes;
   int total_nbytes;
   MPI_Status mpistatus;
   MPI_Comm comm;
@@ -12542,7 +12543,7 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
     return NC_ENEGATIVECNT;
   }
   /* set the mpi file view */
- 
+  
   status = set_vara_fileview_all(ncp, &(ncp->nciop->collective_fh), nvars, varp, start, count, 0);
   if(status != NC_NOERR)
     return status;
@@ -12610,15 +12611,15 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
     total_nbytes = total_nbytes + nbytes[i];
     if (i==0){
 	 displacement[i] = 0;
-         MPI_Get_address( &(xbuf[i][0]), &a0 );
+         MPI_Get_address( xbuf[i], &a0 );
     } else { 
-         MPI_Get_address( &(xbuf[i][0]), &ai );
+         MPI_Get_address( xbuf[i], &ai );
          displacement[i] = (MPI_Aint) (ai-a0);
     }
   }
  
   MPI_Type_create_hindexed(nvars, nbytes, displacement, MPI_BYTE, &buf_type);
-  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, &(xbuf[0][0]), 1, buf_type, &mpistatus);
+  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf[0], 1, buf_type, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
@@ -12675,15 +12676,16 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
 }
 int
 ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
-                   const MPI_Offset *start[], const MPI_Offset *count[],
-                   const void **buf, MPI_Offset *bufcount, 
+                   MPI_Offset *start[], MPI_Offset *count[],
+                   void **buf, MPI_Offset *bufcount, 
                    MPI_Datatype *datatype) {
   NC_var **varp;
   NC *ncp;
   void **xbuf = NULL, **cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int *nelems, *cnelems, *el_size, *nbytes;
+  MPI_Offset *nelems, *cnelems;
+  int *el_size, *nbytes;
   MPI_Status mpistatus;
   int mpireturn;
   MPI_Datatype *ptype;
@@ -12800,9 +12802,9 @@ ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
   }
   if (i==0){
          displacement[i] = 0;
-         MPI_Get_address( &(xbuf[i][0]), &a0 );
+         MPI_Get_address( xbuf[i], &a0 );
     } else {
-         MPI_Get_address( &(xbuf[i][0]), &ai );
+         MPI_Get_address( xbuf[i], &ai );
          displacement[i] = (MPI_Aint) (ai-a0);
     }
 
@@ -12810,7 +12812,7 @@ ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
 
     MPI_Type_create_hindexed(nvars, nbytes, displacement, MPI_BYTE, &buf_type);
 
-    mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, &(xbuf[0][0]), 1, buf_type, &mpistatus);
+    mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf[0], 1, buf_type, &mpistatus);
 
 //  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf[i], nbytes[i], MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
@@ -12878,8 +12880,8 @@ ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
 }
 int
 ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
-                   const MPI_Offset *start[], const MPI_Offset *count[],
-                   const void **buf, int *bufcount,
+                   MPI_Offset *start[], MPI_Offset *count[],
+                   void **buf, MPI_Offset *bufcount,
                    MPI_Datatype *datatype) {
 
   NC_var **varp;
@@ -12889,7 +12891,8 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
   void *t_xbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  int *nelems, *cnelems, *el_size, *nbytes;
+  MPI_Offset *nelems, *cnelems;
+  int *el_size, *nbytes;
   int total_nbytes;
   MPI_Status mpistatus;
   MPI_Comm comm;
@@ -13043,9 +13046,9 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
     total_nbytes = total_nbytes + nbytes[i];
     if (i==0){
          displacement[i] = 0;
-         MPI_Get_address( &(xbuf[i][0]), &a0 );
+         MPI_Get_address( xbuf[i], &a0 );
     } else {
-         MPI_Get_address( &(xbuf[i][0]), &ai );
+         MPI_Get_address( xbuf[i], &ai );
          displacement[i] = (MPI_Aint) (ai-a0);
     }
   }
@@ -13064,7 +13067,7 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
     }
     MPI_Type_create_hindexed(nvars*count[0][0], nbytes, displacement, MPI_BYTE, &buf_type);
   }
-  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, &(xbuf[0][0]), 1, buf_type, &mpistatus);
+  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf[0], 1, buf_type, &mpistatus);
 
   if (mpireturn != MPI_SUCCESS) {
         int rank;
@@ -13120,8 +13123,8 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
 
 int
 ncmpi_put_mvara_all(int ncid, int nvars, int varid[],
-                   const MPI_Offset *start[], const MPI_Offset *count[],
-                   const void **buf, MPI_Offset *bufcount,
+                   MPI_Offset *start[], MPI_Offset *count[],
+                   void **buf, MPI_Offset *bufcount,
                    MPI_Datatype *datatype) {
 
   NC_var *varp;
@@ -13190,7 +13193,7 @@ ncmpi_iput_vara_all(int ncid, int varid,
   (*request)->ndim = varp->ndims;
   (*request)->start = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
   (*request)->count = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
-  (*request)->buf = buf;
+  (*request)->buf = (void *)buf;
   (*request)->bufcount = bufcount;
   (*request)->vartype = datatype;
   (*request)->next_req = NULL;
