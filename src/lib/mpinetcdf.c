@@ -12929,9 +12929,9 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
   if (xbuf==NULL) printf("xbuf is NULL!!!\n");
   cbuf = (void **)malloc(nvars*sizeof(void *));
   if (cbuf==NULL) printf("cbuf is NULL!!!\n");
-  nelems = malloc(nvars*sizeof(int));
+  nelems = malloc(nvars*sizeof(MPI_Offset));
   if (nelems==NULL) printf("nelems is NULL!!!\n");
-  cnelems = malloc(nvars*sizeof(int));
+  cnelems = malloc(nvars*sizeof(MPI_Offset));
   if (cnelems==NULL) printf("cnelems is NULL!!!\n");
   el_size = malloc(nvars*sizeof(int));
   if (el_size==NULL) printf("el_size is NULL!!!\n");
@@ -13080,9 +13080,11 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
     free(xbuf[i]);
     xbuf[i]=NULL;
   }
-  if (cbuf[i] != buf[i] && cbuf[i] != NULL){
-    free(cbuf[i]);
-    cbuf[i]=NULL;
+  if (!iscontig_of_ptypes[i]) {
+    if (cbuf[i] != buf[i] && cbuf[i] != NULL){
+      free(cbuf[i]);
+      cbuf[i]=NULL;
+    }
   }
 
   if (status == NC_NOERR && IS_RECVAR(varp[i])) {
