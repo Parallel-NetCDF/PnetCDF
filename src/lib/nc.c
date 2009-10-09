@@ -890,7 +890,6 @@ int
 ncmpii_NC_enddef(NC *ncp) {
   int status = NC_NOERR;
   MPI_Comm comm;
-  MPI_Info info;
   int mpireturn;
   int rank;
   char value[MPI_MAX_INFO_VAL];
@@ -904,36 +903,14 @@ ncmpii_NC_enddef(NC *ncp) {
 
   MPI_Comm_rank(comm, &rank);
 
-  /* info hints can come from the file system but can also come from
-   * user-specified hints.  the MPI implementation probably should merge the
-   * two, but some implementaitons not only ignore hints they don't understand,
-   * but also fail to incorporate those hints into the info struct (this is
-   * unfortunate for us, but entirely standards compilant). 
-   *
-   * Our policy will be to use the implementation's info first (perhaps the
-   * implementaiton knows something about the underlying file system), and then
-   * consult user-supplied hints should we not find the hint in the info
-   * associated with the MPI file descriptor */
-
-  /* first check the hint from the MPI library ... */
-  MPI_File_get_info(ncp->nciop->collective_fh, &info);
-  if (info != MPI_INFO_NULL) 
-	  MPI_Info_get(info, "striping_unit", MPI_MAX_INFO_VAL-1, value, &flag);
-  if (!flag)  {
-	/* ... then check the hint passed in through ncmpi_create */
-  	if (ncp->nciop->mpiinfo != MPI_INFO_NULL) {
-		MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", 
-			MPI_MAX_INFO_VAL-1, value, &flag);
-	}
-  }
+  ncmpiio_get_hint(ncp, "striping_unit", value, flag);
+  
   if (flag) 
 	  alignment=atoi(value);
   /* negative or zero alignment? can't imagine what that would even mean.  just
    * align to nearest byte (no alignment) */
   if (alignment <= 0)
 	  alignment = 1;
-
-  if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
   /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
    * acomplish the same thing with calls to NC_begins */
