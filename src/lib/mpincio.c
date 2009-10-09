@@ -360,3 +360,45 @@ ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from, MPI_Offset nbyte
   free(buf);
   return NC_NOERR;
 }
+
+int ncmpiio_get_hint(NC *ncp, char *key, char *value, int flag)
+{
+    MPI_Info info;
+
+    /* info hints can come from the file system but can also come from
+     * user-specified hints.  the MPI implementation probably should
+     * merge the two, but some implementaitons not only ignore hints
+     * they don't understand, but also fail to incorporate those hints
+     * into the info struct (this is unfortunate for us, but entirely
+     * standards compilant). 
+     *
+     * Our policy will be to use the implementation's info first
+     * (perhaps the implementaiton knows something about the underlying
+     * file system), and then consult user-supplied hints should we not
+     * find the hint in the info associated with the MPI file descriptor
+     */
+
+    /* first check the hint from the MPI library ... */
+    MPI_File_get_info(ncp->nciop->collective_fh, &info);
+    if (info != MPI_INFO_NULL) 
+        MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
+    if (!flag)  {
+        /* ... then check the hint passed in through ncmpi_create */
+        if (ncp->nciop->mpiinfo != MPI_INFO_NULL) {
+            MPI_Info_get(ncp->nciop->mpiinfo, key, 
+                    MPI_MAX_INFO_VAL-1, value, &flag);
+        }
+    }
+    if (info != MPI_INFO_NULL) 
+        MPI_Info_free(&info);
+
+    return 0;
+}
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ *
+ * vim: ts=8 sts=4 sw=4 expandtab
+ */
