@@ -28,6 +28,7 @@ int c_flag;
 int fortran_flag;
 int netcdf_flag;
 int giantfile_flag;
+int giantvar_flag;
 int nofill_flag;
 char *netcdf_name = NULL;	/* name of output netCDF file to write */
 
@@ -99,6 +100,7 @@ main(
     fortran_flag = 0;
     netcdf_flag = 0;
     giantfile_flag = 0;
+    giantvar_flag = 0;
     nofill_flag = 0;
 
 #if 0
@@ -174,6 +176,10 @@ main(
 		  else if (strcmp(version_name, "2") == 0 || 
 				  strcmp(version_name, "64-bit-offset") == 0) {
 			  giantfile_flag = 1;
+		  } else if (strcmp(version_name, "5") == 0 ||
+				  strcmp(version_name, 
+					  "64-bit-variables") == 0) {
+			  giantvar_flag = 1;
 		  }
 	  }
 	  break;
