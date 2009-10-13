@@ -25,6 +25,7 @@ extern int netcdf_flag;
 extern int c_flag;
 extern int fortran_flag;
 extern int giantfile_flag;
+extern int giantvar_flag;
 extern int nofill_flag;
 
 int	lineno = 1;
@@ -42,10 +43,13 @@ gen_netcdf(
     int varid;
     int stat;
 
-    if (!giantfile_flag) {
+    if (giantfile_flag) {
 	    stat = ncmpi_create(MPI_COMM_WORLD, filename, 
 			    NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
 	    check_err(stat);
+    } else if (giantvar_flag) {
+	    stat = ncmpi_create(MPI_COMM_WORLD, filename,
+			    NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid);
     } else {
 	    stat = ncmpi_create(MPI_COMM_WORLD, filename, 
 			    NC_CLOBBER, MPI_INFO_NULL, &ncid);
@@ -324,12 +328,16 @@ gen_c(
     cline("   MPI_Init(&argc, &argv);");
     cline("   /* enter define mode */");
 
-    if (!giantfile_flag) {
+    if (giantfile_flag) {
 	    sprintf(stmnt,
-		    "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER, MPI_INFO_NULL, &ncid);",
+		    "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);",
 	    filename);
+    } else if (giantvar_flag) {
+	    sprintf(stmnt,
+		    "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER|NC_64BIT_DATA, &ncid);",
+		    filename);
     } else {
-	    sprintf(stmnt, "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER|NC_64BIT_OFFSET, &ncid);", 
+	    sprintf(stmnt, "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER, &ncid);", 
 			    filename);
     }
     cline(stmnt);
@@ -718,10 +726,12 @@ gen_fortran(
 
     /* create netCDF file, uses NC_CLOBBER mode */
     fline("* enter define mode");
-    if (!giantfile_flag) {
-	    sprintf(stmnt, "iret = nfmpi_create(\'%s\', NF_CLOBBER, ncid)", filename);
-    } else {
+    if (giantfile_flag) {
 	    sprintf(stmnt, "iret = nfmpi_create(\'%s\', OR(NF_CLOBBER|NF_64BIT_OFFSET), ncid)", filename);
+    } else if (giantvar_flag) {
+	    sprintf(stmnt, "iret = nfmpi_create(\'%s\', OR(NF_CLOBBER|NF_64BIT_DATA), ncid)", filename); 
+    } else {
+	    sprintf(stmnt, "iret = nfmpi_create(\'%s\', NF_CLOBBER, ncid)", filename);
     }
     fline(stmnt);
     fline("call check_err(iret)");
