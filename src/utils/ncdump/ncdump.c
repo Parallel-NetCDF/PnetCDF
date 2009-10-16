@@ -358,11 +358,14 @@ do_ncdump(const char *path, struct fspec* specp)
     int ncid;			/* netCDF id */
     vnode* vlist = 0;		/* list for vars specified with -v option */
     int ncmpi_status;		/* return from netcdf calls */
+    int NC_mode;
+    int NC_version;
 
     ncmpi_status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     if (ncmpi_status != NC_NOERR) {
 	error("%s: %s", path, ncmpi_strerror(ncmpi_status));
     }
+
     /*
      * If any vars were specified with -v option, get list of associated
      * variable ids
@@ -380,7 +383,22 @@ do_ncdump(const char *path, struct fspec* specp)
 	specp->name = name_path (path);
     }
 
+    ncmpi_inq_version(ncid, &NC_mode);
+    if (specp->version) {
+        if (NC_mode == 0x1000) 
+           Printf ("%s file format: CDF-5 (big variables)\n", specp->name);
+        else if (NC_mode == 0x0200) 
+              Printf ("%s file format: CDF-2 (large file)\n", specp->name);
+	    else Printf ("%s file format: CDF-1\n", specp->name);
+    } else {
+
     Printf ("netcdf %s {\n", specp->name);
+
+    if (NC_mode == 0x1000) 
+       Printf ("// file format: CDF-5 (big variables)\n");
+    else if (NC_mode == 0x0200) 
+           Printf ("// file format: CDF-2 (large file)\n");
+	 else Printf ("// file format: CDF-1\n");
     /*
      * get number of dimensions, number of variables, number of global
      * atts, and dimension id of unlimited dimension, if any
@@ -513,8 +531,8 @@ do_ncdump(const char *path, struct fspec* specp)
 	    }
 	}
     }
-    
     Printf ("}\n");
+    }
     NC_CHECK(
 	ncmpi_close(ncid) );
     if (vlist)
@@ -630,6 +648,7 @@ main(int argc, char *argv[])
       {
 	  0,			/* construct netcdf name from file name */
 	  false,		/* print header info only, no data? */
+	  false,		/* print CDF version, no data, no header */
 	  false,		/* just print coord vars? */
 	  false,		/* brief  comments in data section? */
 	  false,		/* full annotations in data section?  */
@@ -648,10 +667,13 @@ main(int argc, char *argv[])
     progname = argv[0];
     set_formats(FLT_DIGITS, DBL_DIGITS); /* default for float, double data */
 
-    while ((c = getopt(argc, argv, "b:cf:hl:n:v:d:p:")) != EOF)
+    while ((c = getopt(argc, argv, "b:cf:hVl:n:v:d:p:")) != EOF)
       switch(c) {
 	case 'h':		/* dump header only, no data */
 	  fspec.header_only = true;
+	  break;
+	case 'V':		/* dump CDF version, no data, no header */
+	  fspec.version = true;
 	  break;
 	case 'c':		/* header, data only for coordinate dims */
 	  fspec.coord_vals = true;
@@ -719,8 +741,9 @@ main(int argc, char *argv[])
 
     do {		
         if (!nameopt) fspec.name = (char *)0;
-	if (argc > 0)
+	if (argc > 0){
 	  do_ncdump(argv[i], &fspec);
+        }
     } while (++i < argc);
 
     MPI_Finalize();
