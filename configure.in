@@ -413,7 +413,16 @@ has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 chmod u+x ${srcdir}/scripts/install-sh
 
-AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile src/libf/Makefile  test/common/Makefile test/test_double/Makefile test/test_double_int/Makefile test/test_float/Makefile test/test_int/Makefile test/test_dtype/Makefile test/nc_test/Makefile test/nf_test/Makefile test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile src/utils/ncgen/Makefile test/testcases/Makefile)
+AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile 
+         src/libf/Makefile  test/common/Makefile test/test_double/Makefile 
+	 test/test_double_int/Makefile test/test_float/Makefile 
+	 test/test_int/Makefile test/test_dtype/Makefile 
+	 test/nc_test/Makefile test/nf_test/Makefile 
+	 test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile 
+	 src/utils/ncgen/Makefile test/testcases/Makefile 
+	 test/C/Makefile test/mcoll_perf/Makefile
+	 test/test_check_header/Makefile
+	 test/largefile/Makefile)
 
 dnl generate a fortran-friendly pnetcdf.inc nfconfig.inc
 sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf.inc>pnetcdf.inc && mv pnetcdf.inc src/libf/pnetcdf.inc
