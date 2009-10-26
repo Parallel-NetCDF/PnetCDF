@@ -22,7 +22,7 @@ static int length_of_mpitype(MPI_Datatype);
 
 const char *
 ncmpi_inq_libvers(void) {
-  return "version = 1.1.0pre1 of 22 April 2009";
+  return "version = 1.1.0 of 26 October 2009";
 }
 
 /* Prototypes for functions used only in this file */
@@ -2381,6 +2381,13 @@ ncmpi_put_vara_all(int ncid, int varid,
     xbuf = (void *)cbuf;
 
   }
+
+  /* if record variables are too big (so big that we cannot store the stride
+   * between records in an MPI_Aint, for example) then we will have to process
+   * this one record at a time.  
+   *
+   * It stinks that we have to make this change in multiple places by the way
+   */ 
 
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
