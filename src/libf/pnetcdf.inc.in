@@ -81,7 +81,7 @@
       parameter (nf_align_chunk = -1)
       parameter (nf_format_classic = 1)
       parameter (nf_format_64bit = 2)
-      parameter (nf_format_64bit_data = 3)
+      parameter (nf_format_64bit_data = 5)
 
 !
 ! size argument for defining an unlimited dimension:
@@ -157,6 +157,16 @@
       integer nf_enomem
       integer nf_evarsize
       integer nf_edimsize
+      integer nf_edims_multdefine 
+      integer nf_edims_size_multdefine 
+      integer nf_evars_nelms_multdefine 
+      integer nf_evars_ndims_multdefine 
+      integer nf_evars_dimids_multdefine
+      integer nf_evars_type_multdefine 
+      integer nf_evars_len_multdefine 
+      integer nf_evars_begin_multdefine 
+      integer nf_enumrecs_multdefine 
+
 
       integer nf_emultitypes
       integer nf_eiomismatch
@@ -212,6 +222,15 @@
       parameter (nf_eiomismatch = -71)
       parameter (nf_enegativecnt = -72)
       parameter (nf_eunsptetype = -73)
+      parameter (nf_edims_multdefine = -74)
+      parameter (nf_edims_size_multdefine = -75)
+      parameter (nf_evars_nelms_multdefine = -76)
+      parameter (nf_evars_ndims_multdefine = -77)
+      parameter (nf_evars_dimids_multdefine = -78)
+      parameter (nf_evars_type_multdefine = -79)
+      parameter (nf_evars_len_multdefine = -80)
+      parameter (nf_evars_begin_multdefine = -81)
+      parameter (nf_enumrecs_multdefine = -82)
 !
 ! error handling modes:
 !
@@ -255,12 +274,12 @@
       external        nfmpi_open
 
       integer         nfmpi_get_file_info
-!                          integer             ncid,
+!                          (integer             ncid,
 !                          integer             mpi_info)
       external        nfmpi_get_file_info
 
       integer         nfmpi_delete
-!                          character*(*)       path,
+!                          (character*(*)       path,
 !                          integer             mpi_info)
       external        nfmpi_delete
 
@@ -1602,6 +1621,9 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
 !                          doubleprecision     dvals(1))
       external        nfmpi_get_varm_double_all
+
+! could use nonblocking prototypes here, but unsure how to prototype
+! NCMPI_Request type
 
 !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ! begin netcdf 2.4 backward compatibility:
