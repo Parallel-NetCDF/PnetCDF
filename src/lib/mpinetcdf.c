@@ -1158,6 +1158,17 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
     
           MPI_Type_commit(&filetype);
         } else {
+	    /* assertion: because recsize will be used to set up the file
+	     * view, we must ensure there is no overflow when specifying
+	     * how big a stride there is between items (think interleaved
+	     * records).  
+	     *
+	     * note: 'recsize' is the sum of the record size of all record
+	     * variables in this dataset */
+	    if (ncp->recsize != (MPI_Aint)ncp->recsize) {
+		    fprintf(stderr, "Type overflow: unable to read/write multiple records in this dataset\non this platform. Please either access records of this record variable\none-at-a-time or run on a 64 bit platform\n");
+	    }
+	    assert (ncp->recsize == (MPI_Aint)ncp->recsize);
 
           /* more than one record variables */
 
