@@ -60,6 +60,7 @@ static int set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 			     const MPI_Offset stride[], int getnotput);
 static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 		       int collective);
+static int check_recsize_too_big(NC *ncp);
 
 /* Begin Of Dataset Functions */
 
@@ -830,6 +831,24 @@ check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
   return NC_NOERR;
 }
 
+static void check_recsize_too_big(NC *ncp) 
+{
+    /* assertion: because recsize will be used to set up the file
+     * view, we must ensure there is no overflow when specifying
+     * how big a stride there is between items (think interleaved
+     * records).  
+     *
+     * note: 'recsize' is the sum of the record size of all record
+     * variables in this dataset */
+    if (ncp->recsize != (MPI_Aint)ncp->recsize) {
+	    fprintf(stderr, "Type overflow: unable to read/write multiple records in this dataset\non this platform. Please either access records of this record variable\none-at-a-time or run on a 64 bit platform\n");
+    }
+    /* the assert here might harsh, but without it, users will get corrupt
+     * data.  */
+    assert (ncp->recsize == (MPI_Aint)ncp->recsize);
+}
+
+
 /*
  * Check whether 'coord' values (indices) are valid for the variable.
  */
@@ -974,6 +993,8 @@ set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset index
   if (ndims > 0) {
 
     if (IS_RECVAR(varp))
+      /* no need to check recsize here: if MPI_Offset only 32 bits we
+       * will have had problems long before here */
       offset += index[0] * ncp->recsize;
     else 
       offset += index[ndims-1] * varp->xsz;
@@ -1035,6 +1056,7 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
     
     if (ncp->numrecs == 0)
 	    return(NC_NOERR);
+    check_recsize_too_big(NC *ncp);
 
 #if (MPI_VERSION < 2)
     MPI_Type_hvector(ncp->numrecs, blocklen, stride, MPI_BYTE, &filetype);
@@ -1158,18 +1180,7 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
     
           MPI_Type_commit(&filetype);
         } else {
-	    /* assertion: because recsize will be used to set up the file
-	     * view, we must ensure there is no overflow when specifying
-	     * how big a stride there is between items (think interleaved
-	     * records).  
-	     *
-	     * note: 'recsize' is the sum of the record size of all record
-	     * variables in this dataset */
-	    if (ncp->recsize != (MPI_Aint)ncp->recsize) {
-		    fprintf(stderr, "Type overflow: unable to read/write multiple records in this dataset\non this platform. Please either access records of this record variable\none-at-a-time or run on a 64 bit platform\n");
-	    }
-	    assert (ncp->recsize == (MPI_Aint)ncp->recsize);
-
+	  check_recsize_too_big(ncp);
           /* more than one record variables */
 
           offset += start[0] * ncp->recsize;
@@ -1442,6 +1453,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
       blocklens[ndims - 1] = varp->xsz;
       blockcount[ndims - 1] = count[ndims - 1];
       if (ndims == 1 && IS_RECVAR(varp)) {
+	check_recsize_too_big(ncp);
         blockstride[ndims - 1] = stride[ndims - 1] * ncp->recsize;
         offset += start[ndims - 1] * ncp->recsize;
       } else {
