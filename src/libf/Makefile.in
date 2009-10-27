@@ -19,13 +19,6 @@ ld_netcdf	= -L../lib -lpnetcdf
 HEADER_GENERATED	= pnetcdf.inc
 MODULE_GENERATED        = pnetcdf.mod
 
-$(MODULE_GENERATED): pnetcdf.inc
-	/bin/rm -f pnetcdf.F90
-	echo "module pnetcdf" > pnetcdf.F90
-	/bin/cat pnetcdf.inc >> pnetcdf.F90
-	echo "end module pnetcdf" >> pnetcdf.F90
-	$(COMPILE.F) -c pnetcdf.F90
-
 MANUAL	= 
 
 LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
@@ -126,6 +119,13 @@ DIST_GARBAGE	= ncconfig.h
 
 
 all:		$(LIBRARY) $(MANUAL) $(PROGRAM)
+
+$(MODULE_GENERATED): pnetcdf.inc
+	/bin/rm -f pnetcdf.F90
+	echo "module pnetcdf" > pnetcdf.F90
+	/bin/cat pnetcdf.inc >> pnetcdf.F90
+	echo "end module pnetcdf" >> pnetcdf.F90
+	$(COMPILE.F) -c pnetcdf.F90
 
 install:	$(INCDIR)/$(HEADER_GENERATED)  $(INCDIR)/$(MODULE_GENERATED)
 
