@@ -553,6 +553,8 @@ ncmpii_hdr_put_NC(NC *ncp, void *buf);
 extern int
 ncmpii_NC_computeshapes(NC *ncp);
 
+extern int
+ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp);
 /* end defined in header.c */
 
 /* begin defined in mpincio.c */
@@ -568,6 +570,9 @@ ncmpiio_sync(ncio *nciop);
 
 extern int
 ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from, MPI_Offset nbytes);
+
+extern int
+ncmpiio_get_hint(NC *ncp, char *key, char *value, int flag);
 
 extern int
 NC_computeshapes(NC *ncp);
