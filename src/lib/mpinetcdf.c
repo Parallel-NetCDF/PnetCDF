@@ -831,7 +831,7 @@ check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
   return NC_NOERR;
 }
 
-static void check_recsize_too_big(NC *ncp) 
+static int check_recsize_too_big(NC *ncp) 
 {
     /* assertion: because recsize will be used to set up the file
      * view, we must ensure there is no overflow when specifying
@@ -1056,7 +1056,7 @@ set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
     
     if (ncp->numrecs == 0)
 	    return(NC_NOERR);
-    check_recsize_too_big(NC *ncp);
+    check_recsize_too_big(ncp);
 
 #if (MPI_VERSION < 2)
     MPI_Type_hvector(ncp->numrecs, blocklen, stride, MPI_BYTE, &filetype);
