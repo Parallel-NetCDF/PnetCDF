@@ -28,27 +28,32 @@
 
 int main(int argc, char **argv)
 {
+    MPI_Datatype newtype;
     int i, j, array_of_gsizes[3],array_of_distribs[3];
-    int order, nprocs, len, **buf, bufcount, mynod;
+    int order, nprocs, len, **buf, mynod;
+    MPI_Offset bufcount;
     int array_of_dargs[3], array_of_psizes[3];
+    MPI_File fh;
     int status;
-    MPI_Offset sizes[3], array_of_starts[3];
-    double write_time, *new_write_tim, write_bw;
+    MPI_Offset starts[3], sizes[3], array_of_starts[3];
+    double stim, write_time, *new_write_tim, write_bw;
     MPI_Offset file_size;
     double start_time, open_time, def_time, run_time;
     double *new_open_tim, *new_def_tim, *new_run_tim;
+    double read_tim, new_read_tim, read_bw;
     char *pathname, filename[50];
     char dimname[20], varname[20];
     int ncid, dimids[3], rank_dim[3], *varid;
     MPI_Info info;
     MPI_Offset **starts_list, **count_list;
-    int *bufcount_list;
+    MPI_Offset *bufcount_list;
     int ndims = 3;
     int nvars = 10;
     int k, k_loop;
     MPI_Datatype *datatype_list;
     int length;
     int mvar_flag = 0;
+    NCMPI_Request request;
     NCMPI_Request *array_of_requests;
 
     MPI_Init(&argc,&argv);
@@ -109,7 +114,7 @@ int main(int argc, char **argv)
 		printf("varid malloc error\n");
                 return 0;		
     }	
-    bufcount_list = (int *)malloc(nvars*sizeof(int));
+    bufcount_list = (MPI_Offset *)malloc(nvars*sizeof(MPI_Offset));
     if (bufcount_list == NULL){
 		printf("bufcount_list malloc error\n");
                 return 0;		
@@ -269,14 +274,14 @@ int main(int argc, char **argv)
 //      	     status = ncmpi_put_mvara_all(ncid, nvars, varid,
       	     status = ncmpi_put_mvara_all(ncid, nvars, varid,
                                 starts_list, count_list,
-                               (const void **)buf, bufcount_list, datatype_list);
+                               (void **)buf, bufcount_list, datatype_list);
       	     TEST_HANDLE_ERR(status);
      	}
         if (mvar_flag == 2) {
 	      for (i=0; i<nvars; i++){
        		  status = ncmpi_iput_vara_all(ncid, varid[i],
                             starts_list[i], count_list[i],
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+                            (void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	  TEST_HANDLE_ERR(status);
 	          ncmpi_wait(&array_of_requests[i]);
       	      }
@@ -285,7 +290,7 @@ int main(int argc, char **argv)
 	      for (i=0; i<nvars; i++){
        		  status = ncmpi_iput_vara_all(ncid, varid[i],
                             starts_list[i], count_list[i],
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+                            (void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	  TEST_HANDLE_ERR(status);
       	      }
 	      ncmpi_waitall(nvars, array_of_requests);
