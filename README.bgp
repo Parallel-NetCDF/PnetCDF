@@ -8,12 +8,12 @@ compile mode".  This will make configure use compile-only tests, insted of the
 usual compile-and-run tests (running tests on the bgp login node won't work as
 the compute nodes are totaly different).
 
-configure --build powerpc-bgp-linux  --host powerpc64-suse-linux  \
+configure --host powerpc-bgp-linux  --build powerpc64-suse-linux  \
 	--with-mpi=/bgsys/drivers/ppcfloor/comm
 
 It's possible to build pnetcdf with the IBM xl compilers:
 
-./configure --build powerpc-bgp-linux --host powerpc64-suse-linux \
+./configure --host powerpc-bgp-linux --build powerpc64-suse-linux \
 	CC=mpixlc MPICC=mpixlc FC=mpixlf90 \
 	MPIF77=mpixlf90 F77=mpixlf90 F90=mpixlf90
 
