@@ -125,6 +125,8 @@ $(INCDIR)/$(HEADER3):	$(INCDIR) $(HEADER3)
 
 $(INCDIR)/$(HEADER_GENERATED):	$(INCDIR) $(HEADER_GENERATED)
 	cp $(HEADER_GENERATED) $@
+$(INCDIR)/$(MODULE_GENERATED):  $(INCDIR) $(MODULE_GENERATED)
+	cp $(MODULE_GENERATED) $@
 
 $(LIBDIR)/$(LIBRARY):	$(LIBDIR) $(LIBRARY)
 	cp $(LIBRARY) $@
@@ -161,7 +163,7 @@ $(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 # Cleanup:
 
 clean:		FORCE
-	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) ncgentab.* pnetcdf.3
+	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) ncgentab.* pnetcdf.3  pnetcdf.F90 pnetcdf.mod
 
 distclean:	FORCE
 	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
