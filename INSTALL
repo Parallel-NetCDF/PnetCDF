@@ -1,6 +1,7 @@
 To INSTALL parallel netCDF library:
 
-    1. autoconf (only necessary if you make changes to configure.in)
+    1. 'autoreconf' (only necessary if you make changes to configure.in or
+        other configure-related files)
 
     2. ./configure --prefix=<install dir> --with-mpi=/path/to/implementation
 	the --with-mpi argument should specify the prefix of where the mpi
