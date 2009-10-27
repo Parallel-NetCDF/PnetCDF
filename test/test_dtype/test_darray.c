@@ -99,7 +99,6 @@ void partition_array(	/* input parameters : */
 		     int *array_of_psizes)
 {
   int i;
-  int cycle, remain_cycle;
   int pcoord;
 
   for (i=0; i<ndims; i++) {
@@ -134,7 +133,7 @@ int main(int argc, char** argv) {
   int *array_of_sizes;
   int *array_of_distribs, *array_of_dargs;
   int *array_of_psizes;
-  int ncid, *dimids, varid_1, varid_2;
+  int ncid, *dimids, varid_1;
   MPI_Offset *local_starts, *local_edges, *local_strides;
   char dimname[20];
   ncmpi_type nc_etype;

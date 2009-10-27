@@ -22,7 +22,7 @@ int main(int argc, char ** argv)
 	MPI_Init(&argc, &argv);
 	MPI_Datatype vtype, rtype, usertype;
 	MPI_Aint lb, extent;
-	int userbufsz, *userbuf, *srcbuf, *cmpbuf, i, errs=0;
+	int userbufsz, *userbuf, *cmpbuf, i, errs=0;
 	int count = 25;
 	double pi = 3.14159;
 	MPI_Offset start, acount;

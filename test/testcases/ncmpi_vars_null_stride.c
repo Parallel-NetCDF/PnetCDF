@@ -43,5 +43,5 @@ int main(int argc, char **argv)
 	if (ret != NC_NOERR) handle_error(ret);
 
 	MPI_Finalize();
-
+	return 0;
 }

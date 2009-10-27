@@ -28,18 +28,15 @@
 
 int main(int argc, char **argv)
 {
-    MPI_Datatype newtype;
     int i, j, array_of_gsizes[3],array_of_distribs[3];
     int order, nprocs, len, **buf, bufcount, mynod;
     int array_of_dargs[3], array_of_psizes[3];
-    MPI_File fh;
     int status;
-    MPI_Offset starts[3], sizes[3], array_of_starts[3];
-    double stim, write_time, *new_write_tim, write_bw;
+    MPI_Offset sizes[3], array_of_starts[3];
+    double write_time, *new_write_tim, write_bw;
     MPI_Offset file_size;
     double start_time, open_time, def_time, run_time;
     double *new_open_tim, *new_def_tim, *new_run_tim;
-    double read_tim, new_read_tim, read_bw;
     char *pathname, filename[50];
     char dimname[20], varname[20];
     int ncid, dimids[3], rank_dim[3], *varid;
@@ -52,7 +49,6 @@ int main(int argc, char **argv)
     MPI_Datatype *datatype_list;
     int length;
     int mvar_flag = 0;
-    NCMPI_Request request;
     NCMPI_Request *array_of_requests;
     int unlimit_flag;
 

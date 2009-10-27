@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
   MPI_Barrier(comm_cart);
 
-  printf("%3d   %2d %2d %2d  %4d %4d %4d    %4d %4d %4d   %6d %6d %6d\n",
+  printf("%3d   %2d %2d %2d  %4lld %4lld %4lld    %4lld %4lld %4lld   %6lld %6lld %6lld\n",
          mype, pe_coords[0], pe_coords[1], pe_coords[2],
          totsiz_3d[0], totsiz_3d[1], totsiz_3d[2],
          locsiz_3d[0], locsiz_3d[1], locsiz_3d[2],
