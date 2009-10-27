@@ -446,7 +446,7 @@ static int
 val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   NC_string *strp;
   int status;
-  MPI_Offset ndims, tmp_dim;
+  MPI_Offset ndims, *tmp_dim;
   size_t dim;
   NC_var *varp;
 
@@ -474,9 +474,9 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
       ncmpii_free_NC_var(varp);
       return status;
     }
-    tmp_dim = (MPI_Offset) varp->dimids + dim;
+    tmp_dim = (MPI_Offset*) (varp->dimids + dim);
     status = ncmpix_getn_long_long((const void **)(&gbp->pos), 
-                              1, &tmp_dim);
+                              1, tmp_dim);
     if(status != ENOERR) {
       ncmpii_free_NC_var(varp);
       return status;

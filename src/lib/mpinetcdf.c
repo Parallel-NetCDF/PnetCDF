@@ -62,6 +62,9 @@ static int check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 		       int collective);
 static int check_recsize_too_big(NC *ncp);
 
+static int ncmpi_coll_wait(NCMPI_Request request);
+static int ncmpi_coll_waitall(int count, NCMPI_Request array_of_requests[]);
+
 /* Begin Of Dataset Functions */
 
 int 
@@ -302,14 +305,11 @@ ncmpi_end_indep_data(int ncid) {
 int
 ncmpi_enddef(int ncid) {
   int status = NC_NOERR;
-  int errcheck = 0;
-  int errflag = 0;
   NC *ncp;
 
   status = ncmpii_NC_check_id(ncid, &ncp); 
   if(status != NC_NOERR)
     return status;
-
 
   if(!NC_indef(ncp))
     return(NC_ENOTINDEFINE);
@@ -833,6 +833,7 @@ check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm, int collective) {
 
 static int check_recsize_too_big(NC *ncp) 
 {
+    int ret = NC_NOERR;
     /* assertion: because recsize will be used to set up the file
      * view, we must ensure there is no overflow when specifying
      * how big a stride there is between items (think interleaved
@@ -842,10 +843,12 @@ static int check_recsize_too_big(NC *ncp)
      * variables in this dataset */
     if (ncp->recsize != (MPI_Aint)ncp->recsize) {
 	    fprintf(stderr, "Type overflow: unable to read/write multiple records in this dataset\non this platform. Please either access records of this record variable\none-at-a-time or run on a 64 bit platform\n");
+	    ret = NC_ESMALL;
     }
     /* the assert here might harsh, but without it, users will get corrupt
      * data.  */
     assert (ncp->recsize == (MPI_Aint)ncp->recsize);
+    return ret;
 }
 
 
@@ -8302,7 +8305,7 @@ ncmpi_wait(NCMPI_Request *request) {
     return NC_NOERR;
   }
   } else {
-    ncmpi_coll_wait(request); 
+    return (ncmpi_coll_wait(*request));
   }
 }
 
@@ -8332,7 +8335,7 @@ ncmpi_waitall(int count, NCMPI_Request array_of_requests[]) {
     return NC_NOERR;
     }
   } else {
-    ncmpi_coll_waitall(count, array_of_requests); 
+    return (ncmpi_coll_waitall(count, array_of_requests));
   }
 }
 
@@ -12479,7 +12482,8 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
   free(filetype);
   return NC_NOERR;
 }
-int
+
+static int
 ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
                    MPI_Offset *start[], MPI_Offset *count[],
                    void **buf, MPI_Offset *bufcount, 
@@ -12488,8 +12492,6 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varid[],
   NC_var **varp;
   NC *ncp;
   void **xbuf = NULL, **cbuf = NULL;
-  char *temp_xbuf = NULL;
-  void *t_xbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
   MPI_Offset *nelems, *cnelems; 
@@ -12908,7 +12910,8 @@ ncmpi_get_mvara_all(int ncid, int nvars, int varid[],
  
   return ((warning != NC_NOERR) ? warning : status);
 }
-int
+
+static int
 ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
                    MPI_Offset *start[], MPI_Offset *count[],
                    void **buf, MPI_Offset *bufcount,
@@ -12917,8 +12920,6 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
   NC_var **varp;
   NC *ncp;
   void **xbuf = NULL, **cbuf = NULL;
-  char *temp_xbuf = NULL;
-  void *t_xbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
   MPI_Offset *nelems, *cnelems;
@@ -13161,22 +13162,7 @@ ncmpi_put_mvara_all(int ncid, int nvars, int varid[],
 
   NC_var *varp;
   NC *ncp;
-  void **xbuf = NULL, **cbuf = NULL;
-  char *temp_xbuf = NULL;
-  void *t_xbuf = NULL;
-  int status = NC_NOERR, warning = NC_NOERR;
-  int dim;
-  int *nelems, *cnelems, *el_size, *nbytes;
-  int total_nbytes;
-  MPI_Status mpistatus;
-  MPI_Comm comm;
-  int mpireturn;
-  MPI_Datatype *ptype;
-  MPI_Datatype buf_type;
-  int isderived, *iscontig_of_ptypes;
-  int i;
-  MPI_Aint *displacement, a0, ai;
-  int size;
+  int status = NC_NOERR;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -13186,9 +13172,10 @@ ncmpi_put_mvara_all(int ncid, int nvars, int varid[],
     return NC_ENOTVAR;
 
  if (IS_RECVAR(varp))
-  ncmpi_put_mvara_all_record(ncid, nvars, varid, start, count, buf, bufcount, datatype);
+  status = ncmpi_put_mvara_all_record(ncid, nvars, varid, start, count, buf, bufcount, datatype);
  else 
-  ncmpi_put_mvara_all_nonrecord(ncid, nvars, varid, start, count, buf, bufcount, datatype);
+  status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varid, start, count, buf, bufcount, datatype);
+ return (status);
 }
 
 int
@@ -13201,12 +13188,6 @@ ncmpi_iput_vara_all(int ncid, int varid,
   NC *ncp;
   int status = NC_NOERR;
   int dim;
-  int nelems;
-  MPI_Status mpistatus;
-  MPI_Comm comm;
-  int mpireturn;
-  MPI_Datatype ptype;
-  int isderived, iscontig_of_ptypes;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -13238,12 +13219,12 @@ ncmpi_iput_vara_all(int ncid, int varid,
 }
 
 
-int
+static int
 ncmpi_coll_wait(NCMPI_Request request) {
-  ncmpi_put_vara_all(request->ncid, request->varid,
+  return (ncmpi_put_vara_all(request->ncid, request->varid,
                    request->start, request->count,
                    request->buf, request->bufcount,
-                   request->vartype);
+                   request->vartype));
 
 }
 

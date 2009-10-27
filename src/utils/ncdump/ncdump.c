@@ -359,7 +359,6 @@ do_ncdump(const char *path, struct fspec* specp)
     vnode* vlist = 0;		/* list for vars specified with -v option */
     int ncmpi_status;		/* return from netcdf calls */
     int NC_mode;
-    int NC_version;
 
     ncmpi_status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     if (ncmpi_status != NC_NOERR) {

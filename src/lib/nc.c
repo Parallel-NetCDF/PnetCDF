@@ -144,6 +144,9 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp) {
 }
 
 
+/* 'defined but not used': seems like a useful function though. why did we
+ * write it?  should we be using it? */
+
 static int
 NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   int rank;
