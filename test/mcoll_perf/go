@@ -1,4 +1,4 @@
-mpiexec -n 4 mcoll_perf 32 4 1 3 1 -fname /pvfs2/kgao/mvars/test1
+mpiexec -n 4 mcoll_perf 32 4 1 3 1 -fname /pvfs2/kgao/mvars/test1 //combine multiple variable write options in one collective write 
 
 
 argv[1]    length              ! global array size in X, Y and Z
@@ -18,11 +18,12 @@ argv[4]    mvar_flag           ! 0: original ncmpi_put_vara_all
 argv[5]    unlimit_flag        ! 0: non-record variables
 			       ! 1: record variables
 
-mpiexec -n 4 single_mcoll_perf 32 4 1 3 -fname /pvfs2/kgao/mvars/test1
+mpiexec -n 4 single_mcoll_perf_record 32 4 1 3 -fname /pvfs2/kgao/mvars/test1 //multiple write operations of single record variable 
+mpiexec -n 4 single_mcoll_perf_non_record 32 4 1 3 -fname /pvfs2/kgao/mvars/test1 //multiple write operations of single non-record variable
 
 argv[1]    length              ! global array size in X, Y and Z
                                  array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
-argv[2]    nvars               ! number of write 
+argv[2]    ntimes              ! number of write 
 argv[3]    k_loop              ! number of loop for test
 argv[4]    mvar_flag           ! 0: original ncmpi_put_vara_all
                                ! 1: explicit way
