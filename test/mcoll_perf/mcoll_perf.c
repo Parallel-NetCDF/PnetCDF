@@ -328,10 +328,8 @@ int main(int argc, char **argv)
         if (new_run_tim[top]>new_run_tim[k+1]) top = k+1;
       }
 
-      file_size = 1024+nvars*array_of_gsizes[0]*array_of_gsizes[1]*array_of_gsizes[2]*sizeof(int);
-      write_bw = file_size/new_run_tim[top]/1024.0/1024.0;
       fprintf(stderr, "mvar nvars:%d, Global array size %d x %d x %d integers, local array size: %d x %d x%d, filesize:%d\n", nvars, array_of_gsizes[0], array_of_gsizes[1], array_of_gsizes[2],sizes[0], sizes[1], sizes[2], file_size);
-      fprintf(stderr, "%dx%dx%d, %d: nvars:%d, loop:%d, k:%d, open_t = %f, def_t =%f, write_t = %f sec,run_t = %f sec, filesize: %ld, bandwidth = %f Mbytes/sec\n", sizes[0], sizes[1], sizes[2],mvar_flag, nvars, k_loop, top, new_open_tim[top], new_def_tim[top], new_write_tim[top], new_run_tim[top],file_size, write_bw); 
+      fprintf(stderr, "%dx%dx%d, %d: nvars:%d, loop:%d, k:%d, open_t = %f, def_t =%f, write_t = %f sec,run_t = %f sec\n", sizes[0], sizes[1], sizes[2],mvar_flag, nvars, k_loop, top, new_open_tim[top], new_def_tim[top], new_write_tim[top], new_run_tim[top]); 
     }
     
 /*

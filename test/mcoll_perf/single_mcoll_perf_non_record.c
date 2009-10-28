@@ -221,8 +221,8 @@ int main(int argc, char **argv)
                 return 0;		
        }	
 	for (j=0; j<bufcount; j++)
-//		buf[i][j]=rand();
-		buf[i][j]= mynod + 1 + 32768*i;
+		buf[i][j]=rand();
+//		buf[i][j]= mynod + 1 + 32768*i;
     }
 
     MPI_Info_create(&info);
@@ -241,7 +241,8 @@ int main(int argc, char **argv)
       TEST_HANDLE_ERR(status);
       /* define dimensions */
         sprintf(dimname, "dim_%d", 0);
-        ncmpi_def_dim(ncid, dimname, NC_UNLIMITED, &dimids[0]);
+        ncmpi_def_dim(ncid, dimname, array_of_gsizes[0]*ntimes, &dimids[0]);
+//        ncmpi_def_dim(ncid, dimname, NC_UNLIMITED, &dimids[0]);
         for (i=1; i<ndims; i++){
          sprintf(dimname, "dim_%d", i);
          ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids[i]);
@@ -266,7 +267,7 @@ int main(int argc, char **argv)
 	      for (i=0; i<ntimes; i++){
        		  status = ncmpi_put_vara_all(ncid, varid[i],
                             starts_list[i], count_list[i],
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT);
+                            (void *)buf[i], bufcount_list[i], MPI_INT);
 	     	  TEST_HANDLE_ERR(status);
       	      }
       	} 
@@ -281,7 +282,7 @@ int main(int argc, char **argv)
 	      for (i=0; i<ntimes; i++){
        		  status = ncmpi_iput_vara_all(ncid, varid[i],
                             starts_list[i], count_list[i],
-                            (void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+                            (void *)(buf[i]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	  TEST_HANDLE_ERR(status);
 	          ncmpi_wait(&array_of_requests[i]);
       	      }
@@ -290,7 +291,7 @@ int main(int argc, char **argv)
 	      for (i=0; i<ntimes; i++){
        		  status = ncmpi_iput_vara_all(ncid, varid[i],
                             starts_list[i], count_list[i],
-                            (void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+                            (void *)(buf[i]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	  TEST_HANDLE_ERR(status);
       	      }
 	      ncmpi_waitall(ntimes, array_of_requests);
@@ -320,11 +321,10 @@ int main(int argc, char **argv)
         if (new_run_tim[top]>new_run_tim[k+1]) top = k+1;
       }
 
-      fprintf(stderr, "one record variable ntimes:%d, Global array size (%d x %d) x %d x %d integers, local array size: %d x %d x%d, filesize:%d\n", ntimes, array_of_gsizes[0], ntimes, array_of_gsizes[1], array_of_gsizes[2],sizes[0], sizes[1], sizes[2], file_size);
+      fprintf(stderr, "one non-record variable ntimes:%d, Global array size (%d x %d) x %d x %d integers, local array size: %d x %d x %d, filesize:%d\n", ntimes, array_of_gsizes[0], ntimes, array_of_gsizes[1], array_of_gsizes[2],sizes[0], sizes[1], sizes[2], file_size);
       fprintf(stderr, "%dx%dx%d, %d: ntimes:%d, loop:%d, k:%d, open_t = %f, def_t =%f, write_t = %f sec,run_t = %f sec\n", sizes[0], sizes[1], sizes[2],mvar_flag, ntimes, k_loop, top, new_open_tim[top], new_def_tim[top], new_write_tim[top], new_run_tim[top]); 
     }
     
-
 /*
     int nkeys; 
     MPI_Info_get_nkeys(info, &nkeys);
