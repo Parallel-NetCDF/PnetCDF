@@ -24,7 +24,7 @@ mcoll_perf: mcoll_perf.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 single_mcoll_perf_record: single_mcoll_perf_record.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
-single_mcoll_perf_record: single_mcoll_perf_non_record.o
+single_mcoll_perf_non_record: single_mcoll_perf_non_record.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
