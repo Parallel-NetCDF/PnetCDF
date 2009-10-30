@@ -1313,14 +1313,14 @@ int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
                case NC_CHAR:
                case NC_BYTE:
                    if (strcmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue))
-                       printf("Warning (inconsistent metadata): attribute value %s !=%s\n",nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue);
+                       printf("Warning (inconsistent metadata): attribute value %s != %s\n",nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue);
                    break;
                case NC_SHORT:
                    sa = nc_attr1->value[i]->xvalue;
                    sb = nc_attr2->value[i]->xvalue;
                    for (j=0; j<num; j++) {
                        if (sa[j] != sb[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %d !=%d\n",sa[j],sb[j]);
+                           printf("Warning (inconsistent metadata): attribute value %d != %d\n",sa[j],sb[j]);
                            break;
                        }
                    }
@@ -1330,7 +1330,7 @@ int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
                    ib = nc_attr2->value[i]->xvalue;
                    for (j=0; j<num; j++) {
                        if (ia[j] != ib[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %d !=%d\n",ia[j],ib[j]);
+                           printf("Warning (inconsistent metadata): attribute value %d != %d\n",ia[j],ib[j]);
                            break;
                        }
                    }
@@ -1340,7 +1340,7 @@ int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
                    fb = nc_attr2->value[i]->xvalue;
                    for (j=0; j<num; j++) {
                        if (fa[j] != fb[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %f !=%f\n",fa[j],fb[j]);
+                           printf("Warning (inconsistent metadata): attribute value %f != %f\n",fa[j],fb[j]);
                            break;
                        }
                    }
@@ -1349,7 +1349,7 @@ int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
                    db = nc_attr2->value[i]->xvalue;
                    for (j=0; j<num; j++) {
                        if (da[j] != db[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %f !=%f\n",da[j],db[j]);
+                           printf("Warning (inconsistent metadata): attribute value %f != %f\n",da[j],db[j]);
                            break;
                        }
                    }
