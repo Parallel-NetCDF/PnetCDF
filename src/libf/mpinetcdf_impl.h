@@ -65,6 +65,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_issyserr_ ( MPI_Fint *v1 );
 
 /* Fortran logical values */
 
+
 #endif
 
 

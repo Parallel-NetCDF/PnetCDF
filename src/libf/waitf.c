@@ -7,7 +7,7 @@
  * DO NOT EDIT
  */
 #include "mpinetcdf_impl.h"
-
+#include "mvar.h"
 
 #ifdef F77_NAME_UPPER
 #define nfmpi_wait_ NFMPI_WAIT
@@ -21,8 +21,41 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_wait_ ( NCMPI_Request*v1 ){
+FORTRAN_API int FORT_CALL nfmpi_wait_ ( MPI_Fint *v1 ){
     int ierr;
-    ierr = ncmpi_wait( v1 );
+    lnc_req *tmp_req1 = NULL;
+    lnc_req *tmp_req2 = NULL;
+    NCMPI_Request l1_req;
+    extern lnc_req *req_head ;
+    extern lnc_req *req_tail ;
+//    l1_req = nc_requset_list[*v1] ;
+    tmp_req1 = req_head;
+    while(tmp_req1 != NULL){
+	if (tmp_req1->reqid == *v1){
+		break;
+	} else { 
+	   tmp_req2 = tmp_req1;	
+	   tmp_req1 = tmp_req1->next; 
+	}
+    }  
+    l1_req = tmp_req1->req;
+    ierr = ncmpi_wait( &tmp_req1->req );
+    if (req_head->reqid == *v1){
+	if (req_head->next == NULL){
+	 	req_head = NULL;
+		req_tail = NULL;
+        } else {
+		req_head = req_head->next;
+	}
+	free(tmp_req1);
+    } else {
+	if (req_tail->reqid == tmp_req1->reqid)
+		req_tail = tmp_req2;
+        else 
+	tmp_req2 = tmp_req1->next;
+	free(tmp_req1);
+    } 
+
     return ierr;
+
 }

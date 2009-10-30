@@ -1119,6 +1119,7 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   int status;
   NCtype type = NC_UNSPECIFIED;
   NC_var **vpp, **end;
+  int i;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);
@@ -1277,13 +1278,16 @@ int ncmpii_comp_dims(NC_dimarray *nc_dim1, NC_dimarray *nc_dim2){
            return NC_EDIMS_NELEMS_MULTIDEFINE;
 	} else {	
            for (i=0; i<nc_dim1->nelems; i++){
-	      if (nc_dim1->value[i]->size != nc_dim2->value[i]->size){
+	      if (nc_dim1->value[i]->size != nc_dim2->value[i]->size)
 		return NC_EDIMS_SIZE_MULTIDEFINE;
-	      } else {
+#define METADATA_CONSISTENCY_CHECK
+#ifdef METADATA_CONSISTENCY_CHECK
+	      else {
         	   if ((nc_dim1->value[i]->name->nchars != nc_dim1->value[i]->name->nchars)||(strcmp(nc_dim1->value[i]->name->cp, nc_dim2->value[i]->name->cp)!=0)){
-	              printf("Warning: The dimination name of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+	              printf("Warning: The dimination name %s of NC definations on multiprocesses inconsistent.\n",nc_dim1->value[i]->name->cp);
 		   } 
 	     }
+#endif
 	   } 
 
         }
@@ -1292,27 +1296,29 @@ int ncmpii_comp_dims(NC_dimarray *nc_dim1, NC_dimarray *nc_dim2){
 
 int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
 	int i;
+#ifdef METADATA_CONSISTENCY_CHECK
 	if (nc_attr1->nelems != nc_attr2->nelems){
-           printf("Warning: The number of attributes of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+           printf("Warning: The number of attributes (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->nelems,nc_attr2->nelems);
 	} else {
 		for (i=0; i<nc_attr1->nelems; i++){
 		   if (nc_attr1->value[i]->xsz != nc_attr2->value[i]->xsz){
-                       printf("Warning: The size of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+                       printf("Warning: The size of attribute (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->xsz,nc_attr2->value[i]->xsz);
 		   }
 		   if ((nc_attr1->value[i]->name->nchars != nc_attr2->value[i]->name->nchars)||(strcmp(nc_attr1->value[i]->name->cp, nc_attr2->value[i]->name->cp))){
-                       printf("Warning: The name of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+                       printf("Warning: The name of attribute (root=%s != %s) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->name->cp,nc_attr2->value[i]->name->cp);
 	           }
                    if (strcmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue)){
-                    printf("Warning: The value of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+                    printf("Warning: The value of attribute (root=%s !=%s) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue);
 		   }	
 		   if (nc_attr1->value[i]->type != nc_attr2->value[i]->type){
-                    printf("Warning: The type of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+                    printf("Warning: The type of attribute (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->type,nc_attr2->value[i]->type);
 		   }
 		   if (nc_attr1->value[i]->nelems != nc_attr2->value[i]->nelems){
-                    printf("Warning: The length of attribute of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+                    printf("Warning: The length of attribute (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->nelems,nc_attr2->value[i]->nelems);
 		   }
 		}
 	}	
+#endif
     return NC_NOERR;
 }
 
@@ -1322,10 +1328,12 @@ int ncmpii_comp_vars(NC_vararray *nc_var1, NC_vararray *nc_var2){
            return NC_EVARS_NELEMS_MULTIDEFINE;
 	} else {
 		for (i=0; i<nc_var1->nelems; i++){
+#ifdef METADATA_CONSISTENCY_CHECK
 		   if ((nc_var1->value[i]->name->nchars !=  nc_var2->value[i]->name->nchars)||strcmp(nc_var1->value[i]->name->cp,nc_var2->value[i]->name->cp))
 		   {
-                    printf("Warning: The name of variable of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another\n");
+                    printf("Warning: The name of variable (root=%s) of NC definations on multiprocesses inconsistent.\n",nc_var1->value[i]->name->cp);
 		   }
+#endif
 		   if ((nc_var1->value[i]->ndims != nc_var2->value[i]->ndims)){
            		return NC_EVARS_NDIMS_MULTIDEFINE;
 		   }

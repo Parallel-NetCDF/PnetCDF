@@ -21,6 +21,11 @@ $calloc = "calloc";
 $free   = "free";
 $header_file = "mpinetcdf_impl.h";
 
+$tof77{"NCMPI_Request*"} = "int *";
+$tof77{"NCMPI_Request*"} = "int *";
+$tof77{"NCMPI_Request\[\]"} = "int *";
+$tof77{"MPI_Offset**"} = "MPI_Offset *";
+
 # Error return handling
 $errparmtype = "";
 $errparm = "";
@@ -215,6 +220,10 @@ $returnType   = "int";
 	        'get_vara_all-2' => 'in:OffsetIndexIn',
 		'get_vara_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'get_vara_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
+	      'iget_vara_all' => '2:3:4', 
+	        'iget_vara_all-2' => 'in:OffsetIndexIn',
+		'iget_vara_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_vara_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
 	      'get_vara' => '2:3:4', 
 	        'get_vara-2' => 'in:OffsetIndexIn',
 		'get_vara-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
@@ -577,6 +586,12 @@ $returnType   = "int";
 	        'put_vara_all-2' => 'in:OffsetIndexIn',
 		'put_vara_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
 		'put_vara_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
+	      'put_mvara_all' => '3', 
+	        'put_mvara_all-3' => 'in:OffsetIndexIn',
+	      'iput_vara_all' => '2:3:4', 
+	        'iput_vara_all-2' => 'in:OffsetIndexIn',
+		'iput_vara_all-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_vara_all-4' => 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
 	      'put_vara' => '2:3:4', 
 	        'put_vara-2' => 'in:OffsetIndexIn',
 		'put_vara-3' => 'in:intToSizeTOffsetArr:ncmpixVardim(*v1,*v2-1)',
