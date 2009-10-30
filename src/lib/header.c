@@ -1119,7 +1119,6 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   int status;
   NCtype type = NC_UNSPECIFIED;
   NC_var **vpp, **end;
-  int i;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);

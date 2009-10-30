@@ -28,19 +28,15 @@
 
 int main(int argc, char **argv)
 {
-    MPI_Datatype newtype;
     int i, j, array_of_gsizes[3],array_of_distribs[3];
     int order, nprocs, len, **buf, mynod;
     MPI_Offset bufcount;
     int array_of_dargs[3], array_of_psizes[3];
-    MPI_File fh;
     int status;
-    MPI_Offset starts[3], sizes[3], array_of_starts[3];
-    double stim, write_time, *new_write_tim, write_bw;
-    MPI_Offset file_size;
+    MPI_Offset  sizes[3], array_of_starts[3];
+    double write_time, *new_write_tim;
     double start_time, open_time, def_time, run_time;
     double *new_open_tim, *new_def_tim, *new_run_tim;
-    double read_tim, new_read_tim, read_bw;
     char *pathname, filename[50];
     char dimname[20], varname[20];
     int ncid, dimids[3], rank_dim[3], *varid;
@@ -53,7 +49,6 @@ int main(int argc, char **argv)
     MPI_Datatype *datatype_list;
     int length;
     int mvar_flag = 0;
-    NCMPI_Request request;
     NCMPI_Request *array_of_requests;
 
     MPI_Init(&argc,&argv);
@@ -320,7 +315,7 @@ int main(int argc, char **argv)
         if (new_run_tim[top]>new_run_tim[k+1]) top = k+1;
       }
 
-      fprintf(stderr, "one record variable ntimes:%d, Global array size (%d x %d) x %d x %d integers, local array size: %d x %d x%d, filesize:%d\n", ntimes, array_of_gsizes[0], ntimes, array_of_gsizes[1], array_of_gsizes[2],sizes[0], sizes[1], sizes[2], file_size);
+      fprintf(stderr, "one record variable ntimes:%d, Global array size (%d x %d) x %d x %d integers, local array size: %d x %d x%d\n", ntimes, array_of_gsizes[0], ntimes, array_of_gsizes[1], array_of_gsizes[2],sizes[0], sizes[1], sizes[2]);
       fprintf(stderr, "%dx%dx%d, %d: ntimes:%d, loop:%d, k:%d, open_t = %f, def_t =%f, write_t = %f sec,run_t = %f sec\n", sizes[0], sizes[1], sizes[2],mvar_flag, ntimes, k_loop, top, new_open_tim[top], new_def_tim[top], new_write_tim[top], new_run_tim[top]); 
     }
     
