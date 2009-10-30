@@ -14,6 +14,7 @@
       integer nf_float
       integer nf_real
       integer nf_double
+      integer nf_request
 
       parameter (nf_byte = 1)
       parameter (nf_int1 = nf_byte)
@@ -866,6 +867,26 @@
 !                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
 !                          character(*)        text)
       external        nfmpi_put_vara
+
+      integer         nfmpi_iput_vara_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text,
+!                          integer            req)
+      external        nfmpi_iput_vara_all
+
+      integer         nfmpi_wait
+!                         (integer             req)
+      external        nfmpi_wait
+
+      integer         nfmpi_waitall
+!                         (integer            count,
+!                         integer             req(1))
+      external        nfmpi_waitall
+
+
 
       integer         nfmpi_put_vara_all
 !                         (integer             ncid,
