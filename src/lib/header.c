@@ -85,73 +85,59 @@ static const schar ncmagic2[] = {'C', 'D', 'F', 0x05};
 int
 ncmpii_NC_computeshapes(NC *ncp)
 {
-        NC_var **vpp = (NC_var **)ncp->vars.value;
-        NC_var *const *const end = &vpp[ncp->vars.nelems];
-        NC_var *first_var = NULL;       /* first "non-record" var */
-        NC_var *first_rec = NULL;       /* first "record" var */
-        int status;
+    NC_var **vpp = (NC_var **)ncp->vars.value;
+    NC_var *const *const end = &vpp[ncp->vars.nelems];
+    NC_var *first_var = NULL;       /* first "non-record" var */
+    NC_var *first_rec = NULL;       /* first "record" var */
+    int status;
  
-        ncp->begin_var = (MPI_Offset) ncp->xsz;
-        ncp->begin_rec = (MPI_Offset) ncp->xsz;
-        ncp->recsize = 0;
+    ncp->begin_var = (MPI_Offset) ncp->xsz;
+    ncp->begin_rec = (MPI_Offset) ncp->xsz;
+    ncp->recsize = 0;
  
-        if(ncp->vars.nelems == 0)
-                return(0);
+    if(ncp->vars.nelems == 0) return(0);
 
+    for ( /*NADA*/; vpp < end; vpp++) {    
+        status = ncmpii_NC_var_shape64(*vpp, &ncp->dims);
 
-
-
-        for( /*NADA*/; vpp < end; vpp++)
-        {	
-                status = ncmpii_NC_var_shape64(*vpp, &ncp->dims);
-
-
-                if(status != ENOERR)
-                        return(status);
+        if(status != ENOERR) return(status);
  
-                if(IS_RECVAR(*vpp))
-                {
-                        if(first_rec == NULL)
-                                first_rec = *vpp;
-                        ncp->recsize += (*vpp)->len;
-                }
-                else if(first_var == NULL)
-                {
-                        first_var = *vpp;
-                        /*
-                         * Overwritten each time thru.
-                         * Usually overwritten in first_rec != NULL clause.
-                         */
-                        ncp->begin_rec = (*vpp)->begin + (MPI_Offset)(*vpp)->len;
-                }
+        if (IS_RECVAR(*vpp)) {
+            if (first_rec == NULL)
+                first_rec = *vpp;
+            ncp->recsize += (*vpp)->len;
         }
+        else if (first_var == NULL) {
+            first_var = *vpp;
+            /*
+             * Overwritten each time thru.
+             * Usually overwritten in first_rec != NULL clause.
+             */
+            ncp->begin_rec = (*vpp)->begin + (MPI_Offset)(*vpp)->len;
+        }
+    }
  
-        if(first_rec != NULL)
-        {
-                assert(ncp->begin_rec <= first_rec->begin);
-                ncp->begin_rec = first_rec->begin;
-                /*
-                 * for special case of exactly one record variable, pack value
-                 */
-                if(ncp->recsize == first_rec->len)
-                        ncp->recsize = *first_rec->dsizes * first_rec->xsz;
-        }
+    if (first_rec != NULL) {
+        assert(ncp->begin_rec <= first_rec->begin);
+        ncp->begin_rec = first_rec->begin;
+        /*
+         * for special case of exactly one record variable, pack value
+         */
+        if (ncp->recsize == first_rec->len)
+            ncp->recsize = *first_rec->dsizes * first_rec->xsz;
+    }
  
-        if(first_var != NULL)
-        {
-                ncp->begin_var = first_var->begin;
-        }
-        else
-        {
-                ncp->begin_var = ncp->begin_rec;
-        }
+    if (first_var != NULL)
+        ncp->begin_var = first_var->begin;
+    else
+        ncp->begin_var = ncp->begin_rec;
 
-        assert(ncp->begin_var > 0);
-        assert(ncp->xsz <= ncp->begin_var);
-        assert(ncp->begin_rec > 0);
-        assert(ncp->begin_var <= ncp->begin_rec);
+    assert(ncp->begin_var > 0);
+    assert(ncp->xsz <= ncp->begin_var);
+    assert(ncp->begin_rec > 0);
+    assert(ncp->begin_var <= ncp->begin_rec);
  
-        return(ENOERR);
+    return(ENOERR);
 } 
 
 /* 
@@ -164,15 +150,15 @@ ncmpii_NC_computeshapes(NC *ncp)
 static MPI_Offset
 hdr_len_NC_string(const NC_string *ncstrp, MPI_Offset sizeof_t)
 {
-//      MPI_Offset sz = X_SIZEOF_SIZE_T; /* nchars */
-        int sz = sizeof_t; /* nchars */
+//  MPI_Offset sz = X_SIZEOF_SIZE_T; /* nchars */
+    int sz = sizeof_t; /* nchars */
  
-        assert(ncstrp != NULL);
+    assert(ncstrp != NULL);
  
-        if(ncstrp->nchars != 0)
-                sz += _RNDUP(ncstrp->nchars, X_ALIGN);
+    if (ncstrp->nchars != 0)
+        sz += _RNDUP(ncstrp->nchars, X_ALIGN);
  
-        return sz;
+    return sz;
 }
  
 static MPI_Offset
@@ -251,15 +237,15 @@ hdr_len_NC_var(const NC_var *varp, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t)
         MPI_Offset sz;
  
         assert(varp != NULL);
-	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
+    assert(sizeof_off_t == 4 || sizeof_off_t == 8);
  
         sz = hdr_len_NC_string(varp->name,sizeof_t);
 //      sz += X_SIZEOF_SIZE_T; /* ndims */
         sz += sizeof_t; /* ndims */
         if (sizeof_t == 8)
-		sz += ncmpix_len_long(varp->ndims); /* dimids */
+        sz += ncmpix_len_long(varp->ndims); /* dimids */
         else
-		sz += ncmpix_len_int(varp->ndims); /* dimids */
+        sz += ncmpix_len_int(varp->ndims); /* dimids */
         sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_t);
         sz += X_SIZEOF_NC_TYPE; /* type */
 //      sz += X_SIZEOF_SIZE_T; /* len */
@@ -295,17 +281,17 @@ ncmpii_hdr_len_NC(const NC *ncp, MPI_Offset sizeof_off_t)
         MPI_Offset xlen = sizeof(ncmagic);
  
         assert(ncp != NULL);
-	if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-	        xlen += X_SIZEOF_LONG; /* numrecs */
+    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+            xlen += X_SIZEOF_LONG; /* numrecs */
                 xlen += hdr_len_NC_dimarray(&ncp->dims, 8);/* int-> long????????*/
                 xlen += hdr_len_NC_attrarray(&ncp->attrs, 8);
                 xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 8);
-	} else {
-	        xlen += X_SIZEOF_SIZE_T;
+    } else {
+            xlen += X_SIZEOF_SIZE_T;
                 xlen += hdr_len_NC_dimarray(&ncp->dims, 4);
                 xlen += hdr_len_NC_attrarray(&ncp->attrs, 4);
                 xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 4);
-	}
+    }
 
 //        xlen += hdr_len_NC_dimarray(&ncp->dims, sizeof_off_t);/* int-> long????????*/
  
@@ -427,7 +413,7 @@ hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
 
   for (i=0; i< varp->ndims; i++){  
         const MPI_Offset dim_id  = (const MPI_Offset) varp->dimids[i];
- 	status = ncmpix_put_size_t(&pbp->pos, &dim_id, pbp->version == 5 ? 8 : 4);
+     status = ncmpix_put_size_t(&pbp->pos, &dim_id, pbp->version == 5 ? 8 : 4);
   }
 /*
  if (pbp->version == 1)
@@ -588,21 +574,21 @@ ncmpii_hdr_put_NC(NC *ncp, void *buf) {
   putbuf.size = ncp->xsz;
 
   if (ncp->flags & NC_64BIT_DATA)
-	  putbuf.version = 5;
+      putbuf.version = 5;
   else if (ncp->flags & NC_64BIT_OFFSET)
-	  putbuf.version = 2;
+      putbuf.version = 2;
   else
-	  putbuf.version = 1;
+      putbuf.version = 1;
 
   if (putbuf.version == 5)
-	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic2), ncmagic2);
+      status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic2), ncmagic2);
   else if (putbuf.version == 2)
-	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic), ncmagic);
+      status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic), ncmagic);
   else
-	  status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic1), ncmagic1);
+      status = ncmpix_putn_schar_schar(&putbuf.pos, sizeof(ncmagic1), ncmagic1);
 
   if (status != ENOERR)
-	  return status;
+      return status;
 
   nrecs = ncp->numrecs; 
   status = ncmpix_put_size_t(&putbuf.pos, &nrecs, putbuf.version == 5 ? 8 : 4);
@@ -645,7 +631,7 @@ hdr_fetch(bufferinfo *gbp) {
   int rank;
   MPI_Comm comm;
   int mpireturn;
-  MPI_Offset slack;		/* any leftover data in the buffer */
+  MPI_Offset slack;        /* any leftover data in the buffer */
 
   assert(gbp->base != NULL);
   
@@ -665,9 +651,9 @@ hdr_fetch(bufferinfo *gbp) {
   gbp->pos = gbp->base;
   gbp->index = 0;
   mpireturn = MPI_File_set_view(gbp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, 
-		    "native", gbp->nciop->mpiinfo);
+            "native", gbp->nciop->mpiinfo);
   if (mpireturn != MPI_SUCCESS) {
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
+    ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
         MPI_Finalize();
         return NC_EREAD;
   }
@@ -675,9 +661,9 @@ hdr_fetch(bufferinfo *gbp) {
   if (rank == 0) {
     MPI_Status mpistatus;
     mpireturn = MPI_File_read_at(gbp->nciop->collective_fh, (gbp->offset)-slack, gbp->base, 
-	             gbp->size, MPI_BYTE, &mpistatus);  
+                 gbp->size, MPI_BYTE, &mpistatus);  
     if (mpireturn != MPI_SUCCESS) {
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
+    ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
         MPI_Finalize();
         return NC_EREAD;
     }
@@ -898,7 +884,7 @@ ncmpix_len_nctype(nc_type type) {
     case NC_DOUBLE:
         return X_SIZEOF_DOUBLE;
     default: 
-	assert("ncmpix_len_nctype bad type" == 0);
+    assert("ncmpix_len_nctype bad type" == 0);
   }
   return 0;                
 }
@@ -1071,10 +1057,10 @@ hdr_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
 
 /*  
     if (gbp->version == 5) {
-	status = ncmpix_getn_long_long((const void **)(&gbp->pos), 
+    status = ncmpix_getn_long_long((const void **)(&gbp->pos), 
                               1, (MPI_Offset*)varp->dimids + dim);
     } else {
-	status = ncmpix_getn_int_int((const void **)(&gbp->pos), 
+    status = ncmpix_getn_int_int((const void **)(&gbp->pos), 
                               1, (int*) varp->dimids + dim);
     }
 
@@ -1180,7 +1166,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
   /* Initialize the get buffer */
 
   getbuf.nciop = ncp->nciop;
-  getbuf.offset = 0; 	/* read from start of the file */
+  getbuf.offset = 0;     /* read from start of the file */
   getbuf.size = _RNDUP( MAX(MIN_NC_XSZ, ncp->chunk), X_ALIGN );
   if (getbuf.size > 4096)
     getbuf.size = 4096;
@@ -1197,33 +1183,33 @@ ncmpii_hdr_get_NC(NC *ncp) {
           (const void **)(&getbuf.pos), sizeof(magic), magic);
   getbuf.index += sizeof(magic);
   /* don't need to worry about CDF-1 or CDF-2 
-   * 	if the first bits are not 'CDF-'  */
+   *     if the first bits are not 'CDF-'  */
   if(memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
     free(getbuf.base);
     return NC_ENOTNC;
   }
   /* check version number in last byte of magic */
   if (magic[sizeof(ncmagic)-1] == 0x1) {
-	  getbuf.version = 1;
+      getbuf.version = 1;
   } else if (magic[sizeof(ncmagic)-1] == 0x2) {
-	  getbuf.version = 2;
-	  fSet(ncp->flags, NC_64BIT_OFFSET);
-	  if (sizeof(MPI_Offset) != 8) {
-		  /* take the easy way out: if we can't support all CDF-2
-		   * files, return immediately */
-		  free(getbuf.base);
-		  return NC_ESMALL;
-	  }
+      getbuf.version = 2;
+      fSet(ncp->flags, NC_64BIT_OFFSET);
+      if (sizeof(MPI_Offset) != 8) {
+          /* take the easy way out: if we can't support all CDF-2
+           * files, return immediately */
+          free(getbuf.base);
+          return NC_ESMALL;
+      }
   } else if (magic[sizeof(ncmagic)-1] == 0x5) {
-	  getbuf.version = 5;
-	  fSet(ncp->flags, NC_64BIT_DATA);
-	  if (sizeof(MPI_Offset) != 8) {
-		  free(getbuf.base);
-		  return NC_ESMALL;
-	  }
+      getbuf.version = 5;
+      fSet(ncp->flags, NC_64BIT_DATA);
+      if (sizeof(MPI_Offset) != 8) {
+          free(getbuf.base);
+          return NC_ESMALL;
+      }
   } else {
-	  free(getbuf.base);
-	  return NC_ENOTNC;
+      free(getbuf.base);
+      return NC_ENOTNC;
   }
   
 
@@ -1235,9 +1221,9 @@ ncmpii_hdr_get_NC(NC *ncp) {
   status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, (getbuf.version == 5) ? 8 : 4);
 
   if (getbuf.version == 5) {
-	getbuf.index += X_SIZEOF_LONG;
+    getbuf.index += X_SIZEOF_LONG;
   } else {
-	getbuf.index += X_SIZEOF_SIZE_T;
+    getbuf.index += X_SIZEOF_SIZE_T;
   }
   if(status != ENOERR) {
     free(getbuf.base);
@@ -1252,7 +1238,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
     free(getbuf.base);
     return status;
   }
-	
+    
  
 
   status = hdr_get_NC_attrarray(&getbuf, &ncp->attrs); 
@@ -1280,87 +1266,134 @@ ncmpii_hdr_get_NC(NC *ncp) {
 /* End Of get NC */
 
 int ncmpii_comp_dims(NC_dimarray *nc_dim1, NC_dimarray *nc_dim2){
-	int i;
-	if (nc_dim1->nelems != nc_dim2->nelems){
+    int i;
+    if (nc_dim1->nelems != nc_dim2->nelems){
            return NC_EDIMS_NELEMS_MULTIDEFINE;
-	} else {	
+    } else {    
            for (i=0; i<nc_dim1->nelems; i++){
-	      if (nc_dim1->value[i]->size != nc_dim2->value[i]->size)
-		return NC_EDIMS_SIZE_MULTIDEFINE;
+          if (nc_dim1->value[i]->size != nc_dim2->value[i]->size)
+        return NC_EDIMS_SIZE_MULTIDEFINE;
 #define METADATA_CONSISTENCY_CHECK
 #ifdef METADATA_CONSISTENCY_CHECK
-	      else {
-        	   if ((nc_dim1->value[i]->name->nchars != nc_dim1->value[i]->name->nchars)||(strcmp(nc_dim1->value[i]->name->cp, nc_dim2->value[i]->name->cp)!=0)){
-	              printf("Warning: The dimination name %s of NC definations on multiprocesses inconsistent.\n",nc_dim1->value[i]->name->cp);
-		   } 
-	     }
+          else {
+               if ((nc_dim1->value[i]->name->nchars != nc_dim1->value[i]->name->nchars)||(strcmp(nc_dim1->value[i]->name->cp, nc_dim2->value[i]->name->cp)!=0)){
+                      printf("Warning (inconsistent metadata): dimension name %s != %s\n",nc_dim1->value[i]->name->cp,nc_dim2->value[i]->name->cp);
+           } 
+         }
 #endif
-	   } 
+       } 
 
         }
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
-	int i;
+    int     i, j, num;
+    int    *ia, *ib;
+    short int *sa, *sb;
+    float  *fa, *fb;
+    double *da, *db;
 #ifdef METADATA_CONSISTENCY_CHECK
-	if (nc_attr1->nelems != nc_attr2->nelems){
-           printf("Warning: The number of attributes (root=%lld != %lld) of NC definations on multiprocesses inconsistent.\n",lld(nc_attr1->nelems),lld(nc_attr2->nelems));
-	} else {
-		for (i=0; i<nc_attr1->nelems; i++){
-		   if (nc_attr1->value[i]->xsz != nc_attr2->value[i]->xsz){
-                       printf("Warning: The size of attribute (root=%lld != %lld) of NC definations on multiprocesses inconsistent.\n",lld(nc_attr1->value[i]->xsz),lld(nc_attr2->value[i]->xsz));
-		   }
-		   if ((nc_attr1->value[i]->name->nchars != nc_attr2->value[i]->name->nchars)||(strcmp(nc_attr1->value[i]->name->cp, nc_attr2->value[i]->name->cp))){
-                       printf("Warning: The name of attribute (root=%s != %s) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->name->cp,nc_attr2->value[i]->name->cp);
-	           }
-                   if (strcmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue)){
-                    printf("Warning: The value of attribute (root=%s !=%s) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue);
-		   }	
-		   if (nc_attr1->value[i]->type != nc_attr2->value[i]->type){
-                    printf("Warning: The type of attribute (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->type,nc_attr2->value[i]->type);
-		   }
-		   if (nc_attr1->value[i]->nelems != nc_attr2->value[i]->nelems){
-                    printf("Warning: The length of attribute (root=%lld != %lld) of NC definations on multiprocesses inconsistent.\n",lld(nc_attr1->value[i]->nelems),lld(nc_attr2->value[i]->nelems));
-		   }
-		}
-	}	
+    if (nc_attr1->nelems != nc_attr2->nelems){
+        printf("Warning (inconsistent metadata):: number of attributes %lld != %lld\n",lld(nc_attr1->nelems),lld(nc_attr2->nelems));
+    }
+    else {
+        for (i=0; i<nc_attr1->nelems; i++){
+           if (nc_attr1->value[i]->xsz != nc_attr2->value[i]->xsz)
+               printf("Warning (inconsistent metadata): attribute size %lld != %lld\n",lld(nc_attr1->value[i]->xsz),lld(nc_attr2->value[i]->xsz));
+           if ((nc_attr1->value[i]->name->nchars != nc_attr2->value[i]->name->nchars)||(strcmp(nc_attr1->value[i]->name->cp, nc_attr2->value[i]->name->cp)))
+               printf("Warning (inconsistent metadata): attribute name %s != %s\n",nc_attr1->value[i]->name->cp,nc_attr2->value[i]->name->cp);
+           if (nc_attr1->value[i]->type != nc_attr2->value[i]->type)
+               printf("Warning (inconsistent metadata): attribute type %d != %d\n",nc_attr1->value[i]->type,nc_attr2->value[i]->type);
+           if (nc_attr1->value[i]->nelems != nc_attr2->value[i]->nelems)
+               printf("Warning (inconsistent metadata): attribute length %lld != %lld\n",lld(nc_attr1->value[i]->nelems),lld(nc_attr2->value[i]->nelems));
+
+           num = MIN(nc_attr1->value[i]->nelems, nc_attr2->value[i]->nelems);
+           switch (nc_attr1->value[i]->type) {
+               case NC_CHAR:
+               case NC_BYTE:
+                   if (strcmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue))
+                       printf("Warning (inconsistent metadata): attribute value %s !=%s\n",nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue);
+                   break;
+               case NC_SHORT:
+                   sa = nc_attr1->value[i]->xvalue;
+                   sb = nc_attr2->value[i]->xvalue;
+                   for (j=0; j<num; j++) {
+                       if (sa[j] != sb[j]) {
+                           printf("Warning (inconsistent metadata): attribute value %d !=%d\n",sa[j],sb[j]);
+                           break;
+                       }
+                   }
+                   break;
+               case NC_INT:
+                   ia = nc_attr1->value[i]->xvalue;
+                   ib = nc_attr2->value[i]->xvalue;
+                   for (j=0; j<num; j++) {
+                       if (ia[j] != ib[j]) {
+                           printf("Warning (inconsistent metadata): attribute value %d !=%d\n",ia[j],ib[j]);
+                           break;
+                       }
+                   }
+                   break;
+               case NC_FLOAT:
+                   fa = nc_attr1->value[i]->xvalue;
+                   fb = nc_attr2->value[i]->xvalue;
+                   for (j=0; j<num; j++) {
+                       if (fa[j] != fb[j]) {
+                           printf("Warning (inconsistent metadata): attribute value %f !=%f\n",fa[j],fb[j]);
+                           break;
+                       }
+                   }
+               case NC_DOUBLE:
+                   da = nc_attr1->value[i]->xvalue;
+                   db = nc_attr2->value[i]->xvalue;
+                   for (j=0; j<num; j++) {
+                       if (da[j] != db[j]) {
+                           printf("Warning (inconsistent metadata): attribute value %f !=%f\n",da[j],db[j]);
+                           break;
+                       }
+                   }
+               default:
+                   break;
+            }
+        }
+    }
 #endif
     return NC_NOERR;
 }
 
 int ncmpii_comp_vars(NC_vararray *nc_var1, NC_vararray *nc_var2){
-       int i, j;
-	if (nc_var1->nelems != nc_var2->nelems){
+    int i, j;
+    if (nc_var1->nelems != nc_var2->nelems){
            return NC_EVARS_NELEMS_MULTIDEFINE;
-	} else {
-		for (i=0; i<nc_var1->nelems; i++){
+    } else {
+        for (i=0; i<nc_var1->nelems; i++){
 #ifdef METADATA_CONSISTENCY_CHECK
-		   if ((nc_var1->value[i]->name->nchars !=  nc_var2->value[i]->name->nchars)||strcmp(nc_var1->value[i]->name->cp,nc_var2->value[i]->name->cp))
-		   {
-                    printf("Warning: The name of variable (root=%s) of NC definations on multiprocesses inconsistent.\n",nc_var1->value[i]->name->cp);
-		   }
+           if ((nc_var1->value[i]->name->nchars !=  nc_var2->value[i]->name->nchars)||strcmp(nc_var1->value[i]->name->cp,nc_var2->value[i]->name->cp))
+           {
+                    printf("Warning (inconsistent metadata): variable name %s != %s\n",nc_var1->value[i]->name->cp,nc_var2->value[i]->name->cp);
+           }
 #endif
-		   if ((nc_var1->value[i]->ndims != nc_var2->value[i]->ndims)){
-           		return NC_EVARS_NDIMS_MULTIDEFINE;
-		   }
+           if ((nc_var1->value[i]->ndims != nc_var2->value[i]->ndims)){
+                   return NC_EVARS_NDIMS_MULTIDEFINE;
+           }
                    for (j=0; j<nc_var1->value[i]->ndims; j++){
-		     if (nc_var1->value[i]->dimids[j] != nc_var2->value[i]->dimids[j]){
-           		return NC_EVARS_DIMIDS_MULTIDEFINE;
-		     }
-		   }
-		   if (nc_var1->value[i]->type != nc_var2->value[i]->type){
-           		return NC_EVARS_TYPE_MULTIDEFINE;
-		   }
-		   if (nc_var1->value[i]->len != nc_var2->value[i]->len){
-           		return NC_EVARS_LEN_MULTIDEFINE;
-		   }
-		   if (nc_var1->value[i]->begin != nc_var2->value[i]->begin){
-           		return NC_EVARS_BEGIN_MULTIDEFINE;
+             if (nc_var1->value[i]->dimids[j] != nc_var2->value[i]->dimids[j]){
+                   return NC_EVARS_DIMIDS_MULTIDEFINE;
+             }
+           }
+           if (nc_var1->value[i]->type != nc_var2->value[i]->type){
+                   return NC_EVARS_TYPE_MULTIDEFINE;
+           }
+           if (nc_var1->value[i]->len != nc_var2->value[i]->len){
+                   return NC_EVARS_LEN_MULTIDEFINE;
+           }
+           if (nc_var1->value[i]->begin != nc_var2->value[i]->begin){
+                   return NC_EVARS_BEGIN_MULTIDEFINE;
                    }
-		   ncmpii_comp_attrs(&nc_var1->value[i]->attrs, &nc_var2->value[i]->attrs);
-		}
-	}
+           ncmpii_comp_attrs(&nc_var1->value[i]->attrs, &nc_var2->value[i]->attrs);
+        }
+    }
       return NC_NOERR;
 };
 
