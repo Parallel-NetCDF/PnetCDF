@@ -85,8 +85,10 @@ struct NCMPI_Req {
   int ndim;
   MPI_Offset* start;
   MPI_Offset* count;
+  int rw_flag;
 };
 typedef struct NCMPI_Req * NCMPI_Request;
+
 #define NCMPI_REQUEST_NULL ((NCMPI_Request)NULL)
 #define NCMPI_REQTYPE_READ      1
 #define NCMPI_REQTYPE_WRITE     2
@@ -697,8 +699,8 @@ int ncmpi_put_mvara_all(int ncid, int nvars, int varids[],
                    MPI_Offset **starts, MPI_Offset **counts,
                    void **buffers, MPI_Offset *bufcounts,
                    MPI_Datatype *datatypes);
-int
-ncmpi_iput_vara_all(int ncid, int varid,
+
+int ncmpi_iput_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
                    const void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype, NCMPI_Request *request);
@@ -712,6 +714,11 @@ int ncmpi_get_mvara_all(int ncid, int nvars, int varids[],
                    MPI_Offset **starts, MPI_Offset **counts,
                    void **buffers, MPI_Offset *bufcounts,
                    MPI_Datatype *datatypes);
+
+int ncmpi_iget_vara_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   MPI_Datatype datatype, NCMPI_Request *request);
 
 int ncmpi_put_vara(int ncid, int varid,
                const MPI_Offset start[], const MPI_Offset count[],

@@ -13219,14 +13219,60 @@ ncmpi_iput_vara_all(int ncid, int varid,
       (*request)->start[dim]=start[dim];
       (*request)->count[dim]=count[dim];
   }
-  
+  (*request)->rw_flag = 1; 
+  return NC_NOERR;
+}
+
+int
+ncmpi_iget_vara_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   MPI_Datatype datatype, NCMPI_Request *request) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  int dim;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+
+  *request = (NCMPI_Request)malloc(sizeof(struct NCMPI_Req));
+  if (*request == NULL) printf("no memory buffer\n");
+  (*request)->indep = 0;
+  (*request)->ncid = ncid;
+  (*request)->varid = varid;
+  (*request)->ndim = varp->ndims;
+  (*request)->start = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
+  (*request)->count = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
+  (*request)->buf = (void *)buf;
+  (*request)->bufcount = bufcount;
+  (*request)->vartype = datatype;
+  (*request)->next_req = NULL;
+  for (dim = 0; dim < varp->ndims; dim++){
+      (*request)->start[dim]=start[dim];
+      (*request)->count[dim]=count[dim];
+  }
+  (*request)->rw_flag = 0;
   return NC_NOERR;
 }
 
 
 static int
 ncmpi_coll_wait(NCMPI_Request request) {
+  if (request->rw_flag == 1)
   return (ncmpi_put_vara_all(request->ncid, request->varid,
+                   request->start, request->count,
+                   request->buf, request->bufcount,
+                   request->vartype));
+  if (request->rw_flag == 0)
+  return (ncmpi_get_vara_all(request->ncid, request->varid,
                    request->start, request->count,
                    request->buf, request->bufcount,
                    request->vartype));
@@ -13269,11 +13315,24 @@ ncmpi_coll_waitall(int count, NCMPI_Request array_of_requests[]) {
 	bufcount[i] = array_of_requests[i]->bufcount;
 	datatype[i] = array_of_requests[i]->vartype;
   }
-
+  if (array_of_requests[0]->rw_flag == 1)
   ncmpi_put_mvara_all(ncid, count, varids,
                    starts, counts,
                    buf, bufcount,
                    datatype);
+
+  if (array_of_requests[0]->rw_flag == 0)
+  ncmpi_get_mvara_all(ncid, count, varids,
+                   starts, counts,
+                   buf, bufcount,
+                   datatype);
+
+  free(starts);
+  free(varids);
+  free(counts);
+  free(buf);
+  free(bufcount);
+  free(datatype);
   return NC_NOERR;
 }
 /* End non-blocking data access functions */
