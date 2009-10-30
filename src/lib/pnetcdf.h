@@ -1490,7 +1490,6 @@ int ncmpi_get_varm_double(int ncid, int varid,
 /* #################################################################### */
 /* Begin: more prototypes to be included for fortran binding conversion */
 
-#ifdef ENABLE_NONBLOCKING
 /* Begin non-blocking data access functions */
 
 
@@ -2181,5 +2180,3 @@ int ncmpiii_data_decode(MPI_Offset cnelems, int el_size,
 #if defined(__cplusplus)
 }
 #endif
-
-#endif /* _NETCDF_ */
