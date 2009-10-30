@@ -27,7 +27,7 @@ FORTRAN_API int FORT_CALL nfmpi_waitall_ ( int *v1, MPI_Fint * v2 ){
     extern lnc_req *req_tail ;
     int ierr;
     NCMPI_Request *l2_req;
-    int i,j;
+    int i;
     lnc_req *tmp_req = NULL;
     l2_req = malloc((*v1)*sizeof(NCMPI_Request));
     tmp_req = req_head;

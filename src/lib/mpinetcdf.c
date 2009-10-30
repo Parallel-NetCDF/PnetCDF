@@ -22,7 +22,7 @@ static int length_of_mpitype(MPI_Datatype);
 
 const char *
 ncmpi_inq_libvers(void) {
-  return "version = 1.1.0 of 26 October 2009";
+  return "version = 1.1.0 of 28 October 2009";
 }
 
 /* Prototypes for functions used only in this file */
@@ -13266,17 +13266,21 @@ ncmpi_iget_vara_all(int ncid, int varid,
 
 static int
 ncmpi_coll_wait(NCMPI_Request request) {
-  if (request->rw_flag == 1)
-  return (ncmpi_put_vara_all(request->ncid, request->varid,
+  int ret;
+  if (request->rw_flag == 1) {
+    ret = ncmpi_put_vara_all(request->ncid, request->varid,
+                   request->start, request->count,
+                   request->buf, request->bufcount,
+                   request->vartype);
+  } else if ( request->rw_flag == 0) {
+    ret = (ncmpi_get_vara_all(request->ncid, request->varid,
                    request->start, request->count,
                    request->buf, request->bufcount,
                    request->vartype));
-  if (request->rw_flag == 0)
-  return (ncmpi_get_vara_all(request->ncid, request->varid,
-                   request->start, request->count,
-                   request->buf, request->bufcount,
-                   request->vartype));
-
+  } else {
+	  ret = NC_EFILE;
+  }
+  return ret;
 }
 
 
