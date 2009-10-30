@@ -27,6 +27,14 @@
 #define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
 #endif
 
+#ifdef SIZEOF_INT
+# if SIZEOF_INT == 4
+#  define lld(x) (x)
+# elif  SIZEOF_INT == 8
+#  define lld(x) (long long)(x)
+# endif
+#endif
+
 /* Prototypes for functions used only in this file */
 static MPI_Offset hdr_len_NC_string(const NC_string *ncstrp, MPI_Offset sizeof_t);
 static MPI_Offset hdr_len_NC_dim(const NC_dim *dimp, MPI_Offset sizeof_t);
@@ -1297,11 +1305,11 @@ int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
 	int i;
 #ifdef METADATA_CONSISTENCY_CHECK
 	if (nc_attr1->nelems != nc_attr2->nelems){
-           printf("Warning: The number of attributes (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->nelems,nc_attr2->nelems);
+           printf("Warning: The number of attributes (root=%lld != %lld) of NC definations on multiprocesses inconsistent.\n",lld(nc_attr1->nelems),lld(nc_attr2->nelems));
 	} else {
 		for (i=0; i<nc_attr1->nelems; i++){
 		   if (nc_attr1->value[i]->xsz != nc_attr2->value[i]->xsz){
-                       printf("Warning: The size of attribute (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->xsz,nc_attr2->value[i]->xsz);
+                       printf("Warning: The size of attribute (root=%lld != %lld) of NC definations on multiprocesses inconsistent.\n",lld(nc_attr1->value[i]->xsz),lld(nc_attr2->value[i]->xsz));
 		   }
 		   if ((nc_attr1->value[i]->name->nchars != nc_attr2->value[i]->name->nchars)||(strcmp(nc_attr1->value[i]->name->cp, nc_attr2->value[i]->name->cp))){
                        printf("Warning: The name of attribute (root=%s != %s) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->name->cp,nc_attr2->value[i]->name->cp);
@@ -1313,7 +1321,7 @@ int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
                     printf("Warning: The type of attribute (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->type,nc_attr2->value[i]->type);
 		   }
 		   if (nc_attr1->value[i]->nelems != nc_attr2->value[i]->nelems){
-                    printf("Warning: The length of attribute (root=%d != %d) of NC definations on multiprocesses inconsistent.\n",nc_attr1->value[i]->nelems,nc_attr2->value[i]->nelems);
+                    printf("Warning: The length of attribute (root=%lld != %lld) of NC definations on multiprocesses inconsistent.\n",lld(nc_attr1->value[i]->nelems),lld(nc_attr2->value[i]->nelems));
 		   }
 		}
 	}	
