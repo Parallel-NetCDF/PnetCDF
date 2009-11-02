@@ -1313,7 +1313,7 @@ int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
                case NC_CHAR:
                case NC_BYTE:
                    if (strcmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue))
-                       printf("Warning (inconsistent metadata): attribute value %s != %s\n",nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue);
+                       printf("Warning (inconsistent metadata): attribute value %s != %s\n", (char *)nc_attr1->value[i]->xvalue, (char *)nc_attr2->value[i]->xvalue);
                    break;
                case NC_SHORT:
                    sa = nc_attr1->value[i]->xvalue;
