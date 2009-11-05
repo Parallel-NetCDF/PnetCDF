@@ -258,8 +258,6 @@ typedef struct NCMPI_Req * NCMPI_Request;
 
 # define EXTERNL extern MSC_EXTRA
 
-#include <mpi.h>
-
 /* Begin Prototypes */
 
 
@@ -2129,7 +2127,6 @@ int ncmpi_iget_varm_double(int ncid, int varid,
 /* End {put,get}_varm */
 
 /* End non-blocking data access functions */
-#endif
 
 /* End: more prototypes to be included for fortran binding conversion */
 /* ################################################################## */
@@ -2179,4 +2176,5 @@ int ncmpiii_data_decode(MPI_Offset cnelems, int el_size,
         nc_type type, MPI_Offset nbytes, MPI_Offset nelems);
 #if defined(__cplusplus)
 }
+#endif
 #endif
