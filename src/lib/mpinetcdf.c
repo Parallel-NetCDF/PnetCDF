@@ -509,6 +509,32 @@ swapn(void *dst, const void *src, MPI_Offset nn, int xsize)
   }
 }
 
+
+#define SWAP(x,y) {tmp = (x); (x) = (y); (y) = tmp;}
+static void
+in_swapn(void *buf, MPI_Offset nn, int xsize)
+{
+  int i;
+  char tmp;
+  char *op = buf;
+
+  if (xsize == 4) { /* this is the most case */
+      while (nn-- > 0) {
+        SWAP(op[0], op[3]);
+        SWAP(op[1], op[2]);
+        op += xsize;
+      }
+      return;
+  }
+
+  while (nn-- > 0) {
+    for (i=0; i<xsize/2; i++)
+      SWAP(op[i], op[xsize-1-i])
+    op += xsize;
+  }
+}
+
+
 static int
 x_putn_schar(void *xbuf, const void *buf, MPI_Offset nelems, MPI_Datatype datatype) {
   void *xp, *data;
@@ -1634,10 +1660,8 @@ ncmpi_put_var1(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf,  cbuf, 1, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, 1, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -1655,6 +1679,9 @@ ncmpi_put_var1(int ncid, int varid,
         status = NC_EWRITE;
   }
  
+  if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
+      in_swapn(cbuf, 1, ncmpix_len_nctype(varp->type));
+
 fn_exit:
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
@@ -1749,7 +1776,7 @@ ncmpi_get_var1(int ncid, int varid,
 
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp->type, ptype) || need_swap(varp->type, ptype) ) {
+  if ( need_convert(varp->type, ptype) ) {
 
     /* allocate new buffer */
     xbuf = (void *)malloc(nbytes);
@@ -1795,7 +1822,7 @@ ncmpi_get_var1(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    swapn(cbuf, xbuf, 1, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, 1, ncmpix_len_nctype(varp->type));
 
   }
 
@@ -1898,7 +1925,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datat
 
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp->type, ptype) ||  need_swap(varp->type, ptype) ) {
+  if ( need_convert(varp->type, ptype) ) {
 
     /* allocate new buffer */
     xbuf = (void *)malloc(nbytes);
@@ -1944,7 +1971,7 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datat
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    swapn(cbuf, xbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   }
 
@@ -2083,10 +2110,8 @@ ncmpi_put_var(int ncid, int varid, const void *buf, MPI_Offset bufcount, MPI_Dat
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -2103,6 +2128,9 @@ ncmpi_put_var(int ncid, int varid, const void *buf, MPI_Offset bufcount, MPI_Dat
         status = NC_EWRITE;
   }
  
+  if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
   if (cbuf != buf && cbuf != NULL)
@@ -2204,7 +2232,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype 
 
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp->type, ptype) ||  need_swap(varp->type, ptype) ) {
+  if ( need_convert(varp->type, ptype) ) {
 
     /* allocate new buffer */
     xbuf = (void *)malloc(nbytes);
@@ -2250,7 +2278,7 @@ ncmpi_get_var(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype 
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    swapn(cbuf, xbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   }
 
@@ -2396,10 +2424,8 @@ ncmpi_put_vara_all(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -2422,6 +2448,9 @@ ncmpi_put_vara_all(int ncid, int varid,
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
+
+  if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
@@ -2541,7 +2570,7 @@ ncmpi_get_vara_all(int ncid, int varid,
 
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp->type, ptype) ||  need_swap(varp->type, ptype) ) {
+  if ( need_convert(varp->type, ptype) ) {
 
     /* allocate new buffer */
     xbuf = (void *)malloc(nbytes);
@@ -2562,7 +2591,7 @@ ncmpi_get_vara_all(int ncid, int varid,
   }
   if ( need_convert(varp->type, ptype) ) {
 
-    /* automatic numeric datatype conversion */
+    /* automatic numeric datatype conversion and byte swap if needed */
 
     switch( varp->type ) {
       case NC_BYTE:
@@ -2586,7 +2615,7 @@ ncmpi_get_vara_all(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    swapn(cbuf, xbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(xbuf, nelems, ncmpix_len_nctype(varp->type));
 
   }
 
@@ -2730,7 +2759,10 @@ int ncmpiii_data_decode(MPI_Offset cnelems, int el_size,
 
     } else if ( need_swap(type, ptype) ) {
 
-        swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(type));
+        if (xbuf == cbuf)
+            in_swapn(cbuf, nelems, ncmpix_len_nctype(type));
+        else
+            swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(type));
     }
     if (!iscontig_of_ptypes) {
     /* handling for derived datatype: unpack from the contiguous buffer */
@@ -2862,10 +2894,8 @@ ncmpi_put_vara(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -2881,6 +2911,9 @@ ncmpi_put_vara(int ncid, int varid,
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         return NC_EWRITE;
   }
+
+  if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
@@ -2982,7 +3015,7 @@ ncmpi_get_vara(int ncid, int varid,
  
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp->type, ptype) ||  need_swap(varp->type, ptype) ) {
+  if ( need_convert(varp->type, ptype) ) {
 
     /* allocate new buffer */
     xbuf = (void *)malloc(nbytes);
@@ -3027,7 +3060,7 @@ ncmpi_get_vara(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    swapn(cbuf, xbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   }
 
@@ -3185,10 +3218,8 @@ ncmpi_put_vars_all(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -3204,6 +3235,9 @@ ncmpi_put_vars_all(int ncid, int varid,
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
+
+  if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
@@ -3327,7 +3361,7 @@ ncmpi_get_vars_all(int ncid, int varid,
 
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp->type, ptype) ||  need_swap(varp->type, ptype) ) {
+  if ( need_convert(varp->type, ptype) ) {
 
     /* allocate new buffer */
     xbuf = (void *)malloc(nbytes);
@@ -3373,7 +3407,7 @@ ncmpi_get_vars_all(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    swapn(cbuf, xbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   }
 
@@ -3517,10 +3551,8 @@ ncmpi_put_vars(int ncid, int varid,
 
   } else if ( need_swap(varp->type, datatype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -3536,6 +3568,9 @@ ncmpi_put_vars(int ncid, int varid,
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
+
+  if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
@@ -3640,7 +3675,7 @@ ncmpi_get_vars(int ncid, int varid,
 
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp->type, ptype) ||  need_swap(varp->type, ptype) ) {
+  if ( need_convert(varp->type, ptype) ) {
 
     /* allocate new buffer */
     xbuf = (void *)malloc(nbytes);
@@ -3686,7 +3721,7 @@ ncmpi_get_vars(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    swapn(cbuf, xbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
 
   }
 
@@ -8175,6 +8210,9 @@ static int ncmpii_postread(nc_type vartype,
          break;
     }
   } else if ( need_swap(vartype, ptype) ) {
+if (cbuf == xbuf)
+    in_swapn(xbuf, nelems, ncmpix_len_nctype(vartype));
+else
     swapn(cbuf, xbuf, nelems, ncmpix_len_nctype(vartype));
   }
 
@@ -8649,10 +8687,8 @@ ncmpi_iput_var1(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf,  cbuf, 1, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, 1, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -8668,7 +8704,7 @@ ncmpi_iput_var1(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite");
         status = NC_EWRITE;
   }
  
@@ -8924,10 +8960,8 @@ ncmpi_iput_var(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -8943,7 +8977,7 @@ ncmpi_iput_var(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write error");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite error");
         status = NC_EWRITE;
   }
  
@@ -9215,10 +9249,8 @@ ncmpi_iput_vara(int ncid, int varid,
 
   } else if ( need_swap(varp->type, ptype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -9234,7 +9266,7 @@ ncmpi_iput_vara(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite");
         return NC_EWRITE;
   }
 
@@ -9506,10 +9538,8 @@ ncmpi_iput_vars(int ncid, int varid,
 
   } else if ( need_swap(varp->type, datatype) ) {
 
-    /* allocate new buffer */
-    xbuf = (void *)malloc(nbytes);
-
-    swapn(xbuf, cbuf, nelems, ncmpix_len_nctype(varp->type));
+    in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    xbuf = (void *)cbuf;
 
   } else {
 
@@ -9525,7 +9555,7 @@ ncmpi_iput_vars(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite");
         status = NC_EWRITE;
   }
 
@@ -12364,7 +12394,8 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
 
     } else {
       if (IS_RECVAR(varp[i])){ 
-        subcount[0] = count[i][0];
+        subcount[0] = 1;
+//        subcount[0] = count[i][0];
 //        substart[0] = start[i][0];
         substart[0] = 0;
         shape[0] = subcount[0];
@@ -12449,7 +12480,13 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
       }
     }
   }
-    blocklen[i]=1;
+   if (IS_RECVAR(varp[i])&&(ncp->recsize <= varp[i]->len)) {
+        blocklen[i]=count[i][0];
+    } else {
+        blocklen[i]=1;
+    }
+
+//    blocklen[i]=1;
     free(shape);
     free(subcount);
     free(substart);
@@ -12630,9 +12667,8 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varids[],
 
     } else  if ( need_swap(varp[i]->type, ptype[i]) ) {
 
-      xbuf[i] = (void *)malloc(nbytes[i]);
-      if (xbuf[i]==NULL) printf("xbuf[%d] is NULL\n", i);
-      swapn(xbuf[i], cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
+      in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
+      xbuf[i] = (void *)cbuf[i];
 
     } else { 
 
@@ -12658,6 +12694,11 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varids[],
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
+
+  for (i=0; i<nvars; i++)
+      if ( need_swap(varp[i]->type, ptype[i]) && buffers[i] == cbuf[i] && cbuf[i] == xbuf[i] )
+          in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
+
   for (i=0; i<nvars; i++){
   if (xbuf[i] != cbuf[i] && xbuf[i] != NULL){
     free(xbuf[i]);
@@ -12823,7 +12864,7 @@ ncmpi_get_mvara_all(int ncid, int nvars, int *varids,
 
   /* assign or allocate MPI buffer */
 
-  if ( need_convert(varp[i]->type, ptype[i]) ||  need_swap(varp[i]->type, ptype[i]) ) {
+  if ( need_convert(varp[i]->type, ptype[i]) ) {
 
     /* allocate new buffer */
     xbuf[i] = (void *)malloc(nbytes[i]);
@@ -12883,7 +12924,7 @@ ncmpi_get_mvara_all(int ncid, int nvars, int *varids,
 
   } else if ( need_swap(varp[i]->type, ptype[i]) ) {
 
-    swapn(cbuf[i], xbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
+    in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
 
   }
 
@@ -13071,9 +13112,8 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
 
     } else  if ( need_swap(varp[i]->type, ptype[i]) ) {
 
-      xbuf[i] = (void *)malloc(nbytes[i]);
-      if (xbuf[i]==NULL) printf("xbuf[%d] is NULL\n", i);
-      swapn(xbuf[i], cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
+      in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
+      xbuf[i] = (void *)cbuf[i];
 
     } else {
       /* else, just assign contiguous buffer */
@@ -13111,6 +13151,11 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
         ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
+
+  for (i=0; i<nvars; i++)
+      if ( need_swap(varp[i]->type, ptype[i]) )
+          in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
+
   for (i=0; i<nvars; i++){
   if (xbuf[i] != cbuf[i] && xbuf[i] != NULL){
     free(xbuf[i]);
