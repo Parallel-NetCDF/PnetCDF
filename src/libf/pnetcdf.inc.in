@@ -877,6 +877,60 @@
 !                          integer            req)
       external        nfmpi_iput_vara_all
 
+      integer         nfmpi_iput_vara_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iput_vara_int1_all
+
+      integer         nfmpi_iput_vara_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iput_vara_text_all
+
+      integer         nfmpi_iput_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iput_vara_int2_all
+
+      integer         nfmpi_iput_vara_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iput_vara_int_all
+
+      integer         nfmpi_iput_vara_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iput_vara_real_all
+
+      integer         nfmpi_iput_vara_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iput_vara_double_all
+
       integer         nfmpi_iget_vara_all
 !                         (integer             ncid,
 !                          integer             varid,
@@ -885,6 +939,60 @@
 !                          character(*)        text,
 !                          integer            req)
       external        nfmpi_iget_vara_all
+
+      integer         nfmpi_iget_vara_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iget_vara_int1_all
+
+      integer         nfmpi_iget_vara_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iget_vara_text_all
+
+      integer         nfmpi_iget_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iget_vara_int2_all
+
+      integer         nfmpi_iget_vara_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iget_vara_int_all
+
+      integer         nfmpi_iget_vara_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iget_vara_real_all
+
+      integer         nfmpi_iget_vara_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+!                          integer            req)
+      external        nfmpi_iget_vara_double_all
 
 
       integer         nfmpi_wait

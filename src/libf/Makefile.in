@@ -101,7 +101,19 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	get_file_infof.c \
 	deletef.c \
 	iput_vara_allf.c \
+	iput_vara_int1_allf.c \
+	iput_vara_text_allf.c \
+	iput_vara_int2_allf.c \
+	iput_vara_int_allf.c \
+	iput_vara_real_allf.c \
+	iput_vara_double_allf.c \
 	iget_vara_allf.c \
+	iget_vara_int1_allf.c \
+	iget_vara_text_allf.c \
+	iget_vara_int2_allf.c \
+	iget_vara_int_allf.c \
+	iget_vara_real_allf.c \
+	iget_vara_double_allf.c \
 	waitallf.c \
 	waitf.c \
 	mvar.c

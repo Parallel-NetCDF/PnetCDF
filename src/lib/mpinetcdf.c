@@ -12956,6 +12956,606 @@ ncmpi_get_mvara_all(int ncid, int nvars, int *varids,
   return ((warning != NC_NOERR) ? warning : status);
 }
 
+int
+ncmpi_get_mvara_uchar_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_UNSIGNED_CHAR;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_get_mvara_schar_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_BYTE;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_get_mvara_text_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_CHAR;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_get_mvara_short_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_SHORT;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_get_mvara_int_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_INT;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_get_mvara_long_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_LONG;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_get_mvara_float_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_FLOAT;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_get_mvara_double_all(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+        datatypes[i] = MPI_DOUBLE;
+  }
+  ncmpi_get_mvara_all(ncid, nvars, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mget_vara_uchar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_UNSIGNED_CHAR;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
+int
+ncmpi_mget_vara_schar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_BYTE;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
+int
+ncmpi_mget_vara_text_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_CHAR;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
+int
+ncmpi_mget_vara_short_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_SHORT;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
+int
+ncmpi_mget_vara_int_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_INT;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
+int
+ncmpi_mget_vara_long_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_LONG;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
+int
+ncmpi_mget_vara_float_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_FLOAT;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
+int
+ncmpi_mget_vara_double_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts){
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int *varids;
+  int i;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+ 
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+ 
+  for (i=0; i<ntimes; i++){
+        datatypes[i] = MPI_DOUBLE;
+        varids[i] = varid;
+  }
+
+  ncmpi_get_mvara_all(ncid, ntimes, varids,
+                   starts, counts,
+                   buffers, bufcounts,
+                   datatypes);
+
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+
+  return (status);
+
+}
+
 static int
 ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
                    MPI_Offset *start[], MPI_Offset *count[],
@@ -13229,6 +13829,598 @@ ncmpi_put_mvara_all(int ncid, int nvars, int varids[],
 }
 
 int
+ncmpi_put_mvara_uchar_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] = MPI_UNSIGNED_CHAR;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_put_mvara_schar_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] =  MPI_BYTE;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_put_mvara_text_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] = MPI_CHAR;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_put_mvara_short_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] = MPI_SHORT;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_put_mvara_int_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] = MPI_INT;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_put_mvara_long_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] = MPI_LONG;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_put_mvara_float_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] = MPI_FLOAT;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_put_mvara_double_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(nvars*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  for (i=0; i<nvars; i++){
+	datatypes[i] = MPI_DOUBLE;	
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, nvars, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_uchar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_UNSIGNED_CHAR;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_schar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_BYTE;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_text_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_CHAR;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_short_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_SHORT;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_int_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_INT;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_long_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_LONG;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_float_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_FLOAT;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
+ncmpi_mput_vara_double_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts) {
+
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+  MPI_Datatype *datatypes;
+  int i;
+  int *varids;
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  datatypes = (MPI_Datatype *)malloc(ntimes*sizeof(MPI_Datatype));
+  if (datatypes == NULL) return NC_ENOMEM;
+  
+  varids = (int *)malloc(ntimes*sizeof(int));
+  if (varids == NULL) return NC_ENOMEM;
+
+  for (i=0; i<ntimes; i++){
+	datatypes[i] = MPI_DOUBLE;	
+	varids[i] = varid;
+  }
+
+  if (IS_RECVAR(varp))
+    status = ncmpi_put_mvara_all_record(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  else
+    status = ncmpi_put_mvara_all_nonrecord(ncid, ntimes, varids, starts, counts, buffers, bufcounts, datatypes);
+  if (datatypes != NULL){
+    free(datatypes);
+    datatypes = NULL;
+  }
+  return (status);
+}
+
+int
 ncmpi_iput_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
                    const void *buf, MPI_Offset bufcount,
@@ -13266,6 +14458,190 @@ ncmpi_iput_vara_all(int ncid, int varid,
   }
   (*request)->rw_flag = 1; 
   return NC_NOERR;
+}
+
+int
+ncmpi_iput_vara_uchar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_UNSIGNED_CHAR, request);
+
+  return status;
+}
+
+int
+ncmpi_iput_vara_schar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_BYTE, request);
+
+  return status;
+}
+
+int
+ncmpi_iput_vara_text_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_CHAR, request);
+
+  return status;
+}
+
+int
+ncmpi_iput_vara_short_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_SHORT, request);
+
+  return status;
+}
+
+int
+ncmpi_iput_vara_int_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_INT, request);
+
+  return status;
+}
+
+int
+ncmpi_iput_vara_long_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_LONG, request);
+
+  return status;
+}
+
+int
+ncmpi_iput_vara_float_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_FLOAT, request);
+
+  return status;
+}
+
+int
+ncmpi_iput_vara_double_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+   
+  status = ncmpi_iput_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_DOUBLE, request);
+
+  return status;
 }
 
 int
@@ -13308,6 +14684,166 @@ ncmpi_iget_vara_all(int ncid, int varid,
   return NC_NOERR;
 }
 
+int
+ncmpi_iget_vara_uchar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  status = ncmpi_iget_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_UNSIGNED_CHAR, request);
+
+  return status;
+}
+
+int
+ncmpi_iget_vara_schar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  status = ncmpi_iget_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_BYTE, request);
+
+  return status;
+}
+
+int
+ncmpi_iget_vara_text_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  status = ncmpi_iget_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_CHAR, request);
+
+  return status;
+}
+
+int
+ncmpi_iget_vara_short_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  status = ncmpi_iget_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_SHORT, request);
+
+  return status;
+}
+
+int
+ncmpi_iget_vara_int_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  status = ncmpi_iget_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_INT, request);
+
+  return status;
+}
+
+int
+ncmpi_iget_vara_float_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  status = ncmpi_iget_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_FLOAT, request);
+
+  return status;
+}
+
+int
+ncmpi_iget_vara_double_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request) {
+  NC_var *varp;
+  NC *ncp;
+  int status = NC_NOERR;
+
+  status = ncmpii_NC_check_id(ncid, &ncp);
+  if(status != NC_NOERR)
+    return status;
+
+  varp = ncmpii_NC_lookupvar(ncp, varid);
+  if(varp == NULL)
+    return NC_ENOTVAR;
+
+  status = ncmpi_iget_vara_all(ncid, varid, start, count, buf, bufcount,
+                   MPI_DOUBLE, request);
+
+  return status;
+}
 
 static int
 ncmpi_coll_wait(NCMPI_Request request) {
