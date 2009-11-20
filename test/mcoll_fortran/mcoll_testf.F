@@ -337,9 +337,11 @@
 !     &    (ncid, tt1_id, start_3d, count_3d, tt)
 !         ierr = Nfmpi_Put_Vara_All
 !     &    (ncid, tt1_id, start_3d, count_3d, tt, size(tt), MPI_REAL4)
-         ierr = Nfmpi_iPut_Vara_All
-     &    (ncid, tt1_id, start_3d, count_3d, tt1, size(tt1), MPI_REAL4, 
-     &   req1)
+!         ierr = Nfmpi_iPut_Vara_All
+!     &    (ncid, tt1_id, start_3d, count_3d, tt1, size(tt1), MPI_REAL4, 
+!     &   req1)
+         ierr = Nfmpi_iPut_Vara_Real_All
+     &    (ncid, tt1_id, start_3d, count_3d, tt1, size(tt1), req1)
            req(nw)=req1
 !        if (mype == 0) Write (6,900) mype, req1
 

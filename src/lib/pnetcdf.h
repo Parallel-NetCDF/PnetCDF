@@ -698,10 +698,138 @@ int ncmpi_put_mvara_all(int ncid, int nvars, int varids[],
                    void **buffers, MPI_Offset *bufcounts,
                    MPI_Datatype *datatypes);
 
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_put_mvara_uchar_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_put_mvara_schar_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_put_mvara_text_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_put_mvara_short_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_put_mvara_int_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_put_mvara_long_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_put_mvara_float_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_put_mvara_double_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_mput_vara_uchar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_mput_vara_schar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mput_vara_text_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mput_vara_short_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mput_vara_int_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_mput_vara_long_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_mput_vara_float_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mput_vara_double_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
 int ncmpi_iput_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
                    const void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype, NCMPI_Request *request);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_iput_vara_uchar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_iput_vara_schar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iput_vara_text_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iput_vara_short_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iput_vara_int_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_iput_vara_long_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_iput_vara_float_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iput_vara_double_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
 
 int ncmpi_get_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
@@ -713,10 +841,138 @@ int ncmpi_get_mvara_all(int ncid, int nvars, int varids[],
                    void **buffers, MPI_Offset *bufcounts,
                    MPI_Datatype *datatypes);
 
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_get_mvara_uchar_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_get_mvara_schar_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_get_mvara_text_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_get_mvara_short_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_get_mvara_int_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_get_mvara_long_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_get_mvara_float_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_get_mvara_double_all(int ncid, int nvars, int varids[],
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_mget_vara_uchar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_mget_vara_schar_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mget_vara_text_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mget_vara_short_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mget_vara_int_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_mget_vara_long_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_mget_vara_float_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
+int ncmpi_mget_vara_double_all(int ncid, int ntimes, int varid,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts);
+
 int ncmpi_iget_vara_all(int ncid, int varid,
                    const MPI_Offset start[], const MPI_Offset count[],
                    const void *buf, MPI_Offset bufcount,
                    MPI_Datatype datatype, NCMPI_Request *request);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_iget_vara_uchar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_iget_vara_schar_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iget_vara_text_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iget_vara_short_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iget_vara_int_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+/* Begin Skip Prototypes for Fortran binding */
+
+int ncmpi_iget_vara_long_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+/* End Skip Prototypes for Fortran binding */
+
+int ncmpi_iget_vara_float_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
+
+int ncmpi_iget_vara_double_all(int ncid, int varid,
+                   const MPI_Offset start[], const MPI_Offset count[],
+                   const void *buf, MPI_Offset bufcount,
+                   NCMPI_Request *request);
 
 int ncmpi_put_vara(int ncid, int varid,
                const MPI_Offset start[], const MPI_Offset count[],
