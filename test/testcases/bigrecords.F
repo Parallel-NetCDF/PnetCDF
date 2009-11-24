@@ -214,8 +214,10 @@
       call check_err(iret)
 
       ! deliberately want all processes to end up with the full time array
+      time_start = 1
+      time_count = 4
       iret = nfmpi_get_vara_double_all(ncid, time_id,
-     1                               1, 4, time);
+     1                               time_start, time_count, time);
       call check_err(iret)
 
 
