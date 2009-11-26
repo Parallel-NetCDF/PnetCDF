@@ -76,6 +76,7 @@ struct NCMPI_Req {
   int iscontig_of_ptypes;
   void *buf;
   MPI_Offset bufcount;
+  MPI_Datatype mpi_varatype;
   MPI_Datatype datatype;
   MPI_Datatype ptype;
   MPI_Datatype imaptype;

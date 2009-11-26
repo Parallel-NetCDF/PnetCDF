@@ -12687,6 +12687,8 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varids[],
   }
  
   MPI_Type_create_hindexed(nvars, nbytes, displacement, MPI_BYTE, &buf_type);
+  MPI_Type_commit(&buf_type);
+  
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf[0], 1, buf_type, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
@@ -12886,6 +12888,7 @@ ncmpi_get_mvara_all(int ncid, int nvars, int *varids,
   }
 
     MPI_Type_create_hindexed(nvars, nbytes, displacement, MPI_BYTE, &buf_type);
+    MPI_Type_commit(&buf_type);
 
     mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf[0], 1, buf_type, &mpistatus);
 
@@ -13743,6 +13746,7 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
     }
     MPI_Type_create_hindexed(nvars*count[0][0], nbytes, displacement, MPI_BYTE, &buf_type);
   }
+  MPI_Type_commit(&buf_type);
   mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf[0], 1, buf_type, &mpistatus);
 
   if (mpireturn != MPI_SUCCESS) {
@@ -14450,7 +14454,7 @@ ncmpi_iput_vara_all(int ncid, int varid,
   (*request)->count = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
   (*request)->buf = (void *)buf;
   (*request)->bufcount = bufcount;
-  (*request)->vartype = datatype;
+  (*request)->mpi_varatype = datatype;
   (*request)->next_req = NULL;
   for (dim = 0; dim < varp->ndims; dim++){
       (*request)->start[dim]=start[dim];
@@ -14674,7 +14678,7 @@ ncmpi_iget_vara_all(int ncid, int varid,
   (*request)->count = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
   (*request)->buf = (void *)buf;
   (*request)->bufcount = bufcount;
-  (*request)->vartype = datatype;
+  (*request)->mpi_varatype = datatype;
   (*request)->next_req = NULL;
   for (dim = 0; dim < varp->ndims; dim++){
       (*request)->start[dim]=start[dim];
@@ -14852,12 +14856,12 @@ ncmpi_coll_wait(NCMPI_Request request) {
     ret = ncmpi_put_vara_all(request->ncid, request->varid,
                    request->start, request->count,
                    request->buf, request->bufcount,
-                   request->vartype);
+                   request->mpi_varatype);
   } else if ( request->rw_flag == 0) {
     ret = (ncmpi_get_vara_all(request->ncid, request->varid,
                    request->start, request->count,
                    request->buf, request->bufcount,
-                   request->vartype));
+                   request->mpi_varatype));
   } else {
 	  ret = NC_EFILE;
   }
@@ -14898,7 +14902,7 @@ ncmpi_coll_waitall(int count, NCMPI_Request array_of_requests[]) {
 	}
         buf[i] = array_of_requests[i]->buf;
 	bufcount[i] = array_of_requests[i]->bufcount;
-	datatype[i] = array_of_requests[i]->vartype;
+	datatype[i] = array_of_requests[i]->mpi_varatype;
   }
   if (array_of_requests[0]->rw_flag == 1)
   ncmpi_put_mvara_all(ncid, count, varids,
