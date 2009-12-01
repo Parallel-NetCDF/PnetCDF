@@ -12,9 +12,6 @@
 #endif
 #include <stdio.h>
 #include <mpi.h>
-#ifdef HAVE_MPIO_H
-#include <mpio.h>
-#endif
 
 #include "ncmpidtype.h"
 
