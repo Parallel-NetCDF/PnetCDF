@@ -33,9 +33,6 @@
 #include <stdint.h>
 
 #include <mpi.h>
-#ifdef HAVE_MPIO_H
-#include <mpio.h>
-#endif
 
 /*
  * The integer return code for the conversion routines

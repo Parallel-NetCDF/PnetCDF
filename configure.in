@@ -190,7 +190,7 @@ fi
 AC_SUBST(MPICC)
 AC_SUBST(MPIF77)
 
-AC_CHECK_HEADERS(stdlib.h sys/types.h mpio.h)
+AC_CHECK_HEADERS(stdlib.h sys/types.h)
 
 AC_CHECK_FUNC(strerror, ,AC_DEFINE(NO_STRERROR))
 AC_FUNC_ALLOCA

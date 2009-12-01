@@ -12,9 +12,6 @@
 #include "pnetcdf.h"
 
 #include <mpi.h>
-#ifdef HAVE_MPIO_H
-#include <mpio.h>
-#endif
 
 typedef struct ncio ncio;	/* forward reference */
 
