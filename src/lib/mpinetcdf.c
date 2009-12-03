@@ -1265,9 +1265,8 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
           }
           offset += start[0] * ncp->recsize;
 
-          create_subarray_c_order_byte(ndims, shape, subcount, substart, &filetype); 
-//          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-//				    MPI_ORDER_C, MPI_BYTE, &filetype); 
+          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+				    MPI_ORDER_C, MPI_BYTE, &filetype); 
  
           MPI_Type_commit(&filetype);
         } else {
@@ -1295,9 +1294,8 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
             subcount[dim] = varp->xsz * count[dim];
             substart[dim] = varp->xsz * start[dim];
 
-            create_subarray_c_order_byte(ndims-1, shape+1, subcount+1, substart+1, &rectype);
-//	    MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
-//				     MPI_ORDER_C, MPI_BYTE, &rectype);
+	    MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
+				     MPI_ORDER_C, MPI_BYTE, &rectype);
 	    MPI_Type_commit(&rectype);
 #if (MPI_VERSION < 2)
 	    MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
@@ -1332,9 +1330,8 @@ set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start
           subcount[dim] = varp->xsz * count[dim];
           substart[dim] = varp->xsz * start[dim];
   
-          create_subarray_c_order_byte(ndims, shape, subcount, substart, &filetype);
-//          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-//  		         MPI_ORDER_C, MPI_BYTE, &filetype); 
+          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+  		         MPI_ORDER_C, MPI_BYTE, &filetype); 
   
           MPI_Type_commit(&filetype);
         } else {
@@ -12483,9 +12480,8 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
           }
           offset[i] += start[i][0] * ncp->recsize;
 
-          create_subarray_c_order_byte(ndims[i], shape, subcount, substart, &filetype[i]);
-//          MPI_Type_create_subarray(ndims[i], shape, subcount, substart, 
-//				    MPI_ORDER_C, MPI_BYTE, &filetype[i]); 
+          MPI_Type_create_subarray(ndims[i], shape, subcount, substart, 
+				    MPI_ORDER_C, MPI_BYTE, &filetype[i]); 
     
           MPI_Type_commit(&filetype[i]);
         } else {
@@ -12512,9 +12508,8 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
             subcount[dim] = varp[i]->xsz * count[i][dim];
             substart[dim] = varp[i]->xsz * start[i][dim];
 
-            create_subarray_c_order_byte(ndims[i]-1, shape+1, subcount+1, substart+1, &rectype);
-//	    MPI_Type_create_subarray(ndims[i]-1, shape+1, subcount+1, substart+1,
-//				     MPI_ORDER_C, MPI_BYTE, &rectype);
+	    MPI_Type_create_subarray(ndims[i]-1, shape+1, subcount+1, substart+1,
+				     MPI_ORDER_C, MPI_BYTE, &rectype);
 	    MPI_Type_commit(&rectype);
 #if (MPI_VERSION < 2)
 	    MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype[i]);
@@ -12539,9 +12534,8 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
         subcount[dim] = varp[i]->xsz * count[i][dim];
         substart[dim] = varp[i]->xsz * start[i][dim];
 
-        create_subarray_c_order_byte(ndims[i], shape, subcount, substart, &filetype[i]);
-//        MPI_Type_create_subarray(ndims[i], shape, subcount, substart, 
-//		         MPI_ORDER_C, MPI_BYTE, &filetype[i]); 
+        MPI_Type_create_subarray(ndims[i], shape, subcount, substart, 
+		         MPI_ORDER_C, MPI_BYTE, &filetype[i]); 
 
         MPI_Type_commit(&filetype[i]);
       }
