@@ -57,7 +57,7 @@ FORTRAN_API int FORT_CALL nfmpi_iput_vara_all_ ( int *v1, int *v2, MPI_Offset v3
 	return ierr;
     }
     }
-    ierr = ncmpi_iput_vara_all( *v1, l2, l3, l4, v5, *v6, (nc_type)(*v7), &l8_req );
+    ierr = ncmpi_iput_vara_all( *v1, l2, l3, l4, v5, *v6, MPI_Type_f2c(*v7), &l8_req );
     if (req_head==NULL) {
 	req_head=(lnc_req *)malloc(sizeof(lnc_req));
 	req_head->next = NULL;
