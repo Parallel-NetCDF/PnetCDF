@@ -896,7 +896,7 @@ ncmpii_NC_enddef(NC *ncp) {
   int mpireturn;
   int rank;
   char value[MPI_MAX_INFO_VAL];
-  int flag=0, alignment=0;
+  int flag=0, alignment=512;
 
   assert(!NC_readonly(ncp));
   assert(NC_indef(ncp)); 
@@ -910,10 +910,10 @@ ncmpii_NC_enddef(NC *ncp) {
   
   if (flag) 
 	  alignment=atoi(value);
-  /* negative or zero alignment? can't imagine what that would even mean.  just
-   * align to nearest byte (no alignment) */
+  /* negative or zero alignment? can't imagine what that would even mean.
+   * retain default 512 byte alignment (as in serial netcdf) */
   if (alignment <= 0)
-	  alignment = 1;
+	  alignment = 512;
 
   /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
    * acomplish the same thing with calls to NC_begins */
