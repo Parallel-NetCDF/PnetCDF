@@ -248,6 +248,7 @@
       integer req1
       integer req2
       integer req(nwrites)
+      integer stat(nwrites)
         
       NFMPI_OFFSET count_3d(3)
       NFMPI_OFFSET start_3d(3)
@@ -364,7 +365,9 @@
 !       =============================
 
 !       =============================
-        ierr = Nfmpi_Waitall (nwrites, req)
+        ierr = Nfmpi_Wait (nwrites, req, stat)
+!        ierr = Nfmpi_Wait_all (nwrites, req, stat)
+!         ierr = Nfmpi_Waitall (nwrites, req)
 !       =============================
 
 !       ================

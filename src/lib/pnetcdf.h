@@ -173,6 +173,7 @@ typedef struct NCMPI_Req * NCMPI_Request;
 #define NC_MAX_NAME	128	 /* max length of a name */
 #define NC_MAX_VAR_DIMS	NC_MAX_DIMS /* max per variable dimensions */
 
+#define NCMPI_Status int
 
 /*
  * The netcdf version 3 functions all return integer error status.
@@ -297,7 +298,11 @@ int ncmpi_end_indep_data(int ncid);
 
 int ncmpi_close(int ncid);
 
-int ncmpi_wait(NCMPI_Request *request);
+int ncmpi_waiti_one(NCMPI_Request *array_of_request);
+
+int ncmpi_wait(int count, NCMPI_Request array_of_requests[], NCMPI_Status array_of_statuses[]);
+
+int ncmpi_wait_all(int count, NCMPI_Request array_of_requests[], NCMPI_Status array_of_statuses[]);
 
 int ncmpi_waitall(int count, NCMPI_Request array_of_requests[]);
 

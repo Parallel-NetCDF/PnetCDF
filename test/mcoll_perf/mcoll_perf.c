@@ -51,6 +51,7 @@ int main(int argc, char **argv)
     int mvar_flag = 0;
     NCMPI_Request *array_of_requests;
     int unlimit_flag;
+    NCMPI_Status *array_of_statuses;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
@@ -133,6 +134,7 @@ int main(int argc, char **argv)
     }	
     
     array_of_requests = (NCMPI_Request *)malloc(nvars*sizeof(struct NCMPI_Req));
+    array_of_statuses = (NCMPI_Status *)malloc(nvars*sizeof(NCMPI_Status));
     
     new_open_tim = (double *)malloc(k_loop*sizeof(double));
     if (new_open_tim == NULL){
@@ -286,7 +288,7 @@ int main(int argc, char **argv)
                             starts_list[i], count_list[i],
                             (void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	  TEST_HANDLE_ERR(status);
-	          ncmpi_wait(&array_of_requests[i]);
+	          ncmpi_wait_one(&array_of_requests[i]);
       	      }
       	} 
         if (mvar_flag == 3) {
@@ -298,7 +300,36 @@ int main(int argc, char **argv)
       	      }
 	      ncmpi_waitall(nvars, array_of_requests);
       	} 
- 
+        if (mvar_flag == 4) {
+	      for (i=0; i<nvars; i++){
+       		  status = ncmpi_iput_vara_all(ncid, varid[i],
+                            starts_list[i], count_list[i],
+                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+	     	  TEST_HANDLE_ERR(status);
+      	      }
+	      ncmpi_wait_all(nvars, array_of_requests, array_of_statuses);
+	      for (i=0; i<nvars; i++){
+		printf("array_of_statuses[%d]:%d\t", i, array_of_statuses[i]);   
+	     }  
+ 	} 
+        if (mvar_flag == 5) {
+	      for (i=0; i<nvars; i++){
+       		  status = ncmpi_iput_vara_all(ncid, varid[i],
+//       		  status = ncmpi_iput_vara(ncid, varid[i],
+                            starts_list[i], count_list[i],
+                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+	     	  TEST_HANDLE_ERR(status);
+      	      }
+	     for (i=0; i<nvars; i++){
+		printf("array_of_statuses[%d]:%d\t", i, array_of_statuses[i]);   
+	     }  
+//              status = ncmpi_begin_indep_data(ncid);
+	      ncmpi_wait(nvars, array_of_requests, array_of_statuses);
+//              status = ncmpi_end_indep_data(ncid);
+	      for (i=0; i<nvars; i++){
+		printf("array_of_statuses[%d]:%d\t", i, array_of_statuses[i]);   
+	     }  
+ 	} 
  
       MPI_Barrier(MPI_COMM_WORLD);
       write_time = MPI_Wtime() - start_time - open_time - def_time;

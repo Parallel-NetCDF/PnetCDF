@@ -9,53 +9,46 @@
 #include "mpinetcdf_impl.h"
 #include "mvar.h"
 
+
 #ifdef F77_NAME_UPPER
 #define nfmpi_wait_ NFMPI_WAIT
 #elif defined(F77_NAME_LOWER_2USCORE)
 #define nfmpi_wait_ nfmpi_wait__
 #elif !defined(F77_NAME_LOWER_USCORE)
-#define nfmpi_wait_ nfmpi_wait
+#define nfmpi_wait_ nfmpi_wait_
 /* Else leave name alone */
 #endif
 
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_wait_ ( MPI_Fint *v1 ){
-    int ierr;
-    lnc_req *tmp_req1 = NULL;
-    lnc_req *tmp_req2 = NULL;
-    NCMPI_Request l1_req;
+FORTRAN_API int FORT_CALL nfmpi_wait_ ( int *v1, MPI_Fint * v2, MPI_Fint *v3 ){
     extern lnc_req *req_head ;
     extern lnc_req *req_tail ;
-//    l1_req = nc_requset_list[*v1] ;
-    tmp_req1 = req_head;
-    while(tmp_req1 != NULL){
-	if (tmp_req1->reqid == *v1){
-		break;
-	} else { 
-	   tmp_req2 = tmp_req1;	
-	   tmp_req1 = tmp_req1->next; 
-	}
-    }  
-    l1_req = tmp_req1->req;
-    ierr = ncmpi_wait( &tmp_req1->req );
-    if (req_head->reqid == *v1){
-	if (req_head->next == NULL){
-	 	req_head = NULL;
-		req_tail = NULL;
-        } else {
-		req_head = req_head->next;
-	}
-	free(tmp_req1);
-    } else {
-	if (req_tail->reqid == tmp_req1->reqid)
-		req_tail = tmp_req2;
-        else 
-	tmp_req2 = tmp_req1->next;
-	free(tmp_req1);
-    } 
+    int ierr;
+    NCMPI_Request *l2_req;
+    int i;
+    lnc_req *tmp_req = NULL;
+    l2_req = malloc((*v1)*sizeof(NCMPI_Request));
+    tmp_req = req_head;
+ 
+    i = 0;
+    while(tmp_req != NULL){
+	   l2_req[i]=  tmp_req->req; 
+	   tmp_req = tmp_req->next;
+	   i++; 
+    }
+  
+    ierr = ncmpi_wait( *v1, l2_req, v3 );
+   
+    while(req_head != NULL){
+           tmp_req = req_head;
+	   req_head = req_head->next;
+	   free(tmp_req);
+    }    
+	req_tail = NULL;
 
+    free(l2_req);
+	
     return ierr;
-
 }

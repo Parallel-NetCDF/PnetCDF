@@ -115,7 +115,9 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	iget_vara_real_allf.c \
 	iget_vara_double_allf.c \
 	waitallf.c \
+	wait_allf.c \
 	waitf.c \
+	wait_onef.c \
 	mvar.c
 
 LIB_FSRCS = strerrorf.f inq_libversf.f

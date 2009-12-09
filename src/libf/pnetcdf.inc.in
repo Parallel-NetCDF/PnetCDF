@@ -995,9 +995,21 @@
       external        nfmpi_iget_vara_double_all
 
 
-      integer         nfmpi_wait
+      integer         nfmpi_wait_one
 !                         (integer             req)
+      external        nfmpi_wait_one
+
+      integer         nfmpi_wait
+!                         (integer            count,
+!                         integer             req(1),
+!                         integer             status(l))
       external        nfmpi_wait
+
+      integer         nfmpi_wait_all
+!                         (integer            count,
+!                         integer             req(1),
+!                         integer             status(l))
+      external        nfmpi_wait_all
 
       integer         nfmpi_waitall
 !                         (integer            count,

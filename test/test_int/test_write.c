@@ -135,10 +135,6 @@ int main(int argc, char **argv) {
    *    square(x, y), cube(x,y,z), time(time), xytime(time, x, y)  
    */
 
-  printf("dimid1:%d\n", dimid1);
-  printf("dimid2:%d\n", dimid2);
-  printf("dimid3:%d\n", dimid3);
-  printf("udimid:%d\n", udimid);
   square_dim[0] = cube_dim[0] = xytime_dim[1] = dimid1;
   square_dim[1] = cube_dim[1] = xytime_dim[2] = dimid2;
   cube_dim[2] = dimid3;
