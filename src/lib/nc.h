@@ -25,6 +25,10 @@
 #define NC_ARRAY_GROWBY 4
 #endif
 
+/* ncmpi_create/ncmpi_open set up header to be 'chunksize' big and to grow by 'chunksize' as new items added */
+#define NC_DEFAULT_CHUNKSIZE 4096
+
+/* 
 /*
  * The extern size of an empty
  * netcdf version 1 file.
