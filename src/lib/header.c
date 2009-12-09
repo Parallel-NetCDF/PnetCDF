@@ -104,7 +104,8 @@ ncmpii_NC_computeshapes(NC *ncp)
                 first_rec = *vpp;
             ncp->recsize += (*vpp)->len;
         }
-        else if (first_var == NULL) {
+        else {
+            if (first_var == NULL) 
             first_var = *vpp;
             /*
              * Overwritten each time thru.

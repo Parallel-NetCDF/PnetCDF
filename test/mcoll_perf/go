@@ -10,10 +10,18 @@ argv[4]    mvar_flag           ! 0: original ncmpi_put_vara_all
 					ncmpi_mput_vara_all(); 
 			       ! 2: implicit way 
 					ncmpi_iput_vara_all(); 
- 					ncmpi_wait(); 
+ 					ncmpi_wait_one(); 
 			       ! 3: implicit way 
 					ncmpi_iput_vara_all(); 
- 					ncmpi_wait_all(); 
+ 					ncmpi_waitall();
+                               ! 4: implicit way, collective IO
+                                        ncmpi_iput_vara_all();
+                                        ncmpi_wait_all();  
+                               ! 5: implicit way, independent IO
+                                        ncmpi_iput_vara_all();
+                                        ncmpi_wait();  
+
+ 
 
 argv[5]    unlimit_flag        ! 0: non-record variables
 			       ! 1: record variables
@@ -30,8 +38,14 @@ argv[4]    mvar_flag           ! 0: original ncmpi_put_vara_all
                                         ncmpi_mput_vara_all();
                                ! 2: implicit way
                                         ncmpi_iput_vara_all();
-                                        ncmpi_wait();
+                                        ncmpi_wait_one();
                                ! 3: implicit way
                                         ncmpi_iput_vara_all();
+                                        ncmpi_waitall(); 
+                               ! 4: implicit way, collective IO
+                                        ncmpi_iput_vara_all();
                                         ncmpi_wait_all();
+                               ! 5: implicit way, independent IO
+                                        ncmpi_iput_vara_all();
+                                        ncmpi_wait();   
 

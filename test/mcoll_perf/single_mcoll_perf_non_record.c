@@ -50,6 +50,7 @@ int main(int argc, char **argv)
     int length;
     int mvar_flag = 0;
     NCMPI_Request *array_of_requests;
+    NCMPI_Status *array_of_statuses;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
@@ -131,6 +132,7 @@ int main(int argc, char **argv)
     }	
     
     array_of_requests = (NCMPI_Request *)malloc(ntimes*sizeof(struct NCMPI_Req));
+    array_of_statuses = (NCMPI_Status *)malloc(ntimes*sizeof(NCMPI_Status));
     
     new_open_tim = (double *)malloc(k_loop*sizeof(double));
     if (new_open_tim == NULL){
@@ -279,7 +281,7 @@ int main(int argc, char **argv)
                             starts_list[i], count_list[i],
                             (void *)(buf[i]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	  TEST_HANDLE_ERR(status);
-	          ncmpi_wait(&array_of_requests[i]);
+	          ncmpi_wait_one(&array_of_requests[i]);
       	      }
       	} 
         if (mvar_flag == 3) {
@@ -291,7 +293,25 @@ int main(int argc, char **argv)
       	      }
 	      ncmpi_waitall(ntimes, array_of_requests);
       	} 
- 
+        if (mvar_flag == 4) {
+              for (i=0; i<ntimes; i++){
+                  status = ncmpi_iput_vara_all(ncid, varid[i],
+                            starts_list[i], count_list[i],
+                            (void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+                  TEST_HANDLE_ERR(status);
+              }
+              ncmpi_wait_all(ntimes, array_of_requests, array_of_statuses);
+        } 
+        if (mvar_flag == 5) {
+              for (i=0; i<ntimes; i++){
+                  status = ncmpi_iput_vara_all(ncid, varid[i],
+                            starts_list[i], count_list[i],
+                            (void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
+                  TEST_HANDLE_ERR(status);
+              }
+              ncmpi_wait(ntimes, array_of_requests, array_of_statuses);
+        }
+
  
       MPI_Barrier(MPI_COMM_WORLD);
       write_time = MPI_Wtime() - start_time - open_time - def_time;
