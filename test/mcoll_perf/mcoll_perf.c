@@ -308,9 +308,6 @@ int main(int argc, char **argv)
 	     	  TEST_HANDLE_ERR(status);
       	      }
 	      ncmpi_wait_all(nvars, array_of_requests, array_of_statuses);
-	      for (i=0; i<nvars; i++){
-		printf("array_of_statuses[%d]:%d\t", i, array_of_statuses[i]);   
-	     }  
  	} 
         if (mvar_flag == 5) {
 	      for (i=0; i<nvars; i++){
@@ -320,15 +317,9 @@ int main(int argc, char **argv)
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	  TEST_HANDLE_ERR(status);
       	      }
-	     for (i=0; i<nvars; i++){
-		printf("array_of_statuses[%d]:%d\t", i, array_of_statuses[i]);   
-	     }  
 //              status = ncmpi_begin_indep_data(ncid);
 	      ncmpi_wait(nvars, array_of_requests, array_of_statuses);
 //              status = ncmpi_end_indep_data(ncid);
-	      for (i=0; i<nvars; i++){
-		printf("array_of_statuses[%d]:%d\t", i, array_of_statuses[i]);   
-	     }  
  	} 
  
       MPI_Barrier(MPI_COMM_WORLD);

@@ -382,7 +382,7 @@ int main(int argc, char** argv) {
     fflush(stdout);
   }
 
-  ncmpi_wait(&request);
+  ncmpi_wait_one(&request);
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0) {
@@ -412,7 +412,7 @@ int main(int argc, char** argv) {
     fflush(stdout);
   }
 
-  ncmpi_wait(&request);
+  ncmpi_wait_one(&request);
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0) {

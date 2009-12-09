@@ -365,8 +365,8 @@
 !       =============================
 
 !       =============================
-        ierr = Nfmpi_Wait (nwrites, req, stat)
-!        ierr = Nfmpi_Wait_all (nwrites, req, stat)
+!        ierr = Nfmpi_Wait (nwrites, req, stat)
+        ierr = Nfmpi_Wait_all (nwrites, req, stat)
 !         ierr = Nfmpi_Waitall (nwrites, req)
 !       =============================
 
