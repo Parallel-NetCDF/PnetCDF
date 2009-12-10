@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <malloc.h>
 #include "pnetcdf.h"
 
 typedef struct nc_req   
