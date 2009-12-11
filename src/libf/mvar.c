@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <malloc.h>
 #include "mvar.h"
 
 typedef lnc_req *linklist;
