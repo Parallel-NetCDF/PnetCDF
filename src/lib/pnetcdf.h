@@ -298,7 +298,7 @@ int ncmpi_end_indep_data(int ncid);
 
 int ncmpi_close(int ncid);
 
-int ncmpi_waiti_one(NCMPI_Request *array_of_request);
+int ncmpi_wait_one(NCMPI_Request *request);
 
 int ncmpi_wait(int count, NCMPI_Request array_of_requests[], NCMPI_Status array_of_statuses[]);
 
