@@ -32,3 +32,15 @@ Release Notes:
         - either yacc or bison
 	- either lex or flex
       These are usually part of your operating system's development tools.
+
+    - Users sometimes see the following error: 
+
+      $ mpicc -c -g -O2 -I. -I./../lib -I../lib   mvar.c
+      c  strerrorf.f
+      make[3]: c: Command not found
+      make[3]: [strerrorf.o] Error 127 (ignored)
+      c  inq_libversf.f
+      make[3]: c: Command not found
+
+      If you get such an error,  setting the MPIF77 environment varialbe before
+      running configure will likely solve your problem.
