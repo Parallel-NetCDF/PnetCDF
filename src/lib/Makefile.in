@@ -80,7 +80,7 @@ install:
 	$(INSTALL) -d -m 755 $(MANDIR)/man3
 	$(INSTALL) -m 644 $(MANUAL) $(MANDIR)/man3/$(MANUAL)
 
-	$(INSTALL) -d $(BINDIR)
+	$(INSTALL) -d -m 755 $(BINDIR)
 	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
 uninstall:
