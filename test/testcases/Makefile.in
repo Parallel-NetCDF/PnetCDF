@@ -11,8 +11,10 @@ CFLAGS          = @CFLAGS@ $(INCLUDES)
 FC		= @MPIF77@
 FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
 
-SRCS		= $(srcdir)/ncmpi_vars_null_stride.c
-PROGS		= ncmpi_vars_null_stride vectors bigrecords
+
+SRCS		= $(srcdir)/ncmpi_vars_null_stride.c $(srcdir)/vecors.c \
+			$(srcdir)/bigrecords.F 
+PROGS		= ncmpi_vars_null_stride vectors bigrecords 
 LDFLAGS		= -L$(LIBDIR) @LDFLAGS@
 LIBS		= -lpnetcdf @LIBS@
 
@@ -31,11 +33,12 @@ vectors: vectors.o
 
 bigrecords: bigrecords.o
 	$(FC) -o $@ $@.o $(LDFLAGS) $(LIBS)
+
 clean:
 		rm -f *.o $(PROGS) *.nc
 
-test: ncmpi_vars_null_stride
-	./ncmpi_vars_null_stride test.nc
-	@echo '*** Success ***'
+test: ncmpi_vars_null_stride vectors bigrecords
+	./ncmpi_vars_null_stride test.nc && echo '*** ncmpi_vars_null_stride: Success ***'
+	
 
 testing: test
