@@ -1262,137 +1262,159 @@ ncmpii_hdr_get_NC(NC *ncp) {
 }
 
 /* End Of get NC */
-
-int ncmpii_comp_dims(NC_dimarray *nc_dim1, NC_dimarray *nc_dim2){
-    int i;
-    if (nc_dim1->nelems != nc_dim2->nelems){
-           return NC_EDIMS_NELEMS_MULTIDEFINE;
-    } else {    
-           for (i=0; i<nc_dim1->nelems; i++){
-          if (nc_dim1->value[i]->size != nc_dim2->value[i]->size)
-        return NC_EDIMS_SIZE_MULTIDEFINE;
 #define METADATA_CONSISTENCY_CHECK
-#ifdef METADATA_CONSISTENCY_CHECK
-          else {
-               if ((nc_dim1->value[i]->name->nchars != nc_dim1->value[i]->name->nchars)||(strcmp(nc_dim1->value[i]->name->cp, nc_dim2->value[i]->name->cp)!=0)){
-                      printf("Warning (inconsistent metadata): dimension name %s != %s\n",nc_dim1->value[i]->name->cp,nc_dim2->value[i]->name->cp);
-           } 
-         }
-#endif
-       } 
 
+static int
+ncmpii_comp_dims(NC_dimarray *nc_dim1,
+                 NC_dimarray *nc_dim2)
+{
+    int i;
+    if (nc_dim1->nelems != nc_dim2->nelems)
+        return NC_EDIMS_NELEMS_MULTIDEFINE;
+    else {
+        for (i=0; i<nc_dim1->nelems; i++) {
+            NC_string *name1, *name2;
+            if (nc_dim1->value[i]->size != nc_dim2->value[i]->size)
+                return NC_EDIMS_SIZE_MULTIDEFINE;
+#ifdef METADATA_CONSISTENCY_CHECK
+            name1 = nc_dim1->value[i]->name;
+            name2 = nc_dim2->value[i]->name;
+            if (name1->nchars != name2->nchars ||
+                strncmp(name1->cp, name2->cp, name1->nchars) != 0)
+                printf("Warning (inconsistent metadata): dimension name %s != %s\n",
+                       name1->cp,name2->cp);
+#endif
         }
+    } 
     return NC_NOERR;
 }
 
-int ncmpii_comp_attrs(NC_attrarray *nc_attr1, NC_attrarray *nc_attr2){
-    int     i, j, num;
-    int    *ia, *ib;
+static int
+ncmpii_comp_attrs(NC_attrarray *nc_attr1,
+                  NC_attrarray *nc_attr2)
+{
+    int        i, j, num;
+    int       *ia, *ib;
     short int *sa, *sb;
-    float  *fa, *fb;
-    double *da, *db;
-#ifdef METADATA_CONSISTENCY_CHECK
-    if (nc_attr1->nelems != nc_attr2->nelems){
-        printf("Warning (inconsistent metadata):: number of attributes %lld != %lld\n",lld(nc_attr1->nelems),lld(nc_attr2->nelems));
-    }
-    else {
-        for (i=0; i<nc_attr1->nelems; i++){
-           if (nc_attr1->value[i]->xsz != nc_attr2->value[i]->xsz)
-               printf("Warning (inconsistent metadata): attribute size %lld != %lld\n",lld(nc_attr1->value[i]->xsz),lld(nc_attr2->value[i]->xsz));
-           if ((nc_attr1->value[i]->name->nchars != nc_attr2->value[i]->name->nchars)||(strcmp(nc_attr1->value[i]->name->cp, nc_attr2->value[i]->name->cp)))
-               printf("Warning (inconsistent metadata): attribute name %s != %s\n",nc_attr1->value[i]->name->cp,nc_attr2->value[i]->name->cp);
-           if (nc_attr1->value[i]->type != nc_attr2->value[i]->type)
-               printf("Warning (inconsistent metadata): attribute type %d != %d\n",nc_attr1->value[i]->type,nc_attr2->value[i]->type);
-           if (nc_attr1->value[i]->nelems != nc_attr2->value[i]->nelems)
-               printf("Warning (inconsistent metadata): attribute length %lld != %lld\n",lld(nc_attr1->value[i]->nelems),lld(nc_attr2->value[i]->nelems));
+    float     *fa, *fb;
+    double    *da, *db;
 
-           num = MIN(nc_attr1->value[i]->nelems, nc_attr2->value[i]->nelems);
-           switch (nc_attr1->value[i]->type) {
-               case NC_CHAR:
-               case NC_BYTE:
-                   if (strcmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue))
-                       printf("Warning (inconsistent metadata): attribute value %s != %s\n", (char *)nc_attr1->value[i]->xvalue, (char *)nc_attr2->value[i]->xvalue);
-                   break;
-               case NC_SHORT:
-                   sa = nc_attr1->value[i]->xvalue;
-                   sb = nc_attr2->value[i]->xvalue;
-                   for (j=0; j<num; j++) {
-                       if (sa[j] != sb[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %d != %d\n",sa[j],sb[j]);
-                           break;
-                       }
-                   }
-                   break;
-               case NC_INT:
-                   ia = nc_attr1->value[i]->xvalue;
-                   ib = nc_attr2->value[i]->xvalue;
-                   for (j=0; j<num; j++) {
-                       if (ia[j] != ib[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %d != %d\n",ia[j],ib[j]);
-                           break;
-                       }
-                   }
-                   break;
-               case NC_FLOAT:
-                   fa = nc_attr1->value[i]->xvalue;
-                   fb = nc_attr2->value[i]->xvalue;
-                   for (j=0; j<num; j++) {
-                       if (fa[j] != fb[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %f != %f\n",fa[j],fb[j]);
-                           break;
-                       }
-                   }
-               case NC_DOUBLE:
-                   da = nc_attr1->value[i]->xvalue;
-                   db = nc_attr2->value[i]->xvalue;
-                   for (j=0; j<num; j++) {
-                       if (da[j] != db[j]) {
-                           printf("Warning (inconsistent metadata): attribute value %f != %f\n",da[j],db[j]);
-                           break;
-                       }
-                   }
-               default:
-                   break;
+    if (nc_attr1->nelems != nc_attr2->nelems)
+        printf("Warning (inconsistent metadata):: number of attributes %lld != %lld\n",
+               lld(nc_attr1->nelems), lld(nc_attr2->nelems));
+    else {
+        for (i=0; i<nc_attr1->nelems; i++) {
+            if (nc_attr1->value[i]->xsz != nc_attr2->value[i]->xsz)
+                printf("Warning (inconsistent metadata): attribute size %lld != %lld\n",
+                       lld(nc_attr1->value[i]->xsz),lld(nc_attr2->value[i]->xsz));
+
+            if (nc_attr1->value[i]->name->nchars != nc_attr2->value[i]->name->nchars ||
+                strncmp(nc_attr1->value[i]->name->cp, nc_attr2->value[i]->name->cp, nc_attr1->value[i]->name->nchars) != 0)
+                printf("Warning (inconsistent metadata): attribute name %s != %s\n",
+                       nc_attr1->value[i]->name->cp,nc_attr2->value[i]->name->cp);
+
+            if (nc_attr1->value[i]->type != nc_attr2->value[i]->type)
+                printf("Warning (inconsistent metadata): attribute type %d != %d\n",
+                       nc_attr1->value[i]->type,nc_attr2->value[i]->type);
+
+            if (nc_attr1->value[i]->nelems != nc_attr2->value[i]->nelems)
+                printf("Warning (inconsistent metadata): attribute length %lld != %lld\n",
+                       lld(nc_attr1->value[i]->nelems),lld(nc_attr2->value[i]->nelems));
+
+            num = MIN(nc_attr1->value[i]->nelems, nc_attr2->value[i]->nelems);
+            switch (nc_attr1->value[i]->type) {
+                case NC_CHAR:
+                case NC_BYTE:
+                    if (strncmp(nc_attr1->value[i]->xvalue, nc_attr2->value[i]->xvalue, num))
+                        printf("Warning (inconsistent metadata): attribute value %s != %s\n",
+                               (char*)(nc_attr1->value[i]->xvalue), (char*)(nc_attr2->value[i]->xvalue));
+                    break;
+                case NC_SHORT:
+                    sa = nc_attr1->value[i]->xvalue;
+                    sb = nc_attr2->value[i]->xvalue;
+                    for (j=0; j<num; j++) {
+                        if (sa[j] != sb[j]) {
+                            printf("Warning (inconsistent metadata): attribute value %d != %d\n",sa[j],sb[j]);
+                            break;
+                        }
+                    }
+                    break;
+                case NC_INT:
+                    ia = nc_attr1->value[i]->xvalue;
+                    ib = nc_attr2->value[i]->xvalue;
+                    for (j=0; j<num; j++) {
+                        if (ia[j] != ib[j]) {
+                            printf("Warning (inconsistent metadata): attribute value %d != %d\n",ia[j],ib[j]);
+                            break;
+                        }
+                    }
+                    break;
+                case NC_FLOAT:
+                    fa = nc_attr1->value[i]->xvalue;
+                    fb = nc_attr2->value[i]->xvalue;
+                    for (j=0; j<num; j++) {
+                        if (fa[j] != fb[j]) {
+                            printf("Warning (inconsistent metadata): attribute value %f != %f\n",fa[j],fb[j]);
+                            break;
+                        }
+                    }
+                case NC_DOUBLE:
+                    da = nc_attr1->value[i]->xvalue;
+                    db = nc_attr2->value[i]->xvalue;
+                    for (j=0; j<num; j++) {
+                        if (da[j] != db[j]) {
+                            printf("Warning (inconsistent metadata): attribute value %f != %f\n",da[j],db[j]);
+                            break;
+                        }
+                    }
+                default:
+                    break;
             }
         }
     }
-#endif
     return NC_NOERR;
 }
 
-int ncmpii_comp_vars(NC_vararray *nc_var1, NC_vararray *nc_var2){
+static int
+ncmpii_comp_vars(NC_vararray *nc_var1,
+                 NC_vararray *nc_var2)
+{
     int i, j;
-    if (nc_var1->nelems != nc_var2->nelems){
-           return NC_EVARS_NELEMS_MULTIDEFINE;
-    } else {
-        for (i=0; i<nc_var1->nelems; i++){
+    if (nc_var1->nelems != nc_var2->nelems)
+        return NC_EVARS_NELEMS_MULTIDEFINE;
+    else {
+        for (i=0; i<nc_var1->nelems; i++) {
+           NC_var *v1 = nc_var1->value[i];
+           NC_var *v2 = nc_var2->value[i];
 #ifdef METADATA_CONSISTENCY_CHECK
-           if ((nc_var1->value[i]->name->nchars !=  nc_var2->value[i]->name->nchars)||strcmp(nc_var1->value[i]->name->cp,nc_var2->value[i]->name->cp))
-           {
-                    printf("Warning (inconsistent metadata): variable name %s != %s\n",nc_var1->value[i]->name->cp,nc_var2->value[i]->name->cp);
-           }
+           if (v1->name->nchars != v2->name->nchars ||
+               strncmp(v1->name->cp, v2->name->cp, v1->name->nchars) != 0)
+               printf("Warning (inconsistent metadata): variable name %s != %s\n",
+                      v1->name->cp,v2->name->cp);
 #endif
-           if ((nc_var1->value[i]->ndims != nc_var2->value[i]->ndims)){
-                   return NC_EVARS_NDIMS_MULTIDEFINE;
-           }
-                   for (j=0; j<nc_var1->value[i]->ndims; j++){
-             if (nc_var1->value[i]->dimids[j] != nc_var2->value[i]->dimids[j]){
+           if (v1->ndims != v2->ndims)
+               return NC_EVARS_NDIMS_MULTIDEFINE;
+
+           for (j=0; j<v1->ndims; j++) {
+               if (v1->dimids[j] != v2->dimids[j])
                    return NC_EVARS_DIMIDS_MULTIDEFINE;
-             }
            }
-           if (nc_var1->value[i]->type != nc_var2->value[i]->type){
-                   return NC_EVARS_TYPE_MULTIDEFINE;
-           }
-           if (nc_var1->value[i]->len != nc_var2->value[i]->len){
-                   return NC_EVARS_LEN_MULTIDEFINE;
-           }
-           if (nc_var1->value[i]->begin != nc_var2->value[i]->begin){
-                   return NC_EVARS_BEGIN_MULTIDEFINE;
-                   }
-           ncmpii_comp_attrs(&nc_var1->value[i]->attrs, &nc_var2->value[i]->attrs);
+
+           if (v1->type != v2->type)
+               return NC_EVARS_TYPE_MULTIDEFINE;
+
+           if (v1->len != v2->len)
+               return NC_EVARS_LEN_MULTIDEFINE;
+
+           if (v1->begin != v2->begin)
+               return NC_EVARS_BEGIN_MULTIDEFINE;
+
+#ifdef METADATA_CONSISTENCY_CHECK
+           ncmpii_comp_attrs(&(v1->attrs), &(v2->attrs));
+#endif
         }
     }
-      return NC_NOERR;
+    return NC_NOERR;
 };
 
 int
@@ -1485,11 +1507,13 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
     return status;
   }
 
+#ifdef METADATA_CONSISTENCY_CHECK
   status = ncmpii_comp_attrs(&temp_ncp->attrs, &ncp->attrs);
   if(status != ENOERR) {
     free(getbuf->base);
     return status;
   }
+#endif
 
   status = hdr_get_NC_vararray(getbuf, &temp_ncp->vars);
   if(status != ENOERR) {
