@@ -107,7 +107,7 @@ ncmpi_strerror(int err)
 	case NC_EWRITE:
 	    return "Unknow error occurs in writting file";
 	case NC_EMULTIDEFINE:
-	    return "NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "File header is inconsistent among processes";
 	case NC_EOFILE:
 	    return "Can not open/create file";
 	case NC_EBADID:
@@ -181,23 +181,23 @@ ncmpi_strerror(int err)
 	case NC_EUNSPTETYPE:
 	    return "Unsupported etype is used in MPI datatype for memory data";
 	case NC_EDIMS_NELEMS_MULTIDEFINE:
-	    return "Number of dimnations of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Number of dimensions is defined inconsistently among processes.";
 	case NC_EDIMS_SIZE_MULTIDEFINE:
-	    return "Dimination size of NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Dimension size is defined inconsistently among processes.";
 	case NC_EVARS_NELEMS_MULTIDEFINE:
-	    return "Number of variables about NC definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Number of variables is defined inconsistently among processes.";
 	case NC_EVARS_NDIMS_MULTIDEFINE:
-	    return "Number of diminations about variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Dimensionality of this variable is defined inconsistently among processes.";
 	case NC_EVARS_DIMIDS_MULTIDEFINE:
-	    return "Dimid of variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Dimension IDs used to define this variable is inconsistent among processes.";
 	case NC_EVARS_TYPE_MULTIDEFINE:
-	    return "Type of variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Data type of this variable is defined inconsistently among processes.";
 	case NC_EVARS_LEN_MULTIDEFINE:
-	    return "Lenght of variable definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Total number of elements of this variable is defined inconsistently among processes.";
 	case NC_EVARS_BEGIN_MULTIDEFINE:
-	    return "Begin offset of variables definations on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "(Internal error) beginning file offset of this variable is inconsistent among processes.";
 	case NC_ENUMRECS_MULTIDEFINE:
-	    return "Number of records on multiprocesses conflict. \nNOTE: Definitions across all processes must agree with one another";
+	    return "Number of records is inconsistent among processes.";
 	
 	default:
 	    return unknown;
