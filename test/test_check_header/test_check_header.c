@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
   	status = ncmpi_close(ncid);
  	if (status != NC_NOERR) handle_error(status);
 	if (rank == 0) {
-	  fprintf(stderr, "Fatal Error: the header is inconsistency!\n");
+	  fprintf(stderr, "Fatal Error: file header is inconsistent!\n");
 	}
  }
   /**
