@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #endif
 #include <assert.h>
+#include <arpa/inet.h>   /* htonl(), htons() */
 
 #include "ncmpidtype.h"
 
@@ -49,8 +50,6 @@ static int x_getn_float(const void *xbuf, void *buf, MPI_Offset nelems,
 			MPI_Datatype datatype);
 static int x_getn_double(const void *xbuf, void *buf, MPI_Offset nelems,
 			 MPI_Datatype datatype);
-static int set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
-			     const MPI_Offset index[]);
 static int set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp);
 static int set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
 			     const MPI_Offset start[], const MPI_Offset count[],
@@ -510,51 +509,38 @@ swapn(void *dst, const void *src, MPI_Offset nn, int xsize)
 }
 
 
+/* Endianness byte swap: done in-place */
 #define SWAP(x,y) {tmp = (x); (x) = (y); (y) = tmp;}
-#define WKL_USE_HTONL 1
 
+/*----< in_swap() >----------------------------------------------------------*/
 static void
-in_swapn(void *buf, MPI_Offset nn, int xsize) {
-   int i;
-   char tmp;
-   char *op = buf;
+in_swapn(void       *buf,
+         MPI_Offset  nelems,  /* number of elements in buf[] */
+         int         esize)   /* byte size of each element */
+{
+    int  i;
+    char tmp, *op = buf;
 
-#ifdef WKL_USE_HTONL
-   if (xsize == 4) { /* this is the most case */
-       uint32_t *dest = (uint32_t*) buf;
-       for (i=0; i<nn; i++)
-           dest[i] = htonl(dest[i]);
-       return;
-   }
-   else if (xsize == 2) {
-       uint16_t *dest = (uint16_t*) buf;
-       for (i=0; i<nn; i++)
-           dest[i] = htons(dest[i]);
-       return;
-   }
-#else
-   if (xsize == 4) { /* this is the most case */
-       while (nn-- > 0) {
-         SWAP(op[0], op[3]);
-         SWAP(op[1], op[2]);
-         op += xsize;
-       }
-       return;
-   }
-   else if (xsize == 2) {
-       while (nn-- > 0) {
-         SWAP(op[0], op[1]);
-         op += xsize;
-       }
-       return;
-   }
-#endif
+    if (esize <= 1 || nelems <= 0) return;  /* no need */
 
-   while (nn-- > 0) {
-     for (i=0; i<xsize/2; i++)
-       SWAP(op[i], op[xsize-1-i])
-     op += xsize;
-   }
+    if (esize == 4) { /* this is the most common case */
+        uint32_t *dest = (uint32_t*) buf;
+        for (i=0; i<nelems; i++)
+            dest[i] = htonl(dest[i]);
+    }
+    else if (esize == 2) {
+        uint16_t *dest = (uint16_t*) buf;
+        for (i=0; i<nelems; i++)
+            dest[i] = htons(dest[i]);
+    }
+    else {
+        /* for esize is not 1, 2, or 4 */
+        while (nelems-- > 0) {
+            for (i=0; i<esize/2; i++)
+                SWAP(op[i], op[esize-1-i])
+            op += esize;
+        }
+    }
 }
 
 
@@ -901,55 +887,54 @@ static int check_recsize_too_big(NC *ncp)
 }
 
 
+/*----< NCcoordck() >--------------------------------------------------------*/
 /*
  * Check whether 'coord' values (indices) are valid for the variable.
  */
 static int
-NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord)
+NCcoordck(NC               *ncp,
+          const NC_var     *varp,
+          const MPI_Offset *coord)
 {
-        const MPI_Offset *ip;
-        MPI_Offset *up;
+    const MPI_Offset *ip;
+    MPI_Offset *up;
  
-        if(varp->ndims == 0)
-                return NC_NOERR;        /* 'scalar' variable */
+    if (varp->ndims == 0)
+        return NC_NOERR;        /* 'scalar' variable */
  
+    if (IS_RECVAR(varp)) {
+/*      if (*coord > X_INT64_T_MAX)
+            return NC_EINVALCOORDS; *//* sanity check */
 
-        if(IS_RECVAR(varp))
-        {
-		
-/*                if(*coord > X_INT64_T_MAX)
-                        return NC_EINVALCOORDS; *//* sanity check */
-                if(NC_readonly(ncp) && *coord >= ncp->numrecs)
-                {
-                        if(!NC_doNsync(ncp))
-                                return NC_EINVALCOORDS;
-                        /* else */
-                        {
-                                /* Update from disk and check again */
-                                const int status = ncmpii_read_numrecs(ncp);
-                                if(status != NC_NOERR)
-                                        return status;
-                                if(*coord >= ncp->numrecs)
-                                        return NC_EINVALCOORDS;
-                        }
-                }
-                ip = coord + 1;
-                up = varp->shape + 1;
+        if (NC_readonly(ncp) && *coord >= ncp->numrecs) {
+            if (!NC_doNsync(ncp))
+                return NC_EINVALCOORDS;
+            /* else */
+            {
+                /* Update from disk and check again */
+                const int status = ncmpii_read_numrecs(ncp);
+                if (status != NC_NOERR)
+                    return status;
+                if (*coord >= ncp->numrecs)
+                    return NC_EINVALCOORDS;
+            }
         }
-        else
-        {
-                ip = coord;
-                up = varp->shape;
-        }
+        /* skip checking the record dimension */
+        ip = coord + 1;
+        up = varp->shape + 1;
+    }
+    else {
+        ip = coord;
+        up = varp->shape;
+    }
  
-        for(; ip < coord + varp->ndims; ip++, up++)
-        {
-                /* cast needed for braindead systems with signed MPI_Offset */
-                if( *ip >= (MPI_Offset)*up )
-                        return NC_EINVALCOORDS;
-        }
- 
-        return NC_NOERR;                                                              }
+    for (; ip < coord + varp->ndims; ip++, up++) {
+        /* cast needed for braindead systems with signed MPI_Offset */
+        if ( *ip >= (MPI_Offset)*up )
+            return NC_EINVALCOORDS;
+    }
+    return NC_NOERR;
+}
 
 /*
  * Check whether 'edges' are valid for the variable and 'start'
@@ -1027,110 +1012,173 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 }
 #endif
 
+/*----< get_offset() >-------------------------------------------------------*/
 static int
-set_var1_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset index[]) {
-  MPI_Offset offset;
-  int status;
-  int dim, ndims;
-  int mpireturn;
+get_offset(NC               *ncp,
+           NC_var           *varp,
+           const MPI_Offset  starts[],   /* offsets relative to varp */
+           MPI_Offset       *offset_ptr) /* return file offset */
+{
+    /* returns the starting file offset when this variable is get/put
+       with starts[] */
+    MPI_Offset offset;
+    int status, dim, ndims;
 
-  status = NCcoordck(ncp, varp, index);
-  if (status != NC_NOERR)
-    return status;
-
-  offset = varp->begin;
- 
-  ndims = varp->ndims;
-
-  if (ndims > 0) {
-
-    if (IS_RECVAR(varp))
-      /* no need to check recsize here: if MPI_Offset only 32 bits we
-       * will have had problems long before here */
-      offset += index[0] * ncp->recsize;
-    else 
-      offset += index[ndims-1] * varp->xsz;
-
-    if (ndims > 1) {
-      if (IS_RECVAR(varp))
-        offset += index[ndims - 1] * varp->xsz;
-      else
-        offset += index[0] * varp->dsizes[1] * varp->xsz;
-
-      for (dim = 1; dim < ndims - 1; dim++)
-        offset += index[dim] * varp->dsizes[dim+1] * varp->xsz;
+    status = NCcoordck(ncp, varp, starts);  /* validate starts[] */
+    if (status != NC_NOERR) {
+        // printf("get_offset(): NCcoordck() fails\n");
+        return status;
     }
 
-  }
+    offset = varp->begin; /* beginning file offset of this variable */
+    ndims  = varp->ndims; /* number of dimensions of this variable */
 
-  mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
-  if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-        return NC_EFILE;
-  }
+    if (ndims > 0) {
+        if (IS_RECVAR(varp))
+            /* no need to check recsize here: if MPI_Offset is only 32 bits we
+               will have had problems long before here */
+            offset += starts[0] * ncp->recsize;
+        else
+            offset += starts[ndims-1] * varp->xsz;
 
-  return NC_NOERR;
+        if (ndims > 1) {
+            if (IS_RECVAR(varp))
+                offset += starts[ndims - 1] * varp->xsz;
+            else
+                offset += starts[0] * varp->dsizes[1] * varp->xsz;
+    
+            for (dim = 1; dim < ndims - 1; dim++)
+                offset += starts[dim] * varp->dsizes[dim+1] * varp->xsz;
+        }
+    }
+    *offset_ptr = offset;
+    return NC_NOERR;
 }
 
+/*----< is_request_contiguous() >--------------------------------------------*/
+static int
+is_request_contiguous(NC_var           *varp,
+                      const MPI_Offset  starts[],
+                      const MPI_Offset  counts[])
+{
+    /* determine whether the get/put request to this variable using
+       starts[] and counts[] is contiguous in file */
+    int i, j, most_sig_dim, ndims = varp->ndims;
+
+    /* this variable is a scalar */
+    if (ndims == 0) return 1;
+
+    most_sig_dim = 0; /* record dimension */
+    if (IS_RECVAR(varp)) {
+        /* if there are more than one record variabl, then the record
+           dimensions, counts[0] must == 1. For now, we assume there
+           are more than one record variable. 
+           TODO: we need the API ncmpi_inq_rec() as in netcdf 3.6.3
+                 to know how many record variables are defined */
+        if (counts[0] != 1) return 0;
+        most_sig_dim = 1;
+    }
+
+    for (i=ndims-1; i>most_sig_dim; i--) {
+        /* find the first counts[i] that is not the entire dimension */
+        if (counts[i] < varp->shape[i]) {
+            /* check dim from i-1, i-2, ..., most_sig_dim and
+               their counts[] should all be 1 */
+            for (j=i-1; j>=most_sig_dim; j--) {
+                if (counts[j] != 1) {
+                    return 0;
+                }
+            }
+            break;
+        }
+        else { /* counts[i] == varp->shape[i] */
+            /* when accessing the entire dimension, starts[i] must be 0 */
+            if (starts[i] != 0) return 0;
+        }
+    }
+    return 1;
+}
+
+/*----< set_var_fileview() >-------------------------------------------------*/
 static int
 set_var_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp) {
-  MPI_Offset offset;
-  int mpireturn;
+    /* setting the fileview for entire variable. For non-record
+       variable, the fileview is contiguous in file and hence
+       no need the to create a filetype, but just use the starting
+       offset */
+    MPI_Offset offset;
+    int mpireturn;
 
-  offset = varp->begin;
+    offset = varp->begin;
 
-  if (!IS_RECVAR(varp)) { 
-    /* Contiguous file view */
-    mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE, "native", ncp->nciop->mpiinfo);
-    if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-        return NC_EFILE;
+    if (!IS_RECVAR(varp)) { 
+        /* Contiguous file view */
+        mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, MPI_BYTE,
+                                      "native", MPI_INFO_NULL);
+        if (mpireturn != MPI_SUCCESS) {
+            int rank;
+            MPI_Comm_rank(ncp->nciop->comm, &rank);
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
+            return NC_EFILE;
+        }
     }
+    else {
+        /* This is a record variable. If there are more than one record
+           varaibles and this variable has more than one record, then the
+           file view is strided (non-contiguous) in file */
+        int  ndims;
+        MPI_Datatype filetype;  
+        MPI_Aint stride;
+        int blocklen;
 
-  } else {
-    /* Record variable, Strided file view */
-    int  ndims;
-    MPI_Datatype filetype;  
-    MPI_Aint stride;
-    int blocklen;
+        if (ncp->numrecs == 0) /* no record been added yet */
+            return(NC_NOERR);
+        check_recsize_too_big(ncp);
 
-    ndims = varp->ndims;
-    if (ndims > 1)
-      blocklen = varp->dsizes[1] * varp->xsz;
-    else
-      blocklen = varp->xsz;
+        if (ncp->numrecs == 1) {
+            /* there is only one record per record variable, the fileview
+               is contiguous, then no need to create a filetype */
+            mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE,
+                                          MPI_BYTE, "native", MPI_INFO_NULL);
+            if (mpireturn != MPI_SUCCESS) {
+                int rank;
+                MPI_Comm_rank(ncp->nciop->comm, &rank);
+                ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
+                return NC_EFILE;
+            }
+            return NC_NOERR;
+        }
 
-    stride = ncp->recsize;
+        /* now, this record variable has ncp->numrecs > 1 */
+        ndims = varp->ndims;
+        if (ndims > 1)
+            blocklen = varp->dsizes[1] * varp->xsz;
+        else
+            blocklen = varp->xsz;
+
+        /* ncp->recsize is the sum of 1st record of all record variables */
+        stride = ncp->recsize;
     
-    if (ncp->numrecs == 0)
-	    return(NC_NOERR);
-    check_recsize_too_big(ncp);
-
 #if (MPI_VERSION < 2)
-    MPI_Type_hvector(ncp->numrecs, blocklen, stride, MPI_BYTE, &filetype);
+        MPI_Type_hvector(ncp->numrecs, blocklen, stride, MPI_BYTE, &filetype);
 #else
-    MPI_Type_create_hvector(ncp->numrecs, blocklen, stride, MPI_BYTE, &filetype);
+        MPI_Type_create_hvector(ncp->numrecs, blocklen, stride, MPI_BYTE, &filetype);
 #endif
-    MPI_Type_commit(&filetype);
+        MPI_Type_commit(&filetype);
 
-    mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, filetype, "native", ncp->nciop->mpiinfo);
-    if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-        return NC_EFILE;
+        mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, filetype, "native", MPI_INFO_NULL);
+        if (mpireturn != MPI_SUCCESS) {
+            int rank;
+            MPI_Comm_rank(ncp->nciop->comm, &rank);
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
+            return NC_EFILE;
+        }
+        MPI_Type_free(&filetype); 
     }
-
-    MPI_Type_free(&filetype); 
-  }
-
-  return NC_NOERR;
+    return NC_NOERR;
 }
 
+/*----< create_subarray_c_order_byte() >-------------------------------------*/
 static int
 create_subarray_c_order_byte(int ndims,
                              int sizes[],
@@ -1138,6 +1186,9 @@ create_subarray_c_order_byte(int ndims,
                              int starts[],
                              MPI_Datatype *newtype)
 {
+    /* if a request is contiguous in file, this function calls
+       MPI_Type_contiguous() and MPI_Type_create_resized(), we
+       MPI_Type_create_subarray() can be avoided */
     int i, iscontig = 1;
 
     for (i=ndims-1; i>0; i--) {
@@ -1149,7 +1200,7 @@ create_subarray_c_order_byte(int ndims,
 
     if (iscontig) {
         /* subsizes[1...ndims-1] == sizes[1...ndims-1] and
- *              starts[1...ndims-1] == 0 */
+             starts[1...ndims-1] == 0 */
         MPI_Aint extent=sizes[0];
 
         *newtype = MPI_BYTE;
@@ -1166,280 +1217,281 @@ create_subarray_c_order_byte(int ndims,
                                     MPI_ORDER_C, MPI_BYTE, newtype);
 }
 
-
-
-
+/*----< set_vara_fileview() >------------------------------------------------*/
 static int
-set_vara_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp, const MPI_Offset start[], const MPI_Offset count[], int getnotput) {
+set_vara_fileview(NC               *ncp,
+                  MPI_File         *mpifh,
+                  NC_var           *varp,
+                  const MPI_Offset *start,
+                  const MPI_Offset *count,
+                  int               getnotput)
+{
+    int i, status, dim, ndims, mpireturn;
+    int *shape = NULL, *subcount = NULL, *substart = NULL; /* all in bytes */
+    MPI_Offset *shape64 = NULL, *subcount64 = NULL, *substart64 = NULL;
+    MPI_Datatype rectype, filetype, types[3], type1;
+    MPI_Offset offset, size, disps[3];
+    int blklens[3], tag = 0;
 
-  MPI_Offset offset;
-  int status;
-  int dim, ndims;
-  int *shape = NULL, *subcount = NULL, *substart = NULL; /* all in bytes */
-  MPI_Offset *shape64 = NULL, *subcount64 = NULL, *substart64 = NULL;
-  MPI_Datatype rectype;
-  MPI_Datatype filetype;
-  int mpireturn;
-  MPI_Datatype types[3];
-  MPI_Datatype type1;
-  MPI_Offset size, disps[3];
-  int blklens[3];
-  int tag = 0;
-  int i;
+    offset = varp->begin;
   
+    ndims = varp->ndims;
 
-  offset = varp->begin;
-  
-  ndims = varp->ndims;
-
-  /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
-  status = NCedgeck(ncp, varp, start, count);
-  if( (status != NC_NOERR) ||
-      (getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp)) ) 
-  {
-    status = NCcoordck(ncp, varp, start);
-    if (status != NC_NOERR)
-      return status;
-    else
-      return NC_EEDGE;
-  }
+    /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
+    status = NCedgeck(ncp, varp, start, count);
+    if (status != NC_NOERR ||
+        (getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp)) ) 
+    {
+        status = NCcoordck(ncp, varp, start);
+        if (status != NC_NOERR)
+            return status;
+        else
+            return NC_EEDGE;
+    }
 
 /* Removed to fix NC_EINVALCOORDS bug
 
-  status = NCcoordck(ncp, varp, start);
-  if (status != NC_NOERR)
-    return status;
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR)
+        return status;
 
-  status = NCedgeck(ncp, varp, start, count);
-  if(status != NC_NOERR)
-    return status;
+    status = NCedgeck(ncp, varp, start, count);
+    if (status != NC_NOERR)
+        return status;
 
-  if (getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp))
-    return NC_EEDGE;
+    if (getnotput && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp))
+        return NC_EEDGE;
 */
 
-  if (ndims == 0) {
+    /* check if the request is contiguous in file
+       if yes, there is no need to create a filetype */
+    if (is_request_contiguous(varp, start, count)) {
+        status = get_offset(ncp, varp, start, &offset);
+        if (status != NC_NOERR) return status;
 
-    /* scalar variable */
-    filetype = MPI_BYTE;
-
-  } else {
-
-    /* if ndims == 0, all below pointers would be null */
-
-    shape = (int *)malloc(sizeof(int) * ndims);
-    subcount = (int *)malloc(sizeof(int) * ndims);
-    substart = (int *)malloc(sizeof(int) * ndims);
-
-    dim = 0;
-    while (dim < ndims && count[dim] > 0) dim++;
-
-    if (dim < ndims) {
-
-      /* 0 size data */
-      filetype = MPI_BYTE;
-
-    } else {
-
-      if (IS_RECVAR(varp)) {
-        subcount[0] = count[0];
-        substart[0] = 0;
-        shape[0] = subcount[0];
-
-        if (ncp->recsize <= varp->len) {
-    
-          /* the only record variable */
-
-          if (varp->ndims == 1) {
-            shape[0] *= varp->xsz;
-	    subcount[0] *= varp->xsz;
-          } else {
-	    for (dim = 1; dim < ndims-1; dim++) {
-              shape[dim] = varp->shape[dim];
-              subcount[dim] = count[dim];
-              substart[dim] = start[dim];
-	    }
-	    shape[dim] = varp->xsz * varp->shape[dim];
-	    subcount[dim] = varp->xsz * count[dim];
-	    substart[dim] = varp->xsz * start[dim];
-          }
-          offset += start[0] * ncp->recsize;
-
-          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-				    MPI_ORDER_C, MPI_BYTE, &filetype); 
- 
-          MPI_Type_commit(&filetype);
-        } else {
-	  check_recsize_too_big(ncp);
-          /* more than one record variables */
-
-          offset += start[0] * ncp->recsize;
-          if (varp->ndims == 1) {
-#if (MPI_VERSION < 2)
-	    MPI_Type_hvector(subcount[0], varp->xsz, ncp->recsize,
-			    MPI_BYTE, &filetype);
-#else
-	    MPI_Type_create_hvector(subcount[0], varp->xsz, ncp->recsize,
-				    MPI_BYTE, &filetype);
-#endif
-	    MPI_Type_commit(&filetype);
-
-          } else {
-            for (dim = 1; dim < ndims-1; dim++) {
-              shape[dim] = varp->shape[dim];
-              subcount[dim] = count[dim];
-              substart[dim] = start[dim];
-            }
-            shape[dim] = varp->xsz * varp->shape[dim];
-            subcount[dim] = varp->xsz * count[dim];
-            substart[dim] = varp->xsz * start[dim];
-
-	    MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
-				     MPI_ORDER_C, MPI_BYTE, &rectype);
-	    MPI_Type_commit(&rectype);
-#if (MPI_VERSION < 2)
-	    MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
-#else
-	    MPI_Type_create_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
-#endif
-	    MPI_Type_commit(&filetype);
-	    MPI_Type_free(&rectype);
-          }
+        mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
+                                      MPI_BYTE, "native", MPI_INFO_NULL);
+        if (mpireturn != MPI_SUCCESS) {
+            int rank;
+            MPI_Comm_rank(ncp->nciop->comm, &rank);
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
+            return NC_EFILE;
         }
-
-      } else {
-        
-        /* non record variable */
-       tag = 0;
-         for (dim=0; dim< ndims-1; dim++){
-           if  (varp->shape[dim] > 2147483647){ /* if shape > 2^31-1 */
-                tag = 1;
-                break;
-           }
-         }
-       if ((varp->shape[dim]*varp->xsz)  > 2147483647)
-          tag = 1;
-       if (tag == 0 ){
-          for (dim = 0; dim < ndims-1; dim++ ) {
-            shape[dim] = varp->shape[dim];
-            subcount[dim] = count[dim];
-            substart[dim] = start[dim];
-          } 
-
-          shape[dim] = varp->xsz * varp->shape[dim];
-          subcount[dim] = varp->xsz * count[dim];
-          substart[dim] = varp->xsz * start[dim];
-  
-          MPI_Type_create_subarray(ndims, shape, subcount, substart, 
-  		         MPI_ORDER_C, MPI_BYTE, &filetype); 
-  
-          MPI_Type_commit(&filetype);
-        } else {
-shape64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
-          subcount64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
-          substart64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
-
-          if (ndims == 1){  // for 64-bit support,  added July 23, 2008
-            shape64[0] = varp->shape[0];
-            subcount64[0] = count[0];
-            substart64[0] = start[0];
-
-            offset += start[0]*varp->xsz;
-
-            MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
-            MPI_Type_commit(&type1);
-
-          #if (MPI_VERSION < 2)
-            MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
-                            MPI_BYTE, &filetype);
-          #else
-            MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
-                                    type1, &filetype);
-          #endif
-            MPI_Type_commit(&filetype);
-            MPI_Type_free(&type1);
-
-       } else {
-          for (dim = 0; dim < ndims-1; dim++ ) {
-            shape64[dim] = varp->shape[dim];
-            subcount64[dim] = count[dim];
-            substart64[dim] = start[dim];
-          }
-
-          shape64[dim] = varp->xsz * varp->shape[dim];
-          subcount64[dim] = varp->xsz * count[dim];
-          substart64[dim] = varp->xsz * start[dim];
-          MPI_Type_hvector(subcount64[dim-1],
-                             subcount64[dim],
-                             varp->xsz * varp->shape[dim],
-                             MPI_BYTE,
-                             &type1);
-          MPI_Type_commit(&type1);
-          size = shape[dim];
-          for (i=dim-2; i>=0; i--) {
-                size *= shape[i+1];
-                MPI_Type_hvector(subcount64[i],
-                                 1,
-                                 size,
-                                 type1,
-                                 &filetype);
-                MPI_Type_commit(&filetype);
-
-                MPI_Type_free(&type1);
-                type1 = filetype;
-          }
-          disps[1] = substart64[dim];
-          size = 1;
-          for (i=dim-1; i>=0; i--) {
-            size *= shape64[i+1];
-            disps[1] += size*substart64[i];
-          }
-          disps[2] = 1;
-          for (i=0; i<ndims; i++) disps[2] *= shape64[i];
-
-          disps[0] = 0;
-          blklens[0] = blklens[1] = blklens[2] = 1;
-          types[0] = MPI_LB;
-          types[1] = type1;
-          types[2] = MPI_UB;
-
-          MPI_Type_struct(3,
-                    blklens,
-                    (MPI_Aint*) disps,
-                    types,
-                    &filetype);
-
-          MPI_Type_free(&type1);
-         }
-
-         free(shape64);
-         free(subcount64);
-         free(substart64);
-       }
-     }
- 
+        return NC_NOERR;
     }
-  }
 
-  mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
-		    filetype, "native", ncp->nciop->mpiinfo);
-  if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-        return NC_EFILE;
-  }
+    if (ndims == 0) {
+        /* scalar variable */
+        filetype = MPI_BYTE;
+    }
+    else {
+        /* if ndims == 0, all below pointers would be null */
+        shape    = (int *)malloc(sizeof(int) * ndims);
+        subcount = (int *)malloc(sizeof(int) * ndims);
+        substart = (int *)malloc(sizeof(int) * ndims);
 
-  if (ndims > 0) {
-    if (filetype != MPI_BYTE)
-      MPI_Type_free(&filetype);
+        dim = 0;
+        while (dim < ndims && count[dim] > 0) dim++;
 
-    free(shape);
-    free(subcount);
-    free(substart);
-  }
+        if (dim < ndims) {
+            /* 0 size data */
+            filetype = MPI_BYTE;
+        }
+        else {
+           if (IS_RECVAR(varp)) {
+               subcount[0] = count[0];
+               substart[0] = 0;
+               shape[0] = subcount[0];
 
-  return NC_NOERR;
+               if (ncp->recsize <= varp->len) {
+                   /* the only record variable */
+
+                   if (varp->ndims == 1) {
+                       shape[0] *= varp->xsz;
+                       subcount[0] *= varp->xsz;
+                   }
+                   else {
+                       for (dim = 1; dim < ndims-1; dim++) {
+                           shape[dim]    = varp->shape[dim];
+                           subcount[dim] = count[dim];
+                           substart[dim] = start[dim];
+                       }
+                       shape[dim]    = varp->xsz * varp->shape[dim];
+                       subcount[dim] = varp->xsz * count[dim];
+                       substart[dim] = varp->xsz * start[dim];
+                   }
+                   offset += start[0] * ncp->recsize;
+
+                   MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+                                            MPI_ORDER_C, MPI_BYTE, &filetype); 
+                   MPI_Type_commit(&filetype);
+               }
+               else {
+                   check_recsize_too_big(ncp);
+                   /* more than one record variables */
+
+                   offset += start[0] * ncp->recsize;
+                   if (varp->ndims == 1) {
+#if (MPI_VERSION < 2)
+                       MPI_Type_hvector(subcount[0], varp->xsz, ncp->recsize,
+                                        MPI_BYTE, &filetype);
+#else
+                       MPI_Type_create_hvector(subcount[0], varp->xsz, ncp->recsize,
+                                               MPI_BYTE, &filetype);
+#endif
+                       MPI_Type_commit(&filetype);
+                   }
+                   else {
+                       for (dim = 1; dim < ndims-1; dim++) {
+                           shape[dim]    = varp->shape[dim];
+                           subcount[dim] = count[dim];
+                           substart[dim] = start[dim];
+                       }
+                       shape[dim]    = varp->xsz * varp->shape[dim];
+                       subcount[dim] = varp->xsz * count[dim];
+                       substart[dim] = varp->xsz * start[dim];
+
+                       MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
+                                                MPI_ORDER_C, MPI_BYTE, &rectype);
+                       MPI_Type_commit(&rectype);
+#if (MPI_VERSION < 2)
+                       MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
+#else
+                       MPI_Type_create_hvector(subcount[0], 1, ncp->recsize, rectype, &filetype);
+#endif
+                       MPI_Type_commit(&filetype);
+                       MPI_Type_free(&rectype);
+                   }
+               }
+           }
+           else { /* non record variable */
+               tag = 0;
+               for (dim=0; dim< ndims-1; dim++) {
+                   if (varp->shape[dim] > 2147483647) { /* if shape > 2^31-1 */
+                       tag = 1;
+                        break;
+                   }
+               }
+               if ((varp->shape[dim]*varp->xsz)  > 2147483647)
+                   tag = 1;
+
+               if (tag == 0) {
+                   for (dim = 0; dim < ndims-1; dim++ ) {
+                       shape[dim]    = varp->shape[dim];
+                       subcount[dim] = count[dim];
+                       substart[dim] = start[dim];
+                   } 
+                   shape[dim]    = varp->xsz * varp->shape[dim];
+                   subcount[dim] = varp->xsz * count[dim];
+                   substart[dim] = varp->xsz * start[dim];
+  
+                   MPI_Type_create_subarray(ndims, shape, subcount, substart, 
+                                            MPI_ORDER_C, MPI_BYTE, &filetype); 
+                   MPI_Type_commit(&filetype);
+               }
+               else {
+                   shape64    = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
+                   subcount64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
+                   substart64 = (MPI_Offset *)malloc(sizeof(MPI_Offset) * ndims);
+
+                   if (ndims == 1) {  // for 64-bit support,  added July 23, 2008
+                       shape64[0]    = varp->shape[0];
+                       subcount64[0] = count[0];
+                       substart64[0] = start[0];
+
+                       offset += start[0]*varp->xsz;
+
+                       MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
+                       MPI_Type_commit(&type1);
+#if (MPI_VERSION < 2)
+                       MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
+                                        MPI_BYTE, &filetype);
+#else
+                       MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
+                                               type1, &filetype);
+#endif
+                       MPI_Type_commit(&filetype);
+                       MPI_Type_free(&type1);
+                   }
+                   else {
+                       for (dim = 0; dim < ndims-1; dim++ ) {
+                           shape64[dim]    = varp->shape[dim];
+                           subcount64[dim] = count[dim];
+                           substart64[dim] = start[dim];
+                       }
+                       shape64[dim]    = varp->xsz * varp->shape[dim];
+                       subcount64[dim] = varp->xsz * count[dim];
+                       substart64[dim] = varp->xsz * start[dim];
+
+                       MPI_Type_hvector(subcount64[dim-1],
+                                        subcount64[dim],
+                                        varp->xsz * varp->shape[dim],
+                                        MPI_BYTE,
+                                        &type1);
+                       MPI_Type_commit(&type1);
+
+                       size = shape[dim];
+                       for (i=dim-2; i>=0; i--) {
+                           size *= shape[i+1];
+                           MPI_Type_hvector(subcount64[i],
+                                            1,
+                                            size,
+                                            type1,
+                                            &filetype);
+                           MPI_Type_commit(&filetype);
+
+                           MPI_Type_free(&type1);
+                           type1 = filetype;
+                       }
+                       disps[1] = substart64[dim];
+                       size = 1;
+                       for (i=dim-1; i>=0; i--) {
+                           size *= shape64[i+1];
+                           disps[1] += size*substart64[i];
+                       }
+                       disps[2] = 1;
+                       for (i=0; i<ndims; i++) disps[2] *= shape64[i];
+
+                       disps[0] = 0;
+                       blklens[0] = blklens[1] = blklens[2] = 1;
+                       types[0] = MPI_LB;
+                       types[1] = type1;
+                       types[2] = MPI_UB;
+
+                       MPI_Type_struct(3,
+                                       blklens,
+                                       (MPI_Aint*) disps,
+                                       types,
+                                       &filetype);
+
+                       MPI_Type_free(&type1);
+                   }
+                   free(shape64);
+                   free(subcount64);
+                   free(substart64);
+               }
+           }
+       }
+   }
+
+   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
+                                 filetype, "native", MPI_INFO_NULL);
+   if (mpireturn != MPI_SUCCESS) {
+       int rank;
+       MPI_Comm_rank(ncp->nciop->comm, &rank);
+       ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
+       return NC_EFILE;
+   }
+
+   if (ndims > 0) {
+       if (filetype != MPI_BYTE)
+           MPI_Type_free(&filetype);
+           
+       free(shape);
+       free(subcount);
+       free(substart);
+   }
+   return NC_NOERR;
 }
 
 static int
@@ -1579,7 +1631,7 @@ set_vars_fileview(NC* ncp, MPI_File *mpifh, NC_var* varp,
   }
 
   mpireturn = MPI_File_set_view(*mpifh, offset, MPI_BYTE, 
-                    *filetype, "native", ncp->nciop->mpiinfo);
+                    *filetype, "native", MPI_INFO_NULL);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
@@ -1619,7 +1671,7 @@ ncmpi_put_var1(int ncid, int varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  MPI_Offset nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes, offset;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -1667,11 +1719,11 @@ ncmpi_put_var1(int ncid, int varid,
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
-  /* set the mpi file view */
- 
-  status = set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
-  if (status != NC_NOERR)
-    return status; 
+  /* accessing one variable element need not set the file view.
+     just find the file offset and use MPI-IO call with explicit offset */
+
+  status = get_offset(ncp, varp, index, &offset);
+  if (status != NC_NOERR) return status;
 
   if (!iscontig_of_ptypes) {
   
@@ -1731,12 +1783,12 @@ ncmpi_put_var1(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes,
+  mpireturn = MPI_File_write_at(ncp->nciop->independent_fh, offset, xbuf, nbytes,
 			     MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
         status = NC_EWRITE;
   }
  
@@ -1772,7 +1824,7 @@ ncmpi_get_var1(int ncid, int varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  MPI_Offset nelems, cnelems, nbytes; 
+  MPI_Offset nelems, cnelems, nbytes, offset; 
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -1817,11 +1869,10 @@ ncmpi_get_var1(int ncid, int varid,
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
-  /* set the mpi file view */
- 
-  status = set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
-  if(status != NC_NOERR)
-    return status; 
+  /* it is not necessary to define a filetype because requesting one
+     array element is accessing a contiguous region in file */
+  status = get_offset(ncp, varp, index, &offset);
+  if (status != NC_NOERR) return status;
 
   if (!iscontig_of_ptypes) {
   
@@ -1849,11 +1900,11 @@ ncmpi_get_var1(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read_at(ncp->nciop->independent_fh, offset, xbuf, nbytes, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
         status = NC_EREAD;
   }
  
@@ -1965,11 +2016,15 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datat
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
-  /* set the mpi file view */
- 
-  status = set_var_fileview(ncp, &(ncp->nciop->collective_fh), varp);
-  if(status != NC_NOERR)
-    return status;
+  /* since reading an entire non-record variable is a contiguous file
+     access, no need to set fileview. Setting fileview is only necessary
+     for record variable and only when there are more than one record */
+  if (IS_RECVAR(varp)) {
+      /* Record variable has a strided file view */
+      status = set_var_fileview(ncp, &(ncp->nciop->collective_fh), varp);
+      if (status != NC_NOERR)
+          return status;
+  }
  
   if (!iscontig_of_ptypes) {
  
@@ -1998,13 +2053,24 @@ ncmpi_get_var_all(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datat
 
   }
 
-  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (IS_RECVAR(varp))
+      mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes,
+                                    MPI_BYTE, &mpistatus);
+  else
+      /* Contiguous file view - read the entire variable from an offset */
+      mpireturn = MPI_File_read_at_all(ncp->nciop->collective_fh, varp->begin,
+                                       xbuf, nbytes, MPI_BYTE, &mpistatus);
+
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read(_at)_all");
         status = NC_EREAD;
   }
+
+  if (IS_RECVAR(varp)) /* reset fileview so the entire file is visible again */
+      MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
+                        "native", MPI_INFO_NULL);
  
   if ( need_convert(varp->type, ptype) ) {
 
@@ -2117,11 +2183,15 @@ ncmpi_put_var(int ncid, int varid, const void *buf, MPI_Offset bufcount, MPI_Dat
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
-  /* set the mpi file view */
- 
-  status = set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
-  if(status != NC_NOERR)
-    return status;
+  /* since writing an entire non-record variable is a contiguous file
+     access, no need to set fileview. Setting fileview is only necessary
+     for record variable and only when there are more than one record */
+  if (IS_RECVAR(varp)) {
+      /* Record variable has a strided file view */
+      status = set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
+      if (status != NC_NOERR)
+          return status;
+  }
 
   if (!iscontig_of_ptypes) {
  
@@ -2181,13 +2251,24 @@ ncmpi_put_var(int ncid, int varid, const void *buf, MPI_Offset bufcount, MPI_Dat
 
   }
 
-  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (IS_RECVAR(varp))
+      mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes,
+                                 MPI_BYTE, &mpistatus);
+  else
+      /* Contiguous file view - write the entire variable from an offset */
+      mpireturn = MPI_File_write_at(ncp->nciop->independent_fh, varp->begin,
+                                    xbuf, nbytes, MPI_BYTE, &mpistatus);
+
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write(_at)");
         status = NC_EWRITE;
   }
+
+  if (IS_RECVAR(varp)) /* reset fileview so the entire file is visible again */
+      MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE,
+                        "native", MPI_INFO_NULL);
  
   if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
     in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
@@ -2273,12 +2354,14 @@ ncmpi_get_var(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype 
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
  
-  /* set the mpi file view */
- 
-  status = set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
-  if(status != NC_NOERR)
-    return status;
- 
+  if (IS_RECVAR(varp)) {
+      /* Accessing the entire variable, only record variables have a
+         strided file view */
+      status = set_var_fileview(ncp, &(ncp->nciop->independent_fh), varp);
+      if (status != NC_NOERR)
+          return status;
+  }
+
   if (!iscontig_of_ptypes) {
  
     /* account for derived datatype: allocate the contiguous buffer */
@@ -2305,13 +2388,24 @@ ncmpi_get_var(int ncid, int varid, void *buf, MPI_Offset bufcount, MPI_Datatype 
 
   }
 
-  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (IS_RECVAR(varp))
+      mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes,
+                                MPI_BYTE, &mpistatus);
+  else
+      /* Contiguous file view - read the entire variable from an offset */
+      mpireturn = MPI_File_read_at(ncp->nciop->independent_fh, varp->begin,
+                                   xbuf, nbytes, MPI_BYTE, &mpistatus);
+
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read(_at)");
         status = NC_EREAD;
   }
+
+  if (IS_RECVAR(varp)) /* reset fileview so the entire file is visible again */
+      MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE,
+                        "native", MPI_INFO_NULL);
  
   if ( need_convert(varp->type, ptype) ) {
 
@@ -2502,13 +2596,18 @@ ncmpi_put_vara_all(int ncid, int varid,
    * It stinks that we have to make this change in multiple places by the way
    */ 
 
-  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes,
+                                 MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
+
+  /* reset fileview so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
+                    "native", MPI_INFO_NULL);
 
   if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
     in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
@@ -2530,18 +2629,15 @@ ncmpi_put_vara_all(int ncid, int varid,
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
+        MPI_Allreduce(&newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT,
+                      MPI_MAX, comm );
  
-      if (ncp->numrecs < max_numrecs) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
+        /* all proc must agree on numrecs because
+           ncmpii_write_numrecs() is collective */
         ncp->numrecs = max_numrecs;
-        if (rank == 0) {
-          status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
-          if(status != NC_NOERR)
+        status = ncmpii_write_numrecs(ncp);
+        if (status != NC_NOERR)
             return status;
-        }
-      }
     }
   }
  
@@ -2643,13 +2739,19 @@ ncmpi_get_vara_all(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes,
+                                MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
+
+  /* reset fileview so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
+                    "native", MPI_INFO_NULL);
+
   if ( need_convert(varp->type, ptype) ) {
 
     /* automatic numeric datatype conversion and byte swap if needed */
@@ -2847,7 +2949,7 @@ ncmpi_put_vara(int ncid, int varid,
   void *xbuf = NULL,  *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  MPI_Offset nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes, offset;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -2901,11 +3003,20 @@ ncmpi_put_vara(int ncid, int varid,
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
  
-  /* set the mpi file view */
- 
-  status = set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 0);
-  if(status != NC_NOERR)
-    return status;
+  /* check if the request is contiguous in file
+     if yes, we will later use offset in MPI_File_write_at() */
+  offset = -1;
+  if (is_request_contiguous(varp, start, count)) {
+      status = get_offset(ncp, varp, start, &offset);
+      if (status != NC_NOERR) return status;
+  }
+  else {
+      /* this request is non-contiguous in file, set the mpi file view */
+      status = set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp,
+                                 start, count, 0);
+      if(status != NC_NOERR)
+          return status;
+  }
  
   if (!iscontig_of_ptypes) {
  
@@ -2965,13 +3076,23 @@ ncmpi_put_vara(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (offset >= 0) /* this is a contiguous file access */
+      mpireturn = MPI_File_write_at(ncp->nciop->independent_fh, offset, xbuf,
+                                    nbytes, MPI_BYTE, &mpistatus);
+  else
+      mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes,
+                                 MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_write(_at)");
         return NC_EWRITE;
   }
+
+  if (offset < 0)
+      /* reset the file view so the entire file is visible again */
+      MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE,
+                        "native", MPI_INFO_NULL);
 
   if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
     in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
@@ -3005,7 +3126,7 @@ ncmpi_get_vara(int ncid, int varid,
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
   int dim;
-  MPI_Offset nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes, offset;
   int el_size;
   MPI_Status mpistatus;
   int mpireturn;
@@ -3056,11 +3177,20 @@ ncmpi_get_vara(int ncid, int varid,
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
-  /* set the mpi file view */
- 
-  status = set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp, start, count, 1);
-  if(status != NC_NOERR)
-    return status;
+  /* check if the request is contiguous in file
+     if yes, we will later use offset in MPI_File_read_at() */
+  offset = -1;
+  if (is_request_contiguous(varp, start, count)) {
+      status = get_offset(ncp, varp, start, &offset);
+      if (status != NC_NOERR) return status;
+  }
+  else {
+      /* this request is non-contiguous in file, set the mpi file view */
+      status = set_vara_fileview(ncp, &(ncp->nciop->independent_fh), varp,
+                                 start, count, 1);
+      if (status != NC_NOERR)
+          return status;
+  }
  
   if (!iscontig_of_ptypes) {
  
@@ -3088,13 +3218,24 @@ ncmpi_get_vara(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  if (offset >= 0) /* this is a contiguous file access */
+      mpireturn = MPI_File_read_at(ncp->nciop->independent_fh, offset, xbuf,
+                                   nbytes, MPI_BYTE, &mpistatus);
+  else
+      mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes,
+                                MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read(_at)");
         status = NC_EREAD;
   }
+
+  if (offset < 0)
+      /* reset the file view so the entire file is visible again */
+      MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE,
+                        "native", MPI_INFO_NULL);
+
   if ( need_convert(varp->type, ptype) ) {
 
     /* automatic numeric datatype conversion */
@@ -3289,13 +3430,18 @@ ncmpi_put_vars_all(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write_all(ncp->nciop->collective_fh, xbuf, nbytes,
+                                 MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
+
+  /* reset fileview so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
+                    "native", MPI_INFO_NULL);
 
   if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
     in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
@@ -3317,18 +3463,15 @@ ncmpi_put_vars_all(int ncid, int varid,
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
+        MPI_Allreduce(&newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT,
+                      MPI_MAX, comm);
  
-      if (ncp->numrecs < max_numrecs) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
+        /* all proc must agree on numrecs because
+           ncmpii_write_numrecs() is collective */
         ncp->numrecs = max_numrecs;
-        if (rank == 0) {
-          status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
-          if(status != NC_NOERR)
+        status = ncmpii_write_numrecs(ncp);
+        if (status != NC_NOERR)
             return status;
-        }
-      }
     }
   }
   if (stride_was_null != NULL) free(stride_was_null);
@@ -3434,13 +3577,18 @@ ncmpi_get_vars_all(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read_all(ncp->nciop->collective_fh, xbuf, nbytes,
+                                MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
+
+  /* reset fileview so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
+                    "native", MPI_INFO_NULL);
 
   if ( need_convert(varp->type, ptype) ) {
 
@@ -3622,13 +3770,18 @@ ncmpi_put_vars(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_write(ncp->nciop->independent_fh, xbuf, nbytes,
+                             MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_write");
         status = NC_EWRITE;
   }
+
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE,
+                    "native", MPI_INFO_NULL);
 
   if ( need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf )
     in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
@@ -3748,13 +3901,18 @@ ncmpi_get_vars(int ncid, int varid,
 
   }
 
-  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+  mpireturn = MPI_File_read(ncp->nciop->independent_fh, xbuf, nbytes,
+                            MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
 	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
         status = NC_EREAD;
   }
+
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE,
+                    "native", MPI_INFO_NULL);
  
   if ( need_convert(varp->type, ptype) ) {
 
@@ -8772,7 +8930,7 @@ ncmpi_iput_var1(int ncid, int varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  MPI_Offset nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes, offset;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -8819,11 +8977,11 @@ ncmpi_iput_var1(int ncid, int varid,
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
-  /* set the mpi file view */
- 
-  status = set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
-  if (status != NC_NOERR)
-    return status; 
+  /* accessing one variable element need not set the file view.
+     just find the file offset and use MPI-IO call with explicit offset */
+
+  status = get_offset(ncp, varp, index, &offset);
+  if (status != NC_NOERR) return status;
 
   if (!iscontig_of_ptypes) {
   
@@ -8885,12 +9043,12 @@ ncmpi_iput_var1(int ncid, int varid,
 
   *request = (NCMPI_Request)malloc(sizeof(struct NCMPI_Req));
 
-  mpireturn = MPI_File_iwrite(ncp->nciop->independent_fh, xbuf, nbytes,
-			      MPI_BYTE, &((*request)->mpi_req));
+  mpireturn = MPI_File_iwrite_at(ncp->nciop->independent_fh, offset, xbuf, nbytes,
+			         MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite_at");
         status = NC_EWRITE;
   }
  
@@ -8925,7 +9083,7 @@ ncmpi_iget_var1(int ncid, int varid,
   NC *ncp;
   void *xbuf = NULL, *cbuf = NULL;
   int status = NC_NOERR, warning = NC_NOERR;
-  MPI_Offset nelems, cnelems, nbytes;
+  MPI_Offset nelems, cnelems, nbytes, offset;
   int el_size;
   int mpireturn;
   MPI_Datatype ptype;
@@ -8969,11 +9127,11 @@ ncmpi_iget_var1(int ncid, int varid,
   if (nbytes < 0)
     return NC_ENEGATIVECNT;
 
-  /* set the mpi file view */
- 
-  status = set_var1_fileview(ncp, &(ncp->nciop->independent_fh), varp, index);
-  if(status != NC_NOERR)
-    return status; 
+  /* accessing one variable element need not set the file view.
+     just find the file offset and use MPI-IO call with explicit offset */
+
+  status = get_offset(ncp, varp, index, &offset);
+  if (status != NC_NOERR) return status;
 
   if (!iscontig_of_ptypes) {
   
@@ -9003,12 +9161,12 @@ ncmpi_iget_var1(int ncid, int varid,
 
   *request = (NCMPI_Request)malloc(sizeof(struct NCMPI_Req));
 
-  mpireturn = MPI_File_iread(ncp->nciop->independent_fh, xbuf, 
-			     nbytes, MPI_BYTE, &((*request)->mpi_req));
+  mpireturn = MPI_File_iread_at(ncp->nciop->independent_fh, offset, xbuf, 
+			        nbytes, MPI_BYTE, &((*request)->mpi_req));
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
         status = NC_EREAD;
   }
  
@@ -9163,9 +9321,12 @@ ncmpi_iput_var(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite error");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iwrite");
         status = NC_EWRITE;
   }
+ 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
  
   (*request)->reqtype = NCMPI_REQTYPE_WRITE;
   (*request)->xbuf = xbuf;
@@ -9290,9 +9451,12 @@ ncmpi_iget_var(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iread");
         status = NC_EREAD;
   }
+ 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
  
   (*request)->reqtype = NCMPI_REQTYPE_READ;
   (*request)->vartype = varp->type;
@@ -9456,6 +9620,9 @@ ncmpi_iput_vara(int ncid, int varid,
         return NC_EWRITE;
   }
 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+ 
   (*request)->reqtype = NCMPI_REQTYPE_WRITE;
   (*request)->xbuf = xbuf;
   (*request)->cbuf = cbuf;
@@ -9582,10 +9749,13 @@ ncmpi_iget_vara(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iread");
         status = NC_EREAD;
   }
 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+ 
   (*request)->reqtype = NCMPI_REQTYPE_READ;
   (*request)->vartype = varp->type;
   (*request)->xbuf = xbuf;
@@ -9745,6 +9915,9 @@ ncmpi_iput_vars(int ncid, int varid,
         status = NC_EWRITE;
   }
 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+ 
   (*request)->reqtype = NCMPI_REQTYPE_WRITE;
   (*request)->xbuf = xbuf;
   (*request)->cbuf = cbuf;
@@ -9869,9 +10042,12 @@ ncmpi_iget_vars(int ncid, int varid,
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read");
+	ncmpii_handle_error(rank, mpireturn, "MPI_File_iread");
         status = NC_EREAD;
   }
+ 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
  
   (*request)->reqtype = NCMPI_REQTYPE_READ;
   (*request)->vartype = varp->type;
@@ -12683,7 +12859,7 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
   
  // mpireturn = MPI_File_set_view(*mpifh, offset[0], MPI_BYTE, 
   mpireturn = MPI_File_set_view(*mpifh, 0, MPI_BYTE, 
-		    full_filetype, "native", ncp->nciop->mpiinfo);
+		    full_filetype, "native", MPI_INFO_NULL);
   if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(ncp->nciop->comm, &rank);
@@ -12884,6 +13060,9 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varids[],
         status = NC_EWRITE;
   }
 
+  /* reset fileview so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
   for (i=0; i<nvars; i++)
       if ( need_swap(varp[i]->type, ptype[i]) && buffers[i] == cbuf[i] && cbuf[i] == xbuf[i] )
           in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
@@ -12905,25 +13084,21 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varids[],
     /* update the number of records in NC
         and write it back to file header, if necessary
     */
-    int newnumrecs, max_numrecs;
+    MPI_Offset newnumrecs, max_numrecs;
     newnumrecs = starts[i][0] + counts[i][0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_INT, MPI_MAX, comm );
+        MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
  
-      if (ncp->numrecs < max_numrecs) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
+        /* all proc must agree on numrecs because
+           ncmpii_write_numrecs() is collective */
         ncp->numrecs = max_numrecs;
-        if (rank == 0) {
-          status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
-          if(status != NC_NOERR)
+        status = ncmpii_write_numrecs(ncp);
+        if (status != NC_NOERR)
             return status;
-        }
-      }
     }
   }
   }/*end for i*/
@@ -13087,6 +13262,8 @@ ncmpi_get_mvara_all(int ncid, int nvars, int *varids,
         ncmpii_handle_error(rank, mpireturn, "MPI_File_read_all");
         status = NC_EREAD;
   }
+  /* reset fileview so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
   for (i=0; i<nvars; i++){
   if ( need_convert(varp[i]->type, ptype[i]) ) {
@@ -13943,6 +14120,8 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
         ncmpii_handle_error(rank, mpireturn, "MPI_File_write_all");
         status = NC_EWRITE;
   }
+  /* reset fileview so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
   for (i=0; i<nvars; i++)
       if ( need_swap(varp[i]->type, ptype[i]) )
@@ -13962,25 +14141,21 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
 
   if (status == NC_NOERR && IS_RECVAR(varp[i])) {
 
-    int newnumrecs, max_numrecs;
+    MPI_Offset newnumrecs, max_numrecs;
     newnumrecs = start[i][0] + count[i][0];
     if (ncp->numrecs < newnumrecs) {
       ncp->numrecs = newnumrecs;
       set_NC_ndirty(ncp);
     }
     if (NC_doNsync(ncp)) {
-      MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_INT, MPI_MAX, comm );
+        MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
 
-      if (ncp->numrecs < max_numrecs) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
+        /* all proc must agree on numrecs because
+           ncmpii_write_numrecs() is collective */
         ncp->numrecs = max_numrecs;
-        if (rank == 0) {
-          status = ncmpii_write_numrecs(ncp); /* call subroutine from nc.c */
-          if(status != NC_NOERR)
+        status = ncmpii_write_numrecs(ncp);
+        if (status != NC_NOERR)
             return status;
-        }
-      }
     }
   }
   }/*end for i*/
@@ -14218,6 +14393,9 @@ ncmpi_put_mvara_record(int ncid, int nvars, int varid[],
         status = NC_EWRITE;
   }
 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+ 
   for (i=0; i<nvars; i++)
       if ( need_swap(varp[i]->type, ptype[i]) )
           in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
@@ -14433,6 +14611,9 @@ ncmpi_put_mvara_nonrecord(int ncid, int nvars, int varids[],
         status = NC_EWRITE;
   }
 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+ 
   for (i=0; i<nvars; i++)
       if ( need_swap(varp[i]->type, ptype[i]) && buffers[i] == cbuf[i] && cbuf[i] == xbuf[i] )
           in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
@@ -14649,6 +14830,9 @@ ncmpi_get_mvara(int ncid, int nvars, int *varids,
         status = NC_EREAD;
   }
 
+  /* reset the file view so the entire file is visible again */
+  MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+ 
   for (i=0; i<nvars; i++){
   if ( need_convert(varp[i]->type, ptype[i]) ) {
 
