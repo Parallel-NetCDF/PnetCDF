@@ -1,5 +1,5 @@
 /*
- *	Copyright 1996, University Corporation for Atmospheric Research
+ *      Copyright 1996, University Corporation for Atmospheric Research
  *      See netcdf/COPYRIGHT file for copying and redistribution conditions.
  */
 /* $Id$ */
@@ -36,7 +36,7 @@ static int move_recs_r(NC *ncp, NC *old);
 static int move_vars_r(NC *ncp, NC *old);
 static int write_NC(NC *ncp);
 static int NC_begins(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
-		      MPI_Offset v_minfree, MPI_Offset r_align);
+                     MPI_Offset v_minfree, MPI_Offset r_align);
 static int NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp);
 static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
 
@@ -49,36 +49,36 @@ static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
 void
 ncmpii_add_to_NCList(NC *ncp)
 {
-	assert(ncp != NULL);
+        assert(ncp != NULL);
 
-	ncp->prev = NULL;
-	if(NClist != NULL)
-		NClist->prev = ncp;
-	ncp->next = NClist;
-	NClist = ncp;
+        ncp->prev = NULL;
+        if(NClist != NULL)
+                NClist->prev = ncp;
+        ncp->next = NClist;
+        NClist = ncp;
 }
 
 void
 ncmpii_del_from_NCList(NC *ncp)
 {
-	assert(ncp != NULL);
+        assert(ncp != NULL);
 
-	if(NClist == ncp)
-	{
-		assert(ncp->prev == NULL);
-		NClist = ncp->next;
-	}
-	else
-	{
-		assert(ncp->prev != NULL);
-		ncp->prev->next = ncp->next;
-	}
+        if(NClist == ncp)
+        {
+                assert(ncp->prev == NULL);
+                NClist = ncp->next;
+        }
+        else
+        {
+                assert(ncp->prev != NULL);
+                ncp->prev->next = ncp->next;
+        }
 
-	if(ncp->next != NULL)
-		ncp->next->prev = ncp->prev;
+        if(ncp->next != NULL)
+                ncp->next->prev = ncp->prev;
 
-	ncp->next = NULL;
-	ncp->prev = NULL;
+        ncp->next = NULL;
+        ncp->prev = NULL;
 }
 
 /*
@@ -134,11 +134,11 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp) {
     if (status!=NC_NOERR) errflag = 1;
     MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_SUM, ncp->nciop->comm);
     if (errcheck != NC_NOERR){
-  	if (status != NC_NOERR ){
-		return status;
-	} else {
-	return NC_EMULTIDEFINE; 
-	}
+          if (status != NC_NOERR ){
+                return status;
+        } else {
+        return NC_EMULTIDEFINE; 
+        }
     }
   return NC_NOERR;
 }
@@ -192,22 +192,22 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
 int
 ncmpii_NC_check_id(int ncid, NC **ncpp)
 {
-	NC *ncp;
+        NC *ncp;
 
-	if(ncid >= 0)
-	{
-		for(ncp = NClist; ncp != NULL; ncp = ncp->next)
-		{
-			if(ncp->nciop->fd == ncid)
-			{
-				*ncpp = ncp;
-				return NC_NOERR; /* normal return */
-			}
-		}
-	}
+        if(ncid >= 0)
+        {
+                for(ncp = NClist; ncp != NULL; ncp = ncp->next)
+                {
+                        if(ncp->nciop->fd == ncid)
+                        {
+                                *ncpp = ncp;
+                                return NC_NOERR; /* normal return */
+                        }
+                }
+        }
 
-	/* else, not found */
-	return NC_EBADID;
+        /* else, not found */
+        return NC_EBADID;
 }
 
 
@@ -215,12 +215,12 @@ ncmpii_NC_check_id(int ncid, NC **ncpp)
 void
 ncmpii_free_NC(NC *ncp)
 {
-	if(ncp == NULL)
-		return;
-	ncmpii_free_NC_dimarrayV(&ncp->dims);
-	ncmpii_free_NC_attrarrayV(&ncp->attrs);
-	ncmpii_free_NC_vararrayV(&ncp->vars);
-	free(ncp);
+        if(ncp == NULL)
+                return;
+        ncmpii_free_NC_dimarrayV(&ncp->dims);
+        ncmpii_free_NC_attrarrayV(&ncp->attrs);
+        ncmpii_free_NC_vararrayV(&ncp->vars);
+        free(ncp);
 }
 
 
@@ -228,24 +228,24 @@ ncmpii_free_NC(NC *ncp)
 NC *
 ncmpii_new_NC(const MPI_Offset *chunkp)
 {
-	NC *ncp;
+        NC *ncp;
 
-	ncp = (NC *) malloc(sizeof(NC));
-	if(ncp == NULL)
-		return NULL;
-	(void) memset(ncp, 0, sizeof(NC));
+        ncp = (NC *) malloc(sizeof(NC));
+        if(ncp == NULL)
+                return NULL;
+        (void) memset(ncp, 0, sizeof(NC));
 
-	if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-		ncp->xsz = MIN_NC_XSZ+28; /*Kgao*/
-	} else {
-		ncp->xsz = MIN_NC_XSZ; 
-	}
+        if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+                ncp->xsz = MIN_NC_XSZ+28; /*Kgao*/
+        } else {
+                ncp->xsz = MIN_NC_XSZ; 
+        }
 
-	assert(ncp->xsz == ncmpii_hdr_len_NC(ncp, 0)); 
-	
-	ncp->chunk = chunkp != NULL ? *chunkp : NC_SIZEHINT_DEFAULT;
+        assert(ncp->xsz == ncmpii_hdr_len_NC(ncp, 0)); 
+        
+        ncp->chunk = chunkp != NULL ? *chunkp : NC_SIZEHINT_DEFAULT;
 
-	return ncp;
+        return ncp;
 }
 
 /* This function sets a default create flag that will be logically
@@ -275,7 +275,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
 static int
 ncmpii_get_default_format(void)
 {
-	return default_create_format;
+        return default_create_format;
 }
 #endif
 
@@ -283,29 +283,29 @@ ncmpii_get_default_format(void)
 NC *
 ncmpii_dup_NC(const NC *ref)
 {
-	NC *ncp;
+        NC *ncp;
 
-	ncp = (NC *) malloc(sizeof(NC));
-	if(ncp == NULL)
-		return NULL;
-	(void) memset(ncp, 0, sizeof(NC));
+        ncp = (NC *) malloc(sizeof(NC));
+        if(ncp == NULL)
+                return NULL;
+        (void) memset(ncp, 0, sizeof(NC));
 
-	if(ncmpii_dup_NC_dimarrayV(&ncp->dims, &ref->dims) != NC_NOERR)
-		goto err;
-	if(ncmpii_dup_NC_attrarrayV(&ncp->attrs, &ref->attrs) != NC_NOERR)
-		goto err;
-	if(ncmpii_dup_NC_vararrayV(&ncp->vars, &ref->vars) != NC_NOERR)
-		goto err;
+        if(ncmpii_dup_NC_dimarrayV(&ncp->dims, &ref->dims) != NC_NOERR)
+                goto err;
+        if(ncmpii_dup_NC_attrarrayV(&ncp->attrs, &ref->attrs) != NC_NOERR)
+                goto err;
+        if(ncmpii_dup_NC_vararrayV(&ncp->vars, &ref->vars) != NC_NOERR)
+                goto err;
 
-	ncp->xsz = ref->xsz;
-	ncp->begin_var = ref->begin_var;
-	ncp->begin_rec = ref->begin_rec;
-	ncp->recsize = ref->recsize;
-	NC_set_numrecs(ncp, NC_get_numrecs(ref));
-	return ncp;
+        ncp->xsz = ref->xsz;
+        ncp->begin_var = ref->begin_var;
+        ncp->begin_rec = ref->begin_rec;
+        ncp->recsize = ref->recsize;
+        NC_set_numrecs(ncp, NC_get_numrecs(ref));
+        return ncp;
 err:
-	ncmpii_free_NC(ncp);
-	return NULL;
+        ncmpii_free_NC(ncp);
+        return NULL;
 }
 
 
@@ -318,16 +318,16 @@ NCcktype()
 int
 ncmpii_cktype(nc_type type)
 {
-	switch((int)type){
-	case NC_BYTE:
-	case NC_CHAR:
-	case NC_SHORT:
-	case NC_INT:
-	case NC_FLOAT:
-	case NC_DOUBLE:
-		return(NC_NOERR);
-	}
-	return(NC_EBADTYPE);
+        switch((int)type){
+        case NC_BYTE:
+        case NC_CHAR:
+        case NC_SHORT:
+        case NC_INT:
+        case NC_FLOAT:
+        case NC_DOUBLE:
+                return(NC_NOERR);
+        }
+        return(NC_EBADTYPE);
 }
 
 
@@ -338,25 +338,25 @@ ncmpii_cktype(nc_type type)
 MPI_Offset
 ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
 {
-	switch(type){
-	case NC_BYTE:
-	case NC_CHAR:
-		return xbufsize;
-	case NC_SHORT:
-		return xbufsize/X_SIZEOF_SHORT;
-	case NC_INT:
-		return xbufsize/X_SIZEOF_INT;
-	case NC_FLOAT:
-		return xbufsize/X_SIZEOF_FLOAT;
-	case NC_DOUBLE:
-		return xbufsize/X_SIZEOF_DOUBLE;
-	default:
-		assert("ncmpix_howmany: Bad type" == 0);
-		return(0);
-	}
+        switch(type){
+        case NC_BYTE:
+        case NC_CHAR:
+                return xbufsize;
+        case NC_SHORT:
+                return xbufsize/X_SIZEOF_SHORT;
+        case NC_INT:
+                return xbufsize/X_SIZEOF_INT;
+        case NC_FLOAT:
+                return xbufsize/X_SIZEOF_FLOAT;
+        case NC_DOUBLE:
+                return xbufsize/X_SIZEOF_DOUBLE;
+        default:
+                assert("ncmpix_howmany: Bad type" == 0);
+                return(0);
+        }
 }
 
-#define	D_RNDUP(x, align) _RNDUP(x, (off_t)(align))
+#define        D_RNDUP(x, align) _RNDUP(x, (off_t)(align))
 
 /*
  * Compute each variable's 'begin' offset,
@@ -364,131 +364,131 @@ ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
  */
 static int
 NC_begins(NC *ncp,
-	MPI_Offset h_minfree, MPI_Offset v_align,
-	MPI_Offset v_minfree, MPI_Offset r_align)
+        MPI_Offset h_minfree, MPI_Offset v_align,
+        MPI_Offset v_minfree, MPI_Offset r_align)
 {
-	MPI_Offset ii;
-	MPI_Offset sizeof_off_t;
-	off_t index = 0;
-	NC_var **vpp;
-	NC_var *last = NULL;
+        MPI_Offset ii;
+        MPI_Offset sizeof_off_t;
+        off_t index = 0;
+        NC_var **vpp;
+        NC_var *last = NULL;
 
-	if(v_align == NC_ALIGN_CHUNK)
-		v_align = ncp->chunk;
-	if(r_align == NC_ALIGN_CHUNK)
-		r_align = ncp->chunk;
+        if(v_align == NC_ALIGN_CHUNK)
+                v_align = ncp->chunk;
+        if(r_align == NC_ALIGN_CHUNK)
+                r_align = ncp->chunk;
 
-	if ((fIsSet(ncp->flags, NC_64BIT_OFFSET))||(fIsSet(ncp->flags, NC_64BIT_DATA))) {
-		sizeof_off_t = 8;
-	} else {
-		sizeof_off_t = 4;
-	}
+        if ((fIsSet(ncp->flags, NC_64BIT_OFFSET))||(fIsSet(ncp->flags, NC_64BIT_DATA))) {
+                sizeof_off_t = 8;
+        } else {
+                sizeof_off_t = 4;
+        }
 
-	ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
-	
+        ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
+        
 
-	if(ncp->vars.nelems == 0) 
-		return NC_NOERR;
+        if(ncp->vars.nelems == 0) 
+                return NC_NOERR;
 
-	/* only (re)calculate begin_var if there is not sufficient space in header
-	   or start of non-record variables is not aligned as requested by valign */
-	if (ncp->begin_var < ncp->xsz + h_minfree ||
-	    ncp->begin_var != D_RNDUP(ncp->begin_var, v_align) ) 
-	{
-	  index = (off_t) ncp->xsz;
-	  ncp->begin_var = D_RNDUP(index, v_align);
-	  if(ncp->begin_var < index + h_minfree)
-	  {
-	    ncp->begin_var = D_RNDUP(index + (off_t)h_minfree, v_align);
-	  }
-	}
-	index = ncp->begin_var;
+        /* only (re)calculate begin_var if there is not sufficient space in header
+           or start of non-record variables is not aligned as requested by valign */
+        if (ncp->begin_var < ncp->xsz + h_minfree ||
+            ncp->begin_var != D_RNDUP(ncp->begin_var, v_align) ) 
+        {
+          index = (off_t) ncp->xsz;
+          ncp->begin_var = D_RNDUP(index, v_align);
+          if(ncp->begin_var < index + h_minfree)
+          {
+            ncp->begin_var = D_RNDUP(index + (off_t)h_minfree, v_align);
+          }
+        }
+        index = ncp->begin_var;
 
-	/* loop thru vars, first pass is for the 'non-record' vars */
-	vpp = ncp->vars.value;
-	for(ii = 0; ii < ncp->vars.nelems ; ii++, vpp++)
-	{
-		if( IS_RECVAR(*vpp) )
-		{
-			/* skip record variables on this pass */
-			continue;
-		}
+        /* loop thru vars, first pass is for the 'non-record' vars */
+        vpp = ncp->vars.value;
+        for(ii = 0; ii < ncp->vars.nelems ; ii++, vpp++)
+        {
+                if( IS_RECVAR(*vpp) )
+                {
+                        /* skip record variables on this pass */
+                        continue;
+                }
 #if 0
 fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
 #endif
-		if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
-		{
-			return NC_EVARSIZE;
-		}
-		/* this will pad out non-record variables with zero to the
-		 * requested alignment.  record variables are a bit trickier.
-		 * we don't do anything special with them */
-		(*vpp)->begin = D_RNDUP(index, v_align);
-		index = (*vpp)->begin + (*vpp)->len;
-	}
+                if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+                {
+                        return NC_EVARSIZE;
+                }
+                /* this will pad out non-record variables with zero to the
+                 * requested alignment.  record variables are a bit trickier.
+                 * we don't do anything special with them */
+                (*vpp)->begin = D_RNDUP(index, v_align);
+                index = (*vpp)->begin + (*vpp)->len;
+        }
 
-	/* only (re)calculate begin_rec if there is not sufficient
-	   space at end of non-record variables or if start of record
-	   variables is not aligned as requested by r_align */
-	if (ncp->begin_rec < index + v_minfree ||
-	    ncp->begin_rec != D_RNDUP(ncp->begin_rec, r_align) )
-	{
-	  ncp->begin_rec = D_RNDUP(index, r_align);
-	  if(ncp->begin_rec < index + v_minfree)
-	  {
-	    ncp->begin_rec = D_RNDUP(index + (off_t)v_minfree, r_align);
-	  }
-	}
-	index = ncp->begin_rec;
+        /* only (re)calculate begin_rec if there is not sufficient
+           space at end of non-record variables or if start of record
+           variables is not aligned as requested by r_align */
+        if (ncp->begin_rec < index + v_minfree ||
+            ncp->begin_rec != D_RNDUP(ncp->begin_rec, r_align) )
+        {
+          ncp->begin_rec = D_RNDUP(index, r_align);
+          if(ncp->begin_rec < index + v_minfree)
+          {
+            ncp->begin_rec = D_RNDUP(index + (off_t)v_minfree, r_align);
+          }
+        }
+        index = ncp->begin_rec;
 
-	ncp->recsize = 0;
+        ncp->recsize = 0;
 
-	/* loop thru vars, second pass is for the 'record' vars */
-	vpp = (NC_var **)ncp->vars.value;
-	for(ii = 0; ii < ncp->vars.nelems; ii++, vpp++)
-	{
-		if( !IS_RECVAR(*vpp) )
-		{
-			/* skip non-record variables on this pass */
-			continue;
-		}
+        /* loop thru vars, second pass is for the 'record' vars */
+        vpp = (NC_var **)ncp->vars.value;
+        for(ii = 0; ii < ncp->vars.nelems; ii++, vpp++)
+        {
+                if( !IS_RECVAR(*vpp) )
+                {
+                        /* skip non-record variables on this pass */
+                        continue;
+                }
 
 #if 0
 fprintf(stderr, "    REC %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
 #endif
-		if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
-		{
-			return NC_EVARSIZE;
-		}
-		/* A few attempts at aligning record variables have failed
-		 * (either with range error or 'value read not that expected',
-		 * or with an error in ncmpi_redef )).  Not sufficent to align
-		 * 'begin', but haven't figured out what else to adjust */
-		(*vpp)->begin = index;
-		index += (*vpp)->len;
-		/* check if record size must fit in 32-bits */
+                if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+                {
+                        return NC_EVARSIZE;
+                }
+                /* A few attempts at aligning record variables have failed
+                 * (either with range error or 'value read not that expected',
+                 * or with an error in ncmpi_redef )).  Not sufficent to align
+                 * 'begin', but haven't figured out what else to adjust */
+                (*vpp)->begin = index;
+                index += (*vpp)->len;
+                /* check if record size must fit in 32-bits */
 #if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
-		if (ncp->recsize > X_UINT_MAX - (*vpp)->len)
-		{
-			return NC_EVARSIZE;
-		}
+                if (ncp->recsize > X_UINT_MAX - (*vpp)->len)
+                {
+                        return NC_EVARSIZE;
+                }
 #endif
-		ncp->recsize += (*vpp)->len;
-		last = (*vpp);
-	}
+                ncp->recsize += (*vpp)->len;
+                last = (*vpp);
+        }
 
-	/*
-	 * for special case of exactly one record variable, pack value
-	 */
-	/* if there is exactly one record variable, then there is no need to
-	 * pad for alignment -- there's nothing after it */
-	if(last != NULL && ncp->recsize == last->len)
-		ncp->recsize = *last->dsizes * last->xsz;
+        /*
+         * for special case of exactly one record variable, pack value
+         */
+        /* if there is exactly one record variable, then there is no need to
+         * pad for alignment -- there's nothing after it */
+        if(last != NULL && ncp->recsize == last->len)
+                ncp->recsize = *last->dsizes * last->xsz;
 
-	if(NC_IsNew(ncp))
-		NC_set_numrecs(ncp, 0);
+        if(NC_IsNew(ncp))
+                NC_set_numrecs(ncp, 0);
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 #define NC_NUMRECS_OFFSET 4
@@ -514,28 +514,21 @@ ncmpii_read_numrecs(NC *ncp) {
   assert(!NC_indef(ncp));
 
   if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-		sizeof_t = X_SIZEOF_LONG;
+                sizeof_t = X_SIZEOF_LONG;
   } else {
- 		sizeof_t = X_SIZEOF_SIZE_T;
+                 sizeof_t = X_SIZEOF_SIZE_T;
   }
  
   pos = buf = (void *)malloc(sizeof_t);
 
-  /* reset the file view */
-  mpireturn = MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE,
-                    MPI_BYTE, "native", ncp->nciop->mpiinfo);
-  if (mpireturn != MPI_SUCCESS) {
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-    return NC_EREAD;
-  }
+  /* fileview is already entire file visible and pointer to zero */
 
-  if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
- 	mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET+4,
-                               buf, sizeof_t, MPI_BYTE, &mpistatus);
-  } else {
- 	mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
-                               buf, sizeof_t, MPI_BYTE, &mpistatus);
-  } 
+  if (fIsSet(ncp->flags, NC_64BIT_DATA))
+      mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET+4,
+                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
+  else
+      mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
+                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
  
   if (mpireturn != MPI_SUCCESS) {
     ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
@@ -561,75 +554,52 @@ ncmpii_read_numrecs(NC *ncp) {
 
 int
 ncmpii_write_numrecs(NC *ncp) {
-  int status = NC_NOERR, mpireturn;
-  MPI_Offset nrecs;
-  void *buf, *pos; 
-  MPI_Status mpistatus;
-  MPI_Comm comm;
-  int rank;
+    /* this function is only called by collective APIs in mpinetcdf.c */
+
+    int status = NC_NOERR, mpireturn;
+    MPI_Offset nrecs;
+    void *buf, *pos; 
+    MPI_Status mpistatus;
+    MPI_Comm comm;
+    int rank, len;
   
-  assert(!NC_readonly(ncp));
-  assert(!NC_indef(ncp));
+    assert(!NC_readonly(ncp));
+    assert(!NC_indef(ncp));
 
-  comm = ncp->nciop->comm;
-  MPI_Comm_rank(comm, &rank);
+    comm = ncp->nciop->comm;
+    MPI_Comm_rank(comm, &rank);
 
-  nrecs = ncp->numrecs;
-  if (ncp->flags & NC_64BIT_DATA){
-    pos = buf = (void *)malloc(X_SIZEOF_LONG);
-    status = ncmpix_put_size_t(&pos, &nrecs, 8);
-  }else {
-    pos = buf = (void *)malloc(X_SIZEOF_SIZE_T);
-    status = ncmpix_put_size_t(&pos, &nrecs, 4);
-  }
+    /* there is a MPI_Allreduce() to ensure ncp->numrecs the same across all
+       processes prior to this call */
+    nrecs = ncp->numrecs;
+    if (ncp->flags & NC_64BIT_DATA)
+        len = X_SIZEOF_LONG;
+    else
+        len = X_SIZEOF_SIZE_T;
+    pos = buf = (void *)malloc(len);
+    status = ncmpix_put_size_t(&pos, &nrecs, len);
 
-  if(NC_indep(ncp) && NC_independentFhOpened(ncp->nciop)) {
-    mpireturn = MPI_File_sync(ncp->nciop->independent_fh);
+    /* file view is already reset to entire file visible */
+    mpireturn = MPI_File_write_at_all(ncp->nciop->collective_fh,
+                                      NC_NUMRECS_OFFSET, buf, len,
+                                      MPI_BYTE, &mpistatus); 
     if (mpireturn != MPI_SUCCESS) {
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+        ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at_all");
         return NC_EWRITE;
     }
-    MPI_Barrier(comm);
-  }
 
-  /* reset the file view */
-  mpireturn = MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE, 
-		    MPI_BYTE, "native", ncp->nciop->mpiinfo);
-  if (mpireturn != MPI_SUCCESS) {
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-        return NC_EWRITE;
-  }
-
-  if (rank == 0) {
-    if (ncp->flags & NC_64BIT_DATA){
-    	mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
-				  buf, X_SIZEOF_LONG, MPI_BYTE, &mpistatus); 
-    } else {
-    	mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
-				  buf, X_SIZEOF_SIZE_T, MPI_BYTE, &mpistatus); 
-	
-    }
-  } 
-
-  MPI_Bcast(&mpireturn, 1, MPI_INT, 0, comm);
-
-  if (mpireturn != MPI_SUCCESS) {
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
-    status = NC_EWRITE;
-  } else {
+    /* file sync to make sure the independent handle can see the change */
     mpireturn = MPI_File_sync(ncp->nciop->collective_fh); 
     if (mpireturn != MPI_SUCCESS) {
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+        ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
         status = NC_EWRITE;
     }
-
     MPI_Barrier(comm);
     fClr(ncp->flags, NC_NDIRTY);  
-  }
 
-  free(buf);
+    free(buf);
 
-  return status;
+    return status;
 }
 
 /*
@@ -664,6 +634,7 @@ write_NC(NC *ncp)
   void *buf;
   MPI_Status mpistatus;
   int rank;
+  MPI_Offset len = 0;
  
   assert(!NC_readonly(ncp));
  
@@ -676,28 +647,21 @@ write_NC(NC *ncp)
     return status;
   }
 
+  /* check the header consistency across all processes */
   status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
   if (status != NC_NOERR) {
     free(buf);
     return status;
   }
 
-  /* reset the file view */
-  mpireturn = MPI_File_set_view(ncp->nciop->collective_fh, 0, MPI_BYTE,
-                    MPI_BYTE, "native", ncp->nciop->mpiinfo);
-  if (mpireturn != MPI_SUCCESS) {
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-    return NC_EWRITE;
-  }
-  if (rank == 0) {
-    mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf, 
-			          ncp->xsz, MPI_BYTE, &mpistatus);
-  }
+  /* the fileview is already entire file visible */
 
-  MPI_Bcast(&mpireturn, 1, MPI_INT, 0, ncp->nciop->comm);
-
+  /* only rank 0's header gets written to the file */
+  if (rank == 0) len = ncp->xsz;
+  mpireturn = MPI_File_write_at_all(ncp->nciop->collective_fh, 0, buf,
+                                    len, MPI_BYTE, &mpistatus);
   if (mpireturn != MPI_SUCCESS) {
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
+    ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at_all");
     return NC_EWRITE;
   }
 
@@ -767,6 +731,9 @@ move_recs_r(NC *ncp, NC *old) {
 
   if (ncp_recsize == old_recsize) {
     
+    /* there is no record variable defined yet */
+    if (ncp_recsize == 0) return NC_NOERR;
+
     /* No new rec var inserted, move all rec vars as a whole */
 
     status = ncmpiio_move(ncp->nciop, ncp_off, old_off, 
@@ -909,11 +876,11 @@ ncmpii_NC_enddef(NC *ncp) {
   ncmpiio_get_hint(ncp, "striping_unit", value, flag);
   
   if (flag) 
-	  alignment=atoi(value);
+          alignment=atoi(value);
   /* negative or zero alignment? can't imagine what that would even mean.
    * retain default 512 byte alignment (as in serial netcdf) */
   if (alignment <= 0)
-	  alignment = 512;
+          alignment = 512;
 
   /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
    * acomplish the same thing with calls to NC_begins */
@@ -932,7 +899,7 @@ ncmpii_NC_enddef(NC *ncp) {
  
     mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+        ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
         return NC_EWRITE;
     }
     /*
@@ -983,7 +950,7 @@ ncmpii_NC_enddef(NC *ncp) {
   fClr(ncp->flags, NC_CREAT | NC_INDEF);
   mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
   if (mpireturn != MPI_SUCCESS) {
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+        ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
         return NC_EWRITE;
   }
 
@@ -1052,40 +1019,40 @@ ncmpii_NC_close(NC *ncp) {
 
 int
 ncmpi_inq(int ncid,
-	int *ndimsp,
-	int *nvarsp,
-	int *nattsp,
-	int *xtendimp)
+        int *ndimsp,
+        int *nvarsp,
+        int *nattsp,
+        int *xtendimp)
 {
-	int status;
-	NC *ncp;
+        int status;
+        NC *ncp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	if(ndimsp != NULL)
-		*ndimsp = (int) ncp->dims.nelems;
-	if(nvarsp != NULL)
-		*nvarsp = (int) ncp->vars.nelems;
-	if(nattsp != NULL)
-		*nattsp = (int) ncp->attrs.nelems;
-	if(xtendimp != NULL)
-		*xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
+        if(ndimsp != NULL)
+                *ndimsp = (int) ncp->dims.nelems;
+        if(nvarsp != NULL)
+                *nvarsp = (int) ncp->vars.nelems;
+        if(nattsp != NULL)
+                *nattsp = (int) ncp->attrs.nelems;
+        if(xtendimp != NULL)
+                *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 int
 ncmpi_inq_version(int ncid, int *NC_mode)
 {
-	int status;
+        int status;
         NC *ncp;
 
         status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
-	
+        
 
        if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
           *NC_mode = NC_64BIT_DATA;
@@ -1102,65 +1069,65 @@ ncmpi_inq_version(int ncid, int *NC_mode)
 int 
 ncmpi_inq_ndims(int ncid, int *ndimsp)
 {
-	int status;
-	NC *ncp;
+        int status;
+        NC *ncp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	if(ndimsp != NULL)
-		*ndimsp = (int) ncp->dims.nelems;
+        if(ndimsp != NULL)
+                *ndimsp = (int) ncp->dims.nelems;
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 int 
 ncmpi_inq_nvars(int ncid, int *nvarsp)
 {
-	int status;
-	NC *ncp;
+        int status;
+        NC *ncp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	if(nvarsp != NULL)
-		*nvarsp = (int) ncp->vars.nelems;
+        if(nvarsp != NULL)
+                *nvarsp = (int) ncp->vars.nelems;
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 int 
 ncmpi_inq_natts(int ncid, int *nattsp)
 {
-	int status;
-	NC *ncp;
+        int status;
+        NC *ncp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	if(nattsp != NULL)
-		*nattsp = (int) ncp->attrs.nelems;
+        if(nattsp != NULL)
+                *nattsp = (int) ncp->attrs.nelems;
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 int 
 ncmpi_inq_unlimdim(int ncid, int *xtendimp)
 {
-	int status;
-	NC *ncp;
+        int status;
+        NC *ncp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	if(xtendimp != NULL)
-		*xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
+        if(xtendimp != NULL)
+                *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 /*ARGSUSED*/
 

@@ -7,6 +7,7 @@
 
 #include "ncconfig.h"
 
+#include <unistd.h>  /* access() */
 #include <assert.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -80,63 +81,76 @@ ncmpiio_new(const char *path, int ioflags)
   return nciop;
 }
 
+/*----< ncmpiio_create() >---------------------------------------------------*/
 int
-ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info, 
-            ncio **nciopp) {
-  ncio *nciop;
-  int i;
-  int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
-  int mpireturn;
-  int do_zero_file_size = 0;
+ncmpiio_create(MPI_Comm     comm,
+               const char  *path,
+               int          ioflags,
+               MPI_Info     info, 
+               ncio       **nciopp)
+{
+    ncio *nciop;
+    int i, mpireturn, do_zero_file_size = 0;
+    int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
 
-  fSet(ioflags, NC_WRITE);
+    fSet(ioflags, NC_WRITE);
 
-  if(path == NULL || *path == 0)
-    return EINVAL;
+    if (path == NULL || *path == 0)
+        return EINVAL;
 
-  nciop = ncmpiio_new(path, ioflags);
-  if(nciop == NULL)
-    return ENOMEM;
+    nciop = ncmpiio_new(path, ioflags);
+    if (nciop == NULL)
+        return ENOMEM;
 
-  nciop->mpiomode = MPI_MODE_RDWR;
-  nciop->mpioflags = 0;
-  nciop->comm = comm;
-  if (info == MPI_INFO_NULL)
-    nciop->mpiinfo = MPI_INFO_NULL;
-  else
+    nciop->mpiomode = MPI_MODE_RDWR;
+    nciop->mpioflags = 0;
+    nciop->comm = comm;
+    if (info == MPI_INFO_NULL)
+        nciop->mpiinfo = MPI_INFO_NULL;
+    else
 #ifdef HAVE_MPI_INFO_DUP
-    MPI_Info_dup(info, &nciop->mpiinfo);
+        MPI_Info_dup(info, &nciop->mpiinfo);
 #else
     nciop->mpiinfo = info;
 #endif
 
-  if (fIsSet(ioflags, NC_NOCLOBBER))
-    fSet(mpiomode, MPI_MODE_EXCL);
-  else
-    do_zero_file_size = 1;
+    if (fIsSet(ioflags, NC_NOCLOBBER))
+        fSet(mpiomode, MPI_MODE_EXCL);
+    else {
+        /* to avoid calling MPI_File_set_size() later, let process 0 check
+           if the file exists. If yes, there is no need of MPI_File_set_size */
+        int rank;
+        MPI_Comm_rank(comm, &rank);
+        if (rank == 0) { /* check if file exists */
+            if (access(path, F_OK) == 0) do_zero_file_size = 1;
+        }
+        MPI_Bcast(&do_zero_file_size, 1, MPI_INT, 0, comm);
+    }
 
-  mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
-  if (mpireturn != MPI_SUCCESS) {
-    int rank;
-    MPI_Comm_rank(comm, &rank);
-    ncmpiio_free(nciop);
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
-    return NC_EOFILE;  
-  }
-  if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
+    mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
+    if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(comm, &rank);
+        ncmpiio_free(nciop);
+        ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
+        return NC_EOFILE;  
+    }
 
-  for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
-  if (i == MAX_NC_ID) {
-    ncmpiio_free(nciop);
-    return NC_ENFILE;
-  }
-  *((int *)&nciop->fd) = i;
-  IDalloc[i] = 1;
+    if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
 
-  set_NC_collectiveFh(nciop);
+    for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
 
-  *nciopp = nciop;
-  return ENOERR;  
+    if (i == MAX_NC_ID) {
+        ncmpiio_free(nciop);
+        return NC_ENFILE;
+    }
+    *((int *)&nciop->fd) = i;
+    IDalloc[i] = 1;
+
+    set_NC_collectiveFh(nciop);
+
+    *nciopp = nciop;
+    return ENOERR;  
 }
 
 int
@@ -269,96 +283,73 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
   return status;
 }
 
+/*----< ncmpiio_move() >-----------------------------------------------------*/
 int
-ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from, MPI_Offset nbytes) {
-  int mpireturn, mpierr = 0, errcheck;
-  const MPI_Offset bufsize = 4096;
-  MPI_Offset movesize, bufcount;
-  int rank, grpsize;
-  void *buf = malloc(bufsize);
-  MPI_Comm comm;
-  MPI_Status mpistatus;
+ncmpiio_move(ncio *const nciop,
+             MPI_Offset  to,
+             MPI_Offset  from,
+             MPI_Offset  nbytes)
+{
+    int rank, grpsize, mpireturn;
+    void *buf;
+    const MPI_Offset bufsize = 4096;
+    MPI_Offset movesize, bufcount;
+    MPI_Status mpistatus;
 
+    if (buf == NULL)
+        return NC_ENOMEM;
 
-  if (buf == NULL)
-	  return NC_ENOMEM;
+    MPI_Comm_size(nciop->comm, &grpsize);
+    MPI_Comm_rank(nciop->comm, &rank);
 
-  comm = nciop->comm;
-  MPI_Comm_size(comm, &grpsize);
-  MPI_Comm_rank(comm, &rank);
+    movesize = nbytes;
+    buf = malloc(bufsize);
 
-  movesize = nbytes;
+    while (movesize > 0) {
+        /* find a proper number of processors to participate I/O */
+        while (grpsize > 1 && movesize/grpsize < bufsize)
+            grpsize--;
+        if (grpsize > 1) {
+            bufcount = bufsize;
+            movesize -= bufsize*grpsize;
+        } 
+        else if (movesize < bufsize) {
+            bufcount = movesize;
+            movesize = 0;
+        } 
+        else {
+            bufcount = bufsize;
+            movesize -= bufsize;
+        }
 
-  while (movesize > 0) {
-    /* find a proper number of processors to participate I/O */
-    while (grpsize > 1 && movesize/grpsize < bufsize)
-      grpsize--;
-    if (grpsize > 1) {
-      bufcount = bufsize;
-      movesize -= bufsize*grpsize;
-    } 
-    else if (movesize < bufsize) {
-      bufcount = movesize;
-      movesize = 0;
-    } 
-    else {
-      bufcount = bufsize;
-      movesize -= bufsize;
+        /* fileview is always entire file visible */
+
+        if (rank >= grpsize) bufcount = 0;
+        /* read the original data @ from+movesize+rank*bufsize */
+        mpireturn = MPI_File_read_at_all(nciop->collective_fh,
+                                         from+movesize+rank*bufsize,
+                                         buf, bufcount, MPI_BYTE, &mpistatus);
+        if (mpireturn != MPI_SUCCESS) {
+	    ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
+            free(buf);
+            return NC_EREAD;
+        }
+
+        MPI_Barrier(nciop->comm); /* important, in case new region overlaps old region */
+
+        if (rank >= grpsize) bufcount = 0;
+        /* write to new location @ to+movesize+rank*bufsize */
+        mpireturn = MPI_File_write_at_all(nciop->collective_fh,
+                                          to+movesize+rank*bufsize,
+                                          buf, bufcount, MPI_BYTE, &mpistatus);
+        if (mpireturn != MPI_SUCCESS) {
+	    ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
+            free(buf);
+            return NC_EWRITE;
+        }
     }
-
-    /* reset the file view */
-    mpireturn = MPI_File_set_view(nciop->collective_fh, 0, MPI_BYTE,
-                                  MPI_BYTE, "native", nciop->mpiinfo);
-    if (mpireturn != MPI_SUCCESS) {
-      free(buf);
-      ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-      return NC_EREAD;
-    }
-    if (rank < grpsize) {
-      /* read the original data @ from+movesize+rank*bufsize */
-      mpireturn = MPI_File_read_at(nciop->collective_fh,
-                                   from+movesize+rank*bufsize,
-                                   buf, bufcount, MPI_BYTE, &mpistatus);
-      if (mpireturn != MPI_SUCCESS) {
-        mpierr = 1;
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
-      }
-    }
-    MPI_Allreduce(&mpierr, &errcheck, 1, MPI_INT, MPI_LOR, comm);
-    if (errcheck) {
-      free(buf);
-      return NC_EREAD;
-    }
-
-    MPI_Barrier(comm); /* important, in case new region overlaps old region */
-
-    /* reset the file view */
-    mpireturn = MPI_File_set_view(nciop->collective_fh, 0, MPI_BYTE,
-                                  MPI_BYTE, "native", nciop->mpiinfo);
-    if (mpireturn != MPI_SUCCESS) {
-      free(buf);
-      ncmpii_handle_error(rank, mpireturn, "MPI_File_set_view");
-      return NC_EWRITE;
-    }
-    if (rank < grpsize) {
-      /* write to new location @ to+movesize+rank*bufsize */
-      mpireturn = MPI_File_write_at(nciop->collective_fh,
-                                    to+movesize+rank*bufsize,
-                                   buf, bufcount, MPI_BYTE, &mpistatus);
-      if (mpireturn != MPI_SUCCESS) {
-        mpierr = 1;
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
-      }
-    }
-    MPI_Allreduce(&mpierr, &errcheck, 1, MPI_INT, MPI_LOR, comm);
-    if (errcheck) {
-      free(buf);
-      return NC_EWRITE;
-    }
-  }
-
-  free(buf);
-  return NC_NOERR;
+    free(buf);
+    return NC_NOERR;
 }
 
 int ncmpiio_get_hint(NC *ncp, char *key, char *value, int flag)
