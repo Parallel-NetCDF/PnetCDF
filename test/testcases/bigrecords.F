@@ -7,10 +7,9 @@
 ! read the smaller time variable OK, but on systems with a 32 bit MPI_AINT, the
 ! time variable will be garbled.
 
+      use pnetcdf
       implicit none
-
       include "mpif.h"
-#     include "pnetcdf.inc"
 
 
 ! error status return
