@@ -27,6 +27,7 @@
 #endif
 
         subroutine usage()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -42,6 +43,7 @@
 
 
         subroutine test(name, func)
+        use pnetcdf
         implicit        none
         character*(*)   name
         external        func
@@ -65,6 +67,7 @@
 #if _CRAYIEEE
 ! which machines need this?
         subroutine getarg(iarg, carg)
+        use pnetcdf
         implicit        none
         integer iarg
         character*(*)   carg
@@ -75,6 +78,7 @@
 #endif
 
         program nf_test
+        use pnetcdf
 #if defined(VISUAL_CPLUSPLUS)
 !	DIGITAL Visual Fortran needs DFLIB for getarg
 	USE DFLIB
@@ -337,7 +341,7 @@ C       /* Initialize global variables defining test file */
 
 C       /* delete any existing scratch netCDF file */
         if ( .not. readonly )
-     +      err = nfmpi_delete(scratch, MPI_COMM_WORLD)
+     +      err = nfmpi_delete(scratch, MPI_INFO_NULL)
 
 C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_strerror', test_nfmpi_strerror)
