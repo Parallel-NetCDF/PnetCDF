@@ -1,0 +1,1539 @@
+!
+! miscellaneous routines:
+!
+      character*80   nfmpi_inq_libvers
+      external       nfmpi_inq_libvers
+
+      character*80   nfmpi_strerror
+!                         (integer             ncerr)
+      external       nfmpi_strerror
+
+      logical        nfmpi_issyserr
+!                         (integer             ncerr)
+      external       nfmpi_issyserr
+
+!
+! control routines:
+!
+      integer         nfmpi_create
+!                         (integer             mpi_comm,
+!                          character*(*)       path,
+!                          integer             cmode,
+!                          integer             mpi_info,
+!                          integer             ncid)
+      external        nfmpi_create
+
+      integer         nfmpi_open
+!                         (integer             mpi_comm,
+!                          character*(*)       path,
+!                          integer             mode,
+!                          integer             mpi_info,
+!                          integer             ncid)
+      external        nfmpi_open
+
+      integer         nfmpi_get_file_info
+!                          (integer             ncid,
+!                          integer             mpi_info)
+      external        nfmpi_get_file_info
+
+      integer         nfmpi_delete
+!                          (character*(*)       path,
+!                          integer             mpi_info)
+      external        nfmpi_delete
+
+      integer         nfmpi_enddef
+!                         (integer             ncid)
+      external        nfmpi_enddef
+
+      integer         nfmpi_redef
+!                         (integer             ncid)
+      external        nfmpi_redef
+
+      integer         nfmpi_set_default_format
+!                          (integer            fillmode,
+!                           integer            old_mode)
+      external        nfmpi_set_default_format
+
+      integer         nfmpi_sync
+!                         (integer             ncid)
+      external        nfmpi_sync
+
+      integer         nfmpi_abort
+!                         (integer             ncid)
+      external        nfmpi_abort
+
+      integer         nfmpi_close
+!                         (integer             ncid)
+      external        nfmpi_close
+
+      integer         nfmpi_set_fill
+!                         (integer             ncid,
+!                          integer             fillmode,
+!                          integer             old_mode)
+      external        nfmpi_set_fill
+
+!
+! general inquiry routines:
+!
+
+      integer         nfmpi_inq
+!                         (integer             ncid,
+!                          integer             ndims,
+!                          integer             nvars,
+!                          integer             ngatts,
+!                          integer             unlimdimid)
+      external        nfmpi_inq
+
+      integer         nfmpi_inq_ndims
+!                         (integer             ncid,
+!                          integer             ndims)
+      external        nfmpi_inq_ndims
+
+      integer         nfmpi_inq_nvars
+!                         (integer             ncid,
+!                          integer             nvars)
+      external        nfmpi_inq_nvars
+
+      integer         nfmpi_inq_natts
+!                         (integer             ncid,
+!                          integer             ngatts)
+      external        nfmpi_inq_natts
+
+      integer         nfmpi_inq_unlimdim
+!                         (integer             ncid,
+!                          integer             unlimdimid)
+      external        nfmpi_inq_unlimdim
+
+!
+! dimension routines:
+!
+
+      integer         nfmpi_def_dim
+!                         (integer             ncid,
+!                          character(*)        name,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len,
+!                          integer             dimid)
+      external        nfmpi_def_dim
+
+      integer         nfmpi_inq_dimid
+!                         (integer             ncid,
+!                          character(*)        name,
+!                          integer             dimid)
+      external        nfmpi_inq_dimid
+
+      integer         nfmpi_inq_dim
+!                         (integer             ncid,
+!                          integer             dimid,
+!                          character(*)        name,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len)
+      external        nfmpi_inq_dim
+
+      integer         nfmpi_inq_dimname
+!                         (integer             ncid,
+!                          integer             dimid,
+!                          character(*)        name)
+      external        nfmpi_inq_dimname
+
+      integer         nfmpi_inq_dimlen
+!                         (integer             ncid,
+!                          integer             dimid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len)
+      external        nfmpi_inq_dimlen
+
+      integer         nfmpi_rename_dim
+!                         (integer             ncid,
+!                          integer             dimid,
+!                          character(*)        name)
+      external        nfmpi_rename_dim
+
+!
+! general attribute routines:
+!
+
+      integer         nfmpi_inq_att
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             xtype,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len)
+      external        nfmpi_inq_att
+
+      integer         nfmpi_inq_attid
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             attnum)
+      external        nfmpi_inq_attid
+
+      integer         nfmpi_inq_atttype
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             xtype)
+      external        nfmpi_inq_atttype
+
+      integer         nfmpi_inq_attlen
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len)
+      external        nfmpi_inq_attlen
+
+      integer         nfmpi_inq_attname
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             attnum,
+!                          character(*)        name)
+      external        nfmpi_inq_attname
+
+      integer         nfmpi_copy_att
+!                         (integer             ncid_in,
+!                          integer             varid_in,
+!                          character(*)        name,
+!                          integer             ncid_out,
+!                          integer             varid_out)
+      external        nfmpi_copy_att
+
+      integer         nfmpi_rename_att
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        curname,
+!                          character(*)        newname)
+      external        nfmpi_rename_att
+
+      integer         nfmpi_del_att
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name)
+      external        nfmpi_del_att
+
+!
+! attribute put/get routines:
+!
+
+      integer         nfmpi_put_att_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len,
+!                          character(*)        text)
+      external        nfmpi_put_att_text
+
+      integer         nfmpi_get_att_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          character(*)        text)
+      external        nfmpi_get_att_text
+
+      integer         nfmpi_put_att_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             xtype,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len,
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_att_int1
+
+      integer         nfmpi_get_att_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_att_int1
+
+      integer         nfmpi_put_att_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             xtype,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_att_int2
+
+      integer         nfmpi_get_att_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_att_int2
+
+      integer         nfmpi_put_att_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             xtype,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len,
+!                          integer             ivals(1))
+      external        nfmpi_put_att_int
+
+      integer         nfmpi_get_att_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             ivals(1))
+      external        nfmpi_get_att_int
+
+      integer         nfmpi_put_att_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             xtype,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len,
+!                          real                rvals(1))
+      external        nfmpi_put_att_real
+
+      integer         nfmpi_get_att_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          real                rvals(1))
+      external        nfmpi_get_att_real
+
+      integer         nfmpi_put_att_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             xtype,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             len,
+!                          double              dvals(1))
+      external        nfmpi_put_att_double
+
+      integer         nfmpi_get_att_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          double              dvals(1))
+      external        nfmpi_get_att_double
+
+!
+! independent data mode routines:
+!
+      integer        nfmpi_begin_indep_data
+!                          (integer          ncid)
+      external       nfmpi_begin_indep_data
+
+      integer        nfmpi_end_indep_data
+!                          (integer          ncid)
+      external       nfmpi_end_indep_data
+!
+! general variable routines:
+!
+
+      integer         nfmpi_def_var
+!                         (integer             ncid,
+!                          character(*)        name,
+!                          integer             datatype,
+!                          integer             ndims,
+!                          integer             dimids(1),
+!                          integer             varid)
+      external        nfmpi_def_var
+
+      integer         nfmpi_inq_var
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name,
+!                          integer             datatype,
+!                          integer             ndims,
+!                          integer             dimids(1),
+!                          integer             natts)
+      external        nfmpi_inq_var
+
+      integer         nfmpi_inq_varid
+!                         (integer             ncid,
+!                          character(*)        name,
+!                          integer             varid)
+      external        nfmpi_inq_varid
+
+      integer         nfmpi_inq_varname
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name)
+      external        nfmpi_inq_varname
+
+      integer         nfmpi_inq_vartype
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             xtype)
+      external        nfmpi_inq_vartype
+
+      integer         nfmpi_inq_varndims
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             ndims)
+      external        nfmpi_inq_varndims
+
+      integer         nfmpi_inq_vardimid
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             dimids(1))
+      external        nfmpi_inq_vardimid
+
+      integer         nfmpi_inq_varnatts
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             natts)
+      external        nfmpi_inq_varnatts
+
+      integer         nfmpi_rename_var
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        name)
+      external        nfmpi_rename_var
+
+!
+! entire variable put/get routines:
+!
+
+      integer         nfmpi_put_var
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        text)
+      external        nfmpi_put_var
+
+      integer         nfmpi_get_var
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        text)
+      external        nfmpi_get_var
+
+      integer         nfmpi_get_var_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        text)
+      external        nfmpi_get_var_all
+
+      integer         nfmpi_put_var_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        text)
+      external        nfmpi_put_var_text
+
+      integer         nfmpi_get_var_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        text)
+      external        nfmpi_get_var_text
+
+      integer         nfmpi_get_var_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          character(*)        text)
+      external        nfmpi_get_var_text_all
+
+      integer         nfmpi_put_var_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_var_int1
+
+      integer         nfmpi_get_var_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_var_int1
+
+      integer         nfmpi_get_var_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_var_int1_all
+
+      integer         nfmpi_put_var_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_var_int2
+
+      integer         nfmpi_get_var_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_var_int2
+
+      integer         nfmpi_get_var_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_var_int2_all
+
+      integer         nfmpi_put_var_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             ivals(1))
+      external        nfmpi_put_var_int
+
+      integer         nfmpi_get_var_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             ivals(1))
+      external        nfmpi_get_var_int
+
+      integer         nfmpi_get_var_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          integer             ivals(1))
+      external        nfmpi_get_var_int_all
+
+      integer         nfmpi_put_var_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          real                rvals(1))
+      external        nfmpi_put_var_real
+
+      integer         nfmpi_get_var_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          real                rvals(1))
+      external        nfmpi_get_var_real
+
+      integer         nfmpi_get_var_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          real                rvals(1))
+      external        nfmpi_get_var_real_all
+
+      integer         nfmpi_put_var_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          doubleprecision     dvals(1))
+      external        nfmpi_put_var_double
+
+      integer         nfmpi_get_var_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_var_double
+
+      integer         nfmpi_get_var_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_var_double_all
+
+!
+! single variable put/get routines:
+!
+
+      integer         nfmpi_put_var1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          character*1         text)
+      external        nfmpi_put_var1
+
+      integer         nfmpi_get_var1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          character*1         text)
+      external        nfmpi_get_var1
+
+      integer         nfmpi_put_var1_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          character*1         text)
+      external        nfmpi_put_var1_text
+
+      integer         nfmpi_get_var1_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          character*1         text)
+      external        nfmpi_get_var1_text
+
+      integer         nfmpi_put_var1_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          nfmpi_int1_t           i1val)
+      external        nfmpi_put_var1_int1
+
+      integer         nfmpi_get_var1_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          nfmpi_int1_t           i1val)
+      external        nfmpi_get_var1_int1
+
+      integer         nfmpi_put_var1_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          nfmpi_int2_t           i2val)
+      external        nfmpi_put_var1_int2
+
+      integer         nfmpi_get_var1_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          nfmpi_int2_t           i2val)
+      external        nfmpi_get_var1_int2
+
+      integer         nfmpi_put_var1_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          integer             ival)
+      external        nfmpi_put_var1_int
+
+      integer         nfmpi_get_var1_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          integer             ival)
+      external        nfmpi_get_var1_int
+
+      integer         nfmpi_put_var1_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          real                rval)
+      external        nfmpi_put_var1_real
+
+      integer         nfmpi_get_var1_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          real                rval)
+      external        nfmpi_get_var1_real
+
+      integer         nfmpi_put_var1_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          doubleprecision     dval)
+      external        nfmpi_put_var1_double
+
+      integer         nfmpi_get_var1_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             index(1),
+!                          doubleprecision     dval)
+      external        nfmpi_get_var1_double
+
+!
+! variable array put/get routines:
+!
+
+      integer         nfmpi_put_vara
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_put_vara
+
+      integer         nfmpi_iput_vara_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text,
+!                          integer            req)
+      external        nfmpi_iput_vara_all
+
+      integer         nfmpi_iput_vara_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iput_vara_int1_all
+
+      integer         nfmpi_iput_vara_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iput_vara_text_all
+
+      integer         nfmpi_iput_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iput_vara_int2_all
+
+      integer         nfmpi_iput_vara_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iput_vara_int_all
+
+      integer         nfmpi_iput_vara_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iput_vara_real_all
+
+      integer         nfmpi_iput_vara_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iput_vara_double_all
+
+      integer         nfmpi_iget_vara_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text,
+!                          integer            req)
+      external        nfmpi_iget_vara_all
+
+      integer         nfmpi_iget_vara_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iget_vara_int1_all
+
+      integer         nfmpi_iget_vara_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iget_vara_text_all
+
+      integer         nfmpi_iget_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iget_vara_int2_all
+
+      integer         nfmpi_iget_vara_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iget_vara_int_all
+
+      integer         nfmpi_iget_vara_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iget_vara_real_all
+
+      integer         nfmpi_iget_vara_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1),
+!                          integer            req)
+      external        nfmpi_iget_vara_double_all
+
+
+      integer         nfmpi_wait_one
+!                         (integer             req)
+      external        nfmpi_wait_one
+
+      integer         nfmpi_wait
+!                         (integer            count,
+!                         integer             req(1),
+!                         integer             status(l))
+      external        nfmpi_wait
+
+      integer         nfmpi_wait_all
+!                         (integer            count,
+!                         integer             req(1),
+!                         integer             status(l))
+      external        nfmpi_wait_all
+
+      integer         nfmpi_waitall
+!                         (integer            count,
+!                         integer             req(1))
+      external        nfmpi_waitall
+
+
+
+      integer         nfmpi_put_vara_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_put_vara_all
+
+      integer         nfmpi_get_vara
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_get_vara
+
+      integer         nfmpi_get_vara_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_get_vara_all
+
+      integer         nfmpi_put_vara_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_put_vara_text
+
+      integer         nfmpi_put_vara_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_put_vara_text_all
+
+      integer         nfmpi_get_vara_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_get_vara_text
+
+      integer         nfmpi_get_vara_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          character(*)        text)
+      external        nfmpi_get_vara_text_all
+
+      integer         nfmpi_put_vara_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vara_int1
+
+      integer         nfmpi_put_vara_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vara_int1_all
+
+      integer         nfmpi_get_vara_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vara_int1
+
+      integer         nfmpi_get_vara_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vara_int1_all
+
+      integer         nfmpi_put_vara_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vara_int2
+
+      integer         nfmpi_put_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vara_int2_all
+
+      integer         nfmpi_get_vara_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vara_int2
+
+      integer         nfmpi_get_vara_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vara_int2_all
+
+      integer         nfmpi_put_vara_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+      external        nfmpi_put_vara_int
+
+      integer         nfmpi_put_vara_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+      external        nfmpi_put_vara_int_all
+
+      integer         nfmpi_get_vara_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vara_int
+
+      integer         nfmpi_get_vara_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vara_int_all
+
+      integer         nfmpi_put_vara_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          real                rvals(1))
+      external        nfmpi_put_vara_real
+
+      integer         nfmpi_put_vara_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          real                rvals(1))
+      external        nfmpi_put_vara_real_all
+
+      integer         nfmpi_get_vara_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vara_real
+
+      integer         nfmpi_get_vara_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vara_real_all
+
+      integer         nfmpi_put_vara_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_put_vara_double
+
+      integer         nfmpi_put_vara_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_put_vara_double_all
+
+      integer         nfmpi_get_vara_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vara_double
+
+      integer         nfmpi_get_vara_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vara_double_all
+
+!
+! strided variable put/get routines:
+!
+
+      integer         nfmpi_put_vars
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_put_vars
+
+      integer         nfmpi_put_vars_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_put_vars_all
+
+      integer         nfmpi_get_vars
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_get_vars
+
+      integer         nfmpi_get_vars_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_get_vars_all
+
+      integer         nfmpi_put_vars_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_put_vars_text
+
+      integer         nfmpi_put_vars_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_put_vars_text_all
+
+      integer         nfmpi_get_vars_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_get_vars_text
+
+      integer         nfmpi_get_vars_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          character(*)        text)
+      external        nfmpi_get_vars_text_all
+
+      integer         nfmpi_put_vars_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vars_int1
+
+      integer         nfmpi_put_vars_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_vars_int1_all
+
+      integer         nfmpi_get_vars_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vars_int1
+
+      integer         nfmpi_get_vars_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_vars_int1_all
+
+      integer         nfmpi_put_vars_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vars_int2
+
+      integer         nfmpi_put_vars_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_vars_int2_all
+
+      integer         nfmpi_get_vars_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vars_int2
+
+      integer         nfmpi_get_vars_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_vars_int2_all
+
+      integer         nfmpi_put_vars_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_put_vars_int
+
+      integer         nfmpi_put_vars_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_put_vars_int_all
+
+      integer         nfmpi_get_vars_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vars_int
+
+      integer         nfmpi_get_vars_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_vars_int_all
+
+      integer         nfmpi_put_vars_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_put_vars_real
+
+      integer         nfmpi_put_vars_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_put_vars_real_all
+
+      integer         nfmpi_get_vars_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vars_real
+
+      integer         nfmpi_get_vars_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_get_vars_real_all
+
+      integer         nfmpi_put_vars_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_put_vars_double
+
+      integer         nfmpi_put_vars_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_put_vars_double_all
+
+      integer         nfmpi_get_vars_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vars_double
+
+      integer         nfmpi_get_vars_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_vars_double_all
+
+!
+! mapped variable put/get routines:
+!
+
+      integer         nfmpi_put_varm
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          character(*)        text)
+      external        nfmpi_put_varm
+
+      integer         nfmpi_put_varm_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          character(*)        text)
+      external        nfmpi_put_varm_all
+
+      integer         nfmpi_get_varm
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          character(*)        text)
+      external        nfmpi_get_varm
+
+      integer         nfmpi_get_varm_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)            imap(1),
+!                          character(*)        text)
+      external        nfmpi_get_varm_all
+
+      integer         nfmpi_put_varm_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          character(*)        text)
+      external        nfmpi_put_varm_text
+
+      integer         nfmpi_put_varm_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          character(*)        text)
+      external        nfmpi_put_varm_text_all
+
+      integer         nfmpi_get_varm_text
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          character(*)        text)
+      external        nfmpi_get_varm_text
+
+      integer         nfmpi_get_varm_text_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          character(*)        text)
+      external        nfmpi_get_varm_text_all
+
+      integer         nfmpi_put_varm_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_varm_int1
+
+      integer         nfmpi_put_varm_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_put_varm_int1_all
+
+      integer         nfmpi_get_varm_int1
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_varm_int1
+
+      integer         nfmpi_get_varm_int1_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int1_t           i1vals(1))
+      external        nfmpi_get_varm_int1_all
+
+      integer         nfmpi_put_varm_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_varm_int2
+
+      integer         nfmpi_put_varm_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_put_varm_int2_all
+
+      integer         nfmpi_get_varm_int2
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_varm_int2
+
+      integer         nfmpi_get_varm_int2_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             imap(1),
+!                          nfmpi_int2_t           i2vals(1))
+      external        nfmpi_get_varm_int2_all
+
+      integer         nfmpi_put_varm_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_put_varm_int
+
+      integer         nfmpi_put_varm_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_put_varm_int_all
+
+      integer         nfmpi_get_varm_int
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_varm_int
+
+      integer         nfmpi_get_varm_int_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          integer             ivals(1))
+      external        nfmpi_get_varm_int_all
+
+      integer         nfmpi_put_varm_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_put_varm_real
+
+      integer         nfmpi_put_varm_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_put_varm_real_all
+
+      integer         nfmpi_get_varm_real
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_get_varm_real
+
+      integer         nfmpi_get_varm_real_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          real                rvals(1))
+      external        nfmpi_get_varm_real_all
+
+      integer         nfmpi_put_varm_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_put_varm_double
+
+      integer         nfmpi_put_varm_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_put_varm_double_all
+
+      integer         nfmpi_get_varm_double
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_varm_double
+
+      integer         nfmpi_get_varm_double_all
+!                         (integer             ncid,
+!                          integer             varid,
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             start(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             count(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          INTEGER(KIND=MPI_OFFSET_KIND)             stride(1),
+!                          doubleprecision     dvals(1))
+      external        nfmpi_get_varm_double_all
+
+! could use nonblocking prototypes here, but unsure how to prototype
+! NCMPI_Request type
+
+!ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+! begin netcdf 2.4 backward compatibility:
+!
+
