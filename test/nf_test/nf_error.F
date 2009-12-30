@@ -9,6 +9,7 @@ C
 C Use for logging error messages
 C
         subroutine error(msg)
+        use pnetcdf
         implicit        none
         character*(*)   msg
 #include "tests.inc"
@@ -22,6 +23,7 @@ C
 C Use for logging error conditions
 C
         subroutine errori(msg, i)
+        use pnetcdf
         implicit        none
         character*(*)   msg
         integer         i
@@ -36,6 +38,7 @@ C
 C Use for logging error conditions
 C
         subroutine errord(msg, d)
+        use pnetcdf
         implicit        none
         character*(*)   msg
         doubleprecision d
@@ -50,6 +53,7 @@ C
 C Use for logging error conditions
 C
         subroutine errorc(msg, string)
+        use pnetcdf
         implicit        none
         character*(*)   msg
         character*(*)   string
@@ -65,6 +69,7 @@ C
 C Use for logging error conditions
 C
         subroutine errore(msg, err)
+        use pnetcdf
         implicit        none
         character*(*)   msg
         integer         err

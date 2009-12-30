@@ -123,7 +123,6 @@
 #endif /* UD_TESTS_INC */
 
 #include "mpif.h"
-#include "pnetcdf.inc"
 
 
 !    /* Global variables - filenames */
@@ -142,12 +141,12 @@
 !    /* Global variables - test data */
 
       CHARACTER*2               DIM_NAME(NDIMS)
-      NFMPI_OFFSET DIM_LEN(NDIMS)
+      integer(kind=MPI_OFFSET_KIND) DIM_LEN(NDIMS)
       CHARACTER*(2+MAX_RANK)    VAR_NAME(NVARS)
       INTEGER                   VAR_TYPE(NVARS)
       INTEGER                   VAR_RANK(NVARS)
       INTEGER                   VAR_DIMID(MAX_RANK,NVARS)
-      NFMPI_OFFSET VAR_SHAPE(MAX_RANK,NVARS)
+      integer(kind=MPI_OFFSET_KIND) VAR_SHAPE(MAX_RANK,NVARS)
       INTEGER                   VAR_NELS(NVARS)
       INTEGER                   VAR_NATTS(NVARS)
       CHARACTER*2               ATTNAME(MAX_NATTS,NVARS)
@@ -155,7 +154,7 @@
       INTEGER                   ATTTYPE(NGATTS,NVARS)
       INTEGER                   GATT_TYPE(NGATTS)
       INTEGER                   ATTLEN(MAX_NATTS,NVARS)
-      NFMPI_OFFSET GATT_LEN(NGATTS)
+      integer(kind=MPI_OFFSET_KIND) GATT_LEN(NGATTS)
 
 !    /* Miscellaneous global variables: */
       CHARACTER*80              PROGNAME   !/* name of the program */
@@ -204,7 +203,7 @@
       INTEGER           NATTS
       CHARACTER*2       ATT_NAME
       INTEGER           ATT_TYPE
-      NFMPI_OFFSET ATT_LEN
+      integer(kind=MPI_OFFSET_KIND) ATT_LEN
 
 
       LOGICAL           INRANGE

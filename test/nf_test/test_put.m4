@@ -18,19 +18,27 @@ dnl NFT_ITYPE(type)
 dnl
 define([NFT_ITYPE], [NFT_[]Upcase($1)])
 
-dnl ARITH(itype, value)
+dnl ARITH3(itype, value)
 dnl
-define([ARITH], [ifelse($1, text, ichar($2), $2)])
+define([ARITH3], [ifelse($1, text, ichar($2($3:$3)), $2($3))])
+
+dnl VAR_ELEM(itype, value)
+dnl
+define([VAR_ELEM], [ifelse($1, text, $2($3:$3), $2($3))])
+
+dnl ARITH_VAR1(itype, value)
+dnl
+define([ARITH_VAR1], [ifelse($1, text, ichar($2), $2)])
 
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character,
-ifelse($1, int1, NF_INT1_T,
-ifelse($1, int2, NF_INT2_T,
-ifelse($1, int, integer,
-ifelse($1, real, real,
-ifelse($1, double, doubleprecision)[]dnl
+ifelse($1, text, character(len=MAX_NELS) $2,
+ifelse($1, int1, NF_INT1_T $2$3,
+ifelse($1, int2, NF_INT2_T $2$3,
+ifelse($1, int, integer $2$3,
+ifelse($1, real, real $2$3,
+ifelse($1, double, doubleprecision $2$3)[]dnl
 )[]dnl
 )[]dnl
 )[]dnl
@@ -38,10 +46,32 @@ ifelse($1, double, doubleprecision)[]dnl
 )[]dnl
 ])
 
-dnl  MAKE_ARITH(funf_suffix, var)
+dnl  DATATYPE_VAR1(funf_suffix)
 dnl
-define([MAKE_ARITH], [dnl
+define([DATATYPE_VAR1], [dnl
+ifelse($1, text, character $2,
+ifelse($1, int1, NF_INT1_T $2,
+ifelse($1, int2, NF_INT2_T $2,
+ifelse($1, int, integer $2,
+ifelse($1, real, real $2,
+ifelse($1, double, doubleprecision $2)[]dnl
+)[]dnl
+)[]dnl
+)[]dnl
+)[]dnl
+)[]dnl
+])
+
+dnl  MAKE_ARITH_VAR1(funf_suffix, var)
+dnl
+define([MAKE_ARITH_VAR1], [dnl
 ifelse($1, text, ichar($2), $2)[]dnl
+])
+
+dnl  MAKE_ARITH3(funf_suffix, var)
+dnl
+define([MAKE_ARITH3], [dnl
+ifelse($1, text, ichar($2($3:$3)), $2($3))[]dnl
 ])
 
 dnl  MAKE_DOUBLE(funf_suffix, var)
@@ -68,7 +98,7 @@ C
 #include "tests.inc"
         integer type
         integer rank
-        NFMPI_OFFSET index(1)
+        integer(kind=MPI_OFFSET_KIND) index(1)
         integer itype
         doubleprecision minimum
         doubleprecision maximum
@@ -90,23 +120,24 @@ C
 C check all vars in file which are (text/numeric) compatible with TYPE
 C
         subroutine check_vars_$1(filename)
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         character*(*)   filename
         integer  ncid          !/* netCDF id */
-        NFMPI_OFFSET index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer  err           !/* status */
         integer  d
         integer  i
         integer  j
-        DATATYPE($1)    value
+        DATATYPE_VAR1($1, value)
         integer datatype
         integer ndims
         integer dimids(MAX_RANK)
         integer ngatts
         doubleprecision expect
         character*(NF_MAX_NAME) name
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) length
         logical canConvert      !/* Both text or both numeric */
         integer nok             !/* count of valid comparisons */
         doubleprecision val
@@ -158,7 +189,7 @@ C
      +                         ('nfmpi_get_var1_$1: ',
      +                          err)
                             else
-                                val = MAKE_ARITH($1,value)
+                                val = MAKE_ARITH_VAR1($1,value)
                                 if (.not.equal(
      +                              val,
      +                              expect,var_type(i),
@@ -205,6 +236,7 @@ C *  check all attributes in file which are (text/numeric) compatible with TYPE
 C *  ignore any attributes containing values outside range of TYPE
 C */
         subroutine check_atts_$1(ncid)
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -212,11 +244,11 @@ C */
         integer  i
         integer  j
         integer  k
-        NFMPI_OFFSET ndx(1)
-        DATATYPE($1)    value(MAX_NELS)
+        integer(kind=MPI_OFFSET_KIND) ndx(1)
+        DATATYPE($1, value, (MAX_NELS))
         integer datatype
         doubleprecision expect(MAX_NELS)
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) length
         integer nInExtRange     !/* number values within external range */
         integer nInIntRange     !/* number values within internal range */
         logical canConvert      !/* Both text or both numeric */
@@ -269,7 +301,7 @@ C */
      +                          .and. 
      +                          in_internal_range(NFT_ITYPE($1), 
      +                                            expect(k))) then
-                            val = MAKE_ARITH($1,value(k))
+                            val = MAKE_ARITH3($1,value,k)
                             if (.not.equal(
      +                          val,
      +                          expect(k),datatype,
@@ -304,15 +336,16 @@ dnl
 define([TEST_NFMPI_PUT_VAR1],dnl
 [dnl
         subroutine test_nfmpi_put_var1_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
         integer i
         integer j
         integer err
-        NFMPI_OFFSET index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
-        DATATYPE($1)    value
+        DATATYPE_VAR1($1, value)
         doubleprecision val
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
@@ -366,7 +399,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
      +                            index, NFT_ITYPE($1)))
                 err = nfmpi_put_var1_$1(ncid, i, index, value)
                 if (canConvert) then
-                    val = ARITH($1, value)
+                    val = ARITH_VAR1($1, value)
                     if (inRange3(val, var_type(i), NFT_ITYPE($1))) then
                         if (err .ne. 0)
      +                      call error(nfmpi_strerror(err))
@@ -400,6 +433,7 @@ dnl
 define([TEST_NFMPI_PUT_VAR],dnl
 [dnl
         subroutine test_nfmpi_put_var_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -408,10 +442,10 @@ define([TEST_NFMPI_PUT_VAR],dnl
         integer j
         integer err
         integer nels
-        NFMPI_OFFSET index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* All values within external range?*/
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
 
         err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
@@ -445,10 +479,10 @@ define([TEST_NFMPI_PUT_VAR],dnl
      +                              index)
                 if (err .ne. 0) 
      +              call error('error in index2indexes 1')
-                value(j) = MAKE_TYPE($1, hash_$1(var_type(i), 
-     +              var_rank(i),
-     +              index, NFT_ITYPE($1)))
-                val = ARITH($1, value(j))
+                VAR_ELEM($1, value, j) = 
+     +            MAKE_TYPE($1,hash_$1(var_type(i), var_rank(i),
+     +            index, NFT_ITYPE($1)))
+                val = ARITH3($1, value, j)
                 allInExtRange = allInExtRange .and.
      +              inRange3(val, var_type(i), NFT_ITYPE($1))
 4           continue
@@ -506,10 +540,10 @@ C           Only test record variables here
      +                              index)
                     if (err .ne. 0) 
      +                  call error('error in index2indexes()')
-                    value(j) = MAKE_TYPE($1, hash_$1(var_type(i), 
-     +                  var_rank(i),
-     +                  index, NFT_ITYPE($1)))
-                    val = ARITH($1, value(j))
+                    VAR_ELEM($1, value, j) =
+     +                 MAKE_TYPE($1,hash_$1(var_type(i), var_rank(i),
+     +                 index, NFT_ITYPE($1)))
+                    val = ARITH3($1, value, j)
                     allInExtRange = allInExtRange .and.
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
@@ -548,6 +582,7 @@ dnl
 define([TEST_NFMPI_PUT_VARA],dnl
 [dnl
         subroutine test_nfmpi_put_vara_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -558,13 +593,13 @@ define([TEST_NFMPI_PUT_VARA],dnl
         integer err
         integer nslabs
         integer nels
-        NFMPI_OFFSET start(MAX_RANK)
-        NFMPI_OFFSET edge(MAX_RANK)
-        NFMPI_OFFSET mid(MAX_RANK)
-        NFMPI_OFFSET index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
 
@@ -696,10 +731,10 @@ C       /* Check correct error returned even when nothing to put */
                     do 8, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
 8                   continue
-                    value(j)= MAKE_TYPE($1, hash_$1(var_type(i), 
-     +                                  var_rank(i), index, 
-     +                                  NFT_ITYPE($1)))
-                    val = ARITH($1, value(j))
+                    VAR_ELEM($1, value, j)=
+     +                MAKE_TYPE($1, hash_$1(var_type(i), var_rank(i),
+     +                index, NFT_ITYPE($1)))
+                    val = ARITH3($1, value, j)
                     allInExtRange = allInExtRange .and.
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
 7               continue
@@ -739,6 +774,7 @@ dnl
 define([TEST_NFMPI_PUT_VARS],dnl
 [dnl
         subroutine test_nfmpi_put_vars_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -751,17 +787,17 @@ define([TEST_NFMPI_PUT_VARS],dnl
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
-        NFMPI_OFFSET start(MAX_RANK)
-        NFMPI_OFFSET edge(MAX_RANK)
-        NFMPI_OFFSET index(MAX_RANK)
-        NFMPI_OFFSET index2(MAX_RANK)
-        NFMPI_OFFSET mid(MAX_RANK)
-        NFMPI_OFFSET count(MAX_RANK)
-        NFMPI_OFFSET sstride(MAX_RANK)
-        NFMPI_OFFSET stride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
 
@@ -894,10 +930,10 @@ C*/
                             index2(d) = index(d) + 
      +                                  (index2(d)-1) * stride(d)
 10                      continue
-                        value(j) = MAKE_TYPE($1, hash_$1(var_type(i), 
-     +                     var_rank(i), 
-     +                     index2, NFT_ITYPE($1)))
-                        val = ARITH($1, value(j))
+                        VAR_ELEM($1, value, j) =
+     +                    MAKE_TYPE($1, hash_$1(var_type(i), var_rank(i), 
+     +                    index2, NFT_ITYPE($1)))
+                        val = ARITH3($1, value, j)
                         allInExtRange = allInExtRange .and.
      +                      inRange3(val, var_type(i), 
      +                               NFT_ITYPE($1))
@@ -942,6 +978,7 @@ dnl
 define([TEST_NFMPI_PUT_VARM],dnl
 [dnl
         subroutine test_nfmpi_put_varm_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -954,18 +991,18 @@ define([TEST_NFMPI_PUT_VARM],dnl
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
-        NFMPI_OFFSET start(MAX_RANK)
-        NFMPI_OFFSET edge(MAX_RANK)
-        NFMPI_OFFSET index(MAX_RANK)
-        NFMPI_OFFSET index2(MAX_RANK)
-        NFMPI_OFFSET mid(MAX_RANK)
-        NFMPI_OFFSET count(MAX_RANK)
-        NFMPI_OFFSET sstride(MAX_RANK)
-        NFMPI_OFFSET stride(MAX_RANK)
-        NFMPI_OFFSET imap(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
-        DATATYPE($1) value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
 
@@ -1107,10 +1144,10 @@ C*/
                             index2(d) = index(d) + 
      +                          (index2(d)-1) * stride(d)
 12                      continue
-                        value(j) = MAKE_TYPE($1, hash_$1(var_type(i),
-     +                                       var_rank(i), 
-     +                                       index2, NFT_ITYPE($1)))
-                        val = ARITH($1, value(j))
+                        VAR_ELEM($1, value, j) =
+     +                    MAKE_TYPE($1, hash_$1(var_type(i),var_rank(i), 
+     +                    index2, NFT_ITYPE($1)))
+                        val = ARITH3($1, value, j)
                         allInExtRange = allInExtRange .and.
      +                      inRange3(val, var_type(i), 
      +                               NFT_ITYPE($1))
@@ -1153,15 +1190,16 @@ dnl
 define([TEST_NFMPI_PUT_ATT],dnl
 [dnl
         subroutine test_nfmpi_put_att_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
         integer i
         integer j
         integer k
-        NFMPI_OFFSET ndx(1)
+        integer(kind=MPI_OFFSET_KIND) ndx(1)
         integer err
-        DATATYPE($1) value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         logical allInExtRange  !/* all values within external range? */
         doubleprecision val
 
@@ -1198,9 +1236,9 @@ define([TEST_NFMPI_PUT_ATT],dnl
                     allInExtRange = .true.
                     do 3, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
-                        value(k) = hash_$1(ATT_TYPE(j,i), -1, ndx, 
-     +                                     NFT_ITYPE($1))
-                        val = ARITH($1, value(k))
+                        VAR_ELEM($1, value, k) = hash_$1(ATT_TYPE(j,i),
+     +                                      -1, ndx, NFT_ITYPE($1))
+                        val = ARITH3($1, value, k)
                         allInExtRange = allInExtRange .and.
      +                      inRange3(val, ATT_TYPE(j,i), 
      +                               NFT_ITYPE($1))
@@ -1330,14 +1368,15 @@ TEST_NFMPI_PUT_VARM(real)
 TEST_NFMPI_PUT_VARM(double)
 
         subroutine test_nfmpi_put_att_text()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
         integer i
         integer j
-        NFMPI_OFFSET k
+        integer(kind=MPI_OFFSET_KIND) k
         integer err
-        character       value(MAX_NELS)
+        character(len=MAX_NELS) value
 
         err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
      +                     ncid)
@@ -1363,7 +1402,8 @@ TEST_NFMPI_PUT_VARM(double)
                     if (err .ne. NF_ENOTVAR)
      +                  call errore('bad var id: ', err)
                     do 3, k = 1, ATT_LEN(j,i)
-                        value(k) = char(int(hash(ATT_TYPE(j,i), -1, k)))
+                        value(k:k) = char(int(hash(ATT_TYPE(j,i),
+     +                                             -1, k)))
 3                   continue
                     err = nfmpi_put_att_text(ncid, i, ATT_NAME(j,i), 
      +                  ATT_LEN(j,i), value)

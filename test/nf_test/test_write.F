@@ -12,6 +12,7 @@ C       test that it can be opened, do nfmpi_inq to check nvars = 0, etc.
 C    Try again in NF_NOCLOBBER mode, check error return
 C On exit, delete this file
         subroutine test_nfmpi_create()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -97,6 +98,7 @@ C    put vars
 C    close
 C    check file: vars & atts
         subroutine test_nfmpi_redef()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer         title_len
@@ -109,8 +111,10 @@ C    check file: vars & atts
         character*(title_len)   title
         doubleprecision         var
         character*(NF_MAX_NAME) name
-        NFMPI_OFFSET                 length
+        integer(kind=MPI_OFFSET_KIND)                 start(1)
+        integer(kind=MPI_OFFSET_KIND)                 length
         integer                 intlen
+        integer                 dimids(1)
 
         title = 'Not funny'
 
@@ -152,7 +156,8 @@ C           /* tests using scratch file */
      +      call errore('nfmpi_inq_varid: ', err)
         var = 1.0
         err = nfmpi_begin_indep_data(ncid)       
-        err = nfmpi_put_var1_double(ncid, vid, 0, var)
+        start = 0
+        err = nfmpi_put_var1_double(ncid, vid, start, var)
         if (err .ne. NF_EINDEFINE)
      +      call errore('nfmpi_put_var... in define mode: ', err)
         err = nfmpi_end_indep_data(ncid)
@@ -174,7 +179,8 @@ C           /* tests using scratch file */
         err = nfmpi_def_dim(ncid, 'abc', length, dimid)
         if (err .ne. 0)
      +      call errore('nfmpi_def_dim: ', err)
-        err = nfmpi_def_var(ncid, 'abc', NF_INT, 0, 0, vid)
+        dimids(1) = 0
+        err = nfmpi_def_var(ncid, 'abc', NF_INT, 0, dimids, vid)
         if (err .ne. 0)
      +      call errore('nfmpi_def_var: ', err)
         length = len(title)
@@ -187,7 +193,7 @@ C           /* tests using scratch file */
      +      call errore('nfmpi_enddef: ', err)
         var = 1.0
         err = nfmpi_begin_indep_data(ncid)
-        err = nfmpi_put_var1_double(ncid, vid, 0, var)
+        err = nfmpi_put_var1_double(ncid, vid, start, var)
         if (err .ne. 0)
      +      call errore('nfmpi_put_var1_double: ', err)
         err = nfmpi_end_indep_data(ncid)       
@@ -211,7 +217,7 @@ C           /* check scratch file written as expected */
             call errori('Unexpected dim length: ', intlen)
         end if
         err = nfmpi_begin_indep_data(ncid)
-        err = nfmpi_get_var1_double(ncid, vid, 0, var)
+        err = nfmpi_get_var1_double(ncid, vid, start, var)
         if (err .ne. 0)
      +      call errore('nfmpi_get_var1_double: ', err)
         if (var .ne. 1.0)
@@ -232,6 +238,7 @@ C Test nfmpi_enddef
 C Simply calls test_nfmpi_redef which tests both nfmpi_redef & nfmpi_enddef
 
         subroutine test_nfmpi_enddef()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -244,6 +251,7 @@ C    try with bad handle, check error
 C    try in define mode, check error
 C    try writing with one handle, reading with another on same netCDF
         subroutine test_nfmpi_sync()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -311,6 +319,7 @@ C    try in define mode before anything written, check that file was deleted
 C    try after nfmpi_enddef, nfmpi_redef, define new dims, vars, atts
 C    try after writing variable
         subroutine test_nfmpi_abort()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -424,6 +433,7 @@ C    try with illegal sizes, check error
 C    make sure unlimited size works, shows up in nfmpi_inq_unlimdim
 C    try to define a second unlimited dimension, check error
         subroutine test_nfmpi_def_dim()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -431,7 +441,7 @@ C    try to define a second unlimited dimension, check error
         integer err             !/* status */
         integer i
         integer dimid         !/* dimension id */
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) length
 
 C           /* BAD_ID test */
         length = 8
@@ -524,6 +534,7 @@ C    check that proper rename worked with nfmpi_inq_dim
 C    try renaming to existing dimension name, check error
 C    try with bad dimension handle, check error
         subroutine test_nfmpi_rename_dim()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -578,6 +589,7 @@ C      try in data mode, check error
 C    check that returned id is one more than previous id
 C    try with bad dimension ids, check error
         subroutine test_nfmpi_def_var()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -652,7 +664,7 @@ C           /* general tests using global vars */
         call def_dims(ncid)
         do 1, i = 1, NVARS
             err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
-     +                       var_rank(i), var_dimid(1,i), vid)
+     +                       var_rank(i), var_dimid(:,i), vid)
             if (err .ne. 0) 
      +          call errore('nfmpi_def_var: ', err)
             if (vid .ne. i)
@@ -681,6 +693,7 @@ C    try renaming to existing variable name, check error
 C    check that proper rename worked with nfmpi_inq_varid
 C    try in data mode, check error
         subroutine test_nfmpi_rename_var()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -765,6 +778,7 @@ C    check that changing type and length of an attribute work OK
 C    try with same ncid for source and target, different variables
 C    try with same ncid for source and target, same variable
         subroutine test_nfmpi_copy_att()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -776,7 +790,7 @@ C    try with same ncid for source and target, same variable
         integer j
         character*(NF_MAX_NAME) name    !/* of att */
         integer datatype                !/* of att */
-        NFMPI_OFFSET length                  !/* of att */
+        integer(kind=MPI_OFFSET_KIND) length                  !/* of att */
         character*1     value
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -916,6 +930,7 @@ C    try renaming to existing att name, check error
 C    check that proper rename worked with nfmpi_inq_attid
 C    try in data mode, check error
         subroutine test_nfmpi_rename_att()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -933,9 +948,9 @@ C    try in data mode, check error
         integer nok             !/* count of valid comparisons */
         integer datatype
         integer attyp
-        NFMPI_OFFSET length
-        NFMPI_OFFSET attlength
-        NFMPI_OFFSET ndx(1)
+        integer(kind=MPI_OFFSET_KIND) length
+        integer(kind=MPI_OFFSET_KIND) attlength
+        integer(kind=MPI_OFFSET_KIND) ndx(1)
         character*(MAX_NELS)    text
         doubleprecision value(MAX_NELS)
         doubleprecision expect
@@ -1085,6 +1100,7 @@ C    try with nonexisting att name, check error
 C    check that proper delete worked using:
 C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
         subroutine test_nfmpi_del_att()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
 
@@ -1208,6 +1224,7 @@ C    check that proper set to NF_FILL works for record & non-record variables
 C    (note that it is not possible to test NF_NOFILL mode!)
 C    close file & create again for test using attribute _FillValue
         subroutine test_nfmpi_set_fill()
+        use pnetcdf
 #if 0   
         implicit none
 #include "tests.inc"
@@ -1222,8 +1239,8 @@ C    close file & create again for test using attribute _FillValue
         character*1 text
         doubleprecision value
         doubleprecision fill
-        NFMPI_OFFSET index(MAX_RANK)
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) length
 
         nok = 0
         value = 0
@@ -1426,6 +1443,7 @@ C *    check that proper set to NC_FILL works for record & non-record variables
 C *    (note that it is not possible to test NC_NOFILL mode!)
 C *    close file & create again for test using attribute _FillValue
       subroutine test_nfmpi_set_default_format()
+      use pnetcdf
       implicit none
 #include "tests.inc"
       
@@ -1470,6 +1488,7 @@ C    /* Remove the left-over file. */
 
 C     This function looks in a file for the netCDF magic number.
       integer function nfmpi_get_file_version(path, version)
+      use pnetcdf
       implicit none
 #include "tests.inc"
       

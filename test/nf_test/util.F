@@ -5,6 +5,7 @@
 !********************************************************************/
 
       SUBROUTINE PRINT_NOK(NOK)
+      USE PNETCDF
       IMPLICIT  NONE
       INTEGER   NOK
 #include "tests.inc"
@@ -16,6 +17,7 @@
 
 ! Is value within external type range? */
       FUNCTION INRANGE(VALUE, DATATYPE)
+      USE PNETCDF
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
@@ -51,6 +53,7 @@
 
 
       FUNCTION INRANGE_UCHAR(VALUE, DATATYPE)
+      USE PNETCDF
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
@@ -65,6 +68,7 @@
 
 
       FUNCTION INRANGE_FLOAT(VALUE, DATATYPE)
+      USE PNETCDF
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
@@ -136,6 +140,7 @@
 !  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
 !
       function equal(x, y, extType, itype)
+      USE PNETCDF
       implicit  none
       doubleprecision   x
       doubleprecision   y
@@ -156,6 +161,7 @@
 
 ! Test whether two int vectors are equal. If so return 1, else 0  */
         function int_vec_eq(v1, v2, n)
+        USE PNETCDF
         implicit        none
         integer n
         integer v1(n)
@@ -183,9 +189,10 @@
 !  Like throwing an n-sided dice marked 0, 1, 2, ..., n-1
 !
       function roll(n)
+      USE PNETCDF
       implicit  none
 #include "tests.inc"
-      NFMPI_OFFSET   n
+      integer(kind=MPI_OFFSET_KIND)   n
 
       doubleprecision   ud_rand
       external          ud_rand
@@ -203,12 +210,13 @@
 !                Steve Emmerson, (same place)
 !
         function index2ncindexes(index, rank, base, indexes)
+        USE PNETCDF
         implicit        none
         integer         index           !!/* index to be converted */
         integer         rank            !/* number of dimensions */
 #include "tests.inc"
-        NFMPI_OFFSET         base(rank)      !/* base(rank) ignored */
-        NFMPI_OFFSET         indexes(rank)   !/* returned FORTRAN indexes */
+        integer(kind=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
+        integer(kind=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
@@ -238,12 +246,13 @@
 !                Steve Emmerson, (same place)
 !
         function index2indexes(index, rank, base, indexes)
+        USE PNETCDF
         implicit        none
         integer         index           !/* index to be converted */
         integer         rank            !/* number of dimensions */
 #include "tests.inc"
-        NFMPI_OFFSET         base(rank)      !/* base(rank) ignored */
-        NFMPI_OFFSET         indexes(rank)   !/* returned FORTRAN indexes */
+        integer(kind=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
+        integer(kind=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
@@ -273,6 +282,7 @@
 !                Steve Emmerson, (same place)
 !
         function indexes2index(rank, indexes, base)
+        USE PNETCDF
         implicit        none
         integer         rank            !/* number of dimensions */
         integer         indexes(rank)   !/* FORTRAN indexes */
@@ -292,11 +302,12 @@
 
 ! Generate data values as function of type, rank (-1 for attribute), index */
       function hash(type, rank, index) 
+      USE PNETCDF
       implicit  none
       integer   type
       integer   rank
 #include "tests.inc"
-      NFMPI_OFFSET   index(*)
+      integer(kind=MPI_OFFSET_KIND)   index(*)
 
       doubleprecision   base
       doubleprecision   result
@@ -406,11 +417,12 @@
 
 ! wrapper for hash to handle special NC_BYTE/uchar adjustment */
       function hash4(type, rank, index, itype)
+      USE PNETCDF
       implicit  none
       integer   type
       integer   rank
 #include "tests.inc"
-      NFMPI_OFFSET   index(*)
+      integer(kind=MPI_OFFSET_KIND)   index(*)
       integer   itype
 
       hash4 = hash( type, rank, index )
@@ -420,6 +432,7 @@
 
 
       integer function char2type(letter)
+      USE PNETCDF
       implicit          none
       character*1       letter
 #include "tests.inc"
@@ -476,10 +489,11 @@
 
 
       integer function prod(nn, sp)
+      USE PNETCDF
       implicit  none
       integer   nn
 #include "tests.inc"
-      NFMPI_OFFSET   sp(MAX_RANK)
+      integer(kind=MPI_OFFSET_KIND)   sp(MAX_RANK)
 
       integer   i
 
@@ -501,7 +515,7 @@
         implicit        none
 #include "tests.inc"
 
-        NFMPI_OFFSET         max_dim_len(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND)         max_dim_len(MAX_RANK)
         character*1     type_letter(NTYPES)
         character*1     digit(10)
 
@@ -513,7 +527,7 @@
         integer jj
         integer ntypes
         integer tc
-        NFMPI_OFFSET tmp(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) tmp(MAX_RANK)
         integer ac              !/* attribute index */
         integer dn              !/* dimension number */
         integer prod            !/* function */
@@ -602,6 +616,7 @@
 
 ! define dims defined by global variables */
         subroutine def_dims(ncid)
+        USE PNETCDF
         implicit        none
         integer         ncid
 #include "tests.inc"
@@ -609,7 +624,7 @@
         integer         err             !/* status */
         integer         i
         integer         dimid           !/* dimension id */
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) length
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
@@ -629,6 +644,7 @@
 
 ! define vars defined by global variables */
         subroutine def_vars(ncid)
+        USE PNETCDF
         implicit        none
         integer         ncid
 #include "tests.inc"
@@ -639,9 +655,9 @@
 
         do 1, i = 1, NVARS
             err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
-     +                       var_rank(i), var_dimid(1,i), var_id)
+     +                       var_rank(i), var_dimid(1:,i), var_id)
             if (err .ne. 0) then
-                call errore('nfmpi_def_var: ', err)
+                call errore('5 nfmpi_def_var: ', err)
             end if
 1       continue
         end
@@ -649,6 +665,7 @@
 
 ! put attributes defined by global variables */
         subroutine put_atts(ncid)
+        USE PNETCDF
         implicit        none
         integer         ncid
 #include "tests.inc"
@@ -658,7 +675,7 @@
                                                 ! * attribute */
         integer                 k               !/* attribute index */
         integer                 j               !/* index of attribute */
-        NFMPI_OFFSET                 ndx(1)
+        integer(kind=MPI_OFFSET_KIND)                 ndx(1)
         logical                 allInRange
         doubleprecision         att(MAX_NELS)
         character*(MAX_NELS+2)  catt
@@ -719,12 +736,13 @@
 
 ! put variables defined by global variables */
         subroutine put_vars(ncid)
+        USE PNETCDF
         implicit        none
         integer                 ncid
 #include "tests.inc"
 
-        NFMPI_OFFSET                 start(MAX_RANK)
-        NFMPI_OFFSET                 index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND)                 start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
         integer                 err             !/* netCDF status */
         integer                 i
         integer                 j
@@ -766,13 +784,13 @@
                 text(var_nels(i)+1:var_nels(i)+1) = char(1)
                 text(var_nels(i)+2:var_nels(i)+2) = char(0)
                 err = nfmpi_put_vara_text(ncid, i, start,
-     +                                    var_shape(1,i), text)
+     +                                    var_shape(:,i), text)
                 if (err .ne. 0) then
                     call errore('nfmpi_put_vara_text: ', err)
                 end if
             else
                 err = nfmpi_put_vara_double(ncid, i, start,
-     +                                      var_shape(1,i), value)
+     +                                      var_shape(:,i), value)
                 if (allInRange) then
                     if (err .ne. 0) then
                         call errore('nfmpi_put_vara_double: ', err)
@@ -792,6 +810,7 @@
 
 ! Create & write all of specified file using global variables */
         subroutine write_file(filename) 
+        USE PNETCDF
         implicit        none
         character*(*)   filename
 #include "tests.inc"
@@ -825,12 +844,13 @@
 ! check dimensions of specified file have expected name & length
 !
         subroutine check_dims(ncid)
+        USE PNETCDF
         implicit        none
         integer         ncid
 #include "tests.inc"
 
         character*(NF_MAX_NAME) name
-        NFMPI_OFFSET                 length
+        integer(kind=MPI_OFFSET_KIND)                 length
         integer                 i
         integer                 err           !/* netCDF status */
 
@@ -853,11 +873,12 @@
 ! check variables of specified file have expected name, type, shape & values
 !
         subroutine check_vars(ncid)
+        USE PNETCDF
         implicit        none
         integer         ncid
 #include "tests.inc"
 
-        NFMPI_OFFSET                 index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
         integer                 err             !/* netCDF status */
         integer                 i
         integer                 j
@@ -870,7 +891,7 @@
         logical                 isChar
         doubleprecision         expect
         character*(NF_MAX_NAME) name
-        NFMPI_OFFSET                 length
+        integer(kind=MPI_OFFSET_KIND)                 length
         integer                 nok             !/* count of valid comparisons */
 
         nok = 0
@@ -948,6 +969,7 @@
 ! check attributes of specified file have expected name, type, length & values
 !
         subroutine check_atts(ncid) 
+        USE PNETCDF
         implicit        none
         integer         ncid
 #include "tests.inc"
@@ -958,9 +980,9 @@
         integer                 k
         integer                 vid             !/* "variable" ID */
         integer                 datatype
-        NFMPI_OFFSET                 ndx(1)
+        integer(kind=MPI_OFFSET_KIND)                 ndx(1)
         character*(NF_MAX_NAME) name
-        NFMPI_OFFSET                 length
+        integer(kind=MPI_OFFSET_KIND)                 length
         character*(MAX_NELS)    text
         doubleprecision         value(MAX_NELS)
         doubleprecision         expect
@@ -1036,6 +1058,7 @@
 
 ! Check file (dims, vars, atts) corresponds to global variables */
         subroutine check_file(filename) 
+        USE PNETCDF
         implicit        none
         character*(*)   filename
 #include "tests.inc"
@@ -1067,6 +1090,7 @@
 !
 
       FUNCTION VARID(VID)
+      USE PNETCDF
       IMPLICIT NONE
       INTEGER VID
 #include "tests.inc"
@@ -1079,6 +1103,7 @@
 
 
       FUNCTION NATTS(VID)
+      USE PNETCDF
       IMPLICIT  NONE
       INTEGER VID
 #include "tests.inc"
@@ -1091,6 +1116,7 @@
 
 
       FUNCTION ATT_NAME(J,VID)
+      USE PNETCDF
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
@@ -1104,6 +1130,7 @@
 
 
       FUNCTION ATT_TYPE(J,VID)
+      USE PNETCDF
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
@@ -1117,6 +1144,7 @@
 
 
       FUNCTION ATT_LEN(J,VID)
+      USE PNETCDF
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
@@ -1269,6 +1297,7 @@
 ! Return the minimum value of an external type.
 !
         function external_min(type)
+        use pnetcdf
         implicit        none
         integer         type
 #include "tests.inc"
@@ -1295,6 +1324,7 @@
 ! Return the maximum value of an internal type.
 !
         function external_max(type)
+        use pnetcdf
         implicit        none
         integer         type
 #include "tests.inc"
@@ -1321,6 +1351,7 @@
 ! Indicate whether or not a value lies in the range of an internal type.
 !
         function in_internal_range(itype, value)
+        use pnetcdf
         implicit        none
         integer         itype
         doubleprecision value
@@ -1335,6 +1366,7 @@
 ! Return the length of a character variable minus any trailing blanks.
 !
         function len_trim(string)
+        use pnetcdf
         implicit        none
         character*(*)   string
 #include "tests.inc"

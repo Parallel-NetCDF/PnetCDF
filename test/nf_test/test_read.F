@@ -9,6 +9,7 @@ C    Try on a bad error status.
 C    Test for each defined error status.
 C
         subroutine test_nfmpi_strerror()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer         number_of_messages
@@ -104,6 +105,7 @@ C If in writable section of tests,
 C    Open a netCDF file with NFMPI_WRITE mode, write something, close it.
 C On exit, any open netCDF files are closed.
         subroutine test_nfmpi_open()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer err
@@ -181,6 +183,7 @@ C    Try on bad handle, check error return.
 C    Try in define mode and data mode.
 C
         subroutine test_nfmpi_close()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -239,6 +242,7 @@ C If in writable section of tests,
 C    Try in define mode, after adding an unlimited dimension, variable.
 C On exit, any open netCDF files are closed.
         subroutine test_nfmpi_inq()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -254,7 +258,8 @@ C On exit, any open netCDF files are closed.
         integer recdim0
         integer did
         integer vid
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) length
+        integer VDIMS(1)
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
@@ -320,8 +325,9 @@ C               /* Add dim, var, global att */
                 err = nfmpi_def_dim(ncid2, 'inqd', length, did)
                 if (err .ne. 0)
      +              call errore('nfmpi_def_dim: ', err)
+                VDIMS = 0
                 err = nfmpi_def_var(ncid2, 'inqv', NF_FLOAT, 
-     +                0, 0, vid)
+     +                0, VDIMS, vid)
                 if (err .ne. 0)
      +              call errore('nfmpi_def_var: ', err)
 
@@ -379,6 +385,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_natts()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -407,6 +414,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_ndims()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -434,6 +442,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_nvars()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -461,6 +470,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_unlimdim()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -489,6 +499,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_dimid()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -522,13 +533,14 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_dim()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
         integer i
         integer err
         character*(NF_MAX_NAME) name
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) length
         integer intlen
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -560,12 +572,13 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_dimlen()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
         integer i
         integer err
-        NFMPI_OFFSET length
+        integer(kind=MPI_OFFSET_KIND) length
         integer intlen
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -595,6 +608,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_dimname()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -627,6 +641,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_varid()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -662,6 +677,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_var()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -709,6 +725,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_vardimid()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -743,6 +760,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_varname()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -775,6 +793,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_varnatts()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -807,6 +826,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_varndims()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -839,6 +859,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_vartype()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -871,6 +892,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_att()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -878,7 +900,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer j
         integer err
         integer t
-        NFMPI_OFFSET n
+        integer(kind=MPI_OFFSET_KIND) n
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
@@ -916,13 +938,14 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_attlen()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
         integer i
         integer j
         integer err
-        NFMPI_OFFSET len
+        integer(kind=MPI_OFFSET_KIND) len
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
@@ -959,6 +982,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_atttype()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -1003,6 +1027,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_attname()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -1047,6 +1072,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
 
 
         subroutine test_nfmpi_inq_attid()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid

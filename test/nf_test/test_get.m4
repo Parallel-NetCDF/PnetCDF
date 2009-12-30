@@ -18,19 +18,39 @@ dnl NFT_ITYPE(type)
 dnl
 define([NFT_ITYPE], [NFT_[]Upcase($1)])
 
-dnl ARITH(itype, value)
+dnl ARITH_VAR1(itype, value)
 dnl
-define([ARITH], [ifelse($1, text, ichar($2), $2)])
+define([ARITH_VAR1], [ifelse($1, text, ichar($2), $2)])
+
+dnl ARITH3(itype, value)
+dnl
+define([ARITH3], [ifelse($1, text, ichar($2($3:$3)), $2($3))])
 
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character,
-ifelse($1, int1, NF_INT1_T,
-ifelse($1, int2, NF_INT2_T,
-ifelse($1, int, integer,
-ifelse($1, real, real,
-ifelse($1, double, doubleprecision)[]dnl
+ifelse($1, text, character(len=MAX_NELS) $2,
+ifelse($1, int1, NF_INT1_T $2$3,
+ifelse($1, int2, NF_INT2_T $2$3,
+ifelse($1, int, integer $2$3,
+ifelse($1, real, real $2$3,
+ifelse($1, double, doubleprecision $2$3)[]dnl
+)[]dnl
+)[]dnl
+)[]dnl
+)[]dnl
+)[]dnl
+])
+
+dnl  DATATYPE_VAR1(funf_suffix)
+dnl
+define([DATATYPE_VAR1], [dnl
+ifelse($1, text, character $2,
+ifelse($1, int1, NF_INT1_T $2,
+ifelse($1, int2, NF_INT2_T $2,
+ifelse($1, int, integer $2,
+ifelse($1, real, real $2,
+ifelse($1, double, doubleprecision $2)[]dnl
 )[]dnl
 )[]dnl
 )[]dnl
@@ -42,6 +62,7 @@ dnl TEST_NFMPI_GET_VAR1(TYPE)
 dnl
 define([TEST_NFMPI_GET_VAR1],[dnl
         subroutine test_nfmpi_get_var1_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -49,10 +70,10 @@ define([TEST_NFMPI_GET_VAR1],[dnl
         integer j
         integer err
         integer nok      
-        NFMPI_OFFSET index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         doubleprecision expect
         logical canConvert     
-        DATATYPE($1)    value
+        DATATYPE_VAR1($1, value)
         doubleprecision val
 
         nok = 0
@@ -104,7 +125,7 @@ define([TEST_NFMPI_GET_VAR1],[dnl
                             if (err .ne. 0) then
                                 call errore('nfmpi_get_var: ', err)
                             else
-                                val = ARITH($1, value)
+                                val = ARITH_VAR1($1, value)
                                 if (.not. equal(val, expect, 
      +                                          var_type(i), 
      +                                          NFT_ITYPE($1))) then
@@ -139,6 +160,7 @@ dnl TEST_NFMPI_GET_VAR(TYPE)
 dnl
 define([TEST_NFMPI_GET_VAR],[dnl
         subroutine test_nfmpi_get_var_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -149,10 +171,10 @@ define([TEST_NFMPI_GET_VAR],[dnl
         logical allInIntRange   
         integer nels
         integer nok      
-        NFMPI_OFFSET index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         doubleprecision expect(MAX_NELS)
         logical canConvert     
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
 
         nok = 0
@@ -209,7 +231,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
      +                           NFT_ITYPE($1)) .and.
      +                  in_internal_range(NFT_ITYPE($1),
      +                                          expect(j))) then
-                        val = ARITH($1, value(j))
+                        val = ARITH3($1, value, j)
                         if (.not. equal(val, expect(j), 
      +                                  var_type(i), 
      +                                  NFT_ITYPE($1))) then
@@ -236,6 +258,7 @@ dnl TEST_NFMPI_GET_VARA(TYPE)
 dnl
 define([TEST_NFMPI_GET_VARA],[dnl
         subroutine test_nfmpi_get_vara_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -249,12 +272,12 @@ define([TEST_NFMPI_GET_VARA],[dnl
         integer nels
         integer nslabs
         integer nok      
-        NFMPI_OFFSET start(MAX_RANK)
-        NFMPI_OFFSET edge(MAX_RANK)
-        NFMPI_OFFSET index(MAX_RANK)
-        NFMPI_OFFSET mid(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
         logical canConvert     
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
         integer ud_shift
@@ -398,7 +421,7 @@ C           bits of k determine whether to get lower or upper part of dim
      +                               NFT_ITYPE($1)) .and.
      +                      in_internal_range(NFT_ITYPE($1), expect(j)))
      +                          then
-                            val = ARITH($1, value(j))
+                            val = ARITH3($1, value, j)
                             if (.not.equal(val,expect(j),
      +                                     var_type(i),NFT_ITYPE($1))) 
      +                              then
@@ -438,6 +461,7 @@ dnl
 define([TEST_NFMPI_GET_VARS],dnl
 [dnl
         subroutine test_nfmpi_get_vars_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -453,16 +477,16 @@ define([TEST_NFMPI_GET_VARS],dnl
         integer nslabs
         integer nstarts         
         integer nok             
-        NFMPI_OFFSET start(MAX_RANK)
-        NFMPI_OFFSET edge(MAX_RANK)
-        NFMPI_OFFSET index(MAX_RANK)
-        NFMPI_OFFSET index2(MAX_RANK)
-        NFMPI_OFFSET mid(MAX_RANK)
-        NFMPI_OFFSET count(MAX_RANK)
-        NFMPI_OFFSET sstride(MAX_RANK)
-        NFMPI_OFFSET stride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
         logical canConvert     
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
         integer ud_shift
@@ -621,7 +645,7 @@ C    */
      +                          NFT_ITYPE($1)) .and.
      +                          in_internal_range(NFT_ITYPE($1), 
      +                                            expect(j))) then
-                                val = ARITH($1, value(j))
+                                val = ARITH3($1, value, j)
                                 if (.not.equal(val, expect(j),
      +                              var_type(i), NFT_ITYPE($1))) then
                                     call error(
@@ -665,6 +689,7 @@ dnl
 define([TEST_NFMPI_GET_VARM],dnl
 [dnl
         subroutine test_nfmpi_get_varm_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -680,17 +705,17 @@ define([TEST_NFMPI_GET_VARM],dnl
         integer nslabs
         integer nstarts         
         integer nok             
-        NFMPI_OFFSET start(MAX_RANK)
-        NFMPI_OFFSET edge(MAX_RANK)
-        NFMPI_OFFSET index(MAX_RANK)
-        NFMPI_OFFSET index2(MAX_RANK)
-        NFMPI_OFFSET mid(MAX_RANK)
-        NFMPI_OFFSET count(MAX_RANK)
-        NFMPI_OFFSET sstride(MAX_RANK)
-        NFMPI_OFFSET stride(MAX_RANK)
-        NFMPI_OFFSET imap(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) index2(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
+        integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
         logical canConvert     
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
         integer ud_shift
@@ -858,7 +883,7 @@ C     */
      +                                   NFT_ITYPE($1)) .and.
      +                          in_internal_range(NFT_ITYPE($1),
      +                                            expect(j))) then
-                                val = ARITH($1, value(j))
+                                val = ARITH3($1, value, j)
                                 if (.not.equal(val, expect(j),
      +                                         var_type(i), 
      +                                         NFT_ITYPE($1))) then
@@ -900,6 +925,7 @@ dnl
 define([TEST_NFMPI_GET_ATT],dnl
 [dnl
         subroutine test_nfmpi_get_att_$1()
+        use pnetcdf
         implicit        none
 #include "tests.inc"
         integer ncid
@@ -907,11 +933,11 @@ define([TEST_NFMPI_GET_ATT],dnl
         integer j
         integer k
         integer err
-        NFMPI_OFFSET ndx(1)
+        integer(kind=MPI_OFFSET_KIND) ndx(1)
         logical allInExtRange
         logical allInIntRange
         logical canConvert     
-        DATATYPE($1)    value(MAX_NELS)
+        DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         integer nok             
         doubleprecision val
@@ -980,7 +1006,7 @@ define([TEST_NFMPI_GET_ATT],dnl
      +                               NFT_ITYPE($1)) .and.
      +                      in_internal_range(NFT_ITYPE($1),
      +                                        expect(k))) then
-                            val = ARITH($1, value(k))
+                            val = ARITH3($1, value, k)
                             if (.not.equal(val, expect(k),
      +                                     ATT_TYPE(j,i), 
      +                                     NFT_ITYPE($1)))then
