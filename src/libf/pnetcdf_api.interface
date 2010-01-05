@@ -1261,7 +1261,6 @@ INTERFACE
 
 !
 ! mapped variable put/get subroutines:
-! (these subroutines are not ready yet as in Dec. 29, 2009)
 !
 
     INTEGER        FUNCTION nfmpi_put_varm(ncid, varid, start, count, stride, imap, text)
