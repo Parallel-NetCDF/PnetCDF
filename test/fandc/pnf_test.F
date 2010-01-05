@@ -43,7 +43,7 @@
       ! number of read samples
       ! number of write samples
 
-      NFMPI_OFFSET TOTSIZ_3D(3) ! global sizes of 3D field
+      INTEGER(KIND=MPI_OFFSET_KIND) TOTSIZ_3D(3) ! global sizes of 3D field
 
 
 !     ----------------------
@@ -56,12 +56,12 @@
               
       integer comm_cart                   ! Cartesian communicator
       integer ierr
-      NFMPI_OFFSET istart, jstart, kstart      ! offsets of 3D field
-      NFMPI_OFFSET locsiz
+      INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart      ! offsets of 3D field
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
       integer mype                        ! rank in comm_cart
       integer totpes                      ! total number of PEs
               
-      NFMPI_OFFSET locsiz_3d(3)                ! local sizes of 3D fields
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)                ! local sizes of 3D fields
       integer pe_coords(3)                ! Cartesian PE coords
               
       integer numpes(3)                      ! number of PEs along axes;
@@ -244,10 +244,10 @@
       integer nwrites
       integer mype
       integer comm_cart
-      NFMPI_OFFSET istart, jstart, kstart
-      NFMPI_OFFSET locsiz
-      NFMPI_OFFSET locsiz_3d(3)
-      NFMPI_OFFSET totsiz_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) totsiz_3d(3)
       real*4  wrt_l(2)
 
 
@@ -261,8 +261,8 @@
       integer nw
       integer tt_id
               
-      NFMPI_OFFSET count_3d(3)
-      NFMPI_OFFSET start_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) count_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) start_3d(3)
               
       integer dim_id(3)
               
@@ -389,10 +389,10 @@
       integer nreads
       integer mype
       integer comm_cart
-      NFMPI_OFFSET istart, jstart, kstart
-      NFMPI_OFFSET locsiz
-      NFMPI_OFFSET locsiz_3d(3)
-      NFMPI_OFFSET totsiz_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) totsiz_3d(3)
       real*4  rdt_l(2)
 
 
@@ -406,8 +406,8 @@
       integer tt_id
       integer ii
               
-      NFMPI_OFFSET count_3d(3)
-      NFMPI_OFFSET start_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) count_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) start_3d(3)
               
       double precision  t1, t2, t3
               
@@ -517,18 +517,18 @@
 !     Argument declarations.
 !     ----------------------
 
-      NFMPI_OFFSET nx
+      INTEGER(KIND=MPI_OFFSET_KIND) nx
       integer mype
       integer totpes
-      NFMPI_OFFSET locnx
-      NFMPI_OFFSET ibegin
+      INTEGER(KIND=MPI_OFFSET_KIND) locnx
+      INTEGER(KIND=MPI_OFFSET_KIND) ibegin
 
 
 !     ----------------------------
 !     Local variable declarations.
 !     ----------------------------
 
-      NFMPI_OFFSET iremain
+      INTEGER(KIND=MPI_OFFSET_KIND) iremain
 
 
 !     ----------------
@@ -567,10 +567,10 @@
 !     Argument declarations.
 !     ----------------------
 
-      NFMPI_OFFSET istart, jstart, kstart
-      NFMPI_OFFSET locsiz
-      NFMPI_OFFSET locsiz_3d(3)
-      NFMPI_OFFSET totsiz_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)
+      INTEGER(KIND=MPI_OFFSET_KIND) totsiz_3d(3)
       real*4  tt(locsiz)
 
 
@@ -626,7 +626,7 @@
 
       integer mype
       integer comm_cart
-      NFMPI_OFFSET locsiz
+      INTEGER(KIND=MPI_OFFSET_KIND) locsiz
       real*4  tt (locsiz)
       real*4  buf(locsiz)
 
