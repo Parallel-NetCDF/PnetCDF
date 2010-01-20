@@ -10,7 +10,7 @@ include ../../../macros.make
 
 NCDUMP		= ../ncdump/ncmpidump
 PROGRAM		= ncmpigen
-INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir) -I.
+INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir) -I. -I../../lib
 MANUAL		= ncmpigen.1
 GARBAGE		= $(PROGRAM) \
 		  pnetcdf.inc \

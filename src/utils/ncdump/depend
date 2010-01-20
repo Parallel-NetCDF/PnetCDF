@@ -1,12 +1,12 @@
-dumplib.o: $(srcdir)/../../../src/lib/pnetcdf.h
+dumplib.o: ../../../src/lib/pnetcdf.h
 dumplib.o: dumplib.c
 dumplib.o: dumplib.h
-ncdump.o: $(srcdir)/../../../src/lib/pnetcdf.h
+ncdump.o: ../../../src/lib/pnetcdf.h
 ncdump.o: dumplib.h
 ncdump.o: ncdump.c
 ncdump.o: ncdump.h
 ncdump.o: vardata.h
-vardata.o: $(srcdir)/../../../src/lib/pnetcdf.h
+vardata.o: ../../../src/lib/pnetcdf.h
 vardata.o: dumplib.h
 vardata.o: ncdump.h
 vardata.o: vardata.c
