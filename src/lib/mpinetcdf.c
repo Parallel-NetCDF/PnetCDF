@@ -23,7 +23,7 @@ static int length_of_mpitype(MPI_Datatype);
 
 const char *
 ncmpi_inq_libvers(void) {
-  return "version = 1.1.0 of 02 November 2009";
+	return "version = " PNETCDF_VERSION "of 02 November 2009";
 }
 
 /* Prototypes for functions used only in this file */

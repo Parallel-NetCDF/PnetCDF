@@ -14,6 +14,27 @@ AC_PREREQ(2.59)
 UD_SRCDIR
 dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
 
+PNETCDF_VERSION_MAJOR=1
+PNETCDF_VERSION_MINOR=1
+PNETCDF_VERSION_SUB=1
+PNETCDF_VERSION_PRE=svn
+#PNETCDF_VERSION_PRE=""
+
+PNETCDF_VERSION=$PNETCDF_VERSION_MAJOR.$PNETCDF_VERSION_MINOR.$PNETCDF_VERSION_SUB$PNETCDF_VERSION_PRE
+
+
+AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MAJOR, $PNETCDF_VERSION_MAJOR, major version number)
+AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MINOR, $PNETCDF_VERSION_MINOR, minor version number)
+AC_DEFINE_UNQUOTED(PNETCDF_VERSION_SUB, $PNETCDF_VERSION_SUB, sub version number)
+AC_DEFINE_UNQUOTED(PNETCDF_VERSION_PRE, $PNETCDF_VERSION_PRE, pre-release string)
+AC_DEFINE_UNQUOTED(PNETCDF_VERSION, ["$PNETCDF_VERSION"], full pnetcdf version string)
+
+AC_SUBST(PNETCDF_VERSION_MAJOR)
+AC_SUBST(PNETCDF_VERSION_MINOR)
+AC_SUBST(PNETCDF_VERSION_SUB)
+AC_SUBST(PNETCDF_VERSION_PRE)
+AC_SUBST(PNETCDF_VERSION)
+
 dnl must be all on same line
 AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf.inc src/libf/nfconfig.inc:src/libf/nfconfig.in )
 
@@ -414,6 +435,7 @@ AC_SUBST(has_fortran)
 chmod u+x ${srcdir}/scripts/install-sh
 
 AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile 
+	src/lib/pnetcdf.h
          src/libf/Makefile  test/common/Makefile test/test_double/Makefile 
 	 test/test_double_int/Makefile test/test_float/Makefile 
 	 test/test_int/Makefile test/test_dtype/Makefile 
@@ -435,7 +457,7 @@ if test "$enable_mpi_io_test" != "yes" ; then
 fi
 
 echo ""
-echo "parallel-netCDF features:"
+echo "parallel-netCDF version $PNETCDF_VERSION features:"
 if test "$ac_cv_sizeof_off_t" -gt 4 ; then
 	echo ". parallel-netcdf configured WITH support for large files"
 else
