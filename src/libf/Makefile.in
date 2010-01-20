@@ -147,11 +147,11 @@ $(MODULE_GENERATED): pnetcdf.inc
 	echo "" >> pnetcdf.F90
 	/bin/cat pnetcdf.inc >> pnetcdf.F90
 	echo "" >> pnetcdf.F90
-	/bin/cat pnetcdf_api.interface >> pnetcdf.F90
+	/bin/cat $(srcdir)/pnetcdf_api.interface >> pnetcdf.F90
 	echo "" >> pnetcdf.F90
 	echo "end module pnetcdf" >> pnetcdf.F90
 	$(COMPILE.F) -c pnetcdf.F90
-	/bin/cat pnetcdf_api.external >> pnetcdf.inc
+	/bin/cat $(srcdir)/pnetcdf_api.external >> pnetcdf.inc
 
 install:	$(INCDIR)/$(HEADER_GENERATED)  $(INCDIR)/$(MODULE_GENERATED)
 
