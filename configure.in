@@ -164,30 +164,64 @@ EOF
  esac
 fi
 
-dnl do the automatic mpi-compiler-checking if MPICC and MPIF77 are not set
-if test x${MPICC} = x -a x${MPIF77} = x ; then
-	MPICC=$CC
-	AC_MSG_CHECKING(mpi implementation)
-	AC_ARG_WITH(mpi, 
+
+MPI_INSTALL=""
+AC_ARG_WITH(mpi, 
 	[  --with-mpi=/path/to/implementation
-				  installation prefix for mpi implementation],
+			installation prefix for MPI implementation],
 		if test x"$withval" = xyes; then
 			AC_MSG_ERROR(--with-mpi must be given a pathname)
 		else
-			AC_MSG_RESULT(using $withval)
-			MPICC=${withval}/bin/mpicc
-			if test ! -x "${MPICC}"; then
-				AC_MSG_WARN($MPICC either does not exist or is not executable: falling back to $CC)
-				MPICC="$CC"
-			fi
-			MPIF77=${withval}/bin/mpif77
-			if test ! -x "${MPIF77}"; then
-				AC_MSG_WARN($MPIF77 either does not exist or is not executable: falling back to $FC)
-				MPIF77="$FC"
-			fi
-
+			MPI_INSTALL=${withval}
 		fi
 	)
+
+dnl do the automatic mpi-compiler-checking if MPICC and MPIF77 are not set
+
+dnl i.e. if user sets compiler environnent variables, those will override the
+dnl --with-mpi flag
+
+if test x${MPI_INSTALL} != x ; then 
+	AC_MSG_CHECKING(mpi C compiler )
+	if test x${MPICC} = x ; then
+		MPICC=${MPI_INSTALL}/bin/mpicc
+	fi
+
+	if test ! -x "${MPICC}" ; then
+		AC_MSG_WARN($MPICC either does not exist or is not executable: falling back to $CC)
+		MPICC="$CC"
+	fi
+	AC_MSG_RESULT(using $MPICC)
+
+	AC_MSG_CHECKING(mpi C++ compiler )
+	if test x${MPICXX} = x ; then
+		MPICXX=${MPI_INSTALL}/bin/mpicxx
+	fi
+	if test ! -x "${MPICXX}" ; then
+		AC_MSG_WARN($MPICXX either does not exist or is not executable: falling back to $CC)
+		MPICXX="$CC"
+	fi
+	AC_MSG_RESULT(using $MPICXX)
+
+	AC_MSG_CHECKING(mpi Fortran 77 compiler )
+	if test x${MPIF77} = x ; then
+		MPIF77=${MPI_INSTALL}/bin/mpif77
+	fi
+	if test ! -x "${MPIF77}" ; then
+		AC_MSG_WARN($MPIF77 either does not exist or is not executable: falling back to $FC)
+		MPIF77="$FC"
+	fi
+	AC_MSG_RESULT(using $MPIF77)
+
+	AC_MSG_CHECKING(mpi Fortran 90 compiler )
+	if test x${MPIF90} = x ; then
+		MPIF90=${MPI_INSTALL}/bin/mpif90
+	fi
+	if test ! -x "${MPIF90}" ; then
+		AC_MSG_WARN($MPIF90 either does not exist or is not executable: falling back to $FC)
+		MPIF90="$FC"
+	fi
+	AC_MSG_RESULT(using $MPIF90)
 fi
 
 
@@ -201,7 +235,9 @@ AC_ARG_ENABLE(mpi-io-test,
 if test "$enable_mpi_io_test" = "yes" ; then
 	AC_MSG_CHECKING(MPI-IO support in MPI implementation)
 	saveCC="$CC"
-	CC=$MPICC
+	if test x$MPICC != x ; then
+		CC=$MPICC
+	fi
 	AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR;],
 		AC_MSG_RESULT(yes),
 		AC_MSG_ERROR([mpi implementation does not support MPI-IO])
@@ -210,6 +246,8 @@ if test "$enable_mpi_io_test" = "yes" ; then
 fi
 AC_SUBST(MPICC)
 AC_SUBST(MPIF77)
+AC_SUBST(MPICXX)
+AC_SUBST(MPIF90)
 
 AC_CHECK_HEADERS(stdlib.h sys/types.h)
 
