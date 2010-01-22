@@ -19,6 +19,9 @@
 .cpp.o:
 	$(COMPILE.cxx) $<
 
+.F90.o:
+	$(COMPILE.f90) $<
+
 # Not all FORTRAN compilers support C-preprocessing of *.F files; ergo, a 
 # relatively complicated rule ensues.
 .F.o:
