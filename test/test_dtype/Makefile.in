@@ -1,10 +1,10 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-INCDIR		= $(srcdir)/../../src/lib
+INCDIR		= $(srcdir)/../../src/lib 
 LIBDIR		= ../../src/lib
 
-INCLUDES	= -I$(INCDIR)
+INCLUDES	= -I$(INCDIR) -I../../src/lib
 
 CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 

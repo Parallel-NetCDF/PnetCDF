@@ -4,7 +4,7 @@ VPATH		= @srcdir@
 INCDIR		= $(srcdir)/../../src/lib
 LIBDIR		= ../../src/lib
 
-INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common
+INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common -I../../src/lib
 
 CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 
