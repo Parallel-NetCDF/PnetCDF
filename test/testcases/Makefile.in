@@ -1,15 +1,17 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-INCDIR		= $(srcdir)/../../src/lib
+INCDIR		= $(srcdir)/../../src/lib 
 LIBDIR		= ../../src/lib
 
-INCLUDES	= -I$(INCDIR) 
+INCLUDES	= -I$(INCDIR)  -I../../src/lib
 
 CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 
 FC		= @MPIF77@
 FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
+CXX		= @MPICXX@
+CXXFLAGS        = @CFLAGS@ $(INCLUDES)
 
 
 SRCS		= $(srcdir)/ncmpi_vars_null_stride.c $(srcdir)/vecors.c \
@@ -23,6 +25,9 @@ LIBS		= -lpnetcdf @LIBS@
 .F.o:
 	$(FC) $(FFLAGS) -c $<
 
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $<
+
 all:		$(PROGS)
 
 ncmpi_vars_null_stride: ncmpi_vars_null_stride.o
@@ -34,11 +39,16 @@ vectors: vectors.o
 bigrecords: bigrecords.o
 	$(FC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
+redef1: redef1.o
+	$(CXX) -o $@ $@.o $(LDFLAGS) $(LIBS)
+
+
 clean:
 		rm -f *.o $(PROGS) *.nc
 
-test: ncmpi_vars_null_stride vectors bigrecords
+test: ncmpi_vars_null_stride vectors bigrecords redef1
 	./ncmpi_vars_null_stride test.nc && echo '*** ncmpi_vars_null_stride: Success ***'
+	$(srcdir)/redef1.sh ./redef1  $(srcdir)/redef-good.ncdump && echo '*** redef1: Success ***'
 	
 
 testing: test
