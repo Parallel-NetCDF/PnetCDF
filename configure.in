@@ -36,7 +36,7 @@ AC_SUBST(PNETCDF_VERSION_PRE)
 AC_SUBST(PNETCDF_VERSION)
 
 dnl must be all on same line
-AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf.inc src/libf/nfconfig.inc:src/libf/nfconfig.in )
+AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf_inc src/libf/nfconfig.inc:src/libf/nfconfig.in )
 
 AC_CONFIG_AUX_DIR(./scripts)
 
@@ -485,8 +485,8 @@ AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile
 	 test/largefile/Makefile
 	 test/mcoll_fortran/Makefile)
 
-dnl generate a fortran-friendly pnetcdf.inc nfconfig.inc
-sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf.inc>pnetcdf.inc && mv pnetcdf.inc src/libf/pnetcdf.inc
+dnl generate a fortran-friendly pnetcdf_inc nfconfig.inc
+sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf_inc>pnetcdf_inc && mv pnetcdf_inc src/libf/pnetcdf_inc
 sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/nfconfig.inc>nfconfig.inc && mv nfconfig.inc src/libf/nfconfig.inc
 
 if test "$enable_mpi_io_test" != "yes" ; then
