@@ -40,8 +40,10 @@ becomes
 . likewise, in many places where serial netcdf takes size_t types, we instead
   take MPI_Offset types
 
-. Fortran users should '#include <mpif.h>' and '#include "pnetcdf.inc"'.
-  Don't use the Fortran INCLUDE directive
+. Fortran users should use '#include <mpif.h>' and '#include "pnetcdf.inc"',
+  instead of using the Fortran INCLUDE directive.
+
+. Fortran 90 users can use 'use mpi' and 'use pnetcdf'.
 
 . Fortran  dimension sizes should be declared as type
   INTEGER(KIND=MPI_OFFSET_KIND) 
