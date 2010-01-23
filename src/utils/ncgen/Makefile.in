@@ -13,11 +13,12 @@ PROGRAM		= ncmpigen
 INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir) -I. -I../../lib
 MANUAL		= ncmpigen.1
 GARBAGE		= $(PROGRAM) \
-		  pnetcdf.inc \
+		  ncgentab.* \
 		  c0.nc c1.cdl c1.nc c2.cdl \
 		  f0.nc \
 		  ctest.c ctest ctest0.nc ctest1.cdl \
-		  ftest.f ftest ftest0.nc ftest1.cdl
+		  ftest.f ftest ftest0.nc ftest1.cdl \
+		  ncgenyy.c
 
 lib_netcdf	= ../../../src/lib/libpnetcdf.a
 ld_netcdf	= -L../../../src/lib -lpnetcdf

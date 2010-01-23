@@ -35,3 +35,6 @@ pnf_test.o:  pnf_test.F
 clean:
 	rm -f $(EXECS) *.o *.nc
 
+distclean: clean
+	rm -f Makefile
+

@@ -27,4 +27,7 @@ test_check_header1: test_check_header1.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-		rm -f $(OBJS) $(PROGS) *.nc
+	rm -f $(OBJS) $(PROGS) *.nc
+
+distclean: clean
+	rm -f Makefile

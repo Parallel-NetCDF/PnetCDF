@@ -3,7 +3,12 @@ all:
 	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) ; fi
 	cd utils && $(MAKE)
 
-distclean: clean
+distclean:
+	cd lib && $(MAKE) distclean
+	cd libf && $(MAKE) distclean
+	cd utils && $(MAKE) distclean
+	rm -f Makefile
+
 clean:
 	cd lib && $(MAKE) clean
 	cd libf && $(MAKE) clean

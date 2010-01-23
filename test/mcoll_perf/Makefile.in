@@ -28,4 +28,7 @@ single_mcoll_perf_non_record: single_mcoll_perf_non_record.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-		rm -f $(OBJS) $(PROGS) *.nc
+	rm -f $(OBJS) $(PROGS) *.nc
+
+distclean: clean
+	rm -f Makefile

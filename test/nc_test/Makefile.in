@@ -29,7 +29,7 @@ ld_netcdf	= -L../../src/lib -lpnetcdf
 
 time_log	= times
 
-GARBAGE		= nc_test test.nc scratch.nc lint.out $(time_log)
+GARBAGE		= nc_test test.nc scratch.nc lint.out $(time_log) test_get.c test_put.c
 
 PACKING_LIST	=  $(SRCS) \
 		    test_get.m4 \

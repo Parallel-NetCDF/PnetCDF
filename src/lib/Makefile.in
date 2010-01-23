@@ -63,7 +63,7 @@ PROG_CSRCS = \
 
 PROG_OBJS = $(PROG_CSRCS:.c=.o)
 
-GARBAGE		= 
+GARBAGE		= $(LIBRARY) $(MANUAL) $(PROGRAM)
 
 DIST_GARBAGE	= ncconfig.h
 
