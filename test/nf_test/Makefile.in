@@ -52,7 +52,9 @@ GARBAGE		= \
 		  lint.out	\
 		  nf_test	\
 		  scratch.nc	\
-		  *.f77
+		  *.f77		\
+		  test.nc	\
+		  $(M4SRCS:.m4=.F)
 #
 
 PACKING_LIST	= \

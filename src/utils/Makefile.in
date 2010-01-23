@@ -13,6 +13,10 @@ ncmpidump:
 clean:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
 
+distclean:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
+	rm -f Makefile
+
 install: ncgen_install ncdump_install
 
 ncgen_install:

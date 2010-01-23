@@ -9,6 +9,8 @@ pres_temp_4D_wr: pres_temp_4D_wr.o
 pres_temp_4D_wr.o: pres_temp_4D_wr.c 
 	$(CC) -c -g -O2 -I$(srcdir)/../../src/lib -I../../src/lib -I. $(srcdir)/pres_temp_4D_wr.c
 
-
 clean:
 	rm -f *.o pres_temp_4D_wr
+
+distclean: clean
+	rm -f Makefile

@@ -20,3 +20,6 @@ mcoll_testf: mcoll_testf.F
 clean:
 	rm -f $(EXECS) *.o *.nc
 
+distclean: clean
+	rm -f Makefile
+

@@ -8,6 +8,8 @@ include ../macros.make
 PACKING_LIST	= Makefile	\
 		  netcdf.m4
 
+GARBAGE         = pnetcdf.3
+
 all:
 
 test:
