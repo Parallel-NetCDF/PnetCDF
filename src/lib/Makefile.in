@@ -75,7 +75,7 @@ install:
 	$(INSTALL) -m 644 $(LIBRARY) $(LIBDIR)/$(LIBRARY)
 
 	$(INSTALL) -d -m 755 $(INCDIR)
-	$(INSTALL) -m 644 $(srcdir)/$(HEADER) $(INCDIR)/$(HEADER)
+	$(INSTALL) -m 644 $(HEADER) $(INCDIR)/$(HEADER)
 
 	$(INSTALL) -d -m 755 $(MANDIR)/man3
 	$(INSTALL) -m 644 $(MANUAL) $(MANDIR)/man3/$(MANUAL)
