@@ -65,7 +65,7 @@ PROG_OBJS = $(PROG_CSRCS:.c=.o)
 
 GARBAGE		= $(LIBRARY) $(MANUAL) $(PROGRAM)
 
-DIST_GARBAGE	= ncconfig.h
+DIST_GARBAGE	= ncconfig.h pnetcdf.h
 
 
 all:		$(LIBRARY) $(MANUAL) $(PROGRAM)
