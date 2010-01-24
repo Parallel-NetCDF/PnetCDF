@@ -28,11 +28,12 @@ install:	src/lib/install src/util/install
 
 uninstall:	src/lib/uninstall
 
-clean:		src/lib/clean test/clean
+clean:		src/clean test/clean
 
-distclean:	src/lib/distclean \
+distclean:	src/distclean \
                 test/distclean \
-		clean_macros 
+		clean_macros  \
+		rmdir_src_test
 
 tests:
 	@cd test && $(MAKE)
@@ -43,6 +44,9 @@ testing:
 clean_macros:
 	rm -f macros.make
 
+rmdir_src_test:
+	if [ $(srcdir) != . ] ; then rmdir src test ; fi
+
 # short names for making things in subdirs
 test/clean	\
 test/distclean	\
@@ -50,8 +54,8 @@ src/lib/all	\
 src/lib/test	\
 src/lib/install	\
 src/lib/uninstall	\
-src/lib/clean	\
-src/lib/distclean	\
+src/clean	\
+src/distclean	\
 src/util/install \
 src/util/clean \
 :

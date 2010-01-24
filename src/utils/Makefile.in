@@ -16,6 +16,7 @@ clean:
 distclean:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
 	rm -f Makefile
+	if [ $(srcdir) != . ] ; then rmdir $(SUBDIRS) ; fi
 
 install: ncgen_install ncdump_install
 
