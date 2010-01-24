@@ -1,20 +1,25 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
 all:
 	cd lib && $(MAKE)
 	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) ; fi
 	cd utils && $(MAKE)
 
-distclean:
-	cd lib && $(MAKE) distclean
-	cd libf && $(MAKE) distclean
-	cd utils && $(MAKE) distclean
-	rm -f Makefile
-
-clean:
-	cd lib && $(MAKE) clean
-	cd libf && $(MAKE) clean
-	cd utils && $(MAKE) clean
-
 install:
 	cd lib && $(MAKE) install
 	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) install ; fi
 	cd utils && $(MAKE) install
+
+clean:
+	cd lib && $(MAKE) clean
+	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) clean ; fi
+	cd utils && $(MAKE) clean
+
+distclean:
+	cd lib && $(MAKE) distclean
+	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) distclean ; fi
+	cd utils && $(MAKE) distclean
+	rm -f Makefile
+	if [ $(srcdir) != . ] ; then if [ @has_fortran@ = yes ] ; then rmdir libf ; fi ; fi
+	if [ $(srcdir) != . ] ; then rmdir lib utils ; fi
