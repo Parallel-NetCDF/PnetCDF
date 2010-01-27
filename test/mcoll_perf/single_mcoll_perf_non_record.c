@@ -10,6 +10,18 @@
 #include <string.h>
 #include <unistd.h>
 
+/* need this for SIZEOF_INT so we get the correct printf output */
+#include "ncconfig.h" 
+
+#ifdef SIZEOF_INT
+# if SIZEOF_INT == 4
+#  define lld(x) (x)
+# elif  SIZEOF_INT == 8
+#  define lld(x) (long long)(x)
+# endif
+#endif
+
+
 
 /* The file name is taken as a command-line argument. */
 
@@ -336,8 +348,8 @@ int main(int argc, char **argv)
         if (new_run_tim[top]>new_run_tim[k+1]) top = k+1;
       }
 
-      fprintf(stderr, "one non-record variable ntimes:%d, Global array size (%d x %d) x %d x %d integers, local array size: %d x %d x %d\n", ntimes, array_of_gsizes[0], ntimes, array_of_gsizes[1], array_of_gsizes[2],sizes[0], sizes[1], sizes[2]);
-      fprintf(stderr, "%dx%dx%d, %d: ntimes:%d, loop:%d, k:%d, open_t = %f, def_t =%f, write_t = %f sec,run_t = %f sec\n", sizes[0], sizes[1], sizes[2],mvar_flag, ntimes, k_loop, top, new_open_tim[top], new_def_tim[top], new_write_tim[top], new_run_tim[top]); 
+      fprintf(stderr, "one non-record variable ntimes:%d, Global array size (%d x %d) x %d x %d integers, local array size: %lld x %lld x %lld\n", ntimes, array_of_gsizes[0], ntimes, array_of_gsizes[1], array_of_gsizes[2],lld(sizes[0]), lld(sizes[1]), lld(sizes[2]));
+      fprintf(stderr, "%lldx%lldx%lld, %d: ntimes:%d, loop:%d, k:%d, open_t = %f, def_t =%f, write_t = %f sec,run_t = %f sec\n", lld(sizes[0]), lld(sizes[1]), lld(sizes[2]),mvar_flag, ntimes, k_loop, top, new_open_tim[top], new_def_tim[top], new_write_tim[top], new_run_tim[top]); 
     }
     
 /*
