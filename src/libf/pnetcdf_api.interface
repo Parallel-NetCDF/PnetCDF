@@ -37,6 +37,16 @@ INTERFACE
                             INTEGER,                       INTENT(OUT) :: ncid
     END FUNCTION   nfmpi_open
 
+    INTEGER        FUNCTION nfmpi_inq_format(ncid, format)
+                            INTEGER,                       INTENT(IN)   :: ncid
+                            INTEGER,                       INTENT(OUT)  :: format
+    END FUNCTION   nfmpi_inq_format
+
+    INTEGER        FUNCTION nfmpi_inq_file_format(path, format)
+                            CHARACTER(len=*),              INTENT(IN)  :: path
+                            INTEGER,                       INTENT(OUT)  :: format
+    END FUNCTION   nfmpi_inq_file_format
+
     INTEGER        FUNCTION nfmpi_get_file_info(ncid, mpi_info)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(OUT) :: mpi_info

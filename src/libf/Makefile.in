@@ -45,6 +45,7 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	inq_dimnamef.c inqf.c inq_nattsf.c inq_ndimsf.c inq_nvarsf.c \
 	inq_unlimdimf.c inq_vardimidf.c inq_varf.c inq_varidf.c \
 	inq_varnamef.c inq_varnattsf.c inq_varndimsf.c inq_vartypef.c \
+        inq_formatf.c inq_file_formatf.c \
 	openf.c put_att_doublef.c put_att_realf.c put_att_intf.c \
 	put_att_int1f.c put_att_int2f.c put_att_textf.c \
 	put_var1_doublef.c put_var1f.c put_var1_realf.c \

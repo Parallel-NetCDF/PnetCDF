@@ -1042,26 +1042,25 @@ ncmpi_inq(int ncid,
 
         return NC_NOERR;
 }
-
 int
 ncmpi_inq_version(int ncid, int *NC_mode)
 {
-        int status;
-        NC *ncp;
+    int status;
+    NC *ncp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp);
-        if(status != NC_NOERR)
-                return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if(status != NC_NOERR)
+        return status;
         
 
-       if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-          *NC_mode = NC_64BIT_DATA;
-       } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
-          *NC_mode = NC_64BIT_OFFSET;
-       } else {
-          *NC_mode = 0;
-       }
-       return 0;
+    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+        *NC_mode = NC_64BIT_DATA;
+    } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
+        *NC_mode = NC_64BIT_OFFSET;
+    } else {
+        *NC_mode = 0;
+    }
+    return 0;
 }
 
 
