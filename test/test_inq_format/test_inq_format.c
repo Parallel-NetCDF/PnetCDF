@@ -16,13 +16,12 @@ int main(int argc, char **argv) {
   status = ncmpi_open(MPI_COMM_WORLD, "../data/test_int.nc", 0, MPI_INFO_NULL, &ncid);
  
   status = ncmpi_inq_format(ncid, &format);
-  printf("00: test.nc format:%d\n", format);
+  printf("../data/test.nc format:%d\n", format);
 
   status = ncmpi_close(ncid);
   
-  status = ncmpi_inq_file_format("../data/test_int.nc", &format);
-  
-  printf("01: test.nc format:%d\n", format);
+  status = ncmpi_inq_file_format("../data/test_int_cdf5.nc", &format);
+  printf("../data/test_int_cdf5.nc format:%d\n", format);
 
   MPI_Finalize();
   return 0;

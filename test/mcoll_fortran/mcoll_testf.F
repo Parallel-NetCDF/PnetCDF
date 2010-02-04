@@ -371,13 +371,13 @@
 !         ierr = Nfmpi_Waitall (nwrites, req)
 !       =============================
 
-        ierr = ncmpi_inq_format(ncid, format)
+        ierr = nfmpi_inq_format(ncid, format)
         print *, 'ncid = ', ncid, ' format:', format
 !       ================
         ierr = Nfmpi_Close (ncid)
 !       ================
 
-        ierr = ncmpi_inq_file_format(filename, format)
+        ierr = nfmpi_inq_file_format(filename, format)
         print *, 'filename = ', filename, ' format:', format
  900  format ("mynod:", i1, " reqid : ", i1)
 
