@@ -94,6 +94,7 @@ ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *nci
 	  fSet(ncp->flags, NC_64BIT_DATA);
 	  sizeof_off_t = 8;
   } else {
+	  fSet(ncp->flags, NC_32BIT);
 	  sizeof_off_t = 4;
   }
   assert(ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t));
@@ -183,13 +184,14 @@ ncmpi_inq_format(int ncid, int *formatp)
     if(status != NC_NOERR)
         return status;
 
-
     if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
         *formatp = NC_FORMAT_64BIT_DATA;
     } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
         *formatp = NC_FORMAT_64BIT;
-    } else {
+    } else if (fIsSet(ncp->flags, NC_32BIT)){
           *formatp = NC_FORMAT_CLASSIC;
+    } else {
+          *formatp = NC_FORMAT_UNKNOWN;
     }
     return 0;
 }
@@ -197,27 +199,34 @@ ncmpi_inq_format(int ncid, int *formatp)
 int
 ncmpi_inq_file_format(char *filename, int *formatp)
 {
-        int status;
-        NC *ncp;
-        int ncid;
+    int status;
+    NC *ncp;
+    int ncid;
 	
 
-	status = ncmpi_open(MPI_COMM_SELF, filename, 0, MPI_INFO_NULL, &ncid);
-        status = ncmpii_NC_check_id(ncid, &ncp);
-        if(status != NC_NOERR)
-                return status;
+    status = ncmpi_open(MPI_COMM_SELF, filename, 0, MPI_INFO_NULL, &ncid);
+    if (status == NC_ENOTNC){ 
+        *formatp = NC_FORMAT_UNKNOWN;
+    }
+    if(status != NC_NOERR)
+        return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if(status != NC_NOERR)
+         return status;
 
 
-       if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-          *formatp = NC_FORMAT_64BIT_DATA;
-       } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
-          *formatp = NC_FORMAT_64BIT;
-       } else {
-          *formatp = NC_FORMAT_CLASSIC;
-       }
-	status = ncmpi_close(ncid);
+    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
+        *formatp = NC_FORMAT_64BIT_DATA;
+    } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
+        *formatp = NC_FORMAT_64BIT;
+    } else if (fIsSet(ncp->flags, NC_32BIT)){
+        *formatp = NC_FORMAT_CLASSIC;
+    } else {
+        *formatp = NC_FORMAT_UNKNOWN;
+    }
+    status = ncmpi_close(ncid);
        
-       return 0;
+    return 0;
 }
 
 

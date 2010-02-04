@@ -1184,6 +1184,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
   /* check version number in last byte of magic */
   if (magic[sizeof(ncmagic)-1] == 0x1) {
       getbuf.version = 1;
+      fSet(ncp->flags, NC_32BIT);
   } else if (magic[sizeof(ncmagic)-1] == 0x2) {
       getbuf.version = 2;
       fSet(ncp->flags, NC_64BIT_OFFSET);
