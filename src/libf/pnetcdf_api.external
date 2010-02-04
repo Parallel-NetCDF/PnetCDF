@@ -31,6 +31,16 @@
 !                          integer             ncid)
       external        nfmpi_open
 
+      integer         nfmpi_inq_format
+!                         (integer             ncid,
+!                          integer             format)
+      external        nfmpi_inq_format
+
+      integer         nfmpi_inq_file_format
+!                         (character*(*)       path,
+!                          integer             format)
+      external        nfmpi_inq_file_format
+
       integer         nfmpi_get_file_info
 !                          (integer             ncid,
 !                          integer             mpi_info)
