@@ -249,6 +249,7 @@
       integer req2
       integer req(nwrites)
       integer stat(nwrites)
+      integer format
         
       INTEGER(KIND=MPI_OFFSET_KIND) count_3d(3)
       INTEGER(KIND=MPI_OFFSET_KIND) start_3d(3)
@@ -370,10 +371,14 @@
 !         ierr = Nfmpi_Waitall (nwrites, req)
 !       =============================
 
+        ierr = ncmpi_inq_format(ncid, format)
+        print *, 'ncid = ', ncid, ' format:', format
 !       ================
         ierr = Nfmpi_Close (ncid)
 !       ================
 
+        ierr = ncmpi_inq_file_format(filename, format)
+        print *, 'filename = ', filename, ' format:', format
  900  format ("mynod:", i1, " reqid : ", i1)
 
 
