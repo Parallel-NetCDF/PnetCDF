@@ -37,8 +37,8 @@
 
       integer (kind=MPI_OFFSET_KIND) :: longlen
 
-      integer (kind=MPI_OFFSET_KIND) :: start1d
-      integer (kind=MPI_OFFSET_KIND) :: count1d
+      integer (kind=MPI_OFFSET_KIND) :: start1d(1)
+      integer (kind=MPI_OFFSET_KIND) :: count1d(1)
 
 ! rank (number of dimensions) for each variable
       integer  time_rank
@@ -62,7 +62,7 @@
 
       integer*8 i8_size
 
-      integer(kind=MPI_OFFSET_KIND) :: time_start, time_count
+      integer(kind=MPI_OFFSET_KIND) :: time_start(1), time_count(1)
 
       double precision  time(4)
 !      data time /0., 20., 40., 60./
@@ -165,8 +165,8 @@
         iret = nfmpi_enddef(ncid)
         call check_err(iret)
 
-        start1d = 1
-        count1d = 26
+        start1d(1) = 1
+        count1d(1) = 26
 
 ! store interfaces
         iret = nfmpi_put_vara_real_all(ncid, interfaces_id,
@@ -183,11 +183,11 @@
 ! MPI_AINT problem, so the issue only shows up at read time.
 
         do n = 1, 4
-          time_start = n
+          time_start(1) = n
           if(myid .eq. 0) then
-            time_count = 1
+            time_count(1) = 1
           else
-            time_count = 0
+            time_count(1) = 0
           endif
 
           iret = nfmpi_put_vara_double_all(ncid, time_id, 
@@ -213,8 +213,8 @@
       call check_err(iret)
 
       ! deliberately want all processes to end up with the full time array
-      time_start = 1
-      time_count = 4
+      time_start(1) = 1
+      time_count(1) = 4
       iret = nfmpi_get_vara_double_all(ncid, time_id,
      1                               time_start, time_count, time);
       call check_err(iret)
@@ -257,7 +257,7 @@
       parameter (time_rank = 1)
       parameter (pressure_rank = 3)
 ! starts and counts for array sections of record variables
-      integer(kind=MPI_OFFSET_KIND) :: time_start, time_count
+      integer(kind=MPI_OFFSET_KIND) :: time_start(1), time_count(1)
       integer  pressure_start(pressure_rank), pressure_count(pressure_ra
      1nk)
        
@@ -279,8 +279,8 @@
 ! store time
 
       do n = 1, 4
-        time_start = n
-        time_count = 1
+        time_start(1) = n
+        time_count(1) = 1
         iret = nfmpi_put_vara_double_all(ncid, time_id, 
      1                                   time_start, time_count,
      1                                   time)
