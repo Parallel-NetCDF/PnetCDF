@@ -296,14 +296,13 @@ ncmpiio_move(ncio *const nciop,
     MPI_Offset movesize, bufcount;
     MPI_Status mpistatus;
 
-    if (buf == NULL)
-        return NC_ENOMEM;
-
     MPI_Comm_size(nciop->comm, &grpsize);
     MPI_Comm_rank(nciop->comm, &rank);
 
     movesize = nbytes;
-    buf = malloc(bufsize);
+    buf = malloc((size_t)bufsize);
+    if (buf == NULL)
+        return NC_ENOMEM;
 
     while (movesize > 0) {
         /* find a proper number of processors to participate I/O */
