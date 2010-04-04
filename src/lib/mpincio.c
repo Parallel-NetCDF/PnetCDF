@@ -117,14 +117,30 @@ ncmpiio_create(MPI_Comm     comm,
     if (fIsSet(ioflags, NC_NOCLOBBER))
         fSet(mpiomode, MPI_MODE_EXCL);
     else {
+/* TODO: in the future, HAVE_ACCESS_FUNCTION shall be tested and set at the
+ * configure time */
+#define HAVE_ACCESS_FUNCTION
+#ifdef HAVE_ACCESS_FUNCTION
         /* to avoid calling MPI_File_set_size() later, let process 0 check
-           if the file exists. If yes, there is no need of MPI_File_set_size */
+           if the file exists. If not, no need to call MPI_File_set_size */
         int rank;
         MPI_Comm_rank(comm, &rank);
         if (rank == 0) { /* check if file exists */
-            if (access(path, F_OK) == 0) do_zero_file_size = 1;
+            if (access(path, F_OK) == 0) { /* but is this only available in Linux? */
+                /* file does exist, so delete it */
+                mpireturn = MPI_File_delete((char*)path, MPI_INFO_NULL);
+                if (mpireturn != MPI_SUCCESS) {
+                    int rank;
+                    MPI_Comm_rank(comm, &rank);
+                    ncmpiio_free(nciop);
+                    ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
+                    return NC_EOFILE;
+                }
+            }
         }
-        MPI_Bcast(&do_zero_file_size, 1, MPI_INT, 0, comm);
+#else
+        do_zero_file_size = 1; 
+#endif
     }
 
     mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
@@ -136,7 +152,9 @@ ncmpiio_create(MPI_Comm     comm,
         return NC_EOFILE;  
     }
 
+#ifndef HAVE_ACCESS_FUNCTION
     if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
+#endif
 
     for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
 
