@@ -93,7 +93,7 @@ typedef struct NC_dimarray {
 	size_t nalloc;		/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_DIMENSION */
-	MPI_Offset nelems;		/* length of the array */
+	MPI_Offset nelems;		/* number of defined variables */
 	NC_dim **value;
 } NC_dimarray;
 
@@ -149,15 +149,15 @@ typedef struct {
 	/* below gets xdr'd */
 	NC_string *name;
 	nc_type type;		/* the discriminant */
-	MPI_Offset nelems;		/* length of the array */
+	MPI_Offset nelems;	/* number of defined variables */
 	void *xvalue;		/* the actual data, in external representation */
 } NC_attr;
 
 typedef struct NC_attrarray {
-	MPI_Offset nalloc;		/* number allocated >= nelems */
+	MPI_Offset nalloc;	/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_ATTRIBUTE */
-	MPI_Offset nelems;		/* length of the array */
+	MPI_Offset nelems;	/* number of defined variables */
 	NC_attr **value;
 } NC_attrarray;
 
@@ -287,10 +287,10 @@ typedef struct {
 } NC_var;
 
 typedef struct NC_vararray {
-	MPI_Offset nalloc;		/* number allocated >= nelems */
+	MPI_Offset nalloc;	/* number allocated >= nelems */
 	/* below gets xdr'd */
 	/* NCtype type = NC_VARIABLE */
-	MPI_Offset nelems;		/* length of the array */
+	MPI_Offset nelems;	/* number of defined variables */
 	NC_var **value;
 } NC_vararray;
 
@@ -385,8 +385,8 @@ struct NC {
 	MPI_Offset xsz;	/* external size of this header, <= var[0].begin */
 	MPI_Offset begin_var; /* position of the first (non-record) var */
 	MPI_Offset begin_rec; /* position of the first 'record' */
-	/* don't constrain maximu sinze of record unnecessarily */
-	MPI_Offset recsize;	/* length of 'record' */	
+	/* don't constrain maximum size of record unnecessarily */
+	MPI_Offset recsize;	/* length of 'record': sum of single record sizes from all record variables */	
 	/* below gets xdr'd */
 	MPI_Offset numrecs; /* number of 'records' allocated */
 	NC_dimarray dims;
@@ -453,7 +453,7 @@ extern int
 ncmpii_write_numrecs(NC *ncp);
 
 extern int
-ncmpii_NC_sync(NC *ncp);
+ncmpii_NC_sync(NC *ncp, int doFsync);
 
 extern void
 ncmpii_free_NC(NC *ncp);

@@ -482,55 +482,51 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
 int
 ncmpi_rename_dim( int ncid, int dimid, const char *newname)
 {
-	int status;
-	NC *ncp;
-	int existid;
-	NC_dim *dimp;
+    int status, existid;
+    NC *ncp;
+    NC_dim *dimp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR)
+        return status;
 
-	if(NC_readonly(ncp))
-		return NC_EPERM;
+    if (NC_readonly(ncp))
+        return NC_EPERM;
 
-	status = ncmpii_NC_check_name(newname);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_name(newname);
+    if (status != NC_NOERR)
+        return status;
 
-	existid = NC_finddim(&ncp->dims, newname, &dimp);
-	if(existid != -1)
-		return NC_ENAMEINUSE;
+    existid = NC_finddim(&ncp->dims, newname, &dimp);
+    if (existid != -1)
+        return NC_ENAMEINUSE;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
-	if(dimp == NULL)
-		return NC_EBADDIM;
+    dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
+    if (dimp == NULL)
+        return NC_EBADDIM;
 
-	if(NC_indef(ncp))
-	{
-		NC_string *old = dimp->name;
-		NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-		if(newStr == NULL)
-			return NC_ENOMEM;
-		dimp->name = newStr;
-		ncmpii_free_NC_string(old);
-		return NC_NOERR;
-	}
+    if (NC_indef(ncp)) {
+        NC_string *old = dimp->name;
+        NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
+        if (newStr == NULL)
+            return NC_ENOMEM;
+        dimp->name = newStr;
+        ncmpii_free_NC_string(old);
+        return NC_NOERR;
+    }
+    /* else, not in define mode */
 
-	/* else, not in define mode */
+    status = ncmpii_set_NC_string(dimp->name, newname);
+    if (status != NC_NOERR)
+        return status;
 
-	status = ncmpii_set_NC_string(dimp->name, newname);
-	if(status != NC_NOERR)
-		return status;
+    set_NC_hdirty(ncp);
 
-	set_NC_hdirty(ncp);
+    if (NC_doHsync(ncp)) {
+        status = ncmpii_NC_sync(ncp, 1);
+        if (status != NC_NOERR)
+            return status;
+    }
 
-	if(NC_doHsync(ncp))
-	{
-		status = ncmpii_NC_sync(ncp);
-		if(status != NC_NOERR)
-			return status;
-	}
-
-	return NC_NOERR;
+    return NC_NOERR;
 }

@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
    * End Define Mode (switch to data mode)
    *   Dataset API: Collective
    */
-  
+
   status = ncmpi_enddef(ncid);
   if (status != NC_NOERR){  
 	handle_error(status);

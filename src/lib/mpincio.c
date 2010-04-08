@@ -98,20 +98,20 @@ ncmpiio_create(MPI_Comm     comm,
     if (path == NULL || *path == 0)
         return EINVAL;
 
-    nciop = ncmpiio_new(path, ioflags);
+    nciop = ncmpiio_new(path, ioflags); /* allocate buffer */
     if (nciop == NULL)
         return ENOMEM;
 
-    nciop->mpiomode = MPI_MODE_RDWR;
+    nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
-    nciop->comm = comm;
+    nciop->comm      = comm;
     if (info == MPI_INFO_NULL)
         nciop->mpiinfo = MPI_INFO_NULL;
     else
 #ifdef HAVE_MPI_INFO_DUP
         MPI_Info_dup(info, &nciop->mpiinfo);
 #else
-    nciop->mpiinfo = info;
+        nciop->mpiinfo = info;
 #endif
 
     if (fIsSet(ioflags, NC_NOCLOBBER))
@@ -136,7 +136,7 @@ ncmpiio_create(MPI_Comm     comm,
                     ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
                     return NC_EOFILE;
                 }
-            }
+            } /* else: the file does not exist, do nothing */
         }
 #else
         do_zero_file_size = 1; 
@@ -172,83 +172,83 @@ ncmpiio_create(MPI_Comm     comm,
 }
 
 int
-ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
-          ncio **nciopp) {
-  ncio *nciop;
-  int i;
-  int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
-  int mpireturn;
+ncmpiio_open(MPI_Comm     comm,
+             const char  *path,
+             int          ioflags,
+             MPI_Info     info,
+             ncio       **nciopp)
+{
+    ncio *nciop;
+    int i, mpireturn;
+    int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
-  if(path == NULL || *path == 0)
-    return EINVAL;
+    if (path == NULL || *path == 0)
+        return EINVAL;
  
-  nciop = ncmpiio_new(path, ioflags);
-  if(nciop == NULL)
-    return ENOMEM;
+    nciop = ncmpiio_new(path, ioflags);
+    if (nciop == NULL)
+        return ENOMEM;
  
-  nciop->mpiomode = mpiomode;
-  nciop->mpioflags = 0;
-  nciop->comm = comm;
-  if (info == MPI_INFO_NULL)
-    nciop->mpiinfo = MPI_INFO_NULL;
-  else
+    nciop->mpiomode  = mpiomode;
+    nciop->mpioflags = 0;
+    nciop->comm      = comm;
+    if (info == MPI_INFO_NULL)
+        nciop->mpiinfo = MPI_INFO_NULL;
+    else
 #ifdef HAVE_MPI_INFO_DUP
-    MPI_Info_dup(info, &nciop->mpiinfo);
+        MPI_Info_dup(info, &nciop->mpiinfo);
 #else
-    nciop->mpiinfo = info;
+        nciop->mpiinfo = info;
 #endif
  
-  mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
-  if (mpireturn != MPI_SUCCESS) {
-    int rank;
-    MPI_Comm_rank(comm, &rank);
-    ncmpiio_free(nciop);
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
-    return NC_EOFILE;
-  }
+    mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
+    if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(comm, &rank);
+        ncmpiio_free(nciop);
+        ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
+        return NC_EOFILE;
+    }
  
-  for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
-  if (i == MAX_NC_ID) {
-    ncmpiio_free(nciop);
-    return NC_ENFILE;
-  }
-  *((int *)&nciop->fd) = i;
-  IDalloc[i] = 1;
+    for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
+    if (i == MAX_NC_ID) {
+        ncmpiio_free(nciop);
+        return NC_ENFILE;
+    }
+    *((int *)&nciop->fd) = i;
+    IDalloc[i] = 1;
  
-  set_NC_collectiveFh(nciop);
+    set_NC_collectiveFh(nciop);
  
-  *nciopp = nciop;
-  return ENOERR; 
+    *nciopp = nciop;
+    return ENOERR; 
 }
 
 int
 ncmpiio_sync(ncio *nciop) {
-  int mpireturn;
+    int mpireturn;
 
-  if(NC_independentFhOpened(nciop)) {
-    mpireturn = MPI_File_sync(nciop->independent_fh);
-    if (mpireturn != MPI_SUCCESS) {
-      int rank;
-      MPI_Comm_rank(nciop->comm, &rank);
-      ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-      return NC_EFILE;
+    if (NC_independentFhOpened(nciop)) {
+        mpireturn = MPI_File_sync(nciop->independent_fh);
+        if (mpireturn != MPI_SUCCESS) {
+            int rank;
+            MPI_Comm_rank(nciop->comm, &rank);
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+            return NC_EFILE;
+        }
     }
-  }
- 
-  if(NC_collectiveFhOpened(nciop)) {
-    mpireturn = MPI_File_sync(nciop->collective_fh); 
-    if (mpireturn != MPI_SUCCESS) {
-      int rank;
-      MPI_Comm_rank(nciop->comm, &rank);
-      ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-      return NC_EFILE;
+    if (NC_collectiveFhOpened(nciop)) {
+        mpireturn = MPI_File_sync(nciop->collective_fh);
+        if (mpireturn != MPI_SUCCESS) {
+            int rank;
+            MPI_Comm_rank(nciop->comm, &rank);
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+            return NC_EFILE;
+        }
     }
-  }
+    MPI_Barrier(nciop->comm);
 
-
-  MPI_Barrier(nciop->comm);
-
-  return ENOERR;
+    return ENOERR;
 }
 
 int
