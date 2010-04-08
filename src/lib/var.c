@@ -787,63 +787,54 @@ ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
 int
 ncmpi_rename_var(int ncid,  int varid, const char *newname)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
-	NC_string *old, *newStr;
-	int other;
+    int status, other;
+    NC *ncp;
+    NC_var *varp;
+    NC_string *old, *newStr;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR)
+        return status;
 
-	if(NC_readonly(ncp))
-	{
-		return NC_EPERM;
-	}
+    if (NC_readonly(ncp))
+        return NC_EPERM;
 
-	status = ncmpii_NC_check_name(newname);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_name(newname);
+    if (status != NC_NOERR)
+        return status;
 
-	/* check for name in use */
-	other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
-	if(other != -1)
-	{
-		return NC_ENAMEINUSE;
-	}
-	
-	varp = ncmpii_NC_lookupvar(ncp, varid);
-	if(varp == NULL)
-	{
-		/* invalid varid */
-		return NC_ENOTVAR; /* TODO: is this the right error code? */
-	}
+    /* check for name in use */
+    other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
+    if (other != -1)
+        return NC_ENAMEINUSE;
+        
+    varp = ncmpii_NC_lookupvar(ncp, varid);
+    if (varp == NULL)
+        /* invalid varid */
+        return NC_ENOTVAR; /* TODO: is this the right error code? */
 
-	old = varp->name;
-	if(NC_indef(ncp))
-	{
-		newStr = ncmpii_new_NC_string(strlen(newname),newname);
-		if(newStr == NULL)
-			return(-1);
-		varp->name = newStr;
-		ncmpii_free_NC_string(old);
-		return NC_NOERR;
-	}
+    old = varp->name;
+    if (NC_indef(ncp)) {
+       newStr = ncmpii_new_NC_string(strlen(newname),newname);
+       if (newStr == NULL)
+           return(-1);
+       varp->name = newStr;
+       ncmpii_free_NC_string(old);
+       return NC_NOERR;
+    }
+    /* else, not in define mode */
 
-	/* else, not in define mode */
-	status = ncmpii_set_NC_string(varp->name, newname);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_set_NC_string(varp->name, newname);
+    if (status != NC_NOERR)
+        return status;
 
-	set_NC_hdirty(ncp);
+    set_NC_hdirty(ncp);
 
-	if(NC_doHsync(ncp))
-	{
-		status = ncmpii_NC_sync(ncp);
-		if(status != NC_NOERR)
-			return status;
-	}
+    if (NC_doHsync(ncp)) {
+        status = ncmpii_NC_sync(ncp, 1);
+        if (status != NC_NOERR)
+            return status;
+    }
 
-	return NC_NOERR;
+    return NC_NOERR;
 }

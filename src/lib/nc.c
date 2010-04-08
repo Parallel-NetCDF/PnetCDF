@@ -553,18 +553,23 @@ ncmpii_read_numrecs(NC *ncp) {
  */
 
 int
-ncmpii_write_numrecs(NC *ncp) {
-    /* this function is only called by collective APIs in mpinetcdf.c */
-
-    int status = NC_NOERR, mpireturn;
-    MPI_Offset nrecs;
+ncmpii_write_numrecs(NC *ncp)
+{
+    /* this function is only called by 3 places
+       1) collective put APIs in mpinetcdf.c that write record variables
+          and numrecs has change
+       2) ncmpi_begin_indep_data() and ncmpi_end_indep_data()
+       3) ncmpii_NC_sync() below
+     */
+    int rank, len, status = NC_NOERR, mpireturn;
     void *buf, *pos; 
+    MPI_Offset nrecs;
     MPI_Status mpistatus;
     MPI_Comm comm;
-    int rank, len;
   
     assert(!NC_readonly(ncp));
     assert(!NC_indef(ncp));
+    /* this function is only called by APIs in data mode */
 
     comm = ncp->nciop->comm;
     MPI_Comm_rank(comm, &rank);
@@ -580,21 +585,16 @@ ncmpii_write_numrecs(NC *ncp) {
     status = ncmpix_put_size_t(&pos, &nrecs, len);
 
     /* file view is already reset to entire file visible */
-    mpireturn = MPI_File_write_at_all(ncp->nciop->collective_fh,
+    if (rank == 0) {
+        mpireturn = MPI_File_write_at(ncp->nciop->collective_fh,
                                       NC_NUMRECS_OFFSET, buf, len,
                                       MPI_BYTE, &mpistatus); 
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at_all");
-        return NC_EWRITE;
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
+            return NC_EWRITE;
+        }
     }
 
-    /* file sync to make sure the independent handle can see the change */
-    mpireturn = MPI_File_sync(ncp->nciop->collective_fh); 
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-        status = NC_EWRITE;
-    }
-    MPI_Barrier(comm);
     fClr(ncp->flags, NC_NDIRTY);  
 
     free(buf);
@@ -630,133 +630,145 @@ ncmpii_read_NC(NC *ncp) {
 static int
 write_NC(NC *ncp)
 {
-  int status = NC_NOERR, mpireturn;
-  void *buf;
-  MPI_Status mpistatus;
-  int rank;
-  MPI_Offset len = 0;
+    int status = NC_NOERR, mpireturn, rank;
+    void *buf;
+    MPI_Status mpistatus;
+    MPI_Offset len = 0;
  
-  assert(!NC_readonly(ncp));
+    assert(!NC_readonly(ncp));
  
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
 
-  buf = (void *)malloc(ncp->xsz);
-  status = ncmpii_hdr_put_NC(ncp, buf);
-  if(status != NC_NOERR) {
+    buf = (void *)malloc(ncp->xsz); /* header buffer for I/O */
+    status = ncmpii_hdr_put_NC(ncp, buf); /* copy header to buffer */
+    if (status != NC_NOERR) {
+        free(buf);
+        return status;
+    }
+
+    /* check the header consistency across all processes */
+    status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
+    if (status != NC_NOERR) {
+        free(buf);
+        return status;
+    }
+
+    /* the fileview is already entire file visible */
+
+    /* only rank 0's header gets written to the file */
+    if (rank == 0) {
+        mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf,
+                                      ncp->xsz, MPI_BYTE, &mpistatus);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
+            return NC_EWRITE;
+        }
+    }
+    fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
     free(buf);
-    return status;
-  }
-
-  /* check the header consistency across all processes */
-  status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
-  if (status != NC_NOERR) {
-    free(buf);
-    return status;
-  }
-
-  /* the fileview is already entire file visible */
-
-  /* only rank 0's header gets written to the file */
-  if (rank == 0) len = ncp->xsz;
-  mpireturn = MPI_File_write_at_all(ncp->nciop->collective_fh, 0, buf,
-                                    len, MPI_BYTE, &mpistatus);
-  if (mpireturn != MPI_SUCCESS) {
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at_all");
-    return NC_EWRITE;
-  }
-
-  fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
-  free(buf);
  
-  return status;
+    return status;
 } 
 
 /*
  * Write the header or the numrecs if necessary.
  */
 int
-ncmpii_NC_sync(NC *ncp)
+ncmpii_NC_sync(NC  *ncp,
+               int  doFsync)
 {
-  MPI_Offset mynumrecs, numrecs;
+    /* this function is called from four places:
+       1) changing header by APIs in data mode and NC_doHsync(ncp) is true
+          and these APIs are called in data mode
+       2) ncmpi_sync()
+       3) ncmpi_abort()
+       4) ncmpii_NC_close()
+       only 1) needs to call MPI_File_sync() here
+     */
+    int status = NC_NOERR, didWrite = 0;
+    MPI_Offset mynumrecs, numrecs;
 
-  assert(!NC_readonly(ncp));
+    assert(!NC_readonly(ncp));
 
-  /* collect and set the max numrecs due to difference by independent write */
+    /* collect and set the max numrecs due to difference by independent write */
+    mynumrecs = ncp->numrecs;
+    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
+    if (numrecs > ncp->numrecs) {
+        ncp->numrecs = numrecs;
+        set_NC_ndirty(ncp); /* set numrecs is dirty flag */
+    }
 
-  mynumrecs = ncp->numrecs;
-  MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
-  if (numrecs > ncp->numrecs) {
-    ncp->numrecs = numrecs;
-    set_NC_ndirty(ncp);
-  }
+    if (NC_hdirty(ncp)) {  /* header is dirty */
+        /* write_NC() will also write numrecs and clear NC_NDIRTY */
+        status = write_NC(ncp);
+        didWrite = 1;
+    }
+    else if (NC_ndirty(ncp)) {  /* numrecs is dirty */
+        status = ncmpii_write_numrecs(ncp);
+        didWrite = 1;
+    }
 
-  if(NC_hdirty(ncp)) {
-    return write_NC(ncp);
-  }
-  /* else */
+    if (doFsync && didWrite)
+        /* fsync only in data mode, except called from ncmpi_sync() or
+           ncmpi_abort() where a fsync will be called later */
+        ncmpiio_sync(ncp->nciop);
 
-  if(NC_ndirty(ncp)) {
-    return ncmpii_write_numrecs(ncp);
-  }
-  /* else */
-
-  return NC_NOERR;
+    return status;
 }
 
 
 /*
- * Move the records "out". 
- * Fill as needed.
+ * header size increases, shift all record and non-record variables down
  */
-
 static int
 move_data_r(NC *ncp, NC *old) {
-  /* no new variable inserted, move the whole contiguous data part */
-  ncp->numrecs = old->numrecs;
-  return ncmpiio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
-              old->begin_rec - old->begin_var + old->recsize * old->numrecs);
+    /* no new record or non-record variable inserted, header size increases,
+     * must shift (move) the whole contiguous data part down
+     * Note ncp->numrecs may be > old->numrecs
+     */
+    return ncmpiio_move(ncp->nciop, ncp->begin_var, old->begin_var, 
+                        old->begin_rec - old->begin_var +
+                        ncp->recsize * ncp->numrecs);
 }
 
+/*
+ * Move the record variables down,
+ * re-arrange records as needed
+ * Fill as needed.
+ */
 static int
 move_recs_r(NC *ncp, NC *old) {
-  int status;
-  MPI_Offset recno;
-  const MPI_Offset old_nrecs = old->numrecs;
-  const MPI_Offset ncp_recsize = ncp->recsize;
-  const MPI_Offset old_recsize = old->recsize;
-  const off_t ncp_off = ncp->begin_rec;
-  const off_t old_off = old->begin_rec;
+    int status;
+    MPI_Offset recno;
+    const MPI_Offset nrecs = ncp->numrecs;
+    const MPI_Offset ncp_recsize = ncp->recsize;
+    const MPI_Offset old_recsize = old->recsize;
+    const off_t ncp_off = ncp->begin_rec;
+    const off_t old_off = old->begin_rec;
 
-  assert(ncp_recsize >= old_recsize);
+    assert(ncp_recsize >= old_recsize);
 
-  if (ncp_recsize == old_recsize) {
-    
-    /* there is no record variable defined yet */
-    if (ncp_recsize == 0) return NC_NOERR;
+    if (ncp_recsize == old_recsize) {
+        if (ncp_recsize == 0) /* no record variable defined yet */
+            return NC_NOERR;
 
-    /* No new rec var inserted, move all rec vars as a whole */
-
-    status = ncmpiio_move(ncp->nciop, ncp_off, old_off, 
-                       old_recsize * old_nrecs);
-    if(status != NC_NOERR)
-      return status;
-  } else {
-
-    /* else, new rec var inserted, to be moved one record at a time */
-
-    for (recno = (MPI_Offset)old_nrecs -1; recno >= 0; recno--) {
-      status = ncmpiio_move(ncp->nciop, 
-                         ncp_off+recno*ncp_recsize, 
-                         old_off+recno*old_recsize, 
-                         old_recsize);
-      if(status != NC_NOERR)
-        return status;
-    } 
-  }
-
-  ncp->numrecs = old_nrecs;
+        /* No new record variable inserted, move all record variables as a whole */
+        status = ncmpiio_move(ncp->nciop, ncp_off, old_off, ncp_recsize * nrecs);
+        if (status != NC_NOERR)
+            return status;
+    } else {
+        /* new record variables inserted, move one whole record at a time */
+        for (recno = nrecs-1; recno >= 0; recno--) {
+            status = ncmpiio_move(ncp->nciop, 
+                                  ncp_off+recno*ncp_recsize, 
+                                  old_off+recno*old_recsize, 
+                                  old_recsize);
+            if (status != NC_NOERR)
+                return status;
+        } 
+    }
   
-  return NC_NOERR;
+    return NC_NOERR;
 }
 
 
@@ -858,105 +870,90 @@ ncmpii_NC_check_vlens(NC *ncp)
  
 int 
 ncmpii_NC_enddef(NC *ncp) {
-  int status = NC_NOERR;
-  MPI_Comm comm;
-  int mpireturn;
-  int rank;
-  char value[MPI_MAX_INFO_VAL];
-  int flag=0, alignment=512;
+    int mpireturn, flag=0, alignment=512, status = NC_NOERR;
+    char value[MPI_MAX_INFO_VAL];
 
-  assert(!NC_readonly(ncp));
-  assert(NC_indef(ncp)); 
+    assert(!NC_readonly(ncp));
+    /* assert(NC_indef(ncp));   This has alredy been checked */
 
+    /* TODO: create a new member in the header struct for hint
+             nc_file_header_alignment. This hint is passed from user's
+             MPI_Info object at open time and will only be used by pnetcdf
+             library. Note if this hint is passed to MPI-IO, it will be
+             lost. So, it must be retrieved during file open.
+             For example, ncp->nciop->info->header_alignment
 
-  comm = ncp->nciop->comm;
-
-  MPI_Comm_rank(comm, &rank);
-
-  ncmpiio_get_hint(ncp, "striping_unit", value, flag);
-  
-  if (flag) 
-          alignment=atoi(value);
-  /* negative or zero alignment? can't imagine what that would even mean.
-   * retain default 512 byte alignment (as in serial netcdf) */
-  if (alignment <= 0)
-          alignment = 512;
-
-  /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
-   * acomplish the same thing with calls to NC_begins */
-  NC_begins(ncp, 0, alignment, 0, alignment);
- 
-  /* serial netcdf calls a check on dimension lenghths here */
-
-  /* To be updated */
-  if(ncp->old != NULL) {
-    /* a plain redef, not a create */
-    assert(!NC_IsNew(ncp));
-    assert(fIsSet(ncp->flags, NC_INDEF));
-    assert(ncp->begin_rec >= ncp->old->begin_rec);
-    assert(ncp->begin_var >= ncp->old->begin_var);
-    assert(ncp->vars.nelems >= ncp->old->vars.nelems);
- 
-    mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-        return NC_EWRITE;
-    }
-    /*
-     * Barrier needed switching between read and write 
-     * Important, MPI_File_sync doesn't ensure barrier 
+       Currently, we use striping_unit or 512 for it.
      */
-    MPI_Barrier(comm); 
+    ncmpiio_get_hint(ncp, "striping_unit", value, flag);
+  
+    if (flag) 
+        alignment=atoi(value);
+    /* negative or zero alignment? can't imagine what that would even mean.
+     * retain default 512 byte alignment (as in serial netcdf) */
+    if (alignment <= 0)
+        alignment = 512;
 
-    if(ncp->vars.nelems != 0) {
-      if(ncp->begin_rec > ncp->old->begin_rec) {
-        if (ncp->vars.nelems == ncp->old->vars.nelems) {
-          status = move_data_r(ncp, ncp->old);
-          if(status != NC_NOERR)
-            return status;
-        } else {
-          status = move_recs_r(ncp, ncp->old);
-          if(status != NC_NOERR)
-            return status;
-          if(ncp->begin_var > ncp->old->begin_var) {
-            status = move_vars_r(ncp, ncp->old);
-            if(status != NC_NOERR)
-              return status;
-          }
-        }
-      } else { /* ... ncp->begin_rec > ncp->old->begin_rec */
-        /* Even if (ncp->begin_rec == ncp->old->begin_rec)
-         * and     (ncp->begin_var == ncp->old->begin_var)
-         * might still have added a new record variable
-         */
-        if(ncp->recsize > ncp->old->recsize) {
-          status = move_recs_r(ncp, ncp->old);
-          if(status != NC_NOERR)
-            return status;
-        }
-      }
+    /* NC_begins: pnetcdf doesn't expose an equivalent to nc__enddef, but we can
+     * acomplish the same thing with calls to NC_begins
+     * to compute each variable's 'begin' offset */
+    NC_begins(ncp, 0, alignment, 0, alignment);
+ 
+    /* serial netcdf calls a check on dimension lenghths here */
+    /* To be updated */
+
+    if (ncp->old != NULL) {
+        /* the current define mode was entered from ncmpi_redef,
+           not from ncmpi_create */
+        MPI_Offset max_numrecs;
+
+        assert(!NC_IsNew(ncp));
+        assert(fIsSet(ncp->flags, NC_INDEF));
+        assert(ncp->begin_rec >= ncp->old->begin_rec);
+        assert(ncp->begin_var >= ncp->old->begin_var);
+        assert(ncp->vars.nelems >= ncp->old->vars.nelems);
+        /* ncp->numrecs has already sync-ed in ncmpi_redef */
+
+        if (ncp->vars.nelems != 0) { /* number of record and non-record variables */
+            if (ncp->begin_var > ncp->old->begin_var) {
+                /* header size increases, shift the entire data part down */
+                /* shift record variables first */
+                status = move_recs_r(ncp, ncp->old);
+                if (status != NC_NOERR)
+                    return status;
+                /* shift non-record variables */
+                status = move_vars_r(ncp, ncp->old);
+                if (status != NC_NOERR)
+                    return status;
+            }
+            else if (ncp->begin_rec > ncp->old->begin_rec ||
+                     ncp->recsize   > ncp->old->recsize) {
+                /* number of non-record variables increases, or
+                   number of records of record variables increases,
+                   shift and move all record variables down */
+                status = move_recs_r(ncp, ncp->old);
+                if (status != NC_NOERR)
+                    return status;
+           }
+       }
+    } /* ... ncp->old != NULL */
+ 
+    /* write header to file, also sync header buffer across all processes */
+    status = write_NC(ncp);
+    if (status != NC_NOERR)
+        return status;
+ 
+    if (ncp->old != NULL) {
+        ncmpii_free_NC(ncp->old);
+        ncp->old = NULL;
     }
-  } /* ... ncp->old != NULL */
- 
-  status = write_NC(ncp);
-  if (status != NC_NOERR)
-    return status;
- 
-  if(ncp->old != NULL) {
-    ncmpii_free_NC(ncp->old);
-    ncp->old = NULL;
-  }
- 
-  fClr(ncp->flags, NC_CREAT | NC_INDEF);
-  mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
-  if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-        return NC_EWRITE;
-  }
+    fClr(ncp->flags, NC_CREAT | NC_INDEF);
 
-  MPI_Barrier(comm);
+    if (fIsSet(ncp->nciop->ioflags, NC_SHARE))
+        /* calling MPI_File_sync() */
+        ncmpiio_sync(ncp->nciop);
 
-  return NC_NOERR;
+    return NC_NOERR;
 }
 
 #if 0
@@ -986,62 +983,67 @@ enddef(NC *ncp)
 
 int 
 ncmpii_NC_close(NC *ncp) {
-  int status = NC_NOERR;
+    int status = NC_NOERR;
 
-
-  if(NC_indef(ncp)) {
-    status = ncmpii_NC_enddef(ncp); /* TODO: defaults */
-    if(status != NC_NOERR ) {
-      /* To do: Abort new definition, if any */
-      if (ncp->old != NULL) {
-        ncmpii_free_NC(ncp->old);
-        ncp->old = NULL;
-        fClr(ncp->flags, NC_INDEF);
-      }
+    if (NC_indef(ncp)) { /* currently in define mode */
+        status = ncmpii_NC_enddef(ncp); /* TODO: defaults */
+        if (status != NC_NOERR ) {
+            /* To do: Abort new definition, if any */
+            if (ncp->old != NULL) {
+                ncmpii_free_NC(ncp->old);
+                ncp->old = NULL;
+                fClr(ncp->flags, NC_INDEF);
+            }
+        }
     }
-  }
-  else if(!NC_readonly(ncp)) {
-    status = ncmpii_NC_sync(ncp);
-    if (status != NC_NOERR)
-      return status;
-  }
+    else if (!NC_readonly(ncp)) { /* file is open for write */
+        /* check if header is dirty, if yes, flush it to file */
+        status = ncmpii_NC_sync(ncp, 0);
+        if (status != NC_NOERR)
+            return status;
+    }
  
-  (void) ncmpiio_close(ncp->nciop, 0);
-  ncp->nciop = NULL;
+    if (fIsSet(ncp->nciop->ioflags, NC_SHARE))
+        /* calling MPI_File_sync() */
+        ncmpiio_sync(ncp->nciop);
+
+    ncmpiio_close(ncp->nciop, 0);
+    ncp->nciop = NULL;
  
-  ncmpii_del_from_NCList(ncp);
+    ncmpii_del_from_NCList(ncp);
  
-  ncmpii_free_NC(ncp);
+    ncmpii_free_NC(ncp);
  
-  return status;
+    return status;
 }
 
 
 int
-ncmpi_inq(int ncid,
-        int *ndimsp,
-        int *nvarsp,
-        int *nattsp,
-        int *xtendimp)
+ncmpi_inq(int  ncid,
+          int *ndimsp,
+          int *nvarsp,
+          int *nattsp,
+          int *xtendimp)
 {
-        int status;
-        NC *ncp;
+    int status;
+    NC *ncp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
-        if(status != NC_NOERR)
-                return status;
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR)
+        return status;
 
-        if(ndimsp != NULL)
-                *ndimsp = (int) ncp->dims.nelems;
-        if(nvarsp != NULL)
-                *nvarsp = (int) ncp->vars.nelems;
-        if(nattsp != NULL)
-                *nattsp = (int) ncp->attrs.nelems;
-        if(xtendimp != NULL)
-                *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
+    if (ndimsp != NULL)
+        *ndimsp = (int) ncp->dims.nelems;
+    if (nvarsp != NULL)
+        *nvarsp = (int) ncp->vars.nelems;
+    if (nattsp != NULL)
+        *nattsp = (int) ncp->attrs.nelems;
+    if (xtendimp != NULL)
+        *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
 
-        return NC_NOERR;
+    return NC_NOERR;
 }
+
 int
 ncmpi_inq_version(int ncid, int *NC_mode)
 {

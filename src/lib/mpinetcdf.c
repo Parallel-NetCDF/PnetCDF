@@ -67,111 +67,117 @@ static int ncmpi_coll_waitall(int count, NCMPI_Request array_of_requests[]);
 /* Begin Of Dataset Functions */
 
 int 
-ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp) {
-  int status = NC_NOERR;
-  MPI_Offset sizeof_off_t = 0;
-  MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;	/* might be a good thing to hint later */
-  NC *ncp;
+ncmpi_create(MPI_Comm    comm,
+             const char *path,
+             int         cmode,
+             MPI_Info    info,
+             int        *ncidp)
+{
+    int status = NC_NOERR;
+    MPI_Offset sizeof_off_t = 0;
+    MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;	/* might be a good thing to hint later */
+    NC *ncp;
 
-  ncp = ncmpii_new_NC(&chunksize);
-  if(ncp == NULL) 
-    return NC_ENOMEM;
+    ncp = ncmpii_new_NC(&chunksize); /* allocate buffer for header */
+    if (ncp == NULL) 
+        return NC_ENOMEM;
 
-  assert(ncp->flags == 0);
+    assert(ncp->flags == 0);
 
-  if (fIsSet(cmode, NC_64BIT_OFFSET)) {
-	  /* unlike serial netcdf, we will not bother to support
-	   * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
-	   * serial netcdf has proven it's possible if datasets are small, but
-	   * that's a hassle we don't want to worry about */
-	  if (sizeof(off_t) != 8)
-		  return NC_ESMALL;
-	  fSet(ncp->flags, NC_64BIT_OFFSET);
-	  sizeof_off_t = 8;
-  } else if (fIsSet(cmode, NC_64BIT_DATA)) {
-	  if (sizeof(MPI_Offset) <  8)
-		  return NC_ESMALL;
-	  fSet(ncp->flags, NC_64BIT_DATA);
-	  sizeof_off_t = 8;
-  } else {
-	  fSet(ncp->flags, NC_32BIT);
-	  sizeof_off_t = 4;
-  }
-  assert(ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t));
+    if (fIsSet(cmode, NC_64BIT_OFFSET)) {
+        /* unlike serial netcdf, we will not bother to support
+         * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
+         * serial netcdf has proven it's possible if datasets are small, but
+         * that's a hassle we don't want to worry about */
+        if (sizeof(off_t) != 8)
+            return NC_ESMALL;
+        fSet(ncp->flags, NC_64BIT_OFFSET);
+        sizeof_off_t = 8;
+    } else if (fIsSet(cmode, NC_64BIT_DATA)) {
+        if (sizeof(MPI_Offset) <  8)
+            return NC_ESMALL;
+        fSet(ncp->flags, NC_64BIT_DATA);
+        sizeof_off_t = 8;
+    } else {
+        fSet(ncp->flags, NC_32BIT);
+        sizeof_off_t = 4;
+    }
+    assert(ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t));
 
-  fSet(ncp->flags, NC_NOFILL);
-  fSet(ncp->flags, NC_HSYNC);
+    fSet(ncp->flags, NC_NOFILL);
 
-  status = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
-  if(status != NC_NOERR) {
-    ncmpii_free_NC(ncp);
+    status = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
+    if (status != NC_NOERR) {
+        ncmpii_free_NC(ncp);
+        return status;
+    }
+
+    fSet(ncp->flags, NC_CREAT);
+
+    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
+        /*
+         * NC_SHARE implies sync up the number of records as well.
+         * (File format version one.)
+         * Note that other header changes are not shared
+         * automatically.  Some sort of IPC (external to this package)
+         * would be used to trigger a call to ncmpi_sync().
+         */ 
+        fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
+        fSet(ncp->flags, NC_HSYNC);  /* sync header */
+    }
+
+    ncmpii_add_to_NCList(ncp);
+    *ncidp = ncp->nciop->fd;
+
     return status;
-  }
-
-  fSet(ncp->flags, NC_CREAT);
-
-  if(fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
-     /*
-      * NC_SHARE implies sync up the number of records as well.
-      * (File format version one.)
-      * Note that other header changes are not shared
-      * automatically.  Some sort of IPC (external to this package)
-      * would be used to trigger a call to ncmpi_sync().
-      */ 
-    fSet(ncp->flags, NC_NSYNC);
-  }
-
-  ncmpii_add_to_NCList(ncp);
-  *ncidp = ncp->nciop->fd;
-
-  return status;
 }
 
 int
-ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp) {
-  int status = NC_NOERR;
-  NC *ncp;
-  MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;	/* might be a good thing to hint later */
+ncmpi_open(MPI_Comm    comm,
+           const char *path,
+           int         omode,
+           MPI_Info    info,
+           int        *ncidp)
+{
+    int status = NC_NOERR;
+    NC *ncp;
+    MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;	/* might be a good thing to hint later */
   
-  ncp = ncmpii_new_NC(&chunksize);
-  if(ncp == NULL)
-    return NC_ENOMEM;
+    ncp = ncmpii_new_NC(&chunksize);
+    if (ncp == NULL)
+        return NC_ENOMEM;
 
-  status = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
-  if(status != NC_NOERR) {
-    ncmpii_free_NC(ncp);
+    status = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
+    if (status != NC_NOERR) {
+        ncmpii_free_NC(ncp);
+        return status;
+    } 
+
+    assert(ncp->flags == 0); 
+
+    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
+        /*
+         * NC_SHARE implies sync up the number of records as well.
+         * (File format version one.)
+         * Note that other header changes are not shared
+         * automatically.  Some sort of IPC (external to this package)
+         * would be used to trigger a call to ncmpi_sync().
+         */ 
+        fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
+        fSet(ncp->flags, NC_HSYNC);  /* sync header */
+    }
+
+    status = ncmpii_hdr_get_NC(ncp); /* read header from file */
+    if (status != NC_NOERR) {
+        ncmpiio_close(ncp->nciop, 0);
+        ncmpii_free_NC(ncp);
+        return status;
+    }
+
+    ncmpii_add_to_NCList(ncp);
+    *ncidp = ncp->nciop->fd;
+
     return status;
-  } 
-
-  assert(ncp->flags == 0); 
-
-  if(fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
-    /*
-     * NC_SHARE implies sync up the number of records as well.
-     * (File format version one.)
-     * Note that other header changes are not shared
-     * automatically.  Some sort of IPC (external to this package)
-     * would be used to trigger a call to ncmpi_sync().
-     */ 
-    fSet(ncp->flags, NC_NSYNC);
-  }
-
-  status = ncmpii_hdr_get_NC(ncp);
-
-  if (status != NC_NOERR) {
-    ncmpiio_close(ncp->nciop, 0);
-    ncmpii_free_NC(ncp);
-    return status;
-  }
-	
-
-  ncmpii_add_to_NCList(ncp);
-
-
-  *ncidp = ncp->nciop->fd;
- 
-
-  return status;
 }
 
 int
@@ -252,208 +258,255 @@ ncmpi_get_file_info(int ncid, MPI_Info *info_used) {
 
 int
 ncmpi_redef(int ncid) {
-  int status;
-  NC *ncp;
-  MPI_Offset mynumrecs, numrecs;
+    int status;
+    NC *ncp;
+    MPI_Offset mynumrecs, numrecs;
 
-  status = ncmpii_NC_check_id(ncid, &ncp);
-  if(status != NC_NOERR) 
-    return status; 
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) 
+        return status; 
 
-  if(NC_readonly(ncp)) 
-    return NC_EPERM;
+    if (NC_readonly(ncp)) 
+        return NC_EPERM;
 
-  if(NC_indef(ncp))
-    return NC_EINDEFINE;
+    if (NC_indef(ncp))
+        return NC_EINDEFINE;
  
-  /* ensure exiting define mode always entering collective data mode */
-  if(NC_indep(ncp))
-    ncmpi_end_indep_data(ncid);
+    /* ensure exiting define mode always entering collective data mode */
+    if (NC_indep(ncp))
+        ncmpi_end_indep_data(ncid);
 
-  if(fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
-    /* read in from disk */
-    status = ncmpii_read_NC(ncp);
-    if(status != NC_NOERR)
-      return status;
-  } else {
-
-    /* collect and set the max numrecs */
-
-    mynumrecs = ncp->numrecs;
-    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
-    if (numrecs > ncp->numrecs) {
-      ncp->numrecs = numrecs;
-      set_NC_ndirty(ncp);
+    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
+        /* re-read the header from file */
+        status = ncmpii_read_NC(ncp);
+        if (status != NC_NOERR)
+            return status;
+    } else {
+        /* before enter define mode, the number of records may increase by
+           independent APIs, i.e. ncp->numrecs may be incoherent and need
+           to sync across all processes 
+           Note that only ncp->numrecs in the header can be incoherent.
+         */
+        mynumrecs = ncp->numrecs;
+        MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
+        if (numrecs > ncp->numrecs) {
+            ncp->numrecs = numrecs;
+            set_NC_ndirty(ncp);
+        }
     }
-  }
 
-  ncp->old = ncmpii_dup_NC(ncp);
-  if(ncp->old == NULL)
-    return NC_ENOMEM;
+    ncp->old = ncmpii_dup_NC(ncp);
+    if (ncp->old == NULL)
+        return NC_ENOMEM;
 
-  fSet(ncp->flags, NC_INDEF);
+    fSet(ncp->flags, NC_INDEF);
 
-  return NC_NOERR;
+    return NC_NOERR;
 }
 
+static
+int update_numrecs(NC         *ncp,
+                   MPI_Offset  newnumrecs)
+{
+    int status = NC_NOERR;
+    /* update the number of records in NC and write to file header, if
+       necessary */
+    if (ncp->numrecs < newnumrecs) {
+        ncp->numrecs = newnumrecs;
+        set_NC_ndirty(ncp);
+    }
+    if (NC_doNsync(ncp)) {
+        int      localChange=0, doChange;
+        MPI_Comm comm = ncp->nciop->comm;
+
+        if (NC_ndirty(ncp)) localChange = 1;
+        MPI_Allreduce(&localChange, &doChange, 1, MPI_INT, MPI_MAX, comm);
+
+        if (doChange) {
+            int mpireturn;
+            /* all proc must agree on numrecs because this func is collective */
+            MPI_Allreduce(&newnumrecs, &ncp->numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm);
+            status = ncmpii_write_numrecs(ncp);
+            if (status != NC_NOERR)
+                return status;
+
+            /* fsync to disk */
+            ncmpiio_sync(ncp->nciop);
+        }
+    }
+    return status;
+}
+ 
 int
 ncmpi_begin_indep_data(int ncid) {
-  int status = NC_NOERR;
-  int mpireturn;
-  NC *ncp;
+    int mpireturn, status = NC_NOERR;
+    NC *ncp;
 
-  status = ncmpii_NC_check_id(ncid, &ncp);
-  if (status != NC_NOERR)
-    return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
 
-  if (NC_indep(ncp))
-    return NC_EINDEP;
+    if (NC_indef(ncp))  /* must not be in define mode */
+        return NC_EINDEFINE;
+
+    if (NC_indep(ncp))  /* already in indep data mode */
+        return NC_EINDEP; /* Should we skip this error? */
  
-  if (NC_indef(ncp))
-      return(NC_EINDEFINE);
+    if (!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
+        /* do memory and file sync for numrecs */
+        MPI_Offset newnumrecs = ncp->numrecs;
+        MPI_Allreduce(&newnumrecs, &ncp->numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
+        status = ncmpii_write_numrecs(ncp);
+        if (status != NC_NOERR)
+            return status;
 
-  if(!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
-    mpireturn = MPI_File_sync(ncp->nciop->collective_fh);   /* collective */
-    if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-        MPI_Finalize();
-        return NC_EFILE;
+        mpireturn = MPI_File_sync(ncp->nciop->collective_fh);   /* collective */
+        if (mpireturn != MPI_SUCCESS) {
+            int rank;
+            MPI_Comm_rank(ncp->nciop->comm, &rank);
+	    ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+            MPI_Finalize();
+            return NC_EFILE;
+        }
     }
-  }
 
-  fSet(ncp->flags, NC_INDEP);
+    fSet(ncp->flags, NC_INDEP);
 
-  MPI_Barrier(ncp->nciop->comm);
+    MPI_Barrier(ncp->nciop->comm);
 
-  return status;  
+    return status;  
 }
 
 int 
 ncmpi_end_indep_data(int ncid) {
-  int status = NC_NOERR;
-  int mpireturn;
-  NC *ncp;
+    int mpireturn, status = NC_NOERR;
+    NC *ncp;
  
-  status = ncmpii_NC_check_id(ncid, &ncp);
-  if (status != NC_NOERR)
-    return status; 
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status; 
 
-  if (!NC_indep(ncp))
-    return NC_ENOTINDEP;
+    if (!NC_indep(ncp))
+        return NC_ENOTINDEP;
 
-  if(!NC_readonly(ncp) && NC_independentFhOpened(ncp->nciop)) {
-    mpireturn = MPI_File_sync(ncp->nciop->independent_fh); /* independent */
-    if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
-	ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-        MPI_Finalize();
-        return NC_EFILE;
+    if (!NC_readonly(ncp) && NC_independentFhOpened(ncp->nciop)) {
+        MPI_Offset newnumrecs = ncp->numrecs;
+        MPI_Allreduce(&newnumrecs, &ncp->numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
+        status = ncmpii_write_numrecs(ncp);
+        if (status != NC_NOERR)
+            return status;
+
+        mpireturn = MPI_File_sync(ncp->nciop->independent_fh); /* independent */
+        if (mpireturn != MPI_SUCCESS) {
+            int rank;
+            MPI_Comm_rank(ncp->nciop->comm, &rank);
+	    ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+            MPI_Finalize();
+            return NC_EFILE;
+        }
     }
-  }
 
-  fClr(ncp->flags, NC_INDEP);
+    fClr(ncp->flags, NC_INDEP);
  
-  MPI_Barrier(ncp->nciop->comm);
+    MPI_Barrier(ncp->nciop->comm);
 
-  return status;
+    return status;
 }
 
 int
 ncmpi_enddef(int ncid) {
-  int status = NC_NOERR;
-  NC *ncp;
+    int status = NC_NOERR;
+    NC *ncp;
 
-  status = ncmpii_NC_check_id(ncid, &ncp); 
-  if(status != NC_NOERR)
-    return status;
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR)
+        return status;
 
-  if(!NC_indef(ncp))
-    return(NC_ENOTINDEFINE);
+    if (!NC_indef(ncp)) /* must currently in define mode */
+        return(NC_ENOTINDEFINE);
 
-  return ncmpii_NC_enddef(ncp);
+    return ncmpii_NC_enddef(ncp);
 }
 
 int
 ncmpi_sync(int ncid) {
-  int status = NC_NOERR;
-  NC *ncp;
+    int status = NC_NOERR;
+    NC *ncp;
 
-  status = ncmpii_NC_check_id(ncid, &ncp);
-  if(status != NC_NOERR)
-    return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
 
-  if(NC_indef(ncp)) 
-    return NC_EINDEFINE;
+    if (NC_indef(ncp)) 
+        return NC_EINDEFINE;
 
-  if(NC_readonly(ncp))
-    return ncmpii_read_NC(ncp);
+    if (NC_readonly(ncp))
+        return ncmpii_read_NC(ncp);
 
-  /* else, read/write */
+    status = ncmpii_NC_sync(ncp, 0); /* write header to file */
+    if (status != NC_NOERR)
+        return status;
 
-  status = ncmpii_NC_sync(ncp);
-  if(status != NC_NOERR)
-    return status;
-
-  return ncmpiio_sync(ncp->nciop);
+    /* calling MPI_File_sync() */
+    return ncmpiio_sync(ncp->nciop);
 }
 
 int
 ncmpi_abort(int ncid) {
- /*
-  * In data mode, same as ncmpiio_close.
-  * In define mode, descard new definition.
-  * In create, remove the file.
-  */
-  int status;
-  NC *ncp;
-  int doUnlink = 0;
+   /*
+    * In data mode, same as ncmpiio_close.
+    * In define mode, descard new definition.
+    * In create, remove the file.
+    */
+    int status, doUnlink = 0;
+    NC *ncp;
 
-  status = ncmpii_NC_check_id(ncid, &ncp);
-  if(status != NC_NOERR)
-    return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if(status != NC_NOERR)
+        return status;
 
-  doUnlink = NC_IsNew(ncp);
+    doUnlink = NC_IsNew(ncp);
 
-  if (ncp->old != NULL) {
-    /* a plain redef, not a create */
-    assert(!NC_IsNew(ncp));
-    assert(fIsSet(ncp->flags, NC_INDEF));
-    ncmpii_free_NC(ncp->old);
-    ncp->old = NULL;
-    fClr(ncp->flags, NC_INDEF);
-  } 
-  else if (!NC_readonly(ncp) && !NC_indef(ncp)) {
-    /* data mode, write */
-    status = ncmpii_NC_sync(ncp);
-    if (status != NC_NOERR)
-      return status;
-  }
+    if (ncp->old != NULL) {
+        /* a plain redef, not a create */
+        assert(!NC_IsNew(ncp));
+        assert(fIsSet(ncp->flags, NC_INDEF));
+        ncmpii_free_NC(ncp->old);
+        ncp->old = NULL;
+        fClr(ncp->flags, NC_INDEF);
+    } 
+    else if (!NC_readonly(ncp) && !NC_indef(ncp)) {
+        /* data mode, write */
+        status = ncmpii_NC_sync(ncp, 0);
+        if (status != NC_NOERR)
+            return status;
+    }
 
-  (void) ncmpiio_close(ncp->nciop, doUnlink);
-  ncp->nciop = NULL;
+    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
+        /* calling MPI_File_sync() */
+        ncmpiio_sync(ncp->nciop);
+    }
+    ncmpiio_close(ncp->nciop, doUnlink);
+    ncp->nciop = NULL;
 
-  ncmpii_del_from_NCList(ncp);
+    ncmpii_del_from_NCList(ncp);
 
-  ncmpii_free_NC(ncp);
+    ncmpii_free_NC(ncp);
 
-  return NC_NOERR;
+    return NC_NOERR;
 }
 
 int
 ncmpi_close(int ncid) {
-  int status = NC_NOERR;
-  NC *ncp;
+    int status = NC_NOERR;
+    NC *ncp;
 
-  status = ncmpii_NC_check_id(ncid, &ncp);
-  if(status != NC_NOERR)
-    return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
 
-  /* release NC object, close the file and write Dirty numrecs if necessary */
-
-  return ncmpii_NC_close(ncp);
+    /* release NC object, close the file and write dirty numrecs if necessary */
+    return ncmpii_NC_close(ncp);
 }
 
 /* ncmpi_delete:
@@ -2678,29 +2731,10 @@ ncmpi_put_vara_all(int ncid, int varid,
     free(cbuf);
  
   if (status == NC_NOERR && IS_RECVAR(varp)) {
- 
-    /* update the number of records in NC
-        and write it back to file header, if necessary
-    */
-    MPI_Offset newnumrecs, max_numrecs;
-    newnumrecs = start[0] + count[0];
-    if (ncp->numrecs < newnumrecs) {
-      ncp->numrecs = newnumrecs;
-      set_NC_ndirty(ncp);
-    }
-    if (NC_doNsync(ncp)) {
-        MPI_Allreduce(&newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT,
-                      MPI_MAX, comm );
- 
-        /* all proc must agree on numrecs because
-           ncmpii_write_numrecs() is collective */
-        ncp->numrecs = max_numrecs;
-        status = ncmpii_write_numrecs(ncp);
-        if (status != NC_NOERR)
-            return status;
-    }
+      /* update the number of records in header NC */
+      MPI_Offset newnumrecs = start[0] + count[0];
+      update_numrecs(ncp, newnumrecs);
   }
- 
   return ((warning != NC_NOERR) ? warning : status);
 }
 
@@ -3512,27 +3546,9 @@ ncmpi_put_vars_all(int ncid, int varid,
     free(cbuf);
  
   if (status == NC_NOERR && IS_RECVAR(varp)) {
- 
-    /* update the number of records in NC
-        and write it back to file header, if necessary
-    */
-    MPI_Offset newnumrecs, max_numrecs;
-    newnumrecs = start[0] + (count[0] - 1) * stride_ptr[0] + 1;
-    if (ncp->numrecs < newnumrecs) {
-      ncp->numrecs = newnumrecs;
-      set_NC_ndirty(ncp);
-    }
-    if (NC_doNsync(ncp)) {
-        MPI_Allreduce(&newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT,
-                      MPI_MAX, comm);
- 
-        /* all proc must agree on numrecs because
-           ncmpii_write_numrecs() is collective */
-        ncp->numrecs = max_numrecs;
-        status = ncmpii_write_numrecs(ncp);
-        if (status != NC_NOERR)
-            return status;
-    }
+      /* update the number of records in header NC */
+      MPI_Offset newnumrecs = start[0] + (count[0] - 1) * stride_ptr[0] + 1;
+      update_numrecs(ncp, newnumrecs);
   }
   if (stride_was_null != NULL) free(stride_was_null);
  
@@ -13127,41 +13143,23 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varids[],
       if ( need_swap(varp[i]->type, ptype[i]) && buffers[i] == cbuf[i] && cbuf[i] == xbuf[i] )
           in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
 
-  for (i=0; i<nvars; i++){
-  if (xbuf[i] != cbuf[i] && xbuf[i] != NULL){
-    free(xbuf[i]);
-    xbuf[i]=NULL;
-  }
-  if (!iscontig_of_ptypes[i]) {
-    if (cbuf[i] != buffers[i] && cbuf[i] != NULL){
-      free(cbuf[i]);
-      cbuf[i]=NULL;
-    }
-  }
-
-  if (status == NC_NOERR && IS_RECVAR(varp[i])) {
- 
-    /* update the number of records in NC
-        and write it back to file header, if necessary
-    */
-    MPI_Offset newnumrecs, max_numrecs;
-    newnumrecs = starts[i][0] + counts[i][0];
-    if (ncp->numrecs < newnumrecs) {
-      ncp->numrecs = newnumrecs;
-      set_NC_ndirty(ncp);
-    }
-    if (NC_doNsync(ncp)) {
-        MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
- 
-        /* all proc must agree on numrecs because
-           ncmpii_write_numrecs() is collective */
-        ncp->numrecs = max_numrecs;
-        status = ncmpii_write_numrecs(ncp);
-        if (status != NC_NOERR)
-            return status;
-    }
-  }
-  }/*end for i*/
+    for (i=0; i<nvars; i++) {
+        if (xbuf[i] != cbuf[i] && xbuf[i] != NULL) {
+            free(xbuf[i]);
+            xbuf[i] = NULL;
+        }
+        if (!iscontig_of_ptypes[i]) {
+            if (cbuf[i] != buffers[i] && cbuf[i] != NULL) {
+                free(cbuf[i]);
+                cbuf[i] = NULL;
+            }
+        }
+        if (status == NC_NOERR && IS_RECVAR(varp[i])) {
+            /* update the number of records in header NC */
+            MPI_Offset newnumrecs = starts[i][0] + counts[i][0];
+            update_numrecs(ncp, newnumrecs);
+        }
+    }/*end for i*/
 
   free(varp);
 
@@ -14187,38 +14185,23 @@ ncmpi_put_mvara_all_record(int ncid, int nvars, int varid[],
       if ( need_swap(varp[i]->type, ptype[i]) )
           in_swapn(cbuf[i], nelems[i], ncmpix_len_nctype(varp[i]->type));
 
-  for (i=0; i<nvars; i++){
-  if (xbuf[i] != cbuf[i] && xbuf[i] != NULL){
-    free(xbuf[i]);
-    xbuf[i]=NULL;
-  }
-  if (!iscontig_of_ptypes[i]) {
-    if (cbuf[i] != buf[i] && cbuf[i] != NULL){
-      free(cbuf[i]);
-      cbuf[i]=NULL;
-    }
-  }
-
-  if (status == NC_NOERR && IS_RECVAR(varp[i])) {
-
-    MPI_Offset newnumrecs, max_numrecs;
-    newnumrecs = start[i][0] + count[i][0];
-    if (ncp->numrecs < newnumrecs) {
-      ncp->numrecs = newnumrecs;
-      set_NC_ndirty(ncp);
-    }
-    if (NC_doNsync(ncp)) {
-        MPI_Allreduce( &newnumrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm );
-
-        /* all proc must agree on numrecs because
-           ncmpii_write_numrecs() is collective */
-        ncp->numrecs = max_numrecs;
-        status = ncmpii_write_numrecs(ncp);
-        if (status != NC_NOERR)
-            return status;
-    }
-  }
-  }/*end for i*/
+    for (i=0; i<nvars; i++){
+        if (xbuf[i] != cbuf[i] && xbuf[i] != NULL) {
+            free(xbuf[i]);
+            xbuf[i]=NULL;
+        }
+        if (!iscontig_of_ptypes[i]) {
+            if (cbuf[i] != buf[i] && cbuf[i] != NULL) {
+                free(cbuf[i]);
+                cbuf[i]=NULL;
+            }
+        }
+        if (status == NC_NOERR && IS_RECVAR(varp[i])) {
+            /* update the number of records in header NC */
+            MPI_Offset newnumrecs = start[i][0] + count[i][0];
+            update_numrecs(ncp, newnumrecs);
+        }
+    }/*end for i*/
 
   free(varp);
 

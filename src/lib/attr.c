@@ -494,69 +494,66 @@ ncmpi_inq_att(int ncid,
 int
 ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 {
-	int status;
-	NC *ncp;
-	NC_attrarray *ncap;
-	NC_attr **tmp;
-	NC_attr *attrp;
-	NC_string *newStr, *old;
+    int status;
+    NC *ncp;
+    NC_attrarray *ncap;
+    NC_attr **tmp;
+    NC_attr *attrp;
+    NC_string *newStr, *old;
 
-			/* sortof inline clone of NC_lookupattr() */
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    /* sortof inline clone of NC_lookupattr() */
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
 
-	if(NC_readonly(ncp))
-		return NC_EPERM;
+    if (NC_readonly(ncp))
+        return NC_EPERM;
 
-	ncap = NC_attrarray0(ncp, varid);
-	if(ncap == NULL)
-		return NC_ENOTVAR;
+    ncap = NC_attrarray0(ncp, varid);
+    if (ncap == NULL)
+        return NC_ENOTVAR;
 
 /* bugs found by Jianwei Li
-	status = ncmpii_NC_check_name(name);
+        status = ncmpii_NC_check_name(name);
 */
-	status = ncmpii_NC_check_name(newname);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_name(newname);
+    if (status != NC_NOERR)
+        return status;
 
-	tmp = ncmpii_NC_findattr(ncap, name);
-	if(tmp == NULL)
-		return NC_ENOTATT;
-	attrp = *tmp;
-			/* end inline clone NC_lookupattr() */
+    tmp = ncmpii_NC_findattr(ncap, name);
+    if (tmp == NULL)
+        return NC_ENOTATT;
+    attrp = *tmp;
+    /* end inline clone NC_lookupattr() */
 
-	if(ncmpii_NC_findattr(ncap, newname) != NULL)
-	{
-		/* name in use */
-		return NC_ENAMEINUSE;
-	}
+    if (ncmpii_NC_findattr(ncap, newname) != NULL) {
+        /* name in use */
+        return NC_ENAMEINUSE;
+    }
 
-	old = attrp->name;
-	if(NC_indef(ncp))
-	{
-		newStr = ncmpii_new_NC_string(strlen(newname), newname);
-		if( newStr == NULL)
-			return NC_ENOMEM;
-		attrp->name = newStr;
-		ncmpii_free_NC_string(old);
-		return NC_NOERR;
-	}
-	/* else */
-	status = ncmpii_set_NC_string(old, newname);
-	if( status != NC_NOERR)
-		return status;
+    old = attrp->name;
+    if (NC_indef(ncp)) {
+        newStr = ncmpii_new_NC_string(strlen(newname), newname);
+        if (newStr == NULL)
+            return NC_ENOMEM;
+        attrp->name = newStr;
+        ncmpii_free_NC_string(old);
+        return NC_NOERR;
+    }
+    /* else, no in define mode */
+    status = ncmpii_set_NC_string(old, newname);
+    if (status != NC_NOERR)
+        return status;
 
-	set_NC_hdirty(ncp);
+    set_NC_hdirty(ncp);
 
-	if(NC_doHsync(ncp))
-	{
-		status = ncmpii_NC_sync(ncp);
-		if(status != NC_NOERR)
-			return status;
-	}
+    if (NC_doHsync(ncp)) {
+        status = ncmpii_NC_sync(ncp, 1);
+        if (status != NC_NOERR)
+            return status;
+    }
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 
@@ -608,7 +605,7 @@ ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ov
 
 			if(NC_doHsync(ncp))
 			{
-				status = ncmpii_NC_sync(ncp);
+				status = ncmpii_NC_sync(ncp, 1);
 				if(status != NC_NOERR)
 					return status;
 			}
@@ -1086,7 +1083,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				status = ncmpii_NC_sync(ncp);
+				status = ncmpii_NC_sync(ncp, 1);
 				if(status != NC_NOERR)
 					return status;
 			}
@@ -1226,7 +1223,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = ncmpii_NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp, 1);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ischar
@@ -1373,7 +1370,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = ncmpii_NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp, 1);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Iuchar
@@ -1520,7 +1517,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = ncmpii_NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp, 1);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ishort
@@ -1667,7 +1664,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = ncmpii_NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp, 1);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Iint
@@ -1814,7 +1811,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = ncmpii_NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp, 1);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ilong
@@ -1961,7 +1958,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = ncmpii_NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp, 1);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ifloat
@@ -2111,7 +2108,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 
 			if(NC_doHsync(ncp))
 			{
-				const int lstatus = ncmpii_NC_sync(ncp);
+				const int lstatus = ncmpii_NC_sync(ncp, 1);
 				/*
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Idouble
