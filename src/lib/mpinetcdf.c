@@ -309,6 +309,9 @@ ncmpi_begin_indep_data(int ncid) {
   if (NC_indep(ncp))
     return NC_EINDEP;
  
+  if (NC_indef(ncp))
+      return(NC_EINDEFINE);
+
   if(!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
     mpireturn = MPI_File_sync(ncp->nciop->collective_fh);   /* collective */
     if (mpireturn != MPI_SUCCESS) {

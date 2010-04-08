@@ -229,6 +229,8 @@ A pair of new dataset operations \texttt{ncmpi\_begin\_indep\_data} and
 \texttt{ncmpi\_end\_indep\_data} switch into and out of independent data mode.
 These calls are collective.  Calling \texttt{ncmpi\_close} or
 \texttt{ncmpi\_redef} also leaves independent data mode.
+Note that it is illegal to enter independent data mode while in define mode.
+Users are reminded to call {\tt ncmpi\_enddef} to leave define mode and enter data mode.
 
 \begin{verbatim}
 int ncmpi_begin_indep_data(int ncid)
@@ -526,7 +528,7 @@ int ncmpi_test(MPI_Request *request,
 %
 % BIBLIOGRAPHY
 %
-\bibliography{./pario}
+\bibliography{pnetcdf-api}
 \bibliographystyle{plain}
 
 %
