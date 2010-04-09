@@ -16,7 +16,7 @@ CXXFLAGS        = @CFLAGS@ $(INCLUDES)
 
 SRCS		= $(srcdir)/ncmpi_vars_null_stride.c $(srcdir)/vecors.c \
 			$(srcdir)/bigrecords.F 
-PROGS		= ncmpi_vars_null_stride vectors bigrecords 
+PROGS		= ncmpi_vars_null_stride vectors bigrecords redef1
 LDFLAGS		= -L$(LIBDIR) @LDFLAGS@
 LIBS		= -lpnetcdf @LIBS@
 

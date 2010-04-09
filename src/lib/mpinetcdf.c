@@ -8624,22 +8624,20 @@ ncmpii_postprocess(NCMPI_Request *request) {
 
 int
 ncmpi_wait_one(NCMPI_Request *request) {
-  int mpireturn = MPI_SUCCESS;
+    int mpireturn = MPI_SUCCESS;
 
-  if((*request)->indep==1) {
-  if (*request != NCMPI_REQUEST_NULL) {
-    mpireturn = MPI_Wait(&((*request)->mpi_req), MPI_STATUS_IGNORE);
-    ncmpii_postprocess(request);
-  }
-
-  if (mpireturn != MPI_SUCCESS) {
-    return NC_EFILE;
-  } else {
-    return NC_NOERR;
-  }
-  } else {
-    return (ncmpi_coll_wait(*request));
-  }
+    if ((*request)->indep==1) {
+        if (*request != NCMPI_REQUEST_NULL) {
+            mpireturn = MPI_Wait(&((*request)->mpi_req), MPI_STATUS_IGNORE);
+            ncmpii_postprocess(request);
+        }
+        if (mpireturn != MPI_SUCCESS)
+            return NC_EFILE;
+        else
+            return NC_NOERR;
+    } else {
+        return (ncmpi_coll_wait(*request));
+    }
 }
 
 int
@@ -9833,6 +9831,7 @@ ncmpi_iget_vara(int ncid, int varid,
   MPI_File_set_view(ncp->nciop->independent_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
  
   (*request)->reqtype = NCMPI_REQTYPE_READ;
+  (*request)->indep = 1;
   (*request)->vartype = varp->type;
   (*request)->xbuf = xbuf;
   (*request)->cbuf = cbuf;
