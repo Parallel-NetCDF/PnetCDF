@@ -277,7 +277,7 @@ elem_NC_vararray(const NC_vararray *ncap, MPI_Offset elem)
 {
 	assert(ncap != NULL);
 		/* cast needed for braindead systems with signed MPI_Offset */
-	if(ncap->nelems == 0 || (unsigned long)elem >= ncap->nelems)
+	if((elem < 0) ||  ncap->nelems == 0 || elem >= ncap->nelems)
 		return NULL;
 
 	assert(ncap->value != NULL);
@@ -543,8 +543,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 	if(status != NC_NOERR)
 		return status;
 
-		/* cast needed for braindead systems with signed MPI_Offset */
-	if((unsigned long long) ndims > X_INT_MAX) /* Backward compat */
+	if((ndims < 0) || ndims > X_INT_MAX) /* Backward compat */
 	{
 		return NC_EINVAL;
 	} 

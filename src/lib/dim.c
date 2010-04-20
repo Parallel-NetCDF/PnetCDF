@@ -292,7 +292,7 @@ NC_dim *
 ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem)
 {
 	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed MPI_Offset */
+		/* cast needed for braindead systems with signed size_t */
 	if(ncap->nelems == 0 || (unsigned long long) elem >= ncap->nelems)
 		return NULL;
 
