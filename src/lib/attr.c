@@ -1048,8 +1048,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 	if(status != NC_NOERR)
 		return status;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
+	if(nelems < 0 || nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
@@ -1189,8 +1188,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
+	if(nelems < 0 || nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
@@ -1336,8 +1334,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
+	if( (nelems < 0) || nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
@@ -1483,8 +1480,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
+	if( (nelems < 0) || (nelems > X_INT_MAX)) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
@@ -1630,8 +1626,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
+	if((nelems < 0) ||  (nelems > X_INT_MAX) )/* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
@@ -1777,8 +1772,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
+	if((nelems < 0) || (nelems > X_INT_MAX) )/* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)
@@ -1924,8 +1918,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 	if(type == NC_CHAR)
 		return NC_ECHAR;
 
-		/* cast needed for braindead systems with signed size_t */
-	if((unsigned long) nelems > X_INT_MAX) /* backward compat */
+	if((nelems < 0 ) || (nelems > X_INT_MAX)) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
 
 	if(nelems != 0 && value == NULL)

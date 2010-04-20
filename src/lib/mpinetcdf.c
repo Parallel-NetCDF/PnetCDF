@@ -1042,8 +1042,7 @@ NCcoordck(NC               *ncp,
     }
  
     for (; ip < coord + varp->ndims; ip++, up++) {
-        /* cast needed for braindead systems with signed MPI_Offset */
-        if ( *ip >= (MPI_Offset)*up )
+        if ( (*ip <0) || (*ip >= *up) )
             return NC_EINVALCOORDS;
     }
     return NC_NOERR;
@@ -1072,8 +1071,7 @@ NCedgeck(const NC *ncp, const NC_var *varp,
 
   for(; start < end; start++, edges++, shp++)
   {
-    /* cast needed for braindead systems with signed MPI_Offset */
-    if( *edges > (MPI_Offset)*shp || *start + *edges > (MPI_Offset)*shp)
+    if( (*shp < 0) || (*edges > *shp) || (*start + *edges > *shp))
     {
       return(NC_EEDGE);
     }
@@ -1108,10 +1106,10 @@ NCstrideedgeck(const NC *ncp, const NC_var *varp,
 
   for(; start < end; start++, edges++, shp++, stride++)
   {
-    /* cast needed for braindead systems with signed MPI_Offset */
-    if( (*edges > (MPI_Offset)*shp) || 
-	(*edges > 0 && *start+1 + (*edges-1) * *stride > (MPI_Offset)*shp) ||
-	(*edges == 0 && *start > (MPI_Offset)*shp) )
+    if( (*shp < 0) ||
+        (*edges > *shp) || 
+	(*edges > 0 && *start+1 + (*edges-1) * *stride > *shp) ||
+	(*edges == 0 && *start > *shp) )
     {
       return(NC_EEDGE);
     }
