@@ -90,7 +90,14 @@ ncmpiio_create(MPI_Comm     comm,
                ncio       **nciopp)
 {
     ncio *nciop;
-    int i, mpireturn, do_zero_file_size = 0;
+    int i, mpireturn; 
+/* TODO: in the future, HAVE_ACCESS_FUNCTION shall be tested and set at the
+ * configure time */
+#define HAVE_ACCESS_FUNCTION
+#ifndef HAVE_ACCESS_FUNCTION
+    int do_zero_file_size = 0;
+#endif
+
     int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
 
     fSet(ioflags, NC_WRITE);
@@ -117,9 +124,6 @@ ncmpiio_create(MPI_Comm     comm,
     if (fIsSet(ioflags, NC_NOCLOBBER))
         fSet(mpiomode, MPI_MODE_EXCL);
     else {
-/* TODO: in the future, HAVE_ACCESS_FUNCTION shall be tested and set at the
- * configure time */
-#define HAVE_ACCESS_FUNCTION
 #ifdef HAVE_ACCESS_FUNCTION
         /* to avoid calling MPI_File_set_size() later, let process 0 check
            if the file exists. If not, no need to call MPI_File_set_size */

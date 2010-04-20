@@ -633,7 +633,6 @@ write_NC(NC *ncp)
     int status = NC_NOERR, mpireturn, rank;
     void *buf;
     MPI_Status mpistatus;
-    MPI_Offset len = 0;
  
     assert(!NC_readonly(ncp));
  
@@ -870,7 +869,7 @@ ncmpii_NC_check_vlens(NC *ncp)
  
 int 
 ncmpii_NC_enddef(NC *ncp) {
-    int mpireturn, flag=0, alignment=512, status = NC_NOERR;
+    int flag=0, alignment=512, status = NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
 
     assert(!NC_readonly(ncp));
@@ -905,7 +904,6 @@ ncmpii_NC_enddef(NC *ncp) {
     if (ncp->old != NULL) {
         /* the current define mode was entered from ncmpi_redef,
            not from ncmpi_create */
-        MPI_Offset max_numrecs;
 
         assert(!NC_IsNew(ncp));
         assert(fIsSet(ncp->flags, NC_INDEF));

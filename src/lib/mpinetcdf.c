@@ -323,7 +323,6 @@ int update_numrecs(NC         *ncp,
         MPI_Allreduce(&localChange, &doChange, 1, MPI_INT, MPI_MAX, comm);
 
         if (doChange) {
-            int mpireturn;
             /* all proc must agree on numrecs because this func is collective */
             MPI_Allreduce(&newnumrecs, &ncp->numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, comm);
             status = ncmpii_write_numrecs(ncp);
@@ -13649,7 +13648,7 @@ ncmpi_mget_vara_uchar_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -13692,7 +13691,7 @@ ncmpi_mget_vara_schar_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -13735,7 +13734,7 @@ ncmpi_mget_vara_text_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -13778,7 +13777,7 @@ ncmpi_mget_vara_short_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -13821,7 +13820,7 @@ ncmpi_mget_vara_int_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -13864,7 +13863,7 @@ ncmpi_mget_vara_long_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -13907,7 +13906,7 @@ ncmpi_mget_vara_float_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -13950,7 +13949,7 @@ ncmpi_mget_vara_double_all(int ncid, int ntimes, int varid,
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
     return status;
-  varp = ncmpii_NC_lookupvar(ncp, varids[0]);
+  varp = ncmpii_NC_lookupvar(ncp, varid);
   if(varp == NULL)
     return NC_ENOTVAR;
 
@@ -14697,7 +14696,7 @@ ncmpi_put_mvara_nonrecord(int ncid, int nvars, int varids[],
 
 
 int
-ncmpi_put_mvara(int ncid, int nvars, int varids[],
+ncmpi_put_mvara(int ncid, int nvars, int *varids,
                    MPI_Offset **starts, MPI_Offset **counts,
                    void **buffers, MPI_Offset *bufcounts,
                    MPI_Datatype *datatypes) {
