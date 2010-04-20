@@ -1003,6 +1003,15 @@ int ncmpi_get_vara(int ncid, int varid,
                void *buf, MPI_Offset bufcount,
                MPI_Datatype datatype);
 
+int ncmpi_get_mvara(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts, 
+                   MPI_Datatype *datatypes);
+
+int ncmpi_put_mvara(int ncid, int nvars, int *varids,
+                   MPI_Offset **starts, MPI_Offset **counts,
+                   void **buffers, MPI_Offset *bufcounts,
+                   MPI_Datatype *datatypes);
 
 /* Begin Skip Prototypes for Fortran binding */
 int ncmpi_put_vara_uchar_all(int ncid, int varid,
