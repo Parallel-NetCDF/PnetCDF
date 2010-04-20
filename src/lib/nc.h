@@ -187,7 +187,7 @@ extern int
 ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref);
 
 extern NC_attr *
-ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, int elem);
+ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem);
 
 extern int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
