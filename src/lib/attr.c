@@ -11,12 +11,11 @@
 #endif
 #include <string.h>
 #include <assert.h>
+#include "nc.h"
 #include "ncx.h"
 #include "fbits.h"
 #include "rnd.h"
 
-/* Prototypes of functions only used in this file */
-static NC_attr *elem_NC_attrarray(const NC_attrarray *ncap, size_t elem);
 
 /*
  * Free attr
@@ -275,11 +274,10 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 
 
 static NC_attr *
-elem_NC_attrarray(const NC_attrarray *ncap, size_t elem)
+elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem)
 {
 	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed size_t*/
-	if(ncap->nelems == 0 || (unsigned long) elem >= ncap->nelems)
+	if((elem < 0) || ncap->nelems == 0 || elem >= ncap->nelems)
 		return NULL;
 
 	assert(ncap->value != NULL);
@@ -398,7 +396,7 @@ ncmpi_inq_attname(int ncid, int varid, int attnum, char *name)
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	attrp = elem_NC_attrarray(ncap, (size_t)attnum);
+	attrp = elem_NC_attrarray(ncap, attnum);
 	if(attrp == NULL)
 		return NC_ENOTATT;
 
