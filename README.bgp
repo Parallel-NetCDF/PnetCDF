@@ -8,6 +8,10 @@ compile mode".  This will make configure use compile-only tests, insted of the
 usual compile-and-run tests (running tests on the bgp login node won't work as
 the compute nodes are totaly different).
 
+There is one run-time check for MPI-IO support of resized types.  Unfortunately
+we have to test for this with a runtime test, but you can set the environemtn
+variable "ac_cv_MPI_TYPE_RESIZED_WORKS" . 
+
 configure --host powerpc-bgp-linux  --build powerpc64-suse-linux  \
 	--with-mpi=/bgsys/drivers/ppcfloor/comm
 
