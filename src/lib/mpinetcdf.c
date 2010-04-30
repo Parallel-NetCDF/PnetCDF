@@ -388,20 +388,23 @@ ncmpi_end_indep_data(int ncid) {
     if (!NC_indep(ncp))
         return NC_ENOTINDEP;
 
-    if (!NC_readonly(ncp) && NC_independentFhOpened(ncp->nciop)) {
+    if (!NC_readonly(ncp)) {
         MPI_Offset newnumrecs = ncp->numrecs;
         MPI_Allreduce(&newnumrecs, &ncp->numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
         status = ncmpii_write_numrecs(ncp);
         if (status != NC_NOERR)
             return status;
 
-        mpireturn = MPI_File_sync(ncp->nciop->independent_fh); /* independent */
-        if (mpireturn != MPI_SUCCESS) {
-            int rank;
-            MPI_Comm_rank(ncp->nciop->comm, &rank);
-	    ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
-            MPI_Finalize();
-            return NC_EFILE;
+        /* calling file sync for those already open the file */
+        if (NC_independentFhOpened(ncp->nciop)) {
+            mpireturn = MPI_File_sync(ncp->nciop->independent_fh); /* independent */
+            if (mpireturn != MPI_SUCCESS) {
+                int rank;
+                MPI_Comm_rank(ncp->nciop->comm, &rank);
+	        ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+                MPI_Finalize();
+                return NC_EFILE;
+            }
         }
     }
 
