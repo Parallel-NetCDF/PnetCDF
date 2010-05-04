@@ -8463,6 +8463,40 @@ ncmpi_get_varm_double(int ncid, int varid,
 /* #################################################################### */
 /* Begin non-blocking data access functions */
 
+NCMPI_Request ncmpii_new_NCMPI_Request(int ncid, int varid, int ndims,
+		const MPI_Offset *start, const MPI_Offset *count,
+		const void *buf, MPI_Offset bufcount, MPI_Datatype datatype)
+{
+	NCMPI_Request request;
+	int dim;
+
+	request = (NCMPI_Request)malloc(sizeof(struct NCMPI_Req));
+	request->indep = 0;
+	request->ncid = ncid;
+	request->varid = varid;
+	request->ndim = ndims;
+	request->start = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+	request->count = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+	request->buf = (void *)buf;
+	request->bufcount = bufcount;
+	request->mpi_varatype = datatype;
+	request->next_req = NULL;
+	for (dim = 0; dim < ndims; dim++){
+		request->start[dim]=start[dim];
+		request->count[dim]=count[dim];
+	}
+	request->rw_flag = 1; 
+	return request;
+}
+
+int ncmpii_free_NCMPI_Request(NCMPI_Request *request) 
+{
+	free ((*request)->start);
+	free ((*request)->count);
+	free (*request);
+	return 0;
+}
+
 static void ncmpii_postwrite(void *xbuf, void *cbuf, void *buf) {
   if (xbuf != cbuf && xbuf != NULL)
     free(xbuf);
@@ -8720,6 +8754,8 @@ ncmpi_wait_all(int count, NCMPI_Request array_of_requests[], int array_of_status
 
   for (i=0; i<count; i++){
 	array_of_statuses[i] = status;
+	ncmpii_free_NCMPI_Request(&(array_of_requests[i]));
+
   }
   free(starts);
   free(varids);
@@ -12944,8 +12980,9 @@ set_vara_fileview_all(NC* ncp, MPI_File *mpifh, int nvars, NC_var **varp, MPI_Of
 
   for (i=0; i<nvars; i++){
   if (ndims[i] > 0) {
-    if (filetype[i] != MPI_BYTE)
+    if (filetype[i] != MPI_BYTE) {
       MPI_Type_free(&filetype[i]);
+    }	
   }
   }/*end for loop*/
   if (full_filetype != MPI_BYTE)
@@ -13162,11 +13199,19 @@ ncmpi_put_mvara_all_nonrecord(int ncid, int nvars, int varids[],
 
   free(varp);
 
+  free(nbytes);
+  free(el_size);
+
   free(nelems);
   free(cnelems);
   free(ptype);
   free(displacement);
   free(iscontig_of_ptypes);
+
+  free(xbuf);
+  free(cbuf);
+
+  MPI_Type_free(&buf_type);
 
   return ((warning != NC_NOERR) ? warning : status);
 }
@@ -15535,7 +15580,6 @@ ncmpi_iput_vara_all(int ncid, int varid,
   NC_var *varp;
   NC *ncp;
   int status = NC_NOERR;
-  int dim;
  
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -15546,23 +15590,11 @@ ncmpi_iput_vara_all(int ncid, int varid,
     return NC_ENOTVAR;
 
 
-  *request = (NCMPI_Request)malloc(sizeof(struct NCMPI_Req));
+  *request = ncmpii_new_NCMPI_Request(ncid, varid, varp->ndims,
+		  start, count,
+		  buf, bufcount, datatype);
   if (*request == NULL) printf("no memory buffer\n");
-  (*request)->indep = 0;
-  (*request)->ncid = ncid;
-  (*request)->varid = varid;
-  (*request)->ndim = varp->ndims;
-  (*request)->start = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
-  (*request)->count = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
-  (*request)->buf = (void *)buf;
-  (*request)->bufcount = bufcount;
-  (*request)->mpi_varatype = datatype;
-  (*request)->next_req = NULL;
-  for (dim = 0; dim < varp->ndims; dim++){
-      (*request)->start[dim]=start[dim];
-      (*request)->count[dim]=count[dim];
-  }
-  (*request)->rw_flag = 1; 
+
   return NC_NOERR;
 }
 
@@ -15759,7 +15791,6 @@ ncmpi_iget_vara_all(int ncid, int varid,
   NC_var *varp;
   NC *ncp;
   int status = NC_NOERR;
-  int dim;
 
   status = ncmpii_NC_check_id(ncid, &ncp);
   if(status != NC_NOERR)
@@ -15770,23 +15801,10 @@ ncmpi_iget_vara_all(int ncid, int varid,
     return NC_ENOTVAR;
 
 
-  *request = (NCMPI_Request)malloc(sizeof(struct NCMPI_Req));
+  *request = ncmpii_new_NCMPI_Request(ncid, varid, varp->ndims,
+		  start, count,
+		  buf, bufcount, datatype);
   if (*request == NULL) printf("no memory buffer\n");
-  (*request)->indep = 0;
-  (*request)->ncid = ncid;
-  (*request)->varid = varid;
-  (*request)->ndim = varp->ndims;
-  (*request)->start = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
-  (*request)->count = (MPI_Offset *)malloc(varp->ndims*sizeof(MPI_Offset));
-  (*request)->buf = (void *)buf;
-  (*request)->bufcount = bufcount;
-  (*request)->mpi_varatype = datatype;
-  (*request)->next_req = NULL;
-  for (dim = 0; dim < varp->ndims; dim++){
-      (*request)->start[dim]=start[dim];
-      (*request)->count[dim]=count[dim];
-  }
-  (*request)->rw_flag = 0;
   return NC_NOERR;
 }
 
@@ -16018,6 +16036,12 @@ ncmpi_coll_waitall(int count, NCMPI_Request array_of_requests[]) {
                    buf, bufcount,
                    datatype);
 
+
+  for (i=0; i<count; i++) {
+	  free(starts[i]);
+	  free(counts[i]);
+	  ncmpii_free_NCMPI_Request(&(array_of_requests[i]));
+  }
   free(starts);
   free(varids);
   free(counts);
