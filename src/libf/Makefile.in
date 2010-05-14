@@ -102,25 +102,79 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	issyserrf.c \
 	get_file_infof.c \
 	deletef.c \
-	iput_vara_allf.c \
-	iput_vara_int1_allf.c \
-	iput_vara_text_allf.c \
-	iput_vara_int2_allf.c \
-	iput_vara_int_allf.c \
-	iput_vara_real_allf.c \
-	iput_vara_double_allf.c \
-	iget_vara_allf.c \
-	iget_vara_int1_allf.c \
-	iget_vara_text_allf.c \
-	iget_vara_int2_allf.c \
-	iget_vara_int_allf.c \
-	iget_vara_real_allf.c \
-	iget_vara_double_allf.c \
-	waitallf.c \
+	iput_var1f.c \
+	iput_var1_int1f.c \
+	iput_var1_textf.c \
+	iput_var1_int2f.c \
+	iput_var1_intf.c \
+	iput_var1_realf.c \
+	iput_var1_doublef.c \
+	iput_varf.c \
+	iput_var_int1f.c \
+	iput_var_textf.c \
+	iput_var_int2f.c \
+	iput_var_intf.c \
+	iput_var_realf.c \
+	iput_var_doublef.c \
+	iput_varaf.c \
+	iput_vara_int1f.c \
+	iput_vara_textf.c \
+	iput_vara_int2f.c \
+	iput_vara_intf.c \
+	iput_vara_realf.c \
+	iput_vara_doublef.c \
+	iput_varsf.c \
+	iput_vars_int1f.c \
+	iput_vars_textf.c \
+	iput_vars_int2f.c \
+	iput_vars_intf.c \
+	iput_vars_realf.c \
+	iput_vars_doublef.c \
+	iput_varmf.c \
+	iput_varm_int1f.c \
+	iput_varm_textf.c \
+	iput_varm_int2f.c \
+	iput_varm_intf.c \
+	iput_varm_realf.c \
+	iput_varm_doublef.c \
+	iget_var1f.c \
+	iget_var1_int1f.c \
+	iget_var1_textf.c \
+	iget_var1_int2f.c \
+	iget_var1_intf.c \
+	iget_var1_realf.c \
+	iget_var1_doublef.c \
+	iget_varf.c \
+	iget_var_int1f.c \
+	iget_var_textf.c \
+	iget_var_int2f.c \
+	iget_var_intf.c \
+	iget_var_realf.c \
+	iget_var_doublef.c \
+	iget_varaf.c \
+	iget_vara_int1f.c \
+	iget_vara_textf.c \
+	iget_vara_int2f.c \
+	iget_vara_intf.c \
+	iget_vara_realf.c \
+	iget_vara_doublef.c \
+	iget_varsf.c \
+	iget_vars_int1f.c \
+	iget_vars_textf.c \
+	iget_vars_int2f.c \
+	iget_vars_intf.c \
+	iget_vars_realf.c \
+	iget_vars_doublef.c \
+	iget_varmf.c \
+	iget_varm_int1f.c \
+	iget_varm_textf.c \
+	iget_varm_int2f.c \
+	iget_varm_intf.c \
+	iget_varm_realf.c \
+	iget_varm_doublef.c \
 	wait_allf.c \
 	waitf.c \
-	wait_onef.c \
-	mvar.c
+	cancelf.c
 
 LIB_FSRCS = strerrorf.f inq_libversf.f
 PACKING_LIST = \

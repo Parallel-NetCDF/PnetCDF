@@ -402,23 +402,39 @@ INTERFACE
 !
 
 #if 0
-! Below 3 functions should be internally used only
-    INTEGER        FUNCTION nfmpi_put_var(ncid, varid, text)
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_put_var(ncid, varid, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_var
 
-    INTEGER        FUNCTION nfmpi_get_var(ncid, varid, text)
+    INTEGER        FUNCTION nfmpi_put_var_all(ncid, varid, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+    END FUNCTION   nfmpi_put_var_all
+
+    INTEGER        FUNCTION nfmpi_get_var(ncid, varid, buf, bufcount, datatype)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_var
 
-    INTEGER        FUNCTION nfmpi_get_var_all (ncid, varid, text)
+    INTEGER        FUNCTION nfmpi_get_var_all (ncid, varid, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_var_all
 #endif
 
@@ -534,19 +550,25 @@ INTERFACE
 ! single variable put/get subroutines:
 !
 #if 0
-! Below 2 functions should be internally used only
-    INTEGER        FUNCTION nfmpi_put_var1(ncid, varid, index, text)
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_put_var1(ncid, varid, index, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_var1
 
-    INTEGER        FUNCTION nfmpi_get_var1(ncid, varid, index, text)
+    INTEGER        FUNCTION nfmpi_get_var1(ncid, varid, index, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_var1
 #endif
 
@@ -639,37 +661,47 @@ INTERFACE
 !
 
 #if 0
-! Below 4 functions should be internally used only
-    INTEGER        FUNCTION nfmpi_put_vara(ncid, varid, start, count, text)
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_put_vara(ncid, varid, start, count, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_vara
 
-    INTEGER        FUNCTION nfmpi_put_vara_all(ncid, varid, start, count, text)
+    INTEGER        FUNCTION nfmpi_put_vara_all(ncid, varid, start, count, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_vara_all
 
-    INTEGER        FUNCTION nfmpi_get_vara(ncid, varid, start, count, text)
+    INTEGER        FUNCTION nfmpi_get_vara(ncid, varid, start, count, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vara
 
-    INTEGER        FUNCTION nfmpi_get_vara_all(ncid, varid, start, count, text)
+    INTEGER        FUNCTION nfmpi_get_vara_all (ncid, varid, start, count, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vara_all
 #endif
 
@@ -870,41 +902,51 @@ INTERFACE
 !
 
 #if 0
-! Below 4 functions should be internally used only
-    INTEGER        FUNCTION nfmpi_put_vars(ncid, varid, start, count, stride, text)
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_put_vars(ncid, varid, start, count, stride, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_vars
 
-    INTEGER        FUNCTION nfmpi_put_vars_all(ncid, varid, start, count, stride, text)
+    INTEGER        FUNCTION nfmpi_put_vars_all(ncid, varid, start, count, stride, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_vars_all
 
-    INTEGER        FUNCTION nfmpi_get_vars(ncid, varid, start, count, stride, text)
+    INTEGER        FUNCTION nfmpi_get_vars(ncid, varid, start, count, stride, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vars
 
-    INTEGER        FUNCTION nfmpi_get_vars_all(ncid, varid, start, count, stride, text)
+    INTEGER        FUNCTION nfmpi_get_vars_all (ncid, varid, start, count, stride, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vars_all
 #endif
 
@@ -1125,469 +1167,60 @@ INTERFACE
     END FUNCTION   nfmpi_get_vars_double_all
 
 !
-! asynchronous variable array put/get subroutines:
-!
-
-#if 0
-! Below 2 functions should be internally used only
-    INTEGER        FUNCTION nfmpi_iput_vara_all(ncid, varid, start, count, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_all
-
-    INTEGER        FUNCTION nfmpi_iget_vara_all(ncid, varid, start, count, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_all
-#endif
-
-    INTEGER        FUNCTION nfmpi_iput_vara_text_all(ncid, varid, start, count, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_text_all
-
-    INTEGER        FUNCTION nfmpi_iput_vara_text(ncid, varid, start, count, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_text
-
-    INTEGER        FUNCTION nfmpi_iput_vara_int1_all(ncid, varid, start, count, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_int1_all
-
-    INTEGER        FUNCTION nfmpi_iput_vara_int1(ncid, varid, start, count, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_int1
-
-    INTEGER        FUNCTION nfmpi_iput_vara_int2_all(ncid, varid, start, count, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_int2_all
-
-    INTEGER        FUNCTION nfmpi_iput_vara_int2(ncid, varid, start, count, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_int2
-
-    INTEGER        FUNCTION nfmpi_iput_vara_int_all(ncid, varid, start, count, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_int_all
-
-    INTEGER        FUNCTION nfmpi_iput_vara_int(ncid, varid, start, count, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_int
-
-    INTEGER        FUNCTION nfmpi_iput_vara_real_all(ncid, varid, start, count, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_real_all
-
-    INTEGER        FUNCTION nfmpi_iput_vara_real(ncid, varid, start, count, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_real
-
-    INTEGER        FUNCTION nfmpi_iput_vara_double_all(ncid, varid, start, count, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_double_all
-
-    INTEGER        FUNCTION nfmpi_iput_vara_double(ncid, varid, start, count, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_vara_double
-
-    INTEGER        FUNCTION nfmpi_iget_vara_text_all(ncid, varid, start, count, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_text_all
-
-    INTEGER        FUNCTION nfmpi_iget_vara_text(ncid, varid, start, count, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_text
-
-    INTEGER        FUNCTION nfmpi_iget_vara_int1_all(ncid, varid, start, count, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_int1_all
-
-    INTEGER        FUNCTION nfmpi_iget_vara_int1(ncid, varid, start, count, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_int1
-
-    INTEGER        FUNCTION nfmpi_iget_vara_int2_all(ncid, varid, start, count, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_int2_all
-
-    INTEGER        FUNCTION nfmpi_iget_vara_int2(ncid, varid, start, count, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_int2
-
-    INTEGER        FUNCTION nfmpi_iget_vara_int_all(ncid, varid, start, count, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_int_all
-
-    INTEGER        FUNCTION nfmpi_iget_vara_int(ncid, varid, start, count, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_int
-
-    INTEGER        FUNCTION nfmpi_iget_vara_real_all(ncid, varid, start, count, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_real_all
-
-    INTEGER        FUNCTION nfmpi_iget_vara_real(ncid, varid, start, count, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_real
-
-    INTEGER        FUNCTION nfmpi_iget_vara_double_all(ncid, varid, start, count, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_double_all
-
-    INTEGER        FUNCTION nfmpi_iget_vara_double(ncid, varid, start, count, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_vara_double
-
-    INTEGER        FUNCTION nfmpi_iput_var_text_all(ncid, varid, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_text_all
-
-    INTEGER        FUNCTION nfmpi_iput_var_text(ncid, varid, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_text
-
-    INTEGER        FUNCTION nfmpi_iput_var_int1_all(ncid, varid, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_int1_all
-
-    INTEGER        FUNCTION nfmpi_iput_var_int1(ncid, varid, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_int1
-
-    INTEGER        FUNCTION nfmpi_iput_var_int2_all(ncid, varid, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_int2_all
-
-    INTEGER        FUNCTION nfmpi_iput_var_int2(ncid, varid, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_int2
-
-    INTEGER        FUNCTION nfmpi_iput_var_int_all(ncid, varid, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_int_all
-
-    INTEGER        FUNCTION nfmpi_iput_var_int(ncid, varid, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_int
-
-    INTEGER        FUNCTION nfmpi_iput_var_real_all(ncid, varid, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_real_all
-
-    INTEGER        FUNCTION nfmpi_iput_var_real(ncid, varid, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_real
-
-    INTEGER        FUNCTION nfmpi_iput_var_double_all(ncid, varid, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_double_all
-
-    INTEGER        FUNCTION nfmpi_iput_var_double(ncid, varid, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iput_var_double
-
-    INTEGER        FUNCTION nfmpi_iget_var_text_all(ncid, varid, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_text_all
-
-    INTEGER        FUNCTION nfmpi_iget_var_text(ncid, varid, text, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(IN)  :: text
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_text
-
-    INTEGER        FUNCTION nfmpi_iget_var_int1_all(ncid, varid, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_int1_all
-
-    INTEGER        FUNCTION nfmpi_iget_var_int1(ncid, varid, i1vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_int1
-
-    INTEGER        FUNCTION nfmpi_iget_var_int2_all(ncid, varid, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_int2_all
-
-    INTEGER        FUNCTION nfmpi_iget_var_int2(ncid, varid, i2vals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_int2
-
-    INTEGER        FUNCTION nfmpi_iget_var_int_all(ncid, varid, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_int_all
-
-    INTEGER        FUNCTION nfmpi_iget_var_int(ncid, varid, ivals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_int
-
-    INTEGER        FUNCTION nfmpi_iget_var_real_all(ncid, varid, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_real_all
-
-    INTEGER        FUNCTION nfmpi_iget_var_real(ncid, varid, rvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            REAL,                          INTENT(IN)  :: rvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_real
-
-    INTEGER        FUNCTION nfmpi_iget_var_double_all(ncid, varid, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_double_all
-
-    INTEGER        FUNCTION nfmpi_iget_var_double(ncid, varid, dvals, req)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: varid
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
-                            INTEGER,                       INTENT(OUT) :: req
-    END FUNCTION   nfmpi_iget_var_double
-
-    INTEGER        FUNCTION nfmpi_wait(count, req, status)
-                            INTEGER,                       INTENT(IN)  :: count
-                            INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(IN)  :: status(count)
-    END FUNCTION   nfmpi_wait
-
-    INTEGER        FUNCTION nfmpi_wait_all(count, req, status)
-                            INTEGER,                       INTENT(IN)  :: count
-                            INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(IN)  :: status(count)
-    END FUNCTION   nfmpi_wait_all
-
-!
 ! mapped variable put/get subroutines:
 !
-
-    INTEGER        FUNCTION nfmpi_put_varm(ncid, varid, start, count, stride, imap, text)
+#if 0
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_put_varm(ncid, varid, start, count, stride, imap, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_varm
 
-    INTEGER        FUNCTION nfmpi_put_varm_all(ncid, varid, start, count, stride, imap, text)
+    INTEGER        FUNCTION nfmpi_put_varm_all(ncid, varid, start, count, stride, imap, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_put_varm_all
 
-    INTEGER        FUNCTION nfmpi_get_varm(ncid, varid, start, count, stride, imap, text)
+    INTEGER        FUNCTION nfmpi_get_varm(ncid, varid, start, count, stride, imap, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_varm
 
-    INTEGER        FUNCTION nfmpi_get_varm_all(ncid, varid, start, count, stride, imap, text)
+    INTEGER        FUNCTION nfmpi_get_varm_all(ncid, varid, start, count, stride, imap, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_varm_all
+#endif
 
     INTEGER        FUNCTION nfmpi_put_varm_text(ncid, varid, start, count, stride, imap, text)
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -1827,6 +1460,727 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
     END FUNCTION   nfmpi_get_varm_double_all
+!
+! non-blocking variable array iput/iget subroutines:
+!
+
+!
+! entire variable iput/iget subroutines:
+!
+
+#if 0
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_iput_var(ncid, varid, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var
+
+    INTEGER        FUNCTION nfmpi_iget_var(ncid, varid, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var
+#endif
+
+    INTEGER        FUNCTION nfmpi_iput_var_text(ncid, varid, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var_text
+
+    INTEGER        FUNCTION nfmpi_iget_var_text(ncid, varid, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var_text
+
+    INTEGER        FUNCTION nfmpi_iput_var_int1(ncid, varid, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var_int1
+
+    INTEGER        FUNCTION nfmpi_iget_var_int1(ncid, varid, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var_int1
+
+    INTEGER        FUNCTION nfmpi_iput_var_int2(ncid, varid, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var_int2
+
+    INTEGER        FUNCTION nfmpi_iget_var_int2(ncid, varid, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var_int2
+
+    INTEGER        FUNCTION nfmpi_iput_var_int(ncid, varid, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var_int
+
+    INTEGER        FUNCTION nfmpi_iget_var_int(ncid, varid, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var_int
+
+    INTEGER        FUNCTION nfmpi_iput_var_real(ncid, varid, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            REAL,                          INTENT(IN)  :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var_real
+
+    INTEGER        FUNCTION nfmpi_iget_var_real(ncid, varid, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            REAL,                          INTENT(IN)  :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var_real
+
+    INTEGER        FUNCTION nfmpi_iput_var_double(ncid, varid, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var_double
+
+    INTEGER        FUNCTION nfmpi_iget_var_double(ncid, varid, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var_double
+
+!
+! single variable iput/iget subroutines:
+!
+
+#if 0
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_iput_var1(ncid, varid, index, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1
+
+    INTEGER        FUNCTION nfmpi_iget_var1(ncid, varid, index, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1
+#endif
+
+    INTEGER        FUNCTION nfmpi_iput_var1_text(ncid, varid, index, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            CHARACTER,                     INTENT(IN)  :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1_text
+
+    INTEGER        FUNCTION nfmpi_iget_var1_text(ncid, varid, index, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            CHARACTER,                     INTENT(OUT) :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1_text
+
+    INTEGER        FUNCTION nfmpi_iput_var1_int1(ncid, varid, index, i1val, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*1,                     INTENT(IN)  :: i1val
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1_int1
+
+    INTEGER        FUNCTION nfmpi_iget_var1_int1(ncid, varid, index, i1val, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*1,                     INTENT(OUT) :: i1val
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1_int1
+
+    INTEGER        FUNCTION nfmpi_iput_var1_int2(ncid, varid, index, i2val, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*2,                     INTENT(IN)  :: i2val
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1_int2
+
+    INTEGER        FUNCTION nfmpi_iget_var1_int2(ncid, varid, index, i2val, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*2,                     INTENT(OUT) :: i2val
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1_int2
+
+    INTEGER        FUNCTION nfmpi_iput_var1_int(ncid, varid, index, ival, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER,                       INTENT(IN)  :: ival
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1_int
+
+    INTEGER        FUNCTION nfmpi_iget_var1_int(ncid, varid, index, ival, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER,                       INTENT(OUT) :: ival
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1_int
+
+    INTEGER        FUNCTION nfmpi_iput_var1_real(ncid, varid, index, rval, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            REAL,                          INTENT(IN)  :: rval
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1_real
+
+    INTEGER        FUNCTION nfmpi_iget_var1_real(ncid, varid, index, rval, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            REAL,                          INTENT(OUT) :: rval
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1_real
+
+    INTEGER        FUNCTION nfmpi_iput_var1_double(ncid, varid, index, dval, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            DOUBLE PRECISION,              INTENT(IN)  :: dval
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1_double
+
+    INTEGER        FUNCTION nfmpi_iget_var1_double(ncid, varid, index, dval, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            DOUBLE PRECISION,              INTENT(OUT) :: dval
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1_double
+
+!
+! variable array iput/iget subroutines:
+!
+
+#if 0
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_iput_vara(ncid, varid, start, count, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara
+
+    INTEGER        FUNCTION nfmpi_iget_vara(ncid, varid, start, count, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara
+#endif
+
+    INTEGER        FUNCTION nfmpi_iput_vara_text(ncid, varid, start, count, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara_text
+
+    INTEGER        FUNCTION nfmpi_iget_vara_text(ncid, varid, start, count, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara_text
+
+    INTEGER        FUNCTION nfmpi_iput_vara_int1(ncid, varid, start, count, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara_int1
+
+    INTEGER        FUNCTION nfmpi_iget_vara_int1(ncid, varid, start, count, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara_int1
+
+    INTEGER        FUNCTION nfmpi_iput_vara_int2(ncid, varid, start, count, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara_int2
+
+    INTEGER        FUNCTION nfmpi_iget_vara_int2(ncid, varid, start, count, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara_int2
+
+    INTEGER        FUNCTION nfmpi_iput_vara_int(ncid, varid, start, count, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara_int
+
+    INTEGER        FUNCTION nfmpi_iget_vara_int(ncid, varid, start, count, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara_int
+
+    INTEGER        FUNCTION nfmpi_iput_vara_real(ncid, varid, start, count, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            REAL,                          INTENT(IN)  :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara_real
+
+    INTEGER        FUNCTION nfmpi_iget_vara_real(ncid, varid, start, count, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            REAL,                          INTENT(IN)  :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara_real
+
+    INTEGER        FUNCTION nfmpi_iput_vara_double(ncid, varid, start, count, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara_double
+
+    INTEGER        FUNCTION nfmpi_iget_vara_double(ncid, varid, start, count, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara_double
+
+
+!
+! strided variable iput/iget subroutines:
+!
+
+#if 0
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_iput_vars(ncid, varid, start, count, stride, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars
+
+    INTEGER        FUNCTION nfmpi_iget_vars(ncid, varid, start, count, stride, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars
+#endif
+
+    INTEGER        FUNCTION nfmpi_iput_vars_text(ncid, varid, start, count, stride, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars_text
+
+    INTEGER        FUNCTION nfmpi_iget_vars_text(ncid, varid, start, count, stride, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars_text
+
+    INTEGER        FUNCTION nfmpi_iput_vars_int1(ncid, varid, start, count, stride, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars_int1
+
+    INTEGER        FUNCTION nfmpi_iget_vars_int1(ncid, varid, start, count, stride, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars_int1
+
+    INTEGER        FUNCTION nfmpi_iput_vars_int2(ncid, varid, start, count, stride, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars_int2
+
+    INTEGER        FUNCTION nfmpi_iget_vars_int2(ncid, varid, start, count, stride, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars_int2
+
+    INTEGER        FUNCTION nfmpi_iput_vars_int(ncid, varid, start, count, stride, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars_int
+
+    INTEGER        FUNCTION nfmpi_iget_vars_int(ncid, varid, start, count, stride, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER,                       INTENT(OUT) :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars_int
+
+    INTEGER        FUNCTION nfmpi_iput_vars_real(ncid, varid, start, count, stride, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            REAL,                          INTENT(OUT) :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars_real
+
+    INTEGER        FUNCTION nfmpi_iget_vars_real(ncid, varid, start, count, stride, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            REAL,                          INTENT(OUT) :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars_real
+
+    INTEGER        FUNCTION nfmpi_iput_vars_double(ncid, varid, start, count, stride, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars_double
+
+    INTEGER        FUNCTION nfmpi_iget_vars_double(ncid, varid, start, count, stride, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars_double
+
+!
+! mapped variable iput/iget subroutines:
+!
+
+#if 0
+!
+! flexible APIs, not ready yet for Fortran90
+!
+    INTEGER        FUNCTION nfmpi_iput_varm(ncid, varid, start, count, stride, imap, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm
+
+    INTEGER        FUNCTION nfmpi_iget_varm(ncid, varid, start, count, stride, imap, buf, bufcount, datatype, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            <type>,                        INTENT(IN)  :: buf(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+                            INTEGER,                       INTENT(IN)  :: datatype
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm
+#endif
+
+    INTEGER        FUNCTION nfmpi_iput_varm_text(ncid, varid, start, count, stride, imap, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm_text
+
+    INTEGER        FUNCTION nfmpi_iget_varm_text(ncid, varid, start, count, stride, imap, text, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            CHARACTER(len=*),              INTENT(OUT) :: text
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm_text
+
+    INTEGER        FUNCTION nfmpi_iput_varm_int1(ncid, varid, start, count, stride, imap, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm_int1
+
+    INTEGER        FUNCTION nfmpi_iget_varm_int1(ncid, varid, start, count, stride, imap, i1vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm_int1
+
+    INTEGER        FUNCTION nfmpi_iput_varm_int2(ncid, varid, start, count, stride, imap, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm_int2
+
+    INTEGER        FUNCTION nfmpi_iget_varm_int2(ncid, varid, start, count, stride, imap, i2vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm_int2
+
+    INTEGER        FUNCTION nfmpi_iput_varm_int (ncid, varid, start, count, stride, imap, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm_int
+
+    INTEGER        FUNCTION nfmpi_iget_varm_int (ncid, varid, start, count, stride, imap, ivals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER,                       INTENT(OUT) :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm_int
+
+    INTEGER        FUNCTION nfmpi_iput_varm_real(ncid, varid, start, count, stride, imap, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            REAL,                          INTENT(IN)  :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm_real
+
+    INTEGER        FUNCTION nfmpi_iget_varm_real(ncid, varid, start, count, stride, imap, rvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            REAL,                          INTENT(OUT) :: rvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm_real
+
+    INTEGER        FUNCTION nfmpi_iput_varm_double(ncid, varid, start, count, stride, imap, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm_double
+
+    INTEGER        FUNCTION nfmpi_iget_varm_double(ncid, varid, start, count, stride, imap, dvals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm_double
+
+    INTEGER        FUNCTION nfmpi_wait(ncid, count, req, status)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: count
+                            INTEGER,                       INTENT(IN)  :: req(count)
+                            INTEGER,                       INTENT(IN)  :: status(count)
+    END FUNCTION   nfmpi_wait
+
+    INTEGER        FUNCTION nfmpi_wait_all(ncid, count, req, status)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: count
+                            INTEGER,                       INTENT(IN)  :: req(count)
+                            INTEGER,                       INTENT(IN)  :: status(count)
+    END FUNCTION   nfmpi_wait_all
+
+    INTEGER        FUNCTION nfmpi_cancel(ncid, count, req, status)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: count
+                            INTEGER,                       INTENT(IN)  :: req(count)
+                            INTEGER,                       INTENT(IN)  :: status(count)
+    END FUNCTION   nfmpi_cancel
+
 
 END INTERFACE
 

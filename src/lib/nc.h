@@ -1,6 +1,6 @@
 /*
- *	Copyright 1996, University Corporation for Atmospheric Research
- *      See netcdf/COPYRIGHT file for copying and redistribution conditions.
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
 #ifndef _NC_H_
@@ -364,6 +364,44 @@ ncmpi_rename_var(int ncid, int varid, const char *newname);
 #define IS_RECVAR(vp) \
 	((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
+/*
+ *  *  The PnetCDF non-blocking I/O request type
+ *   */
+typedef struct NC_req {
+    int            id;
+    int            rw_flag;
+    NC_var        *varp;
+    void          *buf;
+    void          *xbuf;
+    void          *cbuf;
+    void          *lbuf;
+    int            iscontig_of_ptypes;
+    int            is_imap;
+    int            ndims;
+    MPI_Offset    *start;  /* [ndims] */
+    MPI_Offset    *count;  /* [ndims] */
+    MPI_Offset    *stride; /* [ndims] */
+    MPI_Offset     nelems;
+    MPI_Offset     cnelems;
+    MPI_Offset     lnelems;
+    MPI_Offset     bufcount;
+    MPI_Offset     offset_start;  /* starting of aggregate access region */
+    MPI_Offset     offset_end;    /*   ending of aggregate access region */
+    MPI_Datatype   datatype;
+    MPI_Datatype   ptype;
+    MPI_Datatype   imaptype;
+    int           *status;
+    int            num_subreqs;
+    struct NC_req *subreqs;  /* [num_subreq] */
+    struct NC_req *next;
+} NC_req;
+
+#define NCMPI_REQUEST_NULL ((NCMPI_Request)NULL)
+#define NCMPI_REQTYPE_READ      1
+#define NCMPI_REQTYPE_WRITE     2
+#define NCMPI_REQTYPE_MREAD     3
+#define NCMPI_REQTYPE_MWRITE    4
+
 struct NC {
 	/* links to make list of open netcdf's */
 	struct NC *next;
@@ -392,6 +430,8 @@ struct NC {
 	NC_dimarray dims;
 	NC_attrarray attrs;
 	NC_vararray vars;
+        NC_req *head;
+        NC_req *tail;
 };
 
 #define NC_readonly(ncp) \
@@ -563,16 +603,17 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp);
 /* begin defined in mpincio.c */
 extern int
 ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
-            ncio **nciopp);
+               ncio **nciopp);
 
 extern int
 ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
-          ncio **nciopp);
+             ncio **nciopp);
 extern int
 ncmpiio_sync(ncio *nciop);
 
 extern int
-ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from, MPI_Offset nbytes);
+ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from,
+             MPI_Offset nbytes);
 
 extern int
 ncmpiio_get_hint(NC *ncp, char *key, char *value, int flag);
@@ -597,44 +638,75 @@ void ncmpii_handle_error(int rank, int mpi_status, char *msg);
 
 extern int
 ncmpii_put_att(int ncid, int varid, const char *name, nc_type datatype,
-	MPI_Offset len, const void *value);
+	       MPI_Offset len, const void *value);
 
 extern int
 ncmpii_get_att(int ncid, int varid, const char *name, void *value);
 
-extern int
-ncmpii_put_var1(int ncid, int varid, const MPI_Offset *index, const void *value);
+int ncmpii_x_putn_schar(void *xbuf, const void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_putn_short(void *xbuf, const void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_putn_int(void *xbuf, const void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_putn_float(void *xbuf, const void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_putn_double(void *xbuf, const void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_getn_schar(const void *xbuf, void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_getn_short(const void *xbuf, void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_getn_int(const void *xbuf, void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_getn_float(const void *xbuf, void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+int ncmpii_x_getn_double(const void *xbuf, void *buf, MPI_Offset nelems,
+                        MPI_Datatype datatype);
+
+int NCedgeck(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
+                const MPI_Offset *edges);
+
+int NCstrideedgeck(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
+                const MPI_Offset *edges, const MPI_Offset *stride);
+
+int NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord);
+
+int ncmpii_echar(nc_type nctype,MPI_Datatype mpitype);
+
+int ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype);
+
+int ncmpii_need_swap(nc_type nctype,MPI_Datatype mpitype);
+
+void ncmpii_in_swapn(void *buf, MPI_Offset nelems, int esize);
+
+int ncmpii_is_request_contiguous(NC_var *varp, const MPI_Offset starts[],
+                const MPI_Offset  counts[]);
+
+int ncmpii_get_offset(NC *ncp, NC_var *varp, const MPI_Offset starts[],
+                const MPI_Offset counts[], const MPI_Offset strides[],
+                MPI_Offset *offset_ptr);
+
+int ncmpii_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
+                int collective);
+
+int ncmpii_update_numrecs(NC *ncp, MPI_Offset newnumrecs);
+
+int ncmpii_vars_create_filetype(NC* ncp, NC_var* varp,
+                const MPI_Offset start[], const MPI_Offset count[],
+                const MPI_Offset stride[], int rw_flag,
+                MPI_Offset *offset, MPI_Datatype *filetype);
 
 extern int
-ncmpii_get_var1(int ncid, int varid, const MPI_Offset *index, void *value);
+ncmpii_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset *start,
+                const MPI_Offset *count, const MPI_Offset *stride,
+                void *buf, MPI_Offset bufcount, MPI_Datatype datatype,
+                int rw_flag, int io_method);
 
 extern int
-ncmpii_put_vara(int ncid, int varid,
-	 const MPI_Offset *start, const MPI_Offset *count, const void *value);
-
-extern int
-ncmpii_get_vara(int ncid, int varid,
-	 const MPI_Offset *start, const MPI_Offset *count, void *value);
-
-extern int
-ncmpii_put_vars(int ncid, int varid,
-	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
-	 const void * value);
-
-extern int
-ncmpii_get_vars(int ncid, int varid,
-	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
-	 void * value);
-
-extern int
-ncmpii_put_varm(int ncid, int varid,
-	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
-	 const ptrdiff_t * map, const void *value);
-
-extern int
-ncmpii_get_varm(int ncid, int varid,
-	 const MPI_Offset *start, const MPI_Offset *count, const ptrdiff_t *stride,
-	 const ptrdiff_t * map, void *value);
-
+ncmpii_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
+                const MPI_Offset *stride, const MPI_Offset *imap,
+                const MPI_Offset *count, const void *buf, MPI_Offset bufcount,
+                MPI_Datatype datatype, int *reqid, int rw_flag);
 
 #endif /* _NC_H_ */

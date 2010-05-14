@@ -21,7 +21,9 @@ ld_netcdf	= $(lib_netcdf)
 
 M4SRCS		= \
 		  test_get.m4	\
-		  test_put.m4
+		  test_put.m4   \
+		  test_iget.m4  \
+		  test_iput.m4
 #
 
 FSRCS		= \
@@ -43,7 +45,9 @@ OBJS		= \
 		  test_read.o	\
 		  test_write.o	\
 		  util.o	\
-		  fortlib.o
+		  fortlib.o     \
+		  test_iget.o   \
+		  test_iput.o   
 
 time_log	= times
 
@@ -93,6 +97,8 @@ tags:		$(FSRCS) $(CSRCS) FORCE
 
 test_get.F:	test_get.m4
 test_put.F:	test_put.m4
+test_iget.F:	test_iget.m4
+test_iput.F:	test_iput.m4
 
 # This simple testing target ensures that the test files are present
 testing: test.nc nf_test

@@ -134,7 +134,7 @@ void partition_array(int ndims,
 
 int main(int argc, char** argv) {
 
-  int i;
+  int i, err;
   double power_M;
   int *array_of_sizes, *array_of_subsizes, *array_of_starts;
   int ncid, *dimids, varid_1, varid_2;
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
   int status;
   int success, successall;
   int malloc_failure, malloc_failure_any;
-  NCMPI_Request request;
+  int request;
 
 
   MPI_Init(&argc, &argv);
@@ -237,7 +237,8 @@ int main(int argc, char** argv) {
     if (rank == 0) {
       fprintf(stderr, "malloc(%2.3fMB) failed!\n",
               (float)total_sz*sizeof(TEST_NATIVE_ETYPE)*2/1024/1024);
-      fprintf(stderr, "The whole array may be too big for malloc to handle!\n");      fprintf(stderr, "Please choose smaller array size.\n");
+      fprintf(stderr, "The whole array may be too big for malloc to handle!\n");
+      fprintf(stderr, "Please choose smaller array size.\n");
     }
     TEST_EXIT(-1);
   }
@@ -327,18 +328,16 @@ int main(int argc, char** argv) {
       TEST_PRINT_LIST(local_edges, 0, ndims-1, 1);
       printf("] \n");
  
-      fflush(stdout);
-      MPI_Barrier(MPI_COMM_WORLD);
-    } else {
-      /* Synchronizer: processes should print out their stuffs in turn :) */
-      MPI_Barrier(MPI_COMM_WORLD);
     }
+    fflush(stdout);
+    /* Synchronizer: processes should print out their stuffs in turn :) */
+    MPI_Barrier(MPI_COMM_WORLD);
   }
-
-  fflush(stdout); fflush(stdout); fflush(stdout); sleep(2);
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (rank == 0)
+  if (rank == 0) {
     printf("\n");
+    fflush(stdout);
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
 
  /* RESET the target region of buf2 */
 
@@ -382,7 +381,7 @@ int main(int argc, char** argv) {
     fflush(stdout);
   }
 
-  ncmpi_wait_one(&request);
+  ncmpi_wait(ncid, 1, &request, &status);
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0) {
@@ -412,7 +411,7 @@ int main(int argc, char** argv) {
     fflush(stdout);
   }
 
-  ncmpi_wait_one(&request);
+  ncmpi_wait(ncid, 1, &request, &status);
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (rank == 0) {
@@ -424,7 +423,7 @@ int main(int argc, char** argv) {
 
  /* COMPARE buf1 and buf2 for equality */
 
-  if ( memcmp((void *)buf1, (void *)buf2, total_sz*sizeof(TEST_NATIVE_ETYPE)) )
+  if ( err = memcmp((void *)buf1, (void *)buf2, total_sz*sizeof(TEST_NATIVE_ETYPE)) )
     success = 0;
   else
     success = 1;

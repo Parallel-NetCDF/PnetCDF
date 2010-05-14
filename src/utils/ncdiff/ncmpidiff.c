@@ -28,8 +28,8 @@
     status = func(ncid2, NC_GLOBAL, name2, b2);                              \
     HANDLE_ERROR                                                             \
     if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"attribute[%d] %s buf1 != buf2 at position %d\n",        \
-                i,#nctype,pos);                                              \
+        sprintf(str,"attribute[%d] %s: %s buf1 != buf2 at position %d\n",    \
+                i,name1,#nctype,pos);                                        \
     HANDLE_DIFF(str)                                                         \
     free(b1);                                                                \
     free(b2);                                                                \
@@ -45,8 +45,8 @@
     status = func(ncid2, i, name2, b2);                                      \
     HANDLE_ERROR                                                             \
     if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"variable[%d] attribute[%d] %s buf1 != buf2 at position %d\n", \
-                i,j,#nctype,pos);                                            \
+        sprintf(str,"variable[%d] %s: attribute[%d] %s: %s buf1 != buf2 at position %d\n", \
+                i,name,j,name1,#nctype,pos);                                 \
     HANDLE_DIFF(str)                                                         \
     free(b1);                                                                \
     free(b2);                                                                \
@@ -62,8 +62,8 @@
     status = func(ncid2, i, start, shape, b2);                               \
     HANDLE_ERROR                                                             \
     if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"variable[%d] %s %s buf1 != buf2 at position %d\n",      \
-                i,name1,#nctype,pos);                                        \
+        sprintf(str,"variable[%d] %s: %s buf1 != buf2 at position %d\n",     \
+                i,name,#nctype,pos);                                        \
     HANDLE_DIFF(str)                                                         \
     free(b1);                                                                \
     free(b2);                                                                \
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
     int i, j, status, isRecvar, rank, nprocs;
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, dimids1[NC_MAX_DIMS];
     int ncid2, ndims2, nvars2, natts2, unlimdimid2, dimids2[NC_MAX_DIMS];
-    char str[512], name1[NC_MAX_NAME], name2[NC_MAX_NAME];
+    char str[512], name1[NC_MAX_NAME], name2[NC_MAX_NAME], name[NC_MAX_NAME];
     MPI_Offset shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
     MPI_Offset attlen1, dimlen1, attlen2, dimlen2;
     ncmpi_type type1, type2;
@@ -131,10 +131,10 @@ int main(int argc, char **argv) {
         status = ncmpi_inq_att(ncid2, NC_GLOBAL, name2, &type2, &attlen2);
         HANDLE_ERROR
         if (type1 != type2)
-            sprintf(str,"attribute[%d] type1(%d) != type2(%d)\n",i,type1,type2);
+            sprintf(str,"attribute[%d] %s: type1(%d) != type2(%d)\n",i,name1,type1,type2);
         HANDLE_DIFF(str)
         if (attlen1 != attlen2)
-            sprintf(str,"attribute[%d] attlen1(%d) != attlen2(%d)\n",i,attlen1,attlen2);
+            sprintf(str,"attribute[%d] %s: attlen1(%d) != attlen2(%d)\n",i,name1,attlen1,attlen2);
         HANDLE_DIFF(str)
         switch (type1) {
             case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text,   NC_CHAR)
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
         status = ncmpi_inq_dim(ncid2, i, name2, &dimlen2);
         HANDLE_ERROR
         if (dimlen1 != dimlen2)
-            sprintf(str,"dimension[%d] dimlen1(%d) != dimlen2(%d)\n",i,dimlen1,dimlen2);
+            sprintf(str,"dimension[%d] %s: dimlen1(%d) != dimlen2(%d)\n",i,name1,dimlen1,dimlen2);
         HANDLE_DIFF(str)
     }
 
@@ -167,19 +167,21 @@ int main(int argc, char **argv) {
             sprintf(str,"variable[%d]: name1(%s) != name2(%s)\n",i,name1,name2);
         HANDLE_DIFF(str)
         if (type1 != type2)
-            sprintf(str,"variable[%d]: type1(%s) != type2(%s)\n",i,type1,type2);
+            sprintf(str,"variable[%d] %s: type1(%s) != type2(%s)\n",i,name1,type1,type2);
         HANDLE_DIFF(str)
         if (ndims1 != ndims2)
-            sprintf(str,"variable[%d]: ndims1(%s) != ndims2(%s)\n",i,ndims1,ndims2);
+            sprintf(str,"variable[%d] %s: ndims1(%s) != ndims2(%s)\n",i,name1,ndims1,ndims2);
         HANDLE_DIFF(str)
         for (j=0; j<ndims1; j++) {
             if (dimids1[j] != dimids2[j])
-                sprintf(str,"variable[%d]: dimids1[%d]=%d != dimids2[%d]=%d\n",i,j,dimids1[j],j,dimids2[j]);
+                sprintf(str,"variable[%d] %s: dimids1[%d]=%d != dimids2[%d]=%d\n",i,name1,j,dimids1[j],j,dimids2[j]);
             HANDLE_DIFF(str)
         }
         if (natts1 != natts2)
-            sprintf(str,"variable[%d]: natts1(%s) != natts2(%s)\n",i,natts1,natts2);
+            sprintf(str,"variable[%d] %s: natts1(%s) != natts2(%s)\n",i,name1,natts1,natts2);
         HANDLE_DIFF(str)
+
+        strcpy(name,name1);
 
         /* var attributes, assume CHAR attributes */
         for (j=0; j<natts1; j++) {
@@ -188,7 +190,7 @@ int main(int argc, char **argv) {
             status = ncmpi_inq_attname(ncid2, i, j, name2);
             HANDLE_ERROR
             if (strcmp(name1, name2) != 0)
-                sprintf(str,"variable[%d]: attr name[%d] (%s) != (%s)\n",i,j,name1,name2);
+                sprintf(str,"variable[%d] %s: attr name[%d] (%s) != (%s)\n",i,name,j,name1,name2);
             HANDLE_DIFF(str)
 
             status = ncmpi_inq_att(ncid1, i, name1, &type1, &attlen1);
@@ -196,10 +198,10 @@ int main(int argc, char **argv) {
             status = ncmpi_inq_att(ncid2, i, name2, &type2, &attlen2);
             HANDLE_ERROR
             if (type1 != type2)
-                sprintf(str,"variable[%d]: attr type[%d] (%s) != (%s)\n",i,j,type1,type2);
+                sprintf(str,"variable[%d] %s: attr type[%d] (%s) != (%s)\n",i,name,j,type1,type2);
             HANDLE_DIFF(str)
             if (attlen1 != attlen2)
-                sprintf(str,"variable[%d]: attr attlen[%d] (%d) != (%d)\n",i,j,attlen1,attlen2);
+                sprintf(str,"variable[%d] %s: attr attlen[%d] (%d) != (%d)\n",i,name,j,attlen1,attlen2);
             HANDLE_DIFF(str)
 
             switch (type1) {
@@ -234,6 +236,7 @@ int main(int argc, char **argv) {
         isRecvar = 0;
         varsize = 1;
         ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
+        strcpy(name,name1);
         for (j=0; j<ndims1; j++) {
             status = ncmpi_inq_dim(ncid1, dimids1[j], name2, shape + j);
             HANDLE_ERROR

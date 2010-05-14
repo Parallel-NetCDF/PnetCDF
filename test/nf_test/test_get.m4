@@ -682,8 +682,6 @@ C    */
 ])dnl
 
 
-dnl parallel-netcdf doesn't implement varm yet, so we haven't
-dnl parallel-netcdfified this all the way yet.
 dnl TEST_NFMPI_GET_VARM(TYPE)
 dnl
 define([TEST_NFMPI_GET_VARM],dnl

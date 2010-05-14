@@ -20,6 +20,8 @@ SRCS		=   nc_test.c \
 		    test_put.c \
 		    test_read.c \
 		    test_write.c \
+		    test_iget.c \
+		    test_iput.c \
 		    util.c
 
 OBJS		= $(SRCS:.c=.o)
@@ -29,11 +31,13 @@ ld_netcdf	= -L../../src/lib -lpnetcdf
 
 time_log	= times
 
-GARBAGE		= nc_test test.nc scratch.nc lint.out $(time_log) test_get.c test_put.c
+GARBAGE		= nc_test test.nc scratch.nc lint.out $(time_log) test_get.c test_put.c test_iget.c test_iput.c
 
 PACKING_LIST	=  $(SRCS) \
 		    test_get.m4 \
 		    test_put.m4 \
+		    test_iget.m4 \
+		    test_iput.m4 \
 		    error.h \
 	            tests.h \
 		    depend	\
@@ -62,6 +66,10 @@ nc_test:		$(OBJS) $(lib_netcdf)
 test_get.c:	test_get.m4
 
 test_put.c:	test_put.m4
+
+test_iget.c:	test_iget.m4
+
+test_iput.c:	test_iput.m4
 
 nctime:		nctime.o $(lib_netcdf)
 	$(LINK.c) nctime.o $(ld_netcdf) $(ld_math) $(LIBS) 

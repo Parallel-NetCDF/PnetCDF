@@ -1,9 +1,8 @@
-/***************************************************************************
- *
- * This file is written by Northwestern University and Argonne National
- * Laboratory
- *
- **************************************************************************/
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+
 #include "nc.h"
 #include <mpi.h>
 #include <assert.h>
