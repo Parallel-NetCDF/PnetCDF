@@ -1,9 +1,7 @@
-/***********************************************************************
- *
- * This file is written by Northwestern University and Argonne National
- * Laboratory
- *
- ***********************************************************************/
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
 
 #include "nc.h"
 
@@ -1333,7 +1331,7 @@ ncmpii_comp_attrs(NC_attrarray *nc_attr1,
             case NC_BYTE:
                 if (strncmp(v1->xvalue, v2->xvalue, num))
                     printf("%s attribute \"%s\" BYTE/CHAR (%s != %s)\n", WARN_STR,
-                           v1->name->cp,v1->xvalue,v2->xvalue);
+                           v1->name->cp,(char*)v1->xvalue,(char*)v2->xvalue);
                 break;
             case NC_SHORT:
                 sa = v1->xvalue;

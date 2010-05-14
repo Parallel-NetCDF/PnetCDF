@@ -31,7 +31,21 @@ LIB_CSRCS = \
 	ncx.c \
 	string.c \
 	var.c \
-	ncmpidtype.c 
+	ncmpidtype.c \
+	convert_swap.c \
+	filetype.c \
+	getput_var.c \
+	getput_var1.c \
+	getput_vara.c \
+	getput_vars.c \
+	getput_varm.c \
+	i_getput_var.c \
+	i_getput_var1.c \
+	i_getput_vara.c \
+	i_getput_vars.c \
+	i_getput_varm.c \
+	m_getput_varx.c \
+	nonblocking.c
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \
@@ -45,21 +59,12 @@ PACKING_LIST = \
 	pnetcdf.3 \
 	pnetcdf.h \
 	rnd.h \
-	ncmpidtype.h 
+	ncmpidtype.h \
+	macro.h
 
 LIB_OBJS = $(LIB_CSRCS:.c=.o)
 
-PROG_CSRCS = \
-	validator.c \
-	header.c \
-	mpincio.c \
-	attr.c \
-	dim.c \
-	nc.c \
-	ncx.c \
-	string.c \
-	error.c \
-	var.c
+PROG_CSRCS = validator.c
 
 PROG_OBJS = $(PROG_CSRCS:.c=.o)
 
@@ -98,8 +103,8 @@ uninstall:
 $(MANUAL):	$(srcdir)/../../man/netcdf.m4
 	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || rm $@
 
-$(PROGRAM):	$(PROG_OBJS)
-	$(LINK.c) $(PROG_OBJS) $(LIBS)
+$(PROGRAM):	$(PROG_OBJS) $(LIBRARY)
+	$(LINK.c) $(PROG_OBJS) $(LIBRARY)
 
 include $(srcdir)/../../rules.make
 

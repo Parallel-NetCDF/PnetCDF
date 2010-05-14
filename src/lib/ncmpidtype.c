@@ -1,10 +1,7 @@
-/*****************************************************************************
- *
- * This file is created by Northwestern University and Argonne National
- * Laboratory
- *
- ****************************************************************************/
-
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
 
 #include "nc.h"
 #ifdef HAVE_STDLIB_H

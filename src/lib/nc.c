@@ -1,6 +1,6 @@
 /*
- *      Copyright 1996, University Corporation for Atmospheric Research
- *      See netcdf/COPYRIGHT file for copying and redistribution conditions.
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
 
@@ -13,6 +13,7 @@
 #include <string.h>
 #include <assert.h>
 #include "ncx.h"
+#include "macro.h"
 
 /* list of open netcdf's */
 static NC *NClist = NULL;
@@ -632,13 +633,25 @@ write_NC(NC *ncp)
 {
     int status = NC_NOERR, mpireturn, rank;
     void *buf;
+    MPI_Offset hsz; /* header size with 0-padding if needed */
     MPI_Status mpistatus;
  
     assert(!NC_readonly(ncp));
  
     MPI_Comm_rank(ncp->nciop->comm, &rank);
 
-    buf = (void *)malloc(ncp->xsz); /* header buffer for I/O */
+    if (NC_dofill(ncp)) { /* hsz is the header size with zero padding */
+        /* we don't need this, as these paddings will never be accessed */
+        hsz = MIN(ncp->begin_var, ncp->begin_rec);
+        hsz = MAX(hsz, ncp->xsz);
+    }
+    else
+        hsz = ncp->xsz;
+
+    buf = (void *)malloc(hsz); /* header buffer for I/O */
+    if (hsz > ncp->xsz)
+        bzero((char*)buf+ncp->xsz, hsz - ncp->xsz);
+
     status = ncmpii_hdr_put_NC(ncp, buf); /* copy header to buffer */
     if (status != NC_NOERR) {
         free(buf);
@@ -657,7 +670,7 @@ write_NC(NC *ncp)
     /* only rank 0's header gets written to the file */
     if (rank == 0) {
         mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf,
-                                      ncp->xsz, MPI_BYTE, &mpistatus);
+                                      hsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
             return NC_EWRITE;
@@ -677,8 +690,8 @@ ncmpii_NC_sync(NC  *ncp,
                int  doFsync)
 {
     /* this function is called from four places:
-       1) changing header by APIs in data mode and NC_doHsync(ncp) is true
-          and these APIs are called in data mode
+       1) changing header by put APIs in data mode and NC_doHsync(ncp) is true
+          and these put APIs are called in data mode
        2) ncmpi_sync()
        3) ncmpi_abort()
        4) ncmpii_NC_close()
@@ -691,7 +704,8 @@ ncmpii_NC_sync(NC  *ncp,
 
     /* collect and set the max numrecs due to difference by independent write */
     mynumrecs = ncp->numrecs;
-    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX, ncp->nciop->comm);
+    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
+                  ncp->nciop->comm);
     if (numrecs > ncp->numrecs) {
         ncp->numrecs = numrecs;
         set_NC_ndirty(ncp); /* set numrecs is dirty flag */
@@ -708,8 +722,9 @@ ncmpii_NC_sync(NC  *ncp,
     }
 
     if (doFsync && didWrite)
-        /* fsync only in data mode, except called from ncmpi_sync() or
-           ncmpi_abort() where a fsync will be called later */
+        /* calling fsync only in data mode and header was just updataed above.
+           If this API is called from ncmpi_sync() or ncmpi_abort(), fsync
+           is no needed because a later fsync call is laready in those APIs */
         ncmpiio_sync(ncp->nciop);
 
     return status;

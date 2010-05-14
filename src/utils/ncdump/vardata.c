@@ -712,8 +712,8 @@ vardata(
     MPI_Offset cor[NC_MAX_DIMS];	/* corner coordinates */
     MPI_Offset edg[NC_MAX_DIMS];	/* edges of hypercube */
     size_t add[NC_MAX_DIMS];	/* "odometer" increment to next "row"  */
-#define VALBUFSIZ 1000
-    double vals[VALBUFSIZ] ; /* aligned buffer */
+#define VALBUFSIZ 1048576
+    double *vals ; /* aligned buffer */
  
     int gulp = VALBUFSIZ;
 
@@ -727,6 +727,8 @@ vardata(
 
     /* printf format used to print each value */
     const char *fmt = get_fmt(ncid, varid, vp->type);
+
+    vals = (double*) malloc(VALBUFSIZ);
 
     if (!initeps) {		/* make sure epsilons get initialized */
 	init_epsilons();
@@ -857,6 +859,7 @@ vardata(
 	    error("vardata: odometer overflowed!");
 	set_indent(2);
     }
+    free(vals);
 
     return 0;
 }

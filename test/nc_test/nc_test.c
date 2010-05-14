@@ -85,7 +85,7 @@ usage(void)
 }
 
 #define NC_TEST(func) \
-    print( "*** Testing " #func " ... ");\
+    print( "*** Testing %-22s ... ",#func);\
     nfails = 0;\
     test_ ## func();\
     nfailsTotal += nfails;\
@@ -249,6 +249,60 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_inq_attlen);
     NC_TEST(ncmpi_inq_atttype);
 
+    /* nonblocking I/O */
+    NC_TEST(ncmpi_iget_var_text);
+    NC_TEST(ncmpi_iget_var_uchar); 
+    NC_TEST(ncmpi_iget_var_schar);
+    NC_TEST(ncmpi_iget_var_short);
+    NC_TEST(ncmpi_iget_var_int);
+    NC_TEST(ncmpi_iget_var_long); 
+    NC_TEST(ncmpi_iget_var_float);
+    NC_TEST(ncmpi_iget_var_double);
+    NC_TEST(ncmpi_iget_var1_text);
+    NC_TEST(ncmpi_iget_var1_uchar); 
+    NC_TEST(ncmpi_iget_var1_schar);
+    NC_TEST(ncmpi_iget_var1_short);
+    NC_TEST(ncmpi_iget_var1_int);
+    NC_TEST(ncmpi_iget_var1_long);
+    NC_TEST(ncmpi_iget_var1_float);
+    NC_TEST(ncmpi_iget_var1_double);
+#ifdef TEST_VOIDSTAR
+    NC_TEST(ncmpi_iget_var1);
+#endif /* TEST_VOIDSTAR */
+    NC_TEST(ncmpi_iget_vara_text);
+    NC_TEST(ncmpi_iget_vara_uchar);
+    NC_TEST(ncmpi_iget_vara_schar);
+    NC_TEST(ncmpi_iget_vara_short);
+    NC_TEST(ncmpi_iget_vara_int);
+    NC_TEST(ncmpi_iget_vara_long); 
+    NC_TEST(ncmpi_iget_vara_float);
+    NC_TEST(ncmpi_iget_vara_double);
+#ifdef TEST_VOIDSTAR
+    NC_TEST(ncmpi_iget_vara);
+#endif /* TEST_VOIDSTAR */
+    NC_TEST(ncmpi_iget_vars_text);
+    NC_TEST(ncmpi_iget_vars_uchar);
+    NC_TEST(ncmpi_iget_vars_schar);
+    NC_TEST(ncmpi_iget_vars_short);
+    NC_TEST(ncmpi_iget_vars_int);
+    NC_TEST(ncmpi_iget_vars_long); 
+    NC_TEST(ncmpi_iget_vars_float);
+    NC_TEST(ncmpi_iget_vars_double);
+#ifdef TEST_VOIDSTAR
+    NC_TEST(ncmpi_iget_vars);
+#endif /* TEST_VOIDSTAR */
+    NC_TEST(ncmpi_iget_varm_text);
+    NC_TEST(ncmpi_iget_varm_uchar);
+    NC_TEST(ncmpi_iget_varm_schar);
+    NC_TEST(ncmpi_iget_varm_short);
+    NC_TEST(ncmpi_iget_varm_int);
+    NC_TEST(ncmpi_iget_varm_long);
+    NC_TEST(ncmpi_iget_varm_float);
+    NC_TEST(ncmpi_iget_varm_double);
+#ifdef TEST_VOIDSTAR
+    NC_TEST(ncmpi_iget_varm);
+#endif /* TEST_VOIDSTAR */
+
 	/* Test write functions */
     if (! read_only) {
 	NC_TEST(ncmpi_create);
@@ -329,8 +383,61 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_set_fill);
 
 	NC_TEST(ncmpi_delete);
-    }
 
+        /* test nonblocking APIs */
+	NC_TEST(ncmpi_iput_var_text);
+	NC_TEST(ncmpi_iput_var_uchar);
+	NC_TEST(ncmpi_iput_var_schar);
+	NC_TEST(ncmpi_iput_var_short);
+	NC_TEST(ncmpi_iput_var_int);
+	NC_TEST(ncmpi_iput_var_long); 
+	NC_TEST(ncmpi_iput_var_float);
+	NC_TEST(ncmpi_iput_var_double);
+	NC_TEST(ncmpi_iput_var1_text);
+	NC_TEST(ncmpi_iput_var1_uchar); 
+	NC_TEST(ncmpi_iput_var1_schar);
+	NC_TEST(ncmpi_iput_var1_short);
+	NC_TEST(ncmpi_iput_var1_int);
+	NC_TEST(ncmpi_iput_var1_long); 
+	NC_TEST(ncmpi_iput_var1_float);
+	NC_TEST(ncmpi_iput_var1_double);
+#ifdef TEST_VOIDSTAR
+	NC_TEST(ncmpi_iput_var1);
+#endif /* TEST_VOIDSTAR */
+	NC_TEST(ncmpi_iput_vara_text);
+	NC_TEST(ncmpi_iput_vara_uchar);
+	NC_TEST(ncmpi_iput_vara_schar); 
+	NC_TEST(ncmpi_iput_vara_short);
+	NC_TEST(ncmpi_iput_vara_int);
+	NC_TEST(ncmpi_iput_vara_long);
+	NC_TEST(ncmpi_iput_vara_float);
+	NC_TEST(ncmpi_iput_vara_double);
+#ifdef TEST_VOIDSTAR
+	NC_TEST(ncmpi_iput_vara);
+#endif /* TEST_VOIDSTAR */
+	NC_TEST(ncmpi_iput_vars_text);
+	NC_TEST(ncmpi_iput_vars_uchar);
+	NC_TEST(ncmpi_iput_vars_schar);
+	NC_TEST(ncmpi_iput_vars_short);
+	NC_TEST(ncmpi_iput_vars_int);
+	NC_TEST(ncmpi_iput_vars_long); 
+	NC_TEST(ncmpi_iput_vars_float);
+	NC_TEST(ncmpi_iput_vars_double);
+#ifdef TEST_VOIDSTAR
+	NC_TEST(ncmpi_iput_vars);
+#endif /* TEST_VOIDSTAR */
+	NC_TEST(ncmpi_iput_varm_text);
+	NC_TEST(ncmpi_iput_varm_uchar);
+	NC_TEST(ncmpi_iput_varm_schar);
+	NC_TEST(ncmpi_iput_varm_short);
+	NC_TEST(ncmpi_iput_varm_int);
+	NC_TEST(ncmpi_iput_varm_long);
+	NC_TEST(ncmpi_iput_varm_float);
+	NC_TEST(ncmpi_iput_varm_double);
+#ifdef TEST_VOIDSTAR
+	NC_TEST(ncmpi_iput_varm);
+#endif /* TEST_VOIDSTAR */
+    }
     MPI_Finalize();
 
     print( "\nNOTE: parallel-netcdf expects to see 2 failures");

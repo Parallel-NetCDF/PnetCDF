@@ -9,9 +9,9 @@ INCLUDES	= -I$(INCDIR) -I../../src/lib -I$(srcdir)/../common
 CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 
 
-SRCS		= mcoll_perf.c single_mcoll_perf_record.c single_mcoll_perf_non_record.c 
+SRCS		= mcoll_perf.c
 OBJS		= $(SRCS:.c=.o)
-PROGS		= mcoll_perf single_mcoll_perf_record single_mcoll_perf_non_record
+PROGS		= mcoll_perf
 LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
 LIBS		= -lpnetcdf -ltestutils @LIBS@
 
@@ -21,10 +21,6 @@ LIBS		= -lpnetcdf -ltestutils @LIBS@
 all:		$(PROGS)
 
 mcoll_perf: mcoll_perf.o
-	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
-single_mcoll_perf_record: single_mcoll_perf_record.o
-	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
-single_mcoll_perf_non_record: single_mcoll_perf_non_record.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:

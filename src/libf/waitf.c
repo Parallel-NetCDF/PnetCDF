@@ -7,7 +7,6 @@
  * DO NOT EDIT
  */
 #include "mpinetcdf_impl.h"
-#include "mvar.h"
 
 
 #ifdef F77_NAME_UPPER
@@ -15,40 +14,15 @@
 #elif defined(F77_NAME_LOWER_2USCORE)
 #define nfmpi_wait_ nfmpi_wait__
 #elif !defined(F77_NAME_LOWER_USCORE)
-#define nfmpi_wait_ nfmpi_wait_
+#define nfmpi_wait_ nfmpi_wait
 /* Else leave name alone */
 #endif
 
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_wait_ ( int *v1, MPI_Fint * v2, MPI_Fint *v3 ){
-    extern lnc_req *req_head ;
-    extern lnc_req *req_tail ;
+FORTRAN_API int FORT_CALL nfmpi_wait_ ( int *v1, int *v2, MPI_Fint v3[], MPI_Fint v4[] ){
     int ierr;
-    NCMPI_Request *l2_req;
-    int i;
-    lnc_req *tmp_req = NULL;
-    l2_req = malloc((*v1)*sizeof(NCMPI_Request));
-    tmp_req = req_head;
- 
-    i = 0;
-    while(tmp_req != NULL){
-	   l2_req[i]=  tmp_req->req; 
-	   tmp_req = tmp_req->next;
-	   i++; 
-    }
-  
-    ierr = ncmpi_wait( *v1, l2_req, v3 );
-   
-    while(req_head != NULL){
-           tmp_req = req_head;
-	   req_head = req_head->next;
-	   free(tmp_req);
-    }    
-	req_tail = NULL;
-
-    free(l2_req);
-	
+    ierr = ncmpi_wait( *v1, *v2, v3, v4 );
     return ierr;
 }

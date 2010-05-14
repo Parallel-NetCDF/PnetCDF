@@ -178,6 +178,58 @@
         external        test_nfmpi_get_varm_real
         external        test_nfmpi_get_varm_double
 
+        external        test_nfmpi_iget_var1_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iget_var1_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iget_var1_int2
+#endif
+        external        test_nfmpi_iget_var1_int
+        external        test_nfmpi_iget_var1_real
+        external        test_nfmpi_iget_var1_double
+        external        test_nfmpi_iget_var_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iget_var_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iget_var_int2
+#endif
+        external        test_nfmpi_iget_var_int
+        external        test_nfmpi_iget_var_real
+        external        test_nfmpi_iget_var_double
+        external        test_nfmpi_iget_vara_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iget_vara_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iget_vara_int2
+#endif
+        external        test_nfmpi_iget_vara_int
+        external        test_nfmpi_iget_vara_real
+        external        test_nfmpi_iget_vara_double
+        external        test_nfmpi_iget_vars_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iget_vars_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iget_vars_int2
+#endif
+        external        test_nfmpi_iget_vars_int
+        external        test_nfmpi_iget_vars_real
+        external        test_nfmpi_iget_vars_double
+
+        external        test_nfmpi_iget_varm_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iget_varm_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iget_varm_int2
+#endif
+        external        test_nfmpi_iget_varm_int
+        external        test_nfmpi_iget_varm_real
+        external        test_nfmpi_iget_varm_double
+
         external        test_nfmpi_get_att_text
 #if defined(NF_INT1_T)
         external        test_nfmpi_get_att_int1
@@ -252,6 +304,58 @@
         external        test_nfmpi_put_varm_int
         external        test_nfmpi_put_varm_real
         external        test_nfmpi_put_varm_double
+
+        external        test_nfmpi_iput_var1_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iput_var1_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iput_var1_int2
+#endif
+        external        test_nfmpi_iput_var1_int
+        external        test_nfmpi_iput_var1_real
+        external        test_nfmpi_iput_var1_double
+        external        test_nfmpi_iput_var_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iput_var_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iput_var_int2
+#endif
+        external        test_nfmpi_iput_var_int
+        external        test_nfmpi_iput_var_real
+        external        test_nfmpi_iput_var_double
+        external        test_nfmpi_iput_vara_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iput_vara_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iput_vara_int2
+#endif
+        external        test_nfmpi_iput_vara_int
+        external        test_nfmpi_iput_vara_real
+        external        test_nfmpi_iput_vara_double
+        external        test_nfmpi_iput_vars_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iput_vars_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iput_vars_int2
+#endif
+        external        test_nfmpi_iput_vars_int
+        external        test_nfmpi_iput_vars_real
+        external        test_nfmpi_iput_vars_double
+
+        external        test_nfmpi_iput_varm_text
+#if defined(NF_INT1_T)
+        external        test_nfmpi_iput_varm_int1
+#endif
+#if defined(NF_INT2_T)
+        external        test_nfmpi_iput_varm_int2
+#endif
+        external        test_nfmpi_iput_varm_int
+        external        test_nfmpi_iput_varm_real
+        external        test_nfmpi_iput_varm_double
 
         external        test_nfmpi_rename_var
         external        test_nfmpi_put_att_text
@@ -415,6 +519,58 @@ C       /* Test read-only functions, using pregenerated test-file */
         call test('nfmpi_get_varm_real', test_nfmpi_get_varm_real)
         call test('nfmpi_get_varm_double', test_nfmpi_get_varm_double)
 
+        call test('nfmpi_iget_var1_text', test_nfmpi_iget_var1_text)
+#if defined(NF_INT1_T)
+        call test('nfmpi_iget_var1_int1', test_nfmpi_iget_var1_int1)
+#endif
+#if defined(NF_INT2_T)
+        call test('nfmpi_iget_var1_int2', test_nfmpi_iget_var1_int2)
+#endif
+        call test('nfmpi_iget_var1_int', test_nfmpi_iget_var1_int)
+        call test('nfmpi_iget_var1_real', test_nfmpi_iget_var1_real)
+        call test('nfmpi_iget_var1_double', test_nfmpi_iget_var1_double)
+        call test('nfmpi_iget_var_text', test_nfmpi_iget_var_text)
+#if defined(NF_INT1_T)
+        call test('nfmpi_iget_var_int1', test_nfmpi_iget_var_int1)
+#endif
+#if defined(NF_INT2_T)
+        call test('nfmpi_iget_var_int2', test_nfmpi_iget_var_int2)
+#endif
+        call test('nfmpi_iget_var_int', test_nfmpi_iget_var_int)
+        call test('nfmpi_iget_var_real', test_nfmpi_iget_var_real)
+        call test('nfmpi_iget_var_double', test_nfmpi_iget_var_double)
+        call test('nfmpi_iget_vara_text', test_nfmpi_iget_vara_text)
+#if defined(NF_INT1_T)
+        call test('nfmpi_iget_vara_int1', test_nfmpi_iget_vara_int1)
+#endif
+#if defined(NF_INT2_T)
+        call test('nfmpi_iget_vara_int2', test_nfmpi_iget_vara_int2)
+#endif
+        call test('nfmpi_iget_vara_int', test_nfmpi_iget_vara_int)
+        call test('nfmpi_iget_vara_real', test_nfmpi_iget_vara_real)
+        call test('nfmpi_iget_vara_double', test_nfmpi_iget_vara_double)
+        call test('nfmpi_iget_vars_text', test_nfmpi_iget_vars_text)
+#if defined(NF_INT1_T)
+        call test('nfmpi_iget_vars_int1', test_nfmpi_iget_vars_int1)
+#endif
+#if defined(NF_INT2_T)
+        call test('nfmpi_iget_vars_int2', test_nfmpi_iget_vars_int2)
+#endif
+        call test('nfmpi_iget_vars_int', test_nfmpi_iget_vars_int)
+        call test('nfmpi_iget_vars_real', test_nfmpi_iget_vars_real)
+        call test('nfmpi_iget_vars_double', test_nfmpi_iget_vars_double)
+
+        call test('nfmpi_iget_varm_text', test_nfmpi_iget_varm_text)
+#if defined(NF_INT1_T)
+        call test('nfmpi_iget_varm_int1', test_nfmpi_iget_varm_int1)
+#endif
+#if defined(NF_INT2_T)
+        call test('nfmpi_iget_varm_int2', test_nfmpi_iget_varm_int2)
+#endif
+        call test('nfmpi_iget_varm_int', test_nfmpi_iget_varm_int)
+        call test('nfmpi_iget_varm_real', test_nfmpi_iget_varm_real)
+        call test('nfmpi_iget_varm_double', test_nfmpi_iget_varm_double)
+
         call test('nfmpi_get_att_text', test_nfmpi_get_att_text)
 #if defined(NF_INT1_T)
         call test('nfmpi_get_att_int1', test_nfmpi_get_att_int1)
@@ -497,6 +653,63 @@ C           /* Test write functions */
             call test('nfmpi_put_varm_real', test_nfmpi_put_varm_real)
             call test('nfmpi_put_varm_double',
      +                 test_nfmpi_put_varm_double)
+
+            call test('nfmpi_iput_var1_text', test_nfmpi_iput_var1_text)
+#if defined(NF_INT1_T)
+            call test('nfmpi_iput_var1_int1', test_nfmpi_iput_var1_int1)
+#endif
+#if defined(NF_INT2_T)
+            call test('nfmpi_iput_var1_int2', test_nfmpi_iput_var1_int2)
+#endif
+            call test('nfmpi_iput_var1_int', test_nfmpi_iput_var1_int)
+            call test('nfmpi_iput_var1_real', test_nfmpi_iput_var1_real)
+            call test('nfmpi_iput_var1_double', 
+     +                 test_nfmpi_iput_var1_double)
+            call test('nfmpi_iput_var_text', test_nfmpi_iput_var_text)
+#if defined(NF_INT1_T)
+            call test('nfmpi_iput_var_int1', test_nfmpi_iput_var_int1)
+#endif
+#if defined(NF_INT2_T)
+            call test('nfmpi_iput_var_int2', test_nfmpi_iput_var_int2)
+#endif
+            call test('nfmpi_iput_var_int', test_nfmpi_iput_var_int)
+            call test('nfmpi_iput_var_real', test_nfmpi_iput_var_real)
+            call test('nfmpi_iput_var_double',
+     +                 test_nfmpi_iput_var_double)
+            call test('nfmpi_iput_vara_text', test_nfmpi_iput_vara_text)
+#if defined(NF_INT1_T)
+            call test('nfmpi_iput_vara_int1', test_nfmpi_iput_vara_int1)
+#endif
+#if defined(NF_INT2_T)
+            call test('nfmpi_iput_vara_int2', test_nfmpi_iput_vara_int2)
+#endif
+            call test('nfmpi_iput_vara_int', test_nfmpi_iput_vara_int)
+            call test('nfmpi_iput_vara_real', test_nfmpi_iput_vara_real)
+            call test('nfmpi_iput_vara_double',
+     +                 test_nfmpi_iput_vara_double)
+            call test('nfmpi_iput_vars_text', test_nfmpi_iput_vars_text)
+#if defined(NF_INT1_T)
+            call test('nfmpi_iput_vars_int1', test_nfmpi_iput_vars_int1)
+#endif
+#if defined(NF_INT2_T)
+            call test('nfmpi_iput_vars_int2', test_nfmpi_iput_vars_int2)
+#endif
+            call test('nfmpi_iput_vars_int', test_nfmpi_iput_vars_int)
+            call test('nfmpi_iput_vars_real', test_nfmpi_iput_vars_real)
+            call test('nfmpi_iput_vars_double',
+     +                 test_nfmpi_iput_vars_double)
+
+            call test('nfmpi_iput_varm_text', test_nfmpi_iput_varm_text)
+#if defined(NF_INT1_T)
+            call test('nfmpi_iput_varm_int1', test_nfmpi_iput_varm_int1)
+#endif
+#if defined(NF_INT2_T)
+            call test('nfmpi_iput_varm_int2', test_nfmpi_iput_varm_int2)
+#endif
+            call test('nfmpi_iput_varm_int', test_nfmpi_iput_varm_int)
+            call test('nfmpi_iput_varm_real', test_nfmpi_iput_varm_real)
+            call test('nfmpi_iput_varm_double',
+     +                 test_nfmpi_iput_varm_double)
 
             call test('nfmpi_rename_var', test_nfmpi_rename_var)
             call test('nfmpi_put_att_text', test_nfmpi_put_att_text)

@@ -1,6 +1,6 @@
 /*
- *	Copyright 1993, University Corporation for Atmospheric Research
- *      See netcdf/COPYRIGHT file for copying and redistribution conditions.
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id: error.c,v 1.14 90/02/23 16:08:55 davis Exp */
 
@@ -198,6 +198,8 @@ ncmpi_strerror(int err)
 	    return "(Internal error) beginning file offset of this variable is inconsistent among processes.";
 	case NC_ENUMRECS_MULTIDEFINE:
 	    return "Number of records is inconsistent among processes.";
+	case NC_EINVAL_REQUEST:
+	    return "Invalid nonblocking request ID.";
 	
 	default:
 	    return unknown;
