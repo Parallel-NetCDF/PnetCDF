@@ -31,9 +31,9 @@ dnl
 
 #include "tests.h"
 
-dnl TEST_NC_GET_VAR1(TYPE)
+dnl TEST_NC_IGET_VAR1(TYPE)
 dnl
-define(`TEST_NC_GET_VAR1',dnl
+define(`TEST_NC_IGET_VAR1',dnl
 `dnl
 void
 test_ncmpi_iget_var1_$1(void)
@@ -139,19 +139,19 @@ test_ncmpi_iget_var1_$1(void)
 }
 ')dnl
 
-TEST_NC_GET_VAR1(text)
-TEST_NC_GET_VAR1(uchar)
-TEST_NC_GET_VAR1(schar)
-TEST_NC_GET_VAR1(short)
-TEST_NC_GET_VAR1(int)
-TEST_NC_GET_VAR1(long)
-TEST_NC_GET_VAR1(float)
-TEST_NC_GET_VAR1(double)
+TEST_NC_IGET_VAR1(text)
+TEST_NC_IGET_VAR1(uchar)
+TEST_NC_IGET_VAR1(schar)
+TEST_NC_IGET_VAR1(short)
+TEST_NC_IGET_VAR1(int)
+TEST_NC_IGET_VAR1(long)
+TEST_NC_IGET_VAR1(float)
+TEST_NC_IGET_VAR1(double)
 
 
-dnl TEST_NC_GET_VAR(TYPE)
+dnl TEST_NC_IGET_VAR(TYPE)
 dnl
-define(`TEST_NC_GET_VAR',dnl
+define(`TEST_NC_IGET_VAR',dnl
 `dnl
 void
 test_ncmpi_iget_var_$1(void)
@@ -248,19 +248,19 @@ test_ncmpi_iget_var_$1(void)
 }
 ')dnl
 
-TEST_NC_GET_VAR(text)
-TEST_NC_GET_VAR(uchar)
-TEST_NC_GET_VAR(schar)
-TEST_NC_GET_VAR(short)
-TEST_NC_GET_VAR(int)
-TEST_NC_GET_VAR(long)
-TEST_NC_GET_VAR(float)
-TEST_NC_GET_VAR(double)
+TEST_NC_IGET_VAR(text)
+TEST_NC_IGET_VAR(uchar)
+TEST_NC_IGET_VAR(schar)
+TEST_NC_IGET_VAR(short)
+TEST_NC_IGET_VAR(int)
+TEST_NC_IGET_VAR(long)
+TEST_NC_IGET_VAR(float)
+TEST_NC_IGET_VAR(double)
 
 
-dnl TEST_NC_GET_VARA(TYPE)
+dnl TEST_NC_IGET_VARA(TYPE)
 dnl
-define(`TEST_NC_GET_VARA',dnl
+define(`TEST_NC_IGET_VARA',dnl
 `dnl
 void
 test_ncmpi_iget_vara_$1(void)
@@ -459,19 +459,19 @@ test_ncmpi_iget_vara_$1(void)
 }
 ')dnl
 
-TEST_NC_GET_VARA(text)
-TEST_NC_GET_VARA(uchar)
-TEST_NC_GET_VARA(schar)
-TEST_NC_GET_VARA(short)
-TEST_NC_GET_VARA(int)
-TEST_NC_GET_VARA(long)
-TEST_NC_GET_VARA(float)
-TEST_NC_GET_VARA(double)
+TEST_NC_IGET_VARA(text)
+TEST_NC_IGET_VARA(uchar)
+TEST_NC_IGET_VARA(schar)
+TEST_NC_IGET_VARA(short)
+TEST_NC_IGET_VARA(int)
+TEST_NC_IGET_VARA(long)
+TEST_NC_IGET_VARA(float)
+TEST_NC_IGET_VARA(double)
 
 
-dnl TEST_NC_GET_VARS(TYPE)
+dnl TEST_NC_IGET_VARS(TYPE)
 dnl
-define(`TEST_NC_GET_VARS',dnl
+define(`TEST_NC_IGET_VARS',dnl
 `dnl
 void
 test_ncmpi_iget_vars_$1(void)
@@ -656,19 +656,19 @@ test_ncmpi_iget_vars_$1(void)
 }
 ')dnl
 
-TEST_NC_GET_VARS(text)
-TEST_NC_GET_VARS(uchar)
-TEST_NC_GET_VARS(schar)
-TEST_NC_GET_VARS(short)
-TEST_NC_GET_VARS(int)
-TEST_NC_GET_VARS(long)
-TEST_NC_GET_VARS(float)
-TEST_NC_GET_VARS(double)
+TEST_NC_IGET_VARS(text)
+TEST_NC_IGET_VARS(uchar)
+TEST_NC_IGET_VARS(schar)
+TEST_NC_IGET_VARS(short)
+TEST_NC_IGET_VARS(int)
+TEST_NC_IGET_VARS(long)
+TEST_NC_IGET_VARS(float)
+TEST_NC_IGET_VARS(double)
 
 
-dnl TEST_NC_GET_VARM(TYPE)
+dnl TEST_NC_IGET_VARM(TYPE)
 dnl
-define(`TEST_NC_GET_VARM',dnl
+define(`TEST_NC_IGET_VARM',dnl
 `dnl
 void
 test_ncmpi_iget_varm_$1(void)
@@ -861,13 +861,13 @@ test_ncmpi_iget_varm_$1(void)
 }
 ')dnl
 
-TEST_NC_GET_VARM(text)
-TEST_NC_GET_VARM(uchar)
-TEST_NC_GET_VARM(schar)
-TEST_NC_GET_VARM(short)
-TEST_NC_GET_VARM(int)
-TEST_NC_GET_VARM(long)
-TEST_NC_GET_VARM(float)
-TEST_NC_GET_VARM(double)
+TEST_NC_IGET_VARM(text)
+TEST_NC_IGET_VARM(uchar)
+TEST_NC_IGET_VARM(schar)
+TEST_NC_IGET_VARM(short)
+TEST_NC_IGET_VARM(int)
+TEST_NC_IGET_VARM(long)
+TEST_NC_IGET_VARM(float)
+TEST_NC_IGET_VARM(double)
 
 
