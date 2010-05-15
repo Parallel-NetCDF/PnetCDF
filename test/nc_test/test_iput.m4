@@ -165,9 +165,9 @@ CHECK_VARS(double)
 
 
 
-dnl TEST_NC_PUT_VAR1(TYPE)
+dnl TEST_NC_IPUT_VAR1(TYPE)
 dnl
-define(`TEST_NC_PUT_VAR1',dnl
+define(`TEST_NC_IPUT_VAR1',dnl
 `dnl
 void
 test_ncmpi_iput_var1_$1(void)
@@ -275,19 +275,19 @@ test_ncmpi_iput_var1_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VAR1(text)
-TEST_NC_PUT_VAR1(uchar)
-TEST_NC_PUT_VAR1(schar)
-TEST_NC_PUT_VAR1(short)
-TEST_NC_PUT_VAR1(int)
-TEST_NC_PUT_VAR1(long)
-TEST_NC_PUT_VAR1(float)
-TEST_NC_PUT_VAR1(double)
+TEST_NC_IPUT_VAR1(text)
+TEST_NC_IPUT_VAR1(uchar)
+TEST_NC_IPUT_VAR1(schar)
+TEST_NC_IPUT_VAR1(short)
+TEST_NC_IPUT_VAR1(int)
+TEST_NC_IPUT_VAR1(long)
+TEST_NC_IPUT_VAR1(float)
+TEST_NC_IPUT_VAR1(double)
 
 
-dnl TEST_NC_PUT_VAR(TYPE)
+dnl TEST_NC_IPUT_VAR(TYPE)
 dnl
-define(`TEST_NC_PUT_VAR',dnl
+define(`TEST_NC_IPUT_VAR',dnl
 `dnl
 void
 test_ncmpi_iput_var_$1(void)
@@ -428,19 +428,19 @@ test_ncmpi_iput_var_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VAR(text)
-TEST_NC_PUT_VAR(uchar)
-TEST_NC_PUT_VAR(schar)
-TEST_NC_PUT_VAR(short)
-TEST_NC_PUT_VAR(int)
-TEST_NC_PUT_VAR(long)
-TEST_NC_PUT_VAR(float)
-TEST_NC_PUT_VAR(double)
+TEST_NC_IPUT_VAR(text)
+TEST_NC_IPUT_VAR(uchar)
+TEST_NC_IPUT_VAR(schar)
+TEST_NC_IPUT_VAR(short)
+TEST_NC_IPUT_VAR(int)
+TEST_NC_IPUT_VAR(long)
+TEST_NC_IPUT_VAR(float)
+TEST_NC_IPUT_VAR(double)
 
 
-dnl TEST_NC_PUT_VARA(TYPE)
+dnl TEST_NC_IPUT_VARA(TYPE)
 dnl
-define(`TEST_NC_PUT_VARA',dnl
+define(`TEST_NC_IPUT_VARA',dnl
 `dnl
 void
 test_ncmpi_iput_vara_$1(void)
@@ -652,19 +652,19 @@ test_ncmpi_iput_vara_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VARA(text)
-TEST_NC_PUT_VARA(uchar)
-TEST_NC_PUT_VARA(schar)
-TEST_NC_PUT_VARA(short)
-TEST_NC_PUT_VARA(int)
-TEST_NC_PUT_VARA(long)
-TEST_NC_PUT_VARA(float)
-TEST_NC_PUT_VARA(double)
+TEST_NC_IPUT_VARA(text)
+TEST_NC_IPUT_VARA(uchar)
+TEST_NC_IPUT_VARA(schar)
+TEST_NC_IPUT_VARA(short)
+TEST_NC_IPUT_VARA(int)
+TEST_NC_IPUT_VARA(long)
+TEST_NC_IPUT_VARA(float)
+TEST_NC_IPUT_VARA(double)
 
 
-dnl TEST_NC_PUT_VARS(TYPE)
+dnl TEST_NC_IPUT_VARS(TYPE)
 dnl
-define(`TEST_NC_PUT_VARS',dnl
+define(`TEST_NC_IPUT_VARS',dnl
 `dnl
 void
 test_ncmpi_iput_vars_$1(void)
@@ -841,19 +841,19 @@ test_ncmpi_iput_vars_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VARS(text)
-TEST_NC_PUT_VARS(uchar)
-TEST_NC_PUT_VARS(schar)
-TEST_NC_PUT_VARS(short)
-TEST_NC_PUT_VARS(int)
-TEST_NC_PUT_VARS(long)
-TEST_NC_PUT_VARS(float)
-TEST_NC_PUT_VARS(double)
+TEST_NC_IPUT_VARS(text)
+TEST_NC_IPUT_VARS(uchar)
+TEST_NC_IPUT_VARS(schar)
+TEST_NC_IPUT_VARS(short)
+TEST_NC_IPUT_VARS(int)
+TEST_NC_IPUT_VARS(long)
+TEST_NC_IPUT_VARS(float)
+TEST_NC_IPUT_VARS(double)
 
 
-dnl TEST_NC_PUT_VARM(TYPE)
+dnl TEST_NC_IPUT_VARM(TYPE)
 dnl
-define(`TEST_NC_PUT_VARM',dnl
+define(`TEST_NC_IPUT_VARM',dnl
 `dnl
 void
 test_ncmpi_iput_varm_$1(void)
@@ -1031,13 +1031,13 @@ test_ncmpi_iput_varm_$1(void)
 }
 ')dnl
 
-TEST_NC_PUT_VARM(text)
-TEST_NC_PUT_VARM(uchar)
-TEST_NC_PUT_VARM(schar)
-TEST_NC_PUT_VARM(short)
-TEST_NC_PUT_VARM(int)
-TEST_NC_PUT_VARM(long)
-TEST_NC_PUT_VARM(float)
-TEST_NC_PUT_VARM(double)
+TEST_NC_IPUT_VARM(text)
+TEST_NC_IPUT_VARM(uchar)
+TEST_NC_IPUT_VARM(schar)
+TEST_NC_IPUT_VARM(short)
+TEST_NC_IPUT_VARM(int)
+TEST_NC_IPUT_VARM(long)
+TEST_NC_IPUT_VARM(float)
+TEST_NC_IPUT_VARM(double)
 
 
