@@ -373,7 +373,7 @@ NC_lookupattr(int ncid,
 	if(attrpp != NULL)
 		*attrpp = *tmp;
 
-	return ENOERR;
+	return NC_NOERR;
 }
 
 /* Public */
@@ -1223,7 +1223,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ischar
 				 */
-				if(lstatus != ENOERR)
+				if(lstatus != NC_NOERR)
 					return lstatus;
 			}
 
@@ -1369,7 +1369,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Iuchar
 				 */
-				if(lstatus != ENOERR)
+				if(lstatus != NC_NOERR)
 					return lstatus;
 			}
 
@@ -1515,7 +1515,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ishort
 				 */
-				if(lstatus != ENOERR)
+				if(lstatus != NC_NOERR)
 					return lstatus;
 			}
 
@@ -1661,7 +1661,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Iint
 				 */
-				if(lstatus != ENOERR)
+				if(lstatus != NC_NOERR)
 					return lstatus;
 			}
 
@@ -1807,7 +1807,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ilong
 				 */
-				if(lstatus != ENOERR)
+				if(lstatus != NC_NOERR)
 					return lstatus;
 			}
 
@@ -1953,7 +1953,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Ifloat
 				 */
-				if(lstatus != ENOERR)
+				if(lstatus != NC_NOERR)
 					return lstatus;
 			}
 
@@ -2103,7 +2103,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 				 * N.B.: potentially overrides NC_ERANGE
 				 * set by ncmpix_pad_putn_Idouble
 				 */
-				if(lstatus != ENOERR)
+				if(lstatus != NC_NOERR)
 					return lstatus;
 			}
 

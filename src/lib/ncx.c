@@ -29,6 +29,7 @@
  * An external data representation interface.
  */
 
+#include "nc.h"
 #include "ncx.h"
 #include <string.h>
 #include <limits.h>
@@ -298,7 +299,7 @@ ncmpix_get_short_schar(const void *xp, schar *ip)
 	*ip = xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -309,7 +310,7 @@ ncmpix_get_short_uchar(const void *xp, uchar *ip)
 	*ip = xx;
 	if(xx > UCHAR_MAX || xx < 0)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -317,7 +318,7 @@ ncmpix_get_short_short(const void *xp, short *ip)
 {
 #if SIZEOF_IX_SHORT == SIZEOF_SHORT && IX_SHORT_MAX == SHORT_MAX
 	get_ix_short(xp, (ix_short *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_short xx;
 	get_ix_short(xp, &xx);
@@ -326,7 +327,7 @@ ncmpix_get_short_short(const void *xp, short *ip)
 	if(xx > SHORT_MAX || xx < SHORT_MIN)
 		return NC_ERANGE;
 #   endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -335,7 +336,7 @@ ncmpix_get_short_int(const void *xp, int *ip)
 {
 #if SIZEOF_IX_SHORT == SIZEOF_INT && IX_SHORT_MAX == INT_MAX
 	get_ix_short(xp, (ix_short *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_short xx;
 	get_ix_short(xp, &xx);
@@ -344,7 +345,7 @@ ncmpix_get_short_int(const void *xp, int *ip)
 	if(xx > INT_MAX || xx < INT_MIN)
 		return NC_ERANGE;
 #   endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -353,13 +354,13 @@ ncmpix_get_short_long(const void *xp, long *ip)
 {
 #if SIZEOF_IX_SHORT == SIZEOF_LONG && IX_SHORT_MAX == LONG_MAX
 	get_ix_short(xp, (ix_short *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	/* assert(LONG_MAX >= X_SHORT_MAX); */
 	ix_short xx;
 	get_ix_short(xp, &xx);
 	*ip = xx;
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -373,7 +374,7 @@ ncmpix_get_short_float(const void *xp, float *ip)
 	if(xx > FLT_MAX || xx < (-FLT_MAX))
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -383,7 +384,7 @@ ncmpix_get_short_double(const void *xp, double *ip)
 	ix_short xx;
 	get_ix_short(xp, &xx);
 	*ip = xx;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -395,7 +396,7 @@ ncmpix_put_short_schar(void *xp, const schar *ip)
 	else
 		*cp++ = 0;
 	*cp = (uchar)*ip;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -404,7 +405,7 @@ ncmpix_put_short_uchar(void *xp, const uchar *ip)
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0;
 	*cp = *ip;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -412,7 +413,7 @@ ncmpix_put_short_short(void *xp, const short *ip)
 {
 #if SIZEOF_IX_SHORT == SIZEOF_SHORT && X_SHORT_MAX == SHORT_MAX
 	put_ix_short(xp, (const ix_short *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_short xx = (ix_short)*ip;
 	put_ix_short(xp, &xx);
@@ -420,7 +421,7 @@ ncmpix_put_short_short(void *xp, const short *ip)
 	if(*ip > X_SHORT_MAX || *ip < X_SHORT_MIN)
 		return NC_ERANGE;
 # endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -429,7 +430,7 @@ ncmpix_put_short_int(void *xp, const int *ip)
 {
 #if SIZEOF_IX_SHORT == SIZEOF_INT && X_SHORT_MAX == INT_MAX
 	put_ix_short(xp, (const ix_short *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_short xx = (ix_short)*ip;
 	put_ix_short(xp, &xx);
@@ -437,7 +438,7 @@ ncmpix_put_short_int(void *xp, const int *ip)
 	if(*ip > X_SHORT_MAX || *ip < X_SHORT_MIN)
 		return NC_ERANGE;
 # endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -446,7 +447,7 @@ ncmpix_put_short_long(void *xp, const long *ip)
 {
 #if SIZEOF_IX_SHORT == SIZEOF_LONG && X_SHORT_MAX == LONG_MAX
 	put_ix_short(xp, (const ix_short *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_short xx = (ix_short)*ip;
 	put_ix_short(xp, &xx);
@@ -454,7 +455,7 @@ ncmpix_put_short_long(void *xp, const long *ip)
 	if(*ip > X_SHORT_MAX || *ip < X_SHORT_MIN)
 		return NC_ERANGE;
 # endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -465,7 +466,7 @@ ncmpix_put_short_float(void *xp, const float *ip)
 	put_ix_short(xp, &xx);
 	if(*ip > X_SHORT_MAX || *ip < X_SHORT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -475,7 +476,7 @@ ncmpix_put_short_double(void *xp, const double *ip)
 	put_ix_short(xp, &xx);
 	if(*ip > X_SHORT_MAX || *ip < X_SHORT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 /* x_int */
@@ -535,7 +536,7 @@ ncmpix_get_int_schar(const void *xp, schar *ip)
 	*ip = xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -546,7 +547,7 @@ ncmpix_get_int_uchar(const void *xp, uchar *ip)
 	*ip = xx;
 	if(xx > UCHAR_MAX || xx < 0)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -554,7 +555,7 @@ ncmpix_get_int_short(const void *xp, short *ip)
 {
 #if SIZEOF_IX_INT == SIZEOF_SHORT && IX_INT_MAX == SHORT_MAX
 	get_ix_int(xp, (ix_int *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_int xx;
 	get_ix_int(xp, &xx);
@@ -563,7 +564,7 @@ ncmpix_get_int_short(const void *xp, short *ip)
 	if(xx > SHORT_MAX || xx < SHORT_MIN)
 		return NC_ERANGE;
 #  endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -572,7 +573,7 @@ ncmpix_get_int_int(const void *xp, int *ip)
 {
 #if SIZEOF_IX_INT == SIZEOF_INT && IX_INT_MAX == INT_MAX
 	get_ix_int(xp, (ix_int *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_int xx;
 	get_ix_int(xp, &xx);
@@ -581,7 +582,7 @@ ncmpix_get_int_int(const void *xp, int *ip)
 	if(xx > INT_MAX || xx < INT_MIN)
 		return NC_ERANGE;
 #  endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -590,7 +591,7 @@ ncmpix_get_int_long(const void *xp, long *ip)
 {
 #if SIZEOF_IX_INT == SIZEOF_LONG && IX_INT_MAX == LONG_MAX
 	get_ix_int(xp, (ix_int *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_int xx;
 	get_ix_int(xp, &xx);
@@ -599,7 +600,7 @@ ncmpix_get_int_long(const void *xp, long *ip)
 	if(xx > LONG_MAX || xx < LONG_MIN)
 		return NC_ERANGE;
 #  endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -608,7 +609,7 @@ ncmpix_get_long_long(const void *xp,MPI_Offset *ip)
 {
 #if SIZEOF_IX_INT == SIZEOF_LONG && IX_INT_MAX == LONG_MAX
 	get_ix_int(xp, (ix_int *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_int xx;
 	get_ix_int(xp, &xx);
@@ -617,7 +618,7 @@ ncmpix_get_long_long(const void *xp,MPI_Offset *ip)
 	if(xx > LONG_MAX || xx < LONG_MIN)
 		return NC_ERANGE;
 #  endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -631,7 +632,7 @@ ncmpix_get_int_float(const void *xp, float *ip)
 	if(xx > FLT_MAX || xx < (-FLT_MAX))
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -641,7 +642,7 @@ ncmpix_get_int_double(const void *xp, double *ip)
 	ix_int xx;
 	get_ix_int(xp, &xx);
 	*ip = xx;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -661,7 +662,7 @@ ncmpix_put_int_schar(void *xp, const schar *ip)
 		*cp++ = 0x00;
 	}
 	*cp = (uchar)*ip;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -672,7 +673,7 @@ ncmpix_put_int_uchar(void *xp, const uchar *ip)
 	*cp++ = 0x00;
 	*cp++ = 0x00;
 	*cp   = *ip;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -680,7 +681,7 @@ ncmpix_put_int_short(void *xp, const short *ip)
 {
 #if SIZEOF_IX_INT == SIZEOF_SHORT && IX_INT_MAX == SHORT_MAX
 	put_ix_int(xp, (ix_int *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_int xx = (ix_int)(*ip);
 	put_ix_int(xp, &xx);
@@ -688,7 +689,7 @@ ncmpix_put_int_short(void *xp, const short *ip)
 	if(*ip > X_INT_MAX || *ip < X_INT_MIN)
 		return NC_ERANGE;
 #   endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -697,7 +698,7 @@ ncmpix_put_int_int(void *xp, const int *ip)
 {
 #if SIZEOF_IX_INT == SIZEOF_INT && IX_INT_MAX == INT_MAX
 	put_ix_int(xp, (ix_int *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_int xx = (ix_int)(*ip);
 	put_ix_int(xp, &xx);
@@ -705,7 +706,7 @@ ncmpix_put_int_int(void *xp, const int *ip)
 	if(*ip > X_INT_MAX || *ip < X_INT_MIN)
 		return NC_ERANGE;
 #   endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -714,7 +715,7 @@ ncmpix_put_int_long(void *xp, const long *ip)
 {
 #if SIZEOF_IX_INT == SIZEOF_LONG && IX_INT_MAX == LONG_MAX
 	put_ix_int(xp, (ix_int *)ip);
-	return ENOERR;
+	return NC_NOERR;
 #else
 	ix_int xx = (ix_int)(*ip);
 	put_ix_int(xp, &xx);
@@ -722,7 +723,7 @@ ncmpix_put_int_long(void *xp, const long *ip)
 	if(*ip > X_INT_MAX || *ip < X_INT_MIN)
 		return NC_ERANGE;
 #   endif
-	return ENOERR;
+	return NC_NOERR;
 #endif
 }
 
@@ -733,7 +734,7 @@ ncmpix_put_int_float(void *xp, const float *ip)
 	put_ix_int(xp, &xx);
 	if(*ip > (double)X_INT_MAX || *ip < (double)X_INT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -743,7 +744,7 @@ ncmpix_put_int_double(void *xp, const double *ip)
 	put_ix_int(xp, &xx);
 	if(*ip > X_INT_MAX || *ip < X_INT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
  
 
@@ -922,7 +923,7 @@ ncmpix_get_float_schar(const void *xp, schar *ip)
 	*ip = (schar) xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -933,7 +934,7 @@ ncmpix_get_float_uchar(const void *xp, uchar *ip)
 	*ip = (uchar) xx;
 	if(xx > UCHAR_MAX || xx < 0)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -944,7 +945,7 @@ ncmpix_get_float_short(const void *xp, short *ip)
 	*ip = (short) xx;
 	if(xx > SHORT_MAX || xx < SHORT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -955,7 +956,7 @@ ncmpix_get_float_int(const void *xp, int *ip)
 	*ip = (int) xx;
 	if(xx > (double)INT_MAX || xx < (double)INT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -966,7 +967,7 @@ ncmpix_get_float_long(const void *xp, long *ip)
 	*ip = (long) xx;
 	if(xx > LONG_MAX || xx < LONG_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -974,7 +975,7 @@ ncmpix_get_float_float(const void *xp, float *ip)
 {
 	/* TODO */
 	get_ix_float(xp, ip);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -984,7 +985,7 @@ ncmpix_get_float_double(const void *xp, double *ip)
 	float xx;
 	get_ix_float(xp, &xx);
 	*ip = xx;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 
@@ -993,7 +994,7 @@ ncmpix_put_float_schar(void *xp, const schar *ip)
 {
 	float xx = (float) *ip;
 	put_ix_float(xp, &xx);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1001,7 +1002,7 @@ ncmpix_put_float_uchar(void *xp, const uchar *ip)
 {
 	float xx = (float) *ip;
 	put_ix_float(xp, &xx);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1013,7 +1014,7 @@ ncmpix_put_float_short(void *xp, const short *ip)
 	if((float)(*ip) > X_FLOAT_MAX || (float)(*ip) < X_FLOAT_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1025,7 +1026,7 @@ ncmpix_put_float_int(void *xp, const int *ip)
 	if((float)(*ip) > X_FLOAT_MAX || (float)(*ip) < X_FLOAT_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1037,7 +1038,7 @@ ncmpix_put_float_long(void *xp, const long *ip)
 	if((float)(*ip) > X_FLOAT_MAX || (float)(*ip) < X_FLOAT_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1048,7 +1049,7 @@ ncmpix_put_float_float(void *xp, const float *ip)
 	if(*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1058,7 +1059,7 @@ ncmpix_put_float_double(void *xp, const double *ip)
 	put_ix_float(xp, &xx);
 	if(*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 /* x_double */
@@ -1250,7 +1251,7 @@ ncmpix_get_double_schar(const void *xp, schar *ip)
 	*ip = (schar) xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1261,7 +1262,7 @@ ncmpix_get_double_uchar(const void *xp, uchar *ip)
 	*ip = (uchar) xx;
 	if(xx > UCHAR_MAX || xx < 0)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1272,7 +1273,7 @@ ncmpix_get_double_short(const void *xp, short *ip)
 	*ip = (short) xx;
 	if(xx > SHORT_MAX || xx < SHORT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1283,7 +1284,7 @@ ncmpix_get_double_int(const void *xp, int *ip)
 	*ip = (int) xx;
 	if(xx > INT_MAX || xx < INT_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1294,7 +1295,7 @@ ncmpix_get_double_long(const void *xp, long *ip)
 	*ip = (long) xx;
 	if(xx > LONG_MAX || xx < LONG_MIN)
 		return NC_ERANGE;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1313,7 +1314,7 @@ ncmpix_get_double_float(const void *xp, float *ip)
 		return NC_ERANGE;
 	}
 	*ip = (float) xx;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1321,7 +1322,7 @@ ncmpix_get_double_double(const void *xp, double *ip)
 {
 	/* TODO */
 	get_ix_double(xp, ip);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 
@@ -1330,7 +1331,7 @@ ncmpix_put_double_schar(void *xp, const schar *ip)
 {
 	double xx = (double) *ip;
 	put_ix_double(xp, &xx);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1338,7 +1339,7 @@ ncmpix_put_double_uchar(void *xp, const uchar *ip)
 {
 	double xx = (double) *ip;
 	put_ix_double(xp, &xx);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1350,7 +1351,7 @@ ncmpix_put_double_short(void *xp, const short *ip)
 	if((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1362,7 +1363,7 @@ ncmpix_put_double_int(void *xp, const int *ip)
 	if((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1374,7 +1375,7 @@ ncmpix_put_double_long(void *xp, const long *ip)
 	if((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1386,7 +1387,7 @@ ncmpix_put_double_float(void *xp, const float *ip)
 	if((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1397,7 +1398,7 @@ ncmpix_put_double_double(void *xp, const double *ip)
 	if(*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
-	return ENOERR;
+	return NC_NOERR;
 }
 
 
@@ -1421,7 +1422,7 @@ ncmpix_put_size_t1(void **xpp, const MPI_Offset *ulp)
 	*cp   = (uchar)((*ulp) & 0x000000ff);
 
 	*xpp = (void *)((char *)(*xpp) + X_SIZEOF_SIZE_T);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 /*
@@ -1438,7 +1439,7 @@ ncmpix_put_size_t(void **xpp, const MPI_Offset *ulp)
 	*cp   = (uchar)((*ulp) & 0x000000ff);
 
 	*xpp = (void *)((char *)(*xpp) + X_SIZEOF_LONG);
-	return ENOERR;
+	return NC_NOERR;
 }
 */
 int
@@ -1472,7 +1473,7 @@ ncmpix_put_size_t(void **xpp, const MPI_Offset *lp, MPI_Offset sizeof_t)
                 *cp   = (uchar)( (*lp) & 0x00000000000000ffULL);
 	        *xpp = (void *)((char *)(*xpp) + sizeof_t);
         }
-        return ENOERR;
+        return NC_NOERR;
 }
 
 
@@ -1505,7 +1506,7 @@ ncmpix_get_size_t(const void **xpp,  MPI_Offset *lp, MPI_Offset sizeof_off_t)
                *lp |=  (off_t)*cp;
        }
 	*xpp = (const void *)((const char *)(*xpp) + sizeof_off_t);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 /* x_off_t */
@@ -1542,7 +1543,7 @@ ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, MPI_Offset sizeof_off_t)
 		*cp   = (uchar)( (*lp) & 0x00000000000000ffULL);
 	}
 	*xpp = (void *)((char *)(*xpp) + sizeof_off_t);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 /* see comments for ncmpix_put_off_t */
@@ -1571,7 +1572,7 @@ ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, MPI_Offset sizeof_off_t)
        *xpp = (const void *)((const char *)(*xpp) + sizeof_off_t);
 
 
-	return ENOERR;
+	return NC_NOERR;
 }
 
 
@@ -1588,7 +1589,7 @@ ncmpix_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 		(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
@@ -1596,7 +1597,7 @@ ncmpix_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 {
 		(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
@@ -1610,7 +1611,7 @@ ncmpix_getn_schar_short(const void **xpp, MPI_Offset nelems, short *tp)
 	}
 
 	*xpp = (const void *)xp;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1624,7 +1625,7 @@ ncmpix_getn_schar_int(const void **xpp, MPI_Offset nelems, int *tp)
 	}
 
 	*xpp = (const void *)xp;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1638,7 +1639,7 @@ ncmpix_getn_schar_long(const void **xpp, MPI_Offset nelems, long *tp)
 	}
 
 	*xpp = (const void *)xp;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1652,7 +1653,7 @@ ncmpix_getn_schar_float(const void **xpp, MPI_Offset nelems, float *tp)
 	}
 
 	*xpp = (const void *)xp;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1666,7 +1667,7 @@ ncmpix_getn_schar_double(const void **xpp, MPI_Offset nelems, double *tp)
 	}
 
 	*xpp = (const void *)xp;
-	return ENOERR;
+	return NC_NOERR;
 }
 
 
@@ -1681,7 +1682,7 @@ ncmpix_pad_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 	(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems + rndup);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
@@ -1695,7 +1696,7 @@ ncmpix_pad_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 	(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems + rndup);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
@@ -1713,7 +1714,7 @@ ncmpix_pad_getn_schar_short(const void **xpp, MPI_Offset nelems, short *tp)
 	}
 
 	*xpp = (void *)(xp + rndup);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1731,7 +1732,7 @@ ncmpix_pad_getn_schar_int(const void **xpp, MPI_Offset nelems, int *tp)
 	}
 
 	*xpp = (void *)(xp + rndup);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1749,7 +1750,7 @@ ncmpix_pad_getn_schar_long(const void **xpp, MPI_Offset nelems, long *tp)
 	}
 
 	*xpp = (void *)(xp + rndup);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1767,7 +1768,7 @@ ncmpix_pad_getn_schar_float(const void **xpp, MPI_Offset nelems, float *tp)
 	}
 
 	*xpp = (void *)(xp + rndup);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 int
@@ -1785,7 +1786,7 @@ ncmpix_pad_getn_schar_double(const void **xpp, MPI_Offset nelems, double *tp)
 	}
 
 	*xpp = (void *)(xp + rndup);
-	return ENOERR;
+	return NC_NOERR;
 }
 
 
@@ -1795,7 +1796,7 @@ ncmpix_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 		(void) memcpy(*xpp, tp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
@@ -1804,13 +1805,13 @@ ncmpix_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 		(void) memcpy(*xpp, tp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
 ncmpix_putn_schar_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	schar *xp = (schar *) *xpp;
 
 	while(nelems-- != 0)
@@ -1827,7 +1828,7 @@ ncmpix_putn_schar_short(void **xpp, MPI_Offset nelems, const short *tp)
 int
 ncmpix_putn_schar_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	schar *xp = (schar *) *xpp;
 
 	while(nelems-- != 0)
@@ -1844,7 +1845,7 @@ ncmpix_putn_schar_int(void **xpp, MPI_Offset nelems, const int *tp)
 int
 ncmpix_putn_schar_long(void **xpp, MPI_Offset nelems, const long *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	schar *xp = (schar *) *xpp;
 
 	while(nelems-- != 0)
@@ -1861,7 +1862,7 @@ ncmpix_putn_schar_long(void **xpp, MPI_Offset nelems, const long *tp)
 int
 ncmpix_putn_schar_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	schar *xp = (schar *) *xpp;
 
 	while(nelems-- != 0)
@@ -1878,7 +1879,7 @@ ncmpix_putn_schar_float(void **xpp, MPI_Offset nelems, const float *tp)
 int
 ncmpix_putn_schar_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	schar *xp = (schar *) *xpp;
 
 	while(nelems-- != 0)
@@ -1910,7 +1911,7 @@ ncmpix_pad_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 		*xpp = (void *)((char *)(*xpp) + rndup);
 	}
 	
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
@@ -1930,13 +1931,13 @@ ncmpix_pad_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 		*xpp = (void *)((char *)(*xpp) + rndup);
 	}
 	
-	return ENOERR;
+	return NC_NOERR;
 
 }
 int
 ncmpix_pad_putn_schar_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
 	schar *xp = (schar *) *xpp;
 
@@ -1965,7 +1966,7 @@ ncmpix_pad_putn_schar_short(void **xpp, MPI_Offset nelems, const short *tp)
 int
 ncmpix_pad_putn_schar_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
 	schar *xp = (schar *) *xpp;
 
@@ -1994,7 +1995,7 @@ ncmpix_pad_putn_schar_int(void **xpp, MPI_Offset nelems, const int *tp)
 int
 ncmpix_pad_putn_schar_long(void **xpp, MPI_Offset nelems, const long *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
 	schar *xp = (schar *) *xpp;
 
@@ -2023,7 +2024,7 @@ ncmpix_pad_putn_schar_long(void **xpp, MPI_Offset nelems, const long *tp)
 int
 ncmpix_pad_putn_schar_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
 	schar *xp = (schar *) *xpp;
 
@@ -2052,7 +2053,7 @@ ncmpix_pad_putn_schar_float(void **xpp, MPI_Offset nelems, const float *tp)
 int
 ncmpix_pad_putn_schar_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
-	int status = ENOERR;
+	int status = NC_NOERR;
 	MPI_Offset rndup = nelems % X_ALIGN;
 	schar *xp = (schar *) *xpp;
 
@@ -2086,12 +2087,12 @@ int
 ncmpix_getn_short_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2103,12 +2104,12 @@ int
 ncmpix_getn_short_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2127,19 +2128,19 @@ ncmpix_getn_short_short(const void **xpp, MPI_Offset nelems, short *tp)
 	swapn2b(tp, *xpp, nelems);
 # endif
 	*xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_SHORT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_getn_short_short(const void **xpp, MPI_Offset nelems, short *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2152,12 +2153,12 @@ int
 ncmpix_getn_short_int(const void **xpp, MPI_Offset nelems, int *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2169,12 +2170,12 @@ int
 ncmpix_getn_short_long(const void **xpp, MPI_Offset nelems, long *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2186,12 +2187,12 @@ int
 ncmpix_getn_short_float(const void **xpp, MPI_Offset nelems, float *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2203,12 +2204,12 @@ int
 ncmpix_getn_short_double(const void **xpp, MPI_Offset nelems, double *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2223,12 +2224,12 @@ ncmpix_pad_getn_short_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2245,12 +2246,12 @@ ncmpix_pad_getn_short_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2267,12 +2268,12 @@ ncmpix_pad_getn_short_short(const void **xpp, MPI_Offset nelems, short *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2289,12 +2290,12 @@ ncmpix_pad_getn_short_int(const void **xpp, MPI_Offset nelems, int *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2311,12 +2312,12 @@ ncmpix_pad_getn_short_long(const void **xpp, MPI_Offset nelems, long *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2333,12 +2334,12 @@ ncmpix_pad_getn_short_float(const void **xpp, MPI_Offset nelems, float *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2355,12 +2356,12 @@ ncmpix_pad_getn_short_double(const void **xpp, MPI_Offset nelems, double *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		const int lstatus = ncmpix_get_short_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2376,12 +2377,12 @@ int
 ncmpix_putn_short_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2393,12 +2394,12 @@ int
 ncmpix_putn_short_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2417,19 +2418,19 @@ ncmpix_putn_short_short(void **xpp, MPI_Offset nelems, const short *tp)
 	swapn2b(*xpp, tp, nelems);
 # endif
 	*xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_SHORT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_putn_short_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2442,12 +2443,12 @@ int
 ncmpix_putn_short_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2459,12 +2460,12 @@ int
 ncmpix_putn_short_long(void **xpp, MPI_Offset nelems, const long *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2476,12 +2477,12 @@ int
 ncmpix_putn_short_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2493,12 +2494,12 @@ int
 ncmpix_putn_short_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2513,12 +2514,12 @@ ncmpix_pad_putn_short_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2538,12 +2539,12 @@ ncmpix_pad_putn_short_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2563,12 +2564,12 @@ ncmpix_pad_putn_short_short(void **xpp, MPI_Offset nelems, const short *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2588,12 +2589,12 @@ ncmpix_pad_putn_short_int(void **xpp, MPI_Offset nelems, const int *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2613,12 +2614,12 @@ ncmpix_pad_putn_short_long(void **xpp, MPI_Offset nelems, const long *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2638,12 +2639,12 @@ ncmpix_pad_putn_short_float(void **xpp, MPI_Offset nelems, const float *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2663,12 +2664,12 @@ ncmpix_pad_putn_short_double(void **xpp, MPI_Offset nelems, const double *tp)
 	const MPI_Offset rndup = nelems % 2;
 
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_SHORT, tp++)
 	{
 		int lstatus = ncmpix_put_short_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2690,12 +2691,12 @@ int
 ncmpix_getn_int_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		const int lstatus = ncmpix_get_int_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2707,12 +2708,12 @@ int
 ncmpix_getn_int_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		const int lstatus = ncmpix_get_int_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2724,12 +2725,12 @@ int
 ncmpix_getn_int_short(const void **xpp, MPI_Offset nelems, short *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		const int lstatus = ncmpix_get_int_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2748,19 +2749,19 @@ ncmpix_getn_int_int(const void **xpp, MPI_Offset nelems, int *tp)
 	swapn4b(tp, *xpp, nelems);
 # endif
 	*xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_INT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_getn_int_int(const void **xpp, MPI_Offset nelems, int *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		const int lstatus = ncmpix_get_int_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2780,19 +2781,19 @@ ncmpix_getn_int_long(const void **xpp, MPI_Offset nelems, long *tp)
 	swapn4b(tp, *xpp, nelems);
 # endif
 	*xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_INT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_getn_int_long(const void **xpp, MPI_Offset nelems, long *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		const int lstatus = ncmpix_get_int_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2806,12 +2807,12 @@ int
 ncmpix_getn_long_long(const void **xpp, MPI_Offset nelems, MPI_Offset *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += 8, tp++)
 	{
 		const int lstatus = ncmpix_get_long_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2824,12 +2825,12 @@ int
 ncmpix_getn_int_float(const void **xpp, MPI_Offset nelems, float *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		const int lstatus = ncmpix_get_int_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2841,12 +2842,12 @@ int
 ncmpix_getn_int_double(const void **xpp, MPI_Offset nelems, double *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		const int lstatus = ncmpix_get_int_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2859,12 +2860,12 @@ int
 ncmpix_putn_int_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		int lstatus = ncmpix_put_int_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2876,12 +2877,12 @@ int
 ncmpix_putn_int_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		int lstatus = ncmpix_put_int_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2893,12 +2894,12 @@ int
 ncmpix_putn_int_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		int lstatus = ncmpix_put_int_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2917,19 +2918,19 @@ ncmpix_putn_int_int(void **xpp, MPI_Offset nelems, const int *tp)
 	swapn4b(*xpp, tp, nelems);
 # endif
 	*xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_INT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_putn_int_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		int lstatus = ncmpix_put_int_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2949,19 +2950,19 @@ ncmpix_putn_int_long(void **xpp, MPI_Offset nelems, const long *tp)
 	swapn4b(*xpp, tp, nelems);
 # endif
 	*xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_INT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_putn_int_long(void **xpp, MPI_Offset nelems, const long *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		int lstatus = ncmpix_put_int_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2974,12 +2975,12 @@ int
 ncmpix_putn_int_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		int lstatus = ncmpix_put_int_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2991,12 +2992,12 @@ int
 ncmpix_putn_int_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_INT, tp++)
 	{
 		int lstatus = ncmpix_put_int_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3012,12 +3013,12 @@ int
 ncmpix_getn_float_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3029,12 +3030,12 @@ int
 ncmpix_getn_float_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3046,12 +3047,12 @@ int
 ncmpix_getn_float_short(const void **xpp, MPI_Offset nelems, short *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3063,12 +3064,12 @@ int
 ncmpix_getn_float_int(const void **xpp, MPI_Offset nelems, int *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3080,12 +3081,12 @@ int
 ncmpix_getn_float_long(const void **xpp, MPI_Offset nelems, long *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3104,7 +3105,7 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
 	swapn4b(tp, *xpp, nelems);
 # endif
 	*xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_FLOAT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #elif vax
 int
@@ -3164,19 +3165,19 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nfloats, float *ip)
 		ip++;
 		*xpp = (char *)(*xpp) + X_SIZEOF_FLOAT;
 	}
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
 {
 	const char *xp = *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3189,12 +3190,12 @@ int
 ncmpix_getn_float_double(const void **xpp, MPI_Offset nelems, double *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3207,12 +3208,12 @@ int
 ncmpix_putn_float_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3224,12 +3225,12 @@ int
 ncmpix_putn_float_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3241,12 +3242,12 @@ int
 ncmpix_putn_float_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3258,12 +3259,12 @@ int
 ncmpix_putn_float_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3275,12 +3276,12 @@ int
 ncmpix_putn_float_long(void **xpp, MPI_Offset nelems, const long *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3299,7 +3300,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
 	swapn4b(*xpp, tp, nelems);
 # endif
 	*xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_FLOAT);
-	return ENOERR;
+	return NC_NOERR;
 }
 #elif vax
 int
@@ -3358,19 +3359,19 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nfloats, const float *ip)
 		ip++;
 		*xpp = (char *)(*xpp) + X_SIZEOF_FLOAT;
 	}
-	return ENOERR;
+	return NC_NOERR;
 }
 #else
 int
 ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
 	char *xp = *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3383,12 +3384,12 @@ int
 ncmpix_putn_float_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3404,12 +3405,12 @@ int
 ncmpix_getn_double_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3421,12 +3422,12 @@ int
 ncmpix_getn_double_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3438,12 +3439,12 @@ int
 ncmpix_getn_double_short(const void **xpp, MPI_Offset nelems, short *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3455,12 +3456,12 @@ int
 ncmpix_getn_double_int(const void **xpp, MPI_Offset nelems, int *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3472,12 +3473,12 @@ int
 ncmpix_getn_double_long(const void **xpp, MPI_Offset nelems, long *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3489,12 +3490,12 @@ int
 ncmpix_getn_double_float(const void **xpp, MPI_Offset nelems, float *tp)
 {
 	const char *xp = (const char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3513,7 +3514,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
 	swapn8b(tp, *xpp, nelems);
 # endif
 	*xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_DOUBLE);
-	return ENOERR;
+	return NC_NOERR;
 }
 #elif vax
 int
@@ -3568,7 +3569,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset ndoubles, double *ip)
 		ip++;
 		*xpp = (char *)(*xpp) + X_SIZEOF_DOUBLE;
 	}
-	return ENOERR;
+	return NC_NOERR;
 }
 	/* vax */
 
@@ -3577,12 +3578,12 @@ int
 ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
 {
 	const char *xp = *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3596,12 +3597,12 @@ int
 ncmpix_putn_double_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_schar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3613,12 +3614,12 @@ int
 ncmpix_putn_double_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_uchar(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3630,12 +3631,12 @@ int
 ncmpix_putn_double_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_short(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3647,12 +3648,12 @@ int
 ncmpix_putn_double_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_int(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3664,12 +3665,12 @@ int
 ncmpix_putn_double_long(void **xpp, MPI_Offset nelems, const long *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_long(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3681,12 +3682,12 @@ int
 ncmpix_putn_double_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
 	char *xp = (char *) *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_float(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3705,7 +3706,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
 	swapn8b(*xpp, tp, nelems);
 # endif
 	*xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_DOUBLE);
-	return ENOERR;
+	return NC_NOERR;
 }
 #elif vax
 int
@@ -3778,7 +3779,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset ndoubles, const double *ip)
 		ip++;
 		*xpp = (char *)(*xpp) + X_SIZEOF_DOUBLE;
 	}
-	return ENOERR;
+	return NC_NOERR;
 }
 	/* vax */
 
@@ -3787,12 +3788,12 @@ int
 ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
 	char *xp = *xpp;
-	int status = ENOERR;
+	int status = NC_NOERR;
 
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_double(xp, tp);
-		if(lstatus != ENOERR)
+		if(lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3814,7 +3815,7 @@ ncmpix_getn_text(const void **xpp, MPI_Offset nelems, char *tp)
 {
 	(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
-	return ENOERR;
+	return NC_NOERR;
 
 }
 
@@ -3829,7 +3830,7 @@ ncmpix_pad_getn_text(const void **xpp, MPI_Offset nelems, char *tp)
 	(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems + rndup);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 
@@ -3839,7 +3840,7 @@ ncmpix_putn_text(void **xpp, MPI_Offset nelems, const char *tp)
 	(void) memcpy(*xpp, tp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 
@@ -3860,7 +3861,7 @@ ncmpix_pad_putn_text(void **xpp, MPI_Offset nelems, const char *tp)
 		*xpp = (void *)((char *)(*xpp) + rndup);
 	}
 	
-	return ENOERR;
+	return NC_NOERR;
 
 }
 
@@ -3872,7 +3873,7 @@ ncmpix_getn_void(const void **xpp, MPI_Offset nelems, void *tp)
 {
 	(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
-	return ENOERR;
+	return NC_NOERR;
 
 }
 
@@ -3887,7 +3888,7 @@ ncmpix_pad_getn_void(const void **xpp, MPI_Offset nelems, void *tp)
 	(void) memcpy(tp, *xpp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems + rndup);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 
@@ -3897,7 +3898,7 @@ ncmpix_putn_void(void **xpp, MPI_Offset nelems, const void *tp)
 	(void) memcpy(*xpp, tp, nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 
-	return ENOERR;
+	return NC_NOERR;
 
 }
 
@@ -3918,7 +3919,7 @@ ncmpix_pad_putn_void(void **xpp, MPI_Offset nelems, const void *tp)
 		*xpp = (void *)((char *)(*xpp) + rndup);
 	}
 	
-	return ENOERR;
+	return NC_NOERR;
 
 }
 

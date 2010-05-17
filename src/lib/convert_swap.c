@@ -151,7 +151,7 @@ ncmpii_x_putn_schar(void         *xbuf,
                     MPI_Datatype  datatype)
 {
     void *xp, *data;
-    int status = ENOERR;
+    int status = NC_NOERR;
 
     xp = (void*) xbuf;
     data = (void*) buf;
@@ -181,7 +181,7 @@ ncmpii_x_putn_short(void         *xbuf,
 {
     void *xp, *data;
     int datainc;
-    int status = ENOERR;
+    int status = NC_NOERR;
  
     xp = (void*) xbuf;
     data = (void*) buf;
@@ -216,7 +216,7 @@ ncmpii_x_putn_int(void         *xbuf,
 {
     void *xp, *data;
     int datainc;
-    int status = ENOERR;
+    int status = NC_NOERR;
  
     xp = (void*) xbuf;
     data = (void*) buf;
@@ -251,7 +251,7 @@ ncmpii_x_putn_float(void         *xbuf,
 {
     void *xp, *data;
     int datainc;
-    int status = ENOERR;
+    int status = NC_NOERR;
  
     xp = (void*) xbuf;
     data = (void*) buf;
@@ -286,7 +286,7 @@ ncmpii_x_putn_double(void         *xbuf,
 {
     void *xp, *data;
     int datainc;
-    int status = ENOERR;
+    int status = NC_NOERR;
  
     xp = (void*) xbuf; 
     data = (void*) buf;
@@ -320,7 +320,7 @@ ncmpii_x_getn_schar(const void   *xbuf,
                     MPI_Datatype  datatype)
 {
     void *xp, *data;
-    int status = ENOERR;
+    int status = NC_NOERR;
 
     xp = (void*) xbuf;
     data = (void*) buf;
@@ -350,7 +350,7 @@ ncmpii_x_getn_short(const void   *xbuf,
 {
     char *xp, *data;
     int datainc;
-    int status = ENOERR;
+    int status = NC_NOERR;
 
     xp = (char*) xbuf;
     data = (char*) buf;
@@ -385,7 +385,7 @@ ncmpii_x_getn_int(const void   *xbuf,
 {
     char *xp, *data;
     int datainc;
-    int status = ENOERR;
+    int status = NC_NOERR;
  
     xp = (char*) xbuf;
     data = (char*) buf;
@@ -420,7 +420,7 @@ ncmpii_x_getn_float(const void   *xbuf,
 {
     char *xp, *data;
     int datainc;
-    int  status = ENOERR;
+    int  status = NC_NOERR;
 
     xp = (char*) xbuf;
     data = (char*) buf;
@@ -455,7 +455,7 @@ ncmpii_x_getn_double(const void   *xbuf,
 {
     char *xp, *data;
     int datainc;
-    int  status = ENOERR;
+    int  status = NC_NOERR;
  
     xp = (char*) xbuf;
     data = (char*) buf;
