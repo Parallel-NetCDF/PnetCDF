@@ -396,12 +396,6 @@ typedef struct NC_req {
     struct NC_req *next;
 } NC_req;
 
-#define NCMPI_REQUEST_NULL ((NCMPI_Request)NULL)
-#define NCMPI_REQTYPE_READ      1
-#define NCMPI_REQTYPE_WRITE     2
-#define NCMPI_REQTYPE_MREAD     3
-#define NCMPI_REQTYPE_MWRITE    4
-
 struct NC {
 	/* links to make list of open netcdf's */
 	struct NC *next;
