@@ -87,61 +87,53 @@ ncmpii_del_from_NCList(NC *ncp)
  * comparing the header buffer streams of all processes.
  */
 static int
-NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp) {
-  int rank;
-  int errcheck;
-  MPI_Offset compare = 0;
-  void *cmpbuf;
-  MPI_Offset max_size;
-  bufferinfo gbp;
-  int status = NC_NOERR;
-  int errflag;
+NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
+    int rank, errcheck, status=NC_NOERR, errflag, compare;
+    void *cmpbuf;
+    bufferinfo gbp;
 
-  MPI_Comm_rank(comm, &rank);
+    MPI_Comm_rank(comm, &rank);
 
-  if (rank == 0)
-    max_size = nn;
-  MPI_Bcast(&max_size, 1, MPI_LONG_LONG_INT, 0, comm);
+    /* process 0 broadcasts header size */
+    MPI_Bcast(&hsz, 1, MPI_LONG_LONG_INT, 0, comm);
 
-  if (rank == 0) 
-    cmpbuf = buf;
-  else
-    cmpbuf = (void *)malloc(nn);
+    if (rank == 0)
+        cmpbuf = buf;
+    else
+        cmpbuf = (void*) malloc(hsz);
 
-  MPI_Bcast(cmpbuf, nn, MPI_BYTE, 0, comm);
+    /* process 0 broadcasts its header */
+    MPI_Bcast(cmpbuf, hsz, MPI_BYTE, 0, comm);
 
-   compare = memcmp(buf, cmpbuf, nn);
-  
-   MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
+    compare = 0;
+    if (!rank)
+        compare = memcmp(buf, cmpbuf, hsz);
 
-   if (errcheck == 0) {
-    if (rank!=0)
-      free(cmpbuf);
-      return NC_NOERR;
-   }
+    MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_MAX, comm);
+    if (errcheck == 0) {
+        if (rank > 0)
+            free(cmpbuf);
+        return NC_NOERR;
+    }
+    /* now part of the header is not consistent across all processes */
 
 //    gbp.nciop = NULL;
     gbp.nciop = ncp->nciop;
     gbp.offset = 0;    /* read from start of the file */
-    gbp.size = nn;
+    gbp.size = hsz;
     gbp.index = 0;
     gbp.pos=gbp.base = cmpbuf;
 
     status = ncmpii_hdr_check_NC(&gbp, ncp);
-    if (rank!=0){
-      free(cmpbuf);
-    }
-   
-    if (status!=NC_NOERR) errflag = 1;
-    MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_SUM, ncp->nciop->comm);
-    if (errcheck != NC_NOERR){
-          if (status != NC_NOERR ){
-                return status;
-        } else {
-        return NC_EMULTIDEFINE; 
-        }
-    }
-  return NC_NOERR;
+    if (rank > 0)
+        free(cmpbuf);
+
+    errflag = (status == NC_NOERR) ? 0 : 1;
+    MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_MAX, comm);
+    if (errcheck > 0)
+        return (status != NC_NOERR) ? status : NC_EMULTIDEFINE;
+
+    return NC_NOERR;
 }
 
 
