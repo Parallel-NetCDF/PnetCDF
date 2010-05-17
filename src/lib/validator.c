@@ -77,7 +77,7 @@ val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
     
   gbp->size = bufsize;
 
-  return ENOERR;
+  return NC_NOERR;
 }
 
 /*
@@ -86,7 +86,7 @@ val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
 static int
 val_check_buffer(bufferinfo *gbp, MPI_Offset nextread) {
   if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
-    return ENOERR;
+    return NC_NOERR;
   return val_fetch(gbp, MIN(gbp->size, nextread));
 } 
 
@@ -94,24 +94,24 @@ static int
 val_get_NCtype(bufferinfo *gbp, NCtype *typep) {
   int type = 0;
   int status = val_check_buffer(gbp, X_SIZEOF_INT);
-  if (status != ENOERR) {
+  if (status != NC_NOERR) {
     printf("NC component type is expected for ");
     return status;
   }
 
   status =  ncmpix_get_int_int(gbp->pos, &type);
   gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT);
-  if (status != ENOERR)
+  if (status != NC_NOERR)
     return status;
   *typep = (NCtype) type;
-  return ENOERR;
+  return NC_NOERR;
 }
 
 static int
 val_get_size_t(bufferinfo *gbp, MPI_Offset *sp) {
   int sizeof_t = gbp->version == 5 ? 8 : 4; 
   int status = val_check_buffer(gbp, sizeof_t);
-  if (status != ENOERR) {
+  if (status != NC_NOERR) {
     printf("size is expected for ");
     return status; 
   }
@@ -127,7 +127,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   char pad[X_ALIGN-1];
 
   status = val_get_size_t(gbp, &nchars);
-  if (status != ENOERR) {
+  if (status != NC_NOERR) {
     printf("the name string of ");
     return status;
   }
@@ -151,7 +151,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
       bufremain -= strcount;
     } else {
       status = val_fetch(gbp, MIN(gbp->size, X_SIZEOF_CHAR * nchars));
-      if(status != ENOERR) {
+      if(status != NC_NOERR) {
 	printf("fetching the name string of ");
         ncmpii_free_NC_string(ncstrp);
         return status;
@@ -162,7 +162,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
 
   memset(pad, 0, X_ALIGN-1);
   status = val_check_buffer(gbp, padding);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("fetching padding for the name string of ");
     ncmpii_free_NC_string(ncstrp);
     return status;
@@ -177,7 +177,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   
   *ncstrpp = ncstrp;
   
-  return ENOERR;  
+  return NC_NOERR;  
 }
 
 static int
@@ -187,7 +187,7 @@ val_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp) {
   NC_dim *dimp;
 
   status = val_get_NC_string(gbp, &ncstrp);
-  if (status != ENOERR) 
+  if (status != NC_NOERR) 
     return status;
 
   dimp = ncmpii_new_x_NC_dim(ncstrp);
@@ -195,7 +195,7 @@ val_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp) {
     return NC_ENOMEM;
 
   status = val_get_size_t(gbp, &dimp->size);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("\"%s\" - ", ncstrp->cp);
     ncmpii_free_NC_dim(dimp); /* frees name */
     return status;
@@ -203,7 +203,7 @@ val_get_NC_dim(bufferinfo *gbp, NC_dim **dimpp) {
 
   *dimpp = dimp;
 
-  return ENOERR;
+  return NC_NOERR;
 }
 
 static int
@@ -218,13 +218,13 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
   assert(ncap->value == NULL);
 
   status = val_get_NCtype(gbp, &type);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("preamble of ");
     return status; 
   }
 
   status = val_get_size_t(gbp, &ncap->nelems);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("the length of ");
     return status;
   }
@@ -253,7 +253,7 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
     end = &dpp[ncap->nelems];
     for( /*NADA*/ dim = 0; dpp < end; dpp++, dim++) {
       status = val_get_NC_dim(gbp, dpp);
-      if (status != ENOERR) {
+      if (status != NC_NOERR) {
 	printf("dimension[%d] in ", dim);
         ncap->nelems = dpp - ncap->value;
         ncmpii_free_NC_dimarrayV(ncap);
@@ -262,20 +262,20 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
     }
   }
 
-  return ENOERR;
+  return NC_NOERR;
 }
 
 static int
 val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
   int type = 0;
   int status = val_check_buffer(gbp, X_SIZEOF_INT);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("data type is expected for the values of ");
     return status;
   }
 
   status =  ncmpix_get_int_int(gbp->pos, &type);
-  if(status != ENOERR) 
+  if(status != NC_NOERR) 
     return status;
   gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT); 
 
@@ -292,7 +292,7 @@ val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
  
   *typep = (nc_type) type;
 
-  return ENOERR;
+  return NC_NOERR;
 }
 
 /*
@@ -319,7 +319,7 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
       bufremain -= attcount;
     } else {
       status = val_fetch(gbp, MIN(gbp->size, esz * nvalues));
-      if(status != ENOERR) {
+      if(status != NC_NOERR) {
 	printf("fetching the values of ");
         return status;
       }
@@ -335,7 +335,7 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   }
   gbp->pos = (void *)((char *)gbp->pos + padding);
 
-  return ENOERR;
+  return NC_NOERR;
 }
 
 static int
@@ -347,18 +347,18 @@ val_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   NC_attr *attrp;
 
   status = val_get_NC_string(gbp, &strp);
-  if(status != ENOERR)
+  if(status != NC_NOERR)
     return status;
 
   status = val_get_nc_type(gbp, &type);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("\"%s\" - ", strp->cp);
     ncmpii_free_NC_string(strp);
     return status;
   }
 
   status = val_get_size_t(gbp, &nelems); 
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("the values of \"%s\" - ", strp->cp);
     ncmpii_free_NC_string(strp);
     return status;
@@ -371,7 +371,7 @@ val_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
   }
 
   status = val_get_NC_attrV(gbp, attrp);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("\"%s\" - ", strp->cp);
     ncmpii_free_NC_attr(attrp); /* frees strp */ 
     return status;
@@ -379,7 +379,7 @@ val_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp) {
 
   *attrpp = attrp; 
   
-  return ENOERR; 
+  return NC_NOERR; 
 }
 
 static int
@@ -394,13 +394,13 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
   assert(ncap->value == NULL);
 
   status = val_get_NCtype(gbp, &type);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("preamble of ");
     return status; 
   }
 
   status = val_get_size_t(gbp, &ncap->nelems);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("the length of ");
     return status;
   }
@@ -429,7 +429,7 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
     end = &app[ncap->nelems];
     for( /*NADA*/ att = 0; app < end; app++, att++) {
       status = val_get_NC_attr(gbp, app);
-      if (status != ENOERR) {
+      if (status != NC_NOERR) {
 	printf("attribute[%d] of ", att);
         ncap->nelems = app - ncap->value;
         ncmpii_free_NC_attrarrayV(ncap);
@@ -438,7 +438,7 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
     }
   }
   
-  return ENOERR;
+  return NC_NOERR;
 }
 
 static int
@@ -450,11 +450,11 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
   NC_var *varp;
 
   status = val_get_NC_string(gbp, &strp);
-  if(status != ENOERR)
+  if(status != NC_NOERR)
     return status;
 
   status = val_get_size_t(gbp, &ndims);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
      printf("the dimid list of \"%s\" - ", strp->cp);
      ncmpii_free_NC_string(strp); 
      return status;
@@ -468,7 +468,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
 
   for (dim = 0; dim < ndims; dim++ ) {
     status = val_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
-    if(status != ENOERR) {
+    if(status != NC_NOERR) {
       printf("the dimid[%d] is expected for \"%s\" - ", (int)dim, strp->cp);
       ncmpii_free_NC_var(varp);
       return status;
@@ -476,48 +476,48 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     tmp_dim = (MPI_Offset*) (varp->dimids + dim);
     status = ncmpix_getn_long_long((const void **)(&gbp->pos), 
                               1, tmp_dim);
-    if(status != ENOERR) {
+    if(status != NC_NOERR) {
       ncmpii_free_NC_var(varp);
       return status;
     }
   }
 
   status = val_get_NC_attrarray(gbp, &varp->attrs);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("ATTRIBUTE list of \"%s\" - ", strp->cp);
     ncmpii_free_NC_var(varp);
     return status;
   }
 
   status = val_get_nc_type(gbp, &varp->type);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("\"%s\" - ", strp->cp);
     ncmpii_free_NC_var(varp);
     return status;
   } 
 
   status = val_get_size_t(gbp, &varp->len);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("the data of  \"%s\" - ", strp->cp);
     ncmpii_free_NC_var(varp);
     return status;
   }
 
   status = val_check_buffer(gbp, (gbp->version == 5 ? 8 : 4));
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("offset is expected for the data of \"%s\" - ", strp->cp);
     ncmpii_free_NC_var(varp);
     return status;
   }
   status = ncmpix_get_off_t((const void **)&gbp->pos,
                          &varp->begin, (gbp->version == 1 ? 4 : 8));
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     ncmpii_free_NC_var(varp);
     return status;
   }
 
   *varpp = varp;
-  return ENOERR;
+  return NC_NOERR;
 }
 
 static int
@@ -532,13 +532,13 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   assert(ncap->value == NULL); 
 
   status = val_get_NCtype(gbp, &type);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("preamble of ");
     return status;
   }
  
   status = val_get_size_t(gbp, &ncap->nelems);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("the length of ");
     return status;
   }
@@ -567,7 +567,7 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
     end = &vpp[ncap->nelems];
     for( /*NADA*/ var = 0; vpp < end; vpp++, var++) {
       status = val_get_NC_var(gbp, vpp);
-      if (status != ENOERR) {
+      if (status != NC_NOERR) {
         printf("variable[%d] in ", var);
         ncap->nelems = vpp - ncap->value;
         ncmpii_free_NC_vararrayV(ncap);
@@ -576,7 +576,7 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
     }
   }
 
-  return ENOERR;
+  return NC_NOERR;
 }
 
 static int
@@ -598,7 +598,7 @@ val_get_NC(NC *ncp) {
   getbuf.pos = getbuf.base = (void *)malloc(getbuf.size);
 
   status = val_fetch(&getbuf, sizeof(magic));
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("magic number (C D F \\001) is expected!\n");
     return status;
   }
@@ -615,13 +615,13 @@ val_get_NC(NC *ncp) {
   }
 
   status = val_check_buffer(&getbuf, X_SIZEOF_SIZE_T);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("number of records is expected!\n");
     free(getbuf.base);
     return status;
   }
   status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, getbuf.version == 5 ? 8 : 4);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     free(getbuf.base);
     return status;
   }
@@ -630,21 +630,21 @@ val_get_NC(NC *ncp) {
   assert((char *)getbuf.pos < (char *)getbuf.base + getbuf.size);
 
   status = val_get_NC_dimarray(&getbuf, &ncp->dims);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("DIMENSION list!\n");
     free(getbuf.base);
     return status;
   }
 
   status = val_get_NC_attrarray(&getbuf, &ncp->attrs); 
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("GLOBAL ATTRIBUTE list!\n");
     free(getbuf.base);
     return status;
   }
 
   status = val_get_NC_vararray(&getbuf, &ncp->vars);
-  if(status != ENOERR) {
+  if(status != NC_NOERR) {
     printf("VARIABLE list!\n");
     free(getbuf.base);
     return status; 
