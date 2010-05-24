@@ -6,7 +6,7 @@
 
 #define HANDLE_ERROR {                                \
     if (status != NC_NOERR)                           \
-        printf("Error at line %s (%s)\n", __LINE__,   \
+        printf("Error at line %d (%s)\n", __LINE__,   \
                ncmpi_strerror(status));               \
 }
 
