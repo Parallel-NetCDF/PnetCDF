@@ -213,6 +213,7 @@ typedef nc_type ncmpi_type;
 #define NC_EVARS_BEGIN_MULTIDEFINE	(-81)	/* Different var begin defines size on multiprocesses conflict */
 #define NC_ENUMRECS_MULTIDEFINE	(-82)	/* Different number records on multiprocesses conflict */
 #define NC_EINVAL_REQUEST       (-83)   /* invalid request ID */
+#define NC_EAINT_TOO_SMALL      (-84)   /* MPI_Aint not large enough to hold requested value */
 
 
 /*
