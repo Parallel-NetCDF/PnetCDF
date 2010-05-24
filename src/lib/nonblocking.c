@@ -164,6 +164,7 @@ ncmpii_mset_fileview(MPI_File    fh,
     int i, status, mpireturn, *blocklens;
     MPI_Datatype full_filetype, *filetypes;
     MPI_Offset *offsets;
+    MPI_Aint *addrs;
 
     if (ntimes <= 0) { /* participate collective call */
         mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
@@ -175,6 +176,7 @@ ncmpii_mset_fileview(MPI_File    fh,
     blocklens = (int*)          malloc(ntimes * sizeof(int));
     offsets   = (MPI_Offset*)   malloc(ntimes * sizeof(MPI_Offset));
     filetypes = (MPI_Datatype*) malloc(ntimes * sizeof(MPI_Datatype));
+    addrs     = (MPI_Aint *)    malloc(ntimes * sizeof(MPI_Aint));
 
     /* create a filetype for each variable */
     for (i=0; i<ntimes; i++) {
@@ -199,10 +201,15 @@ ncmpii_mset_fileview(MPI_File    fh,
         }
     }
 
+    for (i=0; i< ntimes; i++) {
+	    addrs[i] = offsets[i];
+	    if (addrs[i] != offsets[i]) return NC_EAINT_TOO_SMALL;
+    }
+
 #if (MPI_VERSION < 2)
-    MPI_Type_struct(ntimes, blocklens, (MPI_Aint*)offsets, filetypes, &full_filetype);
+    MPI_Type_struct(ntimes, blocklens, addrs, filetypes, &full_filetype);
 #else
-    MPI_Type_create_struct(ntimes, blocklens, (MPI_Aint*)offsets, filetypes, &full_filetype);
+    MPI_Type_create_struct(ntimes, blocklens, addrs, filetypes, &full_filetype);
 #endif
     MPI_Type_commit(&full_filetype);
   
@@ -219,6 +226,7 @@ ncmpii_mset_fileview(MPI_File    fh,
     free(filetypes);
     free(offsets);
     free(blocklens);
+    free(addrs);
 
     return NC_NOERR;
 }
