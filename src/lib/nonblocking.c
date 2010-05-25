@@ -235,7 +235,7 @@ ncmpii_mset_fileview(MPI_File    fh,
     free(filetypes);
     free(offsets);
     free(blocklens);
-    free(addrs);
+    if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) free(addrs);
 
     return NC_NOERR;
 }
