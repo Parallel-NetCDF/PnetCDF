@@ -176,7 +176,6 @@ ncmpii_mset_fileview(MPI_File    fh,
     blocklens = (int*)          malloc(ntimes * sizeof(int));
     offsets   = (MPI_Offset*)   malloc(ntimes * sizeof(MPI_Offset));
     filetypes = (MPI_Datatype*) malloc(ntimes * sizeof(MPI_Datatype));
-    addrs     = (MPI_Aint *)    malloc(ntimes * sizeof(MPI_Aint));
 
     /* create a filetype for each variable */
     for (i=0; i<ntimes; i++) {
@@ -201,9 +200,19 @@ ncmpii_mset_fileview(MPI_File    fh,
         }
     }
 
-    for (i=0; i< ntimes; i++) {
-	    addrs[i] = offsets[i];
-	    if (addrs[i] != offsets[i]) return NC_EAINT_TOO_SMALL;
+    /* on most 32 bit systems, MPI_Aint and MPI_Offset are different sizes.
+     * Possible that on those platforms some of the beginning offsets of these
+     * variables in the dataset won't fit into the aint used by
+     * MPI_Type_create_struct.  Minor optimization: we don't need to do any of
+     * this if MPI_Aint and MPI_Offset are the same size  */
+    if (sizeof(MPI_Offset) != sizeof(MPI_Aint) ) {	
+	    addrs = (MPI_Aint *) malloc(ntimes * sizeof(MPI_Aint));
+	    for (i=0; i< ntimes; i++) {
+		    addrs[i] = offsets[i];
+		    if (addrs[i] != offsets[i]) return NC_EAINT_TOO_SMALL;
+	    }
+    } else {
+	    addrs = (MPI_Aint*) offsets; /* cast ok: types same size */
     }
 
 #if (MPI_VERSION < 2)
