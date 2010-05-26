@@ -13,4 +13,4 @@ $ module add m4-1.4.14
 $ configure --prefix=/path/to/install \
 	CFLAGS=-qlanglvl=stdc99 \
 	CC=xlc FC=xlf F77=xlf F90=xlf90 \
-	MPICC=mpcc_r MPIF77=mpxlf_r MPIF90=mpxlf90_r CXX=xlC MPICXX=mpxlC
+	MPICC=mpcc_r MPIF77=mpxlf_r MPIF90=mpxlf90_r CXX=xlC MPICXX=mpCC_r
