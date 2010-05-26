@@ -12,6 +12,7 @@
 #include <assert.h>
 #include "ncx.h"
 #include "fbits.h"
+#include "macro.h"
 
 /*
  * Free dim
@@ -24,7 +25,7 @@ ncmpii_free_NC_dim(NC_dim *dimp)
 	if(dimp == NULL)
 		return;
 	ncmpii_free_NC_string(dimp->name);
-	free(dimp);
+	NCI_Free(dimp);
 }
 
 
@@ -33,7 +34,7 @@ ncmpii_new_x_NC_dim(NC_string *name)
 {
 	NC_dim *dimp;
 
-	dimp = (NC_dim *) malloc(sizeof(NC_dim));
+	dimp = (NC_dim *) NCI_Malloc(sizeof(NC_dim));
 	if(dimp == NULL)
 		return NULL;
 
@@ -196,7 +197,7 @@ ncmpii_free_NC_dimarrayV(NC_dimarray *ncap)
 
 	ncmpii_free_NC_dimarrayV0(ncap);
 
-	free(ncap->value);
+	NCI_Free(ncap->value);
 	ncap->value = NULL;
 	ncap->nalloc = 0;
 }
@@ -213,7 +214,7 @@ ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref)
 	if(ref->nelems != 0)
 	{
 		const MPI_Offset sz = ref->nelems * sizeof(NC_dim *);
-		ncap->value = (NC_dim **) malloc(sz);
+		ncap->value = (NC_dim **) NCI_Malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
 		(void) memset(ncap->value, 0, sz);
@@ -263,7 +264,7 @@ incr_NC_dimarray(NC_dimarray *ncap, NC_dim *newelemp)
 	if(ncap->nalloc == 0)
 	{
 		assert(ncap->nelems == 0);
-		vp = (NC_dim **) malloc(NC_ARRAY_GROWBY * sizeof(NC_dim *));
+		vp = (NC_dim **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_dim *));
 		if(vp == NULL)
 			return NC_ENOMEM;
 		ncap->value = vp;
@@ -271,7 +272,7 @@ incr_NC_dimarray(NC_dimarray *ncap, NC_dim *newelemp)
 	}
 	else if(ncap->nelems +1 > ncap->nalloc)
 	{
-		vp = (NC_dim **) realloc(ncap->value,
+		vp = (NC_dim **) NCI_Realloc(ncap->value,
 			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_dim *));
 		if(vp == NULL)
 			return NC_ENOMEM;

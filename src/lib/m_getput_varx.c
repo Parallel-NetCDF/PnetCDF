@@ -389,7 +389,7 @@ ncmpii_mgetput_varm(int                ncid,
         CHECK_INDEP_FH
   
     if (num > 0) {
-        req_ids  = (int*) malloc(2 * num * sizeof(int));
+        req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
         statuses = req_ids + num;
     }
 
@@ -405,14 +405,14 @@ ncmpii_mgetput_varm(int                ncid,
             status = ncmpii_igetput_varm(ncp, varp, start, count, NULL,
                                          NULL, bufs[i], bufcounts[i],
                                          datatypes[i], &req_ids[i], rw_flag);
-            if (varp->ndims > 0) free(start);
+            if (varp->ndims > 0) NCI_Free(start);
         } else if (counts == NULL) {  /* var1 */
             GET_FULL_DIMENSIONS
             GET_ONE_COUNT
             status = ncmpii_igetput_varm(ncp, varp, starts[i], count, NULL,
                                          NULL, bufs[i], bufcounts[i],
                                          datatypes[i], &req_ids[i], rw_flag);
-            if (varp->ndims > 0) free(count);
+            if (varp->ndims > 0) NCI_Free(count);
         } else if (strides == NULL) { /* vara */
             status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i], NULL,
                                          NULL, bufs[i], bufcounts[i],
@@ -440,7 +440,7 @@ ncmpii_mgetput_varm(int                ncid,
         return status;
 
     if (num > 0)
-        free(req_ids);
+        NCI_Free(req_ids);
 
     for (i=0; i<num; i++)
         if (statuses[i] != NC_NOERR)

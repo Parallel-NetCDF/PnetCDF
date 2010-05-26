@@ -42,19 +42,25 @@ static int ncmpii_mset_fileview(MPI_File fh, NC* ncp, int ntimes, NC_var **varp,
 static int req_compare(const NC_req *a, const NC_req *b);
 
 #define FREE_REQUEST(req) {                                          \
-    if (req->xbuf != req->cbuf && req->xbuf != NULL)                 \
-        free(req->xbuf);                                             \
+    if (req->xbuf == req->buf) req->xbuf = NULL;                     \
+    if (req->cbuf == req->buf) req->cbuf = NULL;                     \
+    if (req->xbuf != req->cbuf && req->xbuf != NULL) {               \
+        NCI_Free(req->xbuf);                                         \
+        req->xbuf = NULL;                                            \
+    }                                                                \
     if (req->cbuf != req->buf && req->cbuf != NULL) {                \
-        free(req->cbuf);                                             \
+        NCI_Free(req->cbuf);                                         \
         req->cbuf = NULL;                                            \
     }                                                                \
-    if (req->is_imap && req->cbuf != NULL) /* imap cbuf != buf */    \
-        free(req->cbuf);                                             \
+    if (req->is_imap && req->cbuf != NULL) { /* imap cbuf != buf */  \
+        NCI_Free(req->cbuf);                                         \
+        req->cbuf = NULL;                                            \
+    }                                                                \
     for (j=0; j<req->num_subreqs; j++)                               \
-        free(req->subreqs[j].start);                                 \
+        NCI_Free(req->subreqs[j].start);                             \
     if (req->num_subreqs > 0)                                        \
-        free(req->subreqs);                                          \
-    free(req->start);                                                \
+        NCI_Free(req->subreqs);                                      \
+    NCI_Free(req->start);                                            \
 }
 
 /*----< ncmpi_cancel() >-----------------------------------------------------*/
@@ -119,7 +125,7 @@ ncmpii_cancel(NC  *ncp,
             pre_req->next = cur_req->next;
 
         FREE_REQUEST(cur_req)
-        free(cur_req);
+        NCI_Free(cur_req);
     }
 
     /* make sure ncp->tail pointing to the tail */
@@ -156,6 +162,13 @@ ncmpi_wait_all(int  ncid,
     int  status;
     NC  *ncp;
 
+#ifdef TEST_INDEP_WAIT
+    int status;
+    ncmpi_begin_indep_data(ncid);
+    status = ncmpi_wait(ncid, num_reqs, req_ids, statuses);
+    ncmpi_end_indep_data(ncid);
+    return status;
+#endif
     CHECK_NCID
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 }
@@ -184,9 +197,9 @@ ncmpii_mset_fileview(MPI_File    fh,
         return NC_NOERR;
     }
 
-    blocklens = (int*)          malloc(ntimes * sizeof(int));
-    offsets   = (MPI_Offset*)   malloc(ntimes * sizeof(MPI_Offset));
-    filetypes = (MPI_Datatype*) malloc(ntimes * sizeof(MPI_Datatype));
+    blocklens = (int*)          NCI_Malloc(ntimes * sizeof(int));
+    offsets   = (MPI_Offset*)   NCI_Malloc(ntimes * sizeof(MPI_Offset));
+    filetypes = (MPI_Datatype*) NCI_Malloc(ntimes * sizeof(MPI_Datatype));
 
     /* create a filetype for each variable */
     for (i=0; i<ntimes; i++) {
@@ -216,14 +229,14 @@ ncmpii_mset_fileview(MPI_File    fh,
      * variables in the dataset won't fit into the aint used by
      * MPI_Type_create_struct.  Minor optimization: we don't need to do any of
      * this if MPI_Aint and MPI_Offset are the same size  */
-    if (sizeof(MPI_Offset) != sizeof(MPI_Aint) ) {	
-	    addrs = (MPI_Aint *) malloc(ntimes * sizeof(MPI_Aint));
-	    for (i=0; i< ntimes; i++) {
-		    addrs[i] = offsets[i];
-		    if (addrs[i] != offsets[i]) return NC_EAINT_TOO_SMALL;
-	    }
+    if (sizeof(MPI_Offset) != sizeof(MPI_Aint) ) {
+        addrs = (MPI_Aint *) NCI_Malloc(ntimes * sizeof(MPI_Aint));
+        for (i=0; i< ntimes; i++) {
+            addrs[i] = offsets[i];
+            if (addrs[i] != offsets[i]) return NC_EAINT_TOO_SMALL;
+        }
     } else {
-	    addrs = (MPI_Aint*) offsets; /* cast ok: types same size */
+        addrs = (MPI_Aint*) offsets; /* cast ok: types same size */
     }
 
 #if (MPI_VERSION < 2)
@@ -243,10 +256,10 @@ ncmpii_mset_fileview(MPI_File    fh,
     }
     MPI_Type_free(&full_filetype);
 
-    free(filetypes);
-    free(offsets);
-    free(blocklens);
-    if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) free(addrs);
+    NCI_Free(filetypes);
+    NCI_Free(offsets);
+    NCI_Free(blocklens);
+    if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) NCI_Free(addrs);
 
     return NC_NOERR;
 }
@@ -280,10 +293,7 @@ ncmpii_wait(NC  *ncp,
         CHECK_COLLECTIVE_FH
     else
         CHECK_INDEP_FH
-  
-    /* Note: 1) it is illegal num_reqs is larger than the linked list size
-             2) request ids must be distinct
-     */
+
     j = 0;
     for (i=0; i<num_reqs; i++) {
         statuses[i] = NC_NOERR;
@@ -434,7 +444,7 @@ ncmpii_wait(NC  *ncp,
                     *(cur_req->status) = status;
                 if (status != NC_NOERR) {
                     FREE_REQUEST(cur_req)
-                    free(cur_req);
+                    NCI_Free(cur_req);
                     return status;
                 }
 
@@ -449,7 +459,7 @@ ncmpii_wait(NC  *ncp,
                     if (cur_req->lbuf != NULL) {
                         if (cur_req->cbuf == cur_req->lbuf) cur_req->cbuf = NULL;
                         if (cur_req->xbuf == cur_req->lbuf) cur_req->xbuf = NULL;
-                        free(cur_req->lbuf);
+                        NCI_Free(cur_req->lbuf);
                         cur_req->lbuf = NULL;
                         /* cur_req->lbuf will never == cur_req->buf */
                     }
@@ -458,7 +468,7 @@ ncmpii_wait(NC  *ncp,
                         *(cur_req->status) = status;
                     if (status != NC_NOERR) {
                         FREE_REQUEST(cur_req)
-                        free(cur_req);
+                        NCI_Free(cur_req);
                         return status;
                     }
                 }
@@ -485,7 +495,7 @@ ncmpii_wait(NC  *ncp,
                         *(cur_req->status) = status;
                     if (status != NC_NOERR) {
                         FREE_REQUEST(cur_req)
-                        free(cur_req);
+                        NCI_Free(cur_req);
                         return status;
                     }
                 }
@@ -496,7 +506,7 @@ ncmpii_wait(NC  *ncp,
         FREE_REQUEST(cur_req)
         pre_req = cur_req;
         cur_req = cur_req->next;
-        free(pre_req);
+        NCI_Free(pre_req);
     }
 
     return ((warning != NC_NOERR) ? warning : status);
@@ -522,7 +532,7 @@ ncmpii_wait_getput(NC     *ncp,
     }
     else {
         /* change the linked list into an array to be sorted */
-        reqs = (NC_req*) malloc(num_reqs * sizeof(NC_req));
+        reqs = (NC_req*) NCI_Malloc(num_reqs * sizeof(NC_req));
         i = 0;
         cur_req = req_head;
         while (cur_req != NULL) {
@@ -543,7 +553,7 @@ ncmpii_wait_getput(NC     *ncp,
 
         /* find the non-interleaving groups of requests */
         ngroups = 1;
-        group_index = (int*) malloc(num_reqs * sizeof(int));
+        group_index = (int*) NCI_Malloc(num_reqs * sizeof(int));
 
         j = 1;
         group_index[0] = 0;  /* first reqs[] index of the group */
@@ -575,13 +585,13 @@ ncmpii_wait_getput(NC     *ncp,
         max_ngroups = ngroups;
 
     if (num_reqs > 0) {
-        starts   = (MPI_Offset**) malloc(3 * num_reqs * sizeof(MPI_Offset*));
+        starts   = (MPI_Offset**) NCI_Malloc(3 * num_reqs * sizeof(MPI_Offset*));
         counts   = starts + num_reqs;
         strides  = counts + num_reqs;
-        nbytes   = (MPI_Offset*) malloc(num_reqs * sizeof(MPI_Offset));
-        varps    = (NC_var**)    malloc(num_reqs * sizeof(NC_var*));
-        bufs     = (void**)      malloc(num_reqs * sizeof(void*));
-        statuses = (int*)        malloc(num_reqs * sizeof(int));
+        nbytes   = (MPI_Offset*) NCI_Malloc(num_reqs * sizeof(MPI_Offset));
+        varps    = (NC_var**)    NCI_Malloc(num_reqs * sizeof(NC_var*));
+        bufs     = (void**)      NCI_Malloc(num_reqs * sizeof(void*));
+        statuses = (int*)        NCI_Malloc(num_reqs * sizeof(int));
     }
 
     for (i=0; i<ngroups; i++) {
@@ -615,13 +625,13 @@ ncmpii_wait_getput(NC     *ncp,
                        rw_flag, io_method);
 
     if (num_reqs > 0) {
-        free(starts);
-        free(nbytes);
-        free(varps);
-        free(bufs);
-        free(statuses);
-        free(group_index);
-        free(reqs);
+        NCI_Free(statuses);
+        NCI_Free(bufs);
+        NCI_Free(varps);
+        NCI_Free(nbytes);
+        NCI_Free(starts);
+        NCI_Free(group_index);
+        NCI_Free(reqs);
     }
 
     return NC_NOERR;
@@ -661,8 +671,8 @@ ncmpii_mgetput(NC           *ncp,
 
     /* create the I/O buffer derived data type */
     if (num_reqs > 0) {
-        int *blocklengths = (int*) malloc(num_reqs * sizeof(int));
-        MPI_Aint *disps = (MPI_Aint*) malloc(num_reqs*sizeof(MPI_Aint));
+        int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
+        MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
         MPI_Aint a0, ai;
 
         disps[0] = 0;
@@ -678,8 +688,8 @@ ncmpii_mgetput(NC           *ncp,
         MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE, &buf_type);
         MPI_Type_commit(&buf_type);
 
-        free(disps);
-        free(blocklengths);
+        NCI_Free(disps);
+        NCI_Free(blocklengths);
 
         buf = bufs[0];
         len = 1;

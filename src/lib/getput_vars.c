@@ -637,7 +637,7 @@ ncmpii_getput_vars(NC               *ncp,
 
     if (!iscontig_of_ptypes) {
         /* handling for derived datatype: pack into a contiguous buffer */
-        cbuf = (void*) malloc( cnelems * el_size );
+        cbuf = (void*) NCI_Malloc( cnelems * el_size );
         if (rw_flag == WRITE_REQ) {
             err = ncmpii_data_repack((void*)buf, bufcount, datatype,
                                      cbuf, cnelems, ptype);
@@ -650,7 +650,7 @@ ncmpii_getput_vars(NC               *ncp,
 
     if ( ncmpii_need_convert(varp->type, ptype) ) {
         /* allocate new buffer for data type conversion */
-        xbuf = malloc(nbytes);
+        xbuf = NCI_Malloc(nbytes);
 
         if (rw_flag == WRITE_REQ) {
             /* automatic numeric datatype conversion + swap if necessary */
@@ -763,9 +763,9 @@ ncmpii_getput_vars(NC               *ncp,
     }
 
     if (xbuf != cbuf && xbuf != NULL)
-        free(xbuf);
+        NCI_Free(xbuf);
     if (cbuf != buf && cbuf != NULL)
-        free(cbuf);
+        NCI_Free(cbuf);
  
     return ((warning != NC_NOERR) ? warning : status);
 }

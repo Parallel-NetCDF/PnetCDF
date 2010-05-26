@@ -183,7 +183,7 @@ ncmpii_get_offset(NC               *ncp,
     ndims  = varp->ndims; /* number of dimensions of this variable */
 
     if (counts != NULL)
-        end_off = (MPI_Offset*) malloc(ndims * sizeof(MPI_Offset));
+        end_off = (MPI_Offset*) NCI_Malloc(ndims * sizeof(MPI_Offset));
 
     if (counts != NULL && strides != NULL) {
         for (i=0; i<ndims; i++)
@@ -224,7 +224,7 @@ ncmpii_get_offset(NC               *ncp,
         }
     }
     if (counts != NULL && end_off != NULL)
-        free(end_off);
+        NCI_Free(end_off);
 
     *offset_ptr = offset;
     return NC_NOERR;
@@ -370,7 +370,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
         MPI_Datatype rectype, types[3], type1;
 
         ndims    = varp->ndims;
-        shape    = (int*) malloc(3 * ndims * sizeof(int));
+        shape    = (int*) NCI_Malloc(3 * ndims * sizeof(int));
         subcount = shape    + ndims;
         substart = subcount + ndims;
 
@@ -468,7 +468,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
                 MPI_Type_commit(&filetype);
             }
             else {
-                shape64 = (MPI_Offset*) malloc(3 * ndims * sizeof(MPI_Offset));
+                shape64 = (MPI_Offset*) NCI_Malloc(3 * ndims * sizeof(MPI_Offset));
                 subcount64 = shape64    + ndims;
                 substart64 = subcount64 + ndims;
 
@@ -544,10 +544,10 @@ ncmpii_vara_create_filetype(NC               *ncp,
 
                     MPI_Type_free(&type1);
                 }
-                free(shape64);
+                NCI_Free(shape64);
             }
         }
-        free(shape);
+        NCI_Free(shape);
     }
 
     *offset_ptr   = offset;
@@ -618,7 +618,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
         MPI_Offset *blocklens, *blockstride, *blockcount;
 
         ndims       = varp->ndims;
-        blocklens   = (MPI_Offset*) malloc(3 * ndims * sizeof(MPI_Offset));
+        blocklens   = (MPI_Offset*) NCI_Malloc(3 * ndims * sizeof(MPI_Offset));
         blockstride = blocklens   + ndims;
         blockcount  = blockstride + ndims;
 
@@ -661,7 +661,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
                 }
             }
         }
-        free(blocklens);
+        NCI_Free(blocklens);
     }
 
     *offset_ptr   = offset;

@@ -45,7 +45,8 @@ LIB_CSRCS = \
 	i_getput_vars.c \
 	i_getput_varm.c \
 	m_getput_varx.c \
-	nonblocking.c
+	nonblocking.c   \
+        malloc.c
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \

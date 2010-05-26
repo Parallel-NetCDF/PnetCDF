@@ -14,6 +14,7 @@
 #include "ncx.h"
 #include "fbits.h"
 #include "rnd.h"
+#include "macro.h"
 
 
 /*
@@ -28,7 +29,7 @@ ncmpii_free_NC_attr(NC_attr *attrp)
 	if(attrp == NULL)
 		return;
 	ncmpii_free_NC_string(attrp->name);
-	free(attrp);
+	NCI_Free(attrp);
 }
 
 
@@ -72,7 +73,7 @@ ncmpii_new_x_NC_attr(
 
 	sz += xsz;
 
-	attrp = (NC_attr *) malloc(sz);
+	attrp = (NC_attr *) NCI_Malloc(sz);
 	if(attrp == NULL )
 		return NULL;
 
@@ -177,7 +178,7 @@ ncmpii_free_NC_attrarrayV(NC_attrarray *ncap)
 
 	ncmpii_free_NC_attrarrayV0(ncap);
 
-	free(ncap->value);
+	NCI_Free(ncap->value);
 	ncap->value = NULL;
 	ncap->nalloc = 0;
 }
@@ -194,7 +195,7 @@ ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
 	if(ref->nelems != 0)
 	{
 		const size_t sz = ref->nelems * sizeof(NC_attr *);
-		ncap->value = (NC_attr **) malloc(sz);
+		ncap->value = (NC_attr **) NCI_Malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
 
@@ -245,7 +246,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 	if(ncap->nalloc == 0)
 	{
 		assert(ncap->nelems == 0);
-		vp = (NC_attr **) malloc(NC_ARRAY_GROWBY * sizeof(NC_attr *));
+		vp = (NC_attr **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_attr *));
 		if(vp == NULL)
 			return NC_ENOMEM;
 
@@ -254,7 +255,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 	}
 	else if(ncap->nelems +1 > ncap->nalloc)
 	{
-		vp = (NC_attr **) realloc(ncap->value,
+		vp = (NC_attr **) NCI_Realloc(ncap->value,
 			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr *));
 		if(vp == NULL)
 			return NC_ENOMEM;

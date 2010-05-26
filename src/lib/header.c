@@ -14,13 +14,7 @@
 #include <stdio.h>
 
 #include "ncx.h"
-
-#ifndef MAX
-#define MAX(mm,nn) (((mm) > (nn)) ? (mm) : (nn))
-#endif
-#ifndef MIN
-#define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
-#endif
+#include "macro.h"
 
 #ifdef SIZEOF_INT
 # if SIZEOF_INT == 4
@@ -813,7 +807,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
     if(type != NC_DIMENSION)
       return EINVAL;
 
-    ncap->value = (NC_dim **) malloc(ncap->nelems * sizeof(NC_dim *));
+    ncap->value = (NC_dim **) NCI_Malloc(ncap->nelems * sizeof(NC_dim *));
     if(ncap->value == NULL)
       return NC_ENOMEM;
     ncap->nalloc = ncap->nelems;
@@ -989,7 +983,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
     if(type != NC_ATTRIBUTE)
       return EINVAL;
 
-    ncap->value = (NC_attr **) malloc(ncap->nelems * sizeof(NC_attr *));
+    ncap->value = (NC_attr **) NCI_Malloc(ncap->nelems * sizeof(NC_attr *));
     if(ncap->value == NULL)
       return NC_ENOMEM;
     ncap->nalloc = ncap->nelems; 
@@ -1123,7 +1117,7 @@ hdr_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   } else {
     if(type != NC_VARIABLE)
       return EINVAL;
-    ncap->value = (NC_var **) malloc(ncap->nelems * sizeof(NC_var *));
+    ncap->value = (NC_var **) NCI_Malloc(ncap->nelems * sizeof(NC_var *));
     if(ncap->value == NULL)
       return NC_ENOMEM; 
     ncap->nalloc = ncap->nelems;
@@ -1162,7 +1156,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
   if (getbuf.size > 4096)
     getbuf.size = 4096;
 
-  getbuf.pos = getbuf.base = (void *)malloc(getbuf.size);
+  getbuf.pos = getbuf.base = (void *)NCI_Malloc(getbuf.size);
   getbuf.index = 0;
 
   status = hdr_fetch(&getbuf);
@@ -1176,7 +1170,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
   /* don't need to worry about CDF-1 or CDF-2 
    *     if the first bits are not 'CDF-'  */
   if(memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return NC_ENOTNC;
   }
   /* check version number in last byte of magic */
@@ -1189,25 +1183,25 @@ ncmpii_hdr_get_NC(NC *ncp) {
       if (sizeof(MPI_Offset) != 8) {
           /* take the easy way out: if we can't support all CDF-2
            * files, return immediately */
-          free(getbuf.base);
+          NCI_Free(getbuf.base);
           return NC_ESMALL;
       }
   } else if (magic[sizeof(ncmagic)-1] == 0x5) {
       getbuf.version = 5;
       fSet(ncp->flags, NC_64BIT_DATA);
       if (sizeof(MPI_Offset) != 8) {
-          free(getbuf.base);
+          NCI_Free(getbuf.base);
           return NC_ESMALL;
       }
   } else {
-      free(getbuf.base);
+      NCI_Free(getbuf.base);
       return NC_ENOTNC;
   }
   
 
   status = hdr_check_buffer(&getbuf, (getbuf.version == 1) ? 4 : 8);
   if(status != NC_NOERR) {
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   } 
   status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, (getbuf.version == 5) ? 8 : 4);
@@ -1218,7 +1212,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
     getbuf.index += X_SIZEOF_SIZE_T;
   }
   if(status != NC_NOERR) {
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   }
   ncp->numrecs = nrecs;
@@ -1227,7 +1221,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
 
   status = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
   if(status != NC_NOERR) {
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   }
     
@@ -1235,21 +1229,21 @@ ncmpii_hdr_get_NC(NC *ncp) {
 
   status = hdr_get_NC_attrarray(&getbuf, &ncp->attrs); 
   if(status != NC_NOERR) {
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   }
 
 
   status = hdr_get_NC_vararray(&getbuf, &ncp->vars);
   if(status != NC_NOERR) {
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status; 
   }
  
   
   ncp->xsz = ncmpii_hdr_len_NC(ncp, (getbuf.version == 1) ? 4 : 8 );
   status = ncmpii_NC_computeshapes(ncp);
-  free(getbuf.base);
+  NCI_Free(getbuf.base);
   
   
   return status;
@@ -1444,7 +1438,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
   /* don't need to worry about CDF-1 or CDF-2
  *    *    if the first bits are not 'CDF-'  */
   if(memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return NC_ENOTNC;
   }
   /* check version number in last byte of magic */
@@ -1456,25 +1450,25 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
           if (sizeof(MPI_Offset) != 8) {
                   /* take the easy way out: if we can't support all CDF-2
  *                    * files, return immediately */
-                  free(getbuf->base);
+                  NCI_Free(getbuf->base);
                   return NC_ESMALL;
           }
   } else if (magic[sizeof(ncmagic)-1] == 0x5) {
           getbuf->version = 5;
           fSet(temp_ncp->flags, NC_64BIT_DATA);
           if (sizeof(MPI_Offset) != 8) {
-                  free(getbuf->base);
+                  NCI_Free(getbuf->base);
                   return NC_ESMALL;
           }
   } else {
-          free(getbuf->base);
+          NCI_Free(getbuf->base);
           return NC_ENOTNC;
   }
 
 
   status = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
 
@@ -1486,7 +1480,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
         getbuf->index += X_SIZEOF_SIZE_T;
   }
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
   temp_ncp->numrecs = nrecs;
@@ -1499,39 +1493,39 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
 
   status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
 
   status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
 
   status = hdr_get_NC_attrarray(getbuf, &temp_ncp->attrs);
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
 
 #ifdef METADATA_CONSISTENCY_CHECK
   status = ncmpii_comp_attrs(&temp_ncp->attrs, &ncp->attrs);
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
 #endif
 
   status = hdr_get_NC_vararray(getbuf, &temp_ncp->vars);
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
 
   status = ncmpii_comp_vars(&temp_ncp->vars, &ncp->vars);
   if(status != NC_NOERR) {
-    free(getbuf->base);
+    NCI_Free(getbuf->base);
     return status;
   }
 

@@ -11,6 +11,7 @@
 #include <mpi.h>
 
 #include "ncmpidtype.h"
+#include "macro.h"
 
 /*@
   ncmpii_type_filter - Map a basic MPI datatype into one of the eight
@@ -303,7 +304,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   memsz = num_ints*sizeof(int)
 	+ num_adds*sizeof(MPI_Aint)
 	+ num_dtypes*sizeof(MPI_Datatype);
-  arraybuf = (void *)malloc(memsz);
+  arraybuf = (void *)NCI_Malloc(memsz);
   array_of_ints = (int *)(arraybuf);
   array_of_adds = (MPI_Aint *)(array_of_ints + num_ints);
   array_of_dtypes = (MPI_Datatype *)(array_of_adds + num_adds);
@@ -469,7 +470,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   *nelems *= total_blocks;
 
   if (memsz > 0)
-    free(arraybuf);
+    NCI_Free(arraybuf);
 
   return status;
 }
@@ -515,12 +516,12 @@ int ncmpii_data_repack(void *inbuf,
   
   /* local pack-n-unpack, using MPI_COMM_SELF */
   MPI_Pack_size(incount, intype, MPI_COMM_SELF, &packsz);
-  packbuf = (void *)malloc(packsz);
+  packbuf = (void *)NCI_Malloc(packsz);
   packpos = 0;
   MPI_Pack(inbuf, incount, intype, packbuf, packsz, &packpos, MPI_COMM_SELF);
   packpos = 0;
   MPI_Unpack(packbuf, packsz, &packpos, outbuf, outcount, outtype, MPI_COMM_SELF);
-  free(packbuf);
+  NCI_Free(packbuf);
 
   return NC_NOERR;
 }
