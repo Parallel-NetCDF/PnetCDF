@@ -274,24 +274,24 @@ hdr_len_NC_vararray(const NC_vararray *ncap, MPI_Offset sizeof_off_t, MPI_Offset
 MPI_Offset
 ncmpii_hdr_len_NC(const NC *ncp, MPI_Offset sizeof_off_t)
 {
-        MPI_Offset xlen = sizeof(ncmagic);
+    MPI_Offset xlen = sizeof(ncmagic);
  
-        assert(ncp != NULL);
+    assert(ncp != NULL);
     if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-            xlen += X_SIZEOF_LONG; /* numrecs */
-                xlen += hdr_len_NC_dimarray(&ncp->dims, 8);/* int-> long????????*/
-                xlen += hdr_len_NC_attrarray(&ncp->attrs, 8);
-                xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 8);
+        xlen += X_SIZEOF_LONG; /* numrecs */
+        xlen += hdr_len_NC_dimarray(&ncp->dims, 8);/* int-> long????????*/
+        xlen += hdr_len_NC_attrarray(&ncp->attrs, 8);
+        xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 8);
     } else {
-            xlen += X_SIZEOF_SIZE_T;
-                xlen += hdr_len_NC_dimarray(&ncp->dims, 4);
-                xlen += hdr_len_NC_attrarray(&ncp->attrs, 4);
-                xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 4);
+        xlen += X_SIZEOF_SIZE_T;
+        xlen += hdr_len_NC_dimarray(&ncp->dims, 4);
+        xlen += hdr_len_NC_attrarray(&ncp->attrs, 4);
+        xlen += hdr_len_NC_vararray(&ncp->vars, sizeof_off_t, 4);
     }
 
-//        xlen += hdr_len_NC_dimarray(&ncp->dims, sizeof_off_t);/* int-> long????????*/
+//  xlen += hdr_len_NC_dimarray(&ncp->dims, sizeof_off_t);/* int-> long????????*/
  
-        return xlen;
+    return xlen;
 } 
 
 /* Begin Of put NC */
@@ -1432,7 +1432,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
   NC *temp_ncp;
   MPI_Offset nrecs = 0;
   int rank;
-  MPI_Offset chunksize = 4096;
+  MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
 
   temp_ncp = ncmpii_new_NC(&chunksize);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);

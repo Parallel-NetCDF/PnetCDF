@@ -267,6 +267,58 @@ extern void test_ncmpi_get_varm_text(void);
 extern void test_ncmpi_get_varm_uchar(void);
 extern void test_ncmpi_get_varm(void);
 
+extern void test_ncmpi_iget_var_double(void);
+extern void test_ncmpi_iget_var_float(void);
+extern void test_ncmpi_iget_var_int(void);
+extern void test_ncmpi_iget_var_long(void);
+extern void test_ncmpi_iget_var_schar(void);
+extern void test_ncmpi_iget_var_short(void);
+extern void test_ncmpi_iget_var_text(void);
+extern void test_ncmpi_iget_var_uchar(void);
+extern void test_ncmpi_iget_var(void);
+
+extern void test_ncmpi_iget_var1_double(void);
+extern void test_ncmpi_iget_var1_float(void);
+extern void test_ncmpi_iget_var1_int(void);
+extern void test_ncmpi_iget_var1_long(void);
+extern void test_ncmpi_iget_var1_schar(void);
+extern void test_ncmpi_iget_var1_short(void);
+extern void test_ncmpi_iget_var1_text(void);
+extern void test_ncmpi_iget_var1_uchar(void);
+extern void test_ncmpi_iget_var1(void);
+
+extern void test_ncmpi_iget_vara_double(void);
+extern void test_ncmpi_iget_vara_float(void);
+extern void test_ncmpi_iget_vara_int(void);
+extern void test_ncmpi_iget_vara_long(void);
+extern void test_ncmpi_iget_vara_schar(void);
+extern void test_ncmpi_iget_vara_short(void);
+extern void test_ncmpi_iget_vara_text(void);
+extern void test_ncmpi_iget_vara_uchar(void);
+extern void test_ncmpi_iget_vara(void);
+
+extern void test_ncmpi_iget_vars(void);
+extern void test_ncmpi_iget_vars_double(void);
+extern void test_ncmpi_iget_vars_float(void);
+extern void test_ncmpi_iget_vars_int(void);
+extern void test_ncmpi_iget_vars_long(void);
+extern void test_ncmpi_iget_vars_schar(void);
+extern void test_ncmpi_iget_vars_short(void);
+extern void test_ncmpi_iget_vars_text(void);
+extern void test_ncmpi_iget_vars_uchar(void);
+extern void test_ncmpi_iget_vars(void);
+
+extern void test_ncmpi_iget_varm(void);
+extern void test_ncmpi_iget_varm_double(void);
+extern void test_ncmpi_iget_varm_float(void);
+extern void test_ncmpi_iget_varm_int(void);
+extern void test_ncmpi_iget_varm_long(void);
+extern void test_ncmpi_iget_varm_schar(void);
+extern void test_ncmpi_iget_varm_short(void);
+extern void test_ncmpi_iget_varm_text(void);
+extern void test_ncmpi_iget_varm_uchar(void);
+extern void test_ncmpi_iget_varm(void);
+
 extern void test_ncmpi_get_att(void);
 extern void test_ncmpi_get_att_double(void);
 extern void test_ncmpi_get_att_float(void);
@@ -326,6 +378,56 @@ extern void test_ncmpi_put_varm_short(void);
 extern void test_ncmpi_put_varm_text(void);
 extern void test_ncmpi_put_varm_uchar(void);
 extern void test_ncmpi_put_varm(void);
+
+extern void test_ncmpi_iput_var_double(void);
+extern void test_ncmpi_iput_var_float(void);
+extern void test_ncmpi_iput_var_int(void);
+extern void test_ncmpi_iput_var_long(void);
+extern void test_ncmpi_iput_var_schar(void);
+extern void test_ncmpi_iput_var_short(void);
+extern void test_ncmpi_iput_var_text(void);
+extern void test_ncmpi_iput_var_uchar(void);
+extern void test_ncmpi_iput_var(void);
+
+extern void test_ncmpi_iput_var1_double(void);
+extern void test_ncmpi_iput_var1_float(void);
+extern void test_ncmpi_iput_var1_int(void);
+extern void test_ncmpi_iput_var1_long(void);
+extern void test_ncmpi_iput_var1_schar(void);
+extern void test_ncmpi_iput_var1_short(void);
+extern void test_ncmpi_iput_var1_text(void);
+extern void test_ncmpi_iput_var1_uchar(void);
+extern void test_ncmpi_iput_var1(void);
+
+extern void test_ncmpi_iput_vara_double(void);
+extern void test_ncmpi_iput_vara_float(void);
+extern void test_ncmpi_iput_vara_int(void);
+extern void test_ncmpi_iput_vara_long(void);
+extern void test_ncmpi_iput_vara_schar(void);
+extern void test_ncmpi_iput_vara_short(void);
+extern void test_ncmpi_iput_vara_text(void);
+extern void test_ncmpi_iput_vara_uchar(void);
+extern void test_ncmpi_iput_vara(void);
+
+extern void test_ncmpi_iput_vars_double(void);
+extern void test_ncmpi_iput_vars_float(void);
+extern void test_ncmpi_iput_vars_int(void);
+extern void test_ncmpi_iput_vars_long(void);
+extern void test_ncmpi_iput_vars_schar(void);
+extern void test_ncmpi_iput_vars_short(void);
+extern void test_ncmpi_iput_vars_text(void);
+extern void test_ncmpi_iput_vars_uchar(void);
+extern void test_ncmpi_iput_vars(void);
+
+extern void test_ncmpi_iput_varm_double(void);
+extern void test_ncmpi_iput_varm_float(void);
+extern void test_ncmpi_iput_varm_int(void);
+extern void test_ncmpi_iput_varm_long(void);
+extern void test_ncmpi_iput_varm_schar(void);
+extern void test_ncmpi_iput_varm_short(void);
+extern void test_ncmpi_iput_varm_text(void);
+extern void test_ncmpi_iput_varm_uchar(void);
+extern void test_ncmpi_iput_varm(void);
 
 extern void test_ncmpi_put_att(void);
 extern void test_ncmpi_put_att_double(void);

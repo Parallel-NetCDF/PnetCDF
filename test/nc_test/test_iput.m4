@@ -204,24 +204,10 @@ test_ncmpi_iput_var1_$1(void)
             error("bad var id: err = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
-                index[j] = var_shape[i][j];
+                index[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_var1_$1(ncid, i, index, &value, &reqid);
-                if (err == NC_NOERR) {
-                    /*
-                    ncmpi_begin_indep_data(ncid);
-                    err = ncmpi_wait(ncid, i, &reqid, &status);
-                    ncmpi_end_indep_data(ncid);
-                    */
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                }
-
-                if (canConvert) {
-                    IF (status != NC_EINVALCOORDS)
-                        error("bad index: status = %d", status);
-                } else {
-                    IF (err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
-                }
+                IF (err != NC_EINVALCOORDS)
+                    error("bad index: status = %d", err);
                 index[j] = 0;
             }
         }
@@ -246,7 +232,7 @@ test_ncmpi_iput_var1_$1(void)
 
             if (canConvert) {
                 if (inRange3(value, var_type[i],NCT_ITYPE($1))) {
-                    IF (status)
+                    IF (status != NC_NOERR)
                         error("%s", ncmpi_strerror(status));
                 } else {
                     IF (err != NC_ERANGE) {
@@ -255,6 +241,7 @@ test_ncmpi_iput_var1_$1(void)
                                 s_ncmpi_type(var_type[i]),
                                 (double)value, (long)value, &reqid);
                     }
+                    ncmpi_cancel(ncid, 1, &reqid, &status);
                 }
             } else {
                 IF (err != NC_ECHAR)
@@ -490,48 +477,20 @@ test_ncmpi_iput_vara_$1(void)
             error("bad var id: err = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
+                start[j] = var_shape[i][j];      /* out of bundary check */
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
-                if (err == NC_NOERR) {
-                    /*
-                    ncmpi_begin_indep_data(ncid);
-                    err = ncmpi_wait(ncid, i, &reqid, &status);
-                    ncmpi_end_indep_data(ncid);
-                    */
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                }
-
-                if (canConvert) {
-                    IF (status != NC_EINVALCOORDS)
-                        error("bad start: status = %d", status);
-                } else {
-                    IF (err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
-                }
+                IF (err != NC_EINVALCOORDS)
+                    error("bad start: err = %d", err);
 
                 start[j] = 0;
-                edge[j] = var_shape[i][j] + 1;
+                edge[j] = var_shape[i][j] + 1;  /* edge error check */
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
-                if (err == NC_NOERR) {
-                    /*
-                    ncmpi_begin_indep_data(ncid);
-                    err = ncmpi_wait(ncid, i, &reqid, &status);
-                    ncmpi_end_indep_data(ncid);
-                    */
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                }
-
-                if (canConvert) {
-                    IF (status != NC_EINVALCOORDS && status != NC_EEDGE)
-                        error("bad edge: status = %d", status);
-                } else {
-                    IF (err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
-                }
+                IF (err != NC_EEDGE)
+                    error("bad edge: err = %d", err);
                 edge[j] = 1;
             }
         }
-            /* Check correct error returned even when nothing to put */
+        /* Check correct error returned even when nothing to put */
         for (j = 0; j < var_rank[i]; j++) {
             edge[j] = 0;
         }
@@ -543,25 +502,11 @@ test_ncmpi_iput_vara_$1(void)
             error("bad var id: err = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
-                edge[j] = 1; /* added by Jianwei, fix NC_EINVALCOORDS bug */
+                start[j] = var_shape[i][j];     /* out of boundary check */
+                edge[j] = 1;
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
-                if (err == NC_NOERR) {
-                    /*
-                    ncmpi_begin_indep_data(ncid);
-                    err = ncmpi_wait(ncid, i, &reqid, &status);
-                    ncmpi_end_indep_data(ncid);
-                    */
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                }
-
-                if (canConvert) {
-                    IF (status != NC_EINVALCOORDS && status != NC_EEDGE)
-                        error("bad start: status = %d", status);
-                } else {
-                    IF (err != NC_ECHAR)
-                        error("wrong type: err = %d", err);
-                }
+                IF (err != NC_EINVALCOORDS)
+                    error("bad start: err = %d", err);
                 start[j] = 0;
                 edge[j] = 0; /* added by Jianwei, restore the original value */
             }
@@ -577,7 +522,7 @@ test_ncmpi_iput_vara_$1(void)
         }
 
         if (canConvert) {
-            IF (status) 
+            IF (status != NC_NOERR) 
                 error("%s", ncmpi_strerror(status));
         } else {
             IF (err != NC_ECHAR)
@@ -587,8 +532,8 @@ test_ncmpi_iput_vara_$1(void)
             edge[j] = 1;
         }
 
-            /* Choose a random point dividing each dim into 2 parts */
-            /* Put 2^rank (nslabs) slabs so defined */
+        /* Choose a random point dividing each dim into 2 parts */
+        /* Put 2^rank (nslabs) slabs so defined */
         nslabs = 1;
         for (j = 0; j < var_rank[i]; j++) {
             mid[j] = roll( var_shape[i][j] );
@@ -627,7 +572,7 @@ test_ncmpi_iput_vara_$1(void)
 
             if (canConvert) {
                 if (allInExtRange) {
-                    IF (status) 
+                    IF (status != NC_NOERR) 
                         error("%s", ncmpi_strerror(status));
                 } else {
                     IF (err != NC_ERANGE)
@@ -720,37 +665,23 @@ test_ncmpi_iput_vars_$1(void)
             error("bad var id: err = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
+                start[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                if (err == NC_NOERR) {
-                    /*
-                    ncmpi_begin_indep_data(ncid);
-                    err = ncmpi_wait(ncid, i, &reqid, &status);
-                    ncmpi_end_indep_data(ncid);
-                    */
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                }
+                IF (err != NC_EINVALCOORDS)
+                    error("bad start: err = %d", err);
 
-                if(!canConvert) {
-                    IF(err != NC_ECHAR)
-                        error("conversion: err = %d", err);
-                } else {
-                    IF(status != NC_EINVALCOORDS)
-                        error("bad start: status = %d", status);
-                    start[j] = 0;
-                    edge[j] = var_shape[i][j] + 1;
-                    err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                    IF (status != NC_EEDGE)
-                        error("bad edge: status = %d", status);
-                    edge[j] = 1;
-                    stride[j] = 0;
-                    err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                    IF (status != NC_ESTRIDE)
-                        error("bad stride: status = %d", status);
-                    stride[j] = 1;
-                }
+                start[j] = 0;
+                edge[j] = var_shape[i][j] + 1;  /* edge error check */
+                err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+                IF (err != NC_EEDGE)
+                    error("bad edge: err = %d", err);
+
+                edge[j] = 1;
+                stride[j] = 0;  /* strided edge error check */
+                err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+                IF (err != NC_ESTRIDE)
+                    error("bad stride: err = %d", err);
+                stride[j] = 1;
             }
         }
             /* Choose a random point dividing each dim into 2 parts */
@@ -911,30 +842,23 @@ test_ncmpi_iput_varm_$1(void)
             error("bad var id: err = %d", err);
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
-                start[j] = var_shape[i][j];
+                start[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                if (err == NC_NOERR)
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                if (!canConvert) {
-                    IF(err != NC_ECHAR)
-                        error("conversion: err = %d", err);
-                } else {
-                    IF (status != NC_EINVALCOORDS)
-                        error("bad start: status = %d", status);
-                    start[j] = 0;
-                    edge[j] = var_shape[i][j] + 1;
-                    err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                    IF (status != NC_EEDGE)
-                        error("bad edge: status = %d", status);
-                    edge[j] = 1;
-                    stride[j] = 0;
-                    err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                    ncmpi_wait_all(ncid, 1, &reqid, &status);
-                    IF (status != NC_ESTRIDE)
-                        error("bad stride: status = %d", status);
-                    stride[j] = 1;
-                }
+                IF (err != NC_EINVALCOORDS)
+                    error("bad start: err = %d", err);
+
+                start[j] = 0;
+                edge[j] = var_shape[i][j] + 1;  /* edge error check */
+                err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+                IF (err != NC_EEDGE)
+                    error("bad edge: err = %d", err);
+
+                edge[j] = 1;
+                stride[j] = 0;  /* strided edge error check */
+                err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+                IF (err != NC_ESTRIDE)
+                    error("bad stride: err = %d", err);
+                stride[j] = 1;
             }
         }
             /* Choose a random point dividing each dim into 2 parts */

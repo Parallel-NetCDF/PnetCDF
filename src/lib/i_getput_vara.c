@@ -43,10 +43,14 @@ ncmpi_iput_vara(int               ncid,
     CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
+    status = NCedgeck(ncp, varp, start, count);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, datatype, reqid,
-                              WRITE_REQ);
+                               WRITE_REQ);
 }
 
 #define IPUT_VARA_COMMON(datatype)                                     \
@@ -59,6 +63,10 @@ ncmpi_iput_vara(int               ncid,
     CHECK_WRITE_PERMISSION                                             \
     if (NC_indef(ncp)) return NC_EINDEFINE;                            \
     CHECK_VARID(varid, varp)                                           \
+    status = NCcoordck(ncp, varp, start);                              \
+    if (status != NC_NOERR) return status;                             \
+    status = NCedgeck(ncp, varp, start, count);                        \
+    if (status != NC_NOERR) return status;                             \
     GET_NUM_ELEMENTS                                                   \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
@@ -179,6 +187,10 @@ ncmpi_iget_vara(int               ncid,
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
+    status = NCedgeck(ncp, varp, start, count);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL, buf,
                                bufcount, datatype, reqid, READ_REQ);
@@ -193,6 +205,10 @@ ncmpi_iget_vara(int               ncid,
     CHECK_NCID                                                         \
     if (NC_indef(ncp)) return NC_EINDEFINE;                            \
     CHECK_VARID(varid, varp)                                           \
+    status = NCcoordck(ncp, varp, start);                              \
+    if (status != NC_NOERR) return status;                             \
+    status = NCedgeck(ncp, varp, start, count);                        \
+    if (status != NC_NOERR) return status;                             \
     GET_NUM_ELEMENTS                                                   \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \

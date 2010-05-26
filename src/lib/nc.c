@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #endif
 #include <stdio.h>
-#include <string.h>
+#include <strings.h> /* bzero() */
+#include <string.h>  /* memset() */
 #include <assert.h>
 #include "ncx.h"
 #include "macro.h"
@@ -236,7 +237,7 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
 
         assert(ncp->xsz == ncmpii_hdr_len_NC(ncp, 0)); 
         
-        ncp->chunk = chunkp != NULL ? *chunkp : NC_SIZEHINT_DEFAULT;
+        ncp->chunk = (chunkp != NULL) ? *chunkp : NC_SIZEHINT_DEFAULT;
 
         return ncp;
 }
@@ -366,9 +367,9 @@ NC_begins(NC *ncp,
         NC_var **vpp;
         NC_var *last = NULL;
 
-        if(v_align == NC_ALIGN_CHUNK)
+        if(v_align == NC_ALIGN_CHUNK) /* for non-record variables */
                 v_align = ncp->chunk;
-        if(r_align == NC_ALIGN_CHUNK)
+        if(r_align == NC_ALIGN_CHUNK) /* for record variables */
                 r_align = ncp->chunk;
 
         if ((fIsSet(ncp->flags, NC_64BIT_OFFSET))||(fIsSet(ncp->flags, NC_64BIT_DATA))) {

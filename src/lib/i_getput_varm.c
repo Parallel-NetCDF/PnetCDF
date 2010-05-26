@@ -53,26 +53,34 @@ ncmpi_iput_varm(int               ncid,
     CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
+    status = NCstrideedgeck(ncp, varp, start, count, stride);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, bufcount, datatype, reqid,
                                WRITE_REQ);
 }
 
-#define IPUT_VARM_COMMON(datatype)                                      \
-    int         status;                                                 \
-    NC         *ncp;                                                    \
-    NC_var     *varp;                                                   \
-    MPI_Offset  nelems;                                                 \
-                                                                        \
-    CHECK_NCID                                                          \
-    CHECK_WRITE_PERMISSION                                              \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
-    GET_NUM_ELEMENTS                                                    \
-                                                                        \
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,   \
-                               (void*)op, nelems, datatype, reqid,      \
+#define IPUT_VARM_COMMON(datatype)                                       \
+    int         status;                                                  \
+    NC         *ncp;                                                     \
+    NC_var     *varp;                                                    \
+    MPI_Offset  nelems;                                                  \
+                                                                         \
+    CHECK_NCID                                                           \
+    CHECK_WRITE_PERMISSION                                               \
+    if (NC_indef(ncp)) return NC_EINDEFINE;                              \
+    CHECK_VARID(varid, varp)                                             \
+    status = NCcoordck(ncp, varp, start);                                \
+    if (status != NC_NOERR) return status;                               \
+    status = NCstrideedgeck(ncp, varp, start, count, stride);            \
+    if (status != NC_NOERR) return status;                               \
+    GET_NUM_ELEMENTS                                                     \
+                                                                         \
+    return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
+                               (void*)op, nelems, datatype, reqid,       \
                                WRITE_REQ);
 
 /*----< ncmpi_iput_varm_uchar() >--------------------------------------------*/
@@ -207,6 +215,10 @@ ncmpi_iget_varm(int               ncid,
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
+    status = NCstrideedgeck(ncp, varp, start, count, stride);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap, buf,
                                bufcount, datatype, reqid, READ_REQ);
@@ -221,6 +233,10 @@ ncmpi_iget_varm(int               ncid,
     CHECK_NCID                                                           \
     if (NC_indef(ncp)) return NC_EINDEFINE;                              \
     CHECK_VARID(varid, varp)                                             \
+    status = NCcoordck(ncp, varp, start);                                \
+    if (status != NC_NOERR) return status;                               \
+    status = NCstrideedgeck(ncp, varp, start, count, stride);            \
+    if (status != NC_NOERR) return status;                               \
     GET_NUM_ELEMENTS                                                     \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
@@ -346,7 +362,7 @@ ncmpii_igetput_varm(NC               *ncp,
                     const MPI_Offset  count[],
                     const MPI_Offset  stride[],
                     const MPI_Offset  imap[],
-                    const void       *buf,
+                    void             *buf,
                     MPI_Offset        bufcount,
                     MPI_Datatype      datatype,
                     int              *reqid,
@@ -399,7 +415,7 @@ ncmpii_igetput_varm(NC               *ncp,
             /* handling for derived datatype: pack into a contiguous buffer */
             cbuf = malloc(cnelems * el_size);
             if (rw_flag == WRITE_REQ) {
-                status = ncmpii_data_repack((void*)buf, bufcount, datatype,
+                status = ncmpii_data_repack(buf, bufcount, datatype,
                                          cbuf, cnelems, ptype);
                 if (status != NC_NOERR) {
                     free(cbuf);
@@ -407,7 +423,7 @@ ncmpii_igetput_varm(NC               *ncp,
                 }
             }
         } else {
-            cbuf = (void*) buf;
+            cbuf = buf;
         }
     }
     else {
@@ -416,7 +432,7 @@ ncmpii_igetput_varm(NC               *ncp,
             /* handling for derived datatype: pack into a contiguous buffer */
             lnelems = cnelems;
             lbuf = malloc(lnelems*el_size);
-            status = ncmpii_data_repack((void*)buf, bufcount, datatype,
+            status = ncmpii_data_repack(buf, bufcount, datatype,
                                         lbuf, lnelems, ptype);
             if (status != NC_NOERR) {
                 free(lbuf);
@@ -424,7 +440,7 @@ ncmpii_igetput_varm(NC               *ncp,
             }
         } else {
             lnelems = cnelems / bufcount;
-            lbuf = (void*)buf;
+            lbuf = buf;
         }
         if (count[dim] < 0) {
             if (!iscontig_of_ptypes && lbuf != NULL)
@@ -453,7 +469,7 @@ ncmpii_igetput_varm(NC               *ncp,
             imaptype = tmptype;
             cnelems *= count[dim];
         }
-        cbuf = (void*) malloc(cnelems*el_size);
+        cbuf = malloc(cnelems*el_size);
 
         if (rw_flag == WRITE_REQ) {
             /* layout lbuf to cbuf based on imap */
@@ -511,7 +527,7 @@ ncmpii_igetput_varm(NC               *ncp,
         req->is_imap = 1;
 
     pack_request(ncp, varp, req, do_vars, iscontig_of_ptypes,
-                 (void*)buf, cbuf, xbuf, start, count, stride, nelems,
+                 buf, cbuf, xbuf, start, count, stride, nelems,
                  cnelems, lnelems, bufcount, datatype, ptype, reqid);
 
     return ((warning != NC_NOERR) ? warning : status);
@@ -545,7 +561,7 @@ pack_request(NC               *ncp,
     req->ndims    = varp->ndims;
     req->start    = (MPI_Offset*) malloc(2*varp->ndims*sizeof(MPI_Offset));
     req->count    = req->start + varp->ndims;
-    req->buf      = (void*)buf;
+    req->buf      = buf;
     req->cbuf     = cbuf;
     req->xbuf     = xbuf;
     req->nelems   = nelems;
@@ -555,6 +571,8 @@ pack_request(NC               *ncp,
     req->bufcount = bufcount;
     req->ptype    = ptype;
     req->next     = NULL;
+    req->subreqs     = NULL;
+    req->num_subreqs = 0;
     req->iscontig_of_ptypes = iscontig_of_ptypes;
 
     if (stride != NULL)
@@ -578,6 +596,9 @@ pack_request(NC               *ncp,
     /* check if this is a record varaible. if yes, split the request into
        subrequests, one iput request for a record access. Hereandafter,
        treat each request as a non-record variable request */
+
+/* wkliao: TODO: check if this access is within one record, if yes, no need to create subrequests */
+    // if (IS_RECVAR(varp) && req->count[0] > 1) {
     if (IS_RECVAR(varp)) {
         MPI_Offset rec_bufcount = 1;
         for (i=1; i<varp->ndims; i++)
@@ -620,28 +641,25 @@ pack_request(NC               *ncp,
             subreqs[i].buf      = (char*)(req->buf)  + span;
             subreqs[i].cbuf     = (char*)(req->cbuf) + span;
             subreqs[i].xbuf     = (char*)(req->xbuf) + span;
+            subreqs[i].lbuf     = NULL;
             subreqs[i].bufcount = rec_bufcount;
         }
-        num_subreqs = req->count[0];
-    } else {  /* non-record variable */
-        subreqs        = NULL;
-        num_subreqs    = 0;
+        req->num_subreqs = req->count[0];
+        req->subreqs     = subreqs;
     }
 
     /* add the new request to the internal request array (or linked list) */
     if (ncp->head == NULL) {
+        req->id   = 0;
         ncp->head = req;
-        ncp->head->id = 0;
         ncp->tail = ncp->head;
     }
     else { /* add to the tail */
+        req->id = ncp->tail->id + 1;
         ncp->tail->next = req;
-        ncp->tail->next->id = ncp->tail->id + 1;
         ncp->tail = ncp->tail->next;
     }
-    ncp->tail->subreqs     = subreqs;
-    ncp->tail->num_subreqs = num_subreqs;
-    ncp->tail->next        = NULL;
+    ncp->tail->next = NULL;
 
     /* return the request ID */
     *reqid = ncp->tail->id;

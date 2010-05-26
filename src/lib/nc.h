@@ -700,7 +700,14 @@ ncmpii_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset *start,
 extern int
 ncmpii_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *stride, const MPI_Offset *imap,
-                const MPI_Offset *count, const void *buf, MPI_Offset bufcount,
+                const MPI_Offset *count, void *buf, MPI_Offset bufcount,
                 MPI_Datatype datatype, int *reqid, int rw_flag);
+
+extern int
+ncmpii_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
+                int *statuses);
+
+extern int
+ncmpii_cancel(NC *ncp, int num_req, int *req_ids, int *statuses);
 
 #endif /* _NC_H_ */
