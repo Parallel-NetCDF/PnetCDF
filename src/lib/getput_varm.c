@@ -689,11 +689,11 @@ ncmpii_getput_varm(NC               *ncp,
     if (!iscontig_of_ptypes) {
         /* handling for derived datatype: pack into a contiguous buffer */
         lnelems *= bufcount;
-        lbuf = malloc(lnelems*el_size);
+        lbuf = NCI_Malloc(lnelems*el_size);
         status = ncmpii_data_repack((void*)buf, bufcount, datatype,
                                     lbuf, lnelems, ptype);
         if (status != NC_NOERR) {
-            free(lbuf);
+            NCI_Free(lbuf);
             return ((warning != NC_NOERR) ? warning : status);
         }
     } else {
@@ -702,7 +702,7 @@ ncmpii_getput_varm(NC               *ncp,
 
     if (count[dim] < 0) {
         if (!iscontig_of_ptypes && lbuf != NULL)
-            free(lbuf);
+            NCI_Free(lbuf);
         return ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
     }
     MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
@@ -712,7 +712,7 @@ ncmpii_getput_varm(NC               *ncp,
     for (dim--; dim>=0; dim--) {
         if (count[dim] < 0) {
             if (!iscontig_of_ptypes && lbuf != NULL)
-                free(lbuf);
+                NCI_Free(lbuf);
             return ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
         }
 #if (MPI_VERSION < 2)
@@ -727,15 +727,15 @@ ncmpii_getput_varm(NC               *ncp,
         cnelems *= count[dim];
     }
 
-    cbuf = (void*) malloc(cnelems*el_size);
+    cbuf = (void*) NCI_Malloc(cnelems*el_size);
 
     if (rw_flag == READ_REQ) {
         status = ncmpii_getput_vars(ncp, varp, start, count, stride, cbuf,
                                     cnelems, ptype, rw_flag, io_method);
         if (status != NC_NOERR) {
-            free(cbuf);
+            NCI_Free(cbuf);
             if (!iscontig_of_ptypes && lbuf != NULL)
-                free(lbuf);
+                NCI_Free(lbuf);
             if (status == NC_ERANGE && warning == NC_NOERR)
                 warning = status; /* to satisfy the nc_test logic */
             else
@@ -758,9 +758,9 @@ ncmpii_getput_varm(NC               *ncp,
         /* layout lbuf to cbuf based on imap */
         status = ncmpii_data_repack(lbuf, 1, imaptype, cbuf, cnelems, ptype);
         if (status != NC_NOERR) {
-            free(cbuf);
+            NCI_Free(cbuf);
             if (!iscontig_of_ptypes && lbuf != NULL)
-                free(lbuf);
+                NCI_Free(lbuf);
             return ((warning != NC_NOERR) ? warning : status);
         }
 
@@ -772,10 +772,10 @@ ncmpii_getput_varm(NC               *ncp,
         MPI_Type_free(&imaptype);
 
     if (!iscontig_of_ptypes && lbuf != NULL)
-        free(lbuf);
+        NCI_Free(lbuf);
 
     if (cbuf != NULL)
-        free(cbuf);
+        NCI_Free(cbuf);
 
     return ((warning != NC_NOERR) ? warning : status);
 }

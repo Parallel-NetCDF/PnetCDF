@@ -28,16 +28,13 @@
 #include "ncio.h"
 #include "fbits.h"
 #include "rnd.h"
+#include "macro.h"
 
 /* #define INSTRUMENT 1 */
 #ifdef INSTRUMENT /* debugging */
 #undef NDEBUG
 #include <stdio.h>
 #include "instr.h"
-#endif
-
-#ifndef MIN
-#define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
 #endif
 
 #if !defined(NDEBUG) && !defined(X_INT_MAX)
@@ -57,7 +54,7 @@ static unsigned char IDalloc[MAX_NC_ID];
 void
 ncmpiio_free(ncio *nciop) {
   if (nciop != NULL)
-    free(nciop);
+    NCI_Free(nciop);
 }
 
 ncio *
@@ -67,7 +64,7 @@ ncmpiio_new(const char *path, int ioflags)
   size_t sz_path = M_RNDUP(strlen(path) +1); 
   ncio *nciop; 
 
-  nciop = (ncio *) malloc(sz_ncio + sz_path);
+  nciop = (ncio *) NCI_Malloc(sz_ncio + sz_path);
   if (nciop == NULL) 
     return NULL;
 
@@ -320,7 +317,7 @@ ncmpiio_move(ncio *const nciop,
     MPI_Comm_rank(nciop->comm, &rank);
 
     movesize = nbytes;
-    buf = malloc((size_t)bufsize);
+    buf = NCI_Malloc((size_t)bufsize);
     if (buf == NULL)
         return NC_ENOMEM;
 
@@ -350,7 +347,7 @@ ncmpiio_move(ncio *const nciop,
                                          buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
 	    ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
-            free(buf);
+            NCI_Free(buf);
             return NC_EREAD;
         }
 
@@ -363,11 +360,11 @@ ncmpiio_move(ncio *const nciop,
                                           buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
 	    ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
-            free(buf);
+            NCI_Free(buf);
             return NC_EWRITE;
         }
     }
-    free(buf);
+    NCI_Free(buf);
     return NC_NOERR;
 }
 

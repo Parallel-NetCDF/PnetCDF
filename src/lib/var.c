@@ -12,6 +12,7 @@
 #include <assert.h>
 #include "ncx.h"
 #include "rnd.h"
+#include "macro.h"
 
 /* Prototypes for functions used only in this file */
 static MPI_Offset ncx_szof(nc_type type);
@@ -28,7 +29,7 @@ ncmpii_free_NC_var(NC_var *varp)
 		return;
 	ncmpii_free_NC_attrarrayV(&varp->attrs);
 	ncmpii_free_NC_string(varp->name);
-	free(varp);
+	NCI_Free(varp);
 }
 
 
@@ -47,7 +48,7 @@ ncmpii_new_x_NC_var(
 	const MPI_Offset sz =  M_RNDUP(sizeof(NC_var)) +
 		 o1 + o2 + ndims * sizeof(MPI_Offset);
 
-	varp = (NC_var *) malloc(sz);
+	varp = (NC_var *) NCI_Malloc(sz);
 	if(varp == NULL )
 		return NULL;
 	(void) memset(varp, 0, sz);
@@ -180,7 +181,7 @@ ncmpii_free_NC_vararrayV(NC_vararray *ncap)
 
 	ncmpii_free_NC_vararrayV0(ncap);
 
-	free(ncap->value);
+	NCI_Free(ncap->value);
 	ncap->value = NULL;
 	ncap->nalloc = 0;
 }
@@ -197,7 +198,7 @@ ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 	if(ref->nelems != 0)
 	{
 		const MPI_Offset sz = ref->nelems * sizeof(NC_var *);
-		ncap->value = (NC_var **) malloc(sz);
+		ncap->value = (NC_var **) NCI_Malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
 		(void) memset(ncap->value, 0, sz);
@@ -247,7 +248,7 @@ incr_NC_vararray(NC_vararray *ncap, NC_var *newelemp)
 	if(ncap->nalloc == 0)
 	{
 		assert(ncap->nelems == 0);
-		vp = (NC_var **) malloc(NC_ARRAY_GROWBY * sizeof(NC_var *));
+		vp = (NC_var **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_var *));
 		if(vp == NULL)
 			return NC_ENOMEM;
 		ncap->value = vp;
@@ -255,7 +256,7 @@ incr_NC_vararray(NC_vararray *ncap, NC_var *newelemp)
 	}
 	else if(ncap->nelems +1 > ncap->nalloc)
 	{
-		vp = (NC_var **) realloc(ncap->value,
+		vp = (NC_var **) NCI_Realloc(ncap->value,
 			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_var *));
 		if(vp == NULL)
 			return NC_ENOMEM;

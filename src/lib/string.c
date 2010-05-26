@@ -13,6 +13,7 @@
 #include <assert.h>
 #include "ncx.h"
 #include "rnd.h"
+#include "macro.h"
 
 
 /*
@@ -25,7 +26,7 @@ ncmpii_free_NC_string(NC_string *ncstrp)
 {
 	if(ncstrp==NULL)
 		return;
-	free(ncstrp);
+	NCI_Free(ncstrp);
 }
 
 
@@ -80,7 +81,7 @@ ncmpii_new_NC_string(MPI_Offset slen, const char *str)
 	sz = _RNDUP(sz, X_ALIGN);
 #endif
 		
-	ncstrp = (NC_string *)malloc(sz);
+	ncstrp = (NC_string *)NCI_Malloc(sz);
 	if( ncstrp == NULL )
 		return NULL;
 	(void) memset(ncstrp, 0, sz);

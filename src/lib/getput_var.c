@@ -46,7 +46,7 @@ ncmpi_put_var(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
                                 (void*)buf, bufcount, datatype,
                                 WRITE_REQ, INDEP_IO);
-    if (varp->ndims > 0) free(start);
+    if (varp->ndims > 0) NCI_Free(start);
 
     return status;
 }
@@ -69,7 +69,7 @@ ncmpi_put_var(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
                                 (void*)op, nelems, datatype,     \
                                 WRITE_REQ, INDEP_IO);            \
-    if (varp->ndims > 0) free(start);                            \
+    if (varp->ndims > 0) NCI_Free(start);                        \
                                                                  \
     return status;
 
@@ -167,7 +167,7 @@ ncmpi_get_var(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
                                 buf, bufcount, datatype,
                                 READ_REQ, INDEP_IO);
-    if (varp->ndims > 0) free(start);
+    if (varp->ndims > 0) NCI_Free(start);
 
     return status;
 }
@@ -189,7 +189,7 @@ ncmpi_get_var(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
                                 ip, nelems, datatype,            \
                                 READ_REQ, INDEP_IO);             \
-    if (varp->ndims > 0) free(start);                            \
+    if (varp->ndims > 0) NCI_Free(start);                        \
                                                                  \
     return status;
 
@@ -289,7 +289,7 @@ ncmpi_put_var_all(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
                                 (void*)buf, bufcount, datatype,
                                 WRITE_REQ, COLL_IO);
-    if (varp->ndims > 0) free(start);
+    if (varp->ndims > 0) NCI_Free(start);
 
     return status;
 }
@@ -312,7 +312,7 @@ ncmpi_put_var_all(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,    \
                                 (void*)op, nelems, datatype,      \
                                 WRITE_REQ, COLL_IO);              \
-    if (varp->ndims > 0) free(start);                             \
+    if (varp->ndims > 0) NCI_Free(start);                         \
                                                                   \
     return status;
 
@@ -411,7 +411,7 @@ ncmpi_get_var_all(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
                                 buf, bufcount, datatype,
                                 READ_REQ, COLL_IO);
-    if (varp->ndims > 0) free(start);
+    if (varp->ndims > 0) NCI_Free(start);
 
     return status;
 }
@@ -433,7 +433,7 @@ ncmpi_get_var_all(int           ncid,
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
                                 ip, nelems, datatype,            \
                                 READ_REQ, COLL_IO);              \
-    if (varp->ndims > 0) free(start);                            \
+    if (varp->ndims > 0) NCI_Free(start);                        \
                                                                  \
     return status;
 

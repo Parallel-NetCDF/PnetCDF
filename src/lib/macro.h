@@ -19,6 +19,17 @@
 #define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
 #endif
 
+void *NCI_Malloc_fn(size_t size, int lineno, const char *fname);
+void *NCI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
+void *NCI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
+void NCI_Free_fn(void *ptr, int lineno, const char *fname);
+
+#define NCI_Malloc(a) NCI_Malloc_fn(a,__LINE__,__FILE__)
+#define NCI_Calloc(a,b) NCI_Calloc_fn(a,b,__LINE__,__FILE__)
+#define NCI_Realloc(a,b) NCI_Realloc_fn(a,b,__LINE__,__FILE__)
+#define NCI_Free(a) NCI_Free_fn(a,__LINE__,__FILE__)
+
+
 #define CHECK_MPI_ERROR(str, err) {                                   \
     if (mpireturn != MPI_SUCCESS) {                                   \
 	char errorString[MPI_MAX_ERROR_STRING];                       \
@@ -193,7 +204,7 @@
 
 #define GET_FULL_DIMENSIONS {                                                \
     int i;                                                                   \
-    start = (MPI_Offset*) malloc(2 * varp->ndims * sizeof(MPI_Offset));      \
+    start = (MPI_Offset*) NCI_Malloc(2 * varp->ndims * sizeof(MPI_Offset));  \
     count = start + varp->ndims;                                             \
                                                                              \
     for (i=0; i<varp->ndims; i++) {                                          \
@@ -207,11 +218,11 @@
     }                                                                        \
 }
 
-#define GET_ONE_COUNT {                                             \
-    int i;                                                          \
-    count = (MPI_Offset*) malloc(varp->ndims * sizeof(MPI_Offset)); \
-    for (i=0; i<varp->ndims; i++)                                   \
-        count[i] = 1;                                               \
+#define GET_ONE_COUNT {                                                      \
+    int i;                                                                   \
+    count = (MPI_Offset*) NCI_Malloc(varp->ndims * sizeof(MPI_Offset));      \
+    for (i=0; i<varp->ndims; i++)                                            \
+        count[i] = 1;                                                        \
 }
 
 #define CHECK_INDEP_FH {                                                      \

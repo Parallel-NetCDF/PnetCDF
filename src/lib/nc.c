@@ -101,7 +101,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     if (rank == 0)
         cmpbuf = buf;
     else
-        cmpbuf = (void*) malloc(hsz);
+        cmpbuf = (void*) NCI_Malloc(hsz);
 
     /* process 0 broadcasts its header */
     MPI_Bcast(cmpbuf, hsz, MPI_BYTE, 0, comm);
@@ -113,7 +113,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_MAX, comm);
     if (errcheck == 0) {
         if (rank > 0)
-            free(cmpbuf);
+            NCI_Free(cmpbuf);
         return NC_NOERR;
     }
     /* now part of the header is not consistent across all processes */
@@ -127,7 +127,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
 
     status = ncmpii_hdr_check_NC(&gbp, ncp);
     if (rank > 0)
-        free(cmpbuf);
+        NCI_Free(cmpbuf);
 
     errflag = (status == NC_NOERR) ? 0 : 1;
     MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_MAX, comm);
@@ -165,13 +165,13 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   if (rank == 0)
     cmpbuf = buf;
   else
-    cmpbuf = (void *)malloc(nn);
+    cmpbuf = (void *)NCI_Malloc(nn);
 
   MPI_Bcast(cmpbuf, nn, MPI_BYTE, 0, comm);
 
   if (rank != 0) {
     compare = memcmp(buf, cmpbuf, nn);
-    free(cmpbuf);
+    NCI_Free(cmpbuf);
   }
 
   MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
@@ -214,7 +214,7 @@ ncmpii_free_NC(NC *ncp)
         ncmpii_free_NC_dimarrayV(&ncp->dims);
         ncmpii_free_NC_attrarrayV(&ncp->attrs);
         ncmpii_free_NC_vararrayV(&ncp->vars);
-        free(ncp);
+        NCI_Free(ncp);
 }
 
 
@@ -224,7 +224,7 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
 {
         NC *ncp;
 
-        ncp = (NC *) malloc(sizeof(NC));
+        ncp = (NC *) NCI_Malloc(sizeof(NC));
         if(ncp == NULL)
                 return NULL;
         (void) memset(ncp, 0, sizeof(NC));
@@ -279,7 +279,7 @@ ncmpii_dup_NC(const NC *ref)
 {
         NC *ncp;
 
-        ncp = (NC *) malloc(sizeof(NC));
+        ncp = (NC *) NCI_Malloc(sizeof(NC));
         if(ncp == NULL)
                 return NULL;
         (void) memset(ncp, 0, sizeof(NC));
@@ -367,9 +367,9 @@ NC_begins(NC *ncp,
         NC_var **vpp;
         NC_var *last = NULL;
 
-        if(v_align == NC_ALIGN_CHUNK) /* for non-record variables */
+        if(v_align == NC_ALIGN_CHUNK)  /* for non-record variables */
                 v_align = ncp->chunk;
-        if(r_align == NC_ALIGN_CHUNK) /* for record variables */
+        if(r_align == NC_ALIGN_CHUNK)  /* for record variables */
                 r_align = ncp->chunk;
 
         if ((fIsSet(ncp->flags, NC_64BIT_OFFSET))||(fIsSet(ncp->flags, NC_64BIT_DATA))) {
@@ -379,7 +379,6 @@ NC_begins(NC *ncp,
         }
 
         ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
-        
 
         if(ncp->vars.nelems == 0) 
                 return NC_NOERR;
@@ -513,7 +512,7 @@ ncmpii_read_numrecs(NC *ncp) {
                  sizeof_t = X_SIZEOF_SIZE_T;
   }
  
-  pos = buf = (void *)malloc(sizeof_t);
+  pos = buf = (void *)NCI_Malloc(sizeof_t);
 
   /* fileview is already entire file visible and pointer to zero */
 
@@ -532,7 +531,7 @@ ncmpii_read_numrecs(NC *ncp) {
   status = ncmpix_get_size_t((const void **)&pos, &nrecs, sizeof_t);
   ncp->numrecs = nrecs;
  
-  free(buf);
+  NCI_Free(buf);
  
   return status;
 }
@@ -575,7 +574,7 @@ ncmpii_write_numrecs(NC *ncp)
         len = X_SIZEOF_LONG;
     else
         len = X_SIZEOF_SIZE_T;
-    pos = buf = (void *)malloc(len);
+    pos = buf = (void *)NCI_Malloc(len);
     status = ncmpix_put_size_t(&pos, &nrecs, len);
 
     /* file view is already reset to entire file visible */
@@ -591,7 +590,7 @@ ncmpii_write_numrecs(NC *ncp)
 
     fClr(ncp->flags, NC_NDIRTY);  
 
-    free(buf);
+    NCI_Free(buf);
 
     return status;
 }
@@ -641,20 +640,20 @@ write_NC(NC *ncp)
     else
         hsz = ncp->xsz;
 
-    buf = (void *)malloc(hsz); /* header buffer for I/O */
+    buf = (void *)NCI_Malloc(hsz); /* header buffer for I/O */
     if (hsz > ncp->xsz)
         bzero((char*)buf+ncp->xsz, hsz - ncp->xsz);
 
     status = ncmpii_hdr_put_NC(ncp, buf); /* copy header to buffer */
     if (status != NC_NOERR) {
-        free(buf);
+        NCI_Free(buf);
         return status;
     }
 
     /* check the header consistency across all processes */
     status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
     if (status != NC_NOERR) {
-        free(buf);
+        NCI_Free(buf);
         return status;
     }
 
@@ -670,7 +669,7 @@ write_NC(NC *ncp)
         }
     }
     fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
-    free(buf);
+    NCI_Free(buf);
  
     return status;
 } 
@@ -989,7 +988,8 @@ enddef(NC *ncp)
 
 int 
 ncmpii_NC_close(NC *ncp) {
-    int status = NC_NOERR;
+    int num_reqs, status=NC_NOERR, *req_ids=NULL, *statuses=NULL;
+    NC_req *cur_req;
 
     if (NC_indef(ncp)) { /* currently in define mode */
         status = ncmpii_NC_enddef(ncp); /* TODO: defaults */
@@ -1002,7 +1002,33 @@ ncmpii_NC_close(NC *ncp) {
             }
         }
     }
-    else if (!NC_readonly(ncp)) { /* file is open for write */
+
+    /* cancel or complete all outstanding nonblocking I/O */
+    num_reqs = 0;
+    cur_req = ncp->head;
+    while (cur_req != NULL) {
+        num_reqs++;
+        cur_req = cur_req->next;
+    }
+    if (num_reqs > 0) { /* fill in req_ids[] */
+        req_ids = (int*) NCI_Malloc(2 * num_reqs * sizeof(int));
+        statuses = req_ids + num_reqs;
+        num_reqs = 0;
+        cur_req = ncp->head;
+        while (cur_req != NULL) {
+            req_ids[num_reqs++] = cur_req->id;
+            cur_req = cur_req->next;
+        }
+    }
+#if COMPLETE_NONBLOCKING_IO
+    ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
+#else
+    if (num_reqs > 0) ncmpii_cancel(ncp, num_reqs, req_ids, statuses);
+#endif
+    if (num_reqs > 0)
+        NCI_Free(req_ids);
+
+    if (!NC_readonly(ncp)) { /* file is open for write */
         /* check if header is dirty, if yes, flush it to file */
         status = ncmpii_NC_sync(ncp, 0);
         if (status != NC_NOERR)

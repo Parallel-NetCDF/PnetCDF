@@ -16,13 +16,7 @@
 #include <stdlib.h>
 #endif
 #include "ncx.h"
-
-#ifndef MAX
-#define MAX(mm,nn) (((mm) > (nn)) ? (mm) : (nn))
-#endif
-#ifndef MIN
-#define MIN(mm,nn) (((mm) < (nn)) ? (mm) : (nn))
-#endif
+#include "macro.h"
 
 /*
  * "magic number" at beginning of file: 0x43444601 (big endian) 
@@ -244,7 +238,7 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
       return EINVAL;
     }
 
-    ncap->value = (NC_dim **) malloc(ncap->nelems * sizeof(NC_dim *));
+    ncap->value = (NC_dim **) NCI_Malloc(ncap->nelems * sizeof(NC_dim *));
     if(ncap->value == NULL)
       return NC_ENOMEM;
     ncap->nalloc = ncap->nelems;
@@ -420,7 +414,7 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
       return EINVAL;
     }
 
-    ncap->value = (NC_attr **) malloc(ncap->nelems * sizeof(NC_attr *));
+    ncap->value = (NC_attr **) NCI_Malloc(ncap->nelems * sizeof(NC_attr *));
     if(ncap->value == NULL)
       return NC_ENOMEM;
     ncap->nalloc = ncap->nelems; 
@@ -558,7 +552,7 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
       return EINVAL;
     }
  
-    ncap->value = (NC_var **) malloc(ncap->nelems * sizeof(NC_var *));
+    ncap->value = (NC_var **) NCI_Malloc(ncap->nelems * sizeof(NC_var *));
     if(ncap->value == NULL)
       return NC_ENOMEM; 
     ncap->nalloc = ncap->nelems;
@@ -595,7 +589,7 @@ val_get_NC(NC *ncp) {
   getbuf.size = _RNDUP( MAX(MIN_NC_XSZ, ncp->chunk), X_ALIGN );
   if (getbuf.size > 4096)
     getbuf.size = 4096;
-  getbuf.pos = getbuf.base = (void *)malloc(getbuf.size);
+  getbuf.pos = getbuf.base = (void *)NCI_Malloc(getbuf.size);
 
   status = val_fetch(&getbuf, sizeof(magic));
   if(status != NC_NOERR) {
@@ -610,19 +604,19 @@ val_get_NC(NC *ncp) {
           (const void **)(&getbuf.pos), sizeof(magic), magic);
   if(memcmp(magic, ncmagic, sizeof(ncmagic)) != 0) {
     printf("Error @ [0x%8.8x]: \n\tUnknow magic number, while (C D F \\001) is expected!\n", (unsigned) 0);
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return NC_ENOTNC;
   }
 
   status = val_check_buffer(&getbuf, X_SIZEOF_SIZE_T);
   if(status != NC_NOERR) {
     printf("number of records is expected!\n");
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   }
   status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, getbuf.version == 5 ? 8 : 4);
   if(status != NC_NOERR) {
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   }
   ncp->numrecs = nrecs;
@@ -632,27 +626,27 @@ val_get_NC(NC *ncp) {
   status = val_get_NC_dimarray(&getbuf, &ncp->dims);
   if(status != NC_NOERR) {
     printf("DIMENSION list!\n");
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   }
 
   status = val_get_NC_attrarray(&getbuf, &ncp->attrs); 
   if(status != NC_NOERR) {
     printf("GLOBAL ATTRIBUTE list!\n");
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status;
   }
 
   status = val_get_NC_vararray(&getbuf, &ncp->vars);
   if(status != NC_NOERR) {
     printf("VARIABLE list!\n");
-    free(getbuf.base);
+    NCI_Free(getbuf.base);
     return status; 
   }
 
   ncp->xsz = ncmpii_hdr_len_NC(ncp, (getbuf.version == 1 ? 4 : 8)); 
   status = ncmpii_NC_computeshapes(ncp);
-  free(getbuf.base);
+  NCI_Free(getbuf.base);
 
   return status;
 }
