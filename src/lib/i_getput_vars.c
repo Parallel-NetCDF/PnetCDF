@@ -44,26 +44,34 @@ ncmpi_iput_vars(int               ncid,
     CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
+    status = NCstrideedgeck(ncp, varp, start, count, stride);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, datatype, reqid,
                                WRITE_REQ);
 }
 
-#define IPUT_VARA_COMMON(datatype)                                      \
-    int         status;                                                 \
-    NC         *ncp;                                                    \
-    NC_var     *varp;                                                   \
-    MPI_Offset  nelems;                                                 \
-                                                                        \
-    CHECK_NCID                                                          \
-    CHECK_WRITE_PERMISSION                                              \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
-    GET_NUM_ELEMENTS                                                    \
-                                                                        \
-    return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,   \
-                               (void*)op, nelems, datatype, reqid,      \
+#define IPUT_VARA_COMMON(datatype)                                       \
+    int         status;                                                  \
+    NC         *ncp;                                                     \
+    NC_var     *varp;                                                    \
+    MPI_Offset  nelems;                                                  \
+                                                                         \
+    CHECK_NCID                                                           \
+    CHECK_WRITE_PERMISSION                                               \
+    if (NC_indef(ncp)) return NC_EINDEFINE;                              \
+    CHECK_VARID(varid, varp)                                             \
+    status = NCcoordck(ncp, varp, start);                                \
+    if (status != NC_NOERR) return status;                               \
+    status = NCstrideedgeck(ncp, varp, start, count, stride);            \
+    if (status != NC_NOERR) return status;                               \
+    GET_NUM_ELEMENTS                                                     \
+                                                                         \
+    return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,    \
+                               (void*)op, nelems, datatype, reqid,       \
                                WRITE_REQ);
 
 /*----< ncmpi_iput_vars_uchar() >--------------------------------------------*/
@@ -189,6 +197,10 @@ ncmpi_iget_vars(int               ncid,
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
+    status = NCstrideedgeck(ncp, varp, start, count, stride);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                buf, bufcount, datatype, reqid, READ_REQ);
@@ -203,6 +215,10 @@ ncmpi_iget_vars(int               ncid,
     CHECK_NCID                                                           \
     if (NC_indef(ncp)) return NC_EINDEFINE;                              \
     CHECK_VARID(varid, varp)                                             \
+    status = NCcoordck(ncp, varp, start);                                \
+    if (status != NC_NOERR) return status;                               \
+    status = NCstrideedgeck(ncp, varp, start, count, stride);            \
+    if (status != NC_NOERR) return status;                               \
     GET_NUM_ELEMENTS                                                     \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,    \

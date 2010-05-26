@@ -193,7 +193,7 @@ ncmpii_get_offset(NC               *ncp,
         for (i=0; i<ndims; i++)
             end_off[i] = starts[i] + counts[i] - 1;
     }
-    else { /* counts == NULL && strides == NULL */
+    else { /* when counts == NULL strides is of no use */
         end_off = (MPI_Offset*) starts;
     }
 
@@ -223,7 +223,7 @@ ncmpii_get_offset(NC               *ncp,
                 offset += end_off[i] * varp->dsizes[i+1] * varp->xsz;
         }
     }
-    if (counts != NULL)
+    if (counts != NULL && end_off != NULL)
         free(end_off);
 
     *offset_ptr = offset;

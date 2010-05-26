@@ -215,7 +215,6 @@
 }
 
 #define CHECK_INDEP_FH {                                                      \
-    int status;                                                               \
     /* check to see that the independent MPI file handle is opened */         \
     status =                                                                  \
     ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0); \
@@ -231,7 +230,6 @@
 }
 
 #define CHECK_COLLECTIVE_FH {                                                 \
-    int status;                                                               \
     /* check to see that the collective MPI file handle is opened */          \
     status =                                                                  \
     ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),ncp->nciop->comm,1); \

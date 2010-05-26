@@ -44,6 +44,9 @@ ncmpi_iput_var1(int               ncid,
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
     GET_ONE_COUNT
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
+
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, datatype, reqid,
@@ -62,6 +65,8 @@ ncmpi_iput_var1(int               ncid,
     CHECK_WRITE_PERMISSION                                              \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \
+    status = NCcoordck(ncp, varp, start);                               \
+    if (status != NC_NOERR) return status;                              \
     GET_ONE_COUNT                                                       \
                                                                         \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \
@@ -177,6 +182,8 @@ ncmpi_iget_var1(int               ncid,
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    status = NCcoordck(ncp, varp, start);
+    if (status != NC_NOERR) return status;
     GET_ONE_COUNT
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL, buf,
@@ -194,6 +201,8 @@ ncmpi_iget_var1(int               ncid,
     CHECK_NCID                                                          \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \
+    status = NCcoordck(ncp, varp, start);                               \
+    if (status != NC_NOERR) return status;                              \
     GET_ONE_COUNT                                                       \
                                                                         \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \

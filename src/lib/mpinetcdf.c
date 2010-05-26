@@ -84,6 +84,8 @@ ncmpi_create(MPI_Comm    comm,
         fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
         fSet(ncp->flags, NC_HSYNC);  /* sync header */
     }
+    ncp->head = NULL;
+    ncp->tail = NULL;
 
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
@@ -133,6 +135,8 @@ ncmpi_open(MPI_Comm    comm,
         ncmpii_free_NC(ncp);
         return status;
     }
+    ncp->head = NULL;
+    ncp->tail = NULL;
 
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
