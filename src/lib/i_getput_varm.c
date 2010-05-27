@@ -375,6 +375,14 @@ ncmpii_igetput_varm(NC               *ncp,
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
+#ifndef ENABLE_NONBLOCKING
+    if (!NC_indep(ncp)) /* must be in independent mode */
+        return NC_ENOTINDEP;
+
+    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
+                              buf, bufcount, datatype, rw_flag, INDEP_IO);
+#endif
+
     if (varp->ndims > 0) assert(start != NULL);
     if (varp->ndims > 0) assert(count != NULL);
 
@@ -597,9 +605,9 @@ pack_request(NC               *ncp,
        subrequests, one iput request for a record access. Hereandafter,
        treat each request as a non-record variable request */
 
-/* wkliao: TODO: check if this access is within one record, if yes, no need to create subrequests */
-    // if (IS_RECVAR(varp) && req->count[0] > 1) {
-    if (IS_RECVAR(varp)) {
+    /* check if this access is within one record, if yes, no need to create
+       subrequests */
+    if (IS_RECVAR(varp) && req->count[0] > 1) {
         MPI_Offset rec_bufcount = 1;
         for (i=1; i<varp->ndims; i++)
             rec_bufcount *= req->count[i];

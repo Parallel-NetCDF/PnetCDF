@@ -15,6 +15,9 @@
 
 #include "macro.h"
 
+/* Prototypes for functions used only in this file */
+static int ncmpii_begin_indep_data(NC *ncp);
+static int ncmpii_end_indep_data(NC *ncp);
 
 /*----< ncmpi_inq_libvers() >------------------------------------------------*/
 inline const char*
@@ -239,7 +242,7 @@ ncmpi_redef(int ncid) {
  
     /* ensure exiting define mode always entering collective data mode */
     if (NC_indep(ncp))
-        ncmpi_end_indep_data(ncid);
+        ncmpii_end_indep_data(ncp);
 
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
         /* re-read the header from file */
@@ -311,19 +314,27 @@ ncmpii_update_numrecs(NC         *ncp,
 /*----< ncmpi_begin_indep_data() >-------------------------------------------*/
 int
 ncmpi_begin_indep_data(int ncid) {
-    int mpireturn, status = NC_NOERR;
+    int status = NC_NOERR;
     NC *ncp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    CHECK_NCID
 
     if (NC_indef(ncp))  /* must not be in define mode */
         return NC_EINDEFINE;
 
+#if 0
     if (NC_indep(ncp))  /* already in indep data mode */
         return NC_EINDEP; /* Should we skip this error? */
+#endif
  
+    return ncmpii_begin_indep_data(ncp);  
+}
+
+/*----< ncmpii_begin_indep_data() >------------------------------------------*/
+static int
+ncmpii_begin_indep_data(NC *ncp) {
+    int mpireturn, status = NC_NOERR;
+
     if (!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
         /* do memory and file sync for numrecs, number or records */
         MPI_Offset oldnumrecs = ncp->numrecs;
@@ -345,15 +356,21 @@ ncmpi_begin_indep_data(int ncid) {
 /*----< ncmpi_end_indep_data() >---------------------------------------------*/
 int 
 ncmpi_end_indep_data(int ncid) {
-    int mpireturn, status = NC_NOERR;
+    int status = NC_NOERR;
     NC *ncp;
  
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status; 
+    CHECK_NCID
 
     if (!NC_indep(ncp))
         return NC_ENOTINDEP;
+
+    return ncmpii_end_indep_data(ncp);
+}
+
+/*----< ncmpii_end_indep_data() >--------------------------------------------*/
+static int 
+ncmpii_end_indep_data(NC *ncp) {
+    int mpireturn, status = NC_NOERR;
 
     if (!NC_readonly(ncp)) {
         /* do memory and file sync for numrecs, number or records */
