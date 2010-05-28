@@ -610,7 +610,7 @@ ncmpiio_move(ncio *const nciop, MPI_Offset to, MPI_Offset from,
              MPI_Offset nbytes);
 
 extern int
-ncmpiio_get_hint(NC *ncp, char *key, char *value, int flag);
+ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag);
 
 extern int
 NC_computeshapes(NC *ncp);
