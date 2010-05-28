@@ -368,7 +368,7 @@ ncmpiio_move(ncio *const nciop,
     return NC_NOERR;
 }
 
-int ncmpiio_get_hint(NC *ncp, char *key, char *value, int flag)
+int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
 {
     MPI_Info info;
 
@@ -388,12 +388,12 @@ int ncmpiio_get_hint(NC *ncp, char *key, char *value, int flag)
     /* first check the hint from the MPI library ... */
     MPI_File_get_info(ncp->nciop->collective_fh, &info);
     if (info != MPI_INFO_NULL) 
-        MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
-    if (!flag)  {
+        MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, flag);
+    if (!(*flag))  {
         /* ... then check the hint passed in through ncmpi_create */
         if (ncp->nciop->mpiinfo != MPI_INFO_NULL) {
             MPI_Info_get(ncp->nciop->mpiinfo, key, 
-                    MPI_MAX_INFO_VAL-1, value, &flag);
+                    MPI_MAX_INFO_VAL-1, value, flag);
         }
     }
     if (info != MPI_INFO_NULL) 

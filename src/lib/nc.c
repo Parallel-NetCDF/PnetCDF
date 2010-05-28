@@ -891,7 +891,7 @@ ncmpii_NC_enddef(NC *ncp) {
 
        Currently, we use striping_unit or 512 for it.
      */
-    ncmpiio_get_hint(ncp, "striping_unit", value, flag);
+    ncmpiio_get_hint(ncp, "striping_unit", value, &flag);
   
     if (flag) 
         alignment=atoi(value);
