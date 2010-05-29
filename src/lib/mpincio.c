@@ -389,7 +389,7 @@ int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
     MPI_File_get_info(ncp->nciop->collective_fh, &info);
     if (info != MPI_INFO_NULL) 
         MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, flag);
-    if (!(*flag))  {
+    if (*flag == 0)  {
         /* ... then check the hint passed in through ncmpi_create */
         if (ncp->nciop->mpiinfo != MPI_INFO_NULL) {
             MPI_Info_get(ncp->nciop->mpiinfo, key, 
