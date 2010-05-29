@@ -7,7 +7,8 @@
 
 #include <mpi.h>
 #include <assert.h>
-#include <string.h>
+#include <string.h>  /* memcpy() */
+#include <strings.h> /* bzero() */
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -333,7 +334,7 @@ hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
 
   (void) memcpy(pbp->pos, value, esz * attrp->nelems);
   pbp->pos = (void *)((char *)pbp->pos + esz * attrp->nelems);
-  (void) memset(pbp->pos, 0, padding);
+  bzero(pbp->pos, padding);
   pbp->pos = (void *)((char *)pbp->pos + padding);
     
   return NC_NOERR;
@@ -627,7 +628,7 @@ hdr_fetch(bufferinfo *gbp) {
 
   if (slack == gbp->size) slack = 0;
 
-  (void) memset(gbp->base, 0, gbp->size);
+  bzero(gbp->base, gbp->size);
   gbp->pos = gbp->base;
   gbp->index = 0;
 
@@ -733,7 +734,7 @@ hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   }
 
   if (padding > 0) {
-    (void) memset(pad, 0, X_ALIGN-1);
+    bzero(pad, X_ALIGN-1);
     if (memcmp(gbp->pos, pad, padding) != 0) {
       ncmpii_free_NC_string(ncstrp);
       return EINVAL;
@@ -897,7 +898,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   }
  
   if (padding > 0) {
-    (void) memset(pad, 0, X_ALIGN-1);
+    bzero(pad, X_ALIGN-1);
     if (memcmp(gbp->pos, pad, padding) != 0) 
       return EINVAL;
     gbp->pos = (void *)((char *)gbp->pos + padding);
@@ -1153,7 +1154,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
   
   /* Get the header from get buffer */
 
-  (void) memset(magic, 0, sizeof(magic));
+  bzero(magic, sizeof(magic));
   status = ncmpix_getn_schar_schar(
           (const void **)(&getbuf.pos), sizeof(magic), magic);
   getbuf.index += sizeof(magic);
@@ -1403,6 +1404,7 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
             return NC_EVARS_BEGIN_MULTIDEFINE;
 
 #ifdef METADATA_CONSISTENCY_CHECK
+        /* compare variable's attributes */
         ncmpii_comp_attrs(&(v1->attrs), &(v2->attrs));
 #endif
     }
@@ -1411,119 +1413,120 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
 
 int
 ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
-  int status;
-  schar magic[sizeof(ncmagic)];
-  NC *temp_ncp;
-  MPI_Offset nrecs = 0;
-  int rank;
-  MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
+    int rank, status;
+    schar magic[sizeof(ncmagic)];
+    MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
+    NC *temp_ncp;
 
-  temp_ncp = ncmpii_new_NC(&chunksize);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  assert(ncp != NULL);
-  (void) memset(magic, 0, sizeof(magic));
-  status = ncmpix_getn_schar_schar(
-          (const void **)&getbuf->pos, sizeof(magic), magic);
-  getbuf->index += sizeof(magic);
-  /* don't need to worry about CDF-1 or CDF-2
- *    *    if the first bits are not 'CDF-'  */
-  if(memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
-    NCI_Free(getbuf->base);
-    return NC_ENOTNC;
-  }
-  /* check version number in last byte of magic */
-  if (magic[sizeof(ncmagic)-1] == 0x1) {
-          getbuf->version = 1;
-  } else if (magic[sizeof(ncmagic)-1] == 0x2) {
-          getbuf->version = 2;
-          fSet(temp_ncp->flags, NC_64BIT_OFFSET);
-          if (sizeof(MPI_Offset) != 8) {
-                  /* take the easy way out: if we can't support all CDF-2
- *                    * files, return immediately */
-                  NCI_Free(getbuf->base);
-                  return NC_ESMALL;
-          }
-  } else if (magic[sizeof(ncmagic)-1] == 0x5) {
-          getbuf->version = 5;
-          fSet(temp_ncp->flags, NC_64BIT_DATA);
-          if (sizeof(MPI_Offset) != 8) {
-                  NCI_Free(getbuf->base);
-                  return NC_ESMALL;
-          }
-  } else {
-          NCI_Free(getbuf->base);
-          return NC_ENOTNC;
-  }
+    assert(ncp != NULL);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    /* check header's magic */
+    bzero(magic, sizeof(magic));
+    status = ncmpix_getn_schar_schar(
+            (const void **)&getbuf->pos, sizeof(magic), magic);
+    getbuf->index += sizeof(magic);
+    /* don't need to worry about CDF-1 or CDF-2
+     * if the first bits are not 'CDF-'  */
+    if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
+        NCI_Free(getbuf->base);
+        return NC_ENOTNC;
+    }
 
-  status = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
+    temp_ncp = ncmpii_new_NC(&chunksize);
 
-  status = ncmpix_get_size_t((const void **)(&getbuf->pos), &nrecs, (getbuf->version == 5) ? 8 : 4);
+    /* check version number in last byte of magic */
+    if (magic[sizeof(ncmagic)-1] == 0x1) {
+        getbuf->version = 1;
+    } else if (magic[sizeof(ncmagic)-1] == 0x2) {
+        getbuf->version = 2;
+        fSet(temp_ncp->flags, NC_64BIT_OFFSET);
+        if (sizeof(MPI_Offset) != 8) {
+            /* take the easy way out: if we can't support all CDF-2
+             * files, return immediately */
+            NCI_Free(getbuf->base);
+            return NC_ESMALL;
+        }
+    } else if (magic[sizeof(ncmagic)-1] == 0x5) {
+        getbuf->version = 5;
+        fSet(temp_ncp->flags, NC_64BIT_DATA);
+        if (sizeof(MPI_Offset) != 8) {
+            NCI_Free(getbuf->base);
+            return NC_ESMALL;
+        }
+    } else {
+        NCI_Free(getbuf->base);
+        return NC_ENOTNC;
+    }
 
-  if (getbuf->version == 5) {
+    status = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
+
+    status = ncmpix_get_size_t((const void **)(&getbuf->pos), &nrecs,
+                               (getbuf->version == 5) ? 8 : 4);
+
+    if (getbuf->version == 5) {
         getbuf->index += X_SIZEOF_LONG;
-  } else {
+    } else {
         getbuf->index += X_SIZEOF_SIZE_T;
-  }
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
-  temp_ncp->numrecs = nrecs;
+    }
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
+    temp_ncp->numrecs = nrecs;
 
-  if (temp_ncp->numrecs != ncp->numrecs){
-     return NC_ENUMRECS_MULTIDEFINE;
-  }
+    if (temp_ncp->numrecs != ncp->numrecs){
+        return NC_ENUMRECS_MULTIDEFINE;
+    }
 
-  assert((char *)getbuf->pos < (char *)getbuf->base + getbuf->size);
+    assert((char *)getbuf->pos < (char *)getbuf->base + getbuf->size);
 
-  status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
+    status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
 
-  status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
+    status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
 
-  status = hdr_get_NC_attrarray(getbuf, &temp_ncp->attrs);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
+    status = hdr_get_NC_attrarray(getbuf, &temp_ncp->attrs);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
 
 #ifdef METADATA_CONSISTENCY_CHECK
-  status = ncmpii_comp_attrs(&temp_ncp->attrs, &ncp->attrs);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
+    status = ncmpii_comp_attrs(&temp_ncp->attrs, &ncp->attrs);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
 #endif
 
-  status = hdr_get_NC_vararray(getbuf, &temp_ncp->vars);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
+    status = hdr_get_NC_vararray(getbuf, &temp_ncp->vars);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
 
-  status = ncmpii_comp_vars(&temp_ncp->vars, &ncp->vars);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf->base);
-    return status;
-  }
+    status = ncmpii_comp_vars(&temp_ncp->vars, &ncp->vars);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf->base);
+        return status;
+    }
 
-  temp_ncp->xsz = ncmpii_hdr_len_NC(temp_ncp, (getbuf->version == 1) ? 4 : 8 );
-  status = ncmpii_NC_computeshapes(temp_ncp);
-
+    temp_ncp->xsz = ncmpii_hdr_len_NC(temp_ncp, (getbuf->version == 1) ? 4 : 8 );
+    status = ncmpii_NC_computeshapes(temp_ncp);
   
-  ncmpii_free_NC(temp_ncp);
-  return status;
+    ncmpii_free_NC(temp_ncp);
+    return status;
 }
 
