@@ -204,65 +204,55 @@ hdr_len_NC_attr(const NC_attr *attrp, MPI_Offset sizeof_t)
 static MPI_Offset
 hdr_len_NC_attrarray(const NC_attrarray *ncap, MPI_Offset sizeof_t)
 {
-        MPI_Offset xlen = X_SIZEOF_NCTYPE;  /* type */
-//        xlen += X_SIZEOF_SIZE_T;        /* count */
-        xlen += sizeof_t;        /* count */
-        if(ncap == NULL)
-                return xlen;
-        /* else */
-        {
-                const NC_attr **app = (const NC_attr **)ncap->value;
-                const NC_attr *const *const end = &app[ncap->nelems];
-                for( /*NADA*/; app < end; app++)
-                {
-                        xlen += hdr_len_NC_attr(*app, sizeof_t);
-                }
-        }
+    int i;
+    MPI_Offset xlen = X_SIZEOF_NCTYPE;  /* type */
+//  xlen += X_SIZEOF_SIZE_T;        /* count */
+    xlen += sizeof_t;        /* count */
+    if (ncap == NULL)
         return xlen;
+    /* else */
+    for (i=0; i<ncap->nelems; i++)
+        xlen += hdr_len_NC_attr(ncap->value[i], sizeof_t);
+    return xlen;
 }
  
 static MPI_Offset
 hdr_len_NC_var(const NC_var *varp, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t)
 {
-        MPI_Offset sz;
+    MPI_Offset sz;
  
-        assert(varp != NULL);
+    assert(varp != NULL);
     assert(sizeof_off_t == 4 || sizeof_off_t == 8);
  
-        sz = hdr_len_NC_string(varp->name,sizeof_t);
-//      sz += X_SIZEOF_SIZE_T; /* ndims */
-        sz += sizeof_t; /* ndims */
-        if (sizeof_t == 8)
+    sz = hdr_len_NC_string(varp->name,sizeof_t);
+//  sz += X_SIZEOF_SIZE_T; /* ndims */
+    sz += sizeof_t; /* ndims */
+    if (sizeof_t == 8)
         sz += ncmpix_len_long(varp->ndims); /* dimids */
-        else
+    else
         sz += ncmpix_len_int(varp->ndims); /* dimids */
-        sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_t);
-        sz += X_SIZEOF_NC_TYPE; /* type */
-//      sz += X_SIZEOF_SIZE_T; /* len */
-        sz += sizeof_t; /* len */
-        sz += sizeof_off_t; /* begin */
+    sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_t);
+    sz += X_SIZEOF_NC_TYPE; /* type */
+//  sz += X_SIZEOF_SIZE_T; /* len */
+    sz += sizeof_t; /* len */
+    sz += sizeof_off_t; /* begin */
  
-        return(sz);
+    return(sz);
 } 
 
 static MPI_Offset
 hdr_len_NC_vararray(const NC_vararray *ncap, MPI_Offset sizeof_off_t, MPI_Offset sizeof_t)
 {
-        MPI_Offset xlen = X_SIZEOF_NCTYPE;  /* type */
-//      xlen += X_SIZEOF_SIZE_T;        /* count */
-        xlen += sizeof_t;           /* count */
-        if(ncap == NULL)
-                return xlen;
-        /* else */
-        {
-                const NC_var **vpp = (const NC_var **)ncap->value;
-                const NC_var *const *const end = &vpp[ncap->nelems];
-                for( /*NADA*/; vpp < end; vpp++)
-                {
-                        xlen += hdr_len_NC_var(*vpp, sizeof_off_t, sizeof_t);
-                }
-        }
+    int i;
+    MPI_Offset xlen = X_SIZEOF_NCTYPE;  /* type */
+//  xlen += X_SIZEOF_SIZE_T;        /* count */
+    xlen += sizeof_t;           /* count */
+    if (ncap == NULL)
         return xlen;
+    /* else */
+    for (i=0; i<ncap->nelems; i++)
+        xlen += hdr_len_NC_var(ncap->value[i], sizeof_off_t, sizeof_t);
+    return xlen;
 }
  
 MPI_Offset

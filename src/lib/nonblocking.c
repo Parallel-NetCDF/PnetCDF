@@ -100,7 +100,7 @@ ncmpii_cancel(NC  *ncp,
             continue;
 
         if (ncp->head == NULL) {
-            printf("Error: no such request ID = %d\n", req_ids[i]);
+            printf("Error: ncmpii_cancel() NULL request queue NULL at line %d of %s\n", __LINE__, __FILE__);
             if (statuses != NULL)
                 statuses[i] = NC_EINVAL_REQUEST;
             return NC_EINVAL_REQUEST;
@@ -112,7 +112,7 @@ ncmpii_cancel(NC  *ncp,
             pre_req = cur_req;
             cur_req = cur_req->next;
             if (cur_req == NULL) {
-                printf("Error: no such request ID = %d\n", req_ids[i]);
+                printf("Error: ncmpii_cancel() no such request ID = %d\n", req_ids[i]);
                 if (statuses != NULL)
                     statuses[i] = NC_EINVAL_REQUEST;
                 return NC_EINVAL_REQUEST;
@@ -229,7 +229,7 @@ ncmpii_mset_fileview(MPI_File    fh,
      * variables in the dataset won't fit into the aint used by
      * MPI_Type_create_struct.  Minor optimization: we don't need to do any of
      * this if MPI_Aint and MPI_Offset are the same size  */
-    if (sizeof(MPI_Offset) != sizeof(MPI_Aint) ) {
+    if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) {
         addrs = (MPI_Aint *) NCI_Malloc(ntimes * sizeof(MPI_Aint));
         for (i=0; i< ntimes; i++) {
             addrs[i] = offsets[i];
@@ -294,6 +294,9 @@ ncmpii_wait(NC  *ncp,
     else
         CHECK_INDEP_FH
 
+    /* Note: 1) it is illegal num_reqs is larger than the linked list size
+             2) request ids must be distinct
+     */
     j = 0;
     for (i=0; i<num_reqs; i++) {
         statuses[i] = NC_NOERR;

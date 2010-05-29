@@ -523,14 +523,12 @@ ncmpii_igetput_varm(NC               *ncp,
 
     req->is_imap  = 0;
     req->imaptype = imaptype;
-    if (rw_flag == WRITE_REQ) {
-        req->rw_flag = WRITE_REQ;
-        req->lbuf    = NULL;
-    }
-    else {
-        req->rw_flag = READ_REQ;
-        req->lbuf    = lbuf;
-    }
+    req->rw_flag  = rw_flag;
+    if (rw_flag == WRITE_REQ)
+        req->lbuf = NULL;
+    else
+        req->lbuf = lbuf;
+
     if (!do_vars)
         req->is_imap = 1;
 
