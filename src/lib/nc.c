@@ -11,7 +11,6 @@
 #endif
 #include <stdio.h>
 #include <strings.h> /* bzero() */
-#include <string.h>  /* memset() */
 #include <assert.h>
 #include "ncx.h"
 #include "macro.h"
@@ -90,27 +89,32 @@ ncmpii_del_from_NCList(NC *ncp)
 static int
 NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     int rank, errcheck, status=NC_NOERR, errflag, compare;
+    MPI_Offset hsz_0;
     void *cmpbuf;
     bufferinfo gbp;
 
     MPI_Comm_rank(comm, &rank);
 
     /* process 0 broadcasts header size */
-    MPI_Bcast(&hsz, 1, MPI_LONG_LONG_INT, 0, comm);
+    if (rank == 0) hsz_0 = hsz;
+    MPI_Bcast(&hsz_0, 1, MPI_LONG_LONG_INT, 0, comm);
 
     if (rank == 0)
         cmpbuf = buf;
     else
-        cmpbuf = (void*) NCI_Malloc(hsz);
+        cmpbuf = (void*) NCI_Malloc(hsz_0);
 
     /* process 0 broadcasts its header */
-    MPI_Bcast(cmpbuf, hsz, MPI_BYTE, 0, comm);
+    MPI_Bcast(cmpbuf, hsz_0, MPI_BYTE, 0, comm);
 
     compare = 0;
-    if (!rank)
+    if (hsz != hsz_0)  /* hsz may be different from hsz_0 */
+        compare = 1;
+    else if (rank > 0)
         compare = memcmp(buf, cmpbuf, hsz);
 
-    MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_MAX, comm);
+    /* Use LOR because memcmp() may return negative value */
+    MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
     if (errcheck == 0) {
         if (rank > 0)
             NCI_Free(cmpbuf);
@@ -118,21 +122,27 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     }
     /* now part of the header is not consistent across all processes */
 
-//    gbp.nciop = NULL;
-    gbp.nciop = ncp->nciop;
+    gbp.nciop  = ncp->nciop;
     gbp.offset = 0;    /* read from start of the file */
-    gbp.size = hsz;
-    gbp.index = 0;
-    gbp.pos=gbp.base = cmpbuf;
+    gbp.size   = hsz_0;
+    gbp.index  = 0;
+    gbp.pos    = gbp.base = cmpbuf;
 
     status = ncmpii_hdr_check_NC(&gbp, ncp);
-    if (rank > 0)
-        NCI_Free(cmpbuf);
 
     errflag = (status == NC_NOERR) ? 0 : 1;
     MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_MAX, comm);
-    if (errcheck > 0)
-        return (status != NC_NOERR) ? status : NC_EMULTIDEFINE;
+    if (errcheck > 0) {
+        status = (status != NC_NOERR) ? status : NC_EMULTIDEFINE;
+    }
+    else if (hsz != hsz_0) {
+        /* TODO !!!! need to replace the local NC object with root's.
+           The local header size is different from the root's and the
+           header consistency check returns only a warning. We must
+           overwrite local header, NC object pointed by ncp, with
+           the root's header, current in cmpbuf */
+    }
+    if (rank > 0) NCI_Free(cmpbuf);
 
     return NC_NOERR;
 }
@@ -227,7 +237,7 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
         ncp = (NC *) NCI_Malloc(sizeof(NC));
         if(ncp == NULL)
                 return NULL;
-        (void) memset(ncp, 0, sizeof(NC));
+        bzero(ncp, sizeof(NC));
 
         if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
                 ncp->xsz = MIN_NC_XSZ+28; /*Kgao*/
@@ -282,7 +292,7 @@ ncmpii_dup_NC(const NC *ref)
         ncp = (NC *) NCI_Malloc(sizeof(NC));
         if(ncp == NULL)
                 return NULL;
-        (void) memset(ncp, 0, sizeof(NC));
+        bzero(ncp, sizeof(NC));
 
         if(ncmpii_dup_NC_dimarrayV(&ncp->dims, &ref->dims) != NC_NOERR)
                 goto err;
@@ -358,130 +368,126 @@ ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
  */
 static int
 NC_begins(NC *ncp,
-        MPI_Offset h_minfree, MPI_Offset v_align,
-        MPI_Offset v_minfree, MPI_Offset r_align)
+          MPI_Offset h_minfree, MPI_Offset v_align,
+          MPI_Offset v_minfree, MPI_Offset r_align)
 {
-        MPI_Offset ii;
-        MPI_Offset sizeof_off_t;
-        off_t index = 0;
-        NC_var **vpp;
-        NC_var *last = NULL;
+    MPI_Offset ii, sizeof_off_t, max_xsz;
+    off_t index = 0;
+    NC_var **vpp;
+    NC_var *last = NULL;
 
-        if(v_align == NC_ALIGN_CHUNK)  /* for non-record variables */
-                v_align = ncp->chunk;
-        if(r_align == NC_ALIGN_CHUNK)  /* for record variables */
-                r_align = ncp->chunk;
+    if (v_align == NC_ALIGN_CHUNK)  /* for non-record variables */
+        v_align = ncp->chunk;
+    if (r_align == NC_ALIGN_CHUNK)  /* for record variables */
+        r_align = ncp->chunk;
 
-        if ((fIsSet(ncp->flags, NC_64BIT_OFFSET))||(fIsSet(ncp->flags, NC_64BIT_DATA))) {
-                sizeof_off_t = 8;
-        } else {
-                sizeof_off_t = 4;
-        }
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET) ||
+        fIsSet(ncp->flags, NC_64BIT_DATA)) {
+        sizeof_off_t = 8;
+    } else {
+        sizeof_off_t = 4;
+    }
 
-        ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
+    /* get the header size (un-aligned one) */
+    ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
 
-        if(ncp->vars.nelems == 0) 
-                return NC_NOERR;
+    if (ncp->vars.nelems == 0) /* no variable has been defined */
+        return NC_NOERR;
 
-        /* only (re)calculate begin_var if there is not sufficient space in header
-           or start of non-record variables is not aligned as requested by valign */
-        if (ncp->begin_var < ncp->xsz + h_minfree ||
-            ncp->begin_var != D_RNDUP(ncp->begin_var, v_align) ) 
-        {
-          index = (off_t) ncp->xsz;
-          ncp->begin_var = D_RNDUP(index, v_align);
-          if(ncp->begin_var < index + h_minfree)
-          {
+    /* Since it is allowable to have incocnsistent header's metadata,
+       header sizes, ncp->xsz, may be different among processes.
+       Hence, we need to use the max size among all processes to make
+       sure everyboday has the same size of reserved space for header */
+    MPI_Allreduce(&ncp->xsz, &max_xsz, 1, MPI_LONG_LONG_INT, MPI_MAX,
+                  ncp->nciop->comm);
+
+    /* only (re)calculate begin_var if there is not sufficient space in header
+       or start of non-record variables is not aligned as requested by valign */
+    if (ncp->begin_var < max_xsz + h_minfree ||
+        ncp->begin_var != D_RNDUP(ncp->begin_var, v_align) ) {
+        index = (off_t) max_xsz;
+        ncp->begin_var = D_RNDUP(index, v_align);
+        if (ncp->begin_var < index + h_minfree)
             ncp->begin_var = D_RNDUP(index + (off_t)h_minfree, v_align);
-          }
-        }
-        index = ncp->begin_var;
+    }
 
-        /* loop thru vars, first pass is for the 'non-record' vars */
-        vpp = ncp->vars.value;
-        for(ii = 0; ii < ncp->vars.nelems ; ii++, vpp++)
-        {
-                if( IS_RECVAR(*vpp) )
-                {
-                        /* skip record variables on this pass */
-                        continue;
-                }
+    index = ncp->begin_var;
+    /* this is the aligned strating file offset for the first variable,
+       also the header reserved size */
+
+    /* Now find the starting file offsets for all variables.
+       loop thru vars, first pass is for the 'non-record' vars */
+    vpp = ncp->vars.value;
+    for (ii=0; ii<ncp->vars.nelems ; ii++, vpp++) {
+        if (IS_RECVAR(*vpp))
+            /* skip record variables on this pass */
+            continue;
 #if 0
 fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
 #endif
-                if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
-                {
-                        return NC_EVARSIZE;
-                }
-                /* this will pad out non-record variables with zero to the
-                 * requested alignment.  record variables are a bit trickier.
-                 * we don't do anything special with them */
-                (*vpp)->begin = D_RNDUP(index, v_align);
-                index = (*vpp)->begin + (*vpp)->len;
-        }
+        if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+            return NC_EVARSIZE;
 
-        /* only (re)calculate begin_rec if there is not sufficient
-           space at end of non-record variables or if start of record
-           variables is not aligned as requested by r_align */
-        if (ncp->begin_rec < index + v_minfree ||
-            ncp->begin_rec != D_RNDUP(ncp->begin_rec, r_align) )
-        {
-          ncp->begin_rec = D_RNDUP(index, r_align);
-          if(ncp->begin_rec < index + v_minfree)
-          {
+        /* this will pad out non-record variables with zero to the
+         * requested alignment.  record variables are a bit trickier.
+         * we don't do anything special with them */
+        (*vpp)->begin = D_RNDUP(index, v_align);
+        index = (*vpp)->begin + (*vpp)->len;
+    }
+
+    /* only (re)calculate begin_rec if there is not sufficient
+       space at end of non-record variables or if start of record
+       variables is not aligned as requested by r_align */
+    if (ncp->begin_rec < index + v_minfree ||
+        ncp->begin_rec != D_RNDUP(ncp->begin_rec, r_align) ) {
+        ncp->begin_rec = D_RNDUP(index, r_align);
+        if (ncp->begin_rec < index + v_minfree)
             ncp->begin_rec = D_RNDUP(index + (off_t)v_minfree, r_align);
-          }
-        }
-        index = ncp->begin_rec;
+    }
+    index = ncp->begin_rec;
 
-        ncp->recsize = 0;
+    ncp->recsize = 0;
 
-        /* loop thru vars, second pass is for the 'record' vars */
-        vpp = (NC_var **)ncp->vars.value;
-        for(ii = 0; ii < ncp->vars.nelems; ii++, vpp++)
-        {
-                if( !IS_RECVAR(*vpp) )
-                {
-                        /* skip non-record variables on this pass */
-                        continue;
-                }
+    /* loop thru vars, second pass is for the 'record' vars */
+    vpp = (NC_var **)ncp->vars.value;
+    for (ii=0; ii<ncp->vars.nelems; ii++, vpp++) {
+        if (!IS_RECVAR(*vpp))
+            /* skip non-record variables on this pass */
+            continue;
 
 #if 0
 fprintf(stderr, "    REC %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
 #endif
-                if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
-                {
-                        return NC_EVARSIZE;
-                }
-                /* A few attempts at aligning record variables have failed
-                 * (either with range error or 'value read not that expected',
-                 * or with an error in ncmpi_redef )).  Not sufficent to align
-                 * 'begin', but haven't figured out what else to adjust */
-                (*vpp)->begin = index;
-                index += (*vpp)->len;
-                /* check if record size must fit in 32-bits */
+        if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+            return NC_EVARSIZE;
+
+        /* A few attempts at aligning record variables have failed
+         * (either with range error or 'value read not that expected',
+         * or with an error in ncmpi_redef )).  Not sufficent to align
+         * 'begin', but haven't figured out what else to adjust */
+        (*vpp)->begin = index;
+        index += (*vpp)->len;
+        /* check if record size must fit in 32-bits */
 #if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
-                if (ncp->recsize > X_UINT_MAX - (*vpp)->len)
-                {
-                        return NC_EVARSIZE;
-                }
+        if (ncp->recsize > X_UINT_MAX - (*vpp)->len)
+            return NC_EVARSIZE;
 #endif
-                ncp->recsize += (*vpp)->len;
-                last = (*vpp);
-        }
+        ncp->recsize += (*vpp)->len;
+        last = (*vpp);
+    }
 
-        /*
-         * for special case of exactly one record variable, pack value
-         */
-        /* if there is exactly one record variable, then there is no need to
-         * pad for alignment -- there's nothing after it */
-        if(last != NULL && ncp->recsize == last->len)
-                ncp->recsize = *last->dsizes * last->xsz;
+    /*
+     * for special case of exactly one record variable, pack value
+     */
+    /* if there is exactly one record variable, then there is no need to
+     * pad for alignment -- there's nothing after it */
+    if (last != NULL && ncp->recsize == last->len)
+        ncp->recsize = *last->dsizes * last->xsz;
 
-        if(NC_IsNew(ncp))
-                NC_set_numrecs(ncp, 0);
+    if (NC_IsNew(ncp))
+        NC_set_numrecs(ncp, 0);
 
-        return NC_NOERR;
+    return NC_NOERR;
 }
 
 #define NC_NUMRECS_OFFSET 4
