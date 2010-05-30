@@ -8,7 +8,6 @@
 #include <mpi.h>
 #include <assert.h>
 #include <string.h>  /* memcpy() */
-#include <strings.h> /* bzero() */
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -334,7 +333,7 @@ hdr_put_NC_attrV(bufferinfo *pbp, const NC_attr *attrp) {
 
   (void) memcpy(pbp->pos, value, esz * attrp->nelems);
   pbp->pos = (void *)((char *)pbp->pos + esz * attrp->nelems);
-  bzero(pbp->pos, padding);
+  memset(pbp->pos, 0, padding);
   pbp->pos = (void *)((char *)pbp->pos + padding);
     
   return NC_NOERR;
@@ -628,7 +627,7 @@ hdr_fetch(bufferinfo *gbp) {
 
   if (slack == gbp->size) slack = 0;
 
-  bzero(gbp->base, gbp->size);
+  memset(gbp->base, 0, gbp->size);
   gbp->pos = gbp->base;
   gbp->index = 0;
 
@@ -734,7 +733,7 @@ hdr_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   }
 
   if (padding > 0) {
-    bzero(pad, X_ALIGN-1);
+    memset(pad, 0, X_ALIGN-1);
     if (memcmp(gbp->pos, pad, padding) != 0) {
       ncmpii_free_NC_string(ncstrp);
       return EINVAL;
@@ -898,7 +897,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   }
  
   if (padding > 0) {
-    bzero(pad, X_ALIGN-1);
+    memset(pad, 0, X_ALIGN-1);
     if (memcmp(gbp->pos, pad, padding) != 0) 
       return EINVAL;
     gbp->pos = (void *)((char *)gbp->pos + padding);
@@ -1154,7 +1153,7 @@ ncmpii_hdr_get_NC(NC *ncp) {
   
   /* Get the header from get buffer */
 
-  bzero(magic, sizeof(magic));
+  memset(magic, 0, sizeof(magic));
   status = ncmpix_getn_schar_schar(
           (const void **)(&getbuf.pos), sizeof(magic), magic);
   getbuf.index += sizeof(magic);
@@ -1422,7 +1421,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* check header's magic */
-    bzero(magic, sizeof(magic));
+    memset(magic, 0, sizeof(magic));
     status = ncmpix_getn_schar_schar(
             (const void **)&getbuf->pos, sizeof(magic), magic);
     getbuf->index += sizeof(magic);

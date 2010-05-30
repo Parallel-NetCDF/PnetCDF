@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #endif
 #include <stdio.h>
-#include <strings.h> /* bzero() */
+#include <string.h>
 #include <assert.h>
 #include "ncx.h"
 #include "macro.h"
@@ -237,7 +237,7 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
         ncp = (NC *) NCI_Malloc(sizeof(NC));
         if(ncp == NULL)
                 return NULL;
-        bzero(ncp, sizeof(NC));
+        memset(ncp, 0, sizeof(NC));
 
         if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
                 ncp->xsz = MIN_NC_XSZ+28; /*Kgao*/
@@ -292,7 +292,7 @@ ncmpii_dup_NC(const NC *ref)
         ncp = (NC *) NCI_Malloc(sizeof(NC));
         if(ncp == NULL)
                 return NULL;
-        bzero(ncp, sizeof(NC));
+        memset(ncp, 0, sizeof(NC));
 
         if(ncmpii_dup_NC_dimarrayV(&ncp->dims, &ref->dims) != NC_NOERR)
                 goto err;
@@ -648,7 +648,7 @@ write_NC(NC *ncp)
 
     buf = (void *)NCI_Malloc(hsz); /* header buffer for I/O */
     if (hsz > ncp->xsz)
-        bzero((char*)buf+ncp->xsz, hsz - ncp->xsz);
+        memset((char*)buf+ncp->xsz, 0, hsz - ncp->xsz);
 
     status = ncmpii_hdr_put_NC(ncp, buf); /* copy header to buffer */
     if (status != NC_NOERR) {
