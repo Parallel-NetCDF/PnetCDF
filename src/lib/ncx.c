@@ -294,7 +294,7 @@ put_ix_short(void *xp, const ix_short *ip)
 int
 ncmpix_get_short_schar(const void *xp, schar *ip)
 {
-	ix_short xx;
+	ix_short xx=0;
 	get_ix_short(xp, &xx);
 	*ip = xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
@@ -305,7 +305,7 @@ ncmpix_get_short_schar(const void *xp, schar *ip)
 int
 ncmpix_get_short_uchar(const void *xp, uchar *ip)
 {
-	ix_short xx;
+	ix_short xx=0;
 	get_ix_short(xp, &xx);
 	*ip = xx;
 	if(xx > UCHAR_MAX || xx < 0)
@@ -531,7 +531,7 @@ put_ix_int(void *xp, const ix_int *ip)
 int
 ncmpix_get_int_schar(const void *xp, schar *ip)
 {
-	ix_int xx;
+	ix_int xx=0;
 	get_ix_int(xp, &xx);
 	*ip = xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
@@ -542,7 +542,7 @@ ncmpix_get_int_schar(const void *xp, schar *ip)
 int
 ncmpix_get_int_uchar(const void *xp, uchar *ip)
 {
-	ix_int xx;
+	ix_int xx=0;
 	get_ix_int(xp, &xx);
 	*ip = xx;
 	if(xx > UCHAR_MAX || xx < 0)
@@ -557,7 +557,7 @@ ncmpix_get_int_short(const void *xp, short *ip)
 	get_ix_int(xp, (ix_int *)ip);
 	return NC_NOERR;
 #else
-	ix_int xx;
+	ix_int xx=0;
 	get_ix_int(xp, &xx);
 	*ip = xx;
 #  if IX_INT_MAX > SHORT_MAX
@@ -918,7 +918,7 @@ put_ix_float(void *xp, const float *ip)
 int
 ncmpix_get_float_schar(const void *xp, schar *ip)
 {
-	float xx;
+	float xx=0.0;
 	get_ix_float(xp, &xx);
 	*ip = (schar) xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
@@ -929,7 +929,7 @@ ncmpix_get_float_schar(const void *xp, schar *ip)
 int
 ncmpix_get_float_uchar(const void *xp, uchar *ip)
 {
-	float xx;
+	float xx=0.0;
 	get_ix_float(xp, &xx);
 	*ip = (uchar) xx;
 	if(xx > UCHAR_MAX || xx < 0)
@@ -940,7 +940,7 @@ ncmpix_get_float_uchar(const void *xp, uchar *ip)
 int
 ncmpix_get_float_short(const void *xp, short *ip)
 {
-	float xx;
+	float xx=0.0;
 	get_ix_float(xp, &xx);
 	*ip = (short) xx;
 	if(xx > SHORT_MAX || xx < SHORT_MIN)
@@ -951,7 +951,7 @@ ncmpix_get_float_short(const void *xp, short *ip)
 int
 ncmpix_get_float_int(const void *xp, int *ip)
 {
-	float xx;
+	float xx=0.0;
 	get_ix_float(xp, &xx);
 	*ip = (int) xx;
 	if(xx > (double)INT_MAX || xx < (double)INT_MIN)
@@ -1246,7 +1246,7 @@ put_ix_double(void *xp, const double *ip)
 int
 ncmpix_get_double_schar(const void *xp, schar *ip)
 {
-	double xx;
+	double xx=0.0;
 	get_ix_double(xp, &xx);
 	*ip = (schar) xx;
 	if(xx > SCHAR_MAX || xx < SCHAR_MIN)
@@ -1257,7 +1257,7 @@ ncmpix_get_double_schar(const void *xp, schar *ip)
 int
 ncmpix_get_double_uchar(const void *xp, uchar *ip)
 {
-	double xx;
+	double xx=0.0;
 	get_ix_double(xp, &xx);
 	*ip = (uchar) xx;
 	if(xx > UCHAR_MAX || xx < 0)
@@ -1268,7 +1268,7 @@ ncmpix_get_double_uchar(const void *xp, uchar *ip)
 int
 ncmpix_get_double_short(const void *xp, short *ip)
 {
-	double xx;
+	double xx=0.0;
 	get_ix_double(xp, &xx);
 	*ip = (short) xx;
 	if(xx > SHORT_MAX || xx < SHORT_MIN)
@@ -1279,7 +1279,7 @@ ncmpix_get_double_short(const void *xp, short *ip)
 int
 ncmpix_get_double_int(const void *xp, int *ip)
 {
-	double xx;
+	double xx=0.0;
 	get_ix_double(xp, &xx);
 	*ip = (int) xx;
 	if(xx > INT_MAX || xx < INT_MIN)
@@ -1301,7 +1301,7 @@ ncmpix_get_double_long(const void *xp, long *ip)
 int
 ncmpix_get_double_float(const void *xp, float *ip)
 {
-	double xx;
+	double xx=0.0;
 	get_ix_double(xp, &xx);
 	if(xx > FLT_MAX || xx < (-FLT_MAX))
 	{
