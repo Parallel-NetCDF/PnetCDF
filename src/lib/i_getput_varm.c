@@ -370,7 +370,7 @@ ncmpii_igetput_varm(NC               *ncp,
 {
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
     int status, warning=NC_NOERR, el_size, iscontig_of_ptypes, do_vars;
-    int i, dim, imap_contig_blocklen;
+    int i, dim=0, imap_contig_blocklen;
     MPI_Offset nelems, cnelems, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
