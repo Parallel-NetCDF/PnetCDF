@@ -47,13 +47,6 @@
 */
 
 
-static int
-ncmpii_getput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
-                   const MPI_Offset *count, const MPI_Offset *stride,
-                   const MPI_Offset *imap, void *buf,
-                   MPI_Offset bufcount, MPI_Datatype datatype,
-                   int rw_flag, int io_method);
-
 /*----< ncmpi_put_varm() >---------------------------------------------------*/
 int
 ncmpi_put_varm(int               ncid,
@@ -640,7 +633,7 @@ ncmpi_get_varm_double_all(int               ncid,
 }
 
 /*----< ncmpii_getput_varm() >-----------------------------------------------*/
-static int
+int
 ncmpii_getput_varm(NC               *ncp,
                    NC_var           *varp,
                    const MPI_Offset  start[],
