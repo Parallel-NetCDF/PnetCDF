@@ -263,28 +263,32 @@ dnl
 saveCC="$CC"
 CC=$MPICC
 
-dnl compile-only check for size of MPI_Offset (thanks Christopher Subich
-dnl <csubich@math.uwaterloo.ca>)
+dnl compile-only check for size of MPI types (based on one for MPI_Offset from
+dnl Christopher Subich <csubich@math.uwaterloo.ca>)
 
-AC_DEFUN([UD_MPI_OFFSET], [
-	if test ! "$ac_cv_sizeof_MPI_Offset"; then
-		AC_MSG_CHECKING(if MPI_Offset is size $1)
+AC_DEFUN([UD_MPI_CHECK_SIZE], [
+	if test ! "$ac_cv_sizeof_$1"; then
+		AC_MSG_CHECKING(if $1 is size $2)
 		AC_COMPILE_IFELSE([
 		#include "mpi.h"
 		#include <stdio.h>
 		int main (int argc, char **argv)
 		{
-		static int test_array [[sizeof (MPI_Offset) == $1 ? 1 : -1 ]];
+		static int test_array [[sizeof ($1) == $2 ? 1 : -1 ]];
 		return 0;
 		}], AC_MSG_RESULT(yes)
-		ac_cv_sizeof_MPI_Offset=$1,
+		ac_cv_sizeof_$1=$2,
 		AC_MSG_RESULT(no))
 	fi
 ])
 
-UD_MPI_OFFSET(8)
-UD_MPI_OFFSET(4)
-UD_MPI_OFFSET(16)
+UD_MPI_CHECK_SIZE(MPI_Offset, 8)
+UD_MPI_CHECK_SIZE(MPI_Offset, 4)
+UD_MPI_CHECK_SIZE(MPI_Offset, 16)
+
+UD_MPI_CHECK_SIZE(MPI_Aint, 8)
+UD_MPI_CHECK_SIZE(MPI_Aint, 4)
+UD_MPI_CHECK_SIZE(MPI_Aint, 16)
 
 dnl ok, now we know how big MPI_Offset is.  If it's less than 8 bytes 
 dnl we have to disable the new "CDF-5" (variables larger than 4gb) support
@@ -298,14 +302,23 @@ if test "$enable_cdf5" = "yes" ; then
 	AC_DEFINE(ENABLE_CDF5,,[Define if able to support CDF-5 file format])
 fi
 
+AC_CHECK_FUNCS(MPI_Info_dup,,)
+
 # the nonblocking routines need these functions
 enable_nonblocking=yes
 AC_CHECK_FUNCS(MPI_Request_get_status MPI_Type_dup,,
   enable_nonblocking=no
 )
 
-AC_CHECK_FUNCS(MPI_Info_dup,,)
-	
+# the nonblocking routines build up lists of requests with MPI_Type_struct.  If
+# MPI_Offset not the same size as MPI_Aint, the arrays passed around will get
+# mangled. 
+
+if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
+	AC_MSG_WARN(MPI_Offset and MPI_Aint have different sizes: unable to support non-blocking routines)
+	enable_nonblocking=no
+fi
+
 if test "$enable_nonblocking" = "yes" ; then
 	AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
 fi
@@ -435,7 +448,7 @@ AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(size_t)
 
-dnl Check the size of MPI_Offset
+dnl Check the size of MPI_Offset.  
 dnl As some platforms don't allow running MPI-linked executives directly,
 dnl the test program is only compiled with MPICC inorder to know "mpi.h"
 dnl and is linked with CC to allow direct run in the script.
