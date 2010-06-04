@@ -1755,7 +1755,7 @@ test_ncmpi_del_att(void)
 void
 test_ncmpi_set_fill(void)
 {
-	fprintf(stderr, "unimplemented");
+	fprintf(stderr, "unimplemented. ");
 #if 0
     int ncid;
     int varid;

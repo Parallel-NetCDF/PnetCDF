@@ -375,27 +375,18 @@ ncmpii_igetput_varm(NC               *ncp,
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
-#ifndef ENABLE_NONBLOCKING
-    if (!NC_indep(ncp)) /* must be in independent mode */
-        return NC_ENOTINDEP;
-
-    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
-                              buf, bufcount, datatype, rw_flag, INDEP_IO);
-#endif
-
     if (varp->ndims > 0) assert(start != NULL);
     if (varp->ndims > 0) assert(count != NULL);
 
     do_vars = 0;
 
-    if (imap == NULL) /* no mapping, same as vars */
-        do_vars = 1;
-
     if (varp->ndims == 0)
         /* reduced to scalar var, only one value at one fixed place */
         do_vars = 1;
 
-    if (imap != NULL) {
+    if (imap == NULL) /* no mapping, same as vars */
+        do_vars = 1;
+    else {
         imap_contig_blocklen = 1;
         dim = varp->ndims;
         /* test each dim's contiguity until the 1st non-contiguous dim is
@@ -405,9 +396,10 @@ ncmpii_igetput_varm(NC               *ncp,
                 return NC_ENEGATIVECNT;
             imap_contig_blocklen *= count[dim];
         }
+        if (dim == -1) /* imap is a contiguous layout */
+            do_vars = 1;
     }
-    if (dim == -1) /* imap is a contiguous layout */
-        do_vars = 1;
+    /* dim will be used only when do_vars == 1 */
 
     CHECK_DATATYPE(datatype, ptype, el_size, cnelems, iscontig_of_ptypes)
     CHECK_ECHAR(varp)
@@ -433,8 +425,7 @@ ncmpii_igetput_varm(NC               *ncp,
         } else {
             cbuf = buf;
         }
-    }
-    else {
+    } else { /* of if (do_vars) */
         MPI_Datatype tmptype;
         if (!iscontig_of_ptypes) {
             /* handling for derived datatype: pack into a contiguous buffer */

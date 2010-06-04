@@ -144,11 +144,20 @@ ncmpi_wait(int ncid,
            int *req_ids,  /* [num_reqs] */
            int *statuses) /* [num_reqs] */
 {
-    int  status;
+    int  i, status, ret_st=NC_NOERR;
     NC  *ncp;
 
     CHECK_NCID
+#ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
+#else
+    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+        status = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        if (status != NC_NOERR)
+            ret_st = status;
+    }
+    return ret_st; /* return the last fail status, if there is any */
+#endif
 }
 
 /*----< ncmpi_wait_all() >---------------------------------------------------*/
@@ -159,18 +168,27 @@ ncmpi_wait_all(int  ncid,
                int *req_ids,  /* [num_reqs] */
                int *statuses) /* [num_reqs] */
 {
-    int  status;
+    int  i, status, ret_st=NC_NOERR;
     NC  *ncp;
 
-#ifdef TEST_INDEP_WAIT
-    int status;
-    ncmpi_begin_indep_data(ncid);
-    status = ncmpi_wait(ncid, num_reqs, req_ids, statuses);
-    ncmpi_end_indep_data(ncid);
-    return status;
-#endif
     CHECK_NCID
+#ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
+#else
+    /* must in independent mode, as num_reqs maybe different among processes */
+    ncmpi_begin_indep_data(ncid);
+
+    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+        status = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        if (status != NC_NOERR)
+            ret_st = status;
+    }
+
+    /* return to collective data mode */
+    ncmpi_end_indep_data(ncid);
+
+    return ret_st; /* return the last fail status, if there is any */
+#endif
 }
 
 /*----< ncmpii_mset_fileview() >---------------------------------------------*/
@@ -188,7 +206,6 @@ ncmpii_mset_fileview(MPI_File    fh,
     int i, status, mpireturn, *blocklens;
     MPI_Datatype full_filetype, *filetypes;
     MPI_Offset *offsets;
-    MPI_Aint *addrs;
 
     if (ntimes <= 0) { /* participate collective call */
         mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
@@ -224,42 +241,55 @@ ncmpii_mset_fileview(MPI_File    fh,
         }
     }
 
-    /* on most 32 bit systems, MPI_Aint and MPI_Offset are different sizes.
-     * Possible that on those platforms some of the beginning offsets of these
-     * variables in the dataset won't fit into the aint used by
-     * MPI_Type_create_struct.  Minor optimization: we don't need to do any of
-     * this if MPI_Aint and MPI_Offset are the same size  */
-    if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) {
-        addrs = (MPI_Aint *) NCI_Malloc(ntimes * sizeof(MPI_Aint));
-        for (i=0; i< ntimes; i++) {
-            addrs[i] = offsets[i];
-            if (addrs[i] != offsets[i]) return NC_EAINT_TOO_SMALL;
-        }
-    } else {
-        addrs = (MPI_Aint*) offsets; /* cast ok: types same size */
-    }
+    if (ntimes == 1) {  /* no two or more filetypes to combine */
+        full_filetype = filetypes[0];
+        /* filetypes[0] has been committed already */
 
+        mpireturn = MPI_File_set_view(fh, offsets[0], MPI_BYTE, full_filetype,
+                                      "native", MPI_INFO_NULL);
+        CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
+    }
+    else {
+        /* on most 32 bit systems, MPI_Aint and MPI_Offset are different sizes.
+         * Possible that on those platforms some of the beginning offsets of
+         * these variables in the dataset won't fit into the aint used by
+         * MPI_Type_create_struct.  Minor optimization: we don't need to do any
+         * of this if MPI_Aint and MPI_Offset are the same size  */
+        MPI_Aint *addrs;
+
+        if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) {
+            addrs = (MPI_Aint *) NCI_Malloc(ntimes * sizeof(MPI_Aint));
+            for (i=0; i< ntimes; i++) {
+                addrs[i] = offsets[i];
+                if (addrs[i] != offsets[i]) return NC_EAINT_TOO_SMALL;
+            }
+        } else {
+            addrs = (MPI_Aint*) offsets; /* cast ok: types same size */
+        }
 #if (MPI_VERSION < 2)
-    MPI_Type_struct(ntimes, blocklens, addrs, filetypes, &full_filetype);
+        MPI_Type_struct(ntimes, blocklens, addrs, filetypes, &full_filetype);
 #else
-    MPI_Type_create_struct(ntimes, blocklens, addrs, filetypes, &full_filetype);
+        MPI_Type_create_struct(ntimes, blocklens, addrs, filetypes, &full_filetype);
 #endif
-    MPI_Type_commit(&full_filetype);
-  
-    mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, full_filetype, "native",
-                                  MPI_INFO_NULL);
-    CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
+        MPI_Type_commit(&full_filetype);
+
+        mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, full_filetype, "native",
+                                      MPI_INFO_NULL);
+        CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
+        MPI_Type_free(&full_filetype);
+
+        if (sizeof(MPI_Offset) != sizeof(MPI_Aint))
+            NCI_Free(addrs);
+    }
 
     for (i=0; i<ntimes; i++) {
         if (filetypes[i] != MPI_BYTE)
             MPI_Type_free(&filetypes[i]);
     }
-    MPI_Type_free(&full_filetype);
 
     NCI_Free(filetypes);
     NCI_Free(offsets);
     NCI_Free(blocklens);
-    if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) NCI_Free(addrs);
 
     return NC_NOERR;
 }
