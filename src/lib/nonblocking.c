@@ -175,7 +175,13 @@ ncmpi_wait_all(int  ncid,
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
-    /* must in independent mode, as num_reqs maybe different among processes */
+    /* This API is collective, so make it illegal in indep mode. This also
+       ensures the program will returns back to collective mode. */
+    if (NC_indep(ncp))
+        return NC_EINDEP;
+
+    /* must enter independent mode, as num_reqs may be different among
+       processes */
     ncmpi_begin_indep_data(ncid);
 
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
