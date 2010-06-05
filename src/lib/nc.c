@@ -144,7 +144,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     }
     if (rank > 0) NCI_Free(cmpbuf);
 
-    return NC_NOERR;
+    return status;
 }
 
 
