@@ -1251,14 +1251,15 @@ ncmpii_comp_dims(NC_dimarray *nc_dim1,
                  NC_dimarray *nc_dim2)
 {
     int i;
-    if (nc_dim1->nelems != nc_dim2->nelems)
+    if (nc_dim1->nelems != nc_dim2->nelems) {
+        fprintf(stderr,"Error: number of dimensions defined is inconsistent %lld != %lld\n",
+                nc_dim1->nelems, nc_dim2->nelems);
         return NC_EDIMS_NELEMS_MULTIDEFINE;
+    }
 
     for (i=0; i<nc_dim1->nelems; i++) {
-        NC_string *name1, *name2;
-        if (nc_dim1->value[i]->size != nc_dim2->value[i]->size)
-            return NC_EDIMS_SIZE_MULTIDEFINE;
 #ifdef METADATA_CONSISTENCY_CHECK
+        NC_string *name1, *name2;
         name1 = nc_dim1->value[i]->name;
         name2 = nc_dim2->value[i]->name;
 
@@ -1267,6 +1268,13 @@ ncmpii_comp_dims(NC_dimarray *nc_dim1,
             printf("%s dimension name %s != %s\n", WARN_STR,
                    name1->cp,name2->cp);
 #endif
+        if (nc_dim1->value[i]->size != nc_dim2->value[i]->size) {
+            /* inconsistency in dimension size is fatal */
+            fprintf(stderr,"Error: dimension %s's size inconsistent %lld != %lld\n",
+                    nc_dim1->value[i]->name->cp,nc_dim1->value[i]->size,
+                    nc_dim2->value[i]->size);
+            return NC_EDIMS_SIZE_MULTIDEFINE;
+        }
     }
     return NC_NOERR;
 }
@@ -1372,8 +1380,11 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
                  NC_vararray *nc_var2)
 {
     int i, j;
-    if (nc_var1->nelems != nc_var2->nelems)
+    if (nc_var1->nelems != nc_var2->nelems) {
+        fprintf(stderr,"Error: number of defined variables is inconsistent %lld != %lld\n",
+                nc_var1->nelems, nc_var2->nelems);
         return NC_EVARS_NELEMS_MULTIDEFINE;
+    }
 
     for (i=0; i<nc_var1->nelems; i++) {
         NC_var *v1 = nc_var1->value[i];
@@ -1385,22 +1396,37 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
             printf("%s variable name %s != %s\n", WARN_STR,
                    v1->name->cp,v2->name->cp);
 #endif
-        if (v1->ndims != v2->ndims)
+        if (v1->ndims != v2->ndims) {
+            fprintf(stderr,"Error: variable %s's ndims is inconsistent %d != %d\n",
+                    v1->name->cp, v1->ndims, v2->ndims);
             return NC_EVARS_NDIMS_MULTIDEFINE;
-
-        for (j=0; j<v1->ndims; j++) {
-            if (v1->dimids[j] != v2->dimids[j])
-                return NC_EVARS_DIMIDS_MULTIDEFINE;
         }
 
-        if (v1->type != v2->type)
+        for (j=0; j<v1->ndims; j++) {
+            if (v1->dimids[j] != v2->dimids[j]) {
+                fprintf(stderr,"Error: variable %s's %dth dim ID is inconsistent %d != %d\n",
+                        j, v1->name->cp, v1->dimids[j], v2->dimids[j]);
+                return NC_EVARS_DIMIDS_MULTIDEFINE;
+            }
+        }
+
+        if (v1->type != v2->type) {
+            fprintf(stderr,"Error: variable %s's type is inconsistent %d != %d\n",
+                    v1->name->cp, v1->type, v2->type);
             return NC_EVARS_TYPE_MULTIDEFINE;
+        }
 
-        if (v1->len != v2->len)
+        if (v1->len != v2->len) {
+            fprintf(stderr,"Error: variable %s's len is inconsistent %lld != %lld\n",
+                    v1->name->cp, v1->len, v2->len);
             return NC_EVARS_LEN_MULTIDEFINE;
+        }
 
-        if (v1->begin != v2->begin)
+        if (v1->begin != v2->begin) {
+            fprintf(stderr,"Error: variable %s's begin is inconsistent %lld != %lld\n",
+                    v1->name->cp, v1->begin, v2->begin);
             return NC_EVARS_BEGIN_MULTIDEFINE;
+        }
 
 #ifdef METADATA_CONSISTENCY_CHECK
         /* compare variable's attributes */
@@ -1427,10 +1453,8 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
     getbuf->index += sizeof(magic);
     /* don't need to worry about CDF-1 or CDF-2
      * if the first bits are not 'CDF-'  */
-    if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
-        NCI_Free(getbuf->base);
+    if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0)
         return NC_ENOTNC;
-    }
 
     temp_ncp = ncmpii_new_NC(&chunksize);
 
@@ -1440,87 +1464,69 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
     } else if (magic[sizeof(ncmagic)-1] == 0x2) {
         getbuf->version = 2;
         fSet(temp_ncp->flags, NC_64BIT_OFFSET);
-        if (sizeof(MPI_Offset) != 8) {
+        if (sizeof(MPI_Offset) != 8)
             /* take the easy way out: if we can't support all CDF-2
              * files, return immediately */
-            NCI_Free(getbuf->base);
             return NC_ESMALL;
-        }
     } else if (magic[sizeof(ncmagic)-1] == 0x5) {
         getbuf->version = 5;
         fSet(temp_ncp->flags, NC_64BIT_DATA);
-        if (sizeof(MPI_Offset) != 8) {
-            NCI_Free(getbuf->base);
+        if (sizeof(MPI_Offset) != 8)
             return NC_ESMALL;
-        }
     } else {
-        NCI_Free(getbuf->base);
         return NC_ENOTNC;
     }
 
     status = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+    if (status != NC_NOERR)
         return status;
-    }
 
     status = ncmpix_get_size_t((const void **)(&getbuf->pos), &nrecs,
                                (getbuf->version == 5) ? 8 : 4);
 
-    if (getbuf->version == 5) {
+    if (getbuf->version == 5)
         getbuf->index += X_SIZEOF_LONG;
-    } else {
+    else
         getbuf->index += X_SIZEOF_SIZE_T;
-    }
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+
+    if (status != NC_NOERR)
         return status;
-    }
+
     temp_ncp->numrecs = nrecs;
 
-    if (temp_ncp->numrecs != ncp->numrecs){
+    if (temp_ncp->numrecs != ncp->numrecs) {
+        fprintf(stderr,"Error: number of record variables is inconsistent %lld != %lld\n",
+                temp_ncp->numrecs, ncp->numrecs);
         return NC_ENUMRECS_MULTIDEFINE;
     }
 
     assert((char *)getbuf->pos < (char *)getbuf->base + getbuf->size);
 
     status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+    if (status != NC_NOERR)
         return status;
-    }
 
     status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+    if (status != NC_NOERR)
         return status;
-    }
 
     status = hdr_get_NC_attrarray(getbuf, &temp_ncp->attrs);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+    if (status != NC_NOERR)
         return status;
-    }
 
 #ifdef METADATA_CONSISTENCY_CHECK
     status = ncmpii_comp_attrs(&temp_ncp->attrs, &ncp->attrs);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+    if (status != NC_NOERR)
         return status;
-    }
 #endif
 
     status = hdr_get_NC_vararray(getbuf, &temp_ncp->vars);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+    if (status != NC_NOERR)
         return status;
-    }
 
     status = ncmpii_comp_vars(&temp_ncp->vars, &ncp->vars);
-    if (status != NC_NOERR) {
-        NCI_Free(getbuf->base);
+    if (status != NC_NOERR)
         return status;
-    }
 
     temp_ncp->xsz = ncmpii_hdr_len_NC(temp_ncp, (getbuf->version == 1) ? 4 : 8 );
     status = ncmpii_NC_computeshapes(temp_ncp);

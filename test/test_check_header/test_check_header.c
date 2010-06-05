@@ -110,8 +110,7 @@ int main(int argc, char **argv) {
    * Create a global attribute:
    *    :title = "example netCDF dataset";
    */
-  sprintf(title, "%s:%d of %d", title, rank, nprocs);
-  printf("title:%s\n", title);
+  sprintf(title, "%s: %d processes", title, nprocs);
   status = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
                           strlen(title), title);
   if (status != NC_NOERR) handle_error(status);
@@ -121,10 +120,7 @@ int main(int argc, char **argv) {
    * Add 4 pre-defined dimensions:
    *   x = 100, y = 100, z = 100, time = NC_UNLIMITED
    */
-  if (rank == 0)
- 	 status = ncmpi_def_dim(ncid, "x", 100L, &dimid1);
-  else 
- 	 status = ncmpi_def_dim(ncid, "x", 99L, &dimid1);
+  status = ncmpi_def_dim(ncid, "x", 100L, &dimid1);
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_def_dim(ncid, "y", 100L, &dimid2);
   if (status != NC_NOERR) handle_error(status);
