@@ -371,15 +371,26 @@ NC_begins(NC *ncp,
           MPI_Offset h_minfree, MPI_Offset v_align,
           MPI_Offset v_minfree, MPI_Offset r_align)
 {
-    MPI_Offset ii, sizeof_off_t, max_xsz;
+    MPI_Offset ii, sizeof_off_t, max_xsz, nc_header_chunk;
     off_t index = 0;
     NC_var **vpp;
     NC_var *last = NULL;
 
-    if (v_align == NC_ALIGN_CHUNK)  /* for non-record variables */
-        v_align = ncp->chunk;
-    if (r_align == NC_ALIGN_CHUNK)  /* for record variables */
-        r_align = ncp->chunk;
+    int flag=0;
+    char value[MPI_MAX_INFO_VAL];
+
+    ncmpiio_get_hint(ncp, "nc_header_chunk_size", value, &flag);
+
+    nc_header_chunk = v_align; 
+    if (flag) {
+	nc_header_chunk = atoi(value);
+        ncp->chunk = nc_header_chunk;
+    } else {
+        if (v_align == NC_ALIGN_CHUNK)  /* for non-record variables */
+            v_align = ncp->chunk;
+        if (r_align == NC_ALIGN_CHUNK)  /* for record variables */
+            r_align = ncp->chunk;
+    }
 
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET) ||
         fIsSet(ncp->flags, NC_64BIT_DATA)) {
@@ -404,9 +415,9 @@ NC_begins(NC *ncp,
     /* only (re)calculate begin_var if there is not sufficient space in header
        or start of non-record variables is not aligned as requested by valign */
     if (ncp->begin_var < max_xsz + h_minfree ||
-        ncp->begin_var != D_RNDUP(ncp->begin_var, v_align) ) {
+        ncp->begin_var != D_RNDUP(ncp->begin_var, nc_header_chunk) ) {
         index = (off_t) max_xsz;
-        ncp->begin_var = D_RNDUP(index, v_align);
+        ncp->begin_var = D_RNDUP(index, nc_header_chunk);
         if (ncp->begin_var < index + h_minfree)
             ncp->begin_var = D_RNDUP(index + (off_t)h_minfree, v_align);
     }
@@ -438,11 +449,20 @@ fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
     /* only (re)calculate begin_rec if there is not sufficient
        space at end of non-record variables or if start of record
        variables is not aligned as requested by r_align */
-    if (ncp->begin_rec < index + v_minfree ||
-        ncp->begin_rec != D_RNDUP(ncp->begin_rec, r_align) ) {
-        ncp->begin_rec = D_RNDUP(index, r_align);
-        if (ncp->begin_rec < index + v_minfree)
-            ncp->begin_rec = D_RNDUP(index + (off_t)v_minfree, r_align);
+    if (index == ncp->begin_var){ /*There are only record variable(s) in netCDF file. */
+        if (ncp->begin_rec < index + v_minfree ||
+            ncp->begin_rec != D_RNDUP(ncp->begin_rec, nc_header_chunk) ) {
+            ncp->begin_rec = D_RNDUP(index, nc_header_chunk);
+            if (ncp->begin_rec < index + v_minfree)
+                ncp->begin_rec = D_RNDUP(index + (off_t)v_minfree, r_align);
+        }
+    } else {
+        if (ncp->begin_rec < index + v_minfree ||
+            ncp->begin_rec != D_RNDUP(ncp->begin_rec, r_align) ) {
+            ncp->begin_rec = D_RNDUP(index, r_align);
+            if (ncp->begin_rec < index + v_minfree)
+                ncp->begin_rec = D_RNDUP(index + (off_t)v_minfree, r_align);
+        }
     }
     index = ncp->begin_rec;
 
