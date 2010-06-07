@@ -110,7 +110,8 @@ int main(int argc, char **argv) {
    * Create a global attribute:
    *    :title = "example netCDF dataset";
    */
-  sprintf(title, "%s: %d processes", title, nprocs);
+  sprintf(title, "%s:%d of %d", title, rank, nprocs);
+  printf("title:%s\n", title);
   status = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
                           strlen(title), title);
   if (status != NC_NOERR) handle_error(status);
