@@ -392,6 +392,9 @@ int main(int argc, char **argv)
     }
     free(buf);
     free(bufcount_list);
+    free(datatype_list);
+    free(array_of_requests);
+    free(array_of_statuses);
     free(varid);
     free(starts_list);
     free(count_list);
