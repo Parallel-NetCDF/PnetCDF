@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     int array_of_dargs[3], array_of_psizes[3];
     int status;
     MPI_Offset sizes[3], array_of_starts[3], stride[3];
-    char *pathname, basename[50], filename[100];
+    char basename[50], filename[100];
     char dimname[20], varname[20];
     int ncid, dimids0[3], dimids1[3], rank_dim[3], *varid;
     MPI_Info info;
@@ -389,7 +389,6 @@ int main(int argc, char **argv)
     free(varid);
     free(starts_list);
     free(count_list);
-    free(pathname);
 
     MPI_Finalize();
     return 0;
