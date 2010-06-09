@@ -61,6 +61,8 @@ static int req_compare(const NC_req *a, const NC_req *b);
     if (req->num_subreqs > 0)                                        \
         NCI_Free(req->subreqs);                                      \
     NCI_Free(req->start);                                            \
+    if (req->stride != NULL)                                         \
+	NCI_Free(req->stride);                                       \
 }
 
 /*----< ncmpi_cancel() >-----------------------------------------------------*/
