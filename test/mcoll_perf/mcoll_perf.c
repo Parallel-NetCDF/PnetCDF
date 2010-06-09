@@ -209,7 +209,7 @@ int main(int argc, char **argv)
                 ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids1, &varid[i]);
             }
         } else {
-            for (i=0; i<nvars; i++){
+            for (i=0; i<nprocs; i++){
                 sprintf(varname, "var0_%d", i);
                 ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
             }
@@ -264,7 +264,8 @@ int main(int argc, char **argv)
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	TEST_HANDLE_ERR(status);
                 ncmpi_begin_indep_data(ncid);
-	        ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	        status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	     	TEST_HANDLE_ERR(status);
                 ncmpi_end_indep_data(ncid);
       	    }
 	    if ((mynod == 0)&&(status == NC_NOERR))
@@ -279,7 +280,8 @@ int main(int argc, char **argv)
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	TEST_HANDLE_ERR(status);
       	    }
-	    ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
+	    status = ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
+	    TEST_HANDLE_ERR(status);
 	    if ((mynod == 0)&&(status == NC_NOERR))
                 printf("\t OK\n");                                       \
       	} 
@@ -296,7 +298,8 @@ int main(int argc, char **argv)
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	TEST_HANDLE_ERR(status);
                 ncmpi_begin_indep_data(ncid);
-	        ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	        status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	     	TEST_HANDLE_ERR(status);
                 ncmpi_end_indep_data(ncid);
       	    }
 	    if ((mynod == 0)&&(status == NC_NOERR))
@@ -314,7 +317,8 @@ int main(int argc, char **argv)
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
 	     	TEST_HANDLE_ERR(status);
       	    }
-	    ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
+	    status = ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
+	    TEST_HANDLE_ERR(status);
 	    if ((mynod == 0)&&(status == NC_NOERR))
                 printf("\t OK\n");                                       \
         } 
@@ -338,7 +342,8 @@ int main(int argc, char **argv)
 
 	    TEST_HANDLE_ERR(status);
 	    ncmpi_begin_indep_data(ncid);
-	    ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	    status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	    TEST_HANDLE_ERR(status);
 	    ncmpi_end_indep_data(ncid);
 	    if ((mynod == 0)&&(status == NC_NOERR))
                 printf("\t OK\n");                                       \
@@ -351,7 +356,8 @@ int main(int argc, char **argv)
 	                 (const void *)(buf_var), 32, MPI_INT, &array_of_requests[i]);
 
 	    TEST_HANDLE_ERR(status);
-	    ncmpi_wait_all(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	    status = ncmpi_wait_all(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
+	    TEST_HANDLE_ERR(status);
 	    if ((mynod == 0)&&(status == NC_NOERR))
                 printf("\t OK\n");                                       \
 	}
