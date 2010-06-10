@@ -616,7 +616,7 @@ ncmpii_getput_vars(NC               *ncp,
     int err, status; /* err is for fatal return and status is not */
     MPI_Offset nelems, cnelems, nbytes, offset;
     MPI_Status mpistatus;
-    MPI_Datatype ptype;
+    MPI_Datatype ptype, filetype=MPI_BYTE;
     MPI_File fh;
 
     if (varp->ndims > 0) assert(start != NULL);
@@ -669,8 +669,6 @@ ncmpii_getput_vars(NC               *ncp,
     /* if record variables are too big (so big that we cannot store the stride
      * between records in an MPI_Aint, for example) then we will have to
      * process this one record at a time.  
-     *
-     * It stinks that we have to make this change in multiple places by the way
      */
 
     /* check if the request is contiguous in file */
@@ -692,37 +690,31 @@ ncmpii_getput_vars(NC               *ncp,
         if (err != NC_NOERR)
             return err;
 
-        mpireturn = MPI_File_seek(fh, offset, MPI_SEEK_SET);
-        CHECK_MPI_ERROR("MPI_File_seek", NC_EWRITE)
-
-        if (rw_flag == WRITE_REQ)
-            CALLING_MPI_WRITE
-        else
-            CALLING_MPI_READ
+        filetype = MPI_BYTE;
     }
-    else { /* non-contiguous I/O, set the MPI fileview */
+    else if (cnelems > 0) { /* non-contiguous I/O, set the MPI fileview */
         /* this request is non-contiguous in file, set the mpi file view */
-        MPI_Datatype filetype;
         err = ncmpii_vars_create_filetype(ncp, varp, start, count, stride,
                                           rw_flag, &offset, &filetype);
         if (err != NC_NOERR)
             return err;
  
-        mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
-                                      "native", MPI_INFO_NULL);
-        CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
-
-        if (filetype != MPI_BYTE)
-            MPI_Type_free(&filetype);
-
-        if (rw_flag == WRITE_REQ)
-            CALLING_MPI_WRITE
-        else
-            CALLING_MPI_READ
-
-        /* reset the file view so the entire file is visible again */
-        MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
     }
+    /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
+    mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
+                                  "native", MPI_INFO_NULL);
+    CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
+
+    if (filetype != MPI_BYTE)
+        MPI_Type_free(&filetype);
+
+    if (rw_flag == WRITE_REQ)
+        CALLING_MPI_WRITE
+    else
+        CALLING_MPI_READ
+
+    /* reset the file view so the entire file is visible again */
+    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
     if (rw_flag == READ_REQ) {
         if ( ncmpii_need_convert(varp->type, ptype) ) {
