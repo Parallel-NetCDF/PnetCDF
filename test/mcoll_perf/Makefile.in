@@ -4,27 +4,34 @@ VPATH		= @srcdir@
 INCDIR		= $(srcdir)/../../src/lib
 LIBDIR		= ../../src/lib
 
-INCLUDES	= -I$(INCDIR) -I../../src/lib -I$(srcdir)/../common
+INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common
 
 CC		= @MPICC@
 CFLAGS          = @CFLAGS@ $(INCLUDES) 
+FC              = @MPIF77@
+FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
 
-SRCS		= mcoll_perf.c
-OBJS		= $(SRCS:.c=.o)
-PROGS		= mcoll_perf
+CSRCS		= mcoll_perf.c
+FSRCS		= mcoll_testf.F
+OBJS		= $(CSRCS:.c=.o) $(FSRCS:.F=.o)
+PROGS		= mcoll_perf mcoll_testf
 LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
 LIBS		= -lpnetcdf -ltestutils @LIBS@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
+.F.o:
+	$(FC) $(FFLAGS) -c $<
 
 all:		$(PROGS)
 
 mcoll_perf: mcoll_perf.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+mcoll_testf: mcoll_testf.o
+	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f $(OBJS) $(PROGS) *.nc
+	rm -f *.o $(PROGS) *.nc
 
 distclean: clean
 	rm -f Makefile
