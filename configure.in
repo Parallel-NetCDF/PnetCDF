@@ -543,8 +543,7 @@ AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile
 	 src/utils/ncgen/Makefile test/testcases/Makefile 
 	 test/C/Makefile test/mcoll_perf/Makefile
 	 test/test_check_header/Makefile
-	 test/largefile/Makefile
-	 test/mcoll_fortran/Makefile)
+	 test/largefile/Makefile)
 
 dnl generate a fortran-friendly pnetcdf_inc nfconfig.inc
 sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf_inc>pnetcdf_inc && mv pnetcdf_inc src/libf/pnetcdf_inc
