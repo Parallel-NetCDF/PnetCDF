@@ -427,6 +427,7 @@ int main(int argc, char **argv)
         free(count_list[i]);
     }
     free(buf);
+    free(buf_var);
     free(bufcount_list);
     free(datatype_list);
     free(array_of_requests);
