@@ -551,7 +551,7 @@ pack_request(NC               *ncp,
              MPI_Datatype      ptype,
              int              *reqid)
 {
-    int     i, j, num_subreqs;
+    int     i, j;
     NC_req *subreqs;
 
     req->varp     = varp;
