@@ -423,7 +423,7 @@ int main(int argc, char** argv) {
 
  /* COMPARE buf1 and buf2 for equality */
 
-  if ( err = memcmp((void *)buf1, (void *)buf2, total_sz*sizeof(TEST_NATIVE_ETYPE)) )
+  if ( (err = memcmp((void *)buf1, (void *)buf2, total_sz*sizeof(TEST_NATIVE_ETYPE))) )
     success = 0;
   else
     success = 1;
