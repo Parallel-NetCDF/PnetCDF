@@ -88,7 +88,7 @@ ncmpii_cancel(NC  *ncp,
               int *req_ids,  /* [num_req] */
               int *statuses) /* [num_req], can be NULL if users don't care */
 {
-    int i, j, status;
+    int i, j;
     NC_req *pre_req, *cur_req;
 
     if (num_req == 0)

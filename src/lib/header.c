@@ -1405,7 +1405,7 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
         for (j=0; j<v1->ndims; j++) {
             if (v1->dimids[j] != v2->dimids[j]) {
                 fprintf(stderr,"Error: variable %s's %dth dim ID is inconsistent %d != %d\n",
-                        j, v1->name->cp, v1->dimids[j], v2->dimids[j]);
+                        v1->name->cp, j, v1->dimids[j], v2->dimids[j]);
                 return NC_EVARS_DIMIDS_MULTIDEFINE;
             }
         }
