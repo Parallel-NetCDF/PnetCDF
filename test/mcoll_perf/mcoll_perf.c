@@ -360,7 +360,7 @@ int main(int argc, char **argv)
         } 
         if (k == 7) {
 	    if (mynod == 0)
-                printf("*** Testing to write %d non-record variables by using ncmpi_put_var() ...", nprocs);
+                printf("*** Testing to write %d non-record variable(s) by using ncmpi_put_var() ...", nprocs);
 	    ncmpi_begin_indep_data(ncid);
 	    status = ncmpi_put_var(ncid, varid[mynod],
 	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT);
@@ -371,7 +371,7 @@ int main(int argc, char **argv)
 	}
         if (k == 8) {
 	    if (mynod == 0)
-                printf("*** Testing to write %d non-record variables by using ncmpi_iput_var() and ncmpi_wait() ...", nprocs);
+                printf("*** Testing to write %d non-record variable(s) by using ncmpi_iput_var() and ncmpi_wait() ...", nprocs);
             i = 0;
 	    status = ncmpi_iput_var(ncid, varid[mynod],
 	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT, &array_of_requests[i]);
