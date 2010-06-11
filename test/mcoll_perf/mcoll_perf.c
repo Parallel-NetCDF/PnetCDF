@@ -38,7 +38,7 @@
 
 int main(int argc, char **argv)
 {
-    int i, j, m, array_of_gsizes[3],array_of_distribs[3];
+    int i, j, array_of_gsizes[3],array_of_distribs[3];
     int order, nprocs, len, **buf, mynod;
     MPI_Offset bufcount;
     int array_of_dargs[3], array_of_psizes[3];
@@ -52,12 +52,10 @@ int main(int argc, char **argv)
     MPI_Offset *bufcount_list;
     int ndims = 3;
     int nvars = 10;
-    int k, k_loop;
+    int k;
     MPI_Datatype *datatype_list;
     int length;
-    int mvar_flag = 0;
     int *array_of_requests;
-    int unlimit_flag;
     int *array_of_statuses;
     int *buf_var;
 //    int buf_var[32] ={1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2,
@@ -399,7 +397,7 @@ int main(int argc, char **argv)
 	}
 
     ncmpi_close(ncid);
-    }/*end k_loop */
+    }
 
 /*
     int nkeys; 
