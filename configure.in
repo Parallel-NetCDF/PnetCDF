@@ -302,7 +302,7 @@ if test "$enable_cdf5" = "yes" ; then
 	AC_DEFINE(ENABLE_CDF5,,[Define if able to support CDF-5 file format])
 fi
 
-AC_CHECK_FUNCS(MPI_Info_dup,,)
+AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free,,)
 
 # the nonblocking routines need these functions
 enable_nonblocking=yes
