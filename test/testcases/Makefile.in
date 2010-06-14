@@ -49,9 +49,10 @@ clean:
 distclean: clean
 	rm -f Makefile
 
-test: ncmpi_vars_null_stride vectors bigrecords redef1
+test: ncmpi_vars_null_stride vectors bigrecords 
 	./ncmpi_vars_null_stride test.nc && echo '*** ncmpi_vars_null_stride: Success ***'
+
+testing-cxx: redef1
 	$(srcdir)/redef1.sh ./redef1  $(srcdir)/redef-good.ncdump && echo '*** redef1: Success ***'
-	
 
 testing: test

@@ -216,7 +216,6 @@ main(int argc, char ** argv)
       of data. We will just rewrite the same data for each timestep. In
       a real application, the data would change between timesteps. */
 
-   printf("start write\n");
    for (rec = 0; rec < NREC; rec++)
    {
       start[0] = rec;

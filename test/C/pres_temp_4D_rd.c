@@ -18,7 +18,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <netcdf.h>
+#include <pnetcdf.h>
+#include <mpi.h>
 
 /* This is the name of the data file we will read. */
 #define FILE_NAME "pres_temp_4D.nc"
@@ -58,17 +59,17 @@
 
 /* Handle errors by printing an error message and exiting with a
  * non-zero status. */
-#define ERR(e) {printf("Error: %s\n", nc_strerror(e)); return 2;}
+#define ERR(e) {printf("Error: %s\n", ncmpi_strerror(e)); return 2;}
 
 int
-main()
+main(int argc, char **argv)
 {
    int ncid, pres_varid, temp_varid;
    int lat_varid, lon_varid;
 
    /* The start and count arrays will tell the netCDF library where to
       read our data. */
-   size_t start[NDIMS], count[NDIMS];
+   MPI_Offset start[NDIMS], count[NDIMS];
 
    /* Program variables to hold the data we will read. We will only
       need enough space to hold one timestep of data; one record. */
@@ -84,21 +85,23 @@ main()
    /* Error handling. */
    int retval;
 
+   MPI_Init(&argc, &argv);
+
    /* Open the file. */
-   if ((retval = nc_open(FILE_NAME, NC_NOWRITE, &ncid)))
+   if ((retval = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid)))
       ERR(retval);
 
    /* Get the varids of the latitude and longitude coordinate
     * variables. */
-   if ((retval = nc_inq_varid(ncid, LAT_NAME, &lat_varid)))
+   if ((retval = ncmpi_inq_varid(ncid, LAT_NAME, &lat_varid)))
       ERR(retval);
-   if ((retval = nc_inq_varid(ncid, LON_NAME, &lon_varid)))
+   if ((retval = ncmpi_inq_varid(ncid, LON_NAME, &lon_varid)))
       ERR(retval);
 
    /* Read the coordinate variable data. */
-   if ((retval = nc_get_var_float(ncid, lat_varid, &lats[0])))
+   if ((retval = ncmpi_get_var_float_all(ncid, lat_varid, &lats[0])))
       ERR(retval);
-   if ((retval = nc_get_var_float(ncid, lon_varid, &lons[0])))
+   if ((retval = ncmpi_get_var_float_all(ncid, lon_varid, &lons[0])))
       ERR(retval);
 
    /* Check the coordinate variable data. */
@@ -111,9 +114,9 @@ main()
 
    /* Get the varids of the pressure and temperature netCDF
     * variables. */
-   if ((retval = nc_inq_varid(ncid, PRES_NAME, &pres_varid)))
+   if ((retval = ncmpi_inq_varid(ncid, PRES_NAME, &pres_varid)))
       ERR(retval);
-   if ((retval = nc_inq_varid(ncid, TEMP_NAME, &temp_varid)))
+   if ((retval = ncmpi_inq_varid(ncid, TEMP_NAME, &temp_varid)))
       ERR(retval);
 
    /* Read the data. Since we know the contents of the file we know
@@ -131,10 +134,10 @@ main()
    for (rec = 0; rec < NREC; rec++)
    {
       start[0] = rec;
-      if ((retval = nc_get_vara_float(ncid, pres_varid, start, 
+      if ((retval = ncmpi_get_vara_float_all(ncid, pres_varid, start, 
 				      count, &pres_in[0][0][0])))
 	 ERR(retval);
-      if ((retval = nc_get_vara_float(ncid, temp_varid, start,
+      if ((retval = ncmpi_get_vara_float_all(ncid, temp_varid, start,
 				      count, &temp_in[0][0][0])))
 	 ERR(retval);
 
@@ -154,7 +157,7 @@ main()
    } /* next record */
 
    /* Close the file. */
-   if ((retval = nc_close(ncid)))
+   if ((retval = ncmpi_close(ncid)))
       ERR(retval);
 
    printf("*** SUCCESS reading example file pres_temp_4D.nc!\n");
