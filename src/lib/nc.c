@@ -379,11 +379,13 @@ NC_begins(NC *ncp,
     int flag=0;
     char value[MPI_MAX_INFO_VAL];
 
-    ncmpiio_get_hint(ncp, "nc_header_chunk_size", value, &flag);
+    ncmpiio_get_hint(ncp, "nc_header_align_size", value, &flag);
 
     nc_header_chunk = v_align; 
     if (flag) {
 	nc_header_chunk = atoi(value);
+	if (nc_header_chunk <=0)
+	    nc_header_chunk = 512;
         ncp->chunk = nc_header_chunk;
     } else {
         if (v_align == NC_ALIGN_CHUNK)  /* for non-record variables */
@@ -917,7 +919,8 @@ ncmpii_NC_enddef(NC *ncp) {
 
        Currently, we use striping_unit or 512 for it.
      */
-    ncmpiio_get_hint(ncp, "striping_unit", value, &flag);
+/*    ncmpiio_get_hint(ncp, "striping_unit", value, &flag); */
+    ncmpiio_get_hint(ncp, "nc_var_align_size", value, &flag);
   
     if (flag) 
         alignment=atoi(value);
