@@ -30,6 +30,11 @@ mcoll_perf: mcoll_perf.o
 mcoll_testf: mcoll_testf.o
 	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
+testing: mcoll_perf
+	./mcoll_perf
+testing-f: mcoll_testf
+	./mcoll_testf
+	
 clean:
 	rm -f *.o $(PROGS) *.nc
 

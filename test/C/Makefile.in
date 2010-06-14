@@ -1,16 +1,29 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 CC = @MPICC@
+CFLAGS=@CFLAGS@ -I$(srcidr)/../../src/lib -I../../src/lib -I. 
+LDFLAGS=-L../common  -L../../src/lib
+LIBS=-lpnetcdf -ltestutils
 
-all: pres_temp_4D_wr
+all: pres_temp_4D_wr pres_temp_4D_rd
 
 pres_temp_4D_wr: pres_temp_4D_wr.o 
-	$(CC) -o pres_temp_4D_wr pres_temp_4D_wr.o -L../../src/lib -L../common -lpnetcdf -ltestutils   
-pres_temp_4D_wr.o: pres_temp_4D_wr.c 
-	$(CC) -c -g -O2 -I$(srcdir)/../../src/lib -I../../src/lib -I. $(srcdir)/pres_temp_4D_wr.c
+	$(CC) -o pres_temp_4D_wr pres_temp_4D_wr.o $(LDFLAGS) $(LIBS)   
 
+pres_temp_4D_wr.o: $(srcdir)/pres_temp_4D_wr.c 
+	$(CC) -c $(CFLAGS) $(srcdir)/pres_temp_4D_wr.c
+
+pres_temp_4D_rd: pres_temp_4D_rd.o 
+	$(CC) -o pres_temp_4D_rd pres_temp_4D_rd.o $(LDFLAGS) $(LIBS)   
+
+pres_temp_4D_rd.o: $(srcdir)/pres_temp_4D_rd.c 
+	$(CC) -c $(CFLAGS) $(srcdir)/pres_temp_4D_rd.c
+
+testing: pres_temp_4D_wr pres_temp_4D_rd
+	./pres_temp_4D_wr && ./pres_temp_4D_rd
+	
 clean:
-	rm -f *.o pres_temp_4D_wr
+	rm -f *.o pres_temp_4D_wr pres_temp_4d_rd
 
 distclean: clean
 	rm -f Makefile
