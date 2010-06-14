@@ -294,6 +294,11 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     }
 */
   }
+#ifdef HAVE_MPI_INFO_FREE
+  if (nciop->mpiinfo != MPI_INFO_NULL)
+    MPI_Info_free(&(nciop->mpiinfo));
+#endif
+
 
   ncmpiio_free(nciop);
 
