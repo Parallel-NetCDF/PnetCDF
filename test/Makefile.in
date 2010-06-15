@@ -21,5 +21,6 @@ testing:
 	cd nc_test && make testing
 	if [ @has_fortran@ = yes ] ; then cd nf_test && make testing ; fi
 	if [ @has_fortran@ = yes ] ; then cd mcoll_perf && make testing-f ; fi
+	if [ @has_fortran@ = yes ] ; then cd testcases && make testing-f ; fi
 	if [ $(CXX) != "@CXX@" ] ; then cd testcases && make testing-cxx ; fi
 
