@@ -633,15 +633,13 @@ put_vars(int ncid)
 	    }
 	}
 	if (var_name[i][0] == 'c') {
-// if (i==6) wkl_test(ncid,i);
 	    err = ncmpi_put_vara_text_all(ncid, i, start, var_shape[i], text);
-// if (i==6) printf("err=%d start[0]=%lld var_shape[i][0]=%lld text=%s %g %g\n",err,start[0], var_shape[i][0],text,(double)text[0],(double)text[1]);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_put_vara_text_all: %s", ncmpi_strerror(err));
 	} else {
 	    err = ncmpi_put_vara_double_all(ncid, i, start, var_shape[i], value);
 	    if (allInRange) {
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("ncmpi_put_vara_double_all: %s", ncmpi_strerror(err));
 	    } else {
 		IF (err != NC_ERANGE)
