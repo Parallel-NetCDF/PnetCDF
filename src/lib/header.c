@@ -392,7 +392,7 @@ hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
     return status;
 
   for (i=0; i< varp->ndims; i++){  
-        const MPI_Offset dim_id  = (const MPI_Offset) varp->dimids[i];
+     MPI_Offset dim_id = varp->dimids[i];
      status = ncmpix_put_size_t(&pbp->pos, &dim_id, pbp->version == 5 ? 8 : 4);
   }
 /*
