@@ -81,7 +81,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -108,7 +108,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
             do 4, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call error('error in index2indexes 1')
                 expect = hash4( var_type(i), var_rank(i), index, 
      +                          NFT_ITYPE($1) )
@@ -148,7 +148,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
 4           continue
 1       continue
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ',  err)
         call print_nok(nok)
         end
@@ -180,7 +180,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
      +                   ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -200,7 +200,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
             do 4, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call error('error in index2indexes 1')
                 expect(j) = hash4( var_type(i), var_rank(i), index, 
      +                          NFT_ITYPE($1) )
@@ -248,7 +248,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
             end if
 1       continue
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ',  err)
         call print_nok(nok)
         end
@@ -288,7 +288,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
@@ -347,20 +347,18 @@ C           /* there is nothing to get (edge(j).eq.0) */
                 do 11, j = 1, var_rank(i)
                     if (var_dimid(j,i) .gt. 1) then     !/* skip record dim */
                         start(j) = var_shape(j,i) + 1
-                        edge(j) = 1 !/* By Jianwei, fix NF_EINVALCOORDS bug */
                         err = nfmpi_iget_vara_$1(ncid, i,
      +                          start, edge, value,reqid(1))
                         if (err .ne. NF_EINVALCOORDS)
      +                      call errore(
      +                      'Error:nfmpi_iget_vara_$1: ', err)
                         start(j) = 1
-                        edge(j) = 0 !/* By Jianwei, restore original value */
                     endif
 11              continue
                 err = nfmpi_iget_vara_$1(ncid, i, start,
      +                          edge, value,reqid(1))
                 if (canConvert) then
-                    if (err .ne. 0) then
+                    if (err .ne. NF_NOERR) then
                         call error(nfmpi_strerror(err))
                     else
                         err_w = nfmpi_wait_all(ncid,1,reqid,st)
@@ -398,7 +396,7 @@ C           bits of k determine whether to get lower or upper part of dim
                 allInExtRange = .true.
                 do 7, j = 1, nels
                     err = index2indexes(j, var_rank(i), edge, index)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call error('error in index2indexes 1')
                     do 8, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
@@ -465,7 +463,7 @@ C           bits of k determine whether to get lower or upper part of dim
 5           continue
 1       continue
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('nfmpi_close: ', nfmpi_strerror(err))
         call print_nok(nok)
         end
@@ -512,7 +510,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
@@ -566,8 +564,8 @@ C               get 2^rank (nslabs) slabs so defined
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 4           continue
-C               bits of k determine whether to get lower or upper part of dim
-C               choose random stride from 1 to edge
+C           bits of k determine whether to get lower or upper part of dim
+C           choose random stride from 1 to edge
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
@@ -588,7 +586,7 @@ C               choose random stride from 1 to edge
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, 
      +                                  index)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call error('error in index2indexes')
                     nels = 1
                     do 8, j = 1, var_rank(i)
@@ -597,7 +595,7 @@ C               choose random stride from 1 to edge
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 8                   continue
-C                           Random choice of forward or backward 
+C                   Random choice of forward or backward 
 C    /* TODO
 C                   if ( roll(2) ) then
 C                       for (j = 0 j < var_rank(i) j++) {
@@ -611,7 +609,7 @@ C    */
                     do 9, j = 1, nels
                         err = index2indexes(j, var_rank(i), count, 
      +                                      index2)
-                        if (err .ne. 0)
+                        if (err .ne. NF_NOERR)
      +                      call error('error in index2indexes() 1')
                         do 10, d = 1, var_rank(i)
                             index2(d) = index(d) + (index2(d)-1) * 
@@ -681,7 +679,7 @@ C    */
 
 1       continue
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         call print_nok(nok)
         end
@@ -729,7 +727,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
 
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
@@ -778,16 +776,16 @@ define([TEST_NFMPI_IGET_VARM],dnl
      +              call errore('bad stride: ', err)
                 stride(j) = 1
 3           continue
-C               Choose a random point dividing each dim into 2 parts 
-C               get 2^rank (nslabs) slabs so defined 
+C           Choose a random point dividing each dim into 2 parts 
+C           get 2^rank (nslabs) slabs so defined 
             nslabs = 1
             do 4, j = 1, var_rank(i)
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 4           continue
-C               /* bits of k determine whether to get lower or upper part 
-C                * of dim
-C                * choose random stride from 1 to edge */
+C           /* bits of k determine whether to get lower or upper part 
+C            * of dim
+C            * choose random stride from 1 to edge */
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
@@ -808,7 +806,7 @@ C                * choose random stride from 1 to edge */
 6               continue
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call error('error in index2indexes')
                     nels = 1
                     do 8, j = 1, var_rank(i)
@@ -817,7 +815,7 @@ C                * choose random stride from 1 to edge */
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 8                   continue
-C                       Random choice of forward or backward 
+C                   Random choice of forward or backward 
 C    /* TODO
 C                   if ( roll(2) ) then
 C                       for (j = 0 j < var_rank(i) j++) {
@@ -837,7 +835,7 @@ C     */
                     do 10, j = 1, nels
                         err = index2indexes(j, var_rank(i), count, 
      +                                      index2)
-                        if (err .ne. 0)
+                        if (err .ne. NF_NOERR)
      +                      call error('error in index2indexes 1')
                         do 11, d = 1, var_rank(i)
                             index2(d) = index(d) + (index2(d)-1) * 
@@ -907,7 +905,7 @@ C     */
 5           continue
 1       continue
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ',  err)
         call print_nok(nok)
         end
