@@ -108,14 +108,14 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
 
         err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -144,7 +144,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
             do 4, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
-                if (err .ne. 0) 
+                if (err .ne. NF_NOERR) 
      +              call error('error in index2indexes 1')
                 value = MAKE_TYPE($1, hash_$1(var_type(i),var_rank(i),
      +                            index, NFT_ITYPE($1)))
@@ -169,13 +169,13 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
 4           continue
 1       continue
         err = nfmpi_close(ncid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
         end
@@ -205,14 +205,14 @@ define([TEST_NFMPI_IPUT_VAR],dnl
 
         err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         do 1, i = 1, NVARS
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
@@ -232,7 +232,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
             do 4, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
-                if (err .ne. 0) 
+                if (err .ne. NF_NOERR) 
      +              call error('error in index2indexes 1')
                 VAR_ELEM($1, value, j) = 
      +            MAKE_TYPE($1,hash_$1(var_type(i), var_rank(i),
@@ -248,7 +248,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
 
             if (canConvert) then
                 if (allInExtRange) then
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call error(nfmpi_strerror(err))
                 else
                     if (err .ne. NF_ERANGE .and.
@@ -268,11 +268,11 @@ C       Write record number NRECS to force writing of preceding records.
 C       Assumes variable cr is char vector with UNLIMITED dimension.
 
         err = nfmpi_inq_varid(ncid, "cr", vid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_inq_varid: ', err)
         index(1) = NRECS
         err = nfmpi_iput_var1_text(ncid, vid, index, 'x',reqid(1))
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_iput_var1_text: ', err)
         else
             err_w = nfmpi_wait_all(ncid, 1, reqid, st)
@@ -297,7 +297,7 @@ C           Only test record variables here
                 do 7, j = 1, nels
                     err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
-                    if (err .ne. 0) 
+                    if (err .ne. NF_NOERR) 
      +                  call error('error in index2indexes()')
                     VAR_ELEM($1, value, j) =
      +                 MAKE_TYPE($1,hash_$1(var_type(i), var_rank(i),
@@ -312,7 +312,7 @@ C           Only test record variables here
                     ! NF_ERANGE is not a fatal error?
                 if (canConvert) then
                     if (allInExtRange) then
-                        if (err .ne. 0)
+                        if (err .ne. NF_NOERR)
      +                      call error(nfmpi_strerror(err))
                     else
                         if (err .ne. NF_ERANGE)
@@ -325,13 +325,13 @@ C           Only test record variables here
             endif
 5       continue
         err = nfmpi_close(ncid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
         end
@@ -367,14 +367,14 @@ define([TEST_NFMPI_IPUT_VARA],dnl
 
         err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
@@ -429,13 +429,11 @@ C           /* Check correct error returned even when nothing to put */
             do 21, j = 1, var_rank(i)
                 if (var_dimid(j,i) .gt. 1) then     ! skip record dim
                     start(j) = var_shape(j,i) + 1
-                    edge(j) = 1 !/* By Jianwei, fix NF_EINVALCOORDS bug */
                     err = nfmpi_iput_vara_$1(ncid, i, start,
      +                      edge, value,reqid(1))
                     if (err .ne. NF_EINVALCOORDS)
      +                  call errore('bad start: ', err)
                     start(j) = 1
-                    edge(j) = 0 !/* By Jianwei, restore original value */
                 endif
 21          continue
             err = nfmpi_iput_vara_$1(ncid, i, start, edge, value,
@@ -477,7 +475,7 @@ C           /* Check correct error returned even when nothing to put */
                 allInExtRange = .true.
                 do 7, j = 1, nels
                     err = index2indexes(j, var_rank(i), edge, index)
-                    if (err .ne. 0) 
+                    if (err .ne. NF_NOERR) 
      +                  call error('error in index2indexes 1')
                     do 8, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
@@ -510,13 +508,13 @@ C           /* Check correct error returned even when nothing to put */
 1       continue
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', 
      +          scratch)
         end
@@ -558,14 +556,14 @@ define([TEST_NFMPI_IPUT_VARS],dnl
 
         err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
@@ -616,15 +614,15 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                     stride(j) = 1
                 end if
 3           continue
-                !/* Choose a random point dividing each dim into 2 parts */
-                !/* Put 2^rank (nslabs) slabs so defined */
+            !/* Choose a random point dividing each dim into 2 parts */
+            !/* Put 2^rank (nslabs) slabs so defined */
             nslabs = 1
             do 4, j = 1, var_rank(i)
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 4           continue
-                !/* bits of k determine whether to put lower or upper part of dim */
-                !/* choose random stride from 1 to edge */
+            !/* bits of k determine whether to put lower or upper part of dim */
+            !/* choose random stride from 1 to edge */
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
@@ -645,7 +643,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
 6               continue
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call error('error in index2indexes')
                     nels = 1
                     do 8, j = 1, var_rank(i)
@@ -653,7 +651,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 8                   continue
-                        !/* Random choice of forward or backward */
+                    !/* Random choice of forward or backward */
 C/* TODO
 C                   if ( roll(2) ) {
 C                       for (j = 1 j .lt. var_rank(i) j++) {
@@ -666,7 +664,7 @@ C*/
                     do 9, j = 1, nels
                         err = index2indexes(j, var_rank(i), count, 
      +                                      index2)
-                        if (err .ne. 0)
+                        if (err .ne. NF_NOERR)
      +                      call error('error in index2indexes')
                         do 10, d = 1, var_rank(i)
                             index2(d) = index(d) + 
@@ -702,13 +700,13 @@ C*/
 1       continue
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
         end
@@ -753,14 +751,14 @@ define([TEST_NFMPI_IPUT_VARM],dnl
 
         err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
      +                     ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
         call def_vars(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
 
         do 1, i = 1, NVARS
@@ -813,15 +811,15 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                     stride(j) = 1
                 end if
 3           continue
-                !/* Choose a random point dividing each dim into 2 parts */
-                !/* Put 2^rank (nslabs) slabs so defined */
+            !/* Choose a random point dividing each dim into 2 parts */
+            !/* Put 2^rank (nslabs) slabs so defined */
             nslabs = 1
             do 4, j = 1, var_rank(i)
                 mid(j) = roll( var_shape(j,i) )
                 nslabs = nslabs * 2
 4           continue
-                !/* bits of k determine whether to put lower or upper part of dim */
-                !/* choose random stride from 1 to edge */
+            !/* bits of k determine whether to put lower or upper part of dim */
+            !/* choose random stride from 1 to edge */
             do 5, k = 1, nslabs
                 nstarts = 1
                 do 6, j = 1, var_rank(i)
@@ -842,7 +840,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
 6               continue
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call error('error in index2indexes')
                     nels = 1
                     do 8, j = 1, var_rank(i)
@@ -850,7 +848,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                         nels = nels * count(j)
                         index(j) = index(j) + start(j) - 1
 8                   continue
-                        !/* Random choice of forward or backward */
+                    !/* Random choice of forward or backward */
 C/* TODO
 C                   if ( roll(2) ) then
 C                       do 9, j = 1, var_rank(i)
@@ -870,7 +868,7 @@ C*/
                     do 11 j = 1, nels
                         err = index2indexes(j, var_rank(i), count, 
      +                                      index2)
-                        if (err .ne. 0)
+                        if (err .ne. NF_NOERR)
      +                      call error('error in index2indexes')
                         do 12, d = 1, var_rank(i)
                             index2(d) = index(d) + 
@@ -906,13 +904,13 @@ C*/
 1       continue
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_close: ', err)
 
         call check_vars_$1(scratch)
 
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
         end

@@ -91,14 +91,14 @@ check_vars_$1(const char *filename)
     int nok = 0;      /* count of valid comparisons */
 
     err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         if (canConvert) {
             err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("ncmpi_inq_var: %s", ncmpi_strerror(err));
             IF (strcmp(name, var_name[i]) != 0)
                 error("Unexpected var_name");
@@ -108,21 +108,21 @@ check_vars_$1(const char *filename)
                 error("Unexpected rank");
             for (j = 0; j < ndims; j++) {
                 err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
                 IF (length != var_shape[i][j])
                     error("Unexpected shape");
             }
             for (j = 0; j < var_nels[i]; j++) {
                 err = toMixedBase(j, var_rank[i], var_shape[i], index);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("error in toMixedBase 2");
                 expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 ncmpi_begin_indep_data(ncid);
                 err = ncmpi_get_var1_$1(ncid, i, index, &value);
                 if (inRange3(expect,datatype,NCT_ITYPE($1))) {
                     if (expect >= $1_min && expect <= $1_max) {
-                        IF (err) {
+                        IF (err != NC_NOERR) {
                             error("ncmpi_get_var1_$1: %s", ncmpi_strerror(err));
                         } else {
                             IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
@@ -148,7 +148,7 @@ check_vars_$1(const char *filename)
         }
     }
     err = ncmpi_close (ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     print_nok(nok);
 }
@@ -182,14 +182,14 @@ test_ncmpi_iput_var1_$1(void)
     int reqid, status;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
@@ -207,13 +207,13 @@ test_ncmpi_iput_var1_$1(void)
                 index[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_var1_$1(ncid, i, index, &value, &reqid);
                 IF (err != NC_EINVALCOORDS)
-                    error("bad index: status = %d", err);
+                    error("bad index: err = %d", err);
                 index[j] = 0;
             }
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err) 
+            IF (err != NC_NOERR) 
                 error("error in toMixedBase 1");
             value = hash_$1( var_type[i], var_rank[i], index, NCT_ITYPE($1));
             if (var_rank[i] == 0 && i%2 == 0)
@@ -251,13 +251,13 @@ test_ncmpi_iput_var1_$1(void)
     }
 
     err = ncmpi_close(ncid);
-    IF (err) 
+    IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
 }
 ')dnl
@@ -292,14 +292,14 @@ test_ncmpi_iput_var_$1(void)
     int reqid, status;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
@@ -319,7 +319,7 @@ test_ncmpi_iput_var_$1(void)
         }
         for (allInExtRange = 1, j = 0; j < nels; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err) 
+            IF (err != NC_NOERR) 
                 error("error in toMixedBase 1");
             value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
             allInExtRange = allInExtRange 
@@ -332,7 +332,7 @@ test_ncmpi_iput_var_$1(void)
 
         if (canConvert) {
             if (allInExtRange) {
-                IF (err) 
+                IF (err != NC_NOERR) 
                     error("%s", ncmpi_strerror(err));
             } else {
                 IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
@@ -344,17 +344,17 @@ test_ncmpi_iput_var_$1(void)
         }
     }
 
-        /* Preceeding has written nothing for record variables, now try */
-        /* again with more than 0 records */
+    /* Preceeding has written nothing for record variables, now try */
+    /* again with more than 0 records */
 
-        /* Write record number NRECS to force writing of preceding records */
-        /* Assumes variable cr is char vector with UNLIMITED dimension */
+    /* Write record number NRECS to force writing of preceding records */
+    /* Assumes variable cr is char vector with UNLIMITED dimension */
     err = ncmpi_inq_varid(ncid, "cr", &varid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     index[0] = NRECS-1;
     err = ncmpi_iput_var1_text(ncid, varid, index, "x", &reqid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_iput_var1_text: %s", ncmpi_strerror(err));
     else {
         /*
@@ -377,7 +377,7 @@ test_ncmpi_iput_var_$1(void)
             }
             for (allInExtRange = 1, j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], var_shape[i], index);
-                IF (err) 
+                IF (err != NC_NOERR) 
                     error("error in toMixedBase 1");
                 value[j]= hash_$1(var_type[i], var_rank[i], index, NCT_ITYPE($1));
                 allInExtRange = allInExtRange 
@@ -390,7 +390,7 @@ test_ncmpi_iput_var_$1(void)
 
             if (canConvert) {
                 if (allInExtRange) {
-                    IF (err) 
+                    IF (err != NC_NOERR) 
                         error("%s", ncmpi_strerror(err));
                 } else {
                     IF (err != NC_ERANGE)
@@ -404,13 +404,13 @@ test_ncmpi_iput_var_$1(void)
     }
 
     err = ncmpi_close(ncid);
-    IF (err) 
+    IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
 }
 ')dnl
@@ -450,14 +450,14 @@ test_ncmpi_iput_vara_$1(void)
     int reqid, status;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     value[0] = 0;
@@ -503,12 +503,10 @@ test_ncmpi_iput_vara_$1(void)
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */
-                edge[j] = 1;
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
                 IF (err != NC_EINVALCOORDS)
                     error("bad start: err = %d", err);
                 start[j] = 0;
-                edge[j] = 0; /* added by Jianwei, restore the original value */
             }
         }
         err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
@@ -539,14 +537,14 @@ test_ncmpi_iput_vara_$1(void)
             mid[j] = roll( var_shape[i][j] );
             nslabs *= 2;
         }
-            /* bits of k determine whether to put lower or upper part of dim */
+        /* bits of k determine whether to put lower or upper part of dim */
         for (k = 0; k < nslabs; k++) {
             nels = 1;
             for (j = 0; j < var_rank[i]; j++) {
                 if ((k >> j) & 1) {
                     start[j] = 0;
                     edge[j] = mid[j];
-                }else{
+                } else {
                     start[j] = mid[j];
                     edge[j] = var_shape[i][j] - mid[j];
                 }
@@ -554,7 +552,7 @@ test_ncmpi_iput_vara_$1(void)
             }
             for (allInExtRange = 1, j = 0; j < nels; j++) {
                 err = toMixedBase(j, var_rank[i], edge, index);
-                IF (err) 
+                IF (err != NC_NOERR) 
                     error("error in toMixedBase 1");
                 for (d = 0; d < var_rank[i]; d++) 
                     index[d] += start[d];
@@ -586,13 +584,13 @@ test_ncmpi_iput_vara_$1(void)
     }
 
     err = ncmpi_close(ncid);
-    IF (err) 
+    IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
 }
 ')dnl
@@ -638,14 +636,14 @@ test_ncmpi_iput_vars_$1(void)
     int reqid, status;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
@@ -684,22 +682,22 @@ test_ncmpi_iput_vars_$1(void)
                 stride[j] = 1;
             }
         }
-            /* Choose a random point dividing each dim into 2 parts */
-            /* Put 2^rank (nslabs) slabs so defined */
+        /* Choose a random point dividing each dim into 2 parts */
+        /* Put 2^rank (nslabs) slabs so defined */
         nslabs = 1;
         for (j = 0; j < var_rank[i]; j++) {
             mid[j] = roll( var_shape[i][j] );
             nslabs *= 2;
         }
-            /* bits of k determine whether to put lower or upper part of dim */
-            /* choose random stride from 1 to edge */
+        /* bits of k determine whether to put lower or upper part of dim */
+        /* choose random stride from 1 to edge */
         for (k = 0; k < nslabs; k++) {
             nstarts = 1;
             for (j = 0; j < var_rank[i]; j++) {
                 if ((k >> j) & 1) {
                     start[j] = 0;
                     edge[j] = mid[j];
-                }else{
+                } else {
                     start[j] = mid[j];
                     edge[j] = var_shape[i][j] - mid[j];
                 }
@@ -708,7 +706,7 @@ test_ncmpi_iput_vars_$1(void)
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("error in toMixedBase");
                 nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
@@ -716,7 +714,7 @@ test_ncmpi_iput_vars_$1(void)
                     nels *= count[j];
                     index[j] += start[j];
                 }
-                    /* Random choice of forward or backward */
+                /* Random choice of forward or backward */
 /* TODO
                 if ( roll(2) ) {
                     for (j = 0; j < var_rank[i]; j++) {
@@ -727,7 +725,7 @@ test_ncmpi_iput_vars_$1(void)
 */
                 for (allInExtRange = 1, j = 0; j < nels; j++) {
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err)
+                    IF (err != NC_NOERR)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
@@ -746,7 +744,7 @@ test_ncmpi_iput_vars_$1(void)
 
                 if (canConvert) {
                     if (allInExtRange) {
-                        IF (status) 
+                        IF (status != NC_NOERR) 
                             error("%s", ncmpi_strerror(status));
                     } else {
                         IF (err != NC_ERANGE)
@@ -761,13 +759,13 @@ test_ncmpi_iput_vars_$1(void)
     }
 
     err = ncmpi_close(ncid);
-    IF (err) 
+    IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
 }
 ')dnl
@@ -814,14 +812,14 @@ test_ncmpi_iput_varm_$1(void)
     int reqid, status;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < NVARS; i++) {
@@ -861,22 +859,22 @@ test_ncmpi_iput_varm_$1(void)
                 stride[j] = 1;
             }
         }
-            /* Choose a random point dividing each dim into 2 parts */
-            /* Put 2^rank (nslabs) slabs so defined */
+        /* Choose a random point dividing each dim into 2 parts */
+        /* Put 2^rank (nslabs) slabs so defined */
         nslabs = 1;
         for (j = 0; j < var_rank[i]; j++) {
             mid[j] = roll( var_shape[i][j] );
             nslabs *= 2;
         }
-            /* bits of k determine whether to put lower or upper part of dim */
-            /* choose random stride from 1 to edge */
+        /* bits of k determine whether to put lower or upper part of dim */
+        /* choose random stride from 1 to edge */
         for (k = 0; k < nslabs; k++) {
             nstarts = 1;
             for (j = 0; j < var_rank[i]; j++) {
                 if ((k >> j) & 1) {
                     start[j] = 0;
                     edge[j] = mid[j];
-                }else{
+                } else {
                     start[j] = mid[j];
                     edge[j] = var_shape[i][j] - mid[j];
                 }
@@ -885,7 +883,7 @@ test_ncmpi_iput_varm_$1(void)
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("error in toMixedBase");
                 nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
@@ -893,7 +891,7 @@ test_ncmpi_iput_varm_$1(void)
                     nels *= count[j];
                     index[j] += start[j];
                 }
-                    /* Random choice of forward or backward */
+                /* Random choice of forward or backward */
 /* TODO
                 if ( roll(2) ) {
                     for (j = 0; j < var_rank[i]; j++) {
@@ -910,7 +908,7 @@ test_ncmpi_iput_varm_$1(void)
                 }
                 for (allInExtRange = 1, j = 0; j < nels; j++) {
                     err = toMixedBase(j, var_rank[i], count, index2);
-                    IF (err)
+                    IF (err != NC_NOERR)
                         error("error in toMixedBase");
                     for (d = 0; d < var_rank[i]; d++)
                         index2[d] = index[d] + index2[d] * stride[d];
@@ -929,7 +927,7 @@ test_ncmpi_iput_varm_$1(void)
 
                 if (canConvert) {
                     if (allInExtRange) {
-                        IF (status)
+                        IF (status != NC_NOERR)
                             error("%s", ncmpi_strerror(status));
                     } else {
                         IF (err != NC_ERANGE)
@@ -944,13 +942,13 @@ test_ncmpi_iput_varm_$1(void)
     }
 
     err = ncmpi_close(ncid);
-    IF (err) 
+    IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
 }
 ')dnl
