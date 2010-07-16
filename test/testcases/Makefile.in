@@ -15,8 +15,8 @@ CXXFLAGS        = @CFLAGS@ $(INCLUDES)
 
 
 SRCS		= $(srcdir)/ncmpi_vars_null_stride.c $(srcdir)/vecors.c \
-			$(srcdir)/bigrecords.F 
-PROGS		= ncmpi_vars_null_stride vectors bigrecords redef1
+			$(srcdir)/bigrecords.F $(srcdir)/collective_error.c 
+PROGS		= ncmpi_vars_null_stride vectors bigrecords redef1 collective_error
 LDFLAGS		= -L$(LIBDIR) @LDFLAGS@
 LIBS		= -lpnetcdf @LIBS@
 
@@ -42,6 +42,8 @@ bigrecords: bigrecords.o
 redef1: redef1.o
 	$(CXX) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
+collective_error: collective_error.o
+	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
 	rm -f *.o $(PROGS) *.nc
@@ -58,5 +60,8 @@ testing-cxx: redef1
 
 testing-f: bigrecords
 	./bigrecords && echo '*** bigrecords: Success ***'
+
+testing-collective_error:
+	mpiexec -n 2 collective_error
 
 testing: test

@@ -612,15 +612,20 @@ ncmpii_getput_vars(NC               *ncp,
                    int               io_method)
 {
     void *xbuf=NULL, *cbuf=NULL;
-    int i, warning=NC_NOERR, el_size, iscontig_of_ptypes, mpireturn;
-    int err, status; /* err is for fatal return and status is not */
-    MPI_Offset nelems, cnelems, nbytes, offset;
+    int i, el_size, iscontig_of_ptypes, mpireturn;
+    int warning, err, status; /* err is for API abort and status is not */
+    MPI_Offset nelems, cnelems, nbytes, offset=0;
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE;
     MPI_File fh;
 
-    if (varp->ndims > 0) assert(start != NULL);
-    if (varp->ndims > 0) assert(count != NULL);
+    /* "API error" will abort this API call, but not the entire program */
+    err = status = warning = NC_NOERR;
+
+    if (varp->ndims > 0) {
+        assert(start != NULL);
+        assert(count != NULL);
+    }
 
     if (io_method == COLL_IO)
         fh = ncp->nciop->collective_fh;
@@ -630,19 +635,26 @@ ncmpii_getput_vars(NC               *ncp,
     CHECK_DATATYPE(datatype, ptype, el_size, cnelems, iscontig_of_ptypes)
     CHECK_ECHAR(varp)
     CHECK_NELEMS(varp, cnelems, count, bufcount, nelems, nbytes)
-    if (cnelems == 0 && io_method == INDEP_IO)
-        return NCcoordck(ncp, varp, start);
-    /* for collective I/O, even cnelems == 0, must go on to participate the
-       collective call */
+
+    if (cnelems == 0) {
+        if (io_method == INDEP_IO)
+            return NCcoordck(ncp, varp, start);
+#ifdef ZERO_COUNT_IGNORE_OTHER_ERRORS
+        else
+        /* for collective I/O, even cnelems == 0, must go on to participate
+           the collective calls: MPI_File_set_view and collective read/write */
+            goto err_check;
+#endif
+    }
 
     if (!iscontig_of_ptypes) {
-        /* handling for derived datatype: pack into a contiguous buffer */
+        /* for derived datatype: pack into a contiguous buffer */
         cbuf = (void*) NCI_Malloc( cnelems * el_size );
         if (rw_flag == WRITE_REQ) {
             err = ncmpii_data_repack((void*)buf, bufcount, datatype,
                                      cbuf, cnelems, ptype);
-            if (err != NC_NOERR)
-                return err;
+            if (err != NC_NOERR) /* API error */
+                goto err_check;
         }
     } else {
         cbuf = (void*) buf;
@@ -666,9 +678,9 @@ ncmpii_getput_vars(NC               *ncp,
         xbuf = cbuf;
     }
 
-    /* if record variables are too big (so big that we cannot store the stride
-     * between records in an MPI_Aint, for example) then we will have to
-     * process this one record at a time.  
+    /* if record variables are too big (so big that we cannot store the
+     * stride between records in an MPI_Aint, for example) then we will
+     * have to process this one record at a time.  
      */
 
     /* check if the request is contiguous in file */
@@ -677,29 +689,43 @@ ncmpii_getput_vars(NC               *ncp,
 
         if (err != NC_NOERR ||
             (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-             start[0] + count[0] > NC_get_numrecs(ncp))) {
+             start[0] + count[0] > NC_get_numrecs(ncp))) { /* API error */
             err = NCcoordck(ncp, varp, start);
-            if (err != NC_NOERR)
-                return err;
-            else
-                return NC_EEDGE;
+            if (err != NC_NOERR) {
+                goto err_check;
+            }
+            else {
+                err = NC_EEDGE;
+                goto err_check;
+            }
         }
 
-        /* this is a contiguous file access, no need to set fileview */
+        /* this is a contiguous file access, no need to filetype */
         err = ncmpii_get_offset(ncp, varp, start, NULL, NULL, &offset);
-        if (err != NC_NOERR)
-            return err;
-
-        filetype = MPI_BYTE;
+        if (err != NC_NOERR) /* API error */
+            goto err_check;
     }
-    else if (cnelems > 0) { /* non-contiguous I/O, set the MPI fileview */
+    else {
         /* this request is non-contiguous in file, set the mpi file view */
         err = ncmpii_vars_create_filetype(ncp, varp, start, count, stride,
                                           rw_flag, &offset, &filetype);
-        if (err != NC_NOERR)
-            return err;
- 
+        if (err != NC_NOERR) /* API error */
+            goto err_check;
     }
+
+err_check:
+#define CHECK_FATAL_ERROR_COLLECTIVELY
+#ifdef CHECK_FATAL_ERROR_COLLECTIVELY
+    /* check API error from any proc before going into a collective call */
+    if (io_method == COLL_IO) {
+        int global_err;
+        MPI_Allreduce(&err, &global_err, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (global_err != NC_NOERR) return err;
+    }
+    else
+#endif
+        if (err != NC_NOERR) return err;
+
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
     mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
                                   "native", MPI_INFO_NULL);
@@ -716,6 +742,10 @@ ncmpii_getput_vars(NC               *ncp,
     /* reset the file view so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
+    if (cnelems == 0)
+        return ((warning != NC_NOERR) ? warning : status);
+
+    /* only cnelems > 0 needs to proceed the following */
     if (rw_flag == READ_REQ) {
         if ( ncmpii_need_convert(varp->type, ptype) ) {
             /* automatic numeric datatype conversion + swap if necessary */

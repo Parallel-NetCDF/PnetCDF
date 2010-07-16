@@ -369,14 +369,20 @@ ncmpii_igetput_varm(NC               *ncp,
                     int               rw_flag)
 {
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
-    int status, warning=NC_NOERR, el_size, iscontig_of_ptypes, do_vars;
+    int err, status, warning; /* err is for API abort and status is not */
+    int el_size, iscontig_of_ptypes, do_vars;
     int i, dim=0, imap_contig_blocklen;
     MPI_Offset nelems, cnelems, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
-    if (varp->ndims > 0) assert(start != NULL);
-    if (varp->ndims > 0) assert(count != NULL);
+    /* "API error" will abort this API call, but not the entire program */
+    err = status = warning = NC_NOERR;
+
+    if (varp->ndims > 0) {
+        assert(start != NULL);
+        assert(count != NULL);
+    }
 
     do_vars = 0;
 
@@ -403,8 +409,11 @@ ncmpii_igetput_varm(NC               *ncp,
 
     CHECK_DATATYPE(datatype, ptype, el_size, cnelems, iscontig_of_ptypes)
     CHECK_ECHAR(varp)
-
     CHECK_NELEMS(varp, cnelems, count, bufcount, nelems, nbytes)
+
+err_check:
+    if (err != NC_NOERR) return err;
+
     if (cnelems == 0) {
         *reqid = NC_REQ_NULL;
         return NCcoordck(ncp, varp, start);
