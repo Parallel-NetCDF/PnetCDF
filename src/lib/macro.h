@@ -32,23 +32,24 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 
 #define CHECK_MPI_ERROR(str, err) {                                   \
     if (mpireturn != MPI_SUCCESS) {                                   \
-	char errorString[MPI_MAX_ERROR_STRING];                       \
-	int rank, errorStringLen;                                     \
+        char errorString[MPI_MAX_ERROR_STRING];                       \
+        int rank, errorStringLen;                                     \
         MPI_Comm_rank(ncp->nciop->comm, &rank);                       \
-	MPI_Error_string(mpireturn, errorString, &errorStringLen);    \
-	printf("%2d: MPI Failure at line %d of %s (%s : %s)\n",       \
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);    \
+        printf("%2d: MPI Failure at line %d of %s (%s : %s)\n",       \
                rank, __LINE__, __FILE__, str, errorString);           \
         return err;                                                   \
     }                                                                 \
 }
 
+/* API error will terminate the API call, not the entire program */
 #define CHECK_NCID {                                          \
     status = ncmpii_NC_check_id(ncid, &ncp);                  \
-    if (status != NC_NOERR) {                                 \
+    if (status != NC_NOERR) { /* API error */                 \
         /* uncomment to print debug message                   \
         int rank;                                             \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                 \
-	printf("%2d: Invalid ncid(%d) at line %d of %s\n",    \
+        printf("%2d: Invalid ncid(%d) at line %d of %s\n",    \
                rank, ncid, __LINE__, __FILE__);               \
         */                                                    \
         return status;                                        \
@@ -57,11 +58,11 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 
 #define CHECK_VARID(varid, varp) {                            \
     varp = ncmpii_NC_lookupvar(ncp, varid);                   \
-    if (varp == NULL) {                                       \
+    if (varp == NULL) { /* API error */                       \
         /* uncomment to print debug message                   \
         int rank;                                             \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                 \
-	printf("%2d: Invalid varid(%d) at line %d of %s\n",   \
+        printf("%2d: Invalid varid(%d) at line %d of %s\n",   \
                rank, varid, __LINE__, __FILE__);              \
         */                                                    \
         return NC_ENOTVAR;                                    \
@@ -88,10 +89,10 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 }
 
 #define CHECK_WRITE_PERMISSION {                                   \
-    if (NC_readonly(ncp)) {                                        \
+    if (NC_readonly(ncp)) { /* API error */                        \
         int rank;                                                  \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                      \
-	printf("%2d: No file write permission at line %d of %s\n", \
+        printf("%2d: No file write permission at line %d of %s\n", \
                rank, __LINE__, __FILE__);                          \
         return NC_EPERM;                                           \
     }                                                              \
@@ -99,29 +100,30 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 
 #define CHECK_DATATYPE(datatype, ptype, esize, cnelems, iscontig) {        \
     int isderived;                                                         \
-    status = ncmpii_dtype_decode(datatype, &(ptype), &(esize), &(cnelems), \
-                                 &isderived, &iscontig);                   \
-    if (status != NC_NOERR) {                                              \
+    err = ncmpii_dtype_decode(datatype, &(ptype), &(esize), &(cnelems),    \
+                              &isderived, &iscontig);                      \
+    if (err != NC_NOERR) { /* API error */                                 \
         /* uncomment to print debug message                                \
         int rank;                                                          \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                              \
-	printf("%2d: datatype decode error at line %d of %s\n",            \
+        printf("%2d: datatype decode error at line %d of %s\n",            \
                rank, __LINE__, __FILE__);                                  \
         */                                                                 \
-        return status;                                                     \
+        goto err_check;                                                    \
     }                                                                      \
 }
 
 #define CHECK_ECHAR(varp) {                                                \
     /* unable to type convert for char type */                             \
-    if ( ncmpii_echar((varp)->type, ptype) ) {                             \
+    if ( ncmpii_echar((varp)->type, ptype) ) { /* API error */             \
         /* uncomment to print debug message                                \
         int rank;                                                          \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                              \
-	printf("%2d: datatype cannot convert to CHAR at line %d of %s\n",  \
+        printf("%2d: datatype cannot convert to CHAR at line %d of %s\n",  \
                rank, __LINE__, __FILE__);                                  \
         */                                                                 \
-        return NC_ECHAR;                                                   \
+        err = NC_ECHAR;                                                    \
+        goto err_check;                                                    \
     }                                                                      \
 }
 
@@ -132,8 +134,10 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
     /* nelems is calculated from count[] */                                \
     nelems = 1;                                                            \
     for (i=0; i<(varp)->ndims; i++) {                                      \
-        if (count[i] < 0)                                                  \
-            return NC_ENEGATIVECNT;                                        \
+        if (count[i] < 0) { /* API error */                                \
+            err = NC_ENEGATIVECNT;                                         \
+            goto err_check;                                                \
+        }                                                                  \
         nelems *= count[i];                                                \
     }                                                                      \
                                                                            \
@@ -147,14 +151,15 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
                                                                            \
     /* nbytes is the amount of this request in bytes */                    \
     nbytes = nelems * (varp)->xsz;                                         \
-    if (nbytes < 0) {                                                      \
+    if (nbytes < 0) { /* API error */                                      \
         /* uncomment to print debug message                                \
         int rank;                                                          \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                              \
-	printf("%2d: Error - negative request amount at line %d of %s\n",  \
+        printf("%2d: Error - negative request amount at line %d of %s\n",  \
                rank, __LINE__, __FILE__);                                  \
         */                                                                 \
-        return NC_ENEGATIVECNT;                                            \
+        err = NC_ENEGATIVECNT;                                             \
+        goto err_check;                                                    \
     }                                                                      \
 }
 
@@ -233,7 +238,7 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
         /* uncomment to print debug message                                   \
         int rank;                                                             \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-	printf("%2d: Error - MPI indep file handle at line %d of %s\n",       \
+        printf("%2d: Error - MPI indep file handle at line %d of %s\n",       \
                rank, __LINE__, __FILE__);                                     \
         */                                                                    \
         return status;                                                        \
@@ -248,7 +253,7 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
         /* uncomment to print debug message                                   \
         int rank;                                                             \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-	printf("%2d: Error - MPI collective file handle at line %d of %s\n",  \
+        printf("%2d: Error - MPI collective file handle at line %d of %s\n",  \
                rank, __LINE__, __FILE__);                                     \
         */                                                                    \
         return status;                                                        \

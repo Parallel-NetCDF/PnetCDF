@@ -647,10 +647,13 @@ ncmpii_getput_varm(NC               *ncp,
                    int               io_method)  /* COLL_IO or INDEP_IO */
 {
     void *lbuf=NULL, *cbuf=NULL;
-    int status, warning=NC_NOERR, el_size, iscontig_of_ptypes;
-    int dim, imap_contig_blocklen;
+    int err, status, warning; /* err is for API abort and status is not */
+    int dim, imap_contig_blocklen, el_size, iscontig_of_ptypes;
     MPI_Offset lnelems, cnelems;
     MPI_Datatype ptype, tmptype, imaptype;
+
+    /* "API error" will abort this API call, but not the entire program */
+    err = status = warning = NC_NOERR;
 
     if (imap == NULL || varp->ndims == 0) {
         /* when imap == NULL, no mapping, same as vars.
@@ -665,8 +668,10 @@ ncmpii_getput_varm(NC               *ncp,
     dim = varp->ndims;
     /* test each dim's contiguity until the 1st non-contiguous dim is reached */
     while ( --dim >= 0 && imap_contig_blocklen == imap[dim] ) {
-        if (count[dim] < 0)
-            return NC_ENEGATIVECNT;
+        if (count[dim] < 0) { /* API error */
+            err = NC_ENEGATIVECNT;
+            goto err_check;
+        }
         imap_contig_blocklen *= count[dim];
     }
 
@@ -685,28 +690,31 @@ ncmpii_getput_varm(NC               *ncp,
         lbuf = NCI_Malloc(lnelems*el_size);
         status = ncmpii_data_repack((void*)buf, bufcount, datatype,
                                     lbuf, lnelems, ptype);
-        if (status != NC_NOERR) {
+        if (status != NC_NOERR) { /* API error */
             NCI_Free(lbuf);
-            return ((warning != NC_NOERR) ? warning : status);
+            err = ((warning != NC_NOERR) ? warning : status);
+            goto err_check;
         }
     } else {
         lbuf = (void*)buf;
     }
 
-    if (count[dim] < 0) {
+    if (count[dim] < 0) { /* API error */
         if (!iscontig_of_ptypes && lbuf != NULL)
             NCI_Free(lbuf);
-        return ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
+        err = ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
+        goto err_check;
     }
     MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
                     ptype, &imaptype);
     MPI_Type_commit(&imaptype);
     cnelems = imap_contig_blocklen*count[dim];
     for (dim--; dim>=0; dim--) {
-        if (count[dim] < 0) {
+        if (count[dim] < 0) { /* API error */
             if (!iscontig_of_ptypes && lbuf != NULL)
                 NCI_Free(lbuf);
-            return ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
+            err = ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
+            goto err_check;
         }
 #if (MPI_VERSION < 2)
         MPI_Type_hvector(count[dim], 1, imap[dim]*el_size, imaptype, &tmptype);
@@ -721,6 +729,19 @@ ncmpii_getput_varm(NC               *ncp,
     }
 
     cbuf = (void*) NCI_Malloc(cnelems*el_size);
+
+err_check:
+#define CHECK_FATAL_ERROR_COLLECTIVELY
+#ifdef CHECK_FATAL_ERROR_COLLECTIVELY
+    /* check API error from any proc before going into a collective call */
+    if (io_method == COLL_IO) {
+        int global_err;
+        MPI_Allreduce(&err, &global_err, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (global_err != NC_NOERR) return err;
+    }
+    else
+#endif
+        if (err != NC_NOERR) return err;
 
     if (rw_flag == READ_REQ) {
         status = ncmpii_getput_vars(ncp, varp, start, count, stride, cbuf,
