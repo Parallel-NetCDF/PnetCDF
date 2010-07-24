@@ -39,6 +39,7 @@ ncmpi_iput_var1(int               ncid,
     NC_var     *varp;
     MPI_Offset *count;
 
+    *reqid = NC_REQ_NULL;
     CHECK_NCID
     CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
@@ -61,6 +62,7 @@ ncmpi_iput_var1(int               ncid,
     NC_var     *varp;                                                   \
     MPI_Offset *count;                                                  \
                                                                         \
+    *reqid = NC_REQ_NULL;                                               \
     CHECK_NCID                                                          \
     CHECK_WRITE_PERMISSION                                              \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
@@ -179,6 +181,7 @@ ncmpi_iget_var1(int               ncid,
     NC_var     *varp;
     MPI_Offset *count;
 
+    *reqid = NC_REQ_NULL;
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
@@ -198,6 +201,7 @@ ncmpi_iget_var1(int               ncid,
     NC_var     *varp;                                                   \
     MPI_Offset *count;                                                  \
                                                                         \
+    *reqid = NC_REQ_NULL;                                               \
     CHECK_NCID                                                          \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \

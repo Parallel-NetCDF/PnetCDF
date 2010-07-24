@@ -19,6 +19,7 @@
 int main(int argc, char *argv[])
 {
    int rank, nproc, ncid, err, dim_len, varid, dimids[1];
+   int req, status;
    MPI_Offset start[1], count[1], memCountScalar;
    double buf[2];
 
@@ -60,12 +61,26 @@ int main(int argc, char *argv[])
    err = ncmpi_put_vara_double_all(ncid, varid, start, count, buf);
    CHECK_ERROR("ncmpi_put_vara_double_all")
 
+   err = ncmpi_iput_vara_double(ncid, varid, start, count, buf, &req);
+   CHECK_ERROR("ncmpi_iput_vara_double")
+
+   err = ncmpi_wait_all(ncid, 1, &req, &status);
+   if (err != NC_NOERR)
+       printf("PE %d: ncmpi_wait_all error is %s\n",rank,ncmpi_strerror(err));
+
    err = ncmpi_get_vara_all(ncid, varid, start, count,
 			    buf, count[0], MPI_DOUBLE);
    CHECK_ERROR("ncmpi_get_vara_all")
 
    err = ncmpi_get_vara_double_all(ncid, varid, start, count, buf);
    CHECK_ERROR("ncmpi_get_vara_double_all")
+
+   err = ncmpi_iget_vara_double(ncid, varid, start, count, buf, &req);
+   CHECK_ERROR("ncmpi_iget_vara_double")
+
+   err = ncmpi_wait_all(ncid, 1, &req, &status);
+   if (err != NC_NOERR)
+       printf("PE %d: ncmpi_wait_all error is %s\n",rank,ncmpi_strerror(err));
 
    err = ncmpi_close(ncid);
    assert(err == NC_NOERR);
