@@ -23,7 +23,7 @@ testing: pres_temp_4D_wr pres_temp_4D_rd
 	./pres_temp_4D_wr && ./pres_temp_4D_rd
 	
 clean:
-	rm -f *.o pres_temp_4D_wr pres_temp_4d_rd
+	rm -f *.o *.nc pres_temp_4D_wr pres_temp_4D_rd
 
 distclean: clean
 	rm -f Makefile
