@@ -62,6 +62,6 @@ testing-f: bigrecords
 	./bigrecords && echo '*** bigrecords: Success ***'
 
 testing-collective_error:
-	mpiexec -n 2 collective_error
+	echo "please run with 2 processes. e.g. mpiexec -n 2 collective_error"
 
 testing: test
