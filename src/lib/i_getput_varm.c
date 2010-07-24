@@ -49,6 +49,7 @@ ncmpi_iput_varm(int               ncid,
     NC     *ncp;
     NC_var *varp;
 
+    *reqid = NC_REQ_NULL;
     CHECK_NCID
     CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
@@ -69,6 +70,7 @@ ncmpi_iput_varm(int               ncid,
     NC_var     *varp;                                                    \
     MPI_Offset  nelems;                                                  \
                                                                          \
+    *reqid = NC_REQ_NULL;                                                \
     CHECK_NCID                                                           \
     CHECK_WRITE_PERMISSION                                               \
     if (NC_indef(ncp)) return NC_EINDEFINE;                              \
@@ -212,6 +214,7 @@ ncmpi_iget_varm(int               ncid,
     NC     *ncp;
     NC_var *varp;
 
+    *reqid = NC_REQ_NULL;
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
@@ -230,6 +233,7 @@ ncmpi_iget_varm(int               ncid,
     NC_var     *varp;                                                    \
     MPI_Offset  nelems;                                                  \
                                                                          \
+    *reqid = NC_REQ_NULL;                                                \
     CHECK_NCID                                                           \
     if (NC_indef(ncp)) return NC_EINDEFINE;                              \
     CHECK_VARID(varid, varp)                                             \
@@ -414,10 +418,8 @@ ncmpii_igetput_varm(NC               *ncp,
 err_check:
     if (err != NC_NOERR) return err;
 
-    if (cnelems == 0) {
-        *reqid = NC_REQ_NULL;
+    if (cnelems == 0)
         return NCcoordck(ncp, varp, start);
-    }
 
     if (do_vars) {
         if (!iscontig_of_ptypes) {
