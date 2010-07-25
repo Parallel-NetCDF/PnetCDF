@@ -58,17 +58,17 @@ $(PROGRAM):	$(OBJS) $(lib_netcdf)
 	$(LINK.c) $(OBJS) $(ld_netcdf) $(LIBS) 
 
 ncgentab.c \
-ncgentab.h:	$(srcdir)/ncgen.y ncgenyy.c $(srcdir)/ncgen.h
+ncgentab.h:	ncgen.y ncgenyy.c ncgen.h
 	$(yacc) -d $(srcdir)/ncgen.y; \
 	mv y.tab.c ncgentab.c; \
 	mv y.tab.h ncgentab.h
 
-ncgenyy.c:	$(srcdir)/ncgen.l
+ncgenyy.c:	ncgen.l
 	$(lex) $(srcdir)/ncgen.l; \
 	mv lex.yy.c ncgenyy.c
 
 vmstab.h \
-vmstab.c:	$(srcdir)/ncgen.y
+vmstab.c:	ncgen.y
 	@echo 1>&2 "$@ is out-of-date with respect to $?"
 	@echo 1>&2 "It must be recreated via POSIX yacc(1) on a VMS system"
 	false
