@@ -826,12 +826,12 @@ yyerror(	/* called for yacc syntax error */
 }
 
 /* undefine yywrap macro, in case we are using bison instead of yacc */
-#ifdef yywrap
-#undef yywrap
+#ifdef ncmpiwrap
+#undef ncmpiwrap
 #endif
 
 int
-yywrap(void)			/* returns 1 on EOF if no more input */
+ncmpiwrap(void)			/* returns 1 on EOF if no more input */
 {
     return  1;
 }

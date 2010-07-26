@@ -31,8 +31,9 @@ PACKING_LIST	= Makefile.in depend escapes.c generic.h \
 OBJS		= main.o load.o ncgentab.o escapes.o \
 		  getfill.o init.o genlib.o
 
-lex		= @LEX@
-yacc		= @YACC@
+lex		= @LEX@ -Pncmpi
+yacc		= @YACC@ -p ncmpi
+
 
 program_srcs	= main.c load.c ncgentab.c escapes.c \
 		  getfill.c init.c genlib.c
@@ -65,7 +66,7 @@ ncgentab.h:	ncgen.y ncgenyy.c ncgen.h
 
 ncgenyy.c:	ncgen.l
 	$(lex) $(srcdir)/ncgen.l; \
-	mv lex.yy.c ncgenyy.c
+	mv lex.ncmpi.c ncgenyy.c
 
 vmstab.h \
 vmstab.c:	ncgen.y
