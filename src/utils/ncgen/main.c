@@ -215,7 +215,7 @@ main(
 	cdlname = argv[0];
     }
     yyin = fp;
-    ret = yyparse();
+    ret = ncmpiparse(); 
     MPI_Finalize();
     return ret;
 }
