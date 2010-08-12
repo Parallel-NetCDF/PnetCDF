@@ -32,7 +32,7 @@ int giantvar_flag;
 int nofill_flag;
 char *netcdf_name = NULL;	/* name of output netCDF file to write */
 
-extern FILE *yyin;
+extern FILE *ncmpiin;
 
 static const char* ubasename ( const char* av0 );
 static void usage ( void );
@@ -214,7 +214,7 @@ main(
 	}
 	cdlname = argv[0];
     }
-    yyin = fp;
+    ncmpiin = fp;
     ret = ncmpiparse(); 
     MPI_Finalize();
     return ret;
