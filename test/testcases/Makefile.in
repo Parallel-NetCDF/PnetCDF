@@ -53,7 +53,7 @@ distclean: clean
 
 test: ncmpi_vars_null_stride vectors
 	./ncmpi_vars_null_stride test.nc && echo '*** ncmpi_vars_null_stride: Success ***'
-	./vectors.c && echo '*** vectors: Success ***'
+	./vectors && echo '*** vectors: Success ***'
 
 testing-cxx: redef1
 	$(srcdir)/redef1.sh ./redef1  $(srcdir)/redef-good.ncdump && echo '*** redef1: Success ***'
