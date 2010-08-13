@@ -19,7 +19,7 @@
 #include "ncgen.h"
 #include "genlib.h"
 
-extern int	yyparse(void);
+extern int	ncmpiparse(void);
 
 const char *progname;			/* for error messages */
 const char *cdlname;
