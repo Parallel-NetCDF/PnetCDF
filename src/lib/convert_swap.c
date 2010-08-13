@@ -16,7 +16,6 @@
 
 
 /* Prototypes for functions used only in this file */
-static int length_of_mpitype(MPI_Datatype);
 static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
 
 /*
@@ -33,23 +32,6 @@ static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
  *  Assume: MPI_Datatype and nc_type are both enumerable types
  */
 
-/*----< length_of_mpitype() >------------------------------------------------*/
-static int
-length_of_mpitype(MPI_Datatype datatype) {
-    if ( datatype == MPI_UNSIGNED_CHAR || 
-         datatype == MPI_BYTE || 
-         datatype == MPI_CHAR)
-        return (int) sizeof(char);
-    else if (datatype == MPI_SHORT)  return (int) sizeof(short);
-    else if (datatype == MPI_INT)    return (int) sizeof(int);
-    else if (datatype == MPI_LONG)   return (int) sizeof(long);
-    else if (datatype == MPI_FLOAT)  return (int) sizeof(float);
-    else if (datatype == MPI_DOUBLE) return (int) sizeof(double);
-    else 
-        fprintf(stderr, "FIXME: unknown type passed to length_of_mpitype\n");
-
-    return -1;
-}
 
 /*----< ncmpii_echar() >-----------------------------------------------------*/
 inline int
@@ -180,12 +162,10 @@ ncmpii_x_putn_short(void         *xbuf,
                     MPI_Datatype  datatype)
 {
     void *xp, *data;
-    int datainc;
     int status = NC_NOERR;
  
     xp = (void*) xbuf;
     data = (void*) buf;
-    datainc = length_of_mpitype(datatype);
  
     if (datatype == MPI_CHAR)
         status = NC_ECHAR;
@@ -215,12 +195,10 @@ ncmpii_x_putn_int(void         *xbuf,
                   MPI_Datatype  datatype)
 {
     void *xp, *data;
-    int datainc;
     int status = NC_NOERR;
  
     xp = (void*) xbuf;
     data = (void*) buf;
-    datainc = length_of_mpitype(datatype);
  
     if (datatype == MPI_CHAR)
         status = NC_ECHAR;
@@ -250,12 +228,10 @@ ncmpii_x_putn_float(void         *xbuf,
                     MPI_Datatype  datatype)
 {
     void *xp, *data;
-    int datainc;
     int status = NC_NOERR;
  
     xp = (void*) xbuf;
     data = (void*) buf;
-    datainc = length_of_mpitype(datatype);
  
     if (datatype == MPI_CHAR)
         status = NC_ECHAR;
@@ -285,12 +261,10 @@ ncmpii_x_putn_double(void         *xbuf,
                      MPI_Datatype  datatype)
 {
     void *xp, *data;
-    int datainc;
     int status = NC_NOERR;
  
     xp = (void*) xbuf; 
     data = (void*) buf;
-    datainc = length_of_mpitype(datatype);  
 
     if (datatype ==MPI_CHAR)
         status = NC_ECHAR;
@@ -349,12 +323,10 @@ ncmpii_x_getn_short(const void   *xbuf,
                     MPI_Datatype  datatype)
 {
     char *xp, *data;
-    int datainc;
     int status = NC_NOERR;
 
     xp = (char*) xbuf;
     data = (char*) buf;
-    datainc = length_of_mpitype(datatype);
  
     if (datatype == MPI_CHAR)
         status = NC_ECHAR;
@@ -384,12 +356,10 @@ ncmpii_x_getn_int(const void   *xbuf,
                   MPI_Datatype  datatype)
 {
     char *xp, *data;
-    int datainc;
     int status = NC_NOERR;
  
     xp = (char*) xbuf;
     data = (char*) buf;
-    datainc = length_of_mpitype(datatype);
  
     if (datatype == MPI_CHAR)
         status = NC_ECHAR;
@@ -419,12 +389,10 @@ ncmpii_x_getn_float(const void   *xbuf,
                     MPI_Datatype  datatype)
 {
     char *xp, *data;
-    int datainc;
     int  status = NC_NOERR;
 
     xp = (char*) xbuf;
     data = (char*) buf;
-    datainc = length_of_mpitype(datatype);
  
     if (datatype == MPI_CHAR)
         status = NC_ECHAR;
@@ -454,13 +422,11 @@ ncmpii_x_getn_double(const void   *xbuf,
                      MPI_Datatype datatype)
 {
     char *xp, *data;
-    int datainc;
     int  status = NC_NOERR;
  
     xp = (char*) xbuf;
     data = (char*) buf;
-    datainc = length_of_mpitype(datatype);
-                                                                                    
+
     if (datatype == MPI_CHAR)
         status = NC_ECHAR;
     else if (datatype == MPI_UNSIGNED_CHAR)
