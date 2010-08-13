@@ -142,7 +142,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
     if (type == MPI_LB) {
         if (SIZEOF_SIZE_T == 8) 
             return MPI_DOUBLE;
-	    if (SIZEOF_SIZE_T == 4) 
+        if (SIZEOF_SIZE_T == 4) 
             return MPI_DOUBLE;
     }
 #endif
@@ -150,7 +150,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
     if (type == MPI_UB) {
         if (SIZEOF_SIZE_T == 8) 
             return MPI_DOUBLE;
-	    if (SIZEOF_SIZE_T == 4) 
+        if (SIZEOF_SIZE_T == 4) 
             return MPI_DOUBLE;
     }
 #endif

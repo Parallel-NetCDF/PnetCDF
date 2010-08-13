@@ -612,7 +612,7 @@ ncmpii_getput_vars(NC               *ncp,
                    int               io_method)
 {
     void *xbuf=NULL, *cbuf=NULL;
-    int i, el_size, iscontig_of_ptypes, mpireturn;
+    int el_size, iscontig_of_ptypes, mpireturn;
     int warning, err, status; /* err is for API abort and status is not */
     MPI_Offset nelems, cnelems, nbytes, offset=0;
     MPI_Status mpistatus;

@@ -129,8 +129,6 @@ ncmpiio_create(MPI_Comm     comm,
                 /* file does exist, so delete it */
                 mpireturn = MPI_File_delete((char*)path, MPI_INFO_NULL);
                 if (mpireturn != MPI_SUCCESS) {
-                    int rank;
-                    MPI_Comm_rank(comm, &rank);
                     ncmpiio_free(nciop);
                     ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
                     return NC_EOFILE;

@@ -1351,6 +1351,9 @@ ncmpii_comp_attrs(NC_attrarray *nc_attr1,
                 fa = v1->xvalue;
                 fb = v2->xvalue;
                 for (j=0; j<num; j++) {
+			/* floating-point inequality here but we genuinely do
+			 * expect all processors to set bit-for-bit identical
+			 * headers */
                     if (fa[j] != fb[j]) {
                         printf("%s attribute \"%s\" FLOAT (%f != %f)\n", WARN_STR,
                                v1->name->cp,fa[j],fb[j]);
@@ -1362,6 +1365,9 @@ ncmpii_comp_attrs(NC_attrarray *nc_attr1,
                 da = v1->xvalue;
                 db = v2->xvalue;
                 for (j=0; j<num; j++) {
+			/* floating-point inequality here but we genuinely do
+			 * expect all processors to set bit-for-bit identical
+			 * headers */
                     if (da[j] != db[j]) {
                         printf("%s attribute \"%s\" DOUBLE (%f != %f)\n", WARN_STR,
                                v1->name->cp,da[j],db[j]);
@@ -1398,7 +1404,7 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
 #endif
         if (v1->ndims != v2->ndims) {
             fprintf(stderr,"Error: variable %s's ndims is inconsistent %d != %d\n",
-                    v1->name->cp, v1->ndims, v2->ndims);
+                    v1->name->cp, (int)v1->ndims, (int)v2->ndims);
             return NC_EVARS_NDIMS_MULTIDEFINE;
         }
 
