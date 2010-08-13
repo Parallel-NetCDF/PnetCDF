@@ -146,7 +146,10 @@ ncmpi_wait(int ncid,
            int *req_ids,  /* [num_reqs] */
            int *statuses) /* [num_reqs] */
 {
-    int  i, status, ret_st=NC_NOERR;
+#ifndef ENABLE_NONBLOCKING
+    int i, ret_st=NC_NOERR;
+#endif
+    int status;
     NC  *ncp;
 
     CHECK_NCID
@@ -170,7 +173,10 @@ ncmpi_wait_all(int  ncid,
                int *req_ids,  /* [num_reqs] */
                int *statuses) /* [num_reqs] */
 {
+#ifndef ENABLE_NONBLOCKING
     int  i, status, ret_st=NC_NOERR;
+#endif
+    int status;
     NC  *ncp;
 
     CHECK_NCID
@@ -653,6 +659,7 @@ ncmpii_wait_getput(NC     *ncp,
         status = ncmpii_mgetput(ncp, i_num_reqs, varps, starts, counts,
                                 strides, bufs, nbytes, statuses, rw_flag,
                                 io_method);
+	/* XXX: hey, we set status here and then never use it... */
 
         /* update status */
         for (j=0; j<i_num_reqs; j++)

@@ -257,6 +257,8 @@ ncmpix_get_int_int(const void *xp, int *ip);
 extern int
 ncmpix_get_int_long(const void *xp, long *ip);
 extern int
+ncmpix_get_long_long(const void *xp,MPI_Offset *ip);
+extern int
 ncmpix_get_int_float(const void *xp, float *ip);
 extern int
 ncmpix_get_int_double(const void *xp, double *ip);
@@ -355,6 +357,8 @@ ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, MPI_Offset sizeof_off_t);
 /* ncx_put_int_size_t */
 extern int
 ncmpix_put_size_t(void **xpp, const MPI_Offset *ulp, MPI_Offset sizeof_off_t);
+extern int
+ncmpix_put_size_t1(void **xpp, const MPI_Offset *ulp);
 /* ncx_put_int_off_t */
 extern int
 ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, MPI_Offset sizeof_off_t);

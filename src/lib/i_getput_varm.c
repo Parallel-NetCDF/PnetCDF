@@ -375,7 +375,7 @@ ncmpii_igetput_varm(NC               *ncp,
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
     int err, status, warning; /* err is for API abort and status is not */
     int el_size, iscontig_of_ptypes, do_vars;
-    int i, dim=0, imap_contig_blocklen;
+    int dim=0, imap_contig_blocklen;
     MPI_Offset nelems, cnelems, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;

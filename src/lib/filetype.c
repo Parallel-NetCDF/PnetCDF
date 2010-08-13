@@ -363,7 +363,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
      */
 
     if (dim > 0) {
-        int i, dim, ndims, blklens[3], tag=0;
+        int i, ndims, blklens[3], tag=0;
         int *shape=NULL, *subcount=NULL, *substart=NULL; /* all in bytes */
         MPI_Offset *shape64=NULL, *subcount64=NULL, *substart64=NULL;
         MPI_Offset size, disps[3];

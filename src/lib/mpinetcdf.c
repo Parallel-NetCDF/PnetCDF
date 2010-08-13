@@ -509,7 +509,7 @@ ncmpi_delete(char     *filename,
              MPI_Info  info)
 {
     int status = NC_NOERR;
-    status = MPI_File_delete(filename, MPI_INFO_NULL);
+    status = MPI_File_delete(filename, info);
     if (status != MPI_SUCCESS)
         return NC_EFILE;
     return NC_NOERR;

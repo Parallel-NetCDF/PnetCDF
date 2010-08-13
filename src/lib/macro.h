@@ -82,10 +82,10 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 }
 
 #define GET_NUM_ELEMENTS {           \
-    int i;                           \
+    int _i;                           \
     nelems = 1;                      \
-    for (i=0; i<varp->ndims; i++)    \
-        nelems *= count[i];          \
+    for (_i=0; _i<varp->ndims; _i++)    \
+        nelems *= count[_i];          \
 }
 
 #define CHECK_WRITE_PERMISSION {                                   \
@@ -128,17 +128,18 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 }
 
 #define CHECK_NELEMS(varp, cnelems, count, bufcount, nelems, nbytes) {     \
+    int _i;                                                                \
     /* cnelems is calculated from the number of elements in datatype */    \
     cnelems *= bufcount;                                                   \
                                                                            \
     /* nelems is calculated from count[] */                                \
     nelems = 1;                                                            \
-    for (i=0; i<(varp)->ndims; i++) {                                      \
-        if (count[i] < 0) { /* API error */                                \
+    for (_i=0; _i<(varp)->ndims; _i++) {                                   \
+        if (count[_i] < 0) { /* API error */                               \
             err = NC_ENEGATIVECNT;                                         \
             goto err_check;                                                \
         }                                                                  \
-        nelems *= count[i];                                                \
+        nelems *= count[_i];                                               \
     }                                                                      \
                                                                            \
     /* check mismatch between cnelems and nelems */                        \
@@ -208,26 +209,26 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 }
 
 #define GET_FULL_DIMENSIONS {                                                \
-    int i;                                                                   \
+    int _i;                                                                  \
     start = (MPI_Offset*) NCI_Malloc(2 * varp->ndims * sizeof(MPI_Offset));  \
     count = start + varp->ndims;                                             \
                                                                              \
-    for (i=0; i<varp->ndims; i++) {                                          \
+    for (_i=0; _i<varp->ndims; _i++) {                                       \
         NC_dim *dimp;                                                        \
-        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)varp->dimids[i]); \
+        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)varp->dimids[_i]); \
         if (dimp->size == NC_UNLIMITED)                                      \
-            count[i] = NC_get_numrecs(ncp);                                  \
+            count[_i] = NC_get_numrecs(ncp);                                  \
         else                                                                 \
-            count[i] = dimp->size;                                           \
-        start[i] = 0;                                                        \
+            count[_i] = dimp->size;                                           \
+        start[_i] = 0;                                                        \
     }                                                                        \
 }
 
 #define GET_ONE_COUNT {                                                      \
-    int i;                                                                   \
+    int _i;                                                                   \
     count = (MPI_Offset*) NCI_Malloc(varp->ndims * sizeof(MPI_Offset));      \
-    for (i=0; i<varp->ndims; i++)                                            \
-        count[i] = 1;                                                        \
+    for (_i=0; _i<varp->ndims; _i++)                                            \
+        count[_i] = 1;                                                        \
 }
 
 #define CHECK_INDEP_FH {                                                      \
