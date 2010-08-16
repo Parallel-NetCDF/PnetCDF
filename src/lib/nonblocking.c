@@ -174,7 +174,7 @@ ncmpi_wait_all(int  ncid,
                int *statuses) /* [num_reqs] */
 {
 #ifndef ENABLE_NONBLOCKING
-    int  i, status, ret_st=NC_NOERR;
+    int  i, ret_st=NC_NOERR;
 #endif
     int status;
     NC  *ncp;
