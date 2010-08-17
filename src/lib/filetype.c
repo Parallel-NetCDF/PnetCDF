@@ -327,7 +327,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
                             MPI_Datatype     *filetype_ptr)
 {
     int          dim, status;
-    MPI_Offset   offset;
+    MPI_Offset   offset, nelems=1;
     MPI_Datatype filetype;
 
     offset   = varp->begin;
@@ -354,15 +354,14 @@ ncmpii_vara_create_filetype(NC               *ncp,
         return status;
     }
 
-    dim = 0;
-    while (dim < varp->ndims && count[dim] > 0) dim++;
-    /* if (dim == 0) then
-           either varp->ndims == 0 meaning this is a scalar variable)
-           or     0 size request
-           The filetype will be MPI_BYTE
-     */
+    for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
 
-    if (dim > 0) {
+    /* filetype is defined only when varp is not a scalar and
+       the number of requested elemenst > 0
+       (varp->ndims == 0 meaning this is a scalar variable)
+       Otherwise, keep filetype MPI_BYTE
+     */
+    if (varp->ndims > 0 && nelems > 0) {
         int i, ndims, blklens[3], tag=0;
         int *shape=NULL, *subcount=NULL, *substart=NULL; /* all in bytes */
         MPI_Offset *shape64=NULL, *subcount64=NULL, *substart64=NULL;
@@ -568,7 +567,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
                             MPI_Datatype     *filetype_ptr)
 {
     int          dim, status;
-    MPI_Offset   offset;
+    MPI_Offset   offset, nelems=1;
     MPI_Datatype filetype;
 
     if (stride == NULL)
@@ -604,15 +603,14 @@ ncmpii_vars_create_filetype(NC               *ncp,
           (*count == 0 && *start > NC_get_numrecs(ncp)) ) )
         return NC_EEDGE;
 
-    dim = 0;
-    while (dim < varp->ndims && count[dim] > 0) dim++;
-    /* if (dim == 0) then
-           either varp->ndims == 0 meaning this is a scalar variable)
-           or     0 size request
-           The filetype will be MPI_BYTE
-     */
+    for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
 
-    if (dim > 0) {
+    /* filetype is defined only when varp is not a scalar and
+       the number of requested elemenst > 0
+       (varp->ndims == 0 meaning this is a scalar variable)
+       Otherwise, keep filetype MPI_BYTE
+     */
+    if (varp->ndims > 0 && nelems > 0) {
         int ndims;
         MPI_Datatype tmptype;
         MPI_Offset *blocklens, *blockstride, *blockcount;
