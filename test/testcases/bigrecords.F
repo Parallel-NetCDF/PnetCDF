@@ -7,6 +7,7 @@
 ! read the smaller time variable OK, but on systems with a 32 bit MPI_AINT, the
 ! time variable will be garbled.
 
+      program main
       use pnetcdf
       implicit none
       include "mpif.h"
@@ -219,6 +220,8 @@
      1                               time_start, time_count, time);
       call check_err(iret)
 
+      iret = nfmpi_close(ncid)
+      call check_err(iret)
 
       write(6,*) "Time array: ", time
 !      if ( (time(1) .eq. 0) .and. (time(2) .eq. 20.0)
@@ -229,7 +232,7 @@
 !      endif
 
       call MPI_FINALIZE(ierr)
-      end
+      end program main
        
       subroutine writerecs(ncid,time_id,pressure_id)
 
@@ -288,7 +291,7 @@
         call check_err(iret)
       enddo
        
-      end
+      end subroutine writerecs
        
       subroutine check_err(iret)
 
@@ -298,6 +301,6 @@
 
       if (iret .ne. NF_NOERR) then
           print *, nfmpi_strerror(iret)
-      stop
+          stop
       endif
-      end
+      end subroutine check_err

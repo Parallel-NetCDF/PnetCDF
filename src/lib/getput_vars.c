@@ -702,6 +702,7 @@ ncmpii_getput_vars(NC               *ncp,
 
         /* this is a contiguous file access, no need to filetype */
         err = ncmpii_get_offset(ncp, varp, start, NULL, NULL, &offset);
+        /* if start[] is out of defined size, will return NC_EINVALCOORDS error */
         if (err != NC_NOERR) /* API error */
             goto err_check;
     }
