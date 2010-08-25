@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
     for (i=0; i<natts1; i++) {
         status = ncmpi_inq_attname(ncid1, NC_GLOBAL, i, name1);
         HANDLE_ERROR
-        status = ncmpi_inq_attname(ncid1, NC_GLOBAL, i, name2);
+        status = ncmpi_inq_attname(ncid2, NC_GLOBAL, i, name2);
         HANDLE_ERROR
         if (strcmp(name1, name2) != 0)
             sprintf(str,"attribute[%d] name1(%s) != name2(%s)\n",i,name1,name2);
