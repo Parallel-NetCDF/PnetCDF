@@ -702,6 +702,21 @@ write_NC(NC *ncp)
     return status;
 } 
 
+static int dset_has_recvars(NC *ncp) 
+{
+	/* possible further optimzation: set a flag on the header data
+	 * structure when record variable created so we can skip this loop*/
+    int i;
+    NC_var **vpp;
+
+    vpp = ncp->vars.value;
+    for (i=0; i< ncp->vars.nelems; i++, vpp++) {
+	    if (IS_RECVAR(*vpp)) return 1;
+    }
+    return 0;
+}
+
+
 /*
  * Write the header or the numrecs if necessary.
  */
@@ -723,12 +738,17 @@ ncmpii_NC_sync(NC  *ncp,
     assert(!NC_readonly(ncp));
 
     /* collect and set the max numrecs due to difference by independent write */
-    mynumrecs = ncp->numrecs;
-    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
-                  ncp->nciop->comm);
-    if (numrecs > ncp->numrecs) {
-        ncp->numrecs = numrecs;
-        set_NC_ndirty(ncp); /* set numrecs is dirty flag */
+    /* optimization: if this datset contains no record variables, skip this
+     * check */
+
+    if(dset_has_recvars(ncp)) {
+	    mynumrecs = ncp->numrecs;
+	    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
+			  ncp->nciop->comm);
+	    if (numrecs > ncp->numrecs) {
+		ncp->numrecs = numrecs;
+		set_NC_ndirty(ncp); /* set numrecs is dirty flag */
+	    }
     }
 
     if (NC_hdirty(ncp)) {  /* header is dirty */
