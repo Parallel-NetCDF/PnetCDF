@@ -651,6 +651,7 @@ ncmpii_getput_varm(NC               *ncp,
     int dim, imap_contig_blocklen, el_size, iscontig_of_ptypes;
     MPI_Offset lnelems, cnelems;
     MPI_Datatype ptype, tmptype, imaptype;
+    MPI_Offset *zeros;
 
     /* "API error" will abort this API call, but not the entire program */
     err = status = warning = NC_NOERR;
@@ -666,6 +667,8 @@ ncmpii_getput_varm(NC               *ncp,
 
     imap_contig_blocklen = 1;
     dim = varp->ndims;
+
+    zeros = (MPI_Offset *) NCI_Calloc(dim, sizeof(MPI_Offset));
     /* test each dim's contiguity until the 1st non-contiguous dim is reached */
     while ( --dim >= 0 && imap_contig_blocklen == imap[dim] ) {
         if (count[dim] < 0) { /* API error */
@@ -731,17 +734,19 @@ ncmpii_getput_varm(NC               *ncp,
     cbuf = (void*) NCI_Malloc(cnelems*el_size);
 
 err_check:
-#define CHECK_FATAL_ERROR_COLLECTIVELY
-#ifdef CHECK_FATAL_ERROR_COLLECTIVELY
     /* check API error from any proc before going into a collective call */
-    if (io_method == COLL_IO) {
-        int global_err;
-        MPI_Allreduce(&err, &global_err, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-        if (global_err != NC_NOERR) return err;
+	    /* optimization: to avoid MPI_Allreduce to check parameters at
+	     * every call, we assume caller does the right thing most of the
+	     * time.  If caller passed in bad parameters, we'll still conduct a
+	     * zero-byte operation (everyone has to participate in the
+	     * collective I/O call) but return error */
+    if (err != NC_NOERR) {
+        if (io_method == COLL_IO) {
+	    ncmpii_getput_vars(ncp, varp, start, zeros, zeros, cbuf, 
+				    0, MPI_BYTE, rw_flag, io_method);
+	}
+	return err;
     }
-    else
-#endif
-        if (err != NC_NOERR) return err;
 
     if (rw_flag == READ_REQ) {
         status = ncmpii_getput_vars(ncp, varp, start, count, stride, cbuf,

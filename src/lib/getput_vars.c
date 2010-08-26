@@ -715,17 +715,31 @@ ncmpii_getput_vars(NC               *ncp,
     }
 
 err_check:
-#define CHECK_FATAL_ERROR_COLLECTIVELY
-#ifdef CHECK_FATAL_ERROR_COLLECTIVELY
     /* check API error from any proc before going into a collective call */
-    if (io_method == COLL_IO) {
-        int global_err;
-        MPI_Allreduce(&err, &global_err, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-        if (global_err != NC_NOERR) return err;
+     /* optimization: to avoid MPI_Allreduce to check parameters at
+      * every call, we assume caller does the right thing most of the
+      * time.  If caller passed in bad parameters, we'll still conduct a
+      * zero-byte operation (everyone has to participate in the
+      * collective I/O call) but return error */
+    if (err != NC_NOERR) {
+        if (io_method == COLL_IO) {
+	    nbytes = 0;
+	    /* the two calls to MPI_File_set_view might seem odd: we want all
+	     * processors to return from this collective call.  Note that we
+	     * expect the application to check for errors, but if we hang
+	     * because one process returned early and other processors are in
+	     * MPI_File_set_view, then that's not good either.  */
+	    mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
+			    "native", MPI_INFO_NULL);
+	    if (rw_flag == WRITE_REQ) {
+	        CALLING_MPI_WRITE;
+	    } else {
+	        CALLING_MPI_READ;
+	    }
+	    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+	}
+	return err;
     }
-    else
-#endif
-        if (err != NC_NOERR) return err;
 
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
     mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
