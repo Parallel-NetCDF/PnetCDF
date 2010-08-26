@@ -612,7 +612,7 @@ ncmpii_getput_vars(NC               *ncp,
                    int               io_method)
 {
     void *xbuf=NULL, *cbuf=NULL;
-    int el_size, iscontig_of_ptypes, mpireturn;
+    int el_size, iscontig_of_ptypes, mpireturn, need_swap, is_buf_swapped=0;
     int warning, err, status; /* err is for API abort and status is not */
     MPI_Offset nelems, cnelems, nbytes, offset=0;
     MPI_Status mpistatus;
@@ -635,6 +635,7 @@ ncmpii_getput_vars(NC               *ncp,
     CHECK_DATATYPE(datatype, ptype, el_size, cnelems, iscontig_of_ptypes)
     CHECK_ECHAR(varp)
     CHECK_NELEMS(varp, cnelems, count, bufcount, nelems, nbytes)
+    need_swap = ncmpii_need_swap(varp->type, ptype);
 
     if (cnelems == 0) {
         if (io_method == INDEP_IO)
@@ -665,13 +666,16 @@ ncmpii_getput_vars(NC               *ncp,
         xbuf = NCI_Malloc(nbytes);
 
         if (rw_flag == WRITE_REQ) {
-            /* automatic numeric datatype conversion + swap if necessary */
+            /* automatic numeric datatype conversion + swap if necessary
+               and only xbuf could be byte-swapped, not cbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, cnelems, ptype)
             /* status may be set after DATATYPE_PUT_CONVERT() */
         }
-    } else if ( ncmpii_need_swap(varp->type, ptype) ) {
-        if (rw_flag == WRITE_REQ) /* perform array in-place byte swap */
+    } else if (need_swap) {
+        if (rw_flag == WRITE_REQ) { /* perform array in-place byte swap */
             ncmpii_in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+            is_buf_swapped = (cbuf == buf) ? 1 : 0;
+        }
         xbuf = cbuf;
     } else {
         /* else, just assign contiguous buffer */
@@ -715,30 +719,34 @@ ncmpii_getput_vars(NC               *ncp,
     }
 
 err_check:
-    /* check API error from any proc before going into a collective call */
-     /* optimization: to avoid MPI_Allreduce to check parameters at
-      * every call, we assume caller does the right thing most of the
-      * time.  If caller passed in bad parameters, we'll still conduct a
-      * zero-byte operation (everyone has to participate in the
-      * collective I/O call) but return error */
+    /* check API error from any proc before going into a collective call.
+     * optimization: to avoid MPI_Allreduce to check parameters at
+     * every call, we assume caller does the right thing most of the
+     * time.  If caller passed in bad parameters, we'll still conduct a
+     * zero-byte operation (everyone has to participate in the
+     * collective I/O call) but return error */
     if (err != NC_NOERR) {
-        if (io_method == COLL_IO) {
-	    nbytes = 0;
-	    /* the two calls to MPI_File_set_view might seem odd: we want all
-	     * processors to return from this collective call.  Note that we
-	     * expect the application to check for errors, but if we hang
-	     * because one process returned early and other processors are in
-	     * MPI_File_set_view, then that's not good either.  */
-	    mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
-			    "native", MPI_INFO_NULL);
-	    if (rw_flag == WRITE_REQ) {
-	        CALLING_MPI_WRITE;
-	    } else {
-	        CALLING_MPI_READ;
-	    }
-	    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-	}
-	return err;
+        if (is_buf_swapped) /* byte-swap back to buf's original contents */
+            ncmpii_in_swapn(buf, nelems, ncmpix_len_nctype(varp->type));
+
+        /* release allocated resources */
+        if (filetype != MPI_BYTE)
+            MPI_Type_free(&filetype);
+        filetype = MPI_BYTE;
+
+        if (xbuf != cbuf && xbuf != NULL)
+            NCI_Free(xbuf);
+        if (cbuf != buf && cbuf != NULL)
+            NCI_Free(cbuf);
+
+        if (io_method == INDEP_IO)
+            return err;
+        else /* io_method == COLL_IO */
+	    nbytes = offset = 0;
+	    /* we want all processors to return from this collective call.
+             * Note that we expect the application to check for errors, but if
+             * we hang because one process returned early and other processors
+             * are in MPI_File_set_view, then that's not good either.  */
     }
 
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
@@ -757,7 +765,10 @@ err_check:
     /* reset the file view so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-    if (cnelems == 0)
+    if (err != NC_NOERR) /* no need to go further */
+        return err;
+
+    if (cnelems == 0) /* no need to go further */
         return ((warning != NC_NOERR) ? warning : status);
 
     /* only cnelems > 0 needs to proceed the following */
@@ -765,7 +776,7 @@ err_check:
         if ( ncmpii_need_convert(varp->type, ptype) ) {
             /* automatic numeric datatype conversion + swap if necessary */
             DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, cnelems, ptype)
-        } else if ( ncmpii_need_swap(varp->type, ptype) ) {
+        } else if (need_swap) {
             /* perform array in-place byte swap */
             ncmpii_in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
         }
@@ -778,9 +789,9 @@ err_check:
                 return err;
         }
     }
-    else {
-        if (ncmpii_need_swap(varp->type, ptype) && cbuf == buf && cbuf == xbuf)
-            ncmpii_in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+    else { /* for write case, buf needs to swapped back if swapped previously */
+        if (is_buf_swapped)
+            ncmpii_in_swapn(buf, nelems, ncmpix_len_nctype(varp->type));
 
         if (status == NC_NOERR && IS_RECVAR(varp)) {
             /* update header's number of records in memory */
