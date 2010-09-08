@@ -1,0 +1,37 @@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include ../../macros.make
+
+INCLUDES	= -I$(srcdir)/../../src/lib -I../../src/lib -I$(srcdir)
+
+ld_math		= $(MATHLIB)
+
+SRCS		= collective_write.c \
+                  nonblocking_write.c
+
+OBJS		= $(SRCS:.c=.o)
+
+lib_netcdf	= ../../src/lib/libpnetcdf.a
+ld_netcdf	= -L../../src/lib -lpnetcdf
+
+GARBAGE		= collective_write nonblocking_write
+
+PACKING_LIST	=  $(SRCS) \
+		    Makefile.in
+
+all:
+
+install:
+
+uninstall:
+
+collective_write: collective_write.o
+	$(LINK.c) collective_write.o -o collective_write $(ld_netcdf) $(ld_math) $(LIBS)
+
+nonblocking_write: nonblocking_write.o
+	$(LINK.c) nonblocking_write.o -o nonblocking_write $(ld_netcdf) $(ld_math) $(LIBS)
+
+include $(srcdir)/../../rules.make
+include $(srcdir)/depend
