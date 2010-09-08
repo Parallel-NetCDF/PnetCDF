@@ -1,0 +1,2 @@
+collective_write.o: collective_write.c
+nonblocking_write.o: nonblocking_write.c

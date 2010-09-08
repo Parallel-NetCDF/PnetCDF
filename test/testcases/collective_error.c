@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
-/* This test program check if a collective API can be nicely aborted without
- * causing program hang. It uses a case that one process deliberately cause
- * an erro, while the other does not.
+/* This test program checks if a collective API can be nicely aborted without
+ * causing the program to hang. It runs on 2 processes. One process deliberately
+ * produces an error (using an illegal start argument), while the other does not.
  */
 
 #define CHECK_ERROR(fn) { \
