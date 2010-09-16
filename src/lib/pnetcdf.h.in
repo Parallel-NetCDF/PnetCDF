@@ -162,7 +162,7 @@ typedef nc_type ncmpi_type;
 #define NC_EFILE	(-28)	/* Unknown error in file operation */
 #define NC_EREAD	(-29)	/* Unknown error in reading file */
 #define NC_EWRITE	(-30)	/* Unknown error in writting to file */
-#define NC_EMULTIDEFINE (-31)	/* NC definations on multiprocesses conflict */
+#define NC_EMULTIDEFINE (-31)	/* NC definitions on multiprocesses conflict */
 #define NC_EOFILE	(-32)	/* file open/creation failed */
 #define	NC_EBADID	(-33)	/* Not a netcdf id */
 #define	NC_ENFILE	(-34)	/* Too many netcdfs open */

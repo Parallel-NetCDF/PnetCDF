@@ -68,8 +68,8 @@ void print_info(MPI_Info *info_used)
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, err, ndims;
-    int nprocs, len, *buf, bufsize, rank;
+    int i, j, err, ndims;
+    int nprocs, len, *buf[NUM_VARS], bufsize, rank;
     int gsizes[NDIMS], array_of_distribs[NDIMS];
     int array_of_dargs[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
@@ -111,9 +111,11 @@ int main(int argc, char **argv)
     }
 
     /* allocate buffer and initialize with random numbers */
-    buf = (int *) malloc(bufsize * sizeof(int));
     srand(rank);
-    for (i=0; i<bufsize; i++) buf[i] = rand();
+    for (i=0; i<NUM_VARS; i++) {
+        buf[i] = (int *) malloc(bufsize * sizeof(int));
+        for (j=0; j<bufsize; j++) buf[i][j] = rand();
+    }
 
     MPI_Barrier(MPI_COMM_WORLD);
     write_timing = MPI_Wtime();
@@ -151,7 +153,7 @@ int main(int argc, char **argv)
 
     /* write one variable at a time */
     for (i=0; i<NUM_VARS; i++) {
-        err = ncmpi_put_vara_int_all(ncid, varids[i], starts, counts, buf);
+        err = ncmpi_put_vara_int_all(ncid, varids[i], starts, counts, buf[i]);
         HANDLE_ERROR
     }
 
@@ -162,7 +164,7 @@ int main(int argc, char **argv)
     write_timing = MPI_Wtime() - write_timing;
 
     write_size = bufsize * NUM_VARS;
-    free(buf);
+    for (i=0; i<NUM_VARS; i++) free(buf[i]);
 
     MPI_Reduce(&write_size, &sum_write_size, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
