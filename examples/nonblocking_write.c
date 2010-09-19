@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 
     write_timing = MPI_Wtime() - write_timing;
 
-    write_size = bufsize * NUM_VARS;
+    write_size = bufsize * NUM_VARS * sizeof(int);
     for (i=0; i<NUM_VARS; i++) free(buf[i]);
 
     MPI_Reduce(&write_size, &sum_write_size, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
