@@ -2,21 +2,27 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-include ../../macros.make
+include ../macros.make
 
 INCLUDES	= -I$(srcdir)/../../src/lib -I../../src/lib -I$(srcdir)
 
 ld_math		= $(MATHLIB)
 
-SRCS		= collective_write.c \
-                  nonblocking_write.c
+C_SRCS		= collective_write.c \
+		  nonblocking_write.c \
+		  get_info_c.c
 
-OBJS		= $(SRCS:.c=.o)
+F90_SRCS	= get_info_f.F90
+
+C_OBJS		= $(C_SRCS:.c=.o)
+F90_OBJS	= $(F90_SRCS:.F90=.o)
+
+OBJS		= $(C_OBJS) $(F90_OBJS)
 
 lib_netcdf	= ../../src/lib/libpnetcdf.a
 ld_netcdf	= -L../../src/lib -lpnetcdf
 
-GARBAGE		= collective_write nonblocking_write
+GARBAGE		= collective_write nonblocking_write get_info_c get_info_f
 
 PACKING_LIST	=  $(SRCS) \
 		    Makefile.in
@@ -33,5 +39,14 @@ collective_write: collective_write.o
 nonblocking_write: nonblocking_write.o
 	$(LINK.c) nonblocking_write.o -o nonblocking_write $(ld_netcdf) $(ld_math) $(LIBS)
 
-include $(srcdir)/../../rules.make
+get_info_c: get_info_c.o
+	$(LINK.c) get_info_c.o -o get_info_c $(ld_netcdf) $(ld_math) $(LIBS)
+
+get_info_f.o: get_info_f.F90
+	$(COMPILE.F90) $<
+
+get_info_f: get_info_f.o
+	$(LINK.F90) get_info_f.o -o get_info_f $(ld_netcdf) $(ld_math) $(LIBS)
+
+include $(srcdir)/../rules.make
 include $(srcdir)/depend
