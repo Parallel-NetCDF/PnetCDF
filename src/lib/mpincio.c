@@ -76,6 +76,36 @@ ncmpiio_new(const char *path, int ioflags)
   return nciop;
 }
 
+/*----< ncmpiio_extract_hints() >--------------------------------------------*/
+/* this is where the I/O hints designated to pnetcdf are extracted */
+static
+void ncmpiio_extract_hints(ncio     *nciop,
+                           MPI_Info  info)
+{ 
+    nciop->hints.header_align_size = 0;
+    nciop->hints.var_align_size    = 0;
+
+    /* extract NC hints */
+    if (info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int  flag;
+
+        MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
+        if (flag) nciop->hints.header_align_size = atoi(value);
+
+        MPI_Info_get(info, "nc_var_align_size",    MPI_MAX_INFO_VAL-1, value, &flag);
+        if (flag) nciop->hints.var_align_size = atoi(value);
+
+        /* nc_header_align_size and nc_var_align_size take effect when a file
+           is created or opened and later adding more header or variable data */
+
+        if (nciop->hints.header_align_size < 0)
+            nciop->hints.header_align_size = 0;
+        if (nciop->hints.var_align_size < 0)
+            nciop->hints.var_align_size = 0;
+    }
+}
+
 /*----< ncmpiio_create() >---------------------------------------------------*/
 int
 ncmpiio_create(MPI_Comm     comm,
@@ -107,14 +137,8 @@ ncmpiio_create(MPI_Comm     comm,
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
     nciop->comm      = comm;
-    if (info == MPI_INFO_NULL)
-        nciop->mpiinfo = MPI_INFO_NULL;
-    else
-#ifdef HAVE_MPI_INFO_DUP
-        MPI_Info_dup(info, &nciop->mpiinfo);
-#else
-        nciop->mpiinfo = info;
-#endif
+
+    ncmpiio_extract_hints(nciop, info);
 
     if (fIsSet(ioflags, NC_NOCLOBBER))
         fSet(mpiomode, MPI_MODE_EXCL);
@@ -148,6 +172,9 @@ ncmpiio_create(MPI_Comm     comm,
         ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
         return NC_EOFILE;  
     }
+
+    /* get the file info used by MPI-IO */
+    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
 
 #ifndef HAVE_ACCESS_FUNCTION
     if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
@@ -189,15 +216,9 @@ ncmpiio_open(MPI_Comm     comm,
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
     nciop->comm      = comm;
-    if (info == MPI_INFO_NULL)
-        nciop->mpiinfo = MPI_INFO_NULL;
-    else
-#ifdef HAVE_MPI_INFO_DUP
-        MPI_Info_dup(info, &nciop->mpiinfo);
-#else
-        nciop->mpiinfo = info;
-#endif
  
+    ncmpiio_extract_hints(nciop, info);
+
     mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         int rank;
@@ -206,6 +227,9 @@ ncmpiio_open(MPI_Comm     comm,
         ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
         return NC_EOFILE;
     }
+
+    /* get the file info used by MPI-IO */
+    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
  
     for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
     if (i == MAX_NC_ID) {
@@ -404,6 +428,7 @@ int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
 
     return 0;
 }
+
 /*
  * Local variables:
  *  c-indent-level: 4

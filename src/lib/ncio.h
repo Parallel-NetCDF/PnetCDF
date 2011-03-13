@@ -85,6 +85,14 @@ typedef void ncmpiio_freefunc(void *const pvt);
 #endif
 
 /*
+ * I/O hints used by PnetCDF, but MPI-IO
+ */
+typedef struct {
+    MPI_Offset header_align_size;
+    MPI_Offset var_align_size;
+} nc_hints;
+
+/*
  * netcdf i/o abstraction
  */
 struct ncio {
@@ -126,6 +134,7 @@ struct ncio {
 	MPI_Comm comm;
 	MPI_Info mpiinfo;
 	int mpioflags;
+        nc_hints hints;
 
 	/* member functions do the work */
 
