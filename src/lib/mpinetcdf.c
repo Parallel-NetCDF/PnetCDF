@@ -217,8 +217,12 @@ ncmpi_get_file_info(int       ncid,
     if (status != NC_NOERR)
         return status;
 
+#ifdef HAVE_MPI_INFO_DUP
+    MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
+#else
     mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
     CHECK_MPI_ERROR("MPI_File_get_info", NC_EFILE)
+#endif
 
     return status;
 }
