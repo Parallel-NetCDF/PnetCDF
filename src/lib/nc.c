@@ -940,8 +940,10 @@ ncmpii_NC_enddef(NC *ncp) {
     if (striping_unit && all_var_size > HEADER_ALIGNMENT_LB * striping_unit) {
         /* if system's file striping is available and the size of all
            avaiables meets the header alignment lower bound */
-        h_align = D_RNDUP(h_align, striping_unit);
-        v_align = striping_unit;
+        if (h_align != 1)
+            h_align = D_RNDUP(h_align, striping_unit);
+        if (v_align != 1)
+            v_align = striping_unit;
     }
     else {
         if (h_align == 0)  /* header_align_size is not set at create time */
