@@ -54,6 +54,7 @@ extern "C" {
 /*
  *  The netcdf external data types
  */
+#ifndef _NETCDF_
 typedef enum {
 	NC_NAT =	0,	/* NAT = 'Not A Type' (c.f. NaN) */
 	NC_BYTE =	1,	/* signed 1 byte integer */
@@ -63,6 +64,7 @@ typedef enum {
 	NC_FLOAT =	5,	/* single precision floating point number */
 	NC_DOUBLE =	6	/* double precision floating point number */
 } nc_type;
+#endif
 
 typedef nc_type ncmpi_type;
 
@@ -90,6 +92,7 @@ typedef nc_type ncmpi_type;
 #define _FillValue	"_FillValue"
 
 
+#ifndef _NETCDF_
 /*
  * 'mode' flags for nccreate and ncopen
  */
@@ -102,15 +105,22 @@ typedef nc_type ncmpi_type;
 #define NC_LOCK		0x0400	/* Use locking if available */
 #define NC_SHARE	0x0800	/* Share updates, limit caching */
 #define NC_64BIT_OFFSET 0x0200  /* Use large (64-bit) file offsets */
-#define NC_64BIT_DATA   0x1000  /* (64-bit) supported */
 #define NC_32BIT        0x2000  /* pnetcdf version 1 */
+
+#endif
+/* NOTE: this one is out of the ifndef-endif block only until we port CDF5 to NetCDF4 */
+#define NC_64BIT_DATA   0x1000  /* (64-bit) supported */
 /* Starting with serial netcdf-3.6 and parallel-netcdf-0.9.2, there are
  * different format netCDF files */
 
+#ifndef _NETCDF_
 #define NC_FORMAT_CLASSIC 1
 #define NC_FORMAT_64BIT 2
-#define NC_FORMAT_64BIT_DATA 5
 #define NC_FORMAT_UNKNOWN -1
+#endif
+
+/* NOTE: this one is out of the ifndef-endif block only until we port CDF5 to NetCDF4 */
+#define NC_FORMAT_64BIT_DATA 5
 
 /*
  * Let nc__create() or nc__open() figure out
@@ -139,11 +149,13 @@ typedef nc_type ncmpi_type;
  * applications and utilities.  However, nothing is statically allocated to
  * these sizes internally.
  */
+#ifndef _NETCDF_
 #define NC_MAX_DIMS	512    /* max dimensions per file */
 #define NC_MAX_ATTRS	4096	 /* max global or per variable attributes */
 #define NC_MAX_VARS	4096	 /* max variables per file */
 #define NC_MAX_NAME	128	 /* max length of a name */
 #define NC_MAX_VAR_DIMS	NC_MAX_DIMS /* max per variable dimensions */
+#endif
 
 
 /*
