@@ -76,6 +76,8 @@ AC_PROG_INSTALL
 AC_PROG_YACC
 AC_PROG_LEX
 
+dnl TODO: catch if either  bison or flex not installed and quit
+
 UD_PROG_M4
 AC_PROG_CC
 dnl AC_PROG_CXX
