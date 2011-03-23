@@ -434,7 +434,7 @@ fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
     if (index == ncp->begin_var){ /*There are only record variable(s) in netCDF file. */
         if (ncp->begin_rec < index ||
             ncp->begin_rec != D_RNDUP(ncp->begin_rec, v_align))
-            ncp->begin_rec = D_RNDUP(ncp->begin_rec, v_align);
+            ncp->begin_rec = D_RNDUP(index, v_align);
         /* if the existing begin_rec is already >= index, then leave the
            begin_rec as is (in case some non-record variables are deleted) */
     } else {
