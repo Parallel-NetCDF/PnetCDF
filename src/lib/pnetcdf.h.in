@@ -54,6 +54,9 @@ extern "C" {
 /*
  *  The netcdf external data types
  */
+	/* we happen to like enums because you can print them in the debugger
+	 * but guard against the case where netcdf already defines these and
+	 * includes pnetcdf (as netcdf4 can) */
 #ifndef _NETCDF_
 typedef enum {
 	NC_NAT =	0,	/* NAT = 'Not A Type' (c.f. NaN) */
@@ -89,38 +92,45 @@ typedef nc_type ncmpi_type;
  * and the following reserved name. The value you give the attribute
  * will be used as the fill value for that variable.
  */
-#define _FillValue	"_FillValue"
-
-
+/* do not redefine these if we are included from netcdf */
 #ifndef _NETCDF_
+#define _FillValue	"_FillValue"
+#define NC_FILL		0	/* argument to ncsetfill to clear NC_NOFILL */
+#define NC_NOFILL	0x0100	/* Don't fill data section an records */
+
+
 /*
- * 'mode' flags for nccreate and ncopen
+ * 'mode' flags for ncmpi_open
  */
 #define NC_NOWRITE	0	/* default is read only */
-#define NC_WRITE    	0x1	/* read & write */
+#define NC_WRITE    	0x0001	/* read & write */
+
+/* mode flags for ncmpi_create */
 #define NC_CLOBBER	0
-#define NC_NOCLOBBER	0x4	/* Don't destroy existing file on create */
-#define NC_FILL		0	/* argument to ncsetfill to clear NC_NOFILL */
-#define NC_NOFILL	0x100	/* Don't fill data section an records */
+#define NC_NOCLOBBER	0x0004	/* Don't destroy existing file on create */
+#define NC_64BIT_OFFSET 0x0200  /* Use large (64-bit) file offsets */
 #define NC_LOCK		0x0400	/* Use locking if available */
 #define NC_SHARE	0x0800	/* Share updates, limit caching */
-#define NC_64BIT_OFFSET 0x0200  /* Use large (64-bit) file offsets */
-#define NC_32BIT        0x2000  /* pnetcdf version 1 */
-
+#if 0
+/* these are used by netcdf4: play nice and do not use these flags */
+        NC_NETCDF4      0x1000   used by netcdf4 to select new format */
+	NC_MPIIO        0x2000
+	NC_MPIPOSIX     0x4000
+	NC_PNETCDF      0x8000
 #endif
-/* NOTE: this one is out of the ifndef-endif block only until we port CDF5 to NetCDF4 */
-#define NC_64BIT_DATA   0x1000  /* (64-bit) supported */
+
+#define NC_32BIT        0x0020  /* pnetcdf version 1 */
+#define NC_64BIT_DATA   0x0010  /* (64-bit) supported */
+
 /* Starting with serial netcdf-3.6 and parallel-netcdf-0.9.2, there are
  * different format netCDF files */
 
-#ifndef _NETCDF_
 #define NC_FORMAT_CLASSIC 1
 #define NC_FORMAT_64BIT 2
 #define NC_FORMAT_UNKNOWN -1
-#endif
-
-/* NOTE: this one is out of the ifndef-endif block only until we port CDF5 to NetCDF4 */
 #define NC_FORMAT_64BIT_DATA 5
+
+#endif
 
 /*
  * Let nc__create() or nc__open() figure out
