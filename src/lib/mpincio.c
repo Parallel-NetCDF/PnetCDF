@@ -136,7 +136,7 @@ ncmpiio_create(MPI_Comm     comm,
 
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
-    nciop->comm      = comm;
+    MPI_Comm_dup(comm, &(nciop->comm));
 
     ncmpiio_extract_hints(nciop, info);
 
@@ -147,7 +147,7 @@ ncmpiio_create(MPI_Comm     comm,
         /* to avoid calling MPI_File_set_size() later, let process 0 check
            if the file exists. If not, no need to call MPI_File_set_size */
         int rank;
-        MPI_Comm_rank(comm, &rank);
+        MPI_Comm_rank(nciop->comm, &rank);
         if (rank == 0) { /* check if file exists */
             if (access(path, F_OK) == 0) { /* but is this only available in Linux? */
                 /* file does exist, so delete it */
@@ -164,7 +164,8 @@ ncmpiio_create(MPI_Comm     comm,
 #endif
     }
 
-    mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
+    mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
+            info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(comm, &rank);
@@ -215,11 +216,12 @@ ncmpiio_open(MPI_Comm     comm,
  
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
-    nciop->comm      = comm;
+    MPI_Comm_dup(comm, &(nciop->comm));
  
     ncmpiio_extract_hints(nciop, info);
 
-    mpireturn = MPI_File_open(comm, (char *)path, mpiomode, info, &nciop->collective_fh);
+    mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
+            info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(comm, &rank);
@@ -321,6 +323,9 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     MPI_Info_free(&(nciop->mpiinfo));
 #endif
 
+  if (nciop->comm != MPI_COMM_NULL) {
+      MPI_Comm_free(&(nciop->comm));
+  }
 
   ncmpiio_free(nciop);
 
