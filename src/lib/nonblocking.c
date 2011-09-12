@@ -699,6 +699,7 @@ ncmpii_mgetput(NC           *ncp,
                int           rw_flag,     /* WRITE_REQ or READ_REQ */
                int           io_method)   /* COLL_IO or INDEP_IO */
 {
+#ifdef ENABLE_NONBLOCKING
     int i, len, status=NC_NOERR, warning=NC_NOERR, mpireturn;
     void *buf;
     MPI_Status mpistatus;
@@ -783,4 +784,7 @@ ncmpii_mgetput(NC           *ncp,
     }
 
     return ((warning != NC_NOERR) ? warning : status);
+#else
+    return (NC_EINVAL);
+#endif
 }
