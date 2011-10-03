@@ -76,7 +76,17 @@ AC_PROG_INSTALL
 AC_PROG_YACC
 AC_PROG_LEX
 
-dnl TODO: catch if either  bison or flex not installed and quit
+found_yacc_flex=0;
+
+dnl if configure finds bison then YACC is set to bison -y, so we need to clean
+dnl up the output a bit before testing 
+if which "${YACC% *}" >/dev/null && which "$LEX" >/dev/null ; then
+	found_yacc_flex=1;
+fi
+
+if test "$found_yacc_flex" -ne 1 ; then
+	AC_MSG_ERROR([could not find bison/yacc or flex/lex.  Development tools installed?])
+fi
 
 UD_PROG_M4
 AC_PROG_CC
