@@ -26,7 +26,9 @@
 #endif
 
 /* ncmpi_create/ncmpi_open set up header to be 'chunksize' big and to grow by 'chunksize' as new items added */
-#define NC_DEFAULT_CHUNKSIZE 4096
+#define NC_DEFAULT_CHUNKSIZE 256*1024  /* this used to be 4k.  256k lets us
+					  read in an entire climate header in
+					  one go */
 
 /*
  * The extern size of an empty
