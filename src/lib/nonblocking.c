@@ -725,7 +725,11 @@ ncmpii_mgetput(NC           *ncp,
         MPI_Aint a0, ai;
 
         disps[0] = 0;
+#ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(bufs[0], &a0);
+#else 
+        MPI_Address(bufs[0], &a0);
+#endif
         blocklengths[0] = nbytes[0];
         for (i=1; i<num_reqs; i++) {/*loop for multi-variables*/
 /* wkliao: type convert from MPI_Offset nbytes[i] to int blocklengths[i]
