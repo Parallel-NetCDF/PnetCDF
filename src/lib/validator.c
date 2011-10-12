@@ -587,8 +587,8 @@ val_get_NC(NC *ncp) {
   getbuf.nciop = ncp->nciop;
   getbuf.offset = 0; 	/* read from start of the file */
   getbuf.size = _RNDUP( MAX(MIN_NC_XSZ, ncp->chunk), X_ALIGN );
-  if (getbuf.size > 4096)
-    getbuf.size = 4096;
+  if (getbuf.size > NC_DEFAULT_CHUNKSIZE)
+    getbuf.size = NC_DEFAULT_CHUNKSIZE;
   getbuf.pos = getbuf.base = (void *)NCI_Malloc(getbuf.size);
 
   status = val_fetch(&getbuf, sizeof(magic));
