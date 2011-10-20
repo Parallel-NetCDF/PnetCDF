@@ -324,7 +324,7 @@ gen_c(
 
     /* create netCDF file, uses NC_CLOBBER mode */
     cline("");
-    cline("  int stat=0;");
+    /* stat already declared above */
     cline("   MPI_Init(&argc, &argv);");
     cline("   /* enter define mode */");
 
@@ -334,10 +334,10 @@ gen_c(
 	    filename);
     } else if (giantvar_flag) {
 	    sprintf(stmnt,
-		    "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER|NC_64BIT_DATA, &ncid);",
+		    "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid);",
 		    filename);
     } else {
-	    sprintf(stmnt, "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER, &ncid);", 
+	    sprintf(stmnt, "   stat = ncmpi_create(MPI_COMM_WORLD, \"%s\", NC_CLOBBER, MPI_INFO_NULL, &ncid);", 
 			    filename);
     }
     cline(stmnt);
