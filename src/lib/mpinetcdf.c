@@ -210,7 +210,8 @@ int
 ncmpi_get_file_info(int       ncid,
                     MPI_Info *info_used)
 {
-    int status=NC_NOERR, mpireturn;
+    int flag, status=NC_NOERR, mpireturn;
+    char value[MPI_MAX_INFO_VAL];
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
@@ -223,6 +224,14 @@ ncmpi_get_file_info(int       ncid,
     mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
     CHECK_MPI_ERROR("MPI_File_get_info", NC_EFILE)
 #endif
+
+    ncmpiio_get_hint(ncp, "nc_header_align_size", value, &flag);
+    if (flag)
+        MPI_Info_set(*info_used, "nc_header_align_size", value);
+
+    ncmpiio_get_hint(ncp, "nc_var_align_size", value, &flag);
+    if (flag)
+        MPI_Info_set(*info_used, "nc_var_align_size", value);
 
     return status;
 }
