@@ -210,7 +210,7 @@ int
 ncmpi_get_file_info(int       ncid,
                     MPI_Info *info_used)
 {
-    int flag, status=NC_NOERR, mpireturn;
+    int status=NC_NOERR, mpireturn;
     char value[MPI_MAX_INFO_VAL];
     NC *ncp;
 
