@@ -236,20 +236,20 @@ if test x${MPI_INSTALL} != x ; then
 	AC_MSG_RESULT(using $MPIF90)
 fi
 
-if test ! -x "${MPICC}" ; then
+if test ! -x "$(which ${MPICC})" ; then
 	AC_MSG_ERROR(parallel-netcdf requires an mpi compiler. Please specify
 	the location of one either with the MPICC environment variable or the
 	--with-mpi configure flag) 
 fi
 
 if test "$enable_fortran" = yes ; then
-	if test ! -x "${MPIF77}" ; then
+	if test ! -x "$(which ${MPIF77})" ; then
 		AC_MSG_ERROR(you have requested fortran support but configure
 		cannot find a Fortran77 compiler.  Please specifiy the location
 		of one either with the MPIF77 environment variable or the --with-mpi
 		configure flag).
 	fi
-	if test ! -x "${MPIF90}" ; then
+	if test ! -x "$(which ${MPIF90})" ; then
 		AC_MSG_ERROR(you have requested fortran support but configure
 		cannot find a Fortran90 compiler.  Please specifiy the location
 		of one either with the MPIF90 environment variable or the
