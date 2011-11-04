@@ -1,0 +1,47 @@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+NETCDF=@prefix@
+CC=@MPICC@
+CFLAGS = @CFLAGS@  -I$(NETCDF)/include
+LDFLAGS = -L$(NETCDF)/lib 
+LIBS = -lpnetcdf
+
+LDFLAGS=-L$(NETCDF)/lib
+LIBS=-lpnetcdf 
+
+OBJS = pnetcdf-write-from-master pnetcdf-read-from-master \
+	pnetcdf-write-standard pnetcdf-read-standard \
+	pnetcdf-write-flexible pnetcdf-read-flexible \
+	pnetcdf-write-nb pnetcdf-read-nb
+
+all: $(OBJS)
+
+pnetcdf-write-from-master: $(srcdir)/pnetcdf-write-from-master.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-from-master: $(srcdir)/pnetcdf-read-from-master.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-standard: $(srcdir)/pnetcdf-write-standard.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-standard: $(srcdir)/pnetcdf-read-standard.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-flexible: $(srcdir)/pnetcdf-write-flexible.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-flexible: $(srcdir)/pnetcdf-write-flexible.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-nb: $(srcdir)/pnetcdf-write-nb.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-nb: $(srcdir)/pnetcdf-read-nb.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+
+clean:
+	rm -f *.o $(OBJS) *.nc
