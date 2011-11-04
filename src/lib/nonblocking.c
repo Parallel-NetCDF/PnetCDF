@@ -152,6 +152,7 @@ ncmpi_wait(int ncid,
     int status;
     NC  *ncp;
 
+    if (num_reqs == 0) return NC_NOERR;
     CHECK_NCID
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
@@ -179,6 +180,7 @@ ncmpi_wait_all(int  ncid,
     int status;
     NC  *ncp;
 
+    if (num_reqs == 0) return NC_NOERR;
     CHECK_NCID
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
