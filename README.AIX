@@ -4,6 +4,10 @@
 - the nc_test and nf_test tests use M4 to generate code.  AIX-m4 won't
   generate correct code, so use gnu M4.
 
+- We had a report of a build failure when building the 'ncmpigen' utility.  The
+  system 'bison' tool (bison-1.875) did not produce output files, but when the
+  user installed a new version of gnu bison, everything worked fine.   
+
 - the pnetcdf code is slowly taking on more and more c99 features.  
 
 On BlueFire, the commands I used look like this:
