@@ -164,10 +164,10 @@ get_type(int type)
 
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int i, j, err, isRecvar, rank, nprocs;
+    int i, j, c, err, isRecvar, rank, nprocs;
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, *dimids1;
     int ncid2, ndims2, nvars2, natts2, unlimdimid2, *dimids2;
-    char c, str[512], *name1, *name2;
+    char str[512], *name1, *name2;
     MPI_Offset *shape, varsize, *start;
     MPI_Offset attlen1, dimlen1, attlen2, dimlen2;
     ncmpi_type type1, type2;
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
     var_list.names      = NULL;
     var_list.nvars      = 0;
 
-    while ((c = getopt(argc, argv, "bhv:")) != EOF)
+    while ((c = getopt(argc, argv, "bhv:")) != -1)
         switch(c) {
             case 'h':               /* compare header only */
                 check_header = 1;
