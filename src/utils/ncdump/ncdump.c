@@ -46,6 +46,7 @@ usage(void)
   [-l len]         Line length maximum in data section (default 80)\n\
   [-n name]        Name for netCDF (default derived from file name)\n\
   [-p n[,n]]       Display floating-point values with less precision\n\
+  [-V]             Print the file format (CDF-1, CDF-2, or CDF-5)\n\
   file             File name of input netCDF file\n"
 
     (void) fprintf(stderr,
