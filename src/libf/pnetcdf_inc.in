@@ -61,6 +61,7 @@
       integer nf_lock
       integer nf_share
       integer nf_64bit_offset
+      integer nf_32bit
       integer nf_64bit_data
       integer nf_sizehint_default
       integer nf_align_chunk
@@ -77,7 +78,8 @@
       parameter (nf_lock = 1024)
       parameter (nf_share = 2048)
       parameter (nf_64bit_offset = 512)
-      parameter (nf_64bit_data = 4096)
+      parameter (nf_64bit_data = 16)
+      parameter (nf_32bit = 32)
       parameter (nf_sizehint_default = 0)
       parameter (nf_align_chunk = -1)
       parameter (nf_format_classic = 1)
