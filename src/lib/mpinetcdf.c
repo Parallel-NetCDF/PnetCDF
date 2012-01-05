@@ -225,10 +225,10 @@ ncmpi_get_file_info(int       ncid,
     CHECK_MPI_ERROR("MPI_File_get_info", NC_EFILE)
 #endif
 
-    sprintf(value, "%d", ncp->nciop->hints.header_align_size);
+    sprintf(value, "%lld", ncp->nciop->hints.header_align_size);
     MPI_Info_set(*info_used, "nc_header_align_size", value);
 
-    sprintf(value, "%d", ncp->nciop->hints.var_align_size);
+    sprintf(value, "%lld", ncp->nciop->hints.var_align_size);
     MPI_Info_set(*info_used, "nc_var_align_size", value);
 
     return status;
