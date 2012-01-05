@@ -405,13 +405,13 @@ struct NC {
 	/* contains the previous NC during redef. */
 	struct NC *old;
 	/* flags */
-#define NC_INDEP 1	/* in independent data mode, cleared by endindep */
-#define NC_CREAT 2	/* in create phase, cleared by ncenddef */
-#define NC_INDEF 8	/* in define mode, cleared by ncenddef */
-#define NC_NSYNC 0x10	/* synchronise numrecs on change */
-#define NC_HSYNC 0x20	/* synchronise whole header on change */
-#define NC_NDIRTY 0x40	/* numrecs has changed */
-#define NC_HDIRTY 0x80  /* header info has changed */
+#define NC_INDEP 0x10000	/* in independent data mode, cleared by endindep */
+#define NC_CREAT 0x20000	/* in create phase, cleared by ncenddef */
+#define NC_INDEF 0x80000	/* in define mode, cleared by ncenddef */
+#define NC_NSYNC 0x100000	/* synchronise numrecs on change */
+#define NC_HSYNC 0x200000	/* synchronise whole header on change */
+#define NC_NDIRTY 0x400000	/* numrecs has changed */
+#define NC_HDIRTY 0x800000  /* header info has changed */
 /*	NC_NOFILL in netcdf.h, historical interface */
 	int flags;
 	ncio *nciop;
