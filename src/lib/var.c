@@ -356,112 +356,82 @@ ncx_szof(nc_type type)
 	return 0;
 }
 
-
 /*
- * 'compile' the shape and len of a variable
- *  Formerly
- *   ncmpii_NC_var_shape(var, dims)
+ * set varp->xsz, varp->shape and varp->len of a variable
  */
-#include <stdio.h>
 int
-ncmpii_NC_var_shape64(NC_var *varp, const NC_dimarray *dims)
+ncmpii_NC_var_shape64(NC                *ncp,
+                      NC_var            *varp,
+                      const NC_dimarray *dims)
 {
-	MPI_Offset *shp, *dsp, *op;
-	int *ip;
-	const NC_dim *dimp;
-	MPI_Offset product = 1;
-/*
-	int *shp, *dsp, *op;
-	int *ip;
-	const NC_dim *dimp;
-	int product = 1;
-*/	
-	varp->xsz = ncx_szof(varp->type);
+    int i;
+    MPI_Offset product = 1;
 
-	if(varp->ndims == 0)
-	{
-		goto out;
-	}
+    /* set the size of 1 element */
+    varp->xsz = ncx_szof(varp->type);
 
-	/*
-	 * use the user supplied dimension indices
-	 * to determine the shape
-	 */
-/* 	for (i=0; i<varp->ndims;i++){
-  		   
-                   printf("ncmpii_NC_var_shape64: varp->dimids[%d]:%d, varp->shape[%d]:%d\n",i, varp->dimids[i],i, varp->shape[i]);
+    if (varp->ndims == 0) goto out;
 
-        };
-*/
-        for(ip = varp->dimids, op = varp->shape
-		; ip < &varp->dimids[varp->ndims]; ip++, op++)
-	{
-		if(*ip < 0 || (*ip) >= ((dims != NULL) ? dims->nelems : 1) ){
-#ifdef DEBUG
-		        printf("return NC_EBADDIM, *ip:%d\n", *ip);
-#endif
-			return NC_EBADDIM;
-		}
-		dimp = ncmpii_elem_NC_dimarray(dims, *ip);
-		*op = dimp->size;
-		if(*op == NC_UNLIMITED && ip != varp->dimids)
-			return NC_EUNLIMPOS;
-	}
+    /*
+     * use the user supplied dimension indices to determine the shape
+     */
+    for (i=0; i<varp->ndims; i++) {
+        const NC_dim *dimp;
 
-	/* 
-	 * Compute the dsizes
-	 */
-				/* ndims is > 0 here */
-	for(shp = varp->shape + varp->ndims -1,
-				dsp = varp->dsizes + varp->ndims -1;
- 			shp >= varp->shape;
-			shp--, dsp--)
-	{
-		if(!(shp == varp->shape && IS_RECVAR(varp)))
-		{
-			if( *shp <= X_UINT_MAX / product)
-			{
-				product *= *shp;
-			} else
-			{
-				product = X_UINT_MAX;
-			}
-		}
-		*dsp = product;
-	}
+        if (varp->dimids[i] < 0)
+            return NC_EBADDIM;
+        if (varp->dimids[i] >= ((dims != NULL) ? dims->nelems : 1))
+            return NC_EBADDIM;
 
+        dimp = ncmpii_elem_NC_dimarray(dims, varp->dimids[i]);
+        varp->shape[i] = dimp->size;
+
+        /* check for record variable, only the highest dimension can
+         * be unlimited */
+        if (varp->shape[i] == NC_UNLIMITED && i != 0)
+            return NC_EUNLIMPOS;
+    }
+
+    /* 
+     * compute the dsizes, the right to left product of shape
+     */
+    product = 1;
+    if (varp->ndims == 1) {
+        if (varp->shape[0] == NC_UNLIMITED)
+            varp->dsizes[0] = 1;
+        else {
+            varp->dsizes[0] = varp->shape[0];
+            product = varp->shape[0];
+        }
+    }
+    else { /* varp->ndims > 1 */
+        varp->dsizes[varp->ndims-1] = varp->shape[varp->ndims-1];
+        product = varp->shape[varp->ndims-1];
+        for (i=varp->ndims-2; i>=0; i--) {
+            if (varp->shape[i] != NC_UNLIMITED)
+                product *= varp->shape[i];
+            varp->dsizes[i] = product;
+        }
+    }
 
 out :
+    /*
+     * For CDF-1 and CDF-2 formats, the total number of array elements
+     * cannot exceed 2^32
+     */
+    if (! fIsSet(ncp->flags, NC_64BIT_DATA) &&
+        product >= X_UINT_MAX)
+        return NC_EVARSIZE;
 
-	/* with new CDF-5 variable sizes, we might be able to avoid the bug
-	 * from serial netcdf.  not sure. need to double check */
-	if (varp->xsz <= X_UINT_MAX - 1/ product) 
-		/* if int. mult won't overflow ...*/
-	{
-		varp->len = product * varp->xsz;
-		switch(varp->type) {
-			case NC_BYTE :
-			case NC_CHAR : 
-			case NC_SHORT :
-				if( varp->len%4 != 0 )
-				{
-					varp->len += 4 - varp->len%4; /* round up */
-					/*		*dsp += 4 - *dsp%4; */
-				}
-				break;
-			default:
-				/* already aligned */
-				break;
-		}
-	} else
-	{ /* ok for last var to be "too big", indicated by this special len */
-		varp->len = X_UINT_MAX;
-	}
-#if 0
-	arrayp("\tshape", varp->ndims, varp->shape);
-	arrayp("\tdsizes", varp->ndims, varp->dsizes);
-#endif
-	return NC_NOERR;
+    /*
+     * align variable size to 4 byte boundary, required by all netcdf file
+     * formats
+     */
+    varp->len = product * varp->xsz;
+    if (varp->len % 4 > 0)
+        varp->len += 4 - varp->len % 4; /* round up */
+
+    return NC_NOERR;
 }
 
 /*
@@ -568,7 +538,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 
 	
 
-	status = ncmpii_NC_var_shape64(varp, &ncp->dims);
+	status = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
 	if(status != NC_NOERR)
 	{
 		ncmpii_free_NC_var(varp);
@@ -838,3 +808,63 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
 
     return NC_NOERR;
 }
+
+int
+ncmpi_inq_varoffset(int         ncid,
+                    int         varid, 
+                    MPI_Offset *offset)
+{
+    int     status;
+    NC     *ncp;
+    NC_var *varp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
+
+    varp = elem_NC_vararray(&ncp->vars, varid);
+    if (varp == NULL)
+        return NC_ENOTVAR;
+
+    if (offset != 0)
+        *offset = varp->begin;
+
+    return NC_NOERR;
+}
+
+/* some utility functions for debugging purpose */
+#include <stdio.h>
+int ncmpi_print_all_var_offsets(int ncid) {
+    int i;
+    NC_var **vpp;
+    NC *ncp;
+
+    ncmpii_NC_check_id(ncid, &ncp);
+
+    if (ncp->begin_var%1048576)
+        printf("%s header size (ncp->begin_var)=%lld MB + %lld\n",
+        ncp->nciop->path, ncp->begin_var/1048575, ncp->begin_var%1048576);
+    else
+        printf("%s header size (ncp->begin_var)=%lld MB\n",
+        ncp->nciop->path, ncp->begin_var/1048575);
+
+    vpp = ncp->vars.value;
+    for (i=0; i<ncp->vars.nelems; i++, vpp++) {
+        char str[1024];
+        MPI_Offset off = (*vpp)->begin;
+        MPI_Offset rem = off % 1048576;;
+
+        if (IS_RECVAR(*vpp))
+            sprintf(str,"    Record variable \"%20s\": ",(*vpp)->name->cp);
+        else
+            sprintf(str,"non-record variable \"%20s\": ",(*vpp)->name->cp);
+
+        if (rem)
+            printf("%s offset=%12lld MB + %7lld len=%lld\n", str, off/1048576, rem,(*vpp)->len);
+        else
+            printf("%s offset=%12lld MB len=%lld\n", str, off/1048576,(*vpp)->len);
+    }
+    return NC_NOERR;
+}
+
+

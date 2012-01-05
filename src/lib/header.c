@@ -87,7 +87,7 @@ ncmpii_NC_computeshapes(NC *ncp)
     if(ncp->vars.nelems == 0) return(0);
 
     for ( /*NADA*/; vpp < end; vpp++) {    
-        status = ncmpii_NC_var_shape64(*vpp, &ncp->dims);
+        status = ncmpii_NC_var_shape64(ncp, *vpp, &ncp->dims);
 
         if(status != NC_NOERR) return(status);
  
@@ -405,10 +405,6 @@ hdr_put_NC_var(bufferinfo *pbp, const NC_var *varp) {
 */
   if (status != NC_NOERR)
     return status;
-
-
-  for (i=0; i< varp->ndims; i++){
-  }
 
   status = hdr_put_NC_attrarray(pbp, &varp->attrs);
   if (status != NC_NOERR)
