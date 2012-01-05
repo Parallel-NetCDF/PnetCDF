@@ -352,6 +352,8 @@ int ncmpi_inq_vardimid(int ncid, int varid, int *dimidsp);
 
 int ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
+int ncmpi_inq_varoffset(int ncid, int varid, MPI_Offset *offset);
+
 /* End Inquiry Functions */
 
 /* Begin _att */

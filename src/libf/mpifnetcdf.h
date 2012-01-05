@@ -44,6 +44,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_inq_vartype_ ( int *v1, int *v2, int *v3 
 extern FORTRAN_API int FORT_CALL nfmpi_inq_varndims_ ( int *v1, int *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_vardimid_ ( int *v1, int *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_varnatts_ ( int *v1, int *v2, MPI_Fint *v3 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_varoffset_ ( int *v1, int *v2, MPI_Offset*v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Offset*v5 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_attid_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *v4 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_atttype_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4 FORT_END_LEN(d3) );
