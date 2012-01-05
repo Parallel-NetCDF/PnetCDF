@@ -385,18 +385,18 @@ do_ncdump(const char *path, struct fspec* specp)
 
     ncmpi_inq_version(ncid, &NC_mode);
     if (specp->version) {
-        if (NC_mode == 0x1000) 
+        if (NC_mode == NC_64BIT_DATA) 
            Printf ("%s file format: CDF-5 (big variables)\n", specp->name);
-        else if (NC_mode == 0x0200) 
+        else if (NC_mode == NC_64BIT_OFFSET) 
               Printf ("%s file format: CDF-2 (large file)\n", specp->name);
 	    else Printf ("%s file format: CDF-1\n", specp->name);
     } else {
 
     Printf ("netcdf %s {\n", specp->name);
 
-    if (NC_mode == 0x1000) 
+    if (NC_mode == NC_64BIT_DATA) 
        Printf ("// file format: CDF-5 (big variables)\n");
-    else if (NC_mode == 0x0200) 
+    else if (NC_mode == NC_64BIT_OFFSET) 
            Printf ("// file format: CDF-2 (large file)\n");
 	 else Printf ("// file format: CDF-1\n");
     /*
