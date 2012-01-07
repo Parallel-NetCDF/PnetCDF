@@ -200,6 +200,8 @@ ncmpi_strerror(int err)
 	    return "Number of records is inconsistent among processes.";
 	case NC_EINVAL_REQUEST:
 	    return "Invalid nonblocking request ID.";
+	case NC_ECMODE:
+	    return "File create modes are inconsistent among all processes.";
 	
 	default:
 	    return unknown;

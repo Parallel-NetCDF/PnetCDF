@@ -1439,11 +1439,13 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
 }
 
 int
-ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
+ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
+                    NC         *ncp) {
     int rank, status;
     schar magic[sizeof(ncmagic)];
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *temp_ncp;
+    char *root_magic;
 
     assert(ncp != NULL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -1460,24 +1462,71 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp) {
 
     temp_ncp = ncmpii_new_NC(&chunksize);
 
+    /* consistency of magic numbers should have already been checked during
+     * ncmpi_create()
+     */
+#ifdef CHECK_MAGIC_CONSISTENCY
+    if (magic[sizeof(ncmagic)-1] == 0x5)
+        root_magic = "CDF-5";
+    else if (magic[sizeof(ncmagic)-1] == 0x2)
+        root_magic = "CDF-2";
+    else if (magic[sizeof(ncmagic)-1] == 0x1)
+        root_magic = "CDF-1";
+    else
+        return NC_ENOTNC;
+
     /* check version number in last byte of magic */
-    if (magic[sizeof(ncmagic)-1] == 0x1) {
-        getbuf->version = 1;
-    } else if (magic[sizeof(ncmagic)-1] == 0x2) {
+    if (ncp->flags & NC_64BIT_DATA) {
+        if (magic[sizeof(ncmagic)-1] != 0x5) {
+            fprintf(stderr,"Error: file format inconsistent (local=%s, root=%s)\n", "CDF-5", root_magic);
+            return NC_ECMODE;
+        }
+        getbuf->version = 5;
+        fSet(temp_ncp->flags, NC_64BIT_DATA);
+
+        /* shouldn't this check have already been done? */
+        if (sizeof(MPI_Offset) != 8)
+            return NC_ESMALL;
+    }
+    else if (ncp->flags & NC_64BIT_OFFSET) {
+        if (magic[sizeof(ncmagic)-1] != 0x2) {
+            fprintf(stderr,"Error: file format inconsistent (local=%s, root=%s)\n", "CDF-2", root_magic);
+            return NC_ECMODE;
+        }
         getbuf->version = 2;
         fSet(temp_ncp->flags, NC_64BIT_OFFSET);
+
+        /* shouldn't this check have already been done? */
         if (sizeof(MPI_Offset) != 8)
             /* take the easy way out: if we can't support all CDF-2
              * files, return immediately */
             return NC_ESMALL;
-    } else if (magic[sizeof(ncmagic)-1] == 0x5) {
+    }
+    else {
+        if (magic[sizeof(ncmagic)-1] != 0x1) {
+            fprintf(stderr,"Error: file format inconsistent (local=%s, root=%s)\n", "CDF-1", root_magic);
+            return NC_ECMODE;
+        }
+        getbuf->version = 1;
+    }
+#else
+    if (magic[sizeof(ncmagic)-1] == 0x5) {
         getbuf->version = 5;
         fSet(temp_ncp->flags, NC_64BIT_DATA);
         if (sizeof(MPI_Offset) != 8)
             return NC_ESMALL;
-    } else {
-        return NC_ENOTNC;
     }
+    else if (magic[sizeof(ncmagic)-1] == 0x2) {
+        getbuf->version = 2;
+        fSet(temp_ncp->flags, NC_64BIT_OFFSET);
+        if (sizeof(MPI_Offset) != 8)
+            return NC_ESMALL;
+    }
+    else if (magic[sizeof(ncmagic)-1] == 0x1)
+        getbuf->version = 1;
+    else
+        return NC_ENOTNC;
+#endif
 
     status = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
     if (status != NC_NOERR)

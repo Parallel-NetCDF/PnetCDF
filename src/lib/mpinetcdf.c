@@ -40,6 +40,22 @@ ncmpi_create(MPI_Comm    comm,
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE; /* might be a good thing to hint later */
     NC *ncp;
 
+    /* check if cmode are consistent across all processes */
+    int my_cmode, cmode_sum, nprocs;
+    MPI_Comm_size(comm, &nprocs);
+
+    my_cmode = 1;
+    if (cmode & NC_64BIT_OFFSET)  my_cmode = 2;
+    if (cmode & NC_64BIT_DATA)    my_cmode = 5;
+
+    MPI_Allreduce(&my_cmode, &cmode_sum, 1, MPI_INT, MPI_SUM, comm);
+    if (cmode_sum != my_cmode * nprocs) {
+        // fprintf(stderr,"Error: create modes are inconsistent\n");
+        *ncidp = -1;  /* cause NC_EBADID for any further opertion */
+        return NC_ECMODE;
+    }
+    /* if cmodes are inconsistent, then it is a fatal error to continue */
+
     ncp = ncmpii_new_NC(&chunksize); /* allocate buffer for header */
     if (ncp == NULL) 
         return NC_ENOMEM;
