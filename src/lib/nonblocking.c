@@ -788,14 +788,25 @@ ncmpii_mgetput(NC           *ncp,
     /* reset fileview so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
+    /* update the number of records */
     if (rw_flag == WRITE_REQ) {
+        /* Because netCDF allows only one unlimited dimension, find the
+         * maximum number of records from all nonblocking requests and
+         * update newnumrecs once
+         */
+        MPI_Offset max_newnumrecs = ncp->numrecs;
         for (i=0; i<num_reqs; i++) {
             if (IS_RECVAR(varps[i])) {
                 /* update the number of records in NC */
                 MPI_Offset newnumrecs = starts[i][0] + counts[i][0];
-                ncmpii_update_numrecs(ncp, newnumrecs); /* this is collective */
+                max_newnumrecs = MAX(max_newnumrecs, newnumrecs);
             }
         }
+        ncmpii_update_numrecs(ncp, max_newnumrecs);
+        /* ncmpii_update_numrecs() is collective, so even if this process
+         * finds its max_newnumrecs being zero, it still needs to participate
+         * the call
+         */
     }
 
     return ((warning != NC_NOERR) ? warning : status);
