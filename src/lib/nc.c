@@ -227,28 +227,17 @@ ncmpii_free_NC(NC *ncp)
 }
 
 
-/* static */
+/*----< ncmpii_new_NC() >----------------------------------------------------*/
 NC *
 ncmpii_new_NC(const MPI_Offset *chunkp)
 {
-        NC *ncp;
+    NC *ncp = (NC *) NCI_Calloc(1, sizeof(NC));
 
-        ncp = (NC *) NCI_Malloc(sizeof(NC));
-        if(ncp == NULL)
-                return NULL;
-        memset(ncp, 0, sizeof(NC));
+    if (ncp == NULL) return NULL;
 
-        if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-                ncp->xsz = MIN_NC_XSZ+28; /*Kgao*/
-        } else {
-                ncp->xsz = MIN_NC_XSZ; 
-        }
+    ncp->chunk = (chunkp != NULL) ? *chunkp : NC_SIZEHINT_DEFAULT;
 
-        assert(ncp->xsz == ncmpii_hdr_len_NC(ncp, 0)); 
-        
-        ncp->chunk = (chunkp != NULL) ? *chunkp : NC_SIZEHINT_DEFAULT;
-
-        return ncp;
+    return ncp;
 }
 
 /* This function sets a default create flag that will be logically

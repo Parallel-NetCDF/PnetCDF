@@ -586,7 +586,9 @@ val_get_NC(NC *ncp) {
 
   getbuf.nciop = ncp->nciop;
   getbuf.offset = 0; 	/* read from start of the file */
-  getbuf.size = _RNDUP( MAX(MIN_NC_XSZ, ncp->chunk), X_ALIGN );
+
+  /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
+  getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
   if (getbuf.size > NC_DEFAULT_CHUNKSIZE)
     getbuf.size = NC_DEFAULT_CHUNKSIZE;
   getbuf.pos = getbuf.base = (void *)NCI_Malloc(getbuf.size);
