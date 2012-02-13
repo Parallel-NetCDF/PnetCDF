@@ -80,7 +80,9 @@ ncmpi_create(MPI_Comm    comm,
         fSet(ncp->flags, NC_32BIT);
         sizeof_off_t = 4;
     }
-    assert(ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t));
+
+    /* find the true header size (not-yet aligned) */
+    ncp->xsz = ncmpii_hdr_len_NC(ncp, sizeof_off_t);
 
     fSet(ncp->flags, NC_NOFILL);
 
