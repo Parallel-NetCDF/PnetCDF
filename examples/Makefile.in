@@ -50,3 +50,14 @@ get_info_f: get_info_f.o
 
 include $(srcdir)/../rules.make
 include $(srcdir)/depend
+
+SUBDIRS = tutorial
+
+clean:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
+
+distclean:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
+	/bin/rm -f Makefile
+	if [ @srcdir@ != . ] ; then /bin/rmdir $(SUBDIRS) ; fi
+

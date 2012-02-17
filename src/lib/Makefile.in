@@ -46,7 +46,8 @@ LIB_CSRCS = \
 	i_getput_varm.c \
 	m_getput_varx.c \
 	nonblocking.c   \
-        malloc.c
+        malloc.c \
+	utf8proc.c
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \
@@ -61,7 +62,9 @@ PACKING_LIST = \
 	pnetcdf.h \
 	rnd.h \
 	ncmpidtype.h \
-	macro.h
+	macro.h \
+	utf8proc_data.h \
+	 utf8proc.h
 
 LIB_OBJS = $(LIB_CSRCS:.c=.o)
 
