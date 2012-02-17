@@ -432,7 +432,11 @@ hdr_put_NC_dimarray(bufferinfo *pbp, const NC_dimarray *ncap) {
   assert(pbp != NULL);
   
   if (ncap == NULL || ncap->nelems == 0) {
-     /* ABSENT */
+     /* ABSENT = ZERO  ZERO |  // list is not present for CDF-1 and 2
+      *          ZERO  ZERO64  // for CDF-5
+      * ZERO   = \x00 \x00 \x00 \x00                      // 32-bit zero
+      * ZERO64 = \x00 \x00 \x00 \x00 \x00 \x00 \x00 \x00  // 64-bit zero
+      */
     const MPI_Offset nosz = 0;
     status = hdr_put_NCtype(pbp, NC_UNSPECIFIED);
     if (status != NC_NOERR)
@@ -469,7 +473,11 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap) {
 
   assert(pbp != NULL);
   if (ncap == NULL || ncap->nelems == 0) {
-     /* ABSENT */
+     /* ABSENT = ZERO  ZERO |  // list is not present for CDF-1 and 2
+      *          ZERO  ZERO64  // for CDF-5
+      * ZERO   = \x00 \x00 \x00 \x00                      // 32-bit zero
+      * ZERO64 = \x00 \x00 \x00 \x00 \x00 \x00 \x00 \x00  // 64-bit zero
+      */
     const MPI_Offset nosz = 0;
     status = hdr_put_NCtype(pbp, NC_UNSPECIFIED);
     if (status != NC_NOERR)
@@ -507,7 +515,11 @@ hdr_put_NC_vararray(bufferinfo *pbp, const NC_vararray *ncap){
   assert(pbp != NULL);
 
   if (ncap == NULL || ncap->nelems == 0) {
-     /* ABSENT */
+     /* ABSENT = ZERO  ZERO |  // list is not present for CDF-1 and 2
+      *          ZERO  ZERO64  // for CDF-5
+      * ZERO   = \x00 \x00 \x00 \x00                      // 32-bit zero
+      * ZERO64 = \x00 \x00 \x00 \x00 \x00 \x00 \x00 \x00  // 64-bit zero
+      */
     const MPI_Offset nosz = 0;
     status = hdr_put_NCtype(pbp, NC_UNSPECIFIED);
     if (status != NC_NOERR)

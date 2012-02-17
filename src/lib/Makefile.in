@@ -64,7 +64,7 @@ PACKING_LIST = \
 	ncmpidtype.h \
 	macro.h \
 	utf8proc_data.h \
-	 utf8proc.h
+	utf8proc.h
 
 LIB_OBJS = $(LIB_CSRCS:.c=.o)
 
