@@ -284,6 +284,9 @@ AC_SUBST(MPIF90)
 
 AC_CHECK_HEADERS(stdlib.h sys/types.h)
 
+# Check for <stdbool.h> that conforms to C99 requirements
+AC_HEADER_STDBOOL
+
 AC_CHECK_FUNC(strerror, ,AC_DEFINE(NO_STRERROR))
 AC_FUNC_ALLOCA
 AC_STRUCT_ST_BLKSIZE

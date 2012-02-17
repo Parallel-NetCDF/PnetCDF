@@ -51,4 +51,8 @@ pnetcdf-read-nb: $(srcdir)/pnetcdf-read-nb.c
 
 
 clean:
-	rm -f *.o $(OBJS) *.nc
+	/bin/rm -f *.o $(OBJS) *.nc
+
+distclean: clean
+	/bin/rm -f Makefile
+
