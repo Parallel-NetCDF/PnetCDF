@@ -308,7 +308,7 @@ ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem)
 int
 ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	int dimid;
 	NC_dim *dimp;
@@ -320,9 +320,14 @@ ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
 	if(!NC_indef(ncp))
 		return NC_ENOTINDEFINE;
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	/* MPI_Offset is usually a signed value, but serial netcdf uses 
 	 * MPI_Offset -- normally unsigned */
@@ -483,7 +488,7 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
 int
 ncmpi_rename_dim( int ncid, int dimid, const char *newname)
 {
-    int status, existid;
+    int file_ver, status, existid;
     NC *ncp;
     NC_dim *dimp;
 
@@ -494,9 +499,14 @@ ncmpi_rename_dim( int ncid, int dimid, const char *newname)
     if (NC_readonly(ncp))
         return NC_EPERM;
 
-    status = ncmpii_NC_check_name(newname);
-    if (status != NC_NOERR)
-        return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(newname, file_ver);
+    if (status != NC_NOERR) return status;
 
     existid = NC_finddim(&ncp->dims, newname, &dimp);
     if (existid != -1)

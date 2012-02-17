@@ -72,7 +72,7 @@ extern void
 ncmpii_free_NC_string(NC_string *ncstrp);
 
 extern int
-ncmpii_NC_check_name(const char *name);
+ncmpii_NC_check_name(const char *name, int file_ver);
 
 extern NC_string *
 ncmpii_new_NC_string(MPI_Offset slen, const char *str);

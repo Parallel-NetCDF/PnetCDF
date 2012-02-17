@@ -29,42 +29,51 @@ ncmpii_free_NC_string(NC_string *ncstrp)
 	NCI_Free(ncstrp);
 }
 
+static int ncmpii_NC_check_name_CDF1(const char *name);
+static int ncmpii_NC_check_name_CDF2(const char *name);
 
-#ifdef OLD_CDF
+/*----< ncmpii_NC_check_name() >---------------------------------------------*/
+int
+ncmpii_NC_check_name(const char *name,
+                     int         file_ver) /* CDF version: 1, 2, or 5 */
+{
+    if (file_ver == 1)
+        return ncmpii_NC_check_name_CDF1(name);
+
+    return ncmpii_NC_check_name_CDF2(name);
+}
+
 /*
- * Verify that a name string is valid
+ * For CDF-1, Verify that a name string is valid
  * CDL syntax, eg, all the characters are
  * alphanumeric, '-', '_', or '.'.
  * Also permit ':', '@', '(', or ')' in names for chemists currently making 
  * use of these characters, but don't document until ncgen and ncdump can 
  * also handle these characters in names.
  */
-int
-ncmpii_NC_check_name(const char *name)
+static int
+ncmpii_NC_check_name_CDF1(const char *name)
 {
-	const char *cp = name;
-	assert(name != NULL);
+    const char *cp = name;
+    assert(name != NULL);
 
-	if(*name == 0)
-		return NC_EBADNAME; /* empty names disallowed */
+    if (*name == 0)
+        return NC_EBADNAME; /* empty names disallowed */
 
-	for(; *cp != 0; cp++)
-	{
-		int ch = *cp;
-		if(!isalnum(ch))
-		{
-			if(ch != '_' && ch != '-' && ch != '+' && ch != '.' &&
-					ch != ':' && ch != '@' && ch != '(' && 
-					ch != ')')
-				return NC_EBADNAME;
-		}
-	}
-	if(cp - name > NC_MAX_NAME)
-		return NC_EMAXNAME;
+    for (; *cp != 0; cp++) {
+        int ch = *cp;
+        if (!isalnum(ch)) {
+            if (ch != '_' && ch != '-' && ch != '+' && ch != '.' &&
+                ch != ':' && ch != '@' && ch != '(' && ch != ')')
+                return NC_EBADNAME;
+        }
+    }
+    if (cp - name > NC_MAX_NAME)
+        return NC_EMAXNAME;
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
-#else
+
 #include "utf8proc.h"
 
 /* There are 3 levels of UTF8 checking: 1=> (exact)validating 2=>relaxed
@@ -143,12 +152,14 @@ nextUTF8(const char* cp)
 	if(ch1 != 0 && RANGE(ch1,0xA0,0xBF)) {
 	    int ch2 = (uchar)cp[2];
 	    if(ch2 != 0 && RANGE0(ch2)) skip = 3;
+	}
     } else if((ch0 == 0xED)) {/* 3-bytes minus surrogates */
 	int ch1 = (uchar)cp[1];
 	if(ch1 != 0 && RANGE(ch1,0x80,0x9f)) {
 	    int ch2 = (uchar)cp[2];
 	    if(ch2 != 0 && RANGE0(ch2)) skip = 3;
-    } else if(RANGE(ch0,0xE1,0xEC) || ch0 == 0xEE || ch0 == 0xEF)
+	}
+    } else if(RANGE(ch0,0xE1,0xEC) || ch0 == 0xEE || ch0 == 0xEF) {
 	int ch1 = (uchar)cp[1];
 	if(ch1 != 0 && RANGE0(ch1)) {
 	    int ch2 = (uchar)cp[2];
@@ -156,7 +167,7 @@ nextUTF8(const char* cp)
 	}
     } else if((ch0 == 0xF0)) {/* planes 1-3 */
 	int ch1 = (uchar)cp[1];
-	if(ch1 != 0 && RANGE(ch1,0x90,0xBF) {
+	if(ch1 != 0 && RANGE(ch1,0x90,0xBF)) {
 	    int ch2 = (uchar)cp[2];
 	    if(ch2 != 0 && RANGE0(ch2)) {
 	        int ch3 = (uchar)cp[3];
@@ -172,7 +183,7 @@ nextUTF8(const char* cp)
 	        if(ch3 != 0 && RANGE0(ch3)) skip = 4;
 	    }
 	}    
-    } else if(RANGE(ch0,0xF1,0xF3) { /* planes 4-15 */
+    } else if(RANGE(ch0,0xF1,0xF3)) { /* planes 4-15 */
 	int ch1 = (uchar)cp[1];
 	if(ch1 != 0 && RANGE0(ch1)) {
 	    int ch2 = (uchar)cp[2];
@@ -203,8 +214,8 @@ nextUTF8(const char* cp)
  * character can occur anywhere within an identifier.  We later
  * normalize UTF-8 strings to NFC to facilitate matching and queries.
  */
-int
-ncmpii_NC_check_name(const char *name)
+static int
+ncmpii_NC_check_name_CDF2(const char *name)
 {
 	int skip;
 	int ch;
@@ -254,7 +265,6 @@ ncmpii_NC_check_name(const char *name)
 	    return NC_EBADNAME;
 	return NC_NOERR;
 }
-#endif
 
 /*
  * Allocate a NC_string structure large enough
