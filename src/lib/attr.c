@@ -492,7 +492,7 @@ ncmpi_inq_att(int ncid,
 int
 ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 {
-    int status;
+    int file_ver, status;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr **tmp;
@@ -511,10 +511,13 @@ ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
     if (ncap == NULL)
         return NC_ENOTVAR;
 
-/* bugs found by Jianwei Li
-        status = ncmpii_NC_check_name(name);
-*/
-    status = ncmpii_NC_check_name(newname);
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(newname, file_ver);
     if (status != NC_NOERR)
         return status;
 
@@ -1024,7 +1027,7 @@ int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
 	MPI_Offset nelems, const char *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -1042,9 +1045,14 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 	if(ncap == NULL)
 		return NC_ENOTVAR;
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) 
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA)) 
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	if(nelems < 0 || nelems > X_INT_MAX) /* backward compat */
 		return NC_EINVAL; /* Invalid nelems */
@@ -1161,7 +1169,7 @@ int
 ncmpi_put_att_schar(int ncid, int varid, const char *name,
 	nc_type type, MPI_Offset nelems, const signed char *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -1242,9 +1250,14 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) 
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA)) 
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
@@ -1307,7 +1320,7 @@ int
 ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 	nc_type type, MPI_Offset nelems, const unsigned char *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -1388,9 +1401,14 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
@@ -1453,7 +1471,7 @@ int
 ncmpi_put_att_short(int ncid, int varid, const char *name,
 	nc_type type, MPI_Offset nelems, const short *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -1534,9 +1552,14 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
@@ -1599,7 +1622,7 @@ int
 ncmpi_put_att_int(int ncid, int varid, const char *name,
 	nc_type type, MPI_Offset nelems, const int *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -1680,9 +1703,14 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
@@ -1745,7 +1773,7 @@ int
 ncmpi_put_att_long(int ncid, int varid, const char *name,
 	nc_type type, MPI_Offset nelems, const long *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -1826,9 +1854,14 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
@@ -1891,7 +1924,7 @@ int
 ncmpi_put_att_float(int ncid, int varid, const char *name,
 	nc_type type, MPI_Offset nelems, const float *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -1972,9 +2005,14 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)
@@ -2037,7 +2075,7 @@ int
 ncmpi_put_att_double(int ncid, int varid, const char *name,
 	nc_type type, MPI_Offset nelems, const double *value)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	NC_attrarray *ncap;
 	NC_attr **attrpp;
@@ -2122,9 +2160,14 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 			return NC_EMAXATTS;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	attrp = ncmpii_new_NC_attr(name, type, nelems);
 	if(attrp == NULL)

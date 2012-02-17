@@ -491,7 +491,7 @@ int
 ncmpi_def_var( int ncid, const char *name, nc_type type,
 	 int ndims, const int *dimids, int *varidp)
 {
-	int status;
+	int file_ver, status;
 	NC *ncp;
 	int varid;
 	NC_var *varp;
@@ -506,9 +506,14 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 		return NC_ENOTINDEFINE;
 	}
 
-	status = ncmpii_NC_check_name(name);
-	if(status != NC_NOERR)
-		return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(name, file_ver);
+    if (status != NC_NOERR) return status;
 
 	status = ncmpii_cktype(type);
 	if(status != NC_NOERR)
@@ -757,7 +762,7 @@ ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
 int
 ncmpi_rename_var(int ncid,  int varid, const char *newname)
 {
-    int status, other;
+    int file_ver, status, other;
     NC *ncp;
     NC_var *varp;
     NC_string *old, *newStr;
@@ -769,9 +774,14 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
     if (NC_readonly(ncp))
         return NC_EPERM;
 
-    status = ncmpii_NC_check_name(newname);
-    if (status != NC_NOERR)
-        return status;
+    file_ver = 1;
+    if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        file_ver = 2;
+    else if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        file_ver = 5;
+
+    status = ncmpii_NC_check_name(newname, file_ver);
+    if (status != NC_NOERR) return status;
 
     /* check for name in use */
     other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
