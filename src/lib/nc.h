@@ -7,15 +7,15 @@
 #define _NC_H_
 
 /*
- *	netcdf library 'private' data structures, objects and interfaces
+ * netcdf library 'private' data structures, objects and interfaces
  */
 
 #include "ncconfig.h"
 
-#include <stddef.h>	/* MPI_Offset */
-#include <sys/types.h>	/* MPI_Offset */
+#include <stddef.h>     /* MPI_Offset */
+#include <sys/types.h>  /* MPI_Offset */
 #include "pnetcdf.h"
-#include "ncio.h"	/* ncio */
+#include "ncio.h"       /* ncio */
 #include "fbits.h"
 
 
@@ -25,10 +25,10 @@
 #define NC_ARRAY_GROWBY 4
 #endif
 
-/* ncmpi_create/ncmpi_open set up header to be 'chunksize' big and to grow by 'chunksize' as new items added */
-#define NC_DEFAULT_CHUNKSIZE 256*1024  /* this used to be 4k.  256k lets us
-					  read in an entire climate header in
-					  one go */
+/* ncmpi_create/ncmpi_open set up header to be 'chunksize' big and to grow
+ * by 'chunksize' as new items adde. This used to be 4k. 256k lets us read
+ * in an entire climate header in one go */
+#define NC_DEFAULT_CHUNKSIZE 256*1024
 
 /*
  * The extern size of an empty
@@ -37,18 +37,39 @@
  */
 #define MIN_NC_XSZ 32
 
+/* netcdf file format:
+     netcdf_file  = header  data
+     header       = magic  numrecs  dim_list  gatt_list  var_list
+     magic        = 'C'  'D'  'F'  VERSION
+     VERSION      = \x01 | \x02 | \x05
+     numrecs      = NON_NEG | STREAMING
+     dim_list     = ABSENT | NC_DIMENSION  nelems  [dim ...]
+     gatt_list    = att_list
+     att_list     = ABSENT | NC_ATTRIBUTE  nelems  [attr ...]
+     var_list     = ABSENT | NC_VARIABLE   nelems  [var ...]
+     ABSENT       = ZERO  ZERO                  // Means list is not present
+     ZERO         = \x00 \x00 \x00 \x00         // 32-bit zero
+
+  Minmum happens when nothing is defined, i.e.
+     magic              -- 4 bytes
+     numrecs            -- 4 bytes for CDF-1 and CDF-2, 8 bytes for CDF-5
+     dim_list = ABSENT  -- 8 bytes
+     gatt_list = ABSENT -- 8 bytes
+     var_list = ABSENT  -- 8 bytes
+*/
+
 typedef struct NC NC; /* forward reference */
 
 /*
  *  The internal data types
  */
 typedef enum {
-	NC_UNSPECIFIED = 0,
-/* future	NC_BITFIELD = 7, */
-/*	NC_STRING =	8,	*/
-	NC_DIMENSION =	10,
-	NC_VARIABLE =	11,
-	NC_ATTRIBUTE =	12
+    NC_UNSPECIFIED =  0,
+/*  NC_BITFIELD    =  7, */
+/*  NC_STRING      =  8, */
+    NC_DIMENSION   = 10,
+    NC_VARIABLE    = 11,
+    NC_ATTRIBUTE   = 12
 } NCtype;
 
 
@@ -56,9 +77,9 @@ typedef enum {
  * Counted string for names and such
  */
 typedef struct {
-	/* all xdr'd */
-	MPI_Offset nchars;
-	char *cp;
+    /* all xdr'd */
+    MPI_Offset  nchars;
+    char       *cp;
 } NC_string;
 
 extern NC *
@@ -86,17 +107,19 @@ ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
  * NC dimension stucture
  */
 typedef struct {
-	/* all xdr'd */
-	NC_string *name;
-	MPI_Offset size;
+    /* all xdr'd */
+    NC_string *name;
+    MPI_Offset size;
 } NC_dim;
 
+/* the dimension ID returned from ncmpi_def_dim() is an integer pointer
+ * which means the total number of defined dimension allowed in a file
+ * is up to 2^31. Thus, the member ndefined below should be of type int.
+ */
 typedef struct NC_dimarray {
-	size_t nalloc;		/* number allocated >= nelems */
-	/* below gets xdr'd */
-	/* NCtype type = NC_DIMENSION */
-	MPI_Offset nelems;		/* number of defined variables */
-	NC_dim **value;
+    int      nalloc;    /* number allocated >= ndefined */
+    int      ndefined;  /* number of defined dimensions */
+    NC_dim **value;
 } NC_dimarray;
 
 /* Begin defined in dim.c */
@@ -147,20 +170,17 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
  * NC attribute
  */
 typedef struct {
-	MPI_Offset xsz;		/* amount of space at xvalue */
-	/* below gets xdr'd */
-	NC_string *name;
-	nc_type type;		/* the discriminant */
-	MPI_Offset nelems;	/* number of defined variables */
-	void *xvalue;		/* the actual data, in external representation */
+    MPI_Offset xsz;      /* amount of space at xvalue */
+    NC_string *name;     /* name of the attributes */
+    nc_type    type;     /* the discriminant */
+    MPI_Offset nelems;   /* number of attribute elements */
+    void      *xvalue;   /* the actual data, in external representation */
 } NC_attr;
 
 typedef struct NC_attrarray {
-	MPI_Offset nalloc;	/* number allocated >= nelems */
-	/* below gets xdr'd */
-	/* NCtype type = NC_ATTRIBUTE */
-	MPI_Offset nelems;	/* number of defined variables */
-	NC_attr **value;
+    int       nalloc;    /* number allocated >= ndefined */
+    int       ndefined;  /* number of defined attributes */
+    NC_attr **value;
 } NC_attrarray;
 
 /* Begin defined in attr.c */
@@ -169,10 +189,7 @@ extern void
 ncmpii_free_NC_attr(NC_attr *attrp);
 
 extern NC_attr *
-ncmpii_new_x_NC_attr(
-	NC_string *strp,
-	nc_type type,
-	MPI_Offset nelems);
+ncmpii_new_x_NC_attr(NC_string *strp, nc_type type, MPI_Offset nelems);
 
 extern NC_attr **
 ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name);
@@ -193,54 +210,54 @@ ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem);
 
 extern int
 ncmpi_put_att_text(int ncid, int varid, const char *name,
-	MPI_Offset nelems, const char *value);
+        MPI_Offset nelems, const char *value);
 
 extern int
 ncmpi_get_att_text(int ncid, int varid, const char *name, char *str);
 
 extern int
 ncmpi_put_att_schar(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const signed char *value);
+        nc_type type, MPI_Offset nelems, const signed char *value);
 
 extern int
 ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *tp);
 
 extern int
 ncmpi_put_att_uchar(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const unsigned char *value);
+        nc_type type, MPI_Offset nelems, const unsigned char *value);
 
 extern int
 ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *tp);
 
 extern int
 ncmpi_put_att_short(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const short *value);
+        nc_type type, MPI_Offset nelems, const short *value);
 
 extern int
 ncmpi_get_att_short(int ncid, int varid, const char *name, short *tp);
 
 extern int
 ncmpi_put_att_int(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const int *value);
+        nc_type type, MPI_Offset nelems, const int *value);
 
 extern int
 ncmpi_get_att_int(int ncid, int varid, const char *name, int *tp);
 
 extern int
 ncmpi_put_att_long(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const long *value);
+        nc_type type, MPI_Offset nelems, const long *value);
 
 extern int
 ncmpi_get_att_long(int ncid, int varid, const char *name, long *tp);
 
 extern int
 ncmpi_put_att_float(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const float *value);
+        nc_type type, MPI_Offset nelems, const float *value);
 extern int
 ncmpi_get_att_float(int ncid, int varid, const char *name, float *tp);
 extern int
 ncmpi_put_att_double(int ncid, int varid, const char *name,
-	nc_type type, MPI_Offset nelems, const double *value);
+        nc_type type, MPI_Offset nelems, const double *value);
 extern int
 ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp);
 
@@ -255,11 +272,11 @@ ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp);
 
 extern int
 ncmpi_inq_att(int ncid, int varid, const char *name, 
-	nc_type *datatypep, MPI_Offset *lenp);
+        nc_type *datatypep, MPI_Offset *lenp);
 
 extern int
 ncmpi_copy_att(int ncid_in, int varid_in, const char *name, 
-		int ncid_out, int ovarid);
+        int ncid_out, int ovarid);
 
 extern int
 ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname);
@@ -270,30 +287,28 @@ ncmpi_del_att(int ncid, int varid, const char *name);
 extern int
 ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
 /* End defined in attr.c */
+
 /*
  * NC variable: description and data
  */
 typedef struct {
-	MPI_Offset xsz;		/* xszof 1 element */
-	MPI_Offset *shape; /* compiled info: dim->size of each dim */
-	MPI_Offset *dsizes; /* compiled info: the right to left product of shape */
-	/* below gets xdr'd */
-	NC_string *name;
-	/* next two: formerly NC_iarray *assoc */ /* user definition */
-	size_t ndims;	/* assoc->count */
-	int *dimids;	/* assoc->value */
-	NC_attrarray attrs;
-	nc_type type;		/* the discriminant */
-	MPI_Offset len;		/* the total length originally allocated */
-	MPI_Offset begin;
+    MPI_Offset    xsz;    /* byte size of 1 array element */
+    MPI_Offset   *shape;  /* dim->size of each dim */
+    MPI_Offset   *dsizes; /* the right to left product of shape */
+    NC_string    *name;   /* name of the variable */
+    int           ndims;  /* number of dimensions */
+    int          *dimids; /* array of dimension IDs */
+    NC_attrarray  attrs;  /* attribute array */
+    nc_type       type;   /* variable's data type */
+    MPI_Offset    len;    /* total number of array elements allocated */
+    MPI_Offset    begin;  /* starting file offset of this variable */
 } NC_var;
 
+/* note: we only allow less than 2^31 variables defined in a file */
 typedef struct NC_vararray {
-	MPI_Offset nalloc;	/* number allocated >= nelems */
-	/* below gets xdr'd */
-	/* NCtype type = NC_VARIABLE */
-	MPI_Offset nelems;	/* number of defined variables */
-	NC_var **value;
+    int      nalloc;      /* number allocated >= ndefined */
+    int      ndefined;    /* number of defined variables */
+    NC_var **value;
 } NC_vararray;
 
 /* Begin defined in var.c */
@@ -302,10 +317,7 @@ extern void
 ncmpii_free_NC_var(NC_var *varp);
 
 extern NC_var *
-ncmpii_new_x_NC_var(
-	NC_string *strp,
-	size_t ndims
-        );
+ncmpii_new_x_NC_var(NC_string *strp, size_t ndims);
 
 /* vararray */
 
@@ -322,24 +334,21 @@ extern int
 ncmpii_NC_var_shape64(NC *ncp, NC_var *varp, const NC_dimarray *dims);
 
 extern int
-ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp);
-
-extern int
 ncmpii_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);
 
 extern NC_var *
 ncmpii_NC_lookupvar(NC *ncp, int varid);
 
 extern int
-ncmpi_def_var( int ncid, const char *name, nc_type type,
-              int ndims, const int *dimidsp, int *varidp);
+ncmpi_def_var(int ncid, const char *name, nc_type type,
+        int ndims, const int *dimidsp, int *varidp);
 
 extern int
 ncmpi_rename_var(int ncid, int varid, const char *newname);
 
 extern int
 ncmpi_inq_var(int ncid, int varid, char *name, nc_type *typep, 
-		int *ndimsp, int *dimids, int *nattsp);
+        int *ndimsp, int *dimids, int *nattsp);
 
 extern int
 ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr);
@@ -364,7 +373,7 @@ ncmpi_rename_var(int ncid, int varid, const char *newname);
 /* End defined in var.c */
 
 #define IS_RECVAR(vp) \
-	((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
+        ((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
 /*
  *  *  The PnetCDF non-blocking I/O request type
@@ -399,78 +408,79 @@ typedef struct NC_req {
 } NC_req;
 
 struct NC {
-	/* links to make list of open netcdf's */
-	struct NC *next;
-	struct NC *prev;
-	/* contains the previous NC during redef. */
-	struct NC *old;
-	/* flags */
-#define NC_INDEP 0x10000	/* in independent data mode, cleared by endindep */
-#define NC_CREAT 0x20000	/* in create phase, cleared by ncenddef */
-#define NC_INDEF 0x80000	/* in define mode, cleared by ncenddef */
-#define NC_NSYNC 0x100000	/* synchronise numrecs on change */
-#define NC_HSYNC 0x200000	/* synchronise whole header on change */
-#define NC_NDIRTY 0x400000	/* numrecs has changed */
+    /* links to make list of open netcdf's */
+    struct NC *next;
+    struct NC *prev;
+    /* contains the previous NC during redef. */
+    struct NC *old;
+    /* flags */
+#define NC_INDEP  0x10000   /* in independent data mode, cleared by endindep */
+#define NC_CREAT  0x20000   /* in create phase, cleared by ncenddef */
+#define NC_INDEF  0x80000   /* in define mode, cleared by ncenddef */
+#define NC_NSYNC  0x100000  /* synchronise numrecs on change */
+#define NC_HSYNC  0x200000  /* synchronise whole header on change */
+#define NC_NDIRTY 0x400000  /* numrecs has changed */
 #define NC_HDIRTY 0x800000  /* header info has changed */
-/*	NC_NOFILL in netcdf.h, historical interface */
-	int flags;
-	ncio *nciop;
-	MPI_Offset chunk;	/* largest extent this layer will request from ncio->get() */
-	MPI_Offset xsz;	/* external size of this header, <= var[0].begin */
-	MPI_Offset begin_var; /* position of the first (non-record) var */
-	MPI_Offset begin_rec; /* position of the first 'record' */
-	/* don't constrain maximum size of record unnecessarily */
-	MPI_Offset recsize;	/* length of 'record': sum of single record sizes from all record variables */	
-	/* below gets xdr'd */
-	MPI_Offset numrecs; /* number of 'records' allocated */
-	NC_dimarray dims;
-	NC_attrarray attrs;
-	NC_vararray vars;
-        NC_req *head;
-        NC_req *tail;
+/* NC_NOFILL is defined in netcdf.h, historical interface */
+    int           flags;
+    ncio         *nciop;
+    MPI_Offset    chunk;    /* largest extent this layer will request from
+                               ncio->get() */
+    MPI_Offset    xsz;      /* external size of this header, <= var[0].begin */
+    MPI_Offset    begin_var;/* file offset of the first (non-record) var */
+    MPI_Offset    begin_rec;/* file offset of the first 'record' */
+
+    MPI_Offset    recsize;  /* length of 'record': sum of single record sizes
+                               of all the record variables */
+    MPI_Offset    numrecs;  /* number of 'records' allocated */
+    NC_dimarray   dims;     /* dimensions defined */
+    NC_attrarray  attrs;    /* global attributes defined */
+    NC_vararray   vars;     /* variables defined */
+    NC_req       *head;     /* linked list head of nonblocking requests */
+    NC_req       *tail;     /* tail of the linked list */
 };
 
 #define NC_readonly(ncp) \
-	(!fIsSet(ncp->nciop->ioflags, NC_WRITE))
+        (!fIsSet(ncp->nciop->ioflags, NC_WRITE))
 
 #define NC_IsNew(ncp) \
-	fIsSet((ncp)->flags, NC_CREAT)
+        fIsSet((ncp)->flags, NC_CREAT)
 
 #define NC_indep(ncp) \
-	fIsSet((ncp)->flags, NC_INDEP)
+        fIsSet((ncp)->flags, NC_INDEP)
 
 #define NC_indef(ncp) \
-	(NC_IsNew(ncp) || fIsSet((ncp)->flags, NC_INDEF)) 
+        (NC_IsNew(ncp) || fIsSet((ncp)->flags, NC_INDEF)) 
 
 #define set_NC_ndirty(ncp) \
-	fSet((ncp)->flags, NC_NDIRTY)
+        fSet((ncp)->flags, NC_NDIRTY)
 
 #define NC_ndirty(ncp) \
-	fIsSet((ncp)->flags, NC_NDIRTY)
+        fIsSet((ncp)->flags, NC_NDIRTY)
 
 #define set_NC_hdirty(ncp) \
-	fSet((ncp)->flags, NC_HDIRTY)
+        fSet((ncp)->flags, NC_HDIRTY)
 
 #define NC_hdirty(ncp) \
-	fIsSet((ncp)->flags, NC_HDIRTY)
+        fIsSet((ncp)->flags, NC_HDIRTY)
 
 #define NC_dofill(ncp) \
-	(!fIsSet((ncp)->flags, NC_NOFILL))
+        (!fIsSet((ncp)->flags, NC_NOFILL))
 
 #define NC_doHsync(ncp) \
-	fIsSet((ncp)->flags, NC_HSYNC)
+        fIsSet((ncp)->flags, NC_HSYNC)
 
 #define NC_doNsync(ncp) \
-	fIsSet((ncp)->flags, NC_NSYNC)
+        fIsSet((ncp)->flags, NC_NSYNC)
 
 #define NC_get_numrecs(ncp) \
-	((ncp)->numrecs)
+        ((ncp)->numrecs)
 
 #define NC_set_numrecs(ncp, nrecs) \
-	{((ncp)->numrecs = (nrecs));}
+        {((ncp)->numrecs = (nrecs));}
 
 #define NC_increase_numrecs(ncp, nrecs) \
-	{if((nrecs) > (ncp)->numrecs) ((ncp)->numrecs = (nrecs));}
+        {if((nrecs) > (ncp)->numrecs) ((ncp)->numrecs = (nrecs));}
 /* Begin defined in nc.c */
 
 extern int
@@ -561,16 +571,14 @@ ncmpii_put_rec(int ncid, MPI_Offset recnum, void *const *datap);
 
 /* Begin defined in header.c */
 typedef struct bufferinfo {
-  ncio *nciop;		
-  MPI_Offset offset;	/* current read/write offset in the file */
-  int version;		/* either 1 for normal netcdf or 
-			   2 for 8-byte offset version, 
-			   5 for NC_FORMAT_64BIT_DATA version */
-  void *base;     	/* beginning of read/write buffer */
-  void *pos;      	/* current position in buffer */
-  MPI_Offset size;		/* size of the buffer */
-  MPI_Offset index;		/* index of current position in buffer */
-} bufferinfo;  
+    ncio       *nciop;
+    MPI_Offset  offset;   /* current read/write offset in the file */
+    int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
+    void       *base;     /* beginning of read/write buffer */
+    void       *pos;      /* current position in buffer */
+    MPI_Offset  size;     /* size of the buffer */
+    MPI_Offset  index;    /* index of current position in buffer */
+} bufferinfo;
 
 extern MPI_Offset 
 ncmpix_len_nctype(nc_type type);
@@ -581,7 +589,7 @@ hdr_put_NC_attrarray(bufferinfo *pbp, const NC_attrarray *ncap);
 #endif
 
 extern MPI_Offset
-ncmpii_hdr_len_NC(const NC *ncp, MPI_Offset sizeof_off_t);
+ncmpii_hdr_len_NC(const NC *ncp);
 
 extern int
 ncmpii_hdr_get_NC(NC *ncp);
@@ -634,7 +642,7 @@ void ncmpii_handle_error(int rank, int mpi_status, char *msg);
 
 extern int
 ncmpii_put_att(int ncid, int varid, const char *name, nc_type datatype,
-	       MPI_Offset len, const void *value);
+               MPI_Offset len, const void *value);
 
 extern int
 ncmpii_get_att(int ncid, int varid, const char *name, void *value);
@@ -701,9 +709,9 @@ ncmpii_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset *start,
 
 extern int
 ncmpii_getput_varm(NC *ncp, NC_var *varp, const MPI_Offset start[],
-		const MPI_Offset count[], const MPI_Offset stride[],
-		const MPI_Offset imap[], void *buf, MPI_Offset bufcount,
-		MPI_Datatype datatype, int rw_flag, int io_method);
+                const MPI_Offset count[], const MPI_Offset stride[],
+                const MPI_Offset imap[], void *buf, MPI_Offset bufcount,
+                MPI_Datatype datatype, int rw_flag, int io_method);
 extern int
 ncmpii_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *stride, const MPI_Offset *imap,

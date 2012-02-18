@@ -90,19 +90,19 @@ ncmpii_find_NC_Udim(const NC_dimarray *ncap, NC_dim **dimpp)
 {
 	assert(ncap != NULL);
 
-	if(ncap->nelems == 0)
+	if(ncap->ndefined == 0)
 		return -1;
 
 	{
 	int dimid = 0;
 	NC_dim **loc = ncap->value;
 
-	for(; (MPI_Offset) dimid < ncap->nelems
+	for(; (MPI_Offset) dimid < ncap->ndefined
 			 && (*loc)->size != NC_UNLIMITED; dimid++, loc++)
 	{
 		/*EMPTY*/
 	}
-	if(dimid >= ncap->nelems)
+	if(dimid >= ncap->ndefined)
 		return(-1); /* not found */
 	/* else, normal return */
 	if(dimpp != NULL)
@@ -125,7 +125,7 @@ NC_finddim(const NC_dimarray *ncap, const char *name, NC_dim **dimpp)
 
 	assert(ncap != NULL);
 
-	if(ncap->nelems == 0)
+	if(ncap->ndefined == 0)
 		return -1;
 
 	{
@@ -133,14 +133,14 @@ NC_finddim(const NC_dimarray *ncap, const char *name, NC_dim **dimpp)
 	int dimid = 0;
 	NC_dim **loc = (NC_dim **) ncap->value;
 
-	for(; (MPI_Offset) dimid < ncap->nelems
+	for(; (MPI_Offset) dimid < ncap->ndefined
 			&& (strlen((*loc)->name->cp) != slen
 				|| strncmp((*loc)->name->cp, name, slen) != 0);
 		 dimid++, loc++)
 	{
 		/*EMPTY*/
 	}
-	if(dimid >= ncap->nelems)
+	if(dimid >= ncap->ndefined)
 		return(-1); /* not found */
 	/* else, normal return */
 	if(dimpp != NULL)
@@ -162,21 +162,21 @@ ncmpii_free_NC_dimarrayV0(NC_dimarray *ncap)
 {
 	assert(ncap != NULL);
 
-	if(ncap->nelems == 0)
+	if(ncap->ndefined == 0)
 		return;
 
 	assert(ncap->value != NULL);
 
 	{
 		NC_dim **dpp = ncap->value;
-		NC_dim *const *const end = &dpp[ncap->nelems];
+		NC_dim *const *const end = &dpp[ncap->ndefined];
 		for( /*NADA*/; dpp < end; dpp++)
 		{
 			ncmpii_free_NC_dim(*dpp);
 			*dpp = NULL;
 		}
 	}
-	ncap->nelems = 0;
+	ncap->ndefined = 0;
 }
 
 
@@ -211,22 +211,22 @@ ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref)
 	assert(ref != NULL);
 	assert(ncap != NULL);
 
-	if(ref->nelems != 0)
+	if(ref->ndefined != 0)
 	{
-		const MPI_Offset sz = ref->nelems * sizeof(NC_dim *);
+		const MPI_Offset sz = ref->ndefined * sizeof(NC_dim *);
 		ncap->value = (NC_dim **) NCI_Malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
 		(void) memset(ncap->value, 0, sz);
-		ncap->nalloc = ref->nelems;
+		ncap->nalloc = ref->ndefined;
 	}
 
-	ncap->nelems = 0;
+	ncap->ndefined = 0;
 	{
 		NC_dim **dpp = ncap->value;
 		const NC_dim **drpp = (const NC_dim **)ref->value;
-		NC_dim *const *const end = &dpp[ref->nelems];
-		for( /*NADA*/; dpp < end; drpp++, dpp++, ncap->nelems++)
+		NC_dim *const *const end = &dpp[ref->ndefined];
+		for( /*NADA*/; dpp < end; drpp++, dpp++, ncap->ndefined++)
 		{
 			*dpp = dup_NC_dim(*drpp);
 			if(*dpp == NULL)
@@ -243,7 +243,7 @@ ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref)
 		return status;
 	}
 
-	assert(ncap->nelems == ref->nelems);
+	assert(ncap->ndefined == ref->ndefined);
 
 	return NC_NOERR;
 }
@@ -263,14 +263,14 @@ incr_NC_dimarray(NC_dimarray *ncap, NC_dim *newelemp)
 
 	if(ncap->nalloc == 0)
 	{
-		assert(ncap->nelems == 0);
+		assert(ncap->ndefined == 0);
 		vp = (NC_dim **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_dim *));
 		if(vp == NULL)
 			return NC_ENOMEM;
 		ncap->value = vp;
 		ncap->nalloc = NC_ARRAY_GROWBY;
 	}
-	else if(ncap->nelems +1 > ncap->nalloc)
+	else if(ncap->ndefined +1 > ncap->nalloc)
 	{
 		vp = (NC_dim **) NCI_Realloc(ncap->value,
 			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_dim *));
@@ -282,8 +282,8 @@ incr_NC_dimarray(NC_dimarray *ncap, NC_dim *newelemp)
 
 	if(newelemp != NULL)
 	{
-		ncap->value[ncap->nelems] = newelemp;
-		ncap->nelems++;
+		ncap->value[ncap->ndefined] = newelemp;
+		ncap->ndefined++;
 	}
 	return NC_NOERR;
 }
@@ -294,7 +294,7 @@ ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem)
 {
 	assert(ncap != NULL);
 		/* cast needed for braindead systems with signed size_t */
-	if(ncap->nelems == 0 || (unsigned long long) elem >= ncap->nelems)
+	if(ncap->ndefined == 0 || (unsigned long long) elem >= ncap->ndefined)
 		return NULL;
 
 	assert(ncap->value != NULL);
@@ -357,7 +357,7 @@ ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
 		}
 	}
 
-	if(ncp->dims.nelems >= NC_MAX_DIMS)
+	if(ncp->dims.ndefined >= NC_MAX_DIMS)
 		return NC_EMAXDIMS;
 
 	dimid = NC_finddim(&ncp->dims, name, &dimp);
@@ -375,7 +375,7 @@ ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
 	}
 
 	if(dimidp != NULL)
-		*dimidp = (int)ncp->dims.nelems -1;
+		*dimidp = (int)ncp->dims.ndefined -1;
 	return NC_NOERR;
 }
 

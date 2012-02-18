@@ -1425,90 +1425,99 @@ ncmpix_put_size_t1(void **xpp, const MPI_Offset *ulp)
 	return NC_NOERR;
 }
 
-/*
+/*---< ncmpix_put_size_t() >-------------------------------------------------*/
+/* copy the contents of lp to xpp in Big Endian form
+ * and advance *xpp to next size_t
+ */
 int
-ncmpix_put_size_t(void **xpp, const MPI_Offset *ulp)
+ncmpix_put_size_t(void             **xpp,
+                  const MPI_Offset   lp,
+                  int                sizeof_t) /* 4 or 8 */
 {
-//	uchar *cp = (uchar *) *xpp;
-	unsigned long *cp = (unsigned long *) *xpp;
-	assert(*ulp <= X_SIZE_MAX);
+    /* similar to put_ix_int() */
+    uchar *cp = (uchar *) *xpp;
 
-	*cp++ = (uchar)((*ulp) >> 24);
-	*cp++ = (uchar)(((*ulp) & 0x00ff0000) >> 16);
-	*cp++ = (uchar)(((*ulp) & 0x0000ff00) >>  8);
-	*cp   = (uchar)((*ulp) & 0x000000ff);
+    /* No negative offsets stored in netcdf */
+    /* if (lp < 0) return ERANGE; */
 
-	*xpp = (void *)((char *)(*xpp) + X_SIZEOF_LONG);
-	return NC_NOERR;
-}
-*/
-int
-ncmpix_put_size_t(void **xpp, const MPI_Offset *lp, MPI_Offset sizeof_t)
-{
-        /* similar to put_ix_int() */
-        uchar *cp = (uchar *) *xpp;
-//	assert(*lp <= X_SIZE_MAX);
-                /* No negative offsets stored in netcdf */
-//        if (*lp < 0) {
-                /* assume this is an overflow of a 32-bit int */
-//               return ERANGE;
-//        }
+    assert(sizeof_t == 4 || sizeof_t == 8);
 
-        assert(sizeof_t == 4 || sizeof_t == 8);
-        if (sizeof_t == 4 ) {
-                *cp++ = (uchar)(((*lp) & 0xff000000) >> 24);
-                *cp++ = (uchar)(((*lp) & 0x00ff0000) >> 16);
-                *cp++ = (uchar)(((*lp) & 0x0000ff00) >>  8);
-                *cp   = (uchar)( (*lp) & 0x000000ff);
-	        *xpp = (void *)((char *)(*xpp) + sizeof_t);
-//	        *xpp = (void *)((char *)(*xpp) + X_SIZEOF_SIZE_T);
-        } else {
-                *cp++ = (uchar)(((*lp) & 0xff00000000000000ULL) >> 56);
-                *cp++ = (uchar)(((*lp) & 0x00ff000000000000ULL) >> 48);
-                *cp++ = (uchar)(((*lp) & 0x0000ff0000000000ULL) >> 40);
-                *cp++ = (uchar)(((*lp) & 0x000000ff00000000ULL) >> 32);
-                *cp++ = (uchar)(((*lp) & 0x00000000ff000000ULL) >> 24);
-                *cp++ = (uchar)(((*lp) & 0x0000000000ff0000ULL) >> 16);
-                *cp++ = (uchar)(((*lp) & 0x000000000000ff00ULL) >>  8);
-                *cp   = (uchar)( (*lp) & 0x00000000000000ffULL);
-	        *xpp = (void *)((char *)(*xpp) + sizeof_t);
-        }
-        return NC_NOERR;
-}
+    /* bitwise shifts below are to produce an integer in Big Endian */
+    if (sizeof_t == 4 ) {
+#ifdef WORDS_BIGENDIAN
+        int *ptr = (int*) (*xpp); /* typecast to 4-byte integer */
+        *ptr = (int)lp;
+#else
+        /* cannot call swap4b(), as lp is 8-byte */
+        *cp++ = (uchar)((lp & 0xff000000) >> 24);
+        *cp++ = (uchar)((lp & 0x00ff0000) >> 16);
+        *cp++ = (uchar)((lp & 0x0000ff00) >>  8);
+        *cp   = (uchar)( lp & 0x000000ff);
+#endif
+    }
+    else {
+#ifdef WORDS_BIGENDIAN
+        MPI_Offset *ptr = (MPI_Offset*) (*xpp); /* typecast to 8-byte integer */
+        *ptr = lp;
+#else
+        /* below is the same as calling swap8b(*xpp, &lp) */
+        *cp++ = (uchar)((lp & 0xff00000000000000ULL) >> 56);
+        *cp++ = (uchar)((lp & 0x00ff000000000000ULL) >> 48);
+        *cp++ = (uchar)((lp & 0x0000ff0000000000ULL) >> 40);
+        *cp++ = (uchar)((lp & 0x000000ff00000000ULL) >> 32);
+        *cp++ = (uchar)((lp & 0x00000000ff000000ULL) >> 24);
+        *cp++ = (uchar)((lp & 0x0000000000ff0000ULL) >> 16);
+        *cp++ = (uchar)((lp & 0x000000000000ff00ULL) >>  8);
+        *cp   = (uchar)( lp & 0x00000000000000ffULL);
+#endif
+    }
 
+    /* advance *xpp to next size_t */
+    *xpp  = (void *)((char *)(*xpp) + sizeof_t);
 
-
-
-int
-ncmpix_get_size_t(const void **xpp,  MPI_Offset *lp, MPI_Offset sizeof_off_t)
-{
-	/* similar to get_ix_int */
-	/* similar to get_ix_int() */
-	const uchar *cp = (const uchar *) *xpp;
-	if (*lp < 0) {
-		/* assume this is an overflow of a 32-bit int */
-		return ERANGE;
-	}
-	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
-       if (sizeof_off_t == 4) {
-               *lp = *cp++ << 24;
-               *lp |= (*cp++ << 16);
-               *lp |= (*cp++ <<  8);
-               *lp |= *cp; 
-       } else {
-               *lp =  ((off_t)(*cp++) << 56);
-               *lp |= ((off_t)(*cp++) << 48);
-               *lp |= ((off_t)(*cp++) << 40);
-               *lp |= ((off_t)(*cp++) << 32);
-               *lp |= ((off_t)(*cp++) << 24);
-               *lp |= ((off_t)(*cp++) << 16);
-               *lp |= ((off_t)(*cp++) <<  8);
-               *lp |=  (off_t)*cp;
-       }
-	*xpp = (const void *)((const char *)(*xpp) + sizeof_off_t);
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
+int
+ncmpix_get_size_t(const void **xpp,
+                  MPI_Offset  *lp,
+                  int          sizeof_t)  /* 4 or 8 */
+{
+    /* similar to get_ix_int */
+    /* similar to get_ix_int() */
+    const uchar *cp = (const uchar *) *xpp;
+
+    assert(sizeof_t == 4 || sizeof_t == 8);
+
+    if (sizeof_t == 4) {
+        /* cannot call swap4b(), as lp is 8-byte */
+        *lp  = (*cp++ << 24);
+        *lp |= (*cp++ << 16);
+        *lp |= (*cp++ <<  8);
+        *lp |=  *cp;
+    }
+    else {
+        /* below is the same as calling swap8b(lp, *xpp) */
+        *lp  = ((off_t)(*cp++) << 56);
+        *lp |= ((off_t)(*cp++) << 48);
+        *lp |= ((off_t)(*cp++) << 40);
+        *lp |= ((off_t)(*cp++) << 32);
+        *lp |= ((off_t)(*cp++) << 24);
+        *lp |= ((off_t)(*cp++) << 16);
+        *lp |= ((off_t)(*cp++) <<  8);
+        *lp |=  (off_t)*cp;
+    }
+
+    /* advance *xpp to next size_t */
+    *xpp = (const void *)((const char *)(*xpp) + sizeof_t);
+
+    return NC_NOERR;
+}
+
+/* below ncmpix_put_off_t() and ncmpix_get_off_t() are the same as
+ * ncmpix_put_size_t() and ncmpix_get_size_t()
+ */
+#if 0
 /* x_off_t */
 
 /* A previous version of this function would try to let systems with a 4 byte
@@ -1574,7 +1583,7 @@ ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, MPI_Offset sizeof_off_t)
 
 	return NC_NOERR;
 }
-
+#endif
 
 /*
  * Aggregate numeric conversion functions.

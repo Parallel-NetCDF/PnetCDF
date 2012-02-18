@@ -349,14 +349,14 @@ ncmpix_put_double_double(void *xp, const double *ip);
 
 /* ncx_get_int_size_t */
 extern int
-ncmpix_get_size_t(const void **xpp, MPI_Offset *ulp, MPI_Offset sizeof_off_t);
+ncmpix_get_size_t(const void **xpp, MPI_Offset *ulp, int sizeof_off_t);
 /* ncx_get_int_off_t */
 extern int
-ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, MPI_Offset sizeof_off_t);
+ncmpix_get_off_t(const void **xpp, MPI_Offset *lp, int sizeof_off_t);
 
 /* ncx_put_int_size_t */
 extern int
-ncmpix_put_size_t(void **xpp, const MPI_Offset *ulp, MPI_Offset sizeof_off_t);
+ncmpix_put_size_t(void **xpp, const MPI_Offset ulp, int sizeof_off_t);
 extern int
 ncmpix_put_size_t1(void **xpp, const MPI_Offset *ulp);
 /* ncx_put_int_off_t */
