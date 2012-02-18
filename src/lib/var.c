@@ -146,21 +146,21 @@ ncmpii_free_NC_vararrayV0(NC_vararray *ncap)
 {
 	assert(ncap != NULL);
 
-	if(ncap->nelems == 0)
+	if(ncap->ndefined == 0)
 		return;
 
 	assert(ncap->value != NULL);
 
 	{
 		NC_var **vpp = ncap->value;
-		NC_var *const *const end = &vpp[ncap->nelems];
+		NC_var *const *const end = &vpp[ncap->ndefined];
 		for( /*NADA*/; vpp < end; vpp++)
 		{
 			ncmpii_free_NC_var(*vpp);
 			*vpp = NULL;
 		}
 	}
-	ncap->nelems = 0;
+	ncap->ndefined = 0;
 }
 
 
@@ -195,22 +195,22 @@ ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 	assert(ref != NULL);
 	assert(ncap != NULL);
 
-	if(ref->nelems != 0)
+	if(ref->ndefined != 0)
 	{
-		const MPI_Offset sz = ref->nelems * sizeof(NC_var *);
+		const MPI_Offset sz = ref->ndefined * sizeof(NC_var *);
 		ncap->value = (NC_var **) NCI_Malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
 		(void) memset(ncap->value, 0, sz);
-		ncap->nalloc = ref->nelems;
+		ncap->nalloc = ref->ndefined;
 	}
 
-	ncap->nelems = 0;
+	ncap->ndefined = 0;
 	{
 		NC_var **vpp = ncap->value;
 		const NC_var **drpp = (const NC_var **)ref->value;
-		NC_var *const *const end = &vpp[ref->nelems];
-		for( /*NADA*/; vpp < end; drpp++, vpp++, ncap->nelems++)
+		NC_var *const *const end = &vpp[ref->ndefined];
+		for( /*NADA*/; vpp < end; drpp++, vpp++, ncap->ndefined++)
 		{
 			*vpp = dup_NC_var(*drpp);
 			if(*vpp == NULL)
@@ -227,7 +227,7 @@ ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 		return status;
 	}
 
-	assert(ncap->nelems == ref->nelems);
+	assert(ncap->ndefined == ref->ndefined);
 
 	return NC_NOERR;
 }
@@ -247,14 +247,14 @@ incr_NC_vararray(NC_vararray *ncap, NC_var *newelemp)
 
 	if(ncap->nalloc == 0)
 	{
-		assert(ncap->nelems == 0);
+		assert(ncap->ndefined == 0);
 		vp = (NC_var **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_var *));
 		if(vp == NULL)
 			return NC_ENOMEM;
 		ncap->value = vp;
 		ncap->nalloc = NC_ARRAY_GROWBY;
 	}
-	else if(ncap->nelems +1 > ncap->nalloc)
+	else if(ncap->ndefined +1 > ncap->nalloc)
 	{
 		vp = (NC_var **) NCI_Realloc(ncap->value,
 			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_var *));
@@ -266,8 +266,8 @@ incr_NC_vararray(NC_vararray *ncap, NC_var *newelemp)
 
 	if(newelemp != NULL)
 	{
-		ncap->value[ncap->nelems] = newelemp;
-		ncap->nelems++;
+		ncap->value[ncap->ndefined] = newelemp;
+		ncap->ndefined++;
 	}
 	return NC_NOERR;
 }
@@ -278,7 +278,7 @@ elem_NC_vararray(const NC_vararray *ncap, MPI_Offset elem)
 {
 	assert(ncap != NULL);
 		/* cast needed for braindead systems with signed MPI_Offset */
-	if((elem < 0) ||  ncap->nelems == 0 || elem >= ncap->nelems)
+	if((elem < 0) ||  ncap->ndefined == 0 || elem >= ncap->ndefined)
 		return NULL;
 
 	assert(ncap->value != NULL);
@@ -297,7 +297,7 @@ elem_NC_vararray(const NC_vararray *ncap, MPI_Offset elem)
  * Formerly (sort of)
 NC_hvarid
  */
-int
+static int
 ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
 {
 	NC_var **loc;
@@ -306,14 +306,14 @@ ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
 
 	assert(ncap != NULL);
 
-	if(ncap->nelems == 0)
+	if(ncap->ndefined == 0)
 		return -1;
 
 	loc = (NC_var **) ncap->value;
 
 	slen = strlen(name);
 
-	for(varid = 0; (MPI_Offset) varid < ncap->nelems; varid++, loc++)
+	for(varid = 0; (MPI_Offset) varid < ncap->ndefined; varid++, loc++)
 	{
 		if(strlen((*loc)->name->cp) == slen &&
 			strncmp((*loc)->name->cp, name, slen) == 0)
@@ -380,7 +380,7 @@ ncmpii_NC_var_shape64(NC                *ncp,
 
         if (varp->dimids[i] < 0)
             return NC_EBADDIM;
-        if (varp->dimids[i] >= ((dims != NULL) ? dims->nelems : 1))
+        if (varp->dimids[i] >= ((dims != NULL) ? dims->ndefined : 1))
             return NC_EBADDIM;
 
         dimp = ncmpii_elem_NC_dimarray(dims, varp->dimids[i]);
@@ -524,7 +524,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 		return NC_EINVAL;
 	} 
 
-	if(ncp->vars.nelems >= NC_MAX_VARS)
+	if(ncp->vars.ndefined >= NC_MAX_VARS)
 	{
 		return NC_EMAXVARS;
 	}
@@ -558,7 +558,7 @@ ncmpi_def_var( int ncid, const char *name, nc_type type,
 	}
 
 	if(varidp != NULL)
-		*varidp = (int)ncp->vars.nelems -1; /* varid */
+		*varidp = (int)ncp->vars.ndefined -1; /* varid */
 	return NC_NOERR;
 }
 
@@ -629,7 +629,7 @@ ncmpi_inq_var(int ncid,
 	}
 	if(nattsp != 0)
 	{
-		*nattsp = (int) varp->attrs.nelems;
+		*nattsp = (int) varp->attrs.ndefined;
 	}
 
 	return NC_NOERR;
@@ -753,7 +753,7 @@ ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
 
 	if(nattsp != 0)
 	{
-		*nattsp = (int) varp->attrs.nelems;
+		*nattsp = (int) varp->attrs.ndefined;
 	}
 
 	return NC_NOERR;
@@ -859,7 +859,7 @@ int ncmpi_print_all_var_offsets(int ncid) {
         ncp->nciop->path, ncp->begin_var/1048575);
 
     vpp = ncp->vars.value;
-    for (i=0; i<ncp->vars.nelems; i++, vpp++) {
+    for (i=0; i<ncp->vars.ndefined; i++, vpp++) {
         char str[1024];
         MPI_Offset off = (*vpp)->begin;
         MPI_Offset rem = off % 1048576;;

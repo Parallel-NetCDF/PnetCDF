@@ -206,6 +206,7 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
   NCtype type = NC_UNSPECIFIED; 
   NC_dim **dpp, **end;
   int dim;
+  MPI_Offset tmp;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);
@@ -217,13 +218,14 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
     return status; 
   }
 
-  status = val_get_size_t(gbp, &ncap->nelems);
+  status = val_get_size_t(gbp, &tmp);
   if(status != NC_NOERR) {
     printf("the length of ");
     return status;
   }
+  ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
 
-  if(ncap->nelems == 0) {
+  if(ncap->ndefined == 0) {
     if (type != NC_DIMENSION && type != NC_UNSPECIFIED) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
 	      (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
@@ -234,22 +236,22 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
     if(type != NC_DIMENSION) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
 	      (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
-      printf("NC_DIMENSION is expected since number of dimensions is %d for ", (int)ncap->nelems);
+      printf("NC_DIMENSION is expected since number of dimensions is %d for ", ncap->ndefined);
       return EINVAL;
     }
 
-    ncap->value = (NC_dim **) NCI_Malloc(ncap->nelems * sizeof(NC_dim *));
+    ncap->value = (NC_dim **) NCI_Malloc(ncap->ndefined * sizeof(NC_dim *));
     if(ncap->value == NULL)
       return NC_ENOMEM;
-    ncap->nalloc = ncap->nelems;
+    ncap->nalloc = ncap->ndefined;
 
     dpp = ncap->value;
-    end = &dpp[ncap->nelems];
+    end = &dpp[ncap->ndefined];
     for( /*NADA*/ dim = 0; dpp < end; dpp++, dim++) {
       status = val_get_NC_dim(gbp, dpp);
       if (status != NC_NOERR) {
 	printf("dimension[%d] in ", dim);
-        ncap->nelems = dpp - ncap->value;
+        ncap->ndefined = dpp - ncap->value;
         ncmpii_free_NC_dimarrayV(ncap);
         return status;
       }
@@ -382,6 +384,7 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
   NCtype type = NC_UNSPECIFIED;
   NC_attr **app, **end;
   int att;
+  MPI_Offset tmp;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);
@@ -393,13 +396,14 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
     return status; 
   }
 
-  status = val_get_size_t(gbp, &ncap->nelems);
+  status = val_get_size_t(gbp, &tmp);
   if(status != NC_NOERR) {
     printf("the length of ");
     return status;
   }
+  ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
 
-  if(ncap->nelems == 0) {
+  if(ncap->ndefined == 0) {
     if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
@@ -410,22 +414,22 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
     if(type != NC_ATTRIBUTE) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
-      printf("NC_ATTRIBUTE is expected since number of attributes is %d for ", (int)ncap->nelems);  
+      printf("NC_ATTRIBUTE is expected since number of attributes is %d for ", (int)ncap->ndefined);  
       return EINVAL;
     }
 
-    ncap->value = (NC_attr **) NCI_Malloc(ncap->nelems * sizeof(NC_attr *));
+    ncap->value = (NC_attr **) NCI_Malloc(ncap->ndefined * sizeof(NC_attr *));
     if(ncap->value == NULL)
       return NC_ENOMEM;
-    ncap->nalloc = ncap->nelems; 
+    ncap->nalloc = ncap->ndefined; 
 
     app = ncap->value;
-    end = &app[ncap->nelems];
+    end = &app[ncap->ndefined];
     for( /*NADA*/ att = 0; app < end; app++, att++) {
       status = val_get_NC_attr(gbp, app);
       if (status != NC_NOERR) {
 	printf("attribute[%d] of ", att);
-        ncap->nelems = app - ncap->value;
+        ncap->ndefined = app - ncap->value;
         ncmpii_free_NC_attrarrayV(ncap);
         return status;
       }
@@ -503,7 +507,7 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     ncmpii_free_NC_var(varp);
     return status;
   }
-  status = ncmpix_get_off_t((const void **)&gbp->pos,
+  status = ncmpix_get_size_t((const void **)&gbp->pos,
                          &varp->begin, (gbp->version == 1 ? 4 : 8));
   if(status != NC_NOERR) {
     ncmpii_free_NC_var(varp);
@@ -520,6 +524,7 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
   NCtype type = NC_UNSPECIFIED;
   NC_var **vpp, **end;
   int var;
+  MPI_Offset tmp;
 
   assert(gbp != NULL && gbp->pos != NULL);
   assert(ncap != NULL);
@@ -531,13 +536,14 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
     return status;
   }
  
-  status = val_get_size_t(gbp, &ncap->nelems);
+  status = val_get_size_t(gbp, &tmp);
   if(status != NC_NOERR) {
     printf("the length of ");
     return status;
   }
+  ncap->ndefined = tmp; /* number of allowable defined variables < 2^32 */
  
-  if(ncap->nelems == 0) {
+  if(ncap->ndefined == 0) {
     if (type != NC_VARIABLE && type != NC_UNSPECIFIED) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
@@ -548,22 +554,22 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
     if(type != NC_VARIABLE) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
-      printf("NC_VARIABLE is expected since number of variables is %d for ", (int)ncap->nelems);        
+      printf("NC_VARIABLE is expected since number of variables is %d for ", ncap->ndefined);        
       return EINVAL;
     }
  
-    ncap->value = (NC_var **) NCI_Malloc(ncap->nelems * sizeof(NC_var *));
+    ncap->value = (NC_var **) NCI_Malloc(ncap->ndefined * sizeof(NC_var *));
     if(ncap->value == NULL)
       return NC_ENOMEM; 
-    ncap->nalloc = ncap->nelems;
+    ncap->nalloc = ncap->ndefined;
 
     vpp = ncap->value;
-    end = &vpp[ncap->nelems];
+    end = &vpp[ncap->ndefined];
     for( /*NADA*/ var = 0; vpp < end; vpp++, var++) {
       status = val_get_NC_var(gbp, vpp);
       if (status != NC_NOERR) {
         printf("variable[%d] in ", var);
-        ncap->nelems = vpp - ncap->value;
+        ncap->ndefined = vpp - ncap->value;
         ncmpii_free_NC_vararrayV(ncap);
         return status;
       }
@@ -605,9 +611,33 @@ val_get_NC(NC *ncp) {
   status = ncmpix_getn_schar_schar(
           (const void **)(&getbuf.pos), sizeof(magic), magic);
   if(memcmp(magic, ncmagic, sizeof(ncmagic)) != 0) {
-    printf("Error @ [0x%8.8x]: \n\tUnknow magic number, while (C D F \\001) is expected!\n", (unsigned) 0);
+    printf("Error @ [0x%8.8x]: \n\tUnknow magic number, while (C D F \\001, \\002, or \\005) is expected!\n", (unsigned) 0);
     NCI_Free(getbuf.base);
     return NC_ENOTNC;
+  }
+
+  if (magic[sizeof(ncmagic)-1] == 0x1) {
+      getbuf.version = 1;
+      fSet(ncp->flags, NC_32BIT);
+  } else if (magic[sizeof(ncmagic)-1] == 0x2) {
+      getbuf.version = 2;
+      fSet(ncp->flags, NC_64BIT_OFFSET);
+      if (sizeof(MPI_Offset) != 8) {
+          /* take the easy way out: if we can't support all CDF-2
+           * files, return immediately */
+          NCI_Free(getbuf.base);
+          return NC_ESMALL;
+      }
+  } else if (magic[sizeof(ncmagic)-1] == 0x5) {
+      getbuf.version = 5;
+      fSet(ncp->flags, NC_64BIT_DATA);
+      if (sizeof(MPI_Offset) != 8) {
+          NCI_Free(getbuf.base);
+          return NC_ESMALL;
+      }
+  } else {
+      NCI_Free(getbuf.base);
+      return NC_ENOTNC;
   }
 
   status = val_check_buffer(&getbuf, X_SIZEOF_SIZE_T);
@@ -616,6 +646,7 @@ val_get_NC(NC *ncp) {
     NCI_Free(getbuf.base);
     return status;
   }
+
   status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, getbuf.version == 5 ? 8 : 4);
   if(status != NC_NOERR) {
     NCI_Free(getbuf.base);
@@ -646,7 +677,7 @@ val_get_NC(NC *ncp) {
     return status; 
   }
 
-  ncp->xsz = ncmpii_hdr_len_NC(ncp, (getbuf.version == 1 ? 4 : 8)); 
+  ncp->xsz = ncmpii_hdr_len_NC(ncp);
   status = ncmpii_NC_computeshapes(ncp);
   NCI_Free(getbuf.base);
 

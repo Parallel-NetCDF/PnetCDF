@@ -143,21 +143,21 @@ ncmpii_free_NC_attrarrayV0(NC_attrarray *ncap)
 {
 	assert(ncap != NULL);
 
-	if(ncap->nelems == 0)
+	if(ncap->ndefined == 0)
 		return;
 
 	assert(ncap->value != NULL);
 
 	{
 		NC_attr **app = ncap->value;
-		NC_attr *const *const end = &app[ncap->nelems];
+		NC_attr *const *const end = &app[ncap->ndefined];
 		for( /*NADA*/; app < end; app++)
 		{
 			ncmpii_free_NC_attr(*app);
 			*app = NULL;
 		}
 	}
-	ncap->nelems = 0;
+	ncap->ndefined = 0;
 }
 
 
@@ -192,23 +192,23 @@ ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
 	assert(ref != NULL);
 	assert(ncap != NULL);
 
-	if(ref->nelems != 0)
+	if(ref->ndefined != 0)
 	{
-		const size_t sz = ref->nelems * sizeof(NC_attr *);
+		const size_t sz = ref->ndefined * sizeof(NC_attr *);
 		ncap->value = (NC_attr **) NCI_Malloc(sz);
 		if(ncap->value == NULL)
 			return NC_ENOMEM;
 
 		(void) memset(ncap->value, 0, sz);
-		ncap->nalloc = ref->nelems;
+		ncap->nalloc = ref->ndefined;
 	}
 
-	ncap->nelems = 0;
+	ncap->ndefined = 0;
 	{
 		NC_attr **app = ncap->value;
 		const NC_attr **drpp = (const NC_attr **)ref->value;
-		NC_attr *const *const end = &app[ref->nelems];
-		for( /*NADA*/; app < end; drpp++, app++, ncap->nelems++)
+		NC_attr *const *const end = &app[ref->ndefined];
+		for( /*NADA*/; app < end; drpp++, app++, ncap->ndefined++)
 		{
 			*app = dup_NC_attr(*drpp);
 			if(*app == NULL)
@@ -225,7 +225,7 @@ ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
 		return status;
 	}
 
-	assert(ncap->nelems == ref->nelems);
+	assert(ncap->ndefined == ref->ndefined);
 
 	return NC_NOERR;
 }
@@ -245,7 +245,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 
 	if(ncap->nalloc == 0)
 	{
-		assert(ncap->nelems == 0);
+		assert(ncap->ndefined == 0);
 		vp = (NC_attr **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_attr *));
 		if(vp == NULL)
 			return NC_ENOMEM;
@@ -253,7 +253,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 		ncap->value = vp;
 		ncap->nalloc = NC_ARRAY_GROWBY;
 	}
-	else if(ncap->nelems +1 > ncap->nalloc)
+	else if(ncap->ndefined +1 > ncap->nalloc)
 	{
 		vp = (NC_attr **) NCI_Realloc(ncap->value,
 			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr *));
@@ -266,8 +266,8 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 
 	if(newelemp != NULL)
 	{
-		ncap->value[ncap->nelems] = newelemp;
-		ncap->nelems++;
+		ncap->value[ncap->ndefined] = newelemp;
+		ncap->ndefined++;
 	}
 	return NC_NOERR;
 }
@@ -277,7 +277,7 @@ static NC_attr *
 elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem)
 {
 	assert(ncap != NULL);
-	if((elem < 0) || ncap->nelems == 0 || elem >= ncap->nelems)
+	if((elem < 0) || ncap->ndefined == 0 || elem >= ncap->ndefined)
 		return NULL;
 
 	assert(ncap->value != NULL);
@@ -300,7 +300,7 @@ NC_attrarray0( NC *ncp, int varid)
 	{
 		ap = &ncp->attrs;
 	}
-	else if(varid >= 0 && (size_t) varid < ncp->vars.nelems)
+	else if(varid >= 0 && (size_t) varid < ncp->vars.ndefined)
 	{
 		NC_var **vpp;
 		vpp = (NC_var **)ncp->vars.value;
@@ -326,14 +326,14 @@ ncmpii_NC_findattr(const NC_attrarray *ncap, const char *name)
 
 	assert(ncap != NULL);
 
-	if(ncap->nelems == 0)
+	if(ncap->ndefined == 0)
 		return NULL;
 
 	attrpp = (NC_attr **) ncap->value;
 
 	slen = strlen(name);
 
-	for(attrid = 0; attrid < ncap->nelems; attrid++, attrpp++)
+	for(attrid = 0; attrid < ncap->ndefined; attrid++, attrpp++)
 	{
 		if(strlen((*attrpp)->name->cp) == slen &&
 			strncmp((*attrpp)->name->cp, name, slen) == 0)
@@ -621,7 +621,7 @@ ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ov
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -678,7 +678,7 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 	slen = strlen(name);
 
 	attrpp = (NC_attr **) ncap->value;
-	for(attrid = 0; (size_t) attrid < ncap->nelems; attrid++, attrpp++)
+	for(attrid = 0; (size_t) attrid < ncap->ndefined; attrid++, attrpp++)
 	{
 		if( slen == (*attrpp)->name->nchars &&
 			strncmp(name, (*attrpp)->name->cp, slen) == 0)
@@ -687,19 +687,19 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 			break;
 		}
 	}
-	if( (size_t) attrid == ncap->nelems )
+	if( (size_t) attrid == ncap->ndefined )
 		return NC_ENOTATT;
 			/* end inline NC_findattr() */
 
 	/* shuffle down */
-	for(attrid++; (size_t) attrid < ncap->nelems; attrid++)
+	for(attrid++; (size_t) attrid < ncap->ndefined; attrid++)
 	{
 		*attrpp = *(attrpp + 1);
 		attrpp++;
 	}
 	*attrpp = NULL;
 	/* decrement count */
-	ncap->nelems--;
+	ncap->ndefined--;
 
 	ncmpii_free_NC_attr(old);
 
@@ -1103,7 +1103,7 @@ ncmpi_put_att_text(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -1246,7 +1246,7 @@ ncmpi_put_att_schar(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -1397,7 +1397,7 @@ ncmpi_put_att_uchar(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -1548,7 +1548,7 @@ ncmpi_put_att_short(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -1699,7 +1699,7 @@ ncmpi_put_att_int(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -1850,7 +1850,7 @@ ncmpi_put_att_long(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -2001,7 +2001,7 @@ ncmpi_put_att_float(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
@@ -2156,7 +2156,7 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 		if(!NC_indef(ncp))
 			return NC_ENOTINDEFINE;
 
-		if(ncap->nelems >= NC_MAX_ATTRS)
+		if(ncap->ndefined >= NC_MAX_ATTRS)
 			return NC_EMAXATTS;
 	}
 
