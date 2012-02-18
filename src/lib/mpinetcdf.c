@@ -35,8 +35,7 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int status = NC_NOERR;
-    MPI_Offset sizeof_off_t = 0;
+    int status;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE; /* might be a good thing to hint later */
     NC *ncp;
 
@@ -56,12 +55,13 @@ ncmpi_create(MPI_Comm    comm,
     }
     /* if cmodes are inconsistent, then it is a fatal error to continue */
 
-    ncp = ncmpii_new_NC(&chunksize); /* allocate buffer for header */
-    if (ncp == NULL) 
+    /* allocate buffer for header object NC */
+    if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) 
         return NC_ENOMEM;
 
     assert(ncp->flags == 0);
 
+    /* set the file format version beased on the create mode, cmode */
     if (fIsSet(cmode, NC_64BIT_OFFSET)) {
         /* unlike serial netcdf, we will not bother to support
          * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
@@ -70,15 +70,12 @@ ncmpi_create(MPI_Comm    comm,
         if (sizeof(off_t) != 8)
             return NC_ESMALL;
         fSet(ncp->flags, NC_64BIT_OFFSET);
-        sizeof_off_t = 8;
     } else if (fIsSet(cmode, NC_64BIT_DATA)) {
         if (sizeof(MPI_Offset) <  8)
             return NC_ESMALL;
         fSet(ncp->flags, NC_64BIT_DATA);
-        sizeof_off_t = 8;
     } else {
         fSet(ncp->flags, NC_32BIT);
-        sizeof_off_t = 4;
     }
 
     /* find the true header size (not-yet aligned) */
@@ -105,9 +102,12 @@ ncmpi_create(MPI_Comm    comm,
         fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
         fSet(ncp->flags, NC_HSYNC);  /* sync header */
     }
+
+    /* the linked list storing the outstanding non-blocking requests */
     ncp->head = NULL;
     ncp->tail = NULL;
 
+    /* add to the linked list of opened files */
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
 
@@ -425,15 +425,15 @@ ncmpii_end_indep_data(NC *ncp) {
 /*----< ncmpi_enddef() >-----------------------------------------------------*/
 int
 ncmpi_enddef(int ncid) {
-    int status = NC_NOERR;
+    int status;
     NC *ncp;
 
+    /* check if file ID ncid is valid */
     status = ncmpii_NC_check_id(ncid, &ncp); 
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
-        return(NC_ENOTINDEFINE);
+        return NC_ENOTINDEFINE;
 
     return ncmpii_NC_enddef(ncp);
 }
