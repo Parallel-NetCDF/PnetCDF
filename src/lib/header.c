@@ -839,6 +839,8 @@ ncmpii_hdr_put_NC(NC   *ncp,
 
 /* End Of put NC */
 
+/* Begin Of get NC */
+
 /*
  * Fetch the next header chunk.  the chunk is 'gbp->size' bytes big
  * Takes care to not overwrite leftover (unused) data in the buffer before
@@ -1504,7 +1506,7 @@ ncmpii_comp_dims(NC_dimarray *nc_dim1,
 {
     int i;
     if (nc_dim1->ndefined != nc_dim2->ndefined) {
-        fprintf(stderr,"Error: number of dimensions defined is inconsistent %lld != %lld\n",
+        fprintf(stderr,"Error: number of dimensions defined is inconsistent %d != %d\n",
                 nc_dim1->ndefined, nc_dim2->ndefined);
         return NC_EDIMS_NELEMS_MULTIDEFINE;
     }
@@ -1542,8 +1544,8 @@ ncmpii_comp_attrs(NC_attrarray *nc_attr1,
     double    *da, *db;
 
     if (nc_attr1->ndefined != nc_attr2->ndefined) {
-        printf("%s number of attributes (%lld != %lld)\n", WARN_STR,
-               lld(nc_attr1->ndefined), lld(nc_attr2->ndefined));
+        printf("%s number of attributes (%d != %d)\n", WARN_STR,
+               nc_attr1->ndefined, nc_attr2->ndefined);
         return NC_NOERR;
         /* no need to compare further */
     }
@@ -1639,7 +1641,7 @@ ncmpii_comp_vars(NC_vararray *nc_var1,
 {
     int i, j;
     if (nc_var1->ndefined != nc_var2->ndefined) {
-        fprintf(stderr,"Error: number of defined variables is inconsistent %lld != %lld\n",
+        fprintf(stderr,"Error: number of defined variables is inconsistent %d != %d\n",
                 nc_var1->ndefined, nc_var2->ndefined);
         return NC_EVARS_NELEMS_MULTIDEFINE;
     }
