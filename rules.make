@@ -29,9 +29,9 @@
 	    '')	\
 		set -x;	\
 		$(FPP) $(FPPFLAGS) -C $*.F | grep -v '^#' >$*-tmp.f || 	\
-		    (rm $*-tmp.f ; exit 1);	\
-		$(COMPILE.f) -o $@ $*-tmp.f || (rm $*-tmp.f; exit 1);	\
-		rm $*-tmp.f;	\
+		    ($(RM) -f $*-tmp.f ; exit 1);	\
+		$(COMPILE.f) -o $@ $*-tmp.f || ($(RM) -f $*-tmp.f; exit 1);	\
+		$(RM) -f $*-tmp.f;	\
 		;;	\
 	    *)	\
 		set -x;	\
@@ -43,7 +43,7 @@
 	$(COMPILE.f) $<
 
 #.F.f:
-#	$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*.f || (rm $*.f; exit 1)
+#	$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*.f || ($(RM) -f $*.f; exit 1)
 
 .m4.c:
 	$(M4) $(M4FLAGS) $< >$@
@@ -92,7 +92,7 @@ hpux_shared_library:
 	nm libpnetcdf.a | grep extern | grep entry | \
 	    awk '-F|' '{print $$1}' | sed 's/^/-u /' >symbols.log
 	ld -o $(LIBRARY:.a=.sl) -b -c symbols.log $(LIBRARY)
-	rm symbols.log
+	$(RM) -f symbols.log
 irix_shared_library:
 	ld -o $(LIBRARY:.a=.so) -shared -no_archive \
 	    -all $(LIBRARY) -none -lc -lC $(LIBS)
@@ -156,23 +156,23 @@ $(MANDIR)/man3/$(MANUAL):	$(MANDIR)/man3 $(MANUAL)
 	$(INSTALL) $(srcdir)/$(MANUAL) $@
 $(MANDIR)/man3f/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 				$(MANDIR)/man3f
-	rm -f $@
+	$(RM) -f $@
 	ln -s $(MANDIR)/man3/$(MANUAL) $@
 $(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 				$(MANDIR)/man3f90
-	rm -f $@
+	$(RM) -f $@
 	ln -s $(MANDIR)/man3/$(MANUAL) $@
 
 ################################################################################
 # Cleanup:
 
 clean:		FORCE
-	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE)
+	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE)
 
 distclean:	FORCE
-	rm -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
+	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
 	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files
-	rm -rf SunWS_cache
+	$(RM) -rf SunWS_cache
 
 ################################################################################
 # Dependencies:

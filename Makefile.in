@@ -43,7 +43,7 @@ testing:
 	@cd test && $(MAKE) testing
 
 clean_macros:
-	rm -f macros.make
+	$(RM) -f macros.make
 
 rmdir_src_test:
 	if [ $(srcdir) != . ] ; then rmdir src test examples ; fi
@@ -81,7 +81,7 @@ whatis:		$(MANDIR)/$(WHATIS)
 $(MANDIR)/$(WHATIS):	$(MANDIR)
 	$(MAKEWHATIS_CMD)
 uninstall:
-	rm -f $(MANDIR)/$(WHATIS)
+	$(RM) -f $(MANDIR)/$(WHATIS)
 
 
 ################################################################################
@@ -112,11 +112,11 @@ tar.Z:		check_system FORCE
 
 $(PACKAGE)-$(VERSION).tar.Z:	ensure_manifest MANIFEST
 	id=$(PACKAGE)-$(VERSION) \
-	&& rm -rf $$id \
+	&& $(RM) -fr $$id \
 	&& mkdir $$id \
 	&& ln -s .. $$id/src \
 	&& tar $(TARFLAGS) - `sed "s|^|$$id/src/|" MANIFEST` | compress > $@ \
-	&& rm -r $$id
+	&& $(RM) -fr $$id
 
 MANIFEST:	FORCE
 	$(MAKE) MANIFEST.echo >$@
@@ -138,7 +138,7 @@ ftp:		check_system FORCE
 	    cd $(FTPDIR) || exit 1;
 
 $(FTPDIR)/$(PACKAGE)-$(VERSION).tar.Z:	$(PACKAGE)-$(VERSION).tar.Z
-	rm -f $@
+	$(RM) -f $@
 	cp $(PACKAGE)-$(VERSION).tar.Z $@ 
 	chmod u+rw,g+rw,o=r $@
 
@@ -152,13 +152,13 @@ binftp:		FORCE
 ftpbin:		binftp
 
 $(FTPBINDIR)/$(PACKAGE)-$(VERSION).tar.Z:
-	rm -f $@
+	$(RM) -f $@
 	id=$(PACKAGE)-$(VERSION) \
-	&& rm -f $$id \
+	&& $(RM) -f $$id \
 	&& ln -s $(prefix) $$id \
 	&& tar $(TARFLAGS) - README $$id/bin $$id/include \
 	    $$id/lib $$id/man | compress > $@ \
-	&& rm $$id
+	&& $(RM) -f $$id
 	chmod u+rw,g+rw,o=r $@
 	test -r $(FTPBINDIR)/$(PACKAGE).tar.Z || exit 0; \
 	    cd $(FTPBINDIR) || exit 1;

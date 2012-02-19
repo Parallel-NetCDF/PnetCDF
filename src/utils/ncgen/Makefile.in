@@ -52,8 +52,8 @@ install:
 	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
 uninstall:
-	-rm -f $(BINDIR)/$(PROGRAM)
-	-rm -f $(MANDIR)/man1/$(MANUAL)
+	$(RM) -f $(BINDIR)/$(PROGRAM)
+	$(RM) -f $(MANDIR)/man1/$(MANUAL)
 
 $(PROGRAM):	$(OBJS) $(lib_netcdf)
 	$(LINK.c) $(OBJS) $(ld_netcdf) $(LIBS) 

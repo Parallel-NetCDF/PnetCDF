@@ -1,6 +1,9 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
 CXX = @CXX@
+
+include ../macros.make
+
 SUBDIRS = common test_double test_double_int test_float test_int test_dtype nc_test fandc nf_test largefile C mcoll_perf test_inq_format test_check_header testcases
 
 all:
@@ -11,7 +14,7 @@ clean:
 
 distclean:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
-	rm -f Makefile
+	$(RM) -f Makefile
 	if [ @srcdir@ != . ] ; then rmdir $(SUBDIRS) ; fi
 
 # Eventually, this target will run all of the relevant tests

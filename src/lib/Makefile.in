@@ -93,10 +93,10 @@ install:
 	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
 uninstall:
-	-rm -f $(LIBDIR)/$(LIBRARY)
-	-rm -f $(INCDIR)/$(HEADER)
-	-rm -f $(MANDIR)/man3/$(MANUAL)
-	-rm -f $(BINDIR)/$(PROGRAM)
+	$(RM) -f $(LIBDIR)/$(LIBRARY)
+	$(RM) -f $(INCDIR)/$(HEADER)
+	$(RM) -f $(MANDIR)/man3/$(MANUAL)
+	$(RM) -f $(BINDIR)/$(PROGRAM)
 
 
 
@@ -105,7 +105,7 @@ uninstall:
 # have to depend on the non-POSIX utility m4(1).
 #
 $(MANUAL):	$(srcdir)/../../man/netcdf.m4
-	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || rm $@
+	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || $(RM) $@
 
 $(PROGRAM):	$(PROG_OBJS) $(LIBRARY)
 	$(LINK.c) $(PROG_OBJS) $(LIBRARY)

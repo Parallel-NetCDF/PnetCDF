@@ -1,6 +1,8 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include ../../macros.make
+
 INCDIR		= $(srcdir)/../../src/lib 
 LIBDIR		= ../../src/lib
 
@@ -30,7 +32,7 @@ test_nonblocking: test_nonblocking.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f $(OBJS) $(PROGS) *.nc
+	$(RM) -f $(OBJS) $(PROGS) *.nc
 
 distclean: clean
-	rm -f Makefile
+	$(RM) -f Makefile
