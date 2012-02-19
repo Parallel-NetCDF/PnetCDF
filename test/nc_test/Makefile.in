@@ -83,7 +83,7 @@ saber_src:
 
 # This simple testing target ensures that the test files are present
 testing: test.nc nc_test
-	rm -f scratch.nc
+	$(RM) -f scratch.nc
 	./nc_test && ./nc_test -c -2 && ./nc_test
 
 include $(srcdir)/../../rules.make

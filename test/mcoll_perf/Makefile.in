@@ -1,6 +1,8 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include ../../macros.make
+
 INCDIR		= $(srcdir)/../../src/lib
 LIBDIR		= ../../src/lib
 
@@ -36,7 +38,7 @@ testing-f: mcoll_testf
 	./mcoll_testf
 	
 clean:
-	rm -f *.o $(PROGS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc
 
 distclean: clean
-	rm -f Makefile
+	$(RM) -f Makefile

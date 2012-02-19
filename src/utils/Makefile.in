@@ -1,5 +1,8 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
+
+include ../../macros.make
+
 SUBDIRS = ncgen ncdump ncdiff
 
 all: ncmpigen ncmpidump ncmpidiff
@@ -18,7 +21,7 @@ clean:
 
 distclean:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
-	rm -f Makefile
+	$(RM) -f Makefile
 	if [ $(srcdir) != . ] ; then rmdir $(SUBDIRS) ; fi
 
 install: ncgen_install ncdump_install ncdiff_install

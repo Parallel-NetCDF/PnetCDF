@@ -58,6 +58,6 @@ clean:
 
 distclean:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
-	/bin/rm -f Makefile
-	if [ @srcdir@ != . ] ; then /bin/rmdir $(SUBDIRS) ; fi
+	$(RM) -f Makefile
+	if [ @srcdir@ != . ] ; then rmdir $(SUBDIRS) ; fi
 

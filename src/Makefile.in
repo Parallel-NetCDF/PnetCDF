@@ -1,6 +1,8 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
+include ../macros.make
+
 all:
 	cd lib && $(MAKE)
 	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) ; fi
@@ -20,6 +22,6 @@ distclean:
 	cd lib && $(MAKE) distclean
 	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) distclean ; fi
 	cd utils && $(MAKE) distclean
-	rm -f Makefile
+	$(RM) -f Makefile
 	if [ $(srcdir) != . ] ; then if [ @has_fortran@ = yes ] ; then rmdir libf ; fi ; fi
 	if [ $(srcdir) != . ] ; then rmdir lib utils ; fi

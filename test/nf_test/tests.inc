@@ -20,6 +20,7 @@
 
 #include "../../src/libf/nfconfig.inc"
 
+
 !/* Parameters of test data */
 
 #ifdef  NF_INT1_T

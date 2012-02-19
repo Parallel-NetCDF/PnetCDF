@@ -1,6 +1,8 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
+include ../../macros.make
+
 CC = @MPICC@
 CFLAGS = @CFLAGS@
 
@@ -13,7 +15,7 @@ libtestutils.a: $(OBJS)
 testutils.o: testutils.c testutils.h
 
 clean:
-	rm -f *.o *.a
+	$(RM) -f *.o *.a
 
 distclean: clean
-	rm -f Makefile
+	$(RM) -f Makefile

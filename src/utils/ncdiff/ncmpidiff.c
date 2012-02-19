@@ -16,6 +16,7 @@
  *           mpiexec -n 8 ncmpidiff -h -v var1,var2 file1.nc file2.nc
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,6 +93,25 @@
     free(b1);                                                                \
     free(b2);                                                                \
     break;                                                                   \
+}
+
+char *progname;
+/*
+ *  * Print error message to stderr and exit
+ *   */
+static void
+error(const char *fmt, ...)
+{
+    va_list args ;
+
+    (void) fprintf(stderr,"%s: ", progname);
+    va_start(args, fmt) ;
+    (void) vfprintf(stderr,fmt,args) ;
+    va_end(args) ;
+
+    (void) fprintf(stderr, "\n") ;
+    (void) fflush(stderr);      /* to ensure log files are current */
+    exit(EXIT_FAILURE);
 }
 
 /*----< usage() >-------------------------------------------------------------*/
@@ -182,6 +202,7 @@ int main(int argc, char **argv) {
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
+    progname            = argv[0];
     verbose             = 0;
     check_header        = 0;
     check_variable_list = 0;

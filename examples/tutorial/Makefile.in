@@ -2,6 +2,8 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
+include ../../macros.make
+
 NETCDF=@prefix@
 CC=@MPICC@
 CFLAGS = @CFLAGS@  -I$(NETCDF)/include
@@ -51,8 +53,8 @@ pnetcdf-read-nb: $(srcdir)/pnetcdf-read-nb.c
 
 
 clean:
-	/bin/rm -f *.o $(OBJS) *.nc
+	$(RM) -f *.o $(OBJS) *.nc
 
 distclean: clean
-	/bin/rm -f Makefile
+	$(RM) -f Makefile
 

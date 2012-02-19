@@ -1,6 +1,8 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include ../../macros.make
+
 INCDIR		= $(srcdir)/../../src/lib -I../../src/lib
 LIBDIR		= ../../src/lib
 
@@ -24,7 +26,7 @@ test_inq_format: test_inq_format.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o $(PROGS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc
 
 distclean: clean
-	rm -f Makefile
+	$(RM) -f Makefile

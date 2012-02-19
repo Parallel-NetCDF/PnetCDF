@@ -6,6 +6,7 @@
 
 # POSIX shell.  Shouldn't be necessary -- but is under IRIX 5.3.
 SHELL		= /bin/sh
+RM		= @RM@
 
 
 # Installation Directories:

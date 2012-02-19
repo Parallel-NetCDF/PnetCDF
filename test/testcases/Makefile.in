@@ -1,6 +1,8 @@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include ../../macros.make
+
 INCDIR		= $(srcdir)/../../src/lib 
 LIBDIR		= ../../src/lib
 
@@ -46,10 +48,10 @@ collective_error: collective_error.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o $(PROGS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc
 
 distclean: clean
-	rm -f Makefile
+	$(RM) -f Makefile
 
 test: ncmpi_vars_null_stride vectors
 	./ncmpi_vars_null_stride test.nc && echo '*** ncmpi_vars_null_stride: Success ***'

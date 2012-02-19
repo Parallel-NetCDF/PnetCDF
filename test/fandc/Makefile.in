@@ -33,8 +33,8 @@ pnf_test.o:  pnf_test.F
 	$(MPIF77) $(FFLAGS) -I$(INCDIRF) -c $(srcdir)/pnf_test.F 
 
 clean:
-	rm -f $(EXECS) *.o *.nc
+	$(RM) -f $(EXECS) *.o *.nc
 
 distclean: clean
-	rm -f Makefile
+	$(RM) -f Makefile
 
