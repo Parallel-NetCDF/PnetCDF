@@ -105,7 +105,7 @@ uninstall:
 # have to depend on the non-POSIX utility m4(1).
 #
 $(MANUAL):	$(srcdir)/../../man/netcdf.m4
-	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || $(RM) $@
+	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || $(RM) -f $@
 
 $(PROGRAM):	$(PROG_OBJS) $(LIBRARY)
 	$(LINK.c) $(PROG_OBJS) $(LIBRARY)
