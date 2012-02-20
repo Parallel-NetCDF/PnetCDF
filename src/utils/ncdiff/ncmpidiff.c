@@ -96,9 +96,20 @@
 }
 
 char *progname;
+
+#ifndef EXIT_FAILURE
+#ifndef vms
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+#else
+#define EXIT_SUCCESS 1
+#define EXIT_FAILURE 0
+#endif
+#endif
+
 /*
  *  * Print error message to stderr and exit
- *   */
+ */
 static void
 error(const char *fmt, ...)
 {
@@ -183,7 +194,8 @@ get_type(int type)
 }
 
 /*----< main() >--------------------------------------------------------------*/
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int i, j, c, err, isRecvar, rank, nprocs;
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, *dimids1;
     int ncid2, ndims2, nvars2, natts2, unlimdimid2, *dimids2;
@@ -683,5 +695,9 @@ int main(int argc, char **argv) {
     free(start);
 
     MPI_Finalize();
-    return 0;
+#ifdef vms
+    exit(EXIT_SUCCESS);
+#else
+    return EXIT_SUCCESS;
+#endif
 }
