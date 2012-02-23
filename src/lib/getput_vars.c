@@ -24,309 +24,83 @@
         NetCDF XDR Level        xbuf    (XDR I/O buffer)
 */
 
+#define PUT_VARS(fnmode, collmode)                               \
+int                                                              \
+ncmpi_put_vars##fnmode(int               ncid,                   \
+                       int               varid,                  \
+                       const MPI_Offset  start[],                \
+                       const MPI_Offset  count[],                \
+                       const MPI_Offset  stride[],               \
+                       const void       *buf,                    \
+                       MPI_Offset        bufcount,               \
+                       MPI_Datatype      datatype)               \
+{                                                                \
+    int         status;                                          \
+    NC         *ncp;                                             \
+    NC_var     *varp;                                            \
+                                                                 \
+    CHECK_NCID                                                   \
+    CHECK_WRITE_PERMISSION                                       \
+    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    if (collmode == INDEP_IO)                                    \
+        CHECK_INDEP_FH                                           \
+    else /* collmode == COLL_IO */                               \
+        CHECK_COLLECTIVE_FH                                      \
+    CHECK_VARID(varid, varp)                                     \
+                                                                 \
+    return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
+                              (void*)buf, bufcount, datatype,    \
+                              WRITE_REQ, collmode);              \
+}
+
 /*----< ncmpi_put_vars() >---------------------------------------------------*/
-int
-ncmpi_put_vars(int               ncid,
-               int               varid,
-               const MPI_Offset  start[],
-               const MPI_Offset  count[],
-               const MPI_Offset  stride[],
-               const void       *buf,
-               MPI_Offset        bufcount,
-               MPI_Datatype      datatype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp;
+/*----< ncmpi_put_vars_all() >-----------------------------------------------*/
+PUT_VARS(    , INDEP_IO)
+PUT_VARS(_all, COLL_IO)
 
-    CHECK_NCID
-    CHECK_WRITE_PERMISSION
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_INDEP_FH
-    CHECK_VARID(varid, varp)
-
-    return ncmpii_getput_vars(ncp, varp, start, count, stride,
-                              (void*)buf, bufcount, datatype,
-                              WRITE_REQ, INDEP_IO);
-}
-
-#define PUT_VARS_COMMON(datatype)                               \
-    int         status;                                         \
-    NC         *ncp;                                            \
-    NC_var     *varp;                                           \
-    MPI_Offset  nelems;                                         \
-                                                                \
-    CHECK_NCID                                                  \
-    CHECK_WRITE_PERMISSION                                      \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                     \
-    CHECK_INDEP_FH                                              \
-    CHECK_VARID(varid, varp)                                    \
-    GET_NUM_ELEMENTS                                            \
-                                                                \
-    return ncmpii_getput_vars(ncp, varp, start, count, stride,  \
-                              (void*)op, nelems, datatype,      \
-                              WRITE_REQ, INDEP_IO);
-
-/*----< ncmpi_put_vars_text() >----------------------------------------------*/
-int
-ncmpi_put_vars_text(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[],
-                    const char       *op)
-{
-    PUT_VARS_COMMON(MPI_CHAR)
-}
-
-/*----< ncmpi_put_vars_schar() >---------------------------------------------*/
-int
-ncmpi_put_vars_schar(int                ncid,
-                     int                varid,
-                     const MPI_Offset   start[],
-                     const MPI_Offset   count[],
-                     const MPI_Offset   stride[],
-                     const signed char *op)
-{
-    PUT_VARS_COMMON(MPI_BYTE)
-}
-
-/*----< ncmpi_put_vars_uchar() >---------------------------------------------*/
-int
-ncmpi_put_vars_uchar(int                  ncid,
-                     int                  varid,
-                     const MPI_Offset     start[],
-                     const MPI_Offset     count[],
-                     const MPI_Offset     stride[],
-                     const unsigned char *op)
-{
-    PUT_VARS_COMMON(MPI_UNSIGNED_CHAR)
-}
-
-/*----< ncmpi_put_vars_short() >---------------------------------------------*/
-int
-ncmpi_put_vars_short(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     const short      *op)
-{
-    PUT_VARS_COMMON(MPI_SHORT)
-}
-
-/*----< ncmpi_put_vars_int() >-----------------------------------------------*/
-int
-ncmpi_put_vars_int(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   const int        *op)
-{
-    PUT_VARS_COMMON(MPI_INT)
-}
-
-/*----< ncmpi_put_vars_long() >----------------------------------------------*/
-int
-ncmpi_put_vars_long(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[],
-                    const long       *op)
-{
-    PUT_VARS_COMMON(MPI_LONG)
-}
-
-/*----< ncmpi_put_vars_float() >---------------------------------------------*/
-int
-ncmpi_put_vars_float(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     const float      *op)
-{
-    PUT_VARS_COMMON(MPI_FLOAT)
-}
-
-/*----< ncmpi_put_vars_double() >--------------------------------------------*/
-int
-ncmpi_put_vars_double(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      const double     *op)
-{
-    PUT_VARS_COMMON(MPI_DOUBLE)
+#define GET_VARS(fnmode, collmode)                               \
+int                                                              \
+ncmpi_get_vars##fnmode(int               ncid,                   \
+                       int               varid,                  \
+                       const MPI_Offset  start[],                \
+                       const MPI_Offset  count[],                \
+                       const MPI_Offset  stride[],               \
+                       void             *buf,                    \
+                       MPI_Offset        bufcount,               \
+                       MPI_Datatype      datatype)               \
+{                                                                \
+    int         status;                                          \
+    NC         *ncp;                                             \
+    NC_var     *varp;                                            \
+                                                                 \
+    CHECK_NCID                                                   \
+    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    if (collmode == INDEP_IO)                                    \
+        CHECK_INDEP_FH                                           \
+    else /* collmode == COLL_IO */                               \
+        CHECK_COLLECTIVE_FH                                      \
+    CHECK_VARID(varid, varp)                                     \
+                                                                 \
+    return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
+                              buf, bufcount, datatype,           \
+                              READ_REQ, collmode);               \
 }
 
 /*----< ncmpi_get_vars() >---------------------------------------------------*/
-int
-ncmpi_get_vars(int               ncid,
-               int               varid,
-               const MPI_Offset  start[],
-               const MPI_Offset  count[],
-               const MPI_Offset  stride[],
-               void             *buf,
-               MPI_Offset        bufcount,
-               MPI_Datatype      datatype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp;
+/*----< ncmpi_get_vars_all() >-----------------------------------------------*/
+GET_VARS(    , INDEP_IO)
+GET_VARS(_all, COLL_IO)
 
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_INDEP_FH
-    CHECK_VARID(varid, varp)
 
-    return ncmpii_getput_vars(ncp, varp, start, count, stride,
-                              buf, bufcount, datatype,
-                              READ_REQ, INDEP_IO);
-}
-
-#define GET_VARS_COMMON(datatype)                               \
-    int         status;                                         \
-    NC         *ncp;                                            \
-    NC_var     *varp;                                           \
-    MPI_Offset  nelems;                                         \
-                                                                \
-    CHECK_NCID                                                  \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                     \
-    CHECK_INDEP_FH                                              \
-    CHECK_VARID(varid, varp)                                    \
-    GET_NUM_ELEMENTS                                            \
-                                                                \
-    return ncmpii_getput_vars(ncp, varp, start, count, stride,  \
-                              ip, nelems, datatype,             \
-                              READ_REQ, INDEP_IO);
-
-/*----< ncmpi_get_vars_text() >----------------------------------------------*/
-int
-ncmpi_get_vars_text(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[],
-                    char             *ip)
-{
-    GET_VARS_COMMON(MPI_CHAR)
-}
-
-/*----< ncmpi_get_vars_schar() >---------------------------------------------*/
-int
-ncmpi_get_vars_schar(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     signed char      *ip)
-{
-    GET_VARS_COMMON(MPI_BYTE)
-}
-
-/*----< ncmpi_get_vars_uchar() >---------------------------------------------*/
-int
-ncmpi_get_vars_uchar(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     unsigned char    *ip)
-{
-    GET_VARS_COMMON(MPI_UNSIGNED_CHAR)
-}
-
-/*----< ncmpi_get_vars_short() >---------------------------------------------*/
-int
-ncmpi_get_vars_short(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     short            *ip)
-{
-    GET_VARS_COMMON(MPI_SHORT)
-}
-
-/*----< ncmpi_get_vars_int() >-----------------------------------------------*/
-int
-ncmpi_get_vars_int(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   int              *ip)
-{
-    GET_VARS_COMMON(MPI_INT)
-}
-
-/*----< ncmpi_get_vars_long() >----------------------------------------------*/
-int
-ncmpi_get_vars_long(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[],
-                    long             *ip)
-{
-    GET_VARS_COMMON(MPI_LONG)
-}
-
-/*----< ncmpi_get_vars_float() >---------------------------------------------*/
-int
-ncmpi_get_vars_float(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     float            *ip)
-{
-    GET_VARS_COMMON(MPI_FLOAT)
-}
-
-/*----< ncmpi_get_vars_double() >--------------------------------------------*/
-int
-ncmpi_get_vars_double(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      double           *ip)
-{
-    GET_VARS_COMMON(MPI_DOUBLE)
-}
-
-/*----< ncmpi_put_vars_all() >-----------------------------------------------*/
-int
-ncmpi_put_vars_all(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   const void       *buf,
-                   MPI_Offset        bufcount,
-                   MPI_Datatype      datatype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp;
-
-    CHECK_NCID
-    CHECK_WRITE_PERMISSION
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_COLLECTIVE_FH
-    CHECK_VARID(varid, varp)
-
-    return ncmpii_getput_vars(ncp, varp, start, count, stride,
-                              (void*)buf, bufcount, datatype,
-                              WRITE_REQ, COLL_IO);
-}
-
-#define PUT_VARS_ALL_COMMON(datatype)                            \
+#define PUT_VARS_TYPE(fntype, buftype, mpitype, collmode)        \
+int                                                              \
+ncmpi_put_vars_##fntype(int               ncid,                  \
+                        int               varid,                 \
+                        const MPI_Offset  start[],               \
+                        const MPI_Offset  count[],               \
+                        const MPI_Offset  stride[],              \
+                        const buftype    *op)                    \
+{                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
@@ -335,136 +109,64 @@ ncmpi_put_vars_all(int               ncid,
     CHECK_NCID                                                   \
     CHECK_WRITE_PERMISSION                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_COLLECTIVE_FH                                          \
+    if (collmode == INDEP_IO)                                    \
+        CHECK_INDEP_FH                                           \
+    else /* collmode == COLL_IO */                               \
+        CHECK_COLLECTIVE_FH                                      \
     CHECK_VARID(varid, varp)                                     \
     GET_NUM_ELEMENTS                                             \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
-                              (void*)op, nelems, datatype,       \
-                              WRITE_REQ, COLL_IO);
+                              (void*)op, nelems, mpitype,        \
+                              WRITE_REQ, collmode);              \
+}
+
+/*----< ncmpi_put_vars_text() >----------------------------------------------*/
+/*----< ncmpi_put_vars_schar() >---------------------------------------------*/
+/*----< ncmpi_put_vars_uchar() >---------------------------------------------*/
+/*----< ncmpi_put_vars_short() >---------------------------------------------*/
+/*----< ncmpi_put_vars_int() >-----------------------------------------------*/
+/*----< ncmpi_put_vars_long() >----------------------------------------------*/
+/*----< ncmpi_put_vars_float() >---------------------------------------------*/
+/*----< ncmpi_put_vars_double() >--------------------------------------------*/
+
+PUT_VARS_TYPE(text,   char,   MPI_CHAR,              INDEP_IO)
+PUT_VARS_TYPE(schar,  schar,  MPI_BYTE,              INDEP_IO)
+PUT_VARS_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR,     INDEP_IO)
+PUT_VARS_TYPE(short,  short,  MPI_SHORT,             INDEP_IO)
+PUT_VARS_TYPE(int,    int,    MPI_INT,               INDEP_IO)
+PUT_VARS_TYPE(long,   long,   MPI_LONG,              INDEP_IO)
+PUT_VARS_TYPE(float,  float,  MPI_FLOAT,             INDEP_IO)
+PUT_VARS_TYPE(double, double, MPI_DOUBLE,            INDEP_IO)
 
 /*----< ncmpi_put_vars_text_all() >------------------------------------------*/
-int
-ncmpi_put_vars_text_all(int               ncid,
-                        int               varid,
-                        const MPI_Offset  start[],
-                        const MPI_Offset  count[],
-                        const MPI_Offset  stride[],
-                        const char       *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_CHAR)
-}
-
 /*----< ncmpi_put_vars_schar_all() >-----------------------------------------*/
-int
-ncmpi_put_vars_schar_all(int                ncid,
-                         int                varid,
-                         const MPI_Offset   start[],
-                         const MPI_Offset   count[],
-                         const MPI_Offset   stride[],
-                         const signed char *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_BYTE)
-}
-
 /*----< ncmpi_put_vars_uchar_all() >-----------------------------------------*/
-int
-ncmpi_put_vars_uchar_all(int                  ncid,
-                         int                  varid,
-                         const MPI_Offset     start[],
-                         const MPI_Offset     count[],
-                         const MPI_Offset     stride[],
-                         const unsigned char *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_UNSIGNED_CHAR)
-}
-
 /*----< ncmpi_put_vars_short_all() >-----------------------------------------*/
-int
-ncmpi_put_vars_short_all(int               ncid,
-                         int               varid,
-                         const MPI_Offset  start[],
-                         const MPI_Offset  count[],
-                         const MPI_Offset  stride[],
-                         const short      *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_SHORT)
-}
-
 /*----< ncmpi_put_vars_int_all() >-------------------------------------------*/
-int
-ncmpi_put_vars_int_all(int               ncid,
-                       int               varid,
-                       const MPI_Offset  start[],
-                       const MPI_Offset  count[],
-                       const MPI_Offset  stride[],
-                       const int        *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_INT)
-}
-
 /*----< ncmpi_put_vars_long_all() >------------------------------------------*/
-int
-ncmpi_put_vars_long_all(int               ncid,
-                        int               varid,
-                        const MPI_Offset  start[],
-                        const MPI_Offset  count[],
-                        const MPI_Offset  stride[],
-                        const long       *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_LONG)
-}
-
 /*----< ncmpi_put_vars_float_all() >-----------------------------------------*/
-int
-ncmpi_put_vars_float_all(int               ncid,
-                         int               varid,
-                         const MPI_Offset  start[],
-                         const MPI_Offset  count[],
-                         const MPI_Offset  stride[],
-                         const float      *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_FLOAT)
-}
-
 /*----< ncmpi_put_vars_double_all() >----------------------------------------*/
-int
-ncmpi_put_vars_double_all(int               ncid,
-                          int               varid,
-                          const MPI_Offset  start[],
-                          const MPI_Offset  count[],
-                          const MPI_Offset  stride[],
-                          const double     *op)
-{
-    PUT_VARS_ALL_COMMON(MPI_DOUBLE)
-}
 
-/*----< ncmpi_get_vars_all() >-----------------------------------------------*/
-int
-ncmpi_get_vars_all(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   void             *buf,
-                   MPI_Offset        bufcount,
-                   MPI_Datatype      datatype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp;
+PUT_VARS_TYPE(text_all,   char,   MPI_CHAR,          COLL_IO)
+PUT_VARS_TYPE(schar_all,  schar,  MPI_BYTE,          COLL_IO)
+PUT_VARS_TYPE(uchar_all,  uchar,  MPI_UNSIGNED_CHAR, COLL_IO)
+PUT_VARS_TYPE(short_all,  short,  MPI_SHORT,         COLL_IO)
+PUT_VARS_TYPE(int_all,    int,    MPI_INT,           COLL_IO)
+PUT_VARS_TYPE(long_all,   long,   MPI_LONG,          COLL_IO)
+PUT_VARS_TYPE(float_all,  float,  MPI_FLOAT,         COLL_IO)
+PUT_VARS_TYPE(double_all, double, MPI_DOUBLE,        COLL_IO)
 
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_COLLECTIVE_FH
-    CHECK_VARID(varid, varp)
 
-    return ncmpii_getput_vars(ncp, varp, start, count, stride,
-                              buf, bufcount, datatype,
-                              READ_REQ, COLL_IO);
-}
-
-#define GET_VARS_ALL_COMMON(datatype)                            \
+#define GET_VARS_TYPE(fntype, buftype, mpitype, collmode)        \
+int                                                              \
+ncmpi_get_vars_##fntype(int               ncid,                  \
+                        int               varid,                 \
+                        const MPI_Offset  start[],               \
+                        const MPI_Offset  count[],               \
+                        const MPI_Offset  stride[],              \
+                        buftype          *ip)                    \
+{                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
@@ -472,109 +174,55 @@ ncmpi_get_vars_all(int               ncid,
                                                                  \
     CHECK_NCID                                                   \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_COLLECTIVE_FH                                          \
+    if (collmode == INDEP_IO)                                    \
+        CHECK_INDEP_FH                                           \
+    else /* collmode == COLL_IO */                               \
+        CHECK_COLLECTIVE_FH                                      \
     CHECK_VARID(varid, varp)                                     \
     GET_NUM_ELEMENTS                                             \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
-                              ip, nelems, datatype,              \
-                              READ_REQ, COLL_IO);
+                              ip, nelems, mpitype,               \
+                              READ_REQ, collmode);               \
+}
+
+/*----< ncmpi_get_vars_text() >----------------------------------------------*/
+/*----< ncmpi_get_vars_schar() >---------------------------------------------*/
+/*----< ncmpi_get_vars_uchar() >---------------------------------------------*/
+/*----< ncmpi_get_vars_short() >---------------------------------------------*/
+/*----< ncmpi_get_vars_int() >-----------------------------------------------*/
+/*----< ncmpi_get_vars_long() >----------------------------------------------*/
+/*----< ncmpi_get_vars_float() >---------------------------------------------*/
+/*----< ncmpi_get_vars_double() >--------------------------------------------*/
+
+GET_VARS_TYPE(text,   char,   MPI_CHAR,              INDEP_IO)
+GET_VARS_TYPE(schar,  schar,  MPI_BYTE,              INDEP_IO)
+GET_VARS_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR,     INDEP_IO)
+GET_VARS_TYPE(short,  short,  MPI_SHORT,             INDEP_IO)
+GET_VARS_TYPE(int,    int,    MPI_INT,               INDEP_IO)
+GET_VARS_TYPE(long,   long,   MPI_LONG,              INDEP_IO)
+GET_VARS_TYPE(float,  float,  MPI_FLOAT,             INDEP_IO)
+GET_VARS_TYPE(double, double, MPI_DOUBLE,            INDEP_IO)
 
 /*----< ncmpi_get_vars_text_all() >------------------------------------------*/
-int
-ncmpi_get_vars_text_all(int               ncid,
-                        int               varid,
-                        const MPI_Offset  start[],
-                        const MPI_Offset  count[],
-                        const MPI_Offset  stride[],
-                        char             *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_CHAR)
-}
-
 /*----< ncmpi_get_vars_schar_all() >-----------------------------------------*/
-int
-ncmpi_get_vars_schar_all(int               ncid,
-                         int               varid,
-                         const MPI_Offset  start[],
-                         const MPI_Offset  count[],
-                         const MPI_Offset  stride[],
-                         signed char      *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_BYTE)
-}
-
 /*----< ncmpi_get_vars_uchar_all() >-----------------------------------------*/
-int
-ncmpi_get_vars_uchar_all(int               ncid,
-                         int               varid,
-                         const MPI_Offset  start[],
-                         const MPI_Offset  count[],
-                         const MPI_Offset  stride[],
-                         unsigned char    *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_UNSIGNED_CHAR)
-}
-
 /*----< ncmpi_get_vars_short_all() >-----------------------------------------*/
-int
-ncmpi_get_vars_short_all(int               ncid,
-                         int               varid,
-                         const MPI_Offset  start[],
-                         const MPI_Offset  count[],
-                         const MPI_Offset  stride[],
-                         short            *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_SHORT)
-}
-
 /*----< ncmpi_get_vars_int_all() >-------------------------------------------*/
-int
-ncmpi_get_vars_int_all(int               ncid,
-                       int               varid,
-                       const MPI_Offset  start[],
-                       const MPI_Offset  count[],
-                       const MPI_Offset  stride[],
-                       int              *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_INT)
-}
-
 /*----< ncmpi_get_vars_long_all() >------------------------------------------*/
-int
-ncmpi_get_vars_long_all(int               ncid,
-                        int               varid,
-                        const MPI_Offset  start[],
-                        const MPI_Offset  count[],
-                        const MPI_Offset  stride[],
-                        long             *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_LONG)
-}
-
 /*----< ncmpi_get_vars_float_all() >-----------------------------------------*/
-int
-ncmpi_get_vars_float_all(int               ncid,
-                         int               varid,
-                         const MPI_Offset  start[],
-                         const MPI_Offset  count[],
-                         const MPI_Offset  stride[],
-                         float            *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_FLOAT)
-}
-
 /*----< ncmpi_get_vars_double_all() >----------------------------------------*/
-int
-ncmpi_get_vars_double_all(int               ncid,
-                          int               varid,
-                          const MPI_Offset  start[],
-                          const MPI_Offset  count[],
-                          const MPI_Offset  stride[],
-                          double           *ip)
-{
-    GET_VARS_ALL_COMMON(MPI_DOUBLE)
-}
+
+GET_VARS_TYPE(text_all,   char,   MPI_CHAR,          COLL_IO)
+GET_VARS_TYPE(schar_all,  schar,  MPI_BYTE,          COLL_IO)
+GET_VARS_TYPE(uchar_all,  uchar,  MPI_UNSIGNED_CHAR, COLL_IO)
+GET_VARS_TYPE(short_all,  short,  MPI_SHORT,         COLL_IO)
+GET_VARS_TYPE(int_all,    int,    MPI_INT,           COLL_IO)
+GET_VARS_TYPE(long_all,   long,   MPI_LONG,          COLL_IO)
+GET_VARS_TYPE(float_all,  float,  MPI_FLOAT,         COLL_IO)
+GET_VARS_TYPE(double_all, double, MPI_DOUBLE,        COLL_IO)
+
+
 
 #define CALLING_MPI_WRITE {                                                    \
     if (io_method == COLL_IO) {                                                \
