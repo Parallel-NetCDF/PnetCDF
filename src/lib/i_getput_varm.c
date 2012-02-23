@@ -64,7 +64,17 @@ ncmpi_iput_varm(int               ncid,
                                WRITE_REQ);
 }
 
-#define IPUT_VARM_COMMON(datatype)                                       \
+#define IPUT_VARM_TYPE(fntype, buftype, mpitype)                         \
+int                                                                      \
+ncmpi_iput_varm_##fntype(int               ncid,                         \
+                         int               varid,                        \
+                         const MPI_Offset  start[],                      \
+                         const MPI_Offset  count[],                      \
+                         const MPI_Offset  stride[],                     \
+                         const MPI_Offset  imap[],                       \
+                         const buftype    *op,                           \
+                         int              *reqid)                        \
+{                                                                        \
     int         status;                                                  \
     NC         *ncp;                                                     \
     NC_var     *varp;                                                    \
@@ -82,120 +92,27 @@ ncmpi_iput_varm(int               ncid,
     GET_NUM_ELEMENTS                                                     \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
-                               (void*)op, nelems, datatype, reqid,       \
-                               WRITE_REQ);
-
-/*----< ncmpi_iput_varm_uchar() >--------------------------------------------*/
-int
-ncmpi_iput_varm_uchar(int                  ncid,
-                      int                  varid,
-                      const MPI_Offset     start[],
-                      const MPI_Offset     count[],
-                      const MPI_Offset     stride[],
-                      const MPI_Offset     imap[],
-                      const unsigned char *op,
-                      int                 *reqid)
-{
-    IPUT_VARM_COMMON(MPI_UNSIGNED_CHAR);
-}
-
-/*----< ncmpi_iput_varm_schar() >--------------------------------------------*/
-int
-ncmpi_iput_varm_schar(int                ncid,
-                      int                varid,
-                      const MPI_Offset   start[],
-                      const MPI_Offset   count[],
-                      const MPI_Offset   stride[],
-                      const MPI_Offset   imap[],
-                      const signed char *op,
-                      int               *reqid)
-{
-    IPUT_VARM_COMMON(MPI_BYTE);
+                               (void*)op, nelems, mpitype, reqid,        \
+                               WRITE_REQ);                               \
 }
 
 /*----< ncmpi_iput_varm_text() >---------------------------------------------*/
-int
-ncmpi_iput_varm_text(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     const MPI_Offset  imap[],
-                     const char       *op,
-                     int              *reqid)
-{
-    IPUT_VARM_COMMON(MPI_CHAR);
-}
-
+/*----< ncmpi_iput_varm_schar() >--------------------------------------------*/
+/*----< ncmpi_iput_varm_uchar() >--------------------------------------------*/
 /*----< ncmpi_iput_varm_short() >--------------------------------------------*/
-int
-ncmpi_iput_varm_short(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      const MPI_Offset  imap[],
-                      const short      *op,
-                      int              *reqid)
-{
-    IPUT_VARM_COMMON(MPI_SHORT);
-} 
-
 /*----< ncmpi_iput_varm_int() >----------------------------------------------*/
-int
-ncmpi_iput_varm_int(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[],
-                    const MPI_Offset  imap[],
-                    const int        *op,
-                    int              *reqid)
-{
-    IPUT_VARM_COMMON(MPI_INT);
-}
-
 /*----< ncmpi_iput_varm_long() >---------------------------------------------*/
-int
-ncmpi_iput_varm_long(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     const MPI_Offset  imap[],
-                     const long       *op,
-                     int              *reqid)
-{
-    IPUT_VARM_COMMON(MPI_LONG);
-}
-
 /*----< ncmpi_iput_varm_float() >--------------------------------------------*/
-int
-ncmpi_iput_varm_float(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      const MPI_Offset  imap[],
-                      const float      *op,
-                      int              *reqid)
-{
-    IPUT_VARM_COMMON(MPI_FLOAT);
-}
-
 /*----< ncmpi_iput_varm_double() >-------------------------------------------*/
-int
-ncmpi_iput_varm_double(int               ncid,
-                       int               varid,
-                       const MPI_Offset  start[],
-                       const MPI_Offset  count[],
-                       const MPI_Offset  stride[],
-                       const MPI_Offset  imap[],
-                       const double     *op,
-                       int              *reqid)
-{
-    IPUT_VARM_COMMON(MPI_DOUBLE);
-}
+
+IPUT_VARM_TYPE(text,   char,   MPI_CHAR)
+IPUT_VARM_TYPE(schar,  schar,  MPI_BYTE)
+IPUT_VARM_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR)
+IPUT_VARM_TYPE(short,  short,  MPI_SHORT)
+IPUT_VARM_TYPE(int,    int,    MPI_INT)
+IPUT_VARM_TYPE(long,   long,   MPI_LONG)
+IPUT_VARM_TYPE(float,  float,  MPI_FLOAT)
+IPUT_VARM_TYPE(double, double, MPI_DOUBLE)
 
 /*----< ncmpi_iget_varm() >--------------------------------------------------*/
 int
@@ -227,7 +144,17 @@ ncmpi_iget_varm(int               ncid,
                                bufcount, datatype, reqid, READ_REQ);
 }
 
-#define IGET_VARM_COMMON(datatype)                                       \
+#define IGET_VARM_TYPE(fntype, buftype, mpitype)                         \
+int                                                                      \
+ncmpi_iget_varm_##fntype(int               ncid,                         \
+                         int               varid,                        \
+                         const MPI_Offset  start[],                      \
+                         const MPI_Offset  count[],                      \
+                         const MPI_Offset  stride[],                     \
+                         const MPI_Offset  imap[],                       \
+                         buftype          *ip,                           \
+                         int              *reqid)                        \
+{                                                                        \
     int         status;                                                  \
     NC         *ncp;                                                     \
     NC_var     *varp;                                                    \
@@ -244,119 +171,26 @@ ncmpi_iget_varm(int               ncid,
     GET_NUM_ELEMENTS                                                     \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
-                               ip, nelems, datatype, reqid, READ_REQ);
+                               ip, nelems, mpitype, reqid, READ_REQ);    \
+}
 
 /*----< ncmpi_iget_varm_uchar() >--------------------------------------------*/
-int
-ncmpi_iget_varm_uchar(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[], 
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      const MPI_Offset  imap[],
-                      unsigned char    *ip,
-                      int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_UNSIGNED_CHAR);
-}
-
 /*----< ncmpi_iget_varm_schar() >--------------------------------------------*/
-int
-ncmpi_iget_varm_schar(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      const MPI_Offset  imap[],
-                      signed char      *ip,       
-                      int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_BYTE);
-}
-
 /*----< ncmpi_iget_varm_text() >---------------------------------------------*/
-int
-ncmpi_iget_varm_text(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     const MPI_Offset  imap[],
-                     char             *ip,       
-                     int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_CHAR);
-}
-
 /*----< ncmpi_iget_varm_short() >--------------------------------------------*/
-int
-ncmpi_iget_varm_short(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      const MPI_Offset  imap[],
-                      short            *ip,       
-                      int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_SHORT);
-} 
-
 /*----< ncmpi_iget_varm_int() >----------------------------------------------*/
-int
-ncmpi_iget_varm_int(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const MPI_Offset  stride[],
-                    const MPI_Offset  imap[],
-                    int              *ip,       
-                    int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_INT);
-}
-
 /*----< ncmpi_iget_varm_long() >---------------------------------------------*/
-int
-ncmpi_iget_varm_long(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const MPI_Offset  stride[],
-                     const MPI_Offset  imap[],
-                     long             *ip,       
-                     int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_LONG);
-}
-
 /*----< ncmpi_iget_varm_float() >--------------------------------------------*/
-int
-ncmpi_iget_varm_float(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const MPI_Offset  stride[],
-                      const MPI_Offset  imap[],
-                      float            *ip,
-                      int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_FLOAT);
-}
-
 /*----< ncmpi_iget_varm_double() >-------------------------------------------*/
-int
-ncmpi_iget_varm_double(int               ncid,
-                       int               varid,
-                       const MPI_Offset  start[],
-                       const MPI_Offset  count[],
-                       const MPI_Offset  stride[],
-                       const MPI_Offset  imap[],
-                       double           *ip,
-                       int              *reqid)
-{
-    IGET_VARM_COMMON(MPI_DOUBLE);
-}
+
+IGET_VARM_TYPE(text,   char,   MPI_CHAR)
+IGET_VARM_TYPE(schar,  schar,  MPI_BYTE)
+IGET_VARM_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR)
+IGET_VARM_TYPE(short,  short,  MPI_SHORT)
+IGET_VARM_TYPE(int,    int,    MPI_INT)
+IGET_VARM_TYPE(long,   long,   MPI_LONG)
+IGET_VARM_TYPE(float,  float,  MPI_FLOAT)
+IGET_VARM_TYPE(double, double, MPI_DOUBLE)
 
 /*----< ncmpii_igetput_varm() >----------------------------------------------*/
 int

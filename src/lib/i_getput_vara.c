@@ -54,7 +54,15 @@ ncmpi_iput_vara(int               ncid,
                                WRITE_REQ);
 }
 
-#define IPUT_VARA_COMMON(datatype)                                     \
+#define IPUT_VARA_TYPE(fntype, buftype, mpitype)                       \
+int                                                                    \
+ncmpi_iput_vara_##fntype(int               ncid,                       \
+                         int               varid,                      \
+                         const MPI_Offset  start[],                    \
+                         const MPI_Offset  count[],                    \
+                         const buftype    *op,                         \
+                         int              *reqid)                      \
+{                                                                      \
     int         status;                                                \
     NC         *ncp;                                                   \
     NC_var     *varp;                                                  \
@@ -72,104 +80,28 @@ ncmpi_iput_vara(int               ncid,
     GET_NUM_ELEMENTS                                                   \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
-                               (void*)op, nelems, datatype, reqid,     \
-                               WRITE_REQ);
-
-/*----< ncmpi_iput_vara_uchar() >--------------------------------------------*/
-int
-ncmpi_iput_vara_uchar(int                  ncid,
-                      int                  varid,
-                      const MPI_Offset     start[],
-                      const MPI_Offset     count[],
-                      const unsigned char *op,
-                      int                 *reqid)
-{
-    IPUT_VARA_COMMON(MPI_UNSIGNED_CHAR);
-}
-
-/*----< ncmpi_iput_vara_schar() >--------------------------------------------*/
-int
-ncmpi_iput_vara_schar(int                ncid,
-                      int                varid,
-                      const MPI_Offset   start[],
-                      const MPI_Offset   count[],
-                      const signed char *op,
-                      int               *reqid)
-{
-    IPUT_VARA_COMMON(MPI_BYTE);
+                               (void*)op, nelems, mpitype, reqid,      \
+                               WRITE_REQ);                             \
 }
 
 /*----< ncmpi_iput_vara_text() >---------------------------------------------*/
-int
-ncmpi_iput_vara_text(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const char       *op,
-                     int              *reqid)
-{
-    IPUT_VARA_COMMON(MPI_CHAR);
-}
-
+/*----< ncmpi_iput_vara_schar() >--------------------------------------------*/
+/*----< ncmpi_iput_vara_uchar() >--------------------------------------------*/
 /*----< ncmpi_iput_vara_short() >--------------------------------------------*/
-int
-ncmpi_iput_vara_short(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const short      *op,
-                      int              *reqid)
-{
-    IPUT_VARA_COMMON(MPI_SHORT);
-} 
-
 /*----< ncmpi_iput_vara_int() >----------------------------------------------*/
-int
-ncmpi_iput_vara_int(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    const int        *op,
-                    int              *reqid)
-{
-    IPUT_VARA_COMMON(MPI_INT);
-}
-
 /*----< ncmpi_iput_vara_long() >---------------------------------------------*/
-int
-ncmpi_iput_vara_long(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     const long       *op,
-                     int              *reqid)
-{
-    IPUT_VARA_COMMON(MPI_LONG);
-}
-
 /*----< ncmpi_iput_vara_float() >--------------------------------------------*/
-int
-ncmpi_iput_vara_float(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const float      *op,
-                      int              *reqid)
-{
-    IPUT_VARA_COMMON(MPI_FLOAT);
-}
-
 /*----< ncmpi_iput_vara_double() >-------------------------------------------*/
-int
-ncmpi_iput_vara_double(int              ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      const double     *op,
-                      int              *reqid)
-{
-    IPUT_VARA_COMMON(MPI_DOUBLE);
-}
+
+IPUT_VARA_TYPE(text,   char,   MPI_CHAR)
+IPUT_VARA_TYPE(schar,  schar,  MPI_BYTE)
+IPUT_VARA_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR)
+IPUT_VARA_TYPE(short,  short,  MPI_SHORT)
+IPUT_VARA_TYPE(int,    int,    MPI_INT)
+IPUT_VARA_TYPE(long,   long,   MPI_LONG)
+IPUT_VARA_TYPE(float,  float,  MPI_FLOAT)
+IPUT_VARA_TYPE(double, double, MPI_DOUBLE)
+
 
 /*----< ncmpi_iget_vara() >--------------------------------------------------*/
 int
@@ -199,7 +131,15 @@ ncmpi_iget_vara(int               ncid,
                                bufcount, datatype, reqid, READ_REQ);
 }
 
-#define IGET_VARA_COMMON(datatype)                                     \
+#define IGET_VARA_TYPE(fntype, buftype, mpitype)                       \
+int                                                                    \
+ncmpi_iget_vara_##fntype(int               ncid,                       \
+                         int               varid,                      \
+                         const MPI_Offset  start[],                    \
+                         const MPI_Offset  count[],                    \
+                         buftype          *ip,                         \
+                         int              *reqid)                      \
+{                                                                      \
     int         status;                                                \
     NC         *ncp;                                                   \
     NC_var     *varp;                                                  \
@@ -216,101 +156,24 @@ ncmpi_iget_vara(int               ncid,
     GET_NUM_ELEMENTS                                                   \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
-                               ip, nelems, datatype, reqid, READ_REQ);
-
-/*----< ncmpi_iget_vara_uchar() >--------------------------------------------*/
-int
-ncmpi_iget_vara_uchar(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[], 
-                      const MPI_Offset  count[],
-                      unsigned char    *ip,
-                      int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_UNSIGNED_CHAR);
-}
-
-/*----< ncmpi_iget_vara_schar() >--------------------------------------------*/
-int
-ncmpi_iget_vara_schar(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      signed char      *ip,       
-                      int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_BYTE);
+                               ip, nelems, mpitype, reqid, READ_REQ);  \
 }
 
 /*----< ncmpi_iget_vara_text() >---------------------------------------------*/
-int
-ncmpi_iget_vara_text(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     char             *ip,       
-                     int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_CHAR);
-}
-
+/*----< ncmpi_iget_vara_schar() >--------------------------------------------*/
+/*----< ncmpi_iget_vara_uchar() >--------------------------------------------*/
 /*----< ncmpi_iget_vara_short() >--------------------------------------------*/
-int
-ncmpi_iget_vara_short(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      short            *ip,       
-                      int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_SHORT);
-} 
-
 /*----< ncmpi_iget_vara_int() >----------------------------------------------*/
-int
-ncmpi_iget_vara_int(int               ncid,
-                    int               varid,
-                    const MPI_Offset  start[],
-                    const MPI_Offset  count[],
-                    int              *ip,       
-                    int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_INT);
-}
-
 /*----< ncmpi_iget_vara_long() >---------------------------------------------*/
-int
-ncmpi_iget_vara_long(int               ncid,
-                     int               varid,
-                     const MPI_Offset  start[],
-                     const MPI_Offset  count[],
-                     long             *ip,       
-                     int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_LONG);
-}
-
 /*----< ncmpi_iget_vara_float() >--------------------------------------------*/
-int
-ncmpi_iget_vara_float(int               ncid,
-                      int               varid,
-                      const MPI_Offset  start[],
-                      const MPI_Offset  count[],
-                      float            *ip,
-                      int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_FLOAT);
-}
-
 /*----< ncmpi_iget_vara_double() >-------------------------------------------*/
-int
-ncmpi_iget_vara_double(int               ncid,
-                       int               varid,
-                       const MPI_Offset  start[],
-                       const MPI_Offset  count[],
-                       double           *ip,
-                       int              *reqid)
-{
-    IGET_VARA_COMMON(MPI_DOUBLE);
-}
+
+IGET_VARA_TYPE(text,   char,   MPI_CHAR)
+IGET_VARA_TYPE(schar,  schar,  MPI_BYTE)
+IGET_VARA_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR)
+IGET_VARA_TYPE(short,  short,  MPI_SHORT)
+IGET_VARA_TYPE(int,    int,    MPI_INT)
+IGET_VARA_TYPE(long,   long,   MPI_LONG)
+IGET_VARA_TYPE(float,  float,  MPI_FLOAT)
+IGET_VARA_TYPE(double, double, MPI_DOUBLE)
 
