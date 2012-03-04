@@ -577,6 +577,11 @@ test_ncmpi_put_vara_$1(void)
                 start[j] = 0;
             }
         }
+
+/* wkliao: this test below of put_vara is redundant and incorrectly uses the
+           value[] set from the previously iteration. There is no such test
+           in put_vars and put_varm.
+
         err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
         if (canConvert) {
             IF (err != NC_NOERR) 
@@ -585,6 +590,7 @@ test_ncmpi_put_vara_$1(void)
             IF (err != NC_ECHAR)
                 error("wrong type: err = %d", err);
         }
+*/
         for (j = 0; j < var_rank[i]; j++) {
             edge[j] = 1;
         }
