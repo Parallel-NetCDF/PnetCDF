@@ -4,7 +4,7 @@ VPATH = @srcdir@
 
 include ../macros.make
 
-INCLUDES	= -I$(srcdir)/../../src/lib -I../../src/lib -I$(srcdir)
+INCLUDES	= -I$(srcdir)/../src/lib -I../src/lib -I$(srcdir)
 
 ld_math		= $(MATHLIB)
 
@@ -17,46 +17,54 @@ F90_SRCS	= get_info_f.F90
 C_OBJS		= $(C_SRCS:.c=.o)
 F90_OBJS	= $(F90_SRCS:.F90=.o)
 
+ifeq (@has_fortran@, yes)
+PROGS		= collective_write nonblocking_write get_info_c get_info_f
 OBJS		= $(C_OBJS) $(F90_OBJS)
+else
+PROGS		= collective_write nonblocking_write get_info_c
+OBJS		= $(C_OBJS)
+endif
 
-lib_netcdf	= ../../src/lib/libpnetcdf.a
-ld_netcdf	= -L../../src/lib -lpnetcdf
+GARBAGE         = $(PROGS)
 
-GARBAGE		= collective_write nonblocking_write get_info_c get_info_f
+ld_pnetcdf      = -L../../src/lib -lpnetcdf
 
 PACKING_LIST	=  $(SRCS) \
 		    Makefile.in
 
-all:
+SUBDIRS = tutorial
+
+all: $(PROGS)
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
 
 install:
 
 uninstall:
 
 collective_write: collective_write.o
-	$(LINK.c) collective_write.o -o collective_write $(ld_netcdf) $(ld_math) $(LIBS)
+	$(LINK.c) collective_write.o -o collective_write $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 nonblocking_write: nonblocking_write.o
-	$(LINK.c) nonblocking_write.o -o nonblocking_write $(ld_netcdf) $(ld_math) $(LIBS)
+	$(LINK.c) nonblocking_write.o -o nonblocking_write $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 get_info_c: get_info_c.o
-	$(LINK.c) get_info_c.o -o get_info_c $(ld_netcdf) $(ld_math) $(LIBS)
+	$(LINK.c) get_info_c.o -o get_info_c $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 get_info_f.o: get_info_f.F90
 	$(COMPILE.F90) $<
 
 get_info_f: get_info_f.o
-	$(LINK.F90) get_info_f.o -o get_info_f $(ld_netcdf) $(ld_math) $(LIBS)
+	$(LINK.F90) get_info_f.o -o get_info_f $(ld_pnetcdf) $(ld_math) $(LIBS)
 
-include $(srcdir)/../rules.make
 include $(srcdir)/depend
 
-SUBDIRS = tutorial
 
 clean:
+	$(RM) -f *.o core $(GARBAGE)
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
 
 distclean:
+	$(RM) -f *.o core $(GARBAGE)
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
 	$(RM) -f Makefile
 	if [ @srcdir@ != . ] ; then rmdir $(SUBDIRS) ; fi
