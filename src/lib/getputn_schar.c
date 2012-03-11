@@ -4,6 +4,7 @@
 /*---- schar ----------------------------------------------------------------*/
 
 /*----< ncmpix_getn_schar_schar() >------------------------------------------*/
+int
 ncmpix_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
     memcpy(tp, *xpp, nelems);
