@@ -20,123 +20,227 @@ COMMON_HEADER_GENERATED	= pnetcdf_inc
 HEADER_GENERATED	= pnetcdf.inc
 MODULE_GENERATED        = pnetcdf.mod
 
-MANUAL	= 
+MANUAL	=
 
-LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
-	createf.c def_dimf.c def_varf.c del_attf.c enddeff.c \
-	end_indep_dataf.c get_att_doublef.c get_att_realf.c \
-	get_att_intf.c get_att_int1f.c get_att_int2f.c \
-	get_att_textf.c get_var1_doublef.c \
-	get_var1f.c get_var1_realf.c get_var1_intf.c get_var1_int2f.c \
-	get_var1_textf.c get_vara_allf.c get_vara_double_allf.c \
-	get_vara_doublef.c get_varaf.c get_vara_real_allf.c \
-	get_vara_realf.c get_vara_int_allf.c get_vara_intf.c \
-	get_var_allf.c get_vara_int2_allf.c get_vara_int2f.c \
-	get_vara_text_allf.c get_vara_textf.c get_var_double_allf.c \
-	get_var_doublef.c get_varf.c get_var_real_allf.c \
-	get_var_realf.c get_var_int_allf.c get_var_intf.c get_vars_allf.c \
-	get_vars_double_allf.c get_vars_doublef.c get_varsf.c \
-	get_vars_real_allf.c get_vars_realf.c get_var_int2_allf.c \
-	get_var_int2f.c get_vars_int_allf.c get_vars_intf.c \
-	get_vars_int2_allf.c get_vars_int2f.c get_vars_text_allf.c \
-	get_vars_textf.c get_var_text_allf.c get_var_textf.c \
-	inq_attf.c inq_attidf.c inq_attlenf.c inq_attnamef.c \
-	inq_atttypef.c inq_dimf.c inq_dimidf.c inq_dimlenf.c \
-	inq_dimnamef.c inqf.c inq_nattsf.c inq_ndimsf.c inq_nvarsf.c \
-	inq_unlimdimf.c inq_vardimidf.c inq_varf.c inq_varidf.c \
-	inq_varnamef.c inq_varnattsf.c inq_varoffsetf.c inq_varndimsf.c inq_vartypef.c \
-        inq_formatf.c inq_file_formatf.c \
-	openf.c put_att_doublef.c put_att_realf.c put_att_intf.c \
-	put_att_int1f.c put_att_int2f.c put_att_textf.c \
-	put_var1_doublef.c put_var1f.c put_var1_realf.c \
-	put_var1_intf.c put_var1_int2f.c put_var1_textf.c put_vara_allf.c \
-	put_vara_double_allf.c put_vara_doublef.c put_varaf.c \
-	put_vara_real_allf.c put_vara_realf.c put_vara_int_allf.c \
-	put_vara_intf.c put_vara_int2_allf.c put_vara_int2f.c \
-	put_vara_text_allf.c put_vara_textf.c put_var_doublef.c put_varf.c \
-	put_var_realf.c put_var_intf.c put_vars_allf.c \
-	put_vars_double_allf.c put_vars_doublef.c put_varsf.c \
-	put_vars_real_allf.c put_vars_realf.c put_var_int2f.c \
-	put_vars_int_allf.c put_vars_intf.c put_vars_int2_allf.c \
-	put_vars_int2f.c put_vars_text_allf.c put_vars_textf.c \
-	put_var_textf.c redeff.c rename_attf.c rename_dimf.c \
-	rename_varf.c syncf.c nfxutil.c xstrerrorf.c xinq_libversf.c\
-	get_var1_int1f.c get_var_int1_allf.c \
-	get_var_int1f.c \
-	get_vara_int1_allf.c get_vara_int1f.c \
-	get_vars_int1_allf.c get_vars_int1f.c \
-	put_var1_int1f.c \
-	put_var_int1f.c \
-	put_vara_int1_allf.c put_vara_int1f.c \
-	put_vars_int1_allf.c put_vars_int1f.c \
-	get_varm_allf.c \
-	get_varm_double_allf.c \
-	get_varm_doublef.c \
-	get_varmf.c \
-	get_varm_int1_allf.c \
-	get_varm_int1f.c \
-	get_varm_int2_allf.c \
-	get_varm_int2f.c \
-	get_varm_int_allf.c \
-	get_varm_intf.c \
-	get_varm_real_allf.c \
-	get_varm_realf.c \
-	get_varm_text_allf.c \
-	get_varm_textf.c \
-	put_varm_allf.c \
-	put_varm_double_allf.c \
-	put_varm_doublef.c \
-	put_varmf.c \
-	put_varm_int1_allf.c \
-	put_varm_int1f.c \
-	put_varm_int2_allf.c \
-	put_varm_int2f.c \
-	put_varm_int_allf.c \
-	put_varm_intf.c \
-	put_varm_real_allf.c \
-	put_varm_realf.c \
-	put_varm_text_allf.c \
-	put_varm_textf.c \
-	set_fillf.c \
-	set_default_formatf.c \
-	issyserrf.c \
+UTIL_SRCS = issyserrf.c \
+	nfxutil.c \
+	xstrerrorf.c \
+	xinq_libversf.c
+
+C2F_SRCS = createf.c \
+	openf.c \
 	get_file_infof.c \
 	deletef.c \
+	enddeff.c \
+	redeff.c \
+	set_default_formatf.c \
+	syncf.c \
+	abortf.c \
+	begin_indep_dataf.c \
+	end_indep_dataf.c \
+	closef.c \
+	set_fillf.c \
+	def_dimf.c \
+	def_varf.c \
+	rename_dimf.c \
+	rename_varf.c \
+	inqf.c \
+	inq_formatf.c \
+	inq_file_formatf.c \
+	inq_versionf.c \
+	inq_ndimsf.c \
+	inq_nvarsf.c \
+	inq_nattsf.c \
+	inq_unlimdimf.c \
+	inq_dimidf.c \
+	inq_dimf.c \
+	inq_dimnamef.c \
+	inq_dimlenf.c \
+	inq_varf.c \
+	inq_varidf.c \
+	inq_varnamef.c \
+	inq_vartypef.c \
+	inq_varndimsf.c \
+	inq_vardimidf.c \
+	inq_varnattsf.c \
+	inq_varoffsetf.c \
+	inq_attf.c \
+	inq_attidf.c \
+	inq_atttypef.c \
+	inq_attlenf.c \
+	inq_attnamef.c \
+	copy_attf.c \
+	rename_attf.c \
+	del_attf.c \
+	put_att_textf.c \
+	put_att_int1f.c \
+	put_att_int2f.c \
+	put_att_intf.c \
+	put_att_realf.c \
+	put_att_doublef.c \
+	put_att_int8f.c \
+	get_att_textf.c \
+	get_att_int1f.c \
+	get_att_int2f.c \
+	get_att_intf.c \
+	get_att_realf.c \
+	get_att_doublef.c \
+	get_att_int8f.c \
+	put_var1f.c \
+	put_var1_textf.c \
+	put_var1_int1f.c \
+	put_var1_int2f.c \
+	put_var1_intf.c \
+	put_var1_realf.c \
+	put_var1_doublef.c \
+	put_var1_int8f.c \
+	get_var1f.c \
+	get_var1_textf.c \
+	get_var1_int1f.c \
+	get_var1_int2f.c \
+	get_var1_intf.c \
+	get_var1_realf.c \
+	get_var1_doublef.c \
+	get_var1_int8f.c \
+	put_varf.c \
+	put_var_allf.c \
+	put_var_textf.c \
+	put_var_text_allf.c \
+	put_var_int1f.c \
+	put_var_int1_allf.c \
+	put_var_int2f.c \
+	put_var_int2_allf.c \
+	put_var_intf.c \
+	put_var_int_allf.c \
+	put_var_realf.c \
+	put_var_real_allf.c \
+	put_var_doublef.c \
+	put_var_double_allf.c \
+	put_var_int8f.c \
+	put_var_int8_allf.c \
+	get_varf.c \
+	get_var_allf.c \
+	get_var_textf.c \
+	get_var_text_allf.c \
+	get_var_int1f.c \
+	get_var_int1_allf.c \
+	get_var_int2f.c \
+	get_var_int2_allf.c \
+	get_var_intf.c \
+	get_var_int_allf.c \
+	get_var_realf.c \
+	get_var_real_allf.c \
+	get_var_doublef.c \
+	get_var_double_allf.c \
+	get_var_int8f.c \
+	get_var_int8_allf.c \
+	put_varaf.c \
+	put_vara_allf.c \
+	put_vara_textf.c \
+	put_vara_text_allf.c \
+	put_vara_int1f.c \
+	put_vara_int1_allf.c \
+	put_vara_int2f.c \
+	put_vara_int2_allf.c \
+	put_vara_intf.c \
+	put_vara_int_allf.c \
+	put_vara_realf.c \
+	put_vara_real_allf.c \
+	put_vara_doublef.c \
+	put_vara_double_allf.c \
+	put_vara_int8f.c \
+	put_vara_int8_allf.c \
+	get_varaf.c \
+	get_vara_allf.c \
+	get_vara_textf.c \
+	get_vara_text_allf.c \
+	get_vara_int1f.c \
+	get_vara_int1_allf.c \
+	get_vara_int2f.c \
+	get_vara_int2_allf.c \
+	get_vara_intf.c \
+	get_vara_int_allf.c \
+	get_vara_realf.c \
+	get_vara_real_allf.c \
+	get_vara_doublef.c \
+	get_vara_double_allf.c \
+	get_vara_int8f.c \
+	get_vara_int8_allf.c \
+	put_varsf.c \
+	put_vars_allf.c \
+	put_vars_textf.c \
+	put_vars_text_allf.c \
+	put_vars_int1f.c \
+	put_vars_int1_allf.c \
+	put_vars_int2f.c \
+	put_vars_int2_allf.c \
+	put_vars_intf.c \
+	put_vars_int_allf.c \
+	put_vars_realf.c \
+	put_vars_real_allf.c \
+	put_vars_doublef.c \
+	put_vars_double_allf.c \
+	put_vars_int8f.c \
+	put_vars_int8_allf.c \
+	get_varsf.c \
+	get_vars_allf.c \
+	get_vars_int1f.c \
+	get_vars_int1_allf.c \
+	get_vars_textf.c \
+	get_vars_text_allf.c \
+	get_vars_int2f.c \
+	get_vars_int2_allf.c \
+	get_vars_intf.c \
+	get_vars_int_allf.c \
+	get_vars_realf.c \
+	get_vars_real_allf.c \
+	get_vars_doublef.c \
+	get_vars_double_allf.c \
+	get_vars_int8f.c \
+	get_vars_int8_allf.c \
+	put_varmf.c \
+	put_varm_allf.c \
+	put_varm_textf.c \
+	put_varm_text_allf.c \
+	put_varm_int1f.c \
+	put_varm_int1_allf.c \
+	put_varm_int2f.c \
+	put_varm_int2_allf.c \
+	put_varm_intf.c \
+	put_varm_int_allf.c \
+	put_varm_realf.c \
+	put_varm_real_allf.c \
+	put_varm_doublef.c \
+	put_varm_double_allf.c \
+	put_varm_int8f.c \
+	put_varm_int8_allf.c \
+	get_varmf.c \
+	get_varm_allf.c \
+	get_varm_int1f.c \
+	get_varm_int1_allf.c \
+	get_varm_textf.c \
+	get_varm_text_allf.c \
+	get_varm_int2f.c \
+	get_varm_int2_allf.c \
+	get_varm_intf.c \
+	get_varm_int_allf.c \
+	get_varm_realf.c \
+	get_varm_real_allf.c \
+	get_varm_doublef.c \
+	get_varm_double_allf.c \
+	get_varm_int8f.c \
+	get_varm_int8_allf.c \
+	waitf.c \
+	wait_allf.c \
+	cancelf.c \
 	iput_var1f.c \
-	iput_var1_int1f.c \
 	iput_var1_textf.c \
+	iput_var1_int1f.c \
 	iput_var1_int2f.c \
 	iput_var1_intf.c \
 	iput_var1_realf.c \
 	iput_var1_doublef.c \
-	iput_varf.c \
-	iput_var_int1f.c \
-	iput_var_textf.c \
-	iput_var_int2f.c \
-	iput_var_intf.c \
-	iput_var_realf.c \
-	iput_var_doublef.c \
-	iput_varaf.c \
-	iput_vara_int1f.c \
-	iput_vara_textf.c \
-	iput_vara_int2f.c \
-	iput_vara_intf.c \
-	iput_vara_realf.c \
-	iput_vara_doublef.c \
-	iput_varsf.c \
-	iput_vars_int1f.c \
-	iput_vars_textf.c \
-	iput_vars_int2f.c \
-	iput_vars_intf.c \
-	iput_vars_realf.c \
-	iput_vars_doublef.c \
-	iput_varmf.c \
-	iput_varm_int1f.c \
-	iput_varm_textf.c \
-	iput_varm_int2f.c \
-	iput_varm_intf.c \
-	iput_varm_realf.c \
-	iput_varm_doublef.c \
+	iput_var1_int8f.c \
 	iget_var1f.c \
 	iget_var1_int1f.c \
 	iget_var1_textf.c \
@@ -144,6 +248,15 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	iget_var1_intf.c \
 	iget_var1_realf.c \
 	iget_var1_doublef.c \
+	iget_var1_int8f.c \
+	iput_varf.c \
+	iput_var_int1f.c \
+	iput_var_textf.c \
+	iput_var_int2f.c \
+	iput_var_intf.c \
+	iput_var_realf.c \
+	iput_var_doublef.c \
+	iput_var_int8f.c \
 	iget_varf.c \
 	iget_var_int1f.c \
 	iget_var_textf.c \
@@ -151,6 +264,15 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	iget_var_intf.c \
 	iget_var_realf.c \
 	iget_var_doublef.c \
+	iget_var_int8f.c \
+	iput_varaf.c \
+	iput_vara_int1f.c \
+	iput_vara_textf.c \
+	iput_vara_int2f.c \
+	iput_vara_intf.c \
+	iput_vara_realf.c \
+	iput_vara_doublef.c \
+	iput_vara_int8f.c \
 	iget_varaf.c \
 	iget_vara_int1f.c \
 	iget_vara_textf.c \
@@ -158,13 +280,31 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	iget_vara_intf.c \
 	iget_vara_realf.c \
 	iget_vara_doublef.c \
+	iget_vara_int8f.c \
+	iput_varsf.c \
+	iput_vars_int1f.c \
+	iput_vars_textf.c \
+	iput_vars_int2f.c \
+	iput_vars_intf.c \
 	iget_varsf.c \
+	iput_vars_realf.c \
+	iput_vars_doublef.c \
+	iput_vars_int8f.c \
 	iget_vars_int1f.c \
 	iget_vars_textf.c \
 	iget_vars_int2f.c \
 	iget_vars_intf.c \
 	iget_vars_realf.c \
 	iget_vars_doublef.c \
+	iget_vars_int8f.c \
+	iput_varmf.c \
+	iput_varm_int1f.c \
+	iput_varm_textf.c \
+	iput_varm_int2f.c \
+	iput_varm_intf.c \
+	iput_varm_realf.c \
+	iput_varm_doublef.c \
+	iput_varm_int8f.c \
 	iget_varmf.c \
 	iget_varm_int1f.c \
 	iget_varm_textf.c \
@@ -172,9 +312,9 @@ LIB_CSRCS = abortf.c begin_indep_dataf.c closef.c copy_attf.c \
 	iget_varm_intf.c \
 	iget_varm_realf.c \
 	iget_varm_doublef.c \
-	wait_allf.c \
-	waitf.c \
-	cancelf.c
+	iget_varm_int8f.c
+
+LIB_CSRCS = $(C2F_SRCS) $(UTIL_SRCS)
 
 LIB_FSRCS = strerrorf.f inq_libversf.f
 PACKING_LIST = \

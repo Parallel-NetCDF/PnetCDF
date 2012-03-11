@@ -42,7 +42,7 @@ define(`HASH',dnl
 static
 double
 hash_$1(
-    const ncmpi_type type,
+    const nc_type type,
     const int rank,
     const MPI_Offset *index,
     const nct_itype itype)
@@ -62,6 +62,10 @@ HASH(int)
 HASH(long)
 HASH(float)
 HASH(double)
+HASH(ushort)
+HASH(uint)
+HASH(longlong)
+HASH(ulonglong)
 
 
 dnl CHECK_VARS(TYPE)
@@ -82,7 +86,7 @@ check_vars_$1(const char *filename)
     int  i;
     size_t  j;
     $1 value;
-    ncmpi_type datatype;
+    nc_type datatype;
     int ndims;
     int dimids[MAX_RANK];
     double expect;
@@ -163,6 +167,10 @@ CHECK_VARS(int)
 CHECK_VARS(long)
 CHECK_VARS(float)
 CHECK_VARS(double)
+CHECK_VARS(ushort)
+CHECK_VARS(uint)
+CHECK_VARS(longlong)
+CHECK_VARS(ulonglong)
 
 
 
@@ -239,7 +247,7 @@ test_ncmpi_iput_var1_$1(void)
                     IF (err != NC_ERANGE) {
                         error("Range error: err = %d", err);
                         error("\n\t\tfor type %s value %.17e %ld",
-                                s_ncmpi_type(var_type[i]),
+                                s_nc_type(var_type[i]),
                                 (double)value, (long)value, &reqid);
                     }
                     ncmpi_cancel(ncid, 1, &reqid, &status);
@@ -271,6 +279,10 @@ TEST_NC_IPUT_VAR1(int)
 TEST_NC_IPUT_VAR1(long)
 TEST_NC_IPUT_VAR1(float)
 TEST_NC_IPUT_VAR1(double)
+TEST_NC_IPUT_VAR1(ushort)
+TEST_NC_IPUT_VAR1(uint)
+TEST_NC_IPUT_VAR1(longlong)
+TEST_NC_IPUT_VAR1(ulonglong)
 
 
 dnl TEST_NC_IPUT_VAR(TYPE)
@@ -424,6 +436,10 @@ TEST_NC_IPUT_VAR(int)
 TEST_NC_IPUT_VAR(long)
 TEST_NC_IPUT_VAR(float)
 TEST_NC_IPUT_VAR(double)
+TEST_NC_IPUT_VAR(ushort)
+TEST_NC_IPUT_VAR(uint)
+TEST_NC_IPUT_VAR(longlong)
+TEST_NC_IPUT_VAR(ulonglong)
 
 
 dnl TEST_NC_IPUT_VARA(TYPE)
@@ -604,6 +620,10 @@ TEST_NC_IPUT_VARA(int)
 TEST_NC_IPUT_VARA(long)
 TEST_NC_IPUT_VARA(float)
 TEST_NC_IPUT_VARA(double)
+TEST_NC_IPUT_VARA(ushort)
+TEST_NC_IPUT_VARA(uint)
+TEST_NC_IPUT_VARA(longlong)
+TEST_NC_IPUT_VARA(ulonglong)
 
 
 dnl TEST_NC_IPUT_VARS(TYPE)
@@ -779,6 +799,10 @@ TEST_NC_IPUT_VARS(int)
 TEST_NC_IPUT_VARS(long)
 TEST_NC_IPUT_VARS(float)
 TEST_NC_IPUT_VARS(double)
+TEST_NC_IPUT_VARS(ushort)
+TEST_NC_IPUT_VARS(uint)
+TEST_NC_IPUT_VARS(longlong)
+TEST_NC_IPUT_VARS(ulonglong)
 
 
 dnl TEST_NC_IPUT_VARM(TYPE)
@@ -962,5 +986,9 @@ TEST_NC_IPUT_VARM(int)
 TEST_NC_IPUT_VARM(long)
 TEST_NC_IPUT_VARM(float)
 TEST_NC_IPUT_VARM(double)
+TEST_NC_IPUT_VARM(ushort)
+TEST_NC_IPUT_VARM(uint)
+TEST_NC_IPUT_VARM(longlong)
+TEST_NC_IPUT_VARM(ulonglong)
 
 

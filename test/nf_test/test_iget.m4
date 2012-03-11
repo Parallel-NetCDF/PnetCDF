@@ -33,8 +33,10 @@ ifelse($1, text, character(len=MAX_NELS) $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,
+ifelse($1, int8, NF_INT8_T $2$3,
 ifelse($1, real, real $2$3,
 ifelse($1, double, doubleprecision $2$3)[]dnl
+)[]dnl
 )[]dnl
 )[]dnl
 )[]dnl
@@ -49,8 +51,10 @@ ifelse($1, text, character $2,
 ifelse($1, int1, NF_INT1_T $2,
 ifelse($1, int2, NF_INT2_T $2,
 ifelse($1, int, integer $2,
+ifelse($1, int8, NF_INT8_T $2,
 ifelse($1, real, real $2,
 ifelse($1, double, doubleprecision $2)[]dnl
+)[]dnl
 )[]dnl
 )[]dnl
 )[]dnl
@@ -929,6 +933,7 @@ TEST_NFMPI_IGET_VAR1(int1)
 TEST_NFMPI_IGET_VAR1(int2)
 #endif
 TEST_NFMPI_IGET_VAR1(int)
+TEST_NFMPI_IGET_VAR1(int8)
 TEST_NFMPI_IGET_VAR1(real)
 TEST_NFMPI_IGET_VAR1(double)
 
@@ -940,6 +945,7 @@ TEST_NFMPI_IGET_VAR(int1)
 TEST_NFMPI_IGET_VAR(int2)
 #endif
 TEST_NFMPI_IGET_VAR(int)
+TEST_NFMPI_IGET_VAR(int8)
 TEST_NFMPI_IGET_VAR(real)
 TEST_NFMPI_IGET_VAR(double)
 
@@ -951,6 +957,7 @@ TEST_NFMPI_IGET_VARA(int1)
 TEST_NFMPI_IGET_VARA(int2)
 #endif
 TEST_NFMPI_IGET_VARA(int)
+TEST_NFMPI_IGET_VARA(int8)
 TEST_NFMPI_IGET_VARA(real)
 TEST_NFMPI_IGET_VARA(double)
 
@@ -962,6 +969,7 @@ TEST_NFMPI_IGET_VARS(int1)
 TEST_NFMPI_IGET_VARS(int2)
 #endif
 TEST_NFMPI_IGET_VARS(int)
+TEST_NFMPI_IGET_VARS(int8)
 TEST_NFMPI_IGET_VARS(real)
 TEST_NFMPI_IGET_VARS(double)
 
@@ -973,6 +981,7 @@ TEST_NFMPI_IGET_VARM(int1)
 TEST_NFMPI_IGET_VARM(int2)
 #endif
 TEST_NFMPI_IGET_VARM(int)
+TEST_NFMPI_IGET_VARM(int8)
 TEST_NFMPI_IGET_VARM(real)
 TEST_NFMPI_IGET_VARM(double)
 

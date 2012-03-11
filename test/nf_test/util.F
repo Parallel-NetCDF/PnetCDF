@@ -44,6 +44,10 @@
       ELSE IF (DATATYPE .EQ. NF_DOUBLE) THEN
           MIN = X_DOUBLE_MIN
           MAX = X_DOUBLE_MAX
+      ELSE IF (DATATYPE .EQ. NF_INT64) THEN
+          INRANGE = (VALUE .GE. X_INT8_MIN) .AND. 
+     +              (VALUE .LE. X_INT8_MAX)
+          return
       ELSE
           CALL UD_ABORT
       END IF
@@ -60,7 +64,8 @@
 #include "tests.inc"
 
       IF (DATATYPE .EQ. NF_BYTE) THEN
-          INRANGE_UCHAR = (VALUE .GE. 0) .AND. (VALUE .LE. 255)
+          ! INRANGE_UCHAR = (VALUE .GE. 0) .AND. (VALUE .LE. 255)
+          INRANGE_UCHAR = (VALUE .GE. 0) .AND. (VALUE .LE. 127)
       ELSE
           INRANGE_UCHAR = INRANGE(VALUE, DATATYPE)
       END IF
@@ -106,6 +111,9 @@
               MIN = X_DOUBLE_MIN
               MAX = X_DOUBLE_MAX
           END IF
+      ELSE IF (DATATYPE .EQ. NF_INT64) THEN
+          MIN = X_INT8_MIN
+          MAX = X_INT8_MAX
       ELSE
           CALL UD_ABORT
       END IF
@@ -329,6 +337,8 @@
                   hash = X_FLOAT_MIN
               else if (type .eq. NF_DOUBLE) then
                   hash = X_DOUBLE_MIN
+              else if (type .eq. NF_INT64) then
+                  hash = X_INT_MIN - 128.0
               else
                   call ud_abort
               end if
@@ -345,6 +355,8 @@
                   hash = X_FLOAT_MAX
               else if (type .eq. NF_DOUBLE) then
                   hash = X_DOUBLE_MAX
+              else if (type .eq. NF_INT64) then
+                  hash = X_INT_MAX + 128.0
               else
                   call ud_abort
               end if
@@ -361,6 +373,8 @@
                   hash = X_FLOAT_MIN
               else if (type .eq. NF_DOUBLE) then
                   hash = -1.0
+              else if (type .eq. NF_INT64) then
+                  hash = -1.0
               else
                   call ud_abort
               end if
@@ -376,6 +390,8 @@
               else if (type .eq. NF_FLOAT) then
                   hash = X_FLOAT_MAX
               else if (type .eq. NF_DOUBLE) then
+                  hash = 1.0
+              else if (type .eq. NF_INT64) then
                   hash = 1.0
               else
                   call ud_abort
@@ -394,6 +410,8 @@
               base = -9
           else if (type .eq. NF_DOUBLE) then
               base = -10
+          else if (type .eq. NF_INT64) then
+              base = -20
           else
               stop 'in hash()'
           end if
@@ -449,6 +467,8 @@
           char2type = NF_FLOAT
       else if (letter .eq. 'd') then
           char2type = NF_DOUBLE
+      else if (letter .eq. 'x') then
+          char2type = NF_INT64
       else
         stop 'char2type(): invalid type-letter'
       end if
@@ -535,7 +555,7 @@
         integer err
 
         data    max_dim_len     /0, MAX_DIM_LEN, MAX_DIM_LEN/
-        data    type_letter     /'c', 'b', 's', 'i', 'f', 'd'/
+        data    type_letter     /'c', 'b', 's', 'i', 'f', 'd', 'x'/
         data    digit           /'r', '1', '2', '3', '4', '5',
      +                           '6', '7', '8', '9'/
 
@@ -1169,6 +1189,7 @@
         doubleprecision min_long
         doubleprecision max_float
         doubleprecision max_double
+        doubleprecision min_int64
 #include "tests.inc"
 
         if (type .eq. NFT_CHAR) then
@@ -1219,6 +1240,8 @@
 #else
 #include "No C equivalent to Fortran DOUBLE"
 #endif
+        else if (type .eq. NFT_INT8) then
+            internal_min = min_int64()
         else
             stop 'internal_min(): invalid type'
         end if
@@ -1237,6 +1260,7 @@
         doubleprecision max_long
         doubleprecision max_float
         doubleprecision max_double
+        doubleprecision max_int64
 #include "tests.inc"
 
         if (type .eq. NFT_CHAR) then
@@ -1287,6 +1311,8 @@
 #else
 #include "No C equivalent to Fortran DOUBLE"
 #endif
+        else if (type .eq. NFT_INT8) then
+            internal_max = max_int64()
         else
             stop 'internal_max(): invalid type'
         end if
@@ -1314,6 +1340,8 @@
             external_min = X_FLOAT_MIN
         else if (type .eq. NF_DOUBLE) then
             external_min = X_DOUBLE_MIN
+        else if (type .eq. NF_INT64) then
+            external_min = X_INT8_MIN
         else
             stop 'external_min(): invalid type'
         end if
@@ -1341,6 +1369,8 @@
             external_max = X_FLOAT_MAX
         else if (type .eq. NF_DOUBLE) then
             external_max = X_DOUBLE_MAX
+        else if (type .eq. NF_INT64) then
+            external_max = X_INT8_MAX
         else
             stop 'external_max(): invalid type'
         end if

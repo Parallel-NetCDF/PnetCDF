@@ -111,7 +111,7 @@ int ncmpi_diff(char *filename1, char *filename2) {
     char str[512], name1[NC_MAX_NAME], name2[NC_MAX_NAME], name[NC_MAX_NAME];
     MPI_Offset shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
     MPI_Offset attlen1, dimlen1, attlen2, dimlen2;
-    ncmpi_type type1, type2;
+    nc_type type1, type2;
     MPI_Comm comm=MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &nprocs);

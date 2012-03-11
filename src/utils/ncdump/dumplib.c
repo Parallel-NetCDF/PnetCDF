@@ -96,7 +96,7 @@ has_c_format_att(
     int varid			/* variable id */
     )
 {
-    ncmpi_type cfmt_type;
+    nc_type cfmt_type;
     MPI_Offset cfmt_len;
 #define C_FMT_NAME	"C_format" /* name of C format attribute */
 #define	MAX_CFMT_LEN	100	/* max length of C format attribute */
@@ -132,7 +132,7 @@ const char *
 get_fmt(
      int ncid,			/* netcdf id */
      int varid,			/* variable id */
-     ncmpi_type type		/* netCDF data type */
+     nc_type type		/* netCDF data type */
      )
 {
     char *c_format_att;
@@ -149,24 +149,23 @@ get_fmt(
     /* If C_format attribute exists, return it */
     c_format_att = has_c_format_att(ncid, varid);
     if (c_format_att)
-      return c_format_att;    
+        return c_format_att;    
 
     /* Otherwise return sensible default. */
     switch (type) {
-      case NC_BYTE:
-	return "%d";
-      case NC_CHAR:
-	return "%s";
-      case NC_SHORT:
-	return "%d";
-      case NC_INT:
- 	return "%d";
-      case NC_FLOAT:
-	return float_var_fmt;
-      case NC_DOUBLE:
-	return double_var_fmt;
-      default:
-	error("pr_vals: bad type");
+        case NC_BYTE:   return "%hhd";
+        case NC_CHAR:   return "%s";
+        case NC_SHORT:  return "%hd";
+        case NC_INT:    return "%d";
+        case NC_FLOAT:  return float_var_fmt;
+        case NC_DOUBLE: return double_var_fmt;
+        case NC_UBYTE:  return "%hhu";
+        case NC_USHORT: return "%hu";
+        case NC_UINT:   return "%u";
+        case NC_INT64:  return "%lld";
+        case NC_UINT64: return "%llu";
+        default:
+	    error("pr_vals: bad type");
     }
 
     return 0;

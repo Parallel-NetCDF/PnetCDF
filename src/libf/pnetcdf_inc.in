@@ -11,6 +11,7 @@
       integer nf_short
       integer nf_int2
       integer nf_int
+      integer nf_int64
       integer nf_float
       integer nf_real
       integer nf_double
@@ -25,6 +26,7 @@
       parameter (nf_float = 5)
       parameter (nf_real = nf_float)
       parameter (nf_double = 6)
+      parameter (nf_int64 = 10)
 
 !
 ! default fill values:
@@ -38,6 +40,7 @@
       real              nf_fill_float
       real              nf_fill_real
       doubleprecision   nf_fill_double
+      integer*8         nf_fill_int64
 
       parameter (nf_fill_byte = -127)
       parameter (nf_fill_int1 = nf_fill_byte)
@@ -48,6 +51,7 @@
       parameter (nf_fill_float = 9.9692099683868690e+36)
       parameter (nf_fill_real = nf_fill_float)
       parameter (nf_fill_double = 9.9692099683868690e+36)
+      parameter (nf_fill_int64 = -9223372036854775806_8)
 
 !
 ! mode flags for opening and creating a netcdf dataset:
@@ -461,6 +465,8 @@
 #undef NF_INT2_IS_C_LONG
 #undef NF_INT_IS_C_INT
 #undef NF_INT_IS_C_LONG
+#undef NF_INT8_IS_C_LONG
+#undef NF_INT8_IS_C_LONG_LONG
 #undef NF_REAL_IS_C_FLOAT
 #undef NF_REAL_IS_C_DOUBLE
 #undef NF_DOUBLEPRECISION_IS_C_DOUBLE

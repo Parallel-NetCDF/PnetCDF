@@ -202,6 +202,8 @@ ncmpi_strerror(int err)
 	    return "Invalid nonblocking request ID.";
 	case NC_ECMODE:
 	    return "File create modes are inconsistent among all processes.";
+	case NC_ENOTSUPPORT:
+	    return "Feature is not yet supported.";
 	
 	default:
 	    return unknown;

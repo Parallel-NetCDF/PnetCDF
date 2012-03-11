@@ -116,6 +116,7 @@ ncmpiio_create(MPI_Comm     comm,
 {
     ncio *nciop;
     int i, mpireturn; 
+
 /* TODO: in the future, HAVE_ACCESS_FUNCTION shall be tested and set at the
  * configure time */
 #define HAVE_ACCESS_FUNCTION
@@ -125,6 +126,7 @@ ncmpiio_create(MPI_Comm     comm,
 
     int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
 
+    /* ignore if NC_NOWRITE set by user */
     fSet(ioflags, NC_WRITE);
 
     if (path == NULL || *path == 0)
@@ -165,7 +167,7 @@ ncmpiio_create(MPI_Comm     comm,
     }
 
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
-            info, &nciop->collective_fh);
+                              info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         int rank;
         MPI_Comm_rank(comm, &rank);
@@ -181,15 +183,19 @@ ncmpiio_create(MPI_Comm     comm,
     if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
 #endif
 
-    for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
+    for (i=0; i<MAX_NC_ID; i++)
+        if (IDalloc[i] == 0)
+            break;
 
     if (i == MAX_NC_ID) {
         ncmpiio_free(nciop);
         return NC_ENFILE;
     }
+
     *((int *)&nciop->fd) = i;
     IDalloc[i] = 1;
 
+    /* collective I/O mode is the default mode */
     set_NC_collectiveFh(nciop);
 
     *nciopp = nciop;
