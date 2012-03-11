@@ -210,20 +210,6 @@ typedef signed char schar;
 
 #endif	/* __CHAR_UNSIGNED__ */
 
-#ifndef HAVE_USHORT
-typedef unsigned short int  ushort;
-#endif
-#ifndef HAVE_UINT
-typedef unsigned       int  uint;
-#endif
-#ifndef HAVE_INT64
-typedef          long long  int64;
-#endif
-#ifndef HAVE_UINT64
-typedef unsigned long long  uint64;
-#endif
-
-#define CHECK_NEGATIVE (*tp < 0)
 
 #ifndef WORDS_BIGENDIAN
 /* LITTLE_ENDIAN: DEC and intel */
