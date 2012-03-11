@@ -29,46 +29,44 @@ ncmpii_free_NC_dim(NC_dim *dimp)
 }
 
 
+/* allocate and return a new NC_dim object */
 NC_dim *
 ncmpii_new_x_NC_dim(NC_string *name)
 {
-	NC_dim *dimp;
+    NC_dim *dimp;
 
-	dimp = (NC_dim *) NCI_Malloc(sizeof(NC_dim));
-	if(dimp == NULL)
-		return NULL;
+    dimp = (NC_dim *) NCI_Malloc(sizeof(NC_dim));
+    if (dimp == NULL) return NULL;
 
-	dimp->name = name;
-	dimp->size = 0;
+    dimp->name = name;
+    dimp->size = 0;
 
-	return(dimp);
+    return(dimp);
 }
 
-
+/*----< ncmpii_new_NC_dim() >-----------------------------------------------*/
 /*
- * Formerly
-NC_new_dim(const char *name, long size)
+ * Formerly, NC_new_dim(const char *name, long size)
  */
 static NC_dim *
-ncmpii_new_NC_dim(const char *name, MPI_Offset size)
+ncmpii_new_NC_dim(const char *name,
+                  MPI_Offset  size)
 {
-	NC_string *strp;
-	NC_dim *dimp;
+    NC_string *strp;
+    NC_dim *dimp;
 
-	strp = ncmpii_new_NC_string(strlen(name), name);
-	if(strp == NULL)
-		return NULL;
+    strp = ncmpii_new_NC_string(strlen(name), name);
+    if (strp == NULL) return NULL;
 
-	dimp = ncmpii_new_x_NC_dim(strp);
-	if(dimp == NULL)
-	{
-		ncmpii_free_NC_string(strp);
-		return NULL;
-	}
+    dimp = ncmpii_new_x_NC_dim(strp);
+    if (dimp == NULL) {
+    	ncmpii_free_NC_string(strp);
+    	return NULL;
+    }
 
-	dimp->size = size;
+    dimp->size = size;
 
-	return(dimp);
+    return(dimp);
 }
 
 
@@ -78,75 +76,63 @@ dup_NC_dim(const NC_dim *dimp)
 	return ncmpii_new_NC_dim(dimp->name->cp, dimp->size);
 }
 
+/*----< ncmpii_find_NC_Udim() >----------------------------------------------*/
 /*
  * Step thru NC_DIMENSION array, seeking the UNLIMITED dimension.
  * Return dimid or -1 on not found.
  * *dimpp is set to the appropriate NC_dim.
- * The loop structure is odd. In order to parallelize,
- * we moved a clearer 'break' inside the loop body to the loop test.
  */
 int
-ncmpii_find_NC_Udim(const NC_dimarray *ncap, NC_dim **dimpp)
+ncmpii_find_NC_Udim(const NC_dimarray  *ncap,
+                    NC_dim            **dimpp)
 {
-	assert(ncap != NULL);
+    int dimid;
 
-	if(ncap->ndefined == 0)
-		return -1;
+    assert(ncap != NULL);
 
-	{
-	int dimid = 0;
-	NC_dim **loc = ncap->value;
+    if (ncap->ndefined == 0) return -1;
 
-	for(; (MPI_Offset) dimid < ncap->ndefined
-			 && (*loc)->size != NC_UNLIMITED; dimid++, loc++)
-	{
-		/*EMPTY*/
-	}
-	if(dimid >= ncap->ndefined)
-		return(-1); /* not found */
-	/* else, normal return */
-	if(dimpp != NULL)
-		*dimpp = *loc;
-	return dimid;
-	}
+    /* note that the number of dimensions allowed is < 2^32 */
+    for (dimid=0; dimid<ncap->ndefined; dimid++)
+        if (ncap->value[dimid]->size == NC_UNLIMITED) {
+            /* found the mateched name */
+            if (dimpp != NULL)
+                *dimpp = ncap->value[dimid];
+            return dimid;
+        }
+
+    /* not found */
+    return -1;
 }
 
-
+/*----< NC_finddim() >-------------------------------------------------------*/
 /*
  * Step thru NC_DIMENSION array, seeking match on name.
  * Return dimid or -1 on not found.
  * *dimpp is set to the appropriate NC_dim.
- * The loop structure is odd. In order to parallelize,
- * we moved a clearer 'break' inside the loop body to the loop test.
  */
 static int
-NC_finddim(const NC_dimarray *ncap, const char *name, NC_dim **dimpp)
+NC_finddim(const NC_dimarray  *ncap,
+           const char         *name,
+           NC_dim            **dimpp)
 {
+    int dimid;
 
-	assert(ncap != NULL);
+    assert(ncap != NULL);
 
-	if(ncap->ndefined == 0)
-		return -1;
+    if (ncap->ndefined == 0) return -1;
 
-	{
-	MPI_Offset slen = strlen(name);
-	int dimid = 0;
-	NC_dim **loc = (NC_dim **) ncap->value;
+    /* note that the number of dimensions allowed is < 2^32 */
+    for (dimid=0; dimid<ncap->ndefined; dimid++)
+        if (strcmp(ncap->value[dimid]->name->cp, name) == 0) {
+            /* found the mateched name */
+            if (dimpp != NULL)
+                *dimpp = ncap->value[dimid];
+            return dimid;
+        }
 
-	for(; (MPI_Offset) dimid < ncap->ndefined
-			&& (strlen((*loc)->name->cp) != slen
-				|| strncmp((*loc)->name->cp, name, slen) != 0);
-		 dimid++, loc++)
-	{
-		/*EMPTY*/
-	}
-	if(dimid >= ncap->ndefined)
-		return(-1); /* not found */
-	/* else, normal return */
-	if(dimpp != NULL)
-			*dimpp = *loc;
-	return(dimid);
-	}
+    /* the name is not found */
+    return -1;
 }
 
 
@@ -249,77 +235,84 @@ ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref)
 }
 
 
+/*----< incr_NC_dimarray() >------------------------------------------------*/
 /*
- * Add a new handle on the end of an array of handles
- * Formerly
-NC_incr_array(array, tail)
+ * Add a new handle to the end of an array of handles
+ * Formerly, NC_incr_array(array, tail)
  */
 static int
-incr_NC_dimarray(NC_dimarray *ncap, NC_dim *newelemp)
+incr_NC_dimarray(NC_dimarray *ncap,
+                 NC_dim      *newdimp)
 {
-	NC_dim **vp;
+    NC_dim **vp;
 
-	assert(ncap != NULL);
+    assert(ncap != NULL);
 
-	if(ncap->nalloc == 0)
-	{
-		assert(ncap->ndefined == 0);
-		vp = (NC_dim **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_dim *));
-		if(vp == NULL)
-			return NC_ENOMEM;
-		ncap->value = vp;
-		ncap->nalloc = NC_ARRAY_GROWBY;
-	}
-	else if(ncap->ndefined +1 > ncap->nalloc)
-	{
-		vp = (NC_dim **) NCI_Realloc(ncap->value,
-			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_dim *));
-		if(vp == NULL)
-			return NC_ENOMEM;
-		ncap->value = vp;
-		ncap->nalloc += NC_ARRAY_GROWBY;
-	}
+    if (ncap->nalloc == 0) {
+        assert(ncap->ndefined == 0);
+        vp = (NC_dim **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_dim *));
+        if (vp == NULL) return NC_ENOMEM;
 
-	if(newelemp != NULL)
-	{
-		ncap->value[ncap->ndefined] = newelemp;
-		ncap->ndefined++;
-	}
-	return NC_NOERR;
+        ncap->value = vp;
+        ncap->nalloc = NC_ARRAY_GROWBY;
+    }
+    else if (ncap->ndefined + 1 > ncap->nalloc) {
+        vp = (NC_dim **) NCI_Realloc(ncap->value,
+             (ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_dim *));
+        if (vp == NULL) return NC_ENOMEM;
+
+        ncap->value = vp;
+        ncap->nalloc += NC_ARRAY_GROWBY;
+    }
+    /* else here means some space still available */
+
+    if (newdimp != NULL) {
+        ncap->value[ncap->ndefined] = newdimp;
+        ncap->ndefined++;
+    }
+
+    return NC_NOERR;
 }
 
 
+/*----< ncmpii_elem_NC_dimarray() >------------------------------------------*/
 NC_dim *
-ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem)
+ncmpii_elem_NC_dimarray(const NC_dimarray *ncap,
+                        size_t             dimid)
 {
-	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed size_t */
-	if(ncap->ndefined == 0 || (unsigned long long) elem >= ncap->ndefined)
-		return NULL;
+    /* returns the dimension ID defined earlier */
+    assert(ncap != NULL);
 
-	assert(ncap->value != NULL);
+    if (ncap->ndefined == 0 || dimid >= ncap->ndefined)
+        return NULL;
 
-	return ncap->value[elem];
+    assert(ncap->value != NULL);
+
+    return ncap->value[dimid];
 }
 
 
 /* Public */
 
+/*----< ncmpi_def_dim() >---------------------------------------------------*/
 int
-ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
+ncmpi_def_dim(int         ncid,    /* IN:  file ID */
+              const char *name,    /* IN:  name of dimension */
+              MPI_Offset  size,    /* IN:  dimension size */
+              int        *dimidp)  /* OUT: dimension ID */
 {
-	int file_ver, status;
-	NC *ncp;
-	int dimid;
-	NC_dim *dimp;
+    int dimid, file_ver, status;
+    NC *ncp;
+    NC_dim *dimp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+    /* check if ncid is valid */
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR) return status;
 
-	if(!NC_indef(ncp))
-		return NC_ENOTINDEFINE;
+    /* check if called in define mode */
+    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
 
+    /* check if the name string is legal for netcdf format */
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
         file_ver = 2;
@@ -329,54 +322,55 @@ ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp)
     status = ncmpii_NC_check_name(name, file_ver);
     if (status != NC_NOERR) return status;
 
-	/* MPI_Offset is usually a signed value, but serial netcdf uses 
-	 * MPI_Offset -- normally unsigned */
-	if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
-		/* CDF2 format and LFS */
-		if (size > X_UINT_MAX - 3 || (size < 0)) 
-			/* "-3" handles rounded-up size */
-			return NC_EDIMSIZE;
-	} else if ((ncp->flags & NC_64BIT_DATA)) {
-		/* CDF5 format*/
-		if (size < 0) 
-			/* "-3" handles rounded-up size */
-			return NC_EDIMSIZE;
-	} else {
-		/* CDF1 format */
-		if (size > X_INT_MAX - 3 || (size < 0))
-			return NC_EDIMSIZE;
-	}
+    /* MPI_Offset is usually a signed value, but serial netcdf uses 
+     * MPI_Offset -- normally unsigned */
+    if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
+        /* CDF2 format and LFS */
+        if (size > X_UINT_MAX - 3 || (size < 0)) 
+            /* "-3" handles rounded-up size */
+            return NC_EDIMSIZE;
+    } else if ((ncp->flags & NC_64BIT_DATA)) {
+        /* CDF5 format*/
+        if (size < 0) 
+            return NC_EDIMSIZE;
+    } else {
+        /* CDF1 format */
+        if (size > X_INT_MAX - 3 || (size < 0))
+            /* "-3" handles rounded-up size */
+            return NC_EDIMSIZE;
+    }
 
-	if(size == NC_UNLIMITED)
-	{
-		dimid = ncmpii_find_NC_Udim(&ncp->dims, &dimp);
-		if(dimid != -1)
-		{
-			assert(dimid != -1);
-			return NC_EUNLIMIT;
-		}
-	}
+    if (size == NC_UNLIMITED) {
+        /* check for any existing unlimited dimension, netcdf allows
+         * one per file
+         */
+        dimid = ncmpii_find_NC_Udim(&ncp->dims, &dimp);
+        if (dimid != -1) return NC_EUNLIMIT; /* found an existing one */
+    }
 
-	if(ncp->dims.ndefined >= NC_MAX_DIMS)
-		return NC_EMAXDIMS;
+    /* check if exceeds the upperbound has reached */
+    if (ncp->dims.ndefined >= NC_MAX_DIMS) return NC_EMAXDIMS;
 
-	dimid = NC_finddim(&ncp->dims, name, &dimp);
-	if(dimid != -1)
-		return NC_ENAMEINUSE;
-	
-	dimp = ncmpii_new_NC_dim(name, size);
-	if(dimp == NULL)
-		return NC_ENOMEM;
-	status = incr_NC_dimarray(&ncp->dims, dimp);
-	if(status != NC_NOERR)
-	{
-		ncmpii_free_NC_dim(dimp);
-		return status;
-	}
+    /* check if the name string is previously used */
+    dimid = NC_finddim(&ncp->dims, name, &dimp);
+    if (dimid != -1) return NC_ENAMEINUSE;
+    
+    /* create a new dimension object */
+    dimp = ncmpii_new_NC_dim(name, size);
+    if (dimp == NULL) return NC_ENOMEM;
 
-	if(dimidp != NULL)
-		*dimidp = (int)ncp->dims.ndefined -1;
-	return NC_NOERR;
+    /* Add a new handle to the end of an array of handles */
+    status = incr_NC_dimarray(&ncp->dims, dimp);
+    if (status != NC_NOERR) {
+        ncmpii_free_NC_dim(dimp);
+        return status;
+    }
+
+    if (dimidp != NULL)
+        *dimidp = (int)ncp->dims.ndefined -1;
+        /* ncp->dims.ndefined has been increased in incr_NC_dimarray() */
+
+    return NC_NOERR;
 }
 
 

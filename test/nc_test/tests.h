@@ -15,6 +15,7 @@
 #include <mpi.h>
 #include "error.h"
 
+
 #if defined(_CRAY) && !defined(_CRAYIEEE)
 #define CRAYFLOAT 1 /* CRAY Floating point */
 #elif defined(_SX) && defined(_FLOAT2)	/* NEC SUPER-UX in CRAY mode */
@@ -22,6 +23,13 @@
 #endif
 
     /* Limits of external types (based on those in ncx.h) */
+
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef long long int64;
+typedef long long longlong;
+typedef unsigned long long uint64;
+typedef unsigned long long ulonglong;
 
 #define X_CHAR_MIN	CHAR_MIN
 #define X_CHAR_MAX	CHAR_MAX
@@ -46,6 +54,32 @@
 #define X_DOUBLE_MAX	DBL_MAX
 #endif
 #define X_DOUBLE_MIN	-(DBL_MAX)
+
+#define X_SCHAR_MAX     X_CHAR_MAX
+#define X_SCHAR_MIN     X_CHAR_MIN
+#define X_UCHAR_MAX     UCHAR_MAX
+#define X_UCHAR_MIN     0
+#define X_UBYTE_MAX     X_UCHAR_MAX
+#define X_UBYTE_MIN     X_UCHAR_MIN
+#define X_USHORT_MAX    USHRT_MAX
+#define X_USHORT_MIN    0
+#define X_UINT_MAX      UINT_MAX
+#define X_UINT_MIN      0
+
+#ifndef LLONG_MAX
+#define LLONG_MAX  0x7fffffffffffffffLL
+#endif
+#ifndef LLONG_MIN
+#define LLONG_MIN (-0x7fffffffffffffffLL-1)
+#endif
+#ifndef ULLONG_MAX
+#define ULLONG_MAX  0xffffffffffffffffULL
+#endif
+
+#define X_INT64_MAX    LLONG_MAX
+#define X_INT64_MIN    LLONG_MIN
+#define X_UINT64_MAX  ULLONG_MAX
+#define X_UINT64_MIN  ULLONG_MIN
 
 
 #if defined(_SX) && _SX != 0 /* NEC SUPER UX */
@@ -82,9 +116,8 @@
 
     /* Parameters of test data */
 
-#define NTYPES 6
+#define NTYPES 11   /* number of nc_types to test */
 #define NDIMS 5
-#define NVARS 136
 #define NRECS 2
 #define NGATTS NTYPES
 #define RECDIM 0
@@ -92,7 +125,33 @@
 #define MAX_NELS 64
 #define MAX_DIM_LEN 4
 #define MAX_NATTS 3
+/*
+ *  #define NVARS 136   when NTYPES==6
+ *  #define NVARS 142   when NTYPES==7
+ *  #define NVARS 148   when NTYPES==8
+ *  #define NVARS 154   when NTYPES==9
+ *  #define NVARS 160   when NTYPES==10
+ *  #define NVARS 166   when NTYPES==11
+ *  c:char, b:byte, s:short, i:int, f:float, d:double, y:ubyte, t:ushort,
+ *  u:uint, x:int64, z:uint64
+ */
+#define NVARS 166
 
+/* Here is how NVARS is acalculated in init_gvars().
+MAX_RANK=3
+MAX_DIM_LEN==4
+max_dim_len[MAX_RANK] = {MAX_DIM_LEN +1, MAX_DIM_LEN, MAX_DIM_LEN };
+rank==0, nvars=1      ntypes=NTYPES  (if rank < 2)
+rank==1, nvars=5      ntypes=NTYPES  (if rank < 2)
+rank==2, nvars=5*4    ntypes=1       (if rank >= 2)
+rank==3, nvars=5*4*4  ntypes=1       (if rank >= 2)
+nv=1* 6+5* 6+5*4+5*4*4= 7+35+20+80 = 136 (if NTYPES==6)
+nv=1* 7+5* 7+5*4+5*4*4= 7+35+20+80 = 142 (if NTYPES==7)
+nv=1* 8+5* 8+5*4+5*4*4= 8+40+20+80 = 148 (if NTYPES==8)
+nv=1* 9+5* 9+5*4+5*4*4= 8+40+20+80 = 154 (if NTYPES==9)
+nv=1*10+5*10+5*4+5*4*4= 8+40+20+80 = 160 (if NTYPES==10)
+nv=1*11+5*11+5*4+5*4*4= 8+40+20+80 = 166 (if NTYPES==11)
+*/
 
     /* Limits of internal types */
 
@@ -104,6 +163,13 @@
 #define long_min LONG_MIN
 #define float_min (-FLT_MAX)
 #define double_min (-DBL_MAX)
+#define ushort_min 0
+#define uint_min 0
+#define ulong_min 0
+#define int64_min LLONG_MIN
+#define longlong_min int64_min
+#define uint64 0
+#define ulonglong_min uint64
 
 #define text_max CHAR_MAX
 #define uchar_max UCHAR_MAX
@@ -113,6 +179,13 @@
 #define long_max LONG_MAX
 #define float_max FLT_MAX
 #define double_max DBL_MAX
+#define ushort_max USHRT_MAX
+#define uint_max UINT_MAX
+#define ulong_max ULONG_MAX
+#define int64_max LLONG_MAX
+#define longlong_max int64_max
+#define uint64_max ULLONG_MAX
+#define ulonglong_max uint64_max
 
 
 
@@ -122,7 +195,7 @@
 #define BAD_DIMID -1            /* invalid dim ID */
 #define BAD_VARID -2            /* invalid var ID */
 #define BAD_ATTNUM -1           /* invalid att number */
-#define BAD_TYPE (ncmpi_type) 0    /* invalid data type */
+#define BAD_TYPE (nc_type) 0    /* invalid data type */
 #define BAD_FILLMODE -1         /* invalid fill mode */
 #define BAD_NAME "a/b"		/* invalid name */
 #define BAD_DEFAULT_FORMAT 12	/* invalid default format */
@@ -164,7 +237,7 @@ extern int max_nmpt;		/* max number of messages per test */
 extern char dim_name[NDIMS][3];
 extern MPI_Offset dim_len[NDIMS];
 extern char var_name[NVARS][2+MAX_RANK];
-extern ncmpi_type var_type[NVARS];
+extern nc_type var_type[NVARS];
 extern size_t var_rank[NVARS];
 extern int var_dimid[NVARS][MAX_RANK];
 extern MPI_Offset var_shape[NVARS][MAX_RANK];
@@ -172,8 +245,8 @@ extern size_t var_nels[NVARS];
 extern size_t var_natts[NVARS];
 extern char att_name[NVARS][MAX_NATTS][2];
 extern char gatt_name[NGATTS][3];
-extern ncmpi_type att_type[NVARS][NGATTS];
-extern ncmpi_type gatt_type[NGATTS];
+extern nc_type att_type[NVARS][NGATTS];
+extern nc_type gatt_type[NGATTS];
 extern size_t att_len[NVARS][MAX_NATTS];
 extern size_t gatt_len[NGATTS];
 
@@ -189,7 +262,7 @@ extern MPI_Comm comm;
 #define ATT_TYPE(varid,j) (varid < 0 ? gatt_type[j] : att_type[varid][j])
 #define ATT_LEN(varid,j)  (varid < 0 ? gatt_len[j] : att_len[varid][j])
 
-extern const char *s_ncmpi_type(ncmpi_type);
+extern const char *s_nc_type(nc_type);
 
 extern void test_ncmpi_strerror(void);
 extern void test_ncmpi_open(void);
@@ -463,7 +536,7 @@ extern void test_ncmpi_set_default_format(void);
 
 void print_nok(int nok);
 
-int inRange(const double value, const ncmpi_type datatype);
+int inRange(const double value, const nc_type datatype);
 
 /*
  * internal types
@@ -478,12 +551,18 @@ typedef enum {
 	NCT_INT =	20,	/* int */
 	NCT_LONG =	22,	/* long */
 	NCT_FLOAT =	36,	/* float */
-	NCT_DOUBLE =	40	/* double */
+	NCT_DOUBLE =	40,	/* double */
+	NCT_USHORT =	41,
+	NCT_UINT =	42,
+	NCT_INT64 =	43,
+#define NCT_LONGLONG NCT_INT64
+	NCT_UINT64 =	44
+#define NCT_ULONGLONG NCT_UINT64
 } nct_itype;
 
-int inRange3(const double value, const ncmpi_type datatype, const nct_itype itype);
+int inRange3(const double value, const nc_type datatype, const nct_itype itype);
 
-int equal(const double x, const double y, ncmpi_type extType, nct_itype itype);
+int equal(const double x, const double y, nc_type extType, nct_itype itype);
 
 int int_vec_eq(const int *v1, const int *v2, const int n);
 
@@ -502,14 +581,16 @@ fromMixedBase(
     MPI_Offset number[],      /* dimensioned [length] */
     MPI_Offset base[]);        /* dimensioned [length], base[0] ignored */
 
-int nc2dbl ( const ncmpi_type datatype, const void *p, double *result);
+int nc2dbl ( const nc_type datatype, const void *p, double *result);
 
-int dbl2nc ( const double d, const ncmpi_type datatype, void *p);
+int dbl2nc ( const double d, const nc_type datatype, void *p);
 
-double hash( const ncmpi_type type, const int rank, const MPI_Offset *index );
+double hash( const nc_type type, const int rank, const MPI_Offset *index );
+
+long long hashx_llong(const int rank, const MPI_Offset *index);
 
 double hash4(
-    const ncmpi_type type,
+    const nc_type type,
     const int rank,
     const MPI_Offset *index,
     const nct_itype itype);

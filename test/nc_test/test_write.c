@@ -576,7 +576,7 @@ test_ncmpi_def_var(void)
     int  natts;
     char name[NC_MAX_NAME];
     int dimids[MAX_RANK];
-    ncmpi_type datatype;
+    nc_type datatype;
 
         /* BAD_ID test */
     err = ncmpi_def_var(BAD_ID, "abc", NC_SHORT, 0, NULL, &varid);
@@ -1263,7 +1263,7 @@ test_ncmpi_put_att(void)
     double buf[MAX_NELS];       /* (void *) buffer */
     char *p;                    /* (void *) pointer */
     char *name;			/* of att */
-    ncmpi_type datatype;		/* of att */
+    nc_type datatype;		/* of att */
     size_t length;		/* of att */
     double value;
 
@@ -1344,7 +1344,7 @@ test_ncmpi_copy_att(void)
     int i;
     int j;
     char *name;                 /* of att */
-    ncmpi_type datatype;           /* of att */
+    nc_type datatype;           /* of att */
     MPI_Offset length;              /* of att */
     char  value;
 
@@ -1490,8 +1490,8 @@ test_ncmpi_rename_att(void)
     char oldname[NC_MAX_NAME];
     char newname[NC_MAX_NAME];
     int nok = 0;      /* count of valid comparisons */
-    ncmpi_type datatype;
-    ncmpi_type atttype;
+    nc_type datatype;
+    nc_type atttype;
     MPI_Offset length;
     size_t attlength;
     char  text[MAX_NELS];

@@ -93,8 +93,7 @@ val_get_NCtype(bufferinfo *gbp, NCtype *typep) {
     return status;
   }
 
-  status =  ncmpix_get_int_int(gbp->pos, &type);
-  gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT);
+  status = ncmpix_get_int32(&gbp->pos, &type);
   if (status != NC_NOERR)
     return status;
   *typep = (NCtype) type;
@@ -270,17 +269,22 @@ val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
     return status;
   }
 
-  status =  ncmpix_get_int_int(gbp->pos, &type);
+  status = ncmpix_get_int32(&gbp->pos, &type);
   if(status != NC_NOERR) 
     return status;
   gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT); 
 
   if (   type != NC_BYTE
+      && type != NC_UBYTE
       && type != NC_CHAR
       && type != NC_SHORT
+      && type != NC_USHORT
       && type != NC_INT
+      && type != NC_UINT
       && type != NC_FLOAT
-      && type != NC_DOUBLE) {
+      && type != NC_DOUBLE
+      && type != NC_INT64
+      && type != NC_UINT64) {
     printf("Error @ [0x%8.8Lx]: \n\tUnknown data type for the values of ",
 	   (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - X_SIZEOF_INT));
     return EINVAL; 
@@ -472,8 +476,12 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
       return status;
     }
     tmp_dim = (MPI_Offset*) (varp->dimids + dim);
-    status = ncmpix_getn_long_long((const void **)(&gbp->pos), 
-                              1, tmp_dim);
+    if (gbp->version == 5)
+        status = ncmpix_getn_int64_int64((const void **)(&gbp->pos), 
+                                           1, tmp_dim);
+    else
+        status = ncmpix_getn_int_int64((const void **)(&gbp->pos), 
+                                         1, tmp_dim);
     if(status != NC_NOERR) {
       ncmpii_free_NC_var(varp);
       return status;

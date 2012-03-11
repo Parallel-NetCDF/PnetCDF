@@ -23,6 +23,7 @@
 
 	#define NF_INT1_T        byte
 	#define NF_INT2_T        integer*2
+	#define NF_INT8_T        integer*8
 
     These are the types of the relevant arguments in the NF_*_INT1() and
     NF_*_INT2() netCDF FORTRAN function calls.  The word "ostensibly"
@@ -34,13 +35,15 @@
 #endif
 #undef NF_INT1_T
 #undef NF_INT2_T
+#undef NF_INT8_T
 
 
 #if 0
    Define the following NF_*_IS_C_* macros appropriatly for your system.
-   The "INT1", "INT2" and "INT" after the "NF_" refer to the NF_INT1_T
-   FORTRAN datatype, the NF_INT2_T FORTRAN datatype, and the INTEGER
-   FORTRAN datatype, respectively.  If the respective FORTRAN datatype
+   The "INT1", "INT2", "INT", and "INT8" after the "NF_" refer to the
+   NF_INT1_T FORTRAN datatype, the NF_INT2_T FORTRAN datatype, the INTEGER
+   FORTRAN datatype, and the NF_INT8_T FORTRAN datatype, respectively.
+   If the respective FORTRAN datatype
    does not exist, then do not define the corresponding macro.
 #endif
 #undef NF_INT1_IS_C_SIGNED_CHAR
@@ -52,6 +55,8 @@
 #undef NF_INT2_IS_C_LONG
 #undef NF_INT_IS_C_INT
 #undef NF_INT_IS_C_LONG
+#undef NF_INT8_IS_C_LONG
+#undef NF_INT8_IS_C_LONG_LONG
 #undef NF_REAL_IS_C_FLOAT
 #undef NF_REAL_IS_C_DOUBLE
 #undef NF_DOUBLEPRECISION_IS_C_DOUBLE

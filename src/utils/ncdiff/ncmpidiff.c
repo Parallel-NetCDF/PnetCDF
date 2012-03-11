@@ -202,7 +202,7 @@ int main(int argc, char **argv)
     char str[512], *name1, *name2;
     MPI_Offset *shape, varsize, *start;
     MPI_Offset attlen1, dimlen1, attlen2, dimlen2;
-    ncmpi_type type1, type2;
+    nc_type type1, type2;
     MPI_Comm comm=MPI_COMM_WORLD;
     int nvars, verbose, check_header, check_variable_list, check_entire_file;
     int numVarDIFF=0, numHeadDIFF=0, varDIFF;

@@ -84,24 +84,32 @@ ncmpi_iput_vara_##fntype(int               ncid,                       \
                                WRITE_REQ);                             \
 }
 
-/*----< ncmpi_iput_vara_text() >---------------------------------------------*/
-/*----< ncmpi_iput_vara_schar() >--------------------------------------------*/
-/*----< ncmpi_iput_vara_uchar() >--------------------------------------------*/
-/*----< ncmpi_iput_vara_short() >--------------------------------------------*/
-/*----< ncmpi_iput_vara_int() >----------------------------------------------*/
-/*----< ncmpi_iput_vara_long() >---------------------------------------------*/
-/*----< ncmpi_iput_vara_float() >--------------------------------------------*/
-/*----< ncmpi_iput_vara_double() >-------------------------------------------*/
-
-IPUT_VARA_TYPE(text,   char,   MPI_CHAR)
-IPUT_VARA_TYPE(schar,  schar,  MPI_BYTE)
-IPUT_VARA_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR)
-IPUT_VARA_TYPE(short,  short,  MPI_SHORT)
-IPUT_VARA_TYPE(int,    int,    MPI_INT)
-IPUT_VARA_TYPE(long,   long,   MPI_LONG)
-IPUT_VARA_TYPE(float,  float,  MPI_FLOAT)
-IPUT_VARA_TYPE(double, double, MPI_DOUBLE)
-
+/*----< ncmpi_iput_vara_text() >----------------------------------------------*/
+/*----< ncmpi_iput_vara_schar() >---------------------------------------------*/
+/*----< ncmpi_iput_vara_uchar() >---------------------------------------------*/
+/*----< ncmpi_iput_vara_short() >---------------------------------------------*/
+/*----< ncmpi_iput_vara_ushort() >--------------------------------------------*/
+/*----< ncmpi_iput_vara_int() >-----------------------------------------------*/
+/*----< ncmpi_iput_vara_uint() >----------------------------------------------*/
+/*----< ncmpi_iput_vara_long() >----------------------------------------------*/
+/*----< ncmpi_iput_vara_float() >---------------------------------------------*/
+/*----< ncmpi_iput_vara_double() >--------------------------------------------*/
+/*----< ncmpi_iput_vara_longlong() >------------------------------------------*/
+/*----< ncmpi_iput_vara_ulonglong() >-----------------------------------------*/
+IPUT_VARA_TYPE(text,      char,               MPI_CHAR)
+IPUT_VARA_TYPE(schar,     schar,              MPI_BYTE)
+IPUT_VARA_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
+IPUT_VARA_TYPE(short,     short,              MPI_SHORT)
+IPUT_VARA_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
+IPUT_VARA_TYPE(int,       int,                MPI_INT)
+IPUT_VARA_TYPE(uint,      uint,               MPI_UNSIGNED)
+IPUT_VARA_TYPE(long,      long,               MPI_LONG)
+IPUT_VARA_TYPE(float,     float,              MPI_FLOAT)
+IPUT_VARA_TYPE(double,    double,             MPI_DOUBLE)
+IPUT_VARA_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
+IPUT_VARA_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+// IPUT_VARA_TYPE(string, char*,              MPI_CHAR)
+/* string is not yet supported */
 
 /*----< ncmpi_iget_vara() >--------------------------------------------------*/
 int
@@ -159,21 +167,31 @@ ncmpi_iget_vara_##fntype(int               ncid,                       \
                                ip, nelems, mpitype, reqid, READ_REQ);  \
 }
 
-/*----< ncmpi_iget_vara_text() >---------------------------------------------*/
-/*----< ncmpi_iget_vara_schar() >--------------------------------------------*/
-/*----< ncmpi_iget_vara_uchar() >--------------------------------------------*/
-/*----< ncmpi_iget_vara_short() >--------------------------------------------*/
-/*----< ncmpi_iget_vara_int() >----------------------------------------------*/
-/*----< ncmpi_iget_vara_long() >---------------------------------------------*/
-/*----< ncmpi_iget_vara_float() >--------------------------------------------*/
-/*----< ncmpi_iget_vara_double() >-------------------------------------------*/
+/*----< ncmpi_iget_vara_text() >----------------------------------------------*/
+/*----< ncmpi_iget_vara_schar() >---------------------------------------------*/
+/*----< ncmpi_iget_vara_uchar() >---------------------------------------------*/
+/*----< ncmpi_iget_vara_short() >---------------------------------------------*/
+/*----< ncmpi_iget_vara_ushort() >--------------------------------------------*/
+/*----< ncmpi_iget_vara_int() >-----------------------------------------------*/
+/*----< ncmpi_iget_vara_uint() >----------------------------------------------*/
+/*----< ncmpi_iget_vara_long() >----------------------------------------------*/
+/*----< ncmpi_iget_vara_float() >---------------------------------------------*/
+/*----< ncmpi_iget_vara_double() >--------------------------------------------*/
+/*----< ncmpi_iget_vara_longlong() >------------------------------------------*/
+/*----< ncmpi_iget_vara_ulonglong() >-----------------------------------------*/
+IGET_VARA_TYPE(text,      char,               MPI_CHAR)
+IGET_VARA_TYPE(schar,     schar,              MPI_BYTE)
+IGET_VARA_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
+IGET_VARA_TYPE(short,     short,              MPI_SHORT)
+IGET_VARA_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
+IGET_VARA_TYPE(int,       int,                MPI_INT)
+IGET_VARA_TYPE(uint,      uint,               MPI_UNSIGNED)
+IGET_VARA_TYPE(long,      long,               MPI_LONG)
+IGET_VARA_TYPE(float,     float,              MPI_FLOAT)
+IGET_VARA_TYPE(double,    double,             MPI_DOUBLE)
+IGET_VARA_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
+IGET_VARA_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+// IGET_VARA_TYPE(string, char*,              MPI_CHAR)
+/* string is not yet supported */
 
-IGET_VARA_TYPE(text,   char,   MPI_CHAR)
-IGET_VARA_TYPE(schar,  schar,  MPI_BYTE)
-IGET_VARA_TYPE(uchar,  uchar,  MPI_UNSIGNED_CHAR)
-IGET_VARA_TYPE(short,  short,  MPI_SHORT)
-IGET_VARA_TYPE(int,    int,    MPI_INT)
-IGET_VARA_TYPE(long,   long,   MPI_LONG)
-IGET_VARA_TYPE(float,  float,  MPI_FLOAT)
-IGET_VARA_TYPE(double, double, MPI_DOUBLE)
 

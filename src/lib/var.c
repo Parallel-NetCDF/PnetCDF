@@ -25,11 +25,11 @@ NC_free_var(var)
 void
 ncmpii_free_NC_var(NC_var *varp)
 {
-	if(varp == NULL)
-		return;
-	ncmpii_free_NC_attrarrayV(&varp->attrs);
-	ncmpii_free_NC_string(varp->name);
-	NCI_Free(varp);
+        if(varp == NULL)
+                return;
+        ncmpii_free_NC_attrarrayV(&varp->attrs);
+        ncmpii_free_NC_string(varp->name);
+        NCI_Free(varp);
 }
 
 
@@ -38,99 +38,102 @@ ncmpii_free_NC_var(NC_var *varp)
  * and ncx_get_NC_var()
  */
 NC_var *
-ncmpii_new_x_NC_var(
-	NC_string *strp,
-	size_t ndims)
+ncmpii_new_x_NC_var(NC_string *strp,
+                    size_t     ndims)
 {
-	NC_var *varp;
-	const MPI_Offset o1 = M_RNDUP(ndims * sizeof(MPI_Offset));
-	const MPI_Offset o2 = M_RNDUP(ndims * sizeof(MPI_Offset));
-	const MPI_Offset sz =  M_RNDUP(sizeof(NC_var)) +
-		 o1 + o2 + ndims * sizeof(MPI_Offset);
+    NC_var *varp;
+    const MPI_Offset o1 = M_RNDUP(ndims * sizeof(MPI_Offset));
+    const MPI_Offset o2 = M_RNDUP(ndims * sizeof(MPI_Offset));
+    const MPI_Offset sz = M_RNDUP(sizeof(NC_var)) + o1 + o2 + ndims * sizeof(MPI_Offset);
 
-	varp = (NC_var *) NCI_Malloc(sz);
-	if(varp == NULL )
-		return NULL;
-	(void) memset(varp, 0, sz);
+    /* wkliao: this function allocates a contiguous memory space to put all
+     * members of NC_var structure together: o1 is for shape[], o2 is for
+     * dsizes[] ad the 3rd is for dimids[]
+     * (I don't know why M_RNDUP is needed here and why they should be kept
+     * in a contiguous memory space.)
+     */
+    varp = (NC_var *) NCI_Malloc(sz);
+    if (varp == NULL ) return NULL;
 
-	varp->name = strp;
-	varp->ndims = ndims;
+    (void) memset(varp, 0, sz);
 
-	if(ndims != 0)
-	{
-		/*
-		 * NOTE: lint may complain about the next 3 lines:
-		 * "pointer cast may result in improper alignment".
-		 * We use the M_RNDUP() macro to get the proper alignment.
-		 */
-		varp->dimids = (int *)((char *)varp + M_RNDUP(sizeof(NC_var)));
-		varp->shape = (MPI_Offset *)((char *)varp->dimids + o1);
-		varp->dsizes = (MPI_Offset *)((char *)varp->shape + o2);
-	}
+    varp->name = strp;
+    varp->ndims = ndims;
 
+    if (ndims != 0) {
+        /*
+         * NOTE: lint may complain about the next 3 lines:
+         * "pointer cast may result in improper alignment".
+         * We use the M_RNDUP() macro to get the proper alignment.
+         * roundup to a double
+         */
+        varp->dimids = (int *)((char *)varp + M_RNDUP(sizeof(NC_var)));
+        varp->shape  = (MPI_Offset *)((char *)varp->dimids + o1);
+        varp->dsizes = (MPI_Offset *)((char *)varp->shape + o2);
+    }
 
-	varp->xsz = 0;
-	varp->len = 0;
-	varp->begin = 0;
+    varp->xsz = 0;
+    varp->len = 0;
+    varp->begin = 0;
 
-	return varp;
+    return varp;
 }
 
 
+/*----< ncmpii_new_NC_var() >------------------------------------------------*/
 /*
- * Formerly
-NC_new_var()
+ * Formerly, NC_new_var()
  */
 static NC_var *
-ncmpii_new_NC_var(const char *name, nc_type type,
-	size_t ndims, const int *dimids)
+ncmpii_new_NC_var(const char *name,
+                  nc_type     type,
+                  size_t      ndims,
+                  const int  *dimids)
 {
-	NC_string *strp;
-	NC_var *varp;
+    NC_string *strp;
+    NC_var *varp;
 
-	strp = ncmpii_new_NC_string(strlen(name), name);
-	if(strp == NULL)
-		return NULL;
+    strp = ncmpii_new_NC_string(strlen(name), name);
+    if (strp == NULL) return NULL;
 
-	varp = ncmpii_new_x_NC_var(strp, ndims);
-	if(varp == NULL )
-	{
-		ncmpii_free_NC_string(strp);
-		return NULL;
-	}
-	
-	varp->type = type;
+    varp = ncmpii_new_x_NC_var(strp, ndims);
+    if (varp == NULL ) {
+        ncmpii_free_NC_string(strp);
+        return NULL;
+    }
+        
+    varp->type = type;
 
-	if( ndims != 0 && dimids != NULL)
-		(void) memcpy(varp->dimids, dimids, ndims * sizeof(int));
+    if (ndims != 0 && dimids != NULL)
+        (void) memcpy(varp->dimids, dimids, ndims * sizeof(int));
 
-	return(varp);
+    return(varp);
 }
 
 static NC_var *
 dup_NC_var(const NC_var *rvarp)
 {
-	NC_var *varp = ncmpii_new_NC_var(rvarp->name->cp, rvarp->type,
-		 rvarp->ndims, rvarp->dimids);
-	if(varp == NULL)
-		return NULL;
+        NC_var *varp = ncmpii_new_NC_var(rvarp->name->cp, rvarp->type,
+                 rvarp->ndims, rvarp->dimids);
+        if(varp == NULL)
+                return NULL;
 
-	
-	if(ncmpii_dup_NC_attrarrayV(&varp->attrs, &rvarp->attrs) != NC_NOERR)
-	{
-		ncmpii_free_NC_var(varp);
-		return NULL;
-	}
+        
+        if(ncmpii_dup_NC_attrarrayV(&varp->attrs, &rvarp->attrs) != NC_NOERR)
+        {
+                ncmpii_free_NC_var(varp);
+                return NULL;
+        }
 
-	(void) memcpy(varp->shape, rvarp->shape,
-			 rvarp->ndims * sizeof(MPI_Offset));
-	(void) memcpy(varp->dsizes, rvarp->dsizes,
-			 rvarp->ndims * sizeof(MPI_Offset));
-	varp->xsz = rvarp->xsz;
-	varp->len = rvarp->len;
-	varp->begin = rvarp->begin;
+        (void) memcpy(varp->shape, rvarp->shape,
+                         rvarp->ndims * sizeof(MPI_Offset));
+        (void) memcpy(varp->dsizes, rvarp->dsizes,
+                         rvarp->ndims * sizeof(MPI_Offset));
+        varp->xsz = rvarp->xsz;
+        varp->len = rvarp->len;
+        varp->begin = rvarp->begin;
 
-	return varp;
+        return varp;
 }
 
 
@@ -144,23 +147,23 @@ dup_NC_var(const NC_var *rvarp)
 void
 ncmpii_free_NC_vararrayV0(NC_vararray *ncap)
 {
-	assert(ncap != NULL);
+        assert(ncap != NULL);
 
-	if(ncap->ndefined == 0)
-		return;
+        if(ncap->ndefined == 0)
+                return;
 
-	assert(ncap->value != NULL);
+        assert(ncap->value != NULL);
 
-	{
-		NC_var **vpp = ncap->value;
-		NC_var *const *const end = &vpp[ncap->ndefined];
-		for( /*NADA*/; vpp < end; vpp++)
-		{
-			ncmpii_free_NC_var(*vpp);
-			*vpp = NULL;
-		}
-	}
-	ncap->ndefined = 0;
+        {
+                NC_var **vpp = ncap->value;
+                NC_var *const *const end = &vpp[ncap->ndefined];
+                for( /*NADA*/; vpp < end; vpp++)
+                {
+                        ncmpii_free_NC_var(*vpp);
+                        *vpp = NULL;
+                }
+        }
+        ncap->ndefined = 0;
 }
 
 
@@ -172,64 +175,64 @@ NC_free_array()
 void
 ncmpii_free_NC_vararrayV(NC_vararray *ncap)
 {
-	assert(ncap != NULL);
-	
-	if(ncap->nalloc == 0)
-		return;
+        assert(ncap != NULL);
+        
+        if(ncap->nalloc == 0)
+                return;
 
-	assert(ncap->value != NULL);
+        assert(ncap->value != NULL);
 
-	ncmpii_free_NC_vararrayV0(ncap);
+        ncmpii_free_NC_vararrayV0(ncap);
 
-	NCI_Free(ncap->value);
-	ncap->value = NULL;
-	ncap->nalloc = 0;
+        NCI_Free(ncap->value);
+        ncap->value = NULL;
+        ncap->nalloc = 0;
 }
 
 
 int
 ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 {
-	int status = NC_NOERR;
+        int status = NC_NOERR;
 
-	assert(ref != NULL);
-	assert(ncap != NULL);
+        assert(ref != NULL);
+        assert(ncap != NULL);
 
-	if(ref->ndefined != 0)
-	{
-		const MPI_Offset sz = ref->ndefined * sizeof(NC_var *);
-		ncap->value = (NC_var **) NCI_Malloc(sz);
-		if(ncap->value == NULL)
-			return NC_ENOMEM;
-		(void) memset(ncap->value, 0, sz);
-		ncap->nalloc = ref->ndefined;
-	}
+        if(ref->ndefined != 0)
+        {
+                const MPI_Offset sz = ref->ndefined * sizeof(NC_var *);
+                ncap->value = (NC_var **) NCI_Malloc(sz);
+                if(ncap->value == NULL)
+                        return NC_ENOMEM;
+                (void) memset(ncap->value, 0, sz);
+                ncap->nalloc = ref->ndefined;
+        }
 
-	ncap->ndefined = 0;
-	{
-		NC_var **vpp = ncap->value;
-		const NC_var **drpp = (const NC_var **)ref->value;
-		NC_var *const *const end = &vpp[ref->ndefined];
-		for( /*NADA*/; vpp < end; drpp++, vpp++, ncap->ndefined++)
-		{
-			*vpp = dup_NC_var(*drpp);
-			if(*vpp == NULL)
-			{
-				status = NC_ENOMEM;
-				break;
-			}
-		}
-	}
+        ncap->ndefined = 0;
+        {
+                NC_var **vpp = ncap->value;
+                const NC_var **drpp = (const NC_var **)ref->value;
+                NC_var *const *const end = &vpp[ref->ndefined];
+                for( /*NADA*/; vpp < end; drpp++, vpp++, ncap->ndefined++)
+                {
+                        *vpp = dup_NC_var(*drpp);
+                        if(*vpp == NULL)
+                        {
+                                status = NC_ENOMEM;
+                                break;
+                        }
+                }
+        }
 
-	if(status != NC_NOERR)
-	{
-		ncmpii_free_NC_vararrayV(ncap);
-		return status;
-	}
+        if(status != NC_NOERR)
+        {
+                ncmpii_free_NC_vararrayV(ncap);
+                return status;
+        }
 
-	assert(ncap->ndefined == ref->ndefined);
+        assert(ncap->ndefined == ref->ndefined);
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 
@@ -239,51 +242,49 @@ ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref)
 NC_incr_array(array, tail)
  */
 static int
-incr_NC_vararray(NC_vararray *ncap, NC_var *newelemp)
+incr_NC_vararray(NC_vararray *ncap,
+                 NC_var      *newvarp)
 {
-	NC_var **vp;
+    NC_var **vp;
 
-	assert(ncap != NULL);
+    assert(ncap != NULL);
 
-	if(ncap->nalloc == 0)
-	{
-		assert(ncap->ndefined == 0);
-		vp = (NC_var **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_var *));
-		if(vp == NULL)
-			return NC_ENOMEM;
-		ncap->value = vp;
-		ncap->nalloc = NC_ARRAY_GROWBY;
-	}
-	else if(ncap->ndefined +1 > ncap->nalloc)
-	{
-		vp = (NC_var **) NCI_Realloc(ncap->value,
-			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_var *));
-		if(vp == NULL)
-			return NC_ENOMEM;
-		ncap->value = vp;
-		ncap->nalloc += NC_ARRAY_GROWBY;
-	}
+    if (ncap->nalloc == 0) { /* no variable has been allocated yet */
+        assert(ncap->ndefined == 0);
+        vp = (NC_var **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_var *));
+        if (vp == NULL) return NC_ENOMEM;
 
-	if(newelemp != NULL)
-	{
-		ncap->value[ncap->ndefined] = newelemp;
-		ncap->ndefined++;
-	}
-	return NC_NOERR;
+        ncap->value = vp;
+        ncap->nalloc = NC_ARRAY_GROWBY;
+    }
+    else if (ncap->ndefined + 1 > ncap->nalloc) {
+        vp = (NC_var **) NCI_Realloc(ncap->value, (ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_var *));
+        if (vp == NULL) return NC_ENOMEM;
+
+        ncap->value = vp;
+        ncap->nalloc += NC_ARRAY_GROWBY;
+    }
+
+    if (newvarp != NULL) {
+        ncap->value[ncap->ndefined] = newvarp;
+        ncap->ndefined++;
+    }
+
+    return NC_NOERR;
 }
 
 
 static NC_var *
 elem_NC_vararray(const NC_vararray *ncap, MPI_Offset elem)
 {
-	assert(ncap != NULL);
-		/* cast needed for braindead systems with signed MPI_Offset */
-	if((elem < 0) ||  ncap->ndefined == 0 || elem >= ncap->ndefined)
-		return NULL;
+        assert(ncap != NULL);
+                /* cast needed for braindead systems with signed MPI_Offset */
+        if((elem < 0) ||  ncap->ndefined == 0 || elem >= ncap->ndefined)
+                return NULL;
 
-	assert(ncap->value != NULL);
+        assert(ncap->value != NULL);
 
-	return ncap->value[elem];
+        return ncap->value[elem];
 }
 
 
@@ -298,32 +299,30 @@ elem_NC_vararray(const NC_vararray *ncap, MPI_Offset elem)
 NC_hvarid
  */
 static int
-ncmpii_NC_findvar(const NC_vararray *ncap, const char *name, NC_var **varpp)
+ncmpii_NC_findvar(const NC_vararray  *ncap,
+                  const char         *name,
+                  NC_var            **varpp)
 {
-	NC_var **loc;
-	MPI_Offset slen;
-	int varid;
+    int varid, slen;
+    NC_var **loc;
 
-	assert(ncap != NULL);
+    assert (ncap != NULL);
 
-	if(ncap->ndefined == 0)
-		return -1;
+    if (ncap->ndefined == 0) return -1;
 
-	loc = (NC_var **) ncap->value;
+    loc = (NC_var **) ncap->value;
 
-	slen = strlen(name);
+    slen = strlen(name);
 
-	for(varid = 0; (MPI_Offset) varid < ncap->ndefined; varid++, loc++)
-	{
-		if(strlen((*loc)->name->cp) == slen &&
-			strncmp((*loc)->name->cp, name, slen) == 0)
-		{
-			if(varpp != NULL)
-				*varpp = *loc;
-			return(varid); /* Normal return */
-		}
-	}
-	return(-1); /* not found */
+    for (varid=0; varid<ncap->ndefined; varid++, loc++) {
+        if (strlen((*loc)->name->cp) == slen &&
+            strncmp((*loc)->name->cp, name, slen) == 0) {
+            if (varpp != NULL)
+                *varpp = *loc;
+            return (varid); /* Normal return */
+        }
+    }
+    return (-1); /* not found */
 }
 
 /* 
@@ -337,25 +336,26 @@ NC_xtypelen
 static MPI_Offset
 ncx_szof(nc_type type)
 {
-	switch(type){
-	case NC_BYTE:
-	case NC_CHAR:
-		return(1);
-	case NC_SHORT :
-		return(2);
-	case NC_INT:
-		return X_SIZEOF_INT;
-	case NC_FLOAT:
-		return X_SIZEOF_FLOAT;
-	case NC_DOUBLE : 
-		return X_SIZEOF_DOUBLE;
-	default:
-		assert("ncx_szof invalid type" == 0);
-	}
-	/* default */
-	return 0;
+    switch(type){
+        case NC_BYTE:
+        case NC_CHAR:   return (1);
+        case NC_SHORT:  return (2);
+        case NC_INT:    return X_SIZEOF_INT;
+        case NC_FLOAT:  return X_SIZEOF_FLOAT;
+        case NC_DOUBLE: return X_SIZEOF_DOUBLE;
+        case NC_UBYTE:  return (1);
+        case NC_USHORT: return (2);
+        case NC_UINT:   return X_SIZEOF_UINT;
+        case NC_INT64:  return X_SIZEOF_INT64;
+        case NC_UINT64: return X_SIZEOF_UINT64;
+        default:
+             assert("ncx_szof invalid type" == 0);
+    }
+    /* default */
+    return 0;
 }
 
+/*----< ncmpii_NC_var_shape64() >--------------------------------------------*/
 /*
  * set varp->xsz, varp->shape and varp->len of a variable
  */
@@ -380,9 +380,11 @@ ncmpii_NC_var_shape64(NC                *ncp,
 
         if (varp->dimids[i] < 0)
             return NC_EBADDIM;
+
         if (varp->dimids[i] >= ((dims != NULL) ? dims->ndefined : 1))
             return NC_EBADDIM;
 
+        /* get the pointer to the dim object */
         dimp = ncmpii_elem_NC_dimarray(dims, varp->dimids[i]);
         varp->shape[i] = dimp->size;
 
@@ -419,8 +421,7 @@ out :
      * For CDF-1 and CDF-2 formats, the total number of array elements
      * cannot exceed 2^32
      */
-    if (! fIsSet(ncp->flags, NC_64BIT_DATA) &&
-        product >= X_UINT_MAX)
+    if (! fIsSet(ncp->flags, NC_64BIT_DATA) && product >= X_UINT_MAX)
         return NC_EVARSIZE;
 
     /*
@@ -465,298 +466,291 @@ NC_hlookupvar()
 NC_var *
 ncmpii_NC_lookupvar(NC *ncp,  int varid)
 {
-	NC_var *varp;
+        NC_var *varp;
 
-	if(varid == NC_GLOBAL)
-	{
-		/* Global is error in this context */
-		return(NULL);
-	}
+        if(varid == NC_GLOBAL)
+        {
+                /* Global is error in this context */
+                return(NULL);
+        }
 
-	varp = elem_NC_vararray(&ncp->vars, varid);
-	if(varp == NULL)
-	{
-		return NULL;
-	}
+        varp = elem_NC_vararray(&ncp->vars, varid);
+        if(varp == NULL)
+        {
+                return NULL;
+        }
 
-	assert(varp != NULL);
+        assert(varp != NULL);
 
-	return(varp);
+        return(varp);
 }
 
 
 /* Public */
 
+/*----< ncmpi_def_var() >----------------------------------------------------*/
 int
-ncmpi_def_var( int ncid, const char *name, nc_type type,
-	 int ndims, const int *dimids, int *varidp)
+ncmpi_def_var(int         ncid,
+              const char *name,
+              nc_type     type,
+              int         ndims,
+              const int  *dimids,
+              int        *varidp)
 {
-	int file_ver, status;
-	NC *ncp;
-	int varid;
-	NC_var *varp;
+    int varid, file_ver, status;
+    NC *ncp;
+    NC_var *varp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+    /* check if ncid is valid */
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR) return status;
 
+    /* check if called in define mode */
+    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
 
-	if(!NC_indef(ncp))
-	{
-		return NC_ENOTINDEFINE;
-	}
-
+    /* check if the name string is legal for netcdf format */
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
         file_ver = 2;
     else if (fIsSet(ncp->flags, NC_64BIT_DATA))
         file_ver = 5;
-
     status = ncmpii_NC_check_name(name, file_ver);
     if (status != NC_NOERR) return status;
 
-	status = ncmpii_cktype(type);
-	if(status != NC_NOERR)
-		return status;
+    /* check if type is a valid netcdf type */
+    status = ncmpii_cktype(type);
+    if (status != NC_NOERR) return status;
 
-	if((ndims < 0) || ndims > X_INT_MAX) /* Backward compat */
-	{
-		return NC_EINVAL;
-	} 
+    /* TODO: can ndims > 2^32 in CDF-5 ? */
+    if ((ndims < 0) || ndims > X_INT_MAX) return NC_EINVAL;
 
-	if(ncp->vars.ndefined >= NC_MAX_VARS)
-	{
-		return NC_EMAXVARS;
-	}
+    /* there is an upperbound for the number of variables defeined in a file */
+    if (ncp->vars.ndefined >= NC_MAX_VARS) return NC_EMAXVARS;
 
-	varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
-	if(varid != -1)
-	{
-		return NC_ENAMEINUSE;
-	}
-	
+    /* check whether the variable name has been used */
+    varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
+    if (varid != -1) return NC_ENAMEINUSE;
 
-	
-	varp = ncmpii_new_NC_var(name, type, ndims, dimids);
-	if(varp == NULL)
-		return NC_ENOMEM;
+    /* create a new variable */
+    varp = ncmpii_new_NC_var(name, type, ndims, dimids);
+    if (varp == NULL) return NC_ENOMEM;
 
-	
+    /* set up array dimensional structures */
+    status = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
+    if (status != NC_NOERR) {
+        ncmpii_free_NC_var(varp);
+        return status;
+    }
 
-	status = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
-	if(status != NC_NOERR)
-	{
-		ncmpii_free_NC_var(varp);
-		return status;
-	}
+    /* Add a new handle to the end of an array of handles */
+    status = incr_NC_vararray(&ncp->vars, varp);
+    if (status != NC_NOERR) {
+        ncmpii_free_NC_var(varp);
+        return status;
+    }
 
-	status = incr_NC_vararray(&ncp->vars, varp);
-	if(status != NC_NOERR)
-	{
-		ncmpii_free_NC_var(varp);
-		return status;
-	}
+    if (varidp != NULL)
+        *varidp = (int)ncp->vars.ndefined - 1; /* varid */
+        /* ncp->vars.ndefined has been increased in incr_NC_vararray() */
 
-	if(varidp != NULL)
-		*varidp = (int)ncp->vars.ndefined -1; /* varid */
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 
 int
 ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
-	int varid;
+        int status;
+        NC *ncp;
+        NC_var *varp;
+        int varid;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
-	if(varid == -1)
-	{
-		return NC_ENOTVAR;
-	}
+        varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
+        if(varid == -1)
+        {
+                return NC_ENOTVAR;
+        }
 
-	*varid_ptr = varid;
-	return NC_NOERR;
+        *varid_ptr = varid;
+        return NC_NOERR;
 }
 
 
 int
 ncmpi_inq_var(int ncid,
-	int varid,
-	char *name,
-	nc_type *typep,
-	int *ndimsp,
-	int *dimids,
-	int *nattsp)
+        int varid,
+        char *name,
+        nc_type *typep,
+        int *ndimsp,
+        int *dimids,
+        int *nattsp)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
-	MPI_Offset ii;
+        int status;
+        NC *ncp;
+        NC_var *varp;
+        MPI_Offset ii;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	varp = elem_NC_vararray(&ncp->vars, varid);
-	if(varp == NULL)
-		return NC_ENOTVAR;
+        varp = elem_NC_vararray(&ncp->vars, varid);
+        if(varp == NULL)
+                return NC_ENOTVAR;
 
-	if(name != NULL)
-	{
-		(void) strncpy(name, varp->name->cp, varp->name->nchars);
-		name[varp->name->nchars] = 0;
-	}
+        if(name != NULL)
+        {
+                (void) strncpy(name, varp->name->cp, varp->name->nchars);
+                name[varp->name->nchars] = 0;
+        }
 
-	if(typep != 0)
-		*typep = varp->type;
-	if(ndimsp != 0)
-	{
-		*ndimsp = varp->ndims;
-	}
-	if(dimids != 0)
-	{
-		for(ii = 0; ii < varp->ndims; ii++)
-		{
-			dimids[ii] = varp->dimids[ii];
-		}
-	}
-	if(nattsp != 0)
-	{
-		*nattsp = (int) varp->attrs.ndefined;
-	}
+        if(typep != 0)
+                *typep = varp->type;
+        if(ndimsp != 0)
+        {
+                *ndimsp = varp->ndims;
+        }
+        if(dimids != 0)
+        {
+                for(ii = 0; ii < varp->ndims; ii++)
+                {
+                        dimids[ii] = varp->dimids[ii];
+                }
+        }
+        if(nattsp != 0)
+        {
+                *nattsp = (int) varp->attrs.ndefined;
+        }
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 
 int 
 ncmpi_inq_varname(int ncid,  int varid, char *name)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
+        int status;
+        NC *ncp;
+        NC_var *varp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	varp = elem_NC_vararray(&ncp->vars, varid);
-	if(varp == NULL)
-		return NC_ENOTVAR;
+        varp = elem_NC_vararray(&ncp->vars, varid);
+        if(varp == NULL)
+                return NC_ENOTVAR;
 
-	if(name != NULL)
-	{
-		(void) strncpy(name, varp->name->cp, varp->name->nchars);
-		name[varp->name->nchars] = 0;
-	}
+        if(name != NULL)
+        {
+                (void) strncpy(name, varp->name->cp, varp->name->nchars);
+                name[varp->name->nchars] = 0;
+        }
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 int 
 ncmpi_inq_vartype(int ncid,  int varid, nc_type *typep)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
+        int status;
+        NC *ncp;
+        NC_var *varp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	varp = elem_NC_vararray(&ncp->vars, varid);
-	if(varp == NULL)
-		return NC_ENOTVAR;
+        varp = elem_NC_vararray(&ncp->vars, varid);
+        if(varp == NULL)
+                return NC_ENOTVAR;
 
-	if(typep != 0)
-		*typep = varp->type;
+        if(typep != 0)
+                *typep = varp->type;
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 int 
 ncmpi_inq_varndims(int ncid,  int varid, int *ndimsp)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
+        int status;
+        NC *ncp;
+        NC_var *varp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	varp = elem_NC_vararray(&ncp->vars, varid);
-	if(varp == NULL)
-		return NC_ENOTVAR; /* TODO: is this the right error code? */
+        varp = elem_NC_vararray(&ncp->vars, varid);
+        if(varp == NULL)
+                return NC_ENOTVAR; /* TODO: is this the right error code? */
 
-	if(ndimsp != 0)
-	{
-		*ndimsp = (int) varp->ndims;
-	}
+        if(ndimsp != 0)
+        {
+                *ndimsp = (int) varp->ndims;
+        }
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 
 int 
 ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
-	MPI_Offset ii;
+        int status;
+        NC *ncp;
+        NC_var *varp;
+        MPI_Offset ii;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	varp = elem_NC_vararray(&ncp->vars, varid);
-	if(varp == NULL)
-		return NC_ENOTVAR; /* TODO: is this the right error code? */
+        varp = elem_NC_vararray(&ncp->vars, varid);
+        if(varp == NULL)
+                return NC_ENOTVAR; /* TODO: is this the right error code? */
 
-	if(dimids != 0)
-	{
-		for(ii = 0; ii < varp->ndims; ii++)
-		{
-			dimids[ii] = varp->dimids[ii];
-		}
-	}
+        if(dimids != 0)
+        {
+                for(ii = 0; ii < varp->ndims; ii++)
+                {
+                        dimids[ii] = varp->dimids[ii];
+                }
+        }
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 
 int 
 ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
 {
-	int status;
-	NC *ncp;
-	NC_var *varp;
+        int status;
+        NC *ncp;
+        NC_var *varp;
 
-	if(varid == NC_GLOBAL)
-		return ncmpi_inq_natts(ncid, nattsp);
+        if(varid == NC_GLOBAL)
+                return ncmpi_inq_natts(ncid, nattsp);
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
-	if(status != NC_NOERR)
-		return status;
+        status = ncmpii_NC_check_id(ncid, &ncp); 
+        if(status != NC_NOERR)
+                return status;
 
-	varp = elem_NC_vararray(&ncp->vars, varid);
-	if(varp == NULL)
-		return NC_ENOTVAR; /* TODO: is this the right error code? */
+        varp = elem_NC_vararray(&ncp->vars, varid);
+        if(varp == NULL)
+                return NC_ENOTVAR; /* TODO: is this the right error code? */
 
-	if(nattsp != 0)
-	{
-		*nattsp = (int) varp->attrs.ndefined;
-	}
+        if(nattsp != 0)
+        {
+                *nattsp = (int) varp->attrs.ndefined;
+        }
 
-	return NC_NOERR;
+        return NC_NOERR;
 }
 
 int

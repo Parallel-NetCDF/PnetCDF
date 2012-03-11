@@ -51,6 +51,8 @@ AH_TEMPLATE([NF_INT1_T], [Type for Fortran INT1])
 AH_TEMPLATE([NF_INT2_IS_C_], [C type for Fortran INT2])
 AH_TEMPLATE([NF_INT2_T], [Type for Fortran INT2])
 AH_TEMPLATE([NF_INT_IS_C_], [C type for Fortran INT])
+AH_TEMPLATE([NF_INT8_IS_C_], [C type for Fortran INT8])
+AH_TEMPLATE([NF_INT8_T], [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_], [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT], [Does sytem have IEEE FLOAT])
 AH_TEMPLATE([NO_STRERROR], [Define if system lacks strerror])
@@ -494,6 +496,11 @@ AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(size_t)
+
+AC_CHECK_SIZEOF(ushort)
+AC_CHECK_SIZEOF(uint)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(unsigned long long)
 
 dnl Check the size of MPI_Offset.  
 dnl As some platforms don't allow running MPI-linked executives directly,

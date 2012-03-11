@@ -39,17 +39,32 @@ static void pr_tvals(const struct ncvar *vp, size_t len, const char *fmt,
 static void pr_bvals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const signed char *vals,
 		     const struct fspec* fsp, const MPI_Offset *cor);
+static void pr_ubvals(const struct ncvar *vp, size_t len, const char *fmt,
+		     boolean more, boolean lastrow, const unsigned char *vals,
+		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_svals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const short *vals,
 		     const struct fspec* fsp, const MPI_Offset *cor);
+static void pr_usvals(const struct ncvar *vp, size_t len, const char *fmt,
+		     boolean more, boolean lastrow, const unsigned short *vals,
+		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_ivals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const int *vals,
+		     const struct fspec* fsp, const MPI_Offset *cor);
+static void pr_uivals(const struct ncvar *vp, size_t len, const char *fmt,
+		     boolean more, boolean lastrow, const unsigned int *vals,
 		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_fvals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const float *vals,
 		     const struct fspec* fsp, const MPI_Offset *cor);
 static void pr_dvals(const struct ncvar *vp, size_t len, const char *fmt,
 		     boolean more, boolean lastrow, const double *vals,
+		     const struct fspec* fsp, const MPI_Offset *cor);
+static void pr_llvals(const struct ncvar *vp, size_t len, const char *fmt,
+		     boolean more, boolean lastrow, const long long *vals,
+		     const struct fspec* fsp, const MPI_Offset *cor);
+static void pr_ullvals(const struct ncvar *vp, size_t len, const char *fmt,
+		     boolean more, boolean lastrow, const unsigned long long *vals,
 		     const struct fspec* fsp, const MPI_Offset *cor);
 static int  upcorner(const size_t* dims, int ndims, MPI_Offset* odom,
 		     const size_t* add);
@@ -130,75 +145,43 @@ init_epsilons(void)
 }
 
 /*
- * Output a value of a byte variable, except if there is a fill value for
+ * Output a value of a "type" variable, except if there is a fill value for
  * the variable and the value is the fill value, print the fill-value string
  * instead.
  */
-static void
-printbval(
-    char *sout,			/* string where output goes */
-    const char *fmt,		/* printf format used for value */
-    const struct ncvar *varp,	/* variable */
-    signed char val		/* value */
-    )
-{
-    if (varp->has_fillval) {
-	double fillval = varp->fillval;
-	if(fillval == val) {
-	    (void) sprintf(sout, FILL_STRING);
-	    return;
-	}
-    }
-    (void) sprintf(sout, fmt, val);
+#define PRINT_VAL(fn, type)                                                    \
+static void                                                                    \
+print##fn(char               *sout, /* string where output goes */             \
+          const char         *fmt,  /* printf format used for value */         \
+          const struct ncvar *varp, /* variable */                             \
+          type                val)  /* value */                                \
+{                                                                              \
+    if (varp->has_fillval) {                                                   \
+        double fillval = varp->fillval;                                        \
+        if (fillval == val) {                                                  \
+            sprintf(sout, FILL_STRING);                                        \
+            return;                                                            \
+        }                                                                      \
+    }                                                                          \
+    sprintf(sout, fmt, val);                                                   \
 }
 
-/*
- * Output a value of a short variable, except if there is a fill value for
- * the variable and the value is the fill value, print the fill-value string
- * instead.
- */
-static void
-printsval(
-    char *sout,			/* string where output goes */
-    const char *fmt,		/* printf format used for value */
-    const struct ncvar *varp,		/* variable */
-    short val			/* value */
-    )
-{
-    if (varp->has_fillval) {
-	double fillval = varp->fillval;
-	if(fillval == val) {
-	    (void) sprintf(sout, FILL_STRING);
-	    return;
-	}
-    }
-    (void) sprintf(sout, fmt, val);
-}
-
-
-/*
- * Output a value of an int variable, except if there is a fill value for
- * the variable and the value is the fill value, print the fill-value string
- * instead.
- */
-static void
-printival(
-    char *sout,			/* string where output goes */
-    const char *fmt,		/* printf format used for value */
-    const struct ncvar *varp,		/* variable */
-    int val			/* value */
-    )
-{
-    if (varp->has_fillval) {
-	int fillval = (int)varp->fillval;
-	if(fillval == val) {
-	    (void) sprintf(sout, FILL_STRING);
-	    return;
-	}
-    }
-    (void) sprintf(sout, fmt, val);
-}
-
+/*----< printbval() >---------------------------------------------------------*/
+/*----< printubval() >--------------------------------------------------------*/
+/*----< printsval() >---------------------------------------------------------*/
+/*----< printusval() >--------------------------------------------------------*/
+/*----< printival() >---------------------------------------------------------*/
+/*----< printuival() >--------------------------------------------------------*/
+/*----< printllval() >--------------------------------------------------------*/
+/*----< printullval() >-------------------------------------------------------*/
+PRINT_VAL(bval,   signed char)
+PRINT_VAL(ubval,  unsigned char)
+PRINT_VAL(sval,   short)
+PRINT_VAL(usval,  unsigned short)
+PRINT_VAL(ival,   int)
+PRINT_VAL(uival,  unsigned int)
+PRINT_VAL(llval,  long long)
+PRINT_VAL(ullval, unsigned long long)
 
 #define absval(x)  ( (x) < 0 ? -(x) : (x) )
 
@@ -432,243 +415,70 @@ pr_tvals(
  * Print a number of byte variable values, where the optional comments
  * for each value identify the variable, and each dimension index.
  */
-static void
-pr_bvals(
-     const struct ncvar *vp,	/* variable */
-     size_t len,		/* number of values to print */
-     const char *fmt,		/* printf format used for each value.  If
-				 * ncmpi_type is NC_CHAR and this is NULL,
-				 * character arrays will be printed as
-				 * strings enclosed in quotes.  */
-     boolean more,		/* true if more data for this row will
-				 * follow, so add trailing comma */
-     boolean lastrow,		/* true if this is the last row for this
-				 * variable, so terminate with ";" instead
-				 * of "," */
-     const signed char *vals,	/* pointer to block of values */
-     const struct fspec* fsp,	/* formatting specs */
-     const MPI_Offset *cor		/* corner coordinates */
-     )
-{
-    long iel;
-    char sout[100];		/* temporary string for each encoded output */
-
-    for (iel = 0; iel < len-1; iel++) {
-	printbval(sout, fmt, vp, *vals++);
-	if (fsp->full_data_cmnts) {
-	    Printf("%s", sout);
-	    Printf(",");
-	    annotate (vp, fsp, cor, iel);
-	} else {
-	    (void) strcat(sout, ", ");
-	    lput(sout);
-	}
-    }
-    printbval(sout, fmt, vp, *vals++);
-    if (fsp->full_data_cmnts) {
-	Printf("%s", sout);
-	lastdelim (more, lastrow);
-	annotate (vp, fsp, cor, iel);
-    } else {
-	lput(sout);
-	lastdelim2 (more, lastrow);
-    }
+#define PR_VALS(fn, type)                                                      \
+static void                                                                    \
+pr_##fn##vals(const struct ncvar *vp,     /* variable */                       \
+              size_t              len,    /* number of values to print */      \
+              const char         *fmt,    /* printf format used for each       \
+                                             value. If ncmpi_type is NC_CHAR   \
+                                             and this is NULL, character       \
+                                             arrays will be printed as         \
+                                             strings enclosed in quotes. */    \
+              boolean             more,   /* true if more data for this row    \
+                                             will follow, so add trailing      \
+                                             comma */                          \
+              boolean             lastrow,/* true if this is the last row      \
+                                             for this variable, so terminate   \
+                                             with ";" instead of "," */        \
+              const type         *vals,   /* pointer to block of values */     \
+              const struct fspec *fsp,    /* formatting specs */               \
+              const MPI_Offset   *cor)    /* corner coordinates */             \
+{                                                                              \
+    long iel;                                                                  \
+    char sout[100];  /* temporary string for each encoded output */            \
+                                                                               \
+    for (iel = 0; iel < len-1; iel++) {                                        \
+        print##fn##val(sout, fmt, vp, *vals++);                                \
+        if (fsp->full_data_cmnts) {                                            \
+            Printf("%s", sout);                                                \
+            Printf(",");                                                       \
+            annotate (vp, fsp, cor, iel);                                      \
+        } else {                                                               \
+            (void) strcat(sout, ", ");                                         \
+            lput(sout);                                                        \
+        }                                                                      \
+    }                                                                          \
+    print##fn##val(sout, fmt, vp, *vals++);                                    \
+    if (fsp->full_data_cmnts) {                                                \
+        Printf("%s", sout);                                                    \
+        lastdelim (more, lastrow);                                             \
+        annotate (vp, fsp, cor, iel);                                          \
+    } else {                                                                   \
+        lput(sout);                                                            \
+        lastdelim2 (more, lastrow);                                            \
+    }                                                                          \
 }
 
-
-/*
- * Print a number of short variable values, where the optional comments
- * for each value identify the variable, and each dimension index.
- */
-static void
-pr_svals(
-     const struct ncvar *vp,		/* variable */
-     size_t len,		/* number of values to print */
-     const char *fmt,		/* printf format used for each value.  If
-				 * ncmpi_type is NC_CHAR and this is NULL,
-				 * character arrays will be printed as
-				 * strings enclosed in quotes.  */
-     boolean more,		/* true if more data for this row will
-				 * follow, so add trailing comma */
-     boolean lastrow,		/* true if this is the last row for this
-				 * variable, so terminate with ";" instead
-				 * of "," */
-     const short *vals,		/* pointer to block of values */
-     const struct fspec* fsp,	/* formatting specs */
-     const MPI_Offset *cor		/* corner coordinates */
-     )
-{
-    long iel;
-    char sout[100];		/* temporary string for each encoded output */
-
-    for (iel = 0; iel < len-1; iel++) {
-	printsval(sout, fmt, vp, *vals++);
-	if (fsp->full_data_cmnts) {
-	    Printf("%s", sout);
-	    Printf(",");
-	    annotate (vp, fsp, cor, iel);
-	} else {
-	    (void) strcat(sout, ", ");
-	    lput(sout);
-	}
-    }
-    printsval(sout, fmt, vp, *vals++);
-    if (fsp->full_data_cmnts) {
-	Printf("%s", sout);
-	lastdelim (more, lastrow);
-	annotate (vp, fsp, cor, iel);
-    } else {
-	lput(sout);
-	lastdelim2 (more, lastrow);
-    }
-}
-
-
-
-
-/*
- * Print a number of int variable values, where the optional comments
- * for each value identify the variable, and each dimension index.
- */
-static void
-pr_ivals(
-     const struct ncvar *vp,		/* variable */
-     size_t len,		/* number of values to print */
-     const char *fmt,		/* printf format used for each value.  If
-				 * ncmpi_type is NC_CHAR and this is NULL,
-				 * character arrays will be printed as
-				 * strings enclosed in quotes.  */
-     boolean more,		/* true if more data for this row will
-				 * follow, so add trailing comma */
-     boolean lastrow,		/* true if this is the last row for this
-				 * variable, so terminate with ";" instead
-				 * of "," */
-     const int *vals,		/* pointer to block of values */
-     const struct fspec* fsp,	/* formatting specs */
-     const MPI_Offset *cor		/* corner coordinates */
-     )
-{
-    long iel;
-    char sout[100];		/* temporary string for each encoded output */
-
-    for (iel = 0; iel < len-1; iel++) {
-	printival(sout, fmt, vp, *vals++);
-	if (fsp->full_data_cmnts) {
-	    Printf("%s", sout);
-	    Printf(",");
-	    annotate (vp, fsp, cor, iel);
-	} else {
-	    (void) strcat(sout, ", ");
-	    lput(sout);
-	}
-    }
-    printival(sout, fmt, vp, *vals++);
-    if (fsp->full_data_cmnts) {
-	Printf("%s", sout);
-	lastdelim (more, lastrow);
-	annotate (vp, fsp, cor, iel);
-    } else {
-	lput(sout);
-	lastdelim2 (more, lastrow);
-    }
-}
-
-
-/*
- * Print a number of float variable values, where the optional comments
- * for each value identify the variable, and each dimension index.
- */
-static void
-pr_fvals(
-     const struct ncvar *vp,		/* variable */
-     size_t len,			/* number of values to print */
-     const char *fmt,		/* printf format used for each value.  If
-				 * ncmpi_type is NC_CHAR and this is NULL,
-				 * character arrays will be printed as
-				 * strings enclosed in quotes.  */
-     boolean more,		/* true if more data for this row will
-				 * follow, so add trailing comma */
-     boolean lastrow,		/* true if this is the last row for this
-				 * variable, so terminate with ";" instead
-				 * of "," */
-     const float *vals,		/* pointer to block of values */
-     const struct fspec* fsp,	/* formatting specs */
-     const MPI_Offset *cor		/* corner coordinates */
-     )
-{
-    long iel;
-    char sout[100];		/* temporary string for each encoded output */
-
-    for (iel = 0; iel < len-1; iel++) {
-	printfval(sout, fmt, vp, *vals++);
-	if (fsp->full_data_cmnts) {
-	    Printf("%s", sout);
-	    Printf(",");
-	    annotate (vp, fsp, cor, iel);
-	} else {
-	    (void) strcat(sout, ", ");
-	    lput(sout);
-	}
-    }
-    printfval(sout, fmt, vp, *vals++);
-    if (fsp->full_data_cmnts) {
-	Printf("%s", sout);
-	lastdelim (more, lastrow);
-	annotate (vp, fsp, cor, iel);
-    } else {
-	lput(sout);
-	lastdelim2 (more, lastrow);
-    }
-}
-
-
-/*
- * Print a number of double variable values, where the optional comments
- * for each value identify the variable, and each dimension index.
- */
-static void
-pr_dvals(
-     const struct ncvar *vp,		/* variable */
-     size_t len,			/* number of values to print */
-     const char *fmt,		/* printf format used for each value.  If
-				 * ncmpi_type is NC_CHAR and this is NULL,
-				 * character arrays will be printed as
-				 * strings enclosed in quotes.  */
-     boolean more,		/* true if more data for this row will
-				 * follow, so add trailing comma */
-     boolean lastrow,		/* true if this is the last row for this
-				 * variable, so terminate with ";" instead
-				 * of "," */
-     const double *vals,	/* pointer to block of values */
-     const struct fspec* fsp,	/* formatting specs */
-     const MPI_Offset *cor		/* corner coordinates */
-     )
-{
-    long iel;
-    char sout[100];		/* temporary string for each encoded output */
-
-    for (iel = 0; iel < len-1; iel++) {
-	printdval(sout, fmt, vp, *vals++);
-	if (fsp->full_data_cmnts) {
-	    Printf("%s", sout);
-	    Printf(",");
-	    annotate (vp, fsp, cor, iel);
-	} else {
-	    (void) strcat(sout, ", ");
-	    lput(sout);
-	}
-    }
-    printdval(sout, fmt, vp, *vals++);
-    if (fsp->full_data_cmnts) {
-	Printf("%s", sout);
-	lastdelim (more, lastrow);
-	annotate (vp, fsp, cor, iel);
-    } else {
-	lput(sout);
-	lastdelim2 (more, lastrow);
-    }
-}
-
+/*----< pr_bvals() >----------------------------------------------------------*/
+/*----< pr_ubvals() >---------------------------------------------------------*/
+/*----< pr_svals() >----------------------------------------------------------*/
+/*----< pr_usvals() >---------------------------------------------------------*/
+/*----< pr_ivals() >----------------------------------------------------------*/
+/*----< pr_uivals() >---------------------------------------------------------*/
+/*----< pr_fvals() >----------------------------------------------------------*/
+/*----< pr_dvals() >----------------------------------------------------------*/
+/*----< pr_llvals() >---------------------------------------------------------*/
+/*----< pr_ullvals() >--------------------------------------------------------*/
+PR_VALS(b,   signed char)
+PR_VALS(ub,  unsigned char)
+PR_VALS(s,   short)
+PR_VALS(us,  unsigned short)
+PR_VALS(i,   int)
+PR_VALS(ui,  unsigned int)
+PR_VALS(f,   float)
+PR_VALS(d,   double)
+PR_VALS(ll,  long long)
+PR_VALS(ull, unsigned long long)
 
 /*
  * Updates a vector of ints, odometer style.  Returns 0 if odometer
@@ -844,6 +654,36 @@ vardata(
 		    ncmpi_get_vara_double_all(ncid, varid, cor, edg, (double *)vals) );
 	        pr_dvals(vp, toget, fmt, left > toget, lastrow,
 			 (double *) vals, fsp, cor);
+		break;
+	    case NC_UBYTE:
+		NC_CHECK(
+		    ncmpi_get_vara_uchar_all(ncid, varid, cor, edg, (unsigned char *)vals) );
+	        pr_ubvals(vp, toget, fmt, left > toget, lastrow,
+			 (unsigned char *) vals, fsp, cor);
+		break;
+	    case NC_USHORT:
+		NC_CHECK(
+		    ncmpi_get_vara_ushort_all(ncid, varid, cor, edg, (unsigned short *)vals) );
+	        pr_usvals(vp, toget, fmt, left > toget, lastrow,
+			 (unsigned short *) vals, fsp, cor);
+		break;
+	    case NC_UINT:
+		NC_CHECK(
+		    ncmpi_get_vara_uint_all(ncid, varid, cor, edg, (unsigned int *)vals) );
+	        pr_uivals(vp, toget, fmt, left > toget, lastrow,
+			 (unsigned int *) vals, fsp, cor);
+		break;
+	    case NC_INT64:
+		NC_CHECK(
+		    ncmpi_get_vara_longlong_all(ncid, varid, cor, edg, (long long *)vals) );
+	        pr_llvals(vp, toget, fmt, left > toget, lastrow,
+			 (long long *) vals, fsp, cor);
+		break;
+	    case NC_UINT64:
+		NC_CHECK(
+		    ncmpi_get_vara_ulonglong_all(ncid, varid, cor, edg, (unsigned long long *)vals) );
+	        pr_ullvals(vp, toget, fmt, left > toget, lastrow,
+			 (unsigned long long *) vals, fsp, cor);
 		break;
 	    default:
 		error("vardata: bad type");

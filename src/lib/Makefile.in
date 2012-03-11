@@ -47,7 +47,18 @@ LIB_CSRCS = \
 	m_getput_varx.c \
 	nonblocking.c   \
         malloc.c \
-	utf8proc.c
+	utf8proc.c \
+	getputn_schar.c \
+	getputn_uchar.c \
+	getputn_short.c \
+	getputn_ushort.c \
+	getputn_int.c \
+	getputn_uint.c \
+	getputn_float.c \
+	getputn_double.c \
+	getputn_int64.c \
+	getputn_uint64.c \
+	swap.c
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \

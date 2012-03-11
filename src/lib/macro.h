@@ -22,7 +22,7 @@
 void *NCI_Malloc_fn(size_t size, int lineno, const char *fname);
 void *NCI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
 void *NCI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
-void NCI_Free_fn(void *ptr, int lineno, const char *fname);
+void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
 
 #define NCI_Malloc(a) NCI_Malloc_fn(a,__LINE__,__FILE__)
 #define NCI_Calloc(a,b) NCI_Calloc_fn(a,b,__LINE__,__FILE__)
@@ -81,10 +81,10 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
         nelems = ncp->numrecs;                      \
 }
 
-#define GET_NUM_ELEMENTS {           \
+#define GET_NUM_ELEMENTS {            \
     int _i;                           \
-    nelems = 1;                      \
-    for (_i=0; _i<varp->ndims; _i++)    \
+    nelems = 1;                       \
+    for (_i=0; _i<varp->ndims; _i++)  \
         nelems *= count[_i];          \
 }
 
@@ -114,7 +114,7 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
 }
 
 #define CHECK_ECHAR(varp) {                                                \
-    /* unable to type convert for char type */                             \
+    /* netcdf makes it illegal to type convert char and numbers */         \
     if ( ncmpii_echar((varp)->type, ptype) ) { /* API error */             \
         /* uncomment to print debug message                                \
         int rank;                                                          \
@@ -164,44 +164,78 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
     }                                                                      \
 }
 
-#define DATATYPE_GET_CONVERT(vartype, inbuf, outbuf, cnelems, ptype) {       \
-    switch( vartype ) {                                                      \
+#define DATATYPE_GET_CONVERT(vartype, inbuf, outbuf, cnelems, memtype) {     \
+    /* vartype is the variable's data type defined in the nc file            \
+     * memtype is the I/O buffers data type (MPI_Datatype)  */               \
+    switch(vartype) {                                                        \
         case NC_BYTE:                                                        \
-            status = ncmpii_x_getn_schar(inbuf, outbuf, cnelems, ptype);     \
+            status = ncmpii_x_getn_schar(inbuf, outbuf, cnelems, memtype);   \
+            break;                                                           \
+        case NC_UBYTE:                                                       \
+            status = ncmpii_x_getn_uchar(inbuf, outbuf, cnelems, memtype);   \
             break;                                                           \
         case NC_SHORT:                                                       \
-            status = ncmpii_x_getn_short(inbuf, outbuf, cnelems, ptype);     \
+            status = ncmpii_x_getn_short(inbuf, outbuf, cnelems, memtype);   \
+            break;                                                           \
+        case NC_USHORT:                                                      \
+            status = ncmpii_x_getn_ushort(inbuf, outbuf, cnelems, memtype);  \
             break;                                                           \
         case NC_INT:                                                         \
-            status = ncmpii_x_getn_int(inbuf, outbuf, cnelems, ptype);       \
+            status = ncmpii_x_getn_int(inbuf, outbuf, cnelems, memtype);     \
+            break;                                                           \
+        case NC_UINT:                                                        \
+            status = ncmpii_x_getn_uint(inbuf, outbuf, cnelems, memtype);    \
             break;                                                           \
         case NC_FLOAT:                                                       \
-            status = ncmpii_x_getn_float(inbuf, outbuf, cnelems, ptype);     \
+            status = ncmpii_x_getn_float(inbuf, outbuf, cnelems, memtype);   \
             break;                                                           \
         case NC_DOUBLE:                                                      \
-            status = ncmpii_x_getn_double(inbuf, outbuf, cnelems, ptype);    \
+            status = ncmpii_x_getn_double(inbuf, outbuf, cnelems, memtype);  \
+            break;                                                           \
+        case NC_INT64:                                                       \
+            status = ncmpii_x_getn_int64(inbuf, outbuf, cnelems, memtype);   \
+            break;                                                           \
+        case NC_UINT64:                                                      \
+            status = ncmpii_x_getn_uint64(inbuf, outbuf, cnelems, memtype);  \
             break;                                                           \
         default:                                                             \
             break;                                                           \
     }                                                                        \
 }
 
-#define DATATYPE_PUT_CONVERT(vartype, outbuf, inbuf, cnelems, ptype) {       \
-    switch( vartype ) {                                                      \
+#define DATATYPE_PUT_CONVERT(vartype, outbuf, inbuf, cnelems, memtype) {     \
+    /* vartype is the variable's data type defined in the nc file            \
+     * memtype is the I/O buffers data type (MPI_Datatype)  */               \
+    switch(vartype) {                                                        \
         case NC_BYTE:                                                        \
-            status = ncmpii_x_putn_schar(outbuf, inbuf, cnelems, ptype);     \
+            status = ncmpii_x_putn_schar(outbuf, inbuf, cnelems, memtype);   \
+            break;                                                           \
+        case NC_UBYTE:                                                       \
+            status = ncmpii_x_putn_uchar(outbuf, inbuf, cnelems, memtype);   \
             break;                                                           \
         case NC_SHORT:                                                       \
-            status = ncmpii_x_putn_short(outbuf, inbuf, cnelems, ptype);     \
+            status = ncmpii_x_putn_short(outbuf, inbuf, cnelems, memtype);   \
+            break;                                                           \
+        case NC_USHORT:                                                      \
+            status = ncmpii_x_putn_ushort(outbuf, inbuf, cnelems, memtype);  \
             break;                                                           \
         case NC_INT:                                                         \
-            status = ncmpii_x_putn_int(outbuf, inbuf, cnelems, ptype);       \
+            status = ncmpii_x_putn_int(outbuf, inbuf, cnelems, memtype);     \
+            break;                                                           \
+        case NC_UINT:                                                        \
+            status = ncmpii_x_putn_uint(outbuf, inbuf, cnelems, memtype);    \
             break;                                                           \
         case NC_FLOAT:                                                       \
-            status = ncmpii_x_putn_float(outbuf, inbuf, cnelems, ptype);     \
+            status = ncmpii_x_putn_float(outbuf, inbuf, cnelems, memtype);   \
             break;                                                           \
         case NC_DOUBLE:                                                      \
-            status = ncmpii_x_putn_double(outbuf, inbuf, cnelems, ptype);    \
+            status = ncmpii_x_putn_double(outbuf, inbuf, cnelems, memtype);  \
+            break;                                                           \
+        case NC_INT64:                                                       \
+            status = ncmpii_x_putn_int64(outbuf, inbuf, cnelems, memtype);   \
+            break;                                                           \
+        case NC_UINT64:                                                      \
+            status = ncmpii_x_putn_uint64(outbuf, inbuf, cnelems, memtype);  \
             break;                                                           \
         default:                                                             \
             break;                                                           \
@@ -215,20 +249,20 @@ void NCI_Free_fn(void *ptr, int lineno, const char *fname);
                                                                              \
     for (_i=0; _i<varp->ndims; _i++) {                                       \
         NC_dim *dimp;                                                        \
-        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)varp->dimids[_i]); \
+        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)varp->dimids[_i]);\
         if (dimp->size == NC_UNLIMITED)                                      \
-            count[_i] = NC_get_numrecs(ncp);                                  \
+            count[_i] = NC_get_numrecs(ncp);                                 \
         else                                                                 \
-            count[_i] = dimp->size;                                           \
-        start[_i] = 0;                                                        \
+            count[_i] = dimp->size;                                          \
+        start[_i] = 0;                                                       \
     }                                                                        \
 }
 
 #define GET_ONE_COUNT {                                                      \
-    int _i;                                                                   \
+    int _i;                                                                  \
     count = (MPI_Offset*) NCI_Malloc(varp->ndims * sizeof(MPI_Offset));      \
-    for (_i=0; _i<varp->ndims; _i++)                                            \
-        count[_i] = 1;                                                        \
+    for (_i=0; _i<varp->ndims; _i++)                                         \
+        count[_i] = 1;                                                       \
 }
 
 #define CHECK_INDEP_FH {                                                      \

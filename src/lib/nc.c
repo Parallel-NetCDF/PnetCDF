@@ -251,10 +251,12 @@ ncmpi_set_default_format(int format, int *old_formatp)
 {
     /* Return existing format if desired. */
     if (old_formatp)
-      *old_formatp = default_create_format;
+        *old_formatp = default_create_format;
 
     /* Make sure only valid format is set. */
-    if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT && format != NC_FORMAT_64BIT_DATA  ){
+    if (format != NC_FORMAT_CLASSIC &&
+        format != NC_FORMAT_64BIT &&
+        format != NC_FORMAT_64BIT_DATA) {
       return NC_EINVAL;
     }
     default_create_format = format;
@@ -311,16 +313,23 @@ NCcktype()
 int
 ncmpii_cktype(nc_type type)
 {
-        switch((int)type){
+    switch ((int)type) {
         case NC_BYTE:
         case NC_CHAR:
         case NC_SHORT:
         case NC_INT:
         case NC_FLOAT:
         case NC_DOUBLE:
-                return(NC_NOERR);
-        }
-        return(NC_EBADTYPE);
+        /* case NC_LONG: */
+        case NC_UBYTE:
+        case NC_USHORT:
+        case NC_UINT:
+        case NC_INT64:
+        case NC_UINT64:
+        case NC_STRING:
+             return (NC_NOERR);
+    }
+    return (NC_EBADTYPE);
 }
 
 
@@ -331,25 +340,25 @@ ncmpii_cktype(nc_type type)
 MPI_Offset
 ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
 {
-        switch(type){
+    switch(type){
         case NC_BYTE:
-        case NC_CHAR:
-                return xbufsize;
-        case NC_SHORT:
-                return xbufsize/X_SIZEOF_SHORT;
-        case NC_INT:
-                return xbufsize/X_SIZEOF_INT;
-        case NC_FLOAT:
-                return xbufsize/X_SIZEOF_FLOAT;
-        case NC_DOUBLE:
-                return xbufsize/X_SIZEOF_DOUBLE;
+        case NC_UBYTE:
+        case NC_CHAR:   return xbufsize;
+        case NC_SHORT:  return xbufsize/X_SIZEOF_SHORT;
+        case NC_USHORT: return xbufsize/X_SIZEOF_USHORT;
+        case NC_INT:    return xbufsize/X_SIZEOF_INT;
+        case NC_UINT:   return xbufsize/X_SIZEOF_UINT;
+        case NC_FLOAT:  return xbufsize/X_SIZEOF_FLOAT;
+        case NC_DOUBLE: return xbufsize/X_SIZEOF_DOUBLE;
+        case NC_INT64:  return xbufsize/X_SIZEOF_INT64;
+        case NC_UINT64: return xbufsize/X_SIZEOF_UINT64;
         default:
                 assert("ncmpix_howmany: Bad type" == 0);
                 return(0);
-        }
+    }
 }
 
-#define        D_RNDUP(x, align) _RNDUP(x, (off_t)(align))
+#define D_RNDUP(x, align) _RNDUP(x, (off_t)(align))
 
 /*----< NC_begins() >--------------------------------------------------------*/
 /*
@@ -581,7 +590,7 @@ ncmpii_write_numrecs(NC *ncp)
      */
     nrecs = ncp->numrecs;
     if (ncp->flags & NC_64BIT_DATA)
-        len = X_SIZEOF_LONG;
+        len = X_SIZEOF_INT64;
     else
         len = X_SIZEOF_SIZE_T;
     pos = buf = (void *)NCI_Malloc(len);

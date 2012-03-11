@@ -37,6 +37,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
     /* unsigned char types */
     if (type == MPI_UNSIGNED_CHAR)
         return MPI_UNSIGNED_CHAR;
+
 #ifdef HAVE_MPI_INTEGER1
     if (type == MPI_INTEGER1)
         return MPI_BYTE;
@@ -52,22 +53,30 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
   #endif
     if (type == MPI_SHORT)
         return MPI_SHORT;
+
+    if (type == MPI_UNSIGNED_SHORT)
+        return MPI_UNSIGNED_SHORT;
 #endif
 
     /* 4-byte integer types */
   {
-    MPI_Datatype int_4byte;
+    MPI_Datatype int_4byte, uint_4byte;
 #if (SIZEOF_INT == 4)
-    int_4byte = MPI_INT;
+     int_4byte = MPI_INT;
+    uint_4byte = MPI_UNSIGNED;
 #elif (SIZEOF_SHORT == 4)
-    int_4byte = MPI_SHORT;
+     int_4byte = MPI_SHORT;
+    uint_4byte = MPI_UNSIGNED_SHORT;
 #else
-    int_4byte = MPI_DATATYPE_NULL; /* no 4-byte type? */
+     int_4byte = MPI_DATATYPE_NULL; /* no 4-byte type? */
+    uint_4byte = MPI_DATATYPE_NULL;
 #endif
 
 #ifdef HAVE_MPI_INTEGER
     if (type == MPI_INTEGER)
         return int_4byte;
+    if (type == MPI_UNSIGNED)
+        return uint_4byte;
 #endif
 #ifdef HAVE_MPI_INTEGER4
     if (type == MPI_INTEGER4)
@@ -76,13 +85,19 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 #if (SIZEOF_LONG == 4)
     if (type == MPI_LONG)
         return int_4byte;
+    if (type == MPI_UNSIGNED_LONG)
+        return uint_4byte;
 #endif
 #if (SIZEOF_INT == 4)
     if (type == MPI_INT)
         return MPI_INT;
+    if (type == MPI_UNSIGNED)
+        return MPI_UNSIGNED;
 #elif (SIZEOF_SHORT == 4)
     if (type == MPI_SHORT)
         return MPI_SHORT;
+    if (type == MPI_UNSIGNED_SHORT)
+        return MPI_UNSIGNED_SHORT;
 #endif
   }
 
@@ -98,10 +113,20 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
         return MPI_LONG;
       #endif
   #endif
+  #ifdef HAVE_MPI_UNSIGNED_INTEGER8
+    if (type == MPI_UNSIGNED_INTEGER8)
+      #if (SIZEOF_UINT == 8)
+        return MPI_UNSIGNED;
+      #else
+        return MPI_UNSIGNED_LONG;
+      #endif
+  #endif
 
   #if (SIZEOF_INT == 8)
     if (type == MPI_INT)
         return MPI_INT;
+    if (type == MPI_UNSIGNED)
+        return MPI_UNSIGNED;
   #endif
   #if (SIZEOF_LONG == 8)
     if (type == MPI_LONG)
@@ -109,6 +134,12 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 	return MPI_INT;
       #else
 	return MPI_LONG;
+      #endif
+    if (type == MPI_UNSIGNED_LONG)
+      #if (SIZEOF_UINT == 8)
+	return MPI_UNSIGNED;
+      #else
+	return MPI_UNSIGNED_LONG;
       #endif
   #endif
 #endif
@@ -136,6 +167,12 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 #endif
     if (type == MPI_DOUBLE)
         return MPI_DOUBLE;
+
+    if (type == MPI_LONG_LONG_INT)
+        return MPI_LONG_LONG_INT;
+
+    if (type == MPI_UNSIGNED_LONG_LONG)
+        return MPI_UNSIGNED_LONG_LONG;
 
 /* HP-MPI for example needs to handle MPI_LB and MPI_UB */
 #ifdef HAVE_MPI_LB

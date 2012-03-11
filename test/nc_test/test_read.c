@@ -605,7 +605,7 @@ test_ncmpi_inq_var(void)
     int i;
     int err;
     char name[NC_MAX_NAME];
-    ncmpi_type datatype;
+    nc_type datatype;
     int ndims;
     int dimids[MAX_RANK];
     int natts;
@@ -794,7 +794,7 @@ test_ncmpi_inq_vartype(void)
     int ncid;
     int i;
     int err;
-    ncmpi_type datatype;
+    nc_type datatype;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
@@ -1407,7 +1407,7 @@ test_ncmpi_inq_att(void)
     int i;
     int j;
     int err;
-    ncmpi_type t;
+    nc_type t;
     MPI_Offset n;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
@@ -1490,7 +1490,7 @@ test_ncmpi_inq_atttype(void)
     int i;
     int j;
     int err;
-    ncmpi_type datatype;
+    nc_type datatype;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)

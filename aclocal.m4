@@ -860,6 +860,7 @@ AC_DEFUN([UD_FORTRAN_TYPES],
 	AC_REQUIRE([UD_CHECK_FCALLSCSUB])
 	UD_CHECK_FORTRAN_TYPE(NF_INT1_T, byte integer*1 "integer(kind=1)")
 	UD_CHECK_FORTRAN_TYPE(NF_INT2_T, integer*2 "integer(kind=2)")
+	UD_CHECK_FORTRAN_TYPE(NF_INT8_T, integer*8 "integer(kind=8)")
 
 	case "${NF_INT1_T}" in
 	    '') ;;
@@ -874,6 +875,13 @@ AC_DEFUN([UD_FORTRAN_TYPES],
 	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT2_T, short, INT2)
 		UD_CHECK_CTYPE_FORTRAN($NF_INT2_T, int, INT2)
 		UD_CHECK_CTYPE_FORTRAN($NF_INT2_T, long, INT2)
+		;;
+	esac
+	case "${NF_INT8_T}" in
+	    '') ;;
+	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT8_T, int, INT8)
+		UD_CHECK_CTYPE_FORTRAN($NF_INT8_T, "long", INT8)
+		UD_CHECK_CTYPE_FORTRAN($NF_INT8_T, "long long", INT8)
 		;;
 	esac
 	UD_CHECK_CTYPE_FORTRAN(integer, int long, INT)

@@ -26,7 +26,10 @@ dnl dnl dnl
 dnl
 dnl NCT_ITYPE(type)
 dnl
-define(`NCT_ITYPE', ``NCT_'Upcase($1)')dnl
+define(`NCT_ITYPE',    ``NCT_'Upcase($1)')dnl
+define(`NC_TYPE',      ``NC_'Upcase($1)')dnl
+define(`X_MIN',        ``X_'Upcase($1)_MIN')dnl
+define(`X_MAX',        ``X_'Upcase($1)_MAX')dnl
 dnl
 
 #include "tests.h"
@@ -41,7 +44,7 @@ define(`HASH',dnl
 static
 double
 hash_$1(
-    const ncmpi_type type,
+    const nc_type type,
     const int rank,
     const MPI_Offset *index,
     const nct_itype itype)
@@ -61,6 +64,10 @@ HASH(int)
 HASH(long)
 HASH(float)
 HASH(double)
+HASH(ushort)
+HASH(uint)
+HASH(longlong)
+HASH(ulonglong)
 
 
 dnl CHECK_VARS(TYPE)
@@ -81,14 +88,14 @@ check_vars_$1(const char *filename)
     int  i;
     size_t  j;
     $1 value;
-    ncmpi_type datatype;
+    nc_type datatype;
     int ndims;
     int dimids[MAX_RANK];
-    double expect;
     char name[NC_MAX_NAME];
     MPI_Offset length;
     int canConvert;     /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
+    double expect;
 
     err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
@@ -114,32 +121,34 @@ check_vars_$1(const char *filename)
                     error("Unexpected shape");
             }
             for (j = 0; j < var_nels[i]; j++) {
+                ncmpi_begin_indep_data(ncid);
                 err = toMixedBase(j, var_rank[i], var_shape[i], index);
                 IF (err != NC_NOERR)
                     error("error in toMixedBase 2");
-                expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
-                ncmpi_begin_indep_data(ncid);
+
                 err = ncmpi_get_var1_$1(ncid, i, index, &value);
-                if (inRange3(expect,datatype,NCT_ITYPE($1))) {
-                    if (expect >= $1_min && expect <= $1_max) {
-                        IF (err != NC_NOERR) {
-                            error("ncmpi_get_var1_$1: %s", ncmpi_strerror(err));
-                        } else {
-                            IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
-                                error("Var value read not that expected");
-                                if (verbose) {
-                                    error("\n");
-                                    error("varid: %d, ", i);
-                                    error("var_name: %s, ", var_name[i]);
-                                    error("index:");
-                                    for (d = 0; d < var_rank[i]; d++)
-                                        error(" %d", index[d]);
-                                    error(", expect: %g, ", expect);
-                                    error("got: %g", (double) value);
-                                }
-                            } else {
-                                ++nok;
+
+                expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
+                if (inRange3(expect,datatype,NCT_ITYPE($1)) &&
+                    expect >= $1_min && expect <= $1_max) {
+                    IF (err != NC_NOERR) {
+                        error("ncmpi_get_var1_$1: %s", ncmpi_strerror(err));
+                    } else {
+                        IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
+                            error("Var value read not that expected");
+                            if (verbose) {
+                                error("\n");
+                                error("varid: %d, ", i);
+                                error("var_name: %s, ", var_name[i]);
+                                error("att_type: %s, ", s_nc_type(var_type[i]));
+                                error("index:");
+                                for (d = 0; d < var_rank[i]; d++)
+                                    error(" %d", index[d]);
+                                error(", expect: %g, ", expect);
+                                error("got: %g", (double) value);
                             }
+                        } else {
+                            ++nok;
                         }
                     }
                 }
@@ -162,6 +171,10 @@ CHECK_VARS(int)
 CHECK_VARS(long)
 CHECK_VARS(float)
 CHECK_VARS(double)
+CHECK_VARS(ushort)
+CHECK_VARS(uint)
+CHECK_VARS(longlong)
+CHECK_VARS(ulonglong)
 
 
 dnl CHECK_ATTS(TYPE)         numeric only
@@ -181,63 +194,65 @@ check_atts_$1(int  ncid)
     int  j;
     MPI_Offset  k;
     $1 value[MAX_NELS];
-    ncmpi_type datatype;
-    double expect[MAX_NELS];
+    nc_type datatype;
     MPI_Offset length;
     size_t nInExtRange;  /* number values within external range */
     size_t nInIntRange;  /* number values within internal range */
     int canConvert;     /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
+    double expect[MAX_NELS];
 
     for (i = -1; i < NVARS; i++) {
         for (j = 0; j < NATTS(i); j++) {
             canConvert = (ATT_TYPE(i,j) == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
-            if (canConvert) {
-                err = ncmpi_inq_att(ncid, i, ATT_NAME(i,j), &datatype, &length);
+            if (!canConvert) continue;
+
+            err = ncmpi_inq_att(ncid, i, ATT_NAME(i,j), &datatype, &length);
+            IF (err != NC_NOERR)
+                error("ncmpi_inq_att: %s", ncmpi_strerror(err));
+            IF (datatype != ATT_TYPE(i,j))
+            error("ncmpi_inq_att: unexpected type");
+            IF (length != ATT_LEN(i,j))
+                error("ncmpi_inq_att: unexpected length");
+            assert(length <= MAX_NELS);
+            nInIntRange = nInExtRange = 0;
+            for (k = 0; k < length; k++) {
+                expect[k] = hash4( datatype, -1, &k, NCT_ITYPE($1));
+                if (inRange3(expect[k], datatype, NCT_ITYPE($1))) {
+                    ++nInExtRange;
+                    if (expect[k] >= $1_min && expect[k] <= $1_max)
+                        ++nInIntRange;
+                }
+            }
+            err = ncmpi_get_att_$1(ncid, i, ATT_NAME(i,j), value);
+            if (nInExtRange == length && nInIntRange == length) {
                 IF (err != NC_NOERR)
-                    error("ncmpi_inq_att: %s", ncmpi_strerror(err));
-                IF (datatype != ATT_TYPE(i,j))
-                error("ncmpi_inq_att: unexpected type");
-                IF (length != ATT_LEN(i,j))
-                    error("ncmpi_inq_att: unexpected length");
-                assert(length <= MAX_NELS);
-                nInIntRange = nInExtRange = 0;
-                for (k = 0; k < length; k++) {
-                    expect[k] = hash4( datatype, -1, &k, NCT_ITYPE($1));
-                    if (inRange3(expect[k], datatype, NCT_ITYPE($1))) {
-                        ++nInExtRange;
-                        if (expect[k] >= $1_min && expect[k] <= $1_max)
-                            ++nInIntRange;
-                    }
-                }
-                err = ncmpi_get_att_$1(ncid, i, ATT_NAME(i,j), value);
-                if (nInExtRange == length && nInIntRange == length) {
-                    IF (err != NC_NOERR)
-                        error("%s", ncmpi_strerror(err));
-                } else {
-                    IF (err != NC_NOERR && err != NC_ERANGE)
-                        error("OK or Range error: err = %d", err);
-                }
-                for (k = 0; k < length; k++) {
-                    if (inRange3(expect[k],datatype,NCT_ITYPE($1))
-                            && expect[k] >= $1_min && expect[k] <= $1_max) {
-                        IF (!equal(value[k],expect[k],datatype,NCT_ITYPE($1))) {
-                            error("att. value read not that expected");
-                            if (verbose) {
-                                error("\n");
-                                error("varid: %d, ", i);
-                                error("att_name: %s, ", ATT_NAME(i,j));
-                                error("element number: %d ", k);
-                                error("expect: %g, ", expect[k]);
-                                error("got: %g", (double) value[k]);
-                            }
-                        } else {
-                            nok++;
+                    error("%s", ncmpi_strerror(err));
+            } else {
+                IF (err != NC_NOERR && err != NC_ERANGE)
+                    error("OK or Range error: err = %d", err);
+            }
+            for (k = 0; k < length; k++) {
+                if (inRange3(expect[k], datatype, NCT_ITYPE($1)) &&
+                    expect[k] >= $1_min &&
+                    expect[k] <= $1_max) {
+                    IF (!equal(value[k],expect[k],datatype,NCT_ITYPE($1))) {
+                        error("att. value read not that expected");
+                        if (verbose) {
+                            error("\n");
+                            error("varid: %d, ", i);
+                            error("att_name: %s, ", ATT_NAME(i,j));
+                            error("att_type: %s, ", s_nc_type(ATT_TYPE(i,j)));
+                            error("element number: %d ", k);
+                            error("expect: %g, ", expect[k]);
+                            error("got: %g", (double) value[k]);
                         }
+                    } else {
+                        nok++;
                     }
                 }
             }                                               
-        }
+        }                                               
     }
 
     print_nok(nok);
@@ -252,6 +267,10 @@ CHECK_ATTS(int)
 CHECK_ATTS(long)
 CHECK_ATTS(float)
 CHECK_ATTS(double)
+CHECK_ATTS(ushort)
+CHECK_ATTS(uint)
+CHECK_ATTS(longlong)
+CHECK_ATTS(ulonglong)
 
 
 dnl TEST_NC_PUT_VAR1(TYPE)
@@ -317,7 +336,7 @@ test_ncmpi_put_var1_$1(void)
                     IF (err != NC_ERANGE) {
                         error("Range error: err = %d", err);
                         error("\n\t\tfor type %s value %.17e %ld",
-                                s_ncmpi_type(var_type[i]),
+                                s_nc_type(var_type[i]),
                                 (double)value, (long)value);
                     }
                 }
@@ -349,6 +368,10 @@ TEST_NC_PUT_VAR1(int)
 TEST_NC_PUT_VAR1(long)
 TEST_NC_PUT_VAR1(float)
 TEST_NC_PUT_VAR1(double)
+TEST_NC_PUT_VAR1(ushort)
+TEST_NC_PUT_VAR1(uint)
+TEST_NC_PUT_VAR1(longlong)
+TEST_NC_PUT_VAR1(ulonglong)
 
 
 dnl TEST_NC_PUT_VAR(TYPE)
@@ -492,6 +515,10 @@ TEST_NC_PUT_VAR(int)
 TEST_NC_PUT_VAR(long)
 TEST_NC_PUT_VAR(float)
 TEST_NC_PUT_VAR(double)
+TEST_NC_PUT_VAR(ushort)
+TEST_NC_PUT_VAR(uint)
+TEST_NC_PUT_VAR(longlong)
+TEST_NC_PUT_VAR(ulonglong)
 
 
 dnl TEST_NC_PUT_VARA(TYPE)
@@ -584,7 +611,7 @@ test_ncmpi_put_vara_$1(void)
 
         err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
         if (canConvert) {
-            IF (err != NC_NOERR) 
+            IF (err != NC_NOERR)
                 error("%s", ncmpi_strerror(err));
         } else {
             IF (err != NC_ECHAR)
@@ -664,6 +691,10 @@ TEST_NC_PUT_VARA(int)
 TEST_NC_PUT_VARA(long)
 TEST_NC_PUT_VARA(float)
 TEST_NC_PUT_VARA(double)
+TEST_NC_PUT_VARA(ushort)
+TEST_NC_PUT_VARA(uint)
+TEST_NC_PUT_VARA(longlong)
+TEST_NC_PUT_VARA(ulonglong)
 
 
 dnl TEST_NC_PUT_VARS(TYPE)
@@ -838,6 +869,10 @@ TEST_NC_PUT_VARS(int)
 TEST_NC_PUT_VARS(long)
 TEST_NC_PUT_VARS(float)
 TEST_NC_PUT_VARS(double)
+TEST_NC_PUT_VARS(ushort)
+TEST_NC_PUT_VARS(uint)
+TEST_NC_PUT_VARS(longlong)
+TEST_NC_PUT_VARS(ulonglong)
 
 
 dnl TEST_NC_PUT_VARM(TYPE)
@@ -1020,6 +1055,10 @@ TEST_NC_PUT_VARM(int)
 TEST_NC_PUT_VARM(long)
 TEST_NC_PUT_VARM(float)
 TEST_NC_PUT_VARM(double)
+TEST_NC_PUT_VARM(ushort)
+TEST_NC_PUT_VARM(uint)
+TEST_NC_PUT_VARM(longlong)
+TEST_NC_PUT_VARM(ulonglong)
 
 
 void
@@ -1158,4 +1197,8 @@ TEST_NC_PUT_ATT(int)
 TEST_NC_PUT_ATT(long)
 TEST_NC_PUT_ATT(float)
 TEST_NC_PUT_ATT(double)
+TEST_NC_PUT_ATT(ushort)
+TEST_NC_PUT_ATT(uint)
+TEST_NC_PUT_ATT(longlong)
+TEST_NC_PUT_ATT(ulonglong)
 

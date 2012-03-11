@@ -5,4 +5,4 @@ doc:
 	dvipdf pnetcdf-api
 
 clean:
-	rm  *.dvi *.log *.aux
+	$(RM) -f  *.dvi *.log *.aux

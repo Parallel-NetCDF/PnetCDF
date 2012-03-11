@@ -103,18 +103,6 @@ FORTRAN_API void FORT_CALL nc_ignorefpe_(int *doit)
 }
 
 #ifdef F77_NAME_UPPER
-#define min_int_ MIN_INT
-#elif defined(F77_NAME_LOWER_2USCORE)
-#define min_int_  min_int__
-#elif !defined(F77_NAME_LOWER_USCORE)
-#define min_int_  min_int
-/* Else leave name alone */
-#endif
-FORTRAN_API double min_int_() {
-	return INT_MIN;
-}
-
-#ifdef F77_NAME_UPPER
 #define min_schar_ MIN_SCHAR
 #elif defined(F77_NAME_LOWER_2USCORE)
 #define min_schar_  min_schar__
@@ -139,15 +127,27 @@ FORTRAN_API double min_short_() {
 }
 
 #ifdef F77_NAME_UPPER
-#define max_int_ MAX_INT
+#define min_int_ MIN_INT
 #elif defined(F77_NAME_LOWER_2USCORE)
-#define max_int_  max_int__
+#define min_int_  min_int__
 #elif !defined(F77_NAME_LOWER_USCORE)
-#define max_int_  max_int
+#define min_int_  min_int
 /* Else leave name alone */
 #endif
-FORTRAN_API double max_int_() {
-	return INT_MAX;
+FORTRAN_API double min_int_() {
+	return INT_MIN;
+}
+
+#ifdef F77_NAME_UPPER
+#define min_int64_ MIN_INT64
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define min_int64_  min_int64__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define min_int64_  min_int64
+/* Else leave name alone */
+#endif
+FORTRAN_API double min_int64_() {
+	return INT64_MIN;
 }
 
 #ifdef F77_NAME_UPPER
@@ -172,6 +172,30 @@ FORTRAN_API double max_schar_() {
 #endif
 FORTRAN_API double max_short_() {
 	return SHRT_MAX;
+}
+
+#ifdef F77_NAME_UPPER
+#define max_int_ MAX_INT
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define max_int_  max_int__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define max_int_  max_int
+/* Else leave name alone */
+#endif
+FORTRAN_API double max_int_() {
+	return INT_MAX;
+}
+
+#ifdef F77_NAME_UPPER
+#define max_int64_ MAX_INT64
+#elif defined(F77_NAME_LOWER_2USCORE)
+#define max_int64_  max_int64__
+#elif !defined(F77_NAME_LOWER_USCORE)
+#define max_int64_  max_int64
+/* Else leave name alone */
+#endif
+FORTRAN_API double max_int64_() {
+	return INT64_MAX;
 }
 
 #ifdef F77_NAME_UPPER

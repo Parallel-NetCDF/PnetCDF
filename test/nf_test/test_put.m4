@@ -37,8 +37,10 @@ ifelse($1, text, character(len=MAX_NELS) $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,
+ifelse($1, int8, NF_INT8_T $2$3,
 ifelse($1, real, real $2$3,
 ifelse($1, double, doubleprecision $2$3)[]dnl
+)[]dnl
 )[]dnl
 )[]dnl
 )[]dnl
@@ -53,8 +55,10 @@ ifelse($1, text, character $2,
 ifelse($1, int1, NF_INT1_T $2,
 ifelse($1, int2, NF_INT2_T $2,
 ifelse($1, int, integer $2,
+ifelse($1, int8, NF_INT8_T $2,
 ifelse($1, real, real $2,
 ifelse($1, double, doubleprecision $2)[]dnl
+)[]dnl
 )[]dnl
 )[]dnl
 )[]dnl
@@ -1286,6 +1290,7 @@ HASH(int1)
 HASH(int2)
 #endif
 HASH(int)
+HASH(int8)
 HASH(real)
 HASH(double)
 
@@ -1297,6 +1302,7 @@ CHECK_VARS(int1)
 CHECK_VARS(int2)
 #endif
 CHECK_VARS(int)
+CHECK_VARS(int8)
 CHECK_VARS(real)
 CHECK_VARS(double)
 
@@ -1308,6 +1314,7 @@ CHECK_ATTS(int1)
 CHECK_ATTS(int2)
 #endif
 CHECK_ATTS(int)
+CHECK_ATTS(int8)
 CHECK_ATTS(real)
 CHECK_ATTS(double)
 
@@ -1319,6 +1326,7 @@ TEST_NFMPI_PUT_VAR1(int1)
 TEST_NFMPI_PUT_VAR1(int2)
 #endif
 TEST_NFMPI_PUT_VAR1(int)
+TEST_NFMPI_PUT_VAR1(int8)
 TEST_NFMPI_PUT_VAR1(real)
 TEST_NFMPI_PUT_VAR1(double)
 
@@ -1330,6 +1338,7 @@ TEST_NFMPI_PUT_VAR(int1)
 TEST_NFMPI_PUT_VAR(int2)
 #endif
 TEST_NFMPI_PUT_VAR(int)
+TEST_NFMPI_PUT_VAR(int8)
 TEST_NFMPI_PUT_VAR(real)
 TEST_NFMPI_PUT_VAR(double)
 
@@ -1341,6 +1350,7 @@ TEST_NFMPI_PUT_VARA(int1)
 TEST_NFMPI_PUT_VARA(int2)
 #endif
 TEST_NFMPI_PUT_VARA(int)
+TEST_NFMPI_PUT_VARA(int8)
 TEST_NFMPI_PUT_VARA(real)
 TEST_NFMPI_PUT_VARA(double)
 
@@ -1352,6 +1362,7 @@ TEST_NFMPI_PUT_VARS(int1)
 TEST_NFMPI_PUT_VARS(int2)
 #endif
 TEST_NFMPI_PUT_VARS(int)
+TEST_NFMPI_PUT_VARS(int8)
 TEST_NFMPI_PUT_VARS(real)
 TEST_NFMPI_PUT_VARS(double)
 
@@ -1363,6 +1374,7 @@ TEST_NFMPI_PUT_VARM(int1)
 TEST_NFMPI_PUT_VARM(int2)
 #endif
 TEST_NFMPI_PUT_VARM(int)
+TEST_NFMPI_PUT_VARM(int8)
 TEST_NFMPI_PUT_VARM(real)
 TEST_NFMPI_PUT_VARM(double)
 
@@ -1430,5 +1442,6 @@ TEST_NFMPI_PUT_ATT(int1)
 TEST_NFMPI_PUT_ATT(int2)
 #endif
 TEST_NFMPI_PUT_ATT(int)
+TEST_NFMPI_PUT_ATT(int8)
 TEST_NFMPI_PUT_ATT(real)
 TEST_NFMPI_PUT_ATT(double)

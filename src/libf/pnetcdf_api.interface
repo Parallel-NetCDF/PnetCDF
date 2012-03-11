@@ -322,6 +322,22 @@ INTERFACE
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
     END FUNCTION   nfmpi_get_att_double
 
+    INTEGER        FUNCTION nfmpi_put_att_int8(ncid, varid, name, xtype, len, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            CHARACTER(len=*),              INTENT(IN)  :: name
+                            INTEGER,                       INTENT(IN)  :: xtype
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_att_int8
+
+    INTEGER        FUNCTION nfmpi_get_att_int8(ncid, varid, name, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            CHARACTER(len=*),              INTENT(IN)  :: name
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_att_int8
+
 !
 ! independent data mode subroutines:
 !
@@ -546,6 +562,24 @@ INTERFACE
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
     END FUNCTION   nfmpi_get_var_double_all
 
+    INTEGER        FUNCTION nfmpi_put_var_int8(ncid, varid, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_var_int8
+
+    INTEGER        FUNCTION nfmpi_get_var_int8(ncid, varid, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_var_int8
+
+    INTEGER        FUNCTION nfmpi_get_var_int8_all(ncid, varid, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_var_int8_all
+
 !
 ! single variable put/get subroutines:
 !
@@ -655,6 +689,20 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             DOUBLE PRECISION,              INTENT(OUT) :: dval
     END FUNCTION   nfmpi_get_var1_double
+
+    INTEGER        FUNCTION nfmpi_put_var1_int8(ncid, varid, index, i8val)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8val
+    END FUNCTION   nfmpi_put_var1_int8
+
+    INTEGER        FUNCTION nfmpi_get_var1_int8(ncid, varid, index, i8val)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8val
+    END FUNCTION   nfmpi_get_var1_int8
 
 !
 ! variable array put/get subroutines:
@@ -896,6 +944,38 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
     END FUNCTION   nfmpi_get_vara_double_all
+
+    INTEGER        FUNCTION nfmpi_put_vara_int8(ncid, varid, start, count, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_vara_int8
+
+    INTEGER        FUNCTION nfmpi_put_vara_int8_all(ncid, varid, start, count, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_vara_int8_all
+
+    INTEGER        FUNCTION nfmpi_get_vara_int8(ncid, varid, start, count, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_vara_int8
+
+    INTEGER        FUNCTION nfmpi_get_vara_int8_all(ncid, varid, start, count, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_vara_int8_all
 
 !
 ! strided variable put/get subroutines:
@@ -1165,6 +1245,42 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
     END FUNCTION   nfmpi_get_vars_double_all
+
+    INTEGER        FUNCTION nfmpi_put_vars_int8(ncid, varid, start, count, stride, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_vars_int8
+
+    INTEGER        FUNCTION nfmpi_put_vars_int8_all(ncid, varid, start, count, stride, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_vars_int8_all
+
+    INTEGER        FUNCTION nfmpi_get_vars_int8(ncid, varid, start, count, stride, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_vars_int8
+
+    INTEGER        FUNCTION nfmpi_get_vars_int8_all(ncid, varid, start, count, stride, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_vars_int8_all
 
 !
 ! mapped variable put/get subroutines:
@@ -1460,6 +1576,47 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
     END FUNCTION   nfmpi_get_varm_double_all
+
+    INTEGER        FUNCTION nfmpi_put_varm_int8(ncid, varid, start, count, stride, imap, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_varm_int8
+
+    INTEGER        FUNCTION nfmpi_put_varm_int8_all(ncid, varid, start, count, stride, imap, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+    END FUNCTION   nfmpi_put_varm_int8_all
+
+    INTEGER        FUNCTION nfmpi_get_varm_int8(ncid, varid, start, count, stride, imap, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_varm_int8
+
+    INTEGER        FUNCTION nfmpi_get_varm_int8_all(ncid, varid, start, count, stride, imap, i8vals)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+    END FUNCTION   nfmpi_get_varm_int8_all
+
 !
 ! non-blocking variable array iput/iget subroutines:
 !
@@ -1574,6 +1731,20 @@ INTERFACE
                             DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_double
+
+    INTEGER        FUNCTION nfmpi_iput_var_int8(ncid, varid, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var_int8
+
+    INTEGER        FUNCTION nfmpi_iget_var_int8(ncid, varid, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var_int8
 
 !
 ! single variable iput/iget subroutines:
@@ -1699,6 +1870,22 @@ INTERFACE
                             DOUBLE PRECISION,              INTENT(OUT) :: dval
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var1_double
+
+    INTEGER        FUNCTION nfmpi_iput_var1_int8(ncid, varid, index, i8val, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8val
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_var1_int8
+
+    INTEGER        FUNCTION nfmpi_iget_var1_int8(ncid, varid, index, i8val, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8val
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_var1_int8
 
 !
 ! variable array iput/iget subroutines:
@@ -1839,6 +2026,23 @@ INTERFACE
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_double
 
+    INTEGER        FUNCTION nfmpi_iput_vara_int8(ncid, varid, start, count, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vara_int8
+
+    INTEGER        FUNCTION nfmpi_iget_vara_int8(ncid, varid, start, count, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vara_int8
 
 !
 ! strided variable iput/iget subroutines:
@@ -1992,6 +2196,26 @@ INTERFACE
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vars_double
+
+    INTEGER        FUNCTION nfmpi_iput_vars_int8(ncid, varid, start, count, stride, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_vars_int8
+
+    INTEGER        FUNCTION nfmpi_iget_vars_int8(ncid, varid, start, count, stride, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_vars_int8
 
 !
 ! mapped variable iput/iget subroutines:
@@ -2159,6 +2383,28 @@ INTERFACE
                             DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_varm_double
+
+    INTEGER        FUNCTION nfmpi_iput_varm_int8(ncid, varid, start, count, stride, imap, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iput_varm_int8
+
+    INTEGER        FUNCTION nfmpi_iget_varm_int8(ncid, varid, start, count, stride, imap, i8vals, req)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION   nfmpi_iget_varm_int8
 
     INTEGER        FUNCTION nfmpi_wait(ncid, count, req, status)
                             INTEGER,                       INTENT(IN)  :: ncid

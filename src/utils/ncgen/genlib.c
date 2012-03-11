@@ -127,7 +127,7 @@ gen_netcdf(
  */
 static char *
 cstring(
-     ncmpi_type type,		/* netCDF type code */
+     nc_type type,		/* netCDF type code */
      void *valp,		/* pointer to vector of values */
      int num)			/* element of vector desired */
 {
@@ -447,7 +447,7 @@ gen_c(
 /* return Fortran type name for netCDF type, given type code */
 static const char *
 ncftype(
-     ncmpi_type type)		/* netCDF type code */
+     nc_type type)		/* netCDF type code */
 {
     switch (type) {
 
@@ -483,7 +483,7 @@ ncftype(
 /* return Fortran type suffix for netCDF type, given type code */
 const char *
 nfstype(
-     ncmpi_type type)		/* netCDF type code */
+     nc_type type)		/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -511,7 +511,7 @@ nfstype(
  */
 const char *
 nfftype(
-     ncmpi_type type)		/* netCDF type code */
+     nc_type type)		/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -542,7 +542,7 @@ nfftype(
 /* return FORTRAN name for netCDF type, given type code */
 static const char *
 ftypename(
-     ncmpi_type type)			/* netCDF type code */
+     nc_type type)			/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -580,7 +580,7 @@ gen_fortran(
     /* Need how many netCDF types there are, because we create an array
      * for each type of attribute. */
     int ntypes = 6;		/* number of netCDF types, NC_BYTE, ... */
-    ncmpi_type types[6];		/* at least ntypes */
+    nc_type types[6];		/* at least ntypes */
     size_t max_atts[NC_DOUBLE + 1];
 
     types[0] = NC_BYTE;
@@ -883,7 +883,7 @@ fline(
 /* return C name for netCDF type, given type code */
 const char *
 nctype(
-     ncmpi_type type)			/* netCDF type code */
+     nc_type type)			/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -910,7 +910,7 @@ nctype(
  */
 const char *
 ncctype(
-     ncmpi_type type)			/* netCDF type code */
+     nc_type type)			/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -938,7 +938,7 @@ ncctype(
  */
 const char *
 ncstype(
-     ncmpi_type type)			/* netCDF type code */
+     nc_type type)			/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -965,7 +965,7 @@ ncstype(
  */
 const char *
 ncatype(
-     ncmpi_type type)			/* netCDF type code */
+     nc_type type)			/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -990,7 +990,7 @@ ncatype(
 /* return internal size for values of specified netCDF type */
 size_t
 nctypesize(
-     ncmpi_type type)			/* netCDF type code */
+     nc_type type)			/* netCDF type code */
 {
     switch (type) {
       case NC_BYTE:
@@ -1021,7 +1021,7 @@ nctypesize(
  */
 char *
 fstring(
-     ncmpi_type type,		/* netCDF type code */
+     nc_type type,		/* netCDF type code */
      void *valp,		/* pointer to vector of values */
      int num)			/* element of vector desired */
 {
@@ -1286,7 +1286,7 @@ used_in_rec_var(
 /* Return name for Fortran fill constant of specified type */
 static const char *
 f_fill_name(
-    ncmpi_type type
+    nc_type type
     )
 {
     switch(type) {

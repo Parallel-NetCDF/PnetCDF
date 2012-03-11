@@ -1,11 +1,10 @@
-the fortran bindings are automatically generated from the c header file.  This
-is nifty, but not flawless.  Compliation under 'gcc -Wall' will give some
-warnings.  
+The fortran bindings are automatically generated from the c header file.
+This is nifty, but not flawless.  Compliation under 'gcc -Wall' will give
+some warnings.  
 
-If you regenerate the fortran interface, remember to fix the folowing things by hand:
+A new script file names "createffiles" has been created to generate all
+Fortran files. Usage:
 
-nfmpi_create_:
-. include <stdlib.h>
+    % setenv MPICH2SRC /home/src/mpich2-1.2.1
+    % ./createffiles
 
-nfmpi_open_:
-. include <stdlib.h>
