@@ -16,20 +16,18 @@
 #include "macro.h"
 
 
-/* buffer layers:       
-        
-        User Level              buf     (user defined buffer of MPI_Datatype)
-        MPI Datatype Level      cbuf    (contiguous buffer of ptype)
-        NetCDF XDR Level        xbuf    (XDR I/O buffer)
-*/
-
-#define PUT_VAR(fnmode, collmode)                                \
+/* ftype is the variable's nc_type defined in file, eg. int64
+ * btype is the I/O buffer's C data type, eg. long long
+ * buftype is I/O bufer's MPI data type, eg. MPI_UNSIGNED_LONG_LONG
+ * apitype is data type appeared in the API names, eg. ncmpi_get_vara_longlong
+ */
+#define PUT_VAR(iomode, collmode)                                \
 int                                                              \
-ncmpi_put_var##fnmode(int           ncid,                        \
+ncmpi_put_var##iomode(int           ncid,                        \
                       int           varid,                       \
                       const void   *buf,                         \
                       MPI_Offset    bufcount,                    \
-                      MPI_Datatype  datatype)                    \
+                      MPI_Datatype  buftype)                     \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -48,7 +46,7 @@ ncmpi_put_var##fnmode(int           ncid,                        \
                                                                  \
     /* put_var is a special case of put_vars */                  \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
-                                (void*)buf, bufcount, datatype,  \
+                                (void*)buf, bufcount, buftype,   \
                                 WRITE_REQ, collmode);            \
     if (varp->ndims > 0) NCI_Free(start);                        \
                                                                  \
@@ -61,13 +59,13 @@ PUT_VAR(    , INDEP_IO)
 PUT_VAR(_all, COLL_IO)
 
 
-#define GET_VAR(fnmode, collmode)                                \
+#define GET_VAR(iomode, collmode)                                \
 int                                                              \
-ncmpi_get_var##fnmode(int           ncid,                        \
+ncmpi_get_var##iomode(int           ncid,                        \
                       int           varid,                       \
                       void         *buf,                         \
                       MPI_Offset    bufcount,                    \
-                      MPI_Datatype  datatype)                    \
+                      MPI_Datatype  buftype)                     \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -85,7 +83,7 @@ ncmpi_get_var##fnmode(int           ncid,                        \
                                                                  \
     /* get_var is a special case of get_vars */                  \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
-                                buf, bufcount, datatype,         \
+                                buf, bufcount, buftype,          \
                                 READ_REQ, collmode);             \
     if (varp->ndims > 0) NCI_Free(start);                        \
                                                                  \
@@ -98,11 +96,11 @@ GET_VAR(    , INDEP_IO)
 GET_VAR(_all, COLL_IO)
 
 
-#define PUT_VAR_TYPE(fntype, buftype, mpitype, collmode)         \
+#define PUT_VAR_TYPE(apitype, btype, mpitype, collmode)          \
 int                                                              \
-ncmpi_put_var_##fntype(int            ncid,                      \
-                       int            varid,                     \
-                       const buftype *op)                        \
+ncmpi_put_var_##apitype(int          ncid,                       \
+                        int          varid,                      \
+                        const btype *op)                         \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -184,11 +182,11 @@ PUT_VAR_TYPE(ulonglong_all, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO)
 /* string is not yet supported */
 
 
-#define GET_VAR_TYPE(fntype, buftype, mpitype, collmode)         \
+#define GET_VAR_TYPE(apitype, btype, mpitype, collmode)          \
 int                                                              \
-ncmpi_get_var_##fntype(int      ncid,                            \
-                       int      varid,                           \
-                       buftype *ip)                              \
+ncmpi_get_var_##apitype(int    ncid,                             \
+                        int    varid,                            \
+                        btype *ip)                               \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \

@@ -16,22 +16,21 @@
 #include "macro.h"
 
 
-/* buffer layers:       
-        
-        User Level              buf     (user defined buffer of MPI_Datatype)
-        MPI Datatype Level      cbuf    (contiguous buffer of ptype)
-        NetCDF XDR Level        xbuf    (XDR I/O buffer)
-*/
+/* ftype is the variable's nc_type defined in file, eg. int64
+ * btype is the I/O buffer's C data type, eg. long long
+ * buftype is I/O bufer's MPI data type, eg. MPI_UNSIGNED_LONG_LONG
+ * apitype is data type appeared in the API names, eg. ncmpi_get_vara_longlong
+ */
 
-#define PUT_VARA(fnmode, collmode)                               \
+#define PUT_VARA(iomode, collmode)                               \
 int                                                              \
-ncmpi_put_vara##fnmode(int               ncid,                   \
+ncmpi_put_vara##iomode(int               ncid,                   \
                        int               varid,                  \
                        const MPI_Offset  start[],                \
                        const MPI_Offset  count[],                \
                        const void       *buf,                    \
                        MPI_Offset        bufcount,               \
-                       MPI_Datatype      datatype)               \
+                       MPI_Datatype      buftype)                \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -48,7 +47,7 @@ ncmpi_put_vara##fnmode(int               ncid,                   \
                                                                  \
     /* put_vara is a special case of put_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
-                              (void*)buf, bufcount, datatype,    \
+                              (void*)buf, bufcount, buftype,     \
                               WRITE_REQ, collmode);              \
 }
 
@@ -57,15 +56,15 @@ ncmpi_put_vara##fnmode(int               ncid,                   \
 PUT_VARA(    , INDEP_IO)
 PUT_VARA(_all, COLL_IO)
 
-#define GET_VARA(fnmode, collmode)                               \
+#define GET_VARA(iomode, collmode)                               \
 int                                                              \
-ncmpi_get_vara##fnmode(int               ncid,                   \
+ncmpi_get_vara##iomode(int               ncid,                   \
                        int               varid,                  \
                        const MPI_Offset  start[],                \
                        const MPI_Offset  count[],                \
                        void             *buf,                    \
                        MPI_Offset        bufcount,               \
-                       MPI_Datatype      datatype)               \
+                       MPI_Datatype      buftype)                \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -81,7 +80,7 @@ ncmpi_get_vara##fnmode(int               ncid,                   \
                                                                  \
     /* get_vara is a special case of get_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
-                              buf, bufcount, datatype,           \
+                              buf, bufcount, buftype,            \
                               READ_REQ, collmode);               \
 }
 
@@ -90,13 +89,13 @@ ncmpi_get_vara##fnmode(int               ncid,                   \
 GET_VARA(    , INDEP_IO)
 GET_VARA(_all, COLL_IO)
 
-#define PUT_VARA_TYPE(fntype, buftype, mpitype, collmode)        \
+#define PUT_VARA_TYPE(apitype, btype, mpitype, collmode)         \
 int                                                              \
-ncmpi_put_vara_##fntype(int               ncid,                  \
-                        int               varid,                 \
-                        const MPI_Offset  start[],               \
-                        const MPI_Offset  count[],               \
-                        const buftype    *op)                    \
+ncmpi_put_vara_##apitype(int               ncid,                 \
+                         int               varid,                \
+                         const MPI_Offset  start[],              \
+                         const MPI_Offset  count[],              \
+                         const btype      *op)                   \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -174,13 +173,13 @@ PUT_VARA_TYPE(ulonglong_all, unsigned long long, MPI_UNSIGNED_LONG_LONG,COLL_IO)
 /* string is not yet supported */
 
 
-#define GET_VARA_TYPE(fntype, buftype, mpitype, collmode)        \
+#define GET_VARA_TYPE(apitype, btype, mpitype, collmode)         \
 int                                                              \
-ncmpi_get_vara_##fntype(int               ncid,                  \
-                        int               varid,                 \
-                        const MPI_Offset  start[],               \
-                        const MPI_Offset  count[],               \
-                        buftype          *ip)                    \
+ncmpi_get_vara_##apitype(int               ncid,                 \
+                         int               varid,                \
+                         const MPI_Offset  start[],              \
+                         const MPI_Offset  count[],              \
+                         btype            *ip)                   \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \

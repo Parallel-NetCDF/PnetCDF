@@ -471,12 +471,12 @@ ncmpii_wait(NC  *ncp,
 
     pre_req = NULL;
     while (cur_req != NULL) {
-        MPI_Offset nelems, cnelems;
+        MPI_Offset fnelems, bnelems;
         MPI_Datatype ptype;
         NC_var *varp = cur_req->varp;
 
-        nelems  = cur_req->nelems;
-        cnelems = cur_req->cnelems;
+        fnelems = cur_req->fnelems;
+        bnelems = cur_req->bnelems;
         ptype   = cur_req->ptype;
 
         if (cur_req->rw_flag == WRITE_REQ) {
@@ -488,11 +488,11 @@ ncmpii_wait(NC  *ncp,
             if (cur_req->iscontig_of_ptypes &&
                 !ncmpii_need_convert(varp->type, ptype) &&
                 ncmpii_need_swap(varp->type, ptype))
-                ncmpii_in_swapn(cur_req->buf, nelems, ncmpix_len_nctype(varp->type));
+                ncmpii_in_swapn(cur_req->buf, fnelems, ncmpix_len_nctype(varp->type));
         } else { /* for read */
             if (cur_req->is_imap) {
                 /* layout cbuf to lbuf based on imap */
-                status = ncmpii_data_repack(cur_req->cbuf, cnelems,
+                status = ncmpii_data_repack(cur_req->cbuf, bnelems,
                                             ptype, cur_req->lbuf, 1,
                                             cur_req->imaptype);
                 if (*(cur_req->status) == NC_NOERR) /* keep the first error */
@@ -510,7 +510,7 @@ ncmpii_wait(NC  *ncp,
                     status = ncmpii_data_repack(cur_req->lbuf, cur_req->lnelems,
                                                 ptype, cur_req->buf,
                                                 cur_req->bufcount,
-                                                cur_req->datatype);
+                                                cur_req->buftype);
                     if (cur_req->lbuf != NULL) {
                         if (cur_req->cbuf == cur_req->lbuf) cur_req->cbuf = NULL;
                         if (cur_req->xbuf == cur_req->lbuf) cur_req->xbuf = NULL;
@@ -532,19 +532,19 @@ ncmpii_wait(NC  *ncp,
                 if ( ncmpii_need_convert(varp->type, ptype) ) {
                     /* automatic numeric datatype conversion */
                     DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf,
-                                         cur_req->cbuf, cnelems, ptype)
+                                         cur_req->cbuf, bnelems, ptype)
                     if (*(cur_req->status) == NC_NOERR)
                         /* keep the first error */
                         *(cur_req->status) = status;
                 } else if ( ncmpii_need_swap(varp->type, ptype) ) {
-                    ncmpii_in_swapn(cur_req->cbuf, nelems,
+                    ncmpii_in_swapn(cur_req->cbuf, fnelems,
                                     ncmpix_len_nctype(varp->type));
                 }
                 if (!cur_req->iscontig_of_ptypes) {
                     /* derived datatype: unpack from contiguous buffer */
-                    status = ncmpii_data_repack(cur_req->cbuf, cnelems, ptype,
+                    status = ncmpii_data_repack(cur_req->cbuf, bnelems, ptype,
                                                 cur_req->buf, cur_req->bufcount,
-                                                cur_req->datatype);
+                                                cur_req->buftype);
                     if (*(cur_req->status) == NC_NOERR)
                         /* keep the first error */
                         *(cur_req->status) = status;
@@ -660,7 +660,7 @@ ncmpii_wait_getput(NC     *ncp,
             counts[j]   = reqs[k].count;
             strides[j]  = reqs[k].stride;
             bufs[j]     = reqs[k].xbuf;
-            nbytes[j]   = reqs[k].nelems * varps[j]->xsz;
+            nbytes[j]   = reqs[k].fnelems * varps[j]->xsz;
             statuses[j] = NC_NOERR;
         }
 
