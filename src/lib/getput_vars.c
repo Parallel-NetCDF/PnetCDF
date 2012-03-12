@@ -17,6 +17,12 @@
 #include "macro.h"
 
 
+/* ftype is the variable's nc_type defined in file, eg. int64
+ * btype is the I/O buffer's C data type, eg. long long
+ * buftype is I/O bufer's MPI data type, eg. MPI_UNSIGNED_LONG_LONG
+ * apitype is data type appeared in the API names, eg. ncmpi_get_vara_longlong
+ */
+
 /* buffer layers:       
         
         User Level              buf     (user defined buffer of MPI_Datatype)
@@ -24,16 +30,16 @@
         NetCDF XDR Level        xbuf    (XDR I/O buffer)
 */
 
-#define PUT_VARS(fnmode, collmode)                               \
+#define PUT_VARS(iomode, collmode)                               \
 int                                                              \
-ncmpi_put_vars##fnmode(int               ncid,                   \
+ncmpi_put_vars##iomode(int               ncid,                   \
                        int               varid,                  \
                        const MPI_Offset  start[],                \
                        const MPI_Offset  count[],                \
                        const MPI_Offset  stride[],               \
                        const void       *buf,                    \
                        MPI_Offset        bufcount,               \
-                       MPI_Datatype      datatype)               \
+                       MPI_Datatype      buftype)                \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -49,7 +55,7 @@ ncmpi_put_vars##fnmode(int               ncid,                   \
     CHECK_VARID(varid, varp)                                     \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
-                              (void*)buf, bufcount, datatype,    \
+                              (void*)buf, bufcount, buftype,     \
                               WRITE_REQ, collmode);              \
 }
 
@@ -58,16 +64,16 @@ ncmpi_put_vars##fnmode(int               ncid,                   \
 PUT_VARS(    , INDEP_IO)
 PUT_VARS(_all, COLL_IO)
 
-#define GET_VARS(fnmode, collmode)                               \
+#define GET_VARS(iomode, collmode)                               \
 int                                                              \
-ncmpi_get_vars##fnmode(int               ncid,                   \
+ncmpi_get_vars##iomode(int               ncid,                   \
                        int               varid,                  \
                        const MPI_Offset  start[],                \
                        const MPI_Offset  count[],                \
                        const MPI_Offset  stride[],               \
                        void             *buf,                    \
                        MPI_Offset        bufcount,               \
-                       MPI_Datatype      datatype)               \
+                       MPI_Datatype      buftype)                \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -82,7 +88,7 @@ ncmpi_get_vars##fnmode(int               ncid,                   \
     CHECK_VARID(varid, varp)                                     \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
-                              buf, bufcount, datatype,           \
+                              buf, bufcount, buftype,            \
                               READ_REQ, collmode);               \
 }
 
@@ -92,14 +98,14 @@ GET_VARS(    , INDEP_IO)
 GET_VARS(_all, COLL_IO)
 
 
-#define PUT_VARS_TYPE(fntype, buftype, mpitype, collmode)        \
+#define PUT_VARS_TYPE(apitype, btype, mpitype, collmode)         \
 int                                                              \
-ncmpi_put_vars_##fntype(int               ncid,                  \
-                        int               varid,                 \
-                        const MPI_Offset  start[],               \
-                        const MPI_Offset  count[],               \
-                        const MPI_Offset  stride[],              \
-                        const buftype    *op)                    \
+ncmpi_put_vars_##apitype(int               ncid,                 \
+                         int               varid,                \
+                         const MPI_Offset  start[],              \
+                         const MPI_Offset  count[],              \
+                         const MPI_Offset  stride[],             \
+                         const btype      *op)                   \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -176,14 +182,14 @@ PUT_VARS_TYPE(ulonglong_all, unsigned long long, MPI_UNSIGNED_LONG_LONG,COLL_IO)
 /* string is not yet supported */
 
 
-#define GET_VARS_TYPE(fntype, buftype, mpitype, collmode)        \
+#define GET_VARS_TYPE(apitype, btype, mpitype, collmode)         \
 int                                                              \
-ncmpi_get_vars_##fntype(int               ncid,                  \
-                        int               varid,                 \
-                        const MPI_Offset  start[],               \
-                        const MPI_Offset  count[],               \
-                        const MPI_Offset  stride[],              \
-                        buftype          *ip)                    \
+ncmpi_get_vars_##apitype(int               ncid,                 \
+                         int               varid,                \
+                         const MPI_Offset  start[],              \
+                         const MPI_Offset  count[],              \
+                         const MPI_Offset  stride[],             \
+                         btype            *ip)                   \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
@@ -281,6 +287,14 @@ GET_VARS_TYPE(ulonglong_all, unsigned long long, MPI_UNSIGNED_LONG_LONG,COLL_IO)
     }                                                                          \
 }
 
+#define FINAL_CLEAN_UP {                                                      \
+    if (is_buf_swapped) /* byte-swap back to buf's original contents */       \
+        ncmpii_in_swapn(buf, fnelems, ncmpix_len_nctype(varp->type));         \
+                                                                              \
+    if (xbuf != cbuf && xbuf != NULL) NCI_Free(xbuf);                         \
+    if (cbuf !=  buf && cbuf != NULL) NCI_Free(cbuf);                         \
+}
+
 /*----< ncmpii_getput_vars() >-----------------------------------------------*/
 int
 ncmpii_getput_vars(NC               *ncp,
@@ -290,14 +304,14 @@ ncmpii_getput_vars(NC               *ncp,
                    const MPI_Offset  stride[],
                    void             *buf,
                    MPI_Offset        bufcount,
-                   MPI_Datatype      datatype,
+                   MPI_Datatype      buftype,  /* data type of the bufer */
                    int               rw_flag,
                    int               io_method)
 {
     void *xbuf=NULL, *cbuf=NULL;
-    int el_size, iscontig_of_ptypes, mpireturn, need_swap, is_buf_swapped=0;
+    int el_size, buftype_is_contig, mpireturn, need_swap, is_buf_swapped=0;
     int warning, err, status; /* err is for API abort and status is not */
-    MPI_Offset nelems, cnelems, nbytes, offset=0;
+    MPI_Offset fnelems, bnelems, nbytes, offset=0;
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE;
     MPI_File fh;
@@ -315,28 +329,37 @@ ncmpii_getput_vars(NC               *ncp,
     else
         fh = ncp->nciop->independent_fh;
 
-    CHECK_DATATYPE(datatype, ptype, el_size, cnelems, iscontig_of_ptypes)
+    /* find the ptype (primitive MPI data type) from buftype
+     * el_size is the element size of ptype
+     * bnelems is the number of elements in I/O buffer in ptype
+     * fnelems is the number of nc variable elements in nc_type
+     * nbytes is the amount of read/write in bytes
+     */
+    CHECK_DATATYPE(buftype, ptype, el_size, bnelems, buftype_is_contig)
     CHECK_ECHAR(varp)
-    CHECK_NELEMS(varp, cnelems, count, bufcount, nelems, nbytes)
+    CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes)
+    /* warning might be set in CHECK_NELEMS() */
     need_swap = ncmpii_need_swap(varp->type, ptype);
 
-    if (cnelems == 0) {
+    if (bnelems == 0) { /* if this process has nothing to read/write */
         if (io_method == INDEP_IO)
             return NCcoordck(ncp, varp, start);
 #ifdef ZERO_COUNT_IGNORE_OTHER_ERRORS
         else
-        /* for collective I/O, even cnelems == 0, must go on to participate
+        /* for collective I/O, even bnelems == 0, must go on to participate
            the collective calls: MPI_File_set_view and collective read/write */
             goto err_check;
 #endif
     }
 
-    if (!iscontig_of_ptypes) {
+    /* cbuf is the "contiguous" buffer that all I/O data are packed into a
+     * contiguous memory space pointed by cbuf */
+    if (!buftype_is_contig) {
         /* for derived datatype: pack into a contiguous buffer */
-        cbuf = (void*) NCI_Malloc( cnelems * el_size );
+        cbuf = (void*) NCI_Malloc(bnelems * el_size);
         if (rw_flag == WRITE_REQ) {
-            err = ncmpii_data_repack((void*)buf, bufcount, datatype,
-                                     cbuf, cnelems, ptype);
+            err = ncmpii_data_repack((void*)buf, bufcount, buftype,
+                                     cbuf, bnelems, ptype);
             if (err != NC_NOERR) /* API error */
                 goto err_check;
         }
@@ -344,6 +367,8 @@ ncmpii_getput_vars(NC               *ncp,
         cbuf = (void*) buf;
     }
 
+    /* xbuf is the buffer whose data has been converted into the external
+     * data type, ready to read/written from/to the netCDF file */
     if ( ncmpii_need_convert(varp->type, ptype) ) {
         /* allocate new buffer for data type conversion */
         xbuf = NCI_Malloc(nbytes);
@@ -351,17 +376,19 @@ ncmpii_getput_vars(NC               *ncp,
         if (rw_flag == WRITE_REQ) {
             /* automatic numeric datatype conversion + swap if necessary
                and only xbuf could be byte-swapped, not cbuf */
-            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, cnelems, ptype)
+            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
             /* status may be set after DATATYPE_PUT_CONVERT() */
         }
     } else if (need_swap) {
         if (rw_flag == WRITE_REQ) { /* perform array in-place byte swap */
-            ncmpii_in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+            ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
             is_buf_swapped = (cbuf == buf) ? 1 : 0;
+            /* is_buf_swapped indicates if the contents of the original user
+             * buffer have been changed, i.e. byte swapped. */
         }
         xbuf = cbuf;
     } else {
-        /* else, just assign contiguous buffer */
+        /* else, no type conversion or byte swap */
         xbuf = cbuf;
     }
 
@@ -387,9 +414,10 @@ ncmpii_getput_vars(NC               *ncp,
             }
         }
 
-        /* this is a contiguous file access, no need to filetype */
+        /* this is a contiguous file access, no need to set filetype */
         err = ncmpii_get_offset(ncp, varp, start, NULL, NULL, &offset);
-        /* if start[] is out of defined size, will return NC_EINVALCOORDS error */
+        /* if start[] is out of defined size, then this will return
+         * NC_EINVALCOORDS error */
         if (err != NC_NOERR) /* API error */
             goto err_check;
     }
@@ -409,21 +437,15 @@ err_check:
      * zero-byte operation (everyone has to participate in the
      * collective I/O call) but return error */
     if (err != NC_NOERR) {
-        if (is_buf_swapped) /* byte-swap back to buf's original contents */
-            ncmpii_in_swapn(buf, nelems, ncmpix_len_nctype(varp->type));
-
         /* release allocated resources */
         if (filetype != MPI_BYTE)
             MPI_Type_free(&filetype);
         filetype = MPI_BYTE;
 
-        if (xbuf != cbuf && xbuf != NULL)
-            NCI_Free(xbuf);
-        if (cbuf != buf && cbuf != NULL)
-            NCI_Free(cbuf);
-
-        if (io_method == INDEP_IO)
+        if (io_method == INDEP_IO) {
+            FINAL_CLEAN_UP  /* swap back the data and free buffers */
             return err;
+        }
         else /* io_method == COLL_IO */
 	    nbytes = offset = 0;
 	    /* we want all processors to return from this collective call.
@@ -448,34 +470,35 @@ err_check:
     /* reset the file view so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-    if (err != NC_NOERR) /* no need to go further */
+    if (err != NC_NOERR) { /* no need to go further */
+        FINAL_CLEAN_UP  /* swap back the data and free buffers */
         return err;
+    }
 
-    if (cnelems == 0) /* no need to go further */
+    if (bnelems == 0) /* no need to go further */
         return ((warning != NC_NOERR) ? warning : status);
 
-    /* only cnelems > 0 needs to proceed the following */
+    /* only bnelems > 0 needs to proceed the following */
     if (rw_flag == READ_REQ) {
         if ( ncmpii_need_convert(varp->type, ptype) ) {
             /* automatic numeric datatype conversion + swap if necessary */
-            DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, cnelems, ptype)
+            DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
         } else if (need_swap) {
             /* perform array in-place byte swap */
-            ncmpii_in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+            ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
         }
 
-        if (!iscontig_of_ptypes) {
+        if (!buftype_is_contig) {
             /* handling derived datatype: unpack from the contiguous buffer */
-            err = ncmpii_data_repack(cbuf, cnelems, ptype,
-                                     (void*)buf, bufcount, datatype);
-            if (err != NC_NOERR)
+            err = ncmpii_data_repack(cbuf, bnelems, ptype,
+                                     (void*)buf, bufcount, buftype);
+            if (err != NC_NOERR) {
+                FINAL_CLEAN_UP  /* swap back the data and free buffers */
                 return err;
+            }
         }
     }
     else { /* for write case, buf needs to swapped back if swapped previously */
-        if (is_buf_swapped)
-            ncmpii_in_swapn(buf, nelems, ncmpix_len_nctype(varp->type));
-
         if (status == NC_NOERR && IS_RECVAR(varp)) {
             /* update header's number of records in memory */
             MPI_Offset newnumrecs;
@@ -493,10 +516,7 @@ err_check:
         }
     }
 
-    if (xbuf != cbuf && xbuf != NULL)
-        NCI_Free(xbuf);
-    if (cbuf != buf && cbuf != NULL)
-        NCI_Free(cbuf);
- 
+    FINAL_CLEAN_UP  /* swap back the data and free buffers */
+
     return ((warning != NC_NOERR) ? warning : status);
 }

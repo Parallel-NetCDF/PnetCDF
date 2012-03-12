@@ -24,12 +24,18 @@
         NetCDF XDR Level        xbuf    (XDR I/O buffer)
 */
 
+/* ftype is the variable's nc_type defined in file, eg. int64
+ * btype is the I/O buffer's C data type, eg. long long
+ * buftype is I/O bufer's MPI data type, eg. MPI_UNSIGNED_LONG_LONG
+ * apitype is data type appeared in the API names, eg. ncmpi_get_vara_longlong
+ */
+
 static int
 pack_request(NC *ncp, NC_var *varp, NC_req *req, int do_vars,
              int iscontig_of_ptypes, void *buf, void *cbuf, void *xbuf,
              const MPI_Offset start[], const MPI_Offset count[],
-             const MPI_Offset stride[], MPI_Offset nelems, MPI_Offset cnelems,
-             MPI_Offset lnelems, MPI_Offset bufcount, MPI_Datatype datatype,
+             const MPI_Offset stride[], MPI_Offset fnelems, MPI_Offset bnelems,
+             MPI_Offset lnelems, MPI_Offset bufcount, MPI_Datatype buftype,
              MPI_Datatype ptype, int *reqid);
 
 /*----< ncmpi_iput_varm() >--------------------------------------------------*/
@@ -42,7 +48,7 @@ ncmpi_iput_varm(int               ncid,
                 const MPI_Offset  imap[],
                 const void       *buf,
                 MPI_Offset        bufcount,
-                MPI_Datatype      datatype,
+                MPI_Datatype      buftype,
                 int              *reqid)
 {
     int     status;
@@ -60,20 +66,20 @@ ncmpi_iput_varm(int               ncid,
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
-                               (void*)buf, bufcount, datatype, reqid,
+                               (void*)buf, bufcount, buftype, reqid,
                                WRITE_REQ);
 }
 
-#define IPUT_VARM_TYPE(fntype, buftype, mpitype)                         \
+#define IPUT_VARM_TYPE(apitype, btype, buftype)                          \
 int                                                                      \
-ncmpi_iput_varm_##fntype(int               ncid,                         \
-                         int               varid,                        \
-                         const MPI_Offset  start[],                      \
-                         const MPI_Offset  count[],                      \
-                         const MPI_Offset  stride[],                     \
-                         const MPI_Offset  imap[],                       \
-                         const buftype    *op,                           \
-                         int              *reqid)                        \
+ncmpi_iput_varm_##apitype(int               ncid,                        \
+                          int               varid,                       \
+                          const MPI_Offset  start[],                     \
+                          const MPI_Offset  count[],                     \
+                          const MPI_Offset  stride[],                    \
+                          const MPI_Offset  imap[],                      \
+                          const btype      *op,                          \
+                          int              *reqid)                       \
 {                                                                        \
     int         status;                                                  \
     NC         *ncp;                                                     \
@@ -92,7 +98,7 @@ ncmpi_iput_varm_##fntype(int               ncid,                         \
     GET_NUM_ELEMENTS                                                     \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
-                               (void*)op, nelems, mpitype, reqid,        \
+                               (void*)op, nelems, buftype, reqid,        \
                                WRITE_REQ);                               \
 }
 
@@ -133,7 +139,7 @@ ncmpi_iget_varm(int               ncid,
                 const MPI_Offset  imap[],
                 void             *buf,
                 MPI_Offset        bufcount,
-                MPI_Datatype      datatype,
+                MPI_Datatype      buftype,
                 int              *reqid)
 {
     int     status;
@@ -150,19 +156,19 @@ ncmpi_iget_varm(int               ncid,
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap, buf,
-                               bufcount, datatype, reqid, READ_REQ);
+                               bufcount, buftype, reqid, READ_REQ);
 }
 
-#define IGET_VARM_TYPE(fntype, buftype, mpitype)                         \
+#define IGET_VARM_TYPE(apitype, btype, buftype)                          \
 int                                                                      \
-ncmpi_iget_varm_##fntype(int               ncid,                         \
-                         int               varid,                        \
-                         const MPI_Offset  start[],                      \
-                         const MPI_Offset  count[],                      \
-                         const MPI_Offset  stride[],                     \
-                         const MPI_Offset  imap[],                       \
-                         buftype          *ip,                           \
-                         int              *reqid)                        \
+ncmpi_iget_varm_##apitype(int               ncid,                        \
+                          int               varid,                       \
+                          const MPI_Offset  start[],                     \
+                          const MPI_Offset  count[],                     \
+                          const MPI_Offset  stride[],                    \
+                          const MPI_Offset  imap[],                      \
+                          btype            *ip,                          \
+                          int              *reqid)                       \
 {                                                                        \
     int         status;                                                  \
     NC         *ncp;                                                     \
@@ -180,7 +186,7 @@ ncmpi_iget_varm_##fntype(int               ncid,                         \
     GET_NUM_ELEMENTS                                                     \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
-                               ip, nelems, mpitype, reqid, READ_REQ);    \
+                               ip, nelems, buftype, reqid, READ_REQ);    \
 }
 
 /*----< ncmpi_iget_varm_text() >----------------------------------------------*/
@@ -220,7 +226,7 @@ ncmpii_igetput_varm(NC               *ncp,
                     const MPI_Offset  imap[],
                     void             *buf,
                     MPI_Offset        bufcount,
-                    MPI_Datatype      datatype,
+                    MPI_Datatype      buftype,
                     int              *reqid,
                     int               rw_flag)
 {
@@ -228,7 +234,7 @@ ncmpii_igetput_varm(NC               *ncp,
     int err, status, warning; /* err is for API abort and status is not */
     int el_size, iscontig_of_ptypes, do_vars;
     int dim=0, imap_contig_blocklen;
-    MPI_Offset nelems, cnelems, lnelems, nbytes;
+    MPI_Offset fnelems, bnelems, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
@@ -263,23 +269,28 @@ ncmpii_igetput_varm(NC               *ncp,
     }
     /* dim will be used only when do_vars == 1 */
 
-    CHECK_DATATYPE(datatype, ptype, el_size, cnelems, iscontig_of_ptypes)
+    /* find the ptype (primitive MPI data type) from buftype
+     * el_size is the element size of ptype
+     * bnelems is the number of elements in I/O buffer in ptype
+     * fnelems is the number of nc variable elements in nc_type
+     */
+    CHECK_DATATYPE(buftype, ptype, el_size, bnelems, iscontig_of_ptypes)
     CHECK_ECHAR(varp)
-    CHECK_NELEMS(varp, cnelems, count, bufcount, nelems, nbytes)
+    CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes)
 
 err_check:
     if (err != NC_NOERR) return err;
 
-    if (cnelems == 0)
+    if (bnelems == 0)
         return NCcoordck(ncp, varp, start);
 
     if (do_vars) {
         if (!iscontig_of_ptypes) {
             /* handling for derived datatype: pack into a contiguous buffer */
-            cbuf = NCI_Malloc(cnelems * el_size);
+            cbuf = NCI_Malloc(bnelems * el_size);
             if (rw_flag == WRITE_REQ) {
-                status = ncmpii_data_repack(buf, bufcount, datatype,
-                                         cbuf, cnelems, ptype);
+                status = ncmpii_data_repack(buf, bufcount, buftype,
+                                         cbuf, bnelems, ptype);
                 if (status != NC_NOERR) {
                     NCI_Free(cbuf);
                     return ((warning != NC_NOERR) ? warning : status);
@@ -292,16 +303,16 @@ err_check:
         MPI_Datatype tmptype;
         if (!iscontig_of_ptypes) {
             /* handling for derived datatype: pack into a contiguous buffer */
-            lnelems = cnelems;
+            lnelems = bnelems;
             lbuf = NCI_Malloc(lnelems*el_size);
-            status = ncmpii_data_repack(buf, bufcount, datatype,
+            status = ncmpii_data_repack(buf, bufcount, buftype,
                                         lbuf, lnelems, ptype);
             if (status != NC_NOERR) {
                 NCI_Free(lbuf);
                 return ((warning != NC_NOERR) ? warning : status);
             }
         } else {
-            lnelems = cnelems / bufcount;
+            lnelems = bnelems / bufcount;
             lbuf = buf;
         }
         if (count[dim] < 0) {
@@ -312,7 +323,7 @@ err_check:
         MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
                         ptype, &imaptype);
         MPI_Type_commit(&imaptype);
-        cnelems = imap_contig_blocklen * count[dim];
+        bnelems = imap_contig_blocklen * count[dim];
         for (dim--; dim>=0; dim--) {
             if (count[dim] < 0) {
                 if (!iscontig_of_ptypes && lbuf != NULL)
@@ -329,14 +340,14 @@ err_check:
             MPI_Type_free(&imaptype);
             MPI_Type_commit(&tmptype);
             imaptype = tmptype;
-            cnelems *= count[dim];
+            bnelems *= count[dim];
         }
-        cbuf = NCI_Malloc(cnelems*el_size);
+        cbuf = NCI_Malloc(bnelems*el_size);
 
         if (rw_flag == WRITE_REQ) {
             /* layout lbuf to cbuf based on imap */
             status = ncmpii_data_repack(lbuf, 1, imaptype,
-                                        cbuf, cnelems, ptype);
+                                        cbuf, bnelems, ptype);
             if (status != NC_NOERR) {
                 NCI_Free(cbuf);
                 if (!iscontig_of_ptypes && lbuf != NULL)
@@ -350,7 +361,7 @@ err_check:
 
             /* now it is the same as calling
                ncmpi_put_vars(ncid, varid, start, count, stride,
-                              cbuf, cnelems, ptype);
+                              cbuf, bnelems, ptype);
              */
         }
     }
@@ -361,11 +372,11 @@ err_check:
 
         if (rw_flag == WRITE_REQ)
             /* automatic numeric datatype conversion + swap if necessary */
-            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, cnelems, ptype)
+            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
     } else if ( ncmpii_need_swap(varp->type, ptype) ) {
         if (rw_flag == WRITE_REQ)
             /* perform array in-place byte swap */
-            ncmpii_in_swapn(cbuf, nelems, ncmpix_len_nctype(varp->type));
+            ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
         xbuf = cbuf;
     } else {
         /* else, just assign contiguous buffer */
@@ -387,8 +398,8 @@ err_check:
         req->is_imap = 1;
 
     pack_request(ncp, varp, req, do_vars, iscontig_of_ptypes,
-                 buf, cbuf, xbuf, start, count, stride, nelems,
-                 cnelems, lnelems, bufcount, datatype, ptype, reqid);
+                 buf, cbuf, xbuf, start, count, stride, fnelems,
+                 bnelems, lnelems, bufcount, buftype, ptype, reqid);
 
     return ((warning != NC_NOERR) ? warning : status);
 }
@@ -406,11 +417,11 @@ pack_request(NC               *ncp,
              const MPI_Offset  start[],
              const MPI_Offset  count[],
              const MPI_Offset  stride[],
-             MPI_Offset        nelems,
-             MPI_Offset        cnelems,
+             MPI_Offset        fnelems,
+             MPI_Offset        bnelems,
              MPI_Offset        lnelems,
              MPI_Offset        bufcount,
-             MPI_Datatype      datatype,
+             MPI_Datatype      buftype,
              MPI_Datatype      ptype,
              int              *reqid)
 {
@@ -424,10 +435,10 @@ pack_request(NC               *ncp,
     req->buf      = buf;
     req->cbuf     = cbuf;
     req->xbuf     = xbuf;
-    req->nelems   = nelems;
-    req->cnelems  = cnelems;
+    req->fnelems  = fnelems;
+    req->bnelems  = bnelems;
     req->lnelems  = lnelems; /* used only for iget_varm case */
-    req->datatype = datatype;
+    req->buftype  = buftype;
     req->bufcount = bufcount;
     req->ptype    = ptype;
     req->next     = NULL;
@@ -482,11 +493,11 @@ pack_request(NC               *ncp,
             }
 
             subreqs[i].count[0] = 1;
-            subreqs[i].nelems = 1;
+            subreqs[i].fnelems = 1;
             for (j=1; j<varp->ndims; j++) {
                 subreqs[i].start[j]  = req->start[j];
                 subreqs[i].count[j]  = req->count[j];
-                subreqs[i].nelems   *= subreqs[i].count[j];
+                subreqs[i].fnelems  *= subreqs[i].count[j];
                 if (stride != NULL)
                     subreqs[i].stride[j] = req->stride[j];
             }

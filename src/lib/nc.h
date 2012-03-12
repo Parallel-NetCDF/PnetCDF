@@ -389,13 +389,13 @@ typedef struct NC_req {
     MPI_Offset    *start;  /* [ndims] */
     MPI_Offset    *count;  /* [ndims] */
     MPI_Offset    *stride; /* [ndims] */
-    MPI_Offset     nelems;
-    MPI_Offset     cnelems;
+    MPI_Offset     bnelems;
+    MPI_Offset     fnelems; /* number of nc_type elements in file */
     MPI_Offset     lnelems;
     MPI_Offset     bufcount;
     MPI_Offset     offset_start;  /* starting of aggregate access region */
     MPI_Offset     offset_end;    /*   ending of aggregate access region */
-    MPI_Datatype   datatype;
+    MPI_Datatype   buftype;
     MPI_Datatype   ptype;
     MPI_Datatype   imaptype;
     int           *status;

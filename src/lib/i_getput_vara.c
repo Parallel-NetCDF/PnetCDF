@@ -17,12 +17,11 @@
 #include "macro.h"
 
 
-/* buffer layers:       
-        
-        User Level              buf     (user defined buffer of MPI_Datatype)
-        MPI Datatype Level      cbuf    (contiguous buffer of ptype)
-        NetCDF XDR Level        xbuf    (XDR I/O buffer)
-*/
+/* ftype is the variable's nc_type defined in file, eg. int64
+ * btype is the I/O buffer's C data type, eg. long long
+ * buftype is I/O bufer's MPI data type, eg. MPI_UNSIGNED_LONG_LONG
+ * apitype is data type appeared in the API names, eg. ncmpi_get_vara_longlong
+ */
 
 /*----< ncmpi_iput_vara() >--------------------------------------------------*/
 int
@@ -32,7 +31,7 @@ ncmpi_iput_vara(int               ncid,
                 const MPI_Offset *count,
                 const void       *buf,
                 MPI_Offset        bufcount,
-                MPI_Datatype      datatype,
+                MPI_Datatype      buftype,
                 int              *reqid)
 {
     int     status;
@@ -50,18 +49,18 @@ ncmpi_iput_vara(int               ncid,
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                               (void*)buf, bufcount, datatype, reqid,
+                               (void*)buf, bufcount, buftype, reqid,
                                WRITE_REQ);
 }
 
-#define IPUT_VARA_TYPE(fntype, buftype, mpitype)                       \
+#define IPUT_VARA_TYPE(apitype, btype, buftype)                        \
 int                                                                    \
-ncmpi_iput_vara_##fntype(int               ncid,                       \
-                         int               varid,                      \
-                         const MPI_Offset  start[],                    \
-                         const MPI_Offset  count[],                    \
-                         const buftype    *op,                         \
-                         int              *reqid)                      \
+ncmpi_iput_vara_##apitype(int               ncid,                      \
+                          int               varid,                     \
+                          const MPI_Offset  start[],                   \
+                          const MPI_Offset  count[],                   \
+                          const btype    *op,                          \
+                          int              *reqid)                     \
 {                                                                      \
     int         status;                                                \
     NC         *ncp;                                                   \
@@ -80,7 +79,7 @@ ncmpi_iput_vara_##fntype(int               ncid,                       \
     GET_NUM_ELEMENTS                                                   \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
-                               (void*)op, nelems, mpitype, reqid,      \
+                               (void*)op, nelems, buftype, reqid,      \
                                WRITE_REQ);                             \
 }
 
@@ -119,7 +118,7 @@ ncmpi_iget_vara(int               ncid,
                 const MPI_Offset *count,
                 void             *buf,
                 MPI_Offset        bufcount,
-                MPI_Datatype      datatype,
+                MPI_Datatype      buftype,
                 int              *reqid)
 {
     int     status;
@@ -136,17 +135,17 @@ ncmpi_iget_vara(int               ncid,
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL, buf,
-                               bufcount, datatype, reqid, READ_REQ);
+                               bufcount, buftype, reqid, READ_REQ);
 }
 
-#define IGET_VARA_TYPE(fntype, buftype, mpitype)                       \
+#define IGET_VARA_TYPE(apitype, btype, buftype)                        \
 int                                                                    \
-ncmpi_iget_vara_##fntype(int               ncid,                       \
-                         int               varid,                      \
-                         const MPI_Offset  start[],                    \
-                         const MPI_Offset  count[],                    \
-                         buftype          *ip,                         \
-                         int              *reqid)                      \
+ncmpi_iget_vara_##apitype(int               ncid,                      \
+                          int               varid,                     \
+                          const MPI_Offset  start[],                   \
+                          const MPI_Offset  count[],                   \
+                          btype            *ip,                        \
+                          int              *reqid)                     \
 {                                                                      \
     int         status;                                                \
     NC         *ncp;                                                   \
@@ -164,7 +163,7 @@ ncmpi_iget_vara_##fntype(int               ncid,                       \
     GET_NUM_ELEMENTS                                                   \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
-                               ip, nelems, mpitype, reqid, READ_REQ);  \
+                               ip, nelems, buftype, reqid, READ_REQ);  \
 }
 
 /*----< ncmpi_iget_vara_text() >----------------------------------------------*/
