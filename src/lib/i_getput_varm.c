@@ -232,7 +232,7 @@ ncmpii_igetput_varm(NC               *ncp,
 {
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
     int err, status, warning; /* err is for API abort and status is not */
-    int el_size, iscontig_of_ptypes, do_vars;
+    int el_size, iscontig_of_ptypes, do_vars, isderived;
     int dim=0, imap_contig_blocklen;
     MPI_Offset fnelems, bnelems, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
@@ -267,16 +267,27 @@ ncmpii_igetput_varm(NC               *ncp,
         if (dim == -1) /* imap is a contiguous layout */
             do_vars = 1;
     }
-    /* dim will be used only when do_vars == 1 */
+    /* dim is the first dimension (C order, eg. ZYX) that has non-contiguous
+       imap and it will be used only when do_vars == 1
+     */
 
     /* find the ptype (primitive MPI data type) from buftype
      * el_size is the element size of ptype
-     * bnelems is the number of elements in I/O buffer in ptype
+     * bnelems is the total number of ptype elements in the I/O buffer, buf
      * fnelems is the number of nc variable elements in nc_type
+     * nbytes is the amount of read/write in bytes
      */
-    CHECK_DATATYPE(buftype, ptype, el_size, bnelems, iscontig_of_ptypes)
-    CHECK_ECHAR(varp)
+    err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
+                              &isderived, &iscontig_of_ptypes);
+    /* bnelems now is the number of ptype in a buftype */
+    if (err != NC_NOERR) goto err_check;
+
+    err = NCMPII_ECHAR(varp->type, ptype);
+    if (err != NC_NOERR) goto err_check;
+
     CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes)
+    /* bnelems now is the number of ptype in the whole buf */
+    /* warning is set in CHECK_NELEMS() */
 
 err_check:
     if (err != NC_NOERR) return err;
@@ -286,11 +297,12 @@ err_check:
 
     if (do_vars) {
         if (!iscontig_of_ptypes) {
-            /* handling for derived datatype: pack into a contiguous buffer */
             cbuf = NCI_Malloc(bnelems * el_size);
+
             if (rw_flag == WRITE_REQ) {
+                /* pack buf into cbuf, a contiguous buffer, based on buftype */
                 status = ncmpii_data_repack(buf, bufcount, buftype,
-                                         cbuf, bnelems, ptype);
+                                            cbuf, bnelems, ptype);
                 if (status != NC_NOERR) {
                     NCI_Free(cbuf);
                     return ((warning != NC_NOERR) ? warning : status);
@@ -302,31 +314,35 @@ err_check:
     } else { /* of if (do_vars) */
         MPI_Datatype tmptype;
         if (!iscontig_of_ptypes) {
-            /* handling for derived datatype: pack into a contiguous buffer */
             lnelems = bnelems;
             lbuf = NCI_Malloc(lnelems*el_size);
-            status = ncmpii_data_repack(buf, bufcount, buftype,
-                                        lbuf, lnelems, ptype);
-            if (status != NC_NOERR) {
-                NCI_Free(lbuf);
-                return ((warning != NC_NOERR) ? warning : status);
+
+            if (rw_flag == WRITE_REQ) {
+                /* pack buf into lbuf, a contiguous buffer, based on buftype */
+                status = ncmpii_data_repack(buf, bufcount, buftype,
+                                            lbuf, lnelems, ptype);
+                if (status != NC_NOERR) {
+                    NCI_Free(lbuf);
+                    return ((warning != NC_NOERR) ? warning : status);
+                }
             }
         } else {
             lnelems = bnelems / bufcount;
             lbuf = buf;
         }
-        if (count[dim] < 0) {
-            if (!iscontig_of_ptypes && lbuf != NULL)
-                NCI_Free(lbuf);
-            return ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
-        }
+        /* now lbuf is a contiguous buffer containing the data from buf */
+
+        /* construct a derived data type based on imap[], and use it to
+         * pack lbuf to another contiguous buffer, cbuf. Then we can use cbuf
+         * to call getput_vars
+         */
         MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
                         ptype, &imaptype);
         MPI_Type_commit(&imaptype);
         bnelems = imap_contig_blocklen * count[dim];
         for (dim--; dim>=0; dim--) {
             if (count[dim] < 0) {
-                if (!iscontig_of_ptypes && lbuf != NULL)
+                if (!iscontig_of_ptypes)
                     NCI_Free(lbuf);
                 return ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
             }
@@ -348,39 +364,41 @@ err_check:
             /* layout lbuf to cbuf based on imap */
             status = ncmpii_data_repack(lbuf, 1, imaptype,
                                         cbuf, bnelems, ptype);
-            if (status != NC_NOERR) {
-                NCI_Free(cbuf);
-                if (!iscontig_of_ptypes && lbuf != NULL)
-                    NCI_Free(lbuf);
-                return ((warning != NC_NOERR) ? warning : status);
-            }
-            MPI_Type_free(&imaptype);
-
-            if (!iscontig_of_ptypes && lbuf != NULL)
+            /* for write case, lbuf is no longer needed */
+            if (!iscontig_of_ptypes)
                 NCI_Free(lbuf);
 
-            /* now it is the same as calling
+            if (status != NC_NOERR) {
+                NCI_Free(cbuf);
+                return ((warning != NC_NOERR) ? warning : status);
+            }
+            lbuf = NULL;
+            MPI_Type_free(&imaptype);
+
+            /* now it is the same as using cbuf to call
                ncmpi_put_vars(ncid, varid, start, count, stride,
                               cbuf, bnelems, ptype);
              */
         }
     }
+    /* up to this point, cbuf contains all the write data in a contiguous
+     * space and it can be == buf or created from malloc
+     */
 
     if ( ncmpii_need_convert(varp->type, ptype) ) {
         /* allocate new buffer for data type conversion */
+
         xbuf = NCI_Malloc(nbytes);
 
         if (rw_flag == WRITE_REQ)
             /* automatic numeric datatype conversion + swap if necessary */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
-    } else if ( ncmpii_need_swap(varp->type, ptype) ) {
-        if (rw_flag == WRITE_REQ)
-            /* perform array in-place byte swap */
-            ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
-        xbuf = cbuf;
     } else {
-        /* else, just assign contiguous buffer */
         xbuf = cbuf;
+
+        if (rw_flag == WRITE_REQ && ncmpii_need_swap(varp->type, ptype))
+            /* perform array in-place byte swap */
+            ncmpii_in_swapn(xbuf, fnelems, ncmpix_len_nctype(varp->type));
     }
 
     /* allocate a new request object to store the write info */
@@ -390,10 +408,9 @@ err_check:
     req->imaptype = imaptype;
     req->rw_flag  = rw_flag;
     if (rw_flag == WRITE_REQ)
-        req->lbuf = NULL;
+        req->lbuf = NULL;  /* for write, lbuf has been freed */
     else
-        req->lbuf = lbuf;
-
+        req->lbuf = lbuf;  /* for read, lbuf will be used to imap back to buf */
     if (!do_vars)
         req->is_imap = 1;
 

@@ -42,14 +42,6 @@ static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
  *  In OpenMPI, this assumption will fail
  */
 
-
-/*----< ncmpii_echar() >-----------------------------------------------------*/
-inline int
-ncmpii_echar(nc_type      nctype,
-             MPI_Datatype mpitype) {
-    return ((nctype == NC_CHAR) == (mpitype != MPI_CHAR));
-}
-
 /*----< ncmpii_need_convert() >----------------------------------------------*/
 inline int
 ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype) {

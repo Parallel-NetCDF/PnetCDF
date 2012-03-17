@@ -156,17 +156,17 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
   level primitive datatype information.
 
   Input:
-. dtype - The buftype to be decoded (can be predefined type).
+. buftype - The MPI derived data type to be decoded (can be predefined type).
 
   Output:
-. ptype - The bottom level MPI primitive datatype (only one allowed)
-. el_size - The size of the ptype
-. nelems - Number of elements/entries of such ptype
-. buftype_is_contig - Whether dtype is a contiguous number of ptype
+. ptype - The bottom level MPI primitive datatype (only one allowed) in buftype
+. el_size - The element size in bytes of the ptype
+. nelems - Number of elements/entries of such ptype in one buftype object
+. buftype_is_contig - Whether buftype is a contiguous number of ptype
 */
-#define CHECK_DATATYPE(buftype, ptype, esize, cnelems, buftype_is_contig) {   \
+#define CHECK_DATATYPE(buftype, ptype, esize, nelems, buftype_is_contig) {    \
     int isderived;                                                            \
-    err = ncmpii_dtype_decode(buftype, &(ptype), &(esize), &(cnelems),        \
+    err = ncmpii_dtype_decode(buftype, &(ptype), &(esize), &(nelems),         \
                               &isderived, &buftype_is_contig);                \
     if (err != NC_NOERR) { /* API error */                                    \
         /* uncomment to print debug message                                   \

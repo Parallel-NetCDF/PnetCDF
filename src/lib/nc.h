@@ -30,6 +30,8 @@
  * in an entire climate header in one go */
 #define NC_DEFAULT_CHUNKSIZE 256*1024
 
+#define NCMPII_ECHAR(nctype, mpitype) ((((nctype) == NC_CHAR) == ((mpitype) != MPI_CHAR)) ? NC_ECHAR : NC_NOERR)
+
 /*
  * The extern size of an empty
  * netcdf version 1 file.
@@ -686,7 +688,6 @@ int NCstrideedgeck(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
 
 int NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord);
 
-int ncmpii_echar(nc_type nctype,MPI_Datatype mpitype);
 
 int ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype);
 

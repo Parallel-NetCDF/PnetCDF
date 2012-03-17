@@ -52,7 +52,7 @@ ncmpi_put_var1(int               ncid,
 /* ftype is the variable's nc_type defined in file
  * btype is the I/O buffer's data type
  */
-#define PUT_VAR1_TYPE(apitype, btype, mpitype, collmode)         \
+#define PUT_VAR1_TYPE(apitype, btype, mpitype)                   \
 int                                                              \
 ncmpi_put_var1_##apitype(int               ncid,                 \
                          int               varid,                \
@@ -67,17 +67,14 @@ ncmpi_put_var1_##apitype(int               ncid,                 \
     CHECK_NCID                                                   \
     CHECK_WRITE_PERMISSION                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    CHECK_INDEP_FH                                               \
     CHECK_VARID(varid, varp)                                     \
     GET_ONE_COUNT                                                \
                                                                  \
     /* put_var1 is a special case of put_vars */                 \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
                                 (void*)op, 1, mpitype,           \
-                                WRITE_REQ, collmode);            \
+                                WRITE_REQ, INDEP_IO);            \
     if (varp->ndims > 0) NCI_Free(count);                        \
                                                                  \
     return status;                                               \
@@ -95,19 +92,19 @@ ncmpi_put_var1_##apitype(int               ncid,                 \
 /*----< ncmpi_put_var1_double() >---------------------------------------------*/
 /*----< ncmpi_put_var1_longlong() >-------------------------------------------*/
 /*----< ncmpi_put_var1_ulonglong() >------------------------------------------*/
-PUT_VAR1_TYPE(text,      char,               MPI_CHAR,               INDEP_IO)
-PUT_VAR1_TYPE(schar,     schar,              MPI_BYTE,               INDEP_IO)
-PUT_VAR1_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR,      INDEP_IO)
-PUT_VAR1_TYPE(short,     short,              MPI_SHORT,              INDEP_IO)
-PUT_VAR1_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT,     INDEP_IO)
-PUT_VAR1_TYPE(int,       int,                MPI_INT,                INDEP_IO)
-PUT_VAR1_TYPE(uint,      uint,               MPI_UNSIGNED,           INDEP_IO)
-PUT_VAR1_TYPE(long,      long,               MPI_LONG,               INDEP_IO)
-PUT_VAR1_TYPE(float,     float,              MPI_FLOAT,              INDEP_IO)
-PUT_VAR1_TYPE(double,    double,             MPI_DOUBLE,             INDEP_IO)
-PUT_VAR1_TYPE(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
-PUT_VAR1_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
-// PUT_VAR1_TYPE(string, char*,              MPI_CHAR,               INDEP_IO)
+PUT_VAR1_TYPE(text,      char,               MPI_CHAR)
+PUT_VAR1_TYPE(schar,     schar,              MPI_BYTE)
+PUT_VAR1_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
+PUT_VAR1_TYPE(short,     short,              MPI_SHORT)
+PUT_VAR1_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
+PUT_VAR1_TYPE(int,       int,                MPI_INT)
+PUT_VAR1_TYPE(uint,      uint,               MPI_UNSIGNED)
+PUT_VAR1_TYPE(long,      long,               MPI_LONG)
+PUT_VAR1_TYPE(float,     float,              MPI_FLOAT)
+PUT_VAR1_TYPE(double,    double,             MPI_DOUBLE)
+PUT_VAR1_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
+PUT_VAR1_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+// PUT_VAR1_TYPE(string, char*,              MPI_CHAR)
 /* string is not yet supported */
 
 /*----< ncmpi_get_var1() >---------------------------------------------------*/
@@ -140,7 +137,7 @@ ncmpi_get_var1(int               ncid,
 /* ftype is the variable's nc_type defined in file
  * btype is the I/O buffer's data type
  */
-#define GET_VAR1_TYPE(apitype, btype, mpitype, collmode)         \
+#define GET_VAR1_TYPE(apitype, btype, mpitype)                   \
 int                                                              \
 ncmpi_get_var1_##apitype(int               ncid,                 \
                          int               varid,                \
@@ -154,17 +151,14 @@ ncmpi_get_var1_##apitype(int               ncid,                 \
                                                                  \
     CHECK_NCID                                                   \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    CHECK_INDEP_FH                                               \
     CHECK_VARID(varid, varp)                                     \
     GET_ONE_COUNT                                                \
                                                                  \
     /* get_var1 is a special case of get_vars */                 \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
                                 ip, 1, mpitype,                  \
-                                READ_REQ, collmode);             \
+                                READ_REQ, INDEP_IO);             \
     if (varp->ndims > 0) NCI_Free(count);                        \
                                                                  \
     return status;                                               \
@@ -182,18 +176,18 @@ ncmpi_get_var1_##apitype(int               ncid,                 \
 /*----< ncmpi_get_var1_double() >---------------------------------------------*/
 /*----< ncmpi_get_var1_longlong() >-------------------------------------------*/
 /*----< ncmpi_get_var1_ulonglong() >------------------------------------------*/
-GET_VAR1_TYPE(text,      char,               MPI_CHAR,               INDEP_IO)
-GET_VAR1_TYPE(schar,     schar,              MPI_BYTE,               INDEP_IO)
-GET_VAR1_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR,      INDEP_IO)
-GET_VAR1_TYPE(short,     short,              MPI_SHORT,              INDEP_IO)
-GET_VAR1_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT,     INDEP_IO)
-GET_VAR1_TYPE(int,       int,                MPI_INT,                INDEP_IO)
-GET_VAR1_TYPE(uint,      uint,               MPI_UNSIGNED,           INDEP_IO)
-GET_VAR1_TYPE(long,      long,               MPI_LONG,               INDEP_IO)
-GET_VAR1_TYPE(float,     float,              MPI_FLOAT,              INDEP_IO)
-GET_VAR1_TYPE(double,    double,             MPI_DOUBLE,             INDEP_IO)
-GET_VAR1_TYPE(longlong,  long long,          MPI_LONG_LONG_INT,      INDEP_IO)
-GET_VAR1_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, INDEP_IO)
-// GET_VAR1_TYPE(string, char*,              MPI_CHAR,               INDEP_IO)
+GET_VAR1_TYPE(text,      char,               MPI_CHAR)
+GET_VAR1_TYPE(schar,     schar,              MPI_BYTE)
+GET_VAR1_TYPE(uchar,     uchar,              MPI_UNSIGNED_CHAR)
+GET_VAR1_TYPE(short,     short,              MPI_SHORT)
+GET_VAR1_TYPE(ushort,    ushort,             MPI_UNSIGNED_SHORT)
+GET_VAR1_TYPE(int,       int,                MPI_INT)
+GET_VAR1_TYPE(uint,      uint,               MPI_UNSIGNED)
+GET_VAR1_TYPE(long,      long,               MPI_LONG)
+GET_VAR1_TYPE(float,     float,              MPI_FLOAT)
+GET_VAR1_TYPE(double,    double,             MPI_DOUBLE)
+GET_VAR1_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
+GET_VAR1_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+// GET_VAR1_TYPE(string, char*,              MPI_CHAR)
 /* string is not yet supported */
 
