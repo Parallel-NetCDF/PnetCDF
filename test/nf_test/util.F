@@ -11,7 +11,7 @@
 #include "tests.inc"
 
       IF (VERBOSE .OR. NFAILS .GT. 0) PRINT *, ' '
-      IF (VERBOSE) PRINT *, NOK, ' good comparisons.'
+      PRINT *, NOK, ' good comparisons.'
       END
 
 
@@ -981,7 +981,7 @@
 3           continue
 1       continue
         err = nfmpi_end_indep_data(ncid)
-        call print_nok(nok)
+        ! call print_nok(nok)
         end
 
 

@@ -46,11 +46,18 @@
         use pnetcdf
         implicit        none
         character*(*)   name
+        character(len=25) name_str
+        integer           name_len
         external        func
 #include "tests.inc"
 
-        write(*, 1) name
+        name_len = LEN_TRIM(name)
+        name_str(1:name_len) = name(:)
+        name_str(name_len+1:24) = ' '
+        name_str(25:25) = char(0)
+        write(*, 1, advance="no") name_str
 1       format('*** Testing ', a, ' ... ')
+
         nfails = 0
         call func()
         nfailsTotal = nfailsTotal + nfails
