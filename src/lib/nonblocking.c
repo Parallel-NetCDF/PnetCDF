@@ -41,28 +41,21 @@ static int ncmpii_mset_fileview(MPI_File fh, NC* ncp, int ntimes, NC_var **varp,
 
 static int req_compare(const NC_req *a, const NC_req *b);
 
-#define FREE_REQUEST(req) {                                          \
-    if (req->xbuf == req->buf) req->xbuf = NULL;                     \
-    if (req->cbuf == req->buf) req->cbuf = NULL;                     \
-    if (req->xbuf != req->cbuf && req->xbuf != NULL) {               \
-        NCI_Free(req->xbuf);                                         \
-        req->xbuf = NULL;                                            \
-    }                                                                \
-    if (req->cbuf != req->buf && req->cbuf != NULL) {                \
-        NCI_Free(req->cbuf);                                         \
-        req->cbuf = NULL;                                            \
-    }                                                                \
-    if (req->is_imap && req->cbuf != NULL) { /* imap cbuf != buf */  \
-        NCI_Free(req->cbuf);                                         \
-        req->cbuf = NULL;                                            \
-    }                                                                \
-    for (j=0; j<req->num_subreqs; j++)                               \
-        NCI_Free(req->subreqs[j].start);                             \
-    if (req->num_subreqs > 0)                                        \
-        NCI_Free(req->subreqs);                                      \
-    NCI_Free(req->start);                                            \
-    if (req->stride != NULL)                                         \
-	NCI_Free(req->stride);                                       \
+#define FREE_REQUEST(req) {                                                   \
+    if (req->xbuf != NULL && req->xbuf != req->cbuf) NCI_Free(req->xbuf);     \
+    if (req->cbuf != NULL && req->cbuf != req->buf)  NCI_Free(req->cbuf);     \
+    if (req->lbuf != NULL && req->lbuf != req->buf)  NCI_Free(req->lbuf);     \
+    req->xbuf = NULL;                                                         \
+    req->cbuf = NULL;                                                         \
+    req->lbuf = NULL;                                                         \
+                                                                              \
+    for (j=0; j<req->num_subreqs; j++)                                        \
+        NCI_Free(req->subreqs[j].start);                                      \
+    if (req->num_subreqs > 0)                                                 \
+        NCI_Free(req->subreqs);                                               \
+    NCI_Free(req->start);                                                     \
+    if (req->stride != NULL)                                                  \
+	NCI_Free(req->stride);                                                \
 }
 
 /*----< ncmpi_cancel() >-----------------------------------------------------*/
@@ -326,6 +319,29 @@ req_compare(const NC_req *a, const NC_req *b)
 }
 
 /*----< ncmpii_wait() >------------------------------------------------------*/
+/* The buffer management flow is described below. The wait side starts from
+   the I/O step, i.e. step 5
+
+   for put_varm:
+     1. pack buf to lbuf based on buftype
+     2. create imap_type based on imap
+     3. pack lbuf to cbuf based on imap_type
+     4. type convert and byte swap cbuf to xbuf
+     5. write from xbuf
+     6. byte swap the buf to its original, if it is swapped
+     7. free up temp buffers, cbuf and xbuf if they were allocated separately
+
+   for get_varm:
+     1. allocate lbuf
+     2. create imap_type based on imap
+     3. allocate cbuf
+     4. allocate xbuf
+     5. read to xbuf
+     6. type convert and byte swap xbuf to cbuf
+     7. unpack cbuf to lbuf based on imap_type
+     8. unpack lbuf to buf based on buftype
+     9. free up temp buffers, cbuf and xbuf if they were allocated separately
+ */
 int
 ncmpii_wait(NC  *ncp,
             int  io_method, /* COLL_IO or INDEP_IO */
@@ -443,6 +459,8 @@ ncmpii_wait(NC  *ncp,
         io_req[1] = num_w_reqs;
         MPI_Allreduce(&io_req, &do_io, 2, MPI_INT, MPI_MAX, ncp->nciop->comm);
 
+        /* make sure if at least one process has a non-zero request, all
+           processes participate the collective read/write */
         do_read  = do_io[0];
         do_write = do_io[1];
     }
@@ -474,9 +492,9 @@ ncmpii_wait(NC  *ncp,
         MPI_Offset fnelems, bnelems;
         MPI_Datatype ptype;
         NC_var *varp = cur_req->varp;
+        void *cbuf;
 
         fnelems = cur_req->fnelems;
-        bnelems = cur_req->bnelems;
         ptype   = cur_req->ptype;
 
         if (cur_req->rw_flag == WRITE_REQ) {
@@ -485,14 +503,32 @@ ncmpii_wait(NC  *ncp,
                I.e. ! iscontig_of_ptypes && not ncmpii_need_convert() &&
                ncmpii_need_swap()
             */
+/* wkliao: TODO use a flag to indicate if swap back is needed */
             if (cur_req->iscontig_of_ptypes &&
                 !ncmpii_need_convert(varp->type, ptype) &&
                 ncmpii_need_swap(varp->type, ptype))
                 ncmpii_in_swapn(cur_req->buf, fnelems, ncmpix_len_nctype(varp->type));
         } else { /* for read */
-            if (cur_req->is_imap) {
+            /* now, xbuf contains the data read from the file
+             * type convert + byte swap from xbuf to cbuf
+             */
+            if (ncmpii_need_convert(varp->type, ptype) ) {
+                /* automatic numeric datatype conversion and byte swap */
+                DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf,
+                                     cur_req->cbuf, cur_req->bnelems, ptype)
+                if (*(cur_req->status) == NC_NOERR)
+                    /* keep the first error */
+                    *(cur_req->status) = status;
+            } else if ( ncmpii_need_swap(varp->type, ptype) ) {
+                    /* here cur_req->xbuf == cur_req->cbuf */
+                assert(cur_req->xbuf == cur_req->cbuf);
+                ncmpii_in_swapn(cur_req->cbuf, fnelems,
+                                ncmpix_len_nctype(varp->type));
+            }
+
+            if (cur_req->is_imap) { /* this request was made by getput_varm() */
                 /* layout cbuf to lbuf based on imap */
-                status = ncmpii_data_repack(cur_req->cbuf, bnelems,
+                status = ncmpii_data_repack(cur_req->cbuf, cur_req->bnelems,
                                             ptype, cur_req->lbuf, 1,
                                             cur_req->imaptype);
                 if (*(cur_req->status) == NC_NOERR) /* keep the first error */
@@ -504,59 +540,32 @@ ncmpii_wait(NC  *ncp,
                 }
 
                 MPI_Type_free(&cur_req->imaptype);
+                cbuf = cur_req->lbuf;
+                bnelems = cur_req->lnelems;
+            } else {
+                cbuf = cur_req->cbuf;
+                bnelems = cur_req->bnelems;
+            }
 
-                if (!cur_req->iscontig_of_ptypes) {
-                    /* repack it back, like a read-modify-write operation */
-                    status = ncmpii_data_repack(cur_req->lbuf, cur_req->lnelems,
-                                                ptype, cur_req->buf,
-                                                cur_req->bufcount,
-                                                cur_req->buftype);
-                    if (cur_req->lbuf != NULL) {
-                        if (cur_req->cbuf == cur_req->lbuf) cur_req->cbuf = NULL;
-                        if (cur_req->xbuf == cur_req->lbuf) cur_req->xbuf = NULL;
-                        NCI_Free(cur_req->lbuf);
-                        cur_req->lbuf = NULL;
-                        /* cur_req->lbuf will never == cur_req->buf */
-                    }
-                    if (*(cur_req->status) == NC_NOERR)
-                        /* keep the first error */
-                        *(cur_req->status) = status;
-                    if (status != NC_NOERR) {
-                        FREE_REQUEST(cur_req)
-                        NCI_Free(cur_req);
-                        return status;
-                    }
+            if (!cur_req->iscontig_of_ptypes) {
+                /* pack cbuf/lbuf to buf based on buftype */
+                status = ncmpii_data_repack(cbuf, bnelems,
+                                            ptype, cur_req->buf,
+                                            cur_req->bufcount,
+                                            cur_req->buftype);
+/* wkliao: free up the temp buffers */
+                if (*(cur_req->status) == NC_NOERR) /* keep the first error */
+                    *(cur_req->status) = status;
+                if (status != NC_NOERR) {
+                    FREE_REQUEST(cur_req)
+                    NCI_Free(cur_req);
+                    return status;
                 }
             }
-            else {
-                if ( ncmpii_need_convert(varp->type, ptype) ) {
-                    /* automatic numeric datatype conversion */
-                    DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf,
-                                         cur_req->cbuf, bnelems, ptype)
-                    if (*(cur_req->status) == NC_NOERR)
-                        /* keep the first error */
-                        *(cur_req->status) = status;
-                } else if ( ncmpii_need_swap(varp->type, ptype) ) {
-                    ncmpii_in_swapn(cur_req->cbuf, fnelems,
-                                    ncmpix_len_nctype(varp->type));
-                }
-                if (!cur_req->iscontig_of_ptypes) {
-                    /* derived datatype: unpack from contiguous buffer */
-                    status = ncmpii_data_repack(cur_req->cbuf, bnelems, ptype,
-                                                cur_req->buf, cur_req->bufcount,
-                                                cur_req->buftype);
-                    if (*(cur_req->status) == NC_NOERR)
-                        /* keep the first error */
-                        *(cur_req->status) = status;
-                    if (status != NC_NOERR) {
-                        FREE_REQUEST(cur_req)
-                        NCI_Free(cur_req);
-                        return status;
-                    }
-                }
-            }
+            if (cur_req->lbuf != NULL && cur_req->lbuf != cur_req->buf)
+                NCI_Free(cur_req->lbuf);
+            cur_req->lbuf = NULL;
         }
-
         /* free space allocated for the request objects */
         FREE_REQUEST(cur_req)
         pre_req = cur_req;

@@ -287,13 +287,32 @@ GET_VARS_TYPE(ulonglong_all, unsigned long long, MPI_UNSIGNED_LONG_LONG,COLL_IO)
     }                                                                          \
 }
 
-#define FINAL_CLEAN_UP {                                                      \
-    if (is_buf_swapped) /* byte-swap back to buf's original contents */       \
-        ncmpii_in_swapn(buf, fnelems, ncmpix_len_nctype(varp->type));         \
-                                                                              \
-    if (xbuf != cbuf && xbuf != NULL) NCI_Free(xbuf);                         \
-    if (cbuf !=  buf && cbuf != NULL) NCI_Free(cbuf);                         \
+/* for write case, buf needs to swapped back if swapped previously */
+#define FINAL_CLEAN_UP {                                                       \
+    if (is_buf_swapped) /* byte-swap back to buf's original contents */        \
+        ncmpii_in_swapn(buf, fnelems, ncmpix_len_nctype(varp->type));          \
+                                                                               \
+    if (xbuf != NULL && xbuf != cbuf) NCI_Free(xbuf);                          \
+    if (cbuf != NULL && cbuf !=  buf) NCI_Free(cbuf);                          \
 }
+
+/* The principle of buffer management is:
+
+   for put_vars:
+     1. pack buf to cbuf based on buftype
+     2. type convert and byte swap cbuf to xbuf
+     3. write from xbuf
+     4. byte swap the buf back to its original, if it is swapped
+     5. free up temp buffers, cbuf and xbuf if they were allocated separately
+
+   for get_vars:
+     1. allocate cbuf
+     2. allocate xbuf
+     3. read to xbuf
+     4. type convert and byte swap xbuf to cbuf
+     5. unpack cbuf to buf based on buftype
+     6. free up temp buffers, cbuf and xbuf if they were allocated separately
+*/
 
 /*----< ncmpii_getput_vars() >-----------------------------------------------*/
 int
@@ -310,6 +329,7 @@ ncmpii_getput_vars(NC               *ncp,
 {
     void *xbuf=NULL, *cbuf=NULL;
     int el_size, buftype_is_contig, mpireturn, need_swap, is_buf_swapped=0;
+    int isderived;
     int warning, err, status; /* err is for API abort and status is not */
     MPI_Offset fnelems, bnelems, nbytes, offset=0;
     MPI_Status mpistatus;
@@ -331,14 +351,21 @@ ncmpii_getput_vars(NC               *ncp,
 
     /* find the ptype (primitive MPI data type) from buftype
      * el_size is the element size of ptype
-     * bnelems is the number of elements in I/O buffer in ptype
+     * bnelems is the total number of ptype elements in the I/O buffer, buf
      * fnelems is the number of nc variable elements in nc_type
      * nbytes is the amount of read/write in bytes
      */
-    CHECK_DATATYPE(buftype, ptype, el_size, bnelems, buftype_is_contig)
-    CHECK_ECHAR(varp)
+    err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
+                              &isderived, &buftype_is_contig);
+    /* bnelems now is the number of ptype in a buftype */
+    if (err != NC_NOERR) goto err_check;
+
+    err = NCMPII_ECHAR(varp->type, ptype);
+    if (err != NC_NOERR) goto err_check;   
+
     CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes)
-    /* warning might be set in CHECK_NELEMS() */
+    /* bnelems now is the number of ptype in the whole buf */
+    /* warning is set in CHECK_NELEMS() */
     need_swap = ncmpii_need_swap(varp->type, ptype);
 
     if (bnelems == 0) { /* if this process has nothing to read/write */
@@ -355,7 +382,7 @@ ncmpii_getput_vars(NC               *ncp,
     /* cbuf is the "contiguous" buffer that all I/O data are packed into a
      * contiguous memory space pointed by cbuf */
     if (!buftype_is_contig) {
-        /* for derived datatype: pack into a contiguous buffer */
+        /* pack buf into cbuf, a contiguous buffer */
         cbuf = (void*) NCI_Malloc(bnelems * el_size);
         if (rw_flag == WRITE_REQ) {
             err = ncmpii_data_repack((void*)buf, bufcount, buftype,
@@ -368,7 +395,9 @@ ncmpii_getput_vars(NC               *ncp,
     }
 
     /* xbuf is the buffer whose data has been converted into the external
-     * data type, ready to read/written from/to the netCDF file */
+     * data type, ready to read/written from/to the netCDF file
+     * Now, type convert and byte swap cbuf into xbuf
+     */
     if ( ncmpii_need_convert(varp->type, ptype) ) {
         /* allocate new buffer for data type conversion */
         xbuf = NCI_Malloc(nbytes);
@@ -377,14 +406,14 @@ ncmpii_getput_vars(NC               *ncp,
             /* automatic numeric datatype conversion + swap if necessary
                and only xbuf could be byte-swapped, not cbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
-            /* status may be set after DATATYPE_PUT_CONVERT() */
+            /* status may be set at DATATYPE_PUT_CONVERT() */
         }
     } else if (need_swap) {
         if (rw_flag == WRITE_REQ) { /* perform array in-place byte swap */
             ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
             is_buf_swapped = (cbuf == buf) ? 1 : 0;
             /* is_buf_swapped indicates if the contents of the original user
-             * buffer have been changed, i.e. byte swapped. */
+             * buffer, buf, have been changed, i.e. byte swapped. */
         }
         xbuf = cbuf;
     } else {
@@ -481,15 +510,15 @@ err_check:
     /* only bnelems > 0 needs to proceed the following */
     if (rw_flag == READ_REQ) {
         if ( ncmpii_need_convert(varp->type, ptype) ) {
-            /* automatic numeric datatype conversion + swap if necessary */
+            /* type conversion + swap from xbuf to cbuf*/
             DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
         } else if (need_swap) {
-            /* perform array in-place byte swap */
+            /* perform array in-place byte swap from xbuf to cbuf */
             ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
         }
 
         if (!buftype_is_contig) {
-            /* handling derived datatype: unpack from the contiguous buffer */
+            /* unpack cbuf to buf using buftype */
             err = ncmpii_data_repack(cbuf, bnelems, ptype,
                                      (void*)buf, bufcount, buftype);
             if (err != NC_NOERR) {
@@ -498,7 +527,7 @@ err_check:
             }
         }
     }
-    else { /* for write case, buf needs to swapped back if swapped previously */
+    else {
         if (status == NC_NOERR && IS_RECVAR(varp)) {
             /* update header's number of records in memory */
             MPI_Offset newnumrecs;
