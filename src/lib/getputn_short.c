@@ -110,12 +110,11 @@ ncmpix_get_short_long(const void *xp, long *ip)
 static int                                                                    \
 ncmpix_get_short_##btype(const void *xp, btype *ip)                           \
 {                                                                             \
-    int status = NC_NOERR;                                                    \
     ix_short xx;                                                              \
     get_ix_short(xp, &xx); /* get a short in the form of local Endianness */  \
     *ip = xx;              /* typecast to schar */                            \
     range_check                                                               \
-    return NC_NOERR;                                                          \
+    return NC_NOERR;                                                            \
 }
 /*----< ncmpix_get_short_schar() >-------------------------------------------*/
 /*----< ncmpix_get_short_uchar() >-------------------------------------------*/

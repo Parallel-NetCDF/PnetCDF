@@ -228,9 +228,12 @@ int
 ncmpi_get_file_info(int       ncid,
                     MPI_Info *info_used)
 {
-    int status=NC_NOERR, mpireturn;
+    int status=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
     NC *ncp;
+#ifndef HAVE_MPI_INFO_DUP
+    int mpireturn;
+#endif
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
