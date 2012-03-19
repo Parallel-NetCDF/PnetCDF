@@ -1873,7 +1873,10 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     schar magic[sizeof(ncmagic)];
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *temp_ncp;
+
+#ifdef CHECK_MAGIC_CONSISTENCY
     char *root_magic;
+#endif
 
     assert(ncp != NULL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
