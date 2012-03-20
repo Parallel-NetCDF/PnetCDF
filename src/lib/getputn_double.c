@@ -181,7 +181,7 @@ ncmpix_get_double_##btype(const void *xp, btype *ip)                          \
     double xx=0.0;                                                            \
     get_ix_double(xp, &xx);                                                   \
     *ip = xx;                                                                 \
-    range_check             /* check if can fot into btype */                 \
+    range_check             /* check if can fit into btype */                 \
     return NC_NOERR;                                                          \
 }
 /*----< ncmpix_get_double_schar() >------------------------------------------*/

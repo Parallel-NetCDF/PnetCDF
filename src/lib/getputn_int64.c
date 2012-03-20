@@ -62,13 +62,13 @@ put_ix_int64(void *xp, const int64 *ip)
     uchar *cp = (uchar *) xp;
 
     *cp++ = (*ip) >> 56;
-    *cp++ = ((*ip) & 0x00ff000000000000) >> 48;
-    *cp++ = ((*ip) & 0x0000ff0000000000) >> 40;
-    *cp++ = ((*ip) & 0x000000ff00000000) >> 32;
-    *cp++ = ((*ip) & 0x00000000ff000000) >> 24;
-    *cp++ = ((*ip) & 0x0000000000ff0000) >> 16;
-    *cp++ = ((*ip) & 0x000000000000ff00) >>  8;
-    *cp   = ((*ip) & 0x00000000000000ff);
+    *cp++ = ((*ip) & 0x00ff000000000000LL) >> 48;
+    *cp++ = ((*ip) & 0x0000ff0000000000LL) >> 40;
+    *cp++ = ((*ip) & 0x000000ff00000000LL) >> 32;
+    *cp++ = ((*ip) & 0x00000000ff000000LL) >> 24;
+    *cp++ = ((*ip) & 0x0000000000ff0000LL) >> 16;
+    *cp++ = ((*ip) & 0x000000000000ff00LL) >>  8;
+    *cp   = ((*ip) & 0x00000000000000ffLL);
 }
 
 #define GET_INT64(btype, range_check)                                         \
@@ -94,7 +94,15 @@ ncmpix_get_int64_##btype(const void *xp, btype *ip)                           \
 GET_INT64(schar,  if (xx > SCHAR_MAX || xx < SCHAR_MIN) return NC_ERANGE;)
 GET_INT64(short,  if (xx > SHRT_MAX  || xx < SHRT_MIN)  return NC_ERANGE;)
 GET_INT64(int,    if (xx > INT_MAX   || xx < INT_MIN)   return NC_ERANGE;)
+#if SIZEOF_LONG == X_SIZEOF_INT
+static int 
+ncmpix_get_int64_long(const void *xp, long *ip) 
+{                                              
+    return ncmpix_get_int64_int(xp, (int*)ip);
+}
+#else
 GET_INT64(long,   if (xx > LONG_MAX  || xx < LONG_MIN)  return NC_ERANGE;)
+#endif
 GET_INT64(float,  if (xx > FLT_MAX   || xx < -FLT_MAX)  return NC_ERANGE;)
 /*----< ncmpix_get_int64_uchar() >-------------------------------------------*/
 /*----< ncmpix_get_int64_ushort() >------------------------------------------*/
