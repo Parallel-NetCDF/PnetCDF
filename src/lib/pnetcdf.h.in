@@ -75,7 +75,7 @@ typedef enum {
 } nc_type;
 #define NC_LONG NC_INT; /* deprecated, but required for backward compati bility. */
 
-/* corresponding external (memory) types used in attribute APIs:
+/* corresponding external types and type names used in APIs:
     NC_BYTE   :   signed char       (for _schar     APIs)
     NC_CHAR   :   signed char       (for _text      APIs)
     NC_SHORT  :   signed short int  (for _short     APIs)
@@ -91,6 +91,10 @@ typedef enum {
     NC_STRING :   signed char       (for _string    APIs)
  */
 #endif
+
+/* typedef nc_type ncmpi_type; */
+/* ncmpi_type is deprecated (hopefully no one has ever used it)
+ * it shall be removed */
 
 /*
  * 	Default fill values, used unless _FillValue attribute is set.
