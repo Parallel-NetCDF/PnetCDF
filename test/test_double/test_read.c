@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
   int ncid1, ncid2;
   int ndims, nvars, ngatts, unlimdimid;
   char name[NC_MAX_NAME];
-  ncmpi_type type, vartypes[NC_MAX_VARS];
+  nc_type type, vartypes[NC_MAX_VARS];
   MPI_Offset attlen, dimlen;
   MPI_Offset shape[NC_MAX_VAR_DIMS], varsize, start[NC_MAX_VAR_DIMS];
   MPI_Offset stride[NC_MAX_VAR_DIMS];
