@@ -39,7 +39,7 @@ distclean:	src/distclean \
 tests:
 	@cd test && $(MAKE)
 
-testing:
+testing: tests
 	@cd test && $(MAKE) testing
 
 clean_macros:
