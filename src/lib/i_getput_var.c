@@ -44,10 +44,10 @@ ncmpi_iput_var(int           ncid,
     CHECK_VARID(varid, varp)
     GET_FULL_DIMENSIONS
 
-    /* iput_var is a special case of iput_vara */
+    /* iput_var is a special case of iput_varm */
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, buftype, reqid,
-                                 WRITE_REQ);
+                                 WRITE_REQ, 0);
     if (varp->ndims > 0) NCI_Free(start);
 
     return status;
@@ -74,10 +74,10 @@ ncmpi_iput_var_##apitype(int          ncid,                             \
     GET_TOTAL_NUM_ELEMENTS                                              \
     GET_FULL_DIMENSIONS                                                 \
                                                                         \
-    /* iput_var is a special case of iput_vara */                       \
+    /* iput_var is a special case of iput_varm */                       \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \
                                  (void*)op, nelems, buftype, reqid,     \
-                                 WRITE_REQ);                            \
+                                 WRITE_REQ, 0);                         \
     if (varp->ndims > 0) NCI_Free(start);                               \
                                                                         \
     return status;                                                      \
@@ -132,10 +132,10 @@ ncmpi_iget_var(int           ncid,
     CHECK_VARID(varid, varp)
     GET_FULL_DIMENSIONS
 
-    /* iget_var is a special case of iget_vara */
+    /* iget_var is a special case of iget_varm */
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  buf, bufcount, buftype, reqid,
-                                 READ_REQ);
+                                 READ_REQ, 0);
     if (varp->ndims > 0) NCI_Free(start);
 
     return status;
@@ -163,7 +163,7 @@ ncmpi_iget_var_##apitype(int    ncid,                                   \
     /* iget_var is a special case of iget_vara */                       \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \
                                  ip, nelems, buftype, reqid,            \
-                                 READ_REQ);                             \
+                                 READ_REQ, 0);                          \
     if (varp->ndims > 0) NCI_Free(start);                               \
                                                                         \
     return status;                                                      \

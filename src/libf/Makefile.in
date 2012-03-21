@@ -249,6 +249,14 @@ C2F_SRCS = createf.c \
 	iget_var1_realf.c \
 	iget_var1_doublef.c \
 	iget_var1_int8f.c \
+	bput_var1f.c \
+	bput_var1_textf.c \
+	bput_var1_int1f.c \
+	bput_var1_int2f.c \
+	bput_var1_intf.c \
+	bput_var1_realf.c \
+	bput_var1_doublef.c \
+	bput_var1_int8f.c \
 	iput_varf.c \
 	iput_var_int1f.c \
 	iput_var_textf.c \
@@ -265,6 +273,14 @@ C2F_SRCS = createf.c \
 	iget_var_realf.c \
 	iget_var_doublef.c \
 	iget_var_int8f.c \
+	bput_varf.c \
+	bput_var_int1f.c \
+	bput_var_textf.c \
+	bput_var_int2f.c \
+	bput_var_intf.c \
+	bput_var_realf.c \
+	bput_var_doublef.c \
+	bput_var_int8f.c \
 	iput_varaf.c \
 	iput_vara_int1f.c \
 	iput_vara_textf.c \
@@ -281,15 +297,23 @@ C2F_SRCS = createf.c \
 	iget_vara_realf.c \
 	iget_vara_doublef.c \
 	iget_vara_int8f.c \
+	bput_varaf.c \
+	bput_vara_int1f.c \
+	bput_vara_textf.c \
+	bput_vara_int2f.c \
+	bput_vara_intf.c \
+	bput_vara_realf.c \
+	bput_vara_doublef.c \
+	bput_vara_int8f.c \
 	iput_varsf.c \
 	iput_vars_int1f.c \
 	iput_vars_textf.c \
 	iput_vars_int2f.c \
 	iput_vars_intf.c \
-	iget_varsf.c \
 	iput_vars_realf.c \
 	iput_vars_doublef.c \
 	iput_vars_int8f.c \
+	iget_varsf.c \
 	iget_vars_int1f.c \
 	iget_vars_textf.c \
 	iget_vars_int2f.c \
@@ -297,6 +321,14 @@ C2F_SRCS = createf.c \
 	iget_vars_realf.c \
 	iget_vars_doublef.c \
 	iget_vars_int8f.c \
+	bput_varsf.c \
+	bput_vars_int1f.c \
+	bput_vars_textf.c \
+	bput_vars_int2f.c \
+	bput_vars_intf.c \
+	bput_vars_realf.c \
+	bput_vars_doublef.c \
+	bput_vars_int8f.c \
 	iput_varmf.c \
 	iput_varm_int1f.c \
 	iput_varm_textf.c \
@@ -312,7 +344,18 @@ C2F_SRCS = createf.c \
 	iget_varm_intf.c \
 	iget_varm_realf.c \
 	iget_varm_doublef.c \
-	iget_varm_int8f.c
+	iget_varm_int8f.c \
+	bput_varmf.c \
+	bput_varm_int1f.c \
+	bput_varm_textf.c \
+	bput_varm_int2f.c \
+	bput_varm_intf.c \
+	bput_varm_realf.c \
+	bput_varm_doublef.c \
+	bput_varm_int8f.c \
+	bufattachf.c \
+	bufdetachf.c
+
 
 LIB_CSRCS = $(C2F_SRCS) $(UTIL_SRCS)
 

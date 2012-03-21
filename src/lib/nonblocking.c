@@ -41,13 +41,37 @@ static int ncmpii_mset_fileview(MPI_File fh, NC* ncp, int ntimes, NC_var **varp,
 
 static int req_compare(const NC_req *a, const NC_req *b);
 
+static int
+ncmpii_abuf_free(NC *ncp, void *buf)
+{
+    int i;
+    /* find the index in the occupy table for this buffer
+     * note that abuf->tail points to the first free entry */
+    size_t buf_offset = 0;
+    for (i=0; i<ncp->abuf->tail; i++) {
+        if (buf - ncp->abuf->buf <= buf_offset)
+            break;
+        buf_offset += ncp->abuf->occupy_table[i].req_size;
+    }
+    assert(i < ncp->abuf->tail);
+    ncp->abuf->occupy_table[i].is_used = 0; /* set to free */
+
+    /* coalesce the freed entries backwardly from the tail */
+    while (i >= 0 && i+1 == ncp->abuf->tail) {
+        ncp->abuf->size_used -= ncp->abuf->occupy_table[i].req_size;
+        ncp->abuf->tail--;
+        if (i > 0 && ncp->abuf->occupy_table[i-1].is_used == 0)
+            i--;
+    }
+    return NC_NOERR;
+}
+
 #define FREE_REQUEST(req) {                                                   \
-    if (req->xbuf != NULL && req->xbuf != req->cbuf) NCI_Free(req->xbuf);     \
-    if (req->cbuf != NULL && req->cbuf != req->buf)  NCI_Free(req->cbuf);     \
-    if (req->lbuf != NULL && req->lbuf != req->buf)  NCI_Free(req->lbuf);     \
+    if (req->use_abuf)                                                        \
+        ncmpii_abuf_free(ncp, req->xbuf);                                     \
+    else if (req->xbuf != NULL && req->xbuf != req->buf)                      \
+        NCI_Free(req->xbuf);                                                  \
     req->xbuf = NULL;                                                         \
-    req->cbuf = NULL;                                                         \
-    req->lbuf = NULL;                                                         \
                                                                               \
     for (j=0; j<req->num_subreqs; j++)                                        \
         NCI_Free(req->subreqs[j].start);                                      \
@@ -492,7 +516,6 @@ ncmpii_wait(NC  *ncp,
         MPI_Offset fnelems, bnelems;
         MPI_Datatype ptype;
         NC_var *varp = cur_req->varp;
-        void *cbuf;
 
         fnelems = cur_req->fnelems;
         ptype   = cur_req->ptype;
@@ -503,57 +526,78 @@ ncmpii_wait(NC  *ncp,
                I.e. ! iscontig_of_ptypes && not ncmpii_need_convert() &&
                ncmpii_need_swap()
             */
-/* wkliao: TODO use a flag to indicate if swap back is needed */
-            if (cur_req->iscontig_of_ptypes &&
-                !ncmpii_need_convert(varp->type, ptype) &&
-                ncmpii_need_swap(varp->type, ptype))
-                ncmpii_in_swapn(cur_req->buf, fnelems, ncmpix_len_nctype(varp->type));
+            if (cur_req->need_swap_back_buf)
+                ncmpii_in_swapn(cur_req->buf, fnelems,
+                                ncmpix_len_nctype(varp->type));
+/*
+            if (ncmpii_need_swap(varp->type, ptype) &&
+                cur_req->buf == cur_req->xbuf)
+                ncmpii_in_swapn(cur_req->buf, fnelems,
+                                ncmpix_len_nctype(varp->type));
+*/
         } else { /* for read */
             /* now, xbuf contains the data read from the file
              * type convert + byte swap from xbuf to cbuf
              */
+            void *cbuf, *lbuf;
+
             if (ncmpii_need_convert(varp->type, ptype) ) {
-                /* automatic numeric datatype conversion and byte swap */
+                if (cur_req->is_imap || !cur_req->iscontig_of_ptypes)
+                    cbuf = NCI_Malloc(fnelems * varp->xsz);
+                else
+                    cbuf = cur_req->buf;
+
+                /* type convert + byte swap from xbuf to cbuf */
                 DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf,
-                                     cur_req->cbuf, cur_req->bnelems, ptype)
+                                     cbuf, cur_req->bnelems, ptype)
                 if (*(cur_req->status) == NC_NOERR)
                     /* keep the first error */
                     *(cur_req->status) = status;
-            } else if ( ncmpii_need_swap(varp->type, ptype) ) {
-                    /* here cur_req->xbuf == cur_req->cbuf */
-                assert(cur_req->xbuf == cur_req->cbuf);
-                ncmpii_in_swapn(cur_req->cbuf, fnelems,
-                                ncmpix_len_nctype(varp->type));
+            } else {
+                if (ncmpii_need_swap(varp->type, ptype))
+                    ncmpii_in_swapn(cur_req->xbuf, fnelems,
+                                    ncmpix_len_nctype(varp->type));
+                cbuf = cur_req->xbuf;
             }
 
-            if (cur_req->is_imap) { /* this request was made by getput_varm() */
-                /* layout cbuf to lbuf based on imap */
-                status = ncmpii_data_repack(cur_req->cbuf, cur_req->bnelems,
-                                            ptype, cur_req->lbuf, 1,
-                                            cur_req->imaptype);
+            if (cur_req->is_imap) { /* this request was made by get_varm() */
+                if (cur_req->iscontig_of_ptypes)
+                    lbuf = cur_req->buf;
+                else {
+                    int el_size;
+                    MPI_Type_size(ptype, &el_size);
+                    lbuf = NCI_Malloc(cur_req->lnelems*el_size);
+                }
+
+                /* unpack cbuf to lbuf based on imaptype */
+                status = ncmpii_data_repack(cbuf, cur_req->bnelems, ptype,
+                                            lbuf, 1, cur_req->imaptype);
                 if (*(cur_req->status) == NC_NOERR) /* keep the first error */
                     *(cur_req->status) = status;
+                MPI_Type_free(&cur_req->imaptype);
+
                 if (status != NC_NOERR) {
                     FREE_REQUEST(cur_req)
                     NCI_Free(cur_req);
                     return status;
                 }
+                /* cbuf is no longer needed
+                 * if (cur_req->is_imap) cbuf cannot be == cur_req->buf */
+                if (cbuf != cur_req->xbuf) NCI_Free(cbuf);
+                cbuf = NULL;
 
-                MPI_Type_free(&cur_req->imaptype);
-                cbuf = cur_req->lbuf;
                 bnelems = cur_req->lnelems;
-            } else {
-                cbuf = cur_req->cbuf;
+            } else { /* get_vars */
+                lbuf = cbuf;
                 bnelems = cur_req->bnelems;
             }
 
             if (!cur_req->iscontig_of_ptypes) {
-                /* pack cbuf/lbuf to buf based on buftype */
-                status = ncmpii_data_repack(cbuf, bnelems,
+                /* unpack lbuf to buf based on buftype */
+                status = ncmpii_data_repack(lbuf, bnelems,
                                             ptype, cur_req->buf,
                                             cur_req->bufcount,
                                             cur_req->buftype);
-/* wkliao: free up the temp buffers */
                 if (*(cur_req->status) == NC_NOERR) /* keep the first error */
                     *(cur_req->status) = status;
                 if (status != NC_NOERR) {
@@ -562,9 +606,9 @@ ncmpii_wait(NC  *ncp,
                     return status;
                 }
             }
-            if (cur_req->lbuf != NULL && cur_req->lbuf != cur_req->buf)
-                NCI_Free(cur_req->lbuf);
-            cur_req->lbuf = NULL;
+            /* lbuf is no longer needed */
+            if (lbuf != cur_req->buf && lbuf != cur_req->xbuf)
+                NCI_Free(lbuf);
         }
         /* free space allocated for the request objects */
         FREE_REQUEST(cur_req)
@@ -668,8 +712,8 @@ ncmpii_wait_getput(NC     *ncp,
             starts[j]   = reqs[k].start;
             counts[j]   = reqs[k].count;
             strides[j]  = reqs[k].stride;
-            bufs[j]     = reqs[k].xbuf;
             nbytes[j]   = reqs[k].fnelems * varps[j]->xsz;
+            bufs[j]     = reqs[k].xbuf;
             statuses[j] = NC_NOERR;
         }
 

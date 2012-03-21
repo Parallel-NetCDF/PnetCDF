@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     MPI_Offset imap[2];
     int   var[6][4];
     float rh[4][6];
-    char  varT[4][6];
+    signed char  varT[4][6];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -85,9 +85,8 @@ int main(int argc, char **argv) {
             if (rh[j][i] != k) {
 #ifdef PRINT_ERR_ON_SCREEN
                 printf("get_varm unexpected value at j=%d i=%d\n",j,i);
-#else
-                err++;
 #endif
+                err++;
                 break;
             }
             k += 1.0;
@@ -158,9 +157,8 @@ int main(int argc, char **argv) {
 #ifdef PRINT_ERR_ON_SCREEN
                 /* this error is a pntecdf internal error, if occurs */
                 printf("Error: get_varm write buffer has been altered at j=%d i=%d\n",j,i);
-#else
-                err++;
 #endif
+                err++;
                 break;
             }
         }

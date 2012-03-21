@@ -381,11 +381,12 @@ typedef struct NC_req {
     int            id;
     int            rw_flag;
     NC_var        *varp;
-    void          *buf;
-    void          *xbuf;
-    void          *cbuf;
-    void          *lbuf;
+    void          *buf;    /* the original user buffer */
+    void          *xbuf;   /* the buffer used to read/write, may point to
+                              the same address as buf */
     int            iscontig_of_ptypes;
+    int            need_swap_back_buf;
+    int            use_abuf; /* whether use the attached buffer */
     int            is_imap;
     int            ndims;
     MPI_Offset    *start;  /* [ndims] */
@@ -405,6 +406,22 @@ typedef struct NC_req {
     struct NC_req *subreqs;  /* [num_subreq] */
     struct NC_req *next;
 } NC_req;
+
+#define NC_ABUF_DEFAULT_TABLE_SIZE 128
+
+typedef struct NC_buf_status {
+    int    is_used;
+    size_t req_size;
+} NC_buf_status;
+
+typedef struct NC_buf {
+    int            size_allocated;
+    size_t         size_used;
+    int            table_size;
+    NC_buf_status *occupy_table; /* [table_size] */
+    int            tail;         /* index of last free entry */
+    void          *buf;
+} NC_buf;
 
 struct NC {
     /* links to make list of open netcdf's */
@@ -437,6 +454,7 @@ struct NC {
     NC_vararray   vars;     /* variables defined */
     NC_req       *head;     /* linked list head of nonblocking requests */
     NC_req       *tail;     /* tail of the linked list */
+    NC_buf       *abuf;     /* attached buffer, used by bput APIs */
 };
 
 #define NC_readonly(ncp) \
@@ -727,7 +745,7 @@ extern int
 ncmpii_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *stride, const MPI_Offset *imap,
                 const MPI_Offset *count, void *buf, MPI_Offset bufcount,
-                MPI_Datatype datatype, int *reqid, int rw_flag);
+                MPI_Datatype datatype, int *reqid, int rw_flag, int use_abuf);
 
 extern int
 ncmpii_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
