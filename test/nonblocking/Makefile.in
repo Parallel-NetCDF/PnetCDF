@@ -39,10 +39,12 @@ mcoll_testf: mcoll_testf.o
 test_bputf: test_bputf.o
 	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
-testing: mcoll_perf mcoll_testf test_bput test_bputf
+testing: mcoll_perf test_bput
 	./mcoll_perf
-	./mcoll_testf
 	./test_bput
+
+testing-f: mcoll_testf test_bputf
+	./mcoll_testf
 	./test_bputf
 
 clean:
