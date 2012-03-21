@@ -595,7 +595,7 @@ AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile
 	 test/fandc/Makefile src/utils/Makefile src/utils/ncdump/Makefile 
 	 src/utils/ncdiff/Makefile 
 	 src/utils/ncgen/Makefile test/testcases/Makefile 
-	 test/C/Makefile test/mcoll_perf/Makefile
+	 test/C/Makefile test/nonblocking/Makefile
 	 test/test_check_header/Makefile
 	 test/test_inq_format/Makefile
 	 test/largefile/Makefile
