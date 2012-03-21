@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   int ncid, *dimids, varid_1, varid_2;
   MPI_Offset *local_starts, *local_edges, *stride, *imap;
   char dimname[20];
-  ncmpi_type nc_etype;
+  nc_type nc_etype;
   MPI_Datatype mpi_etype, mpi_subarray;
   TEST_NATIVE_ETYPE *buf1, *buf2, *tmpbuf;
   void *packbuf;
