@@ -13,10 +13,10 @@ CFLAGS          = @CFLAGS@ $(INCLUDES)
 FC              = @MPIF77@
 FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
 
-CSRCS		= mcoll_perf.c
-FSRCS		= mcoll_testf.F
+CSRCS		= mcoll_perf.c test_bput.c
+FSRCS		= mcoll_testf.F test_bputf.F
 OBJS		= $(CSRCS:.c=.o) $(FSRCS:.F=.o)
-PROGS		= mcoll_perf mcoll_testf
+PROGS		= mcoll_perf mcoll_testf test_bput test_bputf
 LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
 LIBS		= -lpnetcdf -ltestutils @LIBS@
 
@@ -29,14 +29,22 @@ all:		$(PROGS)
 
 mcoll_perf: mcoll_perf.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+
+test_bput: test_bput.o
+	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+
 mcoll_testf: mcoll_testf.o
 	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
-testing: mcoll_perf
+test_bputf: test_bputf.o
+	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+
+testing: mcoll_perf mcoll_testf test_bput test_bputf
 	./mcoll_perf
-testing-f: mcoll_testf
 	./mcoll_testf
-	
+	./test_bput
+	./test_bputf
+
 clean:
 	$(RM) -f *.o $(PROGS) *.nc
 

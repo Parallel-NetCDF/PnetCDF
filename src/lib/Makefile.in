@@ -58,7 +58,12 @@ LIB_CSRCS = \
 	getputn_double.c \
 	getputn_int64.c \
 	getputn_uint64.c \
-	swap.c
+	swap.c \
+	bput_var.c \
+	bput_var1.c \
+	bput_vara.c \
+	bput_vars.c \
+	bput_varm.c
 
 PACKING_LIST = \
 	$(LIB_CSRCS) \

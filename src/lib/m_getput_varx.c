@@ -404,28 +404,28 @@ ncmpii_mgetput_varm(int                ncid,
             GET_FULL_DIMENSIONS
             status = ncmpii_igetput_varm(ncp, varp, start, count, NULL,
                                          NULL, bufs[i], bufcounts[i],
-                                         datatypes[i], &req_ids[i], rw_flag);
+                                         datatypes[i], &req_ids[i], rw_flag, 0);
             if (varp->ndims > 0) NCI_Free(start);
         } else if (counts == NULL) {  /* var1 */
             GET_FULL_DIMENSIONS
             GET_ONE_COUNT
             status = ncmpii_igetput_varm(ncp, varp, starts[i], count, NULL,
                                          NULL, bufs[i], bufcounts[i],
-                                         datatypes[i], &req_ids[i], rw_flag);
+                                         datatypes[i], &req_ids[i], rw_flag, 0);
             if (varp->ndims > 0) NCI_Free(count);
         } else if (strides == NULL) { /* vara */
             status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i], NULL,
                                          NULL, bufs[i], bufcounts[i],
-                                         datatypes[i], &req_ids[i], rw_flag);
+                                         datatypes[i], &req_ids[i], rw_flag, 0);
         } else if (imaps == NULL) {   /* vars */
             status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
                                          strides[i], NULL, bufs[i], bufcounts[i],
-                                         datatypes[i], &req_ids[i], rw_flag);
+                                         datatypes[i], &req_ids[i], rw_flag, 0);
         } else {                      /* varm */
             status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
                                          strides[i], imaps[i], bufs[i],
                                          bufcounts[i], datatypes[i],
-                                         &req_ids[i], rw_flag);
+                                         &req_ids[i], rw_flag, 0);
         }
     }
 

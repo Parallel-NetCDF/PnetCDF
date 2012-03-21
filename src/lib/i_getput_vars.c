@@ -51,7 +51,7 @@ ncmpi_iput_vars(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ);
+                               WRITE_REQ, 0);
 }
 
 #define IPUT_VARS_TYPE(apitype, btype, buftype)                          \
@@ -82,7 +82,7 @@ ncmpi_iput_vars_##apitype(int               ncid,                        \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,    \
                                (void*)op, nelems, buftype, reqid,        \
-                               WRITE_REQ);                               \
+                               WRITE_REQ, 0);                            \
 }
 
 /*----< ncmpi_iput_vars_text() >----------------------------------------------*/
@@ -138,7 +138,7 @@ ncmpi_iget_vars(int               ncid,
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
-                               buf, bufcount, buftype, reqid, READ_REQ);
+                               buf, bufcount, buftype, reqid, READ_REQ, 0);
 }
 
 #define IGET_VARS_TYPE(apitype, btype, buftype)                          \
@@ -167,7 +167,7 @@ ncmpi_iget_vars_##apitype(int               ncid,                        \
     GET_NUM_ELEMENTS                                                     \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,    \
-                               ip, nelems, buftype, reqid, READ_REQ);    \
+                               ip, nelems, buftype, reqid, READ_REQ, 0); \
 }
 
 

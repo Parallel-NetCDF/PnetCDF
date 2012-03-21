@@ -50,7 +50,7 @@ ncmpi_iput_vara(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ);
+                               WRITE_REQ, 0);
 }
 
 #define IPUT_VARA_TYPE(apitype, btype, buftype)                        \
@@ -80,7 +80,7 @@ ncmpi_iput_vara_##apitype(int               ncid,                      \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
                                (void*)op, nelems, buftype, reqid,      \
-                               WRITE_REQ);                             \
+                               WRITE_REQ, 0);                          \
 }
 
 /*----< ncmpi_iput_vara_text() >----------------------------------------------*/
@@ -135,35 +135,35 @@ ncmpi_iget_vara(int               ncid,
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL, buf,
-                               bufcount, buftype, reqid, READ_REQ);
+                               bufcount, buftype, reqid, READ_REQ, 0);
 }
 
-#define IGET_VARA_TYPE(apitype, btype, buftype)                        \
-int                                                                    \
-ncmpi_iget_vara_##apitype(int               ncid,                      \
-                          int               varid,                     \
-                          const MPI_Offset  start[],                   \
-                          const MPI_Offset  count[],                   \
-                          btype            *ip,                        \
-                          int              *reqid)                     \
-{                                                                      \
-    int         status;                                                \
-    NC         *ncp;                                                   \
-    NC_var     *varp;                                                  \
-    MPI_Offset  nelems;                                                \
-                                                                       \
-    *reqid = NC_REQ_NULL;                                              \
-    CHECK_NCID                                                         \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                            \
-    CHECK_VARID(varid, varp)                                           \
-    status = NCcoordck(ncp, varp, start);                              \
-    if (status != NC_NOERR) return status;                             \
-    status = NCedgeck(ncp, varp, start, count);                        \
-    if (status != NC_NOERR) return status;                             \
-    GET_NUM_ELEMENTS                                                   \
-                                                                       \
-    return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
-                               ip, nelems, buftype, reqid, READ_REQ);  \
+#define IGET_VARA_TYPE(apitype, btype, buftype)                           \
+int                                                                       \
+ncmpi_iget_vara_##apitype(int               ncid,                         \
+                          int               varid,                        \
+                          const MPI_Offset  start[],                      \
+                          const MPI_Offset  count[],                      \
+                          btype            *ip,                           \
+                          int              *reqid)                        \
+{                                                                         \
+    int         status;                                                   \
+    NC         *ncp;                                                      \
+    NC_var     *varp;                                                     \
+    MPI_Offset  nelems;                                                   \
+                                                                          \
+    *reqid = NC_REQ_NULL;                                                 \
+    CHECK_NCID                                                            \
+    if (NC_indef(ncp)) return NC_EINDEFINE;                               \
+    CHECK_VARID(varid, varp)                                              \
+    status = NCcoordck(ncp, varp, start);                                 \
+    if (status != NC_NOERR) return status;                                \
+    status = NCedgeck(ncp, varp, start, count);                           \
+    if (status != NC_NOERR) return status;                                \
+    GET_NUM_ELEMENTS                                                      \
+                                                                          \
+    return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,       \
+                               ip, nelems, buftype, reqid, READ_REQ, 0);  \
 }
 
 /*----< ncmpi_iget_vara_text() >----------------------------------------------*/

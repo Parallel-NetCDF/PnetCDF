@@ -4,7 +4,7 @@ CXX = @CXX@
 
 include ../macros.make
 
-SUBDIRS = common test_double test_double_int test_float test_int test_dtype nc_test fandc nf_test largefile C mcoll_perf test_inq_format test_check_header testcases
+SUBDIRS = common test_double test_double_int test_float test_int test_dtype nc_test fandc nf_test largefile C nonblocking test_inq_format test_check_header testcases
 
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
@@ -21,10 +21,10 @@ distclean:
 testing:
 	cd common && make
 	cd C && make testing
-	cd mcoll_perf && make testing
+	cd nonblocking && make testing
 	cd nc_test && make testing
 	if [ @has_fortran@ = yes ] ; then cd nf_test && make testing ; fi
-	if [ @has_fortran@ = yes ] ; then cd mcoll_perf && make testing-f ; fi
+	if [ @has_fortran@ = yes ] ; then cd nonblocking && make testing-f ; fi
 	if [ @has_fortran@ = yes ] ; then cd testcases && make testing-f ; fi
 	if [ $(CXX) != "@CXX@" ] ; then cd testcases && make testing-cxx ; fi
 
