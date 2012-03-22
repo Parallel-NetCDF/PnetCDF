@@ -411,7 +411,7 @@ AC_LANG_SOURCE([
 
 static void handle_error(int errcode, char *str)
 {
-        char msg[MPI_MAX_ERROR_STRING];
+        [char msg[MPI_MAX_ERROR_STRING]];
         int resultlen;
         MPI_Error_string(errcode, msg, &resultlen);
         fprintf(stderr, "%s: %s\n", str, msg);
@@ -437,12 +437,8 @@ int main(int argc, char **argv){
 AC_MSG_RESULT(yes)
 ,
 AC_MSG_RESULT(no)
-, if test "$ac_cv_MPI_TYPE_RESIZED_WORKS"; then 
-	AC_DEFINE_UNQUOTED(HAVE_MPI_RESIZED_SUPPORT, 1, RESIZED combiner works)
-	AC_MSG_RESULT(yes: from environment)
-  else
-	AC_MSG_RESULT(no: cannot run test in cross-compile)
-  fi
+, AC_DEFINE_UNQUOTED(HAVE_MPI_RESIZED_SUPPORT, 1, RESIZED combiner works)
+  AC_MSG_RESULT(cross-compiling: assuming yes)
 )
 
 dnl Check for presence of Fortran types
