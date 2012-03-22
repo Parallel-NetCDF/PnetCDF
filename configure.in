@@ -437,8 +437,12 @@ int main(int argc, char **argv){
 AC_MSG_RESULT(yes)
 ,
 AC_MSG_RESULT(no)
-, AC_DEFINE_UNQUOTED(HAVE_MPI_RESIZED_SUPPORT, 1, RESIZED combiner works)
-  AC_MSG_RESULT(cross-compiling: assuming yes)
+, if test "$ac_cv_MPI_TYPE_RESIZED_WORKS" != "no" ; then
+	AC_DEFINE_UNQUOTED(HAVE_MPI_RESIZED_SUPPORT, 1, RESIZED combiner works)
+	AC_MSG_RESULT(cross-compiling: assuming yes)
+  else
+	AC_MSG_RESULT(cross-compiling: environment says no)
+  fi
 )
 
 dnl Check for presence of Fortran types
