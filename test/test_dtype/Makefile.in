@@ -15,7 +15,7 @@ SRCS		= test_subarray.c test_darray.c test_nonblocking.c
 OBJS		= $(SRCS:.c=.o)
 PROGS		= test_subarray test_darray test_nonblocking
 LDFLAGS		= -L$(LIBDIR) 
-LIBS		= -lpnetcdf 
+LIBS		= @LIBS@ -lpnetcdf
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<

@@ -582,6 +582,20 @@ if test "$ac_cv_sizeof_off_t" = "8" ; then
 	large_file_support="yes"
 fi
 
+dnl
+dnl After all other tests, optionally enable coverage.  we do this last
+dnl because legend has it that sometimes on some compilers the coverage flags
+dnl mess up other checks
+dnl
+
+AC_ARG_ENABLE(coverage,
+	      [AS_HELP_STRING([--enable-coverage],
+		      [Compile with coverage support (gcc-based only)])],
+		      CFLAGS="${CFLAGS} -pg -fprofile-arcs -ftest-coverage --coverage "
+		      FFLAGS="${FFLAGS} -pg -fprofile-arcs -ftest-coverage --coverage"
+		      LIBS="${LIBS} -lgcov",
+		      [])
+
 has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 chmod u+x ${srcdir}/scripts/install-sh
