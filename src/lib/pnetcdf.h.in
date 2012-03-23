@@ -792,10 +792,10 @@ int ncmpi_put_vara_long(int ncid, int varid, const MPI_Offset start[],
 int ncmpi_put_vara_long_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const long *op);
 
-int ncmpi_put_vara_ulonnglong(int ncid, int varid, const MPI_Offset start[],
+int ncmpi_put_vara_ulonglong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const unsigned long long *op);
 
-int ncmpi_put_vara_ulonnglong(int ncid, int varid, const MPI_Offset start[],
+int ncmpi_put_vara_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const unsigned long long *op);
 
 int ncmpi_get_vara_uchar(int ncid, int varid, const MPI_Offset start[],
