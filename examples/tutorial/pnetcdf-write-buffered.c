@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     if (NC_NOERR != (err = ncmpi_enddef(ncid)))
         ERR(err);
 
-    /* set the contents of the write buffer var, a 4 x 6 float array
+    /* set the contents of the local write buffer var, a 4 x 6 float array
        for example, for rank == 2, var[4][6] =
           48, 49, 50, 51, 52, 53,
           54, 55, 56, 57, 58, 59,

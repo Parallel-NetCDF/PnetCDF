@@ -4,60 +4,98 @@ VPATH = @srcdir@
 
 include ../../macros.make
 
-NETCDF=@prefix@
-CC=@MPICC@
-CFLAGS = @CFLAGS@  -I$(NETCDF)/include
-LDFLAGS = -L$(NETCDF)/lib 
-LIBS = -lpnetcdf
+INCDIR          = $(srcdir)/../../src/lib
+LIBDIR          = ../../src/lib
 
-LDFLAGS=-L$(NETCDF)/lib
-LIBS=-lpnetcdf 
+INCLUDES        = -I$(INCDIR) -I../../src/lib
 
-OBJS = pnetcdf-write-from-master pnetcdf-read-from-master \
-	pnetcdf-write-nfiles pnetcdf-read-nfiles \
-	pnetcdf-write-standard pnetcdf-read-standard \
-	pnetcdf-write-flexible pnetcdf-read-flexible \
-	pnetcdf-write-nb pnetcdf-read-nb pnetcdf-write-buffered
+CC              = @MPICC@
+CFLAGS          = @CFLAGS@ $(INCLUDES)
+FC              = @MPIF77@
+FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
 
-all: $(OBJS)
+LDFLAGS         = -L$(LIBDIR) @LDFLAGS@
+LIBS            = -lpnetcdf @LIBS@
 
-pnetcdf-write-from-master: $(srcdir)/pnetcdf-write-from-master.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+C_SRCS = pnetcdf-write-from-master.c pnetcdf-read-from-master.c \
+	 pnetcdf-write-nfiles.c pnetcdf-read-nfiles.c \
+	 pnetcdf-write-standard.c pnetcdf-read-standard.c \
+	 pnetcdf-write-flexible.c pnetcdf-read-flexible.c \
+	 pnetcdf-write-nb.c pnetcdf-read-nb.c \
+         pnetcdf-write-buffered.c
 
-pnetcdf-read-from-master: $(srcdir)/pnetcdf-read-from-master.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+F_SRCS = pnetcdf-write-bufferedf.F
 
-pnetcdf-write-nfiles: $(srcdir)/pnetcdf-write-nfiles.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+C_OBJS = $(C_SRCS:.c=.o)
+F_OBJS = $(F_SRCS:.F=.o)
+C_PROG = $(C_SRCS:.c=)
+F_PROG = $(F_SRCS:.F=)
 
-pnetcdf-read-nfiles: $(srcdir)/pnetcdf-read-nfiles.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+ifeq (@has_fortran@, yes)
+OBJS   = $(C_OBJS) $(F_OBJS)
+PROGS  = $(C_PROG) $(F_PROG)
+else
+OBJS   = $(C_OBJS)
+PROGS  = $(C_PROG)
+endif
 
-pnetcdf-write-standard: $(srcdir)/pnetcdf-write-standard.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+GARBAGE      = $(PROGS)
 
-pnetcdf-read-standard: $(srcdir)/pnetcdf-read-standard.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+PACKING_LIST =  $(C_SRCS) $(F_SRCS) \
+                    Makefile.in
 
-pnetcdf-write-flexible: $(srcdir)/pnetcdf-write-flexible.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+.F.o:
+	$(FC) $(FFLAGS) -c $<
 
-pnetcdf-read-flexible: $(srcdir)/pnetcdf-write-flexible.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+all: $(PROGS)
 
-pnetcdf-write-nb: $(srcdir)/pnetcdf-write-nb.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+install:
 
-pnetcdf-read-nb: $(srcdir)/pnetcdf-read-nb.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+uninstall:
 
-pnetcdf-write-buffered: $(srcdir)/pnetcdf-write-buffered.c
-	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+pnetcdf-write-from-master: pnetcdf-write-from-master.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
 
+pnetcdf-read-from-master: pnetcdf-read-from-master.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-nfiles: pnetcdf-write-nfiles.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-nfiles: pnetcdf-read-nfiles.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-standard: pnetcdf-write-standard.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-standard: pnetcdf-read-standard.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-flexible: pnetcdf-write-flexible.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-flexible: pnetcdf-read-flexible.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-nb: pnetcdf-write-nb.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-read-nb: pnetcdf-read-nb.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-buffered: pnetcdf-write-buffered.o
+	$(CC) -g $< -o $@ $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-bufferedf: $(srcdir)/pnetcdf-write-bufferedf.o
+	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	$(RM) -f *.o $(OBJS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc
 
 distclean: clean
 	$(RM) -f Makefile
+
+
 
