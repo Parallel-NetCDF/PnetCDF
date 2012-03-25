@@ -451,7 +451,7 @@ ncmpii_getput_vars(NC               *ncp,
             goto err_check;
     }
     else {
-        /* this request is non-contiguous in file, set the mpi file view */
+        /* this request is non-contiguous in file, create the mpi file type */
         err = ncmpii_vars_create_filetype(ncp, varp, start, count, stride,
                                           rw_flag, &offset, &filetype);
         if (err != NC_NOERR) /* API error */
