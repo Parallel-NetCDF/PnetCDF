@@ -5,10 +5,10 @@
 
       program main
 
-      use mpi
       use pnetcdf
       implicit none
 
+#include "mpif.h"
       integer i, j, ncid, varid, retval, err, rank, nprocs
       integer no_err, cmode
       integer dimid(2)
