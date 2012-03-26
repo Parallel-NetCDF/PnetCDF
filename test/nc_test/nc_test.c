@@ -266,6 +266,7 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_get_att_ulonglong);
 #ifdef TEST_VOIDSTAR
     NC_TEST(ncmpi_get_att);
+#endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_inq_att);
     NC_TEST(ncmpi_inq_attname);
     NC_TEST(ncmpi_inq_attid);
@@ -297,7 +298,6 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_iget_var1_uint);
     NC_TEST(ncmpi_iget_var1_longlong);
     NC_TEST(ncmpi_iget_var1_ulonglong);
-#endif /* TEST_VOIDSTAR */
 #ifdef TEST_VOIDSTAR
     NC_TEST(ncmpi_iget_var1);
 #endif /* TEST_VOIDSTAR */
