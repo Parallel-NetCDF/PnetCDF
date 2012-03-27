@@ -94,6 +94,7 @@ ncmpix_get_uint_int(const void *xp, int *ip)
     return NC_NOERR;
 }
 
+#if SIZEOF_IX_UINT != SIZEOF_UINT
 /*----< ncmpix_get_uint_uint() >---------------------------------------------*/
 static int
 ncmpix_get_uint_uint(const void *xp, uint *ip)
@@ -112,6 +113,7 @@ ncmpix_get_uint_uint(const void *xp, uint *ip)
     return NC_NOERR;
 #endif
 }
+#endif
 
 /*----< ncmpix_get_uint_long() >---------------------------------------------*/
 static int
@@ -230,6 +232,7 @@ ncmpix_put_uint_int(void *xp, const int *ip)
     return NC_NOERR;
 }
 
+#if SIZEOF_IX_UINT != SIZEOF_UINT
 /*----< ncmpix_put_uint_uint() >---------------------------------------------*/
 static int
 ncmpix_put_uint_uint(void *xp, const uint *ip)
@@ -247,6 +250,7 @@ ncmpix_put_uint_uint(void *xp, const uint *ip)
     return NC_NOERR;
 #endif
 }
+#endif
 
 /*----< ncmpix_put_uint_long() >---------------------------------------------*/
 static int

@@ -24,7 +24,7 @@ testing: pres_temp_4D_wr pres_temp_4D_rd
 	./pres_temp_4D_wr && ./pres_temp_4D_rd
 	
 clean:
-	$(RM) -f *.o *.nc pres_temp_4D_wr pres_temp_4D_rd
+	$(RM) -f *.o *.nc pres_temp_4D_wr pres_temp_4D_rd *.gcda *.gcno gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

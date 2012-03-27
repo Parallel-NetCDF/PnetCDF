@@ -48,7 +48,7 @@ testing-f: mcoll_testf test_bputf
 	./test_bputf
 
 clean:
-	$(RM) -f *.o $(PROGS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

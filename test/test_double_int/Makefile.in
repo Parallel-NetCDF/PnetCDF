@@ -32,7 +32,7 @@ test_write_indep: test_write_indep.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	$(RM) -f $(OBJS) $(PROGS) *.nc
+	$(RM) -f $(OBJS) $(PROGS) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

@@ -36,7 +36,7 @@ test_read64: test_read64.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	$(RM) -f $(OBJS) $(PROGS) *.nc
+	$(RM) -f $(OBJS) $(PROGS) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

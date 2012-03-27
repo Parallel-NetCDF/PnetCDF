@@ -52,7 +52,7 @@ test_varm: test_varm.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	$(RM) -f *.o $(PROGS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

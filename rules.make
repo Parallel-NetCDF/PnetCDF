@@ -167,11 +167,13 @@ $(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 # Cleanup:
 
 clean:		FORCE
-	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE)
+	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
+		*.gcda *.gcno gmon.out
 
 distclean:	FORCE
 	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
-	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files
+	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files \
+		*.gcda *.gcno gmon.out
 	$(RM) -rf SunWS_cache
 
 ################################################################################

@@ -15,7 +15,7 @@ libtestutils.a: $(OBJS)
 testutils.o: testutils.c testutils.h
 
 clean:
-	$(RM) -f *.o *.a
+	$(RM) -f *.o *.a *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

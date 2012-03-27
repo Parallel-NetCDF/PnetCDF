@@ -52,6 +52,7 @@ put_ix_short(void *xp, const ix_short *ip)
 }
 
 
+#if X_SIZEOF_SHORT != SIZEOF_SHORT
 /*----< ncmpix_get_short_short() >-------------------------------------------*/
 static int
 ncmpix_get_short_short(const void *xp, short *ip)
@@ -70,6 +71,7 @@ ncmpix_get_short_short(const void *xp, short *ip)
     return NC_NOERR;
 #endif
 }
+#endif
 
 /*----< ncmpix_get_short_int() >---------------------------------------------*/
 int
@@ -162,6 +164,7 @@ ncmpix_put_short_uchar(void *xp, const uchar *ip)
     return NC_NOERR;
 }
 
+#if X_SIZEOF_SHORT != SIZEOF_SHORT
 static int
 ncmpix_put_short_short(void *xp, const short *ip)
 {
@@ -178,6 +181,7 @@ ncmpix_put_short_short(void *xp, const short *ip)
     return NC_NOERR;
 #endif
 }
+#endif
 
 static int
 ncmpix_put_short_int(void *xp, const int *ip)

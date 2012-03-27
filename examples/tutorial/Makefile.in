@@ -92,7 +92,7 @@ pnetcdf-write-bufferedf: $(srcdir)/pnetcdf-write-bufferedf.o
 	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	$(RM) -f *.o $(PROGS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile
