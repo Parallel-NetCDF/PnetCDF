@@ -18,9 +18,9 @@
 
 int main(int argc, char *argv[])
 {
-   int rank, nproc, ncid, err, dim_len, varid, dimids[1];
+   int rank, nproc, ncid, err, varid, dimids[1];
    int req, status;
-   MPI_Offset start[1], count[1], memCountScalar;
+   MPI_Offset start[1], count[1];
    double buf[2];
 
    MPI_Init(&argc, &argv);

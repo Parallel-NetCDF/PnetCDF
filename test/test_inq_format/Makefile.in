@@ -26,7 +26,7 @@ test_inq_format: test_inq_format.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
 
 clean:
-	$(RM) -f *.o $(PROGS) *.nc
+	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

@@ -44,7 +44,7 @@
 /*----< print_info() >------------------------------------------------------*/
 void print_info(MPI_Info *info_used)
 {
-    int  i, err, flag, nkeys;
+    int  i, nkeys;
 
     MPI_Info_get_nkeys(*info_used, &nkeys);
     printf("MPI File Info: nkeys = %d\n",nkeys);
