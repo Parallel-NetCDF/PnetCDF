@@ -226,7 +226,7 @@ pr_att_vals(nc_type       type,
     double             dd;
     long long          sll;
     unsigned long long ull;
-    char               *stringp;
+    char               *stringp; /* unused until we support NC_STRING */
 
     if (len == 0) return;
 
@@ -411,10 +411,11 @@ do_ncdump(const char *path, struct fspec* specp)
             NC_CHECK(ncmpi_inq_dim(ncid, dimid, dims[dimid].name,
                                    &dims[dimid].size) );
             if (dimid == xdimid)
-                Printf ("\t%s = %s ; // (%Ld currently)\n",dims[dimid].name,
-                        "UNLIMITED", dims[dimid].size);
+                Printf ("\t%s = %s ; // (%lld currently)\n",dims[dimid].name,
+                        "UNLIMITED", (long long int)(dims[dimid].size));
             else
-                Printf ("\t%s = %Ld ;\n", dims[dimid].name, dims[dimid].size);
+                Printf ("\t%s = %lld ;\n", dims[dimid].name, 
+			(long long int)(dims[dimid].size));
         }
 
         if (nvars > 0) Printf ("variables:\n");

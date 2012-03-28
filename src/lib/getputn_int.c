@@ -483,19 +483,11 @@ PUTN_INT(long)
 /*----< ncmpix_get_long_long() >---------------------------------------------*/
 /* wkliao: long type is not supported anymore. NC_LONG == NC_INT now
            so, ncmpix_get_long_long is actually ncmpix_get_int_long()
-           and ncmpix_put_long_long is actually ncmpix_put_int_long()
+	   and ncmpix_put_long_long is actually ncmpix_put_int_long().  We
+	   removed the now-unused functions 
+	   - 
  */
-static int
-ncmpix_get_long_long(const void *xp, long *ip) 
-{
-    return ncmpix_get_int_long(xp, ip);
-}
 
-static int
-ncmpix_put_long_long(void *xp, const long *ip) 
-{
-    return ncmpix_put_int_long(xp, ip);
-}
 
 /* wkliao: long type is not supported anymore. NC_LONG == NC_INT now
            so, ncmpix_getn_long_long is actually ncmpix_getn_int_long()
