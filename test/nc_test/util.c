@@ -37,6 +37,7 @@ inRange(const double value, const nc_type datatype)
         case NC_UINT64: return value >= 0            && value <= X_UINT64_MAX;
         default:
             assert(0);
+	    return(0);
     }
 }
 
