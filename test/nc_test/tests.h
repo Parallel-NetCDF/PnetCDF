@@ -15,6 +15,7 @@
 #include <mpi.h>
 #include "error.h"
 
+#include "ncconfig.h" /* output of 'configure' */
 
 #if defined(_CRAY) && !defined(_CRAYIEEE)
 #define CRAYFLOAT 1 /* CRAY Floating point */
@@ -23,13 +24,6 @@
 #endif
 
     /* Limits of external types (based on those in ncx.h) */
-
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef long long int64;
-typedef long long longlong;
-typedef unsigned long long uint64;
-typedef unsigned long long ulonglong;
 
 #define X_CHAR_MIN	CHAR_MIN
 #define X_CHAR_MAX	CHAR_MAX
@@ -168,8 +162,8 @@ nv=1*11+5*11+5*4+5*4*4= 8+40+20+80 = 166 (if NTYPES==11)
 #define ulong_min 0
 #define int64_min LLONG_MIN
 #define longlong_min int64_min
-#define uint64 0
-#define ulonglong_min uint64
+#define uint64_min 0
+#define ulonglong_min uint64_min
 
 #define text_max CHAR_MAX
 #define uchar_max UCHAR_MAX
@@ -211,10 +205,28 @@ extern "C" {
 
 typedef char text;
 typedef signed char schar;
-#if !defined(uchar) && !defined(__osf__) && !defined(_AIX)
+#if !defined(HAVE_UCHAR) && !defined(__osf__) && !defined(_AIX)
 typedef unsigned char uchar;
 #endif
 
+#ifndef HAVE_USHORT
+typedef unsigned short int  ushort;
+#endif
+
+#ifndef HAVE_UINT
+typedef unsigned       int  uint;
+#endif
+
+#ifndef HAVE_INT64
+typedef          long long  int64;
+#endif
+
+#ifndef HAVE_UINT64
+typedef unsigned long long  uint64;
+#endif
+
+typedef long long longlong;
+typedef unsigned long long ulonglong;
 
 
     /* Global variables - filenames */
