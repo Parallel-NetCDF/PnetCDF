@@ -28,7 +28,7 @@
           print*,"This test is designed to run on one process"
           if (rank > 0) then
               call MPI_Finalize(err)
-              return
+              Stop
           endif
       endif
 
@@ -151,6 +151,6 @@
       else
           print*,'test Fortran bput_varm succeeded'
       endif
-      return
+      Stop
       end program
 
