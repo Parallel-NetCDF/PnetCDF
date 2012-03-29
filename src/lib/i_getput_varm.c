@@ -224,7 +224,7 @@ ncmpi_buffer_attach(int        ncid,
     int status;
     NC *ncp;
 
-    if (bufsize == 0) return NC_ENULLBUF;
+    if (bufsize <= 0) return NC_ENULLBUF;
 
     CHECK_NCID
 

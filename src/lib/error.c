@@ -204,6 +204,16 @@ ncmpi_strerror(int err)
 	    return "File create modes are inconsistent among all processes.";
 	case NC_ENOTSUPPORT:
 	    return "Feature is not yet supported.";
+	case NC_ENULLBUF:
+	    return "Trying to attach a NULL buffer or the buffer size is <= 0.";
+	case NC_EPREVATTACHBUF:
+	    return "Previous attached buffer is found.";
+	case NC_ENULLABUF:
+	    return "No attached buffer is found.";
+	case NC_EPENDINGBPUT:
+	    return "Cannot detach buffer as a pending bput request is found.";
+	case NC_EINSUFFBUF:
+	    return "Attached buffer is too small.";
 	
 	default:
 	    return unknown;
