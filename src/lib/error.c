@@ -94,22 +94,6 @@ ncmpi_strerror(int err)
 	switch (err) {
 	case NC_NOERR:
 	    return "No error";
-	case NC_ESMALL:
-	    return "Size of off_t too small for requested format ";
-	case NC_ENOTINDEP:
-	    return "Operation not allowed in collective data mode";
-	case NC_EINDEP:
-	    return "Operation not allowed in independent data mode";
-	case NC_EFILE:
-	    return "Unknown error in file operation";
-        case NC_EREAD:
-            return "Unknow error occurs in reading file";
-	case NC_EWRITE:
-	    return "Unknow error occurs in writting file";
-	case NC_EMULTIDEFINE:
-	    return "File header is inconsistent among processes";
-	case NC_EOFILE:
-	    return "Can not open/create file";
 	case NC_EBADID:
 	    return "Not a netCDF id";
 	case NC_ENFILE:
@@ -172,6 +156,26 @@ ncmpi_strerror(int err)
 	    return "One or more variable sizes violate format constraints";
 	case NC_EDIMSIZE:
 	    return "Invalid dimension size";
+        case NC_ETRUNC:
+            return "File likely truncated or possibly corrupted";
+
+        /* start of PnetCDF errors */
+	case NC_ESMALL:
+	    return "Size of off_t too small for requested format ";
+	case NC_ENOTINDEP:
+	    return "Operation not allowed in collective data mode";
+	case NC_EINDEP:
+	    return "Operation not allowed in independent data mode";
+	case NC_EFILE:
+	    return "Unknown error in file operation";
+        case NC_EREAD:
+            return "Unknow error occurs in reading file";
+	case NC_EWRITE:
+	    return "Unknow error occurs in writting file";
+	case NC_EMULTIDEFINE:
+	    return "File header is inconsistent among processes";
+	case NC_EOFILE:
+	    return "Can not open/create file";
 	case NC_EMULTITYPES:
 	    return "Multiple types used in memory data";
 	case NC_EIOMISMATCH:
@@ -200,6 +204,8 @@ ncmpi_strerror(int err)
 	    return "Number of records is inconsistent among processes.";
 	case NC_EINVAL_REQUEST:
 	    return "Invalid nonblocking request ID.";
+	case NC_EAINT_TOO_SMALL:
+	    return "MPI_Aint not large enough to hold requested value.";
 	case NC_ECMODE:
 	    return "File create modes are inconsistent among all processes.";
 	case NC_ENOTSUPPORT:

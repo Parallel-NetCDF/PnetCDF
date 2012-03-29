@@ -121,14 +121,7 @@
 ! error codes:
 !
       integer NF_NOERR
-      integer NF_ESMALL
-      integer NF_ENOTINDEP
-      integer NF_EINDEP
-      integer NF_EFILE
-      integer NF_EREAD
-      integer NF_EWRITE
-      integer NF_EMULTIDEFINE
-      integer NF_EOFILE
+      integer NF2_ERR
       integer NF_EBADID
       integer NF_ENFILE
       integer NF_EEXIST
@@ -160,6 +153,16 @@
       integer NF_ENOMEM
       integer NF_EVARSIZE
       integer NF_EDIMSIZE
+
+! PnetCDF error codes start here
+      integer NF_ESMALL
+      integer NF_ENOTINDEP
+      integer NF_EINDEP
+      integer NF_EFILE
+      integer NF_EREAD
+      integer NF_EWRITE
+      integer NF_EMULTIDEFINE
+      integer NF_EOFILE
       integer NF_EMULTITYPES
       integer NF_EIOMISMATCH
       integer NF_ENEGATIVECNT
@@ -176,16 +179,15 @@
       integer NF_EINVAL_REQUEST
       integer NF_EAINT_TOO_SMALL
       integer NF_ECMODE
+      integer NF_ENOTSUPPORT
+      integer NF_ENULLBUF
+      integer NF_EPREVATTACHBUF
+      integer NF_ENULLABUF
+      integer NF_EPENDINGBPUT
+      integer NF_EINSUFFBUF
 
       PARAMETER (NF_NOERR        = 0)   ! No Error
-      PARAMETER (NF_ESMALL       = -25) ! size of off_t too small for format
-      PARAMETER (NF_ENOTINDEP    = -26) ! Operation not allowed in collective data mode
-      PARAMETER (NF_EINDEP       = -27) ! Operation not allowed in independent data mode
-      PARAMETER (NF_EFILE        = -28) ! Unknown error in file operation
-      PARAMETER (NF_EREAD        = -29) ! Unknown error in reading file
-      PARAMETER (NF_EWRITE       = -30) ! Unknown error in writting to file
-      PARAMETER (NF_EMULTIDEFINE = -31) ! NC definitions on multiprocesses conflict
-      PARAMETER (NF_EOFILE       = -32) ! file open/creation failed
+      PARAMETER (NF2_ERR         = -1)  ! Returned for all errors in the v2 API
       PARAMETER (NF_EBADID       = -33) ! Not a netcdf id
       PARAMETER (NF_ENFILE       = -34) ! Too many netcdfs open
       PARAMETER (NF_EEXIST       = -35) ! netcdf file exists and NF_NOCLOBBER
@@ -217,22 +219,39 @@
       PARAMETER (NF_ENOMEM       = -61) ! Memory allocation (malloc) failure
       PARAMETER (NF_EVARSIZE     = -62) ! One or more variable sizes violate format constraints
       PARAMETER (NF_EDIMSIZE     = -63) ! Invalid dimension size
-      PARAMETER (NF_EMULTITYPES  = -70) ! Multiple types used in memory data
-      PARAMETER (NF_EIOMISMATCH  = -71) ! Input/Output data amount mismatch
-      PARAMETER (NF_ENEGATIVECNT = -72) ! Negative count is specified
-      PARAMETER (NF_EUNSPTETYPE  = -73) ! Unsupported etype in memory MPI datatype
-      PARAMETER (NF_EDIMS_NELEMS_MULTIDEFINE = -74) ! Different number of dim defines on multiprocesses conflict
-      PARAMETER (NF_EDIMS_SIZE_MULTIDEFINE   = -75) ! Different size of dim defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_NELEMS_MULTIDEFINE = -76) ! Different number of var defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_NDIMS_MULTIDEFINE  = -77) ! Different dim number of var defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_DIMIDS_MULTIDEFINE = -78) ! Different dimid defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_TYPE_MULTIDEFINE   = -79) ! Different type of var defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_LEN_MULTIDEFINE    = -80) ! Different var lenght defines size on multiprocesses conflict
-      PARAMETER (NF_EVARS_BEGIN_MULTIDEFINE  = -81) ! Different var begin defines size on multiprocesses conflict
-      PARAMETER (NF_ENUMRECS_MULTIDEFINE     = -82) ! Different number records on multiprocesses conflict
-      PARAMETER (NF_EINVAL_REQUEST           = -83) ! invalid request ID
-      PARAMETER (NF_EAINT_TOO_SMALL          = -84) ! MPI_Aint not large enough to hold requested value
-      PARAMETER (NF_ECMODE                   = -85) ! file create modes are inconsistent among processes
+
+! PnetCDF error codes start here
+      PARAMETER (NF_ESMALL                   = -201) ! size of off_t too small for format
+      PARAMETER (NF_ENOTINDEP                = -202) ! Operation not allowed in collective data mode
+      PARAMETER (NF_EINDEP                   = -203) ! Operation not allowed in independent data mode
+      PARAMETER (NF_EFILE                    = -204) ! Unknown error in file operation
+      PARAMETER (NF_EREAD                    = -205) ! Unknown error in reading file
+      PARAMETER (NF_EWRITE                   = -206) ! Unknown error in writting to file
+      PARAMETER (NF_EMULTIDEFINE             = -207) ! NC definitions on multiprocesses conflict
+      PARAMETER (NF_EOFILE                   = -208) ! file open/creation failed
+      PARAMETER (NF_EMULTITYPES              = -209) ! Multiple types used in memory data
+      PARAMETER (NF_EIOMISMATCH              = -210) ! Input/Output data amount mismatch
+      PARAMETER (NF_ENEGATIVECNT             = -211) ! Negative count is specified
+      PARAMETER (NF_EUNSPTETYPE              = -212) ! Unsupported etype in memory MPI datatype
+      PARAMETER (NF_EDIMS_NELEMS_MULTIDEFINE = -213) ! Different number of dim defines on multiprocesses conflict
+      PARAMETER (NF_EDIMS_SIZE_MULTIDEFINE   = -214) ! Different size of dim defines on multiprocesses conflict
+      PARAMETER (NF_EVARS_NELEMS_MULTIDEFINE = -215) ! Different number of var defines on multiprocesses conflict
+      PARAMETER (NF_EVARS_NDIMS_MULTIDEFINE  = -216) ! Different dim number of var defines on multiprocesses conflict
+      PARAMETER (NF_EVARS_DIMIDS_MULTIDEFINE = -217) ! Different dimid defines on multiprocesses conflict
+      PARAMETER (NF_EVARS_TYPE_MULTIDEFINE   = -218) ! Different type of var defines on multiprocesses conflict
+      PARAMETER (NF_EVARS_LEN_MULTIDEFINE    = -219) ! Different var lenght defines size on multiprocesses conflict
+      PARAMETER (NF_EVARS_BEGIN_MULTIDEFINE  = -220) ! Different var begin defines size on multiprocesses conflict
+      PARAMETER (NF_ENUMRECS_MULTIDEFINE     = -221) ! Different number records on multiprocesses conflict
+      PARAMETER (NF_EINVAL_REQUEST           = -222) ! invalid nonblocking request ID
+      PARAMETER (NF_EAINT_TOO_SMALL          = -223) ! MPI_Aint not large enough to hold requested value
+      PARAMETER (NF_ECMODE                   = -224) ! file create modes are inconsistent among processes
+      PARAMETER (NF_ENOTSUPPORT              = -225) ! feature is not yet supported
+      PARAMETER (NF_ENULLBUF                 = -226) ! trying to attach a NULL buffer
+      PARAMETER (NF_EPREVATTACHBUF           = -227) ! previous attached buffer is found
+      PARAMETER (NF_ENULLABUF                = -228) ! no attached buffer is found
+      PARAMETER (NF_EPENDINGBPUT             = -229) ! pending bput is found, cannot detach buffer
+      PARAMETER (NF_EINSUFFBUF               = -230) ! attached buffer is too small
+
 
 ! error handling modes:
 !

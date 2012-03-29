@@ -210,72 +210,113 @@ typedef enum {
 
 #define NC_ISSYSERR(err)	((err) > 0)
 
-#define	NC_NOERR	0	/* No Error */
+#define NC_NOERR	0	/* No Error */
 
-#define NC_ESMALL       (-25)   /* size of off_t too small for format */
-#define NC_ENOTINDEP	(-26)	/* Operation not allowed in collective data mode */
-#define NC_EINDEP	(-27)	/* Operation not allowed in independent data mode */
-#define NC_EFILE	(-28)	/* Unknown error in file operation */
-#define NC_EREAD	(-29)	/* Unknown error in reading file */
-#define NC_EWRITE	(-30)	/* Unknown error in writting to file */
-#define NC_EMULTIDEFINE (-31)	/* NC definitions on multiprocesses conflict */
-#define NC_EOFILE	(-32)	/* file open/creation failed */
-#define	NC_EBADID	(-33)	/* Not a netcdf id */
-#define	NC_ENFILE	(-34)	/* Too many netcdfs open */
-#define	NC_EEXIST	(-35)	/* netcdf file exists && NC_NOCLOBBER */
-#define	NC_EINVAL	(-36)	/* Invalid Argument */
-#define	NC_EPERM	(-37)	/* Write to read only */
-#define	NC_ENOTINDEFINE	(-38)	/* Operation not allowed in data mode */
-#define	NC_EINDEFINE	(-39)	/* Operation not allowed in define mode */
-#define	NC_EINVALCOORDS	(-40)	/* Index exceeds dimension bound */
-#define	NC_EMAXDIMS	(-41)	/* NC_MAX_DIMS exceeded */
-#define	NC_ENAMEINUSE	(-42)	/* String match to name in use */
-#define NC_ENOTATT	(-43)	/* Attribute not found */
-#define	NC_EMAXATTS	(-44)	/* NC_MAX_ATTRS exceeded */
-#define NC_EBADTYPE	(-45)	/* Not a netcdf data type */
-#define NC_EBADDIM	(-46)	/* Invalid dimension id or name */
-#define NC_EUNLIMPOS	(-47)	/* NC_UNLIMITED in the wrong index */
-#define	NC_EMAXVARS	(-48)	/* NC_MAX_VARS exceeded */
-#define NC_ENOTVAR	(-49)	/* Variable not found */
-#define NC_EGLOBAL	(-50)	/* Action prohibited on NC_GLOBAL varid */
-#define NC_ENOTNC	(-51)	/* Not a netcdf file */
-#define NC_ESTS        	(-52)	/* In Fortran, string too short */
-#define NC_EMAXNAME    	(-53)	/* NC_MAX_NAME exceeded */
-#define NC_EUNLIMIT    	(-54)	/* NC_UNLIMITED size already in use */
-#define NC_ENORECVARS  	(-55)	/* nc_rec op when there are no record vars */
-#define NC_ECHAR	(-56)	/* Attempt to convert between text & numbers */
-#define NC_EEDGE	(-57)	/* Edge+start exceeds dimension bound */
-#define NC_ESTRIDE	(-58)	/* Illegal stride */
-#define NC_EBADNAME	(-59)	/* Attribute or variable name contains illegal characters */
+#define NC2_ERR         (-1)    /* Returned for all errors in the v2 API. */
+
+/* NetCDF-3 Error Codes */
+#define NC_EBADID	(-33) /* Not a netcdf id */
+#define NC_ENFILE	(-34) /* Too many netcdfs open */
+#define NC_EEXIST	(-35) /* netcdf file exists && NC_NOCLOBBER */
+#define NC_EINVAL	(-36) /* Invalid Argument */
+#define NC_EPERM	(-37) /* Write to read only */
+#define NC_ENOTINDEFINE	(-38) /* Operation not allowed in data mode */
+#define NC_EINDEFINE	(-39) /* Operation not allowed in define mode */
+#define NC_EINVALCOORDS	(-40) /* Index exceeds dimension bound */
+#define NC_EMAXDIMS	(-41) /* NC_MAX_DIMS exceeded */
+#define NC_ENAMEINUSE	(-42) /* String match to name in use */
+#define NC_ENOTATT	(-43) /* Attribute not found */
+#define NC_EMAXATTS	(-44) /* NC_MAX_ATTRS exceeded */
+#define NC_EBADTYPE	(-45) /* Not a netcdf data type */
+#define NC_EBADDIM	(-46) /* Invalid dimension id or name */
+#define NC_EUNLIMPOS	(-47) /* NC_UNLIMITED in the wrong index */
+#define NC_EMAXVARS	(-48) /* NC_MAX_VARS exceeded */
+#define NC_ENOTVAR	(-49) /* Variable not found */
+#define NC_EGLOBAL	(-50) /* Action prohibited on NC_GLOBAL varid */
+#define NC_ENOTNC	(-51) /* Not a netcdf file */
+#define NC_ESTS		(-52) /* In Fortran, string too short */
+#define NC_EMAXNAME	(-53) /* NC_MAX_NAME exceeded */
+#define NC_EUNLIMIT	(-54) /* NC_UNLIMITED size already in use */
+#define NC_ENORECVARS	(-55) /* nc_rec op when there are no record vars */
+#define NC_ECHAR	(-56) /* Attempt to convert between text & numbers */
+#define NC_EEDGE	(-57) /* Edge+start exceeds dimension bound */
+#define NC_ESTRIDE	(-58) /* Illegal stride */
+#define NC_EBADNAME	(-59) /* Attribute or variable name contains illegal characters */
+
 /* N.B. following must match value in ncx.h */
-#define NC_ERANGE	(-60)	/* Math result not representable */
-#define NC_ENOMEM	(-61)	/* Memory allocation (malloc) failure */
-#define NC_EVARSIZE     (-62)   /* One or more variable sizes violate format constraints */
-#define NC_EDIMSIZE     (-63)	/* Invalid dimension size */
-/* More error codes: */
-#define NC_EMULTITYPES  (-70)	/* Multiple types used in memory data */
-#define NC_EIOMISMATCH  (-71)	/* Input/Output data amount mismatch */
-#define NC_ENEGATIVECNT (-72)	/* Negative count is specified */
-#define NC_EUNSPTETYPE  (-73)   /* Unsupported etype in memory MPI datatype */
-#define NC_EDIMS_NELEMS_MULTIDEFINE	(-74)	/* Different number of dim defines on multiprocesses conflict */
-#define NC_EDIMS_SIZE_MULTIDEFINE	(-75)	/* Different size of dim defines on multiprocesses conflict */
-#define NC_EVARS_NELEMS_MULTIDEFINE	(-76)	/* Different number of var defines on multiprocesses conflict */
-#define NC_EVARS_NDIMS_MULTIDEFINE	(-77)	/* Different dim number of var defines on multiprocesses conflict */
-#define NC_EVARS_DIMIDS_MULTIDEFINE	(-78)	/* Different dimid defines on multiprocesses conflict */
-#define NC_EVARS_TYPE_MULTIDEFINE	(-79)	/* Different type of var defines on multiprocesses conflict */
-#define NC_EVARS_LEN_MULTIDEFINE	(-80)	/* Different var lenght defines size on multiprocesses conflict */
-#define NC_EVARS_BEGIN_MULTIDEFINE	(-81)	/* Different var begin defines size on multiprocesses conflict */
-#define NC_ENUMRECS_MULTIDEFINE		(-82)	/* Different number records on multiprocesses conflict */
-#define NC_EINVAL_REQUEST		(-83)   /* invalid request ID */
-#define NC_EAINT_TOO_SMALL		(-84)   /* MPI_Aint not large enough to hold requested value */
-#define NC_ECMODE			(-85)   /* file create modes are inconsistent among processes */
+#define NC_ERANGE	(-60) /* Math result not representable */
+#define NC_ENOMEM	(-61) /* Memory allocation (malloc) failure */
+#define NC_EVARSIZE	(-62) /* One or more variable sizes violate format constraints */
+#define NC_EDIMSIZE	(-63) /* Invalid dimension size */
+#define NC_ETRUNC	(-64) /* File likely truncated or possibly corrupted */
 
-#define NC_ENOTSUPPORT			(-99)   /* feature is not yet supported */
-#define NC_ENULLBUF			(-100)  /* trying to attach a NULL buffer */
-#define NC_EPREVATTACHBUF		(-101)  /* previous attached buffer is found */
-#define NC_ENULLABUF			(-102)  /* no attached buffer is found */
-#define NC_EPENDINGBPUT			(-103)  /* pending bput is found, cannot detach buffer */
-#define NC_EINSUFFBUF			(-104)  /* attached buffer is too small */
+/* NetCDF-4 Error Codes (provide here but not used in PnetCDF) */
+/* The following was added in support of netcdf-4. Make all netcdf-4
+   error codes < -100 so that errors can be added to netcdf-3 if
+   needed.
+ */
+#define NC4_FIRST_ERROR	(-100)
+#define NC_EHDFERR	(-101) /* Error at HDF5 layer. */
+#define NC_ECANTREAD	(-102) /* Can't read. */
+#define NC_ECANTWRITE	(-103) /* Can't write. */
+#define NC_ECANTCREATE	(-104) /* Can't create. */
+#define NC_EFILEMETA	(-105) /* Problem with file metadata. */
+#define NC_EDIMMETA	(-106) /* Problem with dimension metadata. */
+#define NC_EATTMETA	(-107) /* Problem with attribute metadata. */
+#define NC_EVARMETA	(-108) /* Problem with variable metadata. */
+#define NC_ENOCOMPOUND	(-109) /* Not a compound type. */
+#define NC_EATTEXISTS	(-110) /* Attribute already exists. */
+#define NC_ENOTNC4	(-111) /* Attempting netcdf-4 operation on netcdf-3 file. */  
+#define NC_ESTRICTNC3	(-112) /* Attempting netcdf-4 operation on strict nc3 netcdf-4 file. */  
+#define NC_ENOTNC3	(-113) /* Attempting netcdf-3 operation on netcdf-4 file. */  
+#define NC_ENOPAR	(-114) /* Parallel operation on file opened for non-parallel access. */  
+#define NC_EPARINIT	(-115) /* Error initializing for parallel access. */  
+#define NC_EBADGRPID	(-116) /* Bad group ID. */  
+#define NC_EBADTYPID	(-117) /* Bad type ID. */  
+#define NC_ETYPDEFINED	(-118) /* Type has already been defined and may not be edited. */
+#define NC_EBADFIELD	(-119) /* Bad field ID. */  
+#define NC_EBADCLASS	(-120) /* Bad class. */  
+#define NC_EMAPTYPE	(-121) /* Mapped access for atomic types only. */  
+#define NC_ELATEFILL	(-122) /* Attempt to define fill value when data already exists. */
+#define NC_ELATEDEF	(-123) /* Attempt to define var properties, like deflate, after enddef. */
+#define NC_EDIMSCALE	(-124) /* Probem with HDF5 dimscales. */
+#define NC_ENOGRP	(-125) /* No group found. */
+#define NC_ESTORAGE	(-126) /* Can't specify both contiguous and chunking. */
+#define NC_EBADCHUNK	(-127) /* Bad chunksize. */
+#define NC_ENOTBUILT	(-128) /* Attempt to use feature that was not turned on when netCDF was built. */
+#define NC4_LAST_ERROR	(-128) 
+
+/* PnetCDF Error Codes: */
+#define NC_ESMALL			(-201) /* size of off_t too small for format */
+#define NC_ENOTINDEP			(-202) /* Operation not allowed in collective data mode */
+#define NC_EINDEP			(-203) /* Operation not allowed in independent data mode */
+#define NC_EFILE			(-204) /* Unknown error in file operation */
+#define NC_EREAD			(-205) /* Unknown error in reading file */
+#define NC_EWRITE			(-206) /* Unknown error in writting to file */
+#define NC_EMULTIDEFINE			(-207) /* NC definitions on multiprocesses conflict */
+#define NC_EOFILE			(-208) /* file open/creation failed */
+#define NC_EMULTITYPES			(-209) /* Multiple types used in memory data */
+#define NC_EIOMISMATCH			(-210) /* Input/Output data amount mismatch */
+#define NC_ENEGATIVECNT			(-211) /* Negative count is specified */
+#define NC_EUNSPTETYPE			(-212) /* Unsupported etype in memory MPI datatype */
+#define NC_EDIMS_NELEMS_MULTIDEFINE	(-213) /* Different number of dim defines on multiprocesses conflict */
+#define NC_EDIMS_SIZE_MULTIDEFINE	(-214) /* Different size of dim defines on multiprocesses conflict */
+#define NC_EVARS_NELEMS_MULTIDEFINE	(-215) /* Different number of var defines on multiprocesses conflict */
+#define NC_EVARS_NDIMS_MULTIDEFINE	(-216) /* Different dim number of var defines on multiprocesses conflict */
+#define NC_EVARS_DIMIDS_MULTIDEFINE	(-217) /* Different dimid defines on multiprocesses conflict */
+#define NC_EVARS_TYPE_MULTIDEFINE	(-218) /* Different type of var defines on multiprocesses conflict */
+#define NC_EVARS_LEN_MULTIDEFINE	(-219) /* Different var lenght defines size on multiprocesses conflict */
+#define NC_EVARS_BEGIN_MULTIDEFINE	(-220) /* Different var begin defines size on multiprocesses conflict */
+#define NC_ENUMRECS_MULTIDEFINE		(-221) /* Different number records on multiprocesses conflict */
+#define NC_EINVAL_REQUEST		(-222) /* invalid nonblocking request ID */
+#define NC_EAINT_TOO_SMALL		(-223) /* MPI_Aint not large enough to hold requested value */
+#define NC_ECMODE			(-224) /* file create modes are inconsistent among processes */
+#define NC_ENOTSUPPORT			(-225) /* feature is not yet supported */
+#define NC_ENULLBUF			(-226) /* trying to attach a NULL buffer */
+#define NC_EPREVATTACHBUF		(-227) /* previous attached buffer is found */
+#define NC_ENULLABUF			(-228) /* no attached buffer is found */
+#define NC_EPENDINGBPUT			(-229) /* pending bput is found, cannot detach buffer */
+#define NC_EINSUFFBUF			(-230) /* attached buffer is too small */
 
 
 /*
