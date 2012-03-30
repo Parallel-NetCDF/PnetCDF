@@ -203,6 +203,10 @@ extern "C" {
 
     /* Non-standard internal types */
 
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
 typedef char text;
 typedef signed char schar;
 #if !defined(HAVE_UCHAR) && !defined(__osf__) && !defined(_AIX)
