@@ -3,38 +3,29 @@ VPATH = @srcdir@
 
 include ../../macros.make
 
-ALL: pnctestf pnctest csnap pnf_test
 
-INCDIR = ../../src/lib
+INCDIR  = ../../src/lib
 INCDIRF = ../../src/libf/
-LNKDIR = ../../src/lib
+LNKDIR  = ../../src/lib
 
-MPICC = @MPICC@
-MPIF77 = @MPIF77@
+EXECS   = pnctestf pnctest csnap pnf_test
+GARBAGE = $(EXECS) *.nc
 
-EXECS = pnctestf pnctest csnap pnf_test
+all: $(EXECS)
 
 pnctestf: pnctestf.F
-	$(LINK.F) -o pnctestf $(srcdir)/pnctestf.F -I$(INCDIRF) -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
+	$(LINK.F) $< -I$(INCDIRF) -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
 
 pnctest: pnctest.c
-	$(LINK.c) -o pnctest $(srcdir)/pnctest.c -I$(INCDIR) -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
+	$(LINK.c) $< -I$(INCDIR) -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
 
 csnap:  csnap.o
-	$(LINK.c) -L$(LNKDIR) -o csnap csnap.o -lpnetcdf -lm $(LIBS)
-
-csnap.o:  csnap.c
-	$(MPICC) -I$(INCDIR) -c $(srcdir)/csnap.c
+	$(LINK.c) $< -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
 
 pnf_test:  pnf_test.o
-	$(LINK.F) -L$(LNKDIR) -o pnf_test pnf_test.o -lpnetcdf -lm $(LIBS)
+	$(LINK.F) $< -L$(LNKDIR) -lpnetcdf -lm $(LIBS)
 
-pnf_test.o:  pnf_test.F
-	$(MPIF77) $(FFLAGS) -I$(INCDIRF) -c $(srcdir)/pnf_test.F 
+INCLUDES = -I$(srcdir) -I$(srcdir)/../../src/libf -I../../src/libf -I$(srcdir)/../../src/lib -I../../src/lib
 
-clean:
-	$(RM) -f $(EXECS) *.o *.nc *.gcno *.gcda gmon.out
-
-distclean: clean
-	$(RM) -f Makefile
+include $(srcdir)/../../rules.make
 
