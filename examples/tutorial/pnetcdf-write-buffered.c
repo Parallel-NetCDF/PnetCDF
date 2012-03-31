@@ -74,6 +74,13 @@ int main(int argc, char **argv) {
                                            stride, imap, &var[2][0], &req[1])))
         ERR(err);
 
+    /* You are now free to change contents of the buffer, var.
+       It will not change the data supposed to be written in the file.
+     */
+    for (j=0; j<4; j++)
+        for (i=0; i<6; i++)
+            var[j][i] = -1.1;  /* or any numbers */
+
     if (NC_NOERR != (err = ncmpi_wait_all(ncid, 2, req, status)))
         ERR(err);
 
