@@ -48,6 +48,8 @@ check_recsize_too_big(NC *ncp)
 /*----< NCcoordck() >--------------------------------------------------------*/
 /*
  * Check whether 'coord' values (indices) are valid for the variable.
+ * Note that even if the request size is zero, this check is enforced in both
+ * netCDF and PnetCDF. Otherwise, many test cases under test directoy can fail. 
  */
 int
 NCcoordck(NC               *ncp,
