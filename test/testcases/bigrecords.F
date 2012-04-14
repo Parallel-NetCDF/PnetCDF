@@ -223,7 +223,7 @@
       iret = nfmpi_close(ncid)
       call check_err(iret)
 
-      write(6,*) "Time array: ", time
+!     write(6,*) "Time array: ", time
 !      if ( (time(1) .eq. 0) .and. (time(2) .eq. 20.0)
 !     &             .and. (time(3) .eq. 40.0) .and. (time(4) .eq. 60))
 !           write(6,*) " No Errors"

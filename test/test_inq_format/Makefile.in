@@ -21,6 +21,7 @@ LIBS		= -lpnetcdf -ltestutils @LIBS@
 	$(CC) $(CFLAGS) -c $<
 
 all:		$(PROGS)
+	set -e; cd ../data && $(MAKE) unzip
 
 test_inq_format: test_inq_format.o
 	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
