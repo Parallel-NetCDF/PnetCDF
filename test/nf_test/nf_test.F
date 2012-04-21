@@ -53,8 +53,7 @@
 
         name_len = LEN_TRIM(name)
         name_str(1:name_len) = name(:)
-        name_str(name_len+1:24) = ' '
-        name_str(25:25) = char(0)
+        name_str(name_len+1:25) = ' '
         write(*, 1, advance="no") name_str
 1       format('*** Testing ', a, ' ... ')
 
