@@ -19,7 +19,7 @@ It's possible to build pnetcdf with the IBM xl compilers:
 
 ./configure --host powerpc-bgp-linux --build powerpc64-suse-linux \
 	CC=mpixlc MPICC=mpixlc FC=mpixlf90 \
-	MPIF77=mpixlf90 F77=mpixlf90 F90=mpixlf90
+	MPIF77=mpixlf90 F77=mpixlf90 F90=mpixlf90 MPIF90=mpixlf90
 
 As far as we know, there are no issues with pnetcdf on BGP, but should you find any, email parallel-netcdf@mcs.anl.gov
 
