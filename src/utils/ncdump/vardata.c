@@ -522,11 +522,7 @@ vardata(
     MPI_Offset cor[NC_MAX_DIMS];	/* corner coordinates */
     MPI_Offset edg[NC_MAX_DIMS];	/* edges of hypercube */
     size_t add[NC_MAX_DIMS];	/* "odometer" increment to next "row"  */
-#define VALBUFSIZ 1048576
-    double *vals ; /* aligned buffer */
  
-    int gulp = VALBUFSIZ;
-
     int id;
     int ir;
     MPI_Offset nels;
@@ -538,6 +534,35 @@ vardata(
     /* printf format used to print each value */
     const char *fmt = get_fmt(ncid, varid, vp->type);
 
+#define VALBUFSIZ 1048576
+    double *vals ; /* aligned buffer */
+    int xsz; /* variable element size in byte */
+    int gulp;
+
+    switch(vp->type) {
+        case NC_CHAR:
+        case NC_BYTE:
+        case NC_UBYTE:
+            xsz = 1;
+            break;
+        case NC_SHORT:
+        case NC_USHORT:
+            xsz = 2;
+            break;
+        case NC_INT:
+        case NC_UINT:
+        case NC_FLOAT:
+            xsz = 4;
+            break;
+        case NC_DOUBLE:
+        case NC_INT64:
+        case NC_UINT64:
+            xsz = 8;
+            break;
+        default:
+            error("vardata: bad type");
+    }
+    gulp = VALBUFSIZ / xsz;
     vals = (double*) malloc(VALBUFSIZ);
 
     if (!initeps) {		/* make sure epsilons get initialized */
