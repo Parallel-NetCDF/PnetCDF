@@ -35,7 +35,7 @@ void *NCI_Malloc_fn(size_t size, int lineno, const char *fname)
     if (size == 0) return NULL;
     void *new = malloc(size);
     if (!new) {
-	fprintf(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
+	fprintf(stderr, "malloc(%lld) failed in file %s, line %d\n", (long long)size, fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
     return new;
@@ -51,7 +51,7 @@ void *NCI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname)
     if (nelem == 0 || elsize == 0) return NULL;
     void *new =calloc(nelem, elsize);
     if (!new) {
-	fprintf(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
+	fprintf(stderr, "calloc(%lld, %lld) failed in file %s, line %d\n", (long long)nelem,(long long)elsize,fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
     return new;
