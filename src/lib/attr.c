@@ -39,9 +39,9 @@ ncmpii_free_NC_attr(NC_attr *attrp)
  * How much space will 'nelems' of 'type' take in
  *  external representation (as the values of an attribute)?
  */
-static size_t
-ncmpix_len_NC_attrV(nc_type type,
-                    size_t  nelems)
+static MPI_Offset
+ncmpix_len_NC_attrV(nc_type    type,
+                    MPI_Offset nelems)
 {
     switch(type) {
         case NC_BYTE:
@@ -69,8 +69,8 @@ ncmpii_new_x_NC_attr(
 	MPI_Offset nelems)
 {
 	NC_attr *attrp;
-	const size_t xsz = ncmpix_len_NC_attrV(type, nelems);
-	size_t sz = M_RNDUP(sizeof(NC_attr));
+	const MPI_Offset xsz = ncmpix_len_NC_attrV(type, nelems);
+	MPI_Offset  sz = M_RNDUP(sizeof(NC_attr));
 
 	assert(!(xsz == 0 && nelems != 0));
 
@@ -1100,7 +1100,7 @@ ncmpii_put_att(int         ncid,
         if (!NC_indef(ncp)) {
             /* not in define mode, meaning to over-write attribute value */
 
-            const size_t xsz = ncmpix_len_NC_attrV(filetype, nelems);
+            const MPI_Offset xsz = ncmpix_len_NC_attrV(filetype, nelems);
             /* xsz is the total size of this attribute */
 
             attrp = ncap->value[indx]; /* convenience */
