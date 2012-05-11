@@ -24,14 +24,17 @@ C On exit, delete this file
         integer ngatts          !/* number of global attributes */
         integer recdim          !/* id of unlimited dimension */
         integer flags
+        integer nok
 
         flags = NF_NOCLOBBER
+        nok = 0
         do 1, clobber = 0, 1
             err = nfmpi_create(comm, scratch, flags,  MPI_INFO_NULL,
      +                         ncid)
             if (err .ne. 0) then
                 call errore('nfmpi_create: ', err)
             end if
+            nok = nok + 1
             err = nfmpi_close(ncid)
             if (err .ne. 0) then
                 call errore('nfmpi_close: ', err)
@@ -74,10 +77,12 @@ C On exit, delete this file
         if (err .ne. NF_EEXIST) then
             call errore('attempt to overwrite file: ', err)
         end if
+        nok = nok + 1
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0) then
             call errori('delete of scratch file failed: ', err)
         end if
+        call print_nok(nok)
         end
 
 
@@ -125,15 +130,13 @@ C           /* BAD_ID tests */
         err = nfmpi_redef(BAD_ID)
         if (err .ne. NF_EBADID) then
             call errore('bad ncid: ', err)
-        else
-            nok = nok + 1
         endif
+        nok = nok + 1
         err = nfmpi_enddef(BAD_ID)
         if (err .ne. NF_EBADID) then
             call errore('bad ncid: ', err)
-        else
-            nok = nok + 1
         endif
+        nok = nok + 1
 
 C           /* read-only tests */
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
@@ -143,15 +146,13 @@ C           /* read-only tests */
         err = nfmpi_redef(ncid)
         if (err .ne. NF_EPERM) then
             call errore('nfmpi_redef in NF_NOWRITE mode: ', err)
-        else
-            nok = nok + 1
         endif
+        nok = nok + 1
         err = nfmpi_enddef(ncid)
         if (err .ne. NF_ENOTINDEFINE) then
             call errore('nfmpi_redef in NF_NOWRITE mode: ', err)
-        else
-            nok = nok + 1
         endif
+        nok = nok + 1
         err = nfmpi_close(ncid)
         if (err .ne. 0) 
      +      call errore('nfmpi_close: ', err)
@@ -184,9 +185,8 @@ c       should not enter indep mode in define mode
         err = nfmpi_redef(ncid)
         if (err .ne. NF_EINDEFINE) then
             call errore('nfmpi_redef in define mode: ', err)
-        else
-            nok = nok + 1
         endif
+        nok = nok + 1
         err = nfmpi_enddef(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
@@ -198,9 +198,8 @@ c       should not enter indep mode in define mode
         err = nfmpi_redef(ncid)
         if (err .ne. 0) then
             call errore('nfmpi_redef: ', err)
-        else
-            nok = nok + 1
         endif
+        nok = nok + 1
         length = 8
         err = nfmpi_def_dim(ncid, 'abc', length, dimid)
         if (err .ne. 0)
@@ -258,7 +257,7 @@ C           /* check scratch file written as expected */
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete failed for netCDF: ', err)
-        ! call print_nok(nok)
+        call print_nok(nok)
         end
 
 C Test nfmpi_enddef 
@@ -351,7 +350,7 @@ C           /* close both handles */
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
-        ! call print_nok(nok)
+        call print_nok(nok)
         end
 
 
@@ -478,7 +477,7 @@ C           /* try nfmpi_abort in data mode - should just close */
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errori('delete of scratch file failed: ', err)
-        ! call print_nok(nok)
+        call print_nok(nok)
         end
 
 
@@ -947,7 +946,9 @@ C    try with same ncid for source and target, same variable
         integer datatype                !/* of att */
         integer(kind=MPI_OFFSET_KIND) length                  !/* of att */
         character*1     value
+        integer nok
 
+        nok = 0
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid_in)
         if (err .ne. 0)
@@ -969,30 +970,37 @@ C    try with same ncid for source and target, same variable
      +                                ncid_out, vid)
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
+                nok = nok + 1
                 err = nfmpi_copy_att(ncid_in, vid, name, ncid_out, 
      +                            BAD_VARID)
                 if (err .ne. NF_ENOTVAR)
      +              call errore('bad var id: ', err)
+                nok = nok + 1
                 err = nfmpi_copy_att(BAD_ID, vid, name, 
      +                ncid_out, vid)
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
+                nok = nok + 1
                 err = nfmpi_copy_att(ncid_in, vid, name, 
      +                BAD_ID, vid)
                 if (err .ne. NF_EBADID)
      +              call errore('bad ncid: ', err)
+                nok = nok + 1
                 err = nfmpi_copy_att(ncid_in, vid, 'noSuch',
      +                                ncid_out, vid)
                 if (err .ne. NF_ENOTATT)
      +              call errore('bad attname: ', err)
+                nok = nok + 1
                 err = nfmpi_copy_att(ncid_in, vid, name, 
      +                 ncid_out, vid)
                 if (err .ne. 0)
      +              call errore('nfmpi_copy_att: ', err)
+                nok = nok + 1
                 err = nfmpi_copy_att(ncid_out, vid, name,
      +                                ncid_out, vid)
                 if (err .ne. 0)
      +              call errore('source = target: ', err)
+                nok = nok + 1
 2           continue
 1       continue
 
@@ -1039,6 +1047,7 @@ C           if this att. exists them copy ':a' to it
      +                                ncid_out, i)
                 if (err .ne. 0)
      +              call errore('nfmpi_copy_att: ', err)
+                nok = nok + 1
             end if
 3       continue
         err = nfmpi_close(ncid_out)
@@ -1074,6 +1083,7 @@ C           /* Reopen & check */
         err = nfmpi_delete(scratch, MPI_INFO_NULL)
         if (err .ne. 0)
      +      call errorc('delete of scratch file failed', scratch)
+        call print_nok(nok)
         end
 
 
