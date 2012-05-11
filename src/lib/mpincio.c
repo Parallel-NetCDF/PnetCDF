@@ -53,8 +53,16 @@ static unsigned char IDalloc[MAX_NC_ID];
 
 void
 ncmpiio_free(ncio *nciop) {
-  if (nciop != NULL)
-    NCI_Free(nciop);
+    if (nciop != NULL) {
+#ifdef HAVE_MPI_INFO_FREE
+        if (nciop->mpiinfo != MPI_INFO_NULL)
+            MPI_Info_free(&(nciop->mpiinfo));
+#endif
+        if (nciop->comm != MPI_COMM_NULL)
+            MPI_Comm_free(&(nciop->comm));
+
+        NCI_Free(nciop);
+    }
 }
 
 ncio *
@@ -69,6 +77,7 @@ ncmpiio_new(const char *path, int ioflags)
     return NULL;
 
   nciop->ioflags = ioflags;
+  nciop->mpiinfo = MPI_INFO_NULL;
 
   nciop->path = (char *) ((char *)nciop + sz_ncio);
   (void) strcpy((char *)nciop->path, path); 
@@ -258,13 +267,13 @@ ncmpiio_open(MPI_Comm     comm,
     ncmpiio_extract_hints(nciop, info);
 
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
-            info, &nciop->collective_fh);
+                              info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         int rank, errorclass;
         ncmpiio_free(nciop);
 #ifdef HAVE_MPI_ERR_NO_SUCH_FILE
         MPI_Error_class(mpireturn, &errorclass);
-        if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_EEXIST;
+        if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
 #endif
         MPI_Comm_rank(comm, &rank);
         ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
@@ -359,15 +368,6 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     }
 */
   }
-#ifdef HAVE_MPI_INFO_FREE
-  if (nciop->mpiinfo != MPI_INFO_NULL)
-    MPI_Info_free(&(nciop->mpiinfo));
-#endif
-
-  if (nciop->comm != MPI_COMM_NULL) {
-      MPI_Comm_free(&(nciop->comm));
-  }
-
   ncmpiio_free(nciop);
 
   return status;
