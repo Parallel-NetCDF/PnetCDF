@@ -94,8 +94,8 @@ test_ncmpi_open(void)
     err = ncmpi_open(comm, "tooth-fairy.nc", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
     IF (err == NC_NOERR)
 	error("ncmpi_open of nonexistent file should have failed");
-    IF (! NC_ISSYSERR(err))
-	error("ncmpi_open of nonexistent file should have returned system error");
+    IF (err != NC_ENOENT)
+	error("ncmpi_open of nonexistent file should have returned NC_ENOENT");
 
     /* Open a file that is not a netCDF file. */
     err = ncmpi_open(comm, "test_get.c", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */

@@ -56,6 +56,7 @@ test_ncmpi_create(void)
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_EEXIST)
 	error("attempt to overwrite file: status = %d", err);
+
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err)
 	error("remove of %s failed", scratch);

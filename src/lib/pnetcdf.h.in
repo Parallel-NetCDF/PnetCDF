@@ -317,6 +317,7 @@ typedef enum {
 #define NC_ENULLABUF			(-228) /* no attached buffer is found */
 #define NC_EPENDINGBPUT			(-229) /* pending bput is found, cannot detach buffer */
 #define NC_EINSUFFBUF			(-230) /* attached buffer is too small */
+#define NC_ENOENT			(-231) /* File does not exist when calling ncmpi_open() */
 
 
 /*
