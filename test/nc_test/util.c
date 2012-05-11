@@ -860,7 +860,7 @@ check_vars(int  ncid)
             }
         }
     }
-    print_nok(nok);
+    /* print_nok(nok); */
 }
 
 
@@ -919,7 +919,7 @@ check_atts(int  ncid)
             }
         }
     }
-    print_nok(nok);
+    /* print_nok(nok); */
 }
 
 
