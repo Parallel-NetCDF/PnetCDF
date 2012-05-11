@@ -134,10 +134,10 @@ C       /* Try to open a nonexistent file */
         else
             nok = nok + 1
         endif
-        if (.not. NFMPI_ISSYSERR(err)) then
+        if (err .ne. NF_ENOENT) then
             call error(
      +  'nfmpi_open of nonexistent file should 
-     +   have returned system error')
+     +   have returned NF_ENOENT')
         else
             nok = nok + 1
         endif
@@ -200,8 +200,7 @@ C       /* Opened OK, see if can open again and get a different netCDF ID */
         err = nfmpi_close(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        ! call print_nok(nok)
-        print *, ' '
+        call print_nok(nok)
         end
 
 
