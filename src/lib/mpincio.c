@@ -115,22 +115,66 @@ ncmpiio_create(MPI_Comm     comm,
                ncio       **nciopp)
 {
     ncio *nciop;
-    int i, mpireturn; 
-
-/* TODO: in the future, HAVE_ACCESS_FUNCTION shall be tested and set at the
- * configure time */
-#define HAVE_ACCESS_FUNCTION
-#ifndef HAVE_ACCESS_FUNCTION
+    int i, rank, mpireturn; 
+    int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
+#ifdef NO_ACCESS
     int do_zero_file_size = 0;
+#else
+    int file_exist;
 #endif
 
-    int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
+    /* TODO: use MPI_Allreduce to check for valid path, so error can be
+       returned collectively */
+    if (path == NULL || *path == 0)
+        return EINVAL;
+
+    MPI_Comm_rank(comm, &rank);
+
+#ifdef NO_ACCESS
+    if (fIsSet(ioflags, NC_NOCLOBBER))
+        fSet(mpiomode, MPI_MODE_EXCL);
+    else
+        do_zero_file_size = 1;
+#else
+    /* if access() is available, use it to check if file already exists */
+    file_exist = 0;
+    if (rank == 0) { /* check if file exists */
+        /* remove the file system type prefix name if there is any
+         * for example, path=="lustre:/home/john/testfile.nc"
+         * we need to use "/home/john/testfile.nc" when call access()
+         */
+        char *filename = strchr(path, ':');
+        if (filename == NULL) /* no prefix */
+            filename = (char*)path;
+        else
+            filename++;
+
+        if (access(filename, F_OK) == 0) file_exist = 1;
+    }
+
+    if (fIsSet(ioflags, NC_NOCLOBBER)) {
+        /* NetCDF requires NC_EEXIST returned when if the file already exists
+         * and NC_NOCLOBBER is used in ioflags(cmode)
+         */
+        MPI_Bcast(&file_exist, 1, MPI_INT, 0, comm);
+        if (file_exist) return NC_EEXIST;
+    }
+    else {
+        /* to avoid calling MPI_File_set_size() later, let process 0 check
+           if the file exists. If not, no need to call MPI_File_set_size */
+        if (rank == 0 && file_exist) {
+            /* file does exist, so delete it */
+            mpireturn = MPI_File_delete((char*)path, MPI_INFO_NULL);
+            if (mpireturn != MPI_SUCCESS) {
+                ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
+                return NC_EOFILE;
+            }
+        } /* else: the file does not exist, do nothing */
+    }
+#endif
 
     /* ignore if NC_NOWRITE set by user */
     fSet(ioflags, NC_WRITE);
-
-    if (path == NULL || *path == 0)
-        return EINVAL;
 
     nciop = ncmpiio_new(path, ioflags); /* allocate buffer */
     if (nciop == NULL)
@@ -142,44 +186,27 @@ ncmpiio_create(MPI_Comm     comm,
 
     ncmpiio_extract_hints(nciop, info);
 
-    if (fIsSet(ioflags, NC_NOCLOBBER))
-        fSet(mpiomode, MPI_MODE_EXCL);
-    else {
-#ifdef HAVE_ACCESS_FUNCTION
-        /* to avoid calling MPI_File_set_size() later, let process 0 check
-           if the file exists. If not, no need to call MPI_File_set_size */
-        int rank;
-        MPI_Comm_rank(nciop->comm, &rank);
-        if (rank == 0) { /* check if file exists */
-            if (access(path, F_OK) == 0) { /* but is this only available in Linux? */
-                /* file does exist, so delete it */
-                mpireturn = MPI_File_delete((char*)path, MPI_INFO_NULL);
-                if (mpireturn != MPI_SUCCESS) {
-                    ncmpiio_free(nciop);
-                    ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
-                    return NC_EOFILE;
-                }
-            } /* else: the file does not exist, do nothing */
-        }
-#else
-        do_zero_file_size = 1; 
-#endif
-    }
-
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(comm, &rank);
+        /* NetCDF requires NC_EEXIST returned when if the file already exists
+         * and NC_NOCLOBBER is used in ioflags(cmode)
+         * In MPI 2.1, if MPI_File_open uses MPI_MODE_EXCL and the file
+         * already exists, the error code of MPI_ERR_FILE_EXISTS should
+         * return. But in MPI 2.1 and prior, MPI_ERR_IO is returned.
+         */
         ncmpiio_free(nciop);
+#ifdef HAVE_MPI_ERR_FILE_EXISTS
+        if (mpireturn == MPI_ERR_FILE_EXISTS) return NC_EEXIST;
+#endif
         ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
-        return NC_EOFILE;  
+        return NC_EOFILE;
     }
 
     /* get the file info used by MPI-IO */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
 
-#ifndef HAVE_ACCESS_FUNCTION
+#ifdef NO_ACCESS
     if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
 #endif
 
@@ -213,6 +240,8 @@ ncmpiio_open(MPI_Comm     comm,
     int i, mpireturn;
     int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
+    /* TODO: use MPI_Allreduce to check for valid path, so error can be
+       returned collectively */
     if (path == NULL || *path == 0)
         return EINVAL;
  
@@ -230,8 +259,11 @@ ncmpiio_open(MPI_Comm     comm,
             info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         int rank;
-        MPI_Comm_rank(comm, &rank);
         ncmpiio_free(nciop);
+#ifdef HAVE_MPI_ERR_NO_SUCH_FILE
+        if (mpireturn == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
+#endif
+        MPI_Comm_rank(comm, &rank);
         ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
         return NC_EOFILE;
     }

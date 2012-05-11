@@ -56,6 +56,7 @@ AH_TEMPLATE([NF_INT8_T], [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_], [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT], [Does sytem have IEEE FLOAT])
 AH_TEMPLATE([NO_STRERROR], [Define if system lacks strerror])
+AH_TEMPLATE([NO_ACCESS], [Define if system lacks access])
 
 AC_HEADER_STDC
  
@@ -299,6 +300,7 @@ AC_CHECK_HEADERS(stdlib.h sys/types.h)
 AC_HEADER_STDBOOL
 
 AC_CHECK_FUNC(strerror, ,AC_DEFINE(NO_STRERROR))
+AC_CHECK_FUNC(access, ,AC_DEFINE(NO_ACCESS))
 AC_FUNC_ALLOCA
 AC_STRUCT_ST_BLKSIZE
 UD_CHECK_IEEE
@@ -480,6 +482,22 @@ UD_HAS_MPI_TYPE(MPI_COMPLEX16)
 UD_HAS_MPI_TYPE(MPI_COMPLEX32)
 UD_HAS_MPI_TYPE(MPI_UB)
 UD_HAS_MPI_TYPE(MPI_LB)
+
+dnl Check for presence of error codes
+dnl
+AC_DEFUN([UD_HAS_MPI_ERROR_CODE], [
+	AC_MSG_CHECKING(if MPI includes $1)
+	AC_TRY_COMPILE([ #include <mpi.h> ],
+		[int err = $1; ],
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_$1, 1, available),
+		AC_MSG_RESULT(no)
+	)
+	] 
+)
+
+UD_HAS_MPI_ERROR_CODE(MPI_ERR_FILE_EXISTS)
+UD_HAS_MPI_ERROR_CODE(MPI_ERR_NO_SUCH_FILE)
 
 dnl
 dnl *** GOING BACK TO REGULAR CC ***

@@ -157,8 +157,10 @@ main(int argc, char *argv[])
     }
 
     /* delete any existing scratch netCDF file */
-    if ( ! read_only )
-	ncmpi_delete(scratch, MPI_INFO_NULL);
+    if ( ! read_only ) {
+        if (access(scratch, F_OK) == 0)
+            unlink(scratch);
+    }
 
     /* Test read-only functions, using pregenerated test-file */
     NC_TEST(ncmpi_strerror);
@@ -528,10 +530,10 @@ main(int argc, char *argv[])
     }
     MPI_Finalize();
 
-    print( "\nNOTE: parallel-netcdf expects to see 2 failures");
+    print( "\nNOTE: parallel-netcdf expects to see 0 failures");
     print( "\nTotal number of failures: %d\n", nfailsTotal);
-    if (nfailsTotal == 2) 
-	    	return 0;
+    if (nfailsTotal == 0) 
+        return 0;
     else 
-	    return nfailsTotal > 0;
+        return nfailsTotal > 0;
 }
