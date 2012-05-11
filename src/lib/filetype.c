@@ -17,8 +17,6 @@
 /* Prototypes for functions used only in this file */
 static int check_recsize_too_big(NC *ncp);
 
-static int create_subarray_c_order_byte(int ndims, int sizes[], int subsizes[],
-                                        int starts[], MPI_Datatype *newtype);
 static int ncmpii_vara_create_filetype(NC* ncp, NC_var* varp,
                        const MPI_Offset start[], const MPI_Offset count[], 
                        int rw_flag, MPI_Offset *offset, MPI_Datatype *filetype);
@@ -277,45 +275,6 @@ ncmpii_is_request_contiguous(NC_var           *varp,
         }
     }
     return 1;
-}
-
-/*----< create_subarray_c_order_byte() >-------------------------------------*/
-static int
-create_subarray_c_order_byte(int ndims,
-                             int sizes[],
-                             int subsizes[],
-                             int starts[],
-                             MPI_Datatype *newtype)
-{
-    /* if a request is contiguous in file, this function calls
-       MPI_Type_contiguous() and MPI_Type_create_resized(), we
-       MPI_Type_create_subarray() can be avoided */
-    int i, iscontig = 1;
-
-    for (i=ndims-1; i>0; i--) {
-        if (subsizes[i] < sizes[i]) {
-            iscontig = 0;
-            break;
-        }
-    }
-
-    if (iscontig) {
-        /* subsizes[1...ndims-1] == sizes[1...ndims-1] and
-             starts[1...ndims-1] == 0 */
-        MPI_Aint extent=sizes[0];
-
-        *newtype = MPI_BYTE;
-        for (i=ndims-1; i>0; i--) {
-            MPI_Type_contiguous(sizes[i], *newtype, newtype);
-            extent *= sizes[i];
-        }
-        MPI_Type_indexed(1, subsizes, starts, *newtype, newtype);
-        /* augment the upper bound to the entire array size */
-        return MPI_Type_create_resized(*newtype, 0, extent, newtype);
-    }
-
-    return MPI_Type_create_subarray(ndims, sizes, subsizes, starts,
-                                    MPI_ORDER_C, MPI_BYTE, newtype);
 }
 
 /*----< ncmpii_vara_create_filetype() >--------------------------------------*/

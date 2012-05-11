@@ -400,21 +400,6 @@ UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_REAL)
 UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_INTEGER)
 UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_COMPLEX)
 
-dnl unfortunate: MPICH2-1.0.7 defines MPI_COMBINER_RESIZED but it is not
-dnl actually implemented.  AC_TRY_RUN is the only way we can know for sure,
-dnl but on many systems, if you compile an MPI program and try to run it on the
-dnl login node, then you will get a failure.  
-dnl So, let's assume newer than MPICH2-1.0.7, but provide an environment
-dnl variable to override 
-
-AC_MSG_CHECKING(if environment says MPI lacks support for resized type:)
-if test "$ac_cv_MPI_TYPE_RESIZED_WORKS" != "no" ; then
-    AC_DEFINE_UNQUOTED(HAVE_MPI_RESIZED_SUPPORT, 1, RESIZED combiner works)
-    AC_MSG_RESULT(no)
-else
-    AC_MSG_RESULT(yes)
-fi
-
 dnl Check for presence of Fortran types
 dnl
 dnl We do this for a couple of reasons.  First, the MPI might have been
