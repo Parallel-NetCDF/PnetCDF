@@ -136,6 +136,7 @@ ncmpiio_create(MPI_Comm     comm,
 
     MPI_Comm_rank(comm, &rank);
 
+    /* NC_CLOBBER is the default mode, even if it is not used in cmode */
 #ifdef NO_ACCESS
     if (fIsSet(ioflags, NC_NOCLOBBER))
         fSet(mpiomode, MPI_MODE_EXCL);
@@ -144,10 +145,10 @@ ncmpiio_create(MPI_Comm     comm,
 #else
     /* if access() is available, use it to check if file already exists */
     file_exist = 0;
-    if (rank == 0) { /* check if file exists */
-        /* remove the file system type prefix name if there is any
-         * for example, path=="lustre:/home/john/testfile.nc"
-         * we need to use "/home/john/testfile.nc" when call access()
+    if (rank == 0) { /* root checks if file exists */
+        /* remove the file system type prefix name if there is any.
+         * For example, path=="lustre:/home/foo/testfile.nc",
+         * use "/home/foo/testfile.nc" when calling access()
          */
         char *filename = strchr(path, ':');
         if (filename == NULL) /* no prefix */
@@ -237,6 +238,7 @@ ncmpiio_create(MPI_Comm     comm,
     return NC_NOERR;  
 }
 
+/*----< ncmpiio_open() >-----------------------------------------------------*/
 int
 ncmpiio_open(MPI_Comm     comm,
              const char  *path,
@@ -263,7 +265,7 @@ ncmpiio_open(MPI_Comm     comm,
  
     ncmpiio_extract_hints(nciop, info);
 
-    mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
+    mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode,
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         int rank, errorclass;
