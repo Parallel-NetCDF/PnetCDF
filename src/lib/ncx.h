@@ -282,7 +282,7 @@ ncmpii_swapn8b(void *dst, const void *src, MPI_Offset nn);
  *
  * Storage for a single element of internal type is at `ip' argument.
  *
- * These functions return 0 (ENOERR) when no error occured,
+ * These functions return 0 (NC_NOERR) when no error occured,
  * or NC_ERANGE when the value being converted is too large.
  * When NC_ERANGE occurs, an undefined (implementation dependent)
  * conversion may have occured.

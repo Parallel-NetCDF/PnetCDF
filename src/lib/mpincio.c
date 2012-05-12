@@ -12,9 +12,6 @@
 #endif
 #include <stdio.h>
 #include <errno.h>
-#ifndef ENOERR
-#define ENOERR 0
-#endif
 #include <sys/types.h>
 #include <fcntl.h>
 #include <string.h>
@@ -135,7 +132,7 @@ ncmpiio_create(MPI_Comm     comm,
     /* TODO: use MPI_Allreduce to check for valid path, so error can be
        returned collectively */
     if (path == NULL || *path == 0)
-        return EINVAL;
+        return NC_EINVAL;
 
     MPI_Comm_rank(comm, &rank);
 
@@ -187,7 +184,7 @@ ncmpiio_create(MPI_Comm     comm,
 
     nciop = ncmpiio_new(path, ioflags); /* allocate buffer */
     if (nciop == NULL)
-        return ENOMEM;
+        return NC_ENOMEM;
 
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
@@ -237,7 +234,7 @@ ncmpiio_create(MPI_Comm     comm,
     set_NC_collectiveFh(nciop);
 
     *nciopp = nciop;
-    return ENOERR;  
+    return NC_NOERR;  
 }
 
 int
@@ -254,11 +251,11 @@ ncmpiio_open(MPI_Comm     comm,
     /* TODO: use MPI_Allreduce to check for valid path, so error can be
        returned collectively */
     if (path == NULL || *path == 0)
-        return EINVAL;
+        return NC_EINVAL;
  
     nciop = ncmpiio_new(path, ioflags);
     if (nciop == NULL)
-        return ENOMEM;
+        return NC_ENOMEM;
  
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
@@ -294,7 +291,7 @@ ncmpiio_open(MPI_Comm     comm,
     set_NC_collectiveFh(nciop);
  
     *nciopp = nciop;
-    return ENOERR; 
+    return NC_NOERR; 
 }
 
 int
@@ -321,16 +318,16 @@ ncmpiio_sync(ncio *nciop) {
     }
     MPI_Barrier(nciop->comm);
 
-    return ENOERR;
+    return NC_NOERR;
 }
 
 int
 ncmpiio_close(ncio *nciop, int doUnlink) {
-  int status = ENOERR;
+  int status = NC_NOERR;
   int mpireturn;
 
-  if (nciop == NULL)
-    return EINVAL;
+  if (nciop == NULL) /* this should never occur */
+    return NC_EINVAL;
 
   if(NC_independentFhOpened(nciop)) {
     mpireturn = MPI_File_close(&(nciop->independent_fh));
