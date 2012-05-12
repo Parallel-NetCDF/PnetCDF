@@ -926,7 +926,7 @@ hdr_get_nc_type(bufferinfo *gbp,
         type != NC_INT64   &&
         type != NC_UINT64
        )
-        return EINVAL; 
+        return NC_EINVAL; 
  
     *typep = (nc_type) type;
     return NC_NOERR;
@@ -1014,7 +1014,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             ncmpii_free_NC_string(ncstrp);
-            return EINVAL;
+            return NC_EINVAL;
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
         gbp->index += padding;
@@ -1095,9 +1095,9 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
 
     if (ncap->ndefined == 0) {
         if (type != NC_DIMENSION && type != NC_UNSPECIFIED)
-            return EINVAL;
+            return NC_EINVAL;
     } else {
-        if (type != NC_DIMENSION) return EINVAL;
+        if (type != NC_DIMENSION) return NC_EINVAL;
 
         ncap->value = (NC_dim **) NCI_Malloc(ncap->ndefined * sizeof(NC_dim*));
         if (ncap->value == NULL) return NC_ENOMEM;
@@ -1164,7 +1164,7 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     /* hande the padding */
     if (padding > 0) {
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, padding) != 0) return EINVAL;
+        if (memcmp(gbp->pos, pad, padding) != 0) return NC_EINVAL;
         gbp->pos = (void *)((char *)gbp->pos + padding);
         gbp->index += padding;
     }
@@ -1263,9 +1263,9 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
 
     if (ncap->ndefined == 0) {
         if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED)
-            return EINVAL;
+            return NC_EINVAL;
     } else {
-        if (type != NC_ATTRIBUTE) return EINVAL;
+        if (type != NC_ATTRIBUTE) return NC_EINVAL;
 
         ncap->value = (NC_attr **)NCI_Malloc(ncap->ndefined * sizeof(NC_attr*));
         if (ncap->value == NULL) return NC_ENOMEM;
@@ -1421,9 +1421,9 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
  
     if (ncap->ndefined == 0) { /* no variable defined */
         if (type != NC_VARIABLE && type != NC_UNSPECIFIED)
-            return EINVAL;
+            return NC_EINVAL;
     } else {
-        if (type != NC_VARIABLE) return EINVAL;
+        if (type != NC_VARIABLE) return NC_EINVAL;
 
         ncap->value = (NC_var **) NCI_Malloc(ncap->ndefined * sizeof(NC_var*));
         if (ncap->value == NULL) return NC_ENOMEM; 

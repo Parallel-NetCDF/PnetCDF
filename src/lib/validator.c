@@ -164,7 +164,7 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
     printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the name string alignment of ", (long long unsigned)
 	   (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size));
     ncmpii_free_NC_string(ncstrp);
-    return EINVAL;
+    return NC_EINVAL;
   }
   gbp->pos = (void *)((char *)gbp->pos + padding);
   
@@ -229,14 +229,14 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
 	      (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
       printf("NC_DIMENSION or NC_UNSPECIFIED is expected for ");
-      return EINVAL;
+      return NC_EINVAL;
     }
   } else {
     if(type != NC_DIMENSION) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
 	      (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
       printf("NC_DIMENSION is expected since number of dimensions is %d for ", ncap->ndefined);
-      return EINVAL;
+      return NC_EINVAL;
     }
 
     ncap->value = (NC_dim **) NCI_Malloc(ncap->ndefined * sizeof(NC_dim *));
@@ -287,7 +287,7 @@ val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
       && type != NC_UINT64) {
     printf("Error @ [0x%8.8Lx]: \n\tUnknown data type for the values of ",
 	   (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - X_SIZEOF_INT));
-    return EINVAL; 
+    return NC_EINVAL; 
   }
  
   *typep = (nc_type) type;
@@ -331,7 +331,7 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
   if (memcmp(gbp->pos, pad, padding) != 0) {
     printf("Error @ [0x%8.8Lx]: \n\tPadding should be 0x00 for the values alignment of ",
            (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size)); 
-    return EINVAL;
+    return NC_EINVAL;
   }
   gbp->pos = (void *)((char *)gbp->pos + padding);
 
@@ -412,14 +412,14 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
       printf("NC_ATTRIBUTE or NC_UNSPECIFIED is expected for "); 
-      return EINVAL;
+      return NC_EINVAL;
     }
   } else {
     if(type != NC_ATTRIBUTE) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
       printf("NC_ATTRIBUTE is expected since number of attributes is %d for ", (int)ncap->ndefined);  
-      return EINVAL;
+      return NC_EINVAL;
     }
 
     ncap->value = (NC_attr **) NCI_Malloc(ncap->ndefined * sizeof(NC_attr *));
@@ -556,14 +556,14 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
       printf("NC_VARIABLE or NC_UNSPECIFIED is expected for ");
-      return EINVAL;
+      return NC_EINVAL;
     }
   } else {
     if(type != NC_VARIABLE) {
       printf("Error @ [0x%8.8Lx]: \n\tInvalid NC component type, while ",
               (long long unsigned) (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size - 2 * X_SIZEOF_SIZE_T));
       printf("NC_VARIABLE is expected since number of variables is %d for ", ncap->ndefined);        
-      return EINVAL;
+      return NC_EINVAL;
     }
  
     ncap->value = (NC_var **) NCI_Malloc(ncap->ndefined * sizeof(NC_var *));

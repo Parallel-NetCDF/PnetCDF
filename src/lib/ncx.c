@@ -133,7 +133,7 @@ ncmpix_put_size_t(void             **xpp,
     uchar *cp = (uchar *) *xpp;
 
     /* No negative offsets stored in netcdf */
-    /* if (lp < 0) return ERANGE; */
+    /* if (lp < 0) return NC_ERANGE; */
 
     assert(sizeof_t == 4 || sizeof_t == 8);
 
@@ -270,7 +270,7 @@ ncmpix_put_off_t(void **xpp, const MPI_Offset *lp, MPI_Offset sizeof_off_t)
 		/* No negative offsets stored in netcdf */
 	if (*lp < 0) {
 		/* assume this is an overflow of a 32-bit int */
-		return ERANGE;
+		return NC_ERANGE;
 	}
 	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
 	if (sizeof_off_t == 4 ) {
