@@ -66,12 +66,12 @@ vms_strerror( int status )
 #endif /* vms */
 
 
+static char unknown[64];
 
 const char *
 ncmpi_strerror(int err)
 {
-    char unknown[64];
-    sprintf(unknown,"Unrecognized pnetcdf error code %d\n",err);
+    sprintf(unknown,"Unrecognized pnetcdf error code %10d\n",err);
 
 #ifdef vms 
 	if(err == EVMSERR)
