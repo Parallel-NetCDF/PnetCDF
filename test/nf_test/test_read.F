@@ -85,7 +85,8 @@ C       /* Try on a bad error status */
         message = nfmpi_strerror(-666)!/* should fail */
 C       pnetcdf differs from serial netcdf in that we report the error
 C       code along with the message.
-        if (message(1:31) .ne. 'Unrecognized pnetcdf error code') then
+        if (message(1:46) .ne.
+     +      'Unknown Error: Unrecognized PnetCDF error code') then
             call errorc('nfmpi_strerror on bad error status returned: ',
      +          message)
         else
