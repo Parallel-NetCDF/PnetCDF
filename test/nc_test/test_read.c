@@ -59,7 +59,7 @@ test_ncmpi_strerror(void)
 
     /* Try on a bad error status */
     message = ncmpi_strerror(-666);/* should fail */
-    IF (strcmp(message, "Unknown Error") != 0)
+    IF (strncmp(message, "Unrecognized pnetcdf error code", 31) != 0)
 	error("ncmpi_strerror on bad error status returned: %s", message);
     nok++;
 
