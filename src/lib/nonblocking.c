@@ -47,16 +47,17 @@ ncmpii_abuf_free(NC *ncp, void *buf)
     int i;
     /* find the index in the occupy table for this buffer
      * note that abuf->tail points to the first free entry */
-    MPI_Aint buf_addr, abuf_addr, buf_offset = 0;
-    for (i=0; i<ncp->abuf->tail; i++) {
+    MPI_Aint buf_addr, abuf_addr, dist, buf_offset = 0;
 #ifdef HAVE_MPI_GET_ADDRESS
-        MPI_Get_address(buf, &buf_addr);
-        MPI_Get_address(ncp->abuf->buf, &abuf_addr);
+    MPI_Get_address(buf, &buf_addr);
+    MPI_Get_address(ncp->abuf->buf, &abuf_addr);
 #else 
-        MPI_Address(buf, &buf_addr);
-        MPI_Address(ncp->abuf->buf, &abuf_addr);
+    MPI_Address(buf, &buf_addr);
+    MPI_Address(ncp->abuf->buf, &abuf_addr);
 #endif
-        if (buf_addr - abuf_addr <= buf_offset)
+    dist = buf_addr - abuf_addr;
+    for (i=0; i<ncp->abuf->tail; i++) {
+        if (dist <= buf_offset)
             break;
         buf_offset += ncp->abuf->occupy_table[i].req_size;
     }
