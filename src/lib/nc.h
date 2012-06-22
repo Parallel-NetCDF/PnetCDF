@@ -410,13 +410,13 @@ typedef struct NC_req {
 #define NC_ABUF_DEFAULT_TABLE_SIZE 128
 
 typedef struct NC_buf_status {
-    int    is_used;
-    size_t req_size;
+    int        is_used;
+    MPI_Offset req_size;
 } NC_buf_status;
 
 typedef struct NC_buf {
-    int            size_allocated;
-    size_t         size_used;
+    MPI_Offset     size_allocated;
+    MPI_Offset     size_used;
     int            table_size;
     NC_buf_status *occupy_table; /* [table_size] */
     int            tail;         /* index of last free entry */
