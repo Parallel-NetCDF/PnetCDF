@@ -396,6 +396,7 @@ $(HEADER_GENERATED): $(COMMON_HEADER_GENERATED) pnetcdf_api.external
 install:	$(INCDIR)/$(HEADER_GENERATED)  $(INCDIR)/$(MODULE_GENERATED)
 
 uninstall:
+	$(RM) -f $(INCDIR)/$(HEADER_GENERATED)  $(INCDIR)/$(MODULE_GENERATED)
 
 # An empty value for the variable PROGRAM causes some makes to fail
 #$(PROGRAM):	$(PROG_OBJS)
