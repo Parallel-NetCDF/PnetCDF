@@ -13,6 +13,11 @@ install:
 	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) install ; fi
 	cd utils && $(MAKE) install
 
+uninstall:
+	cd lib && $(MAKE) uninstall
+	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) uninstall ; fi
+	cd utils && $(MAKE) uninstall
+
 clean:
 	cd lib && $(MAKE) clean
 	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) clean ; fi

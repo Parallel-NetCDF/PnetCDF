@@ -24,13 +24,9 @@ distclean:
 	$(RM) -f Makefile
 	if [ $(srcdir) != . ] ; then rmdir $(SUBDIRS) ; fi
 
-install: ncgen_install ncdump_install ncdiff_install
+install:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done
 
-ncgen_install:
-	cd ncgen && $(MAKE) install
+uninstall:
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) uninstall ; ) ; done
 
-ncdump_install:
-	cd ncdump && $(MAKE) install
-
-ncdiff_install:
-	cd ncdiff && $(MAKE) install
