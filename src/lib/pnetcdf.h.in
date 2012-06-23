@@ -255,6 +255,7 @@ typedef enum {
    error codes < -100 so that errors can be added to netcdf-3 if
    needed.
  */
+#ifndef NC4_FIRST_ERROR
 #define NC4_FIRST_ERROR	(-100)
 #define NC_EHDFERR	(-101) /* Error at HDF5 layer. */
 #define NC_ECANTREAD	(-102) /* Can't read. */
@@ -284,8 +285,9 @@ typedef enum {
 #define NC_ESTORAGE	(-126) /* Can't specify both contiguous and chunking. */
 #define NC_EBADCHUNK	(-127) /* Bad chunksize. */
 #define NC_ENOTBUILT	(-128) /* Attempt to use feature that was not turned on when netCDF was built. */
-#define NC_EDISKLESS     (-129)    /**< Error in using diskless  access. */  
+#define NC_EDISKLESS    (-129) /**< Error in using diskless  access. */  
 #define NC4_LAST_ERROR	(-129) 
+#endif
 
 /* PnetCDF Error Codes: */
 #define NC_ESMALL			(-201) /* size of off_t too small for format */
@@ -320,26 +322,12 @@ typedef enum {
 #define NC_EINSUFFBUF			(-230) /* attached buffer is too small */
 #define NC_ENOENT			(-231) /* File does not exist when calling ncmpi_open() */
 
+#define NC_REQ_NULL -1  /* zeor-length nonblocking request will be ignored */
+
 
 /*
  * The Interface
  */
-
-/* Declaration modifiers for DLL support (MSC et al) */
-
-#if defined(DLL_NETCDF) /* define when library is a DLL */
-#  if defined(DLL_EXPORT) /* define when building the library */
-#   define MSC_EXTRA __declspec(dllexport)
-#  else
-#   define MSC_EXTRA __declspec(dllimport)
-#  endif
-#else
-#define MSC_EXTRA
-#endif	/* defined(DLL_NETCDF) */
-
-# define EXTERNL MSC_EXTRA extern
-
-#define NC_REQ_NULL -1  /* zeor-length nonblocking request will be ignored */
 
 /* Begin Prototypes */
 
