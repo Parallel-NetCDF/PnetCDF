@@ -114,7 +114,7 @@ ncmpix_get_short_##btype(const void *xp, btype *ip)                           \
 {                                                                             \
     ix_short xx;                                                              \
     get_ix_short(xp, &xx); /* get a short in the form of local Endianness */  \
-    *ip = xx;              /* typecast to schar */                            \
+    *ip = xx;              /* typecast to btype */                            \
     range_check                                                               \
     return NC_NOERR;                                                            \
 }
