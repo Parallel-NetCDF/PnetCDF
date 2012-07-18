@@ -220,6 +220,8 @@ ncmpi_strerror(int err)
 	    return "Cannot detach buffer as a pending bput request is found.";
 	case NC_EINSUFFBUF:
 	    return "Attached buffer is too small.";
+	case NC_ENOENT:
+	    return "The specified netCDF file does not exist when calling ncmpi_open().";
 	
 	default:
 	    return unknown;
