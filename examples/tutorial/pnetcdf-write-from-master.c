@@ -1,12 +1,7 @@
 /* simple demonstration of pnetcdf 
  * text attribute on dataset
  * write out rank into 1-d array after sending to rank 0.  This is a dumb way
- * to do parallel I/O but folks do this sometimes... */
-
-#include <stdlib.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-#include <stdio.h>
+ * to do parallel I/O, but folks do this sometimes... */
 
 /* This program creates a file, say named output.nc, with the following
    contents, shown by running ncmpidump command .
@@ -30,6 +25,11 @@
          v2 = 0, 1, 2, 3 ;
     }
 */
+
+#include <stdlib.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+#include <stdio.h>
 
 static void handle_error(int status, int lineno)
 {
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         ret = ncmpi_create(MPI_COMM_SELF, argv[1],
-                            NC_WRITE|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
+                           NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
         ret = ncmpi_def_dim(ncfile, "d1", nprocs, &dimid);
