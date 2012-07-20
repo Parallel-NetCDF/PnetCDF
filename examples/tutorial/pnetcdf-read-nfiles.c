@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
     int var_ndims, var_natts;;
     MPI_Offset *dim_sizes, var_size;
     MPI_Offset *count;
-
     char filename[DSET_NAME_LEN];
     char varname[NC_MAX_NAME+1];
     int dimids[NC_MAX_VAR_DIMS];

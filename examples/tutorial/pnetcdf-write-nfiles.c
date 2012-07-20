@@ -1,12 +1,7 @@
 /* simple demonstration of pnetcdf 
  * text attribute on dataset
- * write out rank into 1-d array collectively.  The most basic way to do
- * parallel i/o with pnetcdf */
-
-#include <stdlib.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-#include <stdio.h>
+ * Each process writes out rank into 1-d array to a separate file.
+ * This is not a good way to do parallel I/O */
 
 /*
 To run on 4 processes for example,
@@ -21,6 +16,11 @@ There will be 4+1 files created.
 
 The contents of files are shown at the bottom of this files.
 */
+
+#include <stdlib.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+#include <stdio.h>
 
 
 static void handle_error(int status, int lineno)
@@ -118,13 +118,13 @@ int main(int argc, char **argv) {
 netcdf output {
 // file format: CDF-2 (large file)
 dimensions:
-	d1 = 4 ;
+        d1 = 4 ;
 variables:
-	int v1(d1) ;
-	int v2(d1) ;
+        int v1(d1) ;
+        int v2(d1) ;
 
 // global attributes:
-		:string = "Hello World\n",
+                :string = "Hello World\n",
     "" ;
 data:
 
@@ -137,13 +137,13 @@ data:
 netcdf output.nc.0-4 {
 // file format: CDF-2 (large file)
 dimensions:
-	d1 = 1 ;
+        d1 = 1 ;
 variables:
-	int v1(d1) ;
-	int v2(d1) ;
+        int v1(d1) ;
+        int v2(d1) ;
 
 // global attributes:
-		:string = "Hello World\n",
+                :string = "Hello World\n",
     "" ;
 data:
 
@@ -156,13 +156,13 @@ data:
 netcdf output.nc.1-4 {
 // file format: CDF-2 (large file)
 dimensions:
-	d1 = 1 ;
+        d1 = 1 ;
 variables:
-	int v1(d1) ;
-	int v2(d1) ;
+        int v1(d1) ;
+        int v2(d1) ;
 
 // global attributes:
-		:string = "Hello World\n",
+                :string = "Hello World\n",
     "" ;
 data:
 
@@ -175,13 +175,13 @@ data:
 netcdf output.nc.2-4 {
 // file format: CDF-2 (large file)
 dimensions:
-	d1 = 1 ;
+        d1 = 1 ;
 variables:
-	int v1(d1) ;
-	int v2(d1) ;
+        int v1(d1) ;
+        int v2(d1) ;
 
 // global attributes:
-		:string = "Hello World\n",
+                :string = "Hello World\n",
     "" ;
 data:
 
@@ -194,13 +194,13 @@ data:
 netcdf output.nc.3-4 {
 // file format: CDF-2 (large file)
 dimensions:
-	d1 = 1 ;
+        d1 = 1 ;
 variables:
-	int v1(d1) ;
-	int v2(d1) ;
+        int v1(d1) ;
+        int v2(d1) ;
 
 // global attributes:
-		:string = "Hello World\n",
+                :string = "Hello World\n",
     "" ;
 data:
 

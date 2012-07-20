@@ -23,9 +23,15 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    if (argc != 2) {
+        if (rank == 0) printf("Usage: %s filename\n", argv[0]);
+        MPI_Finalize();
+        exit(-1);
+    }
+
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    if (NC_NOERR != (err = ncmpi_create(MPI_COMM_WORLD, "test.nc",
-                                           cmode, MPI_INFO_NULL, &ncid)))
+    if (NC_NOERR != (err = ncmpi_create(MPI_COMM_WORLD, argv[1],
+                                        cmode, MPI_INFO_NULL, &ncid)))
        ERR(err);
 
     /* define a variable of a 6 x (4*nprocs) int64 array in the nc file */
@@ -100,7 +106,7 @@ int main(int argc, char **argv) {
        // file format: CDF-5 (big variables)
        dimensions:
               Y = 6 ;
-       	      X = 16 ;
+              X = 16 ;
        variables:
               int64 var(Y, X) ;
       data:

@@ -1,12 +1,7 @@
 /* simple demonstration of pnetcdf 
  * text attribute on dataset
  * rank 0 reads into 1-d array, broadcasts to all.  This is a dumb way
- * to do parallel I/O but folks do this sometimes... */
-
-#include <stdlib.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-#include <stdio.h>
+ * to do parallel I/O, but folks do this sometimes... */
 
 /* This program reads a file created by pnetcdf-write-from-master.c, say file
    named output.nc with the following contents, shown by running ncmpidump command .
@@ -18,7 +13,7 @@
             d1 = 4 ;
     variables:
             int v1(d1) ;
-        int v2(d1) ;
+            int v2(d1) ;
 
     // global attributes:
                 :string = "Hello World\n",
@@ -30,6 +25,11 @@
          v2 = 0, 1, 2, 3 ;
     }
 */
+
+#include <stdlib.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+#include <stdio.h>
 
 static void handle_error(int status, int lineno)
 {
