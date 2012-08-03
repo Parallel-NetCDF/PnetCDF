@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 
         var_size = count[0];
         for (j=1; j<var_ndims; j++) {
-            count[j] = dimids[j];
+            count[j] = dim_sizes[dimids[j]];
             var_size *= count[j];
         }
 
