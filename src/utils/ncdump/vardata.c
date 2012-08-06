@@ -723,6 +723,10 @@ vardata(
 	  if (!upcorner(vdims,vp->ndims,cor,add))
 	    error("vardata: odometer overflowed!");
 	set_indent(2);
+
+        /* to avoid residue contents from previous read, especially
+           when read beyond the end of file (i.e. read size returned 0) */
+        memset(vals, 0, VALBUFSIZ);
     }
     free(vals);
 
