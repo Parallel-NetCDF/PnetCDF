@@ -319,10 +319,6 @@ ncmpi_buffer_detach(int         ncid,
 static int
 ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf)
 {
-    /* check if there is sufficient space available */
-    if (ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes)
-        return NC_EINSUFFBUF;
-
     /* extend the table size if more entries are needed */
     if (ncp->abuf->tail + 1 == ncp->abuf->table_size) {
         ncp->abuf->table_size += NC_ABUF_DEFAULT_TABLE_SIZE;
@@ -415,6 +411,12 @@ ncmpii_igetput_varm(NC               *ncp,
     CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes)
     /* bnelems now is the number of ptype in the whole buf */
     /* warning is set in CHECK_NELEMS() */
+
+    /* for bput call, check if the remaining buffer space is sufficient
+       to accommodate this request */
+    if (rw_flag == WRITE_REQ && use_abuf &&
+        ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes)
+        return NC_EINSUFFBUF;
 
     need_convert  = ncmpii_need_convert(varp->type, ptype);
     need_swap     = ncmpii_need_swap(varp->type, ptype);
@@ -535,8 +537,13 @@ err_check:
 
         /* Step 3: pack cbuf to xbuf and xbuf will be used to write to file */
         if (need_convert) { /* user buf type != nc var type defined in file */
-            if (use_abuf) /* use attached buffer */
-                ncmpii_abuf_malloc(ncp, nbytes, &xbuf);
+            if (use_abuf) { /* use attached buffer */
+                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf);
+                if (status != NC_NOERR) {
+                    if (cbuf != NULL && cbuf != buf) NCI_Free(cbuf);
+                    return ((warning != NC_NOERR) ? warning : status);
+                }
+            }
             else
                 xbuf = NCI_Malloc(nbytes);
 
@@ -545,7 +552,11 @@ err_check:
         }
         else {  /* cbuf == xbuf */
             if (use_abuf) { /* use attached buffer */
-                ncmpii_abuf_malloc(ncp, nbytes, &xbuf);
+                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf);
+                if (status != NC_NOERR) {
+                    if (cbuf != NULL && cbuf != buf) NCI_Free(cbuf);
+                    return ((warning != NC_NOERR) ? warning : status);
+                }
                 memcpy(xbuf, cbuf, nbytes);
             } else {
                 xbuf = cbuf;
