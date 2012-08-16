@@ -15,6 +15,7 @@ if [ -z "$BUILDIFACE" ] ; then
         echo "Cannot find $mpich2SourceDir/src/binding/f77/buildiface"
         exit 1
     fi
+    BUILDIFACE=$mpich2SourceDir/src/binding/f77/buildiface
 fi
 if [ ! -x $BUILDIFACE ] ; then
         echo "Cannot find $BUILDIFACE"

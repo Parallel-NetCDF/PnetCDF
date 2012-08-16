@@ -746,3 +746,22 @@ pack_request(NC               *ncp,
     return NC_NOERR;
 }
 
+/*----< ncmpi_inq_buffer_usage() >--------------------------------------------*/
+int
+ncmpi_inq_buffer_usage(int         ncid, 
+                       MPI_Offset *usage) /* in bytes */
+{
+    int  status;
+    NC  *ncp;
+
+    CHECK_NCID
+
+    /* check if the buffer has been prviously attached */
+    if (ncp->abuf == NULL) return NC_ENULLABUF;
+
+    /* return the current usage in bytes */
+    *usage = ncp->abuf->size_used;
+
+    return NC_NOERR;
+}
+
