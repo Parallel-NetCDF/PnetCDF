@@ -22,7 +22,7 @@ static int ncmpii_end_indep_data(NC *ncp);
 /*----< ncmpi_inq_libvers() >------------------------------------------------*/
 inline const char*
 ncmpi_inq_libvers(void) {
-    return "version = " PNETCDF_VERSION " of 18 Jun 2012";
+    return "version = " PNETCDF_VERSION " of 24 Sep 2012";
 }
 
 /* Begin Of Dataset Functions */
