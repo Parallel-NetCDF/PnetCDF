@@ -512,45 +512,43 @@ fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
  
 int
 ncmpii_read_numrecs(NC *ncp) {
-  int status = NC_NOERR, mpireturn;
-  MPI_Offset nrecs;
-  void *buf, *pos;
-  MPI_Status mpistatus;
-  int rank;
-  int sizeof_t;
+    int status=NC_NOERR, mpireturn, sizeof_t;
+    void *buf, *pos;
+    MPI_Offset nrecs;
+    MPI_Status mpistatus;
 
-  MPI_Comm_rank(ncp->nciop->comm, &rank);
- 
-  assert(!NC_indef(ncp));
+    assert(!NC_indef(ncp));
 
-  if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-                sizeof_t = X_SIZEOF_LONG;
-  } else {
-                 sizeof_t = X_SIZEOF_SIZE_T;
-  }
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        sizeof_t = X_SIZEOF_LONG;
+    else
+        sizeof_t = X_SIZEOF_SIZE_T;
  
-  pos = buf = (void *)NCI_Malloc(sizeof_t);
+    pos = buf = (void *)NCI_Malloc(sizeof_t);
 
-  /* fileview is already entire file visible and pointer to zero */
+    /* fileview is already entire file visible and pointer to zero */
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        mpireturn = MPI_File_read_at(ncp->nciop->collective_fh,
+                                     NC_NUMRECS_OFFSET+4,
+                                     buf, sizeof_t, MPI_BYTE, &mpistatus);
+    else
+        mpireturn = MPI_File_read_at(ncp->nciop->collective_fh,
+                                     NC_NUMRECS_OFFSET,
+                                     buf, sizeof_t, MPI_BYTE, &mpistatus);
+ 
+    if (mpireturn != MPI_SUCCESS) {
+        int rank;
+        MPI_Comm_rank(ncp->nciop->comm, &rank);
+        ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
+        return NC_EREAD;
+    } 
 
-  if (fIsSet(ncp->flags, NC_64BIT_DATA))
-      mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET+4,
-                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
-  else
-      mpireturn = MPI_File_read_at(ncp->nciop->collective_fh, NC_NUMRECS_OFFSET,
-                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
+    status = ncmpix_get_size_t((const void **)&pos, &nrecs, sizeof_t);
+    ncp->numrecs = nrecs;
  
-  if (mpireturn != MPI_SUCCESS) {
-    ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
-    return NC_EREAD;
-  } 
-
-  status = ncmpix_get_size_t((const void **)&pos, &nrecs, sizeof_t);
-  ncp->numrecs = nrecs;
+    NCI_Free(buf);
  
-  NCI_Free(buf);
- 
-  return status;
+    return status;
 }
  
 /*

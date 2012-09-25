@@ -195,22 +195,8 @@ ncmpiio_create(MPI_Comm     comm,
 
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
                               info, &nciop->collective_fh);
-    if (mpireturn != MPI_SUCCESS) {
-        /* NetCDF requires NC_EEXIST returned when if the file already exists
-         * and NC_NOCLOBBER is used in ioflags(cmode)
-         * In MPI 2.1, if MPI_File_open uses MPI_MODE_EXCL and the file
-         * already exists, the error class MPI_ERR_FILE_EXISTS should
-         * return. But in MPI 2.1 and prior, MPI_ERR_IO is returned.
-         */
-        int errorclass;
-        ncmpiio_free(nciop);
-#ifdef HAVE_MPI_ERR_FILE_EXISTS
-        MPI_Error_class(mpireturn, &errorclass);
-        if (errorclass == MPI_ERR_FILE_EXISTS) return NC_EEXIST;
-#endif
-        ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
-        return NC_EOFILE;
-    }
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_check_mpi_file_open_error(nciop, mpireturn);
 
     /* get the file info used by MPI-IO */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
@@ -267,17 +253,8 @@ ncmpiio_open(MPI_Comm     comm,
 
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode,
                               info, &nciop->collective_fh);
-    if (mpireturn != MPI_SUCCESS) {
-        int rank, errorclass;
-        ncmpiio_free(nciop);
-#ifdef HAVE_MPI_ERR_NO_SUCH_FILE
-        MPI_Error_class(mpireturn, &errorclass);
-        if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
-#endif
-        MPI_Comm_rank(comm, &rank);
-        ncmpii_handle_error(rank, mpireturn, "MPI_File_open");
-        return NC_EOFILE;
-    }
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_check_mpi_file_open_error(nciop, mpireturn);
 
     /* get the file info used by MPI-IO */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
@@ -298,13 +275,12 @@ ncmpiio_open(MPI_Comm     comm,
 
 int
 ncmpiio_sync(ncio *nciop) {
-    int mpireturn;
+    int rank, mpireturn;
+    MPI_Comm_rank(nciop->comm, &rank);
 
     if (NC_independentFhOpened(nciop)) {
         mpireturn = MPI_File_sync(nciop->independent_fh);
         if (mpireturn != MPI_SUCCESS) {
-            int rank;
-            MPI_Comm_rank(nciop->comm, &rank);
             ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
             return NC_EFILE;
         }
@@ -312,8 +288,6 @@ ncmpiio_sync(ncio *nciop) {
     if (NC_collectiveFhOpened(nciop)) {
         mpireturn = MPI_File_sync(nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS) {
-            int rank;
-            MPI_Comm_rank(nciop->comm, &rank);
             ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
             return NC_EFILE;
         }
@@ -325,51 +299,42 @@ ncmpiio_sync(ncio *nciop) {
 
 int
 ncmpiio_close(ncio *nciop, int doUnlink) {
-  int status = NC_NOERR;
-  int mpireturn;
+    int rank, mpireturn, status=NC_NOERR;
+    MPI_Comm_rank(nciop->comm, &rank);
 
-  if (nciop == NULL) /* this should never occur */
-    return NC_EINVAL;
+    if (nciop == NULL) /* this should never occur */
+        return NC_EINVAL;
 
-  if(NC_independentFhOpened(nciop)) {
-    mpireturn = MPI_File_close(&(nciop->independent_fh));
-    if (mpireturn != MPI_SUCCESS) {
-      int rank;
-      MPI_Comm_rank(nciop->comm, &rank);
-      ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
-      return NC_EFILE;
+    if (NC_independentFhOpened(nciop)) {
+        mpireturn = MPI_File_close(&(nciop->independent_fh));
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
+            return NC_EFILE;
+        }
     }
-  }
-
  
-  if(NC_collectiveFhOpened(nciop)) {
-    mpireturn = MPI_File_close(&(nciop->collective_fh));  
-    if (mpireturn != MPI_SUCCESS) {
-      int rank;
-      MPI_Comm_rank(nciop->comm, &rank);
-      ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
-      return NC_EFILE;
+    if (NC_collectiveFhOpened(nciop)) {
+        mpireturn = MPI_File_close(&(nciop->collective_fh));  
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
+            return NC_EFILE;
+        }
     }
-  }
-  IDalloc[*((int *)&nciop->fd)] = 0;
+    IDalloc[*((int *)&nciop->fd)] = 0;
 
-  if (doUnlink) {
-    mpireturn = MPI_File_delete((char *)nciop->path, nciop->mpiinfo);
-/*
-    if (mpireturn != MPI_SUCCESS) {
-      char errorString[512];
-      int  errorStringLen;
-      int rank;
-      MPI_Comm_rank(nciop->comm, &rank);
-      MPI_Error_string(mpireturn, errorString, &errorStringLen);
-      printf("%2d: MPI_File_delete error = %s\n", rank, errorString);
-      return NC_EFILE;
+    if (doUnlink) {
+        mpireturn = MPI_File_delete((char *)nciop->path, nciop->mpiinfo);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
+            /* TODO: need to decide if we should return this error or just
+               report it
+            return NC_EFILE;
+            */
+        }
     }
-*/
-  }
-  ncmpiio_free(nciop);
+    ncmpiio_free(nciop);
 
-  return status;
+    return status;
 }
 
 /*----< ncmpiio_move() >-----------------------------------------------------*/

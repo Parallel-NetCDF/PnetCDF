@@ -230,10 +230,37 @@ ncmpi_strerror(int err)
 	return unknown;
 }
 
-void ncmpii_handle_error(int rank, int mpi_status, char * msg)
+void ncmpii_handle_error(int rank, int mpi_errorcode, char * msg)
 {
-	char errorString[MPI_MAX_ERROR_STRING];
-	int errorStringLen;
-	MPI_Error_string(mpi_status, errorString, &errorStringLen);
-	printf("%2d: %s : %s\n", rank, msg, errorString);
+    /* this rank should be from nciop->comm, as for independent mode
+       where MPI_COMM_SELF is used, ranks will always be 0 */
+    char errorString[MPI_MAX_ERROR_STRING];
+    int errorStringLen;
+    MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
+    printf("%2d: %s : %s\n", rank, msg, errorString);
 }
+
+int ncmpii_check_mpi_file_open_error(ncio *nciop, int mpi_errorcode) {
+    /* When NC_NOCLOBBER is used in ioflags(cmode) for open to create,
+     * netCDF requires NC_EEXIST returned if the file already exists.
+     * In MPI 2.1, if MPI_File_open uses MPI_MODE_EXCL and the file has
+     * already existed, the error class MPI_ERR_FILE_EXISTS should be returned.
+     * For opening an existing file but the file does not exist, MPI 2.1
+     * will return MPI_ERR_NO_SUCH_FILE
+     * Note for MPI 2.1 and prior, we return MPI_ERR_IO, as these error class
+     * have not been defined.
+     */
+    int rank, errorclass;
+    MPI_Comm_rank(nciop->comm, &rank);
+    ncmpiio_free(nciop);
+    MPI_Error_class(mpi_errorcode, &errorclass);
+#ifdef HAVE_MPI_ERR_FILE_EXISTS
+    if (errorclass == MPI_ERR_FILE_EXISTS) return NC_EEXIST;
+#endif
+#ifdef HAVE_MPI_ERR_NO_SUCH_FILE
+    if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
+#endif
+    ncmpii_handle_error(rank, mpi_errorcode, "MPI_File_open");
+    return NC_EOFILE;
+}
+

@@ -265,28 +265,6 @@ GET_VARS_TYPE(ulonglong_all, unsigned long long, MPI_UNSIGNED_LONG_LONG,COLL_IO)
 /* string is not yet supported */
 
 
-#define CALLING_MPI_WRITE {                                                    \
-    if (io_method == COLL_IO) {                                                \
-        mpireturn = MPI_File_write_all(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);\
-        CHECK_MPI_ERROR("MPI_File_write_all", NC_EWRITE)                       \
-    }                                                                          \
-    else { /* io_method == INDEP_IO */                                         \
-        mpireturn = MPI_File_write(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);    \
-        CHECK_MPI_ERROR("MPI_File_write", NC_EWRITE)                           \
-    }                                                                          \
-}
-
-#define CALLING_MPI_READ {                                                     \
-    if (io_method == COLL_IO) {                                                \
-        mpireturn = MPI_File_read_all(fh, xbuf, nbytes, MPI_BYTE, &mpistatus); \
-        CHECK_MPI_ERROR("MPI_File_read_all", NC_EREAD)                         \
-    }                                                                          \
-    else { /* io_method == INDEP_IO */                                         \
-        mpireturn = MPI_File_read(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);     \
-        CHECK_MPI_ERROR("MPI_File_read", NC_EREAD)                             \
-    }                                                                          \
-}
-
 /* for write case, buf needs to swapped back if swapped previously */
 #define FINAL_CLEAN_UP {                                                       \
     if (is_buf_swapped) /* byte-swap back to buf's original contents */        \
@@ -329,7 +307,7 @@ ncmpii_getput_vars(NC               *ncp,
 {
     void *xbuf=NULL, *cbuf=NULL;
     int el_size, buftype_is_contig, mpireturn, need_swap, is_buf_swapped=0;
-    int isderived;
+    int isderived, mpi_err;
     int warning, err, status; /* err is for API abort and status is not */
     MPI_Offset fnelems, bnelems, nbytes, offset=0;
     MPI_Status mpistatus;
@@ -337,7 +315,7 @@ ncmpii_getput_vars(NC               *ncp,
     MPI_File fh;
 
     /* "API error" will abort this API call, but not the entire program */
-    err = status = warning = NC_NOERR;
+    err = status = warning = mpi_err = NC_NOERR;
 
     if (varp->ndims > 0) {
         assert(start != NULL);
@@ -486,15 +464,31 @@ err_check:
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
     mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
                                   "native", MPI_INFO_NULL);
-    CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
+    CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE)
 
     if (filetype != MPI_BYTE)
         MPI_Type_free(&filetype);
 
-    if (rw_flag == WRITE_REQ)
-        CALLING_MPI_WRITE
-    else
-        CALLING_MPI_READ
+    if (rw_flag == WRITE_REQ) {
+        if (io_method == COLL_IO) {
+            mpireturn = MPI_File_write_all(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_write_all", NC_EWRITE)
+        }
+        else { /* io_method == INDEP_IO */
+            mpireturn = MPI_File_write(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_write", NC_EWRITE)
+        }
+    }
+    else {  /* rw_flag == READ_REQ */
+        if (io_method == COLL_IO) {
+            mpireturn = MPI_File_read_all(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_read_all", NC_EREAD)
+        }
+        else { /* io_method == INDEP_IO */
+            mpireturn = MPI_File_read(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_read", NC_EREAD)
+        }
+    }
 
     /* reset the file view so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
@@ -505,7 +499,9 @@ err_check:
     }
 
     if (bnelems == 0) /* no need to go further */
-        return ((warning != NC_NOERR) ? warning : status);
+        return ((warning != NC_NOERR) ? warning
+                                      : ((status != NC_NOERR) ? status
+                                                              : mpi_err));
 
     /* only bnelems > 0 needs to proceed the following */
     if (rw_flag == READ_REQ) {
@@ -547,5 +543,7 @@ err_check:
 
     FINAL_CLEAN_UP  /* swap back the data and free buffers */
 
-    return ((warning != NC_NOERR) ? warning : status);
+    return ((warning != NC_NOERR) ? warning
+                                  : ((status != NC_NOERR) ? status
+                                                          : mpi_err));
 }
