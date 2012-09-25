@@ -30,15 +30,15 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
 #define NCI_Free(a)      NCI_Free_fn(a,__LINE__,__FILE__)
 
 
-#define CHECK_MPI_ERROR(str, err) {                                           \
-    if (mpireturn != MPI_SUCCESS) {                                           \
+#define CHECK_MPI_ERROR(mpi_errorcode, err_msg, nc_err) {                     \
+    if (mpi_errorcode != MPI_SUCCESS) {                                       \
         char errorString[MPI_MAX_ERROR_STRING];                               \
         int rank, errorStringLen;                                             \
         MPI_Comm_rank(ncp->nciop->comm, &rank);                               \
-        MPI_Error_string(mpireturn, errorString, &errorStringLen);            \
+        MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);        \
         printf("%2d: MPI Failure at line %d of %s (%s : %s)\n",               \
-               rank, __LINE__, __FILE__, str, errorString);                   \
-        return err;                                                           \
+               rank, __LINE__, __FILE__, err_msg, errorString);               \
+        mpi_err = nc_err;                                                     \
     }                                                                         \
 }
 

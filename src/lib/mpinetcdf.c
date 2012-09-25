@@ -228,22 +228,20 @@ int
 ncmpi_get_file_info(int       ncid,
                     MPI_Info *info_used)
 {
-    int status=NC_NOERR;
+    int mpireturn, status=NC_NOERR, mpi_err=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
     NC *ncp;
-#ifndef HAVE_MPI_INFO_DUP
-    int mpireturn;
-#endif
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
         return status;
 
 #ifdef HAVE_MPI_INFO_DUP
-    MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
+    mpireturn = MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
+    CHECK_MPI_ERROR(mpireturn, "MPI_Info_dup", NC_EFILE);
 #else
     mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
-    CHECK_MPI_ERROR("MPI_File_get_info", NC_EFILE)
+    CHECK_MPI_ERROR(mpireturn, "MPI_File_get_info", NC_EFILE);
 #endif
 
     sprintf(value, "%lld", ncp->nciop->hints.header_align_size);
@@ -252,7 +250,8 @@ ncmpi_get_file_info(int       ncid,
     sprintf(value, "%lld", ncp->nciop->hints.var_align_size);
     MPI_Info_set(*info_used, "nc_var_align_size", value);
 
-    return status;
+    /* make NC error higher priority than MPI error */
+    return (status != NC_NOERR) ? status : mpi_err;
 }
 
 /*----< ncmpi_redef() >------------------------------------------------------*/
@@ -365,7 +364,7 @@ ncmpi_begin_indep_data(int ncid) {
 /*----< ncmpii_begin_indep_data() >------------------------------------------*/
 static int
 ncmpii_begin_indep_data(NC *ncp) {
-    int mpireturn, status = NC_NOERR;
+    int mpireturn, status=NC_NOERR, mpi_err=NC_NOERR;
 
     if (!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
         /* do memory and file sync for numrecs, number or records */
@@ -373,16 +372,16 @@ ncmpii_begin_indep_data(NC *ncp) {
         MPI_Allreduce(&oldnumrecs, &ncp->numrecs, 1, MPI_LONG_LONG_INT,
                       MPI_MAX, ncp->nciop->comm);
         status = ncmpii_write_numrecs(ncp);
-        if (status != NC_NOERR)
-            return status;
 
+        /* MPI_File_sync() is collective */
         mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
-        CHECK_MPI_ERROR("MPI_File_sync", NC_EFILE)
+        CHECK_MPI_ERROR(mpireturn, "MPI_File_sync", NC_EFILE);
     }
 
     fSet(ncp->flags, NC_INDEP);
 
-    return status;  
+    /* make NC error higher priority than MPI error */
+    return (status != NC_NOERR) ? status : mpi_err;  
 }
 
 /*----< ncmpi_end_indep_data() >---------------------------------------------*/
@@ -402,7 +401,7 @@ ncmpi_end_indep_data(int ncid) {
 /*----< ncmpii_end_indep_data() >--------------------------------------------*/
 static int 
 ncmpii_end_indep_data(NC *ncp) {
-    int mpireturn, status = NC_NOERR;
+    int mpireturn, status=NC_NOERR, mpi_err=NC_NOERR;
 
     if (!NC_readonly(ncp)) {
         /* do memory and file sync for numrecs, number or records */
@@ -410,19 +409,19 @@ ncmpii_end_indep_data(NC *ncp) {
         MPI_Allreduce(&oldnumrecs, &ncp->numrecs, 1, MPI_LONG_LONG_INT,
                       MPI_MAX, ncp->nciop->comm);
         status = ncmpii_write_numrecs(ncp);
-        if (status != NC_NOERR)
-            return status;
 
         /* calling file sync for those already open the file */
         if (NC_independentFhOpened(ncp->nciop)) {
+            /* MPI_File_sync() is collective */
             mpireturn = MPI_File_sync(ncp->nciop->independent_fh);
-            CHECK_MPI_ERROR("MPI_File_sync", NC_EFILE)
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_sync", NC_EFILE);
         }
     }
 
     fClr(ncp->flags, NC_INDEP);
 
-    return status;
+    /* make NC error higher priority than MPI error */
+    return (status != NC_NOERR) ? status : mpi_err;
 }
 
 /*----< ncmpi_enddef() >-----------------------------------------------------*/
@@ -587,8 +586,8 @@ ncmpii_check_mpifh(NC       *ncp,
         mpireturn = MPI_File_open(comm, (char *)ncp->nciop->path,
                                   ncp->nciop->mpiomode, ncp->nciop->mpiinfo,
                                   mpifh);
-        CHECK_MPI_ERROR("ncmpii_check_mpifh(): MPI_File_open", NC_ENFILE)
-        /* To be determined the return error code ???????????? */
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_check_mpi_file_open_error(ncp->nciop, mpireturn);
 
         if (collective)
             set_NC_collectiveFh(ncp->nciop);

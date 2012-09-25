@@ -166,7 +166,7 @@ EOF
 	    else
 		AC_MSG_ERROR(Could not compile conftest.f)
 	    fi
-	    ${RM} -f conftest*
+	    ${RM} -rf conftest*
     case "$FCALLSCSUBA" in 
         sub_a__) 
 	AC_DEFINE(F77_NAME_LOWER_2USCORE,,[Define if Fortran names are lower case with two trailing underscore2])
@@ -503,7 +503,7 @@ if $MPICC -c conftest.c && $MPICC -o conftest conftest.o ; then
                  echo "configure: failed program was:" >&AC_FD_CC
                  cat conftest.c >&AC_FD_CC
          fi
-         ${RM} -f conftest*
+         ${RM} -rf conftest*
 else
          AC_MSG_ERROR([Unable to compile or link the test program])
 fi
@@ -529,7 +529,7 @@ EOF
 	AC_MSG_RESULT(no)
         AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\")  # "
     fi
-    ${RM} -f conftest*
+    ${RM} -rf conftest*
 fi
 UD_MAKEWHATIS
 

@@ -250,15 +250,15 @@ ncmpii_mset_fileview(MPI_File    fh,
                      int         statuses[], /* [ntimes] */
                      int         rw_flag) 
 {
-    int i, status, mpireturn, *blocklens;
+    int i, status=NC_NOERR, mpireturn, mpi_err=NC_NOERR, *blocklens;
     MPI_Datatype full_filetype, *filetypes;
     MPI_Offset *offsets;
 
     if (ntimes <= 0) { /* participate collective call */
         mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                       MPI_INFO_NULL);
-        CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
-        return NC_NOERR;
+        CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE);
+        return mpi_err;
     }
 
     blocklens = (int*)          NCI_Malloc(ntimes * sizeof(int));
@@ -267,18 +267,19 @@ ncmpii_mset_fileview(MPI_File    fh,
 
     /* create a filetype for each variable */
     for (i=0; i<ntimes; i++) {
-        status = ncmpii_vars_create_filetype(ncp,
-                                             varp[i],
-                                             starts[i],
-                                             counts[i],
-                                             strides[i],
-                                             rw_flag,
-                                             &offsets[i],
-                                             &filetypes[i]);
-        statuses[i] = status;
-        if (status != NC_NOERR)
-            return status;
-
+        statuses[i] = ncmpii_vars_create_filetype(ncp,
+                                                  varp[i],
+                                                  starts[i],
+                                                  counts[i],
+                                                  strides[i],
+                                                  rw_flag,
+                                                  &offsets[i],
+                                                  &filetypes[i]);
+        if (statuses[i] != NC_NOERR) {
+            status = statuses[i]; /* report the first error */
+            ntimes = i;  /* to be used to free filetypes[0...i-1] */
+            break;
+        }
         blocklens[i] = 1;
         if (filetypes[i] == MPI_BYTE) { /* file type is contiguous in file */
             int j;
@@ -288,13 +289,18 @@ ncmpii_mset_fileview(MPI_File    fh,
         }
     }
 
-    if (ntimes == 1) {  /* no two or more filetypes to combine */
+    if (status != NC_NOERR) {
+        /* even if error occurs, we still msut participate the collective
+           call to MPI_File_set_view() */
+        MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+    }
+    else if (ntimes == 1) { /* no multiple filetypes to combine */
         full_filetype = filetypes[0];
         /* filetypes[0] has been committed already */
 
         mpireturn = MPI_File_set_view(fh, offsets[0], MPI_BYTE, full_filetype,
                                       "native", MPI_INFO_NULL);
-        CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
+        CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE)
     }
     else {
         /* on most 32 bit systems, MPI_Aint and MPI_Offset are different sizes.
@@ -322,7 +328,7 @@ ncmpii_mset_fileview(MPI_File    fh,
 
         mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, full_filetype, "native",
                                       MPI_INFO_NULL);
-        CHECK_MPI_ERROR("MPI_File_set_view", NC_EFILE)
+        CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE)
         MPI_Type_free(&full_filetype);
 
         if (sizeof(MPI_Offset) != sizeof(MPI_Aint))
@@ -338,7 +344,8 @@ ncmpii_mset_fileview(MPI_File    fh,
     NCI_Free(offsets);
     NCI_Free(blocklens);
 
-    return NC_NOERR;
+    /* make NC error higher priority than MPI error */
+    return (status != NC_NOERR) ? status : mpi_err;
 }
 
 /*----< req_compare() >------------------------------------------------------*/
@@ -768,7 +775,7 @@ ncmpii_mgetput(NC           *ncp,
                int           rw_flag,     /* WRITE_REQ or READ_REQ */
                int           io_method)   /* COLL_IO or INDEP_IO */
 {
-    int i, len, status=NC_NOERR, warning=NC_NOERR, mpireturn;
+    int i, len, status=NC_NOERR, mpireturn, mpi_err=NC_NOERR;
     void *buf;
     MPI_Status mpistatus;
     MPI_Datatype buf_type;
@@ -828,18 +835,18 @@ ncmpii_mgetput(NC           *ncp,
     if (rw_flag == READ_REQ) {
         if (io_method == COLL_IO) {
             mpireturn = MPI_File_read_all(fh, buf, len, buf_type, &mpistatus);
-            CHECK_MPI_ERROR("MPI_File_read_all", NC_EREAD)
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_read_all", NC_EREAD)
         } else {
             mpireturn = MPI_File_read(fh, buf, len, buf_type, &mpistatus);
-            CHECK_MPI_ERROR("MPI_File_read", NC_EREAD)
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_read", NC_EREAD)
         }
     } else { /* WRITE_REQ */
         if (io_method == COLL_IO) {
             mpireturn = MPI_File_write_all(fh, buf, len, buf_type, &mpistatus);
-            CHECK_MPI_ERROR("MPI_File_write_all", NC_EWRITE)
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_write_all", NC_EWRITE)
         } else {
             mpireturn = MPI_File_write(fh, buf, len, buf_type, &mpistatus);
-            CHECK_MPI_ERROR("MPI_File_write", NC_EWRITE)
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_write", NC_EWRITE)
         }
     }
 
@@ -863,12 +870,13 @@ ncmpii_mgetput(NC           *ncp,
                 max_newnumrecs = MAX(max_newnumrecs, newnumrecs);
             }
         }
-        ncmpii_update_numrecs(ncp, max_newnumrecs);
+        status = ncmpii_update_numrecs(ncp, max_newnumrecs);
         /* ncmpii_update_numrecs() is collective, so even if this process
          * finds its max_newnumrecs being zero, it still needs to participate
          * the call
          */
     }
 
-    return ((warning != NC_NOERR) ? warning : status);
+    /* make NC error higher priority than MPI error */
+    return ((status != NC_NOERR) ? status : mpi_err);
 }
