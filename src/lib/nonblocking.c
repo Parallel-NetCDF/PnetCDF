@@ -267,6 +267,7 @@ ncmpii_mset_fileview(MPI_File    fh,
 
     /* create a filetype for each variable */
     for (i=0; i<ntimes; i++) {
+        filetypes[i] = MPI_BYTE;
         statuses[i] = ncmpii_vars_create_filetype(ncp,
                                                   varp[i],
                                                   starts[i],
@@ -275,11 +276,10 @@ ncmpii_mset_fileview(MPI_File    fh,
                                                   rw_flag,
                                                   &offsets[i],
                                                   &filetypes[i]);
-        if (statuses[i] != NC_NOERR) {
+
+        if (status == NC_NOERR && statuses[i] != NC_NOERR)
             status = statuses[i]; /* report the first error */
-            ntimes = i;  /* to be used to free filetypes[0...i-1] */
-            break;
-        }
+
         blocklens[i] = 1;
         if (filetypes[i] == MPI_BYTE) { /* file type is contiguous in file */
             int j;
@@ -388,8 +388,8 @@ ncmpii_wait(NC  *ncp,
             int *req_ids,   /* [num_reqs] */
             int *statuses)  /* [num_reqs] */
 {
-    int i, j, warning=NC_NOERR, status, num_w_reqs, num_r_reqs;
-    int do_read, do_write;
+    int i, j, warning=NC_NOERR, status=NC_NOERR, wait_status=NC_NOERR;
+    int do_read, do_write, num_w_reqs, num_r_reqs;
     NC_req *pre_req, *cur_req;
     NC_req *w_req_head, *w_req_tail, *r_req_head, *r_req_tail;
 
@@ -510,10 +510,12 @@ ncmpii_wait(NC  *ncp,
 
     /* call ncmpii_wait for read and write separately */
     if (do_read > 0)
-        ncmpii_wait_getput(ncp, num_r_reqs, r_req_head, READ_REQ, io_method);
+        wait_status = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head,
+                                         READ_REQ, io_method);
 
     if (do_write > 0)
-        ncmpii_wait_getput(ncp, num_w_reqs, w_req_head, WRITE_REQ, io_method);
+        wait_status = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head,
+                                         WRITE_REQ, io_method);
 
     /* post-IO data processing: may need byte-swap user write buf, or
                                 byte-swap and type convert for read buf */
@@ -632,7 +634,9 @@ ncmpii_wait(NC  *ncp,
         NCI_Free(pre_req);
     }
 
-    return ((warning != NC_NOERR) ? warning : status);
+    return ((warning != NC_NOERR) ? warning
+                                  : ((status != NC_NOERR) ? status
+                                                          : wait_status));
 }
 
 /*----< ncmpii_wait_getput() >-----------------------------------------------*/
@@ -643,7 +647,8 @@ ncmpii_wait_getput(NC     *ncp,
                    int     rw_flag,   /* WRITE_REQ or READ_REQ */
                    int     io_method) /* COLL_IO or INDEP_IO */
 {
-    int i, j, k, status, ngroups, max_ngroups, *group_index, *statuses;
+    int i, j, k, status=NC_NOERR, ngroups, max_ngroups, ret_status=NC_NOERR;
+    int *group_index, *statuses;
     void **bufs;
     MPI_Offset **starts, **counts, **strides, *nbytes;
     NC_var **varps;
@@ -735,7 +740,8 @@ ncmpii_wait_getput(NC     *ncp,
         status = ncmpii_mgetput(ncp, i_num_reqs, varps, starts, counts,
                                 strides, bufs, nbytes, statuses, rw_flag,
                                 io_method);
-	/* XXX: hey, we set status here and then never use it... */
+        if (ret_status == NC_NOERR && status != NC_NOERR)
+            ret_status = status;  /* return the first error */
 
         /* update status */
         for (j=0; j<i_num_reqs; j++)
@@ -758,7 +764,7 @@ ncmpii_wait_getput(NC     *ncp,
         NCI_Free(reqs);
     }
 
-    return NC_NOERR;
+    return ret_status;
 }
 
 /*----< ncmpii_mgetput() >-----------------------------------------------*/
@@ -775,7 +781,7 @@ ncmpii_mgetput(NC           *ncp,
                int           rw_flag,     /* WRITE_REQ or READ_REQ */
                int           io_method)   /* COLL_IO or INDEP_IO */
 {
-    int i, len, status=NC_NOERR, mpireturn, mpi_err=NC_NOERR;
+    int i, len, status=NC_NOERR, mpireturn, mpi_err=NC_NOERR, min_st;
     void *buf;
     MPI_Status mpistatus;
     MPI_Datatype buf_type;
@@ -790,8 +796,13 @@ ncmpii_mgetput(NC           *ncp,
     /* set the MPI file view */
     status = ncmpii_mset_fileview(fh, ncp, num_reqs, varps, starts, counts,
                                   strides, statuses, rw_flag);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) { /* skip this request */
+        if (io_method == COLL_IO)
+            num_reqs = 0; /* still need to participate the successive
+                             collective calls, read/write/setview */
+        else
+            return status;
+    }
 
     /* create the I/O buffer derived data type */
     if (num_reqs > 0) {
@@ -862,6 +873,7 @@ ncmpii_mgetput(NC           *ncp,
          * maximum number of records from all nonblocking requests and
          * update newnumrecs once
          */
+        int update_status;
         MPI_Offset max_newnumrecs = ncp->numrecs;
         for (i=0; i<num_reqs; i++) {
             if (IS_RECVAR(varps[i])) {
@@ -870,11 +882,13 @@ ncmpii_mgetput(NC           *ncp,
                 max_newnumrecs = MAX(max_newnumrecs, newnumrecs);
             }
         }
-        status = ncmpii_update_numrecs(ncp, max_newnumrecs);
+        update_status = ncmpii_update_numrecs(ncp, max_newnumrecs);
         /* ncmpii_update_numrecs() is collective, so even if this process
          * finds its max_newnumrecs being zero, it still needs to participate
          * the call
          */
+        if (status == NC_NOERR) status = update_status;
+        /* keep the first error if there is any */
     }
 
     /* make NC error higher priority than MPI error */
