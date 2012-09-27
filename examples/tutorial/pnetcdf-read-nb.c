@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
                  * will do any coordination (if desired) in a
                  * subsequent ncmpi_wait_all() call */
                 ret = ncmpi_iget_vara(ncfile, i, start, count, data[i],
-                        var_size, MPI_INT, &(requests[i]));
+                        var_size, MPI_INT, &requests[i]);
                 if (ret != NC_NOERR) handle_error(ret, __LINE__);
                 break;
             default:
@@ -118,6 +118,10 @@ int main(int argc, char **argv) {
 
     ret = ncmpi_wait_all(ncfile, nvars, requests, statuses);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
+
+    /* check status of each nonblocking call */
+    for (i=0; i<nvars; i++)
+        if (statuses[i] != NC_NOERR) handle_error(statuses[i], __LINE__);
 
     /* now that the ncmpi_wait_all has returned, the caller can do stuff with
      * the buffers passed in to the non-blocking operations.  The buffer resue

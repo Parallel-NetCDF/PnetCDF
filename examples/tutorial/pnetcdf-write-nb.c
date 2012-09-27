@@ -93,15 +93,19 @@ int main(int argc, char **argv) {
      * schedule the two write operations.  No i/o actually happens here,
      * which is why these routines do not need to be collective.   */
     ret = ncmpi_iput_vara(ncfile, varid1, &start, &count, &data, count,
-            MPI_INT, &(requests[0]) );
+            MPI_INT, &requests[0]);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     ret = ncmpi_iput_vara(ncfile, varid2, &start, &count, &data, count, 
-            MPI_INT, &(requests[1]));
+            MPI_INT, &requests[1]);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     ret = ncmpi_wait_all(ncfile, 2, requests, statuses);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
+
+    /* check status of each nonblocking call */
+    if (statuses[0] != NC_NOERR) handle_error(statuses[0], __LINE__);
+    if (statuses[1] != NC_NOERR) handle_error(statuses[1], __LINE__);
 
     ret = ncmpi_close(ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
