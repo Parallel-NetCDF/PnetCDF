@@ -119,13 +119,18 @@ int main(int argc, char **argv) {
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     /* permute ijk (4x5x6) into jki (5x6x4)*/
+    /* new innermost dimension is I items, strided across the old JK face*/
     MPI_Type_vector(dim_sizes[0], 1, dim_sizes[1]*dim_sizes[2], MPI_DOUBLE, &one_d);
-    MPI_Type_hvector(dim_sizes[2], 1, sizeof(double), one_d, &two_d);
-    MPI_Type_hvector(dim_sizes[1], 1, dim_sizes[2]*sizeof(double), two_d, &transposed_type);
+    /* new middle dimenson is K items, strided over the K row, which isn't
+     * actually a stride in this case.  We use hvector here because we 
+     * operate directly in terms of array items */
+    MPI_Type_create_hvector(dim_sizes[2], 1, sizeof(double), one_d, &two_d);
+    /* new outermost dimension is J items, strided over the old J row */
+    MPI_Type_create_hvector(dim_sizes[1], 1, dim_sizes[2]*sizeof(double), two_d, &transposed_type);
 
+    MPI_Type_commit(&transposed_type);
     MPI_Type_free(&one_d);
     MPI_Type_free(&two_d);
-    MPI_Type_commit(&transposed_type);
 
     ret = ncmpi_put_vara_all(ncfile, flexible_varid, start, count, 
 	    data, 1, transposed_type);
