@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 	    transposed_data, nitems, MPI_DOUBLE);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-    /* permute ijk (4x5x6) into jik (5x6x4)*/
+    /* permute ijk (4x5x6) into jki (5x6x4)*/
     MPI_Type_vector(dim_sizes[0], 1, dim_sizes[1]*dim_sizes[2], MPI_DOUBLE, &one_d);
     MPI_Type_hvector(dim_sizes[2], 1, sizeof(double), one_d, &two_d);
     MPI_Type_hvector(dim_sizes[1], 1, dim_sizes[2]*sizeof(double), two_d, &transposed_type);
