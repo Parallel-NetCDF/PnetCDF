@@ -2412,7 +2412,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_bput_var_text(ncid, varid, text, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            CHARACTER(len=*),              INTENT(IN)  :: text(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_var_text
 
