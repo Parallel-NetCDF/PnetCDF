@@ -2060,175 +2060,175 @@
 !
 ! buffered put non-blocking subroutines:
 !
-    INTEGER         nfmpi_bput_var_text
+      integer         nfmpi_bput_var_text
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            CHARACTER(len=*),              INTENT(IN)  :: text
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var_text
+      external        nfmpi_bput_var_text
 
-    INTEGER         nfmpi_bput_var_int1
+      integer         nfmpi_bput_var_int1
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var_int1
+      external        nfmpi_bput_var_int1
 
-    INTEGER         nfmpi_bput_var_int2
+      integer         nfmpi_bput_var_int2
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var_int2
+      external        nfmpi_bput_var_int2
 
-    INTEGER         nfmpi_bput_var_int
+      integer         nfmpi_bput_var_int
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER,                       INTENT(IN)  :: ivals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var_int
+      external        nfmpi_bput_var_int
 
-    INTEGER         nfmpi_bput_var_real
+      integer         nfmpi_bput_var_real
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            REAL,                          INTENT(IN)  :: rvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var_real
+      external        nfmpi_bput_var_real
 
-    INTEGER         nfmpi_bput_var_double
+      integer         nfmpi_bput_var_double
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var_double
+      external        nfmpi_bput_var_double
 
-    INTEGER         nfmpi_bput_var_int8
+      integer         nfmpi_bput_var_int8
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var_int8
+      external        nfmpi_bput_var_int8
 
-    INTEGER         nfmpi_bput_var1_text
+      integer         nfmpi_bput_var1_text
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
 !                            CHARACTER,                     INTENT(IN)  :: text
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var1_text
+      external        nfmpi_bput_var1_text
 
-    INTEGER         nfmpi_bput_var1_int1
+      integer         nfmpi_bput_var1_int1
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
 !                            INTEGER*1,                     INTENT(IN)  :: i1val
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var1_int1
+      external        nfmpi_bput_var1_int1
 
-    INTEGER         nfmpi_bput_var1_int2
+      integer         nfmpi_bput_var1_int2
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
 !                            INTEGER*2,                     INTENT(IN)  :: i2val
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var1_int2
+      external        nfmpi_bput_var1_int2
 
-    INTEGER         nfmpi_bput_var1_int
+      integer         nfmpi_bput_var1_int
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
 !                            INTEGER,                       INTENT(IN)  :: ival
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var1_int
+      external        nfmpi_bput_var1_int
 
-    INTEGER         nfmpi_bput_var1_real
+      integer         nfmpi_bput_var1_real
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
 !                            REAL,                          INTENT(IN)  :: rval
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var1_real
+      external        nfmpi_bput_var1_real
 
-    INTEGER         nfmpi_bput_var1_double
+      integer         nfmpi_bput_var1_double
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
 !                            DOUBLE PRECISION,              INTENT(IN)  :: dval
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var1_double
+      external        nfmpi_bput_var1_double
 
-    INTEGER         nfmpi_bput_var1_int8
+      integer         nfmpi_bput_var1_int8
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
 !                            INTEGER*8,                     INTENT(IN)  :: i8val
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_var1_int8
+      external        nfmpi_bput_var1_int8
 
-    INTEGER         nfmpi_bput_vara_text
+      integer         nfmpi_bput_vara_text
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
 !                            CHARACTER(len=*),              INTENT(IN)  :: text
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vara_text
+      external        nfmpi_bput_vara_text
 
-    INTEGER         nfmpi_bput_vara_int1
+      integer         nfmpi_bput_vara_int1
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
 !                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vara_int1
+      external        nfmpi_bput_vara_int1
 
-    INTEGER         nfmpi_bput_vara_int2
+      integer         nfmpi_bput_vara_int2
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
 !                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vara_int2
+      external        nfmpi_bput_vara_int2
 
-    INTEGER         nfmpi_bput_vara_int
+      integer         nfmpi_bput_vara_int
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
 !                            INTEGER,                       INTENT(IN)  :: ivals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vara_int
+      external        nfmpi_bput_vara_int
 
-    INTEGER         nfmpi_bput_vara_real
+      integer         nfmpi_bput_vara_real
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
 !                            REAL,                          INTENT(IN)  :: rvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vara_real
+      external        nfmpi_bput_vara_real
 
-    INTEGER         nfmpi_bput_vara_double
+      integer         nfmpi_bput_vara_double
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
 !                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vara_double
+      external        nfmpi_bput_vara_double
 
-    INTEGER         nfmpi_bput_vara_int8
+      integer         nfmpi_bput_vara_int8
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
 !                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vara_int8
+      external        nfmpi_bput_vara_int8
 
-    INTEGER         nfmpi_bput_vars_text
+      integer         nfmpi_bput_vars_text
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2236,9 +2236,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
 !                            CHARACTER(len=*),              INTENT(IN)  :: text
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vars_text
+      external        nfmpi_bput_vars_text
 
-    INTEGER         nfmpi_bput_vars_int1
+      integer         nfmpi_bput_vars_int1
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2246,9 +2246,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
 !                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vars_int1
+      external        nfmpi_bput_vars_int1
 
-    INTEGER         nfmpi_bput_vars_int2
+      integer         nfmpi_bput_vars_int2
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2256,9 +2256,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
 !                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vars_int2
+      external        nfmpi_bput_vars_int2
 
-    INTEGER         nfmpi_bput_vars_int
+      integer         nfmpi_bput_vars_int
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2266,9 +2266,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
 !                            INTEGER,                       INTENT(IN)  :: ivals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vars_int
+      external        nfmpi_bput_vars_int
 
-    INTEGER         nfmpi_bput_vars_real
+      integer         nfmpi_bput_vars_real
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2276,9 +2276,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
 !                            REAL,                          INTENT(OUT) :: rvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vars_real
+      external        nfmpi_bput_vars_real
 
-    INTEGER         nfmpi_bput_vars_double
+      integer         nfmpi_bput_vars_double
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2286,9 +2286,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
 !                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vars_double
+      external        nfmpi_bput_vars_double
 
-    INTEGER         nfmpi_bput_vars_int8
+      integer         nfmpi_bput_vars_int8
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2296,9 +2296,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
 !                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_vars_int8
+      external        nfmpi_bput_vars_int8
 
-    INTEGER         nfmpi_bput_varm_text
+      integer         nfmpi_bput_varm_text
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2307,9 +2307,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
 !                            CHARACTER(len=*),              INTENT(IN)  :: text
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_varm_text
+      external        nfmpi_bput_varm_text
 
-    INTEGER         nfmpi_bput_varm_int1
+      integer         nfmpi_bput_varm_int1
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2318,9 +2318,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
 !                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_varm_int1
+      external        nfmpi_bput_varm_int1
 
-    INTEGER         nfmpi_bput_varm_int2
+      integer         nfmpi_bput_varm_int2
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2329,9 +2329,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
 !                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_varm_int2
+      external        nfmpi_bput_varm_int2
 
-    INTEGER         nfmpi_bput_varm_int 
+      integer         nfmpi_bput_varm_int 
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2340,9 +2340,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
 !                            INTEGER,                       INTENT(IN)  :: ivals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_varm_int
+      external        nfmpi_bput_varm_int
 
-    INTEGER         nfmpi_bput_varm_real
+      integer         nfmpi_bput_varm_real
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2351,9 +2351,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
 !                            REAL,                          INTENT(IN)  :: rvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_varm_real
+      external        nfmpi_bput_varm_real
 
-    INTEGER         nfmpi_bput_varm_double
+      integer         nfmpi_bput_varm_double
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2362,9 +2362,9 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
 !                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_varm_double
+      external        nfmpi_bput_varm_double
 
-    INTEGER         nfmpi_bput_varm_int8
+      integer         nfmpi_bput_varm_int8
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER,                       INTENT(IN)  :: varid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
@@ -2373,21 +2373,21 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
 !                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
 !                            INTEGER,                       INTENT(OUT) :: req
-    EXTERNAL    nfmpi_bput_varm_int8
+      external        nfmpi_bput_varm_int8
 
-    INTEGER         nfmpi_buffer_attach
+      integer         nfmpi_buffer_attach
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufsize
-    EXTERNAL    nfmpi_buffer_attach
+      external        nfmpi_buffer_attach
 
-    INTEGER         nfmpi_buffer_detach
+      integer         nfmpi_buffer_detach
 !                            INTEGER,                       INTENT(IN)  :: ncid
-    EXTERNAL    nfmpi_buffer_detach
+      external        nfmpi_buffer_detach
 
-    INTEGER         nfmpi_inq_buffer_usage
+      integer         nfmpi_inq_buffer_usage
 !                            INTEGER,                       INTENT(IN)  :: ncid
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: usage
-    EXTERNAL     nfmpi_inq_buffer_usage
+      external        nfmpi_inq_buffer_usage
 
 
 !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
