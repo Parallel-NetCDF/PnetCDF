@@ -501,3 +501,8 @@
 ! now we can define nfmpi_unlimited properly
       integer*SIZEOF_MPI_OFFSET nfmpi_unlimited
       parameter (nfmpi_unlimited = 0)
+
+! NULL request for non-blocking I/O APIs
+      integer NF_REQ_NULL
+      PARAMETER (NF_REQ_NULL = -1)
+

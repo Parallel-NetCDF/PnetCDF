@@ -75,6 +75,8 @@
       imap(1)   = 6
       imap(2)   = 1
 
+      req(:) = NF_REQ_NULL  ! actually not necessary, added for testing
+
       ! write to the 1st two columns of the variable in matrix transposed way
       start(1)  = 1 + rank*4
       start(2)  = 1
