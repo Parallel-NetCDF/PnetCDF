@@ -16,6 +16,7 @@ F90_SRCS	= get_info_f.F90
 
 C_OBJS		= $(C_SRCS:.c=.o)
 F90_OBJS	= $(F90_SRCS:.F90=.o)
+F90FLAGS        = -I$(srcdir)/../src/libf -I../src/libf
 
 ifeq (@has_fortran@, yes)
 PROGS		= collective_write nonblocking_write get_info_c get_info_f
@@ -27,7 +28,7 @@ endif
 
 GARBAGE         = $(PROGS)
 
-ld_pnetcdf      = -L../../src/lib -lpnetcdf
+ld_pnetcdf      = -L$(srcdir)/../src/lib -L../src/lib -lpnetcdf
 
 PACKING_LIST	=  $(SRCS) \
 		    Makefile.in
