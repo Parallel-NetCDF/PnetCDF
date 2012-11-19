@@ -34,7 +34,6 @@
 		$(RM) -f $*-tmp.f;	\
 		;;	\
 	    *)	\
-		set -x;	\
 		$(COMPILE.F) $<;	\
 		;;	\
 	esac
