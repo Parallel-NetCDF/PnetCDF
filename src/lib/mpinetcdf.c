@@ -597,7 +597,7 @@ ncmpii_check_mpifh(NC       *ncp,
     return NC_NOERR;
 }
 
-/*----< ncmpi_put_committed() >-----------------------------------------------*/
+/*----< ncmpi_inq_put_size() >------------------------------------------------*/
 /* returns the amount of writes, in bytes, committed to file system so far */
 int 
 ncmpi_inq_put_size(int         ncid,
@@ -614,7 +614,7 @@ ncmpi_inq_put_size(int         ncid,
     return NC_NOERR;
 }
 
-/*----< ncmpi_get_committed() >-----------------------------------------------*/
+/*----< ncmpi_inq_get_size() >------------------------------------------------*/
 /* returns the amount of reads, in bytes, obtained from file system so far */
 int 
 ncmpi_inq_get_size(int         ncid,
