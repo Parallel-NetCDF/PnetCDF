@@ -65,21 +65,23 @@ ncmpiio_free(ncio *nciop) {
 ncio *
 ncmpiio_new(const char *path, int ioflags)
 {
-  size_t sz_ncio = M_RNDUP(sizeof(ncio));
-  size_t sz_path = M_RNDUP(strlen(path) +1); 
-  ncio *nciop; 
+    size_t sz_ncio = M_RNDUP(sizeof(ncio));
+    size_t sz_path = M_RNDUP(strlen(path) +1); 
+    ncio *nciop; 
 
-  nciop = (ncio *) NCI_Malloc(sz_ncio + sz_path);
-  if (nciop == NULL) 
-    return NULL;
+    nciop = (ncio *) NCI_Malloc(sz_ncio + sz_path);
+    if (nciop == NULL) 
+        return NULL;
 
-  nciop->ioflags = ioflags;
-  nciop->mpiinfo = MPI_INFO_NULL;
+    nciop->ioflags  = ioflags;
+    nciop->mpiinfo  = MPI_INFO_NULL;
+    nciop->put_size = 0;
+    nciop->put_size = 0;
 
-  nciop->path = (char *) ((char *)nciop + sz_ncio);
-  (void) strcpy((char *)nciop->path, path); 
+    nciop->path = (char *) ((char *)nciop + sz_ncio);
+    (void) strcpy((char *)nciop->path, path); 
 
-  return nciop;
+    return nciop;
 }
 
 /*----< ncmpiio_extract_hints() >--------------------------------------------*/
@@ -387,6 +389,9 @@ ncmpiio_move(ncio *const nciop,
             NCI_Free(buf);
             return NC_EREAD;
         }
+        int get_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+        nciop->get_size += get_size;
 
         MPI_Barrier(nciop->comm); /* important, in case new region overlaps old region */
 
@@ -400,6 +405,9 @@ ncmpiio_move(ncio *const nciop,
             NCI_Free(buf);
             return NC_EWRITE;
         }
+        int put_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+        nciop->put_size += put_size;
     }
     NCI_Free(buf);
     return NC_NOERR;

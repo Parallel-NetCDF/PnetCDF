@@ -595,6 +595,8 @@ typedef struct bufferinfo {
     void       *pos;      /* current position in buffer */
     MPI_Offset  size;     /* size of the buffer */
     MPI_Offset  index;    /* index of current position in buffer */
+    MPI_Offset  put_size; /* amount of writes so far in bytes */
+    MPI_Offset  get_size; /* amount of reads  so far in bytes */
 } bufferinfo;
 
 extern MPI_Offset 

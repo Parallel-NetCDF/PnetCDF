@@ -851,6 +851,10 @@ ncmpii_mgetput(NC           *ncp,
             mpireturn = MPI_File_read(fh, buf, len, buf_type, &mpistatus);
             CHECK_MPI_ERROR(mpireturn, "MPI_File_read", NC_EREAD)
         }
+        int get_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+        ncp->nciop->get_size += get_size;
+
     } else { /* WRITE_REQ */
         if (io_method == COLL_IO) {
             mpireturn = MPI_File_write_all(fh, buf, len, buf_type, &mpistatus);
@@ -859,6 +863,9 @@ ncmpii_mgetput(NC           *ncp,
             mpireturn = MPI_File_write(fh, buf, len, buf_type, &mpistatus);
             CHECK_MPI_ERROR(mpireturn, "MPI_File_write", NC_EWRITE)
         }
+        int put_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+        ncp->nciop->put_size += put_size;
     }
 
     if (buf_type != MPI_BYTE)
