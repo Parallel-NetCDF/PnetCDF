@@ -478,6 +478,9 @@ err_check:
             mpireturn = MPI_File_write(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             CHECK_MPI_ERROR(mpireturn, "MPI_File_write", NC_EWRITE)
         }
+        int put_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+        ncp->nciop->put_size += put_size;
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
@@ -488,6 +491,9 @@ err_check:
             mpireturn = MPI_File_read(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             CHECK_MPI_ERROR(mpireturn, "MPI_File_read", NC_EREAD)
         }
+        int get_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+        ncp->nciop->get_size += get_size;
     }
 
     /* reset the file view so the entire file is visible again */

@@ -337,3 +337,5 @@ extern FORTRAN_API int FORT_CALL nfmpi_bput_varm_int8_ ( int *v1, int *v2, MPI_O
 extern FORTRAN_API int FORT_CALL nfmpi_buffer_attach_ ( int *v1, MPI_Offset *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_buffer_detach_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_buffer_usage_ ( int *v1, MPI_Offset*v2 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_put_size_ ( int *v1, MPI_Offset*v2 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_get_size_ ( int *v1, MPI_Offset*v2 );

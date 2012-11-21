@@ -355,8 +355,9 @@ C2F_SRCS = createf.c \
 	bput_varm_int8f.c \
 	bufattachf.c \
 	bufdetachf.c \
-	inq_buffer_usagef.c
-
+	inq_buffer_usagef.c \
+	inq_put_sizef.c \
+	inq_get_sizef.c
 
 LIB_CSRCS = $(C2F_SRCS) $(UTIL_SRCS)
 

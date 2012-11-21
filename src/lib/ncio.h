@@ -157,6 +157,9 @@ struct ncio {
 
 	/* implementation private stuff */
 	void *NCIO_CONST pvt;
+
+    MPI_Offset put_size;  /* amount of writes committed so far in bytes */
+    MPI_Offset get_size;  /* amount of reads  committed so far in bytes */
 };
 
 #undef NCIO_CONST

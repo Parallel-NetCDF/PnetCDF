@@ -543,6 +543,10 @@ ncmpii_read_numrecs(NC *ncp) {
         return NC_EREAD;
     } 
 
+    int get_size;
+    MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+    ncp->nciop->get_size += get_size;
+
     status = ncmpix_get_size_t((const void **)&pos, &nrecs, sizeof_t);
     ncp->numrecs = nrecs;
  
@@ -603,6 +607,9 @@ ncmpii_write_numrecs(NC *ncp)
             ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
             return NC_EWRITE;
         }
+        int put_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+        ncp->nciop->put_size += put_size;
     }
 
     fClr(ncp->flags, NC_NDIRTY);  
@@ -685,6 +692,9 @@ write_NC(NC *ncp)
             ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
             return NC_EWRITE;
         }
+        int put_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+        ncp->nciop->put_size += put_size;
     }
     fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
     NCI_Free(buf);

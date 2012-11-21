@@ -746,11 +746,13 @@ ncmpii_hdr_put_NC(NC   *ncp,
     bufferinfo putbuf;
     MPI_Offset nrecs=0; 
 
-    putbuf.nciop  = NULL;
-    putbuf.offset = 0;
-    putbuf.pos    = buf;
-    putbuf.base   = buf;
-    putbuf.size   = ncp->xsz;
+    putbuf.nciop    = NULL;
+    putbuf.offset   = 0;
+    putbuf.pos      = buf;
+    putbuf.base     = buf;
+    putbuf.size     = ncp->xsz;
+    putbuf.put_size = 0;
+    putbuf.get_size = 0;
 
     /* netCDF file format:
      * netcdf_file  = header  data
@@ -788,6 +790,9 @@ ncmpii_hdr_put_NC(NC   *ncp,
     /* copy var_list */
     status = hdr_put_NC_vararray(&putbuf, &ncp->vars);
     if (status != NC_NOERR) return status;
+
+    ncp->nciop->put_size += putbuf.put_size;
+    ncp->nciop->get_size += putbuf.get_size;
 
     return NC_NOERR;
 }
@@ -843,6 +848,9 @@ hdr_fetch(bufferinfo *gbp) {
           MPI_Finalize();
           return NC_EREAD;
       }
+      int get_size;
+      MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+      gbp->get_size += get_size;
   }
   /* we might have had to backtrack */
   gbp->offset += (gbp->size - slack); 
@@ -1470,6 +1478,8 @@ ncmpii_hdr_get_NC(NC *ncp)
     /* Initialize the get buffer that stores the header read from the file */
     getbuf.nciop = ncp->nciop;
     getbuf.offset = 0;     /* read from start of the file */
+    getbuf.put_size = 0;   /* amount of writes so far in bytes */
+    getbuf.get_size = 0;   /* amount of reads  so far in bytes */
 
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
     getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
@@ -1577,6 +1587,9 @@ ncmpii_hdr_get_NC(NC *ncp)
     status = ncmpii_NC_computeshapes(ncp);
 
     NCI_Free(getbuf.base);
+
+    ncp->nciop->put_size += getbuf.put_size;
+    ncp->nciop->get_size += getbuf.get_size;
   
     return status;
 }
@@ -1987,6 +2000,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
     if (status != NC_NOERR)
         return status;
+    ncp->nciop->get_size += getbuf->get_size;
 
     status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
     if (status != NC_NOERR)

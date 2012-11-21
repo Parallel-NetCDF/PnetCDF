@@ -597,3 +597,36 @@ ncmpii_check_mpifh(NC       *ncp,
     return NC_NOERR;
 }
 
+/*----< ncmpi_put_committed() >-----------------------------------------------*/
+/* returns the amount of writes, in bytes, committed to file system so far */
+int 
+ncmpi_inq_put_size(int         ncid,
+                   MPI_Offset *size)
+{
+    int status;
+    NC *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
+
+    *size = ncp->nciop->put_size;
+    return NC_NOERR;
+}
+
+/*----< ncmpi_get_committed() >-----------------------------------------------*/
+/* returns the amount of reads, in bytes, obtained from file system so far */
+int 
+ncmpi_inq_get_size(int         ncid,
+                   MPI_Offset *size)
+{
+    int status;
+    NC *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
+
+    *size = ncp->nciop->get_size;
+    return NC_NOERR;
+}

@@ -18,6 +18,7 @@
       integer(kind=MPI_OFFSET_KIND) stride(2)
       integer(kind=MPI_OFFSET_KIND) imap(2)
       integer(kind=MPI_OFFSET_KIND) bufsize
+      integer(kind=MPI_OFFSET_KIND) put_size
       real  var(6,4)
 
       call MPI_INIT(err)
@@ -130,6 +131,11 @@
       !  5, 11, 17, 23, 29, 35, 41, 47, 53, 59, 65, 71, 77, 83, 89, 95 ;
       !
       ! note that the display of ncmpidump is in C array dimensional order
+
+      err = nfmpi_inq_put_size(ncid, put_size)
+      if (err < NF_NOERR) print*,'Error at nfmpi_inq_put_size ',
+     &                           nfmpi_strerror(err)
+      ! print*,'pnetcdf respots total put size by this proc =', put_size
 
       err = nfmpi_close(ncid)
       if (err < NF_NOERR) print*,'Error at nfmpi_close ',

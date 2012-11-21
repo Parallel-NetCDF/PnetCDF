@@ -9,8 +9,8 @@
  *    This example is similar to collective_write.c but using nonblocking APIs.
  *    It creates a netcdf file in CD-5 format and writes a number of
  *    3D integer non-record vaiables. The measured write bandwith is reported
- *    at the end. Usage:
- *        pnetcdf_coll len filename
+ *    at the end. Usage: (for example)
+ *        mpiexec -n 32 nonblocking_write len filename
  *    where len decides the size of each local array, which is len x len x len.
  *    So, each non-record variable is of size len*len*len * nprocs * sizeof(int)
  *    All variables are partitioned among all processes in a 3D
@@ -165,6 +165,10 @@ int main(int argc, char **argv)
                    i, ncmpi_strerror(st[i]));
     }
 
+    MPI_Offset put_size;
+    ncmpi_inq_put_size(ncid, &put_size);
+    MPI_Allreduce(MPI_IN_PLACE, &put_size, 1, MPI_OFFSET, MPI_SUM, MPI_COMM_WORLD);
+
     /* close the file */
     err = ncmpi_close(ncid);
     HANDLE_ERROR
@@ -174,10 +178,14 @@ int main(int argc, char **argv)
     write_size = bufsize * NUM_VARS * sizeof(int);
     for (i=0; i<NUM_VARS; i++) free(buf[i]);
 
-    MPI_Reduce(&write_size, &sum_write_size, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&write_size,   &sum_write_size,   1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
+        printf("\n");
+        printf("Total amount writes to variables only   (exclude header) = %lld bytes\n", sum_write_size);
+        printf("Total amount writes reported by pnetcdf (include header) = %lld bytes\n", put_size);
+        printf("\n");
         float subarray_size = (float)bufsize*sizeof(int)/1048576.0;
         print_info(&info_used);
         printf("Local array size %d x %d x %d integers, size = %.2f MB\n",len,len,len,subarray_size);
