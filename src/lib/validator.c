@@ -40,6 +40,9 @@ static int val_get_NC(NC *ncp);
 static int val_fetch(bufferinfo *gbp, MPI_Offset fsize);
 static int val_check_buffer(bufferinfo *gbp, MPI_Offset nextread);
 
+
+#define ABORT {printf("Abort: at line=%d func=%s\n", __LINE__,__func__); fflush(stdout); MPI_Abort(MPI_COMM_WORLD, -1);}
+
 /* Begin Of get NC */
 
 /*
@@ -49,27 +52,31 @@ static int
 val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
   char *buf;
   ssize_t nn = 0, bufsize = 0;
+  MPI_Offset slack;        /* any leftover data in the buffer */
+  MPI_Aint pos_addr, base_addr;
 
   assert(gbp->base != NULL);
   
-  fsize = _RNDUP(fsize, X_ALIGN);
-  (void) memset(gbp->base, 0, gbp->size);
-  buf = gbp->pos = gbp->base;
+  MPI_Get_address(gbp->pos,  &pos_addr);
+  MPI_Get_address(gbp->base, &base_addr);
+  slack = gbp->size - (pos_addr - base_addr);
+  /* . if gbp->pos and gbp->base are the same, there is no leftover buffer data
+   *   to worry about.  
+   * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then all
+   * data in the buffer has been consumed */
+  if (slack == gbp->size) slack = 0;
 
-  lseek(gbp->nciop->fd, gbp->offset, SEEK_SET);
-  while ( (bufsize < gbp->size) && (nn = read(gbp->nciop->fd, buf, gbp->size-bufsize)) > 0 ) {
-    buf += nn;
-    bufsize += nn;
-  }
-  gbp->offset += bufsize; 
+  memset(gbp->base, 0, gbp->size);
+  gbp->pos = gbp->base;
+  gbp->index = 0;
 
-  if (bufsize < fsize) {
-    printf("Error @ [0x%8.8Lx]: \n\tUnexpected EOF, while ",
-	   (long long unsigned) gbp->offset);
-    return -1;
+  lseek(gbp->nciop->fd, gbp->offset-slack, SEEK_SET);
+  nn = read(gbp->nciop->fd, gbp->base, gbp->size);
+  if (nn < gbp->size) {
+      printf("Error: Unexpected EOF ");
+      return -1;
   }
-    
-  gbp->size = bufsize;
+  gbp->offset += (gbp->size - slack);
 
   return NC_NOERR;
 }
@@ -78,10 +85,17 @@ val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
  * Ensure that 'nextread' bytes are available.
  */
 static int
-val_check_buffer(bufferinfo *gbp, MPI_Offset nextread) {
-  if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
-    return NC_NOERR;
-  return val_fetch(gbp, MIN(gbp->size, nextread));
+val_check_buffer(bufferinfo *gbp,
+                 MPI_Offset  nextread)
+{
+    MPI_Aint pos_addr, base_addr;
+
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
+    if (pos_addr + nextread <= base_addr + gbp->size)
+        return NC_NOERR;
+
+    return val_fetch(gbp, MIN(gbp->size, nextread));
 } 
 
 static int
@@ -102,13 +116,13 @@ val_get_NCtype(bufferinfo *gbp, NCtype *typep) {
 
 static int
 val_get_size_t(bufferinfo *gbp, MPI_Offset *sp) {
-  int sizeof_t = gbp->version == 5 ? 8 : 4; 
+  int sizeof_t = (gbp->version == 5) ? 8 : 4; 
   int status = val_check_buffer(gbp, sizeof_t);
   if (status != NC_NOERR) {
     printf("size is expected for ");
     return status; 
   }
-  return ncmpix_get_size_t((const void **)(&gbp->pos), sp, sizeof_t );
+  return ncmpix_get_size_t((const void **)(&gbp->pos), sp, sizeof_t);
 }
 
 static int
@@ -262,17 +276,15 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
 
 static int
 val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
-  int type = 0;
-  int status = val_check_buffer(gbp, X_SIZEOF_INT);
-  if(status != NC_NOERR) {
-    printf("data type is expected for the values of ");
-    return status;
-  }
+    /* NCtype is 4-byte integer */
+    int type = 0;
+    int status = val_check_buffer(gbp, 4);
+    if (status != NC_NOERR) return status;
 
-  status = ncmpix_get_int32(&gbp->pos, &type);
-  if(status != NC_NOERR) 
-    return status;
-  gbp->pos = (void *)((char *)gbp->pos + X_SIZEOF_INT); 
+    /* get a 4-byte integer */
+    status = ncmpix_get_int32(&gbp->pos, &type);
+    gbp->index += X_SIZEOF_INT;
+    if (status != NC_NOERR) return status;
 
   if (   type != NC_BYTE
       && type != NC_UBYTE
@@ -589,94 +601,113 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
 
 static int
 val_get_NC(NC *ncp) {
-  int status;
-  bufferinfo getbuf;
-  schar magic[sizeof(ncmagic)];
-  MPI_Offset nrecs = 0;
+    int status;
+    bufferinfo getbuf;
+    schar magic[sizeof(ncmagic)];
+    MPI_Offset nrecs = 0;
+    MPI_Aint pos_addr, base_addr;
 
-  assert(ncp != NULL);
+    assert(ncp != NULL);
 
-  /* Initialize the get buffer */
+    /* Initialize the get buffer that stores the header read from the file */
+    getbuf.nciop = ncp->nciop;
+    getbuf.offset = 0;     /* read from start of the file */
+    getbuf.put_size = 0;   /* amount of writes so far in bytes */
+    getbuf.get_size = 0;   /* amount of reads  so far in bytes */
 
-  getbuf.nciop = ncp->nciop;
-  getbuf.offset = 0; 	/* read from start of the file */
+    /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
+    getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
+    if (getbuf.size > NC_DEFAULT_CHUNKSIZE)
+        getbuf.size = NC_DEFAULT_CHUNKSIZE;
 
-  /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
-  getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
-  if (getbuf.size > NC_DEFAULT_CHUNKSIZE)
-    getbuf.size = NC_DEFAULT_CHUNKSIZE;
-  getbuf.pos = getbuf.base = (void *)NCI_Malloc(getbuf.size);
+    getbuf.pos = getbuf.base = (void *)NCI_Malloc(getbuf.size);
+    getbuf.index = 0;
 
-  status = val_fetch(&getbuf, sizeof(magic));
-  if(status != NC_NOERR) {
-    printf("magic number (C D F \\001) is expected!\n");
-    return status;
-  }
+    /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
+    status = val_fetch(&getbuf, sizeof(magic));
+    if (status != NC_NOERR) {
+        printf("magic number (C D F \\001) is expected!\n");
+        return status;
+    }
   
-  /* Get the header from get buffer */
+    /* First get the file format information, magic */
+    memset(magic, 0, sizeof(magic));
+    status = ncmpix_getn_schar_schar((const void **)(&getbuf.pos),
+                                     sizeof(magic), magic);
+    getbuf.index += sizeof(magic);
 
-  (void) memset(magic, 0, sizeof(magic));
-  status = ncmpix_getn_schar_schar(
-          (const void **)(&getbuf.pos), sizeof(magic), magic);
-  if(memcmp(magic, ncmagic, sizeof(ncmagic)) != 0) {
-    printf("Error @ [0x%8.8x]: \n\tUnknow magic number, while (C D F \\001, \\002, or \\005) is expected!\n", (unsigned) 0);
-    NCI_Free(getbuf.base);
-    return NC_ENOTNC;
-  }
+    if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
+        printf("Error @ [0x%8.8x]: \n\tUnknow magic number, while (C D F \\001, \\002, or \\005) is expected!\n", (unsigned) 0);
+        NCI_Free(getbuf.base);
+        return NC_ENOTNC;
+    }
 
-  if (magic[sizeof(ncmagic)-1] == 0x1) {
-      getbuf.version = 1;
-      fSet(ncp->flags, NC_32BIT);
-  } else if (magic[sizeof(ncmagic)-1] == 0x2) {
-      getbuf.version = 2;
-      fSet(ncp->flags, NC_64BIT_OFFSET);
-      if (sizeof(MPI_Offset) != 8) {
-          /* take the easy way out: if we can't support all CDF-2
-           * files, return immediately */
-          NCI_Free(getbuf.base);
-          return NC_ESMALL;
-      }
-  } else if (magic[sizeof(ncmagic)-1] == 0x5) {
-      getbuf.version = 5;
-      fSet(ncp->flags, NC_64BIT_DATA);
-      if (sizeof(MPI_Offset) != 8) {
-          NCI_Free(getbuf.base);
-          return NC_ESMALL;
-      }
-  } else {
-      NCI_Free(getbuf.base);
-      return NC_ENOTNC;
-  }
+    /* check version number in last byte of magic */
+    if (magic[sizeof(ncmagic)-1] == 0x1) {
+        getbuf.version = 1;
+        fSet(ncp->flags, NC_32BIT);
+    } else if (magic[sizeof(ncmagic)-1] == 0x2) {
+        getbuf.version = 2;
+        fSet(ncp->flags, NC_64BIT_OFFSET);
+        if (sizeof(MPI_Offset) != 8) {
+            /* take the easy way out: if we can't support all CDF-2
+             * files, return immediately */
+            NCI_Free(getbuf.base);
+            return NC_ESMALL;
+        }
+    } else if (magic[sizeof(ncmagic)-1] == 0x5) {
+        getbuf.version = 5;
+        fSet(ncp->flags, NC_64BIT_DATA);
+        if (sizeof(MPI_Offset) != 8) {
+            NCI_Free(getbuf.base);
+            return NC_ESMALL;
+        }
+    } else {
+        NCI_Free(getbuf.base);
+        return NC_ENOTNC;
+    }
 
-  status = val_check_buffer(&getbuf, X_SIZEOF_SIZE_T);
-  if(status != NC_NOERR) {
-    printf("number of records is expected!\n");
-    NCI_Free(getbuf.base);
-    return status;
-  }
+    // status = val_check_buffer(&getbuf, X_SIZEOF_SIZE_T);
+    status = val_check_buffer(&getbuf, (getbuf.version == 1) ? 4 : 8);
+    if (status != NC_NOERR) {
+        printf("number of records is expected!\n");
+        NCI_Free(getbuf.base);
+        return status;
+    }
 
-  status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs, getbuf.version == 5 ? 8 : 4);
-  if(status != NC_NOERR) {
-    NCI_Free(getbuf.base);
-    return status;
-  }
-  ncp->numrecs = nrecs;
+    /* get numrecs from getbuf into ncp */
+    status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs,
+                               (getbuf.version == 5) ? 8 : 4);
+    if (status != NC_NOERR) {
+        NCI_Free(getbuf.base);
+        return status;
+    }
 
-  assert((char *)getbuf.pos < (char *)getbuf.base + getbuf.size);
+    if (getbuf.version == 5)
+        getbuf.index += X_SIZEOF_LONG;
+    else
+        getbuf.index += X_SIZEOF_SIZE_T;
 
-  status = val_get_NC_dimarray(&getbuf, &ncp->dims);
-  if(status != NC_NOERR) {
-    printf("DIMENSION list!\n");
-    NCI_Free(getbuf.base);
-    return status;
-  }
+    ncp->numrecs = nrecs;
 
-  status = val_get_NC_attrarray(&getbuf, &ncp->attrs); 
-  if(status != NC_NOERR) {
-    printf("GLOBAL ATTRIBUTE list!\n");
-    NCI_Free(getbuf.base);
-    return status;
-  }
+    MPI_Get_address(getbuf.pos,  &pos_addr);
+    MPI_Get_address(getbuf.base, &base_addr);
+    assert(pos_addr < base_addr + getbuf.size);
+
+    /* get dim_list from getbuf into ncp */
+    status = val_get_NC_dimarray(&getbuf, &ncp->dims);
+    if (status != NC_NOERR) {
+        printf("DIMENSION list!\n");
+        NCI_Free(getbuf.base);
+        return status;
+    }
+
+    status = val_get_NC_attrarray(&getbuf, &ncp->attrs); 
+    if (status != NC_NOERR) {
+        printf("GLOBAL ATTRIBUTE list!\n");
+        NCI_Free(getbuf.base);
+        return status;
+    }
 
   status = val_get_NC_vararray(&getbuf, &ncp->vars);
   if(status != NC_NOERR) {
@@ -694,74 +725,69 @@ val_get_NC(NC *ncp) {
 
 /* End Of get NC */
 
-int 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
-  char *ncfile;
-  int status;
-  NC *ncp;
-  struct stat ncfilestat;
+    char *ncfile;
+    int status;
+    NC *ncp;
+    struct stat ncfilestat;
 
-  if (argc < 2) {
-    printf("Missing ncfile name. Usage:\n\t ncvalid <ncfile>\n");
-    exit(1);
-  } 
+    MPI_Init(&argc, &argv);
 
-  if (argc > 2) {
-    printf("Too many arguments. Usage:\n\t ncvalid <ncfile>\n");
-    exit(1);
-  }
+    if (argc != 2) {
+        printf("Usage:\n\t ncvalid <ncfile>\n");
+        MPI_Finalize();
+        return 1;
+    } 
 
-  ncfile = argv[1];
+    ncfile = argv[1];
 
-  /* open the netCDF file */
+    /* open the netCDF file */
+    ncp = ncmpii_new_NC(NULL);
+    if (ncp == NULL) {
+        printf("ncmpii_new_NC(): Not enough memory!\n");
+        ABORT
+    }
 
-  ncp = ncmpii_new_NC(NULL);
-  if(ncp == NULL) {
-    printf("Not enough memory!\n");
-    return 0; 
-  }
+    ncp->nciop = ncmpiio_new(ncfile, NC_NOWRITE);
+    if (ncp->nciop == NULL) {
+        ncmpii_free_NC(ncp);
+        printf("ncmpiio_new(): Not enough memory!\n");
+        ABORT
+    }
 
-  ncp->nciop = ncmpiio_new(ncfile, NC_NOWRITE);
-  if(ncp->nciop == NULL) {
-    ncmpii_free_NC(ncp);
-    printf("Not enough memory!\n");
-    return 0; 
-  }
+    if ( (*((int *)&ncp->nciop->fd) = open(ncfile, O_RDONLY)) < 0 ) {
+        printf("Can not open file: %s\n", ncfile);
+        ncmpiio_free(ncp->nciop);
+        ncmpii_free_NC(ncp);
+        ABORT
+    }
 
-  if ( (*((int *)&ncp->nciop->fd) = open(ncfile, O_RDONLY)) < 0 ) {
-    printf("Can not open file: %s\n", ncfile);
-    ncmpiio_free(ncp->nciop);
-    ncmpii_free_NC(ncp);
-    return 0;
-  }
+    /* read to validate the header */
+    status = val_get_NC(ncp);
+    if (status !=  NC_NOERR) {
+        close(ncp->nciop->fd);
+        ncmpiio_free(ncp->nciop);
+        ncmpii_free_NC(ncp);
+        ABORT
+    }
 
-  /* read to validate the header */
-
-  status = val_get_NC(ncp);
-  if (status !=  0) {
-    close(ncp->nciop->fd);
-    ncmpiio_free(ncp->nciop);
-    ncmpii_free_NC(ncp);
-    return 0;
-  }
-
-  /* check data size */
-  
-  fstat(ncp->nciop->fd, &ncfilestat);
-  if ( ncp->begin_rec + ncp->recsize * ncp->numrecs < ncfilestat.st_size ) {
-    printf("Error: \n\tData size is larger than defined!\n");
-    close(ncp->nciop->fd);
-    ncmpiio_free(ncp->nciop);
-    ncmpii_free_NC(ncp);
-    return 0;  
-  } else if ( ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) >= ncfilestat.st_size ) {
-    printf("Error: \n\tData size is less than expected!\n");
-    close(ncp->nciop->fd);
-    ncmpiio_free(ncp->nciop);
-    ncmpii_free_NC(ncp);
-    return 0;
-  }
+    /* check data size */
+    fstat(ncp->nciop->fd, &ncfilestat);
+    if ( ncp->begin_rec + ncp->recsize * ncp->numrecs < ncfilestat.st_size ) {
+        printf("Error: \n\tData size is larger than defined!\n");
+        close(ncp->nciop->fd);
+        ncmpiio_free(ncp->nciop);
+        ncmpii_free_NC(ncp);
+        return 0;  
+    } else if ( ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) > ncfilestat.st_size ) {
+        printf("Error: \n\tData size is less than expected!\n");
+        printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%d\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, ncfilestat.st_size);
+        close(ncp->nciop->fd);
+        ncmpiio_free(ncp->nciop);
+        ncmpii_free_NC(ncp);
+        return 0;
+    }
 
 
   /* close the file */
@@ -772,5 +798,6 @@ main(int argc, char **argv) {
 
   printf("The netCDF file is validated!\n");
 
-  return 0;
+    MPI_Finalize();
+    return 0;
 }
