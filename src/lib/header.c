@@ -824,8 +824,13 @@ hdr_fetch(bufferinfo *gbp) {
   comm = gbp->nciop->comm;
   MPI_Comm_rank(comm, &rank);
 
-  MPI_Get_address(gbp->pos,  &pos_addr);
-  MPI_Get_address(gbp->base, &base_addr);
+#ifdef HAVE_MPI_GET_ADDRESS
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
   slack = gbp->size - (pos_addr - base_addr);
   /* . if gbp->pos and gbp->base are the same, there is no leftover buffer data
    *   to worry about.  
@@ -870,8 +875,13 @@ hdr_check_buffer(bufferinfo *gbp,
 {
     MPI_Aint pos_addr, base_addr;
 
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
     if (pos_addr + nextread <= base_addr + gbp->size)
         return NC_NOERR;
 
@@ -1000,8 +1010,13 @@ hdr_get_NC_name(bufferinfo  *gbp,
     nbytes = nchars * X_SIZEOF_CHAR;
     padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
             - X_SIZEOF_CHAR * ncstrp->nchars;
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
     bufremain = gbp->size - (pos_addr - base_addr);
     cpos = ncstrp->cp;
 
@@ -1158,8 +1173,13 @@ hdr_get_NC_attrV(bufferinfo *gbp,
 
     esz = ncmpix_len_nctype(attrp->type);
     padding = attrp->xsz - esz * attrp->nelems;
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
     bufremain = gbp->size - (pos_addr - base_addr);
     nbytes = esz * attrp->nelems;
 
@@ -1569,8 +1589,13 @@ ncmpii_hdr_get_NC(NC *ncp)
 
     ncp->numrecs = nrecs;
 
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(getbuf.pos,  &pos_addr);
     MPI_Get_address(getbuf.base, &base_addr);
+#else
+    MPI_Address(getbuf.pos,  &pos_addr);
+    MPI_Address(getbuf.base, &base_addr);
+#endif
     assert(pos_addr < base_addr + getbuf.size);
 
     /* get dim_list from getbuf into ncp */
@@ -2013,8 +2038,13 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         return NC_ENUMRECS_MULTIDEFINE;
     }
 
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(getbuf->pos,  &pos_addr);
     MPI_Get_address(getbuf->base, &base_addr);
+#else
+    MPI_Address(getbuf->pos,  &pos_addr);
+    MPI_Address(getbuf->base, &base_addr);
+#endif
     assert(pos_addr < base_addr + getbuf->size);
 
     status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
