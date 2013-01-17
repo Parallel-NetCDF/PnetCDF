@@ -57,8 +57,13 @@ val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
 
   assert(gbp->base != NULL);
   
-  MPI_Get_address(gbp->pos,  &pos_addr);
-  MPI_Get_address(gbp->base, &base_addr);
+#ifdef HAVE_MPI_GET_ADDRESS
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
   slack = gbp->size - (pos_addr - base_addr);
   /* . if gbp->pos and gbp->base are the same, there is no leftover buffer data
    *   to worry about.  
@@ -90,8 +95,13 @@ val_check_buffer(bufferinfo *gbp,
 {
     MPI_Aint pos_addr, base_addr;
 
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
     if (pos_addr + nextread <= base_addr + gbp->size)
         return NC_NOERR;
 
@@ -145,8 +155,13 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
 
   padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
             - X_SIZEOF_CHAR * ncstrp->nchars;
-  MPI_Get_address(gbp->pos,  &pos_addr);
-  MPI_Get_address(gbp->base, &base_addr);
+#ifdef HAVE_MPI_GET_ADDRESS
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
   bufremain = gbp->size - (pos_addr - base_addr);
   cpos = ncstrp->cp;
 
@@ -322,8 +337,13 @@ val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
 
     esz = ncmpix_len_nctype(attrp->type);
     padding = attrp->xsz - esz * nvalues;
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
+#else
+    MPI_Address(gbp->pos,  &pos_addr);
+    MPI_Address(gbp->base, &base_addr);
+#endif
     bufremain = gbp->size - (pos_addr - base_addr);
 
   while (nvalues > 0) {
@@ -695,8 +715,13 @@ val_get_NC(NC *ncp) {
 
     ncp->numrecs = nrecs;
 
+#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(getbuf.pos,  &pos_addr);
     MPI_Get_address(getbuf.base, &base_addr);
+#else
+    MPI_Address(getbuf.pos,  &pos_addr);
+    MPI_Address(getbuf.base, &base_addr);
+#endif
     assert(pos_addr < base_addr + getbuf.size);
 
     /* get dim_list from getbuf into ncp */
