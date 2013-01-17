@@ -989,9 +989,6 @@ hdr_get_NC_name(bufferinfo  *gbp,
     char *cpos, pad[X_ALIGN-1];
     MPI_Aint pos_addr, base_addr;
 
-    MPI_Get_address(gbp->pos,  &pos_addr);
-    MPI_Get_address(gbp->base, &base_addr);
-
     /* get nelems */
     status = hdr_get_size_t(gbp, &nchars);
     if (status != NC_NOERR) return status;
@@ -1003,6 +1000,8 @@ hdr_get_NC_name(bufferinfo  *gbp,
     nbytes = nchars * X_SIZEOF_CHAR;
     padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
             - X_SIZEOF_CHAR * ncstrp->nchars;
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
     bufremain = gbp->size - (pos_addr - base_addr);
     cpos = ncstrp->cp;
 
@@ -1157,11 +1156,10 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     MPI_Offset nbytes, esz, padding, bufremain, attcount;
     MPI_Aint pos_addr, base_addr;
 
-    MPI_Get_address(gbp->pos,  &pos_addr);
-    MPI_Get_address(gbp->base, &base_addr);
-
     esz = ncmpix_len_nctype(attrp->type);
     padding = attrp->xsz - esz * attrp->nelems;
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
     bufremain = gbp->size - (pos_addr - base_addr);
     nbytes = esz * attrp->nelems;
 
