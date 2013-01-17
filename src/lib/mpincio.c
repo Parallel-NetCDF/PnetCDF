@@ -74,6 +74,7 @@ ncmpiio_new(const char *path, int ioflags)
         return NULL;
 
     nciop->ioflags  = ioflags;
+    nciop->comm     = MPI_COMM_NULL;
     nciop->mpiinfo  = MPI_INFO_NULL;
     nciop->put_size = 0;
     nciop->put_size = 0;

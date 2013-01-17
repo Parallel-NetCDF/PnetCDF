@@ -817,19 +817,20 @@ hdr_fetch(bufferinfo *gbp) {
   MPI_Comm comm;
   int mpireturn;
   MPI_Offset slack;        /* any leftover data in the buffer */
+  MPI_Aint pos_addr, base_addr;
 
   assert(gbp->base != NULL);
   
   comm = gbp->nciop->comm;
   MPI_Comm_rank(comm, &rank);
 
-  /* XXX: this pointer math might not be good on 64 bit platforms */
-  slack = gbp->size - ((char *)gbp->pos - (char *)gbp->base);
+  MPI_Get_address(gbp->pos,  &pos_addr);
+  MPI_Get_address(gbp->base, &base_addr);
+  slack = gbp->size - (pos_addr - base_addr);
   /* . if gbp->pos and gbp->base are the same, there is no leftover buffer data
    *   to worry about.  
    * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then all
    * data in the buffer has been consumed */
-
   if (slack == gbp->size) slack = 0;
 
   memset(gbp->base, 0, gbp->size);
@@ -841,7 +842,8 @@ hdr_fetch(bufferinfo *gbp) {
 
   if (rank == 0) {
       MPI_Status mpistatus;
-      mpireturn = MPI_File_read_at(gbp->nciop->collective_fh, (gbp->offset)-slack, gbp->base, 
+      mpireturn = MPI_File_read_at(gbp->nciop->collective_fh,
+                                   (gbp->offset)-slack, gbp->base, 
                                    gbp->size, MPI_BYTE, &mpistatus);  
       if (mpireturn != MPI_SUCCESS) {
           ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
@@ -866,7 +868,11 @@ static int
 hdr_check_buffer(bufferinfo *gbp,
                  MPI_Offset  nextread)
 {
-    if ((char *)gbp->pos + nextread <= (char *)gbp->base + gbp->size)
+    MPI_Aint pos_addr, base_addr;
+
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
+    if (pos_addr + nextread <= base_addr + gbp->size)
         return NC_NOERR;
 
     return hdr_fetch(gbp);
@@ -980,8 +986,11 @@ hdr_get_NC_name(bufferinfo  *gbp,
     int status;
     MPI_Offset  nchars, nbytes, padding, bufremain, strcount; 
     NC_string *ncstrp;
-    char *cpos;
-    char pad[X_ALIGN-1];
+    char *cpos, pad[X_ALIGN-1];
+    MPI_Aint pos_addr, base_addr;
+
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
 
     /* get nelems */
     status = hdr_get_size_t(gbp, &nchars);
@@ -994,7 +1003,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     nbytes = nchars * X_SIZEOF_CHAR;
     padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
             - X_SIZEOF_CHAR * ncstrp->nchars;
-    bufremain = gbp->size - (MPI_Offset)((char *)gbp->pos - (char *)gbp->base);
+    bufremain = gbp->size - (pos_addr - base_addr);
     cpos = ncstrp->cp;
 
     /* get namestring with padding */
@@ -1146,10 +1155,14 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     void *value = attrp->xvalue;
     char pad[X_ALIGN-1]; 
     MPI_Offset nbytes, esz, padding, bufremain, attcount;
+    MPI_Aint pos_addr, base_addr;
+
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
 
     esz = ncmpix_len_nctype(attrp->type);
     padding = attrp->xsz - esz * attrp->nelems;
-    bufremain = gbp->size - (MPI_Offset)((char *)gbp->pos - (char *)gbp->base);
+    bufremain = gbp->size - (pos_addr - base_addr);
     nbytes = esz * attrp->nelems;
 
     /* get values */
@@ -1472,6 +1485,7 @@ ncmpii_hdr_get_NC(NC *ncp)
     bufferinfo getbuf;
     schar magic[sizeof(ncmagic)];
     MPI_Offset nrecs = 0;
+    MPI_Aint pos_addr, base_addr;
 
     assert(ncp != NULL);
 
@@ -1491,6 +1505,7 @@ ncmpii_hdr_get_NC(NC *ncp)
 
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
     status = hdr_fetch(&getbuf);
+    if (status != NC_NOERR) return status;
   
     /* processing the header from getbuf, the get buffer */
 
@@ -1498,7 +1513,9 @@ ncmpii_hdr_get_NC(NC *ncp)
     memset(magic, 0, sizeof(magic));
     status = ncmpix_getn_schar_schar((const void **)(&getbuf.pos),
                                      sizeof(magic), magic);
+    if (status != NC_NOERR) return status;
     getbuf.index += sizeof(magic);
+
     /* don't need to worry about CDF-1 or CDF-2 
      * if the first bits are not 'CDF'
      */
@@ -1554,7 +1571,9 @@ ncmpii_hdr_get_NC(NC *ncp)
 
     ncp->numrecs = nrecs;
 
-    assert((char *)getbuf.pos < (char *)getbuf.base + getbuf.size);
+    MPI_Get_address(getbuf.pos,  &pos_addr);
+    MPI_Get_address(getbuf.base, &base_addr);
+    assert(pos_addr < base_addr + getbuf.size);
 
     /* get dim_list from getbuf into ncp */
     status = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
@@ -1886,6 +1905,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     schar magic[sizeof(ncmagic)];
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *temp_ncp;
+    MPI_Aint pos_addr, base_addr;
 
 #ifdef CHECK_MAGIC_CONSISTENCY
     char *root_magic;
@@ -1995,7 +2015,9 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         return NC_ENUMRECS_MULTIDEFINE;
     }
 
-    assert((char *)getbuf->pos < (char *)getbuf->base + getbuf->size);
+    MPI_Get_address(getbuf->pos,  &pos_addr);
+    MPI_Get_address(getbuf->base, &base_addr);
+    assert(pos_addr < base_addr + getbuf->size);
 
     status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
     if (status != NC_NOERR)

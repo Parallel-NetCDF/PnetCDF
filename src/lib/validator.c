@@ -130,8 +130,8 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
   int status;
   MPI_Offset  nchars = 0, padding, bufremain, strcount; 
   NC_string *ncstrp;
-  char *cpos;
-  char pad[X_ALIGN-1];
+  char *cpos, pad[X_ALIGN-1];
+  MPI_Aint pos_addr, base_addr;
 
   status = val_get_size_t(gbp, &nchars);
   if (status != NC_NOERR) {
@@ -145,7 +145,9 @@ val_get_NC_string(bufferinfo *gbp, NC_string **ncstrpp) {
 
   padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
             - X_SIZEOF_CHAR * ncstrp->nchars;
-  bufremain = gbp->size - (size_t)((char *)gbp->pos - (char *)gbp->base);
+  MPI_Get_address(gbp->pos,  &pos_addr);
+  MPI_Get_address(gbp->base, &base_addr);
+  bufremain = gbp->size - (pos_addr - base_addr);
   cpos = ncstrp->cp;
 
   while (nchars > 0) {
@@ -312,14 +314,17 @@ val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
  */
 static int
 val_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp) {
-  int status;
-  void *value = attrp->xvalue;
-  char pad[X_ALIGN-1]; 
-  MPI_Offset nvalues = attrp->nelems, esz, padding, bufremain, attcount;
+    int status;
+    void *value = attrp->xvalue;
+    char pad[X_ALIGN-1]; 
+    MPI_Offset nvalues = attrp->nelems, esz, padding, bufremain, attcount;
+    MPI_Aint pos_addr, base_addr;
 
-  esz = ncmpix_len_nctype(attrp->type);
-  padding = attrp->xsz - esz * nvalues;
-  bufremain = gbp->size - (size_t)((char *)gbp->pos - (char *)gbp->base);
+    esz = ncmpix_len_nctype(attrp->type);
+    padding = attrp->xsz - esz * nvalues;
+    MPI_Get_address(gbp->pos,  &pos_addr);
+    MPI_Get_address(gbp->base, &base_addr);
+    bufremain = gbp->size - (pos_addr - base_addr);
 
   while (nvalues > 0) {
     if (bufremain > 0) {
