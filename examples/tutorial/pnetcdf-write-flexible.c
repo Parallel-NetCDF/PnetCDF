@@ -6,14 +6,16 @@
 /* This program creates a file, say named output.nc, with the following
    contents, shown by running ncmpidump command .
 
-    % ncmpidump output.nc 
-    netcdf testfile {
+    % mpiexec -n 4 pnetcdf-write-flexible /orangefs/wkliao/output.nc
+
+    % ncmpidump /orangefs/wkliao/output.nc
+    netcdf output {
     // file format: CDF-2 (large file)
     dimensions:
             d1 = 4 ;
     variables:
             int v1(d1) ;
-        int v2(d1) ;
+            int v2(d1) ;
 
     // global attributes:
                 :string = "Hello World\n",
