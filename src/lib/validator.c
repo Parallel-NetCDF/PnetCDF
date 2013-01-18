@@ -812,7 +812,7 @@ int main(int argc, char **argv) {
         return 0;  
     } else if ( ncp->begin_rec + ncp->recsize * (ncp->numrecs - 1) > ncfilestat.st_size ) {
         printf("Error: \n\tData size is less than expected!\n");
-        printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%d\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, ncfilestat.st_size);
+        printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
         close(ncp->nciop->fd);
         ncmpiio_free(ncp->nciop);
         ncmpii_free_NC(ncp);
