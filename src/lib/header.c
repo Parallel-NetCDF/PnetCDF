@@ -85,6 +85,7 @@ ncmpii_NC_computeshapes(NC *ncp)
     if (ncp->vars.ndefined == 0) return NC_NOERR;
 
     for ( /*NADA*/; vpp < end; vpp++) {    
+        /* (*vpp)->len is recomputed from dimensions in ncmpii_NC_var_shape64() */
         status = ncmpii_NC_var_shape64(ncp, *vpp, &ncp->dims);
 
         if (status != NC_NOERR) return status ;
@@ -1399,10 +1400,24 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get vsize */
     status = hdr_get_size_t(gbp, &varp->len);
-    if(status != NC_NOERR) {
+    if (status != NC_NOERR) {
         ncmpii_free_NC_var(varp);
         return status;
     }
+    /* As described in CDF-2 format specification, vsize is redundant.
+       Its value may be computed from the product of dimension lengths. In CDF-2,
+       vsize is a 4-byte integer. So, if we define a variable of less than 2^32
+       elements but size > 2^32-4 bytes, then vsize in CDF-2 will overflow.
+       Recompute varp->len can ignore an overflowed value in vsize stored in
+       the file and hence bypass the limitation of CDF-2 on variable size of
+       2^32-4 bytes.
+
+       Later on, back to ncmpii_hdr_get_NC(), ncmpii_NC_computeshapes() is called
+       which recomputes varp->len using the dimension values and hence overwrites
+       the value read from file above.
+
+       In summary, PnetCDF now ignores the value of vsize stored in the file header.
+     */
   
     status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
     if (status != NC_NOERR) {
