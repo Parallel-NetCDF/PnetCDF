@@ -299,7 +299,9 @@ typedef struct {
     int          *dimids; /* array of dimension IDs */
     NC_attrarray  attrs;  /* attribute array */
     nc_type       type;   /* variable's data type */
-    MPI_Offset    len;    /* total number of array elements allocated */
+    MPI_Offset    len;    /* this is the "vsize" defined in header format, the
+                             total size in bytes of the array variable.
+                             For record variable, this is the record size */
     MPI_Offset    begin;  /* starting file offset of this variable */
 } NC_var;
 
