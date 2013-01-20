@@ -1,0 +1,7 @@
+# January 19 2013
+# Building pnetcdf on the Cray XE6
+# The following configure command works on Hopper @ NERSC
+# http://www.nersc.gov/users/computational-systems/hopper
+
+./configure --prefix=/path/to/install --build --target CC=cc CXX=CC FC=ftn F90=ftn MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn CFLAGS=-fast FFLAGS=-fast
+
