@@ -118,6 +118,7 @@ NCedgeck(const NC         *ncp,
         shp++;
     }
 
+    /* out-of-boundary and negative starts is illegal */
     for (; start < end; start++, edges++, shp++) {
         if ( (*shp < 0) || (*edges > *shp) ||
              (*start < 0) || (*start + *edges > *shp))
