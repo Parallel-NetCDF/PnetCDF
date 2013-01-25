@@ -112,13 +112,15 @@ NCedgeck(const NC         *ncp,
         return NC_NOERR;  /* 'scalar' variable */
 
     if (IS_RECVAR(varp)) {
+        if (start[0] < 0) return(NC_EEDGE);
         start++;
         edges++;
         shp++;
     }
 
     for (; start < end; start++, edges++, shp++) {
-        if ( (*shp < 0) || (*edges > *shp) || (*start + *edges > *shp))
+        if ( (*shp < 0) || (*edges > *shp) ||
+             (*start < 0) || (*start + *edges > *shp))
             return(NC_EEDGE);
     }
 
