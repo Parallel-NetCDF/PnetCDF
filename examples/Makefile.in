@@ -10,7 +10,8 @@ ld_math		= $(MATHLIB)
 
 C_SRCS		= collective_write.c \
 		  nonblocking_write.c \
-		  get_info_c.c
+		  get_info_c.c \
+		  column_wise.c
 
 F90_SRCS	= get_info_f.F90
 
@@ -18,12 +19,11 @@ C_OBJS		= $(C_SRCS:.c=.o)
 F90_OBJS	= $(F90_SRCS:.F90=.o)
 F90FLAGS        = -I$(srcdir)/../src/libf -I../src/libf
 
-ifeq (@has_fortran@, yes)
-PROGS		= collective_write nonblocking_write get_info_c get_info_f
-OBJS		= $(C_OBJS) $(F90_OBJS)
-else
-PROGS		= collective_write nonblocking_write get_info_c
+PROGS		= collective_write nonblocking_write get_info_c column_wise
 OBJS		= $(C_OBJS)
+ifeq (@has_fortran@, yes)
+PROGS		+= get_info_f
+OBJS		+= $(F90_OBJS)
 endif
 
 GARBAGE         = $(PROGS)
@@ -43,19 +43,22 @@ install:
 uninstall:
 
 collective_write: collective_write.o
-	$(LINK.c) collective_write.o -o collective_write $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 nonblocking_write: nonblocking_write.o
-	$(LINK.c) nonblocking_write.o -o nonblocking_write $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 get_info_c: get_info_c.o
-	$(LINK.c) get_info_c.o -o get_info_c $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 get_info_f.o: get_info_f.F90
 	$(COMPILE.F90) $<
 
 get_info_f: get_info_f.o
-	$(LINK.F90) get_info_f.o -o get_info_f $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+
+column_wise: column_wise.o
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 include $(srcdir)/depend
 
