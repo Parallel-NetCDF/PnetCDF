@@ -50,8 +50,7 @@ static int val_check_buffer(bufferinfo *gbp, MPI_Offset nextread);
  */
 static int
 val_fetch(bufferinfo *gbp, MPI_Offset fsize) {
-  char *buf;
-  ssize_t nn = 0, bufsize = 0;
+  ssize_t nn = 0;
   MPI_Offset slack;        /* any leftover data in the buffer */
   MPI_Aint pos_addr, base_addr;
 
