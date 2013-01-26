@@ -2,7 +2,7 @@
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id: error.c,v 1.14 90/02/23 16:08:55 davis Exp */
+/* $Id$ */
 
 /*LINTLIBRARY*/
 
