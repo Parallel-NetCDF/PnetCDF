@@ -1,4 +1,10 @@
 /*
+ *  Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
+/*
  *  This file contains derived data from a modified version of the
  *  Unicode data files.
  *

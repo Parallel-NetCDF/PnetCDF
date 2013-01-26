@@ -4,6 +4,7 @@
  *  See COPYRIGHT notice in top-level directory.
  *
  *********************************************************************/
+/* $Id$ */
 
 #include <stdio.h>
 #include <stdlib.h>

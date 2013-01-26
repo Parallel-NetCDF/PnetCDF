@@ -2,6 +2,7 @@
  *  Copyright (C) 2010, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
+/* $Id$ */
 
 /* wkliao: This diff utility compares header and variables of two files
  *         regardless the define order of the variables and attributes.

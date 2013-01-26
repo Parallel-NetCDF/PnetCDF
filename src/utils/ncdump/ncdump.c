@@ -3,6 +3,7 @@
  *   See netcdf/README file for copying and redistribution conditions.
  *   $Header$
  *********************************************************************/
+/* $Id$ */
 
 #include <stdio.h>
 #include <stdlib.h>

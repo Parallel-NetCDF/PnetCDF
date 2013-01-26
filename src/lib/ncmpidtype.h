@@ -2,6 +2,7 @@
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
+/* $Id$ */
 
 #ifndef NCMPI_DTYPE_H
 #define NCMPI_DTYPE_H
