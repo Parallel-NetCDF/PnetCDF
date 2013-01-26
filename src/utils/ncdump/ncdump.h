@@ -3,6 +3,7 @@
  *   See netcdf/COPYRIGHT file for copying and redistribution conditions.
  *   $Header$
  *********************************************************************/
+/* $Id$ */
 
 
 /* error checking macro */

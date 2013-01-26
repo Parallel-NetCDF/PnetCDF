@@ -1,3 +1,11 @@
+/*********************************************************************
+ *
+ *  Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ *********************************************************************/
+/* $Id$ */
+
 /* simple demonstration of pnetcdf 
  * text attribute on dataset
  * rank 0 reads into 1-d array, broadcasts to all.  This is a dumb way

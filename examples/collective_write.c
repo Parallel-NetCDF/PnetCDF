@@ -1,9 +1,10 @@
 /*********************************************************************
  *
- *  Copyright (C) 2010, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2012, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  *
  *********************************************************************/
+/* $Id$ */
 
 /* wkliao:
  *    This example mimics the coll_perf.c from ROMIO.

@@ -3,6 +3,7 @@
  *   See netcdf/README file for copying and redistribution conditions.
  *   $Header$
  *********************************************************************/
+/* $Id$ */
 
 /*
  * We potentially include <stdarg.h> before <stdio.h> in order to obtain a

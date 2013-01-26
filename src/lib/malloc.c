@@ -2,6 +2,7 @@
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
+/* $Id$ */
 
 /* These are routines for allocating and deallocating memory.
    They should be called as NCI_Malloc(size) and

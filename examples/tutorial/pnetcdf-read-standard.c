@@ -1,3 +1,11 @@
+/*********************************************************************
+ *
+ *  Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ *********************************************************************/
+/* $Id$ */
+
 /* simple demonstration of pnetcdf:
  * knowing nothing about the file, read in the variables. 
  *
