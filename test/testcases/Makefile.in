@@ -1,3 +1,9 @@
+#
+#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+#  See COPYRIGHT notice in top-level directory.
+#
+#  $Id$
+
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
@@ -65,10 +71,15 @@ test: ncmpi_vars_null_stride vectors test_varm
 testing-cxx: redef1
 	$(srcdir)/redef1.sh ./redef1  $(srcdir)/redef-good.ncdump && echo '*** redef1: Success ***'
 
+verbose_testing-cxx: testing-cxx
+
 testing-f: bigrecords
 	./bigrecords && echo '*** bigrecords: Success ***'
+
+verbose_testing-f: testing-f
 
 testing-collective_error:
 	echo "please run with 2 processes. e.g. mpiexec -n 2 collective_error"
 
 testing: test
+

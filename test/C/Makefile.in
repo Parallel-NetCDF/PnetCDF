@@ -1,3 +1,9 @@
+#
+#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+#  See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
@@ -22,7 +28,9 @@ pres_temp_4D_rd.o: $(srcdir)/pres_temp_4D_rd.c
 
 testing: pres_temp_4D_wr pres_temp_4D_rd
 	./pres_temp_4D_wr && ./pres_temp_4D_rd
-	
+
+verbose_testing: testing
+
 clean:
 	$(RM) -f *.o *.nc pres_temp_4D_wr pres_temp_4D_rd *.gcda *.gcno gmon.out
 

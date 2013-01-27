@@ -1,4 +1,6 @@
-# Makefile for netCDF (semi)exhaustive test.
+#
+#   Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+#   See COPYRIGHT notice in top-level directory.
 #
 # $Id$
 
@@ -85,6 +87,10 @@ saber_src:
 testing: test.nc nc_test
 	$(RM) -f scratch.nc
 	./nc_test && ./nc_test -c -2 && ./nc_test
+
+verbose_testing: test.nc nc_test
+	$(RM) -f scratch.nc
+	./nc_test -v && ./nc_test -c -v -2 && ./nc_test -v
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend

@@ -1409,7 +1409,6 @@ C    (note that it is not possible to test NF_NOFILL mode!)
 C    close file & create again for test using attribute _FillValue
         subroutine test_nfmpi_set_fill()
         use pnetcdf
-#if 0   
         implicit none
 #include "tests.inc"
 
@@ -1427,6 +1426,7 @@ C    close file & create again for test using attribute _FillValue
         integer(kind=MPI_OFFSET_KIND) length
 
         nok = 0
+#if 0   
         value = 0
 
 C           /* bad ncid */

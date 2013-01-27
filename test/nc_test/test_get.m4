@@ -35,7 +35,7 @@ dnl TEST_NC_GET_VAR1(TYPE)
 dnl
 define(`TEST_NC_GET_VAR1',dnl
 `dnl
-void
+int
 test_ncmpi_get_var1_$1(void)
 {
     int ncid;
@@ -126,7 +126,7 @@ test_ncmpi_get_var1_$1(void)
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 
@@ -148,7 +148,7 @@ dnl TEST_NC_GET_VAR(TYPE)
 dnl
 define(`TEST_NC_GET_VAR',dnl
 `dnl
-void
+int
 test_ncmpi_get_var_$1(void)
 {
     int ncid;
@@ -242,7 +242,7 @@ test_ncmpi_get_var_$1(void)
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 
@@ -264,7 +264,7 @@ dnl TEST_NC_GET_VARA(TYPE)
 dnl
 define(`TEST_NC_GET_VARA',dnl
 `dnl
-void
+int
 test_ncmpi_get_vara_$1(void)
 {
     int ncid;
@@ -428,7 +428,7 @@ test_ncmpi_get_vara_$1(void)
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 
@@ -450,7 +450,7 @@ dnl TEST_NC_GET_VARS(TYPE)
 dnl
 define(`TEST_NC_GET_VARS',dnl
 `dnl
-void
+int
 test_ncmpi_get_vars_$1(void)
 {
     int ncid;
@@ -623,7 +623,7 @@ test_ncmpi_get_vars_$1(void)
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 
@@ -645,7 +645,7 @@ dnl TEST_NC_GET_VARM(TYPE)
 dnl
 define(`TEST_NC_GET_VARM',dnl
 `dnl
-void
+int
 test_ncmpi_get_varm_$1(void)
 {
     int ncid;
@@ -826,7 +826,7 @@ test_ncmpi_get_varm_$1(void)
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 
@@ -848,7 +848,7 @@ dnl TEST_NC_GET_ATT(TYPE)
 dnl
 define(`TEST_NC_GET_ATT',dnl
 `dnl
-void
+int
 test_ncmpi_get_att_$1(void)
 {
     int ncid;
@@ -933,7 +933,7 @@ test_ncmpi_get_att_$1(void)
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 

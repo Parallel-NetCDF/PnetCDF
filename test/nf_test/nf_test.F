@@ -54,14 +54,12 @@
         name_len = LEN_TRIM(name)
         name_str(1:name_len) = name(:)
         name_str(name_len+1:25) = ' '
-        write(*, 1, advance="no") name_str
+        if (verbose) write(*, 1, advance="no") name_str
 1       format('*** Testing ', a, ' ... ')
 
         nfails = 0
         call func()
         nfailsTotal = nfailsTotal + nfails
-        if (verbose)
-     +      print *, ' '
         if ( nfails .ne. 0) then
             print *, ' '
             print *, '  ### ', nfails, ' FAILURES TESTING ', name, 
@@ -793,8 +791,12 @@ C           /* Test write functions */
 #endif
         end if
 
-        print *, 'NOTE: Parallel-netcdf expects to see 0 failures'
-        print *,'Total number of failures: ', nfailsTotal
+        if (nfailsTotal .eq. 0) then
+            print *,'*** Testing nf_test: Success'
+        else
+            print *,'NOTE: Parallel-netcdf expects to see 0 failures'
+            print *,'Total number of failures: ', nfailsTotal
+        endif
         ! if (nfailsTotal .eq. 0) call ud_exit(0)
         call ud_exit(0)
         end

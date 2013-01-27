@@ -67,13 +67,12 @@ int  max_nmpt;		/* max. number of messages per test */
  * Misc. global variables
  */
 int  nfails;		/* number of failures in specific test */
-static char *progname;
 char testfile[] = "test.nc";    /* read-only testfile */
 char scratch[] = "scratch.nc";  /* writable scratch file */
 MPI_Comm comm = MPI_COMM_WORLD; /* mpi communicator for parallel-netcdf */
 
 static void
-usage(void)
+usage(char *progname)
 {
     error("%s [-hrv] [-n <MAX_NMPT>]\n", progname);
     error("   [-h] Print help\n" );
@@ -84,18 +83,23 @@ usage(void)
     error("   [-n <MAX_NMPT>] max. number of messages per test (Default: 8)\n");
 }
 
-#define NC_TEST(func) \
-    print( "*** Testing %-25s ... ",#func);\
-    nfails = 0;\
-    test_ ## func();\
-    nfailsTotal += nfails;\
-    if (verbose) \
-	print("\n"); \
-    if ( nfails == 0) \
-        print( "ok\n");\
-    else\
-        print( "\n\t### %d FAILURES TESTING %s! ###\n", nfails, #func)
-
+#define NC_TEST(func) {                                                  \
+    char func_name[64];                                                  \
+    int noks;                                                            \
+    nfails = 0;                                                          \
+    sprintf(func_name, "test_%s",#func);                                 \
+    if (verbose) print( "*** Testing %-30s ... ",func_name);             \
+    noks = test_ ## func();                                              \
+    nfailsTotal += nfails;                                               \
+    if (verbose && nfails == 0) {                                        \
+        if (noks > 0)                                                    \
+            print("%4d good comparisons. ok\n", noks);                   \
+        else                                                             \
+            print("\n");                                                 \
+    }                                                                    \
+    else if (nfails > 0)                                                 \
+        print("\n\t### %d FAILURES TESTING %s! ###\n",nfails,func_name); \
+}
 
 #if 1		/* both CRAY MPP and OSF/1 Alpha systems need this */
 #include <signal.h>
@@ -118,7 +122,6 @@ main(int argc, char *argv[])
 
     MPI_Init(&argc, &argv);
 
-    progname = argv[0];
     create_file = 0;            /* file test.nc will normally already exist */
     read_only = 0;               /* assume may write in test dir as default */
     verbose = 0;
@@ -143,7 +146,7 @@ main(int argc, char *argv[])
 	  break;
 	case 'h':
 	case '?':
-	  usage();
+	  usage(argv[0]);
 	  return 1;
       }
 
@@ -530,10 +533,13 @@ main(int argc, char *argv[])
     }
     MPI_Finalize();
 
-    print( "\nNOTE: parallel-netcdf expects to see 0 failures");
-    print( "\nTotal number of failures: %d\n", nfailsTotal);
-    if (nfailsTotal == 0) 
+    if (nfailsTotal == 0)  {
+        print("*** Testing nc_test: Success\n");
         return 0;
-    else 
+    }
+    else {
+        print("\nNOTE: nc_test expects 0 failures ... ");
+        print("Total number of failures: %d\n\n", nfailsTotal);
         return nfailsTotal > 0;
+    }
 }

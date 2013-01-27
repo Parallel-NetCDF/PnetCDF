@@ -1,3 +1,9 @@
+#
+#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+#  See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+
 srcdir = @srcdir@
 VPATH = @srcdir@
 CXX = @CXX@
@@ -25,7 +31,16 @@ testing:
 	cd nonblocking && make testing
 	cd nc_test && make testing
 	if [ @has_fortran@ = yes ] ; then cd nf_test && make testing ; fi
-	if [ @has_fortran@ = yes ] ; then cd nonblocking && make testing-f ; fi
 	if [ @has_fortran@ = yes ] ; then cd testcases && make testing-f ; fi
 	if [ $(CXX) != "@CXX@" ] ; then cd testcases && make testing-cxx ; fi
+
+verbose_testing:
+	# no tests in 'common' just common routines
+	cd common && make  
+	cd C && make verbose_testing
+	cd nonblocking && make verbose_testing
+	cd nc_test && make verbose_testing
+	if [ @has_fortran@ = yes ] ; then cd nf_test && make verbose_testing ; fi
+	if [ @has_fortran@ = yes ] ; then cd testcases && make verbose_testing-f ; fi
+	if [ $(CXX) != "@CXX@" ] ; then cd testcases && make verbose_testing-cxx ; fi
 

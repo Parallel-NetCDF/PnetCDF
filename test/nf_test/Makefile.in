@@ -1,6 +1,8 @@
-# Makefile for netCDF (semi)exhaustive FORTRAN test.
 #
-# $Id$
+#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+#  See COPYRIGHT notice in top-level directory.
+#
+#  $Id$
 
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -104,6 +106,10 @@ test_iput.F:	test_iput.m4
 testing: test.nc nf_test
 	$(RM) -f scratch.nc
 	./nf_test
+
+verbose_testing: test.nc nf_test
+	$(RM) -f scratch.nc
+	./nf_test -v
 
 #test.nc: 
 #	(cd ../nc_test && make nc_test && ./nc_test -c)

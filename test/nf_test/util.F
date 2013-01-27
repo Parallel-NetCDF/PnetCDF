@@ -10,8 +10,11 @@
       INTEGER   NOK
 #include "tests.inc"
 
-      IF (VERBOSE .OR. NFAILS .GT. 0) PRINT *, ' '
-      PRINT *, NOK, ' good comparisons.'
+ 123  FORMAT(I4,A)
+      IF (NFAILS .GT. 0) PRINT *, ' '
+      IF (VERBOSE) THEN
+          PRINT 123, NOK, ' good comparisons.'
+      ENDIF
       END
 
 

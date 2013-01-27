@@ -69,11 +69,11 @@ include $(srcdir)/depend
 
 
 clean:
-	$(RM) -f *.o core $(GARBAGE)
+	$(RM) -f *.o core* $(GARBAGE)
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
 
 distclean:
-	$(RM) -f *.o core $(GARBAGE)
+	$(RM) -f *.o core* $(GARBAGE)
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
 	$(RM) -f Makefile
 	if [ @srcdir@ != . ] ; then rmdir $(SUBDIRS) ; fi
