@@ -1,54 +1,81 @@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+#
+#  Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+#  See COPYRIGHT notice in top-level directory.
+#
+#  $Id$
+
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include ../../macros.make
 
-INCDIR		= $(srcdir)/../../src/lib
-LIBDIR		= ../../src/lib
+INCLUDES = -I$(srcdir)/../../src/lib -I../../src/lib -I$(srcdir)
 
-INCLUDES	= -I$(INCDIR) -I../../src/lib -I$(srcdir)/../common
+ld_math  = $(MATHLIB)
 
-CC		= @MPICC@
-CFLAGS          = @CFLAGS@ $(INCLUDES) 
-FC              = @MPIF77@
-FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
+C_SRCS   = mcoll_perf.c \
+           test_bput.c
 
-CSRCS		= mcoll_perf.c test_bput.c
-FSRCS		= mcoll_testf.F test_bputf.F
-OBJS		= $(CSRCS:.c=.o) $(FSRCS:.F=.o)
-PROGS		= mcoll_perf mcoll_testf test_bput test_bputf
-LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
-LIBS		= -lpnetcdf -ltestutils @LIBS@
+F_SRCS	 = mcoll_testf.F \
+           test_bputf.F
 
-.c.o:
-	$(CC) $(CFLAGS) -c $<
-.F.o:
-	$(FC) $(FFLAGS) -c $<
+C_OBJS   = $(C_SRCS:.c=.o)
+F_OBJS   = $(F_SRCS:.F=.o)
 
-all:		$(PROGS)
+F90FLAGS = -I$(srcdir)/../../src/libf -I../../src/libf
+
+PROGS    = mcoll_perf test_bput
+OBJS     = $(C_OBJS)
+ifeq (@has_fortran@, yes)
+PROGS   += mcoll_testf test_bputf
+OBJS    += $(F_OBJS)
+endif
+
+GARBAGE         = $(PROGS)
+
+ld_pnetcdf      = -L$(srcdir)/../../src/lib -L../../src/lib -lpnetcdf
+
+PACKING_LIST    =  $(SRCS) \
+                    Makefile.in
+
+all: $(PROGS)
 
 mcoll_perf: mcoll_perf.o
-	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 test_bput: test_bput.o
-	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+
+mcoll_testf.o: mcoll_testf.F
+	$(COMPILE.F90) $<
 
 mcoll_testf: mcoll_testf.o
-	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+
+test_bputf.o: test_bputf.F
+	$(COMPILE.F90) $<
 
 test_bputf: test_bputf.o
-	$(FC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
-testing: mcoll_perf test_bput
+testing: $(PROGS)
 	./mcoll_perf
 	./test_bput
-
-testing-f: mcoll_testf test_bputf
+ifeq (@has_fortran@, yes)
 	./mcoll_testf
 	./test_bputf
+endif
+
+verbose_testing: $(PROGS)
+	./mcoll_perf -v
+	./test_bput -v
+ifeq (@has_fortran@, yes)
+	./mcoll_testf -v
+	./test_bputf -v
+endif
 
 clean:
-	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
+	$(RM) -f *.o core* $(GARBAGE) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile

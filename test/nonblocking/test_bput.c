@@ -110,9 +110,9 @@ int main(int argc, char **argv) {
 
     MPI_Finalize();
     if (err)
-        printf("test C bput_varm failed\n");
+        printf("*** Testing C bput_varm failed\n");
     else
-        printf("test C bput_varm succeeded\n");
+        printf("*** Testing C bput_varm: Success\n");
     return err;
 }
 

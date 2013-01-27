@@ -42,6 +42,9 @@ tests:
 testing: tests
 	@cd test && $(MAKE) testing
 
+verbose_testing: tests
+	@cd test && $(MAKE) verbose_testing
+
 clean_macros:
 	$(RM) -f macros.make
 

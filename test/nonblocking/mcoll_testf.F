@@ -199,6 +199,8 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
+      print*,'*** Testing Fortran mcoll_testf.F: Success'
+
       call MPI_Finalize  (ierr)
 
 

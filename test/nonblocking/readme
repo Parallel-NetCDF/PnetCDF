@@ -6,7 +6,7 @@ mpiexec -n 4 mcoll_perf  //test the blocking I/O and non-blocking I/O
 The default path to write output is "./". 
 
 You can change the path and output path:
-mpiexec -n 4 mcoll_perf -fname /pvfs2/kgao/non_blocking
+mpiexec -n 4 mcoll_perf -f testfile.nc
 
 (2) Fortran test case
 mpiexec -n 4 mcoll_testf

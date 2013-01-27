@@ -78,7 +78,7 @@ define(`CHECK_VARS',dnl
  *  check all vars in file which are (text/numeric) compatible with TYPE
  */
 static
-void
+int
 check_vars_$1(const char *filename)
 {
     int  ncid;                  /* netCDF id */
@@ -159,7 +159,7 @@ check_vars_$1(const char *filename)
     err = ncmpi_close (ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 
@@ -186,7 +186,7 @@ define(`CHECK_ATTS',dnl
  *  ignore any attributes containing values outside range of TYPE
  */
 static
-void
+int
 check_atts_$1(int  ncid)
 {
     int  err;
@@ -254,8 +254,7 @@ check_atts_$1(int  ncid)
             }                                               
         }                                               
     }
-
-    print_nok(nok);
+    return nok;
 }
 ')dnl
 
@@ -277,10 +276,10 @@ dnl TEST_NC_PUT_VAR1(TYPE)
 dnl
 define(`TEST_NC_PUT_VAR1',dnl
 `dnl
-void
+int
 test_ncmpi_put_var1_$1(void)
 {
-    int ncid;
+    int ncid, nok=0;
     int i;
     int j;
     int err;
@@ -307,15 +306,18 @@ test_ncmpi_put_var1_$1(void)
         err = ncmpi_put_var1_$1(BAD_ID, i, index, &value);
         IF (err != NC_EBADID) 
             error("bad ncid: err = %d", err);
+        ELSE_NOK
         err = ncmpi_put_var1_$1(ncid, BAD_VARID, index, &value);
         IF (err != NC_ENOTVAR) 
             error("bad var id: err = %d", err);
+        ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 index[j] = var_shape[i][j];
                 err = ncmpi_put_var1_$1(ncid, i, index, &value);
                 IF (canConvert && err != NC_EINVALCOORDS)
                     error("bad index: err = %d", err);
+                ELSE_NOK
                 index[j] = 0;
             }
         }
@@ -332,6 +334,7 @@ test_ncmpi_put_var1_$1(void)
                 if (inRange3(value, var_type[i],NCT_ITYPE($1))) {
                     IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
+                    ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE) {
                         error("Range error: err = %d", err);
@@ -339,10 +342,12 @@ test_ncmpi_put_var1_$1(void)
                                 s_nc_type(var_type[i]),
                                 (double)value, (long)value);
                     }
+                    ELSE_NOK
                 }
             } else {
                 IF (err != NC_ECHAR)
                     error("wrong type: err = %d", err);
+                ELSE_NOK
             }
         }
     }
@@ -352,11 +357,12 @@ test_ncmpi_put_var1_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    check_vars_$1(scratch);
+    nok += check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    return nok;
 }
 ')dnl
 
@@ -378,10 +384,10 @@ dnl TEST_NC_PUT_VAR(TYPE)
 dnl
 define(`TEST_NC_PUT_VAR',dnl
 `dnl
-void
+int
 test_ncmpi_put_var_$1(void)
 {
-    int ncid;
+    int ncid, nok=0;
     int varid;
     int i;
     int j;
@@ -411,9 +417,11 @@ test_ncmpi_put_var_$1(void)
         err = ncmpi_put_var_$1(BAD_ID, i, value);
         IF (err != NC_EBADID) 
             error("bad ncid: err = %d", err);
+        ELSE_NOK
         err = ncmpi_put_var_$1(ncid, BAD_VARID, value);
         IF (err != NC_ENOTVAR) 
             error("bad var id: err = %d", err);
+        ELSE_NOK
 
         nels = 1;
         for (j = 0; j < var_rank[i]; j++) {
@@ -432,13 +440,16 @@ test_ncmpi_put_var_$1(void)
             if (allInExtRange) {
                 IF (err != NC_NOERR) 
                     error("%s", ncmpi_strerror(err));
+                ELSE_NOK
             } else {
                 IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
                     error("range error: err = %d", err);
+                ELSE_NOK
             }
         } else { /* should flag wrong type even if nothing to write */
             IF (nels > 0 && err != NC_ECHAR)
                 error("wrong type: err = %d", err);
+            ELSE_NOK
         }
     }
     ncmpi_end_indep_data(ncid);
@@ -465,6 +476,7 @@ test_ncmpi_put_var_$1(void)
             err = ncmpi_put_var_$1(BAD_ID, i, value);
             IF (err != NC_EBADID) 
                 error("bad ncid: err = %d", err);
+            ELSE_NOK
 
             nels = 1;
             for (j = 0; j < var_rank[i]; j++) {
@@ -483,13 +495,16 @@ test_ncmpi_put_var_$1(void)
                 if (allInExtRange) {
                     IF (err != NC_NOERR) 
                         error("%s", ncmpi_strerror(err));
+                    ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
                         error("range error: err = %d", err);
+                    ELSE_NOK
                 }
             } else {
                 IF (nels > 0 && err != NC_ECHAR)
                     error("wrong type: err = %d", err);
+                    ELSE_NOK
             }
         }
     }
@@ -499,11 +514,12 @@ test_ncmpi_put_var_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    check_vars_$1(scratch);
+    nok += check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    return nok;
 }
 ')dnl
 
@@ -525,10 +541,10 @@ dnl TEST_NC_PUT_VARA(TYPE)
 dnl
 define(`TEST_NC_PUT_VARA',dnl
 `dnl
-void
+int
 test_ncmpi_put_vara_$1(void)
 {
-    int ncid;
+    int ncid, nok=0;
     int d;
     int i;
     int j;
@@ -567,20 +583,24 @@ test_ncmpi_put_vara_$1(void)
         err = ncmpi_put_vara_$1_all(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
             error("bad ncid: err = %d", err);
+        ELSE_NOK
         err = ncmpi_put_vara_$1_all(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
             error("bad var id: err = %d", err);
+        ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];
                 err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EINVALCOORDS)
                     error("bad start: err = %d", err);
+                ELSE_NOK
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;
                 err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EEDGE)
                     error("bad edge: err = %d", err);
+                ELSE_NOK
                 edge[j] = 1;
             }
         }
@@ -592,15 +612,18 @@ test_ncmpi_put_vara_$1(void)
         err = ncmpi_put_vara_$1_all(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
             error("bad ncid: err = %d", err);
+        ELSE_NOK
         err = ncmpi_put_vara_$1_all(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
             error("bad var id: err = %d", err);
+        ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];
                 err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EINVALCOORDS)
                     error("bad start: err = %d", err);
+                ELSE_NOK
                 start[j] = 0;
             }
         }
@@ -613,9 +636,11 @@ test_ncmpi_put_vara_$1(void)
         if (canConvert) {
             IF (err != NC_NOERR)
                 error("%s", ncmpi_strerror(err));
+            ELSE_NOK
         } else {
             IF (err != NC_ECHAR)
                 error("wrong type: err = %d", err);
+            ELSE_NOK
         }
 */
         for (j = 0; j < var_rank[i]; j++) {
@@ -660,13 +685,16 @@ test_ncmpi_put_vara_$1(void)
                 if (allInExtRange) {
                     IF (err != NC_NOERR) 
                         error("%s", ncmpi_strerror(err));
+                    ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
                         error("range error: err = %d", err);
+                    ELSE_NOK
                 }
             } else {
                 IF (nels > 0 && err != NC_ECHAR)
                     error("wrong type: err = %d", err);
+                ELSE_NOK
             }
         }
     }
@@ -675,11 +703,12 @@ test_ncmpi_put_vara_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    check_vars_$1(scratch);
+    nok += check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    return nok;
 }
 ')dnl
 
@@ -701,10 +730,10 @@ dnl TEST_NC_PUT_VARS(TYPE)
 dnl
 define(`TEST_NC_PUT_VARS',dnl
 `dnl
-void
+int
 test_ncmpi_put_vars_$1(void)
 {
-    int ncid;
+    int ncid, nok=0;
     int d;
     int i;
     int j;
@@ -749,9 +778,11 @@ test_ncmpi_put_vars_$1(void)
         err = ncmpi_put_vars_$1_all(BAD_ID, i, start, edge, stride, value);
         IF (err != NC_EBADID) 
             error("bad ncid: err = %d", err);
+        ELSE_NOK
         err = ncmpi_put_vars_$1_all(ncid, BAD_VARID, start, edge, stride, value);
         IF (err != NC_ENOTVAR) 
             error("bad var id: err = %d", err);
+        ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];
@@ -759,19 +790,23 @@ test_ncmpi_put_vars_$1(void)
                 if (!canConvert) {
                     IF (err != NC_ECHAR)
                         error("conversion: err = %d", err);
+                    ELSE_NOK
                 } else {
                     IF (err != NC_EINVALCOORDS)
                         error("bad start: err = %d", err);
+                    ELSE_NOK
                     start[j] = 0;
                     edge[j] = var_shape[i][j] + 1;
                     err = ncmpi_put_vars_$1_all(ncid, i, start, edge, stride, value);
                     IF (err != NC_EEDGE)
                         error("bad edge: err = %d", err);
+                    ELSE_NOK
                     edge[j] = 1;
                     stride[j] = 0;
                     err = ncmpi_put_vars_$1_all(ncid, i, start, edge, stride, value);
                     IF (err != NC_ESTRIDE)
                         error("bad stride: err = %d", err);
+                    ELSE_NOK
                     stride[j] = 1;
                 }
             }
@@ -837,13 +872,16 @@ test_ncmpi_put_vars_$1(void)
                     if (allInExtRange) {
                         IF (err != NC_NOERR) 
                             error("%s", ncmpi_strerror(err));
+                        ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
                             error("range error: err = %d", err);
+                        ELSE_NOK
                     }
                 } else {
                     IF (nels > 0 && err != NC_ECHAR)
                         error("wrong type: err = %d", err);
+                    ELSE_NOK
                 }
             }
         }
@@ -853,11 +891,12 @@ test_ncmpi_put_vars_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    check_vars_$1(scratch);
+    nok += check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    return nok;
 }
 ')dnl
 
@@ -879,10 +918,10 @@ dnl TEST_NC_PUT_VARM(TYPE)
 dnl
 define(`TEST_NC_PUT_VARM',dnl
 `dnl
-void
+int
 test_ncmpi_put_varm_$1(void)
 {
-    int ncid;
+    int ncid, nok=0;
     int d;
     int i;
     int j;
@@ -929,9 +968,11 @@ test_ncmpi_put_varm_$1(void)
         err = ncmpi_put_varm_$1_all(BAD_ID, i, start, edge, stride, imap, value);
         IF (err != NC_EBADID) 
             error("bad ncid: err = %d", err);
+        ELSE_NOK
         err = ncmpi_put_varm_$1_all(ncid, BAD_VARID, start, edge, stride, imap, value);
         IF (err != NC_ENOTVAR) 
             error("bad var id: err = %d", err);
+        ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];
@@ -939,19 +980,23 @@ test_ncmpi_put_varm_$1(void)
                 if (!canConvert) {
                     IF (err != NC_ECHAR)
                         error("conversion: err = %d", err);
+                    ELSE_NOK
                 } else {
                     IF (err != NC_EINVALCOORDS)
                         error("bad start: err = %d", err);
+                    ELSE_NOK
                     start[j] = 0;
                     edge[j] = var_shape[i][j] + 1;
                     err = ncmpi_put_varm_$1_all(ncid, i, start, edge, stride, imap, value);
                     IF (err != NC_EEDGE)
                         error("bad edge: err = %d", err);
+                    ELSE_NOK
                     edge[j] = 1;
                     stride[j] = 0;
                     err = ncmpi_put_varm_$1_all(ncid, i, start, edge, stride, imap, value);
                     IF (err != NC_ESTRIDE)
                         error("bad stride: err = %d", err);
+                    ELSE_NOK
                     stride[j] = 1;
                 }
             }
@@ -1023,13 +1068,16 @@ test_ncmpi_put_varm_$1(void)
                     if (allInExtRange) {
                         IF (err != NC_NOERR)
                             error("%s", ncmpi_strerror(err));
+                        ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
                             error("range error: err = %d", err);
+                        ELSE_NOK
                     }
                 } else {
                     IF (nels > 0 && err != NC_ECHAR)
                         error("wrong type: err = %d", err);
+                    ELSE_NOK
                 }
             }
         }
@@ -1039,11 +1087,12 @@ test_ncmpi_put_varm_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    check_vars_$1(scratch);
+    nok += check_vars_$1(scratch);
 
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    return nok;
 }
 ')dnl
 
@@ -1061,10 +1110,10 @@ TEST_NC_PUT_VARM(longlong)
 TEST_NC_PUT_VARM(ulonglong)
 
 
-void
+int
 test_ncmpi_put_att_text(void)
 {
-    int ncid;
+    int ncid, nok=0;
     int i;
     int j;
     MPI_Offset k;
@@ -1086,6 +1135,7 @@ test_ncmpi_put_att_text(void)
         err = ncmpi_put_att_text(ncid, 0, "", tval_len, tval);
         IF (err != NC_EBADNAME)
            error("should be NC_EBADNAME: err = %d", err);
+        ELSE_NOK
     }
     for (i = -1; i < NVARS; i++) {
         for (j = 0; j < NATTS(i); j++) {
@@ -1095,23 +1145,25 @@ test_ncmpi_put_att_text(void)
                     value);
                 IF (err != NC_EBADID)
                     error("bad ncid: err = %d", err);
+                ELSE_NOK
                 err = ncmpi_put_att_text(ncid, BAD_VARID, ATT_NAME(i,j), 
                     ATT_LEN(i,j), value);
                 IF (err != NC_ENOTVAR)
                     error("bad var id: err = %d", err);
+                ELSE_NOK
                 for (k = 0; k < ATT_LEN(i,j); k++) {
                     value[k] = hash(ATT_TYPE(i,j), -1, &k);
                 }
                 err = ncmpi_put_att_text(ncid, i, ATT_NAME(i,j), 
                     ATT_LEN(i,j), value);
-                IF (err != NC_NOERR) {
+                IF (err != NC_NOERR)
                     error("%s", ncmpi_strerror(err));
-                }
+                ELSE_NOK
             }
         }
     }
 
-    check_atts_text(ncid);
+    nok += check_atts_text(ncid);
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -1119,6 +1171,7 @@ test_ncmpi_put_att_text(void)
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    return nok;
 }
 
 
@@ -1126,10 +1179,10 @@ dnl TEST_NC_PUT_ATT(TYPE)         numeric only
 dnl
 define(`TEST_NC_PUT_ATT',dnl
 `dnl
-void
+int
 test_ncmpi_put_att_$1(void)
 {
-    int ncid;
+    int ncid, nok=0;
     int i;
     int j;
     MPI_Offset k;
@@ -1153,14 +1206,17 @@ test_ncmpi_put_att_$1(void)
                     ATT_LEN(i,j), value);
                 IF (err != NC_EBADID)
                     error("bad ncid: err = %d", err);
+                ELSE_NOK
                 err = ncmpi_put_att_$1(ncid, BAD_VARID, ATT_NAME(i,j), 
                     ATT_TYPE(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_ENOTVAR)
                     error("bad var id: err = %d", err);
+                ELSE_NOK
                 err = ncmpi_put_att_$1(ncid, i, ATT_NAME(i,j), BAD_TYPE, 
                     ATT_LEN(i,j), value);
                 IF (err != NC_EBADTYPE)
                     error("bad type: err = %d", err);
+                ELSE_NOK
                 for (allInExtRange = 1, k = 0; k < ATT_LEN(i,j); k++) {
                     value[k] = hash_$1(ATT_TYPE(i,j), -1, &k, NCT_ITYPE($1));
                     allInExtRange = allInExtRange
@@ -1171,15 +1227,17 @@ test_ncmpi_put_att_$1(void)
                 if (allInExtRange) {
                     IF (err != NC_NOERR)
                         error("%s", ncmpi_strerror(err));
+                    ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
                         error("range error: err = %d", err);
+                    ELSE_NOK
                 }
             }
         }
     }
 
-    check_atts_$1(ncid);
+    nok += check_atts_$1(ncid);
     err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
@@ -1187,6 +1245,7 @@ test_ncmpi_put_att_$1(void)
     err = ncmpi_delete(scratch, MPI_INFO_NULL);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+    return nok;
 }
 ')dnl
 
