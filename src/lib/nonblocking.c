@@ -771,7 +771,7 @@ ncmpii_merge_requests(NC          *ncp,
         /* note that all reqs[].status have been initialized to NC_NOERR
            in ncmpii_wait()
          */
-        if (*(reqs[i].status) != NC_NOERR) /* skip this invalid reqs[i] */
+        if (*reqs[i].status != NC_NOERR) /* skip this invalid reqs[i] */
             continue;
 
         is_recvar = IS_RECVAR(reqs[i].varp);
@@ -783,11 +783,11 @@ ncmpii_merge_requests(NC          *ncp,
              reqs[i].start[0] + reqs[i].count[0] > NC_get_numrecs(ncp))) {
             err = NCcoordck(ncp, reqs[i].varp, reqs[i].start);
             if (err != NC_NOERR) { /* status is the 1st encounter errror */
-                *(reqs[i].status) = err;
+                *reqs[i].status = err;
                 status = (status == NC_NOERR) ? err : status;
             }
             else {
-                *(reqs[i].status) = NC_EEDGE;
+                *reqs[i].status = NC_EEDGE;
                 status = (status == NC_NOERR) ? NC_EEDGE : status;
             }
         }
@@ -796,7 +796,7 @@ ncmpii_merge_requests(NC          *ncp,
     /* find the number of valid requests in reqs[] */
     num_valid_reqs = 0;
     for (i=0; i<num_reqs; i++) {
-        if (*(reqs[i].status) != NC_NOERR) continue;
+        if (*reqs[i].status != NC_NOERR) continue;
         num_valid_reqs++; /* incease the number of valid requests */
     }
 
@@ -810,7 +810,7 @@ ncmpii_merge_requests(NC          *ncp,
        can malloc a contiguous memory space for storing off-len pairs
      */
     for (i=0; i<num_reqs; i++) {
-        if (*(reqs[i].status) != NC_NOERR) continue; /* skip invalid one */
+        if (*reqs[i].status != NC_NOERR) continue; /* skip invalid one */
 
         /* buf_addr is the buffer address of the first valid request */
         if (*buf == NULL) {
@@ -851,7 +851,7 @@ ncmpii_merge_requests(NC          *ncp,
 
     /* now re-run the loop to fill in the off-len pairs */
     for (i=0; i<num_reqs; i++) {
-        if (*(reqs[i].status) != NC_NOERR) continue; /* skip invalid one */
+        if (*reqs[i].status != NC_NOERR) continue; /* skip invalid one */
 
         /* buf_addr is the buffer address of the first valid request */
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -1196,8 +1196,8 @@ ncmpii_wait_getput(NC     *ncp,
 
             /* update status */
             for (j=0; j<i_num_reqs; j++)
-                if (*(reqs[group_index[i] + j].status) == NC_NOERR)
-                    *(reqs[group_index[i] + j].status) = statuses[j];
+                if (*reqs[group_index[i] + j].status == NC_NOERR)
+                    *reqs[group_index[i] + j].status = statuses[j];
         }
         NCI_Free(statuses);
         NCI_Free(bufs);
@@ -1220,7 +1220,7 @@ ncmpii_wait_getput(NC     *ncp,
          */
         MPI_Offset max_newnumrecs = ncp->numrecs;
         for (i=0; i<num_reqs; i++) {
-            if (*(reqs[i].status) == NC_NOERR && IS_RECVAR(reqs[i].varp)) {
+            if (*reqs[i].status == NC_NOERR && IS_RECVAR(reqs[i].varp)) {
                 /* update the number of records in NC */
                 MPI_Offset newnumrecs = reqs[i].start[0] + reqs[i].count[0];
                 max_newnumrecs = MAX(max_newnumrecs, newnumrecs);
