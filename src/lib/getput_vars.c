@@ -385,7 +385,9 @@ ncmpii_getput_vars(NC               *ncp,
             /* automatic numeric datatype conversion + swap if necessary
                and only xbuf could be byte-swapped, not cbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
-            /* status may be set at DATATYPE_PUT_CONVERT() */
+            /* err is set in DATATYPE_PUT_CONVERT() */
+            /* retain the first error status */
+            if (status == NC_NOERR) status = err;
         }
     } else if (need_swap) {
         if (rw_flag == WRITE_REQ) { /* perform array in-place byte swap */
@@ -515,6 +517,9 @@ err_check:
         if ( ncmpii_need_convert(varp->type, ptype) ) {
             /* type conversion + swap from xbuf to cbuf*/
             DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
+            /* err is set in DATATYPE_GET_CONVERT() */
+            /* retain the first error status */
+            if (status == NC_NOERR) status = err;
         } else if (need_swap) {
             /* perform array in-place byte swap from xbuf to cbuf */
             ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));

@@ -53,7 +53,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
         printf("%2d: Invalid ncid(%d) at line %d of %s\n",                    \
                rank, ncid, __LINE__, __FILE__);                               \
         */                                                                    \
-        return status; /* abort the API now */                                \
+        return status; /* return the API now */                                \
     }                                                                         \
 }
 
@@ -78,7 +78,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
         printf("%2d: Error - MPI indep file handle at line %d of %s\n",       \
                rank, __LINE__, __FILE__);                                     \
         */                                                                    \
-        return status;  /* abort the API now */                               \
+        return status;  /* return the API now */                               \
     }                                                                         \
 }
 
@@ -93,7 +93,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
         printf("%2d: Error - MPI collective file handle at line %d of %s\n",  \
                rank, __LINE__, __FILE__);                                     \
         */                                                                    \
-        return status;  /* abort the API now */                               \
+        return status;  /* return the API now */                               \
     }                                                                         \
 } 
 
@@ -249,36 +249,37 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
      * memtype is the I/O buffers data type (MPI_Datatype)  */                \
     switch(vartype) {                                                         \
         case NC_BYTE:                                                         \
-            status = ncmpii_x_getn_schar(inbuf, outbuf, cnelems, memtype);    \
+            err = ncmpii_x_getn_schar(inbuf, outbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_UBYTE:                                                        \
-            status = ncmpii_x_getn_uchar(inbuf, outbuf, cnelems, memtype);    \
+            err = ncmpii_x_getn_uchar(inbuf, outbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_SHORT:                                                        \
-            status = ncmpii_x_getn_short(inbuf, outbuf, cnelems, memtype);    \
+            err = ncmpii_x_getn_short(inbuf, outbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_USHORT:                                                       \
-            status = ncmpii_x_getn_ushort(inbuf, outbuf, cnelems, memtype);   \
+            err = ncmpii_x_getn_ushort(inbuf, outbuf, cnelems, memtype);      \
             break;                                                            \
         case NC_INT:                                                          \
-            status = ncmpii_x_getn_int(inbuf, outbuf, cnelems, memtype);      \
+            err = ncmpii_x_getn_int(inbuf, outbuf, cnelems, memtype);         \
             break;                                                            \
         case NC_UINT:                                                         \
-            status = ncmpii_x_getn_uint(inbuf, outbuf, cnelems, memtype);     \
+            err = ncmpii_x_getn_uint(inbuf, outbuf, cnelems, memtype);        \
             break;                                                            \
         case NC_FLOAT:                                                        \
-            status = ncmpii_x_getn_float(inbuf, outbuf, cnelems, memtype);    \
+            err = ncmpii_x_getn_float(inbuf, outbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_DOUBLE:                                                       \
-            status = ncmpii_x_getn_double(inbuf, outbuf, cnelems, memtype);   \
+            err = ncmpii_x_getn_double(inbuf, outbuf, cnelems, memtype);      \
             break;                                                            \
         case NC_INT64:                                                        \
-            status = ncmpii_x_getn_int64(inbuf, outbuf, cnelems, memtype);    \
+            err = ncmpii_x_getn_int64(inbuf, outbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_UINT64:                                                       \
-            status = ncmpii_x_getn_uint64(inbuf, outbuf, cnelems, memtype);   \
+            err = ncmpii_x_getn_uint64(inbuf, outbuf, cnelems, memtype);      \
             break;                                                            \
         default:                                                              \
+            err = NC_EBADTYPE;                                                \
             break;                                                            \
     }                                                                         \
 }
@@ -288,36 +289,37 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
      * memtype is the I/O buffers data type (MPI_Datatype)  */                \
     switch(vartype) {                                                         \
         case NC_BYTE:                                                         \
-            status = ncmpii_x_putn_schar(outbuf, inbuf, cnelems, memtype);    \
+            err = ncmpii_x_putn_schar(outbuf, inbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_UBYTE:                                                        \
-            status = ncmpii_x_putn_uchar(outbuf, inbuf, cnelems, memtype);    \
+            err = ncmpii_x_putn_uchar(outbuf, inbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_SHORT:                                                        \
-            status = ncmpii_x_putn_short(outbuf, inbuf, cnelems, memtype);    \
+            err = ncmpii_x_putn_short(outbuf, inbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_USHORT:                                                       \
-            status = ncmpii_x_putn_ushort(outbuf, inbuf, cnelems, memtype);   \
+            err = ncmpii_x_putn_ushort(outbuf, inbuf, cnelems, memtype);      \
             break;                                                            \
         case NC_INT:                                                          \
-            status = ncmpii_x_putn_int(outbuf, inbuf, cnelems, memtype);      \
+            err = ncmpii_x_putn_int(outbuf, inbuf, cnelems, memtype);         \
             break;                                                            \
         case NC_UINT:                                                         \
-            status = ncmpii_x_putn_uint(outbuf, inbuf, cnelems, memtype);     \
+            err = ncmpii_x_putn_uint(outbuf, inbuf, cnelems, memtype);        \
             break;                                                            \
         case NC_FLOAT:                                                        \
-            status = ncmpii_x_putn_float(outbuf, inbuf, cnelems, memtype);    \
+            err = ncmpii_x_putn_float(outbuf, inbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_DOUBLE:                                                       \
-            status = ncmpii_x_putn_double(outbuf, inbuf, cnelems, memtype);   \
+            err = ncmpii_x_putn_double(outbuf, inbuf, cnelems, memtype);      \
             break;                                                            \
         case NC_INT64:                                                        \
-            status = ncmpii_x_putn_int64(outbuf, inbuf, cnelems, memtype);    \
+            err = ncmpii_x_putn_int64(outbuf, inbuf, cnelems, memtype);       \
             break;                                                            \
         case NC_UINT64:                                                       \
-            status = ncmpii_x_putn_uint64(outbuf, inbuf, cnelems, memtype);   \
+            err = ncmpii_x_putn_uint64(outbuf, inbuf, cnelems, memtype);      \
             break;                                                            \
         default:                                                              \
+            err = NC_EBADTYPE;                                                \
             break;                                                            \
     }                                                                         \
 }

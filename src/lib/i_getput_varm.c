@@ -550,6 +550,9 @@ err_check:
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
+            /* err is set in DATATYPE_PUT_CONVERT() */
+            /* retain the first error status */
+            if (status == NC_NOERR) status = err;
         }
         else {  /* cbuf == xbuf */
             if (use_abuf) { /* use attached buffer */
