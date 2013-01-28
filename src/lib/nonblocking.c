@@ -374,7 +374,7 @@ ncmpii_wait(NC  *ncp,
             int *req_ids,   /* [num_reqs] */
             int *statuses)  /* [num_reqs] */
 {
-    int i, j, warning=NC_NOERR, status=NC_NOERR, wait_status=NC_NOERR;
+    int i, j, err, status=NC_NOERR;
     int do_read, do_write, num_w_reqs, num_r_reqs;
     NC_req *pre_req, *cur_req;
     NC_req *w_req_head, *w_req_tail, *r_req_head, *r_req_tail;
@@ -397,13 +397,14 @@ ncmpii_wait(NC  *ncp,
             continue;
         j++;
     }
-    /* j now is the true number of non-zeor length request */
+    /* j now is the true number of non-zero length requests */
 
     if (io_method == INDEP_IO && j == 0)
         return NC_NOERR;
-
-    /* For collective APIs, even thorugh some processes may have no
-       requests at all, but they are still required to participate the call */
+    /* For collective APIs, even thorugh some processes may have zero-length
+       requests, they must still participate the collective call. Hence,
+       only independent APIs stop here if request is of zero length.
+     */
 
     w_req_head = w_req_tail = NULL;
     r_req_head = r_req_tail = NULL;
@@ -416,7 +417,7 @@ ncmpii_wait(NC  *ncp,
        In the meantime coalesce the linked list */
 
     for (i=0; i<num_reqs; i++) {
-        if (req_ids[i] == NC_REQ_NULL) /* skip zeor-size request */
+        if (req_ids[i] == NC_REQ_NULL) /* skip zero-size request */
             continue;
 
         assert(ncp->head != NULL);
@@ -430,7 +431,9 @@ ncmpii_wait(NC  *ncp,
                 printf("Error: no such request ID = %d\n", req_ids[i]);
                 if (statuses != NULL)
                     statuses[i] = NC_EINVAL_REQUEST;
-                return NC_EINVAL_REQUEST;
+                /* retain the first error status */
+                if (status == NC_NOERR)
+                    status = NC_EINVAL_REQUEST;
             }
         }
         /* found it: cur_req */
@@ -494,17 +497,20 @@ ncmpii_wait(NC  *ncp,
         do_write = num_w_reqs;
     }
 
-    /* call ncmpii_wait for read and write separately */
+    /* carry out reads and writes separately */
     if (do_read > 0)
-        wait_status = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head,
-                                         READ_REQ, io_method);
+        err = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head,
+                                 READ_REQ, io_method);
 
     if (do_write > 0)
-        wait_status = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head,
-                                         WRITE_REQ, io_method);
+        err = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head,
+                                 WRITE_REQ, io_method);
+
+    /* retain the first error status */
+    if (status != NC_NOERR) status = err;
 
     /* post-IO data processing: may need byte-swap user write buf, or
-                                byte-swap and type convert for read buf */
+                                byte-swap and type convert user read buf */
 
     /* connect read and write request lists into a single list */
     if (r_req_head != NULL) {
@@ -532,15 +538,9 @@ ncmpii_wait(NC  *ncp,
             if (cur_req->need_swap_back_buf)
                 ncmpii_in_swapn(cur_req->buf, fnelems,
                                 ncmpix_len_nctype(varp->type));
-/*
-            if (ncmpii_need_swap(varp->type, ptype) &&
-                cur_req->buf == cur_req->xbuf)
-                ncmpii_in_swapn(cur_req->buf, fnelems,
-                                ncmpix_len_nctype(varp->type));
-*/
         } else { /* for read */
-            /* now, xbuf contains the data read from the file
-             * type convert + byte swap from xbuf to cbuf
+            /* now, xbuf contains the data read from the file.
+             * It needs to be type-converted + byte-swapped to cbuf
              */
             void *cbuf, *lbuf;
 
@@ -553,9 +553,10 @@ ncmpii_wait(NC  *ncp,
                 /* type convert + byte swap from xbuf to cbuf */
                 DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf,
                                      cbuf, cur_req->bnelems, ptype)
-                if (*(cur_req->status) == NC_NOERR)
-                    /* keep the first error */
-                    *(cur_req->status) = status;
+                /* err is set in DATATYPE_GET_CONVERT() */
+                /* keep the first error */
+                if (*cur_req->status == NC_NOERR) *cur_req->status = err;
+                if (status == NC_NOERR) status = err;
             } else {
                 if (ncmpii_need_swap(varp->type, ptype))
                     ncmpii_in_swapn(cur_req->xbuf, fnelems,
@@ -573,16 +574,17 @@ ncmpii_wait(NC  *ncp,
                 }
 
                 /* unpack cbuf to lbuf based on imaptype */
-                status = ncmpii_data_repack(cbuf, cur_req->bnelems, ptype,
-                                            lbuf, 1, cur_req->imaptype);
-                if (*(cur_req->status) == NC_NOERR) /* keep the first error */
-                    *(cur_req->status) = status;
+                err = ncmpii_data_repack(cbuf, cur_req->bnelems, ptype,
+                                         lbuf, 1, cur_req->imaptype);
+                if (*cur_req->status == NC_NOERR)
+                    /* keep the first error */
+                    *cur_req->status = err;
                 MPI_Type_free(&cur_req->imaptype);
 
-                if (status != NC_NOERR) {
+                if (err != NC_NOERR) {
                     FREE_REQUEST(cur_req)
                     NCI_Free(cur_req);
-                    return status;
+                    return ((status != NC_NOERR) ? status : err);
                 }
                 /* cbuf is no longer needed
                  * if (cur_req->is_imap) cbuf cannot be == cur_req->buf */
@@ -597,16 +599,16 @@ ncmpii_wait(NC  *ncp,
 
             if (!cur_req->iscontig_of_ptypes) {
                 /* unpack lbuf to buf based on buftype */
-                status = ncmpii_data_repack(lbuf, bnelems,
-                                            ptype, cur_req->buf,
-                                            cur_req->bufcount,
-                                            cur_req->buftype);
-                if (*(cur_req->status) == NC_NOERR) /* keep the first error */
-                    *(cur_req->status) = status;
-                if (status != NC_NOERR) {
+                err = ncmpii_data_repack(lbuf, bnelems,
+                                         ptype, cur_req->buf,
+                                         cur_req->bufcount,
+                                         cur_req->buftype);
+                if (*cur_req->status == NC_NOERR) /* keep the first error */
+                    *cur_req->status = err;
+                if (err != NC_NOERR) {
                     FREE_REQUEST(cur_req)
                     NCI_Free(cur_req);
-                    return status;
+                    return ((status != NC_NOERR) ? status : err);
                 }
             }
             /* lbuf is no longer needed */
@@ -620,9 +622,7 @@ ncmpii_wait(NC  *ncp,
         NCI_Free(pre_req);
     }
 
-    return ((warning != NC_NOERR) ? warning
-                                  : ((status != NC_NOERR) ? status
-                                                          : wait_status));
+    return status;
 }
 
 /* C struct for breaking down a request to a list of offset-length segments */
