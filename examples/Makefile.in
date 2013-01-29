@@ -18,7 +18,8 @@ C_SRCS		= collective_write.c \
 		  get_info_c.c \
 		  column_wise.c
 
-F90_SRCS	= get_info_f.F90
+F90_SRCS	= get_info_f.F90 \
+                  put_vara.F
 
 C_OBJS		= $(C_SRCS:.c=.o)
 F90_OBJS	= $(F90_SRCS:.F90=.o)
@@ -64,6 +65,12 @@ get_info_f: get_info_f.o
 
 column_wise: column_wise.o
 	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+
+put_vara.o: put_vara.F
+	$(COMPILE.F90) $<
+
+put_vara: put_vara.o
+	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 include $(srcdir)/depend
 
