@@ -28,7 +28,7 @@ F90FLAGS        = -I$(srcdir)/../src/libf -I../src/libf
 PROGS		= collective_write nonblocking_write get_info_c column_wise
 OBJS		= $(C_OBJS)
 ifeq (@has_fortran@, yes)
-PROGS		+= get_info_f
+PROGS		+= get_info_f put_vara
 OBJS		+= $(F90_OBJS)
 endif
 
