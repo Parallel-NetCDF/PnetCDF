@@ -940,16 +940,19 @@ ncmpii_merge_requests(NC          *ncp,
 
 /*----< ncmpii_getput_merged_requests() >-------------------------------------*/
 static int
-ncmpii_getput_merged_requests(NC      *ncp,
-                              int      rw_flag,  /* WRITE_REQ or READ_REQ */
-                              int      io_method,/* COLL_IO or INDEP_IO */
-                              int      nsegs,    /* no. off-len pairs */
-                              off_len *segs,     /* [nsegs] off-en pairs */
-                              void    *buf)
+ncmpii_getput_merged_requests(NC         *ncp,
+                              int         rw_flag,  /* WRITE_REQ or READ_REQ */
+                              int         io_method,/* COLL_IO or INDEP_IO */
+                              MPI_Offset  nsegs,    /* no. off-len pairs */
+                              off_len    *segs,     /* [nsegs] off-en pairs */
+                              void       *buf)
 {
-    int i, mpireturn, status=NC_NOERR, mpi_err=NC_NOERR;
-    MPI_File fh;
-    MPI_Status mpistatus;
+    int i, j, mpireturn, status=NC_NOERR, mpi_err=NC_NOERR;
+    int         *blocklengths;
+    MPI_Aint    *displacements;
+    MPI_Offset   next_off, next_len;
+    MPI_File     fh;
+    MPI_Status   mpistatus;
     MPI_Datatype filetype, buftype;
 
     assert(nsegs > 0);
@@ -961,13 +964,44 @@ ncmpii_getput_merged_requests(NC      *ncp,
 
     /* create the file view MPI derived data type by concatenating the sorted
        offset-length pairs */
-    int *blocklengths = (int*) NCI_Malloc(nsegs * sizeof(int));;
-    MPI_Aint *displacements = (MPI_Aint*) NCI_Malloc(nsegs * sizeof(MPI_Aint));
-    for (i=0; i<nsegs; i++) {
-        blocklengths[i]  = segs[i].len;
-        displacements[i] = segs[i].off;
+
+    /* For filetype, the segs[].off can be further coalesced. For example,
+       when writing a consecutive columns of a 2D array, even though the I/O
+       buffer addresses may not be able to coalesced, the file offsets on
+       the same row can be coalesced. Thus, first calculate the length of
+       coalesced off-len pairs (the memory space needed for malloc) */
+    next_off = segs[0].off;
+    next_len = segs[0].len;
+    for (j=0,i=1; i<nsegs; i++) {
+        if (next_off + next_len == segs[i].off) /* j and i are contiguous */
+            next_len += segs[i].len;
+        else {
+            j++;
+            next_off = segs[i].off;
+            next_len = segs[i].len;
+        }
     }
-    MPI_Type_create_hindexed(nsegs, blocklengths, displacements, MPI_BYTE,
+    /* j+1 is the coalesced length */
+    blocklengths  = (int*)      NCI_Malloc((j+1) * sizeof(int));;
+    displacements = (MPI_Aint*) NCI_Malloc((j+1) * sizeof(MPI_Aint));
+
+    /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
+    displacements[0] = segs[0].off;
+    blocklengths[0]  = segs[0].len;
+    for (j=0,i=1; i<nsegs; i++) {
+        if (displacements[j] + blocklengths[j] == segs[i].off)
+            /* j and i are contiguous */
+            blocklengths[j] += segs[i].len;
+        else {
+            j++;
+            displacements[j] = segs[i].off;
+            blocklengths[j]  = segs[i].len;
+        }
+    }
+    /* j+1 is the coalesced length */
+// printf("filetype new j+1=%d blocklengths[0]=%d\n",j+1,blocklengths[0]);
+
+    MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
                              &filetype);
     MPI_Type_commit(&filetype);
 
@@ -976,14 +1010,48 @@ ncmpii_getput_merged_requests(NC      *ncp,
                                   MPI_INFO_NULL);
     CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE);
     MPI_Type_free(&filetype);
+    NCI_Free(displacements);
+    NCI_Free(blocklengths);
 
-    /* create the I/O buffer derived data type from the offset-length pairs */
-    for (i=0; i<nsegs; i++)
-        displacements[i] = segs[i].buf_addr;
-    MPI_Type_create_hindexed(nsegs, blocklengths, displacements, MPI_BYTE,
+    /* create the I/O buffer derived data type from the I/O buffer's
+       offset-length pairs */
+
+    /* Although it is unlikely buffers can be coalesced, it will not harm to
+       check it out */
+    next_off = segs[0].buf_addr;
+    next_len = segs[0].len;
+    for (j=0,i=1; i<nsegs; i++) {
+        if (next_off + next_len == segs[i].buf_addr)
+            /* j and i are contiguous */
+            next_len += segs[i].len;
+        else {
+            j++;
+            next_off = segs[i].buf_addr;
+            next_len = segs[i].len;
+        }
+    }
+    /* j+1 is the coalesced length */
+    blocklengths  = (int*)      NCI_Malloc((j+1) * sizeof(int));;
+    displacements = (MPI_Aint*) NCI_Malloc((j+1) * sizeof(MPI_Aint));
+
+    /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
+    displacements[0] = segs[0].buf_addr;
+    blocklengths[0]  = segs[0].len;
+    for (j=0,i=1; i<nsegs; i++) {
+        if (displacements[j] + blocklengths[j] == segs[i].buf_addr)
+            /* j and i are contiguous */
+            blocklengths[j] += segs[i].len;
+        else {
+            j++;
+            displacements[j] = segs[i].buf_addr;
+            blocklengths[j]  = segs[i].len;
+        }
+    }
+    /* j+1 is the coalesced length */
+// printf("buftype new j+1=%d blocklengths[0]=%d\n",j+1,blocklengths[0]);
+    MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
                              &buftype);
     MPI_Type_commit(&buftype);
-
     NCI_Free(displacements);
     NCI_Free(blocklengths);
 
