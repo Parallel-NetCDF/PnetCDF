@@ -167,9 +167,9 @@ ncmpi_wait(int ncid,
            int *statuses) /* [num_reqs] */
 {
 #ifndef ENABLE_NONBLOCKING
-    int i, ret_st=NC_NOERR;
+    int i;
 #endif
-    int status;
+    int err, status=NC_NOERR;
     NC  *ncp;
 
     if (num_reqs == 0) return NC_NOERR;
@@ -179,11 +179,10 @@ ncmpi_wait(int ncid,
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        status = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-        if (status != NC_NOERR)
-            ret_st = status;
+        err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        if (status == NC_NOERR) status = err;
     }
-    return ret_st; /* return the last fail status, if there is any */
+    return status; /* return the first error status, if there is any */
 #endif
 }
 
@@ -196,9 +195,9 @@ ncmpi_wait_all(int  ncid,
                int *statuses) /* [num_reqs] */
 {
 #ifndef ENABLE_NONBLOCKING
-    int  i, ret_st=NC_NOERR;
+    int  i;
 #endif
-    int status;
+    int err, status=NC_NOERR;
     NC  *ncp;
 
     /* the following line CANNOT be added, because ncmpi_wait_all() is a
@@ -213,23 +212,23 @@ ncmpi_wait_all(int  ncid,
 #else
     /* This API is collective, so make it illegal in indep mode. This also
        ensures the program will returns back to collective mode. */
-    if (NC_indep(ncp))
-        return NC_EINDEP;
+    if (NC_indep(ncp)) return NC_EINDEP;
 
     /* must enter independent mode, as num_reqs may be different among
        processes */
-    ncmpi_begin_indep_data(ncid);
+    err = ncmpi_begin_indep_data(ncid);
+    if (status == NC_NOERR) status = err;
 
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        status = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-        if (status != NC_NOERR)
-            ret_st = status;
+        err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        if (status == NC_NOERR) status = err;
     }
 
     /* return to collective data mode */
-    ncmpi_end_indep_data(ncid);
+    err = ncmpi_end_indep_data(ncid);
+    if (status == NC_NOERR) status = err;
 
-    return ret_st; /* return the last fail status, if there is any */
+    return status; /* return the first error status, if there is any */
 #endif
 }
 
@@ -272,7 +271,7 @@ ncmpii_mset_fileview(MPI_File    fh,
                                                   &offsets[i],
                                                   &filetypes[i]);
 
-        if (status == NC_NOERR && statuses[i] != NC_NOERR)
+        if (status == NC_NOERR)
             status = statuses[i]; /* report the first error */
 
         blocklens[i] = 1;
@@ -401,7 +400,7 @@ ncmpii_wait(NC  *ncp,
 
     if (io_method == INDEP_IO && j == 0)
         return NC_NOERR;
-    /* For collective APIs, even thorugh some processes may have zero-length
+    /* For collective APIs, even though some processes may have zero-length
        requests, they must still participate the collective call. Hence,
        only independent APIs stop here if request is of zero length.
      */
@@ -436,6 +435,9 @@ ncmpii_wait(NC  *ncp,
                     status = NC_EINVAL_REQUEST;
             }
         }
+        /* skip this invalid nonblocking request i */
+        if (cur_req == NULL) continue;
+
         /* found it: cur_req */
         cur_req->status = statuses + i;
         for (j=0; j<cur_req->num_subreqs; j++)
@@ -458,8 +460,8 @@ ncmpii_wait(NC  *ncp,
             }
             r_req_tail->next = NULL;
             num_r_reqs += (cur_req->num_subreqs == 0) ? 1 : cur_req->num_subreqs;
-            /* if this request is for record variable, then count only
-               the subrequests (for individual record) */
+            /* if this request is for record variable, then count only its
+               subrequests (one for each individual record) */
         }
         else { /* add cur_req to w_req_tail */
             if (w_req_head == NULL) {
@@ -472,8 +474,8 @@ ncmpii_wait(NC  *ncp,
             }
             w_req_tail->next = NULL;
             num_w_reqs += (cur_req->num_subreqs == 0) ? 1 : cur_req->num_subreqs;
-            /* if this request is for record variable, then count only
-               the subrequests (for individual record) */
+            /* if this request is for record variable, then count only its
+               subrequests (one for each individual record) */
         }
     }
     /* make sure ncp->tail pointing to the tail */
@@ -507,7 +509,7 @@ ncmpii_wait(NC  *ncp,
                                  WRITE_REQ, io_method);
 
     /* retain the first error status */
-    if (status != NC_NOERR) status = err;
+    if (status == NC_NOERR) status = err;
 
     /* post-IO data processing: may need byte-swap user write buf, or
                                 byte-swap and type convert user read buf */
@@ -530,9 +532,9 @@ ncmpii_wait(NC  *ncp,
         ptype   = cur_req->ptype;
 
         if (cur_req->rw_flag == WRITE_REQ) {
-            /* must byte-swap the user buffer back to its original endianess
-               only when the buffer itself has been byte-swapped before.
-               I.e. ! iscontig_of_ptypes && not ncmpii_need_convert() &&
+            /* must byte-swap the user buffer back to its original Endianess
+               only when the buffer itself has been byte-swapped before,
+               i.e. NOT iscontig_of_ptypes && NOT ncmpii_need_convert() &&
                ncmpii_need_swap()
             */
             if (cur_req->need_swap_back_buf)
@@ -1117,8 +1119,9 @@ ncmpii_wait_getput(NC     *ncp,
     off_len    *segs=NULL; /* array of the offset-length pairs */
     if (ngroups > 1) {
         /* try merge all requests into sorted offset-length pairs */
-        status = ncmpii_merge_requests(ncp, num_reqs, reqs, rw_flag,
-                                       &merged_buf, &nsegs, &segs);
+        err = ncmpii_merge_requests(ncp, num_reqs, reqs, rw_flag,
+                                    &merged_buf, &nsegs, &segs);
+        if (status == NC_NOERR) status = err;
         /* this returned status is the first error encountered */
 
         if (nsegs > 0) ngroups = 1;
@@ -1157,7 +1160,7 @@ ncmpii_wait_getput(NC     *ncp,
         err = ncmpii_getput_merged_requests(ncp, rw_flag, io_method, nsegs,
                                             segs, merged_buf);
         /* preserve the previous error if there is any */
-        status = (status == NC_NOERR) ? err : status;
+        if (status == NC_NOERR) status = err;
         NCI_Free(segs);
     }
     else if (num_reqs > 0) {  /* also means ngroups > 0 */
@@ -1191,8 +1194,8 @@ ncmpii_wait_getput(NC     *ncp,
             err = ncmpii_mgetput(ncp, i_num_reqs, varps, starts, counts,
                                  strides, bufs, nbytes, statuses, rw_flag,
                                  io_method);
-            status = (status == NC_NOERR) ? err : status;
-            /* return the first error */
+            if (status == NC_NOERR) status = err;
+            /* retain the first error if there is any */
 
             /* update status */
             for (j=0; j<i_num_reqs; j++)
@@ -1231,8 +1234,8 @@ ncmpii_wait_getput(NC     *ncp,
          * finds its max_newnumrecs being zero, it still needs to participate
          * the call
          */
-        status = (status == NC_NOERR) ? err : status;
-        /* keep the first error if there is any */
+        if (status == NC_NOERR) status = err;
+        /* retain the first error if there is any */
     }
 
     if (num_reqs > 0) {
