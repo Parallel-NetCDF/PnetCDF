@@ -71,7 +71,7 @@
 int main(int argc, char** argv) {
     int i, j, debug, rank, nprocs, err, myNX, G_NX, myOff;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
-    MPI_Offset start[2], count[2], stride[2];
+    MPI_Offset start[2], count[2];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
