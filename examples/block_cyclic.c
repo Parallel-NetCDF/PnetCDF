@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -29,27 +30,26 @@
  *
  *    % mpicc -g -o column_wise column_wise.c -lpnetcdf
  *    % mpiexec -l -n 4 column_wise testfile.nc
- *    0:  0: myOff=  0 myNX=  4
- *    1:  1: myOff=  4 myNX=  4
- *    2:  2: myOff=  8 myNX=  4
- *    3:  3: myOff= 12 myNX=  4
- *
- *    0: [i=0] start=  0   0 count= 10   1
- *    0: [i=1] start=  0   1 count= 10   1
- *    0: [i=2] start=  0   8 count= 10   1
- *    0: [i=3] start=  0   9 count= 10   1
- *    1: [i=0] start=  0   2 count= 10   1
- *    1: [i=1] start=  0   3 count= 10   1
- *    1: [i=2] start=  0  10 count= 10   1
- *    1: [i=3] start=  0  11 count= 10   1
- *    2: [i=0] start=  0   4 count= 10   1
- *    2: [i=1] start=  0   5 count= 10   1
- *    2: [i=2] start=  0  12 count= 10   1
- *    2: [i=3] start=  0  13 count= 10   1
- *    3: [i=0] start=  0   6 count= 10   1
- *    3: [i=1] start=  0   7 count= 10   1
- *    3: [i=2] start=  0  14 count= 10   1
- *    3: [i=3] start=  0  15 count= 10   1
+ *    0:  0: NY=10 myNX=  4 myOff=  0
+ *    1:  1: NY=10 myNX=  4 myOff=  4
+ *    2:  2: NY=10 myNX=  4 myOff=  8
+ *    3:  3: NY=10 myNX=  4 myOff= 12
+ *    0: [i=0] iput() start=  0   0 count= 10   1
+ *    0: [i=1] iput() start=  0   1 count= 10   1
+ *    0: [i=2] iput() start=  0   8 count= 10   1
+ *    0: [i=3] iput() start=  0   9 count= 10   1
+ *    1: [i=0] iput() start=  0   2 count= 10   1
+ *    1: [i=1] iput() start=  0   3 count= 10   1
+ *    1: [i=2] iput() start=  0  10 count= 10   1
+ *    1: [i=3] iput() start=  0  11 count= 10   1
+ *    2: [i=0] iput() start=  0   4 count= 10   1
+ *    2: [i=1] iput() start=  0   5 count= 10   1
+ *    2: [i=2] iput() start=  0  12 count= 10   1
+ *    2: [i=3] iput() start=  0  13 count= 10   1
+ *    3: [i=0] iput() start=  0   6 count= 10   1
+ *    3: [i=1] iput() start=  0   7 count= 10   1
+ *    3: [i=2] iput() start=  0  14 count= 10   1
+ *    3: [i=3] iput() start=  0  15 count= 10   1
  *
  *    % ncmpidump testfile.nc
  *    netcdf testfile {
@@ -80,22 +80,23 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
-    int i, j, debug, rank, nprocs, err, myNX, G_NX, myOff;
+    int i, j, verbose, rank, nprocs, err;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
-    int block_start, block_len;
-    MPI_Offset start[2], count[2], stride[2];
+    MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
+    MPI_Offset start[2], count[2];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    debug = 1;
+    verbose = 1;
     if (argc != 2) {
         if (!rank) printf("Usage: %s filename\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
 
+    /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
     ERR
@@ -103,8 +104,8 @@ int main(int argc, char** argv) {
     /* the global array is NY * (NX * nprocs) */
     G_NX  = NX * nprocs;
     myOff = NX * rank;
-    myNX   = NX;
-    if (debug) printf("%2d: myOff=%3d myNX=%3d\n",rank,myOff,myNX);
+    myNX  = NX;
+    if (verbose) printf("%2d: NY=%d myNX=%3lld myOff=%3lld\n",rank,NY,myNX,myOff);
 
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]);
     ERR
@@ -146,8 +147,8 @@ int main(int argc, char** argv) {
         err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i], &reqs[i]);
         ERR
 
-        if (debug)
-            printf("[i=%d] start=%3lld %3lld count=%3lld %3lld\n",
+        if (verbose)
+            printf("[i=%d] iput() start=%3lld %3lld count=%3lld %3lld\n",
                    i, start[0],start[1], count[0],count[1]);
 
         if (i % block_len == block_len-1)  {
@@ -166,6 +167,80 @@ int main(int argc, char** argv) {
     free(sts);
     free(reqs);
     for (i=0; i<myNX; i++) free(buf[i]);
+    free(buf);
+
+    /* open an existing file created earlier for read -----------------------*/
+    cmode = NC_NOWRITE;
+    err = ncmpi_open(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
+    ERR
+
+    /* the global array is NY * (NX * nprocs) */
+    MPI_Offset global_ny, global_nx;
+    err = ncmpi_inq_dimid(ncid, "Y", &dimid[0]);
+    ERR
+    err = ncmpi_inq_dimlen(ncid, dimid[0], &global_ny);
+    ERR
+    assert(global_ny == NY);
+
+    err = ncmpi_inq_dimid(ncid, "X", &dimid[1]);
+    ERR
+    err = ncmpi_inq_dimlen(ncid, dimid[1], &global_nx);
+    ERR
+    assert(global_nx == G_NX);
+
+    myOff = myOff * rank;
+    myNX  = global_nx / nprocs;
+
+    err = ncmpi_inq_varid(ncid, "var", &varid);
+    ERR
+
+    /* initialize the buffer with -1, so a read error can be pingpointed */
+    buf    = (int**) malloc(myNX * sizeof(int*));
+    buf[0] = (int*)  malloc(global_ny * myNX * sizeof(int));
+    for (i=0; i<myNX; i++) {
+        if (i > 0) buf[i] = buf[i-1] + global_ny;
+        for (j=0; j<global_ny; j++) buf[i][j] = -1;
+    }
+
+    reqs = (int*) malloc(myNX * sizeof(int));
+    sts  = (int*) malloc(myNX * sizeof(int));
+
+    /* each proc reads myNX columns of the 2D array, block_len controls the
+       the number of contiguous columns at a time */
+    block_start = 0;
+    block_len   = 2;  /* can be 1, 2, 3, ..., myNX */
+    if (block_len > myNX) block_len = myNX;
+
+    start[0] = 0;          start[1] = rank * block_len;
+    count[0] = global_ny;  count[1] = 1;
+    for (i=0; i<myNX; i++) {
+        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[i], &reqs[i]);
+        ERR
+
+        if (i % block_len == block_len-1)  {
+            int stride = MIN(myNX-1-i, block_len);
+            block_start += block_len * nprocs;
+            start[1] = block_start + stride * rank;
+        }
+        else
+            start[1]++;
+    }
+    err = ncmpi_wait_all(ncid, myNX, reqs, sts);
+    ERR
+    err = ncmpi_close(ncid);
+    ERR
+
+    /* check the read contents */
+    for (i=0; i<myNX; i++) {
+        for (j=0; j<global_ny; j++)
+            if (buf[i][j] != rank+10) {
+                printf("Read contents mismatch at buf[%d][%d] = %d (should be %d)\n", i,j,buf[i][j],rank+10);
+            }
+    }
+
+    free(sts);
+    free(reqs);
+    free(buf[0]);
     free(buf);
 
     MPI_Finalize();
