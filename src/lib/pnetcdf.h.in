@@ -285,7 +285,7 @@ typedef enum {
 #define NC_ENUMRECS_MULTIDEFINE		(-221) /* Different number records on multiprocesses conflict */
 #define NC_EINVAL_REQUEST		(-222) /* invalid nonblocking request ID */
 #define NC_EAINT_TOO_SMALL		(-223) /* MPI_Aint not large enough to hold requested value */
-#define NC_ECMODE			(-224) /* file create modes are inconsistent among processes */
+#define NC_ECMODE			(-224) /* Bad file create/open mode or modes are inconsistent across processes */
 #define NC_ENOTSUPPORT			(-225) /* feature is not yet supported */
 #define NC_ENULLBUF			(-226) /* trying to attach a NULL buffer */
 #define NC_EPREVATTACHBUF		(-227) /* previous attached buffer is found */

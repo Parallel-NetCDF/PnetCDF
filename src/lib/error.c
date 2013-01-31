@@ -207,7 +207,7 @@ ncmpi_strerror(int err)
 	case NC_EAINT_TOO_SMALL:
 	    return "MPI_Aint not large enough to hold requested value.";
 	case NC_ECMODE:
-	    return "File create modes are inconsistent among all processes.";
+	    return "Bad file create/open mode or modes are inconsistent across processes.";
 	case NC_ENOTSUPPORT:
 	    return "Feature is not yet supported.";
 	case NC_ENULLBUF:
