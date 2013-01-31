@@ -5,13 +5,17 @@
 ! $Id$
 
 !
-! This example shows how to use nfmpi_put_vara_int_all().
-! It first defines a netCDF variable as a 2D array of size
-! global_nx * global_ny of 4-byte integer type where global_nx == 5 and
-! global_ny == (4 * number of MPI processes). Each process writes a subarray
-! of size nx * ny. Note the description above follows the Fortran order.
+! This example shows how to use nfmpi_put_vara_int_all() to write a 2D
+! 4-byte integer array in parallel. It first defines a netCDF variable of
+! size global_nx * global_ny where
+!    global_nx == 5 and
+!    global_ny == (4 * number of MPI processes).
+! The data partitioning pattern is a column-wise partitioning across all
+! proceses. Each process writes a subarray of size nx * ny.
+! Note the description above follows the Fortran array index order.
 !
-! Example MPI run and output from ncmpidump:
+! Example commands for MPI run and outputs from running ncmpidump on the
+! NC file produced by this example program:
 !
 !    % mpiexec -l -n 4 ./put_vara
 !
@@ -26,22 +30,22 @@
 !    data:
 !
 !     var =
-!      1, 2, 3, 4, 5,
-!      6, 7, 8, 9, 10,
-!      11, 12, 13, 14, 15,
-!      16, 17, 18, 19, 20,
-!      1001, 1002, 1003, 1004, 1005,
-!      1006, 1007, 1008, 1009, 1010,
-!      1011, 1012, 1013, 1014, 1015,
-!      1016, 1017, 1018, 1019, 1020,
-!      2001, 2002, 2003, 2004, 2005,
-!      2006, 2007, 2008, 2009, 2010,
-!      2011, 2012, 2013, 2014, 2015,
-!      2016, 2017, 2018, 2019, 2020,
-!      3001, 3002, 3003, 3004, 3005,
-!      3006, 3007, 3008, 3009, 3010,
-!      3011, 3012, 3013, 3014, 3015,
-!      3016, 3017, 3018, 3019, 3020 ;
+!      0, 0, 0, 0, 0,
+!      0, 0, 0, 0, 0,
+!      0, 0, 0, 0, 0,
+!      0, 0, 0, 0, 0,
+!      1, 1, 1, 1, 1,
+!      1, 1, 1, 1, 1,
+!      1, 1, 1, 1, 1,
+!      1, 1, 1, 1, 1,
+!      2, 2, 2, 2, 2,
+!      2, 2, 2, 2, 2,
+!      2, 2, 2, 2, 2,
+!      2, 2, 2, 2, 2,
+!      3, 3, 3, 3, 3,
+!      3, 3, 3, 3, 3,
+!      3, 3, 3, 3, 3,
+!      3, 3, 3, 3, 3 ;
 !    }
 !
       subroutine check(err, message)
@@ -64,10 +68,11 @@
           implicit none
 
           character(LEN=128) filename
-          integer i, err, nprocs, rank, cmode, ncid, varid, dimid(2)
-          integer buf(20)
+          integer err, nprocs, rank, cmode, ncid, varid, dimid(2)
           integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
           integer(kind=MPI_OFFSET_KIND) starts(2), counts(2)
+          PARAMETER(nx=5, ny=4)
+          integer buf(nx,ny)
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -75,14 +80,10 @@
 
           ! set parameters
           filename  = 'testfile.nc'
-          nx        = 5
-          ny        = 4
           global_nx = nx
           global_ny = ny * nprocs
 
-          do i = 1, 20
-             buf(i) = rank * 1000 + i
-          end do
+          buf = rank;
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
