@@ -44,6 +44,10 @@ ncmpi_create(MPI_Comm    comm,
     int my_cmode, cmode_sum, nprocs;
     MPI_Comm_size(comm, &nprocs);
 
+    /* Note if cmode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
+       In pnetcdf.h, they both are defined the same value, 0.
+     */
+
     my_cmode = 1;
     if (cmode & NC_64BIT_OFFSET)  my_cmode = 2;
     if (cmode & NC_64BIT_DATA)    my_cmode = 5;

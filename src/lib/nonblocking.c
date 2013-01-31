@@ -1101,7 +1101,7 @@ req_compare(const NC_req *a, const NC_req *b)
 /*----< ncmpii_wait_getput() >------------------------------------------------*/
 static int
 ncmpii_wait_getput(NC     *ncp,
-                   int     num_reqs,  /* # requests incuding subrequests */
+                   int     num_reqs,  /* # requests including subrequests */
                    NC_req *req_head,  /* linked list not include subrequests */
                    int     rw_flag,   /* WRITE_REQ or READ_REQ */
                    int     io_method) /* COLL_IO or INDEP_IO */
@@ -1133,6 +1133,8 @@ ncmpii_wait_getput(NC     *ncp,
          * This is because MPI collective I/O requires each process's fileview
          * contains monotonic non-decreasing file offsets
          */
+
+        /* first sort reqs[] based on reqs[].offset_start */
         fcnt = (int (*)(const void *, const void *))req_compare;
         qsort(reqs, num_reqs, sizeof(NC_req), fcnt);
 
