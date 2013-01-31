@@ -10,10 +10,8 @@
       use pnetcdf
       implicit none
 
-      integer i, j, ncid, varid, retval, err, rank, nprocs
-      integer no_err, cmode
-      integer dimid(2)
-      integer req(2), status(2)
+      integer i, j, ncid, varid, cmode, err, rank, nprocs
+      integer dimid(2), req(2), status(2)
       integer(kind=MPI_OFFSET_KIND) start(2)
       integer(kind=MPI_OFFSET_KIND) count(2)
       integer(kind=MPI_OFFSET_KIND) stride(2)
