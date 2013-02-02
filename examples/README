@@ -1,3 +1,17 @@
+tutorial
+    A directory contains example programs that use different parallel I/O
+    strategies, including:
+        Parallel I/O from the master process
+        Concurrent I/O on separate files
+        Real parallel I/O on shared files
+        Using "flexible" APIs
+        Using non-blocking APIs
+        Using non-blocking buffered write APIs
+
+   Detailed descriptions for these programs can be found in
+   http://trac.mcs.anl.gov/projects/parallel-netcdf/wiki/QuickTutorial
+
+
 block_cyclic.c
     This example makes a number of nonblocking API calls, each to write a
     block of columns into a 2D integer variable in a file. In other words,
