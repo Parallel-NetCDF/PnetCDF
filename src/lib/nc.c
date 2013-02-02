@@ -1086,14 +1086,13 @@ ncmpii_NC_close(NC *ncp) {
             req_ids[num_reqs++] = cur_req->id;
             cur_req = cur_req->next;
         }
-    }
 #if COMPLETE_NONBLOCKING_IO
-    ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
+        ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
-    if (num_reqs > 0) ncmpii_cancel(ncp, num_reqs, req_ids, statuses);
+        ncmpii_cancel(ncp, num_reqs, req_ids, statuses);
 #endif
-    if (num_reqs > 0)
         NCI_Free(req_ids);
+    }
 
     if (!NC_readonly(ncp)) { /* file is open for write */
         /* check if header is dirty, if yes, flush it to file */
