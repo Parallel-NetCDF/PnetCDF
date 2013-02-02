@@ -379,7 +379,7 @@ ncmpii_wait(NC  *ncp,
             int *req_ids,   /* [num_reqs] */
             int *statuses)  /* [num_reqs] */
 {
-    int i, j, err, status=NC_NOERR;
+    int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs, num_r_reqs;
     NC_req *pre_req, *cur_req;
     NC_req *w_req_head, *w_req_tail, *r_req_head, *r_req_tail;
