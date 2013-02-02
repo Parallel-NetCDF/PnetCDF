@@ -426,8 +426,11 @@ ncmpii_igetput_varm(NC               *ncp,
 err_check:
     if (err != NC_NOERR) return err;
 
-    if (bnelems == 0)
+    if (bnelems == 0) {
+        /* zero-length request, mark this as a NULL request */
+        *reqid = NC_REQ_NULL;
         return NCcoordck(ncp, varp, start);
+    }
 
 /* Here is the pseudo code description on buffer packing
     if (iscontig_of_ptypes)
