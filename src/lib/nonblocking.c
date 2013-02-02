@@ -421,18 +421,20 @@ ncmpii_wait(NC  *ncp,
 
         assert(ncp->head != NULL);
 
+        /* find req_ids[i] from the request linked list */
         pre_req = NULL;
         cur_req = ncp->head;
-        while (cur_req->id != req_ids[i]) { /* find from the linked list */
+        while (cur_req->id != req_ids[i]) {
             pre_req = cur_req;
             cur_req = cur_req->next;
             if (cur_req == NULL) {
-                printf("Error: no such request ID = %d\n", req_ids[i]);
+                // printf("Error: no such request ID = %d\n", req_ids[i]);
                 if (statuses != NULL)
                     statuses[i] = NC_EINVAL_REQUEST;
                 /* retain the first error status */
                 if (status == NC_NOERR)
                     status = NC_EINVAL_REQUEST;
+                break;
             }
         }
         /* skip this invalid nonblocking request i */
