@@ -409,9 +409,6 @@ ncmpii_wait(NC  *ncp,
     r_req_head = r_req_tail = NULL;
     num_w_reqs = num_r_reqs = 0;
 
-    if (j > 0) /* j is the number of valid, non-zero-length, requests */
-        assert(ncp->head != NULL);
-
     /* extract the requests from the linked list into a new linked list.
        In the meantime coalesce the linked list */
 
@@ -419,7 +416,15 @@ ncmpii_wait(NC  *ncp,
         if (req_ids[i] == NC_REQ_NULL) /* skip zero-size request */
             continue;
 
-        assert(ncp->head != NULL);
+        if (ncp->head == NULL) { /* this reqeust is invalid */
+            if (statuses != NULL)
+                statuses[i] = NC_EINVAL_REQUEST;
+            /* retain the first error status */
+            if (status == NC_NOERR)
+                status = NC_EINVAL_REQUEST;
+            continue;
+            /* cannot break loop i, must continue to set the error status */
+        }
 
         /* find req_ids[i] from the request linked list */
         pre_req = NULL;
