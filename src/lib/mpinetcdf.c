@@ -353,7 +353,8 @@ ncmpi_begin_indep_data(int ncid) {
     int status = NC_NOERR;
     NC *ncp;
 
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
     if (NC_indef(ncp))  /* must not be in define mode */
         return NC_EINDEFINE;
@@ -395,10 +396,10 @@ ncmpi_end_indep_data(int ncid) {
     int status = NC_NOERR;
     NC *ncp;
  
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-    if (!NC_indep(ncp))
-        return NC_ENOTINDEP;
+    if (!NC_indep(ncp)) return NC_ENOTINDEP;
 
     return ncmpii_end_indep_data(ncp);
 }

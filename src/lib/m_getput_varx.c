@@ -378,11 +378,9 @@ ncmpii_mgetput_varm(int                ncid,
     NC *ncp=NULL;
 
     CHECK_NCID
+    if (NC_indef(ncp)) return NC_EINDEFINE;
     if (rw_flag == WRITE_REQ)
         CHECK_WRITE_PERMISSION
-
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-
     /* check to see that the desired MPI file handle is opened */
     if (io_method == COLL_IO)
         CHECK_COLLECTIVE_FH
@@ -399,7 +397,8 @@ ncmpii_mgetput_varm(int                ncid,
         NC_var *varp;
         MPI_Offset *start, *count;
 
-        CHECK_VARID(varids[i], varp)
+        varp = ncmpii_NC_lookupvar(ncp, varids[i]);
+        if (varp == NULL) continue; /* invalid varid, skip this request */
 
         if (starts == NULL) {         /* var */
             GET_FULL_DIMENSIONS

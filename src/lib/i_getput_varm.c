@@ -58,9 +58,10 @@ ncmpi_iput_varm(int               ncid,
 
     *reqid = NC_REQ_NULL;
     CHECK_NCID
-    CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    CHECK_WRITE_PERMISSION
+
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
@@ -89,9 +90,10 @@ ncmpi_iput_varm_##apitype(int               ncid,                        \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
     CHECK_NCID                                                           \
-    CHECK_WRITE_PERMISSION                                               \
     if (NC_indef(ncp)) return NC_EINDEFINE;                              \
     CHECK_VARID(varid, varp)                                             \
+    CHECK_WRITE_PERMISSION                                               \
+                                                                         \
     status = NCcoordck(ncp, varp, start);                                \
     if (status != NC_NOERR) return status;                               \
     status = NCstrideedgeck(ncp, varp, start, count, stride);            \
@@ -151,6 +153,7 @@ ncmpi_iget_varm(int               ncid,
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
@@ -180,6 +183,7 @@ ncmpi_iget_varm_##apitype(int               ncid,                        \
     CHECK_NCID                                                           \
     if (NC_indef(ncp)) return NC_EINDEFINE;                              \
     CHECK_VARID(varid, varp)                                             \
+                                                                         \
     status = NCcoordck(ncp, varp, start);                                \
     if (status != NC_NOERR) return status;                               \
     status = NCstrideedgeck(ncp, varp, start, count, stride);            \
@@ -227,7 +231,8 @@ ncmpi_buffer_attach(int        ncid,
 
     if (bufsize <= 0) return NC_ENULLBUF;
 
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
     /* check if the buffer has been prviously attached
      * note that in nc.c, the NC object is allocated with calloc, so
@@ -255,7 +260,8 @@ ncmpi_buffer_detach(int ncid)
     NC     *ncp;
     NC_req *cur_req;
 
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
     /* check if the buffer has been prviously attached */
     if (ncp->abuf == NULL) return NC_ENULLABUF;
@@ -291,7 +297,8 @@ ncmpi_buffer_detach(int         ncid,
     NC     *ncp;
     NC_req *cur_req;
 
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
     /* check if the buffer has been prviously attached */
     if (ncp->abuf == NULL) return NC_ENULLABUF;
@@ -761,7 +768,8 @@ ncmpi_inq_buffer_usage(int         ncid,
     int  status;
     NC  *ncp;
 
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
     /* check if the buffer has been prviously attached */
     if (ncp->abuf == NULL) return NC_ENULLABUF;

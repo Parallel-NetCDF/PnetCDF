@@ -95,7 +95,9 @@ ncmpi_cancel(int  ncid,
     int status;
     NC *ncp;
 
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
     if (NC_indef(ncp)) return NC_EINDEFINE;
 
     return ncmpii_cancel(ncp, num_req, req_ids, statuses);
@@ -178,7 +180,9 @@ ncmpi_wait(int ncid,
 
     if (num_reqs == 0) return NC_NOERR;
 
-    CHECK_NCID
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
@@ -201,7 +205,7 @@ ncmpi_wait_all(int  ncid,
 #ifndef ENABLE_NONBLOCKING
     int  i;
 #endif
-    int err, status=NC_NOERR;
+    int err, status=NC_NOERR, min_st;
     NC  *ncp;
 
     /* the following line CANNOT be added, because ncmpi_wait_all() is a
@@ -210,9 +214,12 @@ ncmpi_wait_all(int  ncid,
      */
     /* if (num_reqs == 0) return NC_NOERR; */
 
-    CHECK_NCID
-    /* TODO: if invalid ncid is passed, CHECK_NCID returns here !
-             this is not good for collective APIs */
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+    if (min_st != NC_NOERR) return status;
+    /* If ncid on one of the processes is invalid, we collectively return
+       the function with error here. */
+
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else

@@ -89,13 +89,13 @@ ncmpi_put_varm##iomode(int               ncid,                       \
     NC_var     *varp;                                                \
                                                                      \
     CHECK_NCID                                                       \
-    CHECK_WRITE_PERMISSION                                           \
     if (NC_indef(ncp)) return NC_EINDEFINE;                          \
+    CHECK_VARID(varid, varp)                                         \
+    CHECK_WRITE_PERMISSION                                           \
     if (collmode == INDEP_IO)                                        \
         CHECK_INDEP_FH                                               \
     else /* collmode == COLL_IO */                                   \
         CHECK_COLLECTIVE_FH                                          \
-    CHECK_VARID(varid, varp)                                         \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               (void*)buf, bufcount, buftype,         \
@@ -125,11 +125,11 @@ ncmpi_get_varm##iomode(int               ncid,                       \
                                                                      \
     CHECK_NCID                                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                          \
+    CHECK_VARID(varid, varp)                                         \
     if (collmode == INDEP_IO)                                        \
         CHECK_INDEP_FH                                               \
     else /* collmode == COLL_IO */                                   \
         CHECK_COLLECTIVE_FH                                          \
-    CHECK_VARID(varid, varp)                                         \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               buf, bufcount, buftype,                \
@@ -157,13 +157,14 @@ ncmpi_put_varm_##apitype(int               ncid,                     \
     MPI_Offset  nelems;                                              \
                                                                      \
     CHECK_NCID                                                       \
-    CHECK_WRITE_PERMISSION                                           \
     if (NC_indef(ncp)) return NC_EINDEFINE;                          \
+    CHECK_VARID(varid, varp)                                         \
+    CHECK_WRITE_PERMISSION                                           \
     if (collmode == INDEP_IO)                                        \
         CHECK_INDEP_FH                                               \
     else /* collmode == COLL_IO */                                   \
         CHECK_COLLECTIVE_FH                                          \
-    CHECK_VARID(varid, varp)                                         \
+                                                                     \
     GET_NUM_ELEMENTS                                                 \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
@@ -243,11 +244,12 @@ ncmpi_get_varm_##apitype(int               ncid,                     \
                                                                      \
     CHECK_NCID                                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                          \
+    CHECK_VARID(varid, varp)                                         \
     if (collmode == INDEP_IO)                                        \
         CHECK_INDEP_FH                                               \
     else /* collmode == COLL_IO */                                   \
         CHECK_COLLECTIVE_FH                                          \
-    CHECK_VARID(varid, varp)                                         \
+                                                                     \
     GET_NUM_ELEMENTS                                                 \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \

@@ -43,10 +43,11 @@ ncmpi_bput_varm(int               ncid,
 
     *reqid = NC_REQ_NULL;
     CHECK_NCID
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
-    CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    CHECK_WRITE_PERMISSION
+
+    if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
@@ -75,10 +76,11 @@ ncmpi_bput_varm_##apitype(int               ncid,                        \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
     CHECK_NCID                                                           \
-    if (ncp->abuf == NULL) return NC_ENULLABUF;                          \
-    CHECK_WRITE_PERMISSION                                               \
     if (NC_indef(ncp)) return NC_EINDEFINE;                              \
     CHECK_VARID(varid, varp)                                             \
+    CHECK_WRITE_PERMISSION                                               \
+                                                                         \
+    if (ncp->abuf == NULL) return NC_ENULLABUF;                          \
     status = NCcoordck(ncp, varp, start);                                \
     if (status != NC_NOERR) return status;                               \
     status = NCstrideedgeck(ncp, varp, start, count, stride);            \

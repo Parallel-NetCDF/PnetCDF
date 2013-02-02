@@ -47,13 +47,13 @@ ncmpi_put_vars##iomode(int               ncid,                   \
     NC_var     *varp;                                            \
                                                                  \
     CHECK_NCID                                                   \
-    CHECK_WRITE_PERMISSION                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    CHECK_VARID(varid, varp)                                     \
+    CHECK_WRITE_PERMISSION                                       \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               (void*)buf, bufcount, buftype,     \
@@ -82,11 +82,11 @@ ncmpi_get_vars##iomode(int               ncid,                   \
                                                                  \
     CHECK_NCID                                                   \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    CHECK_VARID(varid, varp)                                     \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               buf, bufcount, buftype,            \
@@ -114,13 +114,13 @@ ncmpi_put_vars_##apitype(int               ncid,                 \
     MPI_Offset  nelems;                                          \
                                                                  \
     CHECK_NCID                                                   \
-    CHECK_WRITE_PERMISSION                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    CHECK_VARID(varid, varp)                                     \
+    CHECK_WRITE_PERMISSION                                       \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
     GET_NUM_ELEMENTS                                             \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
@@ -198,12 +198,13 @@ ncmpi_get_vars_##apitype(int               ncid,                 \
     MPI_Offset  nelems;                                          \
                                                                  \
     CHECK_NCID                                                   \
+    CHECK_VARID(varid, varp)                                     \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
+                                                                 \
     GET_NUM_ELEMENTS                                             \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \

@@ -37,10 +37,11 @@ ncmpi_put_var1(int               ncid,
     MPI_Offset *count;
 
     CHECK_NCID
-    CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_INDEP_FH
     CHECK_VARID(varid, varp)
+    CHECK_WRITE_PERMISSION
+    CHECK_INDEP_FH
+
     GET_ONE_COUNT
 
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
@@ -66,10 +67,11 @@ ncmpi_put_var1_##apitype(int               ncid,                 \
     MPI_Offset *count;                                           \
                                                                  \
     CHECK_NCID                                                   \
-    CHECK_WRITE_PERMISSION                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_INDEP_FH                                               \
     CHECK_VARID(varid, varp)                                     \
+    CHECK_WRITE_PERMISSION                                       \
+    CHECK_INDEP_FH                                               \
+                                                                 \
     GET_ONE_COUNT                                                \
                                                                  \
     /* put_var1 is a special case of put_vars */                 \
@@ -124,8 +126,9 @@ ncmpi_get_var1(int               ncid,
 
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_INDEP_FH
     CHECK_VARID(varid, varp)
+    CHECK_INDEP_FH
+
     GET_ONE_COUNT
 
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
@@ -152,8 +155,9 @@ ncmpi_get_var1_##apitype(int               ncid,                 \
                                                                  \
     CHECK_NCID                                                   \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_INDEP_FH                                               \
     CHECK_VARID(varid, varp)                                     \
+    CHECK_INDEP_FH                                               \
+                                                                 \
     GET_ONE_COUNT                                                \
                                                                  \
     /* get_var1 is a special case of get_vars */                 \

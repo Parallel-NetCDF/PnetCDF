@@ -41,13 +41,13 @@ ncmpi_iput_var1(int               ncid,
 
     *reqid = NC_REQ_NULL;
     CHECK_NCID
-    CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
-    GET_ONE_COUNT
+    CHECK_WRITE_PERMISSION
+
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
-
+    GET_ONE_COUNT
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, buftype, reqid,
@@ -71,9 +71,10 @@ ncmpi_iput_var1_##apitype(int               ncid,                       \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
     CHECK_NCID                                                          \
-    CHECK_WRITE_PERMISSION                                              \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \
+    CHECK_WRITE_PERMISSION                                              \
+                                                                        \
     status = NCcoordck(ncp, varp, start);                               \
     if (status != NC_NOERR) return status;                              \
     GET_ONE_COUNT                                                       \
@@ -132,6 +133,7 @@ ncmpi_iget_var1(int               ncid,
     CHECK_NCID
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
     GET_ONE_COUNT
@@ -159,6 +161,7 @@ ncmpi_iget_var1_##apitype(int               ncid,                       \
     CHECK_NCID                                                          \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \
+                                                                        \
     status = NCcoordck(ncp, varp, start);                               \
     if (status != NC_NOERR) return status;                              \
     GET_ONE_COUNT                                                       \

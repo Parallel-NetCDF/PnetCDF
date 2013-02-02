@@ -40,9 +40,10 @@ ncmpi_iput_var(int           ncid,
 
     *reqid = NC_REQ_NULL;
     CHECK_NCID
-    CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    CHECK_WRITE_PERMISSION
+
     GET_FULL_DIMENSIONS
 
     /* iput_var is a special case of iput_varm */
@@ -69,9 +70,10 @@ ncmpi_iput_var_##apitype(int          ncid,                             \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
     CHECK_NCID                                                          \
-    CHECK_WRITE_PERMISSION                                              \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \
+    CHECK_WRITE_PERMISSION                                              \
+                                                                        \
     GET_TOTAL_NUM_ELEMENTS                                              \
     GET_FULL_DIMENSIONS                                                 \
                                                                         \
@@ -128,9 +130,10 @@ ncmpi_iget_var(int           ncid,
 
     *reqid = NC_REQ_NULL;
     CHECK_NCID
-    CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    CHECK_WRITE_PERMISSION
+
     GET_FULL_DIMENSIONS
 
     /* iget_var is a special case of iget_varm */
@@ -158,6 +161,7 @@ ncmpi_iget_var_##apitype(int    ncid,                                   \
     CHECK_NCID                                                          \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \
+                                                                        \
     GET_TOTAL_NUM_ELEMENTS                                              \
     GET_FULL_DIMENSIONS                                                 \
                                                                         \
