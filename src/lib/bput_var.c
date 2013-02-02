@@ -40,10 +40,11 @@ ncmpi_bput_var(int           ncid,
 
     *reqid = NC_REQ_NULL;
     CHECK_NCID
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
-    CHECK_WRITE_PERMISSION
     if (NC_indef(ncp)) return NC_EINDEFINE;
     CHECK_VARID(varid, varp)
+    CHECK_WRITE_PERMISSION
+
+    if (ncp->abuf == NULL) return NC_ENULLABUF;
     GET_FULL_DIMENSIONS
 
     /* bput_var is a special case of bput_vara */
@@ -70,10 +71,11 @@ ncmpi_bput_var_##apitype(int          ncid,                             \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
     CHECK_NCID                                                          \
-    if (ncp->abuf == NULL) return NC_ENULLABUF;                         \
-    CHECK_WRITE_PERMISSION                                              \
     if (NC_indef(ncp)) return NC_EINDEFINE;                             \
     CHECK_VARID(varid, varp)                                            \
+    CHECK_WRITE_PERMISSION                                              \
+                                                                        \
+    if (ncp->abuf == NULL) return NC_ENULLABUF;                         \
     GET_TOTAL_NUM_ELEMENTS                                              \
     GET_FULL_DIMENSIONS                                                 \
                                                                         \

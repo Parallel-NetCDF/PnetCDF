@@ -12,6 +12,7 @@
 
 #define INDEP_IO 0
 #define COLL_IO  1
+#define INDEP_COLL_IO  -1
 
 #ifndef MAX
 #define MAX(mm,nn) (((mm) > (nn)) ? (mm) : (nn))

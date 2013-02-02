@@ -38,13 +38,13 @@ ncmpi_put_vara##iomode(int               ncid,                   \
     NC_var     *varp;                                            \
                                                                  \
     CHECK_NCID                                                   \
-    CHECK_WRITE_PERMISSION                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    CHECK_VARID(varid, varp)                                     \
+    CHECK_WRITE_PERMISSION                                       \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
                                                                  \
     /* put_vara is a special case of put_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
@@ -73,11 +73,11 @@ ncmpi_get_vara##iomode(int               ncid,                   \
                                                                  \
     CHECK_NCID                                                   \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    CHECK_VARID(varid, varp)                                     \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
                                                                  \
     /* get_vara is a special case of get_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
@@ -104,13 +104,14 @@ ncmpi_put_vara_##apitype(int               ncid,                 \
     MPI_Offset  nelems;                                          \
                                                                  \
     CHECK_NCID                                                   \
-    CHECK_WRITE_PERMISSION                                       \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    CHECK_VARID(varid, varp)                                     \
+    CHECK_WRITE_PERMISSION                                       \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
+                                                                 \
     GET_NUM_ELEMENTS                                             \
                                                                  \
     /* put_vara is a special case of put_vars */                 \
@@ -189,11 +190,12 @@ ncmpi_get_vara_##apitype(int               ncid,                 \
                                                                  \
     CHECK_NCID                                                   \
     if (NC_indef(ncp)) return NC_EINDEFINE;                      \
+    CHECK_VARID(varid, varp)                                     \
     if (collmode == INDEP_IO)                                    \
         CHECK_INDEP_FH                                           \
     else /* collmode == COLL_IO */                               \
         CHECK_COLLECTIVE_FH                                      \
-    CHECK_VARID(varid, varp)                                     \
+                                                                 \
     GET_NUM_ELEMENTS                                             \
                                                                  \
     /* get_vara is a special case of get_vars */                 \
