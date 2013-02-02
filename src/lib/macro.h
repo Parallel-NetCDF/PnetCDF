@@ -207,7 +207,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
     bnelems *= bufcount;                                                      \
                                                                               \
     /* fnelems is the total number of nc_type elements calculated from        \
-     * fcount[]. fcount[] is the access count[ to the variable defined in     \
+     * fcount[]. fcount[] is the access count to the variable defined in      \
      * the netCDF file.                                                       \
      */                                                                       \
     fnelems = 1;                                                              \
