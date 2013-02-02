@@ -68,7 +68,7 @@
           implicit none
 
           character(LEN=128) filename
-          integer err, nprocs, rank, cmode, ncid, varid, dimid(2)
+          integer argc, err, nprocs, rank, cmode, ncid, varid, dimid(2)
           integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
           integer(kind=MPI_OFFSET_KIND) starts(2), counts(2)
           PARAMETER(nx=5, ny=4)
@@ -78,8 +78,15 @@
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
+          ! take filename from command-line argument if there is any
+          argc = IARGC()
+          if (argc .GE. 1) then
+              call getarg(1, filename)
+          else
+              filename  = 'testfile.nc'
+          endif
+
           ! set parameters
-          filename  = 'testfile.nc'
           global_nx = nx
           global_ny = ny * nprocs
 
