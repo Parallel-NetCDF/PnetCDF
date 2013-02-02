@@ -90,7 +90,7 @@ int
 ncmpi_cancel(int  ncid,
              int  num_req,
              int *req_ids,  /* [num_req] */
-             int *statuses) /* [num_req], can be NULL if users don't care */
+             int *statuses) /* [num_req] */
 {
     int status;
     NC *ncp;
@@ -106,9 +106,9 @@ int
 ncmpii_cancel(NC  *ncp,
               int  num_req,
               int *req_ids,  /* [num_req] */
-              int *statuses) /* [num_req], can be NULL if users don't care */
+              int *statuses) /* [num_req] */
 {
-    int i, j;
+    int i, j, status=NC_NOERR;
     NC_req *pre_req, *cur_req;
 
     if (num_req == 0)
@@ -116,16 +116,17 @@ ncmpii_cancel(NC  *ncp,
 
     /* collect the requests from the linked list */
     for (i=0; i<num_req; i++) {
-        if (statuses != NULL)
-            statuses[i] = NC_NOERR;
+        statuses[i] = NC_NOERR;
+
         if (req_ids[i] == NC_REQ_NULL)
             continue;
 
         if (ncp->head == NULL) {
-            printf("Error: ncmpii_cancel() NULL request queue NULL at line %d of %s\n", __LINE__, __FILE__);
-            if (statuses != NULL)
-                statuses[i] = NC_EINVAL_REQUEST;
-            return NC_EINVAL_REQUEST;
+            // printf("Error: ncmpii_cancel() NULL request queue NULL at line %d of %s\n", __LINE__, __FILE__);
+            statuses[i] = NC_EINVAL_REQUEST;
+            if (status == NC_NOERR)
+                status = NC_EINVAL_REQUEST;
+            continue;
         }
 
         pre_req = NULL;
@@ -134,12 +135,15 @@ ncmpii_cancel(NC  *ncp,
             pre_req = cur_req;
             cur_req = cur_req->next;
             if (cur_req == NULL) {
-                printf("Error: ncmpii_cancel() no such request ID = %d\n", req_ids[i]);
-                if (statuses != NULL)
-                    statuses[i] = NC_EINVAL_REQUEST;
-                return NC_EINVAL_REQUEST;
+                // printf("Error: ncmpii_cancel() no such request ID = %d\n", req_ids[i]);
+                statuses[i] = NC_EINVAL_REQUEST;
+                if (status == NC_NOERR)
+                    status = NC_EINVAL_REQUEST;
+                break; /* break while loop */
             }
         }
+        if (cur_req == NULL) continue;
+
         /* found it */
         if (cur_req == ncp->head) /* move cur_req to next */
             ncp->head = cur_req->next;
@@ -155,7 +159,7 @@ ncmpii_cancel(NC  *ncp,
     while (ncp->tail != NULL && ncp->tail->next != NULL)
         ncp->tail = ncp->tail->next;
 
-    return NC_NOERR;
+    return status;
 }
 
 /*----< ncmpi_wait() >--------------------------------------------------------*/
@@ -182,7 +186,7 @@ ncmpi_wait(int ncid,
         err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
         if (status == NC_NOERR) status = err;
     }
-    return status; /* return the first error status, if there is any */
+    return status; /* return the first error encountered */
 #endif
 }
 
@@ -207,6 +211,8 @@ ncmpi_wait_all(int  ncid,
     /* if (num_reqs == 0) return NC_NOERR; */
 
     CHECK_NCID
+    /* TODO: if invalid ncid is passed, CHECK_NCID returns here !
+             this is not good for collective APIs */
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
@@ -228,7 +234,7 @@ ncmpi_wait_all(int  ncid,
     err = ncmpi_end_indep_data(ncid);
     if (status == NC_NOERR) status = err;
 
-    return status; /* return the first error status, if there is any */
+    return status; /* return the first error encountered, if there is any */
 #endif
 }
 
@@ -392,11 +398,12 @@ ncmpii_wait(NC  *ncp,
     j = 0;
     for (i=0; i<num_reqs; i++) {
         statuses[i] = NC_NOERR;
-        if (req_ids[i] == NC_REQ_NULL) /* skip zero-size request */
+        if (req_ids[i] == NC_REQ_NULL) /* skip NULL request */
             continue;
         j++;
     }
-    /* j now is the true number of non-zero length requests */
+    /* j now is the true number of non-NULL requests, but some requests
+       may still be invalid, i.e. no such request IDs */
 
     if (io_method == INDEP_IO && j == 0)
         return NC_NOERR;
@@ -417,8 +424,7 @@ ncmpii_wait(NC  *ncp,
             continue;
 
         if (ncp->head == NULL) { /* this reqeust is invalid */
-            if (statuses != NULL)
-                statuses[i] = NC_EINVAL_REQUEST;
+            statuses[i] = NC_EINVAL_REQUEST;
             /* retain the first error status */
             if (status == NC_NOERR)
                 status = NC_EINVAL_REQUEST;
@@ -434,8 +440,7 @@ ncmpii_wait(NC  *ncp,
             cur_req = cur_req->next;
             if (cur_req == NULL) {
                 // printf("Error: no such request ID = %d\n", req_ids[i]);
-                if (statuses != NULL)
-                    statuses[i] = NC_EINVAL_REQUEST;
+                statuses[i] = NC_EINVAL_REQUEST;
                 /* retain the first error status */
                 if (status == NC_NOERR)
                     status = NC_EINVAL_REQUEST;
