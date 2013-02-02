@@ -1,0 +1,93 @@
+block_cyclic.c
+    This example makes a number of nonblocking API calls, each to write a
+    block of columns into a 2D integer variable in a file. In other words,
+    data partitioning pattern is a block-cyclic along X dimension.
+    The pattern is described by the rank IDs if run with 4 processes.
+
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3,
+        0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3 ;
+
+
+collective_write.c
+    This example defined NUM_VARS 3D integer non-record vaiables in a file.
+    All variables are partitioned among processes in a 3D block-block-block
+    fashion. The I/O is carried out by making NUM_VARS calls to 
+    ncmpi_put_vara_int_all(), one for each variable. Performance measurements
+    are reported in the standard output.
+
+
+column_wise.c
+    This example makes a number of nonblocking API calls, each writes a single
+    column of a 2D integer variable defined in a file. The data partitioning
+    pattern among processes is a cyclic along dimension X, illustrated below
+    by the process rank IDs if run with 4 processes
+
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+       0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3 ;
+
+
+get_info_c.c
+get_info_f.F90
+    These two example progrms print the PnetCDF and MPI-IO hints to the
+    stardard output.
+
+
+mput.c
+    This example shows how to use a single call of ncmpi_mput_vara_all() to
+    write a sequence of requests with arbitrary array indices and lengths.
+    It is intended to run on 4 processes. If more processes were allocated,
+    the extra processes write zero-length requests. The offsets and lengths
+    are just some random numbers to make the output look like:
+
+        3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
+        0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
+        1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
+        0, 0, 0, 2, 1, 1, 1, 3, 3, 3 ;
+
+
+
+nonblocking_write.c
+    This example is almost the same as to collective_write.c but using
+    nonblocking APIs instead.
+
+
+put_vara.F
+    This example shows how to use nfmpi_put_vara_int_all() to write a 2D
+    4-byte integer array in parallel. The data partitioning pattern among
+    processes is a *-block in Fortran order. It is described by the process
+    rank IDs as below if run on 4 processes.
+
+         0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0,
+         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1,
+         1, 1, 1, 1, 1,
+         2, 2, 2, 2, 2,
+         2, 2, 2, 2, 2,
+         2, 2, 2, 2, 2,
+         2, 2, 2, 2, 2,
+         3, 3, 3, 3, 3,
+         3, 3, 3, 3, 3,
+         3, 3, 3, 3, 3,
+         3, 3, 3, 3, 3 ;
+
+
