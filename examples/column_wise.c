@@ -69,7 +69,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
-    int i, j, debug, rank, nprocs, err, myNX, G_NX, myOff;
+    int i, j, debug, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset start[2], count[2];
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     /* the global array is NY * (NX * nprocs) */
     G_NX  = NX * nprocs;
     myOff = NX * rank;
-    myNX   = NX;
+    myNX  = NX;
     if (debug) printf("%2d: myOff=%3d myNX=%3d\n",rank,myOff,myNX);
 
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]);
@@ -129,13 +129,22 @@ int main(int argc, char** argv) {
         printf("%2d: start=%3lld %3lld count=%3lld %3lld\n",
                rank, start[0],start[1], count[0],count[1]);
 
+    num_reqs = 0;
     for (i=0; i<myNX; i++) {
-        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i], &reqs[i]);
+        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i],
+                                  &reqs[num_reqs++]);
         ERR
         start[1] += nprocs;
     }
-    err = ncmpi_wait_all(ncid, myNX, reqs, sts);
+    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
     ERR
+
+    /* check status of all requests */
+    for (i=0; i<num_reqs; i++)
+        if (sts[i] != NC_NOERR)
+            printf("Error: nonblocking write fails on request %d (%s)\n",
+                   i, ncmpi_strerror(sts[i]));
+
     err = ncmpi_close(ncid);
     ERR
 

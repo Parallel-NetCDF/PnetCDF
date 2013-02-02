@@ -80,7 +80,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
-    int i, j, verbose, rank, nprocs, err;
+    int i, j, verbose, rank, nprocs, err, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
     MPI_Offset start[2], count[2];
@@ -141,10 +141,12 @@ int main(int argc, char** argv) {
     block_len   = 2;  /* can be 1, 2, 3, ..., myNX */
     if (block_len > myNX) block_len = myNX;
 
-    start[0]  = 0;   start[1] = rank * block_len;
-    count[0]  = NY;  count[1] = 1;
+    start[0] = 0;   start[1] = rank * block_len;
+    count[0] = NY;  count[1] = 1;
+    num_reqs = 0;
     for (i=0; i<myNX; i++) {
-        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i], &reqs[i]);
+        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i],
+                                  &reqs[num_reqs++]);
         ERR
 
         if (verbose)
@@ -159,8 +161,16 @@ int main(int argc, char** argv) {
         else
             start[1]++;
     }
-    err = ncmpi_wait_all(ncid, myNX, reqs, sts);
+
+    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
     ERR
+
+    /* check status of all requests */
+    for (i=0; i<num_reqs; i++)
+        if (sts[i] != NC_NOERR)
+            printf("Error: nonblocking write fails on request %d (%s)\n",
+                   i, ncmpi_strerror(sts[i]));
+
     err = ncmpi_close(ncid);
     ERR
 
@@ -213,8 +223,10 @@ int main(int argc, char** argv) {
 
     start[0] = 0;          start[1] = rank * block_len;
     count[0] = global_ny;  count[1] = 1;
+    num_reqs = 0;
     for (i=0; i<myNX; i++) {
-        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[i], &reqs[i]);
+        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[i],
+                                  &reqs[num_reqs++]);
         ERR
 
         if (i % block_len == block_len-1)  {
@@ -225,8 +237,15 @@ int main(int argc, char** argv) {
         else
             start[1]++;
     }
-    err = ncmpi_wait_all(ncid, myNX, reqs, sts);
+    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
     ERR
+
+    /* check status of all requests */
+    for (i=0; i<num_reqs; i++)
+        if (sts[i] != NC_NOERR)
+            printf("Error: nonblocking read fails on request %d (%s)\n",
+                   i, ncmpi_strerror(sts[i]));
+
     err = ncmpi_close(ncid);
     ERR
 
