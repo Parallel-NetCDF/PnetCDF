@@ -40,10 +40,7 @@ ncmpi_iput_var1(int               ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_WRITE_PERMISSION
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
 
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
@@ -70,10 +67,7 @@ ncmpi_iput_var1_##apitype(int               ncid,                       \
     MPI_Offset *count;                                                  \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    CHECK_NCID                                                          \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
-    CHECK_WRITE_PERMISSION                                              \
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                              \
                                                                         \
     status = NCcoordck(ncp, varp, start);                               \
     if (status != NC_NOERR) return status;                              \
@@ -130,9 +124,7 @@ ncmpi_iget_var1(int               ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
+    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)
 
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
@@ -158,9 +150,7 @@ ncmpi_iget_var1_##apitype(int               ncid,                       \
     MPI_Offset *count;                                                  \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    CHECK_NCID                                                          \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
+    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)                               \
                                                                         \
     status = NCcoordck(ncp, varp, start);                               \
     if (status != NC_NOERR) return status;                              \

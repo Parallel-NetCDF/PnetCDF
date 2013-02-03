@@ -44,71 +44,45 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
     }                                                                         \
 }
 
-/* API error will terminate the API call, not the entire program */
-#define CHECK_NCID {                                                          \
-    status = ncmpii_NC_check_id(ncid, &ncp);                                  \
-    if (status != NC_NOERR) { /* API error */                                 \
-        /* uncomment to print debug message                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: Invalid ncid(%d) at line %d of %s\n",                    \
-               rank, ncid, __LINE__, __FILE__);                               \
-        */                                                                    \
-        return status; /* return the API now */                                \
-    }                                                                         \
-}
 
-#define CHECK_WRITE_PERMISSION {                                              \
-    if (NC_readonly(ncp)) { /* API error */                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: No file write permission at line %d of %s\n",            \
-               rank, __LINE__, __FILE__);                                     \
-        return NC_EPERM;                                                      \
-    }                                                                         \
-}
-
-#define CHECK_INDEP_FH {                                                      \
-    /* check to see that the independent MPI file handle is opened */         \
-    status =                                                                  \
-    ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh), MPI_COMM_SELF, 0); \
-    if (status != NC_NOERR) {                                                 \
-        /* uncomment to print debug message                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: Error - MPI indep file handle at line %d of %s\n",       \
-               rank, __LINE__, __FILE__);                                     \
-        */                                                                    \
-        return status;  /* return the API now */                               \
-    }                                                                         \
-}
-
-#define CHECK_COLLECTIVE_FH {                                                 \
-    /* check to see that the collective MPI file handle is opened */          \
-    status =                                                                  \
-    ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),ncp->nciop->comm,1); \
-    if (status != NC_NOERR) {                                                 \
-        /* uncomment to print debug message                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: Error - MPI collective file handle at line %d of %s\n",  \
-               rank, __LINE__, __FILE__);                                     \
-        */                                                                    \
-        return status;  /* return the API now */                               \
-    }                                                                         \
-} 
-
-#define CHECK_VARID(varid, varp) {                                            \
-    varp = ncmpii_NC_lookupvar(ncp, varid);                                   \
-    if (varp == NULL) { /* API error */                                       \
-        /* uncomment to print debug message                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: Invalid varid(%d) at line %d of %s\n",                   \
-               rank, varid, __LINE__, __FILE__);                              \
-        */                                                                    \
-        return NC_ENOTVAR;                                                    \
-    }                                                                         \
+#define SANITY_CHECK(rw_flag, io_method) {                                     \
+    int min_st;                                                                \
+                                                                               \
+    /* check if ncid is valid */                                               \
+    status = ncmpii_NC_check_id(ncid, &ncp);                                   \
+    if (status != NC_NOERR)                                                    \
+        /* must return the error now, parallel program might hang */           \
+        return status;                                                         \
+                                                                               \
+    /* check if it is in define mode */                                        \
+    if (NC_indef(ncp)) status = NC_EINDEFINE;                                  \
+                                                                               \
+    /* check if varid is valid */                                              \
+    if (status == NC_NOERR) {                                                  \
+        varp = ncmpii_NC_lookupvar(ncp, varid);                                \
+        if (varp == NULL) status = NC_ENOTVAR;                                 \
+    }                                                                          \
+    /* check file write permission if this is write request */                 \
+    if (status == NC_NOERR) {                                                  \
+        if (rw_flag == WRITE_REQ && NC_readonly(ncp)) status = NC_EPERM;       \
+    }                                                                          \
+    /* check whether collective or independent mode */                         \
+    if (status == NC_NOERR) {                                                  \
+        if (io_method == INDEP_IO)                                             \
+            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),    \
+                                        MPI_COMM_SELF, 0);                     \
+        else if (io_method == COLL_IO)                                         \
+            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),     \
+                                        ncp->nciop->comm, 1);                  \
+        /* else if (io_method == INDEP_COLL_IO) */                             \
+    }                                                                          \
+    if (io_method == COLL_IO)                                                  \
+        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);\
+    else                                                                       \
+        min_st = status;                                                       \
+                                                                               \
+    if (min_st != NC_NOERR)                                                    \
+        return status;                                                         \
 }
 
 #define GET_ONE_COUNT {                                                       \

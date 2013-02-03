@@ -39,10 +39,7 @@ ncmpi_bput_var(int           ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_WRITE_PERMISSION
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     GET_FULL_DIMENSIONS
@@ -70,10 +67,7 @@ ncmpi_bput_var_##apitype(int          ncid,                             \
     MPI_Offset  nelems, *start, *count;                                 \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    CHECK_NCID                                                          \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
-    CHECK_WRITE_PERMISSION                                              \
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                              \
                                                                         \
     if (ncp->abuf == NULL) return NC_ENULLABUF;                         \
     GET_TOTAL_NUM_ELEMENTS                                              \

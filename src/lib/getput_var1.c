@@ -36,11 +36,7 @@ ncmpi_put_var1(int               ncid,
     NC_var     *varp;
     MPI_Offset *count;
 
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_WRITE_PERMISSION
-    CHECK_INDEP_FH
+    SANITY_CHECK(WRITE_REQ, INDEP_IO)
 
     GET_ONE_COUNT
 
@@ -66,11 +62,7 @@ ncmpi_put_var1_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset *count;                                           \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_WRITE_PERMISSION                                       \
-    CHECK_INDEP_FH                                               \
+    SANITY_CHECK(WRITE_REQ, INDEP_IO)                            \
                                                                  \
     GET_ONE_COUNT                                                \
                                                                  \
@@ -124,10 +116,7 @@ ncmpi_get_var1(int               ncid,
     NC_var *varp;
     MPI_Offset *count;
 
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_INDEP_FH
+    SANITY_CHECK(READ_REQ, INDEP_IO)
 
     GET_ONE_COUNT
 
@@ -153,10 +142,7 @@ ncmpi_get_var1_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset *count;                                           \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_INDEP_FH                                               \
+    SANITY_CHECK(READ_REQ, INDEP_IO)                             \
                                                                  \
     GET_ONE_COUNT                                                \
                                                                  \

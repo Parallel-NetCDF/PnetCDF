@@ -374,18 +374,39 @@ ncmpii_mgetput_varm(int                ncid,
                     int                rw_flag,     /* WRITE_REQ or READ_REQ */
                     int                io_method)   /* COLL_IO or INDEP_IO */
 {
-    int i, status=NC_NOERR, *req_ids=NULL, *statuses=NULL;
+    int i, status=NC_NOERR, *req_ids=NULL, *statuses=NULL, min_st;
     NC *ncp=NULL;
 
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    if (rw_flag == WRITE_REQ)
-        CHECK_WRITE_PERMISSION
-    /* check to see that the desired MPI file handle is opened */
+    /* check if ncid is valid */
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        /* must return the error now, parallel program might hang */
+        return status;
+
+    /* check if it is in define mode */
+    if (NC_indef(ncp)) status = NC_EINDEFINE;
+
+    /* check file write permission if this is write request */
+    if (status == NC_NOERR) {
+        if (rw_flag == WRITE_REQ && NC_readonly(ncp)) status = NC_EPERM;
+    }
+    /* check whether collective or independent mode */
+    if (status == NC_NOERR) {
+        if (io_method == INDEP_IO)
+            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
+                                        MPI_COMM_SELF, 0);
+        else if (io_method == COLL_IO)
+            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
+                                        ncp->nciop->comm, 1);
+        /* else if (io_method == INDEP_COLL_IO) */
+    }
     if (io_method == COLL_IO)
-        CHECK_COLLECTIVE_FH
+        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
     else
-        CHECK_INDEP_FH
+        min_st = status;
+
+    if (min_st != NC_NOERR)
+        return status;
   
     if (num > 0) {
         req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));

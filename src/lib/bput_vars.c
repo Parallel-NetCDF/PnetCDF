@@ -41,10 +41,7 @@ ncmpi_bput_vars(int               ncid,
     NC_var *varp;
 
     *reqid = NC_REQ_NULL;
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_WRITE_PERMISSION
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start);
@@ -73,10 +70,7 @@ ncmpi_bput_vars_##apitype(int               ncid,                        \
     MPI_Offset  nelems;                                                  \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
-    CHECK_NCID                                                           \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                              \
-    CHECK_VARID(varid, varp)                                             \
-    CHECK_WRITE_PERMISSION                                               \
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                               \
                                                                          \
     if (ncp->abuf == NULL) return NC_ENULLABUF;                          \
     status = NCcoordck(ncp, varp, start);                                \

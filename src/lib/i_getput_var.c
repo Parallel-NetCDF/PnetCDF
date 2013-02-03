@@ -39,10 +39,7 @@ ncmpi_iput_var(int           ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_WRITE_PERMISSION
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
 
     GET_FULL_DIMENSIONS
 
@@ -69,10 +66,7 @@ ncmpi_iput_var_##apitype(int          ncid,                             \
     MPI_Offset  nelems, *start, *count;                                 \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    CHECK_NCID                                                          \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
-    CHECK_WRITE_PERMISSION                                              \
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                              \
                                                                         \
     GET_TOTAL_NUM_ELEMENTS                                              \
     GET_FULL_DIMENSIONS                                                 \
@@ -129,10 +123,7 @@ ncmpi_iget_var(int           ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_WRITE_PERMISSION
+    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)
 
     GET_FULL_DIMENSIONS
 
@@ -158,9 +149,7 @@ ncmpi_iget_var_##apitype(int    ncid,                                   \
     MPI_Offset  nelems, *start, *count;                                 \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    CHECK_NCID                                                          \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
+    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)                               \
                                                                         \
     GET_TOTAL_NUM_ELEMENTS                                              \
     GET_FULL_DIMENSIONS                                                 \
