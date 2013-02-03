@@ -36,9 +36,9 @@ ncmpi_put_var1(int               ncid,
     NC_var     *varp;
     MPI_Offset *count;
 
-    SANITY_CHECK(WRITE_REQ, INDEP_IO)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_IO, status)
 
-    GET_ONE_COUNT
+    GET_ONE_COUNT(count)
 
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
                                 (void*)buf, bufcount, buftype,
@@ -62,9 +62,9 @@ ncmpi_put_var1_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset *count;                                           \
                                                                  \
-    SANITY_CHECK(WRITE_REQ, INDEP_IO)                            \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_IO, status)   \
                                                                  \
-    GET_ONE_COUNT                                                \
+    GET_ONE_COUNT(count)                                         \
                                                                  \
     /* put_var1 is a special case of put_vars */                 \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
@@ -116,9 +116,9 @@ ncmpi_get_var1(int               ncid,
     NC_var *varp;
     MPI_Offset *count;
 
-    SANITY_CHECK(READ_REQ, INDEP_IO)
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_IO, status)
 
-    GET_ONE_COUNT
+    GET_ONE_COUNT(count)
 
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,
                                 buf, bufcount, buftype,
@@ -142,9 +142,9 @@ ncmpi_get_var1_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset *count;                                           \
                                                                  \
-    SANITY_CHECK(READ_REQ, INDEP_IO)                             \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_IO, status)    \
                                                                  \
-    GET_ONE_COUNT                                                \
+    GET_ONE_COUNT(count)                                         \
                                                                  \
     /* get_var1 is a special case of get_vars */                 \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \

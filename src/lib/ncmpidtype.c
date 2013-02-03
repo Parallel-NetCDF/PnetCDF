@@ -271,15 +271,14 @@ static int ncmpii_darray_get_totalblks(int rank,
   level primitive datatype information.
 
   Input:
-. dtype - The datatype to be decoded (can be predefined type).
+. dtype - The MPI derived datatype to be decoded (can be predefined type).
 
   Output:
-. ptype - The bottom level primitive datatype (only one allowed)
+. ptype - The bottom level primitive datatype (only one allowed) in buftype
 . el_size - The size of the ptype
-. nelems - Number of elements/entries of such ptype
+. nelems - Number of elements/entries of such ptype in one buftype object
 . iscontig_of_ptypes - Whether dtype is a contiguous number of ptype
 @*/
-
 int ncmpii_dtype_decode(MPI_Datatype dtype, 
 			MPI_Datatype *ptype, 
 			int *el_size,

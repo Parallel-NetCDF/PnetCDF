@@ -39,9 +39,9 @@ ncmpi_iput_var(int           ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    GET_FULL_DIMENSIONS
+    GET_FULL_DIMENSIONS(start, count)
 
     /* iput_var is a special case of iput_varm */
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -66,10 +66,10 @@ ncmpi_iput_var_##apitype(int          ncid,                             \
     MPI_Offset  nelems, *start, *count;                                 \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                              \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)     \
                                                                         \
-    GET_TOTAL_NUM_ELEMENTS                                              \
-    GET_FULL_DIMENSIONS                                                 \
+    GET_TOTAL_NUM_ELEMENTS(nelems)                                      \
+    GET_FULL_DIMENSIONS(start, count)                                   \
                                                                         \
     /* iput_var is a special case of iput_varm */                       \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \
@@ -123,9 +123,9 @@ ncmpi_iget_var(int           ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    GET_FULL_DIMENSIONS
+    GET_FULL_DIMENSIONS(start, count)
 
     /* iget_var is a special case of iget_varm */
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -149,10 +149,10 @@ ncmpi_iget_var_##apitype(int    ncid,                                   \
     MPI_Offset  nelems, *start, *count;                                 \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)                               \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)      \
                                                                         \
-    GET_TOTAL_NUM_ELEMENTS                                              \
-    GET_FULL_DIMENSIONS                                                 \
+    GET_TOTAL_NUM_ELEMENTS(nelems)                                      \
+    GET_FULL_DIMENSIONS(start, count)                                   \
                                                                         \
     /* iget_var is a special case of iget_vara */                       \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \

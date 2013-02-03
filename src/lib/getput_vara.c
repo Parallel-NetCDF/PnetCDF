@@ -37,7 +37,7 @@ ncmpi_put_vara##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    SANITY_CHECK(WRITE_REQ, collmode)                            \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
                                                                  \
     /* put_vara is a special case of put_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
@@ -64,7 +64,7 @@ ncmpi_get_vara##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    SANITY_CHECK(READ_REQ, collmode)                             \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
                                                                  \
     /* get_vara is a special case of get_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
@@ -90,9 +90,9 @@ ncmpi_put_vara_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    SANITY_CHECK(WRITE_REQ, collmode)                            \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
                                                                  \
-    GET_NUM_ELEMENTS                                             \
+    GET_NUM_ELEMENTS(nelems)                                     \
                                                                  \
     /* put_vara is a special case of put_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
@@ -168,9 +168,9 @@ ncmpi_get_vara_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    SANITY_CHECK(READ_REQ, collmode)                             \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
                                                                  \
-    GET_NUM_ELEMENTS                                             \
+    GET_NUM_ELEMENTS(nelems)                                     \
                                                                  \
     /* get_vara is a special case of get_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \

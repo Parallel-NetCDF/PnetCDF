@@ -35,9 +35,9 @@ ncmpi_put_var##iomode(int           ncid,                        \
     NC_var     *varp;                                            \
     MPI_Offset *start, *count;                                   \
                                                                  \
-    SANITY_CHECK(WRITE_REQ, collmode)                            \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
                                                                  \
-    GET_FULL_DIMENSIONS                                          \
+    GET_FULL_DIMENSIONS(start, count)                            \
                                                                  \
     /* put_var is a special case of put_vars */                  \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
@@ -67,9 +67,9 @@ ncmpi_get_var##iomode(int           ncid,                        \
     NC_var     *varp;                                            \
     MPI_Offset *start, *count;                                   \
                                                                  \
-    SANITY_CHECK(READ_REQ, collmode)                             \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
                                                                  \
-    GET_FULL_DIMENSIONS                                          \
+    GET_FULL_DIMENSIONS(start, count)                            \
                                                                  \
     /* get_var is a special case of get_vars */                  \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
@@ -97,10 +97,10 @@ ncmpi_put_var_##apitype(int          ncid,                       \
     NC_var     *varp;                                            \
     MPI_Offset  nelems, *start, *count;                          \
                                                                  \
-    SANITY_CHECK(WRITE_REQ, collmode)                            \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
                                                                  \
-    GET_TOTAL_NUM_ELEMENTS                                       \
-    GET_FULL_DIMENSIONS                                          \
+    GET_TOTAL_NUM_ELEMENTS(nelems)                               \
+    GET_FULL_DIMENSIONS(start, count)                            \
                                                                  \
     /* put_var is a special case of put_vars */                  \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \
@@ -177,10 +177,10 @@ ncmpi_get_var_##apitype(int    ncid,                             \
     NC_var     *varp;                                            \
     MPI_Offset  nelems, *start, *count;                          \
                                                                  \
-    SANITY_CHECK(READ_REQ, collmode)                             \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
                                                                  \
-    GET_TOTAL_NUM_ELEMENTS                                       \
-    GET_FULL_DIMENSIONS                                          \
+    GET_TOTAL_NUM_ELEMENTS(nelems)                               \
+    GET_FULL_DIMENSIONS(start, count)                            \
                                                                  \
     /* get_var is a special case of get_vars */                  \
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL,   \

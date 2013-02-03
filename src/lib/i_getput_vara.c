@@ -40,7 +40,7 @@ ncmpi_iput_vara(int               ncid,
     NC_var *varp;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
@@ -67,13 +67,13 @@ ncmpi_iput_vara_##apitype(int               ncid,                      \
     MPI_Offset  nelems;                                                \
                                                                        \
     *reqid = NC_REQ_NULL;                                              \
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                             \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)    \
                                                                        \
     status = NCcoordck(ncp, varp, start);                              \
     if (status != NC_NOERR) return status;                             \
     status = NCedgeck(ncp, varp, start, count);                        \
     if (status != NC_NOERR) return status;                             \
-    GET_NUM_ELEMENTS                                                   \
+    GET_NUM_ELEMENTS(nelems)                                           \
                                                                        \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,    \
                                (void*)op, nelems, buftype, reqid,      \
@@ -123,7 +123,7 @@ ncmpi_iget_vara(int               ncid,
     NC_var *varp;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
@@ -149,13 +149,13 @@ ncmpi_iget_vara_##apitype(int               ncid,                         \
     MPI_Offset  nelems;                                                   \
                                                                           \
     *reqid = NC_REQ_NULL;                                                 \
-    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)                                 \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)        \
                                                                           \
     status = NCcoordck(ncp, varp, start);                                 \
     if (status != NC_NOERR) return status;                                \
     status = NCedgeck(ncp, varp, start, count);                           \
     if (status != NC_NOERR) return status;                                \
-    GET_NUM_ELEMENTS                                                      \
+    GET_NUM_ELEMENTS(nelems)                                              \
                                                                           \
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,       \
                                ip, nelems, buftype, reqid, READ_REQ, 0);  \

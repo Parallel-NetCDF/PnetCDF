@@ -88,7 +88,7 @@ ncmpi_put_varm##iomode(int               ncid,                       \
     NC         *ncp;                                                 \
     NC_var     *varp;                                                \
                                                                      \
-    SANITY_CHECK(WRITE_REQ, collmode)                                \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)       \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               (void*)buf, bufcount, buftype,         \
@@ -116,7 +116,7 @@ ncmpi_get_varm##iomode(int               ncid,                       \
     NC         *ncp;                                                 \
     NC_var     *varp;                                                \
                                                                      \
-    SANITY_CHECK(READ_REQ, collmode)                                 \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)        \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               buf, bufcount, buftype,                \
@@ -143,9 +143,9 @@ ncmpi_put_varm_##apitype(int               ncid,                     \
     NC_var     *varp;                                                \
     MPI_Offset  nelems;                                              \
                                                                      \
-    SANITY_CHECK(WRITE_REQ, collmode)                                \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)       \
                                                                      \
-    GET_NUM_ELEMENTS                                                 \
+    GET_NUM_ELEMENTS(nelems)                                         \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               (void*)op, nelems, mpitype,            \
@@ -222,9 +222,9 @@ ncmpi_get_varm_##apitype(int               ncid,                     \
     NC_var     *varp;                                                \
     MPI_Offset  nelems;                                              \
                                                                      \
-    SANITY_CHECK(READ_REQ, collmode)                                 \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)        \
                                                                      \
-    GET_NUM_ELEMENTS                                                 \
+    GET_NUM_ELEMENTS(nelems)                                         \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               ip, nelems, mpitype,                   \

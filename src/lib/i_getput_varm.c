@@ -57,7 +57,7 @@ ncmpi_iput_varm(int               ncid,
     NC_var *varp;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
@@ -86,17 +86,17 @@ ncmpi_iput_varm_##apitype(int               ncid,                        \
     MPI_Offset  nelems;                                                  \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                               \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)      \
                                                                          \
     status = NCcoordck(ncp, varp, start);                                \
     if (status != NC_NOERR) return status;                               \
     status = NCstrideedgeck(ncp, varp, start, count, stride);            \
     if (status != NC_NOERR) return status;                               \
-    GET_NUM_ELEMENTS                                                     \
+    GET_NUM_ELEMENTS(nelems)                                             \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
                                (void*)op, nelems, buftype, reqid,        \
-                               WRITE_REQ, 0);                               \
+                               WRITE_REQ, 0);                            \
 }
 
 /*----< ncmpi_iput_varm_text() >----------------------------------------------*/
@@ -144,7 +144,7 @@ ncmpi_iget_varm(int               ncid,
     NC_var *varp;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
@@ -172,13 +172,13 @@ ncmpi_iget_varm_##apitype(int               ncid,                        \
     MPI_Offset  nelems;                                                  \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
-    SANITY_CHECK(READ_REQ, INDEP_COLL_IO)                                \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)       \
                                                                          \
     status = NCcoordck(ncp, varp, start);                                \
     if (status != NC_NOERR) return status;                               \
     status = NCstrideedgeck(ncp, varp, start, count, stride);            \
     if (status != NC_NOERR) return status;                               \
-    GET_NUM_ELEMENTS                                                     \
+    GET_NUM_ELEMENTS(nelems)                                             \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
                                ip, nelems, buftype, reqid, READ_REQ, 0); \
@@ -406,7 +406,7 @@ ncmpii_igetput_varm(NC               *ncp,
     err = NCMPII_ECHAR(varp->type, ptype);
     if (err != NC_NOERR) goto err_check;
 
-    CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes)
+    CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes, err)
     /* bnelems now is the number of ptype in the whole buf */
     /* warning is set in CHECK_NELEMS() */
 
@@ -549,8 +549,7 @@ err_check:
                 xbuf = NCI_Malloc(nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
-            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
-            /* err is set in DATATYPE_PUT_CONVERT() */
+            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
             /* retain the first error status */
             if (status == NC_NOERR) status = err;
         }
