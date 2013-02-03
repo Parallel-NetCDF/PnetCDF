@@ -381,30 +381,30 @@ ncmpii_wait(NC  *ncp,
             int *req_ids,   /* [num_reqs] */
             int *statuses)  /* [num_reqs] */
 {
-    int i, j, err=NC_NOERR, status=NC_NOERR, min_st;
+    int i, j, err=NC_NOERR, status=NC_NOERR, fatal_err=NC_NOERR;
     int do_read, do_write, num_w_reqs, num_r_reqs;
     NC_req *pre_req, *cur_req;
     NC_req *w_req_head, *w_req_tail, *r_req_head, *r_req_tail;
 
     /* check if it is in define mode */
-    if (NC_indef(ncp)) status = NC_EINDEFINE;
+    if (NC_indef(ncp)) fatal_err = NC_EINDEFINE;
  
     /* check whether collective or independent mode */
-    if (status == NC_NOERR) {
+    if (fatal_err == NC_NOERR) {
         if (io_method == INDEP_IO)
-            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
-                                        MPI_COMM_SELF, 0);
+            fatal_err = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
+                                           MPI_COMM_SELF, 0);
         else if (io_method == COLL_IO)
-            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
-                                        ncp->nciop->comm, 1);
+            fatal_err = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
+                                           ncp->nciop->comm, 1);
     }
-    if (io_method == COLL_IO)
-        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-    else
-        min_st = status;
-
-    if (min_st != NC_NOERR)
-        return status;
+    if (fatal_err != NC_NOERR) {
+        if (io_method == COLL_IO)
+            num_reqs = 0; /* to skip the following 2 num_reqs loops and jump to
+                             MPI_Allreduce for collectively return */
+        else /* INDEP_IO */
+            return fatal_err;
+    }
 
     /* Note: 1) it is illegal num_reqs is larger than the linked list size
              2) request ids must be distinct
@@ -510,10 +510,14 @@ ncmpii_wait(NC  *ncp,
         ncp->tail = ncp->tail->next;
 
     if (io_method == COLL_IO) {
-        int io_req[2], do_io[2];  /* [0]: do read, [1]: do write */
+        int io_req[3], do_io[3];  /* [0]: read [1]: write [2]: error */
         io_req[0] = num_r_reqs;
         io_req[1] = num_w_reqs;
-        MPI_Allreduce(&io_req, &do_io, 2, MPI_INT, MPI_MAX, ncp->nciop->comm);
+        io_req[2] = -fatal_err;   /* all NC errors are negative */
+        MPI_Allreduce(&io_req, &do_io, 3, MPI_INT, MPI_MAX, ncp->nciop->comm);
+
+        /* if fatal_err occurs, return the API collectively */
+        if (do_io[2] != -NC_NOERR) return fatal_err;
 
         /* make sure if at least one process has a non-zero request, all
            processes participate the collective read/write */
@@ -572,7 +576,7 @@ ncmpii_wait(NC  *ncp,
              */
             void *cbuf, *lbuf;
 
-            if (ncmpii_need_convert(varp->type, ptype) ) {
+            if (ncmpii_need_convert(varp->type, ptype)) {
                 if (cur_req->is_imap || !cur_req->iscontig_of_ptypes)
                     cbuf = NCI_Malloc(fnelems * varp->xsz);
                 else
@@ -626,10 +630,8 @@ ncmpii_wait(NC  *ncp,
 
             if (!cur_req->iscontig_of_ptypes) {
                 /* unpack lbuf to buf based on buftype */
-                err = ncmpii_data_repack(lbuf, bnelems,
-                                         ptype, cur_req->buf,
-                                         cur_req->bufcount,
-                                         cur_req->buftype);
+                err = ncmpii_data_repack(lbuf, bnelems, ptype, cur_req->buf,
+                                         cur_req->bufcount, cur_req->buftype);
                 if (*cur_req->status == NC_NOERR) /* keep the first error */
                     *cur_req->status = err;
                 if (err != NC_NOERR) {
