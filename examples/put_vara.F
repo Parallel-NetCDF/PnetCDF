@@ -68,7 +68,8 @@
           implicit none
 
           character(LEN=128) filename
-          integer argc, err, nprocs, rank, cmode, ncid, varid, dimid(2)
+          integer argc, IARGC, err, nprocs, rank
+          integer cmode, ncid, varid, dimid(2)
           integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
           integer(kind=MPI_OFFSET_KIND) starts(2), counts(2)
           PARAMETER(nx=5, ny=4)

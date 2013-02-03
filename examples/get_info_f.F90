@@ -35,7 +35,7 @@
         use pnetcdf
         implicit none
 
-        integer argc, ncid, rank, info, omode, ierr
+        integer argc, IARGC, ncid, rank, info, omode, ierr
         character(len = 256) :: filename
 
         call MPI_Init(ierr)
