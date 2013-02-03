@@ -172,10 +172,7 @@ ncmpi_wait(int ncid,
            int *req_ids,  /* [num_reqs] */
            int *statuses) /* [num_reqs] */
 {
-#ifndef ENABLE_NONBLOCKING
-    int i;
-#endif
-    int err, status=NC_NOERR;
+    int  status=NC_NOERR;
     NC  *ncp;
 
     if (num_reqs == 0) return NC_NOERR;
@@ -186,6 +183,7 @@ ncmpi_wait(int ncid,
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
+    int i, err, status=NC_NOERR;
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
         err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
         if (status == NC_NOERR) status = err;
@@ -202,12 +200,8 @@ ncmpi_wait_all(int  ncid,
                int *req_ids,  /* [num_reqs] */
                int *statuses) /* [num_reqs] */
 {
-#ifndef ENABLE_NONBLOCKING
-    int  i;
-#endif
-    int err, status=NC_NOERR, min_st;
+    int  status=NC_NOERR;
     NC  *ncp;
-
     /* the following line CANNOT be added, because ncmpi_wait_all() is a
      * collective call, all processes must participate some MPI collective
      * operations used later on.
@@ -215,14 +209,15 @@ ncmpi_wait_all(int  ncid,
     /* if (num_reqs == 0) return NC_NOERR; */
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-    if (min_st != NC_NOERR) return status;
-    /* If ncid on one of the processes is invalid, we collectively return
-       the function with error here. */
+    if (status != NC_NOERR)
+        /* must return the error now, parallel program might hang */
+        return status;
 
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
+    int  i, err;
+
     /* This API is collective, so make it illegal in indep mode. This also
        ensures the program will returns back to collective mode. */
     if (NC_indep(ncp)) return NC_EINDEP;
@@ -386,18 +381,30 @@ ncmpii_wait(NC  *ncp,
             int *req_ids,   /* [num_reqs] */
             int *statuses)  /* [num_reqs] */
 {
-    int i, j, err=NC_NOERR, status=NC_NOERR;
+    int i, j, err=NC_NOERR, status=NC_NOERR, min_st;
     int do_read, do_write, num_w_reqs, num_r_reqs;
     NC_req *pre_req, *cur_req;
     NC_req *w_req_head, *w_req_tail, *r_req_head, *r_req_tail;
 
-    if (NC_indef(ncp)) return NC_EINDEFINE;
+    /* check if it is in define mode */
+    if (NC_indef(ncp)) status = NC_EINDEFINE;
  
-    /* check to see that the desired MPI file handle is opened */
+    /* check whether collective or independent mode */
+    if (status == NC_NOERR) {
+        if (io_method == INDEP_IO)
+            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
+                                        MPI_COMM_SELF, 0);
+        else if (io_method == COLL_IO)
+            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
+                                        ncp->nciop->comm, 1);
+    }
     if (io_method == COLL_IO)
-        CHECK_COLLECTIVE_FH
+        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
     else
-        CHECK_INDEP_FH
+        min_st = status;
+
+    if (min_st != NC_NOERR)
+        return status;
 
     /* Note: 1) it is illegal num_reqs is larger than the linked list size
              2) request ids must be distinct

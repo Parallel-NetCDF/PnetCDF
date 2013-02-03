@@ -40,10 +40,7 @@ ncmpi_bput_var1(int               ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    CHECK_NCID
-    if (NC_indef(ncp)) return NC_EINDEFINE;
-    CHECK_VARID(varid, varp)
-    CHECK_WRITE_PERMISSION
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     GET_ONE_COUNT
@@ -71,10 +68,7 @@ ncmpi_bput_var1_##apitype(int               ncid,                       \
     MPI_Offset *count;                                                  \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    CHECK_NCID                                                          \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                             \
-    CHECK_VARID(varid, varp)                                            \
-    CHECK_WRITE_PERMISSION                                              \
+    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                              \
                                                                         \
     if (ncp->abuf == NULL) return NC_ENULLABUF;                         \
     status = NCcoordck(ncp, varp, start);                               \

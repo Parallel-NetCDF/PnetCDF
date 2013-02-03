@@ -46,14 +46,7 @@ ncmpi_put_vars##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_WRITE_PERMISSION                                       \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(WRITE_REQ, collmode)                            \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               (void*)buf, bufcount, buftype,     \
@@ -80,13 +73,7 @@ ncmpi_get_vars##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(READ_REQ, collmode)                             \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               buf, bufcount, buftype,            \
@@ -113,14 +100,8 @@ ncmpi_put_vars_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_WRITE_PERMISSION                                       \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(WRITE_REQ, collmode)                            \
+                                                                 \
     GET_NUM_ELEMENTS                                             \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
@@ -197,13 +178,7 @@ ncmpi_get_vars_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    CHECK_NCID                                                   \
-    CHECK_VARID(varid, varp)                                     \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(READ_REQ, collmode)                             \
                                                                  \
     GET_NUM_ELEMENTS                                             \
                                                                  \

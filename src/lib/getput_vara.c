@@ -37,14 +37,7 @@ ncmpi_put_vara##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_WRITE_PERMISSION                                       \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(WRITE_REQ, collmode)                            \
                                                                  \
     /* put_vara is a special case of put_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
@@ -71,13 +64,7 @@ ncmpi_get_vara##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(READ_REQ, collmode)                             \
                                                                  \
     /* get_vara is a special case of get_vars */                 \
     return ncmpii_getput_vars(ncp, varp, start, count, NULL,     \
@@ -103,14 +90,7 @@ ncmpi_put_vara_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_WRITE_PERMISSION                                       \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(WRITE_REQ, collmode)                            \
                                                                  \
     GET_NUM_ELEMENTS                                             \
                                                                  \
@@ -188,13 +168,7 @@ ncmpi_get_vara_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(READ_REQ, collmode)                             \
                                                                  \
     GET_NUM_ELEMENTS                                             \
                                                                  \

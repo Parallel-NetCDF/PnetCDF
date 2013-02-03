@@ -35,14 +35,7 @@ ncmpi_put_var##iomode(int           ncid,                        \
     NC_var     *varp;                                            \
     MPI_Offset *start, *count;                                   \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_WRITE_PERMISSION                                       \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(WRITE_REQ, collmode)                            \
                                                                  \
     GET_FULL_DIMENSIONS                                          \
                                                                  \
@@ -74,13 +67,7 @@ ncmpi_get_var##iomode(int           ncid,                        \
     NC_var     *varp;                                            \
     MPI_Offset *start, *count;                                   \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(READ_REQ, collmode)                             \
                                                                  \
     GET_FULL_DIMENSIONS                                          \
                                                                  \
@@ -110,14 +97,7 @@ ncmpi_put_var_##apitype(int          ncid,                       \
     NC_var     *varp;                                            \
     MPI_Offset  nelems, *start, *count;                          \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    CHECK_WRITE_PERMISSION                                       \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(WRITE_REQ, collmode)                            \
                                                                  \
     GET_TOTAL_NUM_ELEMENTS                                       \
     GET_FULL_DIMENSIONS                                          \
@@ -197,13 +177,7 @@ ncmpi_get_var_##apitype(int    ncid,                             \
     NC_var     *varp;                                            \
     MPI_Offset  nelems, *start, *count;                          \
                                                                  \
-    CHECK_NCID                                                   \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                      \
-    CHECK_VARID(varid, varp)                                     \
-    if (collmode == INDEP_IO)                                    \
-        CHECK_INDEP_FH                                           \
-    else /* collmode == COLL_IO */                               \
-        CHECK_COLLECTIVE_FH                                      \
+    SANITY_CHECK(READ_REQ, collmode)                             \
                                                                  \
     GET_TOTAL_NUM_ELEMENTS                                       \
     GET_FULL_DIMENSIONS                                          \

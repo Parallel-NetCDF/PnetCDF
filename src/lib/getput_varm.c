@@ -88,14 +88,7 @@ ncmpi_put_varm##iomode(int               ncid,                       \
     NC         *ncp;                                                 \
     NC_var     *varp;                                                \
                                                                      \
-    CHECK_NCID                                                       \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                          \
-    CHECK_VARID(varid, varp)                                         \
-    CHECK_WRITE_PERMISSION                                           \
-    if (collmode == INDEP_IO)                                        \
-        CHECK_INDEP_FH                                               \
-    else /* collmode == COLL_IO */                                   \
-        CHECK_COLLECTIVE_FH                                          \
+    SANITY_CHECK(WRITE_REQ, collmode)                                \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               (void*)buf, bufcount, buftype,         \
@@ -123,13 +116,7 @@ ncmpi_get_varm##iomode(int               ncid,                       \
     NC         *ncp;                                                 \
     NC_var     *varp;                                                \
                                                                      \
-    CHECK_NCID                                                       \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                          \
-    CHECK_VARID(varid, varp)                                         \
-    if (collmode == INDEP_IO)                                        \
-        CHECK_INDEP_FH                                               \
-    else /* collmode == COLL_IO */                                   \
-        CHECK_COLLECTIVE_FH                                          \
+    SANITY_CHECK(READ_REQ, collmode)                                 \
                                                                      \
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, \
                               buf, bufcount, buftype,                \
@@ -156,14 +143,7 @@ ncmpi_put_varm_##apitype(int               ncid,                     \
     NC_var     *varp;                                                \
     MPI_Offset  nelems;                                              \
                                                                      \
-    CHECK_NCID                                                       \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                          \
-    CHECK_VARID(varid, varp)                                         \
-    CHECK_WRITE_PERMISSION                                           \
-    if (collmode == INDEP_IO)                                        \
-        CHECK_INDEP_FH                                               \
-    else /* collmode == COLL_IO */                                   \
-        CHECK_COLLECTIVE_FH                                          \
+    SANITY_CHECK(WRITE_REQ, collmode)                                \
                                                                      \
     GET_NUM_ELEMENTS                                                 \
                                                                      \
@@ -242,13 +222,7 @@ ncmpi_get_varm_##apitype(int               ncid,                     \
     NC_var     *varp;                                                \
     MPI_Offset  nelems;                                              \
                                                                      \
-    CHECK_NCID                                                       \
-    if (NC_indef(ncp)) return NC_EINDEFINE;                          \
-    CHECK_VARID(varid, varp)                                         \
-    if (collmode == INDEP_IO)                                        \
-        CHECK_INDEP_FH                                               \
-    else /* collmode == COLL_IO */                                   \
-        CHECK_COLLECTIVE_FH                                          \
+    SANITY_CHECK(READ_REQ, collmode)                                 \
                                                                      \
     GET_NUM_ELEMENTS                                                 \
                                                                      \
