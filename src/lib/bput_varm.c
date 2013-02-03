@@ -42,7 +42,7 @@ ncmpi_bput_varm(int               ncid,
     NC_var *varp;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start);
@@ -72,14 +72,14 @@ ncmpi_bput_varm_##apitype(int               ncid,                        \
     MPI_Offset  nelems;                                                  \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                               \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)      \
                                                                          \
     if (ncp->abuf == NULL) return NC_ENULLABUF;                          \
     status = NCcoordck(ncp, varp, start);                                \
     if (status != NC_NOERR) return status;                               \
     status = NCstrideedgeck(ncp, varp, start, count, stride);            \
     if (status != NC_NOERR) return status;                               \
-    GET_NUM_ELEMENTS                                                     \
+    GET_NUM_ELEMENTS(nelems)                                             \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,    \
                                (void*)op, nelems, buftype, reqid,        \

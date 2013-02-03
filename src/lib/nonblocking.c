@@ -580,8 +580,7 @@ ncmpii_wait(NC  *ncp,
 
                 /* type convert + byte swap from xbuf to cbuf */
                 DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf,
-                                     cbuf, cur_req->bnelems, ptype)
-                /* err is set in DATATYPE_GET_CONVERT() */
+                                     cbuf, cur_req->bnelems, ptype, err)
                 /* keep the first error */
                 if (*cur_req->status == NC_NOERR) *cur_req->status = err;
                 if (status == NC_NOERR) status = err;

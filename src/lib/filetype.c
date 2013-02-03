@@ -66,7 +66,8 @@ NCcoordck(NC               *ncp,
 /*      if (*coord > X_INT64_T_MAX)
             return NC_EINVALCOORDS; *//* sanity check */
 
-        if (NC_readonly(ncp) && *coord >= ncp->numrecs) {
+        /* for record variable, [0] is the NC_UNLIMITED dimension */
+        if (NC_readonly(ncp) && coord[0] >= ncp->numrecs) {
             if (!NC_doNsync(ncp))
                 return NC_EINVALCOORDS;
             /* else */
@@ -75,7 +76,7 @@ NCcoordck(NC               *ncp,
                 const int status = ncmpii_read_numrecs(ncp);
                 if (status != NC_NOERR)
                     return status;
-                if (*coord >= ncp->numrecs)
+                if (coord[0] >= ncp->numrecs)
                     return NC_EINVALCOORDS;
             }
         }
@@ -89,7 +90,7 @@ NCcoordck(NC               *ncp,
     }
 
     for (; ip < coord + varp->ndims; ip++, up++) {
-        if ( (*ip <0) || (*ip >= *up) )
+        if ( (*ip < 0) || (*ip >= *up) )
             return NC_EINVALCOORDS;
     }
     return NC_NOERR;
@@ -114,7 +115,7 @@ NCedgeck(const NC         *ncp,
         return NC_NOERR;  /* 'scalar' variable */
 
     if (IS_RECVAR(varp)) {
-        if (start[0] < 0) return(NC_EEDGE);
+        if (start[0] < 0) return NC_EEDGE;
         start++;
         edges++;
         shp++;
@@ -124,7 +125,7 @@ NCedgeck(const NC         *ncp,
     for (; start < end; start++, edges++, shp++) {
         if ( (*shp < 0) || (*edges > *shp) ||
              (*start < 0) || (*start + *edges > *shp))
-            return(NC_EEDGE);
+            return NC_EEDGE;
     }
 
     return NC_NOERR;
@@ -160,7 +161,7 @@ NCstrideedgeck(const NC         *ncp,
             (*edges > *shp) ||
             (*edges > 0 && *start+1 + (*edges-1) * *stride > *shp) ||
             (*edges == 0 && *start > *shp) )
-            return(NC_EEDGE);
+            return NC_EEDGE;
 
         if ( *stride == 0)/* || *stride >= X_INT64_T_MAX)*/
             /* cast needed for braindead systems with signed MPI_Offset */

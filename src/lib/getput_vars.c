@@ -46,7 +46,7 @@ ncmpi_put_vars##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    SANITY_CHECK(WRITE_REQ, collmode)                            \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               (void*)buf, bufcount, buftype,     \
@@ -73,7 +73,7 @@ ncmpi_get_vars##iomode(int               ncid,                   \
     NC         *ncp;                                             \
     NC_var     *varp;                                            \
                                                                  \
-    SANITY_CHECK(READ_REQ, collmode)                             \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               buf, bufcount, buftype,            \
@@ -100,9 +100,9 @@ ncmpi_put_vars_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    SANITY_CHECK(WRITE_REQ, collmode)                            \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
                                                                  \
-    GET_NUM_ELEMENTS                                             \
+    GET_NUM_ELEMENTS(nelems)                                     \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               (void*)op, nelems, mpitype,        \
@@ -178,9 +178,9 @@ ncmpi_get_vars_##apitype(int               ncid,                 \
     NC_var     *varp;                                            \
     MPI_Offset  nelems;                                          \
                                                                  \
-    SANITY_CHECK(READ_REQ, collmode)                             \
+    SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
                                                                  \
-    GET_NUM_ELEMENTS                                             \
+    GET_NUM_ELEMENTS(nelems)                                     \
                                                                  \
     return ncmpii_getput_vars(ncp, varp, start, count, stride,   \
                               ip, nelems, mpitype,               \
@@ -318,7 +318,7 @@ ncmpii_getput_vars(NC               *ncp,
     err = NCMPII_ECHAR(varp->type, ptype);
     if (err != NC_NOERR) goto err_check;   
 
-    CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes)
+    CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes, err)
     /* bnelems now is the number of ptype in the whole buf */
     /* warning is set in CHECK_NELEMS() */
     need_swap = ncmpii_need_swap(varp->type, ptype);
@@ -360,8 +360,7 @@ ncmpii_getput_vars(NC               *ncp,
         if (rw_flag == WRITE_REQ) {
             /* automatic numeric datatype conversion + swap if necessary
                and only xbuf could be byte-swapped, not cbuf */
-            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
-            /* err is set in DATATYPE_PUT_CONVERT() */
+            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
             /* retain the first error status */
             if (status == NC_NOERR) status = err;
         }
@@ -492,8 +491,7 @@ err_check:
     if (rw_flag == READ_REQ) {
         if ( ncmpii_need_convert(varp->type, ptype) ) {
             /* type conversion + swap from xbuf to cbuf*/
-            DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype)
-            /* err is set in DATATYPE_GET_CONVERT() */
+            DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
             /* retain the first error status */
             if (status == NC_NOERR) status = err;
         } else if (need_swap) {

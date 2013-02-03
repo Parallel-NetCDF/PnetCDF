@@ -45,13 +45,14 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
 }
 
 
-#define SANITY_CHECK(rw_flag, io_method) {                                     \
+#define SANITY_CHECK(ncid, ncp, varp, rw_flag, io_method, status) {            \
     int min_st;                                                                \
                                                                                \
     /* check if ncid is valid */                                               \
     status = ncmpii_NC_check_id(ncid, &ncp);                                   \
     if (status != NC_NOERR)                                                    \
-        /* must return the error now, parallel program might hang */           \
+        /* must return error now, collective APIs might hang if error occurs   \
+           only on a subset of processes */                                    \
         return status;                                                         \
                                                                                \
     /* check if it is in define mode */                                        \
@@ -85,14 +86,14 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
         return status;                                                         \
 }
 
-#define GET_ONE_COUNT {                                                       \
+#define GET_ONE_COUNT(count) {                                                \
     int _i;                                                                   \
     count = (MPI_Offset*) NCI_Malloc(varp->ndims * sizeof(MPI_Offset));       \
     for (_i=0; _i<varp->ndims; _i++)                                          \
         count[_i] = 1;                                                        \
 }
 
-#define GET_TOTAL_NUM_ELEMENTS {                                              \
+#define GET_TOTAL_NUM_ELEMENTS(nelems) {                                      \
     int ndims = varp->ndims;                                                  \
     if (ndims == 0)                                                           \
         nelems = 1;                                                           \
@@ -104,14 +105,14 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
         nelems = ncp->numrecs;                                                \
 }
 
-#define GET_NUM_ELEMENTS {                                                    \
+#define GET_NUM_ELEMENTS(nelems) {                                            \
     int _i;                                                                   \
     nelems = 1;                                                               \
     for (_i=0; _i<varp->ndims; _i++)                                          \
         nelems *= count[_i];                                                  \
 }
 
-#define GET_FULL_DIMENSIONS {                                                 \
+#define GET_FULL_DIMENSIONS(start, count) {                                   \
     int _i;                                                                   \
     start = (MPI_Offset*) NCI_Malloc(2 * varp->ndims * sizeof(MPI_Offset));   \
     count = start + varp->ndims;                                              \
@@ -127,51 +128,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
     }                                                                         \
 }
 
-/*
-  ncmpii_dtype_decode - Decode the MPI derived datatype to get the bottom
-  level primitive datatype information.
-
-  Input:
-. buftype - The MPI derived data type to be decoded (can be predefined type).
-
-  Output:
-. ptype - The bottom level MPI primitive datatype (only one allowed) in buftype
-. el_size - The element size in bytes of the ptype
-. nelems - Number of elements/entries of such ptype in one buftype object
-. buftype_is_contig - Whether buftype is a contiguous number of ptype
-*/
-#define CHECK_DATATYPE(buftype, ptype, esize, nelems, buftype_is_contig) {    \
-    int isderived;                                                            \
-    err = ncmpii_dtype_decode(buftype, &(ptype), &(esize), &(nelems),         \
-                              &isderived, &buftype_is_contig);                \
-    if (err != NC_NOERR) { /* API error */                                    \
-        /* uncomment to print debug message                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: buftype decode error at line %d of %s\n",                \
-               rank, __LINE__, __FILE__);                                     \
-        */                                                                    \
-        goto err_check;                                                       \
-        /* cannot return now, for collective call must return collectively */ \
-    }                                                                         \
-}
-
-#define CHECK_ECHAR(varp) {                                                   \
-    /* netcdf makes it illegal to type convert char and numbers */            \
-    if ( ncmpii_echar((varp)->type, ptype) ) { /* API error */                \
-        /* uncomment to print debug message                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: buftype cannot convert to CHAR at line %d of %s\n",      \
-               rank, __LINE__, __FILE__);                                     \
-        */                                                                    \
-        err = NC_ECHAR;                                                       \
-        goto err_check;                                                       \
-        /* cannot return now, for collective call must return collectively */ \
-    }                                                                         \
-}
-
-#define CHECK_NELEMS(varp, fnelems, fcount, bnelems, bufcount, nbytes) {      \
+#define CHECK_NELEMS(varp, fnelems, fcount, bnelems, bufcount, nbytes, err) { \
     int _i;                                                                   \
     /* bnelems is the number of elements in the I/O buffer and the element    \
      * is of MPI primitive type. When input, bnelems is the number of         \
@@ -219,7 +176,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
     }                                                                         \
 }
 
-#define DATATYPE_GET_CONVERT(vartype, inbuf, outbuf, cnelems, memtype) {      \
+#define DATATYPE_GET_CONVERT(vartype, inbuf, outbuf, cnelems, memtype, err) { \
     /* vartype is the variable's data type defined in the nc file             \
      * memtype is the I/O buffers data type (MPI_Datatype)  */                \
     switch(vartype) {                                                         \
@@ -259,7 +216,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
     }                                                                         \
 }
 
-#define DATATYPE_PUT_CONVERT(vartype, outbuf, inbuf, cnelems, memtype) {      \
+#define DATATYPE_PUT_CONVERT(vartype, outbuf, inbuf, cnelems, memtype, err) { \
     /* vartype is the variable's data type defined in the nc file             \
      * memtype is the I/O buffers data type (MPI_Datatype)  */                \
     switch(vartype) {                                                         \

@@ -40,12 +40,12 @@ ncmpi_bput_var1(int               ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    GET_ONE_COUNT
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
+    GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, buftype, reqid,
@@ -68,12 +68,12 @@ ncmpi_bput_var1_##apitype(int               ncid,                       \
     MPI_Offset *count;                                                  \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
-    SANITY_CHECK(WRITE_REQ, INDEP_COLL_IO)                              \
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)     \
                                                                         \
     if (ncp->abuf == NULL) return NC_ENULLABUF;                         \
     status = NCcoordck(ncp, varp, start);                               \
     if (status != NC_NOERR) return status;                              \
-    GET_ONE_COUNT                                                       \
+    GET_ONE_COUNT(count)                                                \
                                                                         \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \
                                  (void*)op, 1, buftype, reqid,          \
