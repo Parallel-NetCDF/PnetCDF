@@ -183,7 +183,7 @@ ncmpi_wait(int ncid,
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
-    int i, err, status=NC_NOERR;
+    int i, err;
     for (i=0; i<num_reqs; i++) { /* serve one request at a time */
         err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
         if (status == NC_NOERR) status = err;
