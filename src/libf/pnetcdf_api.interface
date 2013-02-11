@@ -443,7 +443,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_get_var(ncid, varid, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_var
@@ -451,7 +451,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_get_var_all (ncid, varid, buf, bufcount, datatype)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_var_all
@@ -603,7 +603,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_var1
@@ -740,7 +740,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vara
@@ -750,7 +750,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vara_all
@@ -1016,7 +1016,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vars
@@ -1027,7 +1027,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_vars_all
@@ -1323,7 +1323,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_varm
@@ -1335,7 +1335,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
     END FUNCTION   nfmpi_get_varm_all
@@ -1644,7 +1644,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var(ncid, varid, buf, bufcount, datatype, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
                             INTEGER,                       INTENT(OUT) :: req
@@ -1661,7 +1661,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var_text(ncid, varid, text, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            CHARACTER(len=*),              INTENT(OUT) :: text
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_text
 
@@ -1675,7 +1675,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var_int1(ncid, varid, i1vals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_int1
 
@@ -1689,7 +1689,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var_int2(ncid, varid, i2vals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_int2
 
@@ -1703,7 +1703,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var_int(ncid, varid, ivals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: ivals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_int
 
@@ -1717,7 +1717,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var_real(ncid, varid, rvals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            REAL,                          INTENT(IN)  :: rvals(*)
+                            REAL,                          INTENT(OUT) :: rvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_real
 
@@ -1731,7 +1731,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var_double(ncid, varid, dvals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_double
 
@@ -1745,7 +1745,7 @@ INTERFACE
     INTEGER        FUNCTION nfmpi_iget_var_int8(ncid, varid, i8vals, req)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_int8
 
@@ -1771,7 +1771,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
                             INTEGER,                       INTENT(OUT) :: req
@@ -1914,7 +1914,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
                             INTEGER,                       INTENT(OUT) :: req
@@ -1935,7 +1935,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            CHARACTER(len=*),              INTENT(IN)  :: text
+                            CHARACTER(len=*),              INTENT(OUT) :: text
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_text
 
@@ -1953,7 +1953,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_int1
 
@@ -1971,7 +1971,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_int2
 
@@ -1980,7 +1980,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: ivals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_int
 
@@ -1989,7 +1989,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER,                       INTENT(IN)  :: ivals(*)
+                            INTEGER,                       INTENT(OUT) :: ivals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_int
 
@@ -2007,7 +2007,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            REAL,                          INTENT(IN)  :: rvals(*)
+                            REAL,                          INTENT(OUT) :: rvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_real
 
@@ -2025,7 +2025,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_double
 
@@ -2043,7 +2043,7 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_int8
 
@@ -2073,7 +2073,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
                             INTEGER,                       INTENT(OUT) :: req
@@ -2248,7 +2248,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            <type>,                        INTENT(IN)  :: buf(*)
+                            <type>,                        INTENT(OUT) :: buf(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
                             INTEGER,                       INTENT(IN)  :: datatype
                             INTEGER,                       INTENT(OUT) :: req
@@ -2745,21 +2745,21 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: count
                             INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(IN)  :: status(count)
+                            INTEGER,                       INTENT(OUT) :: status(count)
     END FUNCTION   nfmpi_wait
 
     INTEGER        FUNCTION nfmpi_wait_all(ncid, count, req, status)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: count
                             INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(IN)  :: status(count)
+                            INTEGER,                       INTENT(OUT) :: status(count)
     END FUNCTION   nfmpi_wait_all
 
     INTEGER        FUNCTION nfmpi_cancel(ncid, count, req, status)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: count
                             INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(IN)  :: status(count)
+                            INTEGER,                       INTENT(OUT) :: status(count)
     END FUNCTION   nfmpi_cancel
 
     INTEGER        FUNCTION nfmpi_inq_put_size(ncid, size)
