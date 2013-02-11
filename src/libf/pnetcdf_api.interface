@@ -2764,12 +2764,12 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_inq_put_size(ncid, size)
                             INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: size
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
     END FUNCTION   nfmpi_inq_put_size
 
     INTEGER        FUNCTION nfmpi_inq_get_size(ncid, size)
                             INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: size
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
     END FUNCTION   nfmpi_inq_get_size
 
 END INTERFACE
