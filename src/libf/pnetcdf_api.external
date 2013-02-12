@@ -2406,6 +2406,22 @@
 !                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
       external        nfmpi_inq_get_size
 
+      integer         nfmpi_inq_header_size
+!                            INTEGER,                       INTENT(IN)  :: ncid
+!                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
+      external        nfmpi_inq_header_size
+
+      integer         nfmpi_inq_header_extent
+!                            INTEGER,                       INTENT(IN)  :: ncid
+!                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: extent
+      external        nfmpi_inq_header_extent
+
+      integer         nfmpi_inq_varoffset
+!                            INTEGER,                       INTENT(IN)  :: ncid
+!                            INTEGER,                       INTENT(IN)  :: varid
+!                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: offset
+      external        nfmpi_inq_varoffset
+
 
 !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ! begin netcdf 2.4 backward compatibility:

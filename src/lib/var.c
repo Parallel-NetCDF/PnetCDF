@@ -813,6 +813,9 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
     return NC_NOERR;
 }
 
+/* some utility functions for debugging purpose */
+
+/*----< ncmpi_inq_varoffset() >-----------------------------------------------*/
 int
 ncmpi_inq_varoffset(int         ncid,
                     int         varid, 
@@ -830,14 +833,45 @@ ncmpi_inq_varoffset(int         ncid,
     if (varp == NULL)
         return NC_ENOTVAR;
 
-    if (offset != 0)
+    if (offset != NULL)
         *offset = varp->begin;
 
     return NC_NOERR;
 }
 
-/* some utility functions for debugging purpose */
+/*----< ncmpi_inq_header_extent() >-------------------------------------------*/
+int ncmpi_inq_header_extent(int         ncid,
+                            MPI_Offset *extent)
+{
+    int err;
+    NC *ncp;
+
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) return err;
+
+    *extent = ncp->begin_var;
+
+    return NC_NOERR;
+}
+
+/*----< ncmpi_inq_header_size() >---------------------------------------------*/
+int ncmpi_inq_header_size(int         ncid,
+                          MPI_Offset *size)
+{
+    int err;
+    NC *ncp;
+
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) return err;
+
+    *size = ncp->xsz;
+
+    return NC_NOERR;
+}
+
+
 #include <stdio.h>
+/*----< ncmpi_print_all_var_offsets() >---------------------------------------*/
 int ncmpi_print_all_var_offsets(int ncid) {
     int i;
     NC_var **vpp;

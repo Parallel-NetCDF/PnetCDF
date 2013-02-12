@@ -45,6 +45,10 @@ extern FORTRAN_API int FORT_CALL nfmpi_inq_varndims_ ( int *v1, int *v2, MPI_Fin
 extern FORTRAN_API int FORT_CALL nfmpi_inq_vardimid_ ( int *v1, int *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_varnatts_ ( int *v1, int *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_varoffset_ ( int *v1, int *v2, MPI_Offset*v3 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_put_size_ ( int *v1, MPI_Offset*v2 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_get_size_ ( int *v1, MPI_Offset*v2 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_header_size_ ( int *v1, MPI_Offset*v2 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_header_extent_ ( int *v1, MPI_Offset*v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_att_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4, MPI_Offset*v5 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_attid_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), MPI_Fint *v4 FORT_END_LEN(d3) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_atttype_ ( int *v1, int *v2, char *v3 FORT_MIXED_LEN(d3), int *v4 FORT_END_LEN(d3) );
@@ -337,5 +341,3 @@ extern FORTRAN_API int FORT_CALL nfmpi_bput_varm_int8_ ( int *v1, int *v2, MPI_O
 extern FORTRAN_API int FORT_CALL nfmpi_buffer_attach_ ( int *v1, MPI_Offset *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_buffer_detach_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_buffer_usage_ ( int *v1, MPI_Offset*v2 );
-extern FORTRAN_API int FORT_CALL nfmpi_inq_put_size_ ( int *v1, MPI_Offset*v2 );
-extern FORTRAN_API int FORT_CALL nfmpi_inq_get_size_ ( int *v1, MPI_Offset*v2 );
