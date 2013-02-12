@@ -4,24 +4,12 @@
 # $Id$
 
 # This is a simple script that creates the Fortran interface files.
+# Usually, it is MPICH_DISTRIBUTION/src/binding/f77/buildiface
 # It makes use of an interface builder developed for MPICH2 and a set of 
 # NetCDF-specific descriptions in the file "defs".
-if [ -z "$BUILDIFACE" ] ; then
-    mpich2SourceDir=${MPICH2SRC:-/home/d_cluster/src/MPICH/mpich2-1.2.1}
 
-    if [ ! -d "$mpich2SourceDir" ] ; then
-        echo "Set the environment variable MPICH2SRC to the root directory for mpich2"
-        exit 1
-    fi
-    if [ ! -x $mpich2SourceDir/src/binding/f77/buildiface ] ; then
-        echo "Cannot find $mpich2SourceDir/src/binding/f77/buildiface"
-        exit 1
-    fi
-    BUILDIFACE=$mpich2SourceDir/src/binding/f77/buildiface
-fi
-if [ ! -x $BUILDIFACE ] ; then
-        echo "Cannot find $BUILDIFACE"
-        exit 1
+if [ -z "$BUILDIFACE" ] ; then
+    BUILDIFACE=./buildiface
 fi
 
 # Build the files 

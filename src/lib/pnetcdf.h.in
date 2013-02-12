@@ -395,6 +395,14 @@ int ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
 int ncmpi_inq_varoffset(int ncid, int varid, MPI_Offset *offset);
 
+int ncmpi_inq_put_size(int ncid, MPI_Offset *size);
+
+int ncmpi_inq_get_size(int ncid, MPI_Offset *size);
+
+int ncmpi_inq_header_size(int ncid, MPI_Offset *size);
+
+int ncmpi_inq_header_extent(int ncid, MPI_Offset *extent);
+
 /* End Inquiry Functions */
 
 /* Begin _att */
@@ -2109,9 +2117,6 @@ int ncmpi_mget_varm_all(int ncid, int ntimes, int varids[],
 int ncmpi_buffer_attach(int ncid, MPI_Offset bufsize);
 int ncmpi_buffer_detach(int ncid);
 int ncmpi_inq_buffer_usage(int ncid, MPI_Offset *usage);
-
-int ncmpi_inq_put_size(int ncid, MPI_Offset *size);
-int ncmpi_inq_get_size(int ncid, MPI_Offset *size);
 
 /* End non-blocking data access functions */
 

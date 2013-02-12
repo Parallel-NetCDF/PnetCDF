@@ -2772,5 +2772,21 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
     END FUNCTION   nfmpi_inq_get_size
 
+    INTEGER        FUNCTION nfmpi_inq_header_size(ncid, size)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
+    END FUNCTION   nfmpi_inq_header_size
+
+    INTEGER        FUNCTION nfmpi_inq_header_extent(ncid, extent)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: extent
+    END FUNCTION   nfmpi_inq_header_extent
+
+    INTEGER        FUNCTION nfmpi_inq_varoffset(ncid, varid, offset)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: offset
+    END FUNCTION   nfmpi_inq_varoffset
+
 END INTERFACE
 
