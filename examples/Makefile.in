@@ -18,19 +18,22 @@ C_SRCS		= collective_write.c \
 		  get_info_c.c \
 		  column_wise.c \
 		  block_cyclic.c \
-		  mput.c
+		  mput.c \
+		  hints.c \
+		  flex.c
 
 F90_SRCS	= get_info_f.F90 \
-                  put_vara.F
+                  put_vara.F \
+                  flex_f.F
 
 C_OBJS		= $(C_SRCS:.c=.o)
 F90_OBJS	= $(F90_SRCS:.F90=.o)
 F90FLAGS        = -I$(srcdir)/../src/libf -I../src/libf
 
-PROGS		= collective_write nonblocking_write get_info_c column_wise block_cyclic mput
+PROGS		= collective_write nonblocking_write get_info_c column_wise block_cyclic mput hints flex
 OBJS		= $(C_OBJS)
 ifeq (@has_fortran@, yes)
-PROGS		+= get_info_f put_vara
+PROGS		+= get_info_f put_vara flex_f
 OBJS		+= $(F90_OBJS)
 endif
 
@@ -79,6 +82,18 @@ put_vara: put_vara.o
 
 mput: mput.o
 	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+
+hints: hints.o
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+
+flex: flex.o
+	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+
+flex_f.o: flex_f.F
+	$(COMPILE.F90) $<
+
+flex_f: flex_f.o
+	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 include $(srcdir)/depend
 

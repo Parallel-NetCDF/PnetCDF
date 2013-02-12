@@ -104,4 +104,25 @@ put_vara.F
          3, 3, 3, 3, 3,
          3, 3, 3, 3, 3 ;
 
+hints.c
+    This example sets two PnetCDF hints:
+        nc_header_align_size and
+        nc_var_align_size
+    and prints the hint values, the header size, header extent, and
+    variables' starting file offsets.
+
+
+flex_f.F
+    This example shows how to use PnetCDF nonblocking flexible API,
+    nfmpi_iput_vara() to write a 2D 4-byte integer array in parallel.
+    The local buffer has a ghost cell of length 3 surrounded along each
+    dimension.
+
+
+flex.c
+    This example shows how to use PnetCDF flexible APIs, ncmpi_put_vara_all()
+    and ncmpi_iput_vara() to write two 2D array variables (one is of 4-byte
+    integer byte and the other float type) in parallel.
+    Local buffers have a ghost cell of length 3 surrounded along each
+    dimension.
 
