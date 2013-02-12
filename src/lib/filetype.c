@@ -545,7 +545,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
 
     for (dim=0; dim<varp->ndims && stride[dim]==1; dim++) ;
 
-    if (dim == varp->ndims)
+    if (dim == varp->ndims) /* if stride[] all == 1 */
         return ncmpii_vara_create_filetype(ncp, varp, start, count, rw_flag,
                                            offset_ptr, filetype_ptr);
 

@@ -650,7 +650,7 @@ pack_request(NC               *ncp,
     req->lnelems  = lnelems; /* used only for iget_varm case */
     req->buftype  = buftype;
     req->bufcount = bufcount;
-    req->ptype    = ptype;
+    req->ptype    = ptype;   /* MPI element datatype for the I/O buffer */
     req->next     = NULL;
     req->subreqs     = NULL;
     req->num_subreqs = 0;
