@@ -101,8 +101,8 @@
           ! first initialize the entire buffer to -1
           buf = -1;
           ! assign values for non-ghost cells
-          do j=ghost_len+1, ny+ghost_len+1
-             do i=ghost_len+1, nx+ghost_len+1
+          do j=ghost_len+1, ny+ghost_len
+             do i=ghost_len+1, nx+ghost_len
                  buf(i, j) = rank
              enddo
           enddo
@@ -112,8 +112,8 @@
           array_of_sizes(2)    = ny + 2*ghost_len
           array_of_subsizes(1) = nx
           array_of_subsizes(2) = ny
-          array_of_starts(1)   = ghost_len+1
-          array_of_starts(2)   = ghost_len+1
+          array_of_starts(1)   = ghost_len  ! MPI start index starts with 0
+          array_of_starts(2)   = ghost_len
           call MPI_Type_create_subarray(2, array_of_sizes,
      &         array_of_subsizes, array_of_starts, MPI_ORDER_FORTRAN,
      &         MPI_INT, subarray, err)
