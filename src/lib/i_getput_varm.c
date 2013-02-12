@@ -574,7 +574,7 @@ err_check:
             }
         }
         /* cbuf is no longer needed */
-        if (cbuf != buf) NCI_Free(cbuf);
+        if (cbuf != buf && cbuf != xbuf) NCI_Free(cbuf);
         cbuf = NULL;
     }
     else { /* rw_flag == READ_REQ */
