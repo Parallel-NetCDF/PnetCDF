@@ -128,6 +128,7 @@ ncmpi_iget_var1(int               ncid,
 
     status = NCcoordck(ncp, varp, start);
     if (status != NC_NOERR) return status;
+    if (IS_RECVAR(varp) && start[0] + 1 > NC_get_numrecs(ncp)) return NC_EEDGE;
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL, buf,
@@ -154,6 +155,8 @@ ncmpi_iget_var1_##apitype(int               ncid,                       \
                                                                         \
     status = NCcoordck(ncp, varp, start);                               \
     if (status != NC_NOERR) return status;                              \
+    if (IS_RECVAR(varp) &&                                              \
+        start[0] + 1 > NC_get_numrecs(ncp)) return NC_EEDGE;            \
     GET_ONE_COUNT(count)                                                \
                                                                         \
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,   \

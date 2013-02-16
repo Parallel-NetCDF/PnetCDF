@@ -54,7 +54,7 @@ check_recsize_too_big(NC *ncp)
 int
 NCcoordck(NC               *ncp,
           const NC_var     *varp,
-          const MPI_Offset *coord)
+          const MPI_Offset *coord)  /* i.e. start[] */
 {
     const MPI_Offset *ip;
     MPI_Offset *up;
@@ -106,7 +106,7 @@ int
 NCedgeck(const NC         *ncp,
          const NC_var     *varp,
          const MPI_Offset *start,
-         const MPI_Offset *edges)
+         const MPI_Offset *edges)  /* i.e. count[] */
 {
     const MPI_Offset *const end = start + varp->ndims;
     const MPI_Offset *shp = varp->shape;
@@ -136,7 +136,7 @@ int
 NCstrideedgeck(const NC         *ncp,
                const NC_var     *varp,
                const MPI_Offset *start,
-               const MPI_Offset *edges,
+               const MPI_Offset *edges,  /* i.e. count[] */
                const MPI_Offset *stride)
 {
     const MPI_Offset *const end = start + varp->ndims;
