@@ -132,6 +132,8 @@ ncmpi_iget_vars(int               ncid,
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
+    if (IS_RECVAR(varp) &&
+        start[0] + count[0] > NC_get_numrecs(ncp)) return NC_EEDGE;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                buf, bufcount, buftype, reqid, READ_REQ, 0);
@@ -159,6 +161,8 @@ ncmpi_iget_vars_##apitype(int               ncid,                        \
     if (status != NC_NOERR) return status;                               \
     status = NCstrideedgeck(ncp, varp, start, count, stride);            \
     if (status != NC_NOERR) return status;                               \
+    if (IS_RECVAR(varp) &&                                               \
+        start[0] + count[0] > NC_get_numrecs(ncp)) return NC_EEDGE;      \
     GET_NUM_ELEMENTS(nelems)                                             \
                                                                          \
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,    \
