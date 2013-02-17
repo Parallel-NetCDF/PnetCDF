@@ -2066,7 +2066,6 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
     if (status != NC_NOERR)
         return status;
-    ncp->nciop->get_size += getbuf->get_size;
 
     status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
     if (status != NC_NOERR)
