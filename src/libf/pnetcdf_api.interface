@@ -2790,3 +2790,61 @@ INTERFACE
 
 END INTERFACE
 
+! PnetCDF flexible APIs
+      integer  nfmpi_put_var
+      external nfmpi_put_var
+      integer  nfmpi_put_var1
+      external nfmpi_put_var1
+      integer  nfmpi_put_vara
+      external nfmpi_put_vara
+      integer  nfmpi_put_vars
+      external nfmpi_put_vars
+      integer  nfmpi_put_varm
+      external nfmpi_put_varm
+      integer  nfmpi_get_var
+      external nfmpi_get_var
+      integer  nfmpi_get_var1
+      external nfmpi_get_var1
+      integer  nfmpi_get_vara
+      external nfmpi_get_vara
+      integer  nfmpi_get_vars
+      external nfmpi_get_vars
+      integer  nfmpi_get_varm
+      external nfmpi_get_varm
+      integer  nfmpi_put_var_all
+      external nfmpi_put_var_all
+      integer  nfmpi_put_vara_all
+      external nfmpi_put_vara_all
+      integer  nfmpi_put_vars_all
+      external nfmpi_put_vars_all
+      integer  nfmpi_put_varm_all
+      external nfmpi_put_varm_all
+      integer  nfmpi_get_var_all
+      external nfmpi_get_var_all
+      integer  nfmpi_get_vara_all
+      external nfmpi_get_vara_all
+      integer  nfmpi_get_vars_all
+      external nfmpi_get_vars_all
+      integer  nfmpi_get_varm_all
+      external nfmpi_get_varm_all
+      integer  nfmpi_iput_var
+      external nfmpi_iput_var
+      integer  nfmpi_iput_var1
+      external nfmpi_iput_var1
+      integer  nfmpi_iput_vara
+      external nfmpi_iput_vara
+      integer  nfmpi_iput_vars
+      external nfmpi_iput_vars
+      integer  nfmpi_iput_varm
+      external nfmpi_iput_varm
+      integer  nfmpi_iget_var
+      external nfmpi_iget_var
+      integer  nfmpi_iget_var1
+      external nfmpi_iget_var1
+      integer  nfmpi_iget_vara
+      external nfmpi_iget_vara
+      integer  nfmpi_iget_vars
+      external nfmpi_iget_vars
+      integer  nfmpi_iget_varm
+      external nfmpi_iget_varm
+
