@@ -284,7 +284,7 @@ ncmpii_getput_vars(NC               *ncp,
 {
     void *xbuf=NULL, *cbuf=NULL;
     int el_size, buftype_is_contig, mpireturn, need_swap, is_buf_swapped=0;
-    int isderived, mpi_err;
+    int isderived, mpi_err, int4;
     int warning, err, status; /* err is for API abort and status is not */
     MPI_Offset fnelems, bnelems, nbytes, offset=0;
     MPI_Status mpistatus;
@@ -319,6 +319,12 @@ ncmpii_getput_vars(NC               *ncp,
     if (err != NC_NOERR) goto err_check;   
 
     CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes, err)
+    int4 = nbytes;
+    if (int4 != nbytes) {
+        err = NC_EINTOVERFLOW;
+        if (io_method == INDEP_IO) return err;
+        goto err_check;
+    }
     /* bnelems now is the number of ptype in the whole buf */
     /* warning is set in CHECK_NELEMS() */
     need_swap = ncmpii_need_swap(varp->type, ptype);
