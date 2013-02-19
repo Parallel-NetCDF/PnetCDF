@@ -222,6 +222,8 @@ ncmpi_strerror(int err)
 	    return "Attached buffer is too small.";
 	case NC_ENOENT:
 	    return "The specified netCDF file does not exist when calling ncmpi_open().";
+	case NC_EINTOVERFLOW:
+	    return "Overflow when type cast to 4-byte integer.";
 	
 	default:
 	    return unknown;

@@ -381,6 +381,7 @@ ncmpii_mset_fileview(MPI_File    fh,
                                            displacements,
                                            ftypes,
                                            &filetype);
+        if (err != NC_NOERR) filetype = MPI_BYTE;
         if (status == NC_NOERR) status = err; /* report the first error */
     }
 
@@ -1036,6 +1037,14 @@ ncmpii_getput_merged_requests(NC         *ncp,
 
     assert(nsegs > 0);
 
+    for (i=0; i<nsegs; i++) {
+        int int4 = segs[i].len;
+        if (int4 != segs[i].len) { /* check overflow */
+            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+            segs[i].len = 0; /* skip this reuest */
+        }
+    }
+
     if (io_method == COLL_IO)
         fh = ncp->nciop->collective_fh;
     else
@@ -1060,6 +1069,7 @@ ncmpii_getput_merged_requests(NC         *ncp,
             next_len = segs[i].len;
         }
     }
+
     /* j+1 is the coalesced length */
     blocklengths  = (int*)      NCI_Malloc((j+1) * sizeof(int));;
     displacements = (MPI_Aint*) NCI_Malloc((j+1) * sizeof(MPI_Aint));
@@ -1071,6 +1081,7 @@ ncmpii_getput_merged_requests(NC         *ncp,
         if (displacements[j] + blocklengths[j] == segs[i].off)
             /* j and i are contiguous */
             blocklengths[j] += segs[i].len;
+            /* TODO: take care of 4-byte int overflow problem */
         else {
             j++;
             displacements[j] = segs[i].off;
@@ -1124,6 +1135,7 @@ ncmpii_getput_merged_requests(NC         *ncp,
         if (displacements[j] + blocklengths[j] == segs[i].buf_addr)
             /* j and i are contiguous */
             blocklengths[j] += segs[i].len;
+            /* TODO: take care of 4-byte int overflow problem */
         else {
             j++;
             displacements[j] = segs[i].buf_addr;
@@ -1409,6 +1421,7 @@ ncmpii_mgetput(NC           *ncp,
         int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
         MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
         MPI_Aint a0, ai;
+        MPI_Offset int8;
 
         disps[0] = 0;
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -1416,11 +1429,20 @@ ncmpii_mgetput(NC           *ncp,
 #else 
         MPI_Address(reqs[0].xbuf, &a0);
 #endif
-        blocklengths[0] = reqs[0].fnelems * reqs[0].varp->xsz;
-        for (i=1; i<num_reqs; i++) {/*loop for multi-variables*/
-/* wkliao: type convert from MPI_Offset nbytes[i] to int blocklengths[i]
- *         Can we do someting smarter here ? */
-            blocklengths[i] = reqs[i].fnelems * reqs[i].varp->xsz;
+        /* check int overflow */
+        int8  = reqs[0].fnelems * reqs[0].varp->xsz;
+        blocklengths[0] = int8;
+        if (int8 != blocklengths[0]) {
+            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+            blocklengths[0] = 0; /* skip this request */
+        }
+        for (i=1; i<num_reqs; i++) {
+            int8 = reqs[i].fnelems * reqs[i].varp->xsz;
+            blocklengths[i] = int8;
+            if (int8 != blocklengths[i]) {
+                if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+                blocklengths[i] = 0; /* skip this request */
+            }
 #ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(reqs[i].xbuf, &ai);
 #else
@@ -1429,7 +1451,11 @@ ncmpii_mgetput(NC           *ncp,
             disps[i] = ai - a0;
         }
         /* concatenate buffer addresses into a single buffer type */
+#if (MPI_VERSION < 2)
         MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE, &buf_type);
+#else
+        MPI_Type_create_hindexed(num_reqs, blocklengths, disps, MPI_BYTE, &buf_type);
+#endif
         MPI_Type_commit(&buf_type);
 
         NCI_Free(disps);
