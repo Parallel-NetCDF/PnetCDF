@@ -28,12 +28,13 @@
  *
  *    % mpiexec -l -n 4 hints testfile.nc
  *
- *    nc_header_align_size set to = 1024
- *    nc_var_align_size    set to = 512
- *    header size                 = 252
- *    header extent               = 1024
- *    var_zy start file offset    = 1024
- *    var_yx start file offset    = 3072
+ *    nc_header_align_size      set to = 1024
+ *    nc_var_align_size         set to = 512
+ *    nc_header_read_chunk_size set to = 256
+ *    header size                      = 252
+ *    header extent                    = 1024
+ *    var_zy start file offset         = 1024
+ *    var_yx start file offset         = 3072
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -43,9 +44,10 @@ void print_hints(int ncid,
                  int varid0,
                  int varid1)
 {
-    char h_align[MPI_MAX_INFO_VAL], v_align[MPI_MAX_INFO_VAL];
+    char value[MPI_MAX_INFO_VAL];
     int err, len, flag;
     MPI_Offset header_size, header_extent, var_zy_start, var_yx_start;
+    MPI_Offset h_align, v_align, h_chunk;
     MPI_Info info_used;
 
     err = ncmpi_inq_header_size  (ncid, &header_size);      ERR
@@ -55,17 +57,29 @@ void print_hints(int ncid,
 
     err = ncmpi_get_file_info(ncid, &info_used); ERR
     MPI_Info_get_valuelen(info_used, "nc_header_align_size", &len, &flag);
-    MPI_Info_get(info_used, "nc_header_align_size", len+1, h_align, &flag);
-    MPI_Info_get_valuelen(info_used, "nc_var_align_size", &len, &flag);
-    MPI_Info_get(info_used, "nc_var_align_size", len+1, v_align, &flag);
+    if (flag) {
+        MPI_Info_get(info_used, "nc_header_align_size", len+1, value, &flag);
+        h_align = atoll(value);
+    }
+        MPI_Info_get_valuelen(info_used, "nc_var_align_size", &len, &flag);
+    if (flag) {
+        MPI_Info_get(info_used, "nc_var_align_size", len+1, value, &flag);
+        v_align = atoll(value);
+    }
+    MPI_Info_get_valuelen(info_used, "nc_header_read_chunk_size", &len, &flag);
+    if (flag) {
+        MPI_Info_get(info_used, "nc_header_read_chunk_size", len+1, value,&flag);
+        h_chunk = atoll(value);
+    }
     MPI_Info_free(&info_used);
 
-    printf("nc_header_align_size set to = %s\n",h_align);
-    printf("nc_var_align_size    set to = %s\n",v_align);
-    printf("header size                 = %lld\n",header_size);
-    printf("header extent               = %lld\n",header_extent);
-    printf("var_zy start file offset    = %lld\n",var_zy_start);
-    printf("var_yx start file offset    = %lld\n",var_yx_start);
+    printf("nc_header_align_size      set to = %lld\n", h_align);
+    printf("nc_var_align_size         set to = %lld\n", v_align);
+    printf("nc_header_read_chunk_size set to = %lld\n", h_chunk);
+    printf("header size                      = %lld\n", header_size);
+    printf("header extent                    = %lld\n", header_extent);
+    printf("var_zy start file offset         = %lld\n", var_zy_start);
+    printf("var_yx start file offset         = %lld\n", var_yx_start);
 }
 
 int main(int argc, char** argv) {
@@ -86,8 +100,9 @@ int main(int argc, char** argv) {
     }
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_header_align_size", "1024"); /* size in bytes */
-    MPI_Info_set(info, "nc_var_align_size",    "512");  /* size in bytes */
+    MPI_Info_set(info, "nc_header_align_size",      "1024"); /* size in bytes */
+    MPI_Info_set(info, "nc_var_align_size",         "512");  /* size in bytes */
+    MPI_Info_set(info, "nc_header_read_chunk_size", "256");  /* size in bytes */
     /* note that set the above values to 1 to disable the alignment */
 
     /* create a new file for writing ----------------------------------------*/

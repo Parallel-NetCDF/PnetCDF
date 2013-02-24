@@ -11,22 +11,25 @@
  *
  *    Example standard output:
 
-    MPI File Info: nkeys = 15
-    MPI File Info: [ 0] key =           cb_buffer_size, value = 16777216
-    MPI File Info: [ 1] key =            romio_cb_read, value = automatic
-    MPI File Info: [ 2] key =           romio_cb_write, value = automatic
-    MPI File Info: [ 3] key =                 cb_nodes, value = 1
-    MPI File Info: [ 4] key =        romio_no_indep_rw, value = false
-    MPI File Info: [ 5] key =             romio_cb_pfr, value = disable
-    MPI File Info: [ 6] key =        romio_cb_fr_types, value = aar
-    MPI File Info: [ 7] key =    romio_cb_fr_alignment, value = 1
-    MPI File Info: [ 8] key =    romio_cb_ds_threshold, value = 0
-    MPI File Info: [ 9] key =        romio_cb_alltoall, value = automatic
-    MPI File Info: [10] key =       ind_rd_buffer_size, value = 4194304
-    MPI File Info: [11] key =       ind_wr_buffer_size, value = 524288
-    MPI File Info: [12] key =            romio_ds_read, value = automatic
-    MPI File Info: [13] key =           romio_ds_write, value = automatic
-    MPI File Info: [14] key =           cb_config_list, value = *:1
+    MPI File Info: nkeys = 18
+    MPI File Info: [ 0] key =            cb_buffer_size, value = 16777216
+    MPI File Info: [ 1] key =             romio_cb_read, value = automatic
+    MPI File Info: [ 2] key =            romio_cb_write, value = automatic
+    MPI File Info: [ 3] key =                  cb_nodes, value = 1
+    MPI File Info: [ 4] key =         romio_no_indep_rw, value = false
+    MPI File Info: [ 5] key =              romio_cb_pfr, value = disable
+    MPI File Info: [ 6] key =         romio_cb_fr_types, value = aar
+    MPI File Info: [ 7] key =     romio_cb_fr_alignment, value = 1
+    MPI File Info: [ 8] key =     romio_cb_ds_threshold, value = 0
+    MPI File Info: [ 9] key =         romio_cb_alltoall, value = automatic
+    MPI File Info: [10] key =        ind_rd_buffer_size, value = 4194304
+    MPI File Info: [11] key =        ind_wr_buffer_size, value = 524288
+    MPI File Info: [12] key =             romio_ds_read, value = automatic
+    MPI File Info: [13] key =            romio_ds_write, value = automatic
+    MPI File Info: [14] key =            cb_config_list, value = *:1
+    MPI File Info: [15] key =      nc_header_align_size, value = 512
+    MPI File Info: [16] key =         nc_var_align_size, value = 512
+    MPI File Info: [17] key = nc_header_read_chunk_size, value = 0
  */
 
 #include <stdio.h>
@@ -56,7 +59,7 @@ void print_info(MPI_Info *info_used)
         MPI_Info_get_nthkey(*info_used, i, key);
         MPI_Info_get_valuelen(*info_used, key, &valuelen, &flag);
         MPI_Info_get(*info_used, key, valuelen+1, value, &flag);
-        printf("MPI File Info: [%2d] key = %24s, value = %s\n",i,key,value);
+        printf("MPI File Info: [%2d] key = %25s, value = %s\n",i,key,value);
     }
 }
 
