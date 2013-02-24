@@ -90,6 +90,7 @@ typedef void ncmpiio_freefunc(void *const pvt);
 typedef struct {
     MPI_Offset header_align_size;
     MPI_Offset var_align_size;
+    MPI_Offset header_read_chunk_size;
 } nc_hints;
 
 /*
