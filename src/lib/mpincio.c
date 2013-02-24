@@ -92,19 +92,27 @@ static
 void ncmpiio_extract_hints(ncio     *nciop,
                            MPI_Info  info)
 { 
-    nciop->hints.header_align_size = 0;
-    nciop->hints.var_align_size    = 0;
+    /* value 0 indicates the hint is not set */
+    nciop->hints.header_align_size      = 0;
+    nciop->hints.var_align_size         = 0;
+    nciop->hints.header_read_chunk_size = 0;
 
     /* extract NC hints */
     if (info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int  flag;
 
-        MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
-        if (flag) nciop->hints.header_align_size = atoi(value);
+        MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
+                     &flag);
+        if (flag) nciop->hints.header_align_size = atoll(value);
 
-        MPI_Info_get(info, "nc_var_align_size",    MPI_MAX_INFO_VAL-1, value, &flag);
-        if (flag) nciop->hints.var_align_size = atoi(value);
+        MPI_Info_get(info, "nc_var_align_size",    MPI_MAX_INFO_VAL-1, value,
+                     &flag);
+        if (flag) nciop->hints.var_align_size = atoll(value);
+
+        MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) nciop->hints.header_read_chunk_size = atoll(value);
 
         /* nc_header_align_size and nc_var_align_size take effect when a file
            is created or opened and later adding more header or variable data */
@@ -113,6 +121,8 @@ void ncmpiio_extract_hints(ncio     *nciop,
             nciop->hints.header_align_size = 0;
         if (nciop->hints.var_align_size < 0)
             nciop->hints.var_align_size = 0;
+        if (nciop->hints.header_read_chunk_size < 0)
+            nciop->hints.header_read_chunk_size = 0;
     }
 }
 

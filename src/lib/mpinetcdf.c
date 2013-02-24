@@ -37,7 +37,7 @@ ncmpi_create(MPI_Comm    comm,
              int        *ncidp)
 {
     int status;
-    MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE; /* might be a good thing to hint later */
+    MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
 
     /* check if cmode are consistent across all processes */
@@ -59,6 +59,15 @@ ncmpi_create(MPI_Comm    comm,
         return NC_ECMODE;
     }
     /* if cmodes are inconsistent, then it is a fatal error to continue */
+
+    /* get header chunk size from user info */
+    if (info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int  flag;
+        MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) chunksize = atoll(value);
+    }
 
     /* allocate buffer for header object NC */
     if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) 
@@ -129,8 +138,17 @@ ncmpi_open(MPI_Comm    comm,
 {
     int status = NC_NOERR;
     NC *ncp;
-    MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE; /* might be a good thing to hint later */
+    MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
   
+    /* get header chunk size from user info, if provided */
+    if (info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int  flag;
+        MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) chunksize = atoll(value);
+    }
+
     ncp = ncmpii_new_NC(&chunksize);
     if (ncp == NULL)
         return NC_ENOMEM;
@@ -254,6 +272,9 @@ ncmpi_get_file_info(int       ncid,
 
     sprintf(value, "%lld", ncp->nciop->hints.var_align_size);
     MPI_Info_set(*info_used, "nc_var_align_size", value);
+
+    sprintf(value, "%lld", ncp->nciop->hints.header_read_chunk_size);
+    MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
 
     /* make NC error higher priority than MPI error */
     return (status != NC_NOERR) ? status : mpi_err;
