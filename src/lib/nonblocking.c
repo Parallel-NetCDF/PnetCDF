@@ -161,6 +161,28 @@ ncmpii_cancel(NC  *ncp,
     return status;
 }
 
+/*----< ncmpi_inq_nreqs() >---------------------------------------------------*/
+int
+ncmpi_inq_nreqs(int  ncid,
+                int *nreqs) /* OUT: number of pending requests */
+{
+    int     status;
+    NC     *ncp;
+    NC_req *req_ptr;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    req_ptr = ncp->head;
+    *nreqs = 0;
+    while (req_ptr != NULL) {
+        (*nreqs)++;
+        req_ptr = req_ptr->next;
+    }
+
+    return NC_NOERR;
+}
+
 /*----< ncmpi_wait() >--------------------------------------------------------*/
 /* ncmpi_wait() is an independent call */
 int

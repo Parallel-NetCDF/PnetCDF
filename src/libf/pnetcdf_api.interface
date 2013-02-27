@@ -2788,6 +2788,11 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: offset
     END FUNCTION   nfmpi_inq_varoffset
 
+    INTEGER        FUNCTION nfmpi_inq_nreqs(ncid, nreqs)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(OUT) :: nreqs
+    END FUNCTION   nfmpi_inq_nreqs
+
 END INTERFACE
 
 ! PnetCDF flexible APIs
