@@ -437,16 +437,20 @@ NC_begins(NC         *ncp,
          * requested alignment.  record variables are a bit trickier.
          * we don't do anything special with them */
         ncp->vars.value[i]->begin = D_RNDUP(index, v_align);
-        if (ncp->old != NULL && j < ncp->old->vars.ndefined) {
-            if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
-                /* the first ncp->vars.ndefined non-record variables should be
-                   the same. If the new begin is smaller, use the old begin */
-                ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
 
+        if (ncp->old != NULL) {
             /* move to the next fixed variable */
-            for (j++; j<ncp->old->vars.ndefined; j++)
+            for (; j<ncp->old->vars.ndefined; j++)
                 if (!IS_RECVAR(ncp->old->vars.value[j]))
                     break;
+            if (j < ncp->old->vars.ndefined) {
+                if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
+                    /* the first ncp->vars.ndefined non-record variables should
+                       be the same. If the new begin is smaller, reuse the old
+                       begin */
+                    ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
+                j++;
+            }
         }
         index = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
     }
@@ -492,15 +496,18 @@ NC_begins(NC         *ncp,
          * or with an error in ncmpi_redef )).  Not sufficent to align
          * 'begin', but haven't figured out what else to adjust */
         ncp->vars.value[i]->begin = index;
-        if (ncp->old != NULL && j < ncp->old->vars.ndefined) {
-            if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
-                /* if the new begin is smaller, use the old begin */
-                ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
 
+        if (ncp->old != NULL) {
             /* move to the next record variable */
-            for (j++; j<ncp->old->vars.ndefined; j++)
+            for (; j<ncp->old->vars.ndefined; j++)
                 if (IS_RECVAR(ncp->old->vars.value[j]))
                     break;
+            if (j < ncp->old->vars.ndefined) {
+                if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
+                    /* if the new begin is smaller, use the old begin */
+                    ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
+                j++;
+            }
         }
         index += ncp->vars.value[i]->len;
 
