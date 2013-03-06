@@ -29,6 +29,7 @@ testing:
 	cd common && make  
 	cd C && make testing
 	cd nonblocking && make testing
+	cd testcases && make testing
 	cd nc_test && make testing
 	if [ @has_fortran@ = yes ] ; then cd nf_test && make testing ; fi
 	if [ @has_fortran@ = yes ] ; then cd testcases && make testing-f ; fi
@@ -39,6 +40,7 @@ verbose_testing:
 	cd common && make  
 	cd C && make verbose_testing
 	cd nonblocking && make verbose_testing
+	cd testcases && make verbose_testing
 	cd nc_test && make verbose_testing
 	if [ @has_fortran@ = yes ] ; then cd nf_test && make verbose_testing ; fi
 	if [ @has_fortran@ = yes ] ; then cd testcases && make verbose_testing-f ; fi
