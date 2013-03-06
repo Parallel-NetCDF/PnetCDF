@@ -323,7 +323,9 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     if (status != NC_NOERR) return status;
 
     /* MPI_Offset is usually a signed value, but serial netcdf uses 
-     * MPI_Offset -- normally unsigned */
+     * size_t -- normally unsigned
+     * In 1999 ISO C standard, size_t is a unsigned integer type of at least
+     * 16 bit. */
     if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
         /* CDF2 format and LFS */
         if (size > X_UINT_MAX - 3 || (size < 0)) 

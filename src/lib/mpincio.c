@@ -360,7 +360,7 @@ ncmpiio_move(ncio *const nciop,
 {
     int rank, grpsize, mpireturn;
     void *buf;
-    const MPI_Offset bufsize = 4096;
+    const MPI_Offset bufsize = 4096; /* move chunk size one at a time */
     MPI_Offset movesize, bufcount;
     MPI_Status mpistatus;
 
@@ -423,6 +423,26 @@ ncmpiio_move(ncio *const nciop,
     }
     NCI_Free(buf);
     return NC_NOERR;
+}
+
+/*----< ncmpiio_move_vars() >-------------------------------------------------*/
+/* move one variable at a time, only when the new begin > old begin */
+int
+ncmpiio_move_vars(NC *ncp,
+                  NC *old)
+{
+    int i, err, status=NC_NOERR;
+
+    /* move starting from the last fixed variable */
+    for (i=old->vars.ndefined-1; i>=0; i--) {
+        MPI_Offset from = old->vars.value[i]->begin;
+        MPI_Offset to   = ncp->vars.value[i]->begin;
+        if (to - from > 0) {
+            err = ncmpiio_move(ncp->nciop, to, from, ncp->vars.value[i]->len);
+            if (status == NC_NOERR) status = err;
+        }
+    }
+    return status;
 }
 
 int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
