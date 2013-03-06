@@ -1063,7 +1063,7 @@ ncmpii_NC_enddef(NC *ncp)
                     return status;
                 /* shift non-record variables */
                 // status = move_vars_r(ncp, ncp->old);
-                status = ncmpiio_move_vars(ncp, ncp->old);
+                status = ncmpiio_move_fixed_vars(ncp, ncp->old);
                 if (status != NC_NOERR)
                     return status;
             }
