@@ -73,6 +73,7 @@ ncmpi_create(MPI_Comm    comm,
     if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) 
         return NC_ENOMEM;
 
+    ncp->old = NULL;
     assert(ncp->flags == 0);
 
     /* set the file format version beased on the create mode, cmode */
@@ -152,6 +153,8 @@ ncmpi_open(MPI_Comm    comm,
     ncp = ncmpii_new_NC(&chunksize);
     if (ncp == NULL)
         return NC_ENOMEM;
+
+    ncp->old = NULL;
 
     status = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
     if (status != NC_NOERR) {

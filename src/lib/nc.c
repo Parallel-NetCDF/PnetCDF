@@ -36,7 +36,7 @@ static int move_data_r(NC *ncp, NC *old);
 static int move_recs_r(NC *ncp, NC *old);
 static int move_vars_r(NC *ncp, NC *old);
 static int write_NC(NC *ncp);
-static int NC_begins(NC *ncp);
+static int NC_begins(NC *ncp, MPI_Offset h_align, MPI_Offset v_align);
 static int NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp);
 static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
 
@@ -369,17 +369,14 @@ ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
  *    ncp->recsize               ---- size of 1 record of all record variables
  */
 static int
-NC_begins(NC *ncp)
+NC_begins(NC         *ncp,
+          MPI_Offset  h_align, /* file alignment hint for header */
+          MPI_Offset  v_align) /* file alignment hint for fixed variables */
 {
-    int ii, sizeof_off_t;
-    MPI_Offset max_xsz, h_align, v_align;
+    int i, j, sizeof_off_t;
+    MPI_Offset max_xsz;
     off_t index = 0;
-    NC_var **vpp;
     NC_var *last = NULL;
-
-    /* file alignment hints for the header and non-record variables */
-    h_align = ncp->nciop->hints.header_align_size; 
-    v_align = ncp->nciop->hints.var_align_size; 
 
     /* sizeof_off_t is for the variable's "begin" in the header */
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET) ||
@@ -391,15 +388,15 @@ NC_begins(NC *ncp)
     /* get the true header size (un-aligned one) */
     ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
-    if (ncp->vars.ndefined == 0) /* no variable has been defined */
-        return NC_NOERR;
-
     /* Since it is allowable to have incocnsistent header's metadata,
        header sizes, ncp->xsz, may be different among processes.
        Hence, we need to use the max size among all processes to make
        sure everyboday has the same size of reserved space for header */
     MPI_Allreduce(&ncp->xsz, &max_xsz, 1, MPI_LONG_LONG_INT, MPI_MAX,
                   ncp->nciop->comm);
+
+    if (ncp->vars.ndefined == 0) /* no variable has been defined */
+        return NC_NOERR;
 
     /* NC_begins is called at ncmpi_enddef(), which can be in either
      * creating a new file or opening an existing file with metadata modified.
@@ -414,28 +411,43 @@ NC_begins(NC *ncp)
     /* if the existing begin_var is already >= max_xsz, then leave the
        begin_var as is (in case some header data is deleted) */
 
+    if (ncp->old != NULL) {
+        /* check whether the new begin_var is smaller */
+        if (ncp->begin_var < ncp->old->begin_var)
+            ncp->begin_var = ncp->old->begin_var;
+    }
+
     index = ncp->begin_var;
     /* this is the aligned starting file offset for the first variable,
        also the reserved size for header */
 
     /* Now find the starting file offsets for all variables.
        loop thru vars, first pass is for the 'non-record' vars */
-    vpp = ncp->vars.value;
-    for (ii=0; ii<ncp->vars.ndefined ; ii++, vpp++) {
-        if (IS_RECVAR(*vpp))
+    j = 0;
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        if (IS_RECVAR(ncp->vars.value[i]))
             /* skip record variables on this pass */
             continue;
-#if 0
-fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
-#endif
+
+        /* for CDF-1 check if over the file size limit */
         if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
             return NC_EVARSIZE;
 
         /* this will pad out non-record variables with zero to the
          * requested alignment.  record variables are a bit trickier.
          * we don't do anything special with them */
-        (*vpp)->begin = D_RNDUP(index, v_align);
-        index = (*vpp)->begin + (*vpp)->len;
+        ncp->vars.value[i]->begin = D_RNDUP(index, v_align);
+        if (ncp->old != NULL && j < ncp->old->vars.ndefined) {
+            if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
+                /* the first ncp->vars.ndefined non-record variables should be
+                   the same. If the new begin is smaller, use the old begin */
+                ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
+            /* move to the next fixed variable */
+            for (j++; j<ncp->old->vars.ndefined; j++)
+                if (!IS_RECVAR(ncp->old->vars.value[j]))
+                    break;
+        }
+        index = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
     }
     /* index now is pointing to the end of non-record variables */
 
@@ -449,6 +461,12 @@ fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
         ncp->begin_rec != D_RNDUP(ncp->begin_rec, v_align))
         ncp->begin_rec = D_RNDUP(index, v_align);
 
+    if (ncp->old != NULL) {
+        /* check whether the new begin_rec is smaller */
+        if (ncp->begin_rec < ncp->old->begin_rec)
+            ncp->begin_rec = ncp->old->begin_rec;
+    }
+
     index = ncp->begin_rec;
     /* index now is pointing to the beginning of record variables
      * note that this can be larger than the end of all non-record variables
@@ -459,9 +477,9 @@ fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
     /* TODO: alignment for record variables (maybe using a new hint) */
 
     /* loop thru vars, second pass is for the 'record' vars */
-    vpp = (NC_var **)ncp->vars.value;
-    for (ii=0; ii<ncp->vars.ndefined; ii++, vpp++) {
-        if (!IS_RECVAR(*vpp))
+    j = 0;
+    for (i=0; i<ncp->vars.ndefined; i++) {
+        if (!IS_RECVAR(ncp->vars.value[i]))
             /* skip non-record variables on this pass */
             continue;
 
@@ -472,16 +490,26 @@ fprintf(stderr, "    VAR %lld %s: %lld\n", ii, (*vpp)->name->cp, index);
          * (either with range error or 'value read not that expected',
          * or with an error in ncmpi_redef )).  Not sufficent to align
          * 'begin', but haven't figured out what else to adjust */
-        (*vpp)->begin = index;
-        index += (*vpp)->len;
+        ncp->vars.value[i]->begin = index;
+        if (ncp->old != NULL && j < ncp->old->vars.ndefined) {
+            if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
+                /* f the new begin is smaller, use the old begin */
+                ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
+
+            /* move to the next fixed variable */
+            for (j++; j<ncp->old->vars.ndefined; j++)
+                if (IS_RECVAR(ncp->old->vars.value[j]))
+                    break;
+        }
+        index += ncp->vars.value[i]->len;
 
         /* check if record size must fit in 32-bits */
 #if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
-        if (ncp->recsize > X_UINT_MAX - (*vpp)->len)
+        if (ncp->recsize > X_UINT_MAX - ncp->vars.value[i]->len)
             return NC_EVARSIZE;
 #endif
-        ncp->recsize += (*vpp)->len;
-        last = (*vpp);
+        ncp->recsize += ncp->vars.value[i]->len;
+        last = ncp->vars.value[i];
     }
 
 /* below is only needed if alignment is performed on record variables */
@@ -954,27 +982,35 @@ ncmpii_NC_enddef(NC *ncp)
 
     if (striping_unit && all_var_size > HEADER_ALIGNMENT_LB * striping_unit) {
         /* if system's file striping is available and the size of all
-           avaiables meets the header alignment lower bound */
+           variables meets the header alignment lower bound */
         if (h_align == 0)       /* has not been set by user */
             h_align = striping_unit;
-        else if (h_align != 1)  /* user indicates no alignment */
-            h_align = D_RNDUP(h_align, striping_unit);
+        else if (h_align == 1)  /* user indicates no alignment */
+            h_align = 4;
+        else if (h_align > 1)  /* user indicates customized alignment */
+            h_align = D_RNDUP(h_align, 4);
 
         if (v_align == 0)       /* has not been set by user */
             v_align = striping_unit;
-        else if (v_align != 1)  /* user indicates no alignment */
-            v_align = striping_unit;
+        else if (v_align == 1)  /* user indicates no alignment */
+            v_align = 4;
+        else if (v_align > 1)  /* user indicates customized alignment */
+            v_align = D_RNDUP(h_align, 4);
     }
     else {
         if (h_align == 0)  /* header_align_size is not set at create time */
             h_align = DEFAULT_ALIGNMENT;
+        else if (h_align == 1)  /* user indicates no alignment */
+            h_align = 4;
         else if (h_align > 1) /* make sure header_align_size is aligned */
-            h_align = D_RNDUP(h_align, DEFAULT_ALIGNMENT);
+            h_align = D_RNDUP(h_align, 4);
 
         if (v_align == 0)  /* var_align_size is not set at create time */
             v_align = DEFAULT_ALIGNMENT;
+        else if (v_align == 1)  /* user indicates no alignment */
+            v_align = 4;
         else if (v_align > 1) /* make sure var_align_size is aligned */
-            v_align = D_RNDUP(v_align, DEFAULT_ALIGNMENT);
+            v_align = D_RNDUP(v_align, 4);
     }
 
     /* adjust the hints to be used by PnetCDF */
@@ -993,10 +1029,11 @@ ncmpii_NC_enddef(NC *ncp)
      *         status = NC_check_vlens(ncp);
      * To be updated */
 
-    /* Compute each variable's 'begin' file offset and offset for record
-     * variables as well.
+    /* When ncp->old == NULL, compute each variable's 'begin' file offset
+     * and offset for record variables as well. Otherwise, re-used all
+     * variable offsets as possible
      */
-    NC_begins(ncp);
+    NC_begins(ncp, h_align, v_align);
  
     if (ncp->old != NULL) {
         /* the current define mode was entered from ncmpi_redef,
@@ -1017,7 +1054,8 @@ ncmpii_NC_enddef(NC *ncp)
                 if (status != NC_NOERR)
                     return status;
                 /* shift non-record variables */
-                status = move_vars_r(ncp, ncp->old);
+                // status = move_vars_r(ncp, ncp->old);
+                status = ncmpiio_move_vars(ncp, ncp->old);
                 if (status != NC_NOERR)
                     return status;
             }
