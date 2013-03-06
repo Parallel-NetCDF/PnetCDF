@@ -24,8 +24,8 @@ CXXFLAGS        = @CFLAGS@ $(INCLUDES)
 
 SRCS		= $(srcdir)/ncmpi_vars_null_stride.c $(srcdir)/vecors.c \
 			$(srcdir)/bigrecords.F $(srcdir)/collective_error.c \
-			$(srcdir)/test_varm.c
-PROGS		= ncmpi_vars_null_stride vectors bigrecords redef1 collective_error test_varm
+			$(srcdir)/test_varm.c $(srcdir)/alignment_test.c
+PROGS		= ncmpi_vars_null_stride vectors bigrecords redef1 collective_error test_varm alignment_test
 LDFLAGS		= -L$(LIBDIR) @LDFLAGS@
 LIBS		= -lpnetcdf @LIBS@
 
@@ -57,16 +57,20 @@ collective_error: collective_error.o
 test_varm: test_varm.o
 	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
 
+alignment_test: alignment_test.o
+	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
+
 clean:
 	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
 
 distclean: clean
 	$(RM) -f Makefile
 
-test: ncmpi_vars_null_stride vectors test_varm
+test: ncmpi_vars_null_stride vectors test_varm alignment_test
 	./ncmpi_vars_null_stride test.nc && echo '*** ncmpi_vars_null_stride: Success ***'
 	./vectors && echo '*** vectors: Success ***'
 	./test_varm && echo '*** test_varm: Success ***'
+	./alignment_test testfile.nc && echo '*** alignment_test: Success ***'
 
 testing-cxx: redef1
 	$(srcdir)/redef1.sh ./redef1  $(srcdir)/redef-good.ncdump && echo '*** redef1: Success ***'
