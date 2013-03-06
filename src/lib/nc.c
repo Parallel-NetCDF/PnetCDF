@@ -442,6 +442,7 @@ NC_begins(NC         *ncp,
                 /* the first ncp->vars.ndefined non-record variables should be
                    the same. If the new begin is smaller, use the old begin */
                 ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
+
             /* move to the next fixed variable */
             for (j++; j<ncp->old->vars.ndefined; j++)
                 if (!IS_RECVAR(ncp->old->vars.value[j]))
@@ -493,10 +494,10 @@ NC_begins(NC         *ncp,
         ncp->vars.value[i]->begin = index;
         if (ncp->old != NULL && j < ncp->old->vars.ndefined) {
             if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
-                /* f the new begin is smaller, use the old begin */
+                /* if the new begin is smaller, use the old begin */
                 ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
 
-            /* move to the next fixed variable */
+            /* move to the next record variable */
             for (j++; j<ncp->old->vars.ndefined; j++)
                 if (IS_RECVAR(ncp->old->vars.value[j]))
                     break;
