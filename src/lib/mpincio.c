@@ -425,16 +425,18 @@ ncmpiio_move(ncio *const nciop,
     return NC_NOERR;
 }
 
-/*----< ncmpiio_move_vars() >-------------------------------------------------*/
-/* move one variable at a time, only when the new begin > old begin */
+/*----< ncmpiio_move_fixed_vars() >-------------------------------------------*/
+/* move one fixed variable at a time, only when the new begin > old begin */
 int
-ncmpiio_move_vars(NC *ncp,
-                  NC *old)
+ncmpiio_move_fixed_vars(NC *ncp,
+                        NC *old)
 {
     int i, err, status=NC_NOERR;
 
     /* move starting from the last fixed variable */
     for (i=old->vars.ndefined-1; i>=0; i--) {
+        if (IS_RECVAR(old->vars.value[i])) continue;
+
         MPI_Offset from = old->vars.value[i]->begin;
         MPI_Offset to   = ncp->vars.value[i]->begin;
         if (to - from > 0) {
