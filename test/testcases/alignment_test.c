@@ -60,16 +60,22 @@ int main(int argc, char** argv) {
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
     err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[1]); ERR
 
+#define TEST_FIXED_VAR
+#define TEST_RECORD_VAR
     /* Odd numbers are fixed variables, even numbers are record variables */
     for (i=0; i<NVARS; i++) {
+#ifdef TEST_FIXED_VAR
         if (i%2) {
             sprintf(str,"fixed_var_%d",i);
             err = ncmpi_def_var(ncid, str, NC_INT, 1, dimid+1, &varid[i]); ERR
         }
-        else {
+#endif
+#ifdef TEST_RECORD_VAR
+        if (i%2 == 0) {
             sprintf(str,"record_var_%d",i);
             err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &varid[i]); ERR
         }
+#endif
     }
     err = ncmpi_enddef(ncid); ERR
 
@@ -77,12 +83,15 @@ int main(int argc, char** argv) {
     buf = (int*) malloc(NX * sizeof(int));
     for (i=0; i<NVARS; i++) {
         for (j=0; j<NX; j++) buf[j] = rank*1000 + i*10 + j;
+#ifdef TEST_FIXED_VAR
         if (i%2) {
             start[0] = NX*rank;
             count[0] = NX;
             err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
         }
-        else {
+#endif
+#ifdef TEST_RECORD_VAR
+        if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
             err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
@@ -90,6 +99,7 @@ int main(int argc, char** argv) {
             start[0] = 1; /* write 2nd record */
             err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); ERR
         }
+#endif
     }
     err = ncmpi_close(ncid); ERR
 
@@ -98,7 +108,7 @@ int main(int argc, char** argv) {
     /* mimic netCDF that does not do alignments */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_header_align_size", "1"); /* size in bytes */
-    MPI_Info_set(info, "nc_var_align_size",    "1"); /* size in bytes */
+    MPI_Info_set(info, "nc_var_align_size",    "197"); /* size in bytes */
 
     /* open the file for adding more metadata */
     err = ncmpi_open(MPI_COMM_WORLD, argv[1], NC_WRITE, info, &ncid); ERR
@@ -107,7 +117,15 @@ int main(int argc, char** argv) {
     err = ncmpi_inq_header_size(ncid, &header_size[0]); ERR
     err = ncmpi_inq_header_extent(ncid, &header_extent[0]); ERR
     for (i=0; i<NVARS; i++) {
-        err = ncmpi_inq_varoffset(ncid, varid[i], &old_var_off[i]); ERR
+#ifdef TEST_FIXED_VAR
+        if (i%2)
+            err = ncmpi_inq_varoffset(ncid, varid[i], &old_var_off[i]);
+#endif
+#ifdef TEST_RECORD_VAR
+        if (i%2==0)
+            err = ncmpi_inq_varoffset(ncid, varid[i], &old_var_off[i]);
+#endif
+        ERR
     }
 
     /* enter redef mode */
@@ -116,7 +134,15 @@ int main(int argc, char** argv) {
     /* add attributes to make header grow */
     for (i=0; i<NVARS; i++) {
         sprintf(str, "annotation_for_var_%d",i);
-        err = ncmpi_put_att_text(ncid, varid[i], "text_attr", strlen(str), str); ERR
+#ifdef TEST_FIXED_VAR
+        if (i%2)
+            err = ncmpi_put_att_text(ncid, varid[i], "text_attr", strlen(str), str);
+#endif
+#ifdef TEST_RECORD_VAR
+        if (i%2==0)
+            err = ncmpi_put_att_text(ncid, varid[i], "text_attr", strlen(str), str);
+#endif
+        ERR
     }
 
     /* add new dimensions */
@@ -128,14 +154,18 @@ int main(int argc, char** argv) {
     /* add new variables */
     int new_varid[NVARS];
     for (i=0; i<NVARS; i++) {
-        if (i%2) {
-            sprintf(str,"record_var_%d",i+NVARS);
-            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &new_varid[i]); ERR
-        }
-        else {
+#ifdef TEST_FIXED_VAR
+        if (i%2 == 0) {
             sprintf(str,"fixed_var_%d",i+NVARS);
             err = ncmpi_def_var(ncid, str, NC_INT, 1, new_dimid+2, &new_varid[i]); ERR
         }
+#endif
+#ifdef TEST_RECORD_VAR
+        if (i%2 == 1) {
+            sprintf(str,"record_var_%d",i+NVARS);
+            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &new_varid[i]); ERR
+        }
+#endif
     }
     err = ncmpi_enddef(ncid); ERR
 
@@ -147,20 +177,45 @@ int main(int argc, char** argv) {
         printf("NX = %d (integer type)\n",NX);
         printf("old header_size  =%lld new header_size  =%lld\n",header_size[0],header_size[1]);
         printf("old header_extent=%lld new header_extent=%lld\n",header_extent[0],header_extent[1]);
-        for (i=0; i<2*NVARS; i++) {
-            int vid = (i < NVARS) ? varid[i] : new_varid[i-NVARS];
-            err = ncmpi_inq_varoffset(ncid, vid, &new_var_off[i]); ERR
-            if (i < NVARS)
-                printf("var[%2d] old offset=%4lld new offset=%4lld\n",i,old_var_off[i],new_var_off[i]);
-            else
-                printf("var[%2d] additional new offset=%4lld\n",i,new_var_off[i]);
+
+#ifdef TEST_FIXED_VAR
+        for (i=1; i<NVARS; i+=2) {
+            err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); ERR
+            printf("old fixed  var[%2d] old offset=%4lld new offset=%4lld\n",i,old_var_off[i],new_var_off[i]);
         }
+        for (i=NVARS; i<2*NVARS; i++) {
+            if (i%2 == 0) {
+                err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); ERR
+                printf("new fixed  var[%2d]                 new offset=%4lld\n",i,new_var_off[i]);
+            }
+        }
+#endif
+#ifdef TEST_RECORD_VAR
+        for (i=0; i<NVARS; i+=2) {
+            err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); ERR
+            printf("old record var[%2d] old offset=%4lld new offset=%4lld\n",i,old_var_off[i],new_var_off[i]);
+        }
+        for (i=NVARS; i<2*NVARS; i++) {
+            if (i%2) {
+                err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); ERR
+                printf("new record var[%2d]                 new offset=%4lld\n",i,new_var_off[i]);
+            }
+        }
+#endif
     }
 
     /* write to the new variables */
     for (i=0; i<NVARS; i++) {
         for (j=0; j<NX; j++) buf[j] = -1 * (i*10 + j);
-        if (i%2) {
+#ifdef TEST_FIXED_VAR
+        if (i%2 == 0) {
+            start[0] = NX*rank;
+            count[0] = NX;
+            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
+        }
+#endif
+#ifdef TEST_RECORD_VAR
+        if (i%2 == 1) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
             err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
@@ -168,15 +223,12 @@ int main(int argc, char** argv) {
             start[0] = 1; /* write 2nd record */
             err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
         }
-        else {
-            start[0] = NX*rank;
-            count[0] = NX;
-            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); ERR
-        }
+#endif
     }
 
     /* read old variables and check their contents */
     for (i=0; i<NVARS; i++) {
+#ifdef TEST_FIXED_VAR
         if (i%2) {
             start[0] = NX*rank;
             count[0] = NX;
@@ -187,7 +239,9 @@ int main(int argc, char** argv) {
                     nfailed++;
                 }
         }
-        else {
+#endif
+#ifdef TEST_RECORD_VAR
+        if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
             err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); ERR
@@ -204,16 +258,15 @@ int main(int argc, char** argv) {
                     nfailed++;
                 }
         }
+#endif
     }
     err = ncmpi_close(ncid); ERR
     MPI_Info_free(&info);
 
     free(buf);
     MPI_Reduce(&nfailed, &nfailed_all, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (rank == 0 && verbose) {
-        if (nfailed_all == 0) printf("alignment test (%s) --- passed\n",argv[0]);
-        else printf("alignment test (%s) failed with %d mismatches\n",argv[0],nfailed_all);
-    }
+    if (rank == 0 && nfailed_all > 0)
+        printf("alignment test (%s) failed with %d mismatches\n",argv[0],nfailed_all);
     MPI_Finalize();
     return 0;
 }
