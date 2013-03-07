@@ -894,15 +894,16 @@ ncmpii_NC_check_vlens(NC *ncp)
     MPI_Offset ii;
     MPI_Offset large_vars_count;
     MPI_Offset rec_vars_count;
-    int last=-1;
+    int last = 0;
 
     if(ncp->vars.ndefined == 0) 
        return NC_NOERR;
 
+    if ((ncp->flags & NC_64BIT_DATA) && sizeof(off_t) > 4)
+       return NC_NOERR;
+
     if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
        /* CDF2 format and LFS */
-       vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
-    } else if ((ncp->flags & NC_64BIT_DATA) && sizeof(off_t) > 4) {
        vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
     } else {
        /* CDF1 format */
@@ -989,42 +990,33 @@ ncmpii_NC_enddef(NC *ncp)
     for (i=0; i<ncp->vars.ndefined; i++)
         all_var_size += ncp->vars.value[i]->len;
 
-    /* initialize file align sizes for file header space and variables */
+    /* align file offsets for file header space and fixed variables */
     h_align = ncp->nciop->hints.header_align_size;
     v_align = ncp->nciop->hints.var_align_size;
 
-    if (striping_unit && all_var_size > HEADER_ALIGNMENT_LB * striping_unit) {
-        /* if system's file striping is available and the size of all
-           variables meets the header alignment lower bound */
-        if (h_align == 0)      /* has not been set by user */
+    if (h_align == 0) { /* user does not set hint header_align_size */
+        if (striping_unit &&
+            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+            /* if striping_unit is available and file size sufficiently large */
             h_align = striping_unit;
-        else if (h_align == 1) /* user indicates no alignment */
-            h_align = 4;       /* CDF formats require 4-bytes alignment */
-        else if (h_align > 1)  /* user indicates customized alignment */
-            h_align = D_RNDUP(h_align, 4);
-
-        if (v_align == 0)      /* has not been set by user */
-            v_align = striping_unit;
-        else if (v_align == 1) /* user indicates no alignment */
-            v_align = 4;       /* CDF formats require 4-bytes alignment */
-        else if (v_align > 1)  /* user indicates customized alignment */
-            v_align = D_RNDUP(h_align, 4);
-    }
-    else {
-        if (h_align == 0)      /* header_align_size is not set at create time */
+        else
             h_align = DEFAULT_ALIGNMENT;
-        else if (h_align == 1) /* user indicates no alignment */
-            h_align = 4;       /* CDF formats require 4-bytes alignment */
-        else if (h_align > 1)  /* make sure header_align_size is aligned */
-            h_align = D_RNDUP(h_align, 4);
-
-        if (v_align == 0)      /* var_align_size is not set at create time */
-            v_align = DEFAULT_ALIGNMENT;
-        else if (v_align == 1) /* user indicates no alignment */
-            v_align = 4;       /* CDF formats require 4-bytes alignment */
-        else if (v_align > 1)  /* make sure var_align_size is aligned */
-            v_align = D_RNDUP(v_align, 4);
     }
+    /* else respect user hint */
+
+    if (v_align == 0) { /* user does not set hint var_align_size */
+        if (striping_unit &&
+            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+            /* if striping_unit is available and file size sufficiently large */
+            v_align = striping_unit;
+        else
+            v_align = DEFAULT_ALIGNMENT;
+    }
+    /* else respect user hint */
+
+    /* all CDF formats require 4-bytes alignment */
+    h_align = D_RNDUP(h_align, 4);
+    v_align = D_RNDUP(v_align, 4);
 
     /* adjust the hints to be used by PnetCDF */
     ncp->nciop->hints.header_align_size = h_align;
@@ -1044,7 +1036,7 @@ ncmpii_NC_enddef(NC *ncp)
 
     /* When ncp->old == NULL, compute each variable's 'begin' file offset
      * and offset for record variables as well. Otherwise, re-used all
-     * variable offsets as possible
+     * variable offsets as many as possible
      */
     NC_begins(ncp, h_align, v_align);
  
