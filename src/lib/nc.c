@@ -377,6 +377,7 @@ NC_begins(NC         *ncp,
     MPI_Offset max_xsz;
     off_t index = 0;
     NC_var *last = NULL;
+    NC_var *first_var = NULL;       /* first "non-record" var */
 
     /* sizeof_off_t is for the variable's "begin" in the header */
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET) ||
@@ -394,9 +395,6 @@ NC_begins(NC         *ncp,
        sure everyboday has the same size of reserved space for header */
     MPI_Allreduce(&ncp->xsz, &max_xsz, 1, MPI_LONG_LONG_INT, MPI_MAX,
                   ncp->nciop->comm);
-
-    if (ncp->vars.ndefined == 0) /* no variable has been defined */
-        return NC_NOERR;
 
     /* NC_begins is called at ncmpi_enddef(), which can be in either
      * creating a new file or opening an existing file with metadata modified.
@@ -428,6 +426,7 @@ NC_begins(NC         *ncp,
         if (IS_RECVAR(ncp->vars.value[i]))
             /* skip record variables on this pass */
             continue;
+        if (first_var == NULL) first_var = ncp->vars.value[i];
 
         /* for CDF-1 check if over the file size limit */
         if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
@@ -454,6 +453,7 @@ NC_begins(NC         *ncp,
         }
         index = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
     }
+
     /* index now is pointing to the end of non-record variables */
 
     /* only (re)calculate begin_rec if there is not sufficient
@@ -471,6 +471,11 @@ NC_begins(NC         *ncp,
         if (ncp->begin_rec < ncp->old->begin_rec)
             ncp->begin_rec = ncp->old->begin_rec;
     }
+
+    if (first_var != NULL)
+        ncp->begin_var = first_var->begin;
+    else
+        ncp->begin_var = ncp->begin_rec;
 
     index = ncp->begin_rec;
     /* index now is pointing to the beginning of record variables
@@ -991,33 +996,33 @@ ncmpii_NC_enddef(NC *ncp)
     if (striping_unit && all_var_size > HEADER_ALIGNMENT_LB * striping_unit) {
         /* if system's file striping is available and the size of all
            variables meets the header alignment lower bound */
-        if (h_align == 0)       /* has not been set by user */
+        if (h_align == 0)      /* has not been set by user */
             h_align = striping_unit;
-        else if (h_align == 1)  /* user indicates no alignment */
-            h_align = 4;
+        else if (h_align == 1) /* user indicates no alignment */
+            h_align = 4;       /* CDF formats require 4-bytes alignment */
         else if (h_align > 1)  /* user indicates customized alignment */
             h_align = D_RNDUP(h_align, 4);
 
-        if (v_align == 0)       /* has not been set by user */
+        if (v_align == 0)      /* has not been set by user */
             v_align = striping_unit;
-        else if (v_align == 1)  /* user indicates no alignment */
-            v_align = 4;
+        else if (v_align == 1) /* user indicates no alignment */
+            v_align = 4;       /* CDF formats require 4-bytes alignment */
         else if (v_align > 1)  /* user indicates customized alignment */
             v_align = D_RNDUP(h_align, 4);
     }
     else {
-        if (h_align == 0)  /* header_align_size is not set at create time */
+        if (h_align == 0)      /* header_align_size is not set at create time */
             h_align = DEFAULT_ALIGNMENT;
-        else if (h_align == 1)  /* user indicates no alignment */
-            h_align = 4;
-        else if (h_align > 1) /* make sure header_align_size is aligned */
+        else if (h_align == 1) /* user indicates no alignment */
+            h_align = 4;       /* CDF formats require 4-bytes alignment */
+        else if (h_align > 1)  /* make sure header_align_size is aligned */
             h_align = D_RNDUP(h_align, 4);
 
-        if (v_align == 0)  /* var_align_size is not set at create time */
+        if (v_align == 0)      /* var_align_size is not set at create time */
             v_align = DEFAULT_ALIGNMENT;
-        else if (v_align == 1)  /* user indicates no alignment */
-            v_align = 4;
-        else if (v_align > 1) /* make sure var_align_size is aligned */
+        else if (v_align == 1) /* user indicates no alignment */
+            v_align = 4;       /* CDF formats require 4-bytes alignment */
+        else if (v_align > 1)  /* make sure var_align_size is aligned */
             v_align = D_RNDUP(v_align, 4);
     }
 
