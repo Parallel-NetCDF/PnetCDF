@@ -48,10 +48,11 @@ usage(void)
   [-n name]        Name for netCDF (default derived from file name)\n\
   [-p n[,n]]       Display floating-point values with less precision\n\
   [-V]             Print the file format (CDF-1, CDF-2, or CDF-5)\n\
+  [-k]             Print kind of file (classic, 64-bit offset, or 64-bit data)\n\
   file             File name of input netCDF file\n"
 
     fprintf(stderr,
-           "%s [-c|-h] [-v ...] [[-b|-f] [c|f]] [-l len] [-n name] [-p n[,n]] file\n%s",
+           "%s [-c|-h] [-v ...] [[-b|-f] [c|f]] [-l len] [-n name] [-p n[,n]] [-k] [-V] file\n%s",
            progname, USAGE);
     
     fprintf(stderr, "netcdf library version %s\n", ncmpi_inq_libvers());
@@ -390,6 +391,13 @@ do_ncdump(const char *path, struct fspec* specp)
             Printf ("%s file format: CDF-2 (large file)\n", specp->name);
         else
             Printf ("%s file format: CDF-1\n", specp->name);
+    } else if (specp->kind) {
+        if (NC_mode == NC_64BIT_DATA) 
+            Printf ("64-bit data\n");
+        else if (NC_mode == NC_64BIT_OFFSET) 
+            Printf ("64-bit offset\n");
+        else
+            Printf ("classic\n");
     } else {
         Printf ("netcdf %s {\n", specp->name);
 
@@ -657,6 +665,7 @@ main(int argc, char *argv[])
       0,            /* construct netcdf name from file name */
       false,        /* print header info only, no data? */
       false,        /* print CDF version, no data, no header */
+      false,        /* print file kind, no data, no header */
       false,        /* just print coord vars? */
       false,        /* brief  comments in data section? */
       false,        /* full annotations in data section?  */
@@ -675,13 +684,16 @@ main(int argc, char *argv[])
     progname = argv[0];
     set_formats(FLT_DIGITS, DBL_DIGITS); /* default for float, double data */
 
-    while ((c = getopt(argc, argv, "b:cf:hVl:n:v:d:p:")) != EOF)
+    while ((c = getopt(argc, argv, "b:cf:hVkl:n:v:d:p:")) != EOF)
         switch(c) {
             case 'h':        /* dump header only, no data */
                 fspec.header_only = true;
                 break;
             case 'V':        /* dump CDF version, no data, no header */
                 fspec.version = true;
+                break;
+            case 'k':        /* dump CDF version, no data, no header */
+                fspec.kind = true;
                 break;
             case 'c':        /* header, data only for coordinate dims */
                 fspec.coord_vals = true;

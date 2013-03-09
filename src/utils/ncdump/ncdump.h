@@ -52,7 +52,8 @@ struct fspec {			/* specification for how to format dump */
 
     boolean header_only;	/* if true, don't print any variable data */
 
-    boolean version;	       /* if true, print version*/
+    boolean version;	       /* if true, print version */
+    boolean kind;	       /* if true, print kind of file format */
 
     boolean coord_vals;		/* if true, print header and coordinate
 				 * dimension values (values of variables
