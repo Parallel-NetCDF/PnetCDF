@@ -32,6 +32,36 @@ static int ncmpii_wait_getput(NC *ncp, int num_reqs, NC_req *req_head,
 static int ncmpii_mgetput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
                           int io_method);
 
+/*----< ncmpii_getput_zero_req() >--------------------------------------------*/
+/* For simply participate collective calls, this is called only when in
+   collective data mode */
+static int
+ncmpii_getput_zero_req(NC  *ncp,
+                       int  rw_flag)     /* WRITE_REQ or READ_REQ */
+{
+    int mpireturn, mpi_err=NC_NOERR;
+    MPI_Status mpistatus;
+    MPI_File fh;
+
+    fh = ncp->nciop->collective_fh;
+
+    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+    if (rw_flag == READ_REQ) {
+        mpireturn = MPI_File_read_all(fh, NULL, 0, MPI_BYTE, &mpistatus);
+        CHECK_MPI_ERROR(mpireturn, "MPI_File_read_all", NC_EREAD)
+
+    } else { /* WRITE_REQ */
+        mpireturn = MPI_File_write_all(fh, NULL, 0, MPI_BYTE, &mpistatus);
+        CHECK_MPI_ERROR(mpireturn, "MPI_File_write_all", NC_EWRITE)
+    }
+
+    /* reset fileview so the entire file is visible again */
+    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+    return mpi_err;
+}
+
 /*----< ncmpii_abuf_free() >--------------------------------------------------*/
 static int
 ncmpii_abuf_free(NC *ncp, void *buf)
@@ -121,7 +151,6 @@ ncmpii_cancel(NC  *ncp,
             continue;
 
         if (ncp->head == NULL) {
-            // printf("Error: ncmpii_cancel() NULL request queue NULL at line %d of %s\n", __LINE__, __FILE__);
             statuses[i] = NC_EINVAL_REQUEST;
             if (status == NC_NOERR)
                 status = NC_EINVAL_REQUEST;
@@ -134,7 +163,6 @@ ncmpii_cancel(NC  *ncp,
             pre_req = cur_req;
             cur_req = cur_req->next;
             if (cur_req == NULL) {
-                // printf("Error: ncmpii_cancel() no such request ID = %d\n", req_ids[i]);
                 statuses[i] = NC_EINVAL_REQUEST;
                 if (status == NC_NOERR)
                     status = NC_EINVAL_REQUEST;
@@ -259,52 +287,19 @@ ncmpi_wait_all(int  ncid,
 #endif
 }
 
-/*----< ncmpii_create_filetype() >----------------------------------------------*/
-/* create a filetype for the request */
+/*----< ncmpii_concatenate_datatypes() >--------------------------------------*/
 static int
-ncmpii_create_filetype(NC           *ncp, 
-                       NC_req       *req,
-                       int           rw_flag,
-                       MPI_Datatype *filetype,
-                       int          *blocklength,
-                       MPI_Offset   *displacement) /* should be MPI_Aint */
-{
-    int i, status;
-
-    *filetype = MPI_BYTE;
-    status = ncmpii_vars_create_filetype(ncp,
-                                         req->varp,
-                                         req->start,
-                                         req->count,
-                                         req->stride,
-                                         rw_flag,
-                                         displacement,
-                                         filetype);
-
-    /* TODO: should use req->ptype, instead of MPI_BYTE */
-    *blocklength = 1;
-    if (*filetype == MPI_BYTE) { /* file type is contiguous in file */
-        *blocklength = req->varp->xsz;
-        for (i=0; i<req->varp->ndims; i++)
-            *blocklength *= req->count[i];
-    }
-
-    return status;
-}
-
-/*----< ncmpii_concatenate_filetypes() >--------------------------------------*/
-static int
-ncmpii_concatenate_filetypes(NC           *ncp, 
+ncmpii_concatenate_datatypes(NC           *ncp, 
                              int           num, 
                              int          *blocklens,     /* IN: [num] */
                              MPI_Offset   *displacements, /* IN: [num] */
-                             MPI_Datatype *ftypes,        /* IN: [num] */
-                             MPI_Datatype *filetype)      /* OUT: */
+                             MPI_Datatype *dtypes,        /* IN: [num] */
+                             MPI_Datatype *datatype)      /* OUT: */
 {
     int i, mpireturn, mpi_err=NC_NOERR, free_addrs=0;
     MPI_Aint *addrs;
 
-    *filetype = MPI_BYTE;
+    *datatype = MPI_BYTE;
 
     if (num <= 0) return NC_NOERR;
 
@@ -328,37 +323,35 @@ ncmpii_concatenate_filetypes(NC           *ncp,
         addrs = (MPI_Aint*) displacements; /* cast ok: types same size */
     }
 #if (MPI_VERSION < 2)
-    mpireturn = MPI_Type_struct(num, blocklens, addrs, ftypes, filetype);
+    mpireturn = MPI_Type_struct(num, blocklens, addrs, dtypes, datatype);
 #else
-    mpireturn = MPI_Type_create_struct(num, blocklens, addrs, ftypes, filetype);
+    mpireturn = MPI_Type_create_struct(num, blocklens, addrs, dtypes, datatype);
 #endif
     CHECK_MPI_ERROR(mpireturn, "MPI_Type_create_struct", NC_EFILE)
 
-    MPI_Type_commit(filetype);
+    MPI_Type_commit(datatype);
 
     if (free_addrs) NCI_Free(addrs);
 
     return mpi_err;
 }
 
-/*----< ncmpii_mset_fileview() >----------------------------------------------*/
-/* concatenate the filetypes of all requests and set the fileview */
+/*----< ncmpii_construct_filetypes() >----------------------------------------*/
+/* concatenate the filetypes of all requests */
 static int
-ncmpii_mset_fileview(MPI_File    fh,
-                     NC         *ncp, 
-                     int         num_reqs, 
-                     NC_req     *reqs,       /* [num_reqs] */
-                     int         rw_flag) 
+ncmpii_construct_filetypes(NC           *ncp, 
+                           int           num_reqs, 
+                           NC_req       *reqs,      /* [num_reqs] */
+                           int           rw_flag,
+                           MPI_Datatype *filetype)  /* OUT */
 {
-    int i, err, status=NC_NOERR, mpireturn, mpi_err=NC_NOERR, *blocklens;
-    MPI_Datatype filetype, *ftypes;
+    int i, err, status=NC_NOERR, mpi_err=NC_NOERR, *blocklens;
+    MPI_Datatype *ftypes;
     MPI_Offset *displacements;
 
-    if (num_reqs <= 0) { /* participate collective call */
-        mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                      MPI_INFO_NULL);
-        CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE);
-        return mpi_err;
+    if (num_reqs <= 0) { /* for participating collective call */
+        *filetype = MPI_BYTE;
+        return NC_NOERR;;
     }
 
     /* hereinafter, num_reqs > 0 */
@@ -375,7 +368,7 @@ ncmpii_mset_fileview(MPI_File    fh,
                                           reqs[i].count,
                                           reqs[i].stride,
                                           rw_flag,
-                                          &displacements[i],
+                                          &displacements[i], /* to offset 0 */
                                           &ftypes[i]);
         if (*reqs[i].status == NC_NOERR) *reqs[i].status = err;
         if (status == NC_NOERR) status = err; /* report the first error */
@@ -393,36 +386,94 @@ ncmpii_mset_fileview(MPI_File    fh,
     if (status != NC_NOERR) {
         /* even if error occurs, we still must participate the collective
            call to MPI_File_set_view() */
-        filetype = MPI_BYTE;
+        *filetype = MPI_BYTE;
     }
     else {
         /* all ftypes[] created fine, now concatenate all ftypes[] */
-        err = ncmpii_concatenate_filetypes(ncp, 
+        err = ncmpii_concatenate_datatypes(ncp, 
                                            num_reqs,
                                            blocklens,
                                            displacements,
                                            ftypes,
-                                           &filetype);
-        if (err != NC_NOERR) filetype = MPI_BYTE;
+                                           filetype);
+        if (err != NC_NOERR) *filetype = MPI_BYTE;
         if (status == NC_NOERR) status = err; /* report the first error */
     }
 
-    mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, filetype, "native",
-                                  MPI_INFO_NULL);
-    CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE)
-
-    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
     for (i=0; i<num_reqs; i++) {
         if (ftypes[i] != MPI_BYTE)
             MPI_Type_free(&ftypes[i]);
     }
-
     NCI_Free(ftypes);
     NCI_Free(displacements);
     NCI_Free(blocklens);
 
     /* make NC error higher priority than MPI error */
     return (status != NC_NOERR) ? status : mpi_err;
+}
+
+/*----< ncmpii_construct_buffertypes() >--------------------------------------*/
+/* the input requests, reqs[], are non-interleaving requests */
+static int
+ncmpii_construct_buffertypes(NC           *ncp,
+                             int           num_reqs,
+                             NC_req       *reqs,         /* [num_reqs] */
+                             MPI_Datatype *buffer_type)  /* OUT */
+{
+    int i, status=NC_NOERR, mpireturn, mpi_err=NC_NOERR;
+
+    *buffer_type = MPI_BYTE;
+    if (num_reqs == 0) return NC_NOERR;
+
+    /* create the I/O buffer derived data type */
+    int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
+    MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
+    MPI_Aint a0, ai;
+    MPI_Offset int8;
+
+    disps[0] = 0;
+#ifdef HAVE_MPI_GET_ADDRESS
+    MPI_Get_address(reqs[0].xbuf, &a0);
+#else 
+    MPI_Address(reqs[0].xbuf, &a0);
+#endif
+    /* check int overflow */
+    int8  = reqs[0].fnelems * reqs[0].varp->xsz;
+    blocklengths[0] = int8;
+    if (int8 != blocklengths[0]) {
+        if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+        blocklengths[0] = 0; /* skip this request */
+    }
+    for (i=1; i<num_reqs; i++) {/*loop for multi-variables*/
+        int8 = reqs[i].fnelems * reqs[i].varp->xsz;
+        blocklengths[i] = int8;
+        if (int8 != blocklengths[i]) {
+            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+            blocklengths[i] = 0; /* skip this request */
+        }
+#ifdef HAVE_MPI_GET_ADDRESS
+        MPI_Get_address(reqs[i].xbuf, &ai);
+#else
+	MPI_Address(reqs[i].xbuf, &ai);
+#endif
+        disps[i] = ai - a0;
+    }
+    /* concatenate buffer addresses into a single buffer type */
+#if (MPI_VERSION < 2)
+    mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
+                                  buffer_type);
+#else
+    mpireturn = MPI_Type_create_hindexed(num_reqs, blocklengths, disps,
+                                         MPI_BYTE, buffer_type);
+#endif
+    CHECK_MPI_ERROR(mpireturn, "MPI_Type_hindexed", NC_EFILE)
+
+    MPI_Type_commit(buffer_type);
+
+    NCI_Free(disps);
+    NCI_Free(blocklengths);
+
+    return (status == NC_NOERR) ? mpi_err : status;
 }
 
 /*----< ncmpii_wait() >-------------------------------------------------------*/
@@ -528,7 +579,6 @@ ncmpii_wait(NC  *ncp,
             pre_req = cur_req;
             cur_req = cur_req->next;
             if (cur_req == NULL) {
-                // printf("Error: no such request ID = %d\n", req_ids[i]);
                 statuses[i] = NC_EINVAL_REQUEST;
                 /* retain the first error status */
                 if (status == NC_NOERR)
@@ -855,82 +905,36 @@ static int
 ncmpii_merge_requests(NC          *ncp,
                       int          num_reqs,
                       NC_req      *reqs,    /* [num_reqs] */
-                      int          rw_flag, /* WRITE_REQ or READ_REQ */
                       void       **buf,     /* OUT: 1st I/O buf addr */
                       MPI_Offset  *nsegs,   /* OUT: no. off-len pairs */
                       off_len    **segs)    /* OUT: [*nsegs] */
 {
-    int i, j, err, status=NC_NOERR, num_valid_reqs, ndims, is_recvar;
+    int i, j, status=NC_NOERR, ndims, is_recvar;
     MPI_Offset  nseg, *start, *count, *shape, *stride;
     MPI_Aint addr, buf_addr;
 
-    /* first check and remove invalid reqs[], for example out-of-boundary
-       requests, and set their status to NC error codes. Because some
-       requests are subrequests of the same record-variable request, their
-       status pointed to the same memory address of the parent request's
-       status. Hece, if one of the subrequests is invalid, we mark the
-       parent request invalid and skip it.
-     */
-    for (i=0; i<num_reqs; i++) {
-        /* note that all reqs[].status have been initialized to NC_NOERR
-           in ncmpii_wait()
-         */
-        if (*reqs[i].status != NC_NOERR) /* skip this invalid reqs[i] */
-            continue;
-
-        is_recvar = IS_RECVAR(reqs[i].varp);
-
-        /* Check for out-of-boundary requests */
-        err = NCedgeck(ncp, reqs[i].varp, reqs[i].start, reqs[i].count);
-        if (err != NC_NOERR ||
-            (rw_flag == READ_REQ && is_recvar &&
-             reqs[i].start[0] + reqs[i].count[0] > NC_get_numrecs(ncp))) {
-            err = NCcoordck(ncp, reqs[i].varp, reqs[i].start);
-            if (err != NC_NOERR) { /* status is the 1st encounter errror */
-                *reqs[i].status = err;
-                status = (status == NC_NOERR) ? err : status;
-            }
-            else {
-                *reqs[i].status = NC_EEDGE;
-                status = (status == NC_NOERR) ? NC_EEDGE : status;
-            }
-        }
-    }
-
-    /* find the number of valid requests in reqs[] */
-    num_valid_reqs = 0;
-    for (i=0; i<num_reqs; i++) {
-        if (*reqs[i].status != NC_NOERR) continue;
-        num_valid_reqs++; /* incease the number of valid requests */
-    }
-
     *nsegs = 0;    /* total number of offset-length pairs */
-    *buf   = NULL; /* I/O buffer of first valid request */
-    *segs  = NULL; /* I/O buffer of first valid request */
-    if (num_valid_reqs == 0)
-        return status;
+    *segs  = NULL; /* array of offset-length pairs */
 
-    /* Count the number off-len pairs from the remaining valid reqs[], so we
+    /* note invalid requests have been removed in ncmpii_wait_getput() */
+    *buf   = reqs[0].xbuf; /* I/O buffer of first request */
+
+    /* buf_addr is the buffer address of the first request */
+#ifdef HAVE_MPI_GET_ADDRESS
+    MPI_Get_address(reqs[0].xbuf, &buf_addr);
+#else
+    MPI_Address(reqs[0].xbuf, &buf_addr);
+#endif
+
+    /* Count the number off-len pairs from reqs[], so we
        can malloc a contiguous memory space for storing off-len pairs
      */
     for (i=0; i<num_reqs; i++) {
-        if (*reqs[i].status != NC_NOERR) continue; /* skip invalid one */
-
-        /* buf_addr is the buffer address of the first valid request */
-        if (*buf == NULL) {
-#ifdef HAVE_MPI_GET_ADDRESS
-            MPI_Get_address(reqs[i].xbuf, &buf_addr);
-#else
-            MPI_Address(reqs[i].xbuf, &buf_addr);
-#endif
-            *buf = reqs[i].xbuf;
-        }
-
         is_recvar = IS_RECVAR(reqs[i].varp);
 
         /* for record variable, each reqs[] is within a record */
-        ndims  = (is_recvar) ? reqs[i].ndims  - 1 : reqs[i].ndims;
-        count  = (is_recvar) ? reqs[i].count  + 1 : reqs[i].count;
+        ndims  = (is_recvar) ? reqs[i].ndims - 1 : reqs[i].ndims;
+        count  = (is_recvar) ? reqs[i].count + 1 : reqs[i].count;
         stride = NULL;
         if (reqs[i].stride != NULL)
             stride = (is_recvar) ? reqs[i].stride + 1 : reqs[i].stride;
@@ -955,8 +959,6 @@ ncmpii_merge_requests(NC          *ncp,
 
     /* now re-run the loop to fill in the off-len pairs */
     for (i=0; i<num_reqs; i++) {
-        if (*reqs[i].status != NC_NOERR) continue; /* skip invalid one */
-
         /* buf_addr is the buffer address of the first valid request */
 #ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(reqs[i].xbuf, &addr);
@@ -992,19 +994,6 @@ ncmpii_merge_requests(NC          *ncp,
     /* sort the off-len array, segs[], in an increasing order */
     qsort(*segs, *nsegs, sizeof(off_len), off_compare);
 
-#ifdef USE_MULTIPLE_IO_METHOD
-    /* check for any overlapping offset-length pairs. If found, we will fall
-       back to the group method, i.e. perform multiple MPI-IO calls */
-    for (i=0; i<*nsegs-1; i++)
-        if ((*segs)[i].off + (*segs)[i].len > (*segs)[i+1].off)
-            break;
-
-    if (i < *nsegs-1) {  /* overlap found */
-        NCI_Free(*segs); /* free up allocated space */
-        *segs    = NULL;
-        *nsegs   = 0;    /* indicating merging failed */
-    }
-#else
     /* merge the overlapped requests, skip the overlapped regions for those
        requests with higher j indices (i.e. requests with lower j indices
        win the writes to the overlapped regions)
@@ -1036,41 +1025,23 @@ ncmpii_merge_requests(NC          *ncp,
 
     /* update number of segments, now all off-len pairs are not overlapped */
     *nsegs = i+1;
-#endif
+
     return status;
 }
 
-/*----< ncmpii_getput_merged_requests() >-------------------------------------*/
+/*----< ncmpii_construct_off_len_type() >-------------------------------------*/
 static int
-ncmpii_getput_merged_requests(NC         *ncp,
-                              int         rw_flag,  /* WRITE_REQ or READ_REQ */
-                              int         io_method,/* COLL_IO or INDEP_IO */
-                              MPI_Offset  nsegs,    /* no. off-len pairs */
-                              off_len    *segs,     /* [nsegs] off-en pairs */
-                              void       *buf)
+ncmpii_construct_off_len_type(NC           *ncp,
+                              MPI_Offset    nsegs,    /* no. off-len pairs */
+                              off_len      *segs,     /* [nsegs] off-en pairs */
+                              MPI_Datatype *filetype,
+                              MPI_Datatype *buf_type)
 {
-    int i, j, mpireturn, status=NC_NOERR, mpi_err=NC_NOERR;
-    int         *blocklengths;
-    MPI_Aint    *displacements;
-    MPI_Offset   next_off, next_len;
-    MPI_File     fh;
-    MPI_Status   mpistatus;
-    MPI_Datatype filetype, buftype;
+    int i, j, err, *blocklengths;
+    MPI_Aint   *displacements;
+    MPI_Offset  next_off, next_len;
 
     assert(nsegs > 0);
-
-    for (i=0; i<nsegs; i++) {
-        int int4 = segs[i].len;
-        if (int4 != segs[i].len) { /* check overflow */
-            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
-            segs[i].len = 0; /* skip this reuest */
-        }
-    }
-
-    if (io_method == COLL_IO)
-        fh = ncp->nciop->collective_fh;
-    else
-        fh = ncp->nciop->independent_fh;
 
     /* create the file view MPI derived data type by concatenating the sorted
        offset-length pairs */
@@ -1091,7 +1062,6 @@ ncmpii_getput_merged_requests(NC         *ncp,
             next_len = segs[i].len;
         }
     }
-
     /* j+1 is the coalesced length */
     blocklengths  = (int*)      NCI_Malloc((j+1) * sizeof(int));;
     displacements = (MPI_Aint*) NCI_Malloc((j+1) * sizeof(MPI_Aint));
@@ -1111,21 +1081,20 @@ ncmpii_getput_merged_requests(NC         *ncp,
         }
     }
     /* j+1 is the coalesced length */
-// printf("filetype new j+1=%d blocklengths[0]=%d\n",j+1,blocklengths[0]);
 
 #if (MPI_VERSION < 2)
-    MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE, &filetype);
+    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                            filetype);
 #else
-    MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                             &filetype);
+    err = MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                                   filetype);
 #endif
-    MPI_Type_commit(&filetype);
-
-    /* now we are ready to call MPI_File_set_view */
-    mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, filetype, "native",
-                                  MPI_INFO_NULL);
-    CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE);
-    MPI_Type_free(&filetype);
+    if (err != MPI_SUCCESS) {
+        *filetype = MPI_BYTE;
+        *buf_type = MPI_BYTE;
+        return NC_EFILE;
+    }
+    MPI_Type_commit(filetype);
     NCI_Free(displacements);
     NCI_Free(blocklengths);
 
@@ -1165,7 +1134,6 @@ ncmpii_getput_merged_requests(NC         *ncp,
         }
     }
     /* j+1 is the coalesced length */
-// printf("buftype new j+1=%d blocklengths[0]=%d\n",j+1,blocklengths[0]);
 #if (MPI_VERSION < 2)
     /* TODO: It is illogical to check MPI version, as PnetCDF relies on MPI-IO
              which is only defined in MPI-2. This checking should be done
@@ -1173,46 +1141,23 @@ ncmpii_getput_merged_requests(NC         *ncp,
              MPI_Type_create_hindexed() and if it is not, we use C macro to
              replace MPI_Type_create_hindexed() with MPI_Type_hindexed().
      */
-    MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE, &buftype);
+    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                            buf_type);
 #else
-    MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                             &buftype);
+    err = MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                                   buf_type);
 #endif
-    MPI_Type_commit(&buftype);
+    if (err != MPI_SUCCESS) {
+        *filetype = MPI_BYTE;
+        if (*buf_type != MPI_BYTE) MPI_Type_free(buf_type);
+        *buf_type = MPI_BYTE;
+        return NC_EFILE;
+    }
+    MPI_Type_commit(buf_type);
     NCI_Free(displacements);
     NCI_Free(blocklengths);
 
-    /* now we are ready to call MPI read/write APIs */
-    if (rw_flag == READ_REQ) {
-        if (io_method == COLL_IO) {
-            mpireturn = MPI_File_read_all(fh, buf, 1, buftype, &mpistatus);
-            CHECK_MPI_ERROR(mpireturn, "MPI_File_read_all", NC_EREAD)
-        } else {
-            mpireturn = MPI_File_read(fh, buf, 1, buftype, &mpistatus);
-            CHECK_MPI_ERROR(mpireturn, "MPI_File_read", NC_EREAD)
-        }
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        ncp->nciop->get_size += get_size;
-    } else { /* WRITE_REQ */
-        if (io_method == COLL_IO) {
-            mpireturn = MPI_File_write_all(fh, buf, 1, buftype, &mpistatus);
-            CHECK_MPI_ERROR(mpireturn, "MPI_File_write_all", NC_EWRITE)
-        } else {
-            mpireturn = MPI_File_write(fh, buf, 1, buftype, &mpistatus);
-            CHECK_MPI_ERROR(mpireturn, "MPI_File_write", NC_EWRITE)
-        }
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->nciop->put_size += put_size;
-    }
-    MPI_Type_free(&buftype);
-
-    /* reset fileview so the entire file is visible again */
-    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-
-    /* make NC error higher priority than MPI error */
-    return ((status != NC_NOERR) ? status : mpi_err);
+    return NC_NOERR;
 }
 
 /*----< req_compare() >-------------------------------------------------------*/
@@ -1225,6 +1170,342 @@ req_compare(const NC_req *a, const NC_req *b)
     return (0);
 }
 
+/*----< ncmpii_req_aggregation() >--------------------------------------------*/
+static int
+ncmpii_req_aggregation(NC     *ncp,
+                       int     num_reqs,    /* # requests */
+                       NC_req *reqs,        /* sorted requests */
+                       int     rw_flag,     /* WRITE_REQ or READ_REQ */
+                       int     io_method,   /* COLL_IO or INDEP_IO */
+                       int     interleaved) /* interleaved in reqs[] */
+{
+    int i, type, err, status=NC_NOERR, ngroups;
+    int *group_index, *group_type;
+
+    if (num_reqs == 0) { /* only COLL_IO can reach here for 0 request */
+        assert(io_method == COLL_IO);
+        /* simply participate the collective call */
+        return ncmpii_getput_zero_req(ncp, rw_flag);
+    }
+    if (! interleaved) {
+        /* concatenate all filetypes into a single one and do I/O */
+        return ncmpii_mgetput(ncp, num_reqs, reqs, rw_flag, io_method);
+    }
+    /* now some request's aggregate access region is interleaved with other's */
+
+    /* divide the requests into groups.
+     * Two types of groups: one contains requests that all are not interleaved
+     * and the other contains requests that any 2 consecutive requests are
+     * interleaved. All requests will be aggregated into one and carried out
+     * by a single MPI-IO call.
+     * This approach is because MPI collective I/O requires each process's
+     * fileview must contain only monotonic non-decreasing file offsets. Thus
+     * if the nonblocking requests interleave with each other (although not
+     * overlapp), then we cannot simply concatenate the filetypes of individual
+     * requests. This approach flattens the requests of "interleaved" groups
+     * into offset-length pairs, sorts, and merges them into an aggregated
+     * filetype. Similar for building an aggregated I/O buffer type.
+     */
+
+    /* first calculate the number of groups, so group_index and group_type can
+       be malloc-ed. Group type: 0 for non-interleaved group and 1 for
+       interleaved group.
+     */
+    ngroups = 1;
+    type    = (reqs[0].offset_end > reqs[1].offset_start) ? 1 : 0;
+    for (i=1; i<num_reqs-1; i++) {
+        if (type == 0 && reqs[i].offset_end > reqs[i+1].offset_start) {
+            ngroups++;
+            type = 1;
+        }
+        else if (type == 1 && reqs[i].offset_end <= reqs[i+1].offset_start) {
+            type = 0;
+            if (i+2 < num_reqs && reqs[i+1].offset_end > reqs[i+2].offset_start)
+                type = 1; /* next group is also interleaved */
+            ngroups++;
+        }
+    }
+
+    group_index = (int*) NCI_Malloc((ngroups+1) * sizeof(int));
+    group_type  = (int*) NCI_Malloc((ngroups+1) * sizeof(int));
+
+    /* calculate the starting index of each group and determine group type */
+    group_index[0] = 0;
+    group_type[0]  = type;
+    ngroups        = 1;
+    type           = (reqs[0].offset_end > reqs[1].offset_start) ? 1 : 0;
+    for (i=1; i<num_reqs-1; i++) {
+        if (type == 0 &&
+            reqs[i].offset_end > reqs[i+1].offset_start) {
+            /* reqs[i] starts an interleaved group */
+            group_index[ngroups] = i;
+            type = 1;
+            group_type[ngroups] = type;
+            ngroups++;
+        }
+        else if (type == 1 &&
+                 reqs[i].offset_end <= reqs[i+1].offset_start) {
+            /* the interleaved group ends with reqs[i] */
+            group_index[ngroups] = i+1;
+            type = 0;
+            if (i+2 < num_reqs && reqs[i+1].offset_end > reqs[i+2].offset_start)
+                type = 1; /* next group is also interleaved */
+            group_type[ngroups] = type;
+            ngroups++;
+        }
+    }
+    group_index[ngroups] = num_reqs; /* to indicate end of groups */
+
+    /* for each group, construct one filetype by concatenating if the group
+       is non-interleaved and by flatten/sort/merge if the group is
+       interleaved. At the end, all ngroups filetypes are concatenated into
+       a single filetype. Similar for constructing buffer types.
+       Then use one collective I/O to commit.
+     */
+
+    void         *buf; /* point to starting buffer, used by MPI-IO call */
+    int          *f_blocklengths, *b_blocklengths;
+    MPI_Aint      b_begin, b_addr, *f_disps, *b_disps;
+    MPI_Datatype  filetype, buf_type, *ftypes, *btypes;
+
+    ftypes = (MPI_Datatype*) NCI_Malloc(2 * ngroups * sizeof(MPI_Datatype));
+    btypes = ftypes + ngroups;
+    f_blocklengths = (int*) NCI_Malloc(2 * ngroups * sizeof(int));
+    b_blocklengths = f_blocklengths + ngroups;
+    f_disps = (MPI_Aint*) NCI_Malloc(2 * ngroups*sizeof(MPI_Aint));
+    b_disps = f_disps + ngroups;
+
+    buf = reqs[0].xbuf; /* the buffer of 1st request */
+    b_disps[0] = 0;     /* relative to address of 1st buf */
+#ifdef HAVE_MPI_GET_ADDRESS
+    MPI_Get_address(buf, &b_begin);
+#else 
+    MPI_Address(buf, &b_begin);
+#endif
+
+    /* for each group, build a filetype and a buffer type in ftypes[i] and
+       btypes[i] */
+    for (i=0; i<ngroups; i++) {
+        NC_req *g_reqs = reqs + group_index[i];
+        int     g_num_reqs = group_index[i+1] - group_index[i];
+        f_disps[i] = 0;  /* file displacements always to the file offset 0 */
+
+        if (group_type[i] == 0) {
+            /* concatenate filetypes of this group into a single one */
+            err = ncmpii_construct_filetypes(ncp, g_num_reqs, g_reqs, rw_flag,
+                                             &ftypes[i]);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) { /* skip this group */
+                ftypes[i] = btypes[i] = MPI_BYTE;
+                f_blocklengths[i] = 0;
+                continue;
+            }
+            f_blocklengths[i] = 1;
+
+            /* concatenate buffer types of this group into a single one */
+            err = ncmpii_construct_buffertypes(ncp, g_num_reqs, g_reqs,
+                                               &btypes[i]);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) { /* skip this group */
+                ftypes[i] = btypes[i] = MPI_BYTE;
+                b_blocklengths[i] = 0;
+                f_blocklengths[i] = 0;
+                continue;
+            }
+        }
+        else { /* this group is interleaved */
+            /* flatten the interleaved requests in this group, so interleaved
+               requests can be sorted and merged into a monotonically
+               non-decreasing filetype. For example, multiple nonblocking
+               requests each accessing a single column of a 2D array, that each
+               produces a filetype interleaving with others'.
+
+               The pitfall of this flattening is the additional memorys
+               requirement, as it will have to break down each request into a
+               list of offset-length pairs, and merge all lists into a sorted
+               list based on their offsets into an increasing order.
+
+               Be warned! The additional memory requirement for this merging can
+               be more than the I/O data itself. For example, each nonblocking
+               request access a single column of a 2D array of 4-byte integer
+               type. Each off-len pair represents only a 4-byte integer, but the
+               off-len pair itself takes 24 bytes. Additional memory is also
+               required for MPI arguments of displacements and blocklengths.
+             */
+            MPI_Offset  nsegs=0;   /* number of merged offset-length pairs */
+            off_len    *segs=NULL; /* array of the offset-length pairs */
+            void       *merged_buf;
+
+            /* merge all requests into sorted offset-length pairs */
+            err = ncmpii_merge_requests(ncp, g_num_reqs, g_reqs, &merged_buf,
+                                        &nsegs, &segs);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) { /* skip this group */
+                ftypes[i] = btypes[i] = MPI_BYTE;
+                b_blocklengths[i] = 0;
+                f_blocklengths[i] = 0;
+                continue;
+            }
+            assert(nsegs > 0);
+
+            /* sges[] will be used to construct fileview and buffer type */
+            err = ncmpii_construct_off_len_type(ncp, nsegs, segs, &ftypes[i],
+                                                &btypes[i]);
+            /* preserve the previous error if there is any */
+            if (status == NC_NOERR) status = err;
+            NCI_Free(segs);
+            if (err != NC_NOERR) { /* skip this group */
+                ftypes[i] = btypes[i] = MPI_BYTE;
+                b_blocklengths[i] = 0;
+                f_blocklengths[i] = 0;
+                continue;
+            }
+            f_blocklengths[i] = 1;
+        }
+
+        if (i > 0) {
+            /* get the buffer address of the first request in this group */
+#ifdef HAVE_MPI_GET_ADDRESS
+            MPI_Get_address(g_reqs[0].xbuf, &b_addr);
+#else 
+            MPI_Address(g_reqs[0].xbuf, &b_addr);
+#endif
+            b_disps[i] = b_addr - b_begin; /* to 1st buffer of 1st group*/
+        }
+        b_blocklengths[i] = 1;
+    }
+    NCI_Free(group_index);
+    NCI_Free(group_type);
+
+    int mpireturn, mpi_err=NC_NOERR, buf_len=1;
+
+    /* concatenate all ftypes[] to filetype */
+#if (MPI_VERSION < 2)
+    mpireturn = MPI_Type_struct(ngroups, f_blocklengths, f_disps, ftypes,
+                                &filetype);
+#else
+    mpireturn = MPI_Type_create_struct(ngroups, f_blocklengths, f_disps,
+                                       ftypes, &filetype);
+#endif
+    CHECK_MPI_ERROR(mpireturn, "MPI_Type_create_struct", NC_EFILE)
+    if (status == NC_NOERR) status = mpi_err; /* report the first error */
+
+    if (mpi_err == NC_NOERR)
+        MPI_Type_commit(&filetype);
+    else {
+        buf_len  = 0; /* skip this request */
+        filetype = MPI_BYTE;
+    }
+    for (i=0; i<ngroups; i++) {
+        if (ftypes[i] != MPI_BYTE) MPI_Type_free(&ftypes[i]);
+    }
+
+    /* concatenate all btypes[] to datatype */
+#if (MPI_VERSION < 2)
+    mpireturn = MPI_Type_struct(ngroups, b_blocklengths, b_disps, btypes,
+                                &buf_type);
+#else
+    mpireturn = MPI_Type_create_struct(ngroups, b_blocklengths, b_disps,
+                                       btypes, &buf_type);
+#endif
+    CHECK_MPI_ERROR(mpireturn, "MPI_Type_create_struct", NC_EFILE)
+    if (status == NC_NOERR) status = mpi_err; /* report the first error */
+
+    if (mpi_err == NC_NOERR)
+        MPI_Type_commit(&filetype);
+    else {
+        buf_len  = 0; /* skip this request */
+        filetype = MPI_BYTE;
+    }
+    for (i=0; i<ngroups; i++) {
+        if (btypes[i] != MPI_BYTE) MPI_Type_free(&btypes[i]);
+    }
+
+    MPI_File fh;
+    MPI_Status mpistatus;
+
+    if (io_method == COLL_IO)
+        fh = ncp->nciop->collective_fh;
+    else
+        fh = ncp->nciop->independent_fh;
+
+    /* set the MPI-IO fileview */
+    mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, filetype, "native",
+                                  MPI_INFO_NULL);
+    CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE)
+
+    if (rw_flag == READ_REQ) {
+        if (io_method == COLL_IO) {
+            mpireturn = MPI_File_read_all(fh, buf, buf_len, buf_type, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_read_all", NC_EREAD)
+        } else {
+            mpireturn = MPI_File_read(fh, buf, buf_len, buf_type, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_read", NC_EREAD)
+        }
+        int get_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+        ncp->nciop->get_size += get_size;
+
+    } else { /* WRITE_REQ */
+        if (io_method == COLL_IO) {
+            mpireturn = MPI_File_write_all(fh, buf, buf_len, buf_type, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_write_all", NC_EWRITE)
+        } else {
+            mpireturn = MPI_File_write(fh, buf, buf_len, buf_type, &mpistatus);
+            CHECK_MPI_ERROR(mpireturn, "MPI_File_write", NC_EWRITE)
+        }
+        int put_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+        ncp->nciop->put_size += put_size;
+    }
+
+    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
+    if (buf_type != MPI_BYTE) MPI_Type_free(&buf_type);
+
+    /* reset fileview so the entire file is visible again */
+    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+    NCI_Free(ftypes);
+    NCI_Free(f_blocklengths);
+    NCI_Free(f_disps);
+
+    return ((status != NC_NOERR) ? status : mpi_err);
+}
+
+/*----< ncmpii_check_edge() >-------------------------------------------------*/
+static
+int ncmpii_check_edge(NC     *ncp,
+                      NC_req *req,
+                      int     rw_flag)
+{
+    int is_recvar, err;
+
+    /* check for example out-of-boundary request, and set its status to NC
+       error codes. Because some requests are subrequests of the same
+       record-variable request, their status pointed to the same memory
+       address of the parent request's status. Hece, if one of the
+       subrequests is invalid, we mark the parent request invalid and skip it.
+
+       Note that all reqs[].status have been initialized to NC_NOERR
+       in ncmpii_wait()
+     */
+    if (*req->status != NC_NOERR) /* skip this invalid req */
+        return *req->status;
+
+    is_recvar = IS_RECVAR(req->varp);
+
+    /* Check for out-of-boundary */
+    err = NCedgeck(ncp, req->varp, req->start, req->count);
+    if (err != NC_NOERR ||
+        (rw_flag == READ_REQ && is_recvar &&
+         req->start[0] + req->count[0] > NC_get_numrecs(ncp))) {
+        err = NCcoordck(ncp, req->varp, req->start);
+        if (err == NC_NOERR) err = NC_EEDGE;
+        *req->status = err;
+    }
+    return err;
+}
+
 /*----< ncmpii_wait_getput() >------------------------------------------------*/
 static int
 ncmpii_wait_getput(NC     *ncp,
@@ -1233,149 +1514,55 @@ ncmpii_wait_getput(NC     *ncp,
                    int     rw_flag,   /* WRITE_REQ or READ_REQ */
                    int     io_method) /* COLL_IO or INDEP_IO */
 {
-    int i, j, k, err, status=NC_NOERR, ngroups, max_ngroups, *group_index;
-    void *merged_buf;
-    NC_var **varps;
+    int i, j, err, status=NC_NOERR, access_interleaved=0;
     NC_req *reqs, *cur_req;
     int (*fcnt)(const void*, const void*);
 
-    if (num_reqs == 0) {
-        ngroups = 0;
-    }
-    else {
-        /* change the linked list into an array to be sorted */
-        reqs = (NC_req*) NCI_Malloc(num_reqs * sizeof(NC_req));
-        i = 0;
-        cur_req = req_head;
-        while (cur_req != NULL) {
-            reqs[i++] = *cur_req;
-            if (cur_req->num_subreqs > 0) i--;
-            for (j=0; j<cur_req->num_subreqs; j++)
-                reqs[i++] = cur_req->subreqs[j];
-            cur_req = cur_req->next;
-        }
-        assert(i == num_reqs);
-
-        /* divide the requests into groups of non-interleaved requests
-         * This is because MPI collective I/O requires each process's fileview
-         * contains monotonic non-decreasing file offsets
-         */
-
-        /* first sort reqs[] based on reqs[].offset_start */
-        fcnt = (int (*)(const void *, const void *))req_compare;
-        qsort(reqs, num_reqs, sizeof(NC_req), fcnt);
-
-        /* find the non-interleaving groups of requests */
-        ngroups = 1;
-        group_index = (int*) NCI_Malloc(num_reqs * sizeof(int));
-
-        j = 1;
-        group_index[0] = 0;  /* first reqs[] index of the group */
-        while (j < num_reqs) {
-            for (i=j; i<num_reqs; i++) {
-                if (reqs[j-1].offset_end < reqs[i].offset_start) {
-                    /* shift reqs[j ... i-1] to reqs[j+1 ... i] */
-                    if (i > j) {
-                        NC_req tmp = reqs[i];
-                        for (k=i; k>j; k--)
-                            reqs[k] = reqs[k-1];
-                        /* move reqs[i] to reqs[j] */
-                        reqs[j] = tmp;
-                    }
-                    j++;
-                }
-                /* else do nothing */
-            }
-            if (j < num_reqs) /* next group starts with reqs[j] */
-                group_index[ngroups++] = j++;
-        }
-    }
-
-    /* Each group contains requests whose starting file offsets have been
-       sorted in a monotonically non-descreasing order. An MPI-IO call will
-       be made for each group. The file view of requests in a group are
-       appended one after another into a single one. Similarly, an I/O
-       buffer derived data type is created by concatenating their I/O buffers.
-
-       However, requests across groups can be merged in order to reduce the
-       number of groups, and hence the number of  MPI-IO calls to further
-       improve the performance. For example, multiple nonblocking requests
-       each accessing a single column of a 2D array.
-
-       The pitfall of the merging is that it will have to break down each
-       request into a list of offset-length pairs, and merge all lists into
-       a sorted list based on their offsets in an increasing order.
-
-       Be warned! The additional memory requirement for this merging can be
-       more than the I/O data itself. For example, each nonblocking request
-       access a single column of a 2D array of 4-byte integer type. Each
-       off-len pair represents only a 4-byte integer, but the off-len pair
-       itself takes 24 bytes.
+    /* pack the linked list into an array to be sorted and remove invalid
+       requests, such as out-of-boundary ones
      */
-    MPI_Offset  nsegs=0;   /* number of merged offset-length pairs */
-    off_len    *segs=NULL; /* array of the offset-length pairs */
-    if (ngroups > 1) {
-        /* try merge all requests into sorted offset-length pairs */
-        err = ncmpii_merge_requests(ncp, num_reqs, reqs, rw_flag,
-                                    &merged_buf, &nsegs, &segs);
-        if (status == NC_NOERR) status = err;
-        /* this returned status is the first error encountered */
-
-        if (nsegs > 0) ngroups = 1;
-        /* when nsegs > 0, the merge is successful, the returned "segs"
-           points to an array of off-len pairs containing only the valid
-           requests. Invalid requests in reqs[], such as out-of-boundary
-           ones, are detected and removed, setting their status, reqs[].status,
-           to proper NC error codes.
-
-           If macro USE_MULTIPLE_IO_METHOD is defined,
-               when nsegs == 0, it indicates merge failed becaue the fillowing
-               2 causes. One, all requests are invalid. The other is because
-               an overlapped between two offset-length pairs is detected. In
-               both case, we fall back to the multi-group method which makes
-               an MPI-IO call for each group.
-           else if macro USE_MULTIPLE_IO_METHOD is NOT defined,
-               merge is successful and overlaps have been resolved. I/O will
-               be performed using one MPI-IO call.
-         */
-    }
-
-#ifdef USE_MULTIPLE_IO_METHOD
-    if (io_method == COLL_IO)
-        /* I/O will be completed in max_ngroups number of collective I/O */
-        MPI_Allreduce(&ngroups, &max_ngroups, 1, MPI_INT, MPI_MAX,
-                      ncp->nciop->comm);
-    else /* INDEP_IO */
-        max_ngroups = ngroups;
-#else
-    max_ngroups = 1;
-#endif
-// printf("ngroups=%d max_ngroups=%d nsegs=%lld\n",ngroups,max_ngroups,nsegs);
-
-    if (nsegs > 0) { /* requests are merged */
-        /* sges[] will be used to construct fileview and buffer type */
-        err = ncmpii_getput_merged_requests(ncp, rw_flag, io_method, nsegs,
-                                            segs, merged_buf);
-        /* preserve the previous error if there is any */
-        if (status == NC_NOERR) status = err;
-        NCI_Free(segs);
-    }
-    else if (num_reqs > 0) {  /* also means ngroups > 0 */
-        for (i=0; i<ngroups; i++) {
-            int i_num_reqs = (i == ngroups-1) ? num_reqs : group_index[i+1];
-            i_num_reqs -= group_index[i]; /* number of requests in group i */
-
-            err = ncmpii_mgetput(ncp, i_num_reqs, reqs+group_index[i], 
-                                 rw_flag, io_method);
+    reqs = (NC_req*) NCI_Malloc(num_reqs * sizeof(NC_req));
+    i = 0;
+    cur_req = req_head;
+    while (cur_req != NULL) {
+        if (cur_req->num_subreqs == 0) {
+            err = ncmpii_check_edge(ncp, cur_req, rw_flag);
             if (status == NC_NOERR) status = err;
-            /* retain the first error if there is any */
+            if (err == NC_NOERR) /* add this valid request to reqs[] */
+                reqs[i++] = *cur_req;
+        }
+        else {
+            for (j=0; j<cur_req->num_subreqs; j++) {
+                err = ncmpii_check_edge(ncp, cur_req->subreqs+j, rw_flag);
+                if (status == NC_NOERR) status = err;
+                if (err != NC_NOERR) /* skip all invalid subreqs[] */
+                    break;
+                /* add this valid request to reqs[] */
+                reqs[i++] = cur_req->subreqs[j];
+            }
+        }
+        cur_req = cur_req->next;
+    }
+    /* i is the number of valid requests */
+    num_reqs = i;
+
+    if (num_reqs == 0 && io_method == INDEP_IO) return status;
+
+    /* sort reqs[] based on reqs[].offset_start */
+    fcnt = (int (*)(const void *, const void *))req_compare;
+    qsort(reqs, num_reqs, sizeof(NC_req), fcnt);
+
+    /* check for any interleaved rquests */
+    for (i=1; i<num_reqs; i++) {
+        if (reqs[i-1].offset_end > reqs[i].offset_start) {
+            access_interleaved = 1;
+            break;
         }
     }
 
-    /* All processes must participate all max_ngroups collective calls,
-       for example, a subset of processes have zero-size data to write */
-    for (i=ngroups; i<max_ngroups; i++)
-        ncmpii_mgetput(ncp, 0, NULL, rw_flag, io_method);
+    err = ncmpii_req_aggregation(ncp, num_reqs, reqs, rw_flag, io_method,
+                                 access_interleaved);
+    if (status == NC_NOERR) status = err;
 
     /* update the number of records if new records are added */
     if (rw_flag == WRITE_REQ) {
@@ -1400,10 +1587,7 @@ ncmpii_wait_getput(NC     *ncp,
         /* retain the first error if there is any */
     }
 
-    if (num_reqs > 0) {
-        NCI_Free(group_index);
-        NCI_Free(reqs);
-    }
+    if (num_reqs > 0) NCI_Free(reqs);
 
     return status;
 }
@@ -1419,7 +1603,7 @@ ncmpii_mgetput(NC           *ncp,
     int i, len, status=NC_NOERR, mpireturn, mpi_err=NC_NOERR;
     void *buf;
     MPI_Status mpistatus;
-    MPI_Datatype buf_type;
+    MPI_Datatype filetype, buf_type;
     MPI_File fh;
 
     buf_type = MPI_BYTE;
@@ -1429,14 +1613,21 @@ ncmpii_mgetput(NC           *ncp,
         fh = ncp->nciop->independent_fh;
 
     /* set the MPI file view */
-    status = ncmpii_mset_fileview(fh, ncp, num_reqs, reqs, rw_flag);
+    status = ncmpii_construct_filetypes(ncp, num_reqs, reqs, rw_flag, &filetype);
     if (status != NC_NOERR) { /* skip this request */
-        if (io_method == COLL_IO)
-            num_reqs = 0; /* still need to participate the successive
-                             collective calls, read/write/setview */
-        else
-            return status;
+        if (io_method == INDEP_IO) return status;
+
+        /* For collective I/O, we still need to participate the successive
+           collective calls: read/write/setview */
+        num_reqs = 0;
+        filetype = MPI_BYTE;
     }
+
+    /* set the MPI-IO fileview */
+    mpireturn = MPI_File_set_view(fh, 0, MPI_BYTE, filetype, "native",
+                                  MPI_INFO_NULL);
+    CHECK_MPI_ERROR(mpireturn, "MPI_File_set_view", NC_EFILE)
+    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
 
     /* create the I/O buffer derived data type */
     if (num_reqs > 0) {
@@ -1456,9 +1647,9 @@ ncmpii_mgetput(NC           *ncp,
         blocklengths[0] = int8;
         if (int8 != blocklengths[0]) {
             if (status == NC_NOERR) status = NC_EINTOVERFLOW;
-            blocklengths[0] = 0; /* skip this request */
+            blocklengths[0] = 0;/* skip this request */
         }
-        for (i=1; i<num_reqs; i++) {
+        for (i=1; i<num_reqs; i++) {/*loop for multi-variables*/
             int8 = reqs[i].fnelems * reqs[i].varp->xsz;
             blocklengths[i] = int8;
             if (int8 != blocklengths[i]) {
@@ -1472,19 +1663,21 @@ ncmpii_mgetput(NC           *ncp,
 #endif
             disps[i] = ai - a0;
         }
+
         /* concatenate buffer addresses into a single buffer type */
 #if (MPI_VERSION < 2)
         MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE, &buf_type);
 #else
-        MPI_Type_create_hindexed(num_reqs, blocklengths, disps, MPI_BYTE, &buf_type);
+        MPI_Type_create_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
+                                     &buf_type);
 #endif
         MPI_Type_commit(&buf_type);
 
         NCI_Free(disps);
         NCI_Free(blocklengths);
 
-        buf = reqs[0].xbuf;
         len = 1;
+        buf = reqs[0].xbuf;
     }
     else { /* num_reqs == 0, simply participate the collective call */
         buf      = NULL;
@@ -1525,3 +1718,4 @@ ncmpii_mgetput(NC           *ncp,
 
     return ((status != NC_NOERR) ? status : mpi_err);
 }
+
