@@ -70,17 +70,18 @@ AC_MSG_RESULT(using $RM)
 AC_SUBST(RM)
 
 AC_ARG_ENABLE(fortran,
-[  --disable-fortran       Turn off support for the Fortran interface, if you
-                          only need the C interface. Default is enable.],
-[enable_fortran=${enableval}], [enable_fortran=yes])
+    [AS_HELP_STRING([--disable-fortran],
+                    [Turn off support for the Fortran interface,
+                     if you only need the C interface. @<:@default: no@:>@])],
+    [enable_fortran=${enableval}], [enable_fortran=yes])
 
 dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
 dnl preventing PATH_MAX from being defined for some of the test files,
 dnl and I was having a tough time figuring out how to get it back! -- RobR
 AC_ARG_ENABLE(strict,
-[  --enable-strict         Turn on strict debugging with gcc. Default is
-                          disable.],
-[enable_strict=${enableval}], [enable_strict=no])
+    [AS_HELP_STRING([--enable-strict],
+                    [Turn on strict debugging with gcc. @<:@default: no@:>@])],
+    [enable_strict=${enableval}], [enable_strict=no])
 
 if test "x${enable_strict}" = xyes; then
     if test "x${GCC}" = xyes; then
@@ -89,8 +90,9 @@ if test "x${enable_strict}" = xyes; then
 fi
 
 AC_ARG_ENABLE(echo, 
-[  --enable-echo           Turn on strong echoing. The default is enable=no.] 
-,set -x)
+    [AS_HELP_STRING([--enable-echo],
+                    [Turn on strong echoing. @<:@default: no@:>@])],
+    [set -x])
 
 AC_PROG_INSTALL
 AC_PROG_YACC
@@ -199,8 +201,8 @@ fi
 
 MPI_INSTALL=""
 AC_ARG_WITH(mpi, 
-	[  --with-mpi=/path/to/implementation
-			installation prefix for MPI implementation],
+    [AS_HELP_STRING([--with-mpi=/path/to/implementation],
+                    [installation prefix for MPI implementation])],
 		if test x"$withval" = xyes; then
 			AC_MSG_ERROR(--with-mpi must be given a pathname)
 		else
@@ -278,14 +280,15 @@ if test "$enable_fortran" = yes ; then
 fi
 
 
-AC_ARG_ENABLE(mpi-io-test,
-[  --enable-mpi-io-test    Check for MPI-IO support in MPI implementation.  
-                          Turn this off if you know your MPI 
-                          implementation has MPI-IO support but the 
-                          configure test fails to find it (on by default)]
-				 ,,enable_mpi_io_test=yes )
+AC_ARG_ENABLE([mpi-io-test],
+    [AS_HELP_STRING([--disable-mpi-io-test],
+                    [Disable check for MPI-IO support in MPI implementation,
+                     if you know your MPI implementation has MPI-IO support
+                     but the configure test fails to find it.
+                     @<:@default: no@:>@])],
+    [enable_mpi_io_test=${enableval}], [enable_mpi_io_test=yes])
 
-if test "$enable_mpi_io_test" = "yes" ; then
+if test "x${enable_mpi_io_test}" = xyes ; then
 	AC_MSG_CHECKING(MPI-IO support in MPI implementation)
 	saveCC="$CC"
 	if test x$MPICC != x ; then
@@ -600,7 +603,7 @@ dnl generate a fortran-friendly pnetcdf_inc nfconfig.inc
 sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf_inc>pnetcdf_inc && mv pnetcdf_inc src/libf/pnetcdf_inc
 sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/nfconfig.inc>nfconfig.inc && mv nfconfig.inc src/libf/nfconfig.inc
 
-if test "$enable_mpi_io_test" != "yes" ; then
+if test "x${enable_mpi_io_test}" = xno ; then
 	AC_MSG_WARN([
 "NOTE: disabling the MPI-IO test is a VERY bad idea. Please make sure you know what you are doing"])
 fi
