@@ -1,0 +1,85 @@
+This is essentially a placeholder for the next release note ...
+
+o New optimization: request aggregation
+  The original design of nonblocking I/O is to concatenate the fileviews of
+  individual nonblocking requests and serve them with a single MPI-IO call,
+  if possible. However, because MPI-IO requires the file displacements of
+  the flattened fileview be monotonically nondecreasing, the original approach
+  divides the nonblocking requests into groups such that each group abides by
+  this MPI-IO fileview requirement. Each group is then carried out by a
+  separate MPI-IO call. Performance can be poor if there are many groups nad
+  each group has an aggregate access region that is non-contiguous in files.
+
+  This revision fixes this problem by 1) sorting the starting offset of
+  fileviews into a non-decreasing order 2) dividing the fileviews into groups.
+  There are only two types of groups: interleaving and non-interleaving. 3)
+  concatenating fileviews for non-interleaving groups individually, 4)
+  flattening fileviews for interleaving groups individually, merging the
+  offset-length pair, and concatenating them into a new fileview, 5)
+  concatenating the fileviews from all groups into a single one. 6) the final
+  combined fileview is used by one MPI-IO call to commit the requests.
+  Performance is expected to be improved as the number of MPI-IO calls is
+  reduced to one.
+
+  However, be warned about the additional memory requirement. The additional
+  memory needed for flatterning the fileviews might be more than the I/O data
+  itself. For example, a request to accessing a single column of a 2D integer
+  array will result in offset-length pairs, each representing only a 4-byte
+  integer where the C struct in PnetCDF for storing an offset-length pair
+  takes 3*sizeof(MPI_Offset)=24 bytes.
+
+o New APIs
+  * ncmpi_inq_nreqs() reports the number of pending nonblocking requests
+  * ncmpi_inq_header_size() reports the size of the file header
+  * ncmpi_inq_header_extent() reports the space currently allocated for the
+    file header, (also the file offset of the first variable)
+  * ncmpi_inq_put_size() reports the write amount committed by far
+  * ncmpi_inq_get_size() reports the read amount committed by far
+
+o New PnetCDF hint
+  * nc_header_read_chunk_size: PnetCDF reads the file headers in chunks. This
+    hint indicates the chunk size (in bytes). The default is 256 KB.
+
+o New error code
+  * NC_EINTOVERFLOW reports the error of 4-byte integer overflow. This usually
+    happens due to MPI-IO data type constructor APIs' arguments using 4-byte
+    integers.
+
+o New example programs
+  * hints.c, for using PnetCDF hints
+  * flex_c.c and flex_f.F, for using blocking and nonblocking flexible APIs
+  * mput.c, for using ncmpi_mput_vara_all() to write a series of arbitrary
+    start[] and count[]
+  * block_cyclic.c, for a *-block-cyclic 2D partitioning pattern
+  * column_wise.c, for a *-cyclic 2D partitioning pattern
+  * put_vara.F for using for nfmpi_put_vara_int_all()
+
+o New programs for I/O benchmarks
+  * benchmarks/aggregation.c -- evaluate PnetCDF's performance on I/O
+    aggregation across multiple requests with different data access patterns.
+  * benchmarks/write_block_read_column.c -- writes variables and reads back
+    using different data partitioning patterns
+
+o New test program
+  * testcases/alignment_test.c -- test for header and fixed variable file
+    offset alignments when entering redef mode
+
+o Updates:
+  * add file README.CRAY-XE6 for configure command
+  * add declaration of flexible APIs for Fortran90
+  * "make testing" now hides most of the stdout. Use "make verbose_testing" for
+    verbose output.
+  * add the command-line option "-k" to ncmpidum that reports the kind of
+    netCDF file, similar to ncdump of netCDF4.
+
+o Bug fixes
+  * For collective APIs, many places have been changed to prevent program
+    from hanging if a subset of the processes got errors. The fix will keep
+    all processes participating all the MPI collective calls in the PnetCDF
+    collective APIs
+  * set the nonblocking request ID to NULL when the request length is zero
+  * report error when bogus request IDs are passed in ncmpi_wait
+  * when entering redef with different alignment hints, fixed variables' file
+    starting offsets should only be changed when it is bigger than the old ones
+  * Fix Fortran API intent in/out argument declarations
+
