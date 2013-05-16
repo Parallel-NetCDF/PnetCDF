@@ -32,11 +32,12 @@ install:	src/lib/install src/util/install
 
 uninstall:	src/lib/uninstall
 
-clean:		src/clean test/clean examples/clean
+clean:		src/clean test/clean examples/clean benchmarks/clean
 
 distclean:	src/distclean \
                 test/distclean \
                 examples/distclean \
+                benchmarks/distclean \
 		clean_macros  \
 		rmdir_src_test
 
@@ -68,6 +69,8 @@ src/util/install \
 src/util/clean \
 examples/clean \
 examples/distclean \
+benchmarks/clean \
+benchmarks/distclean \
 :
 	@subdir=`echo $@ | sed 's,/.*,,'`; \
 	target=`echo $@ | sed 's,.*/,,'`; \

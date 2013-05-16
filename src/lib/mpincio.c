@@ -439,7 +439,7 @@ ncmpiio_move_fixed_vars(NC *ncp,
 
         MPI_Offset from = old->vars.value[i]->begin;
         MPI_Offset to   = ncp->vars.value[i]->begin;
-        if (to - from > 0) {
+        if (to > from) {
             err = ncmpiio_move(ncp->nciop, to, from, ncp->vars.value[i]->len);
             if (status == NC_NOERR) status = err;
         }
