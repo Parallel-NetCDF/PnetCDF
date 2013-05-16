@@ -1,0 +1,23 @@
+The programs in this directory are designed to measure the I/O performance for
+various of APIs as well as access patterns.
+
+aggregation.c
+   o This program writes a series of 2D variables with data partitioning
+     patterns of block-block, *-cyclic, block-*, and *-block, round-robinly.
+     The block-* partitioning case writes 1st half followed by 2nd half. The
+     same partitioning patterns are used for read. In both cases, nonblocking
+     APIs are used to evaluate the performance.
+   o Parameters:
+         * NVARS: a defined C macro, the number of variables
+         * len:   dimension size of local variables, len x len
+   o Write and read performance are measured and reported separately.
+
+
+write_block_read_column.c
+   o This program writes a series of 2D variables partitioned in a block-block
+     pattern into a new file. The file is re-opened to read all the 2D variables
+     but in a 2D *-block pattern.
+   o Write and read performance are measured and reported separately.
+   
+
+
