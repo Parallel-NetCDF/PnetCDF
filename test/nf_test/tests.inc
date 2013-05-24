@@ -169,7 +169,7 @@
 !    /* Common blocks for global variables: */
 
 !/* MPI_OFFSET */
-      COMMON	/OFFSETCOM/	DIM_LEN, VAR_SHAPE, GATT_LEN 
+      COMMON    /OFFSETCOM/     DIM_LEN, VAR_SHAPE, GATT_LEN 
 
       COMMON    /MPICOM/        COMM
       COMMON    /LOGCOM/        CREATE_FILE,

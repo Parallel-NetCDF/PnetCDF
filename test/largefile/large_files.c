@@ -21,8 +21,8 @@
 
 #define FILE_NAME "./large_files.nc"
 
-void
-check_err(const int stat, const int line, const char *file) {
+static
+void check_err(const int stat, const int line, const char *file) {
     if (stat != NC_NOERR) {
 	   (void) fprintf(stderr, "line %d of %s: %s\n", line, file, ncmpi_strerror(stat));
         exit(1);

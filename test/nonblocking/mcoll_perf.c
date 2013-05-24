@@ -102,6 +102,7 @@ static int n_fails;
 }
 
 
+static
 int ncmpi_diff(char *filename1, char *filename2) {
     int i, j, status, isRecvar, rank, nprocs;
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, dimids1[NC_MAX_DIMS];
@@ -296,9 +297,9 @@ int ncmpi_diff(char *filename1, char *filename2) {
 static void
 usage(char *progname)
 {
-    error("%s [-v] [-f <file base name>]\n", progname);
-    error("   [-f <file base name>] file base name\n" );
-    error("   [-v] Verbose mode\n" );
+    fprintf(stderr, "%s [-v] [-f <file base name>]\n", progname);
+    fprintf(stderr, "   [-f <file base name>] file base name\n" );
+    fprintf(stderr, "   [-v] Verbose mode\n" );
 }
 
 int main(int argc, char **argv)
@@ -306,7 +307,7 @@ int main(int argc, char **argv)
     extern char *optarg;
     int c;
     int i, j, array_of_gsizes[3],array_of_distribs[3];
-    int order, nprocs, len, **buf, mynod;
+    int order, nprocs, **buf, mynod;
     MPI_Offset bufcount;
     int array_of_dargs[3], array_of_psizes[3];
     int status;
@@ -471,7 +472,7 @@ int main(int argc, char **argv)
 
 	status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_OFFSET,
                         info, &ncid);
-        HANDLE_ERROR(status);
+        HANDLE_ERROR
       /* define dimensions */
         for (i=0; i<ndims; i++){
             sprintf(dimname, "dim0_%d", i);
@@ -520,7 +521,7 @@ int main(int argc, char **argv)
        		status = ncmpi_put_vara_all(ncid, varid[i],
                             starts_list[i], count_list[i],
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
       	    }
 	}
 	if (k == 1) {
@@ -531,7 +532,7 @@ int main(int argc, char **argv)
        	        status = ncmpi_put_vara(ncid, varid[i],
                             starts_list[i], count_list[i],
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
       	    }
             ncmpi_end_indep_data(ncid);
       	} 
@@ -541,7 +542,7 @@ int main(int argc, char **argv)
       	     status = ncmpi_mput_vara_all(ncid, nvars, varid,
                                 starts_list, count_list,
                                (void **)buf, bufcount_list, datatype_list);
-      	     HANDLE_ERROR(status);
+      	     HANDLE_ERROR
      	}
 
         if (k == 3) {
@@ -551,10 +552,10 @@ int main(int argc, char **argv)
        	        status = ncmpi_iput_vara(ncid, varid[i],
                             starts_list[i], count_list[i],
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
                 ncmpi_begin_indep_data(ncid);
 	        status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
                 ncmpi_end_indep_data(ncid);
       	    }
       	} 
@@ -565,10 +566,10 @@ int main(int argc, char **argv)
        	        status = ncmpi_iput_vara(ncid, varid[i],
                             starts_list[i], count_list[i],
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
       	    }
 	    status = ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
-	    HANDLE_ERROR(status);
+	    HANDLE_ERROR
       	} 
 
         if (k == 5) {
@@ -581,10 +582,10 @@ int main(int argc, char **argv)
        	        status = ncmpi_iput_vars(ncid, varid[i],
                             starts_list[i], count_list[i], stride,
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
                 ncmpi_begin_indep_data(ncid);
 	        status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
                 ncmpi_end_indep_data(ncid);
       	    }
       	} 
@@ -598,10 +599,10 @@ int main(int argc, char **argv)
        	        status = ncmpi_iput_vars(ncid, varid[i],
                             starts_list[i], count_list[i], stride,
                             (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR(status);
+	     	HANDLE_ERROR
       	    }
 	    status = ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
-	    HANDLE_ERROR(status);
+	    HANDLE_ERROR
         } 
         if (k == 7) {
 	    if (mynod == 0 && verbose)
@@ -609,7 +610,7 @@ int main(int argc, char **argv)
 	    ncmpi_begin_indep_data(ncid);
 	    status = ncmpi_put_var(ncid, varid[mynod],
 	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT);
-	    HANDLE_ERROR(status);
+	    HANDLE_ERROR
 	    ncmpi_end_indep_data(ncid);
 	}
         if (k == 8) {
@@ -619,10 +620,10 @@ int main(int argc, char **argv)
 	    status = ncmpi_iput_var(ncid, varid[mynod],
 	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT, &array_of_requests[i]);
 
-	    HANDLE_ERROR(status);
+	    HANDLE_ERROR
 	    ncmpi_begin_indep_data(ncid);
 	    status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	    HANDLE_ERROR(status);
+	    HANDLE_ERROR
 	    ncmpi_end_indep_data(ncid);
 	}
         if (k == 9) {
@@ -632,9 +633,9 @@ int main(int argc, char **argv)
 	    status = ncmpi_iput_var(ncid, varid[mynod],
 	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT, &array_of_requests[i]);
 
-	    HANDLE_ERROR(status);
+	    HANDLE_ERROR
 	    status = ncmpi_wait_all(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	    HANDLE_ERROR(status);
+	    HANDLE_ERROR
 	}
         ncmpi_close(ncid);
         if (status == NC_NOERR){
