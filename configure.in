@@ -305,6 +305,13 @@ AC_SUBST(MPIF77)
 AC_SUBST(MPICXX)
 AC_SUBST(MPIF90)
 
+if test "x${MPICXX}" = x ; then
+    has_mpicxx=no
+else
+    has_mpicxx=yes
+fi
+AC_SUBST(has_mpicxx)
+
 AC_CHECK_HEADERS(stdlib.h sys/types.h)
 
 # Check for <stdbool.h> that conforms to C99 requirements

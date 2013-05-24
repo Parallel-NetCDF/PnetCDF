@@ -20,14 +20,17 @@ FC		= @MPIF77@
 FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
 CXX		= @MPICXX@
 CXXFLAGS        = @CFLAGS@ $(INCLUDES)
-
+LDFLAGS		= -L$(LIBDIR) @LDFLAGS@
+LIBS		= -lpnetcdf @LIBS@
 
 SRCS		= $(srcdir)/ncmpi_vars_null_stride.c $(srcdir)/vecors.c \
 			$(srcdir)/bigrecords.F $(srcdir)/collective_error.c \
 			$(srcdir)/test_varm.c $(srcdir)/alignment_test.c
-PROGS		= ncmpi_vars_null_stride vectors bigrecords redef1 collective_error test_varm alignment_test
-LDFLAGS		= -L$(LIBDIR) @LDFLAGS@
-LIBS		= -lpnetcdf @LIBS@
+PROGS		= ncmpi_vars_null_stride vectors bigrecords collective_error test_varm alignment_test
+CXX_PROGS	= redef1
+ifeq (@has_mpicxx@, yes)
+PROGS		+= $(CXX_PROGS)
+endif
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<

@@ -44,10 +44,10 @@ distclean:	src/distclean \
 tests:
 	@cd test && $(MAKE)
 
-testing: tests
+check testing: tests
 	@cd test && $(MAKE) testing
 
-verbose_testing: tests
+verbose_check verbose_testing: tests
 	@cd test && $(MAKE) verbose_testing
 
 clean_macros:
