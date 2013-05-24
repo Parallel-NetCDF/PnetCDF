@@ -112,6 +112,7 @@
 #define ERR(e) {if((e)!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));}
 
 /*----< print_info() >------------------------------------------------------*/
+static
 void print_info(MPI_Info *info_used)
 {
     int  i, nkeys;
@@ -130,6 +131,7 @@ void print_info(MPI_Info *info_used)
 }
 
 /*----< benchmark_write() >---------------------------------------------------*/
+static
 int benchmark_write(char       *filename,
                     MPI_Offset  len,
                     MPI_Offset *w_size,
@@ -341,6 +343,7 @@ int benchmark_write(char       *filename,
 }
 
 /*----< benchmark_read() >---------------------------------------------------*/
+static
 int benchmark_read(char       *filename,
                    MPI_Offset  len,
                    MPI_Offset *r_size,
