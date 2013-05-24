@@ -340,7 +340,7 @@ EOF
 		AC_MSG_RESULT(failed to compile test program)
 		unset F90
 	    fi
-	    rm -f conftest.*
+	    ${RM} -f conftest.*
 	    ;;
 	*)
 	    case "${FC+set}" in
@@ -370,7 +370,7 @@ EOF
 			AC_MSG_RESULT(failed to build test program)
 			unset F90
 		    fi
-		    rm -f conftest*
+		    ${RM} -f conftest*
 		    ;;
 	    esac
 	    case "${F90-unset}" in
@@ -410,7 +410,7 @@ EOF
 				;;
 			esac
 		    done
-		    rm -f conftest*
+		    ${RM} -f conftest*
 		    case "${F90}" in
 			'') AC_MSG_WARN(
 			    "Could not find working Fortran-90 compiler")
@@ -465,7 +465,7 @@ EOF
 			AC_MSG_RESULT(failed to compile test program)
 			FC=
 		    fi
-		    rm -f conftest.*
+		    ${RM} -f conftest.*
 		    ;;
 	    esac
 	    ;;
@@ -487,7 +487,7 @@ EOF
 			AC_MSG_RESULT(failed to compile test program)
 			unset FC
 		    fi
-		    rm -f conftest.*
+		    ${RM} -f conftest.*
 		    ;;
 	    esac
 	    case "${FC-unset}" in
@@ -568,7 +568,7 @@ EOF
 				;;
 			esac
 		    done
-		    rm -f conftest.*
+		    ${RM} -f conftest.*
 		    case "${FC}" in
 			'') AC_MSG_WARN(
 				"Could not find working Fortran-77 compiler")
@@ -617,7 +617,7 @@ EOF
 		    COMPILE_F=
 		    AC_MSG_RESULT(no)
 		fi
-		rm -f conftest*
+		${RM} -f conftest*
 		;;
 	    esac
 	    ;;
@@ -669,7 +669,7 @@ EOF
 	    break;
 	fi
     done
-    rm -f conftest.f conftest.o
+    ${RM} -f conftest.f conftest.o
     AC_DEFINE_UNQUOTED($1, $type)
     AC_MSG_RESULT($type)
     $1=$type
@@ -727,7 +727,7 @@ EOF
     else
 	AC_MSG_ERROR(Could not compile conftest.f)
     fi
-    rm -f conftest*
+    ${RM} -f conftest*
 ])
 
 
@@ -754,7 +754,7 @@ EOF
 	    AC_MSG_RESULT(no)
 	fi
     done
-    rm -f conftest*
+    ${RM} -f conftest*
 ])
 
 
@@ -791,7 +791,7 @@ EOF
 	    else
 		AC_MSG_ERROR(Could not compile conftest.f)
 	    fi
-	    rm -f conftest*
+	    ${RM} -f conftest*
 	    ;;
     esac
 ])
@@ -844,7 +844,7 @@ EOF
 	    AC_MSG_ERROR(Could not compile conftest.c)
 	fi
     done
-    rm -f conftest*
+    ${RM} -f conftest*
 ])
 
 
@@ -978,3 +978,4 @@ AC_DEFUN(UD_CHECK_LIB_MATH,
     esac
     AC_SUBST(MATHLIB)
 ])
+
