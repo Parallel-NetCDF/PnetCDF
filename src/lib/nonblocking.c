@@ -309,6 +309,11 @@ ncmpii_concatenate_datatypes(NC           *ncp,
      * MPI_Type_create_struct.  Minor optimization: we don't need to do any
      * of this if MPI_Aint and MPI_Offset are the same size  */
 
+    /* note that at the configure time, checking size of MPI_Offset and
+     * MPI_Aint is done and if they are different ENABLE_NONBLOCKING will
+     * not be defined. In this case, all nonblocking APIs are carried out
+     * by blocking ones in independent data mode
+     */
     if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) {
         addrs = (MPI_Aint *) NCI_Malloc(num * sizeof(MPI_Aint));
         free_addrs = 1;
