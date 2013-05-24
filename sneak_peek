@@ -65,7 +65,8 @@ o New test program
     offset alignments when entering redef mode
 
 o Updates:
-  * add file README.CRAY-XE6 for configure command
+  * add build recipe README.bgq for BGQ (e.g. Vesta/Mira/Cetus @ANL)
+  * add build recipe README.CRAY-XE6 (e.g. Hopper @NERSC)
   * add declaration of flexible APIs for Fortran90
   * "make testing" now hides most of the stdout. Use "make verbose_testing" for
     verbose output.
