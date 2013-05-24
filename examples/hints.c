@@ -40,6 +40,7 @@
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
+static
 void print_hints(int ncid,
                  int varid0,
                  int varid1)
@@ -47,7 +48,7 @@ void print_hints(int ncid,
     char value[MPI_MAX_INFO_VAL];
     int err, len, flag;
     MPI_Offset header_size, header_extent, var_zy_start, var_yx_start;
-    MPI_Offset h_align, v_align, h_chunk;
+    MPI_Offset h_align=-1, v_align=-1, h_chunk=-1;
     MPI_Info info_used;
 
     err = ncmpi_inq_header_size  (ncid, &header_size);      ERR
@@ -73,9 +74,20 @@ void print_hints(int ncid,
     }
     MPI_Info_free(&info_used);
 
-    printf("nc_header_align_size      set to = %lld\n", h_align);
-    printf("nc_var_align_size         set to = %lld\n", v_align);
-    printf("nc_header_read_chunk_size set to = %lld\n", h_chunk);
+    if (h_align == -1)
+        printf("nc_header_align_size      is NOT set\n");
+    else
+        printf("nc_header_align_size      set to = %lld\n", h_align);
+
+    if (v_align == -1)
+        printf("nc_var_align_size         is NOT set\n");
+    else
+        printf("nc_var_align_size         set to = %lld\n", v_align);
+    if (h_chunk == -1)
+        printf("nc_header_read_chunk_size is NOT set\n");
+    else
+        printf("nc_header_read_chunk_size set to = %lld\n", h_chunk);
+
     printf("header size                      = %lld\n", header_size);
     printf("header extent                    = %lld\n", header_extent);
     printf("var_zy start file offset         = %lld\n", var_zy_start);
