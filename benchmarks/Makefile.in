@@ -43,10 +43,10 @@ install:
 uninstall:
 
 aggregation: aggregation.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 write_block_read_column: write_block_read_column.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 include $(srcdir)/depend
 
