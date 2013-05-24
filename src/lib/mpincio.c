@@ -475,8 +475,10 @@ int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
                     MPI_MAX_INFO_VAL-1, value, flag);
         }
     }
+#ifdef HAVE_MPI_INFO_FREE
     if (info != MPI_INFO_NULL) 
         MPI_Info_free(&info);
+#endif
 
     return 0;
 }
