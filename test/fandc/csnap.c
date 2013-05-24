@@ -248,7 +248,7 @@ void read_file(char *filename, double *t) {
   double *smf = NULL;
   double *buf = NULL;
   double t1, t2, t3;
-  double dt1, dt2;
+  double dt1, dt2=0;
   int ncid;
   int vid_t, vid_smf;
   int i, j, k, ii, ierr;

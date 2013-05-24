@@ -2022,8 +2022,7 @@ test_ncmpi_set_fill(void)
 */
 #define MAGIC_NUM_LEN 4
 static
-int
-ncmpi_get_file_version(char *path, int *version)
+int ncmpi_get_file_version(char *path, int *version)
 {
    FILE *fp;
    char magic[MAGIC_NUM_LEN];
@@ -2067,7 +2066,7 @@ test_ncmpi_set_default_format(void)
     int ncid, nok=0;
     int err;
     int i;
-    int version;
+    int version=1;
     int old_format;
 
     /* bad format */

@@ -20,6 +20,7 @@ int test_n = TEST_N;
 double test_m = TEST_M;
 int order = TEST_ARRAY_ORDER;
 
+static
 void parse_args(int argc, char **argv, int rank) {
   extern char * optarg;
   int c;
@@ -89,6 +90,7 @@ void parse_args(int argc, char **argv, int rank) {
   return;
 }
 
+static
 void partition_array(int ndims, 
 		     int *total_sizes, 
 		     int *local_subsizes, 
