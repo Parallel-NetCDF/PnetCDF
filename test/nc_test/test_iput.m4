@@ -193,7 +193,7 @@ test_ncmpi_iput_var1_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -314,7 +314,7 @@ test_ncmpi_iput_var_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -486,7 +486,7 @@ test_ncmpi_iput_vara_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -690,7 +690,7 @@ test_ncmpi_iput_vars_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -880,7 +880,7 @@ test_ncmpi_iput_varm_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);

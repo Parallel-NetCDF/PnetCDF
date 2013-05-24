@@ -41,22 +41,22 @@ PACKING_LIST    =  $(SRCS) \
 all: $(PROGS)
 
 mcoll_perf: mcoll_perf.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 test_bput: test_bput.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 mcoll_testf.o: mcoll_testf.F
 	$(COMPILE.F90) $<
 
 mcoll_testf: mcoll_testf.o
-	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.F90) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 test_bputf.o: test_bputf.F
 	$(COMPILE.F90) $<
 
 test_bputf: test_bputf.o
-	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.F90) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 testing: $(PROGS)
 	./mcoll_perf

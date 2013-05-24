@@ -290,7 +290,7 @@ test_ncmpi_put_var1_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -401,7 +401,7 @@ test_ncmpi_put_var_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -563,7 +563,7 @@ test_ncmpi_put_vara_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -758,7 +758,7 @@ test_ncmpi_put_vars_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -947,7 +947,7 @@ test_ncmpi_put_varm_$1(void)
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -1123,7 +1123,7 @@ test_ncmpi_put_att_text(void)
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
@@ -1193,7 +1193,7 @@ test_ncmpi_put_att_$1(void)
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
-        return;
+        return nok;
     }
     def_dims(ncid);
     def_vars(ncid);

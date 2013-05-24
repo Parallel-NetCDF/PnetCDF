@@ -360,7 +360,7 @@
       end do
 
 
- 950  format ("write ", i1, ": ", e9.3, 1x, e9.3)
+ 950  format ("write ", i1, ": ", e10.3, 1x, e10.3)
 
 
       Return
@@ -494,7 +494,7 @@
       end do
 
 
- 970  format (" read ", i1, ": ", e9.3, 1x, e9.3)
+ 970  format (" read ", i1, ": ", e10.3, 1x, e10.3)
 
 
       Return
@@ -681,7 +681,7 @@
       if (mype == 0) Write (6,990) diff, delmax, delmin
 
  990  format ("diff, delmax, delmin = ",
-     &        e9.3, 1x, e9.3, 1x, e9.3)
+     &        e10.3, 1x, e10.3, 1x, e10.3)
 
 
 
