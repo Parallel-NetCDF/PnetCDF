@@ -1129,7 +1129,7 @@ ncmpii_NC_close(NC *ncp) {
             req_ids[num_reqs++] = cur_req->id;
             cur_req = cur_req->next;
         }
-#if COMPLETE_NONBLOCKING_IO
+#ifdef COMPLETE_NONBLOCKING_IO
         ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
         ncmpii_cancel(ncp, num_reqs, req_ids, statuses);

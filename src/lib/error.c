@@ -16,7 +16,7 @@
 #include "pnetcdf.h"
 #include "nc.h"
 
-#ifndef NO_STRERROR
+#ifdef HAVE_STRERROR
 #include <string.h> /* contains prototype for ansi libc function strerror() */
 #else
 /* provide a strerror function for older unix systems */
@@ -30,7 +30,7 @@ strerror(int errnum)
     /* else */
     return sys_errlist[errnum];
 }
-#endif /* NO_STRERROR */
+#endif /* HAVE_STRERROR */
 
 
 #ifdef vms

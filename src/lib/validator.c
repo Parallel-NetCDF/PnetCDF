@@ -7,10 +7,10 @@
 #include "nc.h"
 #include <mpi.h>
 #include <assert.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <sys/types.h>  /* open() */
+#include <sys/stat.h>   /* open() */
+#include <fcntl.h>      /* open() */
+#include <unistd.h>     /* read() */
 #include <string.h>
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H

@@ -6,15 +6,15 @@
 
 #include "ncconfig.h"
 
+#ifdef HAVE_ACCESS
 #include <unistd.h>  /* access() */
+#endif
 #include <assert.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <stdio.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <fcntl.h>
 #include <string.h>
 #ifdef _MSC_VER /* Microsoft Compilers */
 #include <io.h>
@@ -137,10 +137,10 @@ ncmpiio_create(MPI_Comm     comm,
     ncio *nciop;
     int i, rank, mpireturn; 
     int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
-#ifdef NO_ACCESS
-    int do_zero_file_size = 0;
-#else
+#ifdef HAVE_ACCESS
     int file_exist;
+#else
+    int do_zero_file_size = 0;
 #endif
 
     /* TODO: use MPI_Allreduce to check for valid path, so error can be
@@ -151,12 +151,7 @@ ncmpiio_create(MPI_Comm     comm,
     MPI_Comm_rank(comm, &rank);
 
     /* NC_CLOBBER is the default mode, even if it is not used in cmode */
-#ifdef NO_ACCESS
-    if (fIsSet(ioflags, NC_NOCLOBBER))
-        fSet(mpiomode, MPI_MODE_EXCL);
-    else
-        do_zero_file_size = 1;
-#else
+#ifdef HAVE_ACCESS
     /* if access() is available, use it to check if file already exists */
     file_exist = 0;
     if (rank == 0) { /* root checks if file exists */
@@ -192,6 +187,11 @@ ncmpiio_create(MPI_Comm     comm,
             }
         } /* else: the file does not exist, do nothing */
     }
+#else
+    if (fIsSet(ioflags, NC_NOCLOBBER))
+        fSet(mpiomode, MPI_MODE_EXCL);
+    else
+        do_zero_file_size = 1;
 #endif
 
     /* ignore if NC_NOWRITE set by user */
@@ -215,7 +215,7 @@ ncmpiio_create(MPI_Comm     comm,
     /* get the file info used by MPI-IO */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
 
-#ifdef NO_ACCESS
+#ifndef HAVE_ACCESS
     if (do_zero_file_size) MPI_File_set_size(nciop->collective_fh, 0);
 #endif
 

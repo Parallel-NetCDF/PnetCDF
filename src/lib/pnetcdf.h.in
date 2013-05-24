@@ -470,6 +470,9 @@ int ncmpi_get_att_longlong(int ncid, int varid, const char *name, long long *ip)
 int ncmpi_put_att_uchar(int ncid, int varid, const char *name,
                   nc_type xtype, MPI_Offset len, const unsigned char *op);
 
+int ncmpi_put_att_ubyte(int ncid, int varid, const char *name,
+                  nc_type xtype, MPI_Offset len, const unsigned char *op);
+
 int ncmpi_put_att_ushort(int ncid, int varid, const char *name,
                   nc_type xtype, MPI_Offset len, const unsigned short *op);
 
@@ -482,7 +485,13 @@ int ncmpi_put_att_long(int ncid, int varid, const char *name,
 int ncmpi_put_att_ulonglong(int ncid, int varid, const char *name,
                   nc_type xtype, MPI_Offset len, const unsigned long long *op);
 
+int ncmpi_put_att_string(int ncid, int varid, const char  *name,
+                  MPI_Offset nelems, const char **value);
+
 int ncmpi_get_att_uchar(int ncid, int varid, const char *name,
+                  unsigned char *ip);
+
+int ncmpi_get_att_ubyte(int ncid, int varid, const char *name,
                   unsigned char *ip);
 
 int ncmpi_get_att_ushort(int ncid, int varid, const char *name,
@@ -496,6 +505,9 @@ int ncmpi_get_att_long(int ncid, int varid, const char *name,
 
 int ncmpi_get_att_ulonglong(int ncid, int varid, const char *name,
                   unsigned long long *ip);
+
+int ncmpi_get_att_string(int ncid, int varid, const char  *name,
+                  char **value);
 /* End Skip Prototypes for Fortran binding */
 
 /* End _att */

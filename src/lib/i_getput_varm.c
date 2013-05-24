@@ -54,7 +54,7 @@ ncmpi_iput_varm(int               ncid,
 {
     int     status;
     NC     *ncp;
-    NC_var *varp;
+    NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
@@ -82,7 +82,7 @@ ncmpi_iput_varm_##apitype(int               ncid,                        \
 {                                                                        \
     int         status;                                                  \
     NC         *ncp;                                                     \
-    NC_var     *varp;                                                    \
+    NC_var     *varp=NULL;                                               \
     MPI_Offset  nelems;                                                  \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
@@ -141,7 +141,7 @@ ncmpi_iget_varm(int               ncid,
 {
     int     status;
     NC     *ncp;
-    NC_var *varp;
+    NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
@@ -170,7 +170,7 @@ ncmpi_iget_varm_##apitype(int               ncid,                        \
 {                                                                        \
     int         status;                                                  \
     NC         *ncp;                                                     \
-    NC_var     *varp;                                                    \
+    NC_var     *varp=NULL;                                               \
     MPI_Offset  nelems;                                                  \
                                                                          \
     *reqid = NC_REQ_NULL;                                                \
@@ -358,7 +358,7 @@ ncmpii_igetput_varm(NC               *ncp,
     int err, status, warning; /* err is for API abort and status is not */
     int el_size, iscontig_of_ptypes, do_vars, isderived;
     int need_convert, need_swap, need_swap_back_buf;
-    int i, dim=0, imap_contig_blocklen;
+    int i, dim=0, imap_contig_blocklen=1;
     MPI_Offset fnelems, bnelems, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
