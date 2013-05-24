@@ -54,46 +54,46 @@ install:
 uninstall:
 
 collective_write: collective_write.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 nonblocking_write: nonblocking_write.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 get_info_c: get_info_c.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 get_info_f.o: get_info_f.F90
 	$(COMPILE.F90) $<
 
 get_info_f: get_info_f.o
-	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.F90) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 column_wise: column_wise.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 block_cyclic: block_cyclic.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 put_vara.o: put_vara.F
 	$(COMPILE.F90) $<
 
 put_vara: put_vara.o
-	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.F90) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 mput: mput.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 hints: hints.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 flex: flex.o
-	$(LINK.c) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 flex_f.o: flex_f.F
 	$(COMPILE.F90) $<
 
 flex_f: flex_f.o
-	$(LINK.F90) -o $@ $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+	$(LINK.F90) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 include $(srcdir)/depend
 
