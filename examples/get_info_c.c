@@ -46,6 +46,7 @@
 }
 
 /*----< print_info() >------------------------------------------------------*/
+static
 void print_info(MPI_Info *info_used)
 {
     int  i, nkeys;
