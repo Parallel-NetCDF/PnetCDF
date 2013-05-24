@@ -35,7 +35,7 @@ ncmpi_iput_var(int           ncid,
 {
     int         status;
     NC         *ncp;
-    NC_var     *varp;
+    NC_var     *varp=NULL;
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
@@ -62,7 +62,7 @@ ncmpi_iput_var_##apitype(int          ncid,                             \
 {                                                                       \
     int         status;                                                 \
     NC         *ncp;                                                    \
-    NC_var     *varp;                                                   \
+    NC_var     *varp=NULL;                                              \
     MPI_Offset  nelems, *start, *count;                                 \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \
@@ -119,7 +119,7 @@ ncmpi_iget_var(int           ncid,
 {
     int         status;
     NC         *ncp;
-    NC_var     *varp;
+    NC_var     *varp=NULL;
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
@@ -145,7 +145,7 @@ ncmpi_iget_var_##apitype(int    ncid,                                   \
 {                                                                       \
     int         status;                                                 \
     NC         *ncp;                                                    \
-    NC_var     *varp;                                                   \
+    NC_var     *varp=NULL;                                              \
     MPI_Offset  nelems, *start, *count;                                 \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \

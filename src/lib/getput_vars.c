@@ -44,7 +44,7 @@ ncmpi_put_vars##iomode(int               ncid,                   \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
                                                                  \
@@ -71,7 +71,7 @@ ncmpi_get_vars##iomode(int               ncid,                   \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
                                                                  \
@@ -97,7 +97,7 @@ ncmpi_put_vars_##apitype(int               ncid,                 \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset  nelems;                                          \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
@@ -175,7 +175,7 @@ ncmpi_get_vars_##apitype(int               ncid,                 \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset  nelems;                                          \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
@@ -283,10 +283,10 @@ ncmpii_getput_vars(NC               *ncp,
                    int               io_method)
 {
     void *xbuf=NULL, *cbuf=NULL;
-    int el_size, buftype_is_contig, mpireturn, need_swap, is_buf_swapped=0;
+    int el_size, buftype_is_contig, mpireturn, need_swap=0, is_buf_swapped=0;
     int isderived, mpi_err, int4;
     int warning, err, status; /* err is for API abort and status is not */
-    MPI_Offset fnelems, bnelems, nbytes, offset=0;
+    MPI_Offset fnelems=1, bnelems, nbytes, offset=0;
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE;
     MPI_File fh;

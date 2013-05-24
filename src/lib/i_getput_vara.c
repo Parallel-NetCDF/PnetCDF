@@ -37,7 +37,7 @@ ncmpi_iput_vara(int               ncid,
 {
     int     status;
     NC     *ncp;
-    NC_var *varp;
+    NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
@@ -63,7 +63,7 @@ ncmpi_iput_vara_##apitype(int               ncid,                      \
 {                                                                      \
     int         status;                                                \
     NC         *ncp;                                                   \
-    NC_var     *varp;                                                  \
+    NC_var     *varp=NULL;                                             \
     MPI_Offset  nelems;                                                \
                                                                        \
     *reqid = NC_REQ_NULL;                                              \
@@ -120,7 +120,7 @@ ncmpi_iget_vara(int               ncid,
 {
     int     status;
     NC     *ncp;
-    NC_var *varp;
+    NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
@@ -147,7 +147,7 @@ ncmpi_iget_vara_##apitype(int               ncid,                         \
 {                                                                         \
     int         status;                                                   \
     NC         *ncp;                                                      \
-    NC_var     *varp;                                                     \
+    NC_var     *varp=NULL;                                                \
     MPI_Offset  nelems;                                                   \
                                                                           \
     *reqid = NC_REQ_NULL;                                                 \

@@ -537,7 +537,7 @@ vardata(
 
 #define VALBUFSIZ 1048576
     double *vals ; /* aligned buffer */
-    int xsz; /* variable element size in byte */
+    int xsz=1; /* variable element size in byte */
     int gulp;
 
     switch(vp->type) {

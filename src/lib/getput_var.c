@@ -32,7 +32,7 @@ ncmpi_put_var##iomode(int           ncid,                        \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset *start, *count;                                   \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
@@ -64,7 +64,7 @@ ncmpi_get_var##iomode(int           ncid,                        \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset *start, *count;                                   \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \
@@ -94,7 +94,7 @@ ncmpi_put_var_##apitype(int          ncid,                       \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset  nelems, *start, *count;                          \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, collmode, status)   \
@@ -174,7 +174,7 @@ ncmpi_get_var_##apitype(int    ncid,                             \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset  nelems, *start, *count;                          \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, collmode, status)    \

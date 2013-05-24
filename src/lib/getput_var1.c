@@ -33,7 +33,7 @@ ncmpi_put_var1(int               ncid,
 {
     int         status;
     NC         *ncp;
-    NC_var     *varp;
+    NC_var     *varp=NULL;
     MPI_Offset *count;
 
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_IO, status)
@@ -59,7 +59,7 @@ ncmpi_put_var1_##apitype(int               ncid,                 \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset *count;                                           \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_IO, status)   \
@@ -113,7 +113,7 @@ ncmpi_get_var1(int               ncid,
 {
     int     status;
     NC     *ncp;
-    NC_var *varp;
+    NC_var *varp=NULL;
     MPI_Offset *count;
 
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_IO, status)
@@ -139,7 +139,7 @@ ncmpi_get_var1_##apitype(int               ncid,                 \
 {                                                                \
     int         status;                                          \
     NC         *ncp;                                             \
-    NC_var     *varp;                                            \
+    NC_var     *varp=NULL;                                       \
     MPI_Offset *count;                                           \
                                                                  \
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_IO, status)    \

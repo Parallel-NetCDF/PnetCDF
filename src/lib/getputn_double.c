@@ -36,7 +36,7 @@ put_ix_double(void *xp, const double *ip)
 #endif
 }
 
-#elif vax
+#elif defined(vax)
 
 /* What IEEE double precision floating point looks like on a Vax */
 struct ieee_double {
@@ -306,7 +306,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
     *xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_DOUBLE);
     return NC_NOERR;
 }
-#elif vax
+#elif defined(vax)
 int
 ncmpix_getn_double_double(const void **xpp, MPI_Offset ndoubles, double *ip)
 {
@@ -409,7 +409,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
     *xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_DOUBLE);
     return NC_NOERR;
 }
-#elif vax
+#elif defined(vax)
 int
 ncmpix_putn_double_double(void **xpp, MPI_Offset ndoubles, const double *ip)
 {

@@ -36,7 +36,7 @@ put_ix_float(void *xp, const float *ip)
 #endif
 }
 
-#elif vax
+#elif defined(vax)
 
 /* What IEEE single precision floating point looks like on a Vax */
 struct ieee_single {
@@ -313,7 +313,7 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
     *xpp = (const void *)((const char *)(*xpp) + nelems * X_SIZEOF_FLOAT);
     return NC_NOERR;
 }
-#elif vax
+#elif defined(vax)
 int
 ncmpix_getn_float_float(const void **xpp, MPI_Offset nfloats, float *ip)
 {
@@ -424,7 +424,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
     *xpp = (void *)((char *)(*xpp) + nelems * X_SIZEOF_FLOAT);
     return NC_NOERR;
 }
-#elif vax
+#elif defined(vax)
 int
 ncmpix_putn_float_float(void **xpp, MPI_Offset nfloats, const float *ip)
 {

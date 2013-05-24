@@ -869,6 +869,7 @@ int ncmpi_inq_header_size(int         ncid,
     return NC_NOERR;
 }
 
+#ifdef __DEBUG
 
 #include <stdio.h>
 /*----< ncmpi_print_all_var_offsets() >---------------------------------------*/
@@ -905,4 +906,4 @@ int ncmpi_print_all_var_offsets(int ncid) {
     return NC_NOERR;
 }
 
-
+#endif

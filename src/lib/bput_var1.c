@@ -36,7 +36,7 @@ ncmpi_bput_var1(int               ncid,
 {
     int         status;
     NC         *ncp;
-    NC_var     *varp;
+    NC_var     *varp=NULL;
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
@@ -64,7 +64,7 @@ ncmpi_bput_var1_##apitype(int               ncid,                       \
 {                                                                       \
     int         status;                                                 \
     NC         *ncp;                                                    \
-    NC_var     *varp;                                                   \
+    NC_var     *varp=NULL;                                              \
     MPI_Offset *count;                                                  \
                                                                         \
     *reqid = NC_REQ_NULL;                                               \

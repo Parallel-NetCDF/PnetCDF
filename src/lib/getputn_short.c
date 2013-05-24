@@ -75,7 +75,7 @@ ncmpix_get_short_short(const void *xp, short *ip)
 #endif
 
 /*----< ncmpix_get_short_int() >---------------------------------------------*/
-int
+static int
 ncmpix_get_short_int(const void *xp, int *ip)
 {
 #if SIZEOF_IX_SHORT == SIZEOF_INT && IX_SHORT_MAX == INT_MAX
