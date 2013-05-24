@@ -141,6 +141,5 @@
      &                           nfmpi_strerror(err)
 
       CALL MPI_Finalize(err)
-      return
       end program
 

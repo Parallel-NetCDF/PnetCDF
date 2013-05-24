@@ -79,8 +79,6 @@
           integer subarray, req(1), status(1)
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2)
-          integer nfmpi_put_vara_all
-          integer nfmpi_iput_vara
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)

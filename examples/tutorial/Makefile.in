@@ -61,40 +61,40 @@ install:
 uninstall:
 
 pnetcdf-write-from-master: pnetcdf-write-from-master.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-read-from-master: pnetcdf-read-from-master.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-write-nfiles: pnetcdf-write-nfiles.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-read-nfiles: pnetcdf-read-nfiles.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-write-standard: pnetcdf-write-standard.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-read-standard: pnetcdf-read-standard.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-write-flexible: pnetcdf-write-flexible.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-read-flexible: pnetcdf-read-flexible.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-write-nb: pnetcdf-write-nb.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-read-nb: pnetcdf-read-nb.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-write-buffered: pnetcdf-write-buffered.o
-	$(LINK.c) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o
-	$(LINK.F) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+	$(LINK.F) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
 clean:
 	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
