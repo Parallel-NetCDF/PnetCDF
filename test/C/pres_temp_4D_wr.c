@@ -62,7 +62,7 @@
  * non-zero status. */
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); return 2;}
 
-void
+static void
 check_err(const int stat, const int line, const char *file) {
     if (stat != NC_NOERR) {
            (void) fprintf(stderr, "line %d of %s: %s\n", line, file, ncmpi_strerror(stat));
