@@ -11,6 +11,10 @@
    NCI_Free_fn(ptr,__LINE__,__FILE__).
  */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

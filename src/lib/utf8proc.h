@@ -39,9 +39,6 @@
 #ifndef UTF8PROC_H
 #define UTF8PROC_H
 
-
-#include "ncconfig.h"
-
 #include <stdlib.h>
 #ifdef HAVE_STDBOOL_H
 #include <stdbool.h>

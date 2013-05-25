@@ -4,7 +4,7 @@
  *   $Id$
  *********************************************************************/
 
-#include <math.h>
+#include <math.h> /* floor() */
 #include "tests.h"
 
 /* Prototypes */

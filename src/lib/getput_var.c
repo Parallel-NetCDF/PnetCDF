@@ -4,6 +4,10 @@
  */
 /* $Id$ */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include "nc.h"
 #include "ncx.h"
 #include <mpi.h>

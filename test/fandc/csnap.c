@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <math.h>
+#include <math.h>  /* sqrt() */
 #include <limits.h>
 #include <float.h>
 #include <mpi.h>

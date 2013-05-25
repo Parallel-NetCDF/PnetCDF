@@ -4,6 +4,10 @@
  */
 /* $Id$ */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include "ncx.h"
 
 /* ftype is the variable's nc_type defined in file, eg. int64

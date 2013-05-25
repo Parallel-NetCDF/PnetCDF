@@ -4,7 +4,9 @@
  */
 /* $Id$ */
 
-#include "ncconfig.h"
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
 
 #ifdef HAVE_ACCESS
 #include <unistd.h>  /* access() */
@@ -15,7 +17,7 @@
 #endif
 #include <stdio.h>
 #include <errno.h>
-#include <string.h>
+#include <string.h>  /* strchr() */
 #ifdef _MSC_VER /* Microsoft Compilers */
 #include <io.h>
 #else

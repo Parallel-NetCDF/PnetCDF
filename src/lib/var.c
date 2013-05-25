@@ -4,11 +4,15 @@
  */
 /* $Id$ */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include "nc.h"
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include <string.h>
+#include <string.h> /* memset() */
 #include <assert.h>
 #include "ncx.h"
 #include "rnd.h"

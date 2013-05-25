@@ -7,8 +7,6 @@
 #ifndef NCTYPES_H
 #define NCTYPES_H
 
-#include "ncconfig.h" /* output of 'configure' */
-
 #ifndef HAVE_PTRDIFF_T
 typedef int ptrdiff_t;
 #endif

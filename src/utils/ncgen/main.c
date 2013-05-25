@@ -4,11 +4,15 @@
  *   $Header$
  *********************************************************************/
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include <stdio.h>		/* has getopt() under VMS */
 #include <string.h>
 
 #ifdef __hpux
-#include <locale.h>
+#include <locale.h>  /* setlocale() */
 #endif
     
 #include <pnetcdf.h>

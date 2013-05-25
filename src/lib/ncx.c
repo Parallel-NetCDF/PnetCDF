@@ -27,10 +27,13 @@
  * An external data representation interface.
  */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include "nc.h"
 #include "ncx.h"
 #include <string.h>
-#include <limits.h>
 #include <sys/types.h>
 
 
