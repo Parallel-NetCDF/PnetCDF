@@ -184,8 +184,7 @@ ncmpii_get_offset(NC               *ncp,
                   const MPI_Offset  strides[],  /* [varp->ndims] */
                   MPI_Offset       *offset_ptr) /* return file offset */
 {
-    /* returns the starting file offset when this variable is get/put
-       with starts[] */
+    /* returns the file offset of the last element of this request */
     MPI_Offset offset, *end_off=NULL;
     int status, i, ndims;
 
@@ -197,7 +196,7 @@ ncmpii_get_offset(NC               *ncp,
 
     if (counts != NULL && strides != NULL) {
         for (i=0; i<ndims; i++)
-            end_off[i] = starts[i] + counts[i] * strides[i] - 1;
+            end_off[i] = starts[i] + (counts[i] - 1) * strides[i];
     }
     else if (counts != NULL) { /* strides == NULL */
         for (i=0; i<ndims; i++)
