@@ -28,8 +28,8 @@ SRCS		=   nc_test.c \
 
 OBJS		= $(SRCS:.c=.o)
 
-lib_netcdf	= ../../src/lib/libpnetcdf.a
-ld_netcdf	= -L../../src/lib -lpnetcdf
+lib_pnetcdf	= ../../src/lib/libpnetcdf.a
+ld_pnetcdf	= -L../../src/lib -lpnetcdf
 
 time_log	= times
 
@@ -62,8 +62,8 @@ install:
 uninstall:
 
 
-nc_test:		$(OBJS) $(lib_netcdf)
-	$(LINK.c) $(OBJS) $(ld_netcdf) $(ld_math) $(LIBS)
+nc_test:		$(OBJS) $(lib_pnetcdf)
+	$(LINK.c) $(OBJS) $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 test_get.c:	test_get.m4
 
@@ -73,15 +73,15 @@ test_iget.c:	test_iget.m4
 
 test_iput.c:	test_iput.m4
 
-nctime:		nctime.o $(lib_netcdf)
-	$(LINK.c) nctime.o $(ld_netcdf) $(ld_math) $(LIBS) 
+nctime:		nctime.o $(lib_pnetcdf)
+	$(LINK.c) nctime.o $(ld_pnetcdf) $(ld_math) $(LIBS) 
 
 time:	nctime
 	time ./nctime 24 13 19 17 > $(time_log)
 	awk -f timesum.awk < $(time_log)
 
 saber_src:
-	#load -C $(CPPFLAGS) $(SRCS) $(ld_netcdf) $(ld_math) $(LIBS)
+	#load -C $(CPPFLAGS) $(SRCS) $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 # This simple testing target ensures that the test files are present
 testing: test.nc nc_test
