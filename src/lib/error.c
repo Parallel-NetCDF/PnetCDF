@@ -6,15 +6,18 @@
 
 /*LINTLIBRARY*/
 
+#if HAVE_CONFIG_H
 #include "ncconfig.h"
+#endif
 
 #include <stdio.h>
-#include <stdarg.h>
+
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include "pnetcdf.h"
+
 #include "nc.h"
+#include "pnetcdf.h"
 
 #ifdef HAVE_STRERROR
 #include <string.h> /* contains prototype for ansi libc function strerror() */

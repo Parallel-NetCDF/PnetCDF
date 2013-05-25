@@ -5,6 +5,9 @@
  *********************************************************************/
 /* $Id$ */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>

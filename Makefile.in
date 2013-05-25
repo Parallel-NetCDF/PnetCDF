@@ -54,7 +54,7 @@ clean_macros:
 	$(RM) -f macros.make
 
 rmdir_src_test:
-	if [ $(srcdir) != . ] ; then rmdir src test examples ; fi
+	if [ $(srcdir) != . ] ; then rmdir src test examples benchmarks ; fi
 
 # short names for making things in subdirs
 test/clean	\

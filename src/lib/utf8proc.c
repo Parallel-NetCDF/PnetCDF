@@ -25,6 +25,10 @@
  */
 
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include "utf8proc.h"
 #include "utf8proc_data.h"
 

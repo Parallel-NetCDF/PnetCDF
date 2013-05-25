@@ -22,7 +22,6 @@
  * 
  */
 
-#include "ncconfig.h" /* output of 'configure' */
 #include "rnd.h"
 #include <stdio.h>
 #include <string.h>

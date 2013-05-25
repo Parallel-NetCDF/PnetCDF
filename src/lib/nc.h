@@ -10,8 +10,6 @@
  * netcdf library 'private' data structures, objects and interfaces
  */
 
-#include "ncconfig.h"
-
 #include <stddef.h>     /* MPI_Offset */
 #include <sys/types.h>  /* MPI_Offset */
 #include "pnetcdf.h"

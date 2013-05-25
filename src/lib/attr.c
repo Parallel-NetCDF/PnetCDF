@@ -4,8 +4,11 @@
  */
 /* $Id$ */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include <stdio.h>
-#include "nc.h"
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
