@@ -1157,8 +1157,8 @@ ncmpii_construct_off_len_type(NC           *ncp,
                                    buf_type);
 #endif
     if (err != MPI_SUCCESS) {
+        if (*filetype != MPI_BYTE) MPI_Type_free(filetype);
         *filetype = MPI_BYTE;
-        if (*buf_type != MPI_BYTE) MPI_Type_free(buf_type);
         *buf_type = MPI_BYTE;
         return NC_EFILE;
     }
@@ -1421,10 +1421,10 @@ ncmpii_req_aggregation(NC     *ncp,
     if (status == NC_NOERR) status = mpi_err; /* report the first error */
 
     if (mpi_err == NC_NOERR)
-        MPI_Type_commit(&filetype);
+        MPI_Type_commit(&buf_type);
     else {
         buf_len  = 0; /* skip this request */
-        filetype = MPI_BYTE;
+        buf_type = MPI_BYTE;
     }
     for (i=0; i<ngroups; i++) {
         if (btypes[i] != MPI_BYTE) MPI_Type_free(&btypes[i]);
@@ -1451,10 +1451,11 @@ ncmpii_req_aggregation(NC     *ncp,
             mpireturn = MPI_File_read(fh, buf, buf_len, buf_type, &mpistatus);
             CHECK_MPI_ERROR(mpireturn, "MPI_File_read", NC_EREAD)
         }
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        ncp->nciop->get_size += get_size;
-
+        if (mpireturn == MPI_SUCCESS) {
+            int get_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+            ncp->nciop->get_size += get_size;
+        }
     } else { /* WRITE_REQ */
         if (io_method == COLL_IO) {
             mpireturn = MPI_File_write_all(fh, buf, buf_len, buf_type, &mpistatus);
@@ -1463,9 +1464,11 @@ ncmpii_req_aggregation(NC     *ncp,
             mpireturn = MPI_File_write(fh, buf, buf_len, buf_type, &mpistatus);
             CHECK_MPI_ERROR(mpireturn, "MPI_File_write", NC_EWRITE)
         }
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->nciop->put_size += put_size;
+        if (mpireturn == MPI_SUCCESS) {
+            int put_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            ncp->nciop->put_size += put_size;
+        }
     }
 
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
