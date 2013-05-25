@@ -55,8 +55,6 @@ AH_TEMPLATE([NF_INT8_IS_C_], [C type for Fortran INT8])
 AH_TEMPLATE([NF_INT8_T], [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_], [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT], [Does sytem have IEEE FLOAT])
-AH_TEMPLATE([NO_STRERROR], [Define if system lacks strerror])
-AH_TEMPLATE([NO_ACCESS], [Define if system lacks access])
 
 AC_HEADER_STDC
  
@@ -317,8 +315,7 @@ AC_CHECK_HEADERS(stdlib.h sys/types.h)
 # Check for <stdbool.h> that conforms to C99 requirements
 AC_HEADER_STDBOOL
 
-AC_CHECK_FUNC(strerror, ,AC_DEFINE(NO_STRERROR))
-AC_CHECK_FUNC(access, ,AC_DEFINE(NO_ACCESS))
+AC_CHECK_FUNCS([strerror access])
 AC_FUNC_ALLOCA
 AC_STRUCT_ST_BLKSIZE
 UD_CHECK_IEEE
