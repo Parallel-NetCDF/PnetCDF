@@ -1388,46 +1388,53 @@ ncmpii_req_aggregation(NC     *ncp,
 
     int mpireturn, mpi_err=NC_NOERR, buf_len=1;
 
-    /* concatenate all ftypes[] to filetype */
-#if (MPI_VERSION < 2)
-    mpireturn = MPI_Type_struct(ngroups, f_blocklengths, f_disps, ftypes,
-                                &filetype);
-#else
-    mpireturn = MPI_Type_create_struct(ngroups, f_blocklengths, f_disps,
-                                       ftypes, &filetype);
-#endif
-    CHECK_MPI_ERROR(mpireturn, "MPI_Type_create_struct", NC_EFILE)
-    if (status == NC_NOERR) status = mpi_err; /* report the first error */
-
-    if (mpi_err == NC_NOERR)
-        MPI_Type_commit(&filetype);
+    if (ngroups == 1) {
+        /* use ftypes[0] and btypes[0] directly */
+        filetype = ftypes[0];
+        buf_type = btypes[0];
+    }
     else {
-        buf_len  = 0; /* skip this request */
-        filetype = MPI_BYTE;
-    }
-    for (i=0; i<ngroups; i++) {
-        if (ftypes[i] != MPI_BYTE) MPI_Type_free(&ftypes[i]);
-    }
-
-    /* concatenate all btypes[] to datatype */
+        /* concatenate all ftypes[] to filetype */
 #if (MPI_VERSION < 2)
-    mpireturn = MPI_Type_struct(ngroups, b_blocklengths, b_disps, btypes,
-                                &buf_type);
+        mpireturn = MPI_Type_struct(ngroups, f_blocklengths, f_disps, ftypes,
+                                    &filetype);
 #else
-    mpireturn = MPI_Type_create_struct(ngroups, b_blocklengths, b_disps,
-                                       btypes, &buf_type);
+        mpireturn = MPI_Type_create_struct(ngroups, f_blocklengths, f_disps,
+                                           ftypes, &filetype);
 #endif
-    CHECK_MPI_ERROR(mpireturn, "MPI_Type_create_struct", NC_EFILE)
-    if (status == NC_NOERR) status = mpi_err; /* report the first error */
+        CHECK_MPI_ERROR(mpireturn, "MPI_Type_create_struct", NC_EFILE)
+        if (status == NC_NOERR) status = mpi_err; /* report the first error */
 
-    if (mpi_err == NC_NOERR)
-        MPI_Type_commit(&buf_type);
-    else {
-        buf_len  = 0; /* skip this request */
-        buf_type = MPI_BYTE;
-    }
-    for (i=0; i<ngroups; i++) {
-        if (btypes[i] != MPI_BYTE) MPI_Type_free(&btypes[i]);
+        if (mpi_err == NC_NOERR)
+            MPI_Type_commit(&filetype);
+        else {
+            buf_len  = 0; /* skip this request */
+            filetype = MPI_BYTE;
+        }
+        for (i=0; i<ngroups; i++) {
+            if (ftypes[i] != MPI_BYTE) MPI_Type_free(&ftypes[i]);
+        }
+
+        /* concatenate all btypes[] to datatype */
+#if (MPI_VERSION < 2)
+        mpireturn = MPI_Type_struct(ngroups, b_blocklengths, b_disps, btypes,
+                                    &buf_type);
+#else
+        mpireturn = MPI_Type_create_struct(ngroups, b_blocklengths, b_disps,
+                                           btypes, &buf_type);
+#endif
+        CHECK_MPI_ERROR(mpireturn, "MPI_Type_create_struct", NC_EFILE)
+        if (status == NC_NOERR) status = mpi_err; /* report the first error */
+
+        if (mpi_err == NC_NOERR)
+            MPI_Type_commit(&buf_type);
+        else {
+            buf_len  = 0; /* skip this request */
+            buf_type = MPI_BYTE;
+        }
+        for (i=0; i<ngroups; i++) {
+            if (btypes[i] != MPI_BYTE) MPI_Type_free(&btypes[i]);
+        }
     }
 
     MPI_File fh;
