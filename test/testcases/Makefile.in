@@ -16,7 +16,6 @@ LIBS     += -lpnetcdf
 
 C_SRCS   = ncmpi_vars_null_stride.c \
            vectors.c \
-           bigrecords.F \
            collective_error.c \
            test_varm.c \
            alignment_test.c
