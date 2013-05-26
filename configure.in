@@ -3,25 +3,28 @@ dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
-dnl Defaults:
-CPPFLAGS=${CFLAGS}
-CFLAGS=${CFLAGS--O}
-FPPFLAGS=${FPPFLAGS-}
-FFLAGS=${FFLAGS-}
-
-AC_INIT(src/lib/ncconfig.in)
 AC_PREREQ(2.59)
+AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
+AC_CONFIG_SRCDIR([src/lib/ncconfig.in])
+
+IFS=. read PNETCDF_VERSION_MAJOR PNETCDF_VERSION_MINOR PNETCDF_VERSION_SUB PNETCDF_VERSION_PRE <<< "$PACKAGE_VERSION"
+
+PNETCDF_VERSION="${PNETCDF_VERSION_MAJOR}.${PNETCDF_VERSION_MINOR}"
+if test x${PNETCDF_VERSION_SUB} != x ; then 
+    PNETCDF_VERSION+=".${PNETCDF_VERSION_SUB}"
+    if test x${PNETCDF_VERSION_PRE} != x ; then 
+        PNETCDF_VERSION+=".${PNETCDF_VERSION_PRE}"
+    fi
+fi
+
+dnl AC_MSG_NOTICE([PNETCDF_VERSION_MAJOR=$PNETCDF_VERSION_MAJOR])
+dnl AC_MSG_NOTICE([PNETCDF_VERSION_MINOR=$PNETCDF_VERSION_MINOR])
+dnl AC_MSG_NOTICE([PNETCDF_VERSION_SUB=$PNETCDF_VERSION_SUB])
+dnl AC_MSG_NOTICE([PNETCDF_VERSION_PRE=$PNETCDF_VERSION_PRE])
+dnl AC_MSG_NOTICE([PNETCDF_VERSION=$PNETCDF_VERSION])
+
 UD_SRCDIR
 dnl AC_PREFIX_DEFAULT(`(cd ..; pwd)`)
-
-PNETCDF_VERSION_MAJOR=1
-PNETCDF_VERSION_MINOR=3
-PNETCDF_VERSION_SUB=1
-#PNETCDF_VERSION_PRE=svn
-#PNETCDF_VERSION_PRE="pre1"
-
-PNETCDF_VERSION=$PNETCDF_VERSION_MAJOR.$PNETCDF_VERSION_MINOR.$PNETCDF_VERSION_SUB$PNETCDF_VERSION_PRE
-
 
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MAJOR, $PNETCDF_VERSION_MAJOR, major version number)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MINOR, $PNETCDF_VERSION_MINOR, minor version number)
@@ -41,25 +44,21 @@ AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf_inc sr
 AC_CONFIG_AUX_DIR(./scripts)
 
 dnl these used to live in acconfig.h
-AH_TEMPLATE([SIZEOF_OFF_T], [Number of bytes in a off_t])
-AH_TEMPLATE([SIZEOF_SIZE_T], [Number of bytes in a size_t])
-AH_TEMPLATE([NCBYTE_T], [Type of NC_BYTE])
-AH_TEMPLATE([NCSHORT_T], [Type of NC_SHORT])
+AH_TEMPLATE([NCBYTE_T],                 [Type of NC_BYTE])
+AH_TEMPLATE([NCSHORT_T],                [Type of NC_SHORT])
 AH_TEMPLATE([NF_DOUBLEPRECISION_IS_C_], [C type for Fortran dobule])
-AH_TEMPLATE([NF_INT1_IS_C_], [C type for Fortran INT1])
-AH_TEMPLATE([NF_INT1_T], [Type for Fortran INT1])
-AH_TEMPLATE([NF_INT2_IS_C_], [C type for Fortran INT2])
-AH_TEMPLATE([NF_INT2_T], [Type for Fortran INT2])
-AH_TEMPLATE([NF_INT_IS_C_], [C type for Fortran INT])
-AH_TEMPLATE([NF_INT8_IS_C_], [C type for Fortran INT8])
-AH_TEMPLATE([NF_INT8_T], [Type for Fortran INT8])
-AH_TEMPLATE([NF_REAL_IS_C_], [C type for Fortran REAL])
-AH_TEMPLATE([NO_IEEE_FLOAT], [Does sytem have IEEE FLOAT])
+AH_TEMPLATE([NF_INT1_IS_C_],            [C type for Fortran INT1])
+AH_TEMPLATE([NF_INT1_T],                [Type for Fortran INT1])
+AH_TEMPLATE([NF_INT2_IS_C_],            [C type for Fortran INT2])
+AH_TEMPLATE([NF_INT2_T],                [Type for Fortran INT2])
+AH_TEMPLATE([NF_INT_IS_C_],             [C type for Fortran INT])
+AH_TEMPLATE([NF_INT8_IS_C_],            [C type for Fortran INT8])
+AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
+AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
+AH_TEMPLATE([NO_IEEE_FLOAT],            [Does sytem have IEEE FLOAT])
 
-AC_HEADER_STDC
- 
 AC_MSG_CHECKING(rm)
-if test x${RM} != x ; then
+if test "x${RM}" != x ; then
         RM=${RM}
 else
         RM="rm"
@@ -67,157 +66,26 @@ fi
 AC_MSG_RESULT(using $RM)
 AC_SUBST(RM)
 
-AC_ARG_ENABLE(fortran,
-    [AS_HELP_STRING([--disable-fortran],
-                    [Turn off support for the Fortran interface,
-                     if you only need the C interface. @<:@default: no@:>@])],
-    [enable_fortran=${enableval}], [enable_fortran=yes])
-
-dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
-dnl preventing PATH_MAX from being defined for some of the test files,
-dnl and I was having a tough time figuring out how to get it back! -- RobR
-AC_ARG_ENABLE(strict,
-    [AS_HELP_STRING([--enable-strict],
-                    [Turn on strict debugging with gcc. @<:@default: no@:>@])],
-    [enable_strict=${enableval}], [enable_strict=no])
-
-if test "x${enable_strict}" = xyes; then
-    if test "x${GCC}" = xyes; then
-        CPPFLAGS="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
-        CXXCPPFLAGS="-Wall -Wundef -Wpointer-arith"
-    else
-        AC_MSG_WARN([--enable-strict is for GNU compiler only])
-    fi
-fi
-AC_SUBST(CXXCPPFLAGS)
-
-
 AC_ARG_ENABLE(echo, 
     [AS_HELP_STRING([--enable-echo],
                     [Turn on strong echoing. @<:@default: no@:>@])],
-    [set -x])
-
-AC_PROG_INSTALL
-AC_PROG_YACC
-AC_PROG_LEX
-
-found_yacc_flex=0;
-
-dnl if configure finds bison then YACC is set to bison -y, so we need to clean
-dnl up the output a bit before testing 
-if which "${YACC% *}" >/dev/null && which "$LEX" >/dev/null ; then
-	found_yacc_flex=1;
-fi
-
-if test "$found_yacc_flex" -ne 1 ; then
-	AC_MSG_ERROR([could not find bison/yacc or flex/lex.  Development tools installed?])
-fi
-
-UD_PROG_M4
-AC_PROG_CC
-AC_PROG_CXX
-dnl AC_PROG_F77
-if test "$enable_fortran" = "yes" ; then
-    if test -z "$FC" -a -n "$F77" ; then
-        FC="$F77"
-    fi
-    dnl 'UD_PROG_FC' is quite elaborate and does a whole lot more than just 
-    dnl find a fortran compiler. it also checks fortran types and fortran
-    dnl calling convention.  So don't change this to AC_PROG_FC :>
-    UD_PROG_FC
-fi
-UD_PROG_CC_MAKEDEPEND
-dnl need a --with-cxx=no and --with-fortran=no
-dnl UD_PROG_CXX
-dnl UD_PROG_F90
-# Checking for Fortran types also determines the Fortran name mangling
-# and places the value into FCALLSCSUB as a the C name corresponding
-# to the Fortran name SUB 
-if test "$enable_fortran" = yes ; then
-    UD_CHECK_FCALLSCSUB
-fi
-UD_CHECK_LIB_MATH
-UD_PROG_AR()
-UD_PROG_NM()
-# We could use the PAC check for ranlib (it also makes sure that ranlib works,
-# which is not always true, particularly when GNU tools are installed on 
-# a system that doesn't have (or need) ranlib
-AC_PROG_RANLIB
-
-#
-# If we are building the Fortran interface, determine the correct name mapping
-if test "$enable_fortran" = yes ; then
- case $FCALLSCSUB in 
-    SUB)
-    AC_DEFINE(F77_NAME_UPPER,,[Define if Fortran names are uppercase])
-    ;;
-    sub_)
-    # This is the hard case.  Gcc uses one _ unless the name includes
-    # an underscore, in which case it gets two trailing underscores.
-    # Use essentially the same configure code that the original configure
-    # used to determine SUB
-    AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB_A\") 
-    		dnl "
-	    cat >conftest.f <<\EOF
-              call sub_a()
-              end
-EOF
-	    doit='$FC -c ${FFLAGS} conftest.f'
-	    if AC_TRY_EVAL(doit); then
-		FCALLSCSUBA=`$NM $NMFLAGS conftest.o | awk '
-		    /SUB_A_/{print "SUB_A_";exit}
-		    /SUB_A/ {print "SUB_A"; exit}
-                    /sub_a__/ {print "sub_a__"; exit}
-		    /sub_a_/{print "sub_a_";exit}
-		    /sub_a/ {print "sub_a"; exit}'`
-		case "$FCALLSCSUBA" in
-		    '') AC_MSG_ERROR(not found)
-			;;
-		    *)  AC_MSG_RESULT($FCALLSCSUBA)
-			;;
-		esac
-	    else
-		AC_MSG_ERROR(Could not compile conftest.f)
-	    fi
-	    ${RM} -rf conftest*
-    case "$FCALLSCSUBA" in 
-        sub_a__) 
-	AC_DEFINE(F77_NAME_LOWER_2USCORE,,[Define if Fortran names are lower case with two trailing underscore2])
-	;;
-	sub_a_)    
-	AC_DEFINE(F77_NAME_LOWER_USCORE,,[Define if Fortran names are lower case with one trailing underscore])
-	;;
-	*)
-        AC_MSG_WARN([Unrecognized Fortran name mapping])
-	;;
-    esac	    
-    ;;
-    sub)
-    AC_DEFINE(F77_NAME_LOWER,,[Define if Fortran names are lower case])
-    ;;
-    *)
-    AC_MSG_WARN([Unrecognized Fortran name mapping])
-    ;;
- esac
-fi
-
+    [set -x]
+)
 
 MPI_INSTALL=""
 AC_ARG_WITH(mpi, 
     [AS_HELP_STRING([--with-mpi=/path/to/implementation],
                     [installation prefix for MPI implementation])],
-		if test x"$withval" = xyes; then
-			AC_MSG_ERROR(--with-mpi must be given a pathname)
-		else
-			MPI_INSTALL=${withval}
-		fi
-	)
+    if test x"$withval" = xyes; then
+	AC_MSG_ERROR(--with-mpi must be given a pathname)
+    else
+	MPI_INSTALL=${withval}
+    fi
+)
 
 dnl do the automatic mpi-compiler-checking if MPICC and MPIF77 are not set
-
 dnl i.e. if user sets compiler environnent variables, those will override the
 dnl --with-mpi flag
-
 if test x${MPI_INSTALL} != x ; then 
 	AC_MSG_CHECKING(mpi C compiler )
 	if test x${MPICC} = x ; then
@@ -240,48 +108,95 @@ if test x${MPI_INSTALL} != x ; then
 	fi
 	AC_MSG_RESULT(using $MPICXX)
 
-	AC_MSG_CHECKING(mpi Fortran 77 compiler )
-	if test x${MPIF77} = x ; then
-		MPIF77=${MPI_INSTALL}/bin/mpif77
-	fi
-	if test ! -x "${MPIF77}" ; then
-		AC_MSG_WARN($MPIF77 either does not exist or is not executable: falling back to $FC)
-		MPIF77="$FC"
-	fi
-	AC_MSG_RESULT(using $MPIF77)
+	if test "x${enable_fortran}" != xno ; then
+	    AC_MSG_CHECKING(mpi Fortran 77 compiler )
+	    if test x${MPIF77} = x ; then
+		    MPIF77=${MPI_INSTALL}/bin/mpif77
+	    fi
+	    if test ! -x "${MPIF77}" ; then
+		    AC_MSG_WARN($MPIF77 either does not exist or is not executable: falling back to $FC)
+		    MPIF77="$FC"
+	    fi
+	    AC_MSG_RESULT(using $MPIF77)
 
-	AC_MSG_CHECKING(mpi Fortran 90 compiler )
-	if test x${MPIF90} = x ; then
-		MPIF90=${MPI_INSTALL}/bin/mpif90
-	fi
-	if test ! -x "${MPIF90}" ; then
-		AC_MSG_WARN($MPIF90 either does not exist or is not executable: falling back to $FC)
-		MPIF90="$FC"
-	fi
-	AC_MSG_RESULT(using $MPIF90)
-fi
-
-if test ! -x "$(which ${MPICC})" ; then
-	AC_MSG_ERROR(parallel-netcdf requires an mpi compiler. Please specify
-	the location of one either with the MPICC environment variable or the
-	--with-mpi configure flag) 
-fi
-
-if test "$enable_fortran" = yes ; then
-	if test ! -x "$(which ${MPIF77})" ; then
-		AC_MSG_ERROR(you have requested fortran support but configure
-		cannot find a Fortran77 compiler.  Please specifiy the location
-		of one either with the MPIF77 environment variable or the --with-mpi
-		configure flag.)
-	fi
-	if test ! -x "$(which ${MPIF90})" ; then
-		AC_MSG_ERROR(you have requested fortran support but configure
-		cannot find a Fortran90 compiler.  Please specifiy the location
-		of one either with the MPIF90 environment variable or the
-		--with-mpi configure flag.)
+	    AC_MSG_CHECKING(mpi Fortran 90 compiler )
+	    if test x${MPIF90} = x ; then
+		    MPIF90=${MPI_INSTALL}/bin/mpif90
+	    fi
+	    if test ! -x "${MPIF90}" ; then
+		    AC_MSG_WARN($MPIF90 either does not exist or is not executable: falling back to $FC)
+		    MPIF90="$FC"
+	    fi
+	    AC_MSG_RESULT(using $MPIF90)
 	fi
 fi
 
+dnl if MPICC is defined, check if the file exits
+if test "x${MPICC}" != x ; then
+    # MPICC is defined (in user env or --with-mpi option)
+    if test ! -x "${MPICC}" ; then
+        # file $MPICC does not exist
+        MPICC_ISVALID=""
+        AC_CHECK_PROGS(MPICC_ISVALID, [${MPICC}])
+        if test "x${MPICC_ISVALID}" = x ; then
+            AC_MSG_WARN(MPICC file: ${MPICC} does not exist)
+            MPICC=""
+        fi
+    fi
+fi
+
+if test "x${MPICC}" = x ; then
+    dnl MPICC is not defined and --with-mpi is not set at configure command line
+    # check possible MPICC from $PATH
+    AC_PATH_PROGS(MPICC, [mpicc mpcc mpixlc mpixlc_r mpxlc mpxlc_r blrts_xlc cc])
+fi
+
+if test "x${MPICC}" = x ; then
+    # still cannot find MPICC
+    AC_MSG_ERROR(parallel-netcdf requires an mpi compiler. Please specify
+    the location of one either with the MPICC environment variable or the
+    --with-mpi configure flag) 
+fi
+
+dnl Now MPICC is configured, let's use it to do some basic compiler tests
+CC=${MPICC}
+AC_PROG_CC
+
+dnl PnetCDF needs no C++ compiler to build
+dnl AC_PROG_CXX
+
+if test "x${MPICXX}" = x ; then
+    dnl MPICC is not defined and --with-mpi is not set at configure command line
+    # check possible MPICC from $PATH
+    AC_PATH_PROGS(MPICXX, [mpicxx mpCC mpixlC mpixlC_r mpxlC mpxlC_r blrts_xlC CC])
+fi
+
+if test "x${MPICXX}" = x ; then
+    # still cannot find MPICC
+    AC_MSG_WARN([No MPI C++ compiler is found ... disable testing C++ programs])
+    has_mpicxx=no
+else
+    has_mpicxx=yes
+fi
+
+CXX=${MPICXX}
+AC_PROG_CXX(${MPICXX})
+dnl autoconf 2.5.9 does not support AC_PROG_CXX_C_O
+dnl AC_PROG_CXX_C_O
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h float.h inttypes.h limits.h locale.h malloc.h stddef.h stdint.h stdlib.h string.h unistd.h])
+ 
+# check if MPICC works for basic MPI call: MPI_Comm_rank()
+AC_CHECK_FUNC([MPI_Comm_rank], [],
+   [AC_MSG_ERROR([
+    ------------------------------------------------------------
+     Invalid MPI compiler specified or detected: "${MPICC}"
+     A working MPI compiler is required. Please specify the location
+     of one either with the MPICC environment variable or the
+     --with-mpi configure flag
+    ------------------------------------------------------------])
+])
 
 AC_ARG_ENABLE([mpi-io-test],
     [AS_HELP_STRING([--disable-mpi-io-test],
@@ -289,118 +204,327 @@ AC_ARG_ENABLE([mpi-io-test],
                      if you know your MPI implementation has MPI-IO support
                      but the configure test fails to find it.
                      @<:@default: no@:>@])],
-    [enable_mpi_io_test=${enableval}], [enable_mpi_io_test=yes])
+    [enable_mpi_io_test=${enableval}], [enable_mpi_io_test=yes]
+)
 
 if test "x${enable_mpi_io_test}" = xyes ; then
-	AC_MSG_CHECKING(MPI-IO support in MPI implementation)
-	saveCC="$CC"
-	if test x$MPICC != x ; then
-		CC=$MPICC
-	fi
-	AC_TRY_COMPILE([#include "mpi.h"], [int a = MPI_MODE_RDWR;],
-		AC_MSG_RESULT(yes),
-		AC_MSG_ERROR([mpi implementation does not support MPI-IO])
-	)
-	CC="$saveCC"
+    AC_CHECK_FUNC([MPI_File_open], [],
+           [AC_MSG_ERROR([
+            ------------------------------------------------------------
+             MPI implementation does not support MPI-IO
+             PnetCDF requires MPI-IO support to work properly.
+            ------------------------------------------------------------])]
+    )
+    AC_LANG_PUSH(C++)
+    AC_CHECK_FUNC([MPI_File_close], [],
+           [has_mpicxx=no
+            MPICXX=
+            AC_MSG_WARN([
+            ------------------------------------------------------------
+             MPI C++ implementation does not support MPI-IO
+             Disabling C++ testing programs
+            ------------------------------------------------------------])]
+    )
+    AC_LANG_POP(C++)
 fi
+AC_SUBST(has_mpicxx)
+
+dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
+dnl preventing PATH_MAX from being defined for some of the test files,
+dnl and I was having a tough time figuring out how to get it back! -- RobR
+dnl Note this must be done after the type of C compiler is determined
+AC_ARG_ENABLE(strict,
+    [AS_HELP_STRING([--enable-strict],
+                    [Turn on strict debugging with gcc. @<:@default: no@:>@])],
+    [enable_strict=${enableval}], [enable_strict=no]
+)
+
+if test "x${enable_strict}" = xyes; then
+    if test "x${GCC}" = xyes; then
+        CPPFLAGS+="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
+        CXXCPPFLAGS+="-Wall -Wundef -Wpointer-arith"
+    else
+        AC_MSG_WARN([--enable-strict is for GNU compiler only])
+    fi
+fi
+AC_SUBST(CXXCPPFLAGS)
+
+dnl check if enabling Fortran APIs is desired (default is yes)
+dnl AC_PROG_F77
+enable_fortran=auto
+AC_ARG_ENABLE(fortran,
+    [AS_HELP_STRING([--disable-fortran],
+                    [Turn off support for the Fortran interface,
+                     if you only need the C interface. @<:@default: no@:>@])],
+    [enable_fortran=${enableval}], [enable_fortran=yes]
+)
+
+dnl check and set FC
+# if test "x${enable_fortran}" != xno ; then
+#     if test -z "$FC" -a -n "$F77" ; then
+#         FC="$F77"
+#     fi
+    dnl 'UD_PROG_FC' is quite elaborate and does a whole lot more than just 
+    dnl find a fortran compiler. it also checks fortran types and fortran
+    dnl calling convention.  So don't change this to AC_PROG_FC :>
+#     UD_PROG_FC
+# fi
+dnl UD_PROG_F90
+
+dnl handle the configuration for Fortran
+if test "x${enable_fortran}" != xno ; then
+    if test "x${MPIF77}" = x ; then
+        dnl MPIF77 is not defined so far
+        # check possible MPIF77 from $PATH
+        AC_PATH_PROGS(MPIF77, [mpif77 mpixlf90 mpxlf_r blrts_xlf mpiifc ifc ftn])
+    fi
+    if test "x${MPIF77}" = x ; then
+        if test "x${enable_fortran}" = xyes ; then
+	    AC_MSG_ERROR(you have requested Fortran support but configure
+	    cannot find a Fortran77 compiler.  Please specifiy the location
+	    of one either with the MPIF77 environment variable or the --with-mpi
+	    configure flag.)
+        else
+            enable_fortran=no
+        fi
+    else
+        F77=${MPIF77}
+        AC_PROG_F77
+        dnl Check if MPIF77 works
+        AC_LANG_PUSH([Fortran 77])
+        # saveF77="$F77"
+        # F77=$MPIF77
+        AC_COMPILE_IFELSE(
+            [AC_LANG_CALL([],[MPI_Comm_rank])],
+            [valid_mpif77=yes],[valid_mpif77=no]
+        )
+        if test "x${valid_mpif77}" = xno ; then
+            if test "x${enable_fortran}" = xyes ; then
+                AC_MSG_ERROR([
+                ------------------------------------------------------------
+                    Invalid MPI Fortran 77 compiler specified: "${MPIF77}"
+                    A working MPI compiler is required. Please specify the location
+                    of one either with the MPIF77 environment variable or the
+                    --with-mpi configure flag
+                ------------------------------------------------------------])
+            else
+                enable_fortran=no
+            fi
+        fi
+        # F77="${saveF77}"
+        AC_LANG_POP([Fortran 77])
+    fi
+
+    if test "x${MPIF90}" = x ; then
+        dnl MPIF90 is not defined so far
+        # check possible MPIF90 from $PATH
+        AC_PATH_PROGS(MPIF90, [mpif90 mpixlf90 mpxlf90_r blrts_xlf90 mpiifc ifc ftn])
+    fi
+    if test "x${MPIF90}" = x ; then
+        if test "x${enable_fortran}" = xyes ; then
+	    AC_MSG_ERROR(you have requested Fortran support but configure
+	    cannot find a Fortran90 compiler.  Please specifiy the location
+	    of one either with the MPIF90 environment variable or the
+	    --with-mpi configure flag.)
+        else
+            enable_fortran=no
+        fi
+    else
+        dnl Check if MPIF90 works
+        FC=${MPIF90}
+        AC_PROG_FC
+        AC_LANG_PUSH([Fortran])
+        AC_COMPILE_IFELSE(
+            [AC_LANG_CALL([],[MPI_Comm_rank])],
+            [valid_mpif90=yes],[valid_mpif90=no]
+        )
+        if test "x${valid_mpif90}" = xno ; then
+            if test "x${enable_fortran}" = xyes ; then
+                AC_MSG_ERROR([
+                ------------------------------------------------------------
+                    Invalid MPI Fortran 90 compiler specified: "${MPIF90}"
+                    A working MPI compiler is required. Please specify the location
+                    of one either with the MPIF77 environment variable or the
+                    --with-mpi configure flag
+                ------------------------------------------------------------])
+            else
+                enable_fortran=no
+            fi
+        else
+            if test "x${valid_mpif77}" = xno ; then
+                AC_MSG_WARN([Invalid MPIF77, set MPIF77 to MPIF90])
+                MPIF77=$MPIF90
+                enable_fortran=yes
+            fi
+        fi
+        AC_LANG_POP([Fortran])
+    fi
+    if test "x${valid_mpif77}" = xyes && test "x${valid_mpif90}" = xyes ; then
+        enable_fortran=yes
+    fi
+    if test "x${enable_fortran}" = xno ; then
+        AC_MSG_WARN([
+            ------------------------------------------------------------
+                Specified MPI Fortran 77/90 compilers:
+                    "MPIF77 = ${MPIF77}"
+                    "MPIF90 = ${MPIF90}"
+                either or both are invalid. Disable Fortran feature ...
+            ------------------------------------------------------------])
+    fi
+fi
+
+if test "x${enable_fortran}" = xyes ; then
+    # Checking for Fortran types also determines the Fortran name mangling
+    # and places the value into FCALLSCSUB as a the C name corresponding
+    # to the Fortran name SUB 
+    UD_CHECK_FCALLSCSUB
+
+    # determine the correct name mapping
+    case $FCALLSCSUB in 
+       SUB)
+           AC_DEFINE(F77_NAME_UPPER,,[Define if Fortran names are uppercase])
+           ;;
+       sub_)
+           # This is the hard case.  Gcc uses one _ unless the name includes
+           # an underscore, in which case it gets two trailing underscores.
+           # Use essentially the same configure code that the original configure
+           # used to determine SUB
+           AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB_A\") 
+    		   dnl "
+	    cat >conftest.f <<\EOF
+              call sub_a()
+              end
+EOF
+	   doit='$FC -c ${FFLAGS} conftest.f'
+	   if AC_TRY_EVAL(doit); then
+		FCALLSCSUBA=`$NM $NMFLAGS conftest.o | awk '
+		    /SUB_A_/{print "SUB_A_";exit}
+		    /SUB_A/ {print "SUB_A"; exit}
+                    /sub_a__/ {print "sub_a__"; exit}
+		    /sub_a_/{print "sub_a_";exit}
+		    /sub_a/ {print "sub_a"; exit}'`
+		case "$FCALLSCSUBA" in
+		    '') AC_MSG_ERROR(not found)
+			;;
+		    *)  AC_MSG_RESULT($FCALLSCSUBA)
+			;;
+		esac
+	   else
+		AC_MSG_ERROR(Could not compile conftest.f)
+	   fi
+	   ${RM} -rf conftest*
+           case "$FCALLSCSUBA" in 
+               sub_a__) 
+	           AC_DEFINE(F77_NAME_LOWER_2USCORE,,[Define if Fortran names are lower case with two trailing underscore2])
+	           ;;
+	       sub_a_)    
+	           AC_DEFINE(F77_NAME_LOWER_USCORE,,[Define if Fortran names are lower case with one trailing underscore])
+	           ;;
+	       *)
+                   AC_MSG_WARN([Unrecognized Fortran name mapping])
+	           ;;
+           esac	    
+           ;;
+       sub)
+           AC_DEFINE(F77_NAME_LOWER,,[Define if Fortran names are lower case])
+           ;;
+       *)
+           AC_MSG_WARN([Unrecognized Fortran name mapping])
+           ;;
+    esac
+fi
+
 AC_SUBST(MPICC)
 AC_SUBST(MPIF77)
 AC_SUBST(MPICXX)
 AC_SUBST(MPIF90)
 
-if test "x${MPICXX}" = x ; then
-    has_mpicxx=no
-else
-    has_mpicxx=yes
-fi
-AC_SUBST(has_mpicxx)
+AC_PROG_INSTALL
+AC_PROG_YACC
+AC_PROG_LEX
+AC_PROG_AWK
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
 
-AC_CHECK_HEADERS(stdlib.h sys/types.h)
+dnl YACC and LEX are required to build PnetCDF
+dnl if configure finds bison then YACC is set to bison -y, so we need to clean
+dnl up the output a bit before testing 
+YACC_CMD="${YACC% *}"
+AC_CHECK_PROG([yacc_cmd], [${YACC_CMD}], [yes], [no])
+AC_CHECK_PROG([lex_cmd],  [${LEX}],      [yes], [no])
+if test "x${yacc_cmd}" = no ; then
+    AC_MSG_ERROR([could not find bison/yacc required by PnetCDF])
+fi
+if test "x${lex_cmd}" = no ; then
+    AC_MSG_ERROR([could not find flex/lex required by PnetCDF])
+fi
+
+UD_PROG_M4
+UD_PROG_CC_MAKEDEPEND
+dnl UD_PROG_CXX
+UD_CHECK_LIB_MATH
+UD_PROG_AR()
+UD_PROG_NM()
+# We could use the PAC check for ranlib (it also makes sure that ranlib works,
+# which is not always true, particularly when GNU tools are installed on 
+# a system that doesn't have (or need) ranlib
+AC_PROG_RANLIB
 
 # Check for <stdbool.h> that conforms to C99 requirements
 AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
 
-AC_CHECK_FUNCS([strerror access])
-AC_FUNC_ALLOCA
 AC_STRUCT_ST_BLKSIZE
 UD_CHECK_IEEE
-AC_TYPE_SIZE_T
 
-dnl
-dnl *** SWITCHING TO USING MPICC ***
-dnl
-saveCC="$CC"
-CC=$MPICC
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+AC_FUNC_REALLOC
+AC_FUNC_STRTOD
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([memset setlocale sqrt strchr strerror strrchr strtol access])
+dnl AC_CHECK_LIB([m], [floor])
 
-dnl compile-only check for size of MPI types (based on one for MPI_Offset from
-dnl Christopher Subich <csubich@math.uwaterloo.ca>)
-
-AC_DEFUN([UD_MPI_CHECK_SIZE], [
-	if test ! "$ac_cv_sizeof_$1"; then
-		AC_MSG_CHECKING(if $1 is size $2)
-		AC_COMPILE_IFELSE(
-		[AC_LANG_SOURCE([
-		#include "mpi.h"
-		#include <stdio.h>
-		int main (int argc, char **argv)
-		{
-		static int test_array [[sizeof ($1) == $2 ? 1 : -1 ]];
-		return 0;
-		}])], 
-		AC_MSG_RESULT(yes)
-		ac_cv_sizeof_$1=$2,
-		AC_MSG_RESULT(no))
-	fi
-])
-
-UD_MPI_CHECK_SIZE(MPI_Offset, 8)
-UD_MPI_CHECK_SIZE(MPI_Offset, 4)
-UD_MPI_CHECK_SIZE(MPI_Offset, 16)
-
-UD_MPI_CHECK_SIZE(MPI_Aint, 8)
-UD_MPI_CHECK_SIZE(MPI_Aint, 4)
-UD_MPI_CHECK_SIZE(MPI_Aint, 16)
+AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
+if test "x${ac_cv_type_MPI_Offset}" = xyes; then
+    AC_CHECK_SIZEOF([MPI_Offset], [], [#include <mpi.h>])
+else
+    AC_MSG_ERROR([Unable to find type MPI_Offset in mpi.h])
+fi
+AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
 
 dnl ok, now we know how big MPI_Offset is.  If it's less than 8 bytes 
 dnl we have to disable the new "CDF-5" (variables larger than 4gb) support
-
-enable_cdf5=yes
 if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
 	AC_MSG_WARN("Unable to support CDF-5 format");
 	enable_cdf5=no
-fi
-if test "$enable_cdf5" = "yes" ; then
+else
 	AC_DEFINE(ENABLE_CDF5,,[Define if able to support CDF-5 file format])
+	enable_cdf5=yes
 fi
-
-AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address,,)
-
-# the nonblocking routines need these functions
-enable_nonblocking=yes
-AC_CHECK_FUNCS(MPI_Request_get_status MPI_Type_dup,,
-  enable_nonblocking=no
-)
 
 # the nonblocking routines build up lists of requests with MPI_Type_struct.  If
 # MPI_Offset not the same size as MPI_Aint, the arrays passed around will get
 # mangled. 
-
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
-	AC_MSG_WARN(MPI_Offset and MPI_Aint have different sizes: unable to support non-blocking routines)
+	AC_MSG_WARN(MPI_Offset and MPI_Aint have different sizes: non-blocking APIs now behave like blocking ones)
 	enable_nonblocking=no
-fi
-
-if test "$enable_nonblocking" = "yes" ; then
+else
 	AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
+	enable_nonblocking=yes
 fi
 
-dnl Check for presence of various MPI_COMBINERs.  These could be
-dnl enums, so we have to do compile checks.
+# check for MPI-2 only functions
+AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address,,)
 
-AC_DEFUN([UD_HAS_MPI_COMBINER], [
+dnl Check for presence of MPI constant.
+dnl These could be enums, so we have to do compile checks.
+AC_DEFUN([UD_HAS_MPI_CONST], [
 	AC_MSG_CHECKING(if MPI includes $1)
 	AC_TRY_COMPILE([ #include <mpi.h> ],
-		[int combiner = $1; ],
+		[int dummy = $1; ],
 		AC_MSG_RESULT(yes)
 		AC_DEFINE(HAVE_$1, 1, available),
 		AC_MSG_RESULT(no)
@@ -408,75 +532,79 @@ AC_DEFUN([UD_HAS_MPI_COMBINER], [
 	] 
 )
 
-UD_HAS_MPI_COMBINER(MPI_COMBINER_DUP)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_HVECTOR_INTEGER)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_HINDEXED_INTEGER)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_SUBARRAY)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_DARRAY)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_RESIZED)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_STRUCT_INTEGER)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_INDEXED_BLOCK)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_REAL)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_INTEGER)
-UD_HAS_MPI_COMBINER(MPI_COMBINER_F90_COMPLEX)
+dnl Check for presence of MPI COMBINERS.
+UD_HAS_MPI_CONST(MPI_COMBINER_DUP)
+UD_HAS_MPI_CONST(MPI_COMBINER_HVECTOR_INTEGER)
+UD_HAS_MPI_CONST(MPI_COMBINER_HINDEXED_INTEGER)
+UD_HAS_MPI_CONST(MPI_COMBINER_SUBARRAY)
+UD_HAS_MPI_CONST(MPI_COMBINER_DARRAY)
+UD_HAS_MPI_CONST(MPI_COMBINER_RESIZED)
+UD_HAS_MPI_CONST(MPI_COMBINER_STRUCT_INTEGER)
+UD_HAS_MPI_CONST(MPI_COMBINER_INDEXED_BLOCK)
+UD_HAS_MPI_CONST(MPI_COMBINER_F90_REAL)
+UD_HAS_MPI_CONST(MPI_COMBINER_F90_INTEGER)
+UD_HAS_MPI_CONST(MPI_COMBINER_F90_COMPLEX)
+
+dnl Check for presence of various MPI error classes.
+dnl These could be enums, so we have to do compile checks.
+UD_HAS_MPI_CONST(MPI_ERR_FILE_EXISTS)
+UD_HAS_MPI_CONST(MPI_ERR_NO_SUCH_FILE)
+
+dnl Check for presence of MPI datatypes.
+dnl These could be enums, so we have to do compile checks.
+AC_DEFUN([UD_HAS_MPI_DATATYPE], [
+	AC_MSG_CHECKING(if MPI includes $1)
+	AC_TRY_COMPILE([ #include <mpi.h> ],
+		[MPI_Datatype dummy = $1; ],
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_$1, 1, available),
+		AC_MSG_RESULT(no)
+	)
+	] 
+)
+
+dnl Check for presence of C types
+UD_HAS_MPI_DATATYPE(MPI_CHAR)
+UD_HAS_MPI_DATATYPE(MPI_BYTE)
+UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_CHAR)
+UD_HAS_MPI_DATATYPE(MPI_SHORT)
+UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_SHORT)
+UD_HAS_MPI_DATATYPE(MPI_INT)
+UD_HAS_MPI_DATATYPE(MPI_UNSIGNED)
+UD_HAS_MPI_DATATYPE(MPI_LONG)
+UD_HAS_MPI_DATATYPE(MPI_FLOAT)
+UD_HAS_MPI_DATATYPE(MPI_DOUBLE)
+UD_HAS_MPI_DATATYPE(MPI_LONG_LONG_INT)
+UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
 
 dnl Check for presence of Fortran types
+dnl These could be enums, so we have to do compile checks.
 dnl
 dnl We do this for a couple of reasons.  First, the MPI might have been
 dnl built without Fortran support, in which case these types might not
 dnl exist.  Second, we need to map these types to corresponding C types
 dnl where possible to simplify processing at runtime.
 
-AC_DEFUN([UD_HAS_MPI_TYPE], [
-	AC_MSG_CHECKING(if MPI includes $1)
-	AC_TRY_COMPILE([ #include <mpi.h> ],
-		[int datatype = $1; ],
-		AC_MSG_RESULT(yes)
-		AC_DEFINE(HAVE_$1, 1, available),
-		AC_MSG_RESULT(no)
-	)
-	] 
-)
+UD_HAS_MPI_DATATYPE(MPI_CHARACTER)
+UD_HAS_MPI_DATATYPE(MPI_REAL)
+UD_HAS_MPI_DATATYPE(MPI_INTEGER)
+UD_HAS_MPI_DATATYPE(MPI_DOUBLE_PRECISION)
+UD_HAS_MPI_DATATYPE(MPI_INTEGER1)
+UD_HAS_MPI_DATATYPE(MPI_INTEGER2)
+UD_HAS_MPI_DATATYPE(MPI_INTEGER4)
+UD_HAS_MPI_DATATYPE(MPI_INTEGER8)
+UD_HAS_MPI_DATATYPE(MPI_INTEGER16)
+UD_HAS_MPI_DATATYPE(MPI_REAL4)
+UD_HAS_MPI_DATATYPE(MPI_REAL8)
+UD_HAS_MPI_DATATYPE(MPI_REAL16)
+UD_HAS_MPI_DATATYPE(MPI_COMPLEX8)
+UD_HAS_MPI_DATATYPE(MPI_COMPLEX16)
+UD_HAS_MPI_DATATYPE(MPI_COMPLEX32)
+UD_HAS_MPI_DATATYPE(MPI_UB)
+UD_HAS_MPI_DATATYPE(MPI_LB)
 
-UD_HAS_MPI_TYPE(MPI_CHARACTER)
-UD_HAS_MPI_TYPE(MPI_REAL)
-UD_HAS_MPI_TYPE(MPI_INTEGER)
-UD_HAS_MPI_TYPE(MPI_DOUBLE_PRECISION)
-UD_HAS_MPI_TYPE(MPI_INTEGER1)
-UD_HAS_MPI_TYPE(MPI_INTEGER2)
-UD_HAS_MPI_TYPE(MPI_INTEGER4)
-UD_HAS_MPI_TYPE(MPI_INTEGER8)
-UD_HAS_MPI_TYPE(MPI_INTEGER16)
-UD_HAS_MPI_TYPE(MPI_REAL4)
-UD_HAS_MPI_TYPE(MPI_REAL8)
-UD_HAS_MPI_TYPE(MPI_REAL16)
-UD_HAS_MPI_TYPE(MPI_COMPLEX8)
-UD_HAS_MPI_TYPE(MPI_COMPLEX16)
-UD_HAS_MPI_TYPE(MPI_COMPLEX32)
-UD_HAS_MPI_TYPE(MPI_UB)
-UD_HAS_MPI_TYPE(MPI_LB)
-
-dnl Check for presence of error codes
-dnl
-AC_DEFUN([UD_HAS_MPI_ERROR_CODE], [
-	AC_MSG_CHECKING(if MPI includes $1)
-	AC_TRY_COMPILE([ #include <mpi.h> ],
-		[int err = $1; ],
-		AC_MSG_RESULT(yes)
-		AC_DEFINE(HAVE_$1, 1, available),
-		AC_MSG_RESULT(no)
-	)
-	] 
-)
-
-UD_HAS_MPI_ERROR_CODE(MPI_ERR_FILE_EXISTS)
-UD_HAS_MPI_ERROR_CODE(MPI_ERR_NO_SUCH_FILE)
-
-dnl
-dnl *** GOING BACK TO REGULAR CC ***
-dnl
-CC="$saveCC"
-
+AC_TYPE_SIZE_T
+AC_TYPE_SIGNAL
 AC_TYPE_OFF_T
 AC_CHECK_TYPES([ssize_t, ptrdiff_t, uchar, ushort, uint, int64, uint64])
 AC_C_CHAR_UNSIGNED
@@ -493,45 +621,6 @@ AC_CHECK_SIZEOF(uint)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(unsigned long long)
 
-dnl Check the size of MPI_Offset.  
-dnl As some platforms don't allow running MPI-linked executives directly,
-dnl the test program is only compiled with MPICC inorder to know "mpi.h"
-dnl and is linked with CC to allow direct run in the script.
-AC_CACHE_CHECK([sizeof MPI_Offset],ac_cv_sizeof_MPI_Offset,
-[
-        cat >conftest.c <<EOF
-#include "mpi.h"
-#include <stdio.h>
-int main( int argc, char **argv )
-{
-     MPI_Offset a;
-     FILE *f = fopen("conftestval", "w" );
-     if (! f) return 1;
-     fprintf( f, "%ld\n", (long)sizeof(a) );
-     fclose(f);
-     return 0;
-}
-EOF
-
-if $MPICC -c conftest.c && $MPICC -o conftest conftest.o ; then
-        if ./conftest ; then
-                 #success
-                 ac_cv_sizeof_MPI_Offset=`cat conftestval`
-        else
-                 # failure
-                 AC_MSG_WARN([Unable to run the program to determine sizeof MPI_Offset])
-                 echo "configure: failed program was:" >&AC_FD_CC
-                 cat conftest.c >&AC_FD_CC
-         fi
-         ${RM} -rf conftest*
-else
-         AC_MSG_ERROR([Unable to compile or link the test program])
-fi
-])
-
-dnl according to autoconf-2.57, this is the correct way to use AC_CACHE_CHECK: call AC_DEFINE after AC_CACHE_CHECK
-AC_DEFINE_UNQUOTED(SIZEOF_MPI_OFFSET, $ac_cv_sizeof_MPI_Offset, [The number of bytes in an MPI_Offset])
-
 if test "$enable_fortran" = yes ; then
     UD_FORTRAN_TYPES
 
@@ -542,7 +631,7 @@ if test "$enable_fortran" = yes ; then
 	$NFMPI_OFFSET value
 	end
 EOF
-    doit='$FC -c ${FFLAGS} conftest.f'
+    doit='$F77 -c ${FFLAGS} conftest.f'
     if AC_TRY_EVAL(doit); then
         AC_MSG_RESULT(yes)
     else
@@ -551,16 +640,10 @@ EOF
     fi
     ${RM} -rf conftest*
 fi
+
 UD_MAKEWHATIS
 
 AC_SYS_LARGEFILE
-
-SAVECC=$CC
-CC=$MPICC
-AC_SEARCH_LIBS(MPI_File_sync, mpio hpmpio,,
-	AC_MSG_ERROR(Cannot find MPI-IO library)
-)
-CC=$SAVECC
 
 dnl sometimes AC_CHECK_SIZEOF wasn't good...  check this on several platforms
 AC_CHECK_SIZEOF(off_t)
@@ -604,9 +687,7 @@ AC_SUBST(has_latex)
 BUILDDIR=$PWD
 AC_SUBST(BUILDDIR)
 
-AC_PROG_AWK
-
-AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile 
+AC_CONFIG_FILES(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile 
 	 src/lib/pnetcdf.h
          src/libf/Makefile  test/common/Makefile test/test_double/Makefile 
 	 test/test_double_int/Makefile test/test_float/Makefile 
@@ -626,35 +707,62 @@ AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile
 	 man/Makefile
 	 benchmarks/Makefile)
 
+AC_OUTPUT
+echo "--------------------------------------------------------------------"
+
 dnl generate a fortran-friendly pnetcdf_inc nfconfig.inc
+dnl replace C comment starter '/*' with '!' in Fortran and
+dnl remove C comment starter '*/'
 sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf_inc>pnetcdf_inc && mv pnetcdf_inc src/libf/pnetcdf_inc
 sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/nfconfig.inc>nfconfig.inc && mv nfconfig.inc src/libf/nfconfig.inc
 
 if test "x${enable_mpi_io_test}" = xno ; then
-	AC_MSG_WARN([
-"NOTE: disabling the MPI-IO test is a VERY bad idea. Please make sure you know what you are doing"])
+    AC_MSG_WARN([
+        NOTE: disabling the MPI-IO test is a VERY bad idea.
+        Please make sure you know what you are doing])
 fi
 
-echo ""
-echo "parallel-netCDF version $PNETCDF_VERSION features:"
+msg_large_files=disabled
 if test "$ac_cv_sizeof_off_t" -gt 4 ; then
-	echo ". parallel-netcdf configured WITH support for large files"
-else
-	echo ". parallel-netcdf configured WITHOUT support for large files"
+	msg_large_files=enabled
 fi
+msg_fortran=disabled
 if test "$enable_fortran" = "yes" ; then
-	echo ". parallel-netcdf configured WITH fortran bindings"
-else
-	echo ". parallel-netcdf configured WITHOUT fortran bindings"
+	msg_fortran=enabled
 fi
+msg_nonblocking=disabled
 if test "$enable_nonblocking" = "yes" ; then
-	echo ". parallel-netcdf configured WITH nonblocking routines"
-else
-	echo ". parallel-netcdf configured WITHOUT nonblocking routines" 
+	msg_nonblocking=enabled
+fi
+msg_cdf5=disabled
+if test "$enable_cdf5" = "yes" ; then
+	msg_cdf5=enabled
 fi
 
-if test "$enable_cdf5" = "yes" ; then
-	echo ". parallel-netcdf configured WITH giant variable support"
-else
-	echo ". parallel-netcdf configured WITHOUT giant variable (CDF-5) support"
-fi
+echo \
+"
+   ${PACKAGE_NAME} Version ${PACKAGE_VERSION}
+
+   Features:  Support for large files - ${msg_large_files}
+              Build Fortran APIs      - ${msg_fortran}
+              Build nonblocking APIs  - ${msg_nonblocking}
+              Build CDF-5 support     - ${msg_cdf5}
+
+   Compilers: MPICC       = ${MPICC}
+              MPICXX      = ${MPICXX}
+              MPIF77      = ${MPIF77}
+              MPIF90      = ${MPIF90}
+              CFLAGS      = ${CFLAGS}
+              FFLAGS      = ${FFLAGS}
+              CPPFLAGS    = ${CPPFLAGS}
+              CXXCPPFLAGS = ${CXXCPPFLAGS}
+              LDFLAGS     = ${LDFLAGS}
+              LIBS        = ${LIBS}
+
+   Now type 'make @<:@<target>@:>@'
+       where the optional <target> is:
+           all              - build all binaries
+           testing          - test PnetCDF build
+           install          - install PnetCDF
+---------------------------------------------------------------------"
+
