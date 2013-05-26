@@ -83,9 +83,14 @@ AC_ARG_ENABLE(strict,
 
 if test "x${enable_strict}" = xyes; then
     if test "x${GCC}" = xyes; then
-        CFLAGS="$CFLAGS -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
+        CPPFLAGS="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
+        CXXCPPFLAGS="-Wall -Wundef -Wpointer-arith"
+    else
+        AC_MSG_WARN([--enable-strict is for GNU compiler only])
     fi
 fi
+AC_SUBST(CXXCPPFLAGS)
+
 
 AC_ARG_ENABLE(echo, 
     [AS_HELP_STRING([--enable-echo],
@@ -110,7 +115,7 @@ fi
 
 UD_PROG_M4
 AC_PROG_CC
-dnl AC_PROG_CXX
+AC_PROG_CXX
 dnl AC_PROG_F77
 if test "$enable_fortran" = "yes" ; then
     if test -z "$FC" -a -n "$F77" ; then
@@ -586,8 +591,23 @@ has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 chmod u+x ${srcdir}/scripts/install-sh
 
+AC_CHECK_PROG([LATEX],  [latex])
+AC_CHECK_PROG([DVIPDF], [dvipdf])
+has_latex=no
+if test "x${LATEX}" != x ; then
+    has_latex=yes
+fi
+AC_SUBST(LATEX)
+AC_SUBST(DVIPDF)
+AC_SUBST(has_latex)
+
+BUILDDIR=$PWD
+AC_SUBST(BUILDDIR)
+
+AC_PROG_AWK
+
 AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile 
-	src/lib/pnetcdf.h
+	 src/lib/pnetcdf.h
          src/libf/Makefile  test/common/Makefile test/test_double/Makefile 
 	 test/test_double_int/Makefile test/test_float/Makefile 
 	 test/test_int/Makefile test/test_dtype/Makefile 
@@ -602,6 +622,8 @@ AC_OUTPUT(macros.make Makefile src/Makefile test/Makefile src/lib/Makefile
 	 test/data/Makefile
 	 examples/tutorial/Makefile
 	 examples/Makefile
+	 doc/Makefile
+	 man/Makefile
 	 benchmarks/Makefile)
 
 dnl generate a fortran-friendly pnetcdf_inc nfconfig.inc

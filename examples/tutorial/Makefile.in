@@ -5,102 +5,71 @@
 # $Id$
 
 srcdir = @srcdir@
-VPATH = @srcdir@
+VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCDIR          = $(srcdir)/../../src/lib
-LIBDIR          = ../../src/lib
-
-INCLUDES        = -I$(INCDIR) -I../../src/lib
-
-CC              = @MPICC@
-CFLAGS          = @CFLAGS@ $(INCLUDES)
-FC              = @MPIF77@
-FFLAGS          = @FFLAGS@ $(INCLUDES) -I../../src/libf
-
-LDFLAGS         = -L$(LIBDIR) @LDFLAGS@
-LIBS            = -lpnetcdf @LIBS@
+INCLUDES  = -I../../src/lib
+FPPFLAGS += -I../../src/libf
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf
 
 C_SRCS = pnetcdf-write-from-master.c pnetcdf-read-from-master.c \
-	 pnetcdf-write-nfiles.c pnetcdf-read-nfiles.c \
-	 pnetcdf-write-standard.c pnetcdf-read-standard.c \
-	 pnetcdf-write-flexible.c pnetcdf-read-flexible.c \
-	 pnetcdf-write-nb.c pnetcdf-read-nb.c \
+         pnetcdf-write-nfiles.c pnetcdf-read-nfiles.c \
+         pnetcdf-write-standard.c pnetcdf-read-standard.c \
+         pnetcdf-write-flexible.c pnetcdf-read-flexible.c \
+         pnetcdf-write-nb.c pnetcdf-read-nb.c \
          pnetcdf-write-buffered.c
 
 F_SRCS = pnetcdf-write-bufferedf.F
 
-C_OBJS = $(C_SRCS:.c=.o)
-F_OBJS = $(F_SRCS:.F=.o)
-C_PROG = $(C_SRCS:.c=)
-F_PROG = $(F_SRCS:.F=)
-
+PROGS  = $(C_SRCS:.c=)
+OBJS   = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-OBJS   = $(C_OBJS) $(F_OBJS)
-PROGS  = $(C_PROG) $(F_PROG)
-else
-OBJS   = $(C_OBJS)
-PROGS  = $(C_PROG)
+PROGS += $(F_SRCS:.F=)
+OBJS  += $(F_SRCS:.F=.o)
 endif
 
 GARBAGE      = $(PROGS)
-
-PACKING_LIST =  $(C_SRCS) $(F_SRCS) \
-                    Makefile.in
-
-.c.o:
-	$(CC) $(CFLAGS) -c $<
-.F.o:
-	$(FC) $(FFLAGS) -c $<
+PACKING_LIST = $(C_SRCS) $(F_SRCS) Makefile.in
 
 all: $(PROGS)
 
-install:
+pnetcdf-write-from-master: pnetcdf-write-from-master.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-uninstall:
+pnetcdf-read-from-master: pnetcdf-read-from-master.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-write-from-master: pnetcdf-write-from-master.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-write-nfiles: pnetcdf-write-nfiles.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-read-from-master: pnetcdf-read-from-master.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-read-nfiles: pnetcdf-read-nfiles.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-write-nfiles: pnetcdf-write-nfiles.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-write-standard: pnetcdf-write-standard.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-read-nfiles: pnetcdf-read-nfiles.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-read-standard: pnetcdf-read-standard.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-write-standard: pnetcdf-write-standard.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-write-flexible: pnetcdf-write-flexible.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-read-standard: pnetcdf-read-standard.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-read-flexible: pnetcdf-read-flexible.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-write-flexible: pnetcdf-write-flexible.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-write-nb: pnetcdf-write-nb.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-read-flexible: pnetcdf-read-flexible.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-read-nb: pnetcdf-read-nb.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-write-nb: pnetcdf-write-nb.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-write-buffered: pnetcdf-write-buffered.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-read-nb: pnetcdf-read-nb.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o $(LIBRARY)
+	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-write-buffered: pnetcdf-write-buffered.o
-	$(LINK.c) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
-
-pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o
-	$(LINK.F) $< $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
-
-clean:
-	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
-
-distclean: clean
-	$(RM) -f Makefile
-
-
+include $(srcdir)/../../rules.make
 

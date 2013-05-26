@@ -4,35 +4,40 @@
 #
 # $Id$
 
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+srcdir	= @srcdir@
+VPATH	= @srcdir@
 
 include ../../macros.make
 
-TEST_INCS = -I$(srcidr)/../../src/lib -I../../src/lib -I. 
-TEST_LIBS = -L../common  -L../../src/lib -lpnetcdf -ltestutils
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+LDFLAGS  += -L../../src/lib -L../common
+LIBS     += -ltestutils -lpnetcdf
 
-all: pres_temp_4D_wr pres_temp_4D_rd
+SRCS    = pres_temp_4D_wr.c \
+          pres_temp_4D_rd.c
 
-pres_temp_4D_wr: pres_temp_4D_wr.o 
-	$(LINK.c) $< $(TEST_LIBS)
+OBJS    = $(SRCS:.c=.o)
+PROGS   = $(SRCS:.c=)
 
-pres_temp_4D_wr.o: $(srcdir)/pres_temp_4D_wr.c 
-	$(CC) $(CFLAGS) $(TEST_INCS) -c $<
+GARBAGE      = $(PROGS) *.nc
+PACKING_LIST = $(SRCS) Makefile.in
 
-pres_temp_4D_rd: pres_temp_4D_rd.o 
-	$(LINK.c) $< $(TEST_LIBS)
+all: $(PROGS)
 
-pres_temp_4D_rd.o: $(srcdir)/pres_temp_4D_rd.c 
-	$(CC) $(CFLAGS) $(TEST_INCS) -c $<
+pres_temp_4D_wr.o: pres_temp_4D_wr.c 
+
+pres_temp_4D_wr: pres_temp_4D_wr.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+pres_temp_4D_rd.o: pres_temp_4D_rd.c 
+
+pres_temp_4D_rd: pres_temp_4D_rd.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 testing: pres_temp_4D_wr pres_temp_4D_rd
 	./pres_temp_4D_wr && ./pres_temp_4D_rd
 
 verbose_testing: testing
 
-clean:
-	$(RM) -f *.o *.nc pres_temp_4D_wr pres_temp_4D_rd *.gcda *.gcno gmon.out
+include $(srcdir)/../../rules.make
 
-distclean: clean
-	$(RM) -f Makefile

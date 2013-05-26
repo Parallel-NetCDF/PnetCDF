@@ -56,10 +56,6 @@
 
 lib:		$(LIBRARY)
 
-$(LIBRARY):	$(LIB_OBJS) FORCE
-	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
-	$(RANLIB) $@
-
 #-------------------------------------------------------------------------------
 # Shared Libraries:
 #
@@ -125,10 +121,6 @@ $(INCDIR)/$(HEADER2):	$(INCDIR) $(HEADER2)
 $(INCDIR)/$(HEADER3):	$(INCDIR) $(HEADER3)
 	$(INSTALL) $(srcdir)/$(HEADER3) $@
 
-$(INCDIR)/$(HEADER_GENERATED):	$(INCDIR) $(HEADER_GENERATED) $(MODULE_GENERATED)
-	$(INSTALL) -d -m 755 $(INCDIR)
-	$(INSTALL) -m 644 $(HEADER_GENERATED) $(MODULE_GENERATED) $(INCDIR)
-
 $(LIBDIR)/$(LIBRARY):	$(LIBDIR) $(LIBRARY)
 	$(INSTALL) -d -m 755 $(LIBDIR)
 	$(INSTALL) -m 644  $(LIBRARY) $@
@@ -170,7 +162,7 @@ clean:		FORCE
 		*.gcda *.gcno gmon.out
 
 distclean:	FORCE
-	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
+	$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
 	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files \
 		*.gcda *.gcno gmon.out
 	$(RM) -rf SunWS_cache

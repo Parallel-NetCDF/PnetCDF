@@ -4,36 +4,28 @@
 #
 #  $Id$
 
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+srcdir  = @srcdir@
+VPATH   = @srcdir@
 
 include ../../macros.make
 
-INCDIR		= $(srcdir)/../../src/lib -I../../src/lib
-LIBDIR		= ../../src/lib
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+LDFLAGS  += -L../../src/lib -L../common
+LIBS     += -ltestutils -lpnetcdf
 
-INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common
+SRCS    = test_inq_format.c 
 
-CC		= @MPICC@
-CFLAGS          = @CFLAGS@ $(INCLUDES) 
+OBJS    = $(SRCS:.c=.o)
+PROGS   = $(SRCS:.c=)
 
-SRCS		= test_inq_format.c 
-OBJS		= $(SRCS:.c=.o) 
-PROGS		= test_inq_format  
-LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
-LIBS		= -lpnetcdf -ltestutils @LIBS@
+GARBAGE      = $(PROGS)
+PACKING_LIST = $(SRCS) Makefile.in
 
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+all: $(PROGS)
+	set -e; cd ../data && $(MAKE) all
 
-all:		$(PROGS)
-	set -e; cd ../data && $(MAKE) unzip
+test_inq_format: test_inq_format.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-test_inq_format: test_inq_format.o
-	$(CC) -g -o $@ $@.o $(LDFLAGS) $(LIBS)
+include $(srcdir)/../../rules.make
 
-clean:
-	$(RM) -f *.o $(PROGS) *.nc *.gcno *.gcda gmon.out
-
-distclean: clean
-	$(RM) -f Makefile

@@ -611,7 +611,7 @@ EOF
 EOF
 		doit='$FC -o conftest ${FFLAGS} conftest.F ${FLIBS}'
 		if AC_TRY_EVAL(doit); then
-		    COMPILE_F='$(COMPILE.f) $(FPPFLAGS)'
+		    COMPILE_F='$(COMPILE.f)'
 		    AC_MSG_RESULT(yes)
 		else
 		    COMPILE_F=

@@ -4,35 +4,27 @@
 #
 #  $Id$
 
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+srcdir = @srcdir@
+VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCDIR		= $(srcdir)/../../src/lib
-LIBDIR		= ../../src/lib
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+LDFLAGS  += -L../../src/lib -L../common
+LIBS     += -ltestutils -lpnetcdf
 
-INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common -I../../src/lib
+SRCS    = large_files.c
 
-CC		= @MPICC@
-CFLAGS          = @CFLAGS@ $(INCLUDES) 
+OBJS    = $(SRCS:.c=.o)
+PROGS   = $(SRCS:.c=)
 
-SRCS		= large_files.c
-OBJS		= $(SRCS:.c=.o)
-PROGS		= large_files
-LDFLAGS		= -L$(LIBDIR) -L../common @LDFLAGS@
-LIBS		= -lpnetcdf -ltestutils @LIBS@
+GARBAGE      = $(PROGS)
+PACKING_LIST = $(SRCS) Makefile.in
 
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+all: $(PROGS)
 
-all:		$(PROGS)
+large_files: large_files.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-large_files: large_files.o
-	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
+include $(srcdir)/../../rules.make
 
-clean:
-	$(RM) -f $(OBJS) $(PROGS) *.nc *.gcno *.gcda gmon.out
-
-distclean: clean
-	$(RM) -f Makefile

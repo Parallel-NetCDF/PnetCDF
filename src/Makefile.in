@@ -5,7 +5,7 @@
 # $Id$
 
 srcdir = @srcdir@
-VPATH = @srcdir@
+VPATH  = @srcdir@
 
 include ../macros.make
 

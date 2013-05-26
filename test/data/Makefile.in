@@ -10,11 +10,25 @@ VPATH = @srcdir@
 include ../../macros.make
 
 NC_FILES = test_double.nc \
-	   test_float.nc \
-	   test_int_cdf5.nc \
-	   test_int.nc
+           test_float.nc \
+           test_int_cdf5.nc \
+           test_int.nc
 
-all:
+PACKING_LIST = $(NC_FILES:.nc=.nc.gz) Makefile.in
+
+all: $(NC_FILES)
+
+test_double.nc: test_double.nc.gz
+	gzip -dc $(srcdir)/$< > $@
+
+test_float.nc: test_float.nc.gz
+	gzip -dc $(srcdir)/$< > $@
+
+test_int_cdf5.nc: test_int_cdf5.nc.gz
+	gzip -dc $(srcdir)/$< > $@
+
+test_int.nc: test_int.nc.gz
+	gzip -dc $(srcdir)/$< > $@
 
 unzip:
 	set -e; for i in $(NC_FILES); do ( if [ ! -f $$i ] ; then gzip -dc $(srcdir)/$$i.gz > $$i ; fi ) ; done
