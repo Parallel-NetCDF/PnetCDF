@@ -37,7 +37,7 @@ PROGS   += $(F_SRCS:.F=)
 OBJS    += $(F_SRCS:.F=.o)
 endif
 
-GARBAGE      = $(PROGS)
+GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(C_SRCS) $(F_SRCS) $(CXX_SRCS) Makefile.in \
                geopotential.ncdump \
                redef-good.ncdump \

@@ -34,16 +34,16 @@ uninstall:	src/lib/uninstall man/uninstall
 
 clean:		src/clean \
                 test/clean \
-                examples/clean \
                 examples/tutorial/clean \
+                examples/clean \
                 benchmarks/clean \
                 doc/clean \
                 man/clean
 
 distclean:	src/distclean \
                 test/distclean \
-                examples/distclean \
                 examples/tutorial/distclean \
+                examples/distclean \
                 benchmarks/distclean \
                 doc/distclean \
                 man/distclean \
@@ -66,21 +66,12 @@ rmdir_src_test:
 	if [ $(srcdir) != . ] ; then rmdir src test examples/tutorial examples benchmarks doc man ; fi
 
 # short names for making things in subdirs
-test/clean	\
-test/distclean	\
-src/lib/all	\
-src/lib/test	\
-src/lib/install	\
-src/lib/uninstall	\
-src/clean	\
-src/distclean	\
-src/util/install \
-src/util/uninstall \
-src/util/clean \
+test/clean \
+test/distclean \
+src/clean \
+src/distclean \
 examples/clean \
 examples/distclean \
-examples/tutorial/clean \
-examples/tutorial/distclean \
 benchmarks/clean \
 benchmarks/distclean \
 doc/clean \
@@ -93,6 +84,20 @@ man/uninstall \
 :
 	@subdir=`echo $@ | sed 's,/.*,,'`; \
 	target=`echo $@ | sed 's,.*/,,'`; \
+	$(MAKE) SUBDIR=$$subdir TGET=$$target subdir_target
+
+src/lib/all \
+src/lib/test \
+src/lib/install \
+src/lib/uninstall \
+src/util/install \
+src/util/uninstall \
+src/util/clean \
+examples/tutorial/clean \
+examples/tutorial/distclean \
+:
+	@subdir=`dirname $@`; \
+	target=`echo $@ | sed 's/.*\///'`; \
 	$(MAKE) SUBDIR=$$subdir TGET=$$target subdir_target
 
 subdir_target:
