@@ -407,9 +407,11 @@ ncmpii_begin_indep_data(NC *ncp) {
                       MPI_MAX, ncp->nciop->comm);
         status = ncmpii_write_numrecs(ncp);
 
+#ifndef DISABLE_FILE_SYNC
         /* MPI_File_sync() is collective */
         mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
         CHECK_MPI_ERROR(mpireturn, "MPI_File_sync", NC_EFILE);
+#endif
     }
 
     fSet(ncp->flags, NC_INDEP);
@@ -444,12 +446,14 @@ ncmpii_end_indep_data(NC *ncp) {
                       MPI_MAX, ncp->nciop->comm);
         status = ncmpii_write_numrecs(ncp);
 
+#ifndef DISABLE_FILE_SYNC
         /* calling file sync for those already open the file */
         if (NC_independentFhOpened(ncp->nciop)) {
             /* MPI_File_sync() is collective */
             mpireturn = MPI_File_sync(ncp->nciop->independent_fh);
             CHECK_MPI_ERROR(mpireturn, "MPI_File_sync", NC_EFILE);
         }
+#endif
     }
 
     fClr(ncp->flags, NC_INDEP);

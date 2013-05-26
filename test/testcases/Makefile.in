@@ -85,7 +85,7 @@ verbose_testing-f: testing-f
 testing-collective_error:
 	echo "please run with 2 processes. e.g. mpiexec -n 2 collective_error"
 
-testing: test
+verbose_check check verbose_testing testing: test
 
 include $(srcdir)/../../rules.make
 

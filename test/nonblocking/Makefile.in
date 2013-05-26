@@ -48,7 +48,7 @@ test_bputf.o: test_bputf.F
 test_bputf: test_bputf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
-testing: $(PROGS)
+check testing: $(PROGS)
 	./mcoll_perf
 	./test_bput
 ifeq (@has_fortran@, yes)
@@ -56,7 +56,7 @@ ifeq (@has_fortran@, yes)
 	./test_bputf
 endif
 
-verbose_testing: $(PROGS)
+verbose_check verbose_testing: $(PROGS)
 	./mcoll_perf -v
 	./test_bput -v
 ifeq (@has_fortran@, yes)
