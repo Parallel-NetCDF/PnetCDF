@@ -591,8 +591,8 @@ has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 chmod u+x ${srcdir}/scripts/install-sh
 
-AC_CHECK_PROG([LATEX],  [latex])
-AC_CHECK_PROG([DVIPDF], [dvipdf])
+AC_PATH_PROG([LATEX],  [latex])
+AC_PATH_PROG([DVIPDF], [dvipdf])
 has_latex=no
 if test "x${LATEX}" != x ; then
     has_latex=yes
