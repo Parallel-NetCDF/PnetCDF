@@ -5,102 +5,76 @@
 #  $Id$
 
 srcdir = @srcdir@
-VPATH = @srcdir@
+VPATH  = @srcdir@
 
 include ../../macros.make
 
-# M4FLAGS	= -s -B7168
-# CC		= cc -fullwarn -woff 1209,1506
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common -I$(srcdir)/../../src/libf
+FPPFLAGS += -I../../src/libf -I$(srcdir)
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf
 
+M4SRCS    = test_get.m4 \
+            test_put.m4  \
+            test_iget.m4 \
+            test_iput.m4
 
-INCLUDES	= -I$(srcdir) -I$(srcdir)/../../src/libf -I../../src/libf -I$(srcdir)/../../src/lib -I../../src/lib
+M4SRCS_F  = $(M4SRCS:.m4=.F)
 
-# FFLAGS	= $(INCLUDES) @FFLAGS@ 
-lib_netcdf	= ../../src/lib/libpnetcdf.a
-# Don't use "-L../libsrc -lnetcdf" in the following because that doesn't
-# work on a CRAY T90 (sigh).
-ld_netcdf	= $(lib_netcdf)
+F_SRCS    = nf_error.F \
+            nf_test.F \
+            test_read.F \
+            test_write.F \
+            util.F
 
-M4SRCS		= \
-		  test_get.m4	\
-		  test_put.m4   \
-		  test_iget.m4  \
-		  test_iput.m4
-#
+C_SRCS    = fortlib.c
 
-FSRCS		= \
-		  $(M4SRCS:.m4=.F)	\
-		  nf_error.F	\
-		  nf_test.F	\
-		  test_read.F	\
-		  test_write.F	\
-		  util.F
-#
+C_OBJS  = $(C_SRCS:.c=.o)
+F_OBJS  = $(F_SRCS:.F=.o) $(M4SRCS_F:.F=.o)
+OBJS    = $(C_OBJS) $(F_OBJS)
 
-CSRCS		= fortlib.c
+time_log = times
 
-OBJS		= \
-		  test_get.o	\
-		  test_put.o	\
-		  nf_error.o	\
-		  nf_test.o	\
-		  test_read.o	\
-		  test_write.o	\
-		  util.o	\
-		  fortlib.o     \
-		  test_iget.o   \
-		  test_iput.o   
+PROGS  = nf_test
 
-time_log	= times
+GARBAGE = $(time_log) \
+          lint.out \
+          $(PROGS) \
+          scratch.nc \
+          test.nc \
+          $(M4SRCS_F)
 
-GARBAGE		= \
-		  $(time_log)	\
-		  lint.out	\
-		  nf_test	\
-		  scratch.nc	\
-		  *.f77		\
-		  test.nc	\
-		  $(M4SRCS:.m4=.F)
-#
+PACKING_LIST = $(C_SRCS) \
+               $(F_SRCS) \
+               $(M4SRCS) \
+               depend \
+               Makefile.in \
+               tests.inc \
+               README
 
-PACKING_LIST	= \
-		  $(CSRCS)	\
-		  $(FSRCS)	\
-		  $(M4SRCS)	\
-		  depend	\
-		  Makefile	\
-	          tests.inc
-#
+all: $(PROGS)
 
-all:		nf_test
+nf_test: $(OBJS) $(LIBRARY)
+	$(LINK.F) $(OBJS) $(LDFLAGS) $(LIBS)
 
-test:		nf_test test.nc
+test: nf_test test.nc
 	./nf_test
 	@echo '*** Success ***'
 
-readonly:	nf_test test.nc
+readonly: nf_test test.nc
 	./nf_test -r
 
-test.nc:  nf_test
+test.nc: nf_test
 	./nf_test -c
 
-install:
 
-uninstall:
+tags: $(F_SRCS) $(C_SRCS) FORCE
+	ctags -t $(F_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c
 
-
-nf_test:	$(OBJS) $(lib_netcdf)
-	$(LINK.F) $(OBJS) $(ld_netcdf) $(FLIBS) $(MATHLIB) $(LIBS)
-
-
-tags:		$(FSRCS) $(CSRCS) FORCE
-	ctags -t $(FSRCS) $(CSRCS) ../fortran/*.c ../libsrc/*.c
-
-
-test_get.F:	test_get.m4
-test_put.F:	test_put.m4
-test_iget.F:	test_iget.m4
-test_iput.F:	test_iput.m4
+test_get.F:  test_get.m4
+test_put.F:  test_put.m4
+test_iget.F: test_iget.m4
+test_iput.F: test_iput.m4
 
 # This simple testing target ensures that the test files are present
 testing: test.nc nf_test

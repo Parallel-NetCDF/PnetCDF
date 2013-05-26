@@ -1,0 +1,32 @@
+# $Id$
+#
+#	Makefile for netcdf man
+#
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include ../macros.make
+
+MANUAL = pnetcdf.3
+
+PACKING_LIST = Makefile.in \
+	       netcdf.m4
+
+GARBAGE = $(MANUAL)
+
+all: $(MANUAL)
+
+$(MANUAL): $(srcdir)/netcdf.m4
+	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || $(RM) -f $@
+
+test:
+
+install:
+	$(INSTALL) -d -m 755 $(MANDIR)/man3
+	$(INSTALL) -m 644 $(MANUAL) $(MANDIR)/man3/$(MANUAL)
+
+uninstall:
+	$(RM) -f $(MANDIR)/man3/$(MANUAL)
+
+include $(srcdir)/../rules.make

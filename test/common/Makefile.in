@@ -5,23 +5,27 @@
 #  $Id$
 
 srcdir = @srcdir@
-VPATH = @srcdir@
+VPATH  = @srcdir@
 
 include ../../macros.make
 
-CC = @MPICC@
-CFLAGS = @CFLAGS@
+INCLUDES  = -I. -I$(srcdir)
 
-OBJS = testutils.o
+SRCS    = testutils.c
 
-all: libtestutils.a
+OBJS    = $(SRCS:.c=.o)
+
+PROGS   = libtestutils.a
+
+GARBAGE      = $(PROGS)
+PACKING_LIST = $(SRCS) Makefile.in
+
+all: $(PROGS)
 
 libtestutils.a: $(OBJS)
-	ar cru libtestutils.a $(OBJS)
+	$(AR) $(ARFLAGS) $@ $<
+
 testutils.o: testutils.c testutils.h
 
-clean:
-	$(RM) -f *.o *.a *.gcno *.gcda gmon.out
+include $(srcdir)/../../rules.make
 
-distclean: clean
-	$(RM) -f Makefile

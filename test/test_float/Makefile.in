@@ -4,42 +4,40 @@
 #
 #  $Id$
 
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+srcdir = @srcdir@
+VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCDIR		= $(srcdir)/../../src/lib
-LIBDIR		= ../../src/lib
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+LDFLAGS  += -L../../src/lib -L../common
+LIBS     += -ltestutils -lpnetcdf
 
-INCLUDES	= -I$(INCDIR) -I$(srcdir)/../common -I../../src/lib
+SRCS    = test_read.c \
+          test_read_indep.c \
+          test_write.c \
+          test_write_indep.c
 
-CC		= @MPICC@
-CFLAGS          = @CFLAGS@ $(INCLUDES) 
+OBJS    = $(SRCS:.c=.o)
+PROGS   = $(SRCS:.c=)
 
-SRCS		= test_read.c test_read_indep.c test_write.c test_write_indep.c
-OBJS		= $(SRCS:.c=.o)
-PROGS		= test_read test_read_indep test_write test_write_indep
-LDFLAGS		= -L$(LIBDIR) -L..//common @LDFLAGS@
-LIBS		= -lpnetcdf -ltestutils @LIBS@
+GARBAGE      = $(PROGS)
+PACKING_LIST = $(SRCS) Makefile.in README
 
-.c.o:
-	$(CC) $(CFLAGS) -c $<
+all: $(PROGS)
+	set -e; cd ../data && $(MAKE) all
 
-all:		$(PROGS)
-	set -e; cd ../data && $(MAKE) unzip
+test_read: test_read.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-test_read: test_read.o
-	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
-test_read_indep: test_read_indep.o 
-	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
-test_write: test_write.o
-	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
-test_write_indep: test_write_indep.o
-	$(CC) -o $@ $@.o $(LDFLAGS) $(LIBS)
+test_read_indep: test_read_indep.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-clean:
-	$(RM) -f $(OBJS) $(PROGS) *.nc *.gcno *.gcda gmon.out
+test_write: test_write.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-distclean: clean
-	$(RM) -f Makefile
+test_write_indep: test_write_indep.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+include $(srcdir)/../../rules.make
+

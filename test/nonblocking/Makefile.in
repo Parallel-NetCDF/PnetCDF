@@ -5,13 +5,14 @@
 #  $Id$
 
 srcdir = @srcdir@
-VPATH = @srcdir@
+VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES = -I$(srcdir)/../../src/lib -I../../src/lib -I$(srcdir)
-
-ld_math  = $(MATHLIB)
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+FPPFLAGS += -I../../src/libf
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf $(MATHLIB)
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c
@@ -19,44 +20,33 @@ C_SRCS   = mcoll_perf.c \
 F_SRCS	 = mcoll_testf.F \
            test_bputf.F
 
-C_OBJS   = $(C_SRCS:.c=.o)
-F_OBJS   = $(F_SRCS:.F=.o)
-
-F90FLAGS = -I$(srcdir)/../../src/libf -I../../src/libf
-
-PROGS    = mcoll_perf test_bput
-OBJS     = $(C_OBJS)
+PROGS     = $(C_SRCS:.c=)
+OBJS      = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS   += mcoll_testf test_bputf
-OBJS    += $(F_OBJS)
+PROGS     += $(F_SRCS:.F=)
+OBJS      += $(F_SRCS:.F=.o)
 endif
 
-GARBAGE         = $(PROGS)
-
-ld_pnetcdf      = -L$(srcdir)/../../src/lib -L../../src/lib -lpnetcdf
-
-PACKING_LIST    =  $(SRCS) \
-                    Makefile.in
+GARBAGE      = $(PROGS)
+PACKING_LIST = $(C_SRCS) $(F_SRCS) Makefile.in README
 
 all: $(PROGS)
 
-mcoll_perf: mcoll_perf.o
-	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+mcoll_perf: mcoll_perf.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-test_bput: test_bput.o
-	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+test_bput: test_bput.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 mcoll_testf.o: mcoll_testf.F
-	$(COMPILE.F90) $<
 
-mcoll_testf: mcoll_testf.o
-	$(LINK.F90) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+mcoll_testf: mcoll_testf.o $(LIBRARY)
+	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
 test_bputf.o: test_bputf.F
-	$(COMPILE.F90) $<
 
-test_bputf: test_bputf.o
-	$(LINK.F90) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+test_bputf: test_bputf.o $(LIBRARY)
+	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
 testing: $(PROGS)
 	./mcoll_perf
@@ -74,8 +64,5 @@ ifeq (@has_fortran@, yes)
 	./test_bputf -v
 endif
 
-clean:
-	$(RM) -f *.o core* $(GARBAGE) *.nc *.gcno *.gcda gmon.out
+include $(srcdir)/../../rules.make
 
-distclean: clean
-	$(RM) -f Makefile

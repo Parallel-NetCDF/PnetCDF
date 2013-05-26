@@ -26,18 +26,27 @@ PACKING_LIST	= \
 		rules.make
 
 
-all:		src/lib/all
+all:		src/lib/all man/all
 
-install:	src/lib/install src/util/install
+install:	src/lib/install src/util/install man/install
 
-uninstall:	src/lib/uninstall
+uninstall:	src/lib/uninstall man/uninstall
 
-clean:		src/clean test/clean examples/clean benchmarks/clean
+clean:		src/clean \
+                test/clean \
+                examples/clean \
+                examples/tutorial/clean \
+                benchmarks/clean \
+                doc/clean \
+                man/clean
 
 distclean:	src/distclean \
                 test/distclean \
                 examples/distclean \
+                examples/tutorial/distclean \
                 benchmarks/distclean \
+                doc/distclean \
+                man/distclean \
 		clean_macros  \
 		rmdir_src_test
 
@@ -54,7 +63,7 @@ clean_macros:
 	$(RM) -f macros.make
 
 rmdir_src_test:
-	if [ $(srcdir) != . ] ; then rmdir src test examples benchmarks ; fi
+	if [ $(srcdir) != . ] ; then rmdir src test examples/tutorial examples benchmarks doc man ; fi
 
 # short names for making things in subdirs
 test/clean	\
@@ -66,11 +75,21 @@ src/lib/uninstall	\
 src/clean	\
 src/distclean	\
 src/util/install \
+src/util/uninstall \
 src/util/clean \
 examples/clean \
 examples/distclean \
+examples/tutorial/clean \
+examples/tutorial/distclean \
 benchmarks/clean \
 benchmarks/distclean \
+doc/clean \
+doc/distclean \
+man/all \
+man/clean \
+man/distclean \
+man/install \
+man/uninstall \
 :
 	@subdir=`echo $@ | sed 's,/.*,,'`; \
 	target=`echo $@ | sed 's,.*/,,'`; \

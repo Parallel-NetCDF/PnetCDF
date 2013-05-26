@@ -9,10 +9,25 @@ VPATH = @srcdir@
 
 include ../macros.make
 
-SUBDIRS = common test_double test_double_int test_float test_int test_dtype nc_test fandc nf_test largefile C nonblocking test_inq_format test_check_header testcases data
+SUBDIRS = common \
+          nc_test \
+          nf_test \
+          test_int \
+          test_float \
+          test_double \
+          test_double_int \
+          test_dtype \
+          C \
+          fandc \
+          largefile \
+          nonblocking \
+          test_inq_format \
+          test_check_header \
+          testcases \
+          data
 
 all:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) all ; ) ; done
 
 clean:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done

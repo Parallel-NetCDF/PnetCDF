@@ -4,37 +4,33 @@
 #
 # $Id$
 
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir  = @srcdir@
+VPATH   = @srcdir@
 
 include ../macros.make
 
-INCLUDES	= -I$(srcdir)/../src/lib -I../src/lib -I$(srcdir)
+INCLUDES  = -I../src/lib
+LDFLAGS  += -L../src/lib
+LIBS     += -lpnetcdf $(MATHLIB)
 
-ld_math		= $(MATHLIB)
+C_SRCS    = aggregation.c \
+            write_block_read_column.c
 
-C_SRCS		= aggregation.c \
-		  write_block_read_column.c
+F_SRCS    =
 
-F90_SRCS	=
-
-C_OBJS		= $(C_SRCS:.c=.o)
-F90_OBJS	= $(F90_SRCS:.F90=.o)
-F90FLAGS        = -I$(srcdir)/../src/libf -I../src/libf
-
-PROGS		= aggregation write_block_read_column
-OBJS		= $(C_OBJS)
+PROGS     = $(C_SRCS:.c=)
+OBJS      = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS		+=
-OBJS		+= $(F90_OBJS)
+PROGS    += $(F_SRCS:.F=)
+OBJS     += $(F_SRCS:.F=.o)
 endif
 
-GARBAGE         = $(PROGS)
+GARBAGE      = $(PROGS)
 
-ld_pnetcdf      = -L$(srcdir)/../src/lib -L../src/lib -lpnetcdf
-
-PACKING_LIST	=  $(SRCS) \
-		    Makefile.in
+PACKING_LIST = $(C_SRCS) $(F_SRCS) \
+               Makefile.in \
+               README \
+               depend
 
 all: $(PROGS)
 
@@ -42,19 +38,13 @@ install:
 
 uninstall:
 
-aggregation: aggregation.o
-	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+aggregation: aggregation.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-write_block_read_column: write_block_read_column.o
-	$(LINK.c) $< $(ld_pnetcdf) $(ld_math) $(LIBS)
+write_block_read_column: write_block_read_column.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 include $(srcdir)/depend
 
-
-clean:
-	$(RM) -f *.o core* *.nc $(GARBAGE)
-
-distclean:
-	$(RM) -f *.o core* *.nc $(GARBAGE)
-	$(RM) -f Makefile
+include $(srcdir)/../rules.make
 

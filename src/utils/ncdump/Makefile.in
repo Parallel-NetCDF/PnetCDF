@@ -40,7 +40,7 @@ test:		$(PROGRAM) FORCE
 	     echo "*** $(PROGRAM) test successful ***"
 
 install:	
-	$(INSTALL) -d -m 755 $(MANDIR)/manl
+	$(INSTALL) -d -m 755 $(MANDIR)/man1
 	$(INSTALL) -m 644 $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
 
 	$(INSTALL) -d $(BINDIR)

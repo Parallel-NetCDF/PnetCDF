@@ -3,8 +3,7 @@
 # $Id$
 
 srcdir = @srcdir@
-VPATH = @srcdir@
-INSTALL = @INSTALL@
+VPATH  = @srcdir@
 
 include ../../../macros.make
 
@@ -32,7 +31,7 @@ $(PROGRAM):	$(lib_netcdf) $(OBJS)
 	$(LINK.c) $(OBJS) $(ld_netcdf) $(LIBS) 
 
 install:	
-	$(INSTALL) -d -m 755 $(MANDIR)/manl
+	$(INSTALL) -d -m 755 $(MANDIR)/man1
 	$(INSTALL) -m 644 $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
 
 	$(INSTALL) -d $(BINDIR)
