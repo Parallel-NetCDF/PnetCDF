@@ -291,6 +291,7 @@ ncmpiio_open(MPI_Comm     comm,
 
 int
 ncmpiio_sync(ncio *nciop) {
+#ifndef DISABLE_FILE_SYNC
     int rank, mpireturn;
     MPI_Comm_rank(nciop->comm, &rank);
 
@@ -309,7 +310,7 @@ ncmpiio_sync(ncio *nciop) {
         }
     }
     MPI_Barrier(nciop->comm);
-
+#endif
     return NC_NOERR;
 }
 

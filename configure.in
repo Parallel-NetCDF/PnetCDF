@@ -56,6 +56,7 @@ AH_TEMPLATE([NF_INT8_IS_C_],            [C type for Fortran INT8])
 AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does sytem have IEEE FLOAT])
+AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 
 AC_MSG_CHECKING(rm)
 if test "x${RM}" != x ; then
@@ -248,6 +249,16 @@ if test "x${enable_strict}" = xyes; then
     fi
 fi
 AC_SUBST(CXXCPPFLAGS)
+
+AC_ARG_ENABLE([file-sync],
+    [AS_HELP_STRING([--disable-file-sync],
+                    [Disable MPI file sync if you know your file system can
+                     provide data consistency. @<:@default: no@:>@])],
+    [file_sync=${enableval}], [file_sync=yes]
+)
+if test "x${file_sync}" = xno ; then
+    AC_DEFINE(DISABLE_FILE_SYNC)
+fi
 
 dnl check if enabling Fortran APIs is desired (default is yes)
 dnl AC_PROG_F77
