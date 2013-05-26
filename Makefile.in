@@ -28,9 +28,9 @@ PACKING_LIST	= \
 
 all:		src/all man/all
 
-install:	src/lib/install src/util/install man/install
+install:	src/install man/install
 
-uninstall:	src/lib/uninstall man/uninstall
+uninstall:	src/uninstall man/uninstall
 
 clean:		src/clean \
                 test/clean \
@@ -67,6 +67,8 @@ rmdir_src_test:
 
 # short names for making things in subdirs
 src/all \
+src/install \
+src/uninstall \
 test/clean \
 test/distclean \
 src/clean \
@@ -90,9 +92,9 @@ man/uninstall \
 src/lib/test \
 src/lib/install \
 src/lib/uninstall \
-src/util/install \
-src/util/uninstall \
-src/util/clean \
+src/utils/install \
+src/utils/uninstall \
+src/utils/clean \
 examples/tutorial/clean \
 examples/tutorial/distclean \
 :

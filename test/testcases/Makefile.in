@@ -28,8 +28,8 @@ F_SRCS   = bigrecords.F
 PROGS    = $(C_SRCS:.c=)
 OBJS     = $(C_SRCS:.c=.o)
 ifeq (@has_mpicxx@, yes)
-PROGS   += $(CXX_PROGS:.cpp=)
-OBJS    += $(CXX_PROGS:.cpp=.o)
+PROGS   += $(CXX_SRCS:.cpp=)
+OBJS    += $(CXX_SRCS:.cpp=.o)
 endif
 
 ifeq (@has_fortran@, yes)
