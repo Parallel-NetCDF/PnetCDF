@@ -26,7 +26,7 @@ PACKING_LIST	= \
 		rules.make
 
 
-all:		src/lib/all man/all
+all:		src/all man/all
 
 install:	src/lib/install src/util/install man/install
 
@@ -66,6 +66,7 @@ rmdir_src_test:
 	if [ $(srcdir) != . ] ; then rmdir src test examples/tutorial examples benchmarks doc man ; fi
 
 # short names for making things in subdirs
+src/all \
 test/clean \
 test/distclean \
 src/clean \
@@ -86,7 +87,6 @@ man/uninstall \
 	target=`echo $@ | sed 's,.*/,,'`; \
 	$(MAKE) SUBDIR=$$subdir TGET=$$target subdir_target
 
-src/lib/all \
 src/lib/test \
 src/lib/install \
 src/lib/uninstall \
