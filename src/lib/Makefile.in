@@ -108,8 +108,8 @@ uninstall:
 	$(RM) -f $(INCDIR)/$(HEADER)
 	$(RM) -f $(BINDIR)/$(PROGRAM)
 
-$(PROGRAM): $(PROG_OBJS) $(LIBRARY)
-	$(LINK.c) $(PROG_OBJS) $(LIBRARY)
+$(PROGRAM): $(PROG_OBJS) $(LIB_OBJS)
+	$(LINK.c) $(PROG_OBJS) $(LIB_OBJS)
 
 include $(srcdir)/../../rules.make
 
