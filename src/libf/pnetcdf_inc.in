@@ -270,7 +270,7 @@
 ! begin netcdf 2.4 backward compatibility:
 !
 
-!      
+!
 ! functions in the fortran interface
 !
 
@@ -341,25 +341,25 @@
       parameter(ncfloat = 5)
       parameter(ncdouble = 6)
 
-!     
+!
 !     masks for the struct nc flag field; passed in as 'mode' arg to
 !     nccreate and ncopen.
-!     
+!
 
-!     read/write, 0 => readonly 
+!     read/write, 0 => readonly
       parameter(ncrdwr = 1)
-!     in create phase, cleared by ncendef 
+!     in create phase, cleared by ncendef
       parameter(nccreat = 2)
-!     on create destroy existing file 
+!     on create destroy existing file
       parameter(ncexcl = 4)
-!     in define mode, cleared by ncendef 
+!     in define mode, cleared by ncendef
       parameter(ncindef = 8)
 !     synchronise numrecs on change (x'10')
       parameter(ncnsync = 16)
 !     synchronise whole header on change (x'20')
       parameter(nchsync = 32)
 !     numrecs has changed (x'40')
-      parameter(ncndirty = 64)  
+      parameter(ncndirty = 64)
 !     header info has changed (x'80')
       parameter(nchdirty = 128)
 !     prefill vars on endef and increase of record, the default behavior
@@ -369,90 +369,90 @@
 !     isa link (x'8000')
       parameter(nclink = 32768)
 
-!     
+!
 !     'mode' arguments for nccreate and ncopen
-!     
+!
       parameter(ncnowrit = 0)
       parameter(ncwrite = ncrdwr)
       parameter(ncclob = nf_clobber)
       parameter(ncnoclob = nf_noclobber)
 
-!     
+!
 !     'size' argument to ncdimdef for an unlimited dimension
-!     
+!
       integer ncunlim
       parameter(ncunlim = 0)
 
-!     
+!
 !     attribute id to put/get a global attribute
-!     
+!
       parameter(ncglobal  = 0)
 
-!     
+!
 !     advisory maximums:
-!     
+!
       parameter(maxncop = 32)
       parameter(maxncdim = 100)
       parameter(maxncatt = 2000)
       parameter(maxncvar = 2000)
-!     not enforced 
+!     not enforced
       parameter(maxncnam = 128)
       parameter(maxvdims = maxncdim)
 
-!     
+!
 !     global netcdf error status variable
 !     initialized in error.c
-!     
+!
 
-!     no error 
+!     no error
       parameter(ncnoerr = nf_noerr)
-!     not a netcdf id 
+!     not a netcdf id
       parameter(ncebadid = nf_ebadid)
-!     too many netcdfs open 
+!     too many netcdfs open
       parameter(ncenfile = -31)   ! nc_syserr
 !     netcdf file exists && ncnoclob
       parameter(nceexist = nf_eexist)
-!     invalid argument 
+!     invalid argument
       parameter(nceinval = nf_einval)
-!     write to read only 
+!     write to read only
       parameter(nceperm = nf_eperm)
-!     operation not allowed in data mode 
-      parameter(ncenotin = nf_enotindefine )   
-!     operation not allowed in define mode 
-      parameter(nceindef = nf_eindefine)   
-!     coordinates out of domain 
+!     operation not allowed in data mode
+      parameter(ncenotin = nf_enotindefine)
+!     operation not allowed in define mode
+      parameter(nceindef = nf_eindefine)
+!     coordinates out of domain
       parameter(ncecoord = nf_einvalcoords)
-!     maxncdims exceeded 
+!     maxncdims exceeded
       parameter(ncemaxds = nf_emaxdims)
-!     string match to name in use 
-      parameter(ncename = nf_enameinuse)   
-!     attribute not found 
+!     string match to name in use
+      parameter(ncename = nf_enameinuse)
+!     attribute not found
       parameter(ncenoatt = nf_enotatt)
-!     maxncattrs exceeded 
+!     maxncattrs exceeded
       parameter(ncemaxat = nf_emaxatts)
-!     not a netcdf data type 
+!     not a netcdf data type
       parameter(ncebadty = nf_ebadtype)
-!     invalid dimension id 
+!     invalid dimension id
       parameter(ncebadd = nf_ebaddim)
-!     ncunlimited in the wrong index 
+!     ncunlimited in the wrong index
       parameter(nceunlim = nf_eunlimpos)
-!     maxncvars exceeded 
+!     maxncvars exceeded
       parameter(ncemaxvs = nf_emaxvars)
-!     variable not found 
+!     variable not found
       parameter(ncenotvr = nf_enotvar)
-!     action prohibited on ncglobal varid 
+!     action prohibited on ncglobal varid
       parameter(nceglob = nf_eglobal)
-!     not a netcdf file 
+!     not a netcdf file
       parameter(ncenotnc = nf_enotnc)
       parameter(ncests = nf_ests)
-      parameter (ncentool = nf_emaxname) 
+      parameter (ncentool = nf_emaxname)
       parameter(ncfoobar = 32)
       parameter(ncsyserr = -31)
 
-!     
+!
 !     global options variable. used to determine behavior of error handler.
 !     initialized in lerror.c
-!     
+!
       parameter(ncfatal = 1)
       parameter(ncverbos = 2)
 
@@ -478,7 +478,7 @@
 !   The "INT1", "INT2" and "INT" after the "NF_" refer to the NF_INT1_T
 !   FORTRAN datatype, the NF_INT2_T FORTRAN datatype, and the INTEGER
 !   FORTRAN datatype, respectively.  If the respective FORTRAN datatype
-!   does not exist, then do not define the corresponding macro. 
+!   does not exist, then do not define the corresponding macro.
 #undef NF_INT1_IS_C_SIGNED_CHAR
 #undef NF_INT1_IS_C_SHORT
 #undef NF_INT1_IS_C_INT
@@ -495,7 +495,7 @@
 #undef NF_DOUBLEPRECISION_IS_C_DOUBLE
 #undef NF_DOUBLEPRECISION_IS_C_FLOAT
 
-! The number of bytes in a MPI_Offset 
+! The number of bytes in a MPI_Offset
 #undef SIZEOF_MPI_OFFSET
 
 #define NFMPI_OFFSET INTEGER*SIZEOF_MPI_OFFSET
