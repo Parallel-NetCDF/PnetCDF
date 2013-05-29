@@ -424,10 +424,12 @@ AC_C_INLINE
 AC_STRUCT_ST_BLKSIZE
 UD_CHECK_IEEE
 
+dnl cross compile fails with undefined reference to rpl_realloc and rpl_malloc
+dnl AC_FUNC_MALLOC
+dnl AC_FUNC_REALLOC
+
 AC_FUNC_ERROR_AT_LINE
-AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
-AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memset setlocale sqrt strchr strerror strrchr strtol access])

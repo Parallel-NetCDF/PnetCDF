@@ -18,7 +18,8 @@
 
 #define NO_NETCDF_2 1
 
-#include "../../src/libf/nfconfig.inc"
+! #include "../../src/libf/nfconfig.inc"
+#include "nfconfig.inc"
 
 
 !/* Parameters of test data */
