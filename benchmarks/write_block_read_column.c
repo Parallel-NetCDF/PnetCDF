@@ -338,9 +338,13 @@ int main(int argc, char** argv) {
     benchmark_read (argv[2], len, &r_size, &r_info_used, timing+5);
 
     MPI_Reduce(&timing, &max_t,     10, MPI_DOUBLE, MPI_MAX, 0, comm);
+#ifdef MPI_OFFSET
     MPI_Reduce(&w_size, &sum_w_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
     MPI_Reduce(&r_size, &sum_r_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
-
+#else
+    MPI_Reduce(&w_size, &sum_w_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
+    MPI_Reduce(&r_size, &sum_r_size, 1, MPI_LONG_LONG, MPI_SUM, 0, comm);
+#endif
     if (rank == 0) {
         double bw = sum_w_size/1048576;
         print_info(&w_info_used);
