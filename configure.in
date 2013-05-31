@@ -138,10 +138,34 @@ AC_DEFUN([UD_CHECK_MPI_COMPILER], [
     fi
 ])
 
-CANDIDATE_MPICC="mpicc mpcc mpixlc mpixlc_r mpxlc mpxlc_r blrts_xlc cc"
-CANDIDATE_MPICXX="mpicxx mpic++ mpCC mpixlC mpixlC_r mpxlC mpxlC_r blrts_xlC CC"
-CANDIDATE_MPICF77="mpif77 mpixlf90 mpxlf_r blrts_xlf mpiifc ifc ftn"
-CANDIDATE_MPICF90="mpif90 mpixlf90 mpxlf_r blrts_xlf mpiifc ifc ftn"
+CANDIDATE_MPICC="mpicc"
+CANDIDATE_MPICXX="mpicxx mpic++ mpiCC"
+CANDIDATE_MPICF77="mpif77"
+CANDIDATE_MPICF90="mpif90"
+
+dnl add IBM MPI compilers
+CANDIDATE_MPICC+=" mpcc_r mpcc mpixlc_r mpixlc"
+CANDIDATE_MPICXX+=" mpCC_r mpCC mpixlcxx_r mpixlcxx mpixlC_r mpixlC"
+CANDIDATE_MPICF77+=" mpixlf77_r mpixlf77"
+CANDIDATE_MPICF90+=" mpixlf90_r mpixlf90"
+
+dnl add IBM BGL MPI compilers
+CANDIDATE_MPICC+=" blrts_xlc mpxlc_r mpxlc"
+CANDIDATE_MPICXX+=" blrts_xlC mpxlC_r mpxlC"
+CANDIDATE_MPICF77+=" blrts_xlf mpxlf_r mpxlf"
+CANDIDATE_MPICF90+=" blrts_xlf90 mpxlf90_r mpxlf90 mpxlf95_r mpxlf95"
+
+dnl add Cray MPI compiler wrappers
+CANDIDATE_MPICC+=" cc"
+CANDIDATE_MPICXX+=" CC"
+CANDIDATE_MPICF77+=" ftn"
+CANDIDATE_MPICF90+=" ftn"
+
+dnl add Intel MPI compiler wrappers
+CANDIDATE_MPICC+=" mpiicc"
+CANDIDATE_MPICXX+=" mpiicpc"
+CANDIDATE_MPICF77+=" mpiifort mpiifc"
+CANDIDATE_MPICF90+=" mpiifort mpiifc"
 
 UD_CHECK_MPI_COMPILER([MPICC], [$CANDIDATE_MPICC])
 if test "x${MPICC}" = x ; then
