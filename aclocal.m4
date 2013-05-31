@@ -807,8 +807,10 @@ AC_DEFUN(UD_CHECK_CTYPE_FORTRAN,
 [
     cat >conftestf.f <<EOF
            $1 values(4)
+           integer status, sub
            data values /-1, -2, -3, -4/
-           call sub(values)
+           status = sub(values)
+           call exit(status)
            end
 EOF
     for ctype in $2; do
@@ -832,7 +834,7 @@ EOF
 		        cname=`echo $ctype | tr ' abcdefghijklmnopqrstuvwxyz' \
 			    _ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 		        AC_DEFINE_UNQUOTED(NF_$3[]_IS_C_$cname)
-		        break
+		        break;
 		    else
 		        AC_MSG_RESULT(no)
 		    fi
