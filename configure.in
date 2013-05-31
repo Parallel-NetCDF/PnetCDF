@@ -5,7 +5,11 @@ dnl
 
 AC_PREREQ(2.59)
 AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
+AC_CONFIG_AUX_DIR(./scripts)
 AC_CONFIG_SRCDIR([src/lib/ncconfig.in])
+dnl must be all on same line
+AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf_inc src/libf/nfconfig.inc:src/libf/nfconfig.in)
+
 
 IFS=. read PNETCDF_VERSION_MAJOR PNETCDF_VERSION_MINOR PNETCDF_VERSION_SUB PNETCDF_VERSION_PRE <<< "$PACKAGE_VERSION"
 
@@ -45,11 +49,6 @@ AC_SUBST(PNETCDF_VERSION_MINOR)
 AC_SUBST(PNETCDF_VERSION_SUB)
 AC_SUBST(PNETCDF_VERSION_PRE)
 AC_SUBST(PNETCDF_VERSION)
-
-dnl must be all on same line
-AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf_inc src/libf/nfconfig.inc:src/libf/nfconfig.in)
-
-AC_CONFIG_AUX_DIR(./scripts)
 
 dnl these used to live in acconfig.h
 AH_TEMPLATE([NCBYTE_T],                 [Type of NC_BYTE])
@@ -542,7 +541,8 @@ UD_HAS_MPI_DATATYPE(MPI_LONG_LONG_INT)
 UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
 UD_HAS_MPI_DATATYPE(MPI_UB)
 UD_HAS_MPI_DATATYPE(MPI_LB)
-UD_HAS_MPI_DATATYPE(MPI_OFFSET)
+dnl UD_HAS_MPI_DATATYPE(MPI_OFFSET)
+dnl HAVE_MPI_OFFSET might have already been defined in mpi.h
 
 dnl Check for presence of Fortran types
 dnl These could be enums, so we have to do compile checks.
@@ -597,7 +597,8 @@ if test "$enable_fortran" = yes ; then
     fi
 
     NFMPI_OFFSET="integer*$ac_cv_sizeof_MPI_Offset"
-    AC_MSG_CHECKING(for Fortran \"$NFMPI_OFFSET\")  # "
+    AC_MSG_CHECKING(for Fortran NFMPI_OFFSET \"$NFMPI_OFFSET\")
+    dnl "
     AC_LANG_PUSH([Fortran 77])
     AC_COMPILE_IFELSE(
         [AC_LANG_SOURCE([
@@ -605,11 +606,16 @@ if test "$enable_fortran" = yes ; then
             $NFMPI_OFFSET value
             end
         ])],
-        [AC_MSG_RESULT(yes)],
-        [AC_MSG_RESULT(no)
-           AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\")  # "]
+        [ac_cv_NFMPI_OFFSET=yes], [ac_cv_NFMPI_OFFSET=no]
     )
     AC_LANG_POP([Fortran 77])
+    if test "$ac_cv_NFMPI_OFFSET" = yes ; then
+        AC_MSG_RESULT(yes)
+    else
+        AC_MSG_RESULT(no)
+        AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\")
+        dnl "
+    fi
     ${RM} -rf conftest*
 fi
 

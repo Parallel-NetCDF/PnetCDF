@@ -498,7 +498,7 @@
 ! The number of bytes in a MPI_Offset
 #undef SIZEOF_MPI_OFFSET
 
-#define NFMPI_OFFSET INTEGER*SIZEOF_MPI_OFFSET
+!  #define NFMPI_OFFSET INTEGER*SIZEOF_MPI_OFFSET
 
 ! now we can define nfmpi_unlimited properly
       integer*SIZEOF_MPI_OFFSET nfmpi_unlimited
