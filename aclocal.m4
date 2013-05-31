@@ -223,7 +223,7 @@ AC_CACHE_VAL(ac_cv_c_long_long,
 else
 AC_TRY_RUN([int main() {
 long long foo = 0;
-exit(sizeof(long long) < sizeof(long)); }],
+return(sizeof(long long) < sizeof(long)); }],
 ac_cv_c_long_long=yes, ac_cv_c_long_long=no, :)
 fi])dnl
 AC_MSG_RESULT($ac_cv_c_long_long)
@@ -328,19 +328,19 @@ AC_DEFUN(UD_PROG_F90,
     case "${F90+set}" in
 	set)
 	    AC_MSG_CHECKING(user-defined Fortran-90 compiler \"$F90\")
-	    cat <<EOF >conftest.f90
-		subroutine foo(bar)
-		integer, intent(in) :: bar
-		end subroutine foo
-EOF
-	    doit='$F90 -c ${F90FLAGS} conftest.f90'
-	    if AC_TRY_EVAL(doit); then
-		AC_MSG_RESULT(works)
-	    else
-		AC_MSG_RESULT(failed to compile test program)
+            AC_LANG_PUSH([Fortran])
+            AC_COMPILE_IFELSE(
+               [AC_LANG_SOURCE([
+		   subroutine foo(bar)
+		   integer, intent(in) :: bar
+		   end subroutine foo
+               ])],
+               [AC_MSG_RESULT(works)],
+               [AC_MSG_RESULT(failed to compile test program)
 		unset F90
-	    fi
-	    ${RM} -f conftest.*
+               ]
+            )
+            AC_LANG_POP([Fortran])
 	    ;;
 	*)
 	    case "${FC+set}" in
@@ -454,18 +454,14 @@ AC_DEFUN(UD_PROG_FC,
 		    ;;
 		*)
 		    AC_MSG_CHECKING(user-defined Fortran-77 compiler \"$FC\")
-		    cat <<EOF >conftest.f
-                        CALL FOO
-                        END
-EOF
-		    doit='$FC -c ${FFLAGS} conftest.f'
-		    if AC_TRY_EVAL(doit); then
-			AC_MSG_RESULT(works)
-		    else
-			AC_MSG_RESULT(failed to compile test program)
-			FC=
-		    fi
-		    ${RM} -f conftest.*
+                    AC_LANG_PUSH([Fortran 77])
+                    AC_COMPILE_IFELSE([AC_LANG_CALL([],[FOO])],
+                       [AC_MSG_RESULT(works)],
+                       [AC_MSG_RESULT(failed to compile test program)
+                        FC=
+                       ]
+                    )
+                    AC_LANG_POP([Fortran 77])
 		    ;;
 	    esac
 	    ;;
@@ -476,18 +472,16 @@ EOF
 		    FFLAGS="${FFLAGS-${F90FLAGS--O}}"
 		    FLIBS="${FLIBS-${F90LIBS-}}"
 		    AC_MSG_CHECKING(\"$FC\" as Fortran-77 compiler)
-		    cat <<EOF >conftest.f
-                        CALL FOO
-                        END
-EOF
-		    doit='$FC -c ${FFLAGS} conftest.f'
-		    if AC_TRY_EVAL(doit); then
-			AC_MSG_RESULT(works)
-		    else
-			AC_MSG_RESULT(failed to compile test program)
+                    AC_LANG_PUSH([Fortran])
+                    AC_COMPILE_IFELSE([AC_LANG_CALL([],[FOO])],
+                       [AC_MSG_RESULT(works)],
+                       [AC_MSG_RESULT(failed to compile test program)
 			unset FC
-		    fi
-		    ${RM} -f conftest.*
+                       ]
+                    )
+                    AC_LANG_POP([Fortran])
+		    ;;
+		*)
 		    ;;
 	    esac
 	    case "${FC-unset}" in
@@ -552,19 +546,15 @@ EOF
 				# for example); thus, we check the compiler
 				# with a test program.
 				# 
-				cat <<EOF >conftest.f
-				    CALL FOO
-				    END
-EOF
-				doit='$FC -c ${FFLAGS} conftest.f'
-				if AC_TRY_EVAL(doit); then
-				    break
-				else
-				    AC_MSG_RESULT(
-					failed to compile test program)
-				    unset FC
+                                AC_LANG_PUSH([Fortran])
+                                AC_COMPILE_IFELSE([AC_LANG_CALL([],[FOO])],
+                                   [AC_MSG_RESULT(works)],
+                                   [AC_MSG_RESULT(failed to compile test program)
+			            unset FC
 				    unset ac_cv_prog_FC
-				fi
+                                   ]
+                                )
+                                AC_LANG_POP([Fortran])
 				;;
 			esac
 		    done
@@ -599,25 +589,26 @@ EOF
 		COMPILE_F=
 		;;
 	    *)
-		AC_MSG_CHECKING(if Fortran-77 compiler handles *.F files)
 		cat >conftest.h <<\EOF
 #define J 1
 EOF
-		cat >conftest.F <<\EOF
+                AC_LANG_PUSH([Fortran])
+                AC_FC_SRCEXT([F])
+		AC_MSG_CHECKING(if Fortran-77 compiler handles *.F files)
+                AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[
 #include "conftest.h"
 #define N 5
 		  real r(J,N)
-		  end
-EOF
-		doit='$FC -o conftest ${FFLAGS} conftest.F ${FLIBS}'
-		if AC_TRY_EVAL(doit); then
-		    COMPILE_F='$(COMPILE.f)'
-		    AC_MSG_RESULT(yes)
-		else
+                   ])],
+                   [AC_MSG_RESULT(yes)
+                    COMPILE_F='$(COMPILE.f)'],
+                   [AC_MSG_RESULT(no)
 		    COMPILE_F=
-		    AC_MSG_RESULT(no)
-		fi
-		${RM} -f conftest*
+                   ]
+                )
+                AC_FC_SRCEXT([f])
+                AC_LANG_POP([Fortran])
+		${RM} -f conftest.h
 		;;
 	    esac
 	    ;;
@@ -659,17 +650,29 @@ dnl
 AC_DEFUN(UD_CHECK_FORTRAN_NCTYPE,
 [
     AC_MSG_CHECKING(for Fortran-equivalent to netCDF \"$3\")
+dnl     for type in $2; do
+dnl         cat >conftest.f <<EOF
+dnl                $type foo
+dnl                end
+dnl EOF
+dnl         doit='$FC -c ${FFLAGS} conftest.f'
+dnl         if AC_TRY_EVAL(doit); then
+dnl             break;
+dnl         fi
+dnl     done
+dnl     ${RM} -f conftest.f conftest.o
+
+    AC_LANG_PUSH([Fortran])
     for type in $2; do
-	cat >conftest.f <<EOF
+        AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE([
                $type foo
                end
-EOF
-	doit='$FC -c ${FFLAGS} conftest.f'
-	if AC_TRY_EVAL(doit); then
-	    break;
-	fi
+           ])],
+           [break;]
+        )
     done
-    ${RM} -f conftest.f conftest.o
+    AC_LANG_POP([Fortran])
     AC_DEFINE_UNQUOTED($1, $type)
     AC_MSG_RESULT($type)
     $1=$type
@@ -683,7 +686,9 @@ dnl
 AC_DEFUN(UD_CHECK_FORTRAN_CTYPE,
 [
     AC_MSG_CHECKING(for Fortran-equivalent to C \"$3\")
-    cat >conftest.f <<EOF
+    AC_LANG_PUSH([Fortran])
+    AC_COMPILE_IFELSE(
+       [AC_LANG_SOURCE([
         subroutine sub(values, minval, maxval)
         implicit        none
         $2              values(5), minval, maxval
@@ -694,10 +699,26 @@ AC_DEFUN(UD_CHECK_FORTRAN_CTYPE,
             maxval = values(2)
         endif
         end
-EOF
-    doit='$FC -c ${FFLAGS} conftest.f'
-    if AC_TRY_EVAL(doit); then
-	mv conftest.o conftestf.o
+       ])],
+       [found_f2c=yes], [found_f2c=no]
+    )
+    AC_LANG_POP([Fortran])
+    if test "x${found_f2c}" = xyes ; then
+dnl     cat >conftest.f <<EOF
+dnl         subroutine sub(values, minval, maxval)
+dnl         implicit        none
+dnl         $2              values(5), minval, maxval
+dnl         minval = values(2)
+dnl         maxval = values(4)
+dnl         if (values(2) .ge. values(4)) then
+dnl             minval = values(4)
+dnl             maxval = values(2)
+dnl         endif
+dnl         end
+dnl EOF
+dnl     doit='$FC -c ${FFLAGS} conftest.f'
+dnl     if AC_TRY_EVAL(doit); then
+dnl         mv conftest.o conftestf.o
 	cat >conftest.c <<EOF
 #include <limits.h>
 #include <float.h>
@@ -705,9 +726,9 @@ void main()
 {
 $3		values[[]] = {0, $4, 0, $5, 0};
 $3		minval, maxval;
-void	$FCALLSCSUB($3*, $3*, $3*);
+int	$FCALLSCSUB($3*, $3*, $3*);
 $FCALLSCSUB(values, &minval, &maxval);
-exit(!(minval == $4 && maxval == $5));
+return(!(minval == $4 && maxval == $5));
 }
 EOF
 	doit='$CC -o conftest ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} conftest.c conftestf.o ${LIBS}'
@@ -728,6 +749,7 @@ EOF
 	AC_MSG_ERROR(Could not compile conftest.f)
     fi
     ${RM} -f conftest*
+    unset found_f2c
 ])
 
 
@@ -737,24 +759,23 @@ dnl UD_CHECK_FORTRAN_TYPE(varname, ftypes)
 dnl
 AC_DEFUN(UD_CHECK_FORTRAN_TYPE,
 [
+    AC_LANG_PUSH([Fortran])
     for ftype in $2; do
 	AC_MSG_CHECKING(for Fortran \"$ftype\")
-	cat >conftest.f <<EOF
-      subroutine sub(value)
-      $ftype value
-      end
-EOF
-	doit='$FC -c ${FFLAGS} conftest.f'
-	if AC_TRY_EVAL(doit); then
-	    AC_MSG_RESULT(yes)
+        AC_COMPILE_IFELSE(
+           [AC_LANG_SOURCE([
+               subroutine sub(value)
+               $ftype value
+               end
+           ])],
+           [AC_MSG_RESULT(yes)
 	    $1=$ftype
 	    AC_DEFINE_UNQUOTED($1, $ftype)
-	    break
-	else
-	    AC_MSG_RESULT(no)
-	fi
+            break;],
+           [AC_MSG_RESULT(no)]
+        )
     done
-    ${RM} -f conftest*
+    AC_LANG_POP([Fortran])
 ])
 
 
@@ -771,27 +792,8 @@ AC_DEFUN([UD_CHECK_FCALLSCSUB],
 	    AC_BEFORE([UD_CHECK_FORTRAN_CTYPE])
 	    AC_BEFORE([UD_CHECK_CTYPE_FORTRAN])
 	    AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB\")
-	    cat >conftest.f <<\EOF
-              call sub()
-              end
-EOF
-	    doit='$FC -c ${FFLAGS} conftest.f'
-	    if AC_TRY_EVAL(doit); then
-		FCALLSCSUB=`$NM $NMFLAGS conftest.o | awk '
-		    /SUB_/{print "SUB_";exit}
-		    /SUB/ {print "SUB"; exit}
-		    /sub_/{print "sub_";exit}
-		    /sub/ {print "sub"; exit}'`
-		case "$FCALLSCSUB" in
-		    '') AC_MSG_ERROR(not found)
-			;;
-		    *)  AC_MSG_RESULT($FCALLSCSUB)
-			;;
-		esac
-	    else
-		AC_MSG_ERROR(Could not compile conftest.f)
-	    fi
-	    ${RM} -f conftest*
+            AC_FC_FUNC(sub, [FCALLSCSUB])
+            AC_MSG_RESULT($FCALLSCSUB)
 	    ;;
     esac
 ])
@@ -812,10 +814,10 @@ EOF
     for ctype in $2; do
 	AC_MSG_CHECKING(if Fortran \"$1\" is C \"$ctype\")
 	cat >conftest.c <<EOF
-	    void $FCALLSCSUB(values)
+	    int $FCALLSCSUB(values)
 		$ctype values[[4]];
 	    {
-		exit(values[[1]] != -2 || values[[2]] != -3);
+		return(values[[1]] != -2 || values[[2]] != -3);
 	    }
 EOF
 	doit='$CC -c ${CPPFLAGS} ${CFLAGS} conftest.c'
