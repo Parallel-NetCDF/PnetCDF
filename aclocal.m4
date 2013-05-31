@@ -395,7 +395,7 @@ EOF
 				    doit=./conftest
 				    if AC_TRY_EVAL(doit); then
 					AC_MSG_RESULT(works)
-					break;
+					break
 				    else
 					AC_MSG_RESULT(
 					    failed to build executable program)
@@ -657,7 +657,7 @@ dnl                end
 dnl EOF
 dnl         doit='$FC -c ${FFLAGS} conftest.f'
 dnl         if AC_TRY_EVAL(doit); then
-dnl             break;
+dnl             break
 dnl         fi
 dnl     done
 dnl     ${RM} -f conftest.f conftest.o
@@ -669,7 +669,7 @@ dnl     ${RM} -f conftest.f conftest.o
                $type foo
                end
            ])],
-           [break;]
+           [break]
         )
     done
     AC_LANG_POP([Fortran])
@@ -771,7 +771,7 @@ AC_DEFUN(UD_CHECK_FORTRAN_TYPE,
            [AC_MSG_RESULT(yes)
 	    $1=$ftype
 	    AC_DEFINE_UNQUOTED($1, $ftype)
-            break;],
+            break],
            [AC_MSG_RESULT(no)]
         )
     done
@@ -813,8 +813,10 @@ AC_DEFUN(UD_CHECK_CTYPE_FORTRAN,
            call exit(status)
            end
 EOF
+    ac_cv_ctype_fortran=no
+    AC_MSG_CHECKING(if Fortran \"$1\" is )
     for ctype in $2; do
-	AC_MSG_CHECKING(if Fortran \"$1\" is C \"$ctype\")
+	dnl AC_MSG_CHECKING(if Fortran \"$1\" is C \"$ctype\")
 	cat >conftest.c <<EOF
 	    int $FCALLSCSUB(values)
 		$ctype values[[4]];
@@ -830,13 +832,13 @@ EOF
 	        if AC_TRY_EVAL(doit); then
 		    doit=./conftest
 		    if AC_TRY_EVAL(doit); then
-		        AC_MSG_RESULT(yes)
+		        dnl AC_MSG_RESULT(yes)
+		        AC_MSG_RESULT(\"$ctype\" in C)
 		        cname=`echo $ctype | tr ' abcdefghijklmnopqrstuvwxyz' \
 			    _ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 		        AC_DEFINE_UNQUOTED(NF_$3[]_IS_C_$cname)
-		        break;
-		    else
-		        AC_MSG_RESULT(no)
+                        ac_cv_ctype_fortran=yes
+		        break
 		    fi
 	        else
 		    AC_MSG_ERROR(Could not link conftestf.o and conftest.o)
@@ -849,6 +851,11 @@ EOF
 	fi
     done
     ${RM} -f conftest*
+
+    if test "$ac_cv_ctype_fortran" = no ; then
+        AC_MSG_RESULT(no correspond data type in C)
+    fi
+    unset ac_cv_ctype_fortran
 ])
 
 
@@ -868,24 +875,17 @@ AC_DEFUN([UD_FORTRAN_TYPES],
 
 	case "${NF_INT1_T}" in
 	    '') ;;
-	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT1_T, "signed char", INT1)
-		UD_CHECK_CTYPE_FORTRAN($NF_INT1_T, "short", INT1)
-		UD_CHECK_CTYPE_FORTRAN($NF_INT1_T, "int", INT1)
-		UD_CHECK_CTYPE_FORTRAN($NF_INT1_T, "long", INT1)
+	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT1_T, "signed char" short int long, INT1)
 		;;
 	esac
 	case "${NF_INT2_T}" in
 	    '') ;;
-	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT2_T, short, INT2)
-		UD_CHECK_CTYPE_FORTRAN($NF_INT2_T, int, INT2)
-		UD_CHECK_CTYPE_FORTRAN($NF_INT2_T, long, INT2)
+	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT2_T, short int long, INT2)
 		;;
 	esac
 	case "${NF_INT8_T}" in
 	    '') ;;
-	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT8_T, int, INT8)
-		UD_CHECK_CTYPE_FORTRAN($NF_INT8_T, "long", INT8)
-		UD_CHECK_CTYPE_FORTRAN($NF_INT8_T, "long long", INT8)
+	    *)  UD_CHECK_CTYPE_FORTRAN($NF_INT8_T, int long "long long", INT8)
 		;;
 	esac
 	UD_CHECK_CTYPE_FORTRAN(integer, int long, INT)
