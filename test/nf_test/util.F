@@ -1207,7 +1207,8 @@
 #elif defined NF_INT1_IS_C_LONG
             internal_min = min_long()
 #else
-#include "No C equivalent to Fortran INTEGER*1"
+            internal_min = min_schar()
+! #include "No C equivalent to Fortran INTEGER*1"
 #endif
         else if (type .eq. NFT_INT2) then
 #if defined NF_INT2_IS_C_SHORT
@@ -1217,7 +1218,8 @@
 #elif defined NF_INT2_IS_C_LONG
             internal_min = min_long()
 #else
-#include "No C equivalent to Fortran INTEGER*2"
+            internal_min = min_short()
+! #include "No C equivalent to Fortran INTEGER*2"
 #endif
         else if (type .eq. NFT_INT) then
 #if defined NF_INT_IS_C_INT
@@ -1225,7 +1227,8 @@
 #elif defined NF_INT_IS_C_LONG
             internal_min = min_long()
 #else
-#include "No C equivalent to Fortran INTEGER"
+            internal_min = min_int()
+! #include "No C equivalent to Fortran INTEGER"
 #endif
         else if (type .eq. NFT_REAL) then
 #if defined NF_REAL_IS_C_FLOAT
@@ -1233,7 +1236,8 @@
 #elif defined NF_REAL_IS_C_DOUBLE
             internal_min = -max_double()
 #else
-#include "No C equivalent to Fortran REAL"
+            internal_min = -max_float()
+! #include "No C equivalent to Fortran REAL"
 #endif
         else if (type .eq. NFT_DOUBLE) then
 #if defined NF_DOUBLEPRECISION_IS_C_DOUBLE
@@ -1241,7 +1245,8 @@
 #elif defined NF_DOUBLEPRECISION_IS_C_FLOAT
             internal_min = -max_float()
 #else
-#include "No C equivalent to Fortran DOUBLE"
+            internal_min = -max_double()
+! #include "No C equivalent to Fortran DOUBLE"
 #endif
         else if (type .eq. NFT_INT8) then
             internal_min = min_int64()
@@ -1278,7 +1283,8 @@
 #elif defined NF_INT1_IS_C_LONG
             internal_max = max_long()
 #else
-#include "No C equivalent to Fortran INTEGER*1"
+            internal_max = max_schar()
+! #include "No C equivalent to Fortran INTEGER*1"
 #endif
         else if (type .eq. NFT_INT2) then
 #if defined NF_INT2_IS_C_SHORT
@@ -1288,7 +1294,8 @@
 #elif defined NF_INT2_IS_C_LONG
             internal_max = max_long()
 #else
-#include "No C equivalent to Fortran INTEGER*2"
+            internal_max = max_short()
+! #include "No C equivalent to Fortran INTEGER*2"
 #endif
         else if (type .eq. NFT_INT) then
 #if defined NF_INT_IS_C_INT
@@ -1296,7 +1303,8 @@
 #elif defined NF_INT_IS_C_LONG
             internal_max = max_long()
 #else
-#include "No C equivalent to Fortran INTEGER"
+            internal_max = max_int()
+! #include "No C equivalent to Fortran INTEGER"
 #endif
         else if (type .eq. NFT_REAL) then
 #if defined NF_REAL_IS_C_FLOAT
@@ -1304,7 +1312,8 @@
 #elif defined NF_REAL_IS_C_DOUBLE
             internal_max = max_double()
 #else
-#include "No C equivalent to Fortran REAL"
+            internal_max = max_float()
+! #include "No C equivalent to Fortran REAL"
 #endif
         else if (type .eq. NFT_DOUBLE) then
 #if defined NF_DOUBLEPRECISION_IS_C_DOUBLE
@@ -1312,7 +1321,8 @@
 #elif defined NF_DOUBLEPRECISION_IS_C_FLOAT
             internal_max = max_float()
 #else
-#include "No C equivalent to Fortran DOUBLE"
+            internal_max = max_double()
+! #include "No C equivalent to Fortran DOUBLE"
 #endif
         else if (type .eq. NFT_INT8) then
             internal_max = max_int64()

@@ -265,12 +265,17 @@ if test "x${enable_fortran}" = xyes ; then
    fi
 fi
 
-AC_MSG_NOTICE(enable_fortran=$enable_fortran)
+dnl AC_MSG_NOTICE(enable_fortran=$enable_fortran)
 
 dnl Check if MPIF90 is a valid MPI compiler
 if test "x${MPIF90}" != x ; then
    FC=${MPIF90}
-   AC_PROG_FC
+   UD_PROG_FC
+dnl   AC_PROG_FC
+dnl   COMPILE_F='$(COMPILE.f)'
+dnl   AC_SUBST(COMPILE_F)
+
+
    AC_LANG_PUSH([Fortran])
    AC_COMPILE_IFELSE([AC_LANG_CALL([],[MPI_Comm_rank])],
                      [valid_mpif90=yes],[valid_mpif90=no]
@@ -326,7 +331,7 @@ if test "x${enable_fortran}" = xyes ; then
     # Checking for Fortran types also determines the Fortran name mangling
     # and places the value into FCALLSCSUB as a the C name corresponding
     # to the Fortran name SUB 
-    UD_CHECK_FCALLSCSUB
+    AC_FC_FUNC(sub, [FCALLSCSUB])
 
     # determine the correct name mapping
     case $FCALLSCSUB in
@@ -340,29 +345,9 @@ if test "x${enable_fortran}" = xyes ; then
            # used to determine SUB
            AC_MSG_CHECKING(for C-equivalent to Fortran routine \"SUB_A\") 
                    dnl "
-            cat >conftest.f <<\EOF
-              call sub_a()
-              end
-EOF
-           doit='$FC -c ${FFLAGS} conftest.f'
-           if AC_TRY_EVAL(doit); then
-                FCALLSCSUBA=`$NM $NMFLAGS conftest.o | awk '
-                    /SUB_A_/{print "SUB_A_";exit}
-                    /SUB_A/ {print "SUB_A"; exit}
-                    /sub_a__/ {print "sub_a__"; exit}
-                    /sub_a_/{print "sub_a_";exit}
-                    /sub_a/ {print "sub_a"; exit}'`
-                case "$FCALLSCSUBA" in
-                    '') AC_MSG_ERROR(not found)
-                        ;;
-                    *)  AC_MSG_RESULT($FCALLSCSUBA)
-                        ;;
-                esac
-           else
-                AC_MSG_ERROR(Could not compile conftest.f)
-           fi
-           ${RM} -rf conftest*
-           case "$FCALLSCSUBA" in
+           AC_FC_FUNC(sub_a, [FCALLSCSUBA])
+           AC_MSG_RESULT($FCALLSCSUBA)
+           case $FCALLSCSUBA in
                sub_a__)
                    AC_DEFINE(F77_NAME_LOWER_2USCORE,,[Define if Fortran names are lower case with two trailing underscore2])
                    ;;
@@ -381,6 +366,7 @@ EOF
            AC_MSG_WARN([Unrecognized Fortran name mapping])
            ;;
     esac
+
     AC_SUBST(MPIF77)
     AC_SUBST(MPIF90)
 fi
@@ -470,14 +456,17 @@ AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address,,)
 dnl Check for presence of MPI constant.
 dnl These could be enums, so we have to do compile checks.
 AC_DEFUN([UD_HAS_MPI_CONST], [
-        AC_MSG_CHECKING(if MPI includes $1)
-        AC_TRY_COMPILE([ #include <mpi.h> ],
-                [int dummy = $1; ],
-                AC_MSG_RESULT(yes)
-                AC_DEFINE(HAVE_$1, 1, available),
-                AC_MSG_RESULT(no)
-        )
-        ]
+   AC_MSG_CHECKING(if MPI constant $1 is defined )
+   AC_COMPILE_IFELSE(
+      [AC_LANG_SOURCE([
+          #include <mpi.h>
+          int dummy = $1;
+      ])],
+      [AC_MSG_RESULT(yes)
+       AC_DEFINE(HAVE_$1, 1, available)
+      ],
+      [AC_MSG_RESULT(no)]
+   )]
 )
 
 dnl Check for presence of MPI COMBINERS.
@@ -501,14 +490,17 @@ UD_HAS_MPI_CONST(MPI_ERR_NO_SUCH_FILE)
 dnl Check for presence of MPI datatypes.
 dnl These could be enums, so we have to do compile checks.
 AC_DEFUN([UD_HAS_MPI_DATATYPE], [
-        AC_MSG_CHECKING(if MPI includes $1)
-        AC_TRY_COMPILE([ #include <mpi.h> ],
-                [MPI_Datatype dummy = $1; ],
-                AC_MSG_RESULT(yes)
-                AC_DEFINE(HAVE_$1, 1, available),
-                AC_MSG_RESULT(no)
-        )
-        ]
+   AC_MSG_CHECKING(if MPI datatype $1 is defined )
+   AC_COMPILE_IFELSE(
+      [AC_LANG_SOURCE([
+          #include <mpi.h>
+          MPI_Datatype dummy = $1;
+      ])],
+      [AC_MSG_RESULT(yes)
+       AC_DEFINE(HAVE_$1, 1, available)
+      ],
+      [AC_MSG_RESULT(no)]
+   )]
 )
 
 dnl Check for presence of C types
@@ -526,6 +518,7 @@ UD_HAS_MPI_DATATYPE(MPI_LONG_LONG_INT)
 UD_HAS_MPI_DATATYPE(MPI_UNSIGNED_LONG_LONG)
 UD_HAS_MPI_DATATYPE(MPI_UB)
 UD_HAS_MPI_DATATYPE(MPI_LB)
+UD_HAS_MPI_DATATYPE(MPI_OFFSET)
 
 dnl Check for presence of Fortran types
 dnl These could be enums, so we have to do compile checks.
@@ -571,22 +564,28 @@ AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(unsigned long long)
 
 if test "$enable_fortran" = yes ; then
-    UD_FORTRAN_TYPES
+    if test "$cross_compiling" = yes; then
+        UD_CHECK_FORTRAN_TYPE(NF_INT1_T, byte integer*1 "integer(kind=1)")
+        UD_CHECK_FORTRAN_TYPE(NF_INT2_T, integer*2 "integer(kind=2)")
+        UD_CHECK_FORTRAN_TYPE(NF_INT8_T, integer*8 "integer(kind=8)")
+    else
+        UD_FORTRAN_TYPES
+    fi
 
     NFMPI_OFFSET="integer*$ac_cv_sizeof_MPI_Offset"
     AC_MSG_CHECKING(for Fortran \"$NFMPI_OFFSET\")  # "
-                cat >conftest.f <<EOF
-        subroutine sub(value)
-        $NFMPI_OFFSET value
-        end
-EOF
-    doit='$F77 -c ${FFLAGS} conftest.f'
-    if AC_TRY_EVAL(doit); then
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_RESULT(no)
-        AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\")  # "
-    fi
+    AC_LANG_PUSH([Fortran 77])
+    AC_COMPILE_IFELSE(
+        [AC_LANG_SOURCE([
+            subroutine sub(value)
+            $NFMPI_OFFSET value
+            end
+        ])],
+        [AC_MSG_RESULT(yes)],
+        [AC_MSG_RESULT(no)
+           AC_MSG_ERROR(F77 does not support \"$NFMPI_OFFSET\")  # "]
+    )
+    AC_LANG_POP([Fortran 77])
     ${RM} -rf conftest*
 fi
 
