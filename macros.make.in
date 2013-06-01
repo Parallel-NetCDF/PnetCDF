@@ -21,9 +21,15 @@ BUILDDIR	= @BUILDDIR@
 LIBRARY		= @BUILDDIR@/src/lib/libpnetcdf.a
 
 
-# Preprocessing:
+# Useful tools
+M4		= @M4@
 M4		= @M4@
 M4FLAGS		= @M4FLAGS@
+SED		= @SED@
+GREP		= @GREP@
+EGREP		= @EGREP@
+
+# Preprocessing:
 DEFS		= @DEFS@
 CPP		= @CPP@
 CPPFLAGS	= $(INCLUDES) $(DEFS) @CPPFLAGS@
