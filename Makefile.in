@@ -85,8 +85,8 @@ man/distclean \
 man/install \
 man/uninstall \
 :
-	@subdir=`echo $@ | sed 's,/.*,,'`; \
-	target=`echo $@ | sed 's,.*/,,'`; \
+	@subdir=`echo $@ | $(SED) 's,/.*,,'`; \
+	target=`echo $@ | $(SED) 's,.*/,,'`; \
 	$(MAKE) SUBDIR=$$subdir TGET=$$target subdir_target
 
 src/lib/test \
@@ -99,7 +99,7 @@ examples/tutorial/clean \
 examples/tutorial/distclean \
 :
 	@subdir=`dirname $@`; \
-	target=`echo $@ | sed 's/.*\///'`; \
+	target=`echo $@ | $(SED) 's/.*\///'`; \
 	$(MAKE) SUBDIR=$$subdir TGET=$$target subdir_target
 
 subdir_target:
@@ -151,7 +151,7 @@ $(PACKAGE)-$(VERSION).tar.Z:	ensure_manifest MANIFEST
 	&& $(RM) -fr $$id \
 	&& mkdir $$id \
 	&& ln -s .. $$id/src \
-	&& tar $(TARFLAGS) - `sed "s|^|$$id/src/|" MANIFEST` | compress > $@ \
+	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/src/|" MANIFEST` | compress > $@ \
 	&& $(RM) -fr $$id
 
 MANIFEST:	FORCE

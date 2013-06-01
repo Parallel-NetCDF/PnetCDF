@@ -48,7 +48,7 @@ $(PROGRAM)_oc : $(c_sources)
 	#setopt program_name $(PROGRAM)
 
 TAGS:		FORCE
-	etags `echo $(PACKING_LIST) | fmt -1 | egrep '\.c|\.h'
+	etags `echo $(PACKING_LIST) | fmt -1 | $(EGREP) '\.c|\.h'
 
 include $(srcdir)/../../../rules.make
 include $(srcdir)/depend
