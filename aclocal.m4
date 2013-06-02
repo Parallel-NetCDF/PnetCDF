@@ -450,7 +450,7 @@ AC_DEFUN(UD_PROG_FC,
 	set)
 	    case "$FC" in
 		'')
-		    AC_MSG_WARN(Fortran-77 compiler is explicitly null)
+		    AC_MSG_WARN(Fortran-77 compiler is explicitly set to null)
 		    ;;
 		*)
 		    AC_MSG_CHECKING(user-defined Fortran-77 compiler \"$FC\")
@@ -466,6 +466,7 @@ AC_DEFUN(UD_PROG_FC,
 	    esac
 	    ;;
 	*)
+            dnl FC is not set, let's try F90 as FC if F90 is set
 	    case "${F90+set}" in
 		set)
 		    FC=$F90
