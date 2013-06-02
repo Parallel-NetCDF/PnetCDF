@@ -11,7 +11,9 @@ dnl must be all on same line
 AC_CONFIG_HEADER( src/lib/ncconfig.h:src/lib/ncconfig.in src/libf/pnetcdf_inc src/libf/nfconfig.inc:src/libf/nfconfig.in)
 
 
+saved_IFS=${IFS}
 IFS=. read PNETCDF_VERSION_MAJOR PNETCDF_VERSION_MINOR PNETCDF_VERSION_SUB PNETCDF_VERSION_PRE <<< "$PACKAGE_VERSION"
+IFS=${saved_IFS}
 
 PNETCDF_VERSION="${PNETCDF_VERSION_MAJOR}.${PNETCDF_VERSION_MINOR}"
 if test x${PNETCDF_VERSION_SUB} != x ; then
@@ -397,12 +399,14 @@ fi
 AC_PROG_INSTALL
 AC_PROG_YACC
 AC_PROG_LEX
-AC_PROG_SED
-AC_PROG_GREP
-AC_PROG_EGREP
 AC_PROG_AWK
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_PROG_EGREP
+
+dnl AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
+dnl AC_PROG_SED
+dnl AC_PROG_GREP
 
 dnl YACC and LEX are required to build PnetCDF
 dnl if configure finds bison then YACC is set to bison -y, so we need to clean
