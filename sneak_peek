@@ -65,6 +65,10 @@ o New test program
     offset alignments when entering redef mode
 
 o Updates:
+  * Files configure.in and all Makefile.in have been revised to detect MPI
+    compilers automatically.
+  * A new configure option to disable calling file sync. This is to be used
+    when the underlying file system provides data consistency control.
   * add build recipe README.bgq for BGQ (e.g. Vesta/Mira/Cetus @ANL)
   * add build recipe README.CRAY-XE6 (e.g. Hopper @NERSC)
   * add declaration of flexible APIs for Fortran90
