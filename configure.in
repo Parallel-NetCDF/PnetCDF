@@ -6,7 +6,7 @@ dnl
 AC_PREREQ(2.59)
 AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 AC_CONFIG_AUX_DIR(./scripts)
-AC_CONFIG_SRCDIR([src/lib/ncconfig.h.in])
+AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 dnl must be all on same line
 AC_CONFIG_HEADER(src/lib/ncconfig.h src/libf/pnetcdf_inc src/libf/nfconfig.inc:src/libf/nfconfig.in)
 
