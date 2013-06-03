@@ -188,7 +188,6 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([malloc.h])
 
 UD_CHECK_MPI_COMPILER([MPICXX], [$CANDIDATE_MPICXX])
-MPICXX=
 if test "x${MPICXX}" = x ; then
     # still cannot find MPICC
     AC_MSG_WARN([No MPI C++ compiler is found ... disable C++ testing programs])
