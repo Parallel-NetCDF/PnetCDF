@@ -71,7 +71,6 @@ PACKING_LIST = $(LIB_CSRCS) \
                ncconfig.in \
                ncio.h \
                ncx.h \
-               pnetcdf.3 \
                pnetcdf.h \
                rnd.h \
                ncmpidtype.h \
