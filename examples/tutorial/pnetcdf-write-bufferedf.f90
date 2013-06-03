@@ -25,27 +25,27 @@
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
-      err = nfmpi_create(MPI_COMM_WORLD, 'test.nc', cmode,
-     &                   MPI_INFO_NULL, ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_create ',
-     &                           nfmpi_strerror(err)
+      err = nfmpi_create(MPI_COMM_WORLD, 'test.nc', cmode, &
+                         MPI_INFO_NULL, ncid)
+      if (err < NF_NOERR) print*,'Error at nfmpi_create ', &
+                                 nfmpi_strerror(err)
 
       ! define a variable of a (4*nprocs) x 6 integer array in the nc file
       err = nfmpi_def_dim(ncid, 'X', 4_MPI_OFFSET_KIND*nprocs, dimid(1))
-      if (err < NF_NOERR) print*,'Error at nfmpi_def_dim ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_def_dim ', &
+                                 nfmpi_strerror(err)
 
       err = nfmpi_def_dim(ncid, 'Y', 6_MPI_OFFSET_KIND, dimid(2))
-      if (err < NF_NOERR) print*,'Error at nfmpi_def_dim ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_def_dim ', &
+                                 nfmpi_strerror(err)
 
       err = nfmpi_def_var(ncid, 'var', NF_INT64, 2, dimid, varid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_def_var ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_def_var ', &
+                                 nfmpi_strerror(err)
 
       err = nfmpi_enddef(ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_enddef ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_enddef ', &
+                                 nfmpi_strerror(err)
 
       ! set the contents of the local write buffer var, a 4 x 6 real array
       ! for example, for rank == 2, var(4,6) =
@@ -64,8 +64,8 @@
       ! bufsize must be max of data type converted before and after
       bufsize = 4*6*8
       err = nfmpi_buffer_attach(ncid, bufsize)
-      if (err < NF_NOERR) print*,'Error at nfmpi_buffer_attach ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_buffer_attach ', &
+                                 nfmpi_strerror(err)
 
       ! write var to the NC variable in the matrix transposed way
       count(1)  = 2
@@ -80,34 +80,34 @@
       ! write to the 1st two columns of the variable in matrix transposed way
       start(1)  = 1 + rank*4
       start(2)  = 1
-      err = nfmpi_bput_varm_real(ncid, varid, start, count, stride,
-     &                           imap, var(1,1), req(1))
-      if (err < NF_NOERR) print*,'Error at nfmpi_bput_varm_real ',
-     &                           nfmpi_strerror(err)
+      err = nfmpi_bput_varm_real(ncid, varid, start, count, stride, &
+                                 imap, var(1,1), req(1))
+      if (err < NF_NOERR) print*,'Error at nfmpi_bput_varm_real ', &
+                                 nfmpi_strerror(err)
 
       ! write to the 2nd two columns of the variable in transposed way
       start(1)  = 3 + rank*4
       start(2)  = 1
-      err = nfmpi_bput_varm_real(ncid, varid, start, count, stride,
-     &                           imap, var(1,3), req(2))
-      if (err < NF_NOERR) print*,'Error at nfmpi_bput_varm_real ',
-     &                           nfmpi_strerror(err)
+      err = nfmpi_bput_varm_real(ncid, varid, start, count, stride, &
+                                 imap, var(1,3), req(2))
+      if (err < NF_NOERR) print*,'Error at nfmpi_bput_varm_real ', &
+                                 nfmpi_strerror(err)
 
       err = nfmpi_wait_all(ncid, 2, req, status)
-      if (err < NF_NOERR) print*,'Error at nfmpi_wait_all ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_wait_all ', &
+                                 nfmpi_strerror(err)
 
       ! check each bput status
       do i = 1, 2
           if (status(i) .ne. NF_NOERR) then
-              print*,'Error at bput status ',
-     &                           nfmpi_strerror(status(i))
+              print*,'Error at bput status ', &
+                                 nfmpi_strerror(status(i))
           endif
       enddo
 
       err = nfmpi_buffer_detach(ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_buffer_detach ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_buffer_detach ', &
+                                 nfmpi_strerror(err)
 
       ! The output from command "ncmpidump test.nc" is shown below if run
       ! this example on 4 processes.
@@ -132,13 +132,13 @@
       ! note that the display of ncmpidump is in C array dimensional order
 
       err = nfmpi_inq_put_size(ncid, put_size)
-      if (err < NF_NOERR) print*,'Error at nfmpi_inq_put_size ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_inq_put_size ', &
+                                 nfmpi_strerror(err)
       ! print*,'pnetcdf respots total put size by this proc =', put_size
 
       err = nfmpi_close(ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_close ',
-     &                           nfmpi_strerror(err)
+      if (err < NF_NOERR) print*,'Error at nfmpi_close ', &
+                                 nfmpi_strerror(err)
 
       CALL MPI_Finalize(err)
       end program

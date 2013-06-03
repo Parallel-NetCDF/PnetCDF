@@ -95,8 +95,8 @@
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
-          err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
-     &                        MPI_INFO_NULL, ncid)
+          err = nfmpi_create(MPI_COMM_WORLD, filename, cmode, &
+                              MPI_INFO_NULL, ncid)
           call check(err, 'In nfmpi_create: ')
 
           ! define dimensions x and y

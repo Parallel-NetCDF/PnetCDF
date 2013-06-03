@@ -21,17 +21,17 @@ C_SRCS = pnetcdf-write-from-master.c pnetcdf-read-from-master.c \
          pnetcdf-write-nb.c pnetcdf-read-nb.c \
          pnetcdf-write-buffered.c
 
-F_SRCS = pnetcdf-write-bufferedf.F
+F90_SRCS = pnetcdf-write-bufferedf.f90
 
 PROGS  = $(C_SRCS:.c=)
 OBJS   = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS += $(F_SRCS:.F=)
-OBJS  += $(F_SRCS:.F=.o)
+PROGS += $(F90_SRCS:.f90=)
+OBJS  += $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS)
-PACKING_LIST = $(C_SRCS) $(F_SRCS) Makefile.in
+PACKING_LIST = $(C_SRCS) $(F90_SRCS) Makefile.in
 
 all: $(PROGS)
 
