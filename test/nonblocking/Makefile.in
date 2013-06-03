@@ -17,18 +17,18 @@ LIBS     += -lpnetcdf $(MATHLIB)
 C_SRCS   = mcoll_perf.c \
            test_bput.c
 
-F_SRCS	 = mcoll_testf.F \
-           test_bputf.F
+F90_SRCS = mcoll_testf.f90 \
+           test_bputf.f90
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS     += $(F_SRCS:.F=)
-OBJS      += $(F_SRCS:.F=.o)
+PROGS     += $(F90_SRCS:.f90=)
+OBJS      += $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F_SRCS) Makefile.in README
+PACKING_LIST = $(C_SRCS) $(F90_SRCS) Makefile.in README
 
 all: $(PROGS)
 
@@ -38,12 +38,8 @@ mcoll_perf: mcoll_perf.o $(LIBRARY)
 test_bput: test_bput.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-mcoll_testf.o: mcoll_testf.F
-
 mcoll_testf: mcoll_testf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
-
-test_bputf.o: test_bputf.F
 
 test_bputf: test_bputf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)

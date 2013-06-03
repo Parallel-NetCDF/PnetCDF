@@ -1,3 +1,10 @@
+!
+!  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+!  See COPYRIGHT notice in top-level directory.
+!
+!  $Id$
+
+!
 ! this test case came from Annette Koonts at PNNL
 !
 ! test creates a dataset with several (large) record variables, but also a
