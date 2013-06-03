@@ -12,7 +12,7 @@ include macros.make
 
 
 PACKAGE		= parallel-netcdf
-SUBDIRS		= src/lib man
+
 DIST_GARBAGE	= \
 		config.cache	\
 		config.status	
@@ -34,7 +34,6 @@ uninstall:	src/uninstall man/uninstall
 
 clean:		src/clean \
                 test/clean \
-                examples/tutorial/clean \
                 examples/clean \
                 benchmarks/clean \
                 doc/clean \
@@ -42,7 +41,6 @@ clean:		src/clean \
 
 distclean:	src/distclean \
                 test/distclean \
-                examples/tutorial/distclean \
                 examples/distclean \
                 benchmarks/distclean \
                 doc/distclean \
