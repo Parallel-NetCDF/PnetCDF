@@ -1,6 +1,8 @@
 /*
- *  Copyright (C) 2012, Northwestern University
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
+ *
+ *  $Id$
  */
 
 #include <stdlib.h>

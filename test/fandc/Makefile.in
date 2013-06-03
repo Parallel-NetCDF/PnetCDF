@@ -17,18 +17,18 @@ LIBS     += -ltestutils -lpnetcdf $(MATHLIB)
 C_SRCS = pnctest.c \
          csnap.c
 
-F_SRCS = pnctestf.F \
-         pnf_test.F
+F90_SRCS = pnctestf.f90 \
+           pnf_test.f90
 
 PROGS  = $(C_SRCS:.c=)
 OBJS   = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS += $(F_SRCS:.F=)
-OBJS  += $(F_SRCS:.F=.o)
+PROGS += $(F90_SRCS:.f90=)
+OBJS  += $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F_SRCS) Makefile.in
+PACKING_LIST = $(C_SRCS) $(F90_SRCS) Makefile.in
 
 all: $(PROGS)
 

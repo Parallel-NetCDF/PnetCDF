@@ -25,15 +25,15 @@
 ! 
 ! i=longitude, j=latitude, k=level
 !
+! $Id$
+!
 !=============================================================================
 
       program Mcoll_Testf
 
+      use mpi
+
       implicit none
-
-      include "mpif.h"
-#     include "pnetcdf.inc"
-
 
 !     -----------------------
 !     Parameter declarations.
@@ -65,9 +65,9 @@
       INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)                ! local sizes of 3D fields
       integer pe_coords(3)                ! Cartesian PE coords
               
-      integer numpes(3)                      ! number of PEs along axes;
-                                             !   determined by MPI where a
-                                             !   zero is specified
+      integer numpes(3)                   ! number of PEs along axes;
+                                          !   determined by MPI where a
+                                          !   zero is specified
 
       real*4  filsiz
               
@@ -98,9 +98,8 @@
 
       call MPI_Dims_Create (totpes, 3, numpes, ierr)
 
-      call MPI_Cart_Create
-     &  (MPI_COMM_WORLD, 3, numpes, isperiodic, reorder,
-     &   comm_cart, ierr)
+      call MPI_Cart_Create(MPI_COMM_WORLD, 3, numpes, isperiodic, &
+                           reorder, comm_cart, ierr)
 
       call MPI_Comm_Rank (comm_cart, mype, ierr)
 
@@ -114,28 +113,25 @@
 !      rdt_l(:) = Huge (rdt_l)   ! initialize for timing
 !      wrt_l(:) = Huge (wrt_l)
 
-
 !     ----------------------------------------
 !     Determine local size for tt (locsiz_3d).
 !     ----------------------------------------
 
 !     ===============
-      call Find_Locnx
-     &  (TOTSIZ_3D(1), pe_coords(1), numpes(1), locsiz_3d(1), istart)
-      call Find_Locnx
-     &  (TOTSIZ_3D(2), pe_coords(2), numpes(2), locsiz_3d(2), jstart)
-      call Find_Locnx
-     &  (TOTSIZ_3D(3), pe_coords(3), numpes(3), locsiz_3d(3), kstart)
+      call Find_Locnx(TOTSIZ_3D(1), pe_coords(1), numpes(1), &
+                      locsiz_3d(1), istart)
+      call Find_Locnx(TOTSIZ_3D(2), pe_coords(2), numpes(2), &
+                      locsiz_3d(2), jstart)
+      call Find_Locnx(TOTSIZ_3D(3), pe_coords(3), numpes(3), &
+                      locsiz_3d(3), kstart)
 !     ===============
-
 
 !     -------------------------------
 !     Compute file size in 1d6 bytes.
 !     -------------------------------
 
-      filsiz = (TOTSIZ_3D(1) * TOTSIZ_3D(2) * TOTSIZ_3D(3)) *
-     &         1.0d-6 * 4.0d0
-
+      filsiz = (TOTSIZ_3D(1) * TOTSIZ_3D(2) * TOTSIZ_3D(3)) * &
+               1.0d-6 * 4.0d0
 
 !     -------------------------------------
 !     Print data decomposition information.
@@ -151,10 +147,10 @@
 !     &  locsiz_3d(1), locsiz_3d(2), locsiz_3d(3),
 !     &  kstart, jstart, istart
 
- 900  format ("mype  pe_coords    totsiz_3d         locsiz_3d       ",
-     &        "kstart,jstart,istart")
- 902  format (i3,3x,i2,1x,i2,1x,i2,2x,i4,1x,i4,1x,i4,4x,i4,1x,i4,1x,i4,
-     &        3x,i6,1x,i6,1x,i6)
+ 900  format ("mype  pe_coords    totsiz_3d         locsiz_3d       ",&
+              "kstart,jstart,istart")
+ 902  format (i3,3x,i2,1x,i2,1x,i2,2x,i4,1x,i4,1x,i4,4x,i4,1x,i4,1x, &
+              i4,3x,i6,1x,i6,1x,i6)
 
 
 !     -------------------------
@@ -164,12 +160,10 @@
       locsiz = locsiz_3d(1) * locsiz_3d(2) * locsiz_3d(3)
 
 !     ===============
-      call Write_File
-!     ===============
-     &  ("mcoll_testf.nc", NWRITES, mype, comm_cart, istart, jstart,
-     &   kstart, locsiz, locsiz_3d, TOTSIZ_3D, wrt_l)
+      call Write_File("mcoll_testf.nc", NWRITES, mype, comm_cart, &
+                      istart, jstart, kstart, locsiz, locsiz_3d,  &
+                      TOTSIZ_3D, wrt_l)
 !!!   Write (6,*) wrt_l(1), wrt_l(2)
-
 
 !     ----------------------------
 !     Compute and print I/O rates.
@@ -178,12 +172,10 @@
       wrates_l(1) = filsiz / wrt_l(2)               ! write rate
       wrates_l(2) = filsiz / (wrt_l(1) + wrt_l(2))  ! effective write rate
 
-      call MPI_Allreduce
-     &  (wrates_l, wrates_g, 2, MPI_REAL, MPI_MIN, comm_cart, ierr)
-
-      call MPI_Allreduce
-     &  (wrt_l,    wrt_g,    2, MPI_REAL, MPI_MAX, comm_cart, ierr)
-
+      call MPI_Allreduce(wrates_l, wrates_g, 2, MPI_REAL, MPI_MIN, &
+                         comm_cart, ierr)
+      call MPI_Allreduce(wrt_l,    wrt_g,    2, MPI_REAL, MPI_MAX, &
+                         comm_cart, ierr)
 
 !      if (mype == 0) then
 !        Write (6,905) filsiz
@@ -203,7 +195,6 @@
 
       call MPI_Finalize  (ierr)
 
-
       Stop
 
       end program Mcoll_Testf
@@ -212,15 +203,14 @@
 !     ------------
 
 
-      subroutine Write_File
-     &  (filename, nwrites, mype, comm_cart, istart, jstart, kstart,
-     &   locsiz, locsiz_3d, totsiz_3d, wrt_l)
+      subroutine Write_File(filename, nwrites, mype, comm_cart, &
+                            istart, jstart, kstart, locsiz,  &
+                            locsiz_3d, totsiz_3d, wrt_l)
+
+      use mpi
+      use pnetcdf
 
       implicit none
-
-      include "mpif.h"
-#     include "pnetcdf.inc"
-
 
 !     ----------------------
 !     Argument declarations.
@@ -235,7 +225,6 @@
       INTEGER(KIND=MPI_OFFSET_KIND) locsiz_3d(3)
       INTEGER(KIND=MPI_OFFSET_KIND) totsiz_3d(3)
       real*4  wrt_l(2)
-
 
 !     ----------------------------
 !     Local variable declarations.
@@ -282,116 +271,66 @@
       count_3d(2) = locsiz_3d(2)
       count_3d(3) = locsiz_3d(3)
 
-
-
 !       ==============
-        call Get_Field
-!       ==============
-     &    (istart, jstart, kstart, locsiz, locsiz_3d, totsiz_3d, tt1)
-
+        call Get_Field(istart, jstart, kstart, locsiz, locsiz_3d, &
+                       totsiz_3d, tt1)
 
         call MPI_Barrier (comm_cart, ierr)
         t1 = MPI_Wtime ( )
 
-
 !       =================
-        ierr = Nfmpi_Create
-!       =================
-     &    (comm_cart, filename, NF_CLOBBER, MPI_INFO_NULL, ncid)
-
+        ierr = nfmpi_create(comm_cart, filename, NF_CLOBBER, &
+                            MPI_INFO_NULL, ncid)
 
 !       ==================
-        ierr = Nfmpi_Def_Dim
-     &    (ncid, "level",     totsiz_3d(1)*nwrites, lon_id)
-        ierr = Nfmpi_Def_Dim
-     &    (ncid, "latitude",  totsiz_3d(2), lat_id)
-        ierr = Nfmpi_Def_Dim
-     &    (ncid, "longitude", totsiz_3d(3), lev_id)
+        ierr = nfmpi_def_dim(ncid, "level",     totsiz_3d(1)*nwrites, &
+                             lon_id)
+        ierr = nfmpi_def_dim(ncid, "latitude",  totsiz_3d(2), lat_id)
+        ierr = nfmpi_def_dim(ncid, "longitude", totsiz_3d(3), lev_id)
 !       ==================
-
 
         dim_id(1) = lon_id
         dim_id(2) = lat_id
         dim_id(3) = lev_id
 
 !       ==================
-        ierr = Nfmpi_Def_Var
-!       ==================
-     &    (ncid, "tt1", NF_REAL, 3, dim_id, tt1_id)
-
-!       ==================
-!        ierr = Nfmpi_Def_Var
-!       ==================
-!     &    (ncid, "tt2", NF_REAL, 3, dim_id, tt2_id)
-
+        ierr = nfmpi_def_var(ncid, "tt1", NF_REAL, 3, dim_id, tt1_id)
 
 !       =================
-        ierr = Nfmpi_Enddef (ncid)
+        ierr = nfmpi_enddef (ncid)
 !       =================
-
 
         t2 = MPI_Wtime ( )
 
       do nw = 1, nwrites
 
-!       =============================
-!         ierr = Nfmpi_Put_Vara_real_All
-!       =============================
-!     &    (ncid, tt1_id, start_3d, count_3d, tt)
-!         ierr = Nfmpi_Put_Vara_All
-!     &    (ncid, tt1_id, start_3d, count_3d, tt, size(tt), MPI_REAL4)
-!         ierr = Nfmpi_iPut_Vara_All
-!     &    (ncid, tt1_id, start_3d, count_3d, tt1, size(tt1), MPI_REAL4, 
-!     &   req1)
-         ierr = Nfmpi_iPut_Vara_Real
-     &    (ncid, tt1_id, start_3d, count_3d, tt1, req1)
-           req(nw)=req1
+         ierr = nfmpi_iput_vara_real(ncid, tt1_id, start_3d, count_3d, &
+                                     tt1, req1)
+         req(nw)=req1
 !        if (mype == 0) Write (6,900) mype, req1
 
-        start_3d(1) = start_3d(1) + count_3d(1)
-!       =============================
-!        ierr = Nfmpi_Wait (req1)
-!       =============================
-
-!         ierr = Nfmpi_iPut_Vara_All
-!     &    (ncid, tt2_id, start_3d, count_3d, tt1, size(tt1), MPI_REAL4, 
-!     &   req2)
-
-!        if (mype == 0) Write (6,900) mype, req2
-
-         req(nw)=req1
-
+         start_3d(1) = start_3d(1) + count_3d(1)
       end do
-!       =============================
-!        ierr = Nfmpi_Wait (req2)
-!       =============================
 
-!       =============================
-!        ierr = Nfmpi_Wait (nwrites, req, stat)
-        ierr = Nfmpi_Wait_all (ncid, nwrites, req, stat)
-!         ierr = Nfmpi_Waitall (nwrites, req)
-!       =============================
+      ierr = nfmpi_wait_all(ncid, nwrites, req, stat)
 
 !       ================
-        ierr = Nfmpi_Close (ncid)
+        ierr = nfmpi_close (ncid)
 !       ================
 
  900  format ("mynod:", i1, " reqid : ", i1)
 
 
-        call MPI_Barrier (comm_cart, ierr)
-        t3 = MPI_Wtime ( )
+      call MPI_Barrier (comm_cart, ierr)
+      t3 = MPI_Wtime ( )
 
 
-        if (t2 - t1 < wrt_l(1)) wrt_l(1) = t2 - t1
-        if (t3 - t2 < wrt_l(2)) wrt_l(2) = t3 - t2
+      if (t2 - t1 < wrt_l(1)) wrt_l(1) = t2 - t1
+      if (t3 - t2 < wrt_l(2)) wrt_l(2) = t3 - t2
 
 !        if (mype == 0) Write (6,950) nw, t2-t1, t3-t2
 
-
-
  950  format ("write ", i1, ": ", e10.3, 1x, e10.3)
-
 
       Return
 
@@ -400,13 +339,11 @@
 
 !     ------------
 
-      subroutine Find_Locnx
-     &  (nx, mype, totpes, locnx, ibegin)
+      subroutine Find_Locnx(nx, mype, totpes, locnx, ibegin)
+
+      use mpi
 
       implicit none
-
-      include "mpif.h"
-#     include "pnetcdf.inc"
 
 !     ----------------------
 !     Argument declarations.
@@ -418,13 +355,11 @@
       INTEGER(KIND=MPI_OFFSET_KIND) locnx
       INTEGER(KIND=MPI_OFFSET_KIND) ibegin
 
-
 !     ----------------------------
 !     Local variable declarations.
 !     ----------------------------
 
       INTEGER(KIND=MPI_OFFSET_KIND) iremain
-
 
 !     ----------------
 !     Begin execution.
@@ -440,7 +375,6 @@
 
       if (mype < iremain) ibegin = ibegin + (mype - iremain)
 
-
       Return
 
       end
@@ -449,14 +383,11 @@
 !     ------------
 
 
-      subroutine Get_Field
-     &  (istart, jstart, kstart, locsiz, locsiz_3d, totsiz_3d, tt)
+      subroutine Get_Field(istart, jstart, kstart, locsiz, locsiz_3d, &
+                           totsiz_3d, tt)
 
+      use mpi
       implicit none
-
-      include "mpif.h"
-#     include "pnetcdf.inc"
-
 
 !     ----------------------
 !     Argument declarations.
@@ -468,14 +399,12 @@
       INTEGER(KIND=MPI_OFFSET_KIND) totsiz_3d(3)
       real*4  tt(locsiz)
 
-
 !     ----------------------------
 !     Local variable declarations.
 !     ----------------------------
 
       integer ii, jj, kk
       integer ind
-
 
 !     ----------------
 !     Begin execution.
@@ -488,10 +417,10 @@
         do jj = 1, locsiz_3d(2)
           do ii = 1, locsiz_3d(1)
 
-             tt(ind) =
-     &         (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 + 
-     &                 (jj - 1) + totsiz_3d(2)*(kstart-1 + 
-     &                 (kk-1)))) * 1.0d-3
+             tt(ind) = &
+               (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 +  &
+                       (jj - 1) + totsiz_3d(2)*(kstart-1 +  &
+                       (kk-1)))) * 1.0d-3
              ind = ind + 1
 
           end do
@@ -507,13 +436,11 @@
 !     ------------
 
 
-      subroutine Compare_Vec
-     &  (mype, comm_cart, locsiz, tt, buf)
+      subroutine Compare_Vec(mype, comm_cart, locsiz, tt, buf)
+
+      use mpi
 
       implicit none
-
-      include "mpif.h"
-
 
 !     ----------------------
 !     Argument declarations.
@@ -560,13 +487,12 @@
       end do
 
 
-      call MPI_Allreduce
-     &  (ws,    wr,     3, MPI_REAL, MPI_SUM, comm_cart, ierr)
-      call MPI_Allreduce
-     &  (ws(4), delmax, 1, MPI_REAL, MPI_MAX, comm_cart, ierr)
-      call MPI_Allreduce
-     &  (ws(5), delmin, 1, MPI_REAL, MPI_MIN, comm_cart, ierr)
-
+      call MPI_Allreduce(ws,    wr,     3, MPI_REAL, MPI_SUM, &
+                         comm_cart, ierr)
+      call MPI_Allreduce(ws(4), delmax, 1, MPI_REAL, MPI_MAX, &
+                         comm_cart, ierr)
+      call MPI_Allreduce(ws(5), delmin, 1, MPI_REAL, MPI_MIN, &
+                         comm_cart, ierr)
 
       diff   = Sqrt (wr(1) / wr(2))         ! normalized error
       delmax = Sqrt (wr(3) * delmax/wr(2))  ! normalized max difference
@@ -575,10 +501,7 @@
 
 !      if (mype == 0) Write (6,990) diff, delmax, delmin
 
- 990  format ("diff, delmax, delmin = ",
-     &        e10.3, 1x, e10.3, 1x, e10.3)
-
-
+ 990  format ("diff, delmax, delmin = ", e10.3, 1x, e10.3, 1x, e10.3)
 
       Return
 
