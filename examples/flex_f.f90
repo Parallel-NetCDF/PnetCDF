@@ -112,15 +112,15 @@
           array_of_subsizes(2) = ny
           array_of_starts(1)   = ghost_len  ! MPI start index starts with 0
           array_of_starts(2)   = ghost_len
-          call MPI_Type_create_subarray(2, array_of_sizes,
-     &         array_of_subsizes, array_of_starts, MPI_ORDER_FORTRAN,
-     &         MPI_INT, subarray, err)
+          call MPI_Type_create_subarray(2, array_of_sizes, &
+               array_of_subsizes, array_of_starts, MPI_ORDER_FORTRAN, &
+               MPI_INT, subarray, err)
           call MPI_Type_commit(subarray, err)
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
-          err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
-     &                        MPI_INFO_NULL, ncid)
+          err = nfmpi_create(MPI_COMM_WORLD, filename, cmode, &
+                              MPI_INFO_NULL, ncid)
           call check(err, 'In nfmpi_create: ')
 
           ! define dimensions x and y
@@ -146,8 +146,8 @@
           counts(2) = ny
           nReqs = 1
 
-          err = nfmpi_iput_vara(ncid, varid, starts, counts, buf,
-     &          nReqs, subarray, req)
+          err = nfmpi_iput_vara(ncid, varid, starts, counts, buf, &
+                nReqs, subarray, req)
           call check(err, 'In nfmpi_iput_vara: ')
 
           err = nfmpi_wait_all(ncid, 1, req, status)

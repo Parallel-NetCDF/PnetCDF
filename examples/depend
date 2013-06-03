@@ -1,4 +1,4 @@
 collective_write.o: collective_write.c
 nonblocking_write.o: nonblocking_write.c
 get_info_c.o: get_info_c.c
-get_info_f.o: get_info_f.F
+get_info_f.o: get_info_f.f90

@@ -23,20 +23,20 @@ C_SRCS    = collective_write.c \
             hints.c \
             flex.c
 
-F_SRCS    = get_info_f.F \
-            put_vara.F \
-            flex_f.F
+F90_SRCS  = get_info_f.f90 \
+            put_vara.f90 \
+            flex_f.f90
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS     += $(F_SRCS:.F=)
-OBJS      += $(F_SRCS:.F=.o)
+PROGS     += $(F90_SRCS:.f90=)
+OBJS      += $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS)
 
-PACKING_LIST =  $(C_SRCS) $(F_SRCS) \
+PACKING_LIST =  $(C_SRCS) $(F90_SRCS) \
                 Makefile.in \
                 README
 

@@ -52,14 +52,14 @@
         call getarg(1, filename)
 
         omode = NF_NOWRITE + NF_64BIT_OFFSET
-        ierr = nfmpi_open(MPI_COMM_WORLD, trim(filename), omode,
-     &                    MPI_INFO_NULL, ncid)
+        ierr = nfmpi_open(MPI_COMM_WORLD, trim(filename), omode, &
+                          MPI_INFO_NULL, ncid)
         if (ierr .ne. NF_NOERR) call handle_err('nfmpi_open',ierr)
 
 
         ierr = nfmpi_get_file_info(ncid, info)
-        if (ierr .ne. NF_NOERR) call handle_err('nfmpi_get_file_info',
-     &                                          ierr)
+        if (ierr .ne. NF_NOERR) call handle_err('nfmpi_get_file_info', &
+                                                ierr)
 
         ierr = nfmpi_close(ncid)
         if (ierr .ne. NF_NOERR) call handle_err('nfmpi_close',ierr)
@@ -87,10 +87,10 @@
             print *, 'MPI File Info: nkeys =', nkeys
             do i=0, nkeys-1
                 call MPI_Info_get_nthkey(info_used, i, key, ierr)
-                call MPI_Info_get(info_used, key, MPI_MAX_INFO_VAL,
-     &                            value, flag, ierr)
- 123            format('MPI File Info: [',I2,'] key = ',A25,
-     &                 ', value =',A)
+                call MPI_Info_get(info_used, key, MPI_MAX_INFO_VAL, &
+                                  value, flag, ierr)
+ 123            format('MPI File Info: [',I2,'] key = ',A25, &
+                       ', value =',A)
                 print 123, i, trim(key), trim(value)
             enddo
             print *, ''
