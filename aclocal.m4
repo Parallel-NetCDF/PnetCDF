@@ -785,7 +785,7 @@ dnl
 dnl UD_CHECK_FCALLSCSUB
 AC_DEFUN([UD_CHECK_FCALLSCSUB],
 [
-    AC_REQUIRE([UD_PROG_FC])
+    dnl AC_REQUIRE([UD_PROG_FC])
     case "$FC" in
 	'') ;;
 	*)
@@ -864,7 +864,7 @@ dnl Get information about Fortran data types.
 dnl
 AC_DEFUN([UD_FORTRAN_TYPES],
 [
-    AC_REQUIRE([UD_PROG_FC])
+    dnl AC_REQUIRE([UD_PROG_FC])
     case "$FC" in
     '')
 	;;

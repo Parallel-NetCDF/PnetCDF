@@ -43,23 +43,31 @@ CXXCPPFLAGS     = $(INCLUDES) $(DEFS) @CXXCPPFLAGS@
 
 
 # Compilation:
-CC		= @MPICC@
-CXX		= @MPICXX@
-FC		= @MPIF90@
-F90		= @MPIF90@
+CC		= @CC@
+CXX		= @CXX@
+F77		= @F77@
+FC		= @FC@
+F90		= @FC@
+
 CFLAGS		= @CFLAGS@
-CXXFLAGS	= @CFLAGS@
+CXXFLAGS	= @CXXFLAGS@
 FFLAGS		= @FFLAGS@
-F90FLAGS	= @FFLAGS@
+F90FLAGS	= @FCFLAGS@
+FCFLAGS_f90	= @FCFLAGS_f90@
+FCFLAGS_F	= @FCFLAGS_F@
+FCFLAGS_F90	= @FCFLAGS_F90@
+
 NETCDF.MOD	= @NETCDF_MOD@
 CC_MAKEDEPEND	= @CC_MAKEDEPEND@
-COMPILE.c	= $(CC) -c $(CFLAGS) $(CPPFLAGS)
+
+COMPILE.c	= $(CC)  -c $(CFLAGS)   $(CPPFLAGS)
 COMPILE.cxx	= $(CXX) -c $(CXXFLAGS) $(CXXCPPFLAGS)
-COMPILE.f	= $(FC) -c $(FFLAGS) $(FPPFLAGS)
-COMPILE.F90	= $(F90) -c $(F90FLAGS) $(FPPFLAGS)
+COMPILE.f	= $(F77) -c $(FFLAGS)   $(FPPFLAGS)
+COMPILE.f90	= $(F90) -c $(F90FLAGS) $(FCFLAGS_f90) $(FPPFLAGS)
 # The following command isn't available on some systems; therefore, the
 # `.F.o' rule is relatively complicated.
-COMPILE.F	= @COMPILE_F@
+COMPILE.F	= $(FC)  -c $(FCLAGS)  $(FCFLAGS_F)   $(FPPFLAGS)
+COMPILE.F90	= $(F90) -c $(F90LAGS) $(FCFLAGS_F90) $(FPPFLAGS)
 
 
 # Linking:

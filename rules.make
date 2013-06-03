@@ -4,7 +4,7 @@
 # It should be processed by every execution of the that utility.
 
 .SUFFIXES:
-.SUFFIXES:	.a .o .i .f .c .cpp .F .y .l .m4
+.SUFFIXES:	.a .o .i .f .c .cpp .F .y .l .m4 .f90 .F90
 
 
 ################################################################################
@@ -18,6 +18,12 @@
 
 .cpp.o:
 	$(COMPILE.cxx) $<
+
+.f.o:
+	$(COMPILE.f) $<
+
+.f90.o:
+	$(COMPILE.f90) $<
 
 .F90.o:
 	$(COMPILE.F90) $<
@@ -37,9 +43,6 @@
 		$(COMPILE.F) $<;	\
 		;;	\
 	esac
-
-.f.o:
-	$(COMPILE.f) $<
 
 #.F.f:
 #	$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*.f || ($(RM) -f $*.f; exit 1)
@@ -158,10 +161,26 @@ $(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 # Cleanup:
 
 clean:		FORCE
+	@if [ -n "$(SUBDIRS)" ]; then \
+	    subdirs="$(SUBDIRS)"; \
+	    for subdir in $$subdirs; do \
+		(cd $$subdir && \
+		echo 1>&2 make clean in `pwd` && \
+		$(MAKE) clean) || exit 1; \
+	    done; \
+	fi
 	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
 		*.gcda *.gcno gmon.out
 
 distclean:	FORCE
+	@if [ -n "$(SUBDIRS)" ]; then \
+	    subdirs="$(SUBDIRS)"; \
+	    for subdir in $$subdirs; do \
+		(cd $$subdir && \
+		echo 1>&2 make distclean in `pwd` && \
+		$(MAKE) distclean) || exit 1; \
+	    done; \
+	fi
 	$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
 	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files \
 		*.gcda *.gcno gmon.out

@@ -295,13 +295,21 @@ dnl AC_MSG_NOTICE(enable_fortran=$enable_fortran)
 dnl Check if MPIF90 is a valid MPI compiler
 if test "x${MPIF90}" != x ; then
    FC=${MPIF90}
-   UD_PROG_FC
-dnl   AC_PROG_FC
-dnl   COMPILE_F='$(COMPILE.f)'
-dnl   AC_SUBST(COMPILE_F)
-
-
+   dnl UD_PROG_FC
+   AC_PROG_FC
    AC_LANG_PUSH([Fortran])
+
+   dnl find compile options for files with .F .F90 .f90 extensions
+   AC_FC_SRCEXT([f90])
+   AC_FC_SRCEXT([F])
+   AC_FC_SRCEXT([F90])
+   AC_SUBST(FCFLAGS_f90)
+   AC_SUBST(FCFLAGS_F)
+   AC_SUBST(FCFLAGS_F90)
+
+   FPPFLAGS=${FPPFLAGS-}
+   AC_SUBST(FPPFLAGS)
+
    AC_COMPILE_IFELSE([AC_LANG_CALL([],[MPI_Comm_rank])],
                      [valid_mpif90=yes],[valid_mpif90=no]
    )
