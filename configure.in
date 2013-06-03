@@ -182,8 +182,9 @@ AC_SUBST(MPICC)
 
 dnl Now MPICC is configured, let's do some basic compiler tests
 AC_PROG_CC
+UD_PROG_CC_MAKEDEPEND
+
 AC_HEADER_STDC
-dnl AC_CHECK_HEADERS([arpa/inet.h fcntl.h float.h inttypes.h limits.h locale.h malloc.h stddef.h stdint.h stdlib.h string.h unistd.h])
 AC_CHECK_HEADERS([malloc.h])
 
 UD_CHECK_MPI_COMPILER([MPICXX], [$CANDIDATE_MPICXX])
@@ -197,6 +198,7 @@ else
     CXX=${MPICXX}
     AC_SUBST(MPICXX)
 
+    dnl UD_PROG_CXX
     AC_PROG_CXX(${MPICXX})
     dnl autoconf 2.5.9 has not yet implemented AC_PROG_CXX_C_O
     dnl AC_PROG_CXX_C_O
@@ -420,20 +422,19 @@ dnl AC_PROG_GREP
 dnl YACC and LEX are required to build PnetCDF
 dnl if configure finds bison then YACC is set to bison -y, so we need to clean
 dnl up the output a bit before testing 
-YACC_CMD="${YACC% *}"
-AC_CHECK_PROG([yacc_cmd], [${YACC_CMD}], [yes], [no])
-AC_CHECK_PROG([lex_cmd],  [${LEX}],      [yes], [no])
-if test "x${yacc_cmd}" = no ; then
-    AC_MSG_ERROR([could not find bison/yacc required by PnetCDF])
-fi
-if test "x${lex_cmd}" = no ; then
-    AC_MSG_ERROR([could not find flex/lex required by PnetCDF])
-fi
+dnl Below checks commands yacc and lex availability under PATH. However, this
+dnl checking is redundant, as AC_PROG_* did that already
+dnl YACC_CMD="${YACC% *}"
+dnl AC_CHECK_PROG([yacc_cmd], [${YACC_CMD}], [yes], [no])
+dnl AC_CHECK_PROG([lex_cmd],  [${LEX}],      [yes], [no])
+dnl if test "x${yacc_cmd}" = no ; then
+dnl     AC_MSG_ERROR([could not find bison/yacc required by PnetCDF])
+dnl fi
+dnl if test "x${lex_cmd}" = no ; then
+dnl     AC_MSG_ERROR([could not find flex/lex required by PnetCDF])
+dnl fi
 
 UD_PROG_M4
-UD_PROG_CC_MAKEDEPEND
-dnl UD_PROG_CXX
-UD_CHECK_LIB_MATH
 UD_PROG_AR()
 UD_PROG_NM()
 # We could use the PAC check for ranlib (it also makes sure that ranlib works,
@@ -458,7 +459,8 @@ AC_FUNC_MEMCMP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memset setlocale sqrt strchr strerror strrchr strtol access])
-dnl AC_CHECK_LIB([m], [floor])
+AC_CHECK_LIB([m], [tanh])
+dnl UD_CHECK_LIB_MATH
 
 AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
 if test "x${ac_cv_type_MPI_Offset}" = xyes; then
@@ -478,9 +480,9 @@ else
         enable_cdf5=yes
 fi
 
-# the nonblocking routines build up lists of requests with MPI_Type_struct.  If
-# MPI_Offset not the same size as MPI_Aint, the arrays passed around will get
-# mangled. 
+dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
+dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
+dnl get mangled. 
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
         AC_MSG_WARN(MPI_Offset and MPI_Aint have different sizes: non-blocking APIs now behave like blocking ones)
         enable_nonblocking=no
@@ -492,7 +494,7 @@ fi
 # check for MPI-2 only functions
 AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address,,)
 
-dnl Check for presence of MPI constant.
+dnl Check for presence of an MPI constant.
 dnl These could be enums, so we have to do compile checks.
 AC_DEFUN([UD_HAS_MPI_CONST], [
    AC_MSG_CHECKING(if MPI constant $1 is defined )
@@ -526,7 +528,7 @@ dnl These could be enums, so we have to do compile checks.
 UD_HAS_MPI_CONST(MPI_ERR_FILE_EXISTS)
 UD_HAS_MPI_CONST(MPI_ERR_NO_SUCH_FILE)
 
-dnl Check for presence of MPI datatypes.
+dnl Check for presence of an MPI datatype.
 dnl These could be enums, so we have to do compile checks.
 AC_DEFUN([UD_HAS_MPI_DATATYPE], [
    AC_MSG_CHECKING(if MPI datatype $1 is defined )
@@ -585,19 +587,21 @@ if test "$enable_fortran" = yes ; then
     UD_HAS_MPI_DATATYPE(MPI_COMPLEX32)
 fi
 
-AC_TYPE_SIZE_T
-AC_TYPE_SIGNAL
-AC_TYPE_OFF_T
-AC_CHECK_TYPES([ssize_t, ptrdiff_t, uchar, ushort, uint, int64, uint64])
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
+
+AC_TYPE_SIGNAL
+AC_TYPE_SIZE_T
+AC_TYPE_OFF_T
+AC_CHECK_TYPES([ssize_t, ptrdiff_t, uchar, ushort, uint, int64, uint64])
+
+AC_CHECK_SIZEOF(size_t)
+AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
-AC_CHECK_SIZEOF(size_t)
-
 AC_CHECK_SIZEOF(ushort)
 AC_CHECK_SIZEOF(uint)
 AC_CHECK_SIZEOF(long long)
@@ -642,17 +646,6 @@ UD_MAKEWHATIS
 
 AC_SYS_LARGEFILE
 
-dnl sometimes AC_CHECK_SIZEOF wasn't good...  check this on several platforms
-AC_CHECK_SIZEOF(off_t)
-dnl on some 64 bit platforms, the _LFS64_LARGEFILE define may not exist -- it
-dnl was, after all, designed for 32 bit systems trying to access large files.
-dnl If off_t is 8 bytes, then we *can* work on large files: do one last check
-dnl so we report the right information to the user
-
-if test "$ac_cv_sizeof_off_t" = "8" ; then
-        large_file_support="yes"
-fi
-
 dnl
 dnl After all other tests, optionally enable coverage.  we do this last
 dnl because legend has it that sometimes on some compilers the coverage flags
@@ -662,9 +655,9 @@ dnl
 AC_ARG_ENABLE(coverage,
               [AS_HELP_STRING([--enable-coverage],
                       [Compile with coverage support (gcc-based only)])],
-                      CFLAGS="${CFLAGS} -pg -fprofile-arcs -ftest-coverage --coverage -O0"
-                      FFLAGS="${FFLAGS} -pg -fprofile-arcs -ftest-coverage --coverage -O0"
-                      LIBS="${LIBS} -lgcov",
+                      CFLAGS+=" -pg -fprofile-arcs -ftest-coverage --coverage -O0"
+                      FFLAGS+=" -pg -fprofile-arcs -ftest-coverage --coverage -O0"
+                      LIBS+=" -lgcov",
                       [])
 
 chmod u+x ${srcdir}/scripts/install-sh
