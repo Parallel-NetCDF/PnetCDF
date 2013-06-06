@@ -984,3 +984,53 @@ AC_DEFUN(UD_CHECK_LIB_MATH,
     AC_SUBST(MATHLIB)
 ])
 
+dnl steal from autoconf 2.69
+AC_DEFUN([UD_FC_PP_SRCEXT],
+[AC_LANG_PUSH(Fortran)dnl
+AC_CACHE_CHECK([for Fortran flag to compile preprocessed .$1 files],
+                ac_cv_fc_pp_srcext_$1,
+[ac_ext=$1
+ac_fcflags_pp_srcext_save=$ac_fcflags_srcext
+ac_fcflags_srcext=
+ac_cv_fc_pp_srcext_$1=unknown
+case $ac_ext in #(
+  [[fF]]77) ac_try=f77-cpp-input;; #(
+  *) ac_try=f95-cpp-input;;
+esac
+for ac_flag in none -ftpp -fpp -Tf "-fpp -Tf" -xpp=fpp -Mpreprocess "-e Z" \
+               -cpp -xpp=cpp -qsuffix=cpp=$1 "-x $ac_try" +cpp -Cpp; do
+  test "x$ac_flag" != xnone && ac_fcflags_srcext="$ac_flag"
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+#if 0
+#include <ac_nonexistent.h>
+      choke me
+#endif]])],
+    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+#if 1
+#include <ac_nonexistent.h>
+      choke me
+#endif]])],
+       [],
+       [ac_cv_fc_pp_srcext_$1=$ac_flag; break])])
+done
+rm -f conftest.$ac_objext conftest.$1
+ac_fcflags_srcext=$ac_fcflags_pp_srcext_save
+])
+if test "x$ac_cv_fc_pp_srcext_$1" = xunknown; then
+  m4_default([$3],
+             [AC_MSG_ERROR([Fortran could not compile preprocessed .$1 files])])
+else
+  ac_fc_srcext=$1
+  if test "x$ac_cv_fc_pp_srcext_$1" = xnone; then
+    ac_fcflags_srcext=""
+    FCFLAGS_[]$1[]=""
+  else
+    ac_fcflags_srcext=$ac_cv_fc_pp_srcext_$1
+    FCFLAGS_[]$1[]=$ac_cv_fc_pp_srcext_$1
+  fi
+  AC_SUBST(FCFLAGS_[]$1)
+  $2
+fi
+AC_LANG_POP(Fortran)dnl
+])# UD_FC_PP_SRCEXT
+

@@ -24,7 +24,7 @@ test:
 
 install:
 	$(INSTALL) -d -m 755 $(MANDIR)/man3
-	$(INSTALL) -m 644 $(MANUAL) $(MANDIR)/man3/$(MANUAL)
+	$(INSTALL_DATA) $(MANUAL) $(MANDIR)/man3/$(MANUAL)
 
 uninstall:
 	$(RM) -f $(MANDIR)/man3/$(MANUAL)

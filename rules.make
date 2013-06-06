@@ -28,21 +28,24 @@
 .F90.o:
 	$(COMPILE.F90) $<
 
+.F.o:
+	$(COMPILE.F) $<
+
 # Not all FORTRAN compilers support C-preprocessing of *.F files; ergo, a 
 # relatively complicated rule ensues.
-.F.o:
-	@case "$(COMPILE.F)" in	\
-	    '')	\
-		set -x;	\
-		$(FPP) $(FPPFLAGS) -C $*.F | grep -v '^#' >$*-tmp.f || 	\
-		    ($(RM) -f $*-tmp.f ; exit 1);	\
-		$(COMPILE.f) -o $@ $*-tmp.f || ($(RM) -f $*-tmp.f; exit 1);	\
-		$(RM) -f $*-tmp.f;	\
-		;;	\
-	    *)	\
-		$(COMPILE.F) $<;	\
-		;;	\
-	esac
+# .F.o:
+# 	@case "$(COMPILE.F)" in	\
+# 	    '')	\
+# 		set -x;	\
+# 		$(FPP) $(FPPFLAGS) -C $*.F | grep -v '^#' >$*-tmp.f || 	\
+# 		    ($(RM) -f $*-tmp.f ; exit 1);	\
+# 		$(COMPILE.f) -o $@ $*-tmp.f || ($(RM) -f $*-tmp.f; exit 1);	\
+# 		$(RM) -f $*-tmp.f;	\
+# 		;;	\
+# 	    *)	\
+# 		$(COMPILE.F) $<;	\
+# 		;;	\
+# 	esac
 
 #.F.f:
 #	$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*.f || ($(RM) -f $*.f; exit 1)
