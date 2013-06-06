@@ -1421,7 +1421,8 @@ hdr_get_NC_var(bufferinfo  *gbp,
        which recomputes varp->len using the dimension values and hence overwrites
        the value read from file above.
 
-       In summary, PnetCDF now ignores the value of vsize stored in the file header.
+       In summary, PnetCDF now ignores the value of vsize stored in the file
+       header.
      */
   
     status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));

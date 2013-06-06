@@ -151,11 +151,11 @@ $(MANDIR)/man3/$(MANUAL):	$(MANDIR)/man3 $(MANUAL)
 $(MANDIR)/man3f/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 				$(MANDIR)/man3f
 	$(RM) -f $@
-	ln -s $(MANDIR)/man3/$(MANUAL) $@
+	$(LN_S) $(MANDIR)/man3/$(MANUAL) $@
 $(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
 				$(MANDIR)/man3f90
 	$(RM) -f $@
-	ln -s $(MANDIR)/man3/$(MANUAL) $@
+	$(LN_S) $(MANDIR)/man3/$(MANUAL) $@
 
 ################################################################################
 # Cleanup:
