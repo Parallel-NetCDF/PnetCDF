@@ -28,7 +28,7 @@ PACKING_LIST	= \
 
 all:		src/all man/all
 
-install:	src/install man/install
+install:	all src/install man/install
 
 uninstall:	src/uninstall man/uninstall
 
@@ -48,7 +48,7 @@ distclean:	src/distclean \
 		clean_macros  \
 		rmdir_src_test
 
-tests:
+tests: all
 	@cd test && $(MAKE)
 
 check testing: tests
