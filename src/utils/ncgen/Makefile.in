@@ -4,7 +4,6 @@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
-INSTALL = @INSTALL@
 
 include ../../../macros.make
 
@@ -46,7 +45,7 @@ test:           $(PROGRAM) b-test c-test FORCE
 
 install:	
 	$(INSTALL) -d -m 755 $(MANDIR)/man1
-	$(INSTALL) -m 644 $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
+	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
 
 	$(INSTALL) -d $(BINDIR)
 	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)

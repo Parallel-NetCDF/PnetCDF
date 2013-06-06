@@ -63,11 +63,11 @@ CC_MAKEDEPEND	= @CC_MAKEDEPEND@
 COMPILE.c	= $(CC)  -c $(CFLAGS)   $(CPPFLAGS)
 COMPILE.cxx	= $(CXX) -c $(CXXFLAGS) $(CXXCPPFLAGS)
 COMPILE.f	= $(F77) -c $(FFLAGS)   $(FPPFLAGS)
-COMPILE.f90	= $(F90) -c $(F90FLAGS) $(FCFLAGS_f90) $(FPPFLAGS)
+COMPILE.f90	= $(F90) -c $(F90FLAGS) $(FPPFLAGS) $(FCFLAGS_f90)
 # The following command isn't available on some systems; therefore, the
 # `.F.o' rule is relatively complicated.
-COMPILE.F	= $(FC)  -c $(FCLAGS)  $(FCFLAGS_F)   $(FPPFLAGS)
-COMPILE.F90	= $(F90) -c $(F90LAGS) $(FCFLAGS_F90) $(FPPFLAGS)
+COMPILE.F	= $(FC)  -c $(FCLAGS)   $(FPPFLAGS) $(FCFLAGS_F)
+COMPILE.F90	= $(F90) -c $(F90LAGS)  $(FPPFLAGS) $(FCFLAGS_F90)
 
 
 # Linking:
@@ -96,6 +96,7 @@ ARFLAGS		= @ARFLAGS@
 AWK		= @AWK@
 RANLIB		= @RANLIB@
 INSTALL 	= @INSTALL@
+INSTALL_DATA	= @INSTALL_DATA@
 TARFLAGS	= -chf
 
 
