@@ -751,6 +751,8 @@ echo \
               MPIF90      = ${MPIF90}
               CFLAGS      = ${CFLAGS}
               FFLAGS      = ${FFLAGS}
+              FCFLAGS     = ${FCFLAGS}
+              F90FLAGS    = ${F90FLAGS}
               CPPFLAGS    = ${CPPFLAGS}
               CXXCPPFLAGS = ${CXXCPPFLAGS}
               LDFLAGS     = ${LDFLAGS}
