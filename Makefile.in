@@ -150,7 +150,7 @@ $(PACKAGE)-$(VERSION).tar.Z:	ensure_manifest MANIFEST
 	id=$(PACKAGE)-$(VERSION) \
 	&& $(RM) -fr $$id \
 	&& mkdir $$id \
-	&& ln -s .. $$id/src \
+	&& $(LN_S) .. $$id/src \
 	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/src/|" MANIFEST` | compress > $@ \
 	&& $(RM) -fr $$id
 
@@ -191,7 +191,7 @@ $(FTPBINDIR)/$(PACKAGE)-$(VERSION).tar.Z:
 	$(RM) -f $@
 	id=$(PACKAGE)-$(VERSION) \
 	&& $(RM) -f $$id \
-	&& ln -s $(prefix) $$id \
+	&& $(LN_S) $(prefix) $$id \
 	&& tar $(TARFLAGS) - README $$id/bin $$id/include \
 	    $$id/lib $$id/man | compress > $@ \
 	&& $(RM) -f $$id

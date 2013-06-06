@@ -19,10 +19,10 @@ IFS=${saved_IFS}
 
 PNETCDF_VERSION="${PNETCDF_VERSION_MAJOR}.${PNETCDF_VERSION_MINOR}"
 if test x${PNETCDF_VERSION_SUB} != x ; then
-    PNETCDF_VERSION+=".${PNETCDF_VERSION_SUB}"
-    if test x${PNETCDF_VERSION_PRE} != x ; then
-        PNETCDF_VERSION+=".${PNETCDF_VERSION_PRE}"
-    fi
+   PNETCDF_VERSION+=".${PNETCDF_VERSION_SUB}"
+   if test x${PNETCDF_VERSION_PRE} != x ; then
+      PNETCDF_VERSION+=".${PNETCDF_VERSION_PRE}"
+   fi
 fi
 
 dnl user defined macro for printing messages for debugging
@@ -85,20 +85,20 @@ fi
 AC_SUBST(RM)
 
 AC_ARG_ENABLE(echo,
-    [AS_HELP_STRING([--enable-echo],
-                    [Turn on strong echoing. @<:@default: no@:>@])],
-    [set -x]
+   [AS_HELP_STRING([--enable-echo],
+                   [Turn on strong echoing. @<:@default: no@:>@])],
+   [set -x]
 )
 
 MPI_INSTALL=
 AC_ARG_WITH(mpi,
-    [AS_HELP_STRING([--with-mpi=/path/to/implementation],
-                    [installation prefix for MPI implementation])],
-    if test x"$withval" = xyes; then
-        AC_MSG_ERROR(--with-mpi must be given a pathname)
-    else
-        MPI_INSTALL=${withval}
-    fi
+   [AS_HELP_STRING([--with-mpi=/path/to/implementation],
+                   [installation prefix for MPI implementation])],
+   if test x"$withval" = xyes; then
+      AC_MSG_ERROR(--with-mpi must be given a pathname)
+   else
+      MPI_INSTALL=${withval}
+   fi
 )
 if test "x${MPI_INSTALL}" != x && (! test -d "${MPI_INSTALL}") ; then
    AC_MSG_WARN(Directory '${MPI_INSTALL}' specified in --with-mpi does not exist)
@@ -106,38 +106,38 @@ fi
 
 AC_DEFUN([UD_CHECK_MPI_COMPILER], [
    if test "x$MPI_INSTALL"  != x ; then
-       UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
-       if test "x$$1" = x ; then
-          UD_MSG_DEBUG(search possible $1 under MPI_INSTALL/bin)
-          AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL/bin])
-       else
-          UD_MSG_DEBUG(check if file $$1 exists)
-          if ! test -f "$$1" ; then
-             dnl file does not exist, check under MPI_INSTALL
-             UD_MSG_DEBUG(File $1= $$1 cannot be found ... check under $MPI_INSTALL)
-             if test -f "$MPI_INSTALL/bin/$$1" ; then
-                UD_MSG_DEBUG(File $1= $$1 is found under $MPI_INSTALL/bin)
-                $1="$MPI_INSTALL/bin/$$1"
-             else
-                UD_MSG_DEBUG(File $1= $$1 cannot be found under $MPI_INSTALL/bin)
-                $1=
-             fi
-          fi
-       fi
-    else
+      UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
+      if test "x$$1" = x ; then
+         UD_MSG_DEBUG(search possible $1 under MPI_INSTALL/bin)
+         AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL/bin])
+      else
+         UD_MSG_DEBUG(check if file $$1 exists)
+         if ! test -f "$$1" ; then
+            dnl file does not exist, check under MPI_INSTALL
+            UD_MSG_DEBUG(File $1= $$1 cannot be found ... check under $MPI_INSTALL)
+            if test -f "$MPI_INSTALL/bin/$$1" ; then
+               UD_MSG_DEBUG(File $1= $$1 is found under $MPI_INSTALL/bin)
+               $1="$MPI_INSTALL/bin/$$1"
+            else
+               UD_MSG_DEBUG(File $1= $$1 cannot be found under $MPI_INSTALL/bin)
+               $1=
+            fi
+         fi
+      fi
+   else
        UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is NOT used)
        UD_MSG_DEBUG(check if $1 is defined. If yes, check if file exists)
        if test "x$$1" != x && (! test -f "$$1") ; then
           UD_MSG_DEBUG(check if file $$1 exists under user's PATH)
           AC_PATH_PROGS([$1], [$$1])
        fi
-    fi
-    dnl if $$1 is not empty, then compler file does exist
-    dnl if $$1 is empty, search under user's PATH
-    if test "x$$1" = x ; then
-       UD_MSG_DEBUG(find possible $1 under user's PATH)
-       AC_PATH_PROGS([$1], [$2])
-    fi
+   fi
+   dnl if $$1 is not empty, then compler file does exist
+   dnl if $$1 is empty, search under user's PATH
+   if test "x$$1" = x ; then
+      UD_MSG_DEBUG(find possible $1 under user's PATH)
+      AC_PATH_PROGS([$1], [$2])
+   fi
 ])
 
 CANDIDATE_MPICC="mpicc"
@@ -191,18 +191,18 @@ AC_CHECK_HEADERS([malloc.h])
 
 UD_CHECK_MPI_COMPILER([MPICXX], [$CANDIDATE_MPICXX])
 if test "x${MPICXX}" = x ; then
-    # still cannot find MPICC
-    AC_MSG_WARN([No MPI C++ compiler is found ... disable C++ testing programs])
-    has_mpicxx=no
+   # still cannot find MPICC
+   AC_MSG_WARN([No MPI C++ compiler is found ... disable C++ testing programs])
+   has_mpicxx=no
 else
-    has_mpicxx=yes
-    CXX=${MPICXX}
-    AC_SUBST(MPICXX)
+   has_mpicxx=yes
+   CXX=${MPICXX}
+   AC_SUBST(MPICXX)
 
-    dnl UD_PROG_CXX
-    AC_PROG_CXX(${MPICXX})
-    dnl autoconf 2.5.9 has not yet implemented AC_PROG_CXX_C_O
-    dnl AC_PROG_CXX_C_O
+   dnl UD_PROG_CXX
+   AC_PROG_CXX(${MPICXX})
+   dnl autoconf 2.5.9 has not yet implemented AC_PROG_CXX_C_O
+   dnl AC_PROG_CXX_C_O
 fi
 
 # check if MPICC works for basic MPI call: MPI_Comm_rank()
@@ -217,23 +217,23 @@ AC_CHECK_FUNC([MPI_Comm_rank], [],
 ])
 
 AC_ARG_ENABLE([mpi-io-test],
-    [AS_HELP_STRING([--disable-mpi-io-test],
-                    [Disable check for MPI-IO support in MPI implementation,
-                     if you know your MPI implementation has MPI-IO support
-                     but the configure test fails to find it.
-                     @<:@default: no@:>@])],
-    [enable_mpi_io_test=${enableval}], [enable_mpi_io_test=yes]
+   [AS_HELP_STRING([--disable-mpi-io-test],
+                   [Disable check for MPI-IO support in MPI implementation,
+                    if you know your MPI implementation has MPI-IO support
+                    but the configure test fails to find it.
+                    @<:@default: no@:>@])],
+   [enable_mpi_io_test=${enableval}], [enable_mpi_io_test=yes]
 )
 
 if test "x${enable_mpi_io_test}" = xyes ; then
-    AC_CHECK_FUNC([MPI_File_open], [],
+   AC_CHECK_FUNC([MPI_File_open], [],
            [AC_MSG_ERROR([
             ------------------------------------------------------------
              MPI implementation does not support MPI-IO
              PnetCDF requires MPI-IO support to work properly.
             ------------------------------------------------------------])]
-    )
-    if test "x${has_mpicxx}" = xyes ; then
+   )
+   if test "x${has_mpicxx}" = xyes ; then
        AC_LANG_PUSH(C++)
        AC_CHECK_FUNC([MPI_File_close], [],
               [has_mpicxx=no
@@ -245,7 +245,7 @@ if test "x${enable_mpi_io_test}" = xyes ; then
                ------------------------------------------------------------])]
        )
        AC_LANG_POP(C++)
-    fi
+   fi
 fi
 AC_SUBST(has_mpicxx)
 
@@ -260,12 +260,12 @@ AC_ARG_ENABLE(strict,
 )
 
 if test "x${enable_strict}" = xyes; then
-    if test "x${GCC}" = xyes; then
-        CPPFLAGS+="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
-        CXXCPPFLAGS+="-Wall -Wundef -Wpointer-arith"
-    else
-        AC_MSG_WARN([--enable-strict is for GNU compiler only])
-    fi
+   if test "x${GCC}" = xyes; then
+      CPPFLAGS+="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
+      CXXCPPFLAGS+="-Wall -Wundef -Wpointer-arith"
+   else
+      AC_MSG_WARN([--enable-strict is for GNU compiler only])
+   fi
 fi
 AC_SUBST(CXXCPPFLAGS)
 
@@ -365,13 +365,13 @@ if test "x${enable_fortran}" = xauto ; then
 fi
 
 if test "x${enable_fortran}" = xyes ; then
-    # Checking for Fortran types also determines the Fortran name mangling
-    # and places the value into FCALLSCSUB as a the C name corresponding
-    # to the Fortran name SUB 
-    AC_FC_FUNC(sub, [FCALLSCSUB])
+   # Checking for Fortran types also determines the Fortran name mangling
+   # and places the value into FCALLSCSUB as a the C name corresponding
+   # to the Fortran name SUB 
+   AC_FC_FUNC(sub, [FCALLSCSUB])
 
-    # determine the correct name mapping
-    case $FCALLSCSUB in
+   # determine the correct name mapping
+   case $FCALLSCSUB in
        SUB)
            AC_DEFINE(F77_NAME_UPPER,,[Define if Fortran names are uppercase])
            ;;
@@ -402,10 +402,10 @@ if test "x${enable_fortran}" = xyes ; then
        *)
            AC_MSG_WARN([Unrecognized Fortran name mapping])
            ;;
-    esac
+   esac
 
-    AC_SUBST(MPIF77)
-    AC_SUBST(MPIF90)
+   AC_SUBST(MPIF77)
+   AC_SUBST(MPIF90)
 fi
 
 AC_PROG_INSTALL
@@ -443,8 +443,10 @@ UD_PROG_NM()
 # a system that doesn't have (or need) ranlib
 AC_PROG_RANLIB
 
-# Check for <stdbool.h> that conforms to C99 requirements
+dnl Check for <stdbool.h> that conforms to C99 requirements
+dnl this is also for supporting special characters in CDF-2 and CDF-5
 AC_HEADER_STDBOOL
+
 AC_C_CONST
 AC_C_INLINE
 
@@ -465,31 +467,31 @@ UD_CHECK_LIB_MATH
 
 AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
 if test "x${ac_cv_type_MPI_Offset}" = xyes; then
-    AC_CHECK_SIZEOF([MPI_Offset], [], [#include <mpi.h>])
+   AC_CHECK_SIZEOF([MPI_Offset], [], [#include <mpi.h>])
 else
-    AC_MSG_ERROR([Unable to find type MPI_Offset in mpi.h])
+   AC_MSG_ERROR([Unable to find type MPI_Offset in mpi.h])
 fi
 AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
 
 dnl ok, now we know how big MPI_Offset is.  If it's less than 8 bytes 
 dnl we have to disable the new "CDF-5" (variables larger than 4gb) support
 if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
-        AC_MSG_WARN("Unable to support CDF-5 format");
-        enable_cdf5=no
+   AC_MSG_WARN("Unable to support CDF-5 format");
+   enable_cdf5=no
 else
-        AC_DEFINE(ENABLE_CDF5,,[Define if able to support CDF-5 file format])
-        enable_cdf5=yes
+   AC_DEFINE(ENABLE_CDF5,,[Define if able to support CDF-5 file format])
+   enable_cdf5=yes
 fi
 
 dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
 dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
 dnl get mangled. 
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
-        AC_MSG_WARN(MPI_Offset and MPI_Aint have different sizes: non-blocking APIs now behave like blocking ones)
-        enable_nonblocking=no
+   AC_MSG_WARN(MPI_Offset and MPI_Aint have different sizes: non-blocking APIs now behave like blocking ones)
+   enable_nonblocking=no
 else
-        AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
-        enable_nonblocking=yes
+   AC_DEFINE(ENABLE_NONBLOCKING,,[Define if able to support nonblocking routines])
+   enable_nonblocking=yes
 fi
 
 # check for MPI-2 only functions
@@ -721,15 +723,6 @@ AC_CONFIG_FILES(macros.make
 
 AC_OUTPUT
 echo "--------------------------------------------------------------------"
-
-
-# if test "$enable_fortran" = yes ; then
-    dnl generate a fortran-friendly pnetcdf_inc nfconfig.inc
-    dnl replace C comment starter '/*' with '!' in Fortran and
-    dnl remove C comment starter '*/'
-    # sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/pnetcdf_inc>pnetcdf_inc && mv pnetcdf_inc src/libf/pnetcdf_inc
-    # sed -e "s%/\*%!%g" -e "s%\*/%%g" <src/libf/nfconfig.inc>nfconfig.inc && mv nfconfig.inc src/libf/nfconfig.inc
-# fi
 
 if test "x${enable_mpi_io_test}" = xno ; then
     AC_MSG_WARN([
