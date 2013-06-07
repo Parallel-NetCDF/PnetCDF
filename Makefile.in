@@ -15,16 +15,44 @@ PACKAGE		= parallel-netcdf
 
 DIST_GARBAGE	= \
 		config.cache	\
-		config.status	
+		config.status	\
+		config.log \
+		autom4te.cache
+
 PACKING_LIST	= \
-		Makefile	\
+		Makefile.in	\
 		aclocal.m4	\
 		configure	\
 		configure.in	\
 		macros.make.in	\
 		macros.make.def	\
-		rules.make
+		rules.make \
+		COPYRIGHT \
+		CREDITS \
+		INSTALL \
+		MANIFEST \
+		README \
+		README.AIX \
+		README.bgl \
+		README.bgp \
+		README.bgq \
+		README.CRAY-X1 \
+		README.CRAY-XE6 \
+		README.ifc_linux \
+		README.IRIX64 \
+		README.jazz \
+		README.large_files \
+		README.SP \
+		README.SX
 
+PACKING_SUBDIRS	= \
+		src \
+		scripts \
+		doc \
+		man \
+		benchmarks \
+		examples \
+		test
 
 all:		src/all man/all
 
@@ -143,15 +171,16 @@ check_system:	FORCE
 # directory.
 #
 tar.Z:		check_system FORCE
-	@version=`cat VERSION`; \
-	    $(MAKE) $(MFLAGS) $(PACKAGE)-$$version.tar.Z VERSION=$$version
+	$(MAKE) $(MFLAGS) $(PACKAGE)-$(PNETCDF_VERSION).tar.Z
 
-$(PACKAGE)-$(VERSION).tar.Z:	ensure_manifest MANIFEST
-	id=$(PACKAGE)-$(VERSION) \
+dist: $(PACKAGE)-$(PNETCDF_VERSION).tar.Z
+
+$(PACKAGE)-$(PNETCDF_VERSION).tar.Z:	ensure_manifest MANIFEST
+	id=$(PACKAGE)-$(PNETCDF_VERSION) \
 	&& $(RM) -fr $$id \
 	&& mkdir $$id \
 	&& $(LN_S) .. $$id/src \
-	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/src/|" MANIFEST` | compress > $@ \
+	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/src/|" MANIFEST` | gzip > $@ \
 	&& $(RM) -fr $$id
 
 MANIFEST:	FORCE
@@ -167,29 +196,26 @@ MANIFEST:	FORCE
 # "ftp" target is made in the "/upc/$(PACKAGE)/build/" directory.
 #
 ftp:		check_system FORCE
-	version=`cat VERSION`; \
-	$(MAKE) $(MFLAGS) $(FTPDIR)/$(PACKAGE)-$$version.tar.Z \
-	    VERSION=$$version; \
+	$(MAKE) $(MFLAGS) $(FTPDIR)/$(PACKAGE)-$(PNETCDF_VERSION).tar.Z \
 	test -r $(FTPDIR)/$(PACKAGE).tar.Z || exit 0; \
 	    cd $(FTPDIR) || exit 1;
 
-$(FTPDIR)/$(PACKAGE)-$(VERSION).tar.Z:	$(PACKAGE)-$(VERSION).tar.Z
+$(FTPDIR)/$(PACKAGE)-$(PNETCDF_VERSION).tar.Z:	$(PACKAGE)-$(PNETCDF_VERSION).tar.Z
 	$(RM) -f $@
-	cp $(PACKAGE)-$(VERSION).tar.Z $@ 
+	cp $(PACKAGE)-$(PNETCDF_VERSION).tar.Z $@ 
 	chmod u+rw,g+rw,o=r $@
 
 # Make a compressed, tar(1) file of the binary distribution in the 
 # appropriate FTP directory.
 #
 binftp:		FORCE
-	version=`cat VERSION`; \
-	$(MAKE) $(MFLAGS) $(FTPBINDIR)/$(PACKAGE)-$$version.tar.Z \
-	    VERSION=$$version
+	$(MAKE) $(MFLAGS) $(FTPBINDIR)/$(PACKAGE)-$(PNETCDF_VERSION).tar.Z \
+
 ftpbin:		binftp
 
-$(FTPBINDIR)/$(PACKAGE)-$(VERSION).tar.Z:
+$(FTPBINDIR)/$(PACKAGE)-$(PNETCDF_VERSION).tar.Z:
 	$(RM) -f $@
-	id=$(PACKAGE)-$(VERSION) \
+	id=$(PACKAGE)-$(PNETCDF_VERSION) \
 	&& $(RM) -f $$id \
 	&& $(LN_S) $(prefix) $$id \
 	&& tar $(TARFLAGS) - README $$id/bin $$id/include \

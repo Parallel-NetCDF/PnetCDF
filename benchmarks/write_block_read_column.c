@@ -21,7 +21,7 @@
  *
  *    % mpicc -g -o write_block_read_column write_block_read_column.c -lpnetcdf
  *
- *    % mpiexec -l -n 4 aggregation 128 testfile.nc
+ *    % mpiexec -l -n 4 write_block_read_column 128 testfile.nc
  *
  *    % ncmpidump -h testfile.nc
  *      netcdf testfile {
