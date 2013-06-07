@@ -10,7 +10,7 @@ RM		= @RM@
 LN_S		= @LN_S@
 
 # Installation Directories:
-SRCDIR		= @SRCDIR@
+# SRCDIR	= @SRCDIR@
 prefix		= @prefix@
 exec_prefix	= $(prefix)
 INCDIR		= $(exec_prefix)/include
@@ -37,9 +37,9 @@ GREP		= grep
 DEFS		= @DEFS@
 CPP		= @CPP@
 CPPFLAGS	= $(INCLUDES) $(DEFS) @CPPFLAGS@
+CXXCPPFLAGS     = $(INCLUDES) $(DEFS) @CXXCPPFLAGS@
 FPP		= @FPP@
 FPPFLAGS	= $(INCLUDES) $(DEFS) @FPPFLAGS@
-CXXCPPFLAGS     = $(INCLUDES) $(DEFS) @CXXCPPFLAGS@
 
 
 # Compilation:
@@ -58,7 +58,7 @@ FCFLAGS_f90	= @FCFLAGS_f90@
 FCFLAGS_F	= @FCFLAGS_F@
 FCFLAGS_F90	= @FCFLAGS_F90@
 
-NETCDF.MOD	= @NETCDF_MOD@
+# NETCDF.MOD	= @NETCDF_MOD@
 CC_MAKEDEPEND	= @CC_MAKEDEPEND@
 
 COMPILE.c	= $(CC)  -c $(CFLAGS)   $(CPPFLAGS)
@@ -74,14 +74,18 @@ COMPILE.F90	= $(F90) -c $(F90FLAGS) $(FPPFLAGS) $(FCFLAGS_F90)
 # Linking:
 MATHLIB		= @MATHLIB@
 FLIBS		= @FLIBS@
+FCLIBS		= @FCLIBS@
 F90LIBS		= @F90LIBS@
-LIBS		= @LDFLAGS@ @LIBS@
-F90LDFLAGS	= $(LDFLAGS)
-LINK.c		= $(CC) -o $@ $(CFLAGS) $(LDFLAGS)
-LINK.cxx	= $(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS)
-LINK.F		= $(FC) -o $@ $(FFLAGS) $(FLDFLAGS)
-LINK.f		= $(FC) -o $@ $(FFLAGS) $(FLDFLAGS)
-LINK.F90	= $(F90) -o $@ $(F90FLAGS) $(F90LDFLAGS)
+FLDFLAGS	= @FLDFLAGS@
+F90LDFLAGS	= @F90LDFLAGS@
+LDFLAGS		= @LDFLAGS@ 
+LIBS		= @LIBS@
+
+LINK.c		= $(CC)  -o $@ $(CFLAGS)   $(LDFLAGS)    $(LIBS)
+LINK.cxx	= $(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS)    $(LIBS)
+LINK.f		= $(FC)  -o $@ $(FFLAGS)   $(FLDFLAGS)   $(LIBS)
+LINK.F		= $(FC)  -o $@ $(FCFLAGS)  $(FLDFLAGS)   $(LIBS)
+LINK.F90	= $(F90) -o $@ $(F90FLAGS) $(F90LDFLAGS) $(LIBS)
 
 
 # Manual pages:

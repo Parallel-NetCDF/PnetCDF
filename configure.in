@@ -309,6 +309,7 @@ if test "x${MPIF90}" != x ; then
    AC_SUBST(FCFLAGS_F90)
 
    FPPFLAGS=${FPPFLAGS-}
+   AC_SUBST(FPP)
    AC_SUBST(FPPFLAGS)
 
    AC_LANG_PUSH([Fortran])
@@ -407,6 +408,12 @@ if test "x${enable_fortran}" = xyes ; then
 
    AC_SUBST(MPIF77)
    AC_SUBST(MPIF90)
+
+   AC_SUBST(FLIBS)
+   AC_SUBST(FCLIBS)
+   AC_SUBST(F90LIBS)
+   AC_SUBST(FLDFLAGS)
+   AC_SUBST(F90LDFLAGS)
 fi
 
 AC_PROG_INSTALL
@@ -754,7 +761,6 @@ echo \
               FCFLAGS     = ${FCFLAGS}
               F90FLAGS    = ${F90FLAGS}
               CPPFLAGS    = ${CPPFLAGS}
-              CXXCPPFLAGS = ${CXXCPPFLAGS}
               LDFLAGS     = ${LDFLAGS}
               LIBS        = ${LIBS}
 
