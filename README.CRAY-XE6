@@ -3,6 +3,32 @@
 # The following configure command works on Hopper @ NERSC
 # http://www.nersc.gov/users/computational-systems/hopper
 
-./configure --prefix=/path/to/install --build --target CC=cc CXX=CC FC=ftn F90=ftn MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn CFLAGS=-O2 FFLAGS=-O2
+./configure --prefix=/path/to/install \
+            --with-mpi=/path/to/mpi/implementation \
+            CFLAGS=-O2 FFLAGS=-O2
 
+
+The configure command above works for PGI, GNU, and Intel
+compilers, i.e. when one of the module load commands below is used:
+
+    module load PrgEnv-pgi
+    module load PrgEnv-gnu
+    module load PrgEnv-intel
+
+
+For Pathscale compiler, i.e.
+    module load PrgEnv-pathscale
+    use command below:
+    ./configure --prefix=/path/to/install \
+                --with-mpi=/path/to/mpi/implementation \
+                CFLAGS=-Ofast FFLAGS=-Ofast FCFLAGS=-Ofast
+
+
+For Cray compilers, i.e.
+    module load PrgEnv-cray
+    use command below:
+    ./configure --prefix=/path/to/install \
+                --with-mpi=/path/to/mpi/implementation \
+                CFLAGS=-O2 FFLAGS=-O2 FCFLAGS="-O2 -e mf" \
+                LDFLAGS=-Wl,-z,muldefs
 
