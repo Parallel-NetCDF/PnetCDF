@@ -406,7 +406,9 @@ $(MODULE_GENERATED): $(COMMON_HEADER_GENERATED) pnetcdf_api.interface
 	echo "module pnetcdf" >> pnetcdf.F90
 	cat $(COMMON_HEADER_GENERATED) $(srcdir)/pnetcdf_api.interface >> pnetcdf.F90
 	echo "end module pnetcdf" >> pnetcdf.F90
+	$(RM) -f pnetcdf.mod
 	$(COMPILE.F90) pnetcdf.F90
+	if [ -e PNETCDF.mod ] ; then mv -f PNETCDF.mod pnetcdf.mod ; fi
 
 $(HEADER_GENERATED): $(COMMON_HEADER_GENERATED) pnetcdf_api.external
 	$(RM) -f pnetcdf.inc
