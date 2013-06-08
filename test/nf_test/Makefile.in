@@ -1,8 +1,10 @@
 #
-#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
-#  See COPYRIGHT notice in top-level directory.
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
 #
-#  $Id$
+# $Id$
+#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH  = @srcdir@
@@ -86,7 +88,7 @@ verbose_testing: test.nc nf_test
 	./nf_test -v
 
 #test.nc: 
-#	(cd ../nc_test && make nc_test && ./nc_test -c)
+#	(cd ../nc_test && $(MAKE) nc_test && ./nc_test -c)
 #	cp ../nc_test/test.nc .
 
 include $(srcdir)/../../rules.make

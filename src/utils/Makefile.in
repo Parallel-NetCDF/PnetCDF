@@ -1,9 +1,10 @@
 #
-#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
-#  See COPYRIGHT notice in top-level directory.
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
 #
 # $Id$
-
+#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH  = @srcdir@
@@ -15,25 +16,25 @@ SUBDIRS = ncgen ncdump ncdiff
 all: ncmpigen ncmpidump ncmpidiff
 
 ncmpigen:
-	cd ncgen && $(MAKE)
+	@cd ncgen && $(MAKE)
 
 ncmpidump:
-	cd ncdump && $(MAKE)
+	@cd ncdump && $(MAKE)
 
 ncmpidiff:
-	cd ncdiff && $(MAKE)
+	@cd ncdiff && $(MAKE)
 
 clean:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
 
 distclean:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
-	$(RM) -f Makefile
-	if [ $(srcdir) != . ] ; then rmdir $(SUBDIRS) ; fi
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
+	@$(RM) -f Makefile
+	@if [ $(srcdir) != . ] ; then rmdir $(SUBDIRS) ; fi
 
 install:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done
 
 uninstall:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) uninstall ; ) ; done
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) uninstall ; ) ; done
 

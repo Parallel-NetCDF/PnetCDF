@@ -1,12 +1,13 @@
 #
-#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
-#  See COPYRIGHT notice in top-level directory.
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
 #
 # $Id$
+#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
-INSTALL = @INSTALL@
 
 include macros.make
 
@@ -16,8 +17,7 @@ PACKAGE		= parallel-netcdf
 DIST_GARBAGE	= \
 		config.cache	\
 		config.status	\
-		config.log \
-		autom4te.cache
+		config.log
 
 PACKING_LIST	= \
 		Makefile.in	\
@@ -88,10 +88,10 @@ verbose_check verbose_testing: tests
 clean_macros:
 	$(RM) -f macros.make
 
-RMDIR_SRCDIRS = src test examples/tutorial examples benchmarks doc man
+RMDIR_SRCDIRS = src test examples benchmarks doc man
 
 rmdir_src_test:
-	if [ $(srcdir) != . ] ; then set -e; for i in $(RMDIR_SRCDIRS); do ( rmdir $$i ; ) ; done; fi
+	@if ! [ $(srcdir) -ef $(PWD) ] ; then set -e; for i in $(RMDIR_SRCDIRS); do ( rmdir $$i ; ) ; done; fi
 
 # short names for making things in subdirs
 src/all \
@@ -131,14 +131,7 @@ examples/tutorial/distclean \
 	$(MAKE) SUBDIR=$$subdir TGET=$$target subdir_target
 
 subdir_target:
-	@echo ""
-	@cd $(SUBDIR) && \
-	    echo "Making \`$(TGET)' in directory `pwd`" && \
-	    echo "" && \
-	    $(MAKE) $(TGET) || exit 1
-	@echo ""
-	@echo "Returning to directory `pwd`"
-	@echo ""
+	@cd $(SUBDIR) && $(MAKE) $(TGET) || exit 1
 
 install:	whatis
 whatis:		$(MANDIR)/$(WHATIS)

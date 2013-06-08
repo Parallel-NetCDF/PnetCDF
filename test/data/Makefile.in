@@ -1,20 +1,26 @@
 #
-#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
-#  See COPYRIGHT notice in top-level directory.
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
 #
-#  $Id$
+# $Id$
+#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
 
 include ../../macros.make
 
-NC_FILES = test_double.nc \
-           test_float.nc \
-           test_int_cdf5.nc \
-           test_int.nc
+NC_ZIP_FILES = test_double.nc.gz \
+               test_float.nc.gz \
+               test_int_cdf5.nc.gz \
+               test_int.nc.gz
 
-PACKING_LIST = $(NC_FILES:.nc=.nc.gz) Makefile.in
+NC_FILES = $(NC_ZIP_FILES:.nc.gz=.nc)
+
+GARBAGE = $(NC_FILES)
+
+PACKING_LIST = $(NC_ZIP_FILES) Makefile.in
 
 all: $(NC_FILES)
 
@@ -31,11 +37,7 @@ test_int.nc: test_int.nc.gz
 	gzip -dc $< > $@
 
 unzip:
-	set -e; for i in $(NC_FILES); do ( if [ ! -f $$i ] ; then gzip -dc $(srcdir)/$$i.gz > $$i ; fi ) ; done
+	set -e; for i in $(NC_ZIP_FILES); do ( if [ ! -f $$i ] ; then gzip -dc $(srcdir)/$$i.gz > $$i ; fi ) ; done
 
-clean:
-
-distclean:
-	set -e; for i in $(NC_FILES); do ( if [ -f $$i ] ; then $(RM) -f $$i ; fi ) ; done
-	$(RM) -f Makefile
+include $(srcdir)/../../rules.make
 

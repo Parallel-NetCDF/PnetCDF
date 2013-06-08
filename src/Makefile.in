@@ -1,8 +1,10 @@
 #
-#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
-#  See COPYRIGHT notice in top-level directory.
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
 #
 # $Id$
+#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH  = @srcdir@
@@ -10,29 +12,29 @@ VPATH  = @srcdir@
 include ../macros.make
 
 all:
-	cd lib && $(MAKE)
-	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) ; fi
-	cd utils && $(MAKE)
+	@cd lib && $(MAKE)
+	@if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) ; fi
+	@cd utils && $(MAKE)
 
 install:
-	cd lib && $(MAKE) install
-	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) install ; fi
-	cd utils && $(MAKE) install
+	@cd lib && $(MAKE) install
+	@if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) install ; fi
+	@cd utils && $(MAKE) install
 
 uninstall:
-	cd lib && $(MAKE) uninstall
-	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) uninstall ; fi
-	cd utils && $(MAKE) uninstall
+	@cd lib && $(MAKE) uninstall
+	@if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) uninstall ; fi
+	@cd utils && $(MAKE) uninstall
 
 clean:
-	cd lib && $(MAKE) clean
-	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) clean ; fi
-	cd utils && $(MAKE) clean
+	@cd lib && $(MAKE) clean
+	@if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) clean ; fi
+	@cd utils && $(MAKE) clean
 
 distclean:
-	cd lib && $(MAKE) distclean
-	if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) distclean ; fi
-	cd utils && $(MAKE) distclean
-	$(RM) -f Makefile
-	if [ $(srcdir) != . ] ; then if [ @has_fortran@ = yes ] ; then rmdir libf ; fi ; fi
-	if [ $(srcdir) != . ] ; then rmdir lib utils ; fi
+	@cd lib && $(MAKE) distclean
+	@if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) distclean ; fi
+	@cd utils && $(MAKE) distclean
+	@$(RM) -f Makefile
+	@if [ $(srcdir) != . ] ; then if [ @has_fortran@ = yes ] ; then rmdir libf ; fi ; fi
+	@if [ $(srcdir) != . ] ; then rmdir lib utils ; fi
