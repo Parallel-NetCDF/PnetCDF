@@ -32,7 +32,7 @@ PROGS += $(F90_SRCS:.f90=)
 OBJS  += $(F90_SRCS:.f90=.o)
 endif
 
-GARBAGE      = $(PROGS)
+GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(C_SRCS) $(F90_SRCS) Makefile.in
 
 all: $(PROGS)
