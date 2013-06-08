@@ -168,11 +168,10 @@ clean:		FORCE
 	    subdirs="$(SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && \
-		echo 1>&2 make clean in `pwd` && \
 		$(MAKE) clean) || exit 1; \
 	    done; \
 	fi
-	$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
+	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
 		*.gcda *.gcno gmon.out
 
 distclean:	FORCE
@@ -180,11 +179,11 @@ distclean:	FORCE
 	    subdirs="$(SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && \
-		echo 1>&2 make distclean in `pwd` && \
 		$(MAKE) distclean) || exit 1; \
+		if ! [ "$(srcdir)" -ef "$(PWD)" ] ; then rmdir $$subdir ; fi \
 	    done; \
 	fi
-	$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
+	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
 	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files \
 		*.gcda *.gcno gmon.out
 	$(RM) -rf SunWS_cache
