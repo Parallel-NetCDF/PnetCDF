@@ -86,7 +86,7 @@ verbose_check verbose_testing: tests
 	@cd test && $(MAKE) verbose_testing
 
 clean_macros:
-	$(RM) -f macros.make
+	@$(RM) -f macros.make
 
 RMDIR_SRCDIRS = src test examples benchmarks doc man
 
