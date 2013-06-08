@@ -1,8 +1,10 @@
 #
-#  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
-#  See COPYRIGHT notice in top-level directory.
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
 #
 # $Id$
+#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -29,34 +31,28 @@ SUBDIRS = common \
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) all ; ) ; done
 
-clean:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
-
-distclean:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
-	$(RM) -f Makefile
-	if [ @srcdir@ != . ] ; then rmdir $(SUBDIRS) ; fi
-
 # Eventually, this target will run all of the relevant tests
 check testing:
 	# no tests in 'common' just common routines
-	cd common && make  
-	cd C && make testing
-	cd nonblocking && make testing
-	cd testcases && make testing
-	cd nc_test && make testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && make testing ;     fi
-	if [ @has_fortran@ = yes ] ; then cd testcases && make testing-f ;   fi
-	if [ @has_mpicxx@  = yes ] ; then cd testcases && make testing-cxx ; fi
+	cd common && $(MAKE)  
+	cd C && $(MAKE) testing
+	cd nonblocking && $(MAKE) testing
+	cd testcases && $(MAKE) testing
+	cd nc_test && $(MAKE) testing
+	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) testing ;     fi
+	if [ @has_fortran@ = yes ] ; then cd testcases && $(MAKE) testing-f ;   fi
+	if [ @has_mpicxx@  = yes ] ; then cd testcases && $(MAKE) testing-cxx ; fi
 
 verbose_check verbose_testing:
 	# no tests in 'common' just common routines
-	cd common && make  
-	cd C && make verbose_testing
-	cd nonblocking && make verbose_testing
-	cd testcases && make verbose_testing
-	cd nc_test && make verbose_testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && make verbose_testing ;     fi
-	if [ @has_fortran@ = yes ] ; then cd testcases && make verbose_testing-f ;   fi
-	if [ @has_mpicxx@  = yes ] ; then cd testcases && make verbose_testing-cxx ; fi
+	cd common && $(MAKE)  
+	cd C && $(MAKE) verbose_testing
+	cd nonblocking && $(MAKE) verbose_testing
+	cd testcases && $(MAKE) verbose_testing
+	cd nc_test && $(MAKE) verbose_testing
+	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) verbose_testing ;     fi
+	if [ @has_fortran@ = yes ] ; then cd testcases && $(MAKE) verbose_testing-f ;   fi
+	if [ @has_mpicxx@  = yes ] ; then cd testcases && $(MAKE) verbose_testing-cxx ; fi
+
+include $(srcdir)/../rules.make
 

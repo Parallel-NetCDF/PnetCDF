@@ -3,6 +3,7 @@
 # The purpose of this file is to contain common make(1) macros.
 # It should be processed by every execution of that utility.
 
+@SET_MAKE@
 
 # POSIX shell.  Shouldn't be necessary -- but is under IRIX 5.3.
 SHELL		= /bin/sh

@@ -1,6 +1,12 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
 # Makefile for ncmpidump(1).
 #
 # $Id$
+#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH = @srcdir@

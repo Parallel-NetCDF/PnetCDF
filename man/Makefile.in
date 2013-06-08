@@ -1,7 +1,10 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
 # $Id$
 #
-#	Makefile for netcdf man
-#
+# @configure_input@
 
 srcdir = @srcdir@
 VPATH = @srcdir@
