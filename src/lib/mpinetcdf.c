@@ -40,29 +40,38 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int status;
+    int status, safe_mode=0;
+    char *env_str=NULL;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
 
-    /* check if cmode are consistent across all processes */
-    int my_cmode, cmode_sum, nprocs;
-    MPI_Comm_size(comm, &nprocs);
-
-    /* Note if cmode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
-       In pnetcdf.h, they both are defined the same value, 0.
+    /* get environment variable PNETCDF_SAFE_MODE
+     * if it is set to 1, then we perform a strict parameter consistent test
      */
+    env_str = getenv("PNETCDF_SAFE_MODE");
+    if (env_str != NULL && *env_str == '1') safe_mode = 1;
 
-    my_cmode = 1;
-    if (cmode & NC_64BIT_OFFSET)  my_cmode = 2;
-    if (cmode & NC_64BIT_DATA)    my_cmode = 5;
+    if (safe_mode) {
+        /* check if cmode are consistent across all processes */
+        int my_cmode, cmode_sum, nprocs;
+        MPI_Comm_size(comm, &nprocs);
 
-    MPI_Allreduce(&my_cmode, &cmode_sum, 1, MPI_INT, MPI_SUM, comm);
-    if (cmode_sum != my_cmode * nprocs) {
-        // fprintf(stderr,"Error: create modes are inconsistent\n");
-        *ncidp = -1;  /* cause NC_EBADID for any further opertion */
-        return NC_ECMODE;
+        /* Note if cmode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
+           In pnetcdf.h, they both are defined the same value, 0.
+         */
+
+        my_cmode = 1;
+        if (cmode & NC_64BIT_OFFSET)  my_cmode = 2;
+        if (cmode & NC_64BIT_DATA)    my_cmode = 5;
+
+        MPI_Allreduce(&my_cmode, &cmode_sum, 1, MPI_INT, MPI_SUM, comm);
+        if (cmode_sum != my_cmode * nprocs) {
+            // fprintf(stderr,"Error: create modes are inconsistent\n");
+            *ncidp = -1;  /* cause NC_EBADID for any further opertion */
+            return NC_ECMODE;
+        }
+        /* if cmodes are inconsistent, then it is a fatal error to continue */
     }
-    /* if cmodes are inconsistent, then it is a fatal error to continue */
 
     /* get header chunk size from user info */
     if (info != MPI_INFO_NULL) {
@@ -77,7 +86,8 @@ ncmpi_create(MPI_Comm    comm,
     if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) 
         return NC_ENOMEM;
 
-    ncp->old = NULL;
+    ncp->safe_mode = safe_mode;
+    ncp->old       = NULL;
     assert(ncp->flags == 0);
 
     /* set the file format version beased on the create mode, cmode */
@@ -141,10 +151,35 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)
 {
-    int status = NC_NOERR;
+    int status=NC_NOERR, safe_mode=0;
+    char *env_str=NULL;
     NC *ncp;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
   
+    /* get environment variable PNETCDF_SAFE_MODE
+     * if it is set to 1, then we perform a strict parameter consistent test
+     */
+    env_str = getenv("PNETCDF_SAFE_MODE");
+    if (env_str != NULL && *env_str == '1') safe_mode = 1;
+
+    if (safe_mode) {
+        /* check if omode are consistent across all processes */
+        int omode_sum, nprocs;
+        MPI_Comm_size(comm, &nprocs);
+
+        /* Note if omode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
+           In pnetcdf.h, they both are defined the same value, 0.
+         */
+
+        MPI_Allreduce(&omode, &omode_sum, 1, MPI_INT, MPI_SUM, comm);
+        if (omode_sum != omode * nprocs) {
+            // fprintf(stderr,"Error: create modes are inconsistent\n");
+            *ncidp = -1;  /* cause NC_EBADID for any further opertion */
+            return NC_ECMODE;
+        }
+        /* if omodes are inconsistent, then it is a fatal error to continue */
+    }
+
     /* get header chunk size from user info, if provided */
     if (info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
@@ -158,7 +193,8 @@ ncmpi_open(MPI_Comm    comm,
     if (ncp == NULL)
         return NC_ENOMEM;
 
-    ncp->old = NULL;
+    ncp->safe_mode = safe_mode;
+    ncp->old       = NULL;
 
     status = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
     if (status != NC_NOERR) {

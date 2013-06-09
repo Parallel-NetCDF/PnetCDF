@@ -439,6 +439,7 @@ struct NC {
 #define NC_HDIRTY 0x800000  /* header info has changed */
 /* NC_NOFILL is defined in netcdf.h, historical interface */
     int           flags;
+    int           safe_mode; /* 0 or 1, for parameter consistentcy check */
     ncio         *nciop;
     MPI_Offset    chunk;    /* largest extent this layer will request from
                                ncio->get() */

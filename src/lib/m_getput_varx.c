@@ -404,7 +404,7 @@ ncmpii_mgetput_varm(int                ncid,
                                         ncp->nciop->comm, 1);
         /* else if (io_method == INDEP_COLL_IO) */
     }
-    if (io_method == COLL_IO)
+    if (ncp->safe_mode == 1 && io_method == COLL_IO)
         MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
     else
         min_st = status;
