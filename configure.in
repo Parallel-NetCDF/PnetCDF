@@ -184,6 +184,10 @@ AC_SUBST(MPICC)
 
 dnl Now MPICC is configured, let's do some basic compiler tests
 AC_PROG_CC
+
+dnl enable large file suppoert
+AC_SYS_LARGEFILE
+
 UD_PROG_CC_MAKEDEPEND
 
 AC_HEADER_STDC
@@ -654,8 +658,6 @@ has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 
 UD_MAKEWHATIS
-
-AC_SYS_LARGEFILE
 
 dnl
 dnl After all other tests, optionally enable coverage.  we do this last
