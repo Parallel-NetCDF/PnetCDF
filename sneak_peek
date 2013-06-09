@@ -45,6 +45,12 @@ o New error code
     happens due to MPI-IO data type constructor APIs' arguments using 4-byte
     integers.
 
+o New environment variable
+  * PNETCDF_SAFE_MODE environment variable can be used to enable/disable the
+    internal checking for data consistency across all processes (by calling
+    collective MPI_Allreduce). Set it to 1 to enable the checking. Default
+    is 0, i.e. disabled.
+
 o New example programs
   * hints.c, for using PnetCDF hints
   * flex_c.c and flex_f.F, for using blocking and nonblocking flexible APIs
