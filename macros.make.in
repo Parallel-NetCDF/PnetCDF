@@ -64,8 +64,8 @@ CC_MAKEDEPEND	= @CC_MAKEDEPEND@
 
 COMPILE.c	= $(CC)  -c $(CFLAGS)   $(CPPFLAGS)
 COMPILE.cxx	= $(CXX) -c $(CXXFLAGS) $(CXXCPPFLAGS)
-COMPILE.f	= $(F77) -c $(FFLAGS)   $(FPPFLAGS)
-COMPILE.f90	= $(F90) -c $(F90FLAGS) $(FPPFLAGS) $(FCFLAGS_f90)
+COMPILE.f	= $(F77) -c $(FFLAGS)
+COMPILE.f90	= $(F90) -c $(F90FLAGS) $(FCFLAGS_f90)
 # The following command isn't available on some systems; therefore, the
 # `.F.o' rule is relatively complicated.
 COMPILE.F	= $(FC)  -c $(FCFLAGS)  $(FPPFLAGS) $(FCFLAGS_F)
