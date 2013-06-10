@@ -18,7 +18,6 @@
 
 #define NO_NETCDF_2 1
 
-! #include "../../src/libf/nfconfig.inc"
 #include "nfconfig.inc"
 
 
