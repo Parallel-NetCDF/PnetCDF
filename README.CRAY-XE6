@@ -1,7 +1,9 @@
-# January 19 2013
-# Building pnetcdf on the Cray XE6
-# The following configure command works on Hopper @ NERSC
-# http://www.nersc.gov/users/computational-systems/hopper
+$Id$
+
+May 9 2013
+
+Building pnetcdf on the Cray XE6 (tested on Hopper @ NERSC)
+http://www.nersc.gov/users/computational-systems/hopper
 
 ./configure --prefix=/path/to/install \
             --with-mpi=/path/to/mpi/implementation \
@@ -16,7 +18,7 @@ compilers, i.e. when one of the module load commands below is used:
     module load PrgEnv-intel
 
 
-For Pathscale compiler, i.e.
+For Pathscale compilers, i.e.
     module load PrgEnv-pathscale
     use command below:
     ./configure --prefix=/path/to/install \
@@ -29,6 +31,6 @@ For Cray compilers, i.e.
     use command below:
     ./configure --prefix=/path/to/install \
                 --with-mpi=/path/to/mpi/implementation \
-                CFLAGS=-O2 FFLAGS=-O2 FCFLAGS="-O2 -e mf" \
+                CFLAGS=-O2 FFLAGS=-O2 FCFLAGS="-O2 -emf" \
                 LDFLAGS=-Wl,-z,muldefs
 

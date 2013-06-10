@@ -819,8 +819,7 @@ EOF
     for ctype in $2; do
 	dnl AC_MSG_CHECKING(if Fortran \"$1\" is C \"$ctype\")
 	cat >conftest.c <<EOF
-	    int $FCALLSCSUB(values)
-		$ctype values[[4]];
+	    int $FCALLSCSUB($ctype values[[4]])
 	    {
 		return(values[[1]] != -2 || values[[2]] != -3);
 	    }

@@ -108,18 +108,25 @@ AC_DEFUN([UD_CHECK_MPI_COMPILER], [
    if test "x$MPI_INSTALL"  != x ; then
       UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
       if test "x$$1" = x ; then
-         UD_MSG_DEBUG(search possible $1 under MPI_INSTALL/bin)
-         AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL/bin])
+         UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL)
+         AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL])
+         if test "x$$1" = x ; then
+            UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL/bin)
+            AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL/bin])
+         fi
       else
          UD_MSG_DEBUG(check if file $$1 exists)
          if ! test -f "$$1" ; then
             dnl file does not exist, check under MPI_INSTALL
             UD_MSG_DEBUG(File $1= $$1 cannot be found ... check under $MPI_INSTALL)
-            if test -f "$MPI_INSTALL/bin/$$1" ; then
+            if test -f "$MPI_INSTALL/$$1" ; then
+               UD_MSG_DEBUG(File $1= $$1 is found under $MPI_INSTALL)
+               $1="$MPI_INSTALL/$$1"
+            elif test -f "$MPI_INSTALL/bin/$$1" ; then
                UD_MSG_DEBUG(File $1= $$1 is found under $MPI_INSTALL/bin)
                $1="$MPI_INSTALL/bin/$$1"
             else
-               UD_MSG_DEBUG(File $1= $$1 cannot be found under $MPI_INSTALL/bin)
+               UD_MSG_DEBUG(File $1= $$1 cannot be found under $MPI_INSTALL)
                $1=
             fi
          fi
