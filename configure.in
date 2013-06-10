@@ -323,6 +323,9 @@ if test "x${MPIF90}" != x ; then
    AC_SUBST(FPP)
    AC_SUBST(FPPFLAGS)
 
+   dnl compiler command-line define preprocess flag, result in FC_DEFINE
+   UD_FC_PP_DEFINE
+
    AC_LANG_PUSH([Fortran])
    AC_FC_SRCEXT([f90])
    AC_SUBST(FCFLAGS_f90)
