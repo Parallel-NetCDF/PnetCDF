@@ -1,157 +1,48 @@
+#
+# generated from command "gcc -MM file.c"
+#
 validator: validator.c
-header.o: header.c
-header.o: nc.h
-header.o: ncx.h
-mpincio.o: mpincio.c
-mpincio.o: ncio.h
-mpincio.o: ncconfig.h
-mpincio.o: fbits.h
-mpincio.o: rnd.h
-mpinetcdf.o: mpinetcdf.c
-mpinetcdf.o: nc.h
-mpinetcdf.o: ncx.h
-mpinetcdf.o: macro.h
-attr.o: attr.c
-attr.o: fbits.h
-attr.o: nc.h
-attr.o: ncconfig.h
-attr.o: ncio.h
-attr.o: ncx.h
-attr.o: pnetcdf.h
-attr.o: rnd.h
-dim.o: dim.c
-dim.o: fbits.h
-dim.o: nc.h
-dim.o: ncconfig.h
-dim.o: ncio.h
-dim.o: ncx.h
-dim.o: pnetcdf.h
-dim.o: rnd.h
-error.o: error.c
-error.o: pnetcdf.h
-nc.o: fbits.h
-nc.o: nc.c
-nc.o: nc.h
-nc.o: ncconfig.h
-nc.o: ncio.h
-nc.o: ncx.h
-nc.o: pnetcdf.h
-nc.o: rnd.h
-ncx.o: ncconfig.h
-ncx.o: ncx.c
-ncx.o: ncx.h
-ncx.o: rnd.h
-var.o: fbits.h
-var.o: nc.h
-var.o: ncconfig.h
-var.o: ncio.h
-var.o: ncx.h
-var.o: pnetcdf.h
-var.o: rnd.h
-var.o: var.c
-convert_swap.o: convert_swap.c
-convert_swap.o: nc.h
-convert_swap.o: ncx.h
-convert_swap.o: macro.h
-filetype.o: filetype.c
-filetype.o: nc.h
-filetype.o: ncx.h
-filetype.o: macro.h
-getput_var.o: getput_var.c
-getput_var.o: nc.h
-getput_var.o: ncx.h
-getput_var.o: macro.h
-getput_var1.o: getput_var1.c
-getput_var1.o: nc.h
-getput_var1.o: ncx.h
-getput_var1.o: macro.h
-getput_vara.o: getput_vara.c
-getput_vara.o: nc.h
-getput_vara.o: ncx.h
-getput_vara.o: macro.h
-getput_vars.o: getput_vars.c
-getput_vars.o: nc.h
-getput_vars.o: ncx.h
-getput_vars.o: macro.h
-getput_varm.o: getput_varm.c
-getput_varm.o: nc.h
-getput_varm.o: ncx.h
-getput_varm.o: macro.h
-i_getput_var.o: i_getput_var.c
-i_getput_var.o: nc.h
-i_getput_var.o: ncx.h
-i_getput_var.o: macro.h
-i_getput_var1.o: i_getput_var1.c
-i_getput_var1.o: nc.h
-i_getput_var1.o: ncx.h
-i_getput_var1.o: macro.h
-i_getput_vara.o: i_getput_vara.c
-i_getput_vara.o: nc.h
-i_getput_vara.o: ncx.h
-i_getput_vara.o: macro.h
-i_getput_vars.o: i_getput_vars.c
-i_getput_vars.o: nc.h
-i_getput_vars.o: ncx.h
-i_getput_vars.o: macro.h
-i_getput_varm.o: i_getput_varm.c
-i_getput_varm.o: nc.h
-i_getput_varm.o: ncx.h
-i_getput_varm.o: macro.h
-m_getput_varx.o: m_getput_varx.c
-m_getput_varx.o: nc.h
-m_getput_varx.o: ncx.h
-m_getput_varx.o: macro.h
-nonblocking.o: nonblocking.c
-nonblocking.o: nc.h
-nonblocking.o: ncx.h
-nonblocking.o: macro.h
-getputn_schar.o: getputn_schar.c
-getputn_schar.o: nc.h
-getputn_schar.o: ncx.h
-getputn_uchar.o: getputn_uchar.c
-getputn_uchar.o: nc.h
-getputn_uchar.o: ncx.h
-getputn_short.o: getputn_short.c
-getputn_short.o: nc.h
-getputn_short.o: ncx.h
-getputn_ushort.o: getputn_ushort.c
-getputn_ushort.o: nc.h
-getputn_ushort.o: ncx.h
-getputn_int.o: getputn_int.c
-getputn_int.o: nc.h
-getputn_int.o: ncx.h
-getputn_uint.o: getputn_uint.c
-getputn_uint.o: nc.h
-getputn_uint.o: ncx.h
-getputn_float.o: getputn_float.c
-getputn_float.o: nc.h
-getputn_float.o: ncx.h
-getputn_double.o: getputn_double.c
-getputn_double.o: nc.h
-getputn_double.o: ncx.h
-getputn_int64.o: getputn_int64.c
-getputn_int64.o: nc.h
-getputn_int64.o: ncx.h
-getputn_uint64.o: getputn_uint64.c
-getputn_uint64.o: nc.h
-getputn_uint64.o: ncx.h
-bput_var.o: bput_var.c
-bput_var.o: nc.h
-bput_var.o: ncx.h
-bput_var.o: macro.h
-bput_var1.o: bput_var1.c
-bput_var1.o: nc.h
-bput_var1.o: ncx.h
-bput_var1.o: macro.h
-bput_vara.o: bput_vara.c
-bput_vara.o: nc.h
-bput_vara.o: ncx.h
-bput_vara.o: macro.h
-bput_vars.o: bput_vars.c
-bput_vars.o: nc.h
-bput_vars.o: ncx.h
-bput_vars.o: macro.h
-bput_varm.o: bput_varm.c
-bput_varm.o: nc.h
-bput_varm.o: ncx.h
-bput_varm.o: macro.h
+mpinetcdf.o: mpinetcdf.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+header.o: header.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+mpincio.o: mpincio.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h rnd.h macro.h
+attr.o: attr.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+dim.o: dim.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+error.o: error.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h
+nc.o: nc.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h rnd.h ncx.h nctypes.h macro.h
+ncx.o: ncx.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h
+string.o: string.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h utf8proc.h
+var.o: var.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+ncmpidtype.o: ncmpidtype.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncmpidtype.h macro.h
+convert_swap.o: convert_swap.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h
+filetype.o: filetype.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+m_getput_varx.o: m_getput_varx.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+nonblocking.o: nonblocking.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+malloc.o: malloc.c ncconfig.h
+utf8proc.o: utf8proc.c ncconfig.h utf8proc.h utf8proc_data.h
+getputn_schar.o: getputn_schar.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h
+getputn_uchar.o: getputn_uchar.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_short.o: getputn_short.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_ushort.o: getputn_ushort.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_int.o: getputn_int.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_uint.o: getputn_uint.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_float.o: getputn_float.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_double.o: getputn_double.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_int64.o: getputn_int64.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+getputn_uint64.o: getputn_uint64.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+swap.o: swap.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+bput_var.o: bput_var.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+bput_var1.o: bput_var1.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+bput_vara.o: bput_vara.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+bput_vars.o: bput_vars.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+bput_varm.o: bput_varm.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+getput_var.o: getput_var.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+getput_var1.o: getput_var1.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+getput_vara.o: getput_vara.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
+getput_vars.o: getput_vars.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+getput_varm.o: getput_varm.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+i_getput_var.o: i_getput_var.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+i_getput_var1.o: i_getput_var1.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+i_getput_vara.o: i_getput_vara.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+i_getput_vars.o: i_getput_vars.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+i_getput_varm.o: i_getput_varm.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+
