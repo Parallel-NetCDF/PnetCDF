@@ -29,7 +29,12 @@ M4_SRCS   = getput_var.m4 \
             i_getput_var1.m4 \
             i_getput_vara.m4 \
             i_getput_vars.m4 \
-            i_getput_varm.m4
+            i_getput_varm.m4 \
+            bput_var.m4 \
+            bput_var1.m4 \
+            bput_vara.m4 \
+            bput_vars.m4 \
+            bput_varm.m4
 
 LIB_CSRCS = mpinetcdf.c \
             header.c \
@@ -58,12 +63,7 @@ LIB_CSRCS = mpinetcdf.c \
             getputn_double.c \
             getputn_int64.c \
             getputn_uint64.c \
-            swap.c \
-            bput_var.c \
-            bput_var1.c \
-            bput_vara.c \
-            bput_vars.c \
-            bput_varm.c
+            swap.c
 
 PACKING_LIST = $(LIB_CSRCS) \
                $(M4_SRCS) \
