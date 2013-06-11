@@ -38,3 +38,4 @@ install:
 uninstall:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) uninstall ; ) ; done
 
+.PHONY: FORCE all clean distclean install uninstall

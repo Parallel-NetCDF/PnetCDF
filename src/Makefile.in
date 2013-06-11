@@ -38,3 +38,5 @@ distclean:
 	@$(RM) -f Makefile
 	@if [ $(srcdir) != . ] ; then if [ @has_fortran@ = yes ] ; then rmdir libf ; fi ; fi
 	@if [ $(srcdir) != . ] ; then rmdir lib utils ; fi
+
+.PHONY: FORCE all clean distclean install uninstall

@@ -242,3 +242,6 @@ ensure_manifest:	$(PACKING_LIST) FORCE
 # Misc:
 
 FORCE:
+
+.PHONY: FORCE all clean distclean install uninstall TAGS test tests check testing verbose_check verbose_testing clean_macros rmdir_src_test b-test c-test f-test 
+
