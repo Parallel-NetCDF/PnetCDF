@@ -20,6 +20,17 @@ LIBRARY  = libpnetcdf.a
 PROGRAM  = ncvalid
 HEADER   = pnetcdf.h
 
+M4_SRCS   = getput_var.m4 \
+            getput_var1.m4 \
+            getput_vara.m4 \
+            getput_vars.m4 \
+            getput_varm.m4 \
+            i_getput_var.m4 \
+            i_getput_var1.m4 \
+            i_getput_vara.m4 \
+            i_getput_vars.m4 \
+            i_getput_varm.m4
+
 LIB_CSRCS = mpinetcdf.c \
             header.c \
             mpincio.c \
@@ -33,16 +44,6 @@ LIB_CSRCS = mpinetcdf.c \
             ncmpidtype.c \
             convert_swap.c \
             filetype.c \
-            getput_var.c \
-            getput_var1.c \
-            getput_vara.c \
-            getput_vars.c \
-            getput_varm.c \
-            i_getput_var.c \
-            i_getput_var1.c \
-            i_getput_vara.c \
-            i_getput_vars.c \
-            i_getput_varm.c \
             m_getput_varx.c \
             nonblocking.c   \
             malloc.c \
@@ -65,6 +66,7 @@ LIB_CSRCS = mpinetcdf.c \
             bput_varm.c
 
 PACKING_LIST = $(LIB_CSRCS) \
+               $(M4_SRCS) \
                depend \
                fbits.h \
                Makefile \
@@ -79,13 +81,13 @@ PACKING_LIST = $(LIB_CSRCS) \
                utf8proc_data.h \
                utf8proc.h
 
-LIB_OBJS   = $(LIB_CSRCS:.c=.o)
+LIB_OBJS   = $(LIB_CSRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 PROG_CSRCS = validator.c
 
 PROG_OBJS  = $(PROG_CSRCS:.c=.o)
 
-GARBAGE    = $(LIBRARY) $(PROGRAM)
+GARBAGE    = $(LIBRARY) $(PROGRAM) $(M4_SRCS:.m4=.c) $(LIB_OBJS)
 
 DIST_GARBAGE = ncconfig.h pnetcdf.h
 
