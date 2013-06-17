@@ -4,20 +4,22 @@ o New optimization: request aggregation
   The original design of nonblocking I/O is to concatenate the fileviews of
   individual nonblocking requests and serve them with a single MPI-IO call,
   if possible. However, because MPI-IO requires the file displacements of
-  the flattened fileview be monotonically nondecreasing, the original approach
-  divides the nonblocking requests into groups such that each group abides by
-  this MPI-IO fileview requirement. Each group is then carried out by a
-  separate MPI-IO call. Performance can be poor if there are many groups nad
-  each group has an aggregate access region that is non-contiguous in files.
+  the flattened fileview be in an monotonically nondecreasing order, the
+  original approach (in v1.3.1 and prior) divides the nonblocking requests
+  into groups such that each group abides by this MPI-IO fileview requirement.
+  Each group is then carried out by a separate MPI-IO call. Performance can
+  be poor if there are multiple groups and each group's aggregate access
+  region is non-contiguous in the file.
 
-  This revision fixes this problem by 1) sorting the starting offset of
-  fileviews into a non-decreasing order 2) dividing the fileviews into groups.
-  There are only two types of groups: interleaving and non-interleaving. 3)
-  concatenating fileviews for non-interleaving groups individually, 4)
-  flattening fileviews for interleaving groups individually, merging the
-  offset-length pair, and concatenating them into a new fileview, 5)
-  concatenating the fileviews from all groups into a single one. 6) the final
-  combined fileview is used by one MPI-IO call to commit the requests.
+  This revision fixes this problem by 1) sorting the starting offset of all
+  nonblocking requests into a non-decreasing order; 2) dividing the requests
+  into groups (two types of groups are identified: interleaving and
+  non-interleaving); 3) for each non-interleaving group, concatenating
+  fileviews of all requests in the group; 4) for each interleaving group,
+  flattening fileviews of all requests in the group, merging the offset-length
+  pairs, and concatenating them into a new integrated fileview; 5)
+  concatenating the fileviews of all groups into a single one; 6) the final
+  combined fileview is used by a single MPI-IO call to carry out the requests.
   Performance is expected to be improved as the number of MPI-IO calls is
   reduced to one.
 
@@ -26,7 +28,7 @@ o New optimization: request aggregation
   itself. For example, a request to accessing a single column of a 2D integer
   array will result in offset-length pairs, each representing only a 4-byte
   integer where the C struct in PnetCDF for storing an offset-length pair
-  takes 3*sizeof(MPI_Offset)=24 bytes.
+  takes 3*sizeof(MPI_Offset)=24 bytes (offset, length, and I/O buffer pointer).
 
 o New APIs
   * ncmpi_inq_nreqs() reports the number of pending nonblocking requests
@@ -47,18 +49,18 @@ o New error code
 
 o New environment variable
   * PNETCDF_SAFE_MODE environment variable can be used to enable/disable the
-    internal checking for data consistency across all processes (by calling
-    collective MPI_Allreduce). Set it to 1 to enable the checking. Default
-    is 0, i.e. disabled.
+    internal checking for data/argument consistency across all processes (by
+    calling collective MPI_Allreduce). Set it to 1 to enable the checking.
+    Default is 0, i.e. disabled.
 
 o New example programs
   * hints.c, for using PnetCDF hints
-  * flex_c.c and flex_f.F, for using blocking and nonblocking flexible APIs
+  * flex_c.c and flex_f.f90, for using blocking and nonblocking flexible APIs
   * mput.c, for using ncmpi_mput_vara_all() to write a series of arbitrary
     start[] and count[]
   * block_cyclic.c, for a *-block-cyclic 2D partitioning pattern
   * column_wise.c, for a *-cyclic 2D partitioning pattern
-  * put_vara.F for using for nfmpi_put_vara_int_all()
+  * put_vara.f90 for using for nfmpi_put_vara_int_all()
 
 o New programs for I/O benchmarks
   * benchmarks/aggregation.c -- evaluate PnetCDF's performance on I/O
@@ -85,12 +87,13 @@ o Updates:
 
 o Bug fixes
   * For collective APIs, many places have been changed to prevent program
-    from hanging if a subset of the processes got errors. The fix will keep
-    all processes participating all the MPI collective calls in the PnetCDF
-    collective APIs
+    from hanging if a subset of the processes got errors. The fix will allow
+    all processes participating the MPI collective calls in the PnetCDF, even
+    if errors are detected on a subset of processes.
   * set the nonblocking request ID to NULL when the request length is zero
   * report error when bogus request IDs are passed in ncmpi_wait
-  * when entering redef with different alignment hints, fixed variables' file
-    starting offsets should only be changed when it is bigger than the old ones
-  * Fix Fortran API intent in/out argument declarations
+  * when entering redef with different alignment hints, fixed-sized variables'
+    file starting offsets should only be changed when it is bigger than the
+    old ones
+  * Fix some Fortran API intent in/out argument declarations
 
