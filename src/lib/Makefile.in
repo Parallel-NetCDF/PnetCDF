@@ -44,7 +44,8 @@ M4_SRCS   = getput_var.m4 \
             getputn_float.m4 \
             getputn_double.m4 \
             getputn_int64.m4 \
-            getputn_uint64.m4
+            getputn_uint64.m4 \
+            m_getput_varx.m4
 
 LIB_CSRCS = mpinetcdf.c \
             header.c \
@@ -59,7 +60,6 @@ LIB_CSRCS = mpinetcdf.c \
             ncmpidtype.c \
             convert_swap.c \
             filetype.c \
-            m_getput_varx.c \
             nonblocking.c   \
             malloc.c \
             utf8proc.c \

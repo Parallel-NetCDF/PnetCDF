@@ -2019,109 +2019,1027 @@ int ncmpi_bput_varm_ulonglong(int ncid, int varid, const MPI_Offset start[],
 
 /* Begin Skip Prototypes for Fortran binding */
 
-int ncmpi_mput_var(int ncid, int ntimes, int varids[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var(int ncid, int num, int varids[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
 
-int ncmpi_mput_var_all(int ncid, int ntimes, int varids[], 
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_all(int ncid, int num, int varids[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
 
-int ncmpi_mput_var1(int ncid, int ntimes, int varids[],
-                   MPI_Offset* const starts[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_text(int ncid, int num, int varids[],
+               char *bufs[]);
 
-int ncmpi_mput_var1_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_schar(int ncid, int num, int varids[],
+               signed char *bufs[]);
 
-int ncmpi_mput_vara(int ncid, int ntimes, int varids[],
-                   MPI_Offset* const starts[], MPI_Offset* const counts[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_uchar(int ncid, int num, int varids[],
+               unsigned char *bufs[]);
 
-int ncmpi_mput_vara_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_short(int ncid, int num, int varids[],
+               short *bufs[]);
 
-int ncmpi_mput_vars(int ncid, int ntimes, int varids[],
-                   MPI_Offset* const starts[], MPI_Offset* const counts[],
-                   MPI_Offset* const strides[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_ushort(int ncid, int num, int varids[],
+               unsigned short *bufs[]);
 
-int ncmpi_mput_vars_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   MPI_Offset* const strides[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_int(int ncid, int num, int varids[],
+               int *bufs[]);
 
-int ncmpi_mput_varm(int ncid, int ntimes, int varids[],
-                   MPI_Offset* const starts[], MPI_Offset* const counts[],
-                   MPI_Offset* const strides[], MPI_Offset* const imaps[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_uint(int ncid, int num, int varids[],
+               unsigned int *bufs[]);
 
-int ncmpi_mput_varm_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   MPI_Offset* const strides[], MPI_Offset* const imaps[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_long(int ncid, int num, int varids[],
+               long *bufs[]);
 
-int ncmpi_mget_var(int ncid, int ntimes, int varids[], 
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_float(int ncid, int num, int varids[],
+               float *bufs[]);
 
-int ncmpi_mget_var_all(int ncid, int ntimes, int varids[], 
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_double(int ncid, int num, int varids[],
+               double *bufs[]);
 
-int ncmpi_mget_var1(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_longlong(int ncid, int num, int varids[],
+               long long *bufs[]);
 
-int ncmpi_mget_var1_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_ulonglong(int ncid, int num, int varids[],
+               unsigned long long *bufs[]);
 
-int ncmpi_mget_vara(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
 
-int ncmpi_mget_vara_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_text_all(int ncid, int num, int varids[],
+               char *bufs[]);
 
-int ncmpi_mget_vars(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   MPI_Offset* const strides[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_schar_all(int ncid, int num, int varids[],
+               signed char *bufs[]);
 
-int ncmpi_mget_vars_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   MPI_Offset* const strides[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_uchar_all(int ncid, int num, int varids[],
+               unsigned char *bufs[]);
 
-int ncmpi_mget_varm(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   MPI_Offset* const strides[], MPI_Offset* const imaps[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_short_all(int ncid, int num, int varids[],
+               short *bufs[]);
 
-int ncmpi_mget_varm_all(int ncid, int ntimes, int varids[], 
-                   MPI_Offset* const starts[], MPI_Offset* const counts[], 
-                   MPI_Offset* const strides[], MPI_Offset* const imaps[],
-                   void *bufs[], MPI_Offset bufcounts[],
-                   MPI_Datatype buftypes[]);
+int ncmpi_mput_var_ushort_all(int ncid, int num, int varids[],
+               unsigned short *bufs[]);
+
+int ncmpi_mput_var_int_all(int ncid, int num, int varids[],
+               int *bufs[]);
+
+int ncmpi_mput_var_uint_all(int ncid, int num, int varids[],
+               unsigned int *bufs[]);
+
+int ncmpi_mput_var_long_all(int ncid, int num, int varids[],
+               long *bufs[]);
+
+int ncmpi_mput_var_float_all(int ncid, int num, int varids[],
+               float *bufs[]);
+
+int ncmpi_mput_var_double_all(int ncid, int num, int varids[],
+               double *bufs[]);
+
+int ncmpi_mput_var_longlong_all(int ncid, int num, int varids[],
+               long long *bufs[]);
+
+int ncmpi_mput_var_ulonglong_all(int ncid, int num, int varids[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mput_var1(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mput_var1_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mput_var1_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], char *bufs[]);
+
+int ncmpi_mput_var1_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], signed char *bufs[]);
+
+int ncmpi_mput_var1_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned char *bufs[]);
+
+int ncmpi_mput_var1_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], short *bufs[]);
+
+int ncmpi_mput_var1_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned short *bufs[]);
+
+int ncmpi_mput_var1_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], int *bufs[]);
+
+int ncmpi_mput_var1_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned int *bufs[]);
+
+int ncmpi_mput_var1_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long *bufs[]);
+
+int ncmpi_mput_var1_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], float *bufs[]);
+
+int ncmpi_mput_var1_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], double *bufs[]);
+
+int ncmpi_mput_var1_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long long *bufs[]);
+
+int ncmpi_mput_var1_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned long long *bufs[]);
+
+
+int ncmpi_mput_var1_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], char *bufs[]);
+
+int ncmpi_mput_var1_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], signed char *bufs[]);
+
+int ncmpi_mput_var1_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned char *bufs[]);
+
+int ncmpi_mput_var1_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], short *bufs[]);
+
+int ncmpi_mput_var1_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned short *bufs[]);
+
+int ncmpi_mput_var1_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], int *bufs[]);
+
+int ncmpi_mput_var1_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned int *bufs[]);
+
+int ncmpi_mput_var1_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long *bufs[]);
+
+int ncmpi_mput_var1_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], float *bufs[]);
+
+int ncmpi_mput_var1_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], double *bufs[]);
+
+int ncmpi_mput_var1_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long long *bufs[]);
+
+int ncmpi_mput_var1_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned long long *bufs[]);
+
+
+int ncmpi_mput_vara(int ncid, int num, int varids[], MPI_Offset* const starts[],
+               MPI_Offset* const counts[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mput_vara_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               void *bufs[], MPI_Offset bufcounts[],
+               MPI_Datatype datatypes[]);
+
+int ncmpi_mput_vara_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               char *bufs[]);
+
+int ncmpi_mput_vara_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               signed char *bufs[]);
+
+int ncmpi_mput_vara_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned char *bufs[]);
+
+int ncmpi_mput_vara_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               short *bufs[]);
+
+int ncmpi_mput_vara_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned short *bufs[]);
+
+int ncmpi_mput_vara_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               int *bufs[]);
+
+int ncmpi_mput_vara_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned int *bufs[]);
+
+int ncmpi_mput_vara_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long *bufs[]);
+
+int ncmpi_mput_vara_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               float *bufs[]);
+
+int ncmpi_mput_vara_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               double *bufs[]);
+
+int ncmpi_mput_vara_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long long *bufs[]);
+
+int ncmpi_mput_vara_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mput_vara_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               char *bufs[]);
+
+int ncmpi_mput_vara_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               signed char *bufs[]);
+
+int ncmpi_mput_vara_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned char *bufs[]);
+
+int ncmpi_mput_vara_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               short *bufs[]);
+
+int ncmpi_mput_vara_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned short *bufs[]);
+
+int ncmpi_mput_vara_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               int *bufs[]);
+
+int ncmpi_mput_vara_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned int *bufs[]);
+
+int ncmpi_mput_vara_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long *bufs[]);
+
+int ncmpi_mput_vara_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               float *bufs[]);
+
+int ncmpi_mput_vara_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               double *bufs[]);
+
+int ncmpi_mput_vara_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long long *bufs[]);
+
+int ncmpi_mput_vara_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mput_vars(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mput_vars_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mput_vars_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], char *bufs[]);
+
+int ncmpi_mput_vars_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], signed char *bufs[]);
+
+int ncmpi_mput_vars_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned char *bufs[]);
+
+int ncmpi_mput_vars_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], short *bufs[]);
+
+int ncmpi_mput_vars_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned short *bufs[]);
+
+int ncmpi_mput_vars_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], int *bufs[]);
+
+int ncmpi_mput_vars_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned int *bufs[]);
+
+int ncmpi_mput_vars_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long *bufs[]);
+
+int ncmpi_mput_vars_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], float *bufs[]);
+
+int ncmpi_mput_vars_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], double *bufs[]);
+
+int ncmpi_mput_vars_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long long *bufs[]);
+
+int ncmpi_mput_vars_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned long long *bufs[]);
+
+
+int ncmpi_mput_vars_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], char *bufs[]);
+
+int ncmpi_mput_vars_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], signed char *bufs[]);
+
+int ncmpi_mput_vars_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned char *bufs[]);
+
+int ncmpi_mput_vars_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], short *bufs[]);
+
+int ncmpi_mput_vars_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned short *bufs[]);
+
+int ncmpi_mput_vars_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], int *bufs[]);
+
+int ncmpi_mput_vars_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned int *bufs[]);
+
+int ncmpi_mput_vars_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long *bufs[]);
+
+int ncmpi_mput_vars_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], float *bufs[]);
+
+int ncmpi_mput_vars_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], double *bufs[]);
+
+int ncmpi_mput_vars_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long long *bufs[]);
+
+int ncmpi_mput_vars_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned long long *bufs[]);
+
+
+int ncmpi_mput_varm(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               void *bufs[], MPI_Offset bufcounts[],
+               MPI_Datatype datatypes[]);
+
+int ncmpi_mput_varm_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               void *bufs[], MPI_Offset bufcounts[],
+               MPI_Datatype datatypes[]);
+
+int ncmpi_mput_varm_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               char *bufs[]);
+
+int ncmpi_mput_varm_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               signed char *bufs[]);
+
+int ncmpi_mput_varm_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned char *bufs[]);
+
+int ncmpi_mput_varm_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               short *bufs[]);
+
+int ncmpi_mput_varm_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned short *bufs[]);
+
+int ncmpi_mput_varm_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               int *bufs[]);
+
+int ncmpi_mput_varm_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned int *bufs[]);
+
+int ncmpi_mput_varm_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long *bufs[]);
+
+int ncmpi_mput_varm_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               float *bufs[]);
+
+int ncmpi_mput_varm_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               double *bufs[]);
+
+int ncmpi_mput_varm_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long long *bufs[]);
+
+int ncmpi_mput_varm_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mput_varm_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               char *bufs[]);
+
+int ncmpi_mput_varm_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               signed char *bufs[]);
+
+int ncmpi_mput_varm_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned char *bufs[]);
+
+int ncmpi_mput_varm_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               short *bufs[]);
+
+int ncmpi_mput_varm_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned short *bufs[]);
+
+int ncmpi_mput_varm_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               int *bufs[]);
+
+int ncmpi_mput_varm_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned int *bufs[]);
+
+int ncmpi_mput_varm_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long *bufs[]);
+
+int ncmpi_mput_varm_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               float *bufs[]);
+
+int ncmpi_mput_varm_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               double *bufs[]);
+
+int ncmpi_mput_varm_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long long *bufs[]);
+
+int ncmpi_mput_varm_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mget_var(int ncid, int num, int varids[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mget_var_all(int ncid, int num, int varids[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mget_var_text(int ncid, int num, int varids[],
+               char *bufs[]);
+
+int ncmpi_mget_var_schar(int ncid, int num, int varids[],
+               signed char *bufs[]);
+
+int ncmpi_mget_var_uchar(int ncid, int num, int varids[],
+               unsigned char *bufs[]);
+
+int ncmpi_mget_var_short(int ncid, int num, int varids[],
+               short *bufs[]);
+
+int ncmpi_mget_var_ushort(int ncid, int num, int varids[],
+               unsigned short *bufs[]);
+
+int ncmpi_mget_var_int(int ncid, int num, int varids[],
+               int *bufs[]);
+
+int ncmpi_mget_var_uint(int ncid, int num, int varids[],
+               unsigned int *bufs[]);
+
+int ncmpi_mget_var_long(int ncid, int num, int varids[],
+               long *bufs[]);
+
+int ncmpi_mget_var_float(int ncid, int num, int varids[],
+               float *bufs[]);
+
+int ncmpi_mget_var_double(int ncid, int num, int varids[],
+               double *bufs[]);
+
+int ncmpi_mget_var_longlong(int ncid, int num, int varids[],
+               long long *bufs[]);
+
+int ncmpi_mget_var_ulonglong(int ncid, int num, int varids[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mget_var_text_all(int ncid, int num, int varids[],
+               char *bufs[]);
+
+int ncmpi_mget_var_schar_all(int ncid, int num, int varids[],
+               signed char *bufs[]);
+
+int ncmpi_mget_var_uchar_all(int ncid, int num, int varids[],
+               unsigned char *bufs[]);
+
+int ncmpi_mget_var_short_all(int ncid, int num, int varids[],
+               short *bufs[]);
+
+int ncmpi_mget_var_ushort_all(int ncid, int num, int varids[],
+               unsigned short *bufs[]);
+
+int ncmpi_mget_var_int_all(int ncid, int num, int varids[],
+               int *bufs[]);
+
+int ncmpi_mget_var_uint_all(int ncid, int num, int varids[],
+               unsigned int *bufs[]);
+
+int ncmpi_mget_var_long_all(int ncid, int num, int varids[],
+               long *bufs[]);
+
+int ncmpi_mget_var_float_all(int ncid, int num, int varids[],
+               float *bufs[]);
+
+int ncmpi_mget_var_double_all(int ncid, int num, int varids[],
+               double *bufs[]);
+
+int ncmpi_mget_var_longlong_all(int ncid, int num, int varids[],
+               long long *bufs[]);
+
+int ncmpi_mget_var_ulonglong_all(int ncid, int num, int varids[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mget_var1(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mget_var1_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mget_var1_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], char *bufs[]);
+
+int ncmpi_mget_var1_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], signed char *bufs[]);
+
+int ncmpi_mget_var1_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned char *bufs[]);
+
+int ncmpi_mget_var1_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], short *bufs[]);
+
+int ncmpi_mget_var1_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned short *bufs[]);
+
+int ncmpi_mget_var1_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], int *bufs[]);
+
+int ncmpi_mget_var1_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned int *bufs[]);
+
+int ncmpi_mget_var1_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long *bufs[]);
+
+int ncmpi_mget_var1_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], float *bufs[]);
+
+int ncmpi_mget_var1_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], double *bufs[]);
+
+int ncmpi_mget_var1_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long long *bufs[]);
+
+int ncmpi_mget_var1_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned long long *bufs[]);
+
+
+int ncmpi_mget_var1_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], char *bufs[]);
+
+int ncmpi_mget_var1_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], signed char *bufs[]);
+
+int ncmpi_mget_var1_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned char *bufs[]);
+
+int ncmpi_mget_var1_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], short *bufs[]);
+
+int ncmpi_mget_var1_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned short *bufs[]);
+
+int ncmpi_mget_var1_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], int *bufs[]);
+
+int ncmpi_mget_var1_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned int *bufs[]);
+
+int ncmpi_mget_var1_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long *bufs[]);
+
+int ncmpi_mget_var1_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], float *bufs[]);
+
+int ncmpi_mget_var1_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], double *bufs[]);
+
+int ncmpi_mget_var1_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], long long *bufs[]);
+
+int ncmpi_mget_var1_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], unsigned long long *bufs[]);
+
+
+int ncmpi_mget_vara(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               void *bufs[], MPI_Offset bufcounts[],
+               MPI_Datatype datatypes[]);
+
+int ncmpi_mget_vara_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               void *bufs[], MPI_Offset bufcounts[],
+               MPI_Datatype datatypes[]);
+
+int ncmpi_mget_vara_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               char *bufs[]);
+
+int ncmpi_mget_vara_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               signed char *bufs[]);
+
+int ncmpi_mget_vara_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned char *bufs[]);
+
+int ncmpi_mget_vara_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               short *bufs[]);
+
+int ncmpi_mget_vara_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned short *bufs[]);
+
+int ncmpi_mget_vara_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               int *bufs[]);
+
+int ncmpi_mget_vara_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned int *bufs[]);
+
+int ncmpi_mget_vara_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long *bufs[]);
+
+int ncmpi_mget_vara_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               float *bufs[]);
+
+int ncmpi_mget_vara_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               double *bufs[]);
+
+int ncmpi_mget_vara_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long long *bufs[]);
+
+int ncmpi_mget_vara_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mget_vara_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               char *bufs[]);
+
+int ncmpi_mget_vara_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               signed char *bufs[]);
+
+int ncmpi_mget_vara_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned char *bufs[]);
+
+int ncmpi_mget_vara_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               short *bufs[]);
+
+int ncmpi_mget_vara_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned short *bufs[]);
+
+int ncmpi_mget_vara_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               int *bufs[]);
+
+int ncmpi_mget_vara_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned int *bufs[]);
+
+int ncmpi_mget_vara_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long *bufs[]);
+
+int ncmpi_mget_vara_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               float *bufs[]);
+
+int ncmpi_mget_vara_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               double *bufs[]);
+
+int ncmpi_mget_vara_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               long long *bufs[]);
+
+int ncmpi_mget_vara_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mget_vars(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mget_vars_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], void *bufs[],
+               MPI_Offset bufcounts[], MPI_Datatype datatypes[]);
+
+int ncmpi_mget_vars_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], char *bufs[]);
+
+int ncmpi_mget_vars_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], signed char *bufs[]);
+
+int ncmpi_mget_vars_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned char *bufs[]);
+
+int ncmpi_mget_vars_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], short *bufs[]);
+
+int ncmpi_mget_vars_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned short *bufs[]);
+
+int ncmpi_mget_vars_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], int *bufs[]);
+
+int ncmpi_mget_vars_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned int *bufs[]);
+
+int ncmpi_mget_vars_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long *bufs[]);
+
+int ncmpi_mget_vars_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], float *bufs[]);
+
+int ncmpi_mget_vars_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], double *bufs[]);
+
+int ncmpi_mget_vars_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long long *bufs[]);
+
+int ncmpi_mget_vars_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned long long *bufs[]);
+
+
+int ncmpi_mget_vars_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], char *bufs[]);
+
+int ncmpi_mget_vars_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], signed char *bufs[]);
+
+int ncmpi_mget_vars_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned char *bufs[]);
+
+int ncmpi_mget_vars_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], short *bufs[]);
+
+int ncmpi_mget_vars_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned short *bufs[]);
+
+int ncmpi_mget_vars_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], int *bufs[]);
+
+int ncmpi_mget_vars_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned int *bufs[]);
+
+int ncmpi_mget_vars_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long *bufs[]);
+
+int ncmpi_mget_vars_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], float *bufs[]);
+
+int ncmpi_mget_vars_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], double *bufs[]);
+
+int ncmpi_mget_vars_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], long long *bufs[]);
+
+int ncmpi_mget_vars_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], unsigned long long *bufs[]);
+
+
+int ncmpi_mget_varm(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               void *bufs[], MPI_Offset bufcounts[],
+               MPI_Datatype datatypes[]);
+
+int ncmpi_mget_varm_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               void *bufs[], MPI_Offset bufcounts[],
+               MPI_Datatype datatypes[]);
+
+int ncmpi_mget_varm_text(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               char *bufs[]);
+
+int ncmpi_mget_varm_schar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               signed char *bufs[]);
+
+int ncmpi_mget_varm_uchar(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned char *bufs[]);
+
+int ncmpi_mget_varm_short(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               short *bufs[]);
+
+int ncmpi_mget_varm_ushort(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned short *bufs[]);
+
+int ncmpi_mget_varm_int(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               int *bufs[]);
+
+int ncmpi_mget_varm_uint(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned int *bufs[]);
+
+int ncmpi_mget_varm_long(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long *bufs[]);
+
+int ncmpi_mget_varm_float(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               float *bufs[]);
+
+int ncmpi_mget_varm_double(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               double *bufs[]);
+
+int ncmpi_mget_varm_longlong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long long *bufs[]);
+
+int ncmpi_mget_varm_ulonglong(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned long long *bufs[]);
+
+
+int ncmpi_mget_varm_text_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               char *bufs[]);
+
+int ncmpi_mget_varm_schar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               signed char *bufs[]);
+
+int ncmpi_mget_varm_uchar_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned char *bufs[]);
+
+int ncmpi_mget_varm_short_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               short *bufs[]);
+
+int ncmpi_mget_varm_ushort_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned short *bufs[]);
+
+int ncmpi_mget_varm_int_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               int *bufs[]);
+
+int ncmpi_mget_varm_uint_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned int *bufs[]);
+
+int ncmpi_mget_varm_long_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long *bufs[]);
+
+int ncmpi_mget_varm_float_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               float *bufs[]);
+
+int ncmpi_mget_varm_double_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               double *bufs[]);
+
+int ncmpi_mget_varm_longlong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               long long *bufs[]);
+
+int ncmpi_mget_varm_ulonglong_all(int ncid, int num, int varids[],
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               MPI_Offset* const strides[], MPI_Offset* const imaps[],
+               unsigned long long *bufs[]);
 
 /* End Skip Prototypes for Fortran binding */
 
