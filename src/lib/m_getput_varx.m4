@@ -1009,7 +1009,7 @@ ncmpii_mgetput_varm(int                ncid,
             if (varp->ndims > 0) NCI_Free(count);
         } else if (strides == NULL) { /* vara */
             /* when bufcounts == NULL, it means the same as counts[] */
-            if (bufcounts == NULL)
+            if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
                     buflen *= counts[i][j];
             }
@@ -1021,7 +1021,7 @@ ncmpii_mgetput_varm(int                ncid,
                                          datatypes[i], &req_ids[i], rw_flag, 0);
         } else if (imaps == NULL) {   /* vars */
             /* when bufcounts == NULL, it means the same as counts[] */
-            if (bufcounts == NULL)
+            if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
                     buflen *= counts[i][j];
             }
@@ -1033,7 +1033,7 @@ ncmpii_mgetput_varm(int                ncid,
                                          datatypes[i], &req_ids[i], rw_flag, 0);
         } else {                      /* varm */
             /* when bufcounts == NULL, it means the same as counts[] */
-            if (bufcounts == NULL)
+            if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
                     buflen *= counts[i][j];
             }
