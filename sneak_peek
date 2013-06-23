@@ -31,6 +31,11 @@ o New optimization: request aggregation
   takes 3*sizeof(MPI_Offset)=24 bytes (offset, length, and I/O buffer pointer).
 
 o New APIs
+  * multiple put/get requests with explict buffer type names:
+    ncmpi_mput_var_type(), ncmpi_mput_var1_type(), ncmpi_mput_vara_type(),
+    ncmpi_mput_vars_type(), ncmpi_mput_varm_type(). Similar for get APIs.
+    "type" is one of the followings: text, schar, uchar, short, ushort, int,
+    uint, long, float, double, longlong, or ulonglong.
   * ncmpi_inq_nreqs() reports the number of pending nonblocking requests
   * ncmpi_inq_header_size() reports the size of the file header
   * ncmpi_inq_header_extent() reports the space currently allocated for the
