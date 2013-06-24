@@ -395,13 +395,12 @@ ncmpii_igetput_varm(NC               *ncp,
 
     /* find the ptype (primitive MPI data type) from buftype
      * el_size is the element size of ptype
-     * bnelems is the total number of ptype elements in the I/O buffer, buf
+     * bnelems is the total number of ptype elements in buftype
      * fnelems is the number of nc variable elements in nc_type
      * nbytes is the amount of read/write in bytes
      */
     err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
                               &isderived, &iscontig_of_ptypes);
-    /* bnelems now is the number of ptype in a buftype */
     if (err != NC_NOERR) goto err_check;
 
     err = NCMPII_ECHAR(varp->type, ptype);
