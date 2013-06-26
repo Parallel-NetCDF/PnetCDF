@@ -997,6 +997,9 @@ sub print_args {
 	    $parm =~ s/^const\s+//;
 	    $arg_qualifiers[$count] .= "const ";
 	}
+        # remove all "const"
+        $parm =~ s/const//;
+
 	if ($parm =~ /^restrict\s+/) {
 	    $parm =~ s/restrict\s+//;
 	    $arg_qualifiers[$count] .= "restrict ";
@@ -1008,8 +1011,20 @@ sub print_args {
 	    print "    Removing argname $2 from parm array $parm\n" if $debug;
 	    $parm = "$1" . "[]";
 	}
-	# Remove arg names from pointer types
-	elsif ($parm =~ /(.*\*)\s+(\w+)/) {
+	elsif ($parm =~ /(\w+\*)\s+(\w+)\s*\[\]/) {
+	    # Assume that this is <type>* <name>[]; convert to <type>*
+	    print "    Removing argname $2 from parm array $parm\n" if $debug;
+	    $parm = "$1";
+	}
+	elsif ($parm =~ /(\w+)\s*\*\s*\*\s*(\w+)/) {
+	    # Remove arg names from pointer types
+	    # Assume that this is <type>** ; convert to <type>*
+	    print "    Removing argname $2 from parm pointer\n" if $debug;
+	    $parm = "$1" . "*";
+	}
+	elsif ($parm =~ /(.*\*)\s*(\w+)/) {
+	    # Remove arg names from pointer types
+	    # Assume that this is <type>* ; convert to <type>*
 	    print "    Removing argname $2 from parm pointer\n" if $debug;
 	    $parm = $1;
 	}
