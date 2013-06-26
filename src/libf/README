@@ -1,0 +1,11 @@
+The fortran bindings are automatically generated from the c header file.
+The script file, createffiles, that can be run to generate the C interface
+files is borrowed from MPICH. It reads the input file, defs, that defines
+the translation of Fortran arguments to C.
+
+This is nifty, but not flawless.  Compliation under 'gcc -Wall' will give
+some warnings.  
+
+To regenerate all C files, run command below:
+   ./createffiles
+
