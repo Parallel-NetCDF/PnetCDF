@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_put_var_int8_all_ ( int *v1, int *v2, long long * v3 ){
+FORTRAN_API int FORT_CALL nfmpi_put_var_int8_all_ ( int *v1, int *v2, const long long * v3 ){
     int ierr;
     int l2 = *v2 - 1;
     ierr = ncmpi_put_var_longlong_all( *v1, l2, v3 );

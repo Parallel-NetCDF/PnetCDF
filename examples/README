@@ -126,3 +126,20 @@ flex.c
     Local buffers have a ghost cell of length 3 surrounded along each
     dimension.
 
+put_varna_int.c
+    This example makes a single call of ncmpi_put_varna_int_all() to write a
+    sequence of requests with arbitrary array indices and lengths. All
+    requests (starts[] and counts[]) are within the boundaries of a single
+    variable.
+    See comments at the beginning of the source file for compile,
+    run instructions, and example output.
+
+put_varna_intf.f90
+    This example is the Fortran verions of put_varna_int.c. It makes a
+    single call to nfmpi_put_varna_int_all() to write a sequence of requests
+    with arbitrary array indices and lengths. All requests (starts[] and
+    counts[]) are within the boundaries of a single variable.
+    See comments at the beginning of the source file for compile,
+    run instructions, and example output.
+
+

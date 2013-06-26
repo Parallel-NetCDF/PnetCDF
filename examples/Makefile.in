@@ -23,11 +23,13 @@ C_SRCS    = collective_write.c \
             block_cyclic.c \
             mput.c \
             hints.c \
-            flex.c
+            flex.c \
+            put_varna_int.c
 
 F90_SRCS  = get_info_f.f90 \
             put_vara.f90 \
-            flex_f.f90
+            flex_f.f90 \
+            put_varna_intf.f90
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
@@ -82,6 +84,12 @@ flex: flex.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 flex_f: flex_f.o $(LIBRARY)
+	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+
+put_varna_int: put_varna_int.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+put_varna_intf: put_varna_intf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
 include $(srcdir)/depend
