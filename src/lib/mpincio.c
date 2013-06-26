@@ -137,7 +137,7 @@ ncmpiio_create(MPI_Comm     comm,
                ncio       **nciopp)
 {
     ncio *nciop;
-    int i, rank, mpireturn; 
+    int i, rank, mpireturn;
     int mpiomode = (MPI_MODE_RDWR | MPI_MODE_CREATE);
 #ifdef HAVE_ACCESS
     int file_exist;
@@ -211,8 +211,12 @@ ncmpiio_create(MPI_Comm     comm,
 
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
                               info, &nciop->collective_fh);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_check_mpi_file_open_error(nciop, mpireturn);
+    if (mpireturn != MPI_SUCCESS) {
+        int nc_err;
+        nc_err = ncmpii_check_mpi_file_open_error(nciop, mpireturn);
+        ncmpiio_free(nciop);
+        return nc_err;
+    }
 
     /* get the file info used by MPI-IO */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
@@ -269,8 +273,12 @@ ncmpiio_open(MPI_Comm     comm,
 
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode,
                               info, &nciop->collective_fh);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_check_mpi_file_open_error(nciop, mpireturn);
+    if (mpireturn != MPI_SUCCESS) {
+        int nc_err;
+        nc_err = ncmpii_check_mpi_file_open_error(nciop, mpireturn);
+        ncmpiio_free(nciop);
+        return nc_err;
+    }
 
     /* get the file info used by MPI-IO */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);

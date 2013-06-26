@@ -660,8 +660,12 @@ ncmpii_check_mpifh(NC       *ncp,
         mpireturn = MPI_File_open(comm, (char *)ncp->nciop->path,
                                   ncp->nciop->mpiomode, ncp->nciop->mpiinfo,
                                   mpifh);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_check_mpi_file_open_error(ncp->nciop, mpireturn);
+        if (mpireturn != MPI_SUCCESS) {
+            int nc_err;
+            nc_err = ncmpii_check_mpi_file_open_error(ncp->nciop, mpireturn);
+            ncmpiio_free(ncp->nciop);
+            return nc_err;
+        }
 
         if (collective)
             set_NC_collectiveFh(ncp->nciop);

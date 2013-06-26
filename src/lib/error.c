@@ -257,7 +257,6 @@ int ncmpii_check_mpi_file_open_error(ncio *nciop, int mpi_errorcode) {
      */
     int rank, errorclass;
     MPI_Comm_rank(nciop->comm, &rank);
-    ncmpiio_free(nciop);
     MPI_Error_class(mpi_errorcode, &errorclass);
 #ifdef HAVE_MPI_ERR_FILE_EXISTS
     if (errorclass == MPI_ERR_FILE_EXISTS) return NC_EEXIST;
