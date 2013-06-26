@@ -4,16 +4,16 @@
 
 define(`VARNX',dnl
 `dnl
-     integer nfmpi_$1_varn$3
-!    INTEGER FUNCTION nfmpi_$1_varn$3(ncid, varid, num, buf, bufcount, buftype)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     <type>,                        INTENT($2)  :: buf(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
-!                     INTEGER,                       INTENT(IN)  :: buftype
-!    END FUNCTION nfmpi_$1_varn$3
-     external nfmpi_$1_varn$3
+      integer nfmpi_$1_varn$3
+!     INTEGER FUNCTION nfmpi_$1_varn$3(ncid, varid, num, buf, bufcount, buftype)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      <type>,                        INTENT($2)  :: buf(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                      INTEGER,                       INTENT(IN)  :: buftype
+!     END FUNCTION nfmpi_$1_varn$3
+      external nfmpi_$1_varn$3
 ')dnl
 !
 ! flexible APIs
@@ -25,14 +25,14 @@ VARNX(put, IN,  _all)
 
 define(`VARN',dnl
 `dnl
-     integer nfmpi_$1_varn_$3$4
-!    INTEGER FUNCTION nfmpi_$1_varn_$3$4(ncid, varid, num, $5)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     $6,			    INTENT($2)  :: $7
-!    END FUNCTION nfmpi_$1_varn_$3$4
-     external nfmpi_$1_varn_$3$4
+      integer nfmpi_$1_varn_$3$4
+!     INTEGER FUNCTION nfmpi_$1_varn_$3$4(ncid, varid, num, $5)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      $6,			    INTENT($2)  :: $7
+!     END FUNCTION nfmpi_$1_varn_$3$4
+      external nfmpi_$1_varn_$3$4
 ')dnl
 VARN(get, OUT, text,       , text,   CHARACTER(len=*), text)
 VARN(get, OUT, int1,       , i1vals, INTEGER*1,        i1vals(*))
@@ -66,17 +66,17 @@ VARN(put, IN,  int8,   _all, i8vals, INTEGER*8,        i8vals(*))
 
 define(`VARN1X',dnl
 `dnl
-     integer nfmpi_$1_varn1$3
-!    INTEGER FUNCTION nfmpi_$1_varn1$3(ncid, varid, num, starts, buf, bufcount, buftype)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     <type>,                        INTENT($2)  :: buf(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
-!                     INTEGER,                       INTENT(IN)  :: buftype
-!    END FUNCTION nfmpi_$1_varn1$3
-     external nfmpi_$1_varn1$3
+      integer nfmpi_$1_varn1$3
+!     INTEGER FUNCTION nfmpi_$1_varn1$3(ncid, varid, num, starts, buf, bufcount, buftype)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      <type>,                        INTENT($2)  :: buf(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                      INTEGER,                       INTENT(IN)  :: buftype
+!     END FUNCTION nfmpi_$1_varn1$3
+      external nfmpi_$1_varn1$3
 ')dnl
 !
 ! flexible APIs
@@ -88,15 +88,15 @@ VARN1X(put, IN,  _all)
 
 define(`VARN1',dnl
 `dnl
-     integer nfmpi_$1_varn1_$3$4
-!    INTEGER FUNCTION nfmpi_$1_varn1_$3$4(ncid, varid, num, starts, $5)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     $6,			    INTENT($2)  :: $7
-!    END FUNCTION nfmpi_$1_varn1_$3$4
-     external nfmpi_$1_varn1_$3$4
+      integer nfmpi_$1_varn1_$3$4
+!     INTEGER FUNCTION nfmpi_$1_varn1_$3$4(ncid, varid, num, starts, $5)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      $6,			    INTENT($2)  :: $7
+!     END FUNCTION nfmpi_$1_varn1_$3$4
+      external nfmpi_$1_varn1_$3$4
 ')dnl
 VARN1(get, OUT, text,       , text,   CHARACTER,        text)
 VARN1(get, OUT, int1,       , i1vals, INTEGER*1,        i1vals(*))
@@ -130,18 +130,18 @@ VARN1(put, IN,  int8,   _all, i8vals, INTEGER*8,        i8vals(*))
 
 define(`VARNAX',dnl
 `dnl
-     integer nfmpi_$1_varna$3
-!    INTEGER FUNCTION nfmpi_$1_varna$3(ncid, varid, num, starts, counts, buf, bufcount, buftype)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-!                     <type>,                        INTENT($2)  :: buf(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
-!                     INTEGER,                       INTENT(IN)  :: buftype
-!    END FUNCTION nfmpi_$1_varna$3
-     external nfmpi_$1_varna$3
+      integer nfmpi_$1_varna$3
+!     INTEGER FUNCTION nfmpi_$1_varna$3(ncid, varid, num, starts, counts, buf, bufcount, buftype)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                      <type>,                        INTENT($2)  :: buf(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                      INTEGER,                       INTENT(IN)  :: buftype
+!     END FUNCTION nfmpi_$1_varna$3
+      external nfmpi_$1_varna$3
 ')dnl
 !
 ! flexible APIs
@@ -153,16 +153,16 @@ VARNAX(put, IN,  _all)
 
 define(`VARNA',dnl
 `dnl
-     integer nfmpi_$1_varna_$3$4
-!    INTEGER FUNCTION nfmpi_$1_varna_$3$4(ncid, varid, num, starts, counts, $5)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-!                     $6,			    INTENT($2)  :: $7
-!    END FUNCTION nfmpi_$1_varna_$3$4
-     external nfmpi_$1_varna_$3$4
+      integer nfmpi_$1_varna_$3$4
+!     INTEGER FUNCTION nfmpi_$1_varna_$3$4(ncid, varid, num, starts, counts, $5)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                      $6,			    INTENT($2)  :: $7
+!     END FUNCTION nfmpi_$1_varna_$3$4
+      external nfmpi_$1_varna_$3$4
 ')dnl
 VARNA(get, OUT, text,       , text,   CHARACTER(len=*), text)
 VARNA(get, OUT, int1,       , i1vals, INTEGER*1,        i1vals(*))
@@ -196,19 +196,19 @@ VARNA(put, IN,  int8,   _all, i8vals, INTEGER*8,        i8vals(*))
 
 define(`VARNSX',dnl
 `dnl
-     integer nfmpi_$1_varns$3
-!    INTEGER FUNCTION nfmpi_$1_varns$3(ncid, varid, num, starts, counts, strides, buf, bufcount, buftype)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
-!                     <type>,                        INTENT($2)  :: buf(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
-!                     INTEGER,                       INTENT(IN)  :: buftype
-!    END FUNCTION nfmpi_$1_varns$3
-     external nfmpi_$1_varns$3
+      integer nfmpi_$1_varns$3
+!     INTEGER FUNCTION nfmpi_$1_varns$3(ncid, varid, num, starts, counts, strides, buf, bufcount, buftype)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
+!                      <type>,                        INTENT($2)  :: buf(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                      INTEGER,                       INTENT(IN)  :: buftype
+!     END FUNCTION nfmpi_$1_varns$3
+      external nfmpi_$1_varns$3
 ')dnl
 !
 ! flexible APIs
@@ -220,17 +220,17 @@ VARNSX(put, IN,  _all)
 
 define(`VARNS',dnl
 `dnl
-     integer nfmpi_$1_varns_$3$4
-!    INTEGER FUNCTION nfmpi_$1_varns_$3$4(ncid, varid, num, starts, counts, strides, $5)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
-!                     $6,			    INTENT($2)  :: $7
-!    END FUNCTION nfmpi_$1_varns_$3$4
-     external nfmpi_$1_varns_$3$4
+      integer nfmpi_$1_varns_$3$4
+!     INTEGER FUNCTION nfmpi_$1_varns_$3$4(ncid, varid, num, starts, counts, strides, $5)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
+!                      $6,			    INTENT($2)  :: $7
+!     END FUNCTION nfmpi_$1_varns_$3$4
+      external nfmpi_$1_varns_$3$4
 ')dnl
 VARNS(get, OUT, text,       , text,   CHARACTER(len=*), text)
 VARNS(get, OUT, int1,       , i1vals, INTEGER*1,        i1vals(*))
@@ -264,20 +264,20 @@ VARNS(put, IN,  int8,   _all, i8vals, INTEGER*8,        i8vals(*))
 
 define(`VARNMX',dnl
 `dnl
-     integer nfmpi_$1_varnm$3
-!    INTEGER FUNCTION nfmpi_$1_varnm$3(ncid, varid, num, starts, counts, strides, imaps, buf, bufcount, buftype)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imaps(*)
-!                     <type>,                        INTENT($2)  :: buf(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
-!                     INTEGER,                       INTENT(IN)  :: buftype
-!    END FUNCTION nfmpi_$1_varnm$3
-     external nfmpi_$1_varnm$3
+      integer nfmpi_$1_varnm$3
+!     INTEGER FUNCTION nfmpi_$1_varnm$3(ncid, varid, num, starts, counts, strides, imaps, buf, bufcount, buftype)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imaps(*)
+!                      <type>,                        INTENT($2)  :: buf(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                      INTEGER,                       INTENT(IN)  :: buftype
+!     END FUNCTION nfmpi_$1_varnm$3
+      external nfmpi_$1_varnm$3
 ')dnl
 !
 ! flexible APIs
@@ -289,18 +289,18 @@ VARNMX(put, IN,  _all)
 
 define(`VARNM',dnl
 `dnl
-     integer nfmpi_$1_varnm_$3$4
-!    INTEGER FUNCTION nfmpi_$1_varnm_$3$4(ncid, varid, num, starts, counts, strides, imaps, $5)
-!                     INTEGER,                       INTENT(IN)  :: ncid
-!                     INTEGER,                       INTENT(IN)  :: varid
-!                     INTEGER,                       INTENT(IN)  :: num
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
-!                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imaps(*)
-!                     $6,			    INTENT($2)  :: $7
-!    END FUNCTION nfmpi_$1_varnm_$3$4
-     external nfmpi_$1_varnm_$3$4
+      integer nfmpi_$1_varnm_$3$4
+!     INTEGER FUNCTION nfmpi_$1_varnm_$3$4(ncid, varid, num, starts, counts, strides, imaps, $5)
+!                      INTEGER,                       INTENT(IN)  :: ncid
+!                      INTEGER,                       INTENT(IN)  :: varid
+!                      INTEGER,                       INTENT(IN)  :: num
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: strides(*)
+!                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imaps(*)
+!                      $6,			    INTENT($2)  :: $7
+!     END FUNCTION nfmpi_$1_varnm_$3$4
+      external nfmpi_$1_varnm_$3$4
 ')dnl
 VARNM(get, OUT, text,       , text,   CHARACTER(len=*), text)
 VARNM(get, OUT, int1,       , i1vals, INTEGER*1,        i1vals(*))
