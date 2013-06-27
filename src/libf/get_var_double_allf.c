@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_get_var_double_all_ ( int *v1, int *v2, double*v3 ){
+FORTRAN_API int FORT_CALL nfmpi_get_var_double_all_ ( int *v1, int *v2, double *v3 ){
     int ierr;
     int l2 = *v2 - 1;
     ierr = ncmpi_get_var_double_all( *v1, l2, v3 );
