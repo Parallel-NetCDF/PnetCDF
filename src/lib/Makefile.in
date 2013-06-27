@@ -20,11 +20,7 @@ LIBRARY  = libpnetcdf.a
 PROGRAM  = ncvalid
 HEADER   = pnetcdf.h
 
-M4_SRCS   = getput_var.m4 \
-            getput_var1.m4 \
-            getput_vara.m4 \
-            getput_vars.m4 \
-            getput_varm.m4 \
+M4_SRCS   = getput.m4 \
             i_getput.m4 \
             bput.m4 \
             getputn_schar.m4 \
