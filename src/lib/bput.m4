@@ -431,3 +431,127 @@ BPUT_VARM_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 dnl BPUT_VARM_TYPE(string, char*,             MPI_CHAR)
 dnl string is not yet supported
 
+/*----< ncmpi_buffer_attach() >-----------------------------------------------*/
+int
+ncmpi_buffer_attach(int        ncid, 
+                    MPI_Offset bufsize)
+{
+    int status;
+    NC *ncp;
+
+    if (bufsize <= 0) return NC_ENULLBUF;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    /* check if the buffer has been prviously attached
+     * note that in nc.c, the NC object is allocated with calloc, so
+     * abuf should be initialized to NULL then
+     */
+    if (ncp->abuf != NULL) return NC_EPREVATTACHBUF;
+
+    ncp->abuf = (NC_buf*) NCI_Malloc(sizeof(NC_buf));
+
+    ncp->abuf->size_allocated = bufsize;
+    ncp->abuf->size_used = 0;
+    ncp->abuf->table_size = NC_ABUF_DEFAULT_TABLE_SIZE;
+    ncp->abuf->occupy_table = (NC_buf_status*)
+               NCI_Calloc(NC_ABUF_DEFAULT_TABLE_SIZE, sizeof(NC_buf_status));
+    ncp->abuf->tail = 0;
+    ncp->abuf->buf = NCI_Malloc(bufsize);
+    return NC_NOERR;
+}
+
+/*----< ncmpi_buffer_detach() >-----------------------------------------------*/
+int
+ncmpi_buffer_detach(int ncid)
+{
+    int     status;
+    NC     *ncp;
+    NC_req *cur_req;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    /* check if the buffer has been prviously attached */
+    if (ncp->abuf == NULL) return NC_ENULLABUF;
+
+    /* this API assumes users are responsible for no pending bput */
+    cur_req = ncp->head;
+    while (cur_req != NULL) { /* check if there is a pending bput */
+        if (cur_req->use_abuf)
+            return NC_EPENDINGBPUT;
+            /* return now, so users can call wait and try detach again */
+        cur_req = cur_req->next;
+    }
+
+    NCI_Free(ncp->abuf->buf);
+    NCI_Free(ncp->abuf->occupy_table);
+    NCI_Free(ncp->abuf);
+    ncp->abuf = NULL;
+
+    return NC_NOERR;
+}
+
+#ifdef THIS_SEEMS_OVER_DONE_IT
+/*----< ncmpi_buffer_detach() >-----------------------------------------------*/
+/* mimic MPI_Buffer_detach()
+ * Note from MPI: Even though the 'bufferptr' argument is declared as
+ * 'void *', it is really the address of a void pointer.
+ */
+int
+ncmpi_buffer_detach(int         ncid, 
+                    void       *bufptr,
+                    MPI_Offset *bufsize)
+{
+    int     status;
+    NC     *ncp;
+    NC_req *cur_req;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    /* check if the buffer has been prviously attached */
+    if (ncp->abuf == NULL) return NC_ENULLABUF;
+
+    /* check MPICH2 src/mpi/pt2pt/bsendutil.c for why the bufptr is void* */
+    *(void **)bufptr = ncp->abuf->buf;
+    *bufsize         = ncp->abuf->size_allocated;
+
+    /* this API assumes users are respobsible for no pending bput when called */
+    cur_req = ncp->head;
+    while (cur_req != NULL) { /* check if there is a pending bput */
+        if (cur_req->use_abuf)
+            return NC_EPENDINGBPUT;
+        cur_req = cur_req->next;
+    }
+
+    NCI_Free(ncp->abuf->occupy_table);
+    NCI_Free(ncp->abuf);
+    ncp->abuf = NULL;
+
+    return NC_NOERR;
+}
+#endif
+
+
+/*----< ncmpi_inq_buffer_usage() >--------------------------------------------*/
+int
+ncmpi_inq_buffer_usage(int         ncid,
+                       MPI_Offset *usage) /* OUT: in bytes */
+{
+    int  status;
+    NC  *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    /* check if the buffer has been prviously attached */
+    if (ncp->abuf == NULL) return NC_ENULLABUF;
+
+    /* return the current usage in bytes */
+    *usage = ncp->abuf->size_used;
+
+    return NC_NOERR;
+}
+
