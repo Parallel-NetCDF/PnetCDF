@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_put_var_real_all_ ( int *v1, int *v2, float*v3 ){
+FORTRAN_API int FORT_CALL nfmpi_put_var_real_all_ ( int *v1, int *v2, float *v3 ){
     int ierr;
     int l2 = *v2 - 1;
     ierr = ncmpi_put_var_float_all( *v1, l2, v3 );

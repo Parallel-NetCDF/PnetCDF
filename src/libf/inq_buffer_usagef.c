@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_inq_buffer_usage_ ( int *v1, MPI_Offset*v2 ){
+FORTRAN_API int FORT_CALL nfmpi_inq_buffer_usage_ ( int *v1, MPI_Offset *v2 ){
     int ierr;
     ierr = ncmpi_inq_buffer_usage( *v1, v2 );
     return ierr;

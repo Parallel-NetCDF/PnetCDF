@@ -21,7 +21,7 @@
 
 /* Prototypes for the Fortran interfaces */
 #include "mpifnetcdf.h"
-FORTRAN_API int FORT_CALL nfmpi_get_vara_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], void*v5, MPI_Offset *v6, MPI_Fint *v7 ){
+FORTRAN_API int FORT_CALL nfmpi_get_vara_ ( int *v1, int *v2, MPI_Offset v3[], MPI_Offset v4[], void *v5, MPI_Offset *v6, MPI_Fint *v7 ){
     int ierr;
     int l2 = *v2 - 1;
     MPI_Offset *l3 = 0;

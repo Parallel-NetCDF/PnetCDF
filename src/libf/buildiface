@@ -1004,17 +1004,19 @@ sub print_args {
 	    $parm =~ s/restrict\s+//;
 	    $arg_qualifiers[$count] .= "restrict ";
 	}
+        # remove leading whitespace
+        $parm =~ s/^\s+//;
+
 	# Remove arg names from array types
 	if ($parm =~ /(\w+)\s+(\w+)\s*\[\]/) {
-	    # Assume that this is <type> <name>[]; convert to
-	    # <type>[]
+	    # Assume that this is <type> <name>[]; convert to <type>[]
 	    print "    Removing argname $2 from parm array $parm\n" if $debug;
 	    $parm = "$1" . "[]";
 	}
-	elsif ($parm =~ /(\w+\*)\s+(\w+)\s*\[\]/) {
+	elsif ($parm =~ /(\w+)\s*\*\s*(\w+)\s*\[\]/) {
 	    # Assume that this is <type>* <name>[]; convert to <type>*
 	    print "    Removing argname $2 from parm array $parm\n" if $debug;
-	    $parm = "$1";
+	    $parm = "$1" . "*";
 	}
 	elsif ($parm =~ /(\w+)\s*\*\s*\*\s*(\w+)/) {
 	    # Remove arg names from pointer types
@@ -1022,11 +1024,11 @@ sub print_args {
 	    print "    Removing argname $2 from parm pointer\n" if $debug;
 	    $parm = "$1" . "*";
 	}
-	elsif ($parm =~ /(.*\*)\s*(\w+)/) {
+	elsif ($parm =~ /(\w+)\s*\*\s*(\w+)/) {
 	    # Remove arg names from pointer types
 	    # Assume that this is <type>* ; convert to <type>*
 	    print "    Removing argname $2 from parm pointer\n" if $debug;
-	    $parm = $1;
+	    $parm = "$1" . "*";
 	}
 	# Remove blanks from the parm
 	$parm =~ s/\s+//;
@@ -1151,6 +1153,10 @@ sub print_args {
 		print $OUTFD "${argsep}${parm}";
 	    }
 	    else {
+	        if ($parm =~ /^(\w+)\*$/) {
+                    # make "type*" to "type *"
+                    $parm = "$1" . " *";
+                }
 		print $OUTFD "${argsep}${parm}${leadspace}v$count";
 	    }
 	    $star_count = 0;
