@@ -31,11 +31,7 @@ getputn_double.o: getputn_double.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
 getputn_int64.o: getputn_int64.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
 getputn_uint64.o: getputn_uint64.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
 swap.o: swap.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-bput_var.o: bput_var.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
-bput_var1.o: bput_var1.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
-bput_vara.o: bput_vara.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
-bput_vars.o: bput_vars.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
-bput_varm.o: bput_varm.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+bput.o: bput.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 getput_var.o: getput_var.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
 getput_var1.o: getput_var1.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
 getput_vara.o: getput_vara.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
