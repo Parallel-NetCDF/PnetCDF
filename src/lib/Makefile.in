@@ -25,11 +25,7 @@ M4_SRCS   = getput_var.m4 \
             getput_vara.m4 \
             getput_vars.m4 \
             getput_varm.m4 \
-            i_getput_var.m4 \
-            i_getput_var1.m4 \
-            i_getput_vara.m4 \
-            i_getput_vars.m4 \
-            i_getput_varm.m4 \
+            i_getput.m4 \
             bput.m4 \
             getputn_schar.m4 \
             getputn_uchar.m4 \
