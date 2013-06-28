@@ -592,6 +592,7 @@ typedef struct bufferinfo {
     ncio       *nciop;
     MPI_Offset  offset;   /* current read/write offset in the file */
     int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
+    int         safe_mode;/* 0: disabled, 1: enabled */
     void       *base;     /* beginning of read/write buffer */
     void       *pos;      /* current position in buffer */
     MPI_Offset  size;     /* size of the buffer */
@@ -653,9 +654,8 @@ NC_computeshapes(NC *ncp);
 /* begin defined in error.c */
 const char * nc_strerror(int err);
 
-void ncmpii_handle_error(int rank, int mpi_errorcode, char *msg);
+int ncmpii_handle_error(int mpi_errorcode, char *msg);
 
-int ncmpii_check_mpi_file_open_error(ncio *nciop, int mpi_errorcode);
 /* end defined in error.c */
 /*
  * These functions are used to support

@@ -752,13 +752,14 @@ ncmpii_hdr_put_NC(NC   *ncp,
     bufferinfo putbuf;
     MPI_Offset nrecs=0; 
 
-    putbuf.nciop    = NULL;
-    putbuf.offset   = 0;
-    putbuf.pos      = buf;
-    putbuf.base     = buf;
-    putbuf.size     = ncp->xsz;
-    putbuf.put_size = 0;
-    putbuf.get_size = 0;
+    putbuf.nciop     = NULL;
+    putbuf.offset    = 0;
+    putbuf.pos       = buf;
+    putbuf.base      = buf;
+    putbuf.size      = ncp->xsz;
+    putbuf.put_size  = 0;
+    putbuf.get_size  = 0;
+    putbuf.safe_mode = ncp->safe_mode;
 
     /* netCDF file format:
      * netcdf_file  = header  data
@@ -819,17 +820,12 @@ ncmpii_hdr_put_NC(NC   *ncp,
  */
 static int
 hdr_fetch(bufferinfo *gbp) {
-  int rank;
-  MPI_Comm comm;
-  int mpireturn;
-  MPI_Offset slack;        /* any leftover data in the buffer */
-  MPI_Aint pos_addr, base_addr;
+    int rank, err=NC_NOERR, mpireturn;
+    MPI_Offset slack;        /* any leftover data in the buffer */
+    MPI_Aint pos_addr, base_addr;
 
-  assert(gbp->base != NULL);
+    assert(gbp->base != NULL);
   
-  comm = gbp->nciop->comm;
-  MPI_Comm_rank(comm, &rank);
-
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(gbp->pos,  &pos_addr);
     MPI_Get_address(gbp->base, &base_addr);
@@ -837,40 +833,47 @@ hdr_fetch(bufferinfo *gbp) {
     MPI_Address(gbp->pos,  &pos_addr);
     MPI_Address(gbp->base, &base_addr);
 #endif
-  slack = gbp->size - (pos_addr - base_addr);
-  /* . if gbp->pos and gbp->base are the same, there is no leftover buffer data
-   *   to worry about.  
-   * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then all
-   * data in the buffer has been consumed */
-  if (slack == gbp->size) slack = 0;
+    slack = gbp->size - (pos_addr - base_addr);
+    /* . if gbp->pos and gbp->base are the same, there is no leftover buffer
+     *   data to worry about.  
+     * In the other extreme, where gbp->size == (gbp->pos - gbp->base), then
+     * all data in the buffer has been consumed */
+    if (slack == gbp->size) slack = 0;
 
-  memset(gbp->base, 0, gbp->size);
-  gbp->pos = gbp->base;
-  gbp->index = 0;
+    memset(gbp->base, 0, gbp->size);
+    gbp->pos = gbp->base;
+    gbp->index = 0;
 
-  /* fileview is already entire file visible and MPI_File_read_at does not 
-     change the file pointer */
+    MPI_Comm_rank(gbp->nciop->comm, &rank);
+    if (rank == 0) {
+        MPI_Status mpistatus;
+        /* fileview is already entire file visible and MPI_File_read_at does
+           not change the file pointer */
+        mpireturn = MPI_File_read_at(gbp->nciop->collective_fh,
+                                     (gbp->offset)-slack, gbp->base, 
+                                     gbp->size, MPI_BYTE, &mpistatus);  
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn, "MPI_File_read_at");
+            err = NC_EREAD;
+        }
+        else {
+            int get_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+            gbp->get_size += get_size;
+        }
+    }
+    /* we might have had to backtrack */
+    gbp->offset += (gbp->size - slack); 
 
-  if (rank == 0) {
-      MPI_Status mpistatus;
-      mpireturn = MPI_File_read_at(gbp->nciop->collective_fh,
-                                   (gbp->offset)-slack, gbp->base, 
-                                   gbp->size, MPI_BYTE, &mpistatus);  
-      if (mpireturn != MPI_SUCCESS) {
-          ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
-          MPI_Finalize();
-          return NC_EREAD;
-      }
-      int get_size;
-      MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-      gbp->get_size += get_size;
-  }
-  /* we might have had to backtrack */
-  gbp->offset += (gbp->size - slack); 
+    if (gbp->safe_mode == 1) {
+        MPI_Bcast(&err, 1, MPI_INT, 0, gbp->nciop->comm);
+        if (err != NC_NOERR)
+            return err;
+    }
 
-  MPI_Bcast(gbp->base, gbp->size, MPI_BYTE, 0, comm);
+    MPI_Bcast(gbp->base, gbp->size, MPI_BYTE, 0, gbp->nciop->comm);
 
-  return NC_NOERR;
+    return err;
 }
 
 /*----< hdr_check_buffer() >--------------------------------------------------*/
@@ -1529,10 +1532,11 @@ ncmpii_hdr_get_NC(NC *ncp)
     assert(ncp != NULL);
 
     /* Initialize the get buffer that stores the header read from the file */
-    getbuf.nciop = ncp->nciop;
-    getbuf.offset = 0;     /* read from start of the file */
-    getbuf.put_size = 0;   /* amount of writes so far in bytes */
-    getbuf.get_size = 0;   /* amount of reads  so far in bytes */
+    getbuf.nciop     = ncp->nciop;
+    getbuf.offset    = 0;   /* read from start of the file */
+    getbuf.put_size  = 0;   /* amount of writes so far in bytes */
+    getbuf.get_size  = 0;   /* amount of reads  so far in bytes */
+    getbuf.safe_mode = ncp->safe_mode;
 
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
     getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );

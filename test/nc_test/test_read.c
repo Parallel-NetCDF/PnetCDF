@@ -101,7 +101,10 @@ test_ncmpi_open(void)
 	error("ncmpi_open of nonexistent file should have failed");
     IF (err != NC_ENOENT)
 	error("ncmpi_open of nonexistent file should have returned NC_ENOENT");
-    ELSE_NOK
+    else {
+        printf("Expected error message: \"File tooth-fairy.nc does not exist\"\n");
+        nok++;
+    }
 
     /* Open a file that is not a netCDF file. */
     err = ncmpi_open(comm, "test_get.c", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */

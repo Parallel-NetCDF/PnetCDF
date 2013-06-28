@@ -135,6 +135,8 @@ C       /* Try to open a nonexistent file */
             call error
      +      ('nfmpi_open of nonexistent file should have failed')
         else
+            print*,
+     +      "Expected error message: File tooth-fairy.nc does not exist"
             nok = nok + 1
         endif
         if (err .ne. NF_ENOENT) then

@@ -553,8 +553,6 @@ NC_begins(NC         *ncp,
  * Read just the numrecs member.
  * (A relatively expensive way to do things.)
  */
-
- 
 int
 ncmpii_read_numrecs(NC *ncp) {
     int status=NC_NOERR, mpireturn, sizeof_t;
@@ -582,18 +580,22 @@ ncmpii_read_numrecs(NC *ncp) {
                                      buf, sizeof_t, MPI_BYTE, &mpistatus);
  
     if (mpireturn != MPI_SUCCESS) {
-        int rank;
-        MPI_Comm_rank(ncp->nciop->comm, &rank);
-        ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
-        return NC_EREAD;
-    } 
+        ncmpii_handle_error(mpireturn, "MPI_File_read_at");
+        status = NC_EREAD;
+    }
+    else {
+        int get_size;
+        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+        ncp->nciop->get_size += get_size;
+    }
+    if (ncp->safe_mode == 1)
+        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
-    int get_size;
-    MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-    ncp->nciop->get_size += get_size;
-
-    status = ncmpix_get_size_t((const void **)&pos, &nrecs, sizeof_t);
-    ncp->numrecs = nrecs;
+    if (status == NC_NOERR) {
+        status = ncmpix_get_size_t((const void**)&pos, &nrecs, sizeof_t);
+        /* ncmpix_get_size_t advances the 1st argument with size sizeof_t */
+        ncp->numrecs = nrecs;
+    }
  
     NCI_Free(buf);
  
@@ -619,17 +621,13 @@ ncmpii_write_numrecs(NC *ncp)
        3) ncmpii_NC_sync() below
      */
     int rank, len, status = NC_NOERR, mpireturn;
-    void *buf, *pos; 
+    void *buf, *pos;
     MPI_Offset nrecs;
     MPI_Status mpistatus;
-    MPI_Comm comm;
   
     assert(!NC_readonly(ncp));
     assert(!NC_indef(ncp));
     /* this function is only called by APIs in data mode */
-
-    comm = ncp->nciop->comm;
-    MPI_Comm_rank(comm, &rank);
 
     /* there is a MPI_Allreduce() to ensure ncp->numrecs the same across all
      * processes prior to this call
@@ -642,20 +640,26 @@ ncmpii_write_numrecs(NC *ncp)
         len = X_SIZEOF_SIZE_T;
     pos = buf = (void *)NCI_Malloc(len);
     status = ncmpix_put_size_t(&pos, nrecs, len);
+    /* ncmpix_put_size_t advances the 1st argument with size len */
 
     /* file view is already reset to entire file visible */
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0) { /* root process writes to the file header */
         mpireturn = MPI_File_write_at(ncp->nciop->collective_fh,
                                       NC_NUMRECS_OFFSET, buf, len,
                                       MPI_BYTE, &mpistatus); 
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
-            return NC_EWRITE;
+            ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            status = NC_EWRITE;
         }
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->nciop->put_size += put_size;
+        else {
+            int put_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            ncp->nciop->put_size += put_size;
+        }
     }
+    if (ncp->safe_mode == 1)
+        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
     fClr(ncp->flags, NC_NDIRTY);  
 
@@ -699,8 +703,6 @@ write_NC(NC *ncp)
  
     assert(!NC_readonly(ncp));
  
-    MPI_Comm_rank(ncp->nciop->comm, &rank);
-
     if (NC_dofill(ncp)) { /* hsz is the header size with zero padding */
         /* we don't need this, as these paddings will never be accessed */
         hsz = MIN(ncp->begin_var, ncp->begin_rec);
@@ -715,6 +717,9 @@ write_NC(NC *ncp)
 
     /* copy header to buffer */
     status = ncmpii_hdr_put_NC(ncp, buf);
+    if (ncp->safe_mode == 1)
+        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+
     if (status != NC_NOERR) {
         NCI_Free(buf);
         return status;
@@ -722,6 +727,9 @@ write_NC(NC *ncp)
 
     /* check the header consistency across all processes */
     status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
+    if (ncp->safe_mode == 1)
+        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+
     if (status != NC_NOERR) {
         NCI_Free(buf);
         return status;
@@ -730,17 +738,23 @@ write_NC(NC *ncp)
     /* the fileview is already entire file visible */
 
     /* only rank 0's header gets written to the file */
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0) {
         mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf,
                                       hsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
-            return NC_EWRITE;
+            ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            status = NC_EWRITE;
         }
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->nciop->put_size += put_size;
+        else {
+            int put_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            ncp->nciop->put_size += put_size;
+        }
     }
+    if (ncp->safe_mode == 1)
+        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+
     fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
     NCI_Free(buf);
  

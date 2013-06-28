@@ -171,7 +171,7 @@ ncmpiio_create(MPI_Comm     comm,
     }
 
     if (fIsSet(ioflags, NC_NOCLOBBER)) {
-        /* NetCDF requires NC_EEXIST returned when if the file already exists
+        /* NetCDF requires NC_EEXIST returned if the file already exists
          * and NC_NOCLOBBER is used in ioflags(cmode)
          */
         MPI_Bcast(&file_exist, 1, MPI_INT, 0, comm);
@@ -184,7 +184,7 @@ ncmpiio_create(MPI_Comm     comm,
             /* file does exist, so delete it */
             mpireturn = MPI_File_delete((char*)path, MPI_INFO_NULL);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
+                ncmpii_handle_error(mpireturn, "MPI_File_delete");
                 return NC_EOFILE;
             }
         } /* else: the file does not exist, do nothing */
@@ -212,10 +212,8 @@ ncmpiio_create(MPI_Comm     comm,
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode, 
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
-        int nc_err;
-        nc_err = ncmpii_check_mpi_file_open_error(nciop, mpireturn);
         ncmpiio_free(nciop);
-        return nc_err;
+        return ncmpii_handle_error(mpireturn, "MPI_File_open");
     }
 
     /* get the file info used by MPI-IO */
@@ -274,10 +272,8 @@ ncmpiio_open(MPI_Comm     comm,
     mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode,
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
-        int nc_err;
-        nc_err = ncmpii_check_mpi_file_open_error(nciop, mpireturn);
         ncmpiio_free(nciop);
-        return nc_err;
+        return ncmpii_handle_error(mpireturn, NULL);
     }
 
     /* get the file info used by MPI-IO */
@@ -300,20 +296,19 @@ ncmpiio_open(MPI_Comm     comm,
 int
 ncmpiio_sync(ncio *nciop) {
 #ifndef DISABLE_FILE_SYNC
-    int rank, mpireturn;
-    MPI_Comm_rank(nciop->comm, &rank);
+    int mpireturn;
 
     if (NC_independentFhOpened(nciop)) {
         mpireturn = MPI_File_sync(nciop->independent_fh);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+            ncmpii_handle_error(mpireturn, "MPI_File_sync");
             return NC_EFILE;
         }
     }
     if (NC_collectiveFhOpened(nciop)) {
         mpireturn = MPI_File_sync(nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(rank, mpireturn, "MPI_File_sync");
+            ncmpii_handle_error(mpireturn, "MPI_File_sync");
             return NC_EFILE;
         }
     }
@@ -324,8 +319,7 @@ ncmpiio_sync(ncio *nciop) {
 
 int
 ncmpiio_close(ncio *nciop, int doUnlink) {
-    int rank, mpireturn, status=NC_NOERR;
-    MPI_Comm_rank(nciop->comm, &rank);
+    int mpireturn;
 
     if (nciop == NULL) /* this should never occur */
         return NC_EINVAL;
@@ -333,7 +327,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     if (NC_independentFhOpened(nciop)) {
         mpireturn = MPI_File_close(&(nciop->independent_fh));
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
+            ncmpii_handle_error(mpireturn, "MPI_File_close");
             return NC_EFILE;
         }
     }
@@ -341,7 +335,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     if (NC_collectiveFhOpened(nciop)) {
         mpireturn = MPI_File_close(&(nciop->collective_fh));  
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(rank, mpireturn, "MPI_File_close");
+            ncmpii_handle_error(mpireturn, "MPI_File_close");
             return NC_EFILE;
         }
     }
@@ -350,7 +344,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     if (doUnlink) {
         mpireturn = MPI_File_delete((char *)nciop->path, nciop->mpiinfo);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(rank, mpireturn, "MPI_File_delete");
+            ncmpii_handle_error(mpireturn, "MPI_File_delete");
             /* TODO: need to decide if we should return this error or just
                report it
             return NC_EFILE;
@@ -359,7 +353,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     }
     ncmpiio_free(nciop);
 
-    return status;
+    return NC_NOERR;
 }
 
 /*----< ncmpiio_move() >-----------------------------------------------------*/
@@ -369,7 +363,7 @@ ncmpiio_move(ncio *const nciop,
              MPI_Offset  from,
              MPI_Offset  nbytes)
 {
-    int rank, grpsize, mpireturn;
+    int rank, grpsize, mpireturn, status=NC_NOERR, min_st;
     void *buf;
     const MPI_Offset bufsize = 4096; /* move chunk size one at a time */
     MPI_Offset movesize, bufcount;
@@ -408,15 +402,20 @@ ncmpiio_move(ncio *const nciop,
                                          from+movesize+rank*bufsize,
                                          buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    ncmpii_handle_error(rank, mpireturn, "MPI_File_read_at");
-            NCI_Free(buf);
-            return NC_EREAD;
+	    ncmpii_handle_error(mpireturn, "MPI_File_read_at");
+            status = NC_EREAD;
         }
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        nciop->get_size += get_size;
+        else {
+            int get_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+            nciop->get_size += get_size;
+        }
 
-        MPI_Barrier(nciop->comm); /* important, in case new region overlaps old region */
+        /* MPI_Barrier(nciop->comm); */
+        /* important, in case new region overlaps old region */
+        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, nciop->comm);
+        status = min_st;
+        if (status != NC_NOERR) break;
 
         if (rank >= grpsize) bufcount = 0;
         /* write to new location @ to+movesize+rank*bufsize */
@@ -424,16 +423,20 @@ ncmpiio_move(ncio *const nciop,
                                           to+movesize+rank*bufsize,
                                           buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    ncmpii_handle_error(rank, mpireturn, "MPI_File_write_at");
-            NCI_Free(buf);
-            return NC_EWRITE;
+	    ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            status = NC_EWRITE;
         }
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        nciop->put_size += put_size;
+        else {
+            int put_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            nciop->put_size += put_size;
+        }
+        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, nciop->comm);
+        status = min_st;
+        if (status != NC_NOERR) break;
     }
     NCI_Free(buf);
-    return NC_NOERR;
+    return status;
 }
 
 /*----< ncmpiio_move_fixed_vars() >-------------------------------------------*/
