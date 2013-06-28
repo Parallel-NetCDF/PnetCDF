@@ -273,7 +273,7 @@ ncmpiio_open(MPI_Comm     comm,
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
-        return ncmpii_handle_error(mpireturn, NULL);
+        return ncmpii_handle_error(mpireturn, "MPI_File_open");
     }
 
     /* get the file info used by MPI-IO */
