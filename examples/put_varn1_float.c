@@ -23,8 +23,8 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -g -o put_varn1_int put_varn1_int.c -lpnetcdf
- *    % mpiexec -l -n 4 put_varn1_int testfile.nc
+ *    % mpicc -g -o put_varn1_float put_varn1_float.c -lpnetcdf
+ *    % mpiexec -l -n 4 put_varn1_float testfile.nc
  *    % ncmpidump testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)

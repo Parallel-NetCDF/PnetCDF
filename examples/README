@@ -142,8 +142,8 @@ put_varna_intf.f90
     See comments at the beginning of the source file for compile,
     run instructions, and example output.
 
-put_varn1_int.c
-    This example makes a single call of ncmpi_put_varn1_int_all() to write a
+put_varn1_float.c
+    This example makes a single call of ncmpi_put_varn1_float_all() to write a
     sequence of one-element requests with arbitrary array indices. All
     request indices, starts[], are within the boundaries of a single variable.
     See comments at the beginning of the source file for compile,

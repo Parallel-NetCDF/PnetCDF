@@ -61,6 +61,7 @@ o New environment variable
     Default is 0, i.e. disabled.
 
 o New example programs
+  * put_varn1_float.c for using the new APIs ncmpi_put_varn1_float_all()
   * put_varna_int.c and put_varna_intf.f90, for using the new APIs
     ncmpi_put_varna_int_all() and nfmpi_put_varna_int_all()
   * hints.c, for using PnetCDF hints

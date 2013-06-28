@@ -25,7 +25,7 @@ C_SRCS    = collective_write.c \
             hints.c \
             flex.c \
             put_varna_int.c \
-            put_varn1_int.c
+            put_varn1_float.c
 
 F90_SRCS  = get_info_f.f90 \
             put_vara.f90 \
@@ -93,7 +93,7 @@ put_varna_int: put_varna_int.o $(LIBRARY)
 put_varna_intf: put_varna_intf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
-put_varn1_int: put_varn1_int.o $(LIBRARY)
+put_varn1_float: put_varn1_float.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 include $(srcdir)/depend
