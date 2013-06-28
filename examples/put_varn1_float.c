@@ -17,8 +17,8 @@
 #define NDIMS 2
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use a single call of ncmpi_put_varn1_all() to
- * write a sequence of one-element requests with arbitrary array indices.
+ * This example shows how to use a single call of ncmpi_put_varn1_float_all()
+ * to write a sequence of one-element requests with arbitrary array indices.
  *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
