@@ -147,9 +147,11 @@
       CALL MPI_Finalize(err)
 
       if (no_err .GT. 0) then
-          print*,'*** Testing Fortran bput_varm failed'
+          print*,'*** TESTING Fortran test_bputf.f90 for bput_varm ', &
+                 '                  ------ failed'
       else
-          print*,'*** Testing Fortran bput_varm: Success'
+          print*,'** TESTING Fortran test_bputf.f90 for bput_varm ', &
+                 '                  ------ pass'
       endif
       Stop
       end program

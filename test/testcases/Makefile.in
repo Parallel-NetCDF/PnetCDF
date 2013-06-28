@@ -68,26 +68,32 @@ test_varm: test_varm.o $(LIBRARY)
 alignment_test: alignment_test.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-test: ncmpi_vars_null_stride vectors test_varm alignment_test
-	./ncmpi_vars_null_stride test.nc && echo '*** ncmpi_vars_null_stride: Success ***'
-	./vectors && echo '*** vectors: Success ***'
-	./test_varm && echo '*** test_varm: Success ***'
-	./alignment_test testfile.nc && echo '*** alignment_test: Success ***'
+testing check: $(PROGS)
+	@./ncmpi_vars_null_stride test.nc
+	@./vectors
+	@./test_varm
+	@./alignment_test testfile.nc
+ifeq (@has_fortran@, yes)
+	@./bigrecords
+endif
+ifeq (@has_mpicxx@, yes)
+	@$(srcdir)/redef1.sh ./redef1 $(srcdir)/redef-good.ncdump
+endif
 
-testing-cxx: redef1
-	$(srcdir)/redef1.sh ./redef1  $(srcdir)/redef-good.ncdump && echo '*** redef1: Success ***'
-
-verbose_testing-cxx: testing-cxx
-
-testing-f: bigrecords
-	./bigrecords && echo '*** bigrecords: Success ***'
-
-verbose_testing-f: testing-f
+verbose_testing : $(PROGS)
+	./ncmpi_vars_null_stride test.nc
+	./vectors
+	./test_varm
+	./alignment_test testfile.nc
+ifeq (@has_fortran@, yes)
+	./bigrecords
+endif
+ifeq (@has_mpicxx@, yes)
+	$(srcdir)/redef1.sh ./redef1 $(srcdir)/redef-good.ncdump
+endif
 
 testing-collective_error:
 	echo "please run with 2 processes. e.g. mpiexec -n 2 collective_error"
-
-verbose_check check verbose_testing testing: test
 
 include $(srcdir)/../../rules.make
 

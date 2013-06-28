@@ -79,7 +79,7 @@ saber_src:
 	#load -C $(CPPFLAGS) $(SRCS) $(ld_pnetcdf) $(ld_math) $(LIBS)
 
 # This simple testing target ensures that the test files are present
-testing: test.nc nc_test
+check testing: test.nc nc_test
 	$(RM) -f scratch.nc
 	./nc_test && ./nc_test -c -2 && ./nc_test
 

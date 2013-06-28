@@ -691,7 +691,11 @@ int main(int argc, char **argv)
     free(starts_list);
     free(count_list);
 
-    if (n_fails == 0) printf("*** Testing %s: Success\n",__FILE__);
+    if (n_fails == 0) {
+       char cmd_str[80];
+       sprintf(cmd_str, "*** TESTING %s for mput/iput APIs ", argv[0]);
+       printf("%-66s ------ pass\n", cmd_str);
+    }
 
     MPI_Finalize();
     return 0;

@@ -1,7 +1,8 @@
-#include <pnetcdf.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <vector>
 #include <iostream>
-#include <stdlib.h>
+#include <pnetcdf.h>
 
 void PNCDF_Error(const int status, const char *const msg)  {  
   if (status != NC_NOERR) {
@@ -153,11 +154,14 @@ int main(int argc, char** argv)
     PNCDF_Error(status, "put2");  
   }
 
-
   status = ncmpi_close(ncid);
   PNCDF_Error(status, "close");  
 
   MPI_Finalize();
+
+  char cmd_str[80];
+  sprintf(cmd_str, "*** TESTING %s for entering re-define mode ", argv[0]);
+  printf("%-66s ------ pass\n", cmd_str);
 
   return 0;
 }

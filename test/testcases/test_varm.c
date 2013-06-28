@@ -168,12 +168,14 @@ int main(int argc, char **argv) {
     if (NC_NOERR != (retval = ncmpi_close(ncid))) ERR(retval);
 
     MPI_Finalize();
+
+    char cmd_str[80];
+    sprintf(cmd_str, "*** TESTING %s for get/put varm ", argv[0]);
+
     if (err)
-        printf("test get/put varm failed\n");
-/*
+        printf("%-66s ------ failed\n", cmd_str);
     else
-        printf("test get/put varm succeeded\n");
- */
+        printf("%-66s ------ pass\n", cmd_str);
     return err;
 }
 

@@ -238,6 +238,9 @@
 !           write(6,*) "Error: time array was ", time
 !      endif
 
+      print*,'** TESTING Fortran bigrecords.F   NF_64BIT_DATA ',
+     +       '                  ------ pass'
+
       call MPI_FINALIZE(ierr)
       end program main
        

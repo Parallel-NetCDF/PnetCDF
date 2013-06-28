@@ -47,11 +47,11 @@ test_bputf: test_bputf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
 check testing: $(PROGS)
-	./mcoll_perf
-	./test_bput
+	@./mcoll_perf
+	@./test_bput
 ifeq (@has_fortran@, yes)
-	./mcoll_testf
-	./test_bputf
+	@./mcoll_testf
+	@./test_bputf
 endif
 
 verbose_check verbose_testing: $(PROGS)
