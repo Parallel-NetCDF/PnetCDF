@@ -264,8 +264,14 @@ int main(int argc, char** argv) {
 
     free(buf);
     MPI_Reduce(&nfailed, &nfailed_all, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (rank == 0 && nfailed_all > 0)
-        printf("alignment test (%s) failed with %d mismatches\n",argv[0],nfailed_all);
+    if (rank == 0) {
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING %s for alignment ", argv[0]);
+        if (nfailed_all > 0)
+            printf("%s ------ failed with %d mismatches\n",cmd_str,nfailed_all);
+        else
+            printf("%-66s ------ pass\n", cmd_str);
+    }
     MPI_Finalize();
     return 0;
 }

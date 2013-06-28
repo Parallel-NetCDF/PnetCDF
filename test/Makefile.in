@@ -35,24 +35,20 @@ all:
 check testing:
 	# no tests in 'common' just common routines
 	cd common && $(MAKE)  
+	cd nc_test && $(MAKE) testing
+	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) testing ;     fi
 	cd C && $(MAKE) testing
 	cd nonblocking && $(MAKE) testing
 	cd testcases && $(MAKE) testing
-	cd nc_test && $(MAKE) testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) testing ;     fi
-	if [ @has_fortran@ = yes ] ; then cd testcases && $(MAKE) testing-f ;   fi
-	if [ @has_mpicxx@  = yes ] ; then cd testcases && $(MAKE) testing-cxx ; fi
 
 verbose_check verbose_testing:
 	# no tests in 'common' just common routines
 	cd common && $(MAKE)  
+	cd nc_test && $(MAKE) verbose_testing
+	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) verbose_testing ;     fi
 	cd C && $(MAKE) verbose_testing
 	cd nonblocking && $(MAKE) verbose_testing
 	cd testcases && $(MAKE) verbose_testing
-	cd nc_test && $(MAKE) verbose_testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) verbose_testing ;     fi
-	if [ @has_fortran@ = yes ] ; then cd testcases && $(MAKE) verbose_testing-f ;   fi
-	if [ @has_mpicxx@  = yes ] ; then cd testcases && $(MAKE) verbose_testing-cxx ; fi
 
 include $(srcdir)/../rules.make
 

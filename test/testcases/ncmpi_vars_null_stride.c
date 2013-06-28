@@ -50,5 +50,10 @@ int main(int argc, char **argv)
 	if (ret != NC_NOERR) handle_error(ret);
 
 	MPI_Finalize();
+
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING %s for NULL stride ", argv[0]);
+        printf("%-66s ------ pass\n", cmd_str);
+
 	return 0;
 }

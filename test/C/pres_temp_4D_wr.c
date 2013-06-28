@@ -229,9 +229,11 @@ main(int argc, char ** argv)
    if ((retval = ncmpi_close(ncid)))
       check_err(retval,__LINE__,__FILE__);
    
-   printf("*** SUCCESS writing example file %s!\n", FILE_NAME);
-   MPI_Finalize();
+   char cmd_str[80];
+   sprintf(cmd_str, "*** TESTING %s for writing file %s ", argv[0],FILE_NAME);
+   printf("%-66s ------ pass\n", cmd_str);
 
+   MPI_Finalize();
 
    return 0;
 }

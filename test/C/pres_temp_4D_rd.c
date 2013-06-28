@@ -160,6 +160,9 @@ main(int argc, char **argv)
    if ((retval = ncmpi_close(ncid)))
       ERR(retval);
 
-   printf("*** SUCCESS reading example file pres_temp_4D.nc!\n");
+   char cmd_str[80];
+   sprintf(cmd_str, "*** TESTING %s for reading file %s ", argv[0],FILE_NAME);
+   printf("%-66s ------ pass\n", cmd_str);
+
    return 0;
 }

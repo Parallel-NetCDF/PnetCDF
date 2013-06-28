@@ -533,13 +533,14 @@ main(int argc, char *argv[])
     }
     MPI_Finalize();
 
+    char cmd_str[80];
+    sprintf(cmd_str, "*** TESTING %s ", argv[0]);
     if (nfailsTotal == 0)  {
-        print("*** Testing nc_test: Success\n");
-        return 0;
+        printf("%-66s ------ pass\n", cmd_str);
     }
     else {
-        print("\nNOTE: nc_test expects 0 failures ... ");
+        print("\n%s: expects 0 failures ... ",argv[0]);
         print("Total number of failures: %d\n\n", nfailsTotal);
-        return nfailsTotal > 0;
     }
+    return nfailsTotal > 0;
 }

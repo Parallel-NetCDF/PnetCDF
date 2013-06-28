@@ -87,5 +87,10 @@ int main(int argc, char ** argv)
 	free(cmpbuf);
 	MPI_Type_free(&usertype);
 	MPI_Finalize();
+
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING %s for put_vara/get_vara ", argv[0]);
+        printf("%-66s ------ pass\n", cmd_str);
+
 	return 0;
 }

@@ -792,10 +792,11 @@ C           /* Test write functions */
         end if
 
         if (nfailsTotal .eq. 0) then
-            print *,'*** Testing nf_test: Success'
+          print*,'** TESTING Fortran nf_test                      ',
+     +           '                  ------ pass'
         else
-            print *,'NOTE: Parallel-netcdf expects to see 0 failures'
-            print *,'Total number of failures: ', nfailsTotal
+          print *,'*** TESTING nf_test expects to see 0 failures'
+          print *,'Total number of failures: ', nfailsTotal
         endif
         ! if (nfailsTotal .eq. 0) call ud_exit(0)
         call ud_exit(0)
