@@ -4,15 +4,15 @@
 !
 ! $Id$
 
-! This example shows how to use a single call of nfmpi_put_varna_all() to
+! This example shows how to use a single call of nfmpi_put_varna_int_all() to
 ! write a sequence of requests with arbitrary array indices and lengths.
-! Using nfmpi_put_varna_all() can achieve the same effect of HDF5 writing
+! Using nfmpi_put_varna_int_all() can achieve the same effect of HDF5 writing
 ! a sequence of selected file locations through the following 2 APIs.
 !
 !   H5Sselect_elements(fid, H5S_SELECT_SET, NUMP, (const hssize_t **)coord);
 !   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val); 
 !
-! Note that in nfmpi_put_varna_all(), users can write more than one element
+! Note that in nfmpi_put_varna_int_all(), users can write more than one element
 ! starting at each selected location.
 !
 ! The compile and run commands are given below, together with an ncmpidump of
