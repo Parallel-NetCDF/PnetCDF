@@ -17,21 +17,13 @@
 #define NDIMS 2
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use a single call of ncmpi_put_varna_all() to
- * write a sequence of requests with arbitrary array indices and lengths.
- * Using ncmpi_put_varna_all() can achieve the same effect of HDF5 writing
- * a sequence of selected file locations through the following 2 APIs.
- *
- *   H5Sselect_elements(fid, H5S_SELECT_SET, NUMP, (const hssize_t **)coord);
- *   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val); 
- *
- * Note that in ncmpi_put_varna_all(), users can write more than one element
- * starting at each selected location.
+ * This example shows how to use a single call of ncmpi_put_varn1_all() to
+ * write a sequence of one-element requests with arbitrary array indices.
  *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -g -o put_varna_int put_varn1_int.c -lpnetcdf
+ *    % mpicc -g -o put_varn1_int put_varn1_int.c -lpnetcdf
  *    % mpiexec -l -n 4 put_varn1_int testfile.nc
  *    % ncmpidump testfile.nc
  *    netcdf testfile {
@@ -56,8 +48,9 @@
 
 int main(int argc, char** argv) {
     int i, j, rank, nprocs, err;
-    int ncid, cmode, varid, dimid[2], num_reqs, *buffer;
-    MPI_Offset w_len, **starts, **counts;
+    int ncid, cmode, varid, dimid[2], num_reqs;
+    float *buffer;
+    MPI_Offset **starts;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -72,7 +65,7 @@ int main(int argc, char** argv) {
         printf("Warning: this program is intended to run on 4 processes\n");
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
+    cmode = NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
     ERR
 
@@ -81,71 +74,88 @@ int main(int argc, char** argv) {
     ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]);
     ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, NDIMS, dimid, &varid);
+    err = ncmpi_def_var(ncid, "var", NC_FLOAT, NDIMS, dimid, &varid);
     ERR
     err = ncmpi_enddef(ncid);
     ERR
 
     /* pick arbitrary numbers of requests for 4 processes */
     num_reqs = 1;
-    if (rank == 0)     num_reqs = 4;
-    else if (rank ==1) num_reqs = 6;
-    else if (rank ==2) num_reqs = 5;
-    else if (rank ==3) num_reqs = 4;
+    if (rank == 0)     num_reqs = 8;
+    else if (rank ==1) num_reqs = 13;
+    else if (rank ==2) num_reqs = 9;
+    else if (rank ==3) num_reqs = 10;
 
     starts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
-    counts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
     starts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
-    counts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
-    for (i=1; i<num_reqs; i++) {
+    for (i=1; i<num_reqs; i++)
         starts[i] = starts[i-1] + NDIMS;
-        counts[i] = counts[i-1] + NDIMS;
-    }
 
-    /* assign arbitrary starts and counts */
+    /* assign arbitrary starts */
     const int y=0, x=1;
     if (rank == 0) {
-        starts[0][y] = 0; starts[0][x] = 5; counts[0][y] = 1; counts[0][x] = 2;
-        starts[1][y] = 1; starts[1][x] = 0; counts[1][y] = 1; counts[1][x] = 1;
-        starts[2][y] = 2; starts[2][x] = 6; counts[2][y] = 1; counts[2][x] = 2;
-        starts[3][y] = 3; starts[3][x] = 0; counts[3][y] = 1; counts[3][x] = 3;
-        /* rank 0 is writing the followings: ("-" means skip)
+        starts[0][y] = 0; starts[0][x] = 5;
+        starts[1][y] = 1; starts[1][x] = 0;
+        starts[2][y] = 2; starts[2][x] = 6;
+        starts[3][y] = 3; starts[3][x] = 0;
+        starts[4][y] = 0; starts[4][x] = 6;
+        starts[5][y] = 2; starts[5][x] = 7;
+        starts[6][y] = 3; starts[6][x] = 1;
+        starts[7][y] = 3; starts[7][x] = 2;
+        /* rank 0 is writing the following locations: ("-" means skip)
                   -  -  -  -  -  0  0  -  -  - 
                   0  -  -  -  -  -  -  -  -  - 
                   -  -  -  -  -  -  0  0  -  - 
                   0  0  0  -  -  -  -  -  -  - 
          */
     } else if (rank ==1) {
-        starts[0][y] = 0; starts[0][x] = 3; counts[0][y] = 1; counts[0][x] = 2;
-        starts[1][y] = 0; starts[1][x] = 8; counts[1][y] = 1; counts[1][x] = 2;
-        starts[2][y] = 1; starts[2][x] = 5; counts[2][y] = 1; counts[2][x] = 2;
-        starts[3][y] = 2; starts[3][x] = 0; counts[3][y] = 1; counts[3][x] = 2;
-        starts[4][y] = 2; starts[4][x] = 8; counts[4][y] = 1; counts[4][x] = 2;
-        starts[5][y] = 3; starts[5][x] = 4; counts[5][y] = 1; counts[5][x] = 3;
-        /* rank 1 is writing the followings: ("-" means skip)
+        starts[ 0][y] = 0; starts[ 0][x] = 3;
+        starts[ 1][y] = 0; starts[ 1][x] = 8;
+        starts[ 2][y] = 1; starts[ 2][x] = 5;
+        starts[ 3][y] = 2; starts[ 3][x] = 0;
+        starts[ 4][y] = 2; starts[ 4][x] = 8;
+        starts[ 5][y] = 3; starts[ 5][x] = 4;
+        starts[ 6][y] = 0; starts[ 6][x] = 4;
+        starts[ 7][y] = 0; starts[ 7][x] = 9;
+        starts[ 8][y] = 1; starts[ 8][x] = 6;
+        starts[ 9][y] = 2; starts[ 9][x] = 1;
+        starts[10][y] = 2; starts[10][x] = 9;
+        starts[11][y] = 3; starts[11][x] = 5;
+        starts[12][y] = 3; starts[12][x] = 6;
+        /* rank 1 is writing the following locations: ("-" means skip)
                   -  -  -  1  1  -  -  -  1  1 
                   -  -  -  -  -  1  1  -  -  - 
                   1  1  -  -  -  -  -  -  1  1 
                   -  -  -  -  1  1  1  -  -  - 
          */
     } else if (rank ==2) {
-        starts[0][y] = 0; starts[0][x] = 7; counts[0][y] = 1; counts[0][x] = 1;
-        starts[1][y] = 1; starts[1][x] = 1; counts[1][y] = 1; counts[1][x] = 3;
-        starts[2][y] = 1; starts[2][x] = 7; counts[2][y] = 1; counts[2][x] = 3;
-        starts[3][y] = 2; starts[3][x] = 2; counts[3][y] = 1; counts[3][x] = 1;
-        starts[4][y] = 3; starts[4][x] = 3; counts[4][y] = 1; counts[4][x] = 1;
-        /* rank 2 is writing the followings: ("-" means skip)
+        starts[0][y] = 0; starts[0][x] = 7;
+        starts[1][y] = 1; starts[1][x] = 1;
+        starts[2][y] = 1; starts[2][x] = 7;
+        starts[3][y] = 2; starts[3][x] = 2; 
+        starts[4][y] = 3; starts[4][x] = 3;
+        starts[5][y] = 1; starts[5][x] = 2;
+        starts[6][y] = 1; starts[6][x] = 8;
+        starts[7][y] = 1; starts[7][x] = 3;
+        starts[8][y] = 1; starts[8][x] = 9;
+        /* rank 2 is writing the following locations: ("-" means skip)
                   -  -  -  -  -  -  -  2  -  - 
                   -  2  2  2  -  -  -  2  2  2 
                   -  -  2  -  -  -  -  -  -  - 
                   -  -  -  2  -  -  -  -  -  - 
          */
     } else if (rank ==3) {
-        starts[0][y] = 0; starts[0][x] = 0; counts[0][y] = 1; counts[0][x] = 3;
-        starts[1][y] = 1; starts[1][x] = 4; counts[1][y] = 1; counts[1][x] = 1;
-        starts[2][y] = 2; starts[2][x] = 3; counts[2][y] = 1; counts[2][x] = 3;
-        starts[3][y] = 3; starts[3][x] = 7; counts[3][y] = 1; counts[3][x] = 3;
-        /* rank 3 is writing the followings: ("-" means skip)
+        starts[0][y] = 0; starts[0][x] = 0;
+        starts[1][y] = 1; starts[1][x] = 4;
+        starts[2][y] = 2; starts[2][x] = 3;
+        starts[3][y] = 3; starts[3][x] = 7;
+        starts[4][y] = 0; starts[4][x] = 1;
+        starts[5][y] = 2; starts[5][x] = 4;
+        starts[6][y] = 3; starts[6][x] = 8;
+        starts[7][y] = 0; starts[7][x] = 2;
+        starts[8][y] = 2; starts[8][x] = 5;
+        starts[9][y] = 3; starts[9][x] = 9;
+        /* rank 3 is writing the following locations: ("-" means skip)
                   3  3  3  -  -  -  -  -  -  - 
                   -  -  -  -  3  -  -  -  -  - 
                   -  -  -  3  3  3  -  -  -  - 
@@ -153,21 +163,12 @@ int main(int argc, char** argv) {
          */
     }
 
-    w_len = 0; /* total write length for this process */
-    for (i=0; i<num_reqs; i++) {
-        MPI_Offset w_req_len=1;
-        for (j=0; j<NDIMS; j++)
-            w_req_len *= counts[i][j];
-        w_len += w_req_len;
-    }
-
     /* allocate I/O buffer and initialize its contents */
-    buffer = (int*) malloc(w_len * sizeof(int));
-    for (i=0; i<w_len; i++) buffer[i] = rank;
+    buffer = (float*) malloc(num_reqs * sizeof(float));
+    for (i=0; i<num_reqs; i++) buffer[i] =  (float)rank;
 
     /* set the buffer pointers to different offsets to the I/O buffer */
-    err = ncmpi_put_varna_int_all(ncid, varid, num_reqs, starts,
-                                  counts, buffer);
+    err = ncmpi_put_varn1_float_all(ncid, varid, num_reqs, starts, buffer);
     ERR
 
     err = ncmpi_close(ncid);
@@ -175,9 +176,7 @@ int main(int argc, char** argv) {
 
     free(buffer);
     free(starts[0]);
-    free(counts[0]);
     free(starts);
-    free(counts);
 
     MPI_Finalize();
     return 0;
