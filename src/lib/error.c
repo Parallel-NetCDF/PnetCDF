@@ -235,17 +235,22 @@ ncmpi_strerror(int err)
 	return unknown;
 }
 
-void ncmpii_handle_error(int rank, int mpi_errorcode, char * msg)
+int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
+                        char *err_msg)       /* extra error message */
 {
-    /* this rank should be from nciop->comm, as for independent mode
-       where MPI_COMM_SELF is used, ranks will always be 0 */
-    char errorString[MPI_MAX_ERROR_STRING];
+    int rank, errorclass;
     int errorStringLen;
-    MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
-    printf("%2d: %s : %s\n", rank, msg, errorString);
-}
+    char errorString[MPI_MAX_ERROR_STRING];
 
-int ncmpii_check_mpi_file_open_error(ncio *nciop, int mpi_errorcode) {
+    /* we report the world rank */
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
+    if (err_msg == NULL) err_msg = "";
+    printf("rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
+
+    /* check for specific error codes understood by PnetCDF */
+
     /* When NC_NOCLOBBER is used in ioflags(cmode) for open to create,
      * netCDF requires NC_EEXIST returned if the file already exists.
      * In MPI 2.1, if MPI_File_open uses MPI_MODE_EXCL and the file has
@@ -255,8 +260,6 @@ int ncmpii_check_mpi_file_open_error(ncio *nciop, int mpi_errorcode) {
      * Note for MPI 2.1 and prior, we return MPI_ERR_IO, as these error class
      * have not been defined.
      */
-    int rank, errorclass;
-    MPI_Comm_rank(nciop->comm, &rank);
     MPI_Error_class(mpi_errorcode, &errorclass);
 #ifdef HAVE_MPI_ERR_FILE_EXISTS
     if (errorclass == MPI_ERR_FILE_EXISTS) return NC_EEXIST;
@@ -264,7 +267,8 @@ int ncmpii_check_mpi_file_open_error(ncio *nciop, int mpi_errorcode) {
 #ifdef HAVE_MPI_ERR_NO_SUCH_FILE
     if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
 #endif
-    ncmpii_handle_error(rank, mpi_errorcode, "MPI_File_open");
-    return NC_EOFILE;
+
+    return NC_EOFILE; /* general file I/O error */
 }
+
 
