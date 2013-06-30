@@ -21,7 +21,7 @@ int ncmpi_$1_varn_$6$4(int ncid, int varid, int num,
 ')dnl
 
 VARN(put, const, WRITE_REQ,     , INDEP_IO, text,      char,               MPI_CHAR)
-VARN(put, const, WRITE_REQ,     , INDEP_IO, schar,     schar,              MPI_BYTE)
+VARN(put, const, WRITE_REQ,     , INDEP_IO, schar,     signed char,        MPI_BYTE)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, short,     short,              MPI_SHORT)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, int,       int,                MPI_INT)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, float,     float,              MPI_FLOAT)
@@ -31,15 +31,15 @@ VARN(put, const, WRITE_REQ,     , INDEP_IO, longlong,  long long,          MPI_L
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-VARN(put, const, WRITE_REQ,     , INDEP_IO, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARN(put, const, WRITE_REQ,     , INDEP_IO, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARN(put, const, WRITE_REQ,     , INDEP_IO, uint,      uint,               MPI_UNSIGNED)
+VARN(put, const, WRITE_REQ,     , INDEP_IO, uchar,     unsigned char,      MPI_UNSIGNED_CHAR)
+VARN(put, const, WRITE_REQ,     , INDEP_IO, ushort,    unsigned short,     MPI_UNSIGNED_SHORT)
+VARN(put, const, WRITE_REQ,     , INDEP_IO, uint,      unsigned int,       MPI_UNSIGNED)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, long,      long,               MPI_LONG)
 VARN(put, const, WRITE_REQ,     , INDEP_IO, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 /* End Skip Prototypes for Fortran binding */
 
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, text,      char,               MPI_CHAR)
-VARN(put, const, WRITE_REQ, _all,  COLL_IO, schar,     schar,              MPI_BYTE)
+VARN(put, const, WRITE_REQ, _all,  COLL_IO, schar,     signed char,        MPI_BYTE)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, short,     short,              MPI_SHORT)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, int,       int,                MPI_INT)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, float,     float,              MPI_FLOAT)
@@ -49,15 +49,15 @@ VARN(put, const, WRITE_REQ, _all,  COLL_IO, longlong,  long long,          MPI_L
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-VARN(put, const, WRITE_REQ, _all,  COLL_IO, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARN(put, const, WRITE_REQ, _all,  COLL_IO, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARN(put, const, WRITE_REQ, _all,  COLL_IO, uint,      uint,               MPI_UNSIGNED)
+VARN(put, const, WRITE_REQ, _all,  COLL_IO, uchar,     unsigned char,      MPI_UNSIGNED_CHAR)
+VARN(put, const, WRITE_REQ, _all,  COLL_IO, ushort,    unsigned short,     MPI_UNSIGNED_SHORT)
+VARN(put, const, WRITE_REQ, _all,  COLL_IO, uint,      unsigned int,       MPI_UNSIGNED)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, long,      long,               MPI_LONG)
 VARN(put, const, WRITE_REQ, _all,  COLL_IO, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 /* End Skip Prototypes for Fortran binding */
 
 VARN(get,      ,  READ_REQ,     , INDEP_IO, text,      char,               MPI_CHAR)
-VARN(get,      ,  READ_REQ,     , INDEP_IO, schar,     schar,              MPI_BYTE)
+VARN(get,      ,  READ_REQ,     , INDEP_IO, schar,     signed char,        MPI_BYTE)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, short,     short,              MPI_SHORT)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, int,       int,                MPI_INT)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, float,     float,              MPI_FLOAT)
@@ -67,15 +67,15 @@ VARN(get,      ,  READ_REQ,     , INDEP_IO, longlong,  long long,          MPI_L
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-VARN(get,      ,  READ_REQ,     , INDEP_IO, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARN(get,      ,  READ_REQ,     , INDEP_IO, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARN(get,      ,  READ_REQ,     , INDEP_IO, uint,      uint,               MPI_UNSIGNED)
+VARN(get,      ,  READ_REQ,     , INDEP_IO, uchar,     unsigned char,      MPI_UNSIGNED_CHAR)
+VARN(get,      ,  READ_REQ,     , INDEP_IO, ushort,    unsigned short,     MPI_UNSIGNED_SHORT)
+VARN(get,      ,  READ_REQ,     , INDEP_IO, uint,      unsigned int,       MPI_UNSIGNED)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, long,      long,               MPI_LONG)
 VARN(get,      ,  READ_REQ,     , INDEP_IO, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 /* End Skip Prototypes for Fortran binding */
 
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, text,      char,               MPI_CHAR)
-VARN(get,      ,  READ_REQ, _all,  COLL_IO, schar,     schar,              MPI_BYTE)
+VARN(get,      ,  READ_REQ, _all,  COLL_IO, schar,     signed char,        MPI_BYTE)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, short,     short,              MPI_SHORT)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, int,       int,                MPI_INT)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, float,     float,              MPI_FLOAT)
@@ -85,9 +85,9 @@ VARN(get,      ,  READ_REQ, _all,  COLL_IO, longlong,  long long,          MPI_L
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-VARN(get,      ,  READ_REQ, _all,  COLL_IO, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARN(get,      ,  READ_REQ, _all,  COLL_IO, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARN(get,      ,  READ_REQ, _all,  COLL_IO, uint,      uint,               MPI_UNSIGNED)
+VARN(get,      ,  READ_REQ, _all,  COLL_IO, uchar,     unsigned char,      MPI_UNSIGNED_CHAR)
+VARN(get,      ,  READ_REQ, _all,  COLL_IO, ushort,    unsigned short,     MPI_UNSIGNED_SHORT)
+VARN(get,      ,  READ_REQ, _all,  COLL_IO, uint,      unsigned int,       MPI_UNSIGNED)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, long,      long,               MPI_LONG)
 VARN(get,      ,  READ_REQ, _all,  COLL_IO, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 /* End Skip Prototypes for Fortran binding */
