@@ -34,7 +34,7 @@ M4_SRCS   = getput.m4 \
             getputn_int64.m4 \
             getputn_uint64.m4 \
             m_getput_varx.m4 \
-            getput_varn.m4
+            varn.m4
 
 LIB_CSRCS = mpinetcdf.c \
             header.c \
@@ -69,6 +69,8 @@ PACKING_LIST = $(LIB_CSRCS) \
                macro.h \
                utf8proc_data.h \
                utf8proc.h \
+               varnx.m4 \
+               varnx_api_header.m4 \
                varn_api_header.m4
 
 LIB_OBJS   = $(LIB_CSRCS:.c=.o) $(M4_SRCS:.m4=.o)
