@@ -17,21 +17,21 @@
 #define NDIMS 2
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use a single call of ncmpi_put_varna_int_all() to
+ * This example shows how to use a single call of ncmpi_put_varn_int_all() to
  * write a sequence of requests with arbitrary array indices and lengths.
- * Using ncmpi_put_varna_int_all() can achieve the same effect of HDF5 writing
+ * Using ncmpi_put_varn_int_all() can achieve the same effect of HDF5 writing
  * a sequence of selected file locations through the following 2 APIs.
  *
  *   H5Sselect_elements(fid, H5S_SELECT_SET, NUMP, (const hssize_t **)coord);
  *   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val); 
  *
- * Note that in ncmpi_put_varna_int_all(), users can write more than one
+ * Note that in ncmpi_put_varn_int_all(), users can write more than one
  * element starting at each selected location.
  *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -g -o put_varna_int put_varn1_int.c -lpnetcdf
+ *    % mpicc -g -o put_varn_int put_varn1_int.c -lpnetcdf
  *    % mpiexec -l -n 4 put_varn1_int testfile.nc
  *    % ncmpidump testfile.nc
  *    netcdf testfile {
@@ -166,8 +166,8 @@ int main(int argc, char** argv) {
     for (i=0; i<w_len; i++) buffer[i] = rank;
 
     /* set the buffer pointers to different offsets to the I/O buffer */
-    err = ncmpi_put_varna_int_all(ncid, varid, num_reqs, starts,
-                                  counts, buffer);
+    err = ncmpi_put_varn_int_all(ncid, varid, num_reqs, starts,
+                                 counts, buffer);
     ERR
 
     err = ncmpi_close(ncid);

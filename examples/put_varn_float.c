@@ -17,14 +17,14 @@
 #define NDIMS 2
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to use a single call of ncmpi_put_varn1_float_all()
+ * This example shows how to use a single call of ncmpi_put_varn_float_all()
  * to write a sequence of one-element requests with arbitrary array indices.
  *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -g -o put_varn1_float put_varn1_float.c -lpnetcdf
- *    % mpiexec -l -n 4 put_varn1_float testfile.nc
+ *    % mpicc -g -o put_varn_float put_varn_float.c -lpnetcdf
+ *    % mpiexec -l -n 4 put_varn_float testfile.nc
  *    % ncmpidump testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
     for (i=0; i<num_reqs; i++) buffer[i] =  (float)rank;
 
     /* set the buffer pointers to different offsets to the I/O buffer */
-    err = ncmpi_put_varn1_float_all(ncid, varid, num_reqs, starts, buffer);
+    err = ncmpi_put_varn_float_all(ncid, varid, num_reqs, starts, NULL, buffer);
     ERR
 
     err = ncmpi_close(ncid);
