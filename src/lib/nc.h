@@ -733,10 +733,19 @@ int ncmpii_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
 
 int ncmpii_update_numrecs(NC *ncp, MPI_Offset newnumrecs);
 
+int ncmpii_vara_create_filetype(NC* ncp, NC_var* varp,
+                const MPI_Offset start[], const MPI_Offset count[],
+                int rw_flag, int *blocklen, MPI_Offset *offset,
+                MPI_Datatype *filetype);
+
 int ncmpii_vars_create_filetype(NC* ncp, NC_var* varp,
                 const MPI_Offset start[], const MPI_Offset count[],
-                const MPI_Offset stride[], int rw_flag,
+                const MPI_Offset stride[], int rw_flag, int *blocklen,
                 MPI_Offset *offset, MPI_Datatype *filetype);
+
+int ncmpii_concatenate_datatypes(NC *ncp, int num, int *blocklens,
+                MPI_Offset *displacements, MPI_Datatype *dtypes,
+                MPI_Datatype *datatype);
 
 extern int
 ncmpii_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset *start,
