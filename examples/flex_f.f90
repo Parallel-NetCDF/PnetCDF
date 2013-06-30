@@ -114,7 +114,7 @@
           array_of_starts(2)   = ghost_len
           call MPI_Type_create_subarray(2, array_of_sizes, &
                array_of_subsizes, array_of_starts, MPI_ORDER_FORTRAN, &
-               MPI_INT, subarray, err)
+               MPI_INTEGER, subarray, err)
           call MPI_Type_commit(subarray, err)
 
           ! create file, truncate it if exists
