@@ -227,6 +227,8 @@ ncmpi_strerror(int err)
 	    return "The specified netCDF file does not exist when calling ncmpi_open().";
 	case NC_EINTOVERFLOW:
 	    return "Overflow when type cast to 4-byte integer.";
+	case NC_EVARNMONO:
+	    return "Argument starts in get/put_varn APIs must be monotonically nondecreasing.";
 	
 	default:
 	    return unknown;
