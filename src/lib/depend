@@ -16,7 +16,7 @@ ncmpidtype.o: ncmpidtype.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncmpidtype.h
 convert_swap.o: convert_swap.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h
 filetype.o: filetype.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
 m_getput_varx.o: m_getput_varx.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
-getput_varn.o: getput_varn.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
+varn.o: varn.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 nonblocking.o: nonblocking.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 malloc.o: malloc.c ncconfig.h
 utf8proc.o: utf8proc.c ncconfig.h utf8proc.h utf8proc_data.h
