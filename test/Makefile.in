@@ -13,7 +13,6 @@ include ../macros.make
 
 SUBDIRS = common \
           nc_test \
-          nf_test \
           test_int \
           test_float \
           test_double \
@@ -27,6 +26,11 @@ SUBDIRS = common \
           test_check_header \
           testcases \
           data
+
+ifeq (@has_fortran@, yes)
+SUBDIRS += nf_test
+endif
+
 
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) all ; ) ; done
