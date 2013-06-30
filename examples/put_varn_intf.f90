@@ -4,22 +4,22 @@
 !
 ! $Id$
 
-! This example shows how to use a single call of nfmpi_put_varna_int_all() to
+! This example shows how to use a single call of nfmpi_put_varn_int_all() to
 ! write a sequence of requests with arbitrary array indices and lengths.
-! Using nfmpi_put_varna_int_all() can achieve the same effect of HDF5 writing
+! Using nfmpi_put_varn_int_all() can achieve the same effect of HDF5 writing
 ! a sequence of selected file locations through the following 2 APIs.
 !
 !   H5Sselect_elements(fid, H5S_SELECT_SET, NUMP, (const hssize_t **)coord);
 !   H5Dwrite(dataset, H5T_NATIVE_INT, mid, fid, H5P_DEFAULT, val); 
 !
-! Note that in nfmpi_put_varna_int_all(), users can write more than one element
+! Note that in nfmpi_put_varn_int_all(), users can write more than one element
 ! starting at each selected location.
 !
 ! The compile and run commands are given below, together with an ncmpidump of
 ! the output file.
 !
-!    % mpif90 -g -o put_varna_intf put_varna_intf.f90 -lpnetcdf
-!    % mpiexec -l -n 4 put_varna_intf testfile.nc
+!    % mpif90 -g -o put_varn_intf put_varn_intf.f90 -lpnetcdf
+!    % mpiexec -l -n 4 put_varn_intf testfile.nc
 !    % ncmpidump testfile.nc
 !    netcdf testfile {
 !    // file format: CDF-5 (big variables)
@@ -248,9 +248,9 @@
           ! initialize buffer contents
           buffer = rank;
 
-          err = nfmpi_put_varna_int_all(ncid, varid, num_reqs, starts, &
-                                        counts, buffer)
-          call check(err, 'In nfmpi_put_varna_int_all: ')
+          err = nfmpi_put_varn_int_all(ncid, varid, num_reqs, starts, &
+                                       counts, buffer)
+          call check(err, 'In nfmpi_put_varn_int_all: ')
 
           ! close the file
           err = nfmpi_close(ncid)

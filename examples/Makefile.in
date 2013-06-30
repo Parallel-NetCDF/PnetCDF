@@ -24,13 +24,13 @@ C_SRCS    = collective_write.c \
             mput.c \
             hints.c \
             flex.c \
-            put_varna_int.c \
-            put_varn1_float.c
+            put_varn_int.c \
+            put_varn_float.c
 
 F90_SRCS  = get_info_f.f90 \
             put_vara.f90 \
             flex_f.f90 \
-            put_varna_intf.f90
+            put_varn_intf.f90
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
@@ -41,9 +41,9 @@ endif
 
 GARBAGE      = $(PROGS) *.nc
 
-PACKING_LIST =  $(C_SRCS) $(F90_SRCS) \
-                Makefile.in \
-                README
+PACKING_LIST = $(C_SRCS) $(F90_SRCS) \
+               Makefile.in \
+               README
 
 SUBDIRS = tutorial
 
@@ -87,13 +87,13 @@ flex: flex.o $(LIBRARY)
 flex_f: flex_f.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
-put_varna_int: put_varna_int.o $(LIBRARY)
+put_varn_int: put_varn_int.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-put_varna_intf: put_varna_intf.o $(LIBRARY)
+put_varn_intf: put_varn_intf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
-put_varn1_float: put_varn1_float.o $(LIBRARY)
+put_varn_float: put_varn_float.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 include $(srcdir)/depend
