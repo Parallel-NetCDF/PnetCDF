@@ -294,7 +294,7 @@ ncmpi_wait_all(int  ncid,
 }
 
 /*----< ncmpii_concatenate_datatypes() >--------------------------------------*/
-static int
+int
 ncmpii_concatenate_datatypes(NC           *ncp, 
                              int           num, 
                              int          *blocklens,     /* IN: [num] */
@@ -382,19 +382,11 @@ ncmpii_construct_filetypes(NC           *ncp,
                                           reqs[i].count,
                                           reqs[i].stride,
                                           rw_flag,
+                                          &blocklens[i],
                                           &displacements[i], /* to offset 0 */
                                           &ftypes[i]);
         if (*reqs[i].status == NC_NOERR) *reqs[i].status = err;
         if (status == NC_NOERR) status = err; /* report the first error */
-
-        blocklens[i] = 1;
-        if (ftypes[i] == MPI_BYTE) { /* file type is contiguous in file */
-            int j;
-            blocklens[i] = reqs[i].varp->xsz;
-            for (j=0; j<reqs[i].varp->ndims; j++)
-                blocklens[i] *= reqs[i].count[j];
-            /* Warning! blocklens[i] might overflow */
-        }
     }
 
     if (status != NC_NOERR) {
@@ -1644,6 +1636,7 @@ ncmpii_wait_getput(NC     *ncp,
 }
 
 /*----< ncmpii_mgetput() >----------------------------------------------------*/
+/* all the fileviews in the requests can be concatenated one after another */
 static int
 ncmpii_mgetput(NC           *ncp,
                int           num_reqs,

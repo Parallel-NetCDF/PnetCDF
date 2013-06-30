@@ -23,10 +23,6 @@
 /* Prototypes for functions used only in this file */
 static int check_recsize_too_big(NC *ncp);
 
-static int ncmpii_vara_create_filetype(NC* ncp, NC_var* varp,
-                       const MPI_Offset start[], const MPI_Offset count[], 
-                       int rw_flag, MPI_Offset *offset, MPI_Datatype *filetype);
-
 /*----< check_recsize_too_big() >--------------------------------------------*/
 static int
 check_recsize_too_big(NC *ncp)
@@ -287,12 +283,13 @@ ncmpii_is_request_contiguous(NC_var           *varp,
 }
 
 /*----< ncmpii_vara_create_filetype() >--------------------------------------*/
-static int
+int
 ncmpii_vara_create_filetype(NC               *ncp,
                             NC_var           *varp,
                             const MPI_Offset *start,
                             const MPI_Offset *count,
                             int               rw_flag,
+                            int              *blocklen,
                             MPI_Offset       *offset_ptr,
                             MPI_Datatype     *filetype_ptr)
 {
@@ -315,6 +312,11 @@ ncmpii_vara_create_filetype(NC               *ncp,
             return NC_EEDGE;
     }
 
+    for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
+
+    *blocklen = varp->xsz * nelems;
+    /* Warning: blocklen might overflow */
+
     /* check if the request is contiguous in file
        if yes, there is no need to create a filetype */
     if (ncmpii_is_request_contiguous(varp, start, count)) {
@@ -323,8 +325,6 @@ ncmpii_vara_create_filetype(NC               *ncp,
         *filetype_ptr = filetype;
         return status;
     }
-
-    for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
 
     /* filetype is defined only when varp is not a scalar and
        the number of requested elemenst > 0
@@ -519,6 +519,8 @@ ncmpii_vara_create_filetype(NC               *ncp,
         NCI_Free(shape);
     }
 
+    if (filetype != MPI_BYTE) *blocklen = 1;
+
     *offset_ptr   = offset;
     *filetype_ptr = filetype;
 
@@ -533,6 +535,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
                             const MPI_Offset  count[],
                             const MPI_Offset  stride[],
                             int               rw_flag,
+                            int              *blocklen,
                             MPI_Offset       *offset_ptr,
                             MPI_Datatype     *filetype_ptr)
 {
@@ -542,7 +545,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
 
     if (stride == NULL)
         return ncmpii_vara_create_filetype(ncp, varp, start, count, rw_flag,
-                                           offset_ptr, filetype_ptr);
+                                           blocklen, offset_ptr, filetype_ptr);
     offset   = varp->begin;
     filetype = MPI_BYTE;
 
@@ -550,7 +553,11 @@ ncmpii_vars_create_filetype(NC               *ncp,
 
     if (dim == varp->ndims) /* if stride[] all == 1 */
         return ncmpii_vara_create_filetype(ncp, varp, start, count, rw_flag,
-                                           offset_ptr, filetype_ptr);
+                                           blocklen, offset_ptr, filetype_ptr);
+
+    /* now stride[] indicates a non-contiguous fileview, we must define an
+     * MPI derived data type for the fileview. */
+    *blocklen = 1;
 
     /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
     status = NCedgeck(ncp, varp, start, count);
