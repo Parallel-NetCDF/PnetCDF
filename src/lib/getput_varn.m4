@@ -89,7 +89,7 @@ ncmpi_put_varn_$1$5(int       ncid,
                     const $2 *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, NULL, NULL, NULL,
-                               NULL, (void*)buf, 0, $3, WRITE_REQ, $4);
+                               NULL, (void*)buf, -1, $3, WRITE_REQ, $4);
 }
 ')dnl
 
@@ -163,7 +163,7 @@ ncmpi_put_varn1_$1$5(int                ncid,
                      const $2          *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, NULL, NULL,
-                               NULL, (void*)buf, 0, $3, WRITE_REQ, $4);
+                               NULL, (void*)buf, -1, $3, WRITE_REQ, $4);
 }
 ')dnl
 
@@ -240,7 +240,7 @@ ncmpi_put_varna_$1$5(int                ncid,
                      const $2          *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, counts, NULL,
-                               NULL, (void*)buf, 0, $3, WRITE_REQ, $4);
+                               NULL, (void*)buf, -1, $3, WRITE_REQ, $4);
 }
 ')dnl
 
@@ -320,7 +320,7 @@ ncmpi_put_varns_$1$5(int                ncid,
                      const $2          *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, counts, strides,
-                               NULL, (void*)buf, 0, $3, WRITE_REQ, $4);
+                               NULL, (void*)buf, -1, $3, WRITE_REQ, $4);
 }
 ')dnl
 
@@ -403,7 +403,7 @@ ncmpi_put_varnm_$1$5(int                ncid,
                      const $2          *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, counts, strides,
-                               imaps, (void*)buf, 0, $3, WRITE_REQ, $4);
+                               imaps, (void*)buf, -1, $3, WRITE_REQ, $4);
 }
 ')dnl
 
@@ -474,7 +474,7 @@ ncmpi_get_varn_$1$5(int       ncid,
                     $2       *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, NULL, NULL, NULL,
-                               NULL, buf, 0, $3, READ_REQ, $4);
+                               NULL, buf, -1, $3, READ_REQ, $4);
 }
 ')dnl
 
@@ -548,7 +548,7 @@ ncmpi_get_varn1_$1$5(int                ncid,
                      $2                *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, NULL, NULL,
-                               NULL, buf, 0, $3, READ_REQ, $4);
+                               NULL, buf, -1, $3, READ_REQ, $4);
 }
 ')dnl
 
@@ -625,7 +625,7 @@ ncmpi_get_varna_$1$5(int                ncid,
                      $2                *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, counts, NULL,
-                               NULL, buf, 0, $3, READ_REQ, $4);
+                               NULL, buf, -1, $3, READ_REQ, $4);
 }
 ')dnl
 
@@ -705,7 +705,7 @@ ncmpi_get_varns_$1$5(int                ncid,
                      $2                *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, counts, strides,
-                               NULL, buf, 0, $3, READ_REQ, $4);
+                               NULL, buf, -1, $3, READ_REQ, $4);
 }
 ')dnl
 
@@ -788,7 +788,7 @@ ncmpi_get_varnm_$1$5(int                ncid,
                      $2                *buf)
 {
     return ncmpii_getput_varnm(ncid, varid, num, starts, counts, strides,
-                               imaps, buf, 0, $3, READ_REQ, $4);
+                               imaps, buf, -1, $3, READ_REQ, $4);
 }
 ')dnl
 
@@ -873,13 +873,15 @@ ncmpii_getput_varnm(int                ncid,
 
     /* decode buftype */
     if (status == NC_NOERR) {
-        if (bufcount > 0)  /* flexible API is used */
+        if (bufcount >= 0)  /* flexible API is used */
             /* ptype (primitive MPI data type) from buftype
              * el_size is the element size of ptype
              * bnelems is the total number of ptype elements in buftype
              */
             status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
                                          &isderived, &iscontig_of_ptypes);
+        else if (bufcount == 0)
+            num = 0;
         else {
             ptype = buftype;
             el_size = ncmpix_len_nctype(varp->type);
