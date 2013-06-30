@@ -187,7 +187,6 @@
       integer NF_EINSUFFBUF
       integer NF_ENOENT
       integer NF_EINTOVERFLOW
-      integer NF_EVARNMONO
 
       PARAMETER (NF_NOERR        = 0)   ! No Error
       PARAMETER (NF2_ERR         = -1)  ! Returned for all errors in the v2 API
@@ -256,7 +255,6 @@
       PARAMETER (NF_EINSUFFBUF               = -230) ! attached buffer is too small
       PARAMETER (NF_ENOENT                   = -231) ! File does not exist when calling nfmpi_open()
       PARAMETER (NF_EINTOVERFLOW             = -232) ! Overflow when type cast to 4-byte integer
-      PARAMETER (NF_EVARNMONO                = -233) ! starts in get/put_varn APIs must be monotonically nondecreasing
 
 
 ! error handling modes:
