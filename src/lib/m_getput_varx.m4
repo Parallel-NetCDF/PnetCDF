@@ -939,34 +939,30 @@ ncmpii_mgetput_varm(int                ncid,
     /* check if ncid is valid */
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
-        /* must return the error now, parallel program might hang */
+        /* must return the error now, parallel program might hang because
+           ncp might not be valid and hence cannot call MPI_Allreduce for
+           collective abort */
         return status;
 
     /* check if it is in define mode */
-    if (NC_indef(ncp)) status = NC_EINDEFINE;
+    if (NC_indef(ncp)) {
+        status = NC_EINDEFINE;
+        goto err_check:
+    }
 
     /* check file write permission if this is write request */
-    if (status == NC_NOERR) {
-        if (rw_flag == WRITE_REQ && NC_readonly(ncp)) status = NC_EPERM;
+    if (rw_flag == WRITE_REQ && NC_readonly(ncp)) {
+        status = NC_EPERM;
+        goto err_check:
     }
     /* check whether collective or independent mode */
-    if (status == NC_NOERR) {
-        if (io_method == INDEP_IO)
-            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
-                                        MPI_COMM_SELF, 0);
-        else if (io_method == COLL_IO)
-            status = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
-                                        ncp->nciop->comm, 1);
-        /* else if (io_method == INDEP_COLL_IO) */
-    }
-    if (ncp->safe_mode == 1 && io_method == COLL_IO)
-        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-    else
-        min_st = status;
+    if (io_method == INDEP_IO)
+        status = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
+                                    MPI_COMM_SELF, 0);
+    else if (io_method == COLL_IO)
+        status = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
+                                    ncp->nciop->comm, 1);
 
-    if (min_st != NC_NOERR)
-        return status;
-  
     if (num > 0) {
         req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
         statuses = req_ids + num;
@@ -1047,22 +1043,34 @@ ncmpii_mgetput_varm(int                ncid,
         }
     }
 
-    if (status != NC_NOERR)
-        return status;
+err_check:
+    if (ncp->safe_mode == 1 && io_method == COLL_IO) {
+        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        if (min_st != NC_NOERR) return status;
+    }
 
+    if (io_method == INDEP_IO && status != NC_NOERR)
+        return status;
+  
+    if (status != NC_NOERR)
+        /* this can only be reached for COLL_IO and safe_mode == 0, set num=0
+           just so this process can participate the collective calls in
+           wait_all */
+        num = 0;
+  
     if (io_method == COLL_IO)
         status = ncmpi_wait_all(ncid, num, req_ids, statuses);
     else
         status = ncmpi_wait(ncid, num, req_ids, statuses);
-    if (status != NC_NOERR)
-        return status;
 
-    if (num > 0)
-        NCI_Free(req_ids);
+    if (status != NC_NOERR) return status;
 
+    /* return the first error if there is one */
     for (i=0; i<num; i++)
         if (statuses[i] != NC_NOERR)
             return statuses[i];
+
+    if (num > 0) NCI_Free(req_ids);
 
     return NC_NOERR;
 }
