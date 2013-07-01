@@ -21,7 +21,8 @@ C_SRCS = pnetcdf-write-from-master.c pnetcdf-read-from-master.c \
          pnetcdf-write-standard.c pnetcdf-read-standard.c \
          pnetcdf-write-flexible.c pnetcdf-read-flexible.c \
          pnetcdf-write-nb.c pnetcdf-read-nb.c \
-         pnetcdf-write-buffered.c
+         pnetcdf-write-buffered.c \
+	 pnetcdf-permute.c \
 
 F90_SRCS = pnetcdf-write-bufferedf.f90
 
@@ -73,5 +74,7 @@ pnetcdf-write-buffered: pnetcdf-write-buffered.o $(LIBRARY)
 pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
-include $(srcdir)/../../rules.make
+pnetcdf-permute: pnetcdf-permute.o
+	$(LINK.F) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
 
+include $(srcdir)/../../rules.make
