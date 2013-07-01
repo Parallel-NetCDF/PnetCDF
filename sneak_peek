@@ -31,8 +31,9 @@ o New optimization: request aggregation
   takes 3*sizeof(MPI_Offset)=24 bytes (offset, length, and I/O buffer pointer).
 
 o New APIs
-  * get/put_varn_<type> for reading/writing a list of subrequests (specified by
-    start[] and counts[]) to a single variable.
+  * get/put_varn_<type> for reading/writing a list of subrequests (each is
+    specified by starts[i][ndims] and counts[i][ndims] for subrequest i.
+    ndims is the number of dimension of the variable) to a single variable.
   * multiple put/get requests with explict buffer type names:
     ncmpi_mput_var_type(), ncmpi_mput_var1_type(), ncmpi_mput_vara_type(),
     ncmpi_mput_vars_type(), ncmpi_mput_varm_type(). Similar for get APIs.
