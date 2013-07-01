@@ -102,7 +102,7 @@ test_ncmpi_open(void)
     IF (err != NC_ENOENT)
 	error("ncmpi_open of nonexistent file should have returned NC_ENOENT");
     else {
-        printf("Expected error message: \"File tooth-fairy.nc does not exist\"\n");
+        printf("Expected error message complaining: \"File tooth-fairy.nc does not exist\"\n");
         nok++;
     }
 
