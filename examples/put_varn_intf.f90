@@ -31,16 +31,16 @@
 !    data:
 !
 !     var =
-!       3, 0, 1, 0,
-!       3, 2, 1, 0,
-!       3, 2, 2, 0,
-!       1, 2, 3, 2,
-!       1, 3, 3, 1,
-!       0, 1, 3, 1,
-!       0, 1, 0, 1,
-!       2, 2, 0, 3,
-!       1, 2, 1, 3,
-!       1, 2, 1, 3 ;
+!      2, 2, 1, 1,
+!      2, 2, 0, 0,
+!      1, 1, 0, 0,
+!      1, 1, 3, 3,
+!      3, 3, 2, 2,
+!      0, 0, 1, 1,
+!      0, 0, 1, 1,
+!      2, 2, 0, 0,
+!      3, 3, 3, 3,
+!      3, 3, 3, 3 ;
 !    }
 !
 !    Note the above dump is in C order
@@ -114,13 +114,13 @@
           ! pick arbitrary numbers of requests for 4 processes
           num_reqs = 1
           if (rank .EQ. 0) then
-              num_reqs = 4
+              num_reqs = 3
           elseif (rank .EQ. 1) then
-              num_reqs = 6;
+              num_reqs = 3;
           elseif (rank .EQ. 2) then
-              num_reqs = 5;
+              num_reqs = 3;
           elseif (rank .EQ. 3) then
-              num_reqs = 4;
+              num_reqs = 3;
           endif
 
           ! Note that in Fortran, array indices start with 1
@@ -131,107 +131,79 @@
           if (rank .EQ. 0) then
               ! rank 0 is writing the followings: ("-" means skip)
               !        -  -  -  -  -  0  0  -  -  - 
-              !        0  -  -  -  -  -  -  -  -  - 
-              !        -  -  -  -  -  -  0  0  -  - 
-              !        0  0  0  -  -  -  -  -  -  - 
+              !        -  -  -  -  -  0  0  -  -  - 
+              !        -  0  0  -  -  -  -  0  -  - 
+              !        -  0  0  -  -  -  -  0  -  - 
               ! Note this is in Fortran order
               starts(1, 1) = 1
               starts(2, 1) = 6
-              counts(1, 1) = 1
+              counts(1, 1) = 2
               counts(2, 1) = 2
-              starts(1, 2) = 2
-              starts(2, 2) = 1
-              counts(1, 2) = 1
-              counts(2, 2) = 1
+              starts(1, 2) = 3
+              starts(2, 2) = 2
+              counts(1, 2) = 2
+              counts(2, 2) = 2
               starts(1, 3) = 3
-              starts(2, 3) = 7
-              counts(1, 3) = 1
-              counts(2, 3) = 2
-              starts(1, 4) = 4
-              starts(2, 4) = 1
-              counts(1, 4) = 1
-              counts(2, 4) = 3
+              starts(2, 3) = 8
+              counts(1, 3) = 2
+              counts(2, 3) = 1
           elseif (rank .EQ. 1) then
               ! rank 1 is writing the followings: ("-" means skip)
-              !        -  -  -  1  1  -  -  -  1  1 
-              !        -  -  -  -  -  1  1  -  -  - 
-              !        1  1  -  -  -  -  -  -  1  1 
-              !        -  -  -  -  1  1  1  -  -  - 
+              !        -  -  1  1  -  -  -  -  -  - 
+              !        -  -  1  1  -  -  -  -  -  - 
+              !        1  -  -  -  -  1  1  -  -  - 
+              !        1  -  -  -  -  1  1  -  -  - 
               ! Note this is in Fortran order
               starts(1, 1) = 1
-              starts(2, 1) = 4
-              counts(1, 1) = 1
+              starts(2, 1) = 3
+              counts(1, 1) = 2
               counts(2, 1) = 2
-              starts(1, 2) = 1
-              starts(2, 2) = 9
-              counts(1, 2) = 1
-              counts(2, 2) = 2
-              starts(1, 3) = 2
+              starts(1, 2) = 3
+              starts(2, 2) = 1
+              counts(1, 2) = 2
+              counts(2, 2) = 1
+              starts(1, 3) = 3
               starts(2, 3) = 6
-              counts(1, 3) = 1
+              counts(1, 3) = 2
               counts(2, 3) = 2
-              starts(1, 4) = 3
-              starts(2, 4) = 1
-              counts(1, 4) = 1
-              counts(2, 4) = 2
-              starts(1, 5) = 3
-              starts(2, 5) = 9
-              counts(1, 5) = 1
-              counts(2, 5) = 2
-              starts(1, 6) = 4
-              starts(2, 6) = 5
-              counts(1, 6) = 1
-              counts(2, 6) = 3
           elseif (rank .EQ. 2) then
               ! rank 2 is writing the followings: ("-" means skip)
-              !        -  -  -  -  -  -  -  2  -  - 
-              !        -  2  2  2  -  -  -  2  2  2 
-              !        -  -  2  -  -  -  -  -  -  - 
-              !        -  -  -  2  -  -  -  -  -  - 
-              ! Note this is in Fortran order
-              starts(1, 1) = 1
-              starts(2, 1) = 8
-              counts(1, 1) = 1
-              counts(2, 1) = 1
-              starts(1, 2) = 2
-              starts(2, 2) = 2
-              counts(1, 2) = 1
-              counts(2, 2) = 3
-              starts(1, 3) = 2
-              starts(2, 3) = 8
-              counts(1, 3) = 1
-              counts(2, 3) = 3
-              starts(1, 4) = 3
-              starts(2, 4) = 3
-              counts(1, 4) = 1
-              counts(2, 4) = 1
-              starts(1, 5) = 4
-              starts(2, 5) = 4
-              counts(1, 5) = 1
-              counts(2, 5) = 1
-          elseif (rank .EQ. 3) then
-              ! rank 3 is writing the followings: ("-" means skip)
-              !        3  3  3  -  -  -  -  -  -  - 
-              !        -  -  -  -  3  -  -  -  -  - 
-              !        -  -  -  3  3  3  -  -  -  - 
-              !        -  -  -  -  -  -  -  3  3  3 
+              !        2  2  -  -  -  -  -  2  -  - 
+              !        2  2  -  -  -  -  -  2  -  - 
+              !        -  -  -  -  2  -  -  -  -  - 
+              !        -  -  -  -  2  -  -  -  -  - 
               ! Note this is in Fortran order
               starts(1, 1) = 1
               starts(2, 1) = 1
-              counts(1, 1) = 1
-              counts(2, 1) = 3
-              starts(1, 2) = 2
-              starts(2, 2) = 5
-              counts(1, 2) = 1
+              counts(1, 1) = 2
+              counts(2, 1) = 2
+              starts(1, 2) = 1
+              starts(2, 2) = 8
+              counts(1, 2) = 2
               counts(2, 2) = 1
               starts(1, 3) = 3
+              starts(2, 3) = 5
+              counts(1, 3) = 2
+              counts(2, 3) = 1
+          elseif (rank .EQ. 3) then
+              ! rank 3 is writing the followings: ("-" means skip)
+              !        -  -  -  -  3  -  -  -  3  3 
+              !        -  -  -  -  3  -  -  -  3  3 
+              !        -  -  -  3  -  -  -  -  3  3 
+              !        -  -  -  3  -  -  -  -  3  3 
+              ! Note this is in Fortran order
+              starts(1, 1) = 1
+              starts(2, 1) = 5
+              counts(1, 1) = 2
+              counts(2, 1) = 1
+              starts(1, 2) = 1
+              starts(2, 2) = 9
+              counts(1, 2) = 4
+              counts(2, 2) = 2
+              starts(1, 3) = 3
               starts(2, 3) = 4
-              counts(1, 3) = 1
-              counts(2, 3) = 3
-              starts(1, 4) = 4
-              starts(2, 4) = 8
-              counts(1, 4) = 1
-              counts(2, 4) = 3
+              counts(1, 3) = 2
+              counts(2, 3) = 1
           endif
  
           ! w_len is total write length for this process
