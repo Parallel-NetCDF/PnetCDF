@@ -31,8 +31,8 @@ o New optimization: request aggregation
   takes 3*sizeof(MPI_Offset)=24 bytes (offset, length, and I/O buffer pointer).
 
 o New APIs
-  * get/put_varn*_<type> for reading/writing a list of multiple start[] and
-    counts[] of a single variable.
+  * get/put_varn_<type> for reading/writing a list of subrequests (specified by
+    start[] and counts[]) to a single variable.
   * multiple put/get requests with explict buffer type names:
     ncmpi_mput_var_type(), ncmpi_mput_var1_type(), ncmpi_mput_vara_type(),
     ncmpi_mput_vars_type(), ncmpi_mput_varm_type(). Similar for get APIs.
@@ -61,9 +61,9 @@ o New environment variable
     Default is 0, i.e. disabled.
 
 o New example programs
-  * put_varn1_float.c for using the new APIs ncmpi_put_varn1_float_all()
-  * put_varna_int.c and put_varna_intf.f90, for using the new APIs
-    ncmpi_put_varna_int_all() and nfmpi_put_varna_int_all()
+  * put_varn_float.c for using the new APIs ncmpi_put_varn_float_all()
+  * put_varn_int.c and put_varn_intf.f90, for using the new APIs
+    ncmpi_put_varn_int_all() and nfmpi_put_varn_int_all()
   * hints.c, for using PnetCDF hints
   * flex_c.c and flex_f.f90, for using blocking and nonblocking flexible APIs
   * mput.c, for using ncmpi_mput_vara_all() to write a series of arbitrary
