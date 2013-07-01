@@ -74,7 +74,7 @@ pnetcdf-write-buffered: pnetcdf-write-buffered.o $(LIBRARY)
 pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
-pnetcdf-permute: pnetcdf-permute.o
-	$(LINK.F) $< -o $@ $(LDFLAGS) $(ld_pnetcdf) $(LIBS)
+pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 include $(srcdir)/../../rules.make
