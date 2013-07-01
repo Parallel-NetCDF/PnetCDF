@@ -947,13 +947,13 @@ ncmpii_mgetput_varm(int                ncid,
     /* check if it is in define mode */
     if (NC_indef(ncp)) {
         status = NC_EINDEFINE;
-        goto err_check:
+        goto err_check;
     }
 
     /* check file write permission if this is write request */
     if (rw_flag == WRITE_REQ && NC_readonly(ncp)) {
         status = NC_EPERM;
-        goto err_check:
+        goto err_check;
     }
     /* check whether collective or independent mode */
     if (io_method == INDEP_IO)
