@@ -213,13 +213,6 @@ GET_DOUBLE(ushort, if (xx > USHRT_MAX  || xx < 0) return NC_ERANGE;)
 GET_DOUBLE(uint,   if (xx > UINT_MAX   || xx < 0) return NC_ERANGE;)
 GET_DOUBLE(uint64, if (xx > ULLONG_MAX || xx < 0) return NC_ERANGE;)
 
-static int
-ncmpix_get_double_double(const void *xp, double *ip)
-{
-    get_ix_double(xp, ip);
-    return NC_NOERR;
-}
-
 
 dnl
 dnl PUT_DOUBLE(xp, ip)
@@ -246,17 +239,6 @@ PUT_DOUBLE(ushort)
 PUT_DOUBLE(uint)
 PUT_DOUBLE(int64)
 PUT_DOUBLE(uint64)
-
-static int
-ncmpix_put_double_double(void *xp, const double *ip)
-{
-    put_ix_double(xp, ip);
-#ifdef NO_IEEE_FLOAT
-    if(*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
-        return NC_ERANGE;
-#endif
-    return NC_NOERR;
-}
 
 /*---- double ---------------------------------------------------------------*/
 
@@ -357,6 +339,14 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset ndoubles, double *ip)
     /* vax */
 
 #else
+
+static int
+ncmpix_get_double_double(const void *xp, double *ip)
+{
+    get_ix_double(xp, ip);
+    return NC_NOERR;
+}
+
 GETN_DOUBLE(double)
 #endif
 
@@ -473,6 +463,18 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset ndoubles, const double *ip)
     /* vax */
 
 #else
+
+static int
+ncmpix_put_double_double(void *xp, const double *ip)
+{
+    put_ix_double(xp, ip);
+#ifdef NO_IEEE_FLOAT
+    if(*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
+        return NC_ERANGE;
+#endif
+    return NC_NOERR;
+}
+
 PUTN_DOUBLE(double)
 #endif
 

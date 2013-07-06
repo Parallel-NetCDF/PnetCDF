@@ -719,6 +719,8 @@ int ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype);
 
 int ncmpii_need_swap(nc_type nctype,MPI_Datatype mpitype);
 
+void ncmpii_swapn(void *dest_p, const void* src_p, MPI_Offset nelems, int esize);
+
 void ncmpii_in_swapn(void *buf, MPI_Offset nelems, int esize);
 
 int ncmpii_is_request_contiguous(NC_var *varp, const MPI_Offset starts[],
