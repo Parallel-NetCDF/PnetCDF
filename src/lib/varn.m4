@@ -23,6 +23,7 @@ dnl
 #endif
 #include <assert.h>
 
+#include "ncmpidtype.h"
 #include "macro.h"
 
 /* ncmpi_get/put_varn_<type>_<mode> API:
@@ -178,7 +179,7 @@ ncmpii_getput_varn(int               ncid,
     int i, j, el_size, status=NC_NOERR, min_st, *req_ids, *statuses;
     void *cbuf=NULL;
     char *bufp;
-    MPI_Offset   bnelems, **_counts=NULL;
+    MPI_Offset **_counts=NULL;
     MPI_Datatype ptype;
     NC     *ncp;
     NC_var *varp=NULL;

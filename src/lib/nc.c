@@ -36,15 +36,15 @@ static int default_create_format = NC_FORMAT_CLASSIC;
 
 
 /* Prototypes for functions used only in this file */
-static int move_data_r(NC *ncp, NC *old);
 static int move_recs_r(NC *ncp, NC *old);
-static int move_vars_r(NC *ncp, NC *old);
 static int write_NC(NC *ncp);
 static int NC_begins(NC *ncp, MPI_Offset h_align, MPI_Offset v_align);
 static int NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp);
-static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
 
 #if 0
+static int move_data_r(NC *ncp, NC *old);
+static int move_vars_r(NC *ncp, NC *old);
+static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
 static int enddef(NC *ncp);
 static int nc_sync(int ncid);
 static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
@@ -153,6 +153,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
 }
 
 
+#if 0
 /* 'defined but not used': seems like a useful function though. why did we
  * write it?  should we be using it? */
 
@@ -197,6 +198,7 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
     return NC_NOERR;
   }
 }
+#endif
 
 /*----< ncmpii_NC_check_id() >-----------------------------------------------*/
 int
@@ -830,6 +832,7 @@ ncmpii_NC_sync(NC  *ncp,
 }
 
 
+#if 0
 /*
  * header size increases, shift all record and non-record variables down
  */
@@ -843,6 +846,7 @@ move_data_r(NC *ncp, NC *old) {
                         old->begin_rec - old->begin_var +
                         ncp->recsize * ncp->numrecs);
 }
+#endif
 
 /*
  * Move the record variables down,
@@ -885,6 +889,7 @@ move_recs_r(NC *ncp, NC *old) {
 }
 
 
+#if 0
 /*
  * Move the "non record" variables "out". 
  * Fill as needed.
@@ -896,7 +901,6 @@ move_vars_r(NC *ncp, NC *old) {
                    old->begin_rec - old->begin_var); 
 }
 
-#if 0
 /*
  * Given a valid ncp, return NC_EVARSIZE if any variable has a bad len 
  * (product of non-rec dim sizes too large), else return NC_NOERR.

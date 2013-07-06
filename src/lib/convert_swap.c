@@ -21,7 +21,9 @@
 
 
 /* Prototypes for functions used only in this file */
+#if 0
 static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
+#endif
 
 /*
  *  Datatype Mapping:
@@ -83,6 +85,7 @@ ncmpii_need_swap(nc_type      nctype,
 #endif
 }
 
+#if 0
 /*----< swapn() >------------------------------------------------------------*/
 static void
 swapn(void       *dst,
@@ -100,10 +103,46 @@ swapn(void       *dst,
         ip += xsize;
     }
 }
-
+#endif
 
 /* Endianness byte swap: done in-place */
 #define SWAP(x,y) {tmp = (x); (x) = (y); (y) = tmp;}
+
+/*----< ncmpii_swap() >-------------------------------------------------------*/
+void
+ncmpii_swapn(void       *dest_p,  /* destination array */
+             const void *src_p,   /* source array */
+             MPI_Offset  nelems,  /* number of elements in buf[] */
+             int         esize)   /* byte size of each element */
+{
+    int  i;
+
+    if (esize <= 1 || nelems <= 0) return;  /* no need */
+
+    if (esize == 4) { /* this is the most common case */
+              uint32_t *dest = (uint32_t*)       dest_p;
+        const uint32_t *src  = (const uint32_t*) src_p;
+        for (i=0; i<nelems; i++)
+            dest[i] = htonl(src[i]);
+    }
+    else if (esize == 2) {
+              uint16_t *dest =       (uint16_t*) dest_p;
+        const uint16_t *src  = (const uint16_t*) src_p;
+        for (i=0; i<nelems; i++)
+            dest[i] = htons(src[i]);
+    }
+    else {
+              uchar *op = dest_p;
+        const uchar *ip = src_p;
+        /* for esize is not 1, 2, or 4 */
+        while (nelems-- > 0) {
+            for (i=0; i<esize; i++)
+                op[i] = ip[esize-1-i];
+            op += esize;
+            ip += esize;
+        }
+    }
+}
 
 /*----< ncmpii_in_swap() >---------------------------------------------------*/
 void

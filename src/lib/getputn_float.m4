@@ -210,16 +210,6 @@ GET_FLOAT(long,   if (xx > LONG_MAX   || xx < LONG_MIN)  return NC_ERANGE;)
 GET_FLOAT(int64,  if (xx > LLONG_MAX  || xx < LLONG_MIN) return NC_ERANGE;)
 GET_FLOAT(double)
 
-/*----< ncmpix_get_float_float() >-------------------------------------------*/
-static int
-ncmpix_get_float_float(const void *xp, float *ip)
-{
-    /* TODO */
-    get_ix_float(xp, ip);
-    return NC_NOERR;
-}
-
-
 #define CHECK_FLOAT_RANGE \
     if ((float)(*ip) > X_FLOAT_MAX || (float)(*ip) < X_FLOAT_MIN) \
         return NC_ERANGE;
@@ -251,17 +241,6 @@ PUT_FLOAT(long,   CHECK_FLOAT_RANGE)
 PUT_FLOAT(double, CHECK_FLOAT_RANGE)
 PUT_FLOAT(int64,  CHECK_FLOAT_RANGE)
 PUT_FLOAT(uint64, CHECK_FLOAT_RANGE)
-
-static int
-ncmpix_put_float_float(void *xp, const float *ip)
-{
-    put_ix_float(xp, ip);
-#ifdef NO_IEEE_FLOAT
-    if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
-        return NC_ERANGE;
-#endif
-    return NC_NOERR;
-}
 
 dnl
 dnl GETN_FLOAT(xp, ip)
@@ -367,6 +346,16 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nfloats, float *ip)
     return NC_NOERR;
 }
 #else
+
+/*----< ncmpix_get_float_float() >-------------------------------------------*/
+static int
+ncmpix_get_float_float(const void *xp, float *ip)
+{
+    /* TODO */
+    get_ix_float(xp, ip);
+    return NC_NOERR;
+}
+
 GETN_FLOAT(float)
 #endif
 
@@ -474,6 +463,18 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nfloats, const float *ip)
     return NC_NOERR;
 }
 #else
+
+static int
+ncmpix_put_float_float(void *xp, const float *ip)
+{
+    put_ix_float(xp, ip);
+#ifdef NO_IEEE_FLOAT
+    if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
+        return NC_ERANGE;
+#endif
+    return NC_NOERR;
+}
+
 PUTN_FLOAT(float)
 #endif
 

@@ -23,6 +23,7 @@ dnl
 #endif
 #include <assert.h>
 
+#include "ncmpidtype.h"
 #include "macro.h"
 
 
