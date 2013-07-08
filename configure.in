@@ -8,10 +8,6 @@ AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 AC_CONFIG_AUX_DIR(./scripts)
 AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 
-dnl must be all on same line
-dnl src/lib/ncconfig.h must be the first, as it will be created by autoreconf
-AC_CONFIG_HEADERS(src/lib/ncconfig.h src/libf/pnetcdf_inc src/libf/nfconfig.inc:src/libf/nfconfig.in)
-
 dnl parse the version numbers to 4 env variables
 saved_IFS=${IFS}
 IFS=. read PNETCDF_VERSION_MAJOR PNETCDF_VERSION_MINOR PNETCDF_VERSION_SUB PNETCDF_VERSION_PRE <<< "$PACKAGE_VERSION"
@@ -719,38 +715,48 @@ if test "x${file_sync}" = xno ; then
     AC_DEFINE(DISABLE_FILE_SYNC)
 fi
 
-AC_CONFIG_FILES(macros.make
-                Makefile
-                src/Makefile
-                src/lib/Makefile
-                src/lib/pnetcdf.h
-                src/libf/Makefile
-                src/utils/Makefile
-                src/utils/ncdump/Makefile
-                src/utils/ncdiff/Makefile
-                src/utils/ncgen/Makefile
-                test/Makefile
-                test/common/Makefile
-                test/nc_test/Makefile
-                test/nf_test/Makefile
-                test/C/Makefile
-                test/test_int/Makefile
-                test/test_float/Makefile
-                test/test_double/Makefile
-                test/test_double_int/Makefile
-                test/test_dtype/Makefile
-                test/fandc/Makefile
-                test/testcases/Makefile
-                test/nonblocking/Makefile
-                test/test_check_header/Makefile
-                test/test_inq_format/Makefile
-                test/largefile/Makefile
-                test/data/Makefile
-                examples/tutorial/Makefile
-                examples/Makefile
-                doc/Makefile
-                man/Makefile
-                benchmarks/Makefile)
+dnl src/lib/ncconfig.h must be the first, as it will be created by autoreconf
+CONFIG_HEADERS="src/lib/ncconfig.h"
+if test "$enable_fortran" = yes ; then
+   CONFIG_HEADERS+=" src/libf/pnetcdf_inc"
+   CONFIG_HEADERS+=" src/libf/nfconfig.inc:src/libf/nfconfig.in"
+fi
+AC_CONFIG_HEADERS(${CONFIG_HEADERS})
+
+CONFIG_FILES="macros.make"
+CONFIG_FILES+=" Makefile"
+CONFIG_FILES+=" src/Makefile"
+CONFIG_FILES+=" src/lib/Makefile"
+CONFIG_FILES+=" src/lib/pnetcdf.h"
+CONFIG_FILES+=" src/utils/Makefile"
+CONFIG_FILES+=" src/utils/ncdump/Makefile"
+CONFIG_FILES+=" src/utils/ncdiff/Makefile"
+CONFIG_FILES+=" src/utils/ncgen/Makefile"
+CONFIG_FILES+=" test/Makefile"
+CONFIG_FILES+=" test/common/Makefile"
+CONFIG_FILES+=" test/nc_test/Makefile"
+CONFIG_FILES+=" test/C/Makefile"
+CONFIG_FILES+=" test/test_int/Makefile"
+CONFIG_FILES+=" test/test_float/Makefile"
+CONFIG_FILES+=" test/test_double/Makefile"
+CONFIG_FILES+=" test/test_double_int/Makefile"
+CONFIG_FILES+=" test/test_dtype/Makefile"
+CONFIG_FILES+=" test/fandc/Makefile"
+CONFIG_FILES+=" test/testcases/Makefile"
+CONFIG_FILES+=" test/nonblocking/Makefile"
+CONFIG_FILES+=" test/test_check_header/Makefile"
+CONFIG_FILES+=" test/test_inq_format/Makefile"
+CONFIG_FILES+=" test/largefile/Makefile"
+CONFIG_FILES+=" test/data/Makefile"
+CONFIG_FILES+=" examples/tutorial/Makefile"
+CONFIG_FILES+=" examples/Makefile"
+CONFIG_FILES+=" doc/Makefile"
+CONFIG_FILES+=" man/Makefile"
+CONFIG_FILES+=" benchmarks/Makefile "
+if test "$enable_fortran" = yes ; then
+   CONFIG_FILES+="src/libf/Makefile test/nf_test/Makefile"
+fi
+AC_CONFIG_FILES(${CONFIG_FILES})
 
 AC_OUTPUT
 echo "--------------------------------------------------------------------"
