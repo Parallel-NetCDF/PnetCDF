@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     char varname[NC_MAX_NAME+1];
     int dimids[NC_MAX_VAR_DIMS];
     nc_type type;
-    int *data;
+    int *data=NULL;
 
     MPI_Init(&argc, &argv);
 

@@ -176,7 +176,7 @@ ncmpii_getput_varn(int               ncid,
                    int               rw_flag,   /* WRITE_REQ or READ_REQ */
                    int               io_method) /* COLL_IO or INDEP_IO */
 {
-    int i, j, el_size, status=NC_NOERR, min_st, *req_ids, *statuses;
+    int i, j, el_size, status=NC_NOERR, min_st, *req_ids=NULL, *statuses=NULL;
     void *cbuf=NULL;
     char *bufp;
     MPI_Offset **_counts=NULL;

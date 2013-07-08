@@ -18,7 +18,7 @@
  *****************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h> /* srand(), rand() */
 #include <unistd.h>
 #include <math.h>  /* sqrt() */
 #include <limits.h>
@@ -354,13 +354,17 @@ void get_fields(double *tt, double *smf) {
 
     for (k = 0; k < locsiz_3d[0]; k++)
       for (j = 0; j < locsiz_3d[1]; j++)
-        for (i = 0; i < locsiz_3d[2]; i++)
-          *tt++ = ((double) (rand())) / (RAND_MAX + 1.);
+        for (i = 0; i < locsiz_3d[2]; i++) {
+            double tmp = rand();
+            *tt++ = tmp / (RAND_MAX + 1.);
+        }
 
     if (has_2d)
       for (j = 0; j < locsiz_2d[0]; j++)
-        for (i = 0; i < locsiz_2d[1]; i++)
-           *smf++ = ((double) (rand())) / (RAND_MAX + 1.);
+        for (i = 0; i < locsiz_2d[1]; i++) {
+            double tmp = rand();
+            *smf++ = tmp / (RAND_MAX + 1.);
+        }
   }
   else {
     for (k = 0; k < locsiz_3d[0]; k++)
