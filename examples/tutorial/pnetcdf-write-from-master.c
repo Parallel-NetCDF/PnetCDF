@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     int ret, ncfile, nprocs, rank, dimid, varid1, varid2, ndims=1;
     MPI_Offset start, count=1;
     char buf[13] = "Hello World\n";
-    int *data;
+    int *data=NULL;
 
     MPI_Init(&argc, &argv);
 
@@ -108,6 +108,8 @@ int main(int argc, char **argv) {
 
         ret = ncmpi_close(ncfile);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
+
+        free(data);
     }
 
     MPI_Finalize();

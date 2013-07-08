@@ -228,7 +228,9 @@ pr_att_vals(nc_type       type,
     double             dd;
     long long          sll;
     unsigned long long ull;
-    char               *stringp; /* unused until we support NC_STRING */
+/* unused until we support NC_STRING
+    char               *stringp;
+*/
 
     if (len == 0) return;
 

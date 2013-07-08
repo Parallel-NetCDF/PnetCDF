@@ -47,7 +47,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
-    int i, j, rank, nprocs, err;
+    int i, rank, nprocs, err;
     int ncid, cmode, varid, dimid[2], num_reqs;
     float *buffer;
     MPI_Offset **starts;

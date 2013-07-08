@@ -50,13 +50,13 @@ static void handle_error(int status, int lineno)
 
 int main(int argc, char **argv) {
 
-    int i, j, rank, nprocs, ret;
+    int i, j=0, rank, nprocs, ret;
     int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
     int dimids[NC_MAX_VAR_DIMS];
     char varname[NC_MAX_NAME+1];
-    MPI_Offset *dim_sizes, var_size;
+    MPI_Offset *dim_sizes=NULL, var_size;
     nc_type type;
-    int *data;
+    int *data=NULL;
 
     MPI_Init(&argc, &argv);
 
@@ -139,6 +139,11 @@ int main(int argc, char **argv) {
 
         /*and finally all processors have the data */
         MPI_Bcast(data, var_size, MPI_INT, 0, MPI_COMM_WORLD);
+
+        /* Here, every process can do computation on the local buffer, data,
+           or copy the contents to somewhere else */
+
+        free(data);
     }
 
     if (rank == 0) {
