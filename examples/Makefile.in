@@ -30,7 +30,8 @@ C_SRCS    = collective_write.c \
 F90_SRCS  = get_info_f.f90 \
             put_vara.f90 \
             flex_f.f90 \
-            put_varn_intf.f90
+            put_varn_intf.f90 \
+            nonblocking_writef.f90
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
@@ -95,6 +96,9 @@ put_varn_intf: put_varn_intf.o $(LIBRARY)
 
 put_varn_float: put_varn_float.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+nonblocking_writef: nonblocking_writef.o $(LIBRARY)
+	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
 include $(srcdir)/depend
 include $(srcdir)/../rules.make

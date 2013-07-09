@@ -62,6 +62,7 @@ o New environment variable
     Default is 0, i.e. disabled.
 
 o New example programs
+  * nonblocking_writef.f90 is the Fortran version of nonblocking_write.c
   * put_varn_float.c for using the new APIs ncmpi_put_varn_float_all()
   * put_varn_int.c and put_varn_intf.f90, for using the new APIs
     ncmpi_put_varn_int_all() and nfmpi_put_varn_int_all()
