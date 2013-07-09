@@ -70,14 +70,12 @@ void print_info(MPI_Info *info_used)
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j, err;
-    int nprocs, len, *buf[NUM_VARS], bufsize, rank;
-    int gsizes[NDIMS], array_of_distribs[NDIMS];
-    int array_of_dargs[NDIMS], psizes[NDIMS];
-    double write_timing, max_write_timing, write_bw;
     char *filename, str[512];
-    int ncid, dimids[NDIMS], varids[NUM_VARS];
-    MPI_Offset starts[NDIMS], counts[NDIMS], write_size, sum_write_size;
+    int i, j, rank, nprocs, len, ncid, bufsize, err;
+    int *buf[NUM_VARS], psizes[NDIMS], dimids[NDIMS], varids[NUM_VARS];
+    double write_timing, max_write_timing, write_bw;
+    MPI_Offset gsizes[NDIMS], starts[NDIMS], counts[NDIMS];
+    MPI_Offset write_size, sum_write_size;
     MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
@@ -92,11 +90,8 @@ int main(int argc, char **argv)
     len = atoi(argv[1]);
     filename = argv[2];
 
-    for (i=0; i<NDIMS; i++) {
-        array_of_distribs[i] = MPI_DISTRIBUTE_BLOCK;
-        array_of_dargs[i]    = MPI_DISTRIBUTE_DFLT_DARG;
+    for (i=0; i<NDIMS; i++)
         psizes[i] = 0;
-    }
 
     MPI_Dims_create(nprocs, NDIMS, psizes);
     starts[0] = rank % psizes[0];
