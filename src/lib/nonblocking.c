@@ -53,13 +53,16 @@ ncmpii_getput_zero_req(NC  *ncp,
 
     if (rw_flag == READ_REQ) {
         mpireturn = MPI_File_read_all(fh, NULL, 0, MPI_BYTE, &mpistatus);
-        ncmpii_handle_error(mpireturn, "MPI_File_read_all");
-        status = NC_EREAD;
-
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn, "MPI_File_read_all");
+            status = NC_EREAD;
+        }
     } else { /* WRITE_REQ */
         mpireturn = MPI_File_write_all(fh, NULL, 0, MPI_BYTE, &mpistatus);
-        ncmpii_handle_error(mpireturn, "MPI_File_write_all");
-        status = NC_EWRITE;
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn, "MPI_File_write_all");
+            status = NC_EWRITE;
+        }
     }
 
     /* reset fileview so the entire file is visible again */
