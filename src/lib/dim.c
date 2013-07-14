@@ -531,9 +531,15 @@ ncmpi_rename_dim( int ncid, int dimid, const char *newname)
     if (status != NC_NOERR)
         return status;
 
+    /* mark header dirty, to be synchronized and commit to file later.
+     * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
     set_NC_hdirty(ncp);
 
     if (NC_doHsync(ncp)) {
+        /* Note ncmpii_NC_sync() is a collective call
+         * We cannot just change the name in the header of file, as the space
+         * occupied by the name can shrink, breaking the format
+         */
         status = ncmpii_NC_sync(ncp, 1);
         if (status != NC_NOERR)
             return status;
