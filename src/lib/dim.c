@@ -517,12 +517,11 @@ ncmpi_rename_dim( int ncid, int dimid, const char *newname)
         return NC_EBADDIM;
 
     if (NC_indef(ncp)) {
-        NC_string *old = dimp->name;
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
         if (newStr == NULL)
             return NC_ENOMEM;
+        ncmpii_free_NC_string(dimp->name);
         dimp->name = newStr;
-        ncmpii_free_NC_string(old);
         return NC_NOERR;
     }
     /* else, not in define mode */

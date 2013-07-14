@@ -791,12 +791,11 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
         return NC_ENOTVAR; /* TODO: is this the right error code? */
 
     if (NC_indef(ncp)) {
-        NC_string *old = varp->name;
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname),newname);
         if (newStr == NULL)
             return NC_ENOMEM;
+        ncmpii_free_NC_string(varp->name);
         varp->name = newStr;
-        ncmpii_free_NC_string(old);
         return NC_NOERR;
     }
     /* else, not in define mode */
