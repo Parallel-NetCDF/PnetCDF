@@ -40,7 +40,7 @@ ncmpii_free_NC_attr(NC_attr *attrp)
 /*----< ncmpix_len_NC_attrV() >----------------------------------------------*/
 /*
  * How much space will 'nelems' of 'type' take in
- *  external representation (as the values of an attribute)?
+ * external representation (as the values of an attribute)?
  */
 static MPI_Offset
 ncmpix_len_NC_attrV(nc_type    type,
@@ -477,14 +477,17 @@ ncmpi_inq_att(int ncid,
 }
 
 
+/*----< ncmpi_rename_att() >--------------------------------------------------*/
 int
-ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
+ncmpi_rename_att(int         ncid,
+                 int         varid,
+                 const char *name,
+                 const char *newname)
 {
     int indx, file_ver, status;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp;
-    NC_string *newStr, *old;
 
     /* sortof inline clone of NC_lookupattr() */
     status = ncmpii_NC_check_id(ncid, &ncp);
@@ -518,23 +521,28 @@ ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
         /* name in use */
         return NC_ENAMEINUSE;
 
-    old = attrp->name;
     if (NC_indef(ncp)) {
-        newStr = ncmpii_new_NC_string(strlen(newname), newname);
+        NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
         if (newStr == NULL)
             return NC_ENOMEM;
         attrp->name = newStr;
-        ncmpii_free_NC_string(old);
+        ncmpii_free_NC_string(attrp->name);
         return NC_NOERR;
     }
-    /* else, no in define mode */
-    status = ncmpii_set_NC_string(old, newname);
+    /* else, not in define mode */
+    status = ncmpii_set_NC_string(attrp->name, newname);
     if (status != NC_NOERR)
         return status;
 
+    /* mark header dirty, to be synchronized and commit to file later.
+     * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
     set_NC_hdirty(ncp);
 
     if (NC_doHsync(ncp)) {
+        /* Note ncmpii_NC_sync() is a collective call
+         * We cannot just change the name in the header of file, as the space
+         * occupied by the name can shrink, breaking the format
+         */
         status = ncmpii_NC_sync(ncp, 1);
         if (status != NC_NOERR)
             return status;
@@ -544,96 +552,96 @@ ncmpi_rename_att( int ncid, int varid, const char *name, const char *newname)
 }
 
 
+/*----< ncmpi_copy_att() >----------------------------------------------------*/
 int
-ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out, int ovarid)
+ncmpi_copy_att(int         ncid_in,
+               int         varid_in,
+               const char *name,
+               int         ncid_out,
+               int         varid_out)
 {
-	int indx, status;
-	NC_attr *iattrp;
-	NC *ncp;
-	NC_attrarray *ncap;
-	NC_attr *old = NULL;
-	NC_attr *attrp;
+    int indx, status;
+    NC *ncp;
+    NC_attrarray *ncap;
+    NC_attr *iattrp, *attrp, *old=NULL;
 
-	status = NC_lookupattr(ncid_in, varid_in, name, &iattrp);
-	if(status != NC_NOERR)
-		return status;
+    status = NC_lookupattr(ncid_in, varid_in, name, &iattrp);
+    if (status != NC_NOERR)
+        return status;
 
-	status = ncmpii_NC_check_id(ncid_out, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid_out, &ncp);
+    if (status != NC_NOERR)
+        return status;
 
-	if(NC_readonly(ncp))
-		return NC_EPERM;
+    if (NC_readonly(ncp))
+        return NC_EPERM;
 
-	ncap = NC_attrarray0(ncp, ovarid);
-	if(ncap == NULL)
-		return NC_ENOTVAR;
+    ncap = NC_attrarray0(ncp, varid_out);
+    if (ncap == NULL)
+        return NC_ENOTVAR;
 
-	indx = ncmpii_NC_findattr(ncap, name);
-	if (indx >= 0) /* name in use */
-	{
-		if(!NC_indef(ncp) )
-		{
-			attrp = ncap->value[indx]; /* convenience */
-	
-			if(iattrp->xsz > attrp->xsz)
-				return NC_ENOTINDEFINE;
-			/* else, we can reuse existing without redef */
-			
-			attrp->xsz = iattrp->xsz;
-			attrp->type = iattrp->type;
-			attrp->nelems = iattrp->nelems;
+    indx = ncmpii_NC_findattr(ncap, name);
+    if (indx >= 0) { /* name in use */
+        if (!NC_indef(ncp) ) {
+            /* if called in data mode, this API must be collective */
 
-			(void) memcpy(attrp->xvalue, iattrp->xvalue,
-				iattrp->xsz);
-			
-			set_NC_hdirty(ncp);
+            attrp = ncap->value[indx]; /* convenience */
+    
+            if (iattrp->xsz > attrp->xsz)
+                return NC_ENOTINDEFINE;
+            /* else, we can reuse existing without redef */
+            
+            attrp->xsz = iattrp->xsz;
+            attrp->type = iattrp->type;
+            attrp->nelems = iattrp->nelems;
 
-			if(NC_doHsync(ncp))
-			{
-				status = ncmpii_NC_sync(ncp, 1);
-				if(status != NC_NOERR)
-					return status;
-			}
+            memcpy(attrp->xvalue, iattrp->xvalue, iattrp->xsz);
+            
+            /* mark header dirty, to be synchronized and commit to file later.
+             * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
+            set_NC_hdirty(ncp);
 
-			return NC_NOERR;
-		}
-		/* else, redefine using existing array slot */
-		old = ncap->value[indx];
-	} 
-	else
-	{
-		if(!NC_indef(ncp))
-			return NC_ENOTINDEFINE;
+            if (NC_doHsync(ncp)) {
+                /* Note ncmpii_NC_sync() is a collective call
+                 * We cannot just change the name in the header of file, as the
+                 * space occupied by the name can shrink, breaking the format
+                 */
+                status = ncmpii_NC_sync(ncp, 1);
+                if (status != NC_NOERR)
+                    return status;
+            }
+            return NC_NOERR;
+        }
+        /* else, redefine using existing array slot */
+        old = ncap->value[indx];
+    } 
+    else {
+        if (!NC_indef(ncp)) /* add new attribute is not allowed in data mode */
+            return NC_ENOTINDEFINE;
 
-		if(ncap->ndefined >= NC_MAX_ATTRS)
-			return NC_EMAXATTS;
-	}
+        if (ncap->ndefined >= NC_MAX_ATTRS)
+            return NC_EMAXATTS;
+    }
 
-	attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
-	if(attrp == NULL)
-		return NC_ENOMEM;
+    attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
+    if (attrp == NULL)
+        return NC_ENOMEM;
 
-	(void) memcpy(attrp->xvalue, iattrp->xvalue,
-		iattrp->xsz);
+    memcpy(attrp->xvalue, iattrp->xvalue, iattrp->xsz);
 
-	if(indx >= 0)
-	{
-		assert(old != NULL);
-		ncap->value[indx] = attrp;
-		ncmpii_free_NC_attr(old);
-	}
-	else
-	{
-		status = incr_NC_attrarray(ncap, attrp);
-		if(status != NC_NOERR)
-		{
-			ncmpii_free_NC_attr(attrp);
-			return status;
-		}
-	}
-
-	return NC_NOERR;
+    if (indx >= 0) {
+        assert(old != NULL);
+        ncap->value[indx] = attrp;
+        ncmpii_free_NC_attr(old);
+    }
+    else {
+        status = incr_NC_attrarray(ncap, attrp);
+        if (status != NC_NOERR) {
+            ncmpii_free_NC_attr(attrp);
+            return status;
+        }
+    }
+    return NC_NOERR;
 }
 
 
@@ -1101,7 +1109,7 @@ ncmpii_put_att(int         ncid,
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx >= 0) { /* name in use */
         if (!NC_indef(ncp)) {
-            /* not in define mode, meaning to over-write attribute value */
+            /* in data mode, meaning to over-write an existing attribute */
 
             const MPI_Offset xsz = ncmpix_len_NC_attrV(filetype, nelems);
             /* xsz is the total size of this attribute */
@@ -1126,14 +1134,18 @@ ncmpii_put_att(int         ncid,
                 if (status != NC_NOERR) return status;
             }
 
-            set_NC_hdirty(ncp); /* indicate the header is dirty */
+            /* mark header dirty, to be synchronized and commit to file later.
+             * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
+            set_NC_hdirty(ncp);
 
             if (NC_doHsync(ncp)) {
-                /* if NC_SHARE is used, we need to flush to file now */
+                /* Note ncmpii_NC_sync() is a collective call
+                 * We cannot just change the name in the header of file, as the
+                 * space occupied by the name can shrink, breaking the format
+                 */
                 status = ncmpii_NC_sync(ncp, 1);
                 if (status != NC_NOERR) return status;
             }
-
             return NC_NOERR;
         }
         /* else, redefine using existing array slot */
