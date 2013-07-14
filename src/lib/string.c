@@ -329,5 +329,8 @@ ncmpii_set_NC_string(NC_string *ncstrp, const char *str)
 	if(diff != 0)
 		(void) memset(ncstrp->cp + slen, 0, diff);
 
+        /* Don't adjust ncstrp->nchars, it includes extra space in the
+         * header for potential later expansion of string. */
+
 	return NC_NOERR;
 }
