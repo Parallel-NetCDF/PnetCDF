@@ -763,7 +763,6 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
     int file_ver, status, other;
     NC *ncp;
     NC_var *varp;
-    NC_string *old, *newStr;
 
     status = ncmpii_NC_check_id(ncid, &ncp); 
     if (status != NC_NOERR)
@@ -791,14 +790,14 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
         /* invalid varid */
         return NC_ENOTVAR; /* TODO: is this the right error code? */
 
-    old = varp->name;
     if (NC_indef(ncp)) {
-       newStr = ncmpii_new_NC_string(strlen(newname),newname);
-       if (newStr == NULL)
-           return(-1);
-       varp->name = newStr;
-       ncmpii_free_NC_string(old);
-       return NC_NOERR;
+        NC_string *old = varp->name;
+        NC_string *newStr = ncmpii_new_NC_string(strlen(newname),newname);
+        if (newStr == NULL)
+            return NC_ENOMEM;
+        varp->name = newStr;
+        ncmpii_free_NC_string(old);
+        return NC_NOERR;
     }
     /* else, not in define mode */
 
@@ -806,9 +805,15 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
     if (status != NC_NOERR)
         return status;
 
+    /* mark header dirty, to be synchronized and commit to file later.
+     * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
     set_NC_hdirty(ncp);
 
     if (NC_doHsync(ncp)) {
+        /* Note ncmpii_NC_sync() is a collective call
+         * We cannot just change the name in the header of file, as the space
+         * occupied by the name can shrink, breaking the format
+         */
         status = ncmpii_NC_sync(ncp, 1);
         if (status != NC_NOERR)
             return status;
