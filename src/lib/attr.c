@@ -525,8 +525,8 @@ ncmpi_rename_att(int         ncid,
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
         if (newStr == NULL)
             return NC_ENOMEM;
-        attrp->name = newStr;
         ncmpii_free_NC_string(attrp->name);
+        attrp->name = newStr;
         return NC_NOERR;
     }
     /* else, not in define mode */
