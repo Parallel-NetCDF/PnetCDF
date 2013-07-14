@@ -1266,7 +1266,7 @@ hdr_get_NC_attr(bufferinfo  *gbp,
 
     /* get [values ...] */
     status = hdr_get_NC_attrV(gbp, attrp);
-    if(status != NC_NOERR) {
+    if (status != NC_NOERR) {
         ncmpii_free_NC_attr(attrp); /* frees strp */ 
         return status;
     }
@@ -1413,16 +1413,16 @@ hdr_get_NC_var(bufferinfo  *gbp,
         return status;
     }
     /* As described in CDF-2 format specification, vsize is redundant.
-       Its value may be computed from the product of dimension lengths. In CDF-2,
-       vsize is a 4-byte integer. So, if we define a variable of less than 2^32
-       elements but size > 2^32-4 bytes, then vsize in CDF-2 will overflow.
-       Recompute varp->len can ignore an overflowed value in vsize stored in
-       the file and hence bypass the limitation of CDF-2 on variable size of
-       2^32-4 bytes.
+       Its value may be computed from the product of dimension lengths.
+       In CDF-2, vsize is a 4-byte integer. So, if we define a variable of
+       less than 2^32 elements but size > 2^32-4 bytes, then vsize in CDF-2
+       will overflow. Recompute varp->len can ignore an overflowed value in
+       vsize stored in the file and hence bypass the limitation of CDF-2 on
+       variable size of 2^32-4 bytes.
 
-       Later on, back to ncmpii_hdr_get_NC(), ncmpii_NC_computeshapes() is called
-       which recomputes varp->len using the dimension values and hence overwrites
-       the value read from file above.
+       Later on, back to ncmpii_hdr_get_NC(), ncmpii_NC_computeshapes() is
+       called which recomputes varp->len using the dimension values and hence
+       overwrites the value read from file above.
 
        In summary, PnetCDF now ignores the value of vsize stored in the file
        header.
@@ -1479,7 +1479,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
  
     /* get nelems (number of variables) from gbp buffer */
     status = hdr_get_size_t(gbp, &tmp);
-    if(status != NC_NOERR) return status;
+    if (status != NC_NOERR) return status;
     ncap->ndefined = tmp; /* number of defined variables allowed < 2^32 */
  
     if (ncap->ndefined == 0) { /* no variable defined */
