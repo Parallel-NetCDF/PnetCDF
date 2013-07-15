@@ -33,10 +33,9 @@ clean:
 
 distclean:
 	@cd lib && $(MAKE) distclean
-	@if [ @has_fortran@ = yes ] ; then cd libf && $(MAKE) distclean ; fi
+	@cd libf && $(MAKE) distclean
 	@cd utils && $(MAKE) distclean
 	@$(RM) -f Makefile
-	@if [ $(srcdir) != . ] ; then if [ @has_fortran@ = yes ] ; then rmdir libf ; fi ; fi
-	@if [ $(srcdir) != . ] ; then rmdir lib utils ; fi
+	@if ! [ $(srcdir) -ef `pwd` ] ; then rmdir lib libf utils ; fi
 
 .PHONY: FORCE all clean distclean install uninstall
