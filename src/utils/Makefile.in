@@ -30,7 +30,7 @@ clean:
 distclean:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
 	@$(RM) -f Makefile
-	@if [ $(srcdir) != . ] ; then rmdir $(SUBDIRS) ; fi
+	@if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $(SUBDIRS) ; fi
 
 install:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done

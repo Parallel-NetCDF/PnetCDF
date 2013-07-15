@@ -180,7 +180,7 @@ distclean:	FORCE
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && \
 		$(MAKE) distclean) || exit 1; \
-		if ! [ "$(srcdir)" -ef "$(PWD)" ] ; then rmdir $$subdir ; fi \
+		if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $$subdir ; fi \
 	    done; \
 	fi
 	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \

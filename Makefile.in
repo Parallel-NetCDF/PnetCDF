@@ -74,7 +74,7 @@ distclean:	src/distclean \
                 doc/distclean \
                 man/distclean \
 		clean_macros  \
-		rmdir_src_test
+		rmdir_src_dirs
 
 tests: all
 	@cd test && $(MAKE)
@@ -90,8 +90,8 @@ clean_macros:
 
 RMDIR_SRCDIRS = src test examples benchmarks doc man
 
-rmdir_src_test:
-	@if ! [ $(srcdir) -ef $(PWD) ] ; then set -e; for i in $(RMDIR_SRCDIRS); do ( rmdir $$i ; ) ; done; fi
+rmdir_src_dirs:
+	@if ! [ $(srcdir) -ef `pwd` ] ; then set -e; for i in $(RMDIR_SRCDIRS); do ( rmdir $$i ; ) ; done; fi
 
 # short names for making things in subdirs
 src/all \
