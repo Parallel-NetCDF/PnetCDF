@@ -39,6 +39,7 @@ C2F_SRCS = createf.c \
 	redeff.c \
 	set_default_formatf.c \
 	syncf.c \
+	sync_numrecsf.c \
 	abortf.c \
 	begin_indep_dataf.c \
 	end_indep_dataf.c \

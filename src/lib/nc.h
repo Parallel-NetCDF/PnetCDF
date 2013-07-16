@@ -170,7 +170,7 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
  * NC attribute
  */
 typedef struct {
-    MPI_Offset xsz;      /* amount of space at xvalue */
+    MPI_Offset xsz;      /* amount of space at xvalue (4-byte aligned) */
     NC_string *name;     /* name of the attributes */
     nc_type    type;     /* the discriminant */
     MPI_Offset nelems;   /* number of attribute elements */
@@ -514,7 +514,7 @@ extern int
 ncmpii_read_numrecs(NC *ncp);
 
 extern int
-ncmpii_write_numrecs(NC *ncp);
+ncmpii_write_numrecs(NC *ncp, MPI_Offset new_numrecs, int forceWrite);
 
 extern int
 ncmpii_NC_sync(NC *ncp, int doFsync);
@@ -712,7 +712,7 @@ int NCedgeck(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
 int NCstrideedgeck(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *edges, const MPI_Offset *stride);
 
-int NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord);
+int NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord, const int rw_flag);
 
 
 int ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype);
@@ -728,7 +728,7 @@ int ncmpii_is_request_contiguous(NC_var *varp, const MPI_Offset starts[],
 
 int ncmpii_get_offset(NC *ncp, NC_var *varp, const MPI_Offset starts[],
                 const MPI_Offset counts[], const MPI_Offset strides[],
-                MPI_Offset *offset_ptr);
+                const int rw_flag, MPI_Offset *offset_ptr);
 
 int ncmpii_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
                 int collective);
@@ -772,5 +772,8 @@ ncmpii_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
 
 extern int
 ncmpii_cancel(NC *ncp, int num_req, int *req_ids, int *statuses);
+
+extern int
+ncmpii_getput_zero_req(NC *ncp, int rw_flag, int sync_numrecs);
 
 #endif /* _NC_H_ */

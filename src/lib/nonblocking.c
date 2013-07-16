@@ -39,9 +39,10 @@ static int ncmpii_mgetput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
 /*----< ncmpii_getput_zero_req() >--------------------------------------------*/
 /* For simply participating collective calls, this is called only when in
    collective data mode */
-static int
+int
 ncmpii_getput_zero_req(NC  *ncp,
-                       int  rw_flag)     /* WRITE_REQ or READ_REQ */
+                       int  rw_flag,      /* WRITE_REQ or READ_REQ */
+                       int  sync_numrecs) /* 0 or 1 */
 {
     int mpireturn, status=NC_NOERR;
     MPI_Status mpistatus;
@@ -67,6 +68,9 @@ ncmpii_getput_zero_req(NC  *ncp,
 
     /* reset fileview so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+    if (rw_flag == WRITE_REQ && sync_numrecs == 1)
+        ncmpii_update_numrecs(ncp, ncp->numrecs);
 
     return status;
 }
@@ -1197,7 +1201,11 @@ ncmpii_req_aggregation(NC     *ncp,
     if (num_reqs == 0) { /* only COLL_IO can reach here for 0 request */
         assert(io_method == COLL_IO);
         /* simply participate the collective call */
-        return ncmpii_getput_zero_req(ncp, rw_flag);
+        /* for nonblocking APIs, there is no way for a process to know whether
+         * others write to a record variable or not. Hence, we sync number of
+         * records for all WRITE_REQ (set the 3rd argument to 1 below)
+         */
+        return ncmpii_getput_zero_req(ncp, rw_flag, 1);
     }
     if (! interleaved) {
         /* concatenate all filetypes into a single one and do I/O */
@@ -1545,7 +1553,7 @@ int ncmpii_check_edge(NC     *ncp,
     if (err != NC_NOERR ||
         (rw_flag == READ_REQ && is_recvar &&
          req->start[0] + req->count[0] > NC_get_numrecs(ncp))) {
-        err = NCcoordck(ncp, req->varp, req->start);
+        err = NCcoordck(ncp, req->varp, req->start, rw_flag);
         if (err == NC_NOERR) err = NC_EEDGE;
         *req->status = err;
     }
@@ -1619,18 +1627,24 @@ ncmpii_wait_getput(NC     *ncp,
         MPI_Offset max_newnumrecs = ncp->numrecs;
         for (i=0; i<num_reqs; i++) {
             if (*reqs[i].status == NC_NOERR && IS_RECVAR(reqs[i].varp)) {
-                /* update the number of records in NC */
                 MPI_Offset newnumrecs = reqs[i].start[0] + reqs[i].count[0];
                 max_newnumrecs = MAX(max_newnumrecs, newnumrecs);
             }
         }
-        err = ncmpii_update_numrecs(ncp, max_newnumrecs);
-        /* ncmpii_update_numrecs() is collective, so even if this process
-         * finds its max_newnumrecs being zero, it still needs to participate
-         * the call
-         */
-        if (status == NC_NOERR) status = err;
-        /* retain the first error if there is any */
+
+        if (io_method == COLL_IO) {
+            /* even this process does not write to record variable, others
+             * might. Note ncmpii_update_numrecs() is collective */
+            err = ncmpii_update_numrecs(ncp, max_newnumrecs);
+            if (status == NC_NOERR) status = err;
+            /* retain the first error if there is any */
+        }
+        else { /* INDEP_IO */
+            if (ncp->numrecs < max_newnumrecs) {
+                ncp->numrecs = max_newnumrecs;
+                set_NC_ndirty(ncp);
+            }
+        }
     }
 
     if (num_reqs > 0) NCI_Free(reqs);

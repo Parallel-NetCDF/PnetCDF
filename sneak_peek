@@ -45,6 +45,9 @@ o New APIs
     file header, (also the file offset of the first variable)
   * ncmpi_inq_put_size() reports the write amount committed by far
   * ncmpi_inq_get_size() reports the read amount committed by far
+  * ncmpi_sync_numrecs() a collective API that can be called in independent
+    data mode to synchronize the number of records in memory across all
+    processes, and update to the file if NC_SHARE is set.
 
 o New PnetCDF hint
   * nc_header_read_chunk_size: PnetCDF reads the file headers in chunks. This

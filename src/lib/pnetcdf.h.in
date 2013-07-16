@@ -324,6 +324,8 @@ int ncmpi_set_default_format(int format, int *old_formatp);
 
 int ncmpi_sync(int ncid);
 
+int ncmpi_sync_numrecs(int ncid);
+
 int ncmpi_abort(int ncid);
 
 int ncmpi_begin_indep_data(int ncid);
