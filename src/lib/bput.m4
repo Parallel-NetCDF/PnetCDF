@@ -126,7 +126,7 @@ ncmpi_bput_var1(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     GET_ONE_COUNT(count)
 
@@ -159,7 +159,7 @@ ncmpi_bput_var1_$1(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     GET_ONE_COUNT(count)
 
@@ -206,7 +206,7 @@ ncmpi_bput_vara(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCedgeck(ncp, varp, start, count);
     if (status != NC_NOERR) return status;
@@ -239,7 +239,7 @@ ncmpi_bput_vara_$1(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCedgeck(ncp, varp, start, count);
     if (status != NC_NOERR) return status;
@@ -287,7 +287,7 @@ ncmpi_bput_vars(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -321,7 +321,7 @@ ncmpi_bput_vars_$1(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -369,7 +369,7 @@ ncmpi_bput_varm(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -404,7 +404,7 @@ ncmpi_bput_varm_$1(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;

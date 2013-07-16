@@ -16,6 +16,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_enddef_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_redef_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_set_default_format_ ( int *v1, MPI_Fint *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_sync_ ( int *v1 );
+extern FORTRAN_API int FORT_CALL nfmpi_sync_numrecs_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_abort_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_begin_indep_data_ ( int *v1 );
 extern FORTRAN_API int FORT_CALL nfmpi_end_indep_data_ ( int *v1 );

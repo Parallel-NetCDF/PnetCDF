@@ -197,7 +197,7 @@ ncmpi_iput_var1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     GET_ONE_COUNT(count)
 
@@ -229,7 +229,7 @@ ncmpi_iput_var1_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     GET_ONE_COUNT(count)
 
@@ -274,7 +274,7 @@ ncmpi_iget_var1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     if (IS_RECVAR(varp) && start[0] + 1 > NC_get_numrecs(ncp)) return NC_EEDGE;
     GET_ONE_COUNT(count)
@@ -306,7 +306,7 @@ ncmpi_iget_var1_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     if (IS_RECVAR(varp) &&
         start[0] + 1 > NC_get_numrecs(ncp)) return NC_EEDGE;
@@ -352,7 +352,7 @@ ncmpi_iput_vara(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCedgeck(ncp, varp, start, count);
     if (status != NC_NOERR) return status;
@@ -384,7 +384,7 @@ ncmpi_iput_vara_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCedgeck(ncp, varp, start, count);
     if (status != NC_NOERR) return status;
@@ -429,7 +429,7 @@ ncmpi_iget_vara(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     status = NCedgeck(ncp, varp, start, count);
     if (status != NC_NOERR) return status;
@@ -462,7 +462,7 @@ ncmpi_iget_vara_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     status = NCedgeck(ncp, varp, start, count);
     if (status != NC_NOERR) return status;
@@ -509,7 +509,7 @@ ncmpi_iput_vars(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -542,7 +542,7 @@ ncmpi_iput_vars_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -588,7 +588,7 @@ ncmpi_iget_vars(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -622,7 +622,7 @@ ncmpi_iget_vars_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -686,7 +686,7 @@ ncmpi_iput_varm(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -720,7 +720,7 @@ ncmpi_iput_varm_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, WRITE_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -767,7 +767,7 @@ ncmpi_iget_varm(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -802,7 +802,7 @@ ncmpi_iget_varm_$1(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
-    status = NCcoordck(ncp, varp, start);
+    status = NCcoordck(ncp, varp, start, READ_REQ);
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
@@ -943,7 +943,7 @@ err_check:
     if (bnelems == 0) {
         /* zero-length request, mark this as a NULL request */
         *reqid = NC_REQ_NULL;
-        return NCcoordck(ncp, varp, start);
+        return NCcoordck(ncp, varp, start, rw_flag);
     }
 
 /* Here is the pseudo code description on buffer packing
@@ -1187,10 +1187,10 @@ pack_request(NC               *ncp,
             req->stride[i] = stride[i];
     }
     /* get the starting file offset for this request */
-    ncmpii_get_offset(ncp, varp, start, NULL, NULL, &req->offset_start);
+    ncmpii_get_offset(ncp, varp, start, NULL, NULL, req->rw_flag, &req->offset_start);
 
     /* get the ending file offset for this request */
-    ncmpii_get_offset(ncp, varp, start, count, stride, &req->offset_end);
+    ncmpii_get_offset(ncp, varp, start, count, stride, req->rw_flag, &req->offset_end);
     req->offset_end += varp->xsz - 1;
 
     /* check if this is a record varaible. if yes, split the request into
@@ -1231,10 +1231,10 @@ pack_request(NC               *ncp,
                     subreqs[i].stride[j] = req->stride[j];
             }
             ncmpii_get_offset(ncp, varp, subreqs[i].start, NULL, NULL,
-                              &subreqs[i].offset_start);
+                              subreqs[i].rw_flag, &subreqs[i].offset_start);
             ncmpii_get_offset(ncp, varp, subreqs[i].start,
                               subreqs[i].count, subreqs[i].stride,
-                              &subreqs[i].offset_end);
+                              subreqs[i].rw_flag, &subreqs[i].offset_end);
             subreqs[i].offset_end += varp->xsz - 1;
 
             span                = i*rec_bufcount*varp->xsz;

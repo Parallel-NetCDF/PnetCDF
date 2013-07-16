@@ -613,40 +613,44 @@ ncmpii_read_numrecs(NC *ncp) {
  * Collective operation implicit
  */
 
+/*----< ncmpii_write_numrecs() >----------------------------------------------*/
 int
-ncmpii_write_numrecs(NC *ncp)
+ncmpii_write_numrecs(NC         *ncp,
+                     MPI_Offset  new_numrecs,
+                     int         forceWrite)
 {
     /* this function is only called in 3 places
        1) collective put APIs in mpinetcdf.c that write record variables
           and numrecs has changed
-       2) ncmpi_begin_indep_data() and ncmpi_end_indep_data()
+       2) ncmpi_end_indep_data()
        3) ncmpii_NC_sync() below
      */
-    int rank, len, status = NC_NOERR, mpireturn;
-    void *buf, *pos;
-    MPI_Offset nrecs;
-    MPI_Status mpistatus;
+    int rank, status=NC_NOERR;
   
     assert(!NC_readonly(ncp));
     assert(!NC_indef(ncp));
     /* this function is only called by APIs in data mode */
 
-    /* there is a MPI_Allreduce() to ensure ncp->numrecs the same across all
-     * processes prior to this call
+    /* there is a MPI_Allreduce() to ensure new_numrecs the same across all
+     * processes prior to this call and new_nnurecs is max of all ncp->numrecs
      * Note that number of records can be larger than 2^32
      */
-    nrecs = ncp->numrecs;
-    if (ncp->flags & NC_64BIT_DATA)
-        len = X_SIZEOF_INT64;
-    else
-        len = X_SIZEOF_SIZE_T;
-    pos = buf = (void *)NCI_Malloc(len);
-    status = ncmpix_put_size_t(&pos, nrecs, len);
-    /* ncmpix_put_size_t advances the 1st argument with size len */
-
-    /* file view is already reset to entire file visible */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
-    if (rank == 0) { /* root process writes to the file header */
+    if (rank == 0 && (forceWrite || new_numrecs > ncp->numrecs)) {
+        /* root process writes to the file header */
+        int len, mpireturn;
+        void *buf, *pos;
+        MPI_Status mpistatus;
+
+        if (ncp->flags & NC_64BIT_DATA)
+            len = X_SIZEOF_INT64;
+        else
+            len = X_SIZEOF_SIZE_T;
+        pos = buf = (void *)NCI_Malloc(len);
+        status = ncmpix_put_size_t(&pos, new_numrecs, len);
+        /* ncmpix_put_size_t advances the 1st argument with size len */
+
+        /* file view is already reset to entire file visible */
         mpireturn = MPI_File_write_at(ncp->nciop->collective_fh,
                                       NC_NUMRECS_OFFSET, buf, len,
                                       MPI_BYTE, &mpistatus); 
@@ -659,13 +663,14 @@ ncmpii_write_numrecs(NC *ncp)
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             ncp->nciop->put_size += put_size;
         }
+        NCI_Free(buf);
     }
+    ncp->numrecs = new_numrecs;
+
     if (ncp->safe_mode == 1)
         MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
     fClr(ncp->flags, NC_NDIRTY);  
-
-    NCI_Free(buf);
 
     return status;
 }
@@ -794,31 +799,28 @@ ncmpii_NC_sync(NC  *ncp,
        only 1) needs to call MPI_File_sync() here
      */
     int status = NC_NOERR, didWrite = 0;
-    MPI_Offset mynumrecs, numrecs;
+    MPI_Offset numrecs;
 
     assert(!NC_readonly(ncp));
 
     /* collect and set the max numrecs due to difference by independent write */
-    /* optimization: if this datset contains no record variables, skip this
+    /* optimization: if this dataset contains no record variables, skip this
      * check */
 
-    if(dset_has_recvars(ncp)) {
-	    mynumrecs = ncp->numrecs;
-	    MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
-			  ncp->nciop->comm);
-	    if (numrecs > ncp->numrecs) {
-		ncp->numrecs = numrecs;
-		set_NC_ndirty(ncp); /* set numrecs is dirty flag */
-	    }
-    }
+    numrecs = ncp->numrecs;
+    if (dset_has_recvars(ncp))
+	MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
+                      ncp->nciop->comm);
 
     if (NC_hdirty(ncp)) {  /* header is dirty */
         /* write_NC() will also write numrecs and clear NC_NDIRTY */
+	if (numrecs > ncp->numrecs)
+            ncp->numrecs = numrecs;
         status = write_NC(ncp);
         didWrite = 1;
     }
-    else if (NC_ndirty(ncp)) {  /* numrecs is dirty */
-        status = ncmpii_write_numrecs(ncp);
+    else {  /* update numrecs if dirty */
+        status = ncmpii_write_numrecs(ncp, numrecs, NC_ndirty(ncp));
         didWrite = 1;
     }
 

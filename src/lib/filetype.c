@@ -54,7 +54,8 @@ check_recsize_too_big(NC *ncp)
 int
 NCcoordck(NC               *ncp,
           const NC_var     *varp,
-          const MPI_Offset *coord)  /* i.e. start[] */
+          const MPI_Offset *coord,  /* i.e. start[] */
+          const int         rw_flag)
 {
     const MPI_Offset *ip;
     MPI_Offset *up;
@@ -63,23 +64,34 @@ NCcoordck(NC               *ncp,
         return NC_NOERR;        /* 'scalar' variable */
 
     if (IS_RECVAR(varp)) {
-/*      if (*coord > X_INT64_T_MAX)
-            return NC_EINVALCOORDS; *//* sanity check */
+        if (! fIsSet(ncp->flags, NC_64BIT_DATA)) /* not CDF-5 */
+            if (*coord > X_UINT_MAX)
+                return NC_EINVALCOORDS; /* sanity check */
 
         /* for record variable, [0] is the NC_UNLIMITED dimension */
-        if (NC_readonly(ncp) && coord[0] >= ncp->numrecs) {
-            if (!NC_doNsync(ncp))
+        if (rw_flag == READ_REQ) {
+            if (coord[0] >= ncp->numrecs)
                 return NC_EINVALCOORDS;
-            /* else */
-            {
-                /* Update from disk and check again */
-                const int status = ncmpii_read_numrecs(ncp);
-                if (status != NC_NOERR)
-                    return status;
-                if (coord[0] >= ncp->numrecs)
-                    return NC_EINVALCOORDS;
-            }
         }
+        /* In collective data mode where numrecs is always kept consistent
+         * across memory, then there is no need to update numrecs.
+         * (If NC_SHARE is set, then numrecs is even sync-ed with file.)
+         *
+         * In independent data mode, numrecs in memory across processes
+         * and file can be inconsistent. Even re-reading numrecs from file
+         * cannot get the lastest value, because in independent mode,
+         * numrecs in file is not updated (due to race condition).
+         * For example, a subset of processes write a new record and at
+         * the same time another set writes 2 new records. Even if NC_SHARE
+         * is set, new values of numrecs cannot be written to the file,
+         * because it can cause a race consition (atomic read-modify IO is
+         * required to solve this problem and MPI-IO cannot do it). Simply
+         * said, numrecs is not automatically kept consistent in
+         * independent mode. Users must call ncmpi_sync_numrecs()
+         * collectively to sync the value. So, here what PnetCDF can do
+         * best is just to check numrecs against the local value.
+         */
+
         /* skip checking the record dimension */
         ip = coord + 1;
         up = varp->shape + 1;
@@ -178,6 +190,7 @@ ncmpii_get_offset(NC               *ncp,
                   const MPI_Offset  starts[],   /* [varp->ndims] */
                   const MPI_Offset  counts[],   /* [varp->ndims] */
                   const MPI_Offset  strides[],  /* [varp->ndims] */
+                  const int         rw_flag,
                   MPI_Offset       *offset_ptr) /* return file offset */
 {
     /* returns the file offset of the last element of this request */
@@ -202,7 +215,7 @@ ncmpii_get_offset(NC               *ncp,
         end_off = (MPI_Offset*) starts;
     }
 
-    status = NCcoordck(ncp, varp, end_off);  /* validate end_off[] */
+    status = NCcoordck(ncp, varp, end_off, rw_flag);  /* validate end_off[] */
     if (status != NC_NOERR) {
 #ifdef CDEBUG
         printf("ncmpii_get_offset(): NCcoordck() fails\n");
@@ -305,7 +318,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
     if (status != NC_NOERR ||
         (rw_flag == READ_REQ && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp)))
     {
-        status = NCcoordck(ncp, varp, start);
+        status = NCcoordck(ncp, varp, start, rw_flag);
         if (status != NC_NOERR)
             return status;
         else
@@ -320,7 +333,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
     /* check if the request is contiguous in file
        if yes, there is no need to create a filetype */
     if (ncmpii_is_request_contiguous(varp, start, count)) {
-        status = ncmpii_get_offset(ncp, varp, start, NULL, NULL, &offset);
+        status = ncmpii_get_offset(ncp, varp, start, NULL, NULL, rw_flag, &offset);
         *offset_ptr   = offset;
         *filetype_ptr = filetype;
         return status;
@@ -564,7 +577,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
     if ((status != NC_NOERR) ||
         (rw_flag == READ_REQ && IS_RECVAR(varp) && *start + *count > NC_get_numrecs(ncp)))
     {
-        status = NCcoordck(ncp, varp, start);
+        status = NCcoordck(ncp, varp, start, rw_flag);
         if (status != NC_NOERR)
             return status;
         else

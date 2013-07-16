@@ -746,9 +746,9 @@ ncmpii_getput_vars(NC               *ncp,
                    int               io_method)
 {
     void *xbuf=NULL, *cbuf=NULL;
-    int el_size, buftype_is_contig, mpireturn, need_swap=0, is_buf_swapped=0;
-    int isderived;
+    int isderived, el_size, mpireturn;
     int warning, err, status; /* err is for API abort and status is not */
+    int buftype_is_contig, need_swap=0, need_convert=0, is_buf_swapped=0;
     MPI_Offset fnelems=1, bnelems, nbytes, offset=0;
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE;
@@ -767,7 +767,9 @@ ncmpii_getput_vars(NC               *ncp,
     else
         fh = ncp->nciop->independent_fh;
 
-    /* find the ptype (primitive MPI data type) from buftype
+    /* Check if buftype is contiguous (for flexible APIs). If no, we must pack
+     * it into a contiguous buffer, named cbuf
+     * find the ptype (primitive MPI data type) from buftype
      * el_size is the element size of ptype
      * bnelems is the total number of ptype elements in the I/O buffer, buf
      * fnelems is the number of nc variable elements in nc_type
@@ -789,11 +791,10 @@ ncmpii_getput_vars(NC               *ncp,
     }
     /* bnelems now is the number of ptype in the whole buf */
     /* warning is set in CHECK_NELEMS() */
-    need_swap = ncmpii_need_swap(varp->type, ptype);
 
     if (bnelems == 0) { /* if this process has nothing to read/write */
         if (io_method == INDEP_IO)
-            return NCcoordck(ncp, varp, start);
+            return NCcoordck(ncp, varp, start, rw_flag);
 #ifdef ZERO_COUNT_IGNORE_OTHER_ERRORS
         else
         /* for collective I/O, even bnelems == 0, must go on to participate
@@ -802,12 +803,10 @@ ncmpii_getput_vars(NC               *ncp,
 #endif
     }
 
-    /* cbuf is the "contiguous" buffer that all I/O data are packed into a
-     * contiguous memory space pointed by cbuf */
-    if (!buftype_is_contig) {
-        /* pack buf into cbuf, a contiguous buffer */
-        cbuf = (void*) NCI_Malloc(bnelems * el_size);
+    if (!buftype_is_contig) { /* buf is noncontiguous in memory */
         if (rw_flag == WRITE_REQ) {
+            /* pack buf into cbuf, a contiguous buffer */
+            cbuf = (void*) NCI_Malloc(bnelems * el_size);
             err = ncmpii_data_repack((void*)buf, bufcount, buftype,
                                      cbuf, bnelems, ptype);
             if (err != NC_NOERR) /* API error */
@@ -817,17 +816,15 @@ ncmpii_getput_vars(NC               *ncp,
         cbuf = (void*) buf;
     }
 
-    /* xbuf is the buffer whose data has been converted into the external
-     * data type, ready to read/written from/to the netCDF file
-     * Now, type convert and byte swap cbuf into xbuf
-     */
-    if ( ncmpii_need_convert(varp->type, ptype) ) {
+    /* Check if we need type convert and byte swap cbuf (into xbuf) */
+    need_swap = ncmpii_need_swap(varp->type, ptype);
+    need_convert = ncmpii_need_convert(varp->type, ptype);
+    if (need_convert) {
         /* allocate new buffer for data type conversion */
         xbuf = NCI_Malloc(nbytes);
 
         if (rw_flag == WRITE_REQ) {
-            /* automatic numeric datatype conversion + swap if necessary
-               and only xbuf could be byte-swapped, not cbuf */
+            /* type convert and byte-swap cbuf to xbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
             /* retain the first error status */
             if (status == NC_NOERR) status = err;
@@ -844,6 +841,10 @@ ncmpii_getput_vars(NC               *ncp,
         /* else, no type conversion or byte swap */
         xbuf = cbuf;
     }
+    /* xbuf is the buffer whose data has been converted into the external
+     * data type, ready to be written to the netCDF file. Similar for read,
+     * after read from file, the contents of xbuf are in external type
+     */
 
     /* if record variables are too big (so big that we cannot store the
      * stride between records in an MPI_Aint, for example) then we will
@@ -857,18 +858,13 @@ ncmpii_getput_vars(NC               *ncp,
         if (err != NC_NOERR ||
             (rw_flag == READ_REQ && IS_RECVAR(varp) &&
              start[0] + count[0] > NC_get_numrecs(ncp))) { /* API error */
-            err = NCcoordck(ncp, varp, start);
-            if (err != NC_NOERR) {
-                goto err_check;
-            }
-            else {
-                err = NC_EEDGE;
-                goto err_check;
-            }
+            err = NCcoordck(ncp, varp, start, rw_flag);
+            if (err == NC_NOERR) err = NC_EEDGE;
+            goto err_check;
         }
 
         /* this is a contiguous file access, no need to set filetype */
-        err = ncmpii_get_offset(ncp, varp, start, NULL, NULL, &offset);
+        err = ncmpii_get_offset(ncp, varp, start, NULL, NULL, rw_flag, &offset);
         /* if start[] is out of defined size, then this will return
          * NC_EINVALCOORDS error */
         if (err != NC_NOERR) /* API error */
@@ -897,16 +893,11 @@ err_check:
             MPI_Type_free(&filetype);
         filetype = MPI_BYTE;
 
-        if (io_method == INDEP_IO) {
-            FINAL_CLEAN_UP  /* swap back the data and free buffers */
-            return err;
-        }
-        else /* io_method == COLL_IO */
-	    nbytes = offset = 0;
-	    /* we want all processors to return from this collective call.
-             * Note that we expect the application to check for errors, but if
-             * we hang because one process returned early and other processors
-             * are in MPI_File_set_view, then that's not good either.  */
+        FINAL_CLEAN_UP  /* swap back put buffer and free temp buffers */
+        if (io_method == COLL_IO)
+            ncmpii_getput_zero_req(ncp, rw_flag, IS_RECVAR(varp));
+
+        return err;
     }
 
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
@@ -967,18 +958,16 @@ err_check:
     /* reset the file view so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-    if (err != NC_NOERR) { /* no need to go further */
-        FINAL_CLEAN_UP  /* swap back the data and free buffers */
-        return err;
-    }
-
-    if (bnelems == 0) /* no need to go further */
-        return ((warning != NC_NOERR) ? warning : status);
-
-    /* only bnelems > 0 needs to proceed the following */
     if (rw_flag == READ_REQ) {
-        if ( ncmpii_need_convert(varp->type, ptype) ) {
-            /* type conversion + swap from xbuf to cbuf*/
+        if (!buftype_is_contig) /* buf is noncontiguous in memory */
+            /* allocate cbuf, so xbuf can type-convert/byte-swap to cbuf
+               and later cbuf can be unpacked to buf using buftype */
+            cbuf = (void*) NCI_Malloc(bnelems * el_size);
+        else
+            cbuf = (void*) buf;
+
+        if (need_convert) {
+            /* type conversion + swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
             /* retain the first error status */
             if (status == NC_NOERR) status = err;
@@ -992,30 +981,42 @@ err_check:
             err = ncmpii_data_repack(cbuf, bnelems, ptype,
                                      (void*)buf, bufcount, buftype);
             if (err != NC_NOERR) {
-                FINAL_CLEAN_UP  /* swap back the data and free buffers */
+                FINAL_CLEAN_UP  /* free temp buffers */
                 return err;
             }
         }
     }
-    else {
-        if (status == NC_NOERR && IS_RECVAR(varp)) {
+    else { /* WRITE_REQ */
+        if (IS_RECVAR(varp)) {
             /* update header's number of records in memory */
-            MPI_Offset newnumrecs;
-            if (stride == NULL)
-                newnumrecs = start[0] + count[0];
-            else
-                newnumrecs = start[0] + (count[0] - 1) * stride[0] + 1;
+            MPI_Offset new_numrecs;
 
-            if (io_method == INDEP_IO) {
-                ncp->numrecs = newnumrecs;
-                set_NC_ndirty(ncp);
+            if (status == NC_NOERR) {
+                if (stride == NULL)
+                    new_numrecs = start[0] + count[0];
+                else
+                    new_numrecs = start[0] + (count[0] - 1) * stride[0] + 1;
             }
             else
-                ncmpii_update_numrecs(ncp, newnumrecs);
+                new_numrecs = ncp->numrecs;
+
+            if (io_method == INDEP_IO) {
+                /* FIXME: if we update numrecs to file now, race condition
+                   can happen. Hence, we delay the update till file close or
+                   exit independent data mode. Note numrecs in memory may be
+                   obsolete till then.
+                 */
+                if (ncp->numrecs < new_numrecs) {
+                    ncp->numrecs = new_numrecs;
+                    set_NC_ndirty(ncp);
+                }
+            }
+            else /* COLL_IO */
+                ncmpii_update_numrecs(ncp, new_numrecs);
         }
     }
 
-    FINAL_CLEAN_UP  /* swap back the data and free buffers */
+    FINAL_CLEAN_UP  /* swap back the put buffer and free temp buffers */
 
     return ((warning != NC_NOERR) ? warning : status);
 }
@@ -1265,7 +1266,7 @@ ncmpii_getput_varm(NC               *ncp,
 {
     void *lbuf=NULL, *cbuf=NULL;
     int err, status, warning; /* err is for API abort and status is not */
-    int dim, imap_contig_blocklen, el_size, iscontig_of_ptypes, isderived;
+    int dim, imap_contig_blocklen, el_size, buftype_is_contig, isderived;
     MPI_Offset lnelems, cnelems;
     MPI_Datatype ptype, tmptype, imaptype;
 
@@ -1277,15 +1278,14 @@ ncmpii_getput_varm(NC               *ncp,
         /* when imap == NULL, no mapping, same as vars.
            when varp->ndims == 0, reduced to scalar var, only one value
            at one fixed place */
-        status = ncmpii_getput_vars(ncp, varp, start, count, stride, buf,
-                                    bufcount, buftype, rw_flag, io_method);
-        return status;
+        return ncmpii_getput_vars(ncp, varp, start, count, stride, buf,
+                                  bufcount, buftype, rw_flag, io_method);
     }
 
+    /* test each dim's contiguity in imap[] until the 1st non-contiguous dim
+       is reached */
     imap_contig_blocklen = 1;
     dim = varp->ndims;
-
-    /* test each dim's contiguity until the 1st non-contiguous dim is reached */
     while ( --dim >= 0 && imap_contig_blocklen == imap[dim] ) {
         if (count[dim] < 0) { /* API error */
             err = NC_ENEGATIVECNT;
@@ -1294,28 +1294,30 @@ ncmpii_getput_varm(NC               *ncp,
         imap_contig_blocklen *= count[dim];
     }
 
-    if (dim == -1) { /* imap is a contiguous layout */
-        status = ncmpii_getput_vars(ncp, varp, start, count, stride, buf,
-                                    bufcount, buftype, rw_flag, io_method);
-        return status;
-    }
-    /* else imap gives non-contiguous layout, and need pack/unpack */
+    if (dim == -1) /* imap is a contiguous layout */
+        return ncmpii_getput_vars(ncp, varp, start, count, stride, buf,
+                                  bufcount, buftype, rw_flag, io_method);
+
+    /* else imap gives non-contiguous layout, we will do pack/unpack I/O
+       buffer based on imap[], but first must check if buftype is contiguous
+       in case for flexible APIs
+     */
 
     /* find the ptype (primitive MPI data type) from buftype
      * el_size is the element size of ptype
      * lnelems is the number of ptype elements in the buftype
      */
     err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &lnelems,
-                              &isderived, &iscontig_of_ptypes);
+                              &isderived, &buftype_is_contig);
     if (err != NC_NOERR)  /* API error */
         goto err_check;
 
-    if (!iscontig_of_ptypes) {
+    if (!buftype_is_contig) {
         /* buftype is not a contiguous of ptypes: pack buf to lbuf, a
            contiguous buffer, using buftype */
         lnelems *= bufcount;
-        lbuf = NCI_Malloc(lnelems*el_size);
         if (rw_flag == WRITE_REQ) { /* only write needs this packing */
+            lbuf = NCI_Malloc(lnelems*el_size);
             status = ncmpii_data_repack((void*)buf, bufcount, buftype,
                                         lbuf, lnelems, ptype);
             if (status != NC_NOERR) { /* API error */
@@ -1350,7 +1352,7 @@ ncmpii_getput_varm(NC               *ncp,
         cnelems *= count[dim];
     }
 
-    /* cbuf cannot be lbuf, as imap[] gives non-contigous layout */
+    /* cbuf cannot be lbuf, as imap[] gives a non-contigous layout */
     cbuf = (void*) NCI_Malloc(cnelems*el_size);
 
     if (rw_flag == WRITE_REQ) {
@@ -1358,7 +1360,10 @@ ncmpii_getput_varm(NC               *ncp,
         err = ncmpii_data_repack(lbuf, 1, imaptype, cbuf, cnelems, ptype);
         if (err != NC_NOERR) goto err_check;
         /* For write case, till now all request data has been packed into
-           cbuf, so simply call ncmpii_getput_vars() to fulfill the write */
+           cbuf, so simply call ncmpii_getput_vars() to fulfill the write.
+           lbuf is not needed anymore */
+        if (lbuf != NULL && lbuf != buf) NCI_Free(lbuf);
+        lbuf = NULL;
     }
 
 err_check:
@@ -1393,17 +1398,23 @@ err_check:
         /* now, cbuf contains the data read from file and they are all
            type converted and byte-swapped */
 
+        if (!buftype_is_contig)
+            /* buftype is not contiguous: unpack cbuf to lbuf, a contiguous
+               buffer, using imap, so later lbuf can be unpacked to buf */
+            lbuf = NCI_Malloc(lnelems*el_size);
+        else
+            lbuf = buf;
+
         /* layout cbuf to lbuf based on imap */
         status = ncmpii_data_repack(cbuf, cnelems, ptype, lbuf, 1, imaptype);
         if (status != NC_NOERR)
             goto err_check2;
 
         /* layout lbuf to buf based on buftype */
-        if (!iscontig_of_ptypes) {
+        if (!buftype_is_contig) {
             status = ncmpii_data_repack(lbuf, lnelems, ptype,
                                         (void *)buf, bufcount, buftype);
-            if (status != NC_NOERR)
-                goto err_check2;
+            /* if (status != NC_NOERR) goto err_check2; */
         }
     }
 
