@@ -44,7 +44,6 @@ ncmpi_create(MPI_Comm    comm,
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
 
-cmode |= NC_SHARE;
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
      */
@@ -417,7 +416,6 @@ ncmpi_begin_indep_data(int ncid)
 
     if (NC_indep(ncp))  /* already in indep data mode */
         return NC_NOERR;
- 
 
 #ifndef DISABLE_FILE_SYNC
     if (!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
