@@ -305,18 +305,18 @@ test_ncmpi_put_var1_$1(void)
             index[j] = 0;
         err = ncmpi_put_var1_$1(BAD_ID, i, index, &value);
         IF (err != NC_EBADID) 
-            error("bad ncid: err = %d", err);
+            error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
         err = ncmpi_put_var1_$1(ncid, BAD_VARID, index, &value);
         IF (err != NC_ENOTVAR) 
-            error("bad var id: err = %d", err);
+            error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 index[j] = var_shape[i][j];
                 err = ncmpi_put_var1_$1(ncid, i, index, &value);
                 IF (canConvert && err != NC_EINVALCOORDS)
-                    error("bad index: err = %d", err);
+                    error("expecting bad index, but err = %d", err);
                 ELSE_NOK
                 index[j] = 0;
             }
@@ -416,11 +416,11 @@ test_ncmpi_put_var_$1(void)
         assert(var_nels[i] <= MAX_NELS);
         err = ncmpi_put_var_$1(BAD_ID, i, value);
         IF (err != NC_EBADID) 
-            error("bad ncid: err = %d", err);
+            error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
         err = ncmpi_put_var_$1(ncid, BAD_VARID, value);
         IF (err != NC_ENOTVAR) 
-            error("bad var id: err = %d", err);
+            error("expecting bad var id, but err = %d", err);
         ELSE_NOK
 
         nels = 1;
@@ -443,7 +443,7 @@ test_ncmpi_put_var_$1(void)
                 ELSE_NOK
             } else {
                 IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
-                    error("range error: err = %d", err);
+                    error("expecting range error, but err = %d", err);
                 ELSE_NOK
             }
         } else { /* should flag wrong type even if nothing to write */
@@ -475,7 +475,7 @@ test_ncmpi_put_var_$1(void)
             assert(var_nels[i] <= MAX_NELS);
             err = ncmpi_put_var_$1(BAD_ID, i, value);
             IF (err != NC_EBADID) 
-                error("bad ncid: err = %d", err);
+                error("expecting bad ncid, but err = %d", err);
             ELSE_NOK
 
             nels = 1;
@@ -498,7 +498,7 @@ test_ncmpi_put_var_$1(void)
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
-                        error("range error: err = %d", err);
+                        error("expecting range error, but err = %d", err);
                     ELSE_NOK
                 }
             } else {
@@ -582,24 +582,24 @@ test_ncmpi_put_vara_$1(void)
         }
         err = ncmpi_put_vara_$1_all(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
-            error("bad ncid: err = %d", err);
+            error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
         err = ncmpi_put_vara_$1_all(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
-            error("bad var id: err = %d", err);
+            error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];
                 err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EINVALCOORDS)
-                    error("bad start: err = %d", err);
+                    error("expecting bad start, but err = %d", err);
                 ELSE_NOK
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;
                 err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
+                    error("expecting bad edge, but err = %d", err);
                 ELSE_NOK
                 edge[j] = 1;
             }
@@ -611,18 +611,18 @@ test_ncmpi_put_vara_$1(void)
         }
         err = ncmpi_put_vara_$1_all(BAD_ID, i, start, edge, value);
         IF (err != NC_EBADID) 
-            error("bad ncid: err = %d", err);
+            error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
         err = ncmpi_put_vara_$1_all(ncid, BAD_VARID, start, edge, value);
         IF (err != NC_ENOTVAR) 
-            error("bad var id: err = %d", err);
+            error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];
                 err = ncmpi_put_vara_$1_all(ncid, i, start, edge, value);
                 IF (canConvert && err != NC_EINVALCOORDS)
-                    error("bad start: err = %d", err);
+                    error("expecting bad start, but err = %d", err);
                 ELSE_NOK
                 start[j] = 0;
             }
@@ -688,7 +688,7 @@ test_ncmpi_put_vara_$1(void)
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
-                        error("range error: err = %d", err);
+                        error("expecting range error, but err = %d", err);
                     ELSE_NOK
                 }
             } else {
@@ -777,11 +777,11 @@ test_ncmpi_put_vars_$1(void)
         }
         err = ncmpi_put_vars_$1_all(BAD_ID, i, start, edge, stride, value);
         IF (err != NC_EBADID) 
-            error("bad ncid: err = %d", err);
+            error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
         err = ncmpi_put_vars_$1_all(ncid, BAD_VARID, start, edge, stride, value);
         IF (err != NC_ENOTVAR) 
-            error("bad var id: err = %d", err);
+            error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
@@ -793,19 +793,19 @@ test_ncmpi_put_vars_$1(void)
                     ELSE_NOK
                 } else {
                     IF (err != NC_EINVALCOORDS)
-                        error("bad start: err = %d", err);
+                        error("expecting bad start, but err = %d", err);
                     ELSE_NOK
                     start[j] = 0;
                     edge[j] = var_shape[i][j] + 1;
                     err = ncmpi_put_vars_$1_all(ncid, i, start, edge, stride, value);
                     IF (err != NC_EEDGE)
-                        error("bad edge: err = %d", err);
+                        error("expecting bad edge, but err = %d", err);
                     ELSE_NOK
                     edge[j] = 1;
                     stride[j] = 0;
                     err = ncmpi_put_vars_$1_all(ncid, i, start, edge, stride, value);
                     IF (err != NC_ESTRIDE)
-                        error("bad stride: err = %d", err);
+                        error("expecting bad stride, but err = %d", err);
                     ELSE_NOK
                     stride[j] = 1;
                 }
@@ -875,7 +875,7 @@ test_ncmpi_put_vars_$1(void)
                         ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
-                            error("range error: err = %d", err);
+                            error("expecting range error, but err = %d", err);
                         ELSE_NOK
                     }
                 } else {
@@ -967,11 +967,11 @@ test_ncmpi_put_varm_$1(void)
         }
         err = ncmpi_put_varm_$1_all(BAD_ID, i, start, edge, stride, imap, value);
         IF (err != NC_EBADID) 
-            error("bad ncid: err = %d", err);
+            error("expecting bad ncid, but err = %d", err);
         ELSE_NOK
         err = ncmpi_put_varm_$1_all(ncid, BAD_VARID, start, edge, stride, imap, value);
         IF (err != NC_ENOTVAR) 
-            error("bad var id: err = %d", err);
+            error("expecting bad var id, but err = %d", err);
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
@@ -983,19 +983,19 @@ test_ncmpi_put_varm_$1(void)
                     ELSE_NOK
                 } else {
                     IF (err != NC_EINVALCOORDS)
-                        error("bad start: err = %d", err);
+                        error("expecting bad start, but err = %d", err);
                     ELSE_NOK
                     start[j] = 0;
                     edge[j] = var_shape[i][j] + 1;
                     err = ncmpi_put_varm_$1_all(ncid, i, start, edge, stride, imap, value);
                     IF (err != NC_EEDGE)
-                        error("bad edge: err = %d", err);
+                        error("expecting bad edge, but err = %d", err);
                     ELSE_NOK
                     edge[j] = 1;
                     stride[j] = 0;
                     err = ncmpi_put_varm_$1_all(ncid, i, start, edge, stride, imap, value);
                     IF (err != NC_ESTRIDE)
-                        error("bad stride: err = %d", err);
+                        error("expecting bad stride, but err = %d", err);
                     ELSE_NOK
                     stride[j] = 1;
                 }
@@ -1071,7 +1071,7 @@ test_ncmpi_put_varm_$1(void)
                         ELSE_NOK
                     } else {
                         IF (err != NC_ERANGE)
-                            error("range error: err = %d", err);
+                            error("expecting range error, but err = %d", err);
                         ELSE_NOK
                     }
                 } else {
@@ -1144,12 +1144,12 @@ test_ncmpi_put_att_text(void)
                 err = ncmpi_put_att_text(BAD_ID, i, ATT_NAME(i,j), ATT_LEN(i,j), 
                     value);
                 IF (err != NC_EBADID)
-                    error("bad ncid: err = %d", err);
+                    error("expecting bad ncid, but err = %d", err);
                 ELSE_NOK
                 err = ncmpi_put_att_text(ncid, BAD_VARID, ATT_NAME(i,j), 
                     ATT_LEN(i,j), value);
                 IF (err != NC_ENOTVAR)
-                    error("bad var id: err = %d", err);
+                    error("expecting bad var id, but err = %d", err);
                 ELSE_NOK
                 for (k = 0; k < ATT_LEN(i,j); k++) {
                     value[k] = hash(ATT_TYPE(i,j), -1, &k);
@@ -1205,17 +1205,17 @@ test_ncmpi_put_att_$1(void)
                 err = ncmpi_put_att_$1(BAD_ID, i, ATT_NAME(i,j), ATT_TYPE(i,j), 
                     ATT_LEN(i,j), value);
                 IF (err != NC_EBADID)
-                    error("bad ncid: err = %d", err);
+                    error("expecting bad ncid, but err = %d", err);
                 ELSE_NOK
                 err = ncmpi_put_att_$1(ncid, BAD_VARID, ATT_NAME(i,j), 
                     ATT_TYPE(i,j), ATT_LEN(i,j), value);
                 IF (err != NC_ENOTVAR)
-                    error("bad var id: err = %d", err);
+                    error("expecting bad var id, but err = %d", err);
                 ELSE_NOK
                 err = ncmpi_put_att_$1(ncid, i, ATT_NAME(i,j), BAD_TYPE, 
                     ATT_LEN(i,j), value);
                 IF (err != NC_EBADTYPE)
-                    error("bad type: err = %d", err);
+                    error("expecting bad type, but err = %d", err);
                 ELSE_NOK
                 for (allInExtRange = 1, k = 0; k < ATT_LEN(i,j); k++) {
                     value[k] = hash_$1(ATT_TYPE(i,j), -1, &k, NCT_ITYPE($1));
@@ -1230,7 +1230,7 @@ test_ncmpi_put_att_$1(void)
                     ELSE_NOK
                 } else {
                     IF (err != NC_ERANGE)
-                        error("range error: err = %d", err);
+                        error("expecting range error, but err = %d", err);
                     ELSE_NOK
                 }
             }
