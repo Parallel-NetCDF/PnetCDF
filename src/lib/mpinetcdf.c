@@ -376,12 +376,14 @@ ncmpi_redef(int ncid) {
     return NC_NOERR;
 }
 
-/*----< ncmpii_update_numrecs() >--------------------------------------------*/
-/* update the number of records in memory and file header, if the number is
- * increased */
+/*----< ncmpii_sync_numrecs() >-----------------------------------------------*/
+/* synchronize the number of records in memory and file header, if the number
+ * is increased
+ * This function is called by collective APIs only
+ */
 int
-ncmpii_update_numrecs(NC         *ncp,
-                      MPI_Offset  new_numrecs)
+ncmpii_sync_numrecs(NC         *ncp,
+                    MPI_Offset  new_numrecs)
 {
     /* Only put APIs and record variables reach this function */
     MPI_Offset max_numrecs;
@@ -395,7 +397,7 @@ ncmpii_update_numrecs(NC         *ncp,
      * collective write call to a record variable is completed, instead
      * of waiting until file close. This is in case when the program
      * aborts before reaching ncmpi_close(), the numrecs value in the
-     * header can be up-to-date.
+     * file header can be up-to-date.
      * ncmpii_write_numrecs() also updates ncp->numrecs
      */
     return ncmpii_write_numrecs(ncp, max_numrecs, NC_ndirty(ncp));
@@ -455,7 +457,7 @@ ncmpii_end_indep_data(NC *ncp) {
 
     if (!NC_readonly(ncp)) {
         /* do memory and file sync for numrecs, number or records */
-        status = ncmpii_update_numrecs(ncp, ncp->numrecs);
+        status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
 
 #ifndef DISABLE_FILE_SYNC
         /* calling file sync for those already open the file */
@@ -496,6 +498,7 @@ ncmpi_enddef(int ncid) {
 /* this API is collective, but can be called in independent data mode.
  * Note that numrecs is always sync-ed in collective mode
  */
+int
 ncmpi_sync_numrecs(int ncid) {
     int status = NC_NOERR;
     NC *ncp;
@@ -508,7 +511,7 @@ ncmpi_sync_numrecs(int ncid) {
         return NC_EINDEFINE;
 
     /* syn numrecs in memory (and file if NC_SHARE is set) */
-    return ncmpii_update_numrecs(ncp, ncp->numrecs);
+    return ncmpii_sync_numrecs(ncp, ncp->numrecs);
 }
 
 /*----< ncmpi_sync() >--------------------------------------------------------*/

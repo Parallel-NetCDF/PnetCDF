@@ -37,8 +37,12 @@ static int ncmpii_mgetput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
                           int io_method);
 
 /*----< ncmpii_getput_zero_req() >--------------------------------------------*/
-/* For simply participating collective calls, this is called only when in
-   collective data mode */
+/* For simply participating the MPI collective calls required by a PnetCDF
+ * collective API, which include setting fileview, collective read/write,
+ * another setting fileview, and an MPI_Allreduce for updating number of
+ * netCDF records, if necessary.
+ * Note this function is called only when in collective data mode
+ */
 int
 ncmpii_getput_zero_req(NC  *ncp,
                        int  rw_flag,      /* WRITE_REQ or READ_REQ */
@@ -70,7 +74,7 @@ ncmpii_getput_zero_req(NC  *ncp,
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
     if (rw_flag == WRITE_REQ && sync_numrecs == 1)
-        ncmpii_update_numrecs(ncp, ncp->numrecs);
+        ncmpii_sync_numrecs(ncp, ncp->numrecs);
 
     return status;
 }
@@ -1624,24 +1628,24 @@ ncmpii_wait_getput(NC     *ncp,
          * maximum number of records from all nonblocking requests and
          * update newnumrecs once
          */
-        MPI_Offset max_newnumrecs = ncp->numrecs;
+        MPI_Offset newnumrecs = ncp->numrecs;
         for (i=0; i<num_reqs; i++) {
             if (*reqs[i].status == NC_NOERR && IS_RECVAR(reqs[i].varp)) {
-                MPI_Offset newnumrecs = reqs[i].start[0] + reqs[i].count[0];
-                max_newnumrecs = MAX(max_newnumrecs, newnumrecs);
+                newnumrecs = MAX(newnumrecs, 
+                                 reqs[i].start[0] + reqs[i].count[0]);
             }
         }
 
         if (io_method == COLL_IO) {
             /* even this process does not write to record variable, others
-             * might. Note ncmpii_update_numrecs() is collective */
-            err = ncmpii_update_numrecs(ncp, max_newnumrecs);
+             * might. Note ncmpii_sync_numrecs() is collective */
+            err = ncmpii_sync_numrecs(ncp, newnumrecs);
             if (status == NC_NOERR) status = err;
             /* retain the first error if there is any */
         }
         else { /* INDEP_IO */
-            if (ncp->numrecs < max_newnumrecs) {
-                ncp->numrecs = max_newnumrecs;
+            if (ncp->numrecs < newnumrecs) {
+                ncp->numrecs = newnumrecs;
                 set_NC_ndirty(ncp);
             }
         }

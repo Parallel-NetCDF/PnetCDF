@@ -757,10 +757,14 @@ ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
         return NC_NOERR;
 }
 
+/*----< ncmpi_rename_var() >--------------------------------------------------*/
+/* This API is collective if called in data mode */
 int
-ncmpi_rename_var(int ncid,  int varid, const char *newname)
+ncmpi_rename_var(int         ncid,
+                 int         varid,
+                 const char *newname)
 {
-    int file_ver, status, other;
+    int file_ver, status=NC_NOERR, other;
     NC *ncp;
     NC_var *varp;
 
@@ -800,25 +804,33 @@ ncmpi_rename_var(int ncid,  int varid, const char *newname)
     }
     /* else, not in define mode */
 
+    /* PnetCDF expects all processes use the same name, However, when names
+     * are not the same, only root's value is significant. Under the safe
+     * mode, we sync the NC object (header) in memory across all processes
+     */
+    if (ncp->safe_mode == 1)
+        MPI_Bcast(&newname, varp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
+
+    /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
     status = ncmpii_set_NC_string(varp->name, newname);
     if (status != NC_NOERR)
         return status;
 
-    /* mark header dirty, to be synchronized and commit to file later.
-     * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
-    set_NC_hdirty(ncp);
-
-    if (NC_doHsync(ncp)) {
-        /* Note ncmpii_NC_sync() is a collective call
-         * We cannot just change the name in the header of file, as the space
-         * occupied by the name can shrink, breaking the format
+    if (NC_doHsync(ncp)) { /* NC_SHARE is set */
+        /* Write the entire header to the file. Noet that we cannot just
+         * change the variable name in the file header, as if the file space
+         * occupied by the name shrink, all following metadata must be moved
+         * ahead.
          */
-        status = ncmpii_NC_sync(ncp, 1);
-        if (status != NC_NOERR)
-            return status;
+        status = ncmpii_write_header(ncp);
+    }
+    else {
+        /* mark header dirty, to be synchronized and commit to file later.
+         * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
+        set_NC_hdirty(ncp);
     }
 
-    return NC_NOERR;
+    return status;
 }
 
 /* some utility functions for debugging purpose */

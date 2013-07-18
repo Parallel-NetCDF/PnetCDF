@@ -2105,3 +2105,48 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     return status;
 }
 
+/*----< ncmpii_write_header() >-----------------------------------------------*/
+/* this function is collective */
+int ncmpii_write_header(NC *ncp)
+{
+    int rank, status=NC_NOERR;
+
+    /* Write the entire header to the file. Noet that we cannot just
+     * change the variable name in the file header, as if the file space
+     * occupied by the name shrink, all following metadata must be moved
+     * ahead.
+     */
+    if (ncmpii_dset_has_recvars(ncp)) { /* sync numrecs */
+        MPI_Offset numrecs;
+        MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_LONG_LONG_INT,
+                      MPI_MAX, ncp->nciop->comm);
+        ncp->numrecs = numrecs;
+    }
+
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
+    if (rank == 0) {
+        int mpireturn;
+        MPI_Status mpistatus;
+        void *buf = NCI_Malloc(ncp->xsz); /* header's write buffer */
+
+        /* copy header to buffer */
+        status = ncmpii_hdr_put_NC(ncp, buf);
+
+        mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf,
+                                      ncp->xsz, MPI_BYTE, &mpistatus);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            status = NC_EWRITE;
+        }
+        else {
+            int put_size;
+            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            ncp->nciop->put_size += put_size;
+        }
+        NCI_Free(buf);
+    }
+    /* update file header size */
+    ncp->xsz = ncmpii_hdr_len_NC(ncp);
+
+    return status;
+}
