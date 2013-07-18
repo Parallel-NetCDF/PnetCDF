@@ -1004,7 +1004,7 @@ err_check:
                 /* FIXME: if we update numrecs to file now, race condition
                    can happen. Hence, we delay the update till file close or
                    exit independent data mode. Note numrecs in memory may be
-                   obsolete till then.
+                   inconsistent and obsolete till then.
                  */
                 if (ncp->numrecs < new_numrecs) {
                     ncp->numrecs = new_numrecs;
@@ -1012,7 +1012,7 @@ err_check:
                 }
             }
             else /* COLL_IO */
-                ncmpii_update_numrecs(ncp, new_numrecs);
+                ncmpii_sync_numrecs(ncp, new_numrecs);
         }
     }
 

@@ -511,10 +511,16 @@ extern MPI_Offset
 ncmpix_howmany(nc_type type, MPI_Offset xbufsize);
 
 extern int
+ncmpii_dset_has_recvars(NC *ncp);
+
+extern int
 ncmpii_read_numrecs(NC *ncp);
 
 extern int
 ncmpii_write_numrecs(NC *ncp, MPI_Offset new_numrecs, int forceWrite);
+
+extern int
+ncmpii_write_header(NC *ncp);
 
 extern int
 ncmpii_NC_sync(NC *ncp, int doFsync);
@@ -733,7 +739,7 @@ int ncmpii_get_offset(NC *ncp, NC_var *varp, const MPI_Offset starts[],
 int ncmpii_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
                 int collective);
 
-int ncmpii_update_numrecs(NC *ncp, MPI_Offset newnumrecs);
+int ncmpii_sync_numrecs(NC *ncp, MPI_Offset newnumrecs);
 
 int ncmpii_vara_create_filetype(NC* ncp, NC_var* varp,
                 const MPI_Offset start[], const MPI_Offset count[],

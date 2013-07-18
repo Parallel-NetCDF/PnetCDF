@@ -291,6 +291,7 @@ ncmpii_new_NC_string(MPI_Offset slen, const char *str)
 		return NULL;
 	(void) memset(ncstrp, 0, sz);
 
+        /* Isn't the line below the same as "sz = slen"? */
 	ncstrp->nchars = sz - M_RNDUP(sizeof(NC_string)) - 1;
 	assert(ncstrp->nchars + 1 > slen);
 	ncstrp->cp = (char *)ncstrp + M_RNDUP(sizeof(NC_string));
@@ -329,8 +330,7 @@ ncmpii_set_NC_string(NC_string *ncstrp, const char *str)
 	if(diff != 0)
 		(void) memset(ncstrp->cp + slen, 0, diff);
 
-        /* Don't adjust ncstrp->nchars, it includes extra space in the
-         * header for potential later expansion of string. */
+        ncstrp->nchars = slen;
 
 	return NC_NOERR;
 }

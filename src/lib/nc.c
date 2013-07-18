@@ -620,10 +620,14 @@ ncmpii_write_numrecs(NC         *ncp,
                      int         forceWrite)
 {
     /* this function is only called in 3 places
-       1) collective put APIs in mpinetcdf.c that write record variables
-          and numrecs has changed
+       1) collective put APIs that write record variables and numrecs has
+          changed
        2) ncmpi_end_indep_data()
        3) ncmpii_NC_sync() below
+
+       Argument forceWrite is for independent I/O where ncp->numrecs is
+       dirty and used as new_numrecs. In this case, we must write the max
+       value across all processes to file.
      */
     int rank, status=NC_NOERR;
   
@@ -631,8 +635,9 @@ ncmpii_write_numrecs(NC         *ncp,
     assert(!NC_indef(ncp));
     /* this function is only called by APIs in data mode */
 
-    /* there is a MPI_Allreduce() to ensure new_numrecs the same across all
-     * processes prior to this call and new_nnurecs is max of all ncp->numrecs
+    /* prior to this call, an MPI_Allreduce() has been called to ensure
+     * new_numrecs are the same across all processes and new_nnurecs is max
+     * of all ncp->numrecs
      * Note that number of records can be larger than 2^32
      */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
@@ -768,7 +773,8 @@ write_NC(NC *ncp)
     return status;
 } 
 
-static int dset_has_recvars(NC *ncp) 
+int
+ncmpii_dset_has_recvars(NC *ncp) 
 {
 	/* possible further optimzation: set a flag on the header data
 	 * structure when record variable created so we can skip this loop*/
@@ -783,8 +789,12 @@ static int dset_has_recvars(NC *ncp)
 }
 
 
+/*----< ncmpii_NC_sync() >----------------------------------------------------*/
 /*
- * Write the header or the numrecs if necessary.
+ * Sync across all processes the NC object, the file header cached in local
+ * memory. Also, write the NC object to file header or the numrecs if
+ * necessary.
+ * This function is collective.
  */
 int
 ncmpii_NC_sync(NC  *ncp,
@@ -808,18 +818,17 @@ ncmpii_NC_sync(NC  *ncp,
      * check */
 
     numrecs = ncp->numrecs;
-    if (dset_has_recvars(ncp))
+    if (ncmpii_dset_has_recvars(ncp))
 	MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
                       ncp->nciop->comm);
 
     if (NC_hdirty(ncp)) {  /* header is dirty */
         /* write_NC() will also write numrecs and clear NC_NDIRTY */
-	if (numrecs > ncp->numrecs)
-            ncp->numrecs = numrecs;
+        ncp->numrecs = numrecs;
         status = write_NC(ncp);
         didWrite = 1;
     }
-    else {  /* update numrecs if dirty */
+    else {  /* only numrecs in the header is dirty */
         status = ncmpii_write_numrecs(ncp, numrecs, NC_ndirty(ncp));
         didWrite = 1;
     }
