@@ -22,7 +22,6 @@
  * 
  */
 
-#include "rnd.h"
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h> 
@@ -31,12 +30,12 @@
 #include <sys/types.h> /* off_t */
 #include <limits.h>
 #include <float.h>
-#include "nctypes.h"
 #include <stdint.h>
 
 #include <mpi.h>
 
-#include "pnetcdf.h"
+#include "rnd.h"
+#include "nctypes.h"
 
 
 /*

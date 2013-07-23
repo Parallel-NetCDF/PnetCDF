@@ -565,7 +565,7 @@ AC_DEFUN([UD_HAS_MPI_DATATYPE], [
           MPI_Datatype dummy = $1;
       ])],
       [AC_MSG_RESULT(yes)
-       AC_DEFINE(HAVE_$1, 1, available)
+       AC_DEFINE(HAVE_$1$2, 1, available)
       ],
       [AC_MSG_RESULT(no)]
    )]
@@ -588,6 +588,8 @@ UD_HAS_MPI_DATATYPE(MPI_UB)
 UD_HAS_MPI_DATATYPE(MPI_LB)
 dnl UD_HAS_MPI_DATATYPE(MPI_OFFSET)
 dnl HAVE_MPI_OFFSET might have already been defined in mpi.h
+dnl Add "_DATATYPE" suffix to distinquish from checking MPI_Offset
+UD_HAS_MPI_DATATYPE(MPI_OFFSET, _DATATYPE)
 
 dnl Check for presence of Fortran types
 dnl These could be enums, so we have to do compile checks.

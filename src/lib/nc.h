@@ -10,12 +10,20 @@
  * netcdf library 'private' data structures, objects and interfaces
  */
 
-#include <stddef.h>     /* MPI_Offset */
-#include <sys/types.h>  /* MPI_Offset */
-#include "pnetcdf.h"
+#include <stddef.h>     /* size_t */
+#include <sys/types.h>  /* off_t */
+
 #include "ncio.h"       /* ncio */
 #include "fbits.h"
 
+/* define MPI_OFFSET if not defined */
+#ifndef HAVE_MPI_OFFSET_DATATYPE
+    #ifdef HAVE_MPI_LONG_LONG_INT
+        #define MPI_OFFSET MPI_LONG_LONG_INT
+    #else
+        #define MPI_OFFSET MPI_INT
+    #endif
+#endif
 
 /* XXX: this seems really low.  do we end up spending a ton of time mallocing?
  * could we reduce that by increasing this to something 21st century? */
@@ -316,7 +324,7 @@ extern void
 ncmpii_free_NC_var(NC_var *varp);
 
 extern NC_var *
-ncmpii_new_x_NC_var(NC_string *strp, size_t ndims);
+ncmpii_new_x_NC_var(NC_string *strp, int ndims);
 
 /* vararray */
 

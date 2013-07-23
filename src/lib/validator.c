@@ -8,8 +8,6 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
-#include <mpi.h>
 #include <assert.h>
 #include <sys/types.h>  /* open() */
 #include <sys/stat.h>   /* open() */
@@ -20,6 +18,10 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+
+#include <mpi.h>
+
+#include "nc.h"
 #include "ncx.h"
 #include "macro.h"
 

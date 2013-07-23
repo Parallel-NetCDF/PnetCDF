@@ -13,6 +13,8 @@ dnl
 # include <ncconfig.h>
 #endif
 
+#include <mpi.h>
+
 #include "nc.h"
 #include "ncx.h"
 

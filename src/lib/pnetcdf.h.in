@@ -7,10 +7,7 @@
 #ifndef _PNETCDF_
 #define _PNETCDF_
 
-#include <stddef.h> /* size_t, ptrdiff_t */
-#include <errno.h>  /* netcdf functions sometimes return system errors */
 #include <mpi.h>
-#include <stdint.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -146,8 +143,8 @@ typedef enum {
 
 /*
  * In nc__enddef(), align to the chunk size.
- */
 #define NC_ALIGN_CHUNK ((size_t)(-1))
+ */
 
 /*
  * 'size' argument to ncdimdef for an unlimited dimension
@@ -262,7 +259,7 @@ typedef enum {
 #endif
 
 /* PnetCDF Error Codes: */
-#define NC_ESMALL			(-201) /* size of off_t too small for format */
+#define NC_ESMALL			(-201) /* size of MPI_Offset too small for format */
 #define NC_ENOTINDEP			(-202) /* Operation not allowed in collective data mode */
 #define NC_EINDEP			(-203) /* Operation not allowed in independent data mode */
 #define NC_EFILE			(-204) /* Unknown error in file operation */

@@ -1,12 +1,16 @@
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  
- *  (C) 2003 by Argonne National Laboratory.
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *      See COPYRIGHT in top-level directory.
  */
+/* $Id$ */
 
 #ifndef MPINETCDF_IMPL_H
 #define MPINETCDF_IMPL_H
-#include "ncconfig.h"
+
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
 
 #include <stdlib.h>
 #include "pnetcdf.h"

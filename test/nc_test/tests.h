@@ -11,8 +11,10 @@
 #include <limits.h>
 #include <float.h>
 #define NO_NETCDF_2 1
-#include "pnetcdf.h"
+#include <errno.h>
 #include <mpi.h>
+
+#include "pnetcdf.h"
 #include "error.h"
 
 #include "ncconfig.h" /* output of 'configure' */

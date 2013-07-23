@@ -14,6 +14,9 @@
 #endif
 #include <string.h>
 #include <assert.h>
+
+#include <mpi.h>
+
 #include "nc.h"
 #include "ncx.h"
 #include "fbits.h"

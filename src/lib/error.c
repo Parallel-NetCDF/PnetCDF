@@ -7,7 +7,7 @@
 /*LINTLIBRARY*/
 
 #if HAVE_CONFIG_H
-#include "ncconfig.h"
+# include <ncconfig.h>
 #endif
 
 #include <stdio.h>
@@ -16,8 +16,9 @@
 #include <stdlib.h>
 #endif
 
+#include <mpi.h>
+
 #include "nc.h"
-#include "pnetcdf.h"
 
 #ifdef HAVE_STRERROR
 #include <string.h> /* contains prototype for ansi libc function strerror() */
@@ -164,7 +165,7 @@ ncmpi_strerror(int err)
 
         /* start of PnetCDF errors */
 	case NC_ESMALL:
-	    return "Size of off_t too small for requested format ";
+	    return "Size of MPI_Offset too small for requested format ";
 	case NC_ENOTINDEP:
 	    return "Operation not allowed in collective data mode";
 	case NC_EINDEP:

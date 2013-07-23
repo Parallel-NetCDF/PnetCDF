@@ -8,10 +8,11 @@
 #define _NCIO_H_
 
 #include <stddef.h>	/* size_t */
-#include <sys/types.h>	/* MPI_Offset */
-#include "pnetcdf.h"
+#include <sys/types.h>	/* off_t */
 
 #include <mpi.h>
+
+#include "pnetcdf.h"
 
 typedef struct ncio ncio;	/* forward reference */
 

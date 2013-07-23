@@ -24,18 +24,20 @@
 #include <unistd.h>
 #endif
 
-#include "nc.h"
-#include "ncio.h"
-#include "fbits.h"
-#include "rnd.h"
-#include "macro.h"
-
 /* #define INSTRUMENT 1 */
 #ifdef INSTRUMENT /* debugging */
 #undef NDEBUG
 #include <stdio.h>
 #include "instr.h"
 #endif
+
+#include <mpi.h>
+
+#include "nc.h"
+#include "ncio.h"
+#include "fbits.h"
+#include "rnd.h"
+#include "macro.h"
 
 #if !defined(NDEBUG) && !defined(X_INT_MAX)
 #define  X_INT_MAX INT_MAX
