@@ -8,13 +8,14 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <stdio.h>
+
 #include <mpi.h>
 
+#include "nc.h"
 #include "ncmpidtype.h"
 #include "macro.h"
 

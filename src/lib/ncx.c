@@ -31,11 +31,13 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
-#include "ncx.h"
 #include <string.h>
 #include <sys/types.h>
 
+#include <mpi.h>
+
+#include "nc.h"
+#include "ncx.h"
 
 /*
  * Primitive numeric conversion functions.

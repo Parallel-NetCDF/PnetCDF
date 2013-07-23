@@ -8,9 +8,6 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
-#include "ncx.h"
-#include <mpi.h>
 #include <stdio.h>
 #include <unistd.h>
 #ifdef HAVE_STDLIB_H
@@ -18,6 +15,10 @@
 #endif
 #include <assert.h>
 
+#include <mpi.h>
+
+#include "nc.h"
+#include "ncx.h"
 #include "macro.h"
 
 /* Prototypes for functions used only in this file */
@@ -359,7 +360,7 @@ ncmpi_redef(int ncid) {
            Note that only ncp->numrecs in the header can be incoherent.
          */
         mynumrecs = ncp->numrecs;
-        MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
+        MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
                       ncp->nciop->comm);
         if (numrecs > ncp->numrecs) {
             ncp->numrecs = numrecs;
@@ -389,7 +390,7 @@ ncmpii_sync_numrecs(NC         *ncp,
     MPI_Offset max_numrecs;
 
     /* sync numrecs in memory across all processes */
-    MPI_Allreduce(&new_numrecs, &max_numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
+    MPI_Allreduce(&new_numrecs, &max_numrecs, 1, MPI_OFFSET, MPI_MAX,
                   ncp->nciop->comm);
 
     /* let root process write numrecs to file header

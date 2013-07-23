@@ -8,14 +8,17 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
-#include "rnd.h"
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+
+#include <mpi.h>
+
+#include "nc.h"
+#include "rnd.h"
 #include "ncx.h"
 #include "macro.h"
 
@@ -102,7 +105,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
 
     /* process 0 broadcasts header size */
     if (rank == 0) hsz_0 = hsz;
-    MPI_Bcast(&hsz_0, 1, MPI_LONG_LONG_INT, 0, comm);
+    MPI_Bcast(&hsz_0, 1, MPI_OFFSET, 0, comm);
 
     if (rank == 0)
         cmpbuf = buf;
@@ -169,11 +172,11 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
 
   if (rank == 0)
     max_size = nn;
-  MPI_Bcast(&max_size, 1, MPI_LONG_LONG_INT, 0, comm);
+  MPI_Bcast(&max_size, 1, MPI_OFFSET, 0, comm);
 
   compare = max_size - nn;
 
-  MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
+  MPI_Allreduce(&compare, &errcheck, 1, MPI_OFFSET, MPI_LOR, comm);
 
   if (errcheck)
     return NC_EMULTIDEFINE;
@@ -190,7 +193,7 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
     NCI_Free(cmpbuf);
   }
 
-  MPI_Allreduce(&compare, &errcheck, 1, MPI_LONG_LONG_INT, MPI_LOR, comm);
+  MPI_Allreduce(&compare, &errcheck, 1, MPI_OFFSET, MPI_LOR, comm);
 
   if (errcheck){
     return NC_EMULTIDEFINE;
@@ -399,7 +402,7 @@ NC_begins(NC         *ncp,
        header sizes, ncp->xsz, may be different among processes.
        Hence, we need to use the max size among all processes to make
        sure everyboday has the same size of reserved space for header */
-    MPI_Allreduce(&ncp->xsz, &max_xsz, 1, MPI_LONG_LONG_INT, MPI_MAX,
+    MPI_Allreduce(&ncp->xsz, &max_xsz, 1, MPI_OFFSET, MPI_MAX,
                   ncp->nciop->comm);
 
     /* NC_begins is called at ncmpi_enddef(), which can be in either
@@ -819,7 +822,7 @@ ncmpii_NC_sync(NC  *ncp,
 
     numrecs = ncp->numrecs;
     if (ncmpii_dset_has_recvars(ncp))
-	MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_LONG_LONG_INT, MPI_MAX,
+	MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
                       ncp->nciop->comm);
 
     if (NC_hdirty(ncp)) {  /* header is dirty */

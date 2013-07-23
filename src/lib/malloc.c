@@ -25,6 +25,8 @@
 
 #include <mpi.h>
 
+#include "nc.h"
+
 void *NCI_Malloc_fn(size_t size, int lineno, const char *fname);
 void *NCI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
 void *NCI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);

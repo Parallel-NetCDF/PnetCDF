@@ -8,12 +8,15 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <string.h>
 #include <assert.h>
+
+#include <mpi.h>
+
+#include "nc.h"
 #include "ncx.h"
 #include "fbits.h"
 #include "macro.h"

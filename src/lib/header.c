@@ -8,9 +8,6 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
-
-#include <mpi.h>
 #include <assert.h>
 #include <string.h>  /* memcpy() */
 #ifdef HAVE_STDLIB_H
@@ -18,6 +15,9 @@
 #endif
 #include <stdio.h>
 
+#include <mpi.h>
+
+#include "nc.h"
 #include "ncx.h"
 #include "macro.h"
 
@@ -2118,7 +2118,7 @@ int ncmpii_write_header(NC *ncp)
      */
     if (ncmpii_dset_has_recvars(ncp)) { /* sync numrecs */
         MPI_Offset numrecs;
-        MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_LONG_LONG_INT,
+        MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET,
                       MPI_MAX, ncp->nciop->comm);
         ncp->numrecs = numrecs;
     }

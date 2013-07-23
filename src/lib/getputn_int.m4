@@ -13,6 +13,9 @@ dnl
 # include <ncconfig.h>
 #endif
 
+#include <mpi.h>
+
+#include "nc.h"
 #include "ncx.h"
 
 /* ftype is the variable's nc_type defined in file, eg. int64

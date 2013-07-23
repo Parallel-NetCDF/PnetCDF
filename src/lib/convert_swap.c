@@ -8,9 +8,6 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
-#include "ncx.h"
-#include <mpi.h>
 #include <stdio.h>
 #include <unistd.h>
 #ifdef HAVE_STDLIB_H
@@ -19,6 +16,10 @@
 #include <assert.h>
 #include <arpa/inet.h>   /* htonl(), htons() */
 
+#include <mpi.h>
+
+#include "nc.h"
+#include "ncx.h"
 
 /* Prototypes for functions used only in this file */
 #if 0

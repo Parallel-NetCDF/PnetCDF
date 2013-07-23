@@ -8,12 +8,15 @@
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <string.h> /* memset() */
 #include <assert.h>
+
+#include <mpi.h>
+
+#include "nc.h"
 #include "ncx.h"
 #include "rnd.h"
 #include "macro.h"
@@ -43,7 +46,7 @@ ncmpii_free_NC_var(NC_var *varp)
  */
 NC_var *
 ncmpii_new_x_NC_var(NC_string *strp,
-                    size_t     ndims)
+                    int        ndims)
 {
     NC_var *varp;
     const MPI_Offset o1 = M_RNDUP(ndims * sizeof(MPI_Offset));
@@ -52,7 +55,7 @@ ncmpii_new_x_NC_var(NC_string *strp,
 
     /* wkliao: this function allocates a contiguous memory space to put all
      * members of NC_var structure together: o1 is for shape[], o2 is for
-     * dsizes[] ad the 3rd is for dimids[]
+     * dsizes[] and the 3rd is for dimids[]
      * (I don't know why M_RNDUP is needed here and why they should be kept
      * in a contiguous memory space.)
      */
@@ -91,7 +94,7 @@ ncmpii_new_x_NC_var(NC_string *strp,
 static NC_var *
 ncmpii_new_NC_var(const char *name,
                   nc_type     type,
-                  size_t      ndims,
+                  int         ndims,
                   const int  *dimids)
 {
     NC_string *strp;

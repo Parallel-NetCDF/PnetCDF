@@ -13,9 +13,6 @@ dnl
 # include <ncconfig.h>
 #endif
 
-#include "nc.h"
-#include "ncx.h"
-#include <mpi.h>
 #include <stdio.h>
 #include <unistd.h>
 #ifdef HAVE_STDLIB_H
@@ -23,6 +20,10 @@ dnl
 #endif
 #include <assert.h>
 
+#include <mpi.h>
+
+#include "nc.h"
+#include "ncx.h"
 #include "ncmpidtype.h"
 #include "macro.h"
 

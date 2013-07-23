@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <float.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <mpinetcdf_impl.h>
 #include <mpifnetcdf.h>
 
