@@ -1459,6 +1459,7 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
                             INTEGER,                       INTENT(INOUT) :: ivals(*)
     END FUNCTION   nfmpi_put_varm_int
 
