@@ -15,6 +15,7 @@ static char SccsId[] = "$Id$";
 #endif
 #include        <string.h>
 #include	<stdlib.h>
+#include	<stddef.h>  /* ptrdiff_t */
 #include	<pnetcdf.h>
 #include 	"generic.h"
 #include        "ncgen.h"
