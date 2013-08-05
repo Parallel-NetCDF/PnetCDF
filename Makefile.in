@@ -54,7 +54,7 @@ PACKING_SUBDIRS	= \
 		examples \
 		test
 
-all:		src/all man/all
+all:		src/all
 
 install:	all src/install man/install
 
