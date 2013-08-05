@@ -299,6 +299,9 @@ C2F_SRCS = createf.c \
 	inq_buffer_usagef.c \
 	inq_put_sizef.c \
 	inq_get_sizef.c \
+        inq_header_sizef.c \
+        inq_header_extentf.c \
+        inq_nreqsf.c \
 	get_varnf.c            get_varn_allf.c \
 	get_varn_textf.c       get_varn_text_allf.c \
 	get_varn_int1f.c       get_varn_int1_allf.c \
