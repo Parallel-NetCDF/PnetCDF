@@ -25,7 +25,7 @@ $(MANUAL): $(srcdir)/netcdf.m4
 
 test:
 
-install:
+install: $(MANUAL)
 	$(INSTALL) -d -m 755 $(MANDIR)/man3
 	$(INSTALL_DATA) $(MANUAL) $(MANDIR)/man3/$(MANUAL)
 
