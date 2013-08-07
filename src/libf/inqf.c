@@ -25,6 +25,6 @@ FORTRAN_API int FORT_CALL nfmpi_inq_ ( int *v1, MPI_Fint *v2, MPI_Fint *v3, MPI_
     int ierr;
     ierr = ncmpi_inq( *v1, v2, v3, v4, v5 );
 
-    if (!ierr) *v5 = *v5 + 1;
+    if (!ierr && *v5 != -1) *v5 = *v5 + 1;
     return ierr;
 }
