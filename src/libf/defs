@@ -599,7 +599,7 @@ $returnType   = "int";
 		'get_varm_longlong_all-6'	=> 'in:intToSizeTArr:ncmpixVardim(*v1,*v2-1)',
 
 	'inq' => '5',
-		'inq-5'			=> 'out:OffsetIndex',
+		'inq-5'			=> 'out:OffsetDimIndex',
 	'inq_att' => '2:3',
 		'inq_att-2'		=> 'in:OffsetIndexIn',
 		'inq_att-3'		=> 'in:addnull',
@@ -2162,6 +2162,28 @@ sub OffsetIndex_ctof {
     my $vname = $_[1];
     print $OUTFD "
     if (!$errparmrval) *v$count = *v$count + 1;\n";
+}
+# -------------------------------------------------------------------------
+# For output of dimension indices, add one to the result
+# If no unlimited length dimension has been defined, -1 is returned.
+# usage is 
+#    'inq_varid' => '3', 'inq_varid-3' => 'out:OffsetDimIndex',
+
+sub OffsetDimIndex_out_decl {
+    my $count = $_[0];
+}
+sub OffsetDimIndex_out_ftoc {
+    my $count = $_[0];
+}
+sub OffsetDimIndex_out_arg {
+    my $count = $_[0];
+    print $OUTFD "v$count";
+}
+sub OffsetDimIndex_ctof {
+    my $lname = $_[0];
+    my $vname = $_[1];
+    print $OUTFD "
+    if (!$errparmrval && *v$count != -1) *v$count = *v$count + 1;\n";
 }
 # -------------------------------------------------------------------------
 # For input of indices, subtract one to the result
