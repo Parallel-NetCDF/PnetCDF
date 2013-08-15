@@ -11,96 +11,32 @@ VPATH   = @srcdir@
 
 include ../macros.make
 
-INCLUDES  = -I../src/lib
-FPPFLAGS += -I../src/libf
-LDFLAGS  += -L../src/lib
-LIBS     += -lpnetcdf $(MATHLIB)
+GARBAGE      =
 
-C_SRCS    = collective_write.c \
-            nonblocking_write.c \
-            get_info_c.c \
-            column_wise.c \
-            block_cyclic.c \
-            mput.c \
-            hints.c \
-            flex.c \
-            put_varn_int.c \
-            put_varn_float.c
-
-F90_SRCS  = get_info_f.f90 \
-            put_vara.f90 \
-            flex_f.f90 \
-            put_varn_intf.f90 \
-            nonblocking_writef.f90
-
-PROGS     = $(C_SRCS:.c=)
-OBJS      = $(C_SRCS:.c=.o)
-ifeq (@has_fortran@, yes)
-PROGS     += $(F90_SRCS:.f90=)
-OBJS      += $(F90_SRCS:.f90=.o)
-endif
-
-GARBAGE      = $(PROGS) *.nc
-
-PACKING_LIST = $(C_SRCS) $(F90_SRCS) \
-               Makefile.in \
+PACKING_LIST = Makefile.in \
                README
 
-SUBDIRS = tutorial
+SUBDIRS = C tutorial
 
-all: $(PROGS)
+ifeq (@has_fortran@, yes)
+SUBDIRS += F77
+SUBDIRS += F90
+endif
+
+all:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
 
 install:
 
 uninstall:
 
-collective_write: collective_write.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+clean:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
 
-nonblocking_write: nonblocking_write.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+distclean:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
+	@if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $(SUBDIRS) ; fi
+	@$(RM) -f Makefile
 
-get_info_c: get_info_c.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-get_info_f: get_info_f.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
-
-column_wise: column_wise.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-block_cyclic: block_cyclic.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-put_vara: put_vara.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
-
-mput: mput.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-hints: hints.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-flex: flex.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-flex_f: flex_f.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
-
-put_varn_int: put_varn_int.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-put_varn_intf: put_varn_intf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
-
-put_varn_float: put_varn_float.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-nonblocking_writef: nonblocking_writef.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
-
-include $(srcdir)/depend
-include $(srcdir)/../rules.make
-
+.PHONY: FORCE all clean distclean install uninstall
 

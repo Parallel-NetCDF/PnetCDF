@@ -1,0 +1,91 @@
+#
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir = @srcdir@
+VPATH  = @srcdir@
+
+include ../../macros.make
+
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+INCLUDES += -I$(srcdir)/../../src/libf -I$(srcdir)/../../src/libf90
+FPPFLAGS += -I../../src/libf90 -I$(srcdir)
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf
+
+M4SRCS      = test_get.m4 \
+              test_put.m4  \
+              test_iget.m4 \
+              test_iput.m4
+
+M4SRCS_F90  = $(M4SRCS:.m4=.F90)
+
+F90_SRCS    = nf90_error.F90 \
+              nf90_test.F90 \
+              test_read.F90 \
+              test_write.F90 \
+              util.F90
+
+C_SRCS      = fortlib.c
+
+C_OBJS   = $(C_SRCS:.c=.o)
+F90_OBJS = $(F90_SRCS:.F90=.o) $(M4SRCS_F90:.F90=.o)
+OBJS     = $(C_OBJS) $(F90_OBJS)
+
+time_log = times
+
+PROGS    = nf90_test
+
+GARBAGE  = $(time_log) \
+           lint.out \
+           $(PROGS) \
+           scratch.nc \
+           test.nc \
+           $(M4SRCS_F90)
+
+PACKING_LIST = $(C_SRCS) \
+               $(F90_SRCS) \
+               $(M4SRCS) \
+               depend \
+               Makefile.in \
+               tests.inc \
+               README
+
+all: $(PROGS)
+
+nf90_test: $(OBJS) $(LIBRARY)
+	$(LINK.F90) $(OBJS) $(LDFLAGS) $(LIBS)
+
+test: nf90_test test.nc
+	./nf90_test
+	@echo '*** Success ***'
+
+readonly: nf90_test test.nc
+	./nf90_test -r
+
+test.nc: nf90_test
+	./nf90_test -c
+
+
+tags: $(F90_SRCS) $(C_SRCS) FORCE
+	ctags -t $(F90_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c
+
+# This simple testing target ensures that the test files are present
+testing check: test.nc nf90_test
+	$(RM) -f scratch.nc
+	./nf90_test
+
+verbose_testing: test.nc nf90_test
+	$(RM) -f scratch.nc
+	./nf90_test -v
+
+#test.nc: 
+#	(cd ../nc_test && $(MAKE) nc_test && ./nc_test -c)
+#	cp ../nc_test/test.nc .
+
+include $(srcdir)/../../rules.make
+include $(srcdir)/depend

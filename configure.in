@@ -6,8 +6,8 @@ dnl
 AC_PREREQ(2.59)
 AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 
-dnl src/lib/ncconfig.h must be the first, as it will be created by autoreconf
-AC_CONFIG_HEADERS([src/lib/ncconfig.h src/libf/pnetcdf_inc src/libf/nfconfig.inc:src/libf/nfconfig.in])
+dnl src/lib/ncconfig.h must be the first, as it will be created by autoreconf (autoheader)
+AC_CONFIG_HEADERS([src/lib/ncconfig.h src/libf/nfconfig_inc])
 
 AC_CONFIG_AUX_DIR(./scripts)
 AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
@@ -668,6 +668,23 @@ if test "$enable_fortran" = yes ; then
     ${RM} -rf conftest*
 fi
 
+SIZEOF_MPI_OFFSET=$ac_cv_sizeof_MPI_Offset
+AC_SUBST(SIZEOF_MPI_OFFSET)
+
+dnl
+dnl Below is to check if a Fortran compiler produces module files with upper
+dnl case file name, eg. PNETCDF.mod. However, this does not work for Mac OSX
+dnl file system which is case insensitive
+dnl
+if test "$enable_fortran" = yes ; then
+   UD_PROG_FC_UPPERCASE_MOD
+fi
+UPPER_CASE_MOD=no
+if test "x$ac_cv_prog_f90_uppercase_mod" = xyes ; then
+   UPPER_CASE_MOD=yes
+fi
+AC_SUBST(UPPER_CASE_MOD)
+
 has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 
@@ -746,17 +763,23 @@ CONFIG_FILES+=" test/test_check_header/Makefile"
 CONFIG_FILES+=" test/test_inq_format/Makefile"
 CONFIG_FILES+=" test/largefile/Makefile"
 CONFIG_FILES+=" test/data/Makefile"
+CONFIG_FILES+=" examples/C/Makefile"
 CONFIG_FILES+=" examples/tutorial/Makefile"
 CONFIG_FILES+=" examples/Makefile"
 CONFIG_FILES+=" doc/Makefile"
 CONFIG_FILES+=" man/Makefile"
 CONFIG_FILES+=" benchmarks/Makefile"
 CONFIG_FILES+=" src/libf/Makefile"
+CONFIG_FILES+=" src/libf/pnetcdf.inc"
+CONFIG_FILES+=" src/libf90/Makefile"
 if test "$enable_fortran" = yes ; then
    CONFIG_FILES+=" test/nf_test/Makefile"
+   CONFIG_FILES+=" test/nf90_test/Makefile"
+   CONFIG_FILES+=" test/F90/Makefile"
+   CONFIG_FILES+=" examples/F77/Makefile"
+   CONFIG_FILES+=" examples/F90/Makefile"
 fi
 AC_CONFIG_FILES(${CONFIG_FILES})
-
 AC_OUTPUT
 echo "--------------------------------------------------------------------"
 

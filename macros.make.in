@@ -44,11 +44,11 @@ FPPFLAGS	= $(INCLUDES) @FPPFLAGS@
 
 
 # Compilation:
-CC		= @CC@
-CXX		= @CXX@
-F77		= @F77@
-FC		= @FC@
-F90		= @FC@
+CC		= @MPICC@
+CXX		= @MPICXX@
+F77		= @MPIF77@
+FC		= @MPIF77@
+F90		= @MPIF90@
 
 CFLAGS		= @CFLAGS@
 CXXFLAGS	= @CXXFLAGS@
@@ -82,11 +82,11 @@ F90LDFLAGS	= @F90LDFLAGS@
 LDFLAGS		= @LDFLAGS@ 
 LIBS		= @LIBS@
 
-LINK.c		= $(CC)  -o $@ $(CFLAGS)   $(LDFLAGS)    $(LIBS)
-LINK.cxx	= $(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS)    $(LIBS)
-LINK.f		= $(FC)  -o $@ $(FFLAGS)   $(FLDFLAGS)   $(LIBS)
-LINK.F		= $(FC)  -o $@ $(FCFLAGS)  $(FLDFLAGS)   $(LIBS)
-LINK.F90	= $(F90) -o $@ $(F90FLAGS) $(F90LDFLAGS) $(LIBS)
+LINK.c		= $(CC)  $(CFLAGS)   -o $@
+LINK.cxx	= $(CXX) $(CXXFLAGS) -o $@
+LINK.f		= $(F77) $(FFLAGS)   -o $@
+LINK.F		= $(FC)  $(FCFLAGS)  -o $@
+LINK.F90	= $(F90) $(F90FLAGS) -o $@
 
 
 # Manual pages:

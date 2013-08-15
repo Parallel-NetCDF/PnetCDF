@@ -12,23 +12,32 @@ VPATH  = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib
-FPPFLAGS += -I../../src/libf
+FPPFLAGS += -I../../src/libf -I../../src/libf90
 LDFLAGS  += -L../../src/lib
 LIBS     += -lpnetcdf
 
-C_SRCS = pnetcdf-write-from-master.c pnetcdf-read-from-master.c \
-         pnetcdf-write-nfiles.c pnetcdf-read-nfiles.c \
-         pnetcdf-write-standard.c pnetcdf-read-standard.c \
-         pnetcdf-write-flexible.c pnetcdf-read-flexible.c \
-         pnetcdf-write-nb.c pnetcdf-read-nb.c \
+C_SRCS = pnetcdf-write-from-master.c \
+         pnetcdf-read-from-master.c \
+         pnetcdf-write-nfiles.c \
+         pnetcdf-read-nfiles.c \
+         pnetcdf-write-standard.c \
+         pnetcdf-read-standard.c \
+         pnetcdf-write-flexible.c \
+         pnetcdf-read-flexible.c \
+         pnetcdf-write-nb.c \
+         pnetcdf-read-nb.c \
          pnetcdf-write-buffered.c \
-	 pnetcdf-permute.c \
+         pnetcdf-permute.c
+
+F77_SRCS = pnetcdf-write-bufferedf77.f
 
 F90_SRCS = pnetcdf-write-bufferedf.f90
 
 PROGS  = $(C_SRCS:.c=)
 OBJS   = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
+PROGS += $(F77_SRCS:.f=)
+OBJS  += $(F77_SRCS:.f=.o)
 PROGS += $(F90_SRCS:.f90=)
 OBJS  += $(F90_SRCS:.f90=.o)
 endif
@@ -72,7 +81,10 @@ pnetcdf-write-buffered: pnetcdf-write-buffered.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+pnetcdf-write-bufferedf77: pnetcdf-write-bufferedf77.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)

@@ -13,25 +13,27 @@ VPATH  = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-FPPFLAGS += -I../../src/libf
+FPPFLAGS += -I../../src/libf -I../../src/libf90
 LDFLAGS  += -L../../src/lib -L../common
 LIBS     += -ltestutils -lpnetcdf $(MATHLIB)
 
 C_SRCS = pnctest.c \
          csnap.c
 
-F90_SRCS = pnctestf.f90 \
-           pnf_test.f90
+F77_SRCS = pnf_test.f \
+           pnctestf.f
+
+F90_SRCS =
 
 PROGS  = $(C_SRCS:.c=)
 OBJS   = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS += $(F90_SRCS:.f90=)
-OBJS  += $(F90_SRCS:.f90=.o)
+PROGS += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
+OBJS  += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F90_SRCS) Makefile.in
+PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in
 
 all: $(PROGS)
 
@@ -42,10 +44,11 @@ csnap:  csnap.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 pnctestf: pnctestf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 pnf_test:  pnf_test.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 include $(srcdir)/../../rules.make
+include $(srcdir)/depend
 

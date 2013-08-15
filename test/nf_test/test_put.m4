@@ -99,6 +99,7 @@ C ensure hash value within range for internal TYPE
 C
         function hash_$1(type, rank, index, itype)
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer type
         integer rank
@@ -124,8 +125,8 @@ C
 C check all vars in file which are (text/numeric) compatible with TYPE
 C
         subroutine check_vars_$1(filename)
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         character*(*)   filename
         integer  ncid          !/* netCDF id */
@@ -240,8 +241,8 @@ C *  check all attributes in file which are (text/numeric) compatible with TYPE
 C *  ignore any attributes containing values outside range of TYPE
 C */
         subroutine check_atts_$1(ncid)
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer  err
@@ -340,8 +341,8 @@ dnl
 define([TEST_NFMPI_PUT_VAR1],dnl
 [dnl
         subroutine test_nfmpi_put_var1_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -437,8 +438,8 @@ dnl
 define([TEST_NFMPI_PUT_VAR],dnl
 [dnl
         subroutine test_nfmpi_put_var_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer vid
@@ -586,8 +587,8 @@ dnl
 define([TEST_NFMPI_PUT_VARA],dnl
 [dnl
         subroutine test_nfmpi_put_vara_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -777,8 +778,8 @@ dnl
 define([TEST_NFMPI_PUT_VARS],dnl
 [dnl
         subroutine test_nfmpi_put_vars_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -981,8 +982,8 @@ dnl
 define([TEST_NFMPI_PUT_VARM],dnl
 [dnl
         subroutine test_nfmpi_put_varm_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -1193,8 +1194,8 @@ dnl
 define([TEST_NFMPI_PUT_ATT],dnl
 [dnl
         subroutine test_nfmpi_put_att_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -1379,8 +1380,8 @@ TEST_NFMPI_PUT_VARM(real)
 TEST_NFMPI_PUT_VARM(double)
 
         subroutine test_nfmpi_put_att_text()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i

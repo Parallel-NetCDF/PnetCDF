@@ -1074,3 +1074,30 @@ AC_SUBST([FC_DEFINE])dnl
 AC_LANG_POP([Fortran])dnl
 ])
 
+# AC_PROG_FC_MOD
+# ---------------
+dnl Note that Mac OSX file system is case-insensitive, so this function does
+dnl not work on Mac
+AC_DEFUN([UD_PROG_FC_UPPERCASE_MOD],
+[
+AC_LANG_PUSH(Fortran)
+AC_MSG_CHECKING([if Fortran 90 compiler capitalizes .mod filenames])
+AC_COMPILE_IFELSE(
+    [AC_LANG_SOURCE([
+        module conftest
+        end module conftest
+    ])]
+)
+dnl ac_try='$F90 ${F90FLAGS} conftest.f90 ${F90LIBS}>&AS_MESSAGE_LOG_FD'
+dnl AC_TRY_EVAL(ac_try)
+if test -f conftest.mod ; then
+   ac_cv_prog_f90_uppercase_mod=no
+else
+   ac_cv_prog_f90_uppercase_mod=yes
+   ${RM} -f CONFTEST.mod
+fi
+AC_MSG_RESULT($ac_cv_prog_f90_uppercase_mod)
+${RM} -f conftest*
+AC_LANG_POP(Fortran)
+])
+

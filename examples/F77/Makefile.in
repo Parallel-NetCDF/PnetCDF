@@ -1,0 +1,73 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir  = @srcdir@
+VPATH   = @srcdir@
+
+include ../../macros.make
+
+INCLUDES  = -I../../src/lib
+FPPFLAGS += -I../../src/libf
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf $(MATHLIB)
+
+F77_SRCS  = block_cyclic.f \
+            column_wise.f \
+            flexible_api.f \
+            get_info.f \
+            hints.f \
+            nonblocking_write.f \
+            put_vara.f \
+            put_varn_real.f \
+            put_varn_int.f
+
+PROGS     = $(F77_SRCS:.f=)
+OBJS      = $(F77_SRCS:.f=.o)
+
+GARBAGE      = $(PROGS) *.nc
+
+PACKING_LIST = $(F77_SRCS) \
+               Makefile.in
+
+all: $(PROGS)
+
+install:
+
+uninstall:
+
+nonblocking_write: nonblocking_write.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+get_info: get_info.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+column_wise: column_wise.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+block_cyclic: block_cyclic.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+put_vara: put_vara.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+hints: hints.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+flexible_api: flexible_api.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+put_varn_int: put_varn_int.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+put_varn_real: put_varn_real.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+include $(srcdir)/depend
+include $(srcdir)/../../rules.make
+
+

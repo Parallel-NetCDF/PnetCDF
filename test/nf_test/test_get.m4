@@ -66,8 +66,8 @@ dnl TEST_NFMPI_GET_VAR1(TYPE)
 dnl
 define([TEST_NFMPI_GET_VAR1],[dnl
         subroutine test_nfmpi_get_var1_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -127,7 +127,8 @@ define([TEST_NFMPI_GET_VAR1],[dnl
                         if (in_internal_range(NFT_ITYPE($1),
      +                                        expect)) then
                             if (err .ne. NF_NOERR) then
-                                call errore('nfmpi_get_var: ', err)
+                                call errore('nfmpi_get_var1_$1: ',
+     +                                      err)
                             else
                                 val = ARITH_VAR1($1, value)
                                 if (.not. equal(val, expect, 
@@ -164,8 +165,8 @@ dnl TEST_NFMPI_GET_VAR(TYPE)
 dnl
 define([TEST_NFMPI_GET_VAR],[dnl
         subroutine test_nfmpi_get_var_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -221,7 +222,8 @@ define([TEST_NFMPI_GET_VAR],[dnl
                 if (allInExtRange) then
                     if (allInIntRange) then
                         if (err .ne. NF_NOERR) 
-     +                      call errore('nfmpi_get_var: ', err)
+     +                      call errore('nfmpi_get_var_$1_all: ',
+     +                                  err)
                     else
                         if (err .ne. NF_ERANGE)
      +                      call errore('Range error: ', err)
@@ -262,8 +264,8 @@ dnl TEST_NFMPI_GET_VARA(TYPE)
 dnl
 define([TEST_NFMPI_GET_VARA],[dnl
         subroutine test_nfmpi_get_vara_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -408,8 +410,8 @@ C           bits of k determine whether to get lower or upper part of dim
                     if (allInExtRange) then
                         if (allInIntRange) then
                             if (err .ne. NF_NOERR)
-     +                          call errore('nfmpi_get_vara_$1:',
-     +                                       err)
+     +                          call errore(
+     +                  'nfmpi_get_vara_$1_all:', err)
                         else
                             if (err .ne. NF_ERANGE)
      +                          call errore('Range error: ', err)
@@ -463,8 +465,8 @@ dnl
 define([TEST_NFMPI_GET_VARS],dnl
 [dnl
         subroutine test_nfmpi_get_vars_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -689,8 +691,8 @@ dnl
 define([TEST_NFMPI_GET_VARM],dnl
 [dnl
         subroutine test_nfmpi_get_varm_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -925,8 +927,8 @@ dnl
 define([TEST_NFMPI_GET_ATT],dnl
 [dnl
         subroutine test_nfmpi_get_att_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i

@@ -1,0 +1,12 @@
+block_cyclic.o: block_cyclic.c
+collective_write.o: collective_write.c
+column_wise.o: column_wise.c
+flexible_api.o: flexible_api.c
+get_info.o: get_info.c
+hints.o: hints.c
+nonblocking_write.o: nonblocking_write.c
+put_vara.o: put_vara.c
+put_varn_float.o: put_varn_float.c
+put_varn_int.o: put_varn_int.c
+mput.o: mput.c
+

@@ -29,6 +29,8 @@ SUBDIRS = common \
 
 ifeq (@has_fortran@, yes)
 SUBDIRS += nf_test
+SUBDIRS += nf90_test
+SUBDIRS += F90
 endif
 
 
@@ -38,18 +40,22 @@ all:
 # Eventually, this target will run all of the relevant tests
 check testing:
 	# no tests in 'common' just common routines
-	cd common && $(MAKE)  
+	cd common && $(MAKE)
 	cd nc_test && $(MAKE) testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) testing ;     fi
+	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) testing ; fi
+	if [ @has_fortran@ = yes ] ; then cd nf90_test && $(MAKE) testing ; fi
+	if [ @has_fortran@ = yes ] ; then cd F90       && $(MAKE) testing ; fi
 	cd C && $(MAKE) testing
 	cd nonblocking && $(MAKE) testing
 	cd testcases && $(MAKE) testing
 
 verbose_check verbose_testing:
 	# no tests in 'common' just common routines
-	cd common && $(MAKE)  
+	cd common && $(MAKE)
 	cd nc_test && $(MAKE) verbose_testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) verbose_testing ;     fi
+	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) verbose_testing ; fi
+	if [ @has_fortran@ = yes ] ; then cd nf90_test && $(MAKE) verbose_testing ; fi
+	if [ @has_fortran@ = yes ] ; then cd F90       && $(MAKE) verbose_testing ; fi
 	cd C && $(MAKE) verbose_testing
 	cd nonblocking && $(MAKE) verbose_testing
 	cd testcases && $(MAKE) verbose_testing

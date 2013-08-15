@@ -12,7 +12,10 @@ tutorial
    http://trac.mcs.anl.gov/projects/parallel-netcdf/wiki/QuickTutorial
 
 
-block_cyclic.c
+  C/block_cyclic.c
+F77/block_cyclic.f
+F90/block_cyclic.f90
+
     This example makes a number of nonblocking API calls, each to write a
     block of columns into a 2D integer variable in a file. In other words,
     data partitioning pattern is a block-cyclic along X dimension.
@@ -30,7 +33,7 @@ block_cyclic.c
         0,  0,  1,  1,  2,  2,  3,  3,  0,  0,  1,  1,  2,  2,  3,  3 ;
 
 
-collective_write.c
+C/collective_write.c
     This example defined NUM_VARS 3D integer non-record vaiables in a file.
     All variables are partitioned among processes in a 3D block-block-block
     fashion. The I/O is carried out by making NUM_VARS calls to 
@@ -38,7 +41,9 @@ collective_write.c
     are reported in the standard output.
 
 
-column_wise.c
+  C/column_wise.c
+F77/column_wise.f
+F90/column_wise.f90
     This example makes a number of nonblocking API calls, each writes a single
     column of a 2D integer variable defined in a file. The data partitioning
     pattern among processes is a cyclic along dimension X, illustrated below
@@ -56,13 +61,34 @@ column_wise.c
        0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3 ;
 
 
-get_info_c.c
-get_info_f.F90
+  C/flexible_api.c
+F77/flexible_api.f
+F90/flexible_api.f90
+    This example shows how to use PnetCDF flexible APIs, ncmpi_put_vara_all()
+    and ncmpi_iput_vara() to write two 2D array variables (one is of 4-byte
+    integer byte and the other float type) in parallel.
+    Local buffers have a ghost cell of length 3 surrounded along each
+    dimension.
+
+
+  C/get_info.c
+F77/get_info.f
+F90/get_info.f90
     These two example progrms print the PnetCDF and MPI-IO hints to the
     stardard output.
 
 
-mput.c
+  C/hints.c
+F77/hints.f
+F90/hints.f90
+    This example sets two PnetCDF hints:
+        nc_header_align_size and
+        nc_var_align_size
+    and prints the hint values, the header size, header extent, and
+    variables' starting file offsets.
+
+
+C/mput.c
     This example shows how to use a single call of ncmpi_mput_vara_all() to
     write a sequence of requests with arbitrary array indices and lengths.
     It is intended to run on 4 processes. If more processes were allocated,
@@ -76,16 +102,16 @@ mput.c
 
 
 
-nonblocking_write.c
+  C/nonblocking_write.c
+F77/nonblocking_write.f
+F90/nonblocking_write.f90
     This example is almost the same as to collective_write.c but using
     nonblocking APIs instead.
 
 
-nonblocking_writef.f90
-    This example is the Fortran version of nonblocking_write.c
-
-
-put_vara.F
+  C/put_vara.c
+F77/put_vara.f
+F90/put_var.f90
     This example shows how to use nfmpi_put_vara_int_all() to write a 2D
     4-byte integer array in parallel. The data partitioning pattern among
     processes is a *-block in Fortran order. It is described by the process
@@ -108,46 +134,22 @@ put_vara.F
          3, 3, 3, 3, 3,
          3, 3, 3, 3, 3 ;
 
-hints.c
-    This example sets two PnetCDF hints:
-        nc_header_align_size and
-        nc_var_align_size
-    and prints the hint values, the header size, header extent, and
-    variables' starting file offsets.
 
-
-flex_f.F
-    This example shows how to use PnetCDF nonblocking flexible API,
-    nfmpi_iput_vara() to write a 2D 4-byte integer array in parallel.
-    The local buffer has a ghost cell of length 3 surrounded along each
-    dimension.
-
-
-flex.c
-    This example shows how to use PnetCDF flexible APIs, ncmpi_put_vara_all()
-    and ncmpi_iput_vara() to write two 2D array variables (one is of 4-byte
-    integer byte and the other float type) in parallel.
-    Local buffers have a ghost cell of length 3 surrounded along each
-    dimension.
-
-put_varn_int.c
-    This example makes a single call of ncmpi_put_varn_int_all() to write a
-    sequence of requests with arbitrary array indices and lengths. All
-    subrequests (starts[] and counts[]) are within the boundaries of a single
-    variable.  See comments at the beginning of the source file for compile,
-    run instructions, and example output.
-
-put_varn_intf.f90
-    This example makes a single call to nfmpi_put_varna_int_all() to write
-    a sequence of requests with arbitrary array indices and lengths. All
-    subrequests (starts[] and counts[]) are within the boundaries of a single
-    variable.  See comments at the beginning of the source file for compile,
-    run instructions, and example output.
-
-put_varn_float.c
+  C/put_varn_float.c
+F77/put_varn_real.f
+F90/put_varn_real.f90
     This example makes a single call of ncmpi_put_varn_float_all() to write a
     sequence of one-element requests with arbitrary array indices. All
     subrequest indices, starts[], are within the boundaries of a single
     variable.  See comments at the beginning of the source file for compile,
     run instructions, and example output.
 
+
+  C/put_varn_int.c
+F77/put_varn_int.f
+F90/put_varn_int.f90
+    This example makes a single call of ncmpi_put_varn_int_all() to write a
+    sequence of requests with arbitrary array indices and lengths. All
+    subrequests (starts[] and counts[]) are within the boundaries of a single
+    variable.  See comments at the beginning of the source file for compile,
+    run instructions, and example output.

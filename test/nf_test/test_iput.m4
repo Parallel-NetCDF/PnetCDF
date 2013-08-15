@@ -95,8 +95,8 @@ dnl
 define([TEST_NFMPI_IPUT_VAR1],dnl
 [dnl
         subroutine test_nfmpi_iput_var1_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -191,8 +191,8 @@ dnl
 define([TEST_NFMPI_IPUT_VAR],dnl
 [dnl
         subroutine test_nfmpi_iput_var_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer vid
@@ -347,8 +347,8 @@ dnl
 define([TEST_NFMPI_IPUT_VARA],dnl
 [dnl
         subroutine test_nfmpi_iput_vara_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -530,8 +530,8 @@ dnl
 define([TEST_NFMPI_IPUT_VARS],dnl
 [dnl
         subroutine test_nfmpi_iput_vars_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -724,8 +724,8 @@ dnl
 define([TEST_NFMPI_IPUT_VARM],dnl
 [dnl
         subroutine test_nfmpi_iput_varm_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d

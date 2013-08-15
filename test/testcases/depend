@@ -1,0 +1,7 @@
+bigrecords.o: bigrecords.f
+alignment_test.o: alignment_test.c
+collective_error.o: collective_error.c
+ncmpi_vars_null_stride.o: ncmpi_vars_null_stride.c
+redef1.o: redef1.cpp
+test_varm.o: test_varm.c
+vectors.o: vectors.c

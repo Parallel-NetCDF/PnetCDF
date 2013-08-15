@@ -1,0 +1,101 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir  = @srcdir@
+VPATH   = @srcdir@
+
+include ../../macros.make
+
+INCLUDES  =
+FPPFLAGS += -I../../src/libf90
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf
+
+F90_SRCS = tst_f90.f90 \
+           tst_io.f90 \
+           f90tst_vars.f90 \
+           tst_types2.f90 \
+           tst_f90_cdf5.f90 \
+           f90tst_vars2.f90 \
+           f90tst_vars3.f90 \
+           f90tst_vars4.f90 \
+           tst_flarge.f90 \
+           f90tst_parallel.f90 \
+           f90tst_parallel2.f90 \
+           f90tst_parallel3.f90 \
+           f90tst_parallel4.f90
+
+PROGS    = $(F90_SRCS:.f90=)
+OBJS     = $(F90_SRCS:.f90=.o)
+
+GARBAGE  = $(PROGS) *.mod *.nc
+
+PACKING_LIST = $(F90_SRCS) \
+               Makefile.in
+
+all: $(PROGS)
+
+testing check: $(PROGS)
+	./tst_f90
+	./tst_io
+	./f90tst_vars
+	./tst_types2
+	./tst_f90_cdf5
+	./f90tst_vars2
+	./f90tst_vars3
+	./f90tst_vars4
+	./tst_flarge
+
+install:
+
+uninstall:
+
+tst_f90: tst_f90.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+tst_io: tst_io.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_vars: f90tst_vars.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+tst_types2: tst_types2.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+tst_f90_cdf5: tst_f90_cdf5.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_vars2: f90tst_vars2.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_vars3: f90tst_vars3.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_vars4: f90tst_vars4.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+tst_flarge: tst_flarge.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_parallel: f90tst_parallel.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_parallel2: f90tst_parallel2.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_parallel3: f90tst_parallel3.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+f90tst_parallel4: f90tst_parallel4.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+
+include $(srcdir)/depend
+include $(srcdir)/../../rules.make
+
+
