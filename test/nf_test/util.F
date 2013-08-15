@@ -5,9 +5,9 @@
 !********************************************************************/
 
       SUBROUTINE PRINT_NOK(NOK)
-      USE PNETCDF
       IMPLICIT  NONE
       INTEGER   NOK
+      include "pnetcdf.inc"
 #include "tests.inc"
 
  123  FORMAT(I4,A)
@@ -20,10 +20,10 @@
 
 ! Is value within external type range? */
       FUNCTION INRANGE(VALUE, DATATYPE)
-      USE PNETCDF
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       DOUBLEPRECISION   MIN
@@ -60,10 +60,10 @@
 
 
       FUNCTION INRANGE_UCHAR(VALUE, DATATYPE)
-      USE PNETCDF
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       IF (DATATYPE .EQ. NF_BYTE) THEN
@@ -76,10 +76,10 @@
 
 
       FUNCTION INRANGE_FLOAT(VALUE, DATATYPE)
-      USE PNETCDF
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       DOUBLEPRECISION   MIN
@@ -136,6 +136,7 @@
       doubleprecision   value
       integer           datatype
       integer           itype
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       if (itype .eq. NFT_REAL) then
@@ -151,12 +152,12 @@
 !  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
 !
       function equal(x, y, extType, itype)
-      USE PNETCDF
       implicit  none
       doubleprecision   x
       doubleprecision   y
       integer           extType         !!/* external data type */
       integer           itype
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       doubleprecision   epsilon
@@ -172,11 +173,11 @@
 
 ! Test whether two int vectors are equal. If so return 1, else 0  */
         function int_vec_eq(v1, v2, n)
-        USE PNETCDF
         implicit        none
         integer n
         integer v1(n)
         integer v2(n)
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer i
@@ -200,8 +201,8 @@
 !  Like throwing an n-sided dice marked 0, 1, 2, ..., n-1
 !
       function roll(n)
-      USE PNETCDF
       implicit  none
+      include "pnetcdf.inc"
 #include "tests.inc"
       integer(kind=MPI_OFFSET_KIND)   n
 
@@ -221,17 +222,17 @@
 !                Steve Emmerson, (same place)
 !
         function index2ncindexes(index, rank, base, indexes)
-        USE PNETCDF
         implicit        none
         integer         index           !!/* index to be converted */
         integer         rank            !/* number of dimensions */
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer(kind=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
         integer(kind=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
-	integer intbase
+        integer intbase
 
         if (rank .gt. 0) then
             offset = index - 1
@@ -257,10 +258,10 @@
 !                Steve Emmerson, (same place)
 !
         function index2indexes(index, rank, base, indexes)
-        USE PNETCDF
         implicit        none
         integer         index           !/* index to be converted */
         integer         rank            !/* number of dimensions */
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer(kind=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
         integer(kind=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
@@ -293,11 +294,11 @@
 !                Steve Emmerson, (same place)
 !
         function indexes2index(rank, indexes, base)
-        USE PNETCDF
         implicit        none
         integer         rank            !/* number of dimensions */
         integer         indexes(rank)   !/* FORTRAN indexes */
         integer         base(rank)      !/* base(rank) ignored */
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer i
@@ -313,10 +314,10 @@
 
 ! Generate data values as function of type, rank (-1 for attribute), index */
       function hash(type, rank, index) 
-      USE PNETCDF
       implicit  none
       integer   type
       integer   rank
+      include "pnetcdf.inc"
 #include "tests.inc"
       integer(kind=MPI_OFFSET_KIND)   index(*)
 
@@ -438,10 +439,10 @@
 
 ! wrapper for hash to handle special NC_BYTE/uchar adjustment */
       function hash4(type, rank, index, itype)
-      USE PNETCDF
       implicit  none
       integer   type
       integer   rank
+      include "pnetcdf.inc"
 #include "tests.inc"
       integer(kind=MPI_OFFSET_KIND)   index(*)
       integer   itype
@@ -453,9 +454,9 @@
 
 
       integer function char2type(letter)
-      USE PNETCDF
       implicit          none
       character*1       letter
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       if (letter .eq. 'c') then
@@ -481,6 +482,7 @@
       subroutine init_dims(digit)
       implicit          none
       character*1       digit(NDIMS)
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       integer   dimid                   !/* index of dimension */
@@ -498,6 +500,7 @@
       subroutine init_gatts(type_letter)
       implicit          none
       character*1       type_letter(NTYPES)
+      include "pnetcdf.inc"
 #include "tests.inc"
 
       integer   attid
@@ -512,9 +515,9 @@
 
 
       integer function prod(nn, sp)
-      USE PNETCDF
       implicit  none
       integer   nn
+      include "pnetcdf.inc"
 #include "tests.inc"
       integer(kind=MPI_OFFSET_KIND)   sp(MAX_RANK)
 
@@ -536,6 +539,7 @@
 
         subroutine init_gvars
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer(kind=MPI_OFFSET_KIND)         max_dim_len(MAX_RANK)
@@ -639,9 +643,9 @@
 
 ! define dims defined by global variables */
         subroutine def_dims(ncid)
-        USE PNETCDF
         implicit        none
         integer         ncid
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer         err             !/* status */
@@ -667,9 +671,9 @@
 
 ! define vars defined by global variables */
         subroutine def_vars(ncid)
-        USE PNETCDF
         implicit        none
         integer         ncid
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer         err             !/* status */
@@ -688,9 +692,9 @@
 
 ! put attributes defined by global variables */
         subroutine put_atts(ncid)
-        USE PNETCDF
         implicit        none
         integer         ncid
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer                 err             !/* netCDF status */
@@ -759,9 +763,9 @@
 
 ! put variables defined by global variables */
         subroutine put_vars(ncid)
-        USE PNETCDF
         implicit        none
         integer                 ncid
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer(kind=MPI_OFFSET_KIND)                 start(MAX_RANK)
@@ -833,9 +837,9 @@
 
 ! Create & write all of specified file using global variables */
         subroutine write_file(filename) 
-        USE PNETCDF
         implicit        none
         character*(*)   filename
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer ncid            !/* netCDF id */
@@ -867,9 +871,9 @@
 ! check dimensions of specified file have expected name & length
 !
         subroutine check_dims(ncid)
-        USE PNETCDF
         implicit        none
         integer         ncid
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         character*(NF_MAX_NAME) name
@@ -896,9 +900,9 @@
 ! check variables of specified file have expected name, type, shape & values
 !
         subroutine check_vars(ncid)
-        USE PNETCDF
         implicit        none
         integer         ncid
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
@@ -992,9 +996,9 @@
 ! check attributes of specified file have expected name, type, length & values
 !
         subroutine check_atts(ncid) 
-        USE PNETCDF
         implicit        none
         integer         ncid
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer                 err             !/* netCDF status */
@@ -1081,9 +1085,9 @@
 
 ! Check file (dims, vars, atts) corresponds to global variables */
         subroutine check_file(filename) 
-        USE PNETCDF
         implicit        none
         character*(*)   filename
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer ncid            !/* netCDF id */
@@ -1113,9 +1117,9 @@
 !
 
       FUNCTION VARID(VID)
-      USE PNETCDF
       IMPLICIT NONE
       INTEGER VID
+      include "pnetcdf.inc"
 #include "tests.inc"
       IF (VID .LT. 1) THEN
           VARID = NF_GLOBAL
@@ -1126,9 +1130,9 @@
 
 
       FUNCTION NATTS(VID)
-      USE PNETCDF
       IMPLICIT  NONE
       INTEGER VID
+      include "pnetcdf.inc"
 #include "tests.inc"
       IF (VID .LT. 1) THEN
           NATTS = NGATTS
@@ -1139,10 +1143,10 @@
 
 
       FUNCTION ATT_NAME(J,VID)
-      USE PNETCDF
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
+      include "pnetcdf.inc"
 #include "tests.inc"
       IF (VID .LT. 1) THEN
           ATT_NAME = GATT_NAME(J)
@@ -1153,10 +1157,10 @@
 
 
       FUNCTION ATT_TYPE(J,VID)
-      USE PNETCDF
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
+      include "pnetcdf.inc"
 #include "tests.inc"
       IF (VID .LT. 1) THEN
           ATT_TYPE = GATT_TYPE(J)
@@ -1167,10 +1171,10 @@
 
 
       FUNCTION ATT_LEN(J,VID)
-      USE PNETCDF
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
+      include "pnetcdf.inc"
 #include "tests.inc"
       IF (VID .LT. 1) THEN
           ATT_LEN = GATT_LEN(J)
@@ -1193,6 +1197,7 @@
         doubleprecision max_float
         doubleprecision max_double
         doubleprecision min_int64
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         if (type .eq. NFT_CHAR) then
@@ -1269,6 +1274,7 @@
         doubleprecision max_float
         doubleprecision max_double
         doubleprecision max_int64
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         if (type .eq. NFT_CHAR) then
@@ -1336,9 +1342,9 @@
 ! Return the minimum value of an external type.
 !
         function external_min(type)
-        use pnetcdf
         implicit        none
         integer         type
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         if (type .eq. NF_BYTE) then
@@ -1365,9 +1371,9 @@
 ! Return the maximum value of an internal type.
 !
         function external_max(type)
-        use pnetcdf
         implicit        none
         integer         type
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         if (type .eq. NF_BYTE) then
@@ -1394,10 +1400,10 @@
 ! Indicate whether or not a value lies in the range of an internal type.
 !
         function in_internal_range(itype, value)
-        use pnetcdf
         implicit        none
         integer         itype
         doubleprecision value
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         in_internal_range = value .ge. internal_min(itype) .and.
@@ -1409,9 +1415,9 @@
 ! Return the length of a character variable minus any trailing blanks.
 !
         function len_trim(string)
-        use pnetcdf
         implicit        none
         character*(*)   string
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         do 1, len_trim = len(string), 1, -1

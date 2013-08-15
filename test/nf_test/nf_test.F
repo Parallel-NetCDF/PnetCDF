@@ -27,8 +27,8 @@
 #endif
 
         subroutine usage()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         call error('usage: nf_test [-hrv] [-n <MAX_NMPT>]')
@@ -43,12 +43,12 @@
 
 
         subroutine test(name, func)
-        use pnetcdf
         implicit        none
         character*(*)   name
         character(len=25) name_str
         integer           name_len
         external        func
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         name_len = LEN_TRIM(name)
@@ -71,7 +71,6 @@
 #if _CRAYIEEE
 ! which machines need this?
         subroutine getarg(iarg, carg)
-        use pnetcdf
         implicit        none
         integer iarg
         character*(*)   carg
@@ -82,7 +81,6 @@
 #endif
 
         program nf_test
-        use pnetcdf
 #if defined(VISUAL_CPLUSPLUS)
 !	DIGITAL Visual Fortran needs DFLIB for getarg
 	USE DFLIB
@@ -99,6 +97,7 @@
 #if defined(__crayx1)
         integer         ipxfargc 
 #endif
+        include "pnetcdf.inc"
 #include "tests.inc"
 
         integer         argc

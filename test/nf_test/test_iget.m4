@@ -66,8 +66,8 @@ dnl TEST_NFMPI_IGET_VAR1(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VAR1],[dnl
         subroutine test_nfmpi_iget_var1_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -162,8 +162,8 @@ dnl TEST_NFMPI_IGET_VAR(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VAR],[dnl
         subroutine test_nfmpi_iget_var_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer i
@@ -263,8 +263,8 @@ dnl TEST_NFMPI_IGET_VARA(TYPE)
 dnl
 define([TEST_NFMPI_IGET_VARA],[dnl
         subroutine test_nfmpi_iget_vara_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -479,8 +479,8 @@ dnl
 define([TEST_NFMPI_IGET_VARS],dnl
 [dnl
         subroutine test_nfmpi_iget_vars_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d
@@ -695,8 +695,8 @@ dnl
 define([TEST_NFMPI_IGET_VARM],dnl
 [dnl
         subroutine test_nfmpi_iget_varm_$1()
-        use pnetcdf
         implicit        none
+        include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
         integer d

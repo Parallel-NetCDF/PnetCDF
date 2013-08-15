@@ -771,7 +771,7 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
 
     if (argc != 2) {
-        printf("Usage:\n\t ncvalid <ncfile>\n");
+        printf("Usage: %s <ncfile>\n", argv[0]);
         MPI_Finalize();
         return 1;
     } 

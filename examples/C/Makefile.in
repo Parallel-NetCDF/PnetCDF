@@ -1,0 +1,80 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir  = @srcdir@
+VPATH   = @srcdir@
+
+include ../../macros.make
+
+INCLUDES  = -I../../src/lib
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf $(MATHLIB)
+
+C_SRCS  = block_cyclic.c \
+          collective_write.c \
+          column_wise.c \
+          flexible_api.c \
+          get_info.c \
+          hints.c \
+          nonblocking_write.c \
+          put_vara.c \
+          put_varn_float.c \
+          put_varn_int.c \
+          mput.c
+
+PROGS     = $(C_SRCS:.c=)
+OBJS      = $(C_SRCS:.c=.o)
+
+GARBAGE      = $(PROGS) *.nc
+
+PACKING_LIST = $(C_SRCS) \
+               Makefile.in
+
+all: $(PROGS)
+
+install:
+
+uninstall:
+
+collective_write: collective_write.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+nonblocking_write: nonblocking_write.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+get_info: get_info.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+column_wise: column_wise.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+block_cyclic: block_cyclic.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+put_vara: put_vara.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+mput: mput.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+hints: hints.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+flexible_api: flexible_api.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+put_varn_int: put_varn_int.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+put_varn_float: put_varn_float.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+include $(srcdir)/depend
+include $(srcdir)/../../rules.make
+
+

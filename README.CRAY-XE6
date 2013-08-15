@@ -34,3 +34,10 @@ For Cray compilers, i.e.
                 CFLAGS=-O2 FFLAGS=-O2 FCFLAGS="-O2 -emf" \
                 LDFLAGS=-Wl,-z,muldefs
 
+    Check crayftn man page for using option "-emf" in FCFLAGS:
+    to creates .mod files to hold module and allows the creation
+    of lower-case module .mod file names.
+
+    Option "-Wl,-z,muldefs" in LDFLAGS is to get around the
+    error of multiple definitions of `tc_version', etc.
+

@@ -11,8 +11,8 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common -I$(srcdir)/../../src/libf
-FPPFLAGS += -I../../src/libf -I$(srcdir)
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common -I$(srcdir)/../../src/libf -I$(srcdir)/../../src/libf90
+FPPFLAGS += -I../../src/libf -I../../src/libf90 -I$(srcdir)
 LDFLAGS  += -L../../src/lib
 LIBS     += -lpnetcdf
 
@@ -73,13 +73,8 @@ test.nc: nf_test
 tags: $(F_SRCS) $(C_SRCS) FORCE
 	ctags -t $(F_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c
 
-test_get.F:  test_get.m4
-test_put.F:  test_put.m4
-test_iget.F: test_iget.m4
-test_iput.F: test_iput.m4
-
 # This simple testing target ensures that the test files are present
-testing: test.nc nf_test
+testing check: test.nc nf_test
 	$(RM) -f scratch.nc
 	./nf_test
 

@@ -16,29 +16,27 @@ LDFLAGS  += -L../../src/lib -L../common
 LIBS     += -ltestutils -lpnetcdf $(MATHLIB)
 
 SRCS      = nc_test.c \
-            error.c \
-            test_get.c \
-            test_put.c \
             test_read.c \
             test_write.c \
-            test_iget.c \
-            test_iput.c \
+            error.c \
             util.c
 
-OBJS      = $(SRCS:.c=.o)
+M4_SRCS   = test_get.m4 \
+            test_put.m4 \
+            test_iget.m4 \
+            test_iput.m4
+
+OBJS      = $(SRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 PROGS     = nc_test
 
 time_log  = times
 
 GARBAGE      = $(PROGS) test.nc scratch.nc lint.out \
-               $(time_log) test_get.c test_put.c test_iget.c test_iput.c
+               $(time_log) $(M4_SRCS:.m4=.c)
 
 PACKING_LIST = $(SRCS) \
-               test_get.m4 \
-               test_put.m4 \
-               test_iget.m4 \
-               test_iput.m4 \
+               $(M4_SRCS) \
                error.h \
                tests.h \
                Makefile.in \
@@ -59,14 +57,6 @@ test.nc:  nc_test
 
 nc_test: $(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS)
-
-test_get.c: test_get.m4
-
-test_put.c: test_put.m4
-
-test_iget.c: test_iget.m4
-
-test_iput.c: test_iput.m4
 
 nctime: nctime.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)

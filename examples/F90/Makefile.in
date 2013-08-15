@@ -1,0 +1,73 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir  = @srcdir@
+VPATH   = @srcdir@
+
+include ../../macros.make
+
+INCLUDES    = -I../../src/lib
+FPPFLAGS   += -I../../src/libf -I../../src/libf90
+F90LDFLAGS += -L../../src/lib
+LIBS       += -lpnetcdf $(MATHLIB)
+
+F90_SRCS  = block_cyclic.f90 \
+            column_wise.f90 \
+            flexible_api.f90 \
+            get_info.f90 \
+            hints.f90 \
+            nonblocking_write.f90 \
+            put_var.f90 \
+            put_varn_real.f90 \
+            put_varn_int.f90
+
+PROGS     = $(F90_SRCS:.f90=)
+OBJS      = $(F90_SRCS:.f90=.o)
+
+GARBAGE      = $(PROGS) *.nc
+
+PACKING_LIST = $(F90_SRCS) \
+               Makefile.in
+
+all: $(PROGS)
+
+install:
+
+uninstall:
+
+nonblocking_write: nonblocking_write.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+get_info: get_info.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+column_wise: column_wise.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+block_cyclic: block_cyclic.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+put_var: put_var.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+hints: hints.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+flexible_api: flexible_api.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+put_varn_int: put_varn_int.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+put_varn_real: put_varn_real.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+include $(srcdir)/depend
+include $(srcdir)/../../rules.make
+
+

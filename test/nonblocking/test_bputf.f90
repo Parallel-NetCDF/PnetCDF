@@ -33,28 +33,28 @@
           endif
       endif
 
-      cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
-      err = nfmpi_create(MPI_COMM_WORLD, 'test.nc', cmode,  &
-                         MPI_INFO_NULL, ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_create ', &
-                                 nfmpi_strerror(err)
+      cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
+      err = nf90mpi_create(MPI_COMM_WORLD, 'testfile.nc', cmode,  &
+                           MPI_INFO_NULL, ncid)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_create ', &
+                                   nf90mpi_strerror(err)
 
       ! define a variable of a 4 x 6 integer array in the nc file
-      err = nfmpi_def_dim(ncid, 'X', 4_MPI_OFFSET_KIND, dimid(1))
-      if (err < NF_NOERR) print*,'Error at nfmpi_def_dim ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_def_dim(ncid, 'X', 4_MPI_OFFSET_KIND, dimid(1))
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_dim ', &
+                                   nf90mpi_strerror(err)
 
-      err = nfmpi_def_dim(ncid, 'Y', 6_MPI_OFFSET_KIND, dimid(2))
-      if (err < NF_NOERR) print*,'Error at nfmpi_def_dim ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_def_dim(ncid, 'Y', 6_MPI_OFFSET_KIND, dimid(2))
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_dim ', &
+                                   nf90mpi_strerror(err)
 
-      err = nfmpi_def_var(ncid, 'var', NF_INT64, 2, dimid, varid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_def_var ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_def_var(ncid, 'var', NF90_INT64, dimid, varid)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_def_var ', &
+                                   nf90mpi_strerror(err)
 
-      err = nfmpi_enddef(ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_enddef ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_enddef(ncid)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_enddef ', &
+                                   nf90mpi_strerror(err)
 
       ! set the contents of write buffer var, a 6 x 4 real array
       !     50, 56, 62, 68,
@@ -71,9 +71,9 @@
 
       ! bufsize must be max of data type converted before and after
       bufsize = 4*6*8
-      err = nfmpi_buffer_attach(ncid, bufsize)
-      if (err < NF_NOERR) print*,'Error at nfmpi_buffer_attach ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_buffer_attach(ncid, bufsize)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_buffer_attach ', &
+                                   nf90mpi_strerror(err)
 
       ! write var to the NC variable in the matrix transposed way
       count(1)  = 2
@@ -86,33 +86,33 @@
       ! write the first two columns of the NC variable in the matrix transposed way
       start(1)  = 1
       start(2)  = 1
-      err = nfmpi_bput_varm_real(ncid, varid, start, count, stride, &
-                                 imap, var(1,1), req(1))
-      if (err < NF_NOERR) print*,'Error at nfmpi_bput_varm_real ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_bput_var(ncid, varid, var(1:,1:), req(1), start, count, &
+                             stride, imap)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_bput_var', &
+                                   nf90mpi_strerror(err)
 
       ! write the second two columns of the NC variable in the matrix transposed way
       start(1)  = 3
       start(2)  = 1
-      err = nfmpi_bput_varm_real(ncid, varid, start, count, stride, &
-                                 imap, var(1,3), req(2))
-      if (err < NF_NOERR) print*,'Error at nfmpi_bput_varm_real ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_bput_var(ncid, varid, var(1:,3:), req(2), start, count, &
+                             stride, imap)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_bput_var', &
+                                   nf90mpi_strerror(err)
 
-      err = nfmpi_wait_all(ncid, 2, req, status)
-      if (err < NF_NOERR) print*,'Error at nfmpi_wait_all ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_wait_all(ncid, 2, req, status)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_wait_all ', &
+                                   nf90mpi_strerror(err)
 
       ! check each bput status
       do i = 1, 2
-          if (status(i) .ne. NF_NOERR) then
-              print*,'Error at bput status ', nfmpi_strerror(status(i))
+          if (status(i) .ne. NF90_NOERR) then
+              print*,'Error at bput status ', nf90mpi_strerror(status(i))
           endif
       enddo
 
-      err = nfmpi_buffer_detach(ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_buffer_detach ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_buffer_detach(ncid)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_buffer_detach ', &
+                                   nf90mpi_strerror(err)
 
       ! the output from command "ncmpidump -v var test.nc" should be:
       !      var =
@@ -132,7 +132,7 @@
 ! #ifdef PRINT_ERR_ON_SCREEN
 !                 ! this error is a pntecdf internal error, if occurs */
 !                 print*,
-!                 'Error: bput_varm write buffer has been altered at j=',
+!                 'Error: nf90mpi_bput_var write buffer has been altered at j=',
 !      &          j,' i=',i,' var=',var(i,j)
 ! #endif
                 no_err = no_err + 1
@@ -140,19 +140,21 @@
          enddo
       enddo
 
-      err = nfmpi_close(ncid)
-      if (err < NF_NOERR) print*,'Error at nfmpi_close ', &
-                                 nfmpi_strerror(err)
+      err = nf90mpi_close(ncid)
+      if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &
+                                   nf90mpi_strerror(err)
+
+      if (rank .EQ. 0) then
+          if (no_err .GT. 0) then
+              print*,'** TESTING Fortran test_bputf.f90 for nf90mpi_bput_var ', &
+                     '           ------ failed'
+          else
+              print*,'** TESTING Fortran test_bputf.f90 for nf90mpi_bput_var ', &
+                     '           ------ pass'
+          endif
+      endif
 
       CALL MPI_Finalize(err)
 
-      if (no_err .GT. 0) then
-          print*,'*** TESTING Fortran test_bputf.f90 for bput_varm ', &
-                 '                  ------ failed'
-      else
-          print*,'** TESTING Fortran test_bputf.f90 for bput_varm ', &
-                 '                  ------ pass'
-      endif
-      Stop
       end program
 

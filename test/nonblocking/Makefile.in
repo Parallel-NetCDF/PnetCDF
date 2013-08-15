@@ -12,12 +12,15 @@ VPATH  = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-FPPFLAGS += -I../../src/libf
+FPPFLAGS += -I../../src/libf -I../../src/libf90
 LDFLAGS  += -L../../src/lib
 LIBS     += -lpnetcdf $(MATHLIB)
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c
+
+F77_SRCS = mcoll_testf77.f \
+           test_bputf77.f
 
 F90_SRCS = mcoll_testf.f90 \
            test_bputf.f90
@@ -25,12 +28,12 @@ F90_SRCS = mcoll_testf.f90 \
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS     += $(F90_SRCS:.f90=)
-OBJS      += $(F90_SRCS:.f90=.o)
+PROGS     += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
+OBJS      += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F90_SRCS) Makefile.in README
+PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in README
 
 all: $(PROGS)
 
@@ -40,18 +43,26 @@ mcoll_perf: mcoll_perf.o $(LIBRARY)
 test_bput: test_bput.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+mcoll_testf77: mcoll_testf77.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
 mcoll_testf: mcoll_testf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 test_bputf: test_bputf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+test_bputf77: test_bputf77.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 check testing: $(PROGS)
 	@./mcoll_perf
 	@./test_bput
 ifeq (@has_fortran@, yes)
 	@./mcoll_testf
+	@./mcoll_testf77
 	@./test_bputf
+	@./test_bputf77
 endif
 
 verbose_check verbose_testing: $(PROGS)
@@ -59,8 +70,11 @@ verbose_check verbose_testing: $(PROGS)
 	./test_bput -v
 ifeq (@has_fortran@, yes)
 	./mcoll_testf -v
+	./mcoll_testf77 -v
 	./test_bputf -v
+	./test_bputf77 -v
 endif
 
 include $(srcdir)/../../rules.make
+include $(srcdir)/depend
 

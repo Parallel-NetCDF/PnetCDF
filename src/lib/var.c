@@ -282,16 +282,16 @@ incr_NC_vararray(NC_vararray *ncap,
 
 
 static NC_var *
-elem_NC_vararray(const NC_vararray *ncap, MPI_Offset elem)
+elem_NC_vararray(const NC_vararray *ncap, int varid)
 {
-        assert(ncap != NULL);
-                /* cast needed for braindead systems with signed MPI_Offset */
-        if((elem < 0) ||  ncap->ndefined == 0 || elem >= ncap->ndefined)
-                return NULL;
+    assert(ncap != NULL);
+    /* cast needed for braindead systems with signed MPI_Offset */
+    if ((varid < 0) ||  ncap->ndefined == 0 || varid >= ncap->ndefined)
+        return NULL;
 
-        assert(ncap->value != NULL);
+    assert(ncap->value != NULL);
 
-        return ncap->value[elem];
+    return ncap->value[varid];
 }
 
 
