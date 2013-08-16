@@ -587,8 +587,8 @@
      +         nfmpi_put_att_int2,   nfmpi_get_att_int2,
      +         nfmpi_put_att_int,    nfmpi_get_att_int,
      +         nfmpi_put_att_real,   nfmpi_get_att_real,
-     +         nfmpi_put_att_double, nfmpi_get_att_double
-     +         nfmpi_put_att_int8,   nfmpi_get_int8
+     +         nfmpi_put_att_double, nfmpi_get_att_double,
+     +         nfmpi_put_att_int8,   nfmpi_get_att_int8
 
       external nfmpi_put_att_text,   nfmpi_get_att_text,
      +         nfmpi_put_att_int1,   nfmpi_get_att_int1,
@@ -667,7 +667,7 @@
      +         nfmpi_get_var_int2,   nfmpi_get_var_int2_all,
      +         nfmpi_get_var_int,    nfmpi_get_var_int_all,
      +         nfmpi_get_var_real,   nfmpi_get_var_real_all,
-     +         nfmpi_get_var_double, nfmpi_get_var_double_all
+     +         nfmpi_get_var_double, nfmpi_get_var_double_all,
      +         nfmpi_get_var_int8,   nfmpi_get_var_int8_all
 
 !
@@ -680,7 +680,7 @@
      +         nfmpi_put_var1_int,
      +         nfmpi_put_var1_real,
      +         nfmpi_put_var1_double,
-     +         nfmpi_put_var1_int8,
+     +         nfmpi_put_var1_int8
 
       external nfmpi_put_var1,
      +         nfmpi_put_var1_text,
@@ -736,7 +736,7 @@
      +         nfmpi_get_vara_int2,   nfmpi_get_vara_int2_all,
      +         nfmpi_get_vara_int,    nfmpi_get_vara_int_all,
      +         nfmpi_get_vara_real,   nfmpi_get_vara_real_all,
-     +         nfmpi_get_vara_double, nfmpi_get_vara_double_all
+     +         nfmpi_get_vara_double, nfmpi_get_vara_double_all,
      +         nfmpi_get_vara_int8,   nfmpi_get_vara_int8_all
 
       external nfmpi_get_vara,        nfmpi_get_vara_all,
@@ -775,7 +775,7 @@
      +         nfmpi_get_vars_int2,   nfmpi_get_vars_int2_all,
      +         nfmpi_get_vars_int,    nfmpi_get_vars_int_all,
      +         nfmpi_get_vars_real,   nfmpi_get_vars_real_all,
-     +         nfmpi_get_vars_double, nfmpi_get_vars_double_all
+     +         nfmpi_get_vars_double, nfmpi_get_vars_double_all,
      +         nfmpi_get_vars_int8,   nfmpi_get_vars_int8_all
 
       external nfmpi_get_vars,        nfmpi_get_vars_all,
@@ -814,7 +814,7 @@
      +         nfmpi_get_varm_int2,   nfmpi_get_varm_int2_all,
      +         nfmpi_get_varm_int,    nfmpi_get_varm_int_all,
      +         nfmpi_get_varm_real,   nfmpi_get_varm_real_all,
-     +         nfmpi_get_varm_double, nfmpi_get_varm_double_all
+     +         nfmpi_get_varm_double, nfmpi_get_varm_double_all,
      +         nfmpi_get_varm_int8,   nfmpi_get_varm_int8_all
 
       external nfmpi_get_varm,        nfmpi_get_varm_all,
@@ -838,7 +838,7 @@
      +         nfmpi_iput_var_int,
      +         nfmpi_iput_var_real,
      +         nfmpi_iput_var_double,
-     +         nfmpi_iput_var_int8,
+     +         nfmpi_iput_var_int8
 
       external nfmpi_iput_var,
      +         nfmpi_iput_var_text,
@@ -877,7 +877,7 @@
      +         nfmpi_iput_var1_int,
      +         nfmpi_iput_var1_real,
      +         nfmpi_iput_var1_double,
-     +         nfmpi_iput_var1_int8,
+     +         nfmpi_iput_var1_int8
 
       external nfmpi_iput_var1,
      +         nfmpi_iput_var1_text,
@@ -916,7 +916,7 @@
      +         nfmpi_iput_vara_int,
      +         nfmpi_iput_vara_real,
      +         nfmpi_iput_vara_double,
-     +         nfmpi_iput_vara_int8,
+     +         nfmpi_iput_vara_int8
 
       external nfmpi_iput_vara,
      +         nfmpi_iput_vara_text,
@@ -955,7 +955,7 @@
      +         nfmpi_iput_vars_int,
      +         nfmpi_iput_vars_real,
      +         nfmpi_iput_vars_double,
-     +         nfmpi_iput_vars_int8,
+     +         nfmpi_iput_vars_int8
 
       external nfmpi_iput_vars,
      +         nfmpi_iput_vars_text,
@@ -994,7 +994,7 @@
      +         nfmpi_iput_varm_int,
      +         nfmpi_iput_varm_real,
      +         nfmpi_iput_varm_double,
-     +         nfmpi_iput_varm_int8,
+     +         nfmpi_iput_varm_int8
 
       external nfmpi_iput_varm,
      +         nfmpi_iput_varm_text,
@@ -1033,7 +1033,7 @@
      +         nfmpi_bput_var_int,
      +         nfmpi_bput_var_real,
      +         nfmpi_bput_var_double,
-     +         nfmpi_bput_var_int8,
+     +         nfmpi_bput_var_int8
 
       external nfmpi_bput_var,
      +         nfmpi_bput_var_text,
@@ -1054,7 +1054,7 @@
      +         nfmpi_bput_var1_int,
      +         nfmpi_bput_var1_real,
      +         nfmpi_bput_var1_double,
-     +         nfmpi_bput_var1_int8,
+     +         nfmpi_bput_var1_int8
 
       external nfmpi_bput_var1,
      +         nfmpi_bput_var1_text,
@@ -1075,7 +1075,7 @@
      +         nfmpi_bput_vara_int,
      +         nfmpi_bput_vara_real,
      +         nfmpi_bput_vara_double,
-     +         nfmpi_bput_vara_int8,
+     +         nfmpi_bput_vara_int8
 
       external nfmpi_bput_vara,
      +         nfmpi_bput_vara_text,
@@ -1096,7 +1096,7 @@
      +         nfmpi_bput_vars_int,
      +         nfmpi_bput_vars_real,
      +         nfmpi_bput_vars_double,
-     +         nfmpi_bput_vars_int8,
+     +         nfmpi_bput_vars_int8
 
       external nfmpi_bput_vars,
      +         nfmpi_bput_vars_text,
@@ -1117,7 +1117,7 @@
      +         nfmpi_bput_varm_int,
      +         nfmpi_bput_varm_real,
      +         nfmpi_bput_varm_double,
-     +         nfmpi_bput_varm_int8,
+     +         nfmpi_bput_varm_int8
 
       external nfmpi_bput_varm,
      +         nfmpi_bput_varm_text,
