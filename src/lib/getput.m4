@@ -7,7 +7,7 @@ dnl
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id: getput_var.m4 1297 2013-06-11 17:07:58Z wkliao $ */
+/* $Id$ */
 
 #if HAVE_CONFIG_H
 # include <ncconfig.h>
