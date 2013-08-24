@@ -17,6 +17,7 @@ char errstr[100];		/* for short error messages */
 
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>   /* errno */
 #include "genlib.h"
 #include "ncgentab.h"
 
