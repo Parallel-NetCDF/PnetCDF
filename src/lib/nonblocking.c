@@ -314,7 +314,7 @@ ncmpii_concatenate_datatypes(NC           *ncp,
                              MPI_Datatype *dtypes,        /* IN: [num] */
                              MPI_Datatype *datatype)      /* OUT: */
 {
-    int i, mpireturn, status=NC_NOERR, free_addrs=0;
+    int i, mpireturn, status=NC_NOERR;
     MPI_Aint *addrs;
 
     *datatype = MPI_BYTE;
@@ -327,24 +327,21 @@ ncmpii_concatenate_datatypes(NC           *ncp,
      * MPI_Type_create_struct.  Minor optimization: we don't need to do any
      * of this if MPI_Aint and MPI_Offset are the same size  */
 
-    /* note that at the configure time, checking size of MPI_Offset and
-     * MPI_Aint is done and if they are different ENABLE_NONBLOCKING will
-     * not be defined. In this case, all nonblocking APIs are carried out
-     * by blocking ones in independent data mode
-     */
-    if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) {
-        addrs = (MPI_Aint *) NCI_Malloc(num * sizeof(MPI_Aint));
-        free_addrs = 1;
-        for (i=0; i<num; i++) {
-            addrs[i] = displacements[i];
-            if (addrs[i] != displacements[i]) {
-                NCI_Free(addrs);
-                return NC_EAINT_TOO_SMALL;
-            }
+    /* at the configure time, size of MPI_Offset and MPI_Aint are checked */
+#if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
+    addrs = (MPI_Aint*) displacements; /* cast ok: types same size */
+#else
+    /* if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) */
+    addrs = (MPI_Aint *) NCI_Malloc(num * sizeof(MPI_Aint));
+    for (i=0; i<num; i++) {
+        addrs[i] = displacements[i];
+        if (displacements[i] != addrs[i]) {
+            NCI_Free(addrs);
+            return NC_EAINT_TOO_SMALL;
         }
-    } else {
-        addrs = (MPI_Aint*) displacements; /* cast ok: types same size */
     }
+#endif
+
 #if (MPI_VERSION < 2)
     mpireturn = MPI_Type_struct(num, blocklens, addrs, dtypes, datatype);
 #else
@@ -357,7 +354,9 @@ ncmpii_concatenate_datatypes(NC           *ncp,
 
     MPI_Type_commit(datatype);
 
-    if (free_addrs) NCI_Free(addrs);
+#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
+    NCI_Free(addrs);
+#endif
 
     return status;
 }
@@ -461,7 +460,7 @@ ncmpii_construct_buffertypes(NC           *ncp,
         if (status == NC_NOERR) status = NC_EINTOVERFLOW;
         blocklengths[0] = 0; /* skip this request */
     }
-    for (i=1; i<num_reqs; i++) {/*loop for multi-variables*/
+    for (i=1; i<num_reqs; i++) {/* loop for multiple requests */
         int8 = reqs[i].fnelems * reqs[i].varp->xsz;
         blocklengths[i] = int8;
         if (int8 != blocklengths[i]) {
