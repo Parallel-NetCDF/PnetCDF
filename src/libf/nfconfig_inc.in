@@ -24,7 +24,7 @@
     ostensibly corresponding to 8-bit and 16-bit integers, respectively.
     For example:
 
-	#define NF_INT1_T        byte
+	#define NF_INT1_T        integer*1
 	#define NF_INT2_T        integer*2
 	#define NF_INT8_T        integer*8
 
