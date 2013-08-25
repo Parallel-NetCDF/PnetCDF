@@ -136,29 +136,27 @@
             call error &
             ('nf90mpi_open of nonexistent file should have failed')
         else
-            print*, &
-            "Expected error message complaining: "// &
-            "File tooth-fairy.nc does not exist"
+            print*, "Expected error message complaining: "// &
+                    "File tooth-fairy.nc does not exist"
             nok = nok + 1
         endif
         if (err .ne. NF90_ENOENT) then
-            call error( &
-        'nf90mpi_open of nonexistent file should  &
-         have returned NF90_ENOENT')
+            call error('nf90mpi_open of nonexistent file should '// &
+                       'have returned NF90_ENOENT')
         else
             nok = nok + 1
         endif
 
-!       /* Open a file that is not a netCDF file. */
-        err = nf90mpi_open(comm, 'test_get.F90', NF90_NOWRITE, MPI_INFO_NULL, &
-                         ncid)!/* should fail */
+!       Open a file that is not a netCDF file. This call should fail
+        err = nf90mpi_open(comm, 'test_get.F90', NF90_NOWRITE, &
+                           MPI_INFO_NULL, ncid)
         if (err .ne. NF90_ENOTNC .and. err .ne. NF90_EOFILE) then
             call errore('nf90mpi_open of non-netCDF file: ', err)
         else
             nok = nok + 1
         endif
 
-!       /* Open a netCDF file in read-only mode, check that write fails */
+!       Open a netCDF file in read-only mode, check that write fails
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, ncid)
         if (err .NE. NF90_NOERR) then
             call errore('nf90mpi_open: ', err)
@@ -168,19 +166,18 @@
         err = nf90mpi_redef(ncid)    !/* should fail */
         if (err .ne. NF90_EPERM) &
             call error('nf90mpi_redef of read-only file should fail')
-!       /* Opened OK, see if can open again and get a different netCDF ID */
+!       Opened OK, see if can open again and get a different netCDF ID
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
                          ncid2)
         if (err .NE. NF90_NOERR) then
-            call errore('xxxxx nf90mpi_open: ', err)
+            call errore('nf90mpi_open: ', err)
         else
             err = nf90mpi_close(ncid2)
             nok = nok + 1
         end if
         if (ncid2 .eq. ncid) &
-            call error( &
-        'netCDF IDs for first and second &
-         nf90mpi_open calls should differ')
+            call error('netCDF IDs for first and second '// &
+                       'nf90mpi_open calls should differ')
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
             err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, &
@@ -353,13 +350,13 @@
             nok = nok + 1
         end if
 
-        if (.not. readonly) then        !/* tests using netCDF scratch file */
+        if (.not. readonly) then  ! tests using netCDF scratch file
             err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, &
                                MPI_INFO_NULL, ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_create: ', err)
-            else                !/* add dim, var, gatt, check inq */
-                err = nf90mpi_enddef(ncid2) !/* enter data mode */
+            else                ! add dim, var, gatt, check inq
+                err = nf90mpi_enddef(ncid2) ! enter data mode
                 err = nf90mpi_inquire(ncid2, ndims0, nvars0,  &
                     ngatts0, recdim0)
                 if (err .NE. NF90_NOERR) then
@@ -405,7 +402,7 @@
                 if (err .NE. NF90_NOERR) &
                     call errore('nf90mpi_put_att: ', err)
 
-!               /* Make sure nf90mpi_inquire sees the additions while in define mode */
+!               Make sure nf90mpi_inquire sees the additions while in define mode
                 err = nf90mpi_inquire(ncid2, ndims, nvars, ngatts, recdim)
                 if (err .NE. NF90_NOERR) then
                     call errore('nf90mpi_inquire in define mode: ', err)
@@ -426,7 +423,7 @@
                 if (err .NE. NF90_NOERR) &
                     call errore('nf90mpi_enddef: ', err)
 
-!               /* Make sure nf90mpi_inquire stills sees additions in data mode */
+!               Make sure nf90mpi_inquire stills sees additions in data mode
                 err = nf90mpi_inquire(ncid2, ndims, nvars, ngatts, recdim)
                 if (err .NE. NF90_NOERR) then
                     call errore('nf90mpi_inquire failed in data mode: ',err)
@@ -462,7 +459,7 @@
         implicit        none
 #include "tests.inc"
         integer ncid
-        integer ngatts                  !/* number of global attributes */
+        integer ngatts                  ! number of global attributes
         integer err
         integer nok
 
@@ -513,7 +510,7 @@
             nok = nok + 1
         endif
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
-                         ncid)
+                           ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_inquire(ncid, ndims)
@@ -587,7 +584,7 @@
             nok = nok + 1
         endif
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
-                         ncid)
+                           ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_inquire(ncid, unlimitedDimId=unlimdim)
@@ -1026,7 +1023,7 @@
                 err = nf90mpi_inquire_variable(ncid, VARID(i), nAtts=na)
             endif
             if (err .NE. NF90_NOERR) then
-                call errore('xxx nf90mpi_inquire_variable: ', err)
+                call errore('nf90mpi_inquire_variable: ', err)
             else if (NATTS(i) .ne. na) then ! works for global attributes
                 call errori('natts unexpected: ', na)
             else
