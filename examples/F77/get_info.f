@@ -91,7 +91,7 @@
      +                 ', value =',A)
                 print 123, i, trim(key), trim(value)
             enddo
-            print *, ''
+            print *
 
             return
         end subroutine print_info
