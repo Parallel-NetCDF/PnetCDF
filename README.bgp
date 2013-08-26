@@ -13,14 +13,18 @@ There is one run-time check for MPI-IO support of resized types. Unfortunately
 we have to test for this with a runtime test, but you can set the environemtn
 variable "ac_cv_MPI_TYPE_RESIZED_WORKS" . 
 
-configure --host powerpc-bgp-linux  --build powerpc64-suse-linux  \
-          --with-mpi=/bgsys/drivers/ppcfloor/comm
+./configure --host powerpc-bgp-linux --build powerpc64-suse-linux \
+            --with-mpi=/bgsys/drivers/ppcfloor/comm
 
 It's possible to build pnetcdf with the IBM xl compilers:
 
 ./configure --host powerpc-bgp-linux --build powerpc64-suse-linux \
             --with-mpi=/bgsys/drivers/ppcfloor/comm/xl \
-            MPICC=mpixlc MPICXX=mpixlcxx MPIF77=mpixlf77 MPIF90=mpixlf90
+            MPICC=mpixlc MPICXX=mpixlcxx MPIF77=mpixlf77 MPIF90=mpixlf90 \
+            FFLAGS="-qsuppress=cmpmsg" FCFLAGS="-qsuppress=cmpmsg"
+
+Fortran flag "-qsuppress=cmpmsg" can suppresses XLF compile informational
+messages that report compilation progress and a successful completion.
 
 As far as we know, there are no issues with pnetcdf on BGP, but should you
 find any, email parallel-netcdf@mcs.anl.gov

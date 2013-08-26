@@ -11,14 +11,18 @@ usual compile-and-run tests (running tests on the bgp login node won't work as
 the compute nodes are totaly different.  This will change if/when lion
 nodes are available).
 
-configure --host powerpc64-bgq-linux  --build ppc64-redhat-linux \
-          --with-mpi=/bgsys/drivers/ppcfloor/comm
+./configure --host powerpc64-bgq-linux --build ppc64-redhat-linux \
+            MPICC=mpicc MPICXX=mpicxx MPIF77=mpif77 MPIF90=mpif90
 
 It's possible to build pnetcdf with the IBM xl compilers:
 
 ./configure --host powerpc64-bgq-linux --build ppc64-redhat-linux \
             --with-mpi=/bgsys/drivers/ppcfloor/comm/xl \
-            MPICC=mpixlc MPICXX=mpixlcxx MPIF77=mpixlf77 MPIF90=mpixlf90
+            MPICC=mpixlc MPICXX=mpixlcxx MPIF77=mpixlf77 MPIF90=mpixlf90 \
+            FFLAGS="-qsuppress=cmpmsg" FCFLAGS="-qsuppress=cmpmsg"
+
+Fortran flag "-qsuppress=cmpmsg" can suppresses XLF compile informational
+messages that report compilation progress and a successful completion.
 
 As far as we know, there are no issues with pnetcdf on BGQ, but should you
 find any, email parallel-netcdf@mcs.anl.gov
