@@ -59,7 +59,7 @@
           ! take filename from command-line argument if there is any
           argc = IARGC()
           if (argc .NE. 2) then
-              print*,'Usage: nonblocking_writef len filename'
+              print*,'Usage: nonblocking_write len filename'
               STOP
           endif
           call getarg(1, str)
