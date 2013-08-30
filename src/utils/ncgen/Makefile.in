@@ -18,7 +18,7 @@ PROGRAM		= ncmpigen
 INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir) -I. -I../../lib
 MANUAL		= ncmpigen.1
 GARBAGE		= $(PROGRAM) \
-		  ncgentab.* \
+		  ncgentab.c ncgentab.h \
 		  c0.nc c1.cdl c1.nc c2.cdl \
 		  f0.nc \
 		  ctest.c ctest ctest0.nc ctest1.cdl \
@@ -29,7 +29,6 @@ lib_netcdf	= ../../../src/lib/libpnetcdf.a
 ld_netcdf	= -L../../../src/lib -lpnetcdf
 
 PACKING_LIST	= Makefile.in depend escapes.c generic.h \
-		  ncgentab.c ncgentab.h \
 		  genlib.c genlib.h getfill.c init.c load.c \
 		  main.c ncmpigen.1 ncgen.h ncgen.l ncgen.y c0.cdl
 

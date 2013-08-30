@@ -13,24 +13,12 @@ include ../../macros.make
 
 SUBDIRS = ncgen ncdump ncdiff
 
-all: ncmpigen ncmpidump ncmpidiff
+PACKING_LIST = Makefile.in
 
-ncmpigen:
-	@cd ncgen && $(MAKE)
+PACKING_SUBDIRS = $(SUBDIRS)
 
-ncmpidump:
-	@cd ncdump && $(MAKE)
-
-ncmpidiff:
-	@cd ncdiff && $(MAKE)
-
-clean:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
-
-distclean:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
-	@$(RM) -f Makefile
-	@if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $(SUBDIRS) ; fi
+all:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
 
 install:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done
@@ -38,4 +26,4 @@ install:
 uninstall:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) uninstall ; ) ; done
 
-.PHONY: FORCE all clean distclean install uninstall
+include $(srcdir)/../../rules.make

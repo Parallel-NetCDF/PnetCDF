@@ -13,9 +13,6 @@ include ../macros.make
 
 GARBAGE      =
 
-PACKING_LIST = Makefile.in \
-               README
-
 SUBDIRS = C tutorial
 
 ifeq (@has_fortran@, yes)
@@ -23,20 +20,19 @@ SUBDIRS += F77
 SUBDIRS += F90
 endif
 
+PACKING_LIST = Makefile.in \
+               README
+
+PACKING_SUBDIRS = C tutorial F77 F90
+
 all:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
 
 install:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done
 
 uninstall:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) uninstall ; ) ; done
 
-clean:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) clean ; ) ; done
-
-distclean:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) distclean ; ) ; done
-	@if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $(SUBDIRS) ; fi
-	@$(RM) -f Makefile
-
-.PHONY: FORCE all clean distclean install uninstall
+include $(srcdir)/../rules.make
 

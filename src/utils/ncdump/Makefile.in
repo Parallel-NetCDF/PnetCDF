@@ -22,7 +22,8 @@ headers		= ncdump.h vardata.h dumplib.h
 PROGRAM		= ncmpidump
 
 PACKING_LIST	= $(c_sources) $(headers) depend \
-		  test0.cdl ncmpidump.1 Makefile
+		  test0.cdl ncmpidump.1 Makefile.in
+
 MANUAL		= ncmpidump.1
 
 lib_netcdf	= ../../../src/lib/libpnetcdf.a
