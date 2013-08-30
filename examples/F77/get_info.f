@@ -6,6 +6,11 @@
 ! $Id$
 
 !
+!    To compile:
+!        mpif77 -O2 get_info.f -o get_info -lpnetcdf
+!    To run:
+!        mpiexec -n 4 get_info filename
+!
 !    prints all MPI-IO hints used
 !
 !    Example standard output:

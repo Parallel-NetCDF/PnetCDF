@@ -31,7 +31,7 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -g -o mput mput.c -lpnetcdf
+ *    % mpicc -O2 -o mput mput.c -lpnetcdf
  *    % mpiexec -l -n 4 ./mput testfile.nc
  *    % ncmpidump testfile.nc
  *    netcdf testfile {

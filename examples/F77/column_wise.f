@@ -20,7 +20,7 @@
 ! The compile and run commands are given below, together with an ncmpidump of
 ! the output file. Note ncdump is in C order (row major).
 !
-!    % mpif77 -g -o column_wise column_wise.f -lpnetcdf
+!    % mpif77 -O2 -o column_wise column_wise.f -lpnetcdf
 !    % mpiexec -n 4 ./column_wise testfile.nc
 !
 !    % ncmpidump testfile.nc

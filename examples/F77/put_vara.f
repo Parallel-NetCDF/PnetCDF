@@ -17,7 +17,7 @@
 ! Example commands for MPI run and outputs from running ncmpidump on the
 ! NC file produced by this example program:
 !
-!    % mpif77 -g -o put_vara put_vara.f -lpnetcdf
+!    % mpif77 -O2 -o put_vara put_vara.f -lpnetcdf
 !    % mpiexec -n 4 ./put_vara testfile.nc
 !
 !    % ncmpidump testfile.nc

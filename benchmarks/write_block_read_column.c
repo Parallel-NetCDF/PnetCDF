@@ -19,7 +19,7 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file. In this example, NVARS = 4.
  *
- *    % mpicc -g -o write_block_read_column write_block_read_column.c -lpnetcdf
+ *    % mpicc -O2 -o write_block_read_column write_block_read_column.c -lpnetcdf
  *
  *    % mpiexec -l -n 4 write_block_read_column 128 testfile.nc
  *

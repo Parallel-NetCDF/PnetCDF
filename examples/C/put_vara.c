@@ -24,6 +24,9 @@
  * The data partitioning pattern is a column-wise partitioning across all
  * proceses. Each process writes a subarray of size ny * nx.
  *
+ *    To compile:
+ *        mpicc -O2 put_vara.c -o put_vara -lpnetcdf
+ *
  * Example commands for MPI run and outputs from running ncmpidump on the
  * NC file produced by this example program:
  *

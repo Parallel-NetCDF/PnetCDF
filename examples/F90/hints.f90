@@ -14,7 +14,7 @@
 !
 ! The compile and run commands are given below.
 !
-!    % mpif90 -g -o hints hints.f90 -lpnetcdf
+!    % mpif90 -O2 -o hints hints.f90 -lpnetcdf
 !
 !    % mpiexec -n 4 ./hints testfile.nc
 !

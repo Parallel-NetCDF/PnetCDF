@@ -11,7 +11,7 @@
 ! The compile and run commands are given below, together with an nfmpidump of
 ! the output file.
 !
-!    % mpif90 -g -o put_varn_real put_varn_real.f90 -lpnetcdf
+!    % mpif90 -O2 -o put_varn_real put_varn_real.f90 -lpnetcdf
 !    % mpiexec -n 4 put_varn_real testfile.nc
 !    % ncmpidump testfile.nc
 !    netcdf testfile {

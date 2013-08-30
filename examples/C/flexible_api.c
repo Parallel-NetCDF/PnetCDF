@@ -33,7 +33,7 @@
  *
  * The compile and run commands are given below.
  *
- *    % mpicc -g -o flexible_api flexible_api.c -lpnetcdf
+ *    % mpicc -O2 -o flexible_api flexible_api.c -lpnetcdf
  *
  *    % mpiexec -l -n 4 ./flexible_api testfile.nc
  *
