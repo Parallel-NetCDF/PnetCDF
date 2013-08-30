@@ -30,7 +30,6 @@ PACKING_LIST	= \
 		COPYRIGHT \
 		CREDITS \
 		INSTALL \
-		MANIFEST \
 		README \
 		README.AIX \
 		README.bgl \
@@ -175,7 +174,7 @@ dist: $(PACKAGE)-$(PNETCDF_VERSION).tar.gz
 $(PACKAGE)-$(PNETCDF_VERSION).tar.gz:	ensure_manifest MANIFEST
 	id=$(PACKAGE)-$(PNETCDF_VERSION) \
 	&& $(RM) -fr $$id \
-	&& $(LN_S) . $$id \
+	&& $(LN_S) $(srcdir) $$id \
 	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/|" MANIFEST` | gzip > $@ \
 	&& $(RM) -f $$id MANIFEST
 
