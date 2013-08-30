@@ -1,0 +1,93 @@
+                       FLASH I/O Benchmark 
+
+                         README 3-20-01
+
+
+This program simulates the I/O employed by FLASH for the purposes of
+benchmarking the code.  Two I/O methods are present in this
+distribution: parallel HDF 5 and serial f77 binary.  Both routines
+result in a single file being created.  In the HDF 5 version, the
+underlying MPI-IO routines are used to create a single file and have
+all processors write directly to the file, although the underlying
+MPI-IO layer may do the writing collectively.  In the f77 version,
+processor 0 creates the file, and the data is distributed to this
+processor before writing.
+
+** This version of the benchmark routine no longer relies on the HDF5
+   hyperslab selection routines to pick the interior of the blocks
+   from the memoryspace, as these routines seem very inefficient.
+   Instead, the interior of the blocks are extracted in the FORTRAN
+   checkpoint/plotfile routines before passing to the HDF 5 calls
+
+Makefiles are provided will build the code on ASCI Blue Pacific at
+LLNL (Makefile.blue), ASCI Red at SNL (Makefile.red) and a local SGI,
+sphere (Makefile.sphere) using HDF 5 v. 1.4 (most likely some beta
+version of it).  To build the code, type
+
+gmake -f Makefile.blue flash_benchmark_io
+
+replacing Makefile.blue with the Makefile for your platform.
+
+FLASH is a block-structured adaptive mesh hydrodynamics code.  The 
+computational domain is divided into blocks which are distributed 
+across the processors.  Typically a block contains 8 zones in each
+coordinate direction (x,y,z) and a perimeter of guardcells (presently
+4 zones deep) to hold information from the neighbors.  
+
+We typically carry 24 variables per zone, and fit about 100 blocks on
+each processor of Blue Pacific.  The layout of unk is
+
+unk(nvar,2*nguard+nxb,2*nguard+nyb,2*nguard+nzb,blocks)
+
+where nvar is the number of variables
+      nguard is the number of guardcells
+      nxb, nyb, and nzb are the number of zones per block in x,y, and z
+  and blocks is the maximum number of blocks to store.
+
+When writing the data for checkpointing or analysis, the guardcells
+are not stored, only the block interiors are stored.  This extraction
+is currently performed via a memory copy into a buffer array in the
+FORTRAN routines before passing onto the HDF 5 routines.  This method
+proves to be faster than using the HDF 5 memory space functionality to
+create a hyperslab containing only the interior zones.  Additionally,
+each variable is stored in a separate record.  Thus we write
+
+unk(i,nguard+1:nguard+nxb,nguard+1:nguard+nyb,nguard+1:nguard+nzb,lblocks)
+
+where i is the variable number, and lblocks are the number of actual
+blocks on the processor.  Typically, nxb=nyb=nzb=8, and the data is
+double precision, so the size of each record from a single processor is
+
+8 bytes / number * 8 zones in x * 8 zones in y * 8 zones in z * 100 blocks
+
+or 400 kB.  This is a major factor in the poor performance currently
+achieved in I/O -- the guardcell overhead is a large fraction of the
+total memory on a processor, thus limiting the size of the record
+being written to disk to a small size.
+
+To run the benchmark code, build it as described above, and submit it
+with the desired number of processors.  The code will put
+0.8*maxblocks blocks on each processor (give or take 2 to make the
+number not constant across processors).  The code will produce a
+checkpoint file (containing all variables in 8-byte precision) and two
+plotfiles (4 variables, 4-byte precision, one containing corner data,
+the other containing cell-centered data).  The plotfiles are
+considerably smaller than the checkpoint files.  Additionally, since
+plotfiles need to support data interpolated to the corners before
+writing, the data is copied into a buffer in FORTRAN code, where it is
+reduced in precision and interpolated if necessary.  This buffer
+contains all the data for a single variable on a processor in a
+contiguous portion of memory (i.e. the guardcells have been removed).
+This buffer is then passed to the C routines that do the actual HDF
+calls.
+
+The checkpoint and plotfile routines are identical to those used in
+the FLASH Code.  Any performance improvements or changes to this will
+directly fit into FLASH.  There is some platform dependent code in the
+C routines that talk to the HDF 5 library.  These are separated via
+preprocessor directives.  These control the I/O mode (collective
+vs. independent), cache sizes, etc.  Tweaking these parameters could
+improve performance.
+
+
+

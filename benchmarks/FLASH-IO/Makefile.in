@@ -1,0 +1,54 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir  = @srcdir@
+VPATH   = @srcdir@
+
+include ../../macros.make
+
+
+INCLUDES    = -I../../src/lib90
+FPPFLAGS   += -I../../src/libf90
+FPPFLAGS   += @FC_DEFINE@N_DIM=3 @FC_DEFINE@MAXBLOCKS=100 @FC_DEFINE@IONMAX=13
+F90LDFLAGS += -L../../src/lib
+LIBS       += -lpnetcdf
+
+PROGS       = flash_benchmark_io
+
+SRCS       = get_mfluid_property.F90 \
+             flash_release.F90 \
+             flash_benchmark_io.F90 \
+             checkpoint_ncmpi_parallel.F90 \
+             plotfile_ncmpi_parallel.F90
+
+HEADERS    = block_boundary_data.fh \
+             common.fh \
+             definitions.fh \
+             numfluids.fh \
+             physicaldata.fh \
+             tree.fh
+
+PACKING_LIST = $(SRCS) $(HEADERS) \
+               Makefile.in \
+               README
+
+GARBAGE      = $(PROGS) *.nc
+
+OBJS         = $(SRCS:.F90=.o)
+
+all: $(PROGS)
+
+install:
+
+uninstall:
+
+$(PROGS): $(OBJS) $(LIBRARY)
+	$(LINK.F90) $(OBJS) $(F90LDFLAGS) $(LIBS)
+
+include $(srcdir)/../../rules.make
+

@@ -770,6 +770,8 @@ CONFIG_FILES="macros.make \
               man/Makefile \
               scripts/Makefile \
               benchmarks/Makefile \
+              benchmarks/C/Makefile \
+              benchmarks/FLASH-IO/Makefile \
               src/libf/Makefile \
               src/libf/pnetcdf.inc \
               src/libf90/Makefile"

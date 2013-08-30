@@ -11,42 +11,27 @@ VPATH   = @srcdir@
 
 include ../macros.make
 
-INCLUDES  = -I../src/lib
-LDFLAGS  += -L../src/lib
-LIBS     += -lpnetcdf $(MATHLIB)
+SUBDIRS = C
 
-C_SRCS    = aggregation.c \
-            write_block_read_column.c
-
-F_SRCS    =
-
-PROGS     = $(C_SRCS:.c=)
-OBJS      = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
-PROGS    += $(F_SRCS:.F=)
-OBJS     += $(F_SRCS:.F=.o)
+SUBDIRS += FLASH-IO
 endif
 
-GARBAGE      = $(PROGS) *.nc
+PACKING_LIST = Makefile.in \
+               README
 
-PACKING_LIST = $(C_SRCS) $(F_SRCS) \
-               Makefile.in \
-               README \
-               depend
+PACKING_SUBDIRS = C FLASH-IO
 
-all: $(PROGS)
+GARBAGE =
+
+all:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
 
 install:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done
 
 uninstall:
-
-aggregation: aggregation.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-write_block_read_column: write_block_read_column.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-include $(srcdir)/depend
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) uninstall ; ) ; done
 
 include $(srcdir)/../rules.make
 
