@@ -24,7 +24,7 @@
  *
  * The compile and run commands are given below.
  *
- *    % mpicc -g -o hints hints.c -lpnetcdf
+ *    % mpicc -O2 -o hints hints.c -lpnetcdf
  *
  *    % mpiexec -l -n 4 ./hints testfile.nc
  *

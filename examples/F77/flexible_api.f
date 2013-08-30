@@ -19,7 +19,7 @@
 ! Example commands for MPI run and outputs from running ncmpidump on the
 ! NC file produced by this example program:
 !
-!    % mpif77 -g -o flexible_api flexible_api.f -lpnetcdf
+!    % mpif77 -O2 -o flexible_api flexible_api.f -lpnetcdf
 !    % mpiexec -n 4 ./flexible_api testfile.nc
 !
 !    % ncmpidump testfile.nc

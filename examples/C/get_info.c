@@ -8,6 +8,10 @@
 
 /*
  *    prints all MPI-IO hints used
+ *    To compile:
+ *        mpicc -O2 get_info.c -o get_info -lpnetcdf
+ *    To run:
+ *        mpiexec -n 4 collective_write len filename
  *
  *    Example standard output:
 

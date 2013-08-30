@@ -11,6 +11,9 @@
  *    It creates a netcdf file in CD-5 format and writes a number of
  *    3D integer non-record vaiables. The measured write bandwith is reported
  *    at the end. Usage: (for example)
+ *    To compile:
+ *        mpicc -O2 nonblocking_write.c -o nonblocking_write -lpnetcdf
+ *    To run:
  *        mpiexec -n 32 ./nonblocking_write 100 /orangefs/wkliao/testfile.nc
  *    where len decides the size of each local array, which is len x len x len.
  *    So, each non-record variable is of size len*len*len * nprocs * sizeof(int)

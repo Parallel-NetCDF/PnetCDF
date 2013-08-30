@@ -17,7 +17,7 @@
 ! The compile and run commands are given below, together with an ncmpidump of
 ! the output file. In this example, block_len = 2.
 !
-!    % mpif90 -g -o block_cyclic block_cyclic.f90 -lpnetcdf
+!    % mpif90 -O2 -o block_cyclic block_cyclic.f90 -lpnetcdf
 !    % mpiexec -n 4 block_cyclic testfile.nc
 !
 !    % ncmpidump testfile.nc

@@ -8,6 +8,9 @@
 !    It creates a netcdf file in CD-5 format and writes a number of
 !    3D integer non-record vaiables.
 !    Usage: (for example)
+!    To compile:
+!        mpif90 -O2 nonblocking_write.f90 -o nonblocking_write -lpnetcdf
+!    To run:
 !        mpiexec -n 32 ./nonblocking_write 100 /orangefs/testfile.nc
 !    where len=100 decides the size of each local array, which is
 !    len x len x len. Each non-record variable is of size

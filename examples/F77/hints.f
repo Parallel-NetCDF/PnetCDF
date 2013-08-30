@@ -13,7 +13,7 @@
 !
 ! The compile and run commands are given below.
 !
-!    % mpif77 -g -o hints hints.f -lpnetcdf
+!    % mpif77 -O2 -o hints hints.f -lpnetcdf
 !
 !    % mpiexec -n 4 ./hints testfile.nc
 !

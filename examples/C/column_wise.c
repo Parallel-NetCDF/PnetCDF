@@ -31,7 +31,7 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -g -o column_wise column_wise.c -lpnetcdf
+ *    % mpicc -O2 -o column_wise column_wise.c -lpnetcdf
  *    % mpiexec -l -n 4 ./column_wise testfile.nc
  *    0:  0: myOff=  0 myNX=  4
  *    1:  1: myOff=  4 myNX=  4

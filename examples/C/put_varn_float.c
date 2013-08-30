@@ -23,7 +23,7 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -g -o put_varn_float put_varn_float.c -lpnetcdf
+ *    % mpicc -O2 -o put_varn_float put_varn_float.c -lpnetcdf
  *    % mpiexec -n 4 ./put_varn_float testfile.nc
  *    % ncmpidump testfile.nc
  *    netcdf testfile {

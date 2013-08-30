@@ -22,7 +22,7 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file. In this example, NVARS = 5.
  *
- *    % mpicc -g -o aggregation aggregation.c -lpnetcdf
+ *    % mpicc -O2 -o aggregation aggregation.c -lpnetcdf
  *
  *    % mpiexec -l -n 4 aggregation 5 testfile.nc
  *

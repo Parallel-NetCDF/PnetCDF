@@ -7,10 +7,14 @@
 !*********************************************************************/
 ! $Id$
 
-!*
-!*    prints all MPI-IO hints used
-!*
-!*    Example standard output:
+!    To compile:
+!        mpif90 -O2 get_info.f90 -o get_info -lpnetcdf
+!    To run:
+!        mpiexec -n 4 get_info filename
+!
+!    prints all MPI-IO hints used
+!
+!    Example standard output:
 !
 !   MPI File Info: nkeys =          18
 !   MPI File Info: [ 0] key =            cb_buffer_size, value =16777216

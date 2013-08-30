@@ -28,7 +28,7 @@
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file. In this example, block_len = 2.
  *
- *    % mpicc -g -o block_cyclic block_cyclic.c -lpnetcdf
+ *    % mpicc -O2 -o block_cyclic block_cyclic.c -lpnetcdf
  *    % mpiexec -l -n 4 ./block_cyclic testfile.nc
  *    0:  0: NY=10 myNX=  4 myOff=  0
  *    1:  1: NY=10 myNX=  4 myOff=  4
