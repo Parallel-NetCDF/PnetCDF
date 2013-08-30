@@ -33,6 +33,7 @@ OBJS      = $(C_SRCS:.c=.o)
 GARBAGE      = $(PROGS) *.nc
 
 PACKING_LIST = $(C_SRCS) \
+               depend \
                Makefile.in
 
 all: $(PROGS)

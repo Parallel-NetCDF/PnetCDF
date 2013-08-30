@@ -768,6 +768,7 @@ CONFIG_FILES="macros.make \
               examples/Makefile \
               doc/Makefile \
               man/Makefile \
+              scripts/Makefile \
               benchmarks/Makefile \
               src/libf/Makefile \
               src/libf/pnetcdf.inc \

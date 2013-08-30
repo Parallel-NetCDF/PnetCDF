@@ -216,9 +216,9 @@ deps:		FORCE
 # relative to the current directory.
 #
 MANIFEST.echo:	FORCE
-	@echo $(PACKING_LIST) | fmt -1
-	@if [ -n "$(SUBDIRS)" ]; then \
-	    subdirs="$(SUBDIRS)"; \
+	echo $(PACKING_LIST) | fmt -1
+	if [ -n "$(PACKING_SUBDIRS)" ]; then \
+	    subdirs="$(PACKING_SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && \
 		echo 1>&2 Creating $@ in `pwd` && \
@@ -232,7 +232,7 @@ MANIFEST.echo:	FORCE
 # the current directory and in all subdirectories.
 #
 ensure_manifest:	$(PACKING_LIST) FORCE
-	@if [ -n "$(SUBDIRS)" ]; then \
+	if [ -n "$(SUBDIRS)" ]; then \
 	    subdirs="$(SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && \

@@ -320,8 +320,9 @@ LIB_FSRCS = strerrorf.f inq_libversf.f
 
 PACKING_LIST = \
 	$(LIB_CSRCS) $(LIB_FSRCS) \
-	nfconfig.inc.in \
+	nfconfig_inc.in \
 	pnetcdf.inc.in \
+	mpifnetcdf.h \
 	mpinetcdf_impl.h \
 	varn_external.m4 \
 	varnx_external.m4 \

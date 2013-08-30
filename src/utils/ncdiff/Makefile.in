@@ -15,25 +15,25 @@ include ../../../macros.make
 
 INCLUDES	= -I$(srcdir)/../../../src/lib -I../../lib -I$(srcdir) 
 
-c_sources	= ncmpidiff.c
-headers		=
+C_SOURCES	= ncmpidiff.c
+HEADERS		=
 
 PROGRAM		= ncmpidiff
 MANUAL		= ncmpidiff.1
 
-PACKING_LIST	= $(c_sources) $(headers) depend \
+PACKING_LIST	= $(C_SOURCES) $(HEADERS) depend \
 		  ncmpidiff.1 Makefile.in
 
-lib_netcdf	= ../../../src/lib/libpnetcdf.a
-ld_netcdf	= -L../../../src/lib -lpnetcdf
+LIB_NETCDF	= ../../../src/lib/libpnetcdf.a
+LD_NETCDF	= -L../../../src/lib -lpnetcdf
 
 OBJS		= ncmpidiff.o
 GARBAGE		= $(PROGRAM)
 
 all:		$(PROGRAM)
 
-$(PROGRAM):	$(lib_netcdf) $(OBJS)
-	$(LINK.c) $(OBJS) $(ld_netcdf) $(LIBS) 
+$(PROGRAM):	$(LIB_NETCDF) $(OBJS)
+	$(LINK.c) $(OBJS) $(LD_NETCDF) $(LIBS) 
 
 install:	
 	$(INSTALL) -d -m 755 $(MANDIR)/man1
@@ -46,9 +46,9 @@ uninstall:
 	$(RM) -f $(BINDIR)/$(PROGRAM)
 	$(RM) -f $(MANDIR)/man1/$(MANUAL)
 
-$(PROGRAM)_oc : $(c_sources)
+$(PROGRAM)_oc : $(C_SOURCES)
 	#setopt primary_language C
-	#load -C $(CPPFLAGS) $(c_sources)
+	#load -C $(CPPFLAGS) $(C_SOURCES)
 	#load -C $(LIBS)
 	#setopt program_name $(PROGRAM)
 

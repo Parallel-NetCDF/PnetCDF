@@ -40,9 +40,9 @@ M4_SRCS   = getput.m4 \
 
 HEADER_SRCS = fbits.h \
               nc.h \
+              nctypes.h \
               ncio.h \
               ncx.h \
-              pnetcdf.h \
               rnd.h \
               ncmpidtype.h \
               macro.h \
@@ -71,9 +71,10 @@ PACKING_LIST = $(LIB_CSRCS) \
                $(M4_SRCS) \
                $(PROG_CSRCS) \
                $(HEADER_SRCS) \
+               pnetcdf.h.in \
                depend \
-               Makefile \
-               ncconfig.in \
+               Makefile.in \
+               ncconfig.h.in \
                varnx.m4 \
                varnx_api_header.m4 \
                varn_api_header.m4

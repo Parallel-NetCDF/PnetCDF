@@ -65,7 +65,8 @@ clean:		src/clean \
                 examples/clean \
                 benchmarks/clean \
                 doc/clean \
-                man/clean
+                man/clean \
+                scripts/clean
 
 distclean:	src/distclean \
                 test/distclean \
@@ -73,6 +74,7 @@ distclean:	src/distclean \
                 benchmarks/distclean \
                 doc/distclean \
                 man/distclean \
+                scripts/distclean \
 		clean_macros  \
 		rmdir_src_dirs
 
@@ -88,7 +90,7 @@ verbose_check verbose_testing: tests
 clean_macros:
 	@$(RM) -f macros.make
 
-RMDIR_SRCDIRS = src test examples benchmarks doc man
+RMDIR_SRCDIRS = src test examples benchmarks doc man scripts
 
 rmdir_src_dirs:
 	@if ! [ $(srcdir) -ef `pwd` ] ; then set -e; for i in $(RMDIR_SRCDIRS); do ( rmdir $$i ; ) ; done; fi
@@ -112,6 +114,8 @@ man/clean \
 man/distclean \
 man/install \
 man/uninstall \
+scripts/clean \
+scripts/distclean \
 :
 	@subdir=`echo $@ | $(SED) 's,/.*,,'`; \
 	target=`echo $@ | $(SED) 's,.*/,,'`; \
@@ -166,18 +170,17 @@ check_system:	FORCE
 tar.Z:		check_system FORCE
 	$(MAKE) $(MFLAGS) $(PACKAGE)-$(PNETCDF_VERSION).tar.Z
 
-dist: $(PACKAGE)-$(PNETCDF_VERSION).tar.Z
+dist: $(PACKAGE)-$(PNETCDF_VERSION).tar.gz
 
-$(PACKAGE)-$(PNETCDF_VERSION).tar.Z:	ensure_manifest MANIFEST
+$(PACKAGE)-$(PNETCDF_VERSION).tar.gz:	ensure_manifest MANIFEST
 	id=$(PACKAGE)-$(PNETCDF_VERSION) \
 	&& $(RM) -fr $$id \
-	&& mkdir $$id \
-	&& $(LN_S) .. $$id/src \
-	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/src/|" MANIFEST` | gzip > $@ \
-	&& $(RM) -fr $$id
+	&& $(LN_S) . $$id \
+	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/|" MANIFEST` | gzip > $@ \
+	&& $(RM) -f $$id MANIFEST
 
 MANIFEST:	FORCE
-	$(MAKE) MANIFEST.echo >$@
+	$(MAKE) -s MANIFEST.echo >$@
 
 # Make a compressed, tar(1) file of the source distribution in the
 # appropriate FTP directory.
