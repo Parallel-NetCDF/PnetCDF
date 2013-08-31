@@ -14,7 +14,7 @@ include ../../macros.make
 INCLUDES    = -I../../src/lib
 FPPFLAGS   += -I../../src/libf -I../../src/libf90
 F90LDFLAGS += -L../../src/lib
-LIBS       += -lpnetcdf $(MATHLIB)
+LIBS       += -lpnetcdf
 
 F90_SRCS  = block_cyclic.f90 \
             column_wise.f90 \
