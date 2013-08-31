@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf $(MATHLIB)
+LIBS     += -lpnetcdf
 
 C_SRCS  = block_cyclic.c \
           collective_write.c \
