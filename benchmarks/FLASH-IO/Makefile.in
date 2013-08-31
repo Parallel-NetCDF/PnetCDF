@@ -12,7 +12,7 @@ VPATH   = @srcdir@
 include ../../macros.make
 
 
-INCLUDES    = -I../../src/lib90
+INCLUDES    = -I../../src/lib90 -I$(srcdir)
 FPPFLAGS   += -I../../src/libf90
 FPPFLAGS   += @FC_DEFINE@N_DIM=3 @FC_DEFINE@MAXBLOCKS=100 @FC_DEFINE@IONMAX=13
 F90LDFLAGS += -L../../src/lib
