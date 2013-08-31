@@ -1,0 +1,45 @@
+#
+# Copyright (C) 2012, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir  = @srcdir@
+VPATH   = @srcdir@
+
+include ../../macros.make
+
+INCLUDES  = -I../../src/lib
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf $(MATHLIB)
+
+C_SRCS    = aggregation.c \
+            write_block_read_column.c
+
+PROGS     = $(C_SRCS:.c=)
+OBJS      = $(C_SRCS:.c=.o)
+
+GARBAGE      = $(PROGS) *.nc
+
+PACKING_LIST = $(C_SRCS) \
+               Makefile.in \
+               depend
+
+all: $(PROGS)
+
+install:
+
+uninstall:
+
+aggregation: aggregation.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+write_block_read_column: write_block_read_column.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+include $(srcdir)/depend
+
+include $(srcdir)/../../rules.make
+
