@@ -148,6 +148,11 @@ AC_DEFUN([UD_CHECK_MPI_COMPILER], [
    fi
 ])
 
+AC_ARG_VAR(MPICC,  MPI C compiler)
+AC_ARG_VAR(MPICXX, MPI C++ compiler)
+AC_ARG_VAR(MPIF77, MPI Fortran 77 compiler)
+AC_ARG_VAR(MPIF90, MPI Fortran 90 compiler)
+
 CANDIDATE_MPICC="mpicc"
 CANDIDATE_MPICXX="mpicxx mpic++ mpiCC"
 CANDIDATE_MPIF77="mpif77"
@@ -737,6 +742,12 @@ AC_ARG_ENABLE([file-sync],
 if test "x${file_sync}" = xno ; then
     AC_DEFINE(DISABLE_FILE_SYNC)
 fi
+
+dnl PNETCDF_INC and PNETCDF_LIB are for benchmark programs use only
+PNETCDF_INC=${BUILDDIR}/src/libf90
+PNETCDF_LIB=${BUILDDIR}/src/lib
+AC_SUBST(PNETCDF_INC)
+AC_SUBST(PNETCDF_LIB)
 
 CONFIG_FILES="macros.make \
               Makefile \

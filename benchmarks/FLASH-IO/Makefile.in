@@ -6,49 +6,77 @@
 #
 # @configure_input@
 
+.SUFFIXES:      .o .mod .F90
+
 srcdir  = @srcdir@
 VPATH   = @srcdir@
 
-include ../../macros.make
+RM           = @RM@
+F90          = @MPIF90@
 
+FPPFLAGS     = @FC_DEFINE@N_DIM=3 @FC_DEFINE@MAXBLOCKS=100 @FC_DEFINE@IONMAX=13
 
-INCLUDES    = -I../../src/lib90 -I$(srcdir)
-FPPFLAGS   += -I../../src/libf90
-FPPFLAGS   += @FC_DEFINE@N_DIM=3 @FC_DEFINE@MAXBLOCKS=100 @FC_DEFINE@IONMAX=13
-F90LDFLAGS += -L../../src/lib
-LIBS       += -lpnetcdf
+FCFLAGS      = @FCFLAGS@ -I@PNETCDF_INC@
+COMPILE.F90  = $(F90) -c $(FCFLAGS) $(FPPFLAGS)
+FCLDFLAGS    = @LDFLAGS@ -L@PNETCDF_LIB@
+FCLIBS       = @LIBS@ -lpnetcdf
+LINK.F90     = $(F90) $(FCFLAGS) -o $@
 
-PROGS       = flash_benchmark_io
+PROGS        = flash_benchmark_io
 
-SRCS       = get_mfluid_property.F90 \
-             flash_release.F90 \
-             flash_benchmark_io.F90 \
-             checkpoint_ncmpi_parallel.F90 \
-             plotfile_ncmpi_parallel.F90
+SRCS         = get_mfluid_property.F90 \
+               flash_release.F90 \
+               flash_benchmark_io.F90 \
+               checkpoint_ncmpi_parallel.F90 \
+               plotfile_ncmpi_parallel.F90
 
-HEADERS    = block_boundary_data.fh \
-             common.fh \
-             definitions.fh \
-             numfluids.fh \
-             physicaldata.fh \
-             tree.fh
+HEADERS      = block_boundary_data.fh \
+               common.fh \
+               definitions.fh \
+               numfluids.fh \
+               physicaldata.fh \
+               tree.fh
 
 PACKING_LIST = $(SRCS) $(HEADERS) \
+               configure.in \
                Makefile.in \
                README
 
 GARBAGE      = $(PROGS) *.nc
+DIST_GARBAGE = config.log config.status config.cache autom4te.cache \
+               Makefile
 
 OBJS         = $(SRCS:.F90=.o)
 
 all: $(PROGS)
 
+.F90.o:
+	$(COMPILE.F90) $<
+
+$(PROGS): $(OBJS) $(LIBRARY)
+	$(LINK.F90) $(OBJS) $(FCLDFLAGS) $(FCLIBS)
+
+MANIFEST.echo: FORCE
+	echo $(PACKING_LIST) | fmt -1
+
+dist:
+	id=FLASH-IO-PnetCDF \
+	&& $(RM) -rf $$id \
+	&& mkdir $$id \
+        && cp $(PACKING_LIST) $$id \
+        && tar -c $$id | gzip > $$id.tar.gz \
+        && $(RM) -rf $$id
+
 install:
 
 uninstall:
 
-$(PROGS): $(OBJS) $(LIBRARY)
-	$(LINK.F90) $(OBJS) $(F90LDFLAGS) $(LIBS)
+clean:
+	@$(RM) -f *.o core core.* $(GARBAGE) \
+        *.gcda *.gcno gmon.out
 
-include $(srcdir)/../../rules.make
+distclean: clean
+	@$(RM) -rf $(DIST_GARBAGE)
+
+.PHONY: FORCE all clean distclean install uninstall dist
 
