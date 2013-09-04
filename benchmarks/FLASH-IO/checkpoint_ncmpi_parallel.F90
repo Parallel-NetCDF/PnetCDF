@@ -159,7 +159,7 @@
 ! subroutine checkpoint_wr
 !----------------------------------------------------------------------------
 
-      subroutine checkpoint_wr_ncmpi_par (filenum, simtime)
+      double precision function checkpoint_wr_ncmpi_par (filenum, simtime)
 !
 ! Do parallel i/o using Parallel netCDF
 !
@@ -241,11 +241,13 @@
       double precision bb_buf(2,ndim,lnblocks)
 
       integer ncid, cmode, file_info
-      integer(kind=MPI_OFFSET_KIND) starts(4), counts(4)
+      integer(kind=MPI_OFFSET_KIND) starts(4), counts(4), put_size
 
 !-----------------------------------------------------------------------------
 ! compute the total number of blocks left of a given processor number
 !-----------------------------------------------------------------------------
+      chk_t(1) = MPI_Wtime()
+
 ! use an allgather routine here 
       call MPI_Allgather(lnblocks, 1,MPI_INTEGER, & 
      &                   n_to_left,1,MPI_INTEGER, & 
@@ -489,6 +491,8 @@
      &     MPI_Wtime() - time_start
 #endif
 
+      chk_t(2) = MPI_Wtime()
+      chk_t(1) = chk_t(2) - chk_t(1)
 
 !-----------------------------------------------------------------------------
 ! store the unknowns -- here we will pass the entire unk array on each 
@@ -533,20 +537,17 @@
 ! close the file
 !-----------------------------------------------------------------------------
 
+      chk_t(3) = MPI_Wtime()
+      chk_t(2) = chk_t(3) - chk_t(2)
+
+      err = nfmpi_inq_put_size(ncid, put_size)
+
       err = nfmpi_close(ncid);
       call check(err, "nfmpi_close")
 
-      if (MyPE .EQ. MasterPE) then
+      chk_t(3) = MPI_Wtime() - chk_t(3)
 
-! write to stdout
-         print *, '*** Wrote output to ', trim(filename),  & 
-     &        ' (', tot_blocks, 'blocks ) ***'
-
-! also store in the log file
-         outstr = "*** wrote         blocks."
-         write (outstr(11:17), '(I7)') tot_blocks
-
-      end if
+      checkpoint_wr_ncmpi_par = put_size
 
       return
       end

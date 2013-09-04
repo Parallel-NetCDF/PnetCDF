@@ -91,3 +91,12 @@ improve performance.
 
 
 
+--------------------------------------------------------------
+For some detailed description of the data partitioning and I/O paterns,
+please refer to the following paper.
+W. Liao and A. Choudhary. Dynamically Adapting File Domain Partitioning
+Methods for Collective I/O Based on Underlying Parallel File System Locking
+Protocols. In the Proceedings of International Conference for High
+Performance Computing, Networking, Storage and Analysis, Austin, Texas,
+November 2008.
+

@@ -50,6 +50,8 @@
         include 'mpif.h'
 
 
+        double precision chk_t(3), corner_t(3), nocorner_t(3)
+        common /timers/ chk_t, corner_t, nocorner_t
 
 
 
