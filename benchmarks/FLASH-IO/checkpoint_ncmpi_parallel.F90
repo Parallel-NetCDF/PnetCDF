@@ -57,7 +57,7 @@
           integer(kind=MPI_OFFSET_KIND) i8NDIM, i8NGID, i8total_blocks
           integer(kind=MPI_OFFSET_KIND) i8nzones_block(3), string_size
           integer atotal_blocks(1), ansteps(1)
-          double precision atime(1)
+          double precision time0, atime(1)
 
           i8NDIM = NDIM
           i8NGID = NGID
@@ -66,7 +66,11 @@
           string_size = 40
           atotal_blocks(1) = total_blocks
           ansteps(1) = nsteps
-          atime(1) = time
+
+          ! to avoid inconsistent header metadata warning from PnetCDF
+          time0 = time
+          call MPI_Bcast(time0, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, err)
+          atime(1) = time0
 
           err = nfmpi_def_dim(ncid, "dim_tot_blocks", i8total_blocks, dim_tot_blocks)
           call check(err, "nfmpi_def_dim: dim_tot_blocks")
