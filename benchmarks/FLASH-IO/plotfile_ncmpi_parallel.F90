@@ -151,7 +151,7 @@
 ! subroutine plotfile
 !----------------------------------------------------------------------------
 
-      subroutine plotfile_ncmpi_par(filenum, simtime, corners)
+      double precision function plotfile_ncmpi_par(filenum, simtime, corners)
 !
 ! plotfile using parallel i/o using Parallel netCDF
 !
@@ -259,8 +259,13 @@
       logical corners
 
       integer ncid, cmode, file_info
-      integer(kind=MPI_OFFSET_KIND) starts(4), counts(4)
+      integer(kind=MPI_OFFSET_KIND) starts(4), counts(4), put_size
 
+      if (corners) then
+         corner_t(1) = MPI_Wtime()
+      else
+         nocorner_t(1) = MPI_Wtime()
+      endif
 
 !-----------------------------------------------------------------------------
 ! set the variables we are going to store
@@ -489,6 +494,14 @@
 ! interior cells to write to disk.
 !-----------------------------------------------------------------------------
 
+      if (corners) then
+         corner_t(2) = MPI_Wtime()
+         corner_t(1) = corner_t(2) - corner_t(1)
+      else
+         nocorner_t(2) = MPI_Wtime()
+         nocorner_t(1) = nocorner_t(2) - nocorner_t(1)
+      endif
+
       do ivar = 1, num_out
          record_label = unklabels(iout(ivar))
 
@@ -582,14 +595,26 @@
 ! close the file
 !-----------------------------------------------------------------------------
 
+      if (corners) then
+         corner_t(3) = MPI_Wtime()
+         corner_t(2) = corner_t(3) - corner_t(2)
+      else
+         nocorner_t(3) = MPI_Wtime()
+         nocorner_t(2) = nocorner_t(3) - nocorner_t(2)
+      endif
+
+      err = nfmpi_inq_put_size(ncid, put_size)
+
       err = nfmpi_close(ncid)
       call check(err, "nfmpi_close_file sp")
 
-      if (MyPE .EQ. MasterPE) then
-         print *, '*** Wrote output to ', trim(filename),  & 
-     &        ' (', tot_blocks, 'blocks ) ***'
+      if (corners) then
+         corner_t(3) = MPI_Wtime() - corner_t(3)
+      else
+         nocorner_t(3) = MPI_Wtime() - nocorner_t(3)
+      endif
 
-      end if
+      plotfile_ncmpi_par = put_size
 
       return
       end
