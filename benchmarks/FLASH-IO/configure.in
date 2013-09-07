@@ -214,7 +214,8 @@ PNETCDF_INC=${PNETCDF_INSTALL}/include
 PNETCDF_LIB=${PNETCDF_INSTALL}/lib
 
 CPPFLAGS+=" -I${PNETCDF_INC}"
-LDFLAGS+=" -L${PNETCDF_LIB} -lpnetcdf"
+LDFLAGS+=" -L${PNETCDF_LIB}"
+LIBS+=" -lpnetcdf"
 
 have_pnetcdf=no
 
