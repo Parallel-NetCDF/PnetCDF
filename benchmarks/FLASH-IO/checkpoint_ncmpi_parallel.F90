@@ -254,8 +254,8 @@
 
 ! use an allgather routine here 
       call MPI_Allgather(lnblocks, 1,MPI_INTEGER, & 
-     &                   n_to_left,1,MPI_INTEGER, & 
-     &                   MPI_COMM_WORLD,err)
+                         n_to_left,1,MPI_INTEGER, & 
+                         MPI_COMM_WORLD,err)
 
       
 ! compute the total number of blocks
@@ -293,7 +293,7 @@
 ! neighbor is on, so the block number is global
             if (neigh(1,j,block_no).gt.0) then
                gid(ngid,block_no) = neigh(1,j,block_no) +  & 
-     &              n_to_left(neigh(2,j,block_no))
+                    n_to_left(neigh(2,j,block_no))
             else
 
 ! the neighbor is either a physical boundary or does not exist at that 
@@ -306,7 +306,7 @@
          ngid = ngid + 1
          if (parent(1,block_no).gt.0) then
             gid(ngid,block_no) = parent(1,block_no) +  & 
-     &           n_to_left(parent(2,block_no))
+                 n_to_left(parent(2,block_no))
          else
             gid(ngid,block_no) = parent(1,block_no)
          end if
@@ -316,7 +316,7 @@
             ngid = ngid + 1
             if (child(1,j,block_no).gt.0) then
                gid(ngid,block_no) = child(1,j,block_no) +  & 
-     &              n_to_left(child(2,j,block_no))
+                    n_to_left(child(2,j,block_no))
             else
                gid(ngid,block_no) = child(1,j,block_no)
             end if
@@ -345,12 +345,14 @@
 
       call MPI_Info_free(file_info, err)
 
+      err = nfmpi_get_file_info(ncid, info_used)
+
 !-----------------------------------------------------------------------------
 ! store the scalar information -- # of blocks, simulation time, etc
 !-----------------------------------------------------------------------------
       
 ! get the current time and date
-        date_string = 'now'      
+      date_string = 'now'      
 
 ! store the number of zones / block in each direction
       nzones_block(1) = nxb
@@ -381,7 +383,7 @@
 
 #ifdef TIMERS
       print *, 'header: MyPE = ', MyPE, ' time = ',  & 
-     &     MPI_Wtime() - time_start
+           MPI_Wtime() - time_start
 #endif
 
       global_offset = n_to_left(MyPE)
@@ -402,7 +404,7 @@
 
 #ifdef TIMERS
       print *, 'lrefine: MyPE = ', MyPE, ' time = ',  & 
-     &     MPI_Wtime() - time_start
+           MPI_Wtime() - time_start
 #endif
 
 ! store the nodetype
@@ -415,7 +417,7 @@
 
 #ifdef TIMERS
       print *, 'nodetype: MyPE = ', MyPE, ' time = ',  & 
-     &     MPI_Wtime() - time_start
+           MPI_Wtime() - time_start
 #endif
 
 ! store the global id
@@ -432,7 +434,7 @@
 
 #ifdef TIMERS
       print *, 'gid: MyPE = ', MyPE, ' time = ',  & 
-     &     MPI_Wtime() - time_start
+           MPI_Wtime() - time_start
 #endif
 
 !-----------------------------------------------------------------------------
@@ -454,7 +456,7 @@
 
 #ifdef TIMERS
       print *, 'coord: MyPE = ', MyPE, ' time = ',  & 
-     &     MPI_Wtime() - time_start
+           MPI_Wtime() - time_start
 #endif
 
 ! store the block size
@@ -472,7 +474,7 @@
 
 #ifdef TIMERS
       print *, 'size: MyPE = ', MyPE, ' time = ',  & 
-     &     MPI_Wtime() - time_start
+           MPI_Wtime() - time_start
 #endif
 
 ! store the bounding box 
@@ -492,7 +494,7 @@
 
 #ifdef TIMERS
       print *, 'bb1: MyPE = ', MyPE, ' time = ',  & 
-     &     MPI_Wtime() - time_start
+           MPI_Wtime() - time_start
 #endif
 
       chk_t(2) = MPI_Wtime()
@@ -509,8 +511,8 @@
          record_label = unklabels(i)
 
          unk_buf(1,1:nxb,1:nyb,1:nzb,:) = unk(i,nguard+1:nguard+nxb, & 
-     &        nguard*k2d+1:nguard*k2d+nyb, & 
-     &        nguard*k3d+1:nguard*k3d+nzb,:)
+              nguard*k2d+1:nguard*k2d+nyb, & 
+              nguard*k3d+1:nguard*k3d+nzb,:)
 
 #ifdef TIMERS
          time_start = MPI_Wtime()
