@@ -34,3 +34,44 @@ please refer to the following paper.
     High Performance Computing, Networking, Storage and Analysis, Austin,
     Texas, November 2008.
 
+To compile:
+    run configure command first, eg.
+    autoreconf
+    ./configure --with-pnetcdf=/path/PnetCDF MPIF90=/path/mpi/F90/compiler
+    make
+
+To run:
+    mpiexec -n 512 flash_benchmark_io
+
+Example output from stdout:
+
+ number of guards      :             4
+ number of blocks      :            80
+ number of variables   :            24
+ checkpoint time       :             7.52  sec
+        max header     :             1.76  sec
+        max unknown    :             5.76  sec
+        max close      :             0.00  sec
+        I/O amount     :         31109.74  MiB
+ plot no corner        :             1.28  sec
+        max header     :             0.29  sec
+        max unknown    :             0.99  sec
+        max close      :             0.00  sec
+        I/O amount     :          5190.36  MiB
+ plot    corner        :             1.56  sec
+        max header     :             0.30  sec
+        max unknown    :             1.27  sec
+        max close      :             0.00  sec
+        I/O amount     :          6224.35  MiB
+ -------------------------------------------------------
+ File base name        : /scratch2/scratchdirs/wkliao/FS_1M_128/flash_io_test_
+   file striping count :           128
+   file striping size  :       1048576     bytes
+ Total I/O amount      :         42524.45  MiB
+ -------------------------------------------------------
+ nproc    array size      exec (sec)   bandwidth (MiB/s)
+  512    16 x  16 x  16     10.36     4103.52
+
+
+
+    
