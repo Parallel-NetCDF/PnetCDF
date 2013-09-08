@@ -22,15 +22,12 @@
           character(len=*) message
 
           ! It is a good idea to check returned value for possible error
-          if (err .NE. NF_NOERR) then
-              write(6,*) trim(message), trim(nfmpi_strerror(err))
-              call MPI_Abort(MPI_COMM_WORLD, -1, err)
-          end if
+          write(6,*) trim(message), trim(nfmpi_strerror(err))
+          call MPI_Abort(MPI_COMM_WORLD, -1, err)
       end subroutine check
 
-      subroutine write_header_info(nvar_out, ncid, &
-                                   file_creation_time, flash_version, &
-                                   total_blocks, time, &
+      subroutine write_header_info(nvar_out, ncid, file_creation_time, &
+                                   flash_version, total_blocks, time, &
                                    nsteps, nzones_block, unk_labels, &
                                    varid)
           use mpi
@@ -45,7 +42,7 @@
           double precision time               ! simulation time
           integer nsteps                      ! total # of timestep
           integer nzones_block(3)             ! nxb, nyb, nzb
-          character(len=4) unk_labels(*)                ! unknown labels
+          character(len=4) unk_labels(*)      ! unknown labels
           integer varid(*)                    ! output: var ids
 
           ! local variables
@@ -73,54 +70,54 @@
           atime(1) = time0
 
           err = nfmpi_def_dim(ncid, "dim_tot_blocks", i8total_blocks, dim_tot_blocks)
-          call check(err, "nfmpi_def_dim: dim_tot_blocks")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_tot_blocks")
           err = nfmpi_def_dim(ncid, "dim_nxb", i8nzones_block(1), dim_nxb)
-          call check(err, "nfmpi_def_dim: dim_nxb")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_nxb")
           err = nfmpi_def_dim(ncid, "dim_nyb", i8nzones_block(2), dim_nyb)
-          call check(err, "nfmpi_def_dim: dim_nyb")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_nyb")
           err = nfmpi_def_dim(ncid, "dim_nzb", i8nzones_block(3), dim_nzb)
-          call check(err, "nfmpi_def_dim: dim_nzb")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_nzb")
           err = nfmpi_def_dim(ncid, "dim_NGID", i8NGID, dim_NGID)
-          call check(err, "nfmpi_def_dim: dim_NGID")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_NGID")
           err = nfmpi_def_dim(ncid, "dim_NDIM", i8NDIM, dim_NDIM)
-          call check(err, "nfmpi_def_dim: dim_NDIM")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_NDIM")
           err = nfmpi_def_dim(ncid, "dim_2", 2_8, dim_2)
-          call check(err, "nfmpi_def_dim: dim_2")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_2")
 
           dimids(1) = dim_tot_blocks
 
           ! define var for refinement level
           err = nfmpi_def_var(ncid, "lrefine", NF_INT, 1, dimids, varid(1))
-          call check(err, "nfmpi_def_var: lrefine")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: lrefine")
 
           ! define var for nodetype
           err = nfmpi_def_var(ncid, "nodetype", NF_INT, 1, dimids, varid(2))
-          call check(err, "nfmpi_def_var: nodetype")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: nodetype")
 
           ! define var for global id
           dimids(1) = dim_NGID
           dimids(2) = dim_tot_blocks
           err = nfmpi_def_var(ncid, "gid", NF_INT, 2, dimids, varid(3))
-          call check(err, "nfmpi_def_var: grid")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: grid")
 
           ! define var for grid coordinates
           dimids(1) = dim_NDIM
           dimids(2) = dim_tot_blocks
           err = nfmpi_def_var(ncid, "coordinates", NF_DOUBLE, 2, dimids, varid(4))
-          call check(err, "nfmpi_def_var: coordinates")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: coordinates")
 
           ! define var for grid block size
           dimids(1) = dim_NDIM
           dimids(2) = dim_tot_blocks
           err = nfmpi_def_var(ncid, "blocksize", NF_DOUBLE, 2, dimids, varid(5))
-          call check(err, "nfmpi_def_var: blocksize")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: blocksize")
 
           ! define var for grid bounding box
           dimids(1) = dim_2
           dimids(2) = dim_NDIM
           dimids(3) = dim_tot_blocks
           err = nfmpi_def_var(ncid, "bndbox", NF_DOUBLE, 3, dimids, varid(6))
-          call check(err, "nfmpi_def_var: bndbox")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: bndbox")
 
           ! define var for unknown array
           dimids(1) = dim_nxb    
@@ -135,28 +132,28 @@
               enddo
               record_label(5:5) = '\0'
               err = nfmpi_def_var(ncid, record_label, NF_DOUBLE, 4, dimids, varid(i+6))
-              call check(err, "nfmpi_def_var: record_label")
+              if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: record_label")
           enddo
 
           err = nfmpi_put_att_text(ncid, NF_GLOBAL, "file_creation_time", string_size, file_creation_time)
-          call check(err, "nfmpi_put_att_text: file_creation_time")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_text: file_creation_time")
           err = nfmpi_put_att_text(ncid, NF_GLOBAL, "flash_version",  string_size, flash_version)
-          call check(err, "nfmpi_put_att_text: flash_version")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_text: flash_version")
           err = nfmpi_put_att_int(ncid, NF_GLOBAL, "total_blocks",  NF_INT, 1_8, atotal_blocks)
-          call check(err, "nfmpi_put_att_int: total_blocks")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_int: total_blocks")
           err = nfmpi_put_att_int(ncid, NF_GLOBAL, "nsteps", NF_INT, 1_8, ansteps)
-          call check(err, "nfmpi_put_att_int: nsteps")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_int: nsteps")
           err = nfmpi_put_att_int(ncid, NF_GLOBAL, "nxb", NF_INT, 1_8, nzones_block(1))
-          call check(err, "nfmpi_put_att_int: nxb")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_int: nxb")
           err = nfmpi_put_att_int(ncid, NF_GLOBAL, "nyb", NF_INT, 1_8, nzones_block(2))
-          call check(err, "nfmpi_put_att_int: nyb")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_int: nyb")
           err = nfmpi_put_att_int(ncid, NF_GLOBAL, "nzb", NF_INT, 1_8, nzones_block(3))
-          call check(err, "nfmpi_put_att_int: nzb")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_int: nzb")
           err = nfmpi_put_att_double(ncid, NF_GLOBAL, "time", NF_DOUBLE, 1_8, atime)
-          call check(err, "nfmpi_put_att_double: time")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_double: time")
       
           err = nfmpi_enddef(ncid)
-          call check(err, "nfmpi_enddef")
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_enddef")
       end subroutine write_header_info
 
 !----------------------------------------------------------------------------
@@ -341,7 +338,7 @@
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, trim(filename), cmode, &
                           file_info, ncid)
-      call check(err, "nfmpi_create")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_create")
 
       call MPI_Info_free(file_info, err)
 
@@ -400,7 +397,7 @@
       starts(1) = global_offset+1
       counts(1) = lnblocks
       err = nfmpi_put_vara_int_all(ncid, varid(1), starts, counts, lrefine)
-      call check(err, "nfmpi_put_vara_int_all: lrefine")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: lrefine")
 
 #ifdef TIMERS
       print *, 'lrefine: MyPE = ', MyPE, ' time = ',  & 
@@ -413,7 +410,7 @@
 #endif      
 
       err = nfmpi_put_vara_int_all(ncid, varid(2), starts, counts, nodetype)
-      call check(err, "nfmpi_put_vara_int_all: nodetype")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: nodetype")
 
 #ifdef TIMERS
       print *, 'nodetype: MyPE = ', MyPE, ' time = ',  & 
@@ -430,7 +427,7 @@
       counts(1) = NGID
       counts(2) = lnblocks
       err = nfmpi_put_vara_int_all(ncid, varid(3), starts, counts, gid)
-      call check(err, "nfmpi_put_vara_int_all: gid")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: gid")
 
 #ifdef TIMERS
       print *, 'gid: MyPE = ', MyPE, ' time = ',  & 
@@ -452,7 +449,7 @@
       counts(1) = NDIM
       counts(2) = lnblocks
       err = nfmpi_put_vara_double_all(ncid, varid(4), starts, counts, coord_buf)
-      call check(err, "nfmpi_put_vara_double_all: coord")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: coord")
 
 #ifdef TIMERS
       print *, 'coord: MyPE = ', MyPE, ' time = ',  & 
@@ -470,7 +467,7 @@
       counts(1) = NDIM
       counts(2) = lnblocks
       err = nfmpi_put_vara_double_all(ncid, varid(5), starts, counts, bs_buf)
-      call check(err, "nfmpi_put_vara_double_all: size")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: size")
 
 #ifdef TIMERS
       print *, 'size: MyPE = ', MyPE, ' time = ',  & 
@@ -490,7 +487,7 @@
       counts(2) = NDIM
       counts(3) = lnblocks
       err = nfmpi_put_vara_double_all(ncid, varid(6), starts, counts, bb_buf)
-      call check(err, "nfmpi_put_vara_double_all: bnd_box")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: bnd_box")
 
 #ifdef TIMERS
       print *, 'bb1: MyPE = ', MyPE, ' time = ',  & 
@@ -527,7 +524,7 @@
          counts(3) = nzb
          counts(4) = lnblocks
          err = nfmpi_put_vara_double_all(ncid, varid(6+i), starts, counts, unk_buf)
-         call check(err, "nfmpi_put_vara_double_all: unknowns")
+         if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: unknowns")
 
 #ifdef TIMERS
          time_io = time_io + (MPI_Wtime() - time_start)
@@ -549,7 +546,7 @@
       err = nfmpi_inq_put_size(ncid, put_size)
 
       err = nfmpi_close(ncid);
-      call check(err, "nfmpi_close")
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_close")
 
       chk_t(3) = MPI_Wtime() - chk_t(3)
 
