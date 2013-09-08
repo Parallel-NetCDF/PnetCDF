@@ -80,7 +80,42 @@
                                  corner_io, nocorner_io)
 
       call MPI_Finalize(ierr)
-      end
+
+      end program flash_benchmark_io
+
+
+! ---------------------------------------------------------------------------
+! get the file striping information from the MPI info objects
+! ---------------------------------------------------------------------------
+      subroutine get_file_striping(info, striping_factor, striping_unit)
+          implicit none
+          include 'mpif.h'
+          integer, intent(in)  :: info
+          integer, intent(out) :: striping_factor
+          integer, intent(out) :: striping_unit
+
+          ! local variables
+          character*(MPI_MAX_INFO_VAL) key, value
+          integer                      i, nkeys, valuelen, ierr
+          logical                      flag
+
+          call MPI_Info_get_nkeys(info, nkeys, ierr)
+          do i=0, nkeys-1
+              key(:) = ' '
+              call MPI_Info_get_nthkey(info, i, key, ierr)
+              call MPI_Info_get(info, key, MPI_MAX_INFO_VAL, value, &
+                                flag, ierr)
+              call MPI_Info_get_valuelen(info, key, valuelen, flag, &
+                                ierr)
+              value(valuelen+1:) = ' '
+              if (key(len_trim(key):len_trim(key)) .EQ. char(0)) &
+                  key(len_trim(key):) = ' '
+              if (trim(key) .EQ. 'striping_factor') &
+                  read(value, '(i10)') striping_factor
+              if (trim(key) .EQ. 'striping_unit') &
+                  read(value, '(i10)') striping_unit
+          enddo
+      end subroutine get_file_striping
 
 
 !---------------------------------------------------------------------------
@@ -96,7 +131,7 @@
        double precision chk_io, corner_io, nocorner_io
 
        ! local variables
-       integer ierr
+       integer ierr, striping_factor, striping_unit
        double precision tmax(3), time_total, io_amount, bw
 
        call MPI_Reduce(chk_t, tmax, 3, MPI_DOUBLE_PRECISION, MPI_MAX, &
@@ -125,57 +160,53 @@
        corner_io = bw
 
       if (MyPE .EQ. MasterPE) then
-          time_total = tmax(1) + tmax(2) + tmax(3)
 
+          call get_file_striping(info_used, striping_factor, striping_unit)
+
+          time_total = tmax(1) + tmax(2) + tmax(3)
           io_amount = chk_io + nocorner_io + corner_io
           bw = io_amount / 1048576.0
           io_amount = bw
           bw = bw / time_total
 
-          print *, 'File base name = ', trim(basenm)
+ 1001 format(A,I13)
+ 1002 format(A,I13,A)
+ 1003 format(A,F16.2,A)
+ 1004 format(' -------------------------------------------------------')
+ 1005 format(' nproc    array size      exec (sec)   bandwidth (MiB/s)')
+ 1006 format(I5, 3x, i3,' x ',i3,' x ',i3, 3x, F7.2 , 2x,F10.2 /)
+ 1007 format(A,A)
 
-          print 2008, nguard
-          print 2009, local_blocks
-          print 2010, nvar
-          print 2011, tmax(1)
-          print 2018, chk_t(1)
-          print 2019, chk_t(2)
-          print 2020, chk_t(3)
-          print 2021, chk_io/1048576
-          print 2012, tmax(2)
-          print 2018, nocorner_t(1)
-          print 2019, nocorner_t(2)
-          print 2020, nocorner_t(3)
-          print 2021, nocorner_io/1048576
-          print 2013, tmax(3)
-          print 2018, corner_t(1)
-          print 2019, corner_t(2)
-          print 2020, corner_t(3)
-          print 2021, corner_io/1048576
-          print 2014, io_amount
-          print 2015
-          print 2016
-          print 2017, NumPEs, nxb, nyb, nzb, time_total, bw
+          print 1001,' number of guards      : ',nguard
+          print 1001,' number of blocks      : ',local_blocks
+          print 1001,' number of variables   : ',nvar
+          print 1003,' checkpoint time       : ',tmax(1), '  sec'
+          print 1003,'        max header     : ',chk_t(1),'  sec'
+          print 1003,'        max unknown    : ',chk_t(2),'  sec'
+          print 1003,'        max close      : ',chk_t(3),'  sec'
+          print 1003,'        I/O amount     : ',chk_io/1048576, '  MiB'
+          print 1003,' plot no corner        : ',tmax(2),      '  sec'
+          print 1003,'        max header     : ',nocorner_t(1),'  sec'
+          print 1003,'        max unknown    : ',nocorner_t(2),'  sec'
+          print 1003,'        max close      : ',nocorner_t(3),'  sec'
+          print 1003,'        I/O amount     : ',nocorner_io/1048576, '  MiB'
+          print 1003,' plot    corner        : ',tmax(3),    '  sec'
+          print 1003,'        max header     : ',corner_t(1),'  sec'
+          print 1003,'        max unknown    : ',corner_t(2),'  sec'
+          print 1003,'        max close      : ',corner_t(3),'  sec'
+          print 1003,'        I/O amount     : ',corner_io/1048576, '  MiB'
+          print 1004
+          print 1007,' File base name        : ', trim(basenm)
+          print 1001,'   file striping count : ',striping_factor
+          print 1002,'   file striping size  : ',striping_unit, '     bytes'
+          print 1003,' Total I/O amount      : ',io_amount,'  MiB'
+          print 1004
+          print 1005
+          print 1006, NumPEs, nxb, nyb, nzb, time_total, bw
+          print *
+
       endif
-
- 2008 format(' number of guards      : ',I6)
- 2009 format(' number of blocks      : ',I6)
- 2010 format(' number of variables   : ',I6)
- 2011 format(' checkpoint time       : ',F16.2, '  sec')
- 2012 format(' plot no corner        : ',F16.2, '  sec')
- 2013 format(' plot    corner        : ',F16.2, '  sec')
- 2014 format(' Total I/O amount      : ',F16.2, '  MiB')
- 2015 format(' -------------------------------------------------------')
- 2016 format(' nproc    array size      exec (sec)   bandwidth (MiB/s)')
- 2017 format(I5, 3x, i3,' x ',i3,' x ',i3, 3x, F7.2 , 2x,F10.2 /)
- 2018 format('        max header     : ',F16.2, '  sec')
- 2019 format('        max unknown    : ',F16.2, '  sec')
- 2020 format('        max close      : ',F16.2, '  sec')
- 2021 format('            I/O amount : ',F16.2, '  MiB')
- 2022 format(' procs    Local  array size  exec(sec)  write(MiB/s)   IO    req    comm   misc  clean  #sends  #recvs')
- 2023 format('-------  ------------------  ---------  -----------   --    ---    ----   ----  -----  ------  ------')
- 2024 format(I5,3x,i5,' x',i5,' x',i5,F9.2,F12.2,F9.2,F7.2,F7.2,F7.2,F7.2,I7,I8)
- 2025 format(I5,3x,i5,' x',i5,' x',i5,F9.2,F12.2,F9.2,F7.2,F7.2,F7.2,F7.2 /)
+      call MPI_Info_free(info_used, ierr)
 
       end subroutine report_io_performance
 
