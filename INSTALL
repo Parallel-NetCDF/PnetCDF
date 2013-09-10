@@ -10,7 +10,7 @@ To INSTALL parallel netCDF library:
 	--with-mpi=/usr/local/mpich-1.2.3
 
     NOTE: If configure cannot find your MPI implementation's C and/or
-	  Fortran compilers, define *both* the MPICC and MPIF77
+	  Fortran compilers, define MPICC, MPICXX, MPIF77 and MPIF90
 	  environment variables to be the name of those compilers.  The
 	  configure script will then use those values instead of trying
 	  to guess.
