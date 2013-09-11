@@ -515,6 +515,11 @@
           nfmpi_iget_vara, &
           nfmpi_iget_vars, &
           nfmpi_iget_varm, &
+          nfmpi_bput_var, &
+          nfmpi_bput_var1, &
+          nfmpi_bput_vara, &
+          nfmpi_bput_vars, &
+          nfmpi_bput_varm, &
           nfmpi_get_varn, &
           nfmpi_put_varn, &
           nfmpi_get_varn_all, &

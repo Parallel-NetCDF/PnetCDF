@@ -432,7 +432,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_put_var(ncid, varid, buf, bufcount, datatype)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -589,7 +589,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_put_var1(ncid, varid, index, buf, bufcount, datatype)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -726,7 +726,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_put_vara(ncid, varid, start, count, buf, bufcount, datatype)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -1025,7 +1025,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_put_vars(ncid, varid, start, count, stride, buf, bufcount, datatype)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -1356,7 +1356,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_put_varm(ncid, varid, start, count, stride, imap, buf, bufcount, datatype)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -1723,7 +1723,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_iput_var(ncid, varid, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -1847,7 +1847,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_iput_var1(ncid, varid, index, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2000,7 +2000,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_iput_vara(ncid, varid, start, count, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2169,7 +2169,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_iput_vars(ncid, varid, start, count, stride, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2354,7 +2354,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_iput_varm(ncid, varid, start, count, stride, imap, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2555,7 +2555,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_bput_var(ncid, varid, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2625,7 +2625,7 @@ INTERFACE
     END FUNCTION   nfmpi_bput_var_int8
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_bput_var1(ncid, varid, start, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2711,7 +2711,7 @@ INTERFACE
     END FUNCTION   nfmpi_bput_var1_int8
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_bput_vara(ncid, varid, start, count, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2806,7 +2806,7 @@ INTERFACE
     END FUNCTION   nfmpi_bput_vara_int8
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_bput_vars(ncid, varid, start, count, stride, imap, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -2910,7 +2910,7 @@ INTERFACE
     END FUNCTION   nfmpi_bput_vars_int8
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER        FUNCTION nfmpi_bput_varm(ncid, varid, start, count, stride, imap, buf, bufcount, datatype, req)
 !                           INTEGER,                       INTENT(IN)  :: ncid
@@ -3104,7 +3104,7 @@ INTERFACE
 !
 
 !
-! flexible APIs, not ready yet for Fortran90
+! flexible APIs, not ready yet for Fortran 77
 !
 !   INTEGER FUNCTION nfmpi_get_varn(ncid, varid, num, starts, counts, buf, bufcount, buftype)
 !                    INTEGER,                       INTENT(IN)  :: ncid
@@ -3473,6 +3473,11 @@ END INTERFACE
           nfmpi_iget_vara, &
           nfmpi_iget_vars, &
           nfmpi_iget_varm, &
+          nfmpi_bput_var, &
+          nfmpi_bput_var1, &
+          nfmpi_bput_vara, &
+          nfmpi_bput_vars, &
+          nfmpi_bput_varm, &
           nfmpi_get_varn, &
           nfmpi_put_varn, &
           nfmpi_get_varn_all, &
