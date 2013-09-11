@@ -5,8 +5,8 @@
 ! $Id$
 
 !
-! This example shows how to use PnetCDF nonblocking flexible API,
-! nfmpi_iput_vara() to write a 2D 4-byte integer array in parallel.
+! This example shows how to use PnetCDF flexible API, nfmpi_put_vara_all()
+! to write a 2D 4-byte integer array in parallel.
 ! It first defines a netCDF variable of size global_nx * global_ny where
 !    global_nx == 5 and
 !    global_ny == (4 * number of MPI processes).
@@ -74,10 +74,10 @@
           integer argc, IARGC, err, nprocs, rank, i, j, ghost_len
           integer cmode, ncid, varid, dimid(2)
           integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
-          integer(kind=MPI_OFFSET_KIND) starts(2), counts(2), nReqs
+          integer(kind=MPI_OFFSET_KIND) starts(2), counts(2), nTypes
           PARAMETER(nx=5, ny=4, ghost_len=3)
           integer buf(nx+2*ghost_len, ny+2*ghost_len)
-          integer subarray, req(1), status(1)
+          integer subarray
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2)
 
@@ -145,15 +145,11 @@
           starts(2) = ny * rank + 1
           counts(1) = nx
           counts(2) = ny
-          nReqs = 1
+          nTypes    = 1
 
-          err = nfmpi_iput_vara(ncid, varid, starts, counts, buf,
-     +          nReqs, subarray, req)
-          call check(err, 'In nfmpi_iput_vara: ')
-
-          err = nfmpi_wait_all(ncid, 1, req, status)
-          call check(err, 'In nfmpi_wait_all: ')
-          call check(status(1), 'In nfmpi_wait_all status error: ')
+          err = nfmpi_put_vara_all(ncid, varid, starts, counts, buf,
+     +                             nTypes, subarray)
+          call check(err, 'In nfmpi_put_vara_all: ')
 
           call MPI_Type_free(subarray, err)
 
