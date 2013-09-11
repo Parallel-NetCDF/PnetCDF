@@ -8,7 +8,7 @@
 ! This example shows how to use a single call of nfmpi_put_varn_real_all()
 ! to write a sequence of one-element requests with arbitrary array indices.
 !
-! The compile and run commands are given below, together with an nfmpidump of
+! The compile and run commands are given below, together with an ncmpidump of
 ! the output file.
 !
 !    % mpif77 -O2 -o put_varn_real put_varn_real.f -lpnetcdf
