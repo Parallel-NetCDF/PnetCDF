@@ -5,8 +5,8 @@
 ! $Id$
 
 !
-! This example shows how to use PnetCDF flexible API, nfmpi_put_vara_all() to
-! write a 2D 4-byte integer array in parallel. It first defines a netCDF
+! This example shows how to use PnetCDF flexible API, nf90mpi_put_var_all()
+! to write a 2D 4-byte integer array in parallel. It first defines a netCDF
 ! variable of size global_nx * global_ny where
 !    global_nx == 5 and
 !    global_ny == (4 * number of MPI processes).
@@ -121,7 +121,7 @@
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
           err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
-                              MPI_INFO_NULL, ncid)
+                               MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
 
           ! define dimensions x and y
@@ -147,10 +147,11 @@
           counts(2) = ny
           nTypes    = 1
 
-          ! must explicitly specify the argument keywords
+          ! must explicitly use the argument keywords for the buffer type and
+          ! number of buffer types, if any previous argument is skipped
           err = nf90mpi_put_var_all(ncid, varid, buf, starts, counts, &
                                     BUFTYPE=subarray, NBUFTYPES=nTypes)
-          call check(err, 'In nfmpi_put_vara_all: ')
+          call check(err, 'In nf90mpi_put_var_all: ')
 
           call MPI_Type_free(subarray, err)
 
