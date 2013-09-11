@@ -147,9 +147,9 @@
           counts(2) = ny
           nTypes    = 1
 
-          ! use generic nfmpi flexible API
-          err = nfmpi_put_vara_all(ncid, varid, starts, counts, buf, &
-                                   nTypes, subarray)
+          ! must explicitly specify the argument keywords
+          err = nf90mpi_put_var_all(ncid, varid, buf, starts, counts, &
+                                    BUFTYPE=subarray, NBUFTYPES=nTypes)
           call check(err, 'In nfmpi_put_vara_all: ')
 
           call MPI_Type_free(subarray, err)
