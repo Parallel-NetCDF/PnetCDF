@@ -15,12 +15,14 @@ INCLUDES  = -I. -I$(srcdir)
 
 SRCS    = testutils.c
 
+HEADERS = testutils.h
+
 OBJS    = $(SRCS:.c=.o)
 
 PROGS   = libtestutils.a
 
 GARBAGE      = $(PROGS)
-PACKING_LIST = $(SRCS) Makefile.in
+PACKING_LIST = $(SRCS) $(HEADERS) Makefile.in
 
 all: $(PROGS)
 

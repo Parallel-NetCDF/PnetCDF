@@ -169,13 +169,12 @@ check_system:	FORCE
 tar.Z:		check_system FORCE
 	$(MAKE) $(MFLAGS) $(PACKAGE)-$(PNETCDF_VERSION).tar.Z
 
-dist: $(PACKAGE)-$(PNETCDF_VERSION).tar.gz
-
-$(PACKAGE)-$(PNETCDF_VERSION).tar.gz:	ensure_manifest MANIFEST
+dist: ensure_manifest MANIFEST
 	id=$(PACKAGE)-$(PNETCDF_VERSION) \
 	&& $(RM) -fr $$id \
 	&& $(LN_S) $(srcdir) $$id \
-	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/|" MANIFEST` | gzip > $@ \
+	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/|" MANIFEST` | gzip  > $(PACKAGE)-$(PNETCDF_VERSION).tar.gz \
+	&& tar $(TARFLAGS) - `$(SED) "s|^|$$id/|" MANIFEST` | bzip2 > $(PACKAGE)-$(PNETCDF_VERSION).tar.bz2 \
 	&& $(RM) -f $$id MANIFEST
 
 MANIFEST:	FORCE

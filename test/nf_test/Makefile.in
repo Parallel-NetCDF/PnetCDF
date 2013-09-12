@@ -31,6 +31,8 @@ F_SRCS    = nf_error.F \
 
 C_SRCS    = fortlib.c
 
+HEADERS   = tests.inc
+
 C_OBJS  = $(C_SRCS:.c=.o)
 F_OBJS  = $(F_SRCS:.F=.o) $(M4SRCS_F:.F=.o)
 OBJS    = $(C_OBJS) $(F_OBJS)
@@ -46,13 +48,7 @@ GARBAGE = $(time_log) \
           test.nc \
           $(M4SRCS_F)
 
-PACKING_LIST = $(C_SRCS) \
-               $(F_SRCS) \
-               $(M4SRCS) \
-               depend \
-               Makefile.in \
-               tests.inc \
-               README
+PACKING_LIST = $(C_SRCS) $(F_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in README
 
 all: $(PROGS)
 

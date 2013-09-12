@@ -37,10 +37,7 @@ HEADERS      = block_boundary_data.fh \
                physicaldata.fh \
                tree.fh
 
-PACKING_LIST = $(SRCS) $(HEADERS) \
-               configure.in \
-               Makefile.in \
-               README
+PACKING_LIST = $(SRCS) $(HEADERS) configure.in Makefile.in README
 
 GARBAGE      = $(PROGS) *.nc
 DIST_GARBAGE = config.log config.status config.cache autom4te.cache \

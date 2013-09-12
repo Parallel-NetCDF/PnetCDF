@@ -20,8 +20,7 @@ SUBDIRS += F77
 SUBDIRS += F90
 endif
 
-PACKING_LIST = Makefile.in \
-               README
+PACKING_LIST = Makefile.in README
 
 PACKING_SUBDIRS = C tutorial F77 F90
 
