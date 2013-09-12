@@ -15,12 +15,12 @@ dnl VAR1(ncid, varid, values, start, count)
 dnl
 define(`VAR1',dnl
 `dnl
-   function nf90mpi_$1_var_$2(ncid, varid, values, start, buftype, nbuftypes)
+   function nf90mpi_$1_var_$2(ncid, varid, values, start, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
      $3 (kind=$2),                                           intent($5)  :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
+     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
-     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: nbuftypes
 
      integer                                                             :: nf90mpi_$1_var_$2
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localIndex
@@ -30,7 +30,7 @@ define(`VAR1',dnl
      if (present(start)) localIndex(:size(start)) = start(:)
  
      if (present(buftype)) then
-         nf90mpi_$1_var_$2 = nfmpi_$1_var1(ncid, varid, localIndex, values, nbuftypes, buftype)
+         nf90mpi_$1_var_$2 = nfmpi_$1_var1(ncid, varid, localIndex, values, bufcount, buftype)
      else
          nf90mpi_$1_var_$2 = nfmpi_$1_var1_$4(ncid, varid, localIndex, values)
      endif
@@ -64,13 +64,13 @@ dnl NBVAR1(ncid, varid, values, start, count, req)
 dnl
 define(`NBVAR1',dnl
 `dnl
-   function nf90mpi_$1_var_$2(ncid, varid, values, req, start, buftype, nbuftypes)
+   function nf90mpi_$1_var_$2(ncid, varid, values, req, start, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
      integer,                                                intent(out) :: req
      $3 (kind=$2),                                           intent($5)  :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
+     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
-     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: nbuftypes
 
      integer                                                             :: nf90mpi_$1_var_$2
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localIndex
@@ -80,7 +80,7 @@ define(`NBVAR1',dnl
      if (present(start)) localIndex(:size(start)) = start(:)
  
      if (present(buftype)) then
-         nf90mpi_$1_var_$2 = nfmpi_$1_var1(ncid, varid, localIndex, values, nbuftypes, buftype, req)
+         nf90mpi_$1_var_$2 = nfmpi_$1_var1(ncid, varid, localIndex, values, bufcount, buftype, req)
      else
          nf90mpi_$1_var_$2 = nfmpi_$1_var1_$4(ncid, varid, localIndex, values, req)
      endif
@@ -125,12 +125,12 @@ dnl VAR(ncid, varid, values, start, count, stride, map)
 dnl
 define(`VAR',dnl
 `dnl
-   function nf90mpi_$1_var_$2_$3$8(ncid, varid, values, start, count, stride, map, buftype, nbuftypes)
+   function nf90mpi_$1_var_$2_$3$8(ncid, varid, values, start, count, stride, map, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
      $4 (kind=$3), dimension($6),                            intent( $7) :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
-     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: nbuftypes
  
      integer                                                             :: nf90mpi_$1_var_$2_$3$8
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
@@ -155,7 +155,7 @@ define(`VAR',dnl
          localMap   (:size(map))    = map(:)
          if (present(buftype)) then
              nf90mpi_$1_var_$2_$3$8 = &
-                nfmpi_$1_varm$8(ncid, varid, localStart, localCount, localStride, localMap, values, nbuftypes, buftype)
+                nfmpi_$1_varm$8(ncid, varid, localStart, localCount, localStride, localMap, values, bufcount, buftype)
          else
              nf90mpi_$1_var_$2_$3$8 = &
                 nfmpi_$1_varm_$5$8(ncid, varid, localStart, localCount, localStride, localMap, values)
@@ -163,7 +163,7 @@ define(`VAR',dnl
      else if (present(stride)) then
          if (present(buftype)) then
              nf90mpi_$1_var_$2_$3$8 = &
-                nfmpi_$1_vars$8(ncid, varid, localStart, localCount, localStride, values, nbuftypes, buftype)
+                nfmpi_$1_vars$8(ncid, varid, localStart, localCount, localStride, values, bufcount, buftype)
          else
              nf90mpi_$1_var_$2_$3$8 = &
                 nfmpi_$1_vars_$5$8(ncid, varid, localStart, localCount, localStride, values)
@@ -171,7 +171,7 @@ define(`VAR',dnl
      else
          if (present(buftype)) then
              nf90mpi_$1_var_$2_$3$8 = &
-                nfmpi_$1_vara$8(ncid, varid, localStart, localCount, values, nbuftypes, buftype)
+                nfmpi_$1_vara$8(ncid, varid, localStart, localCount, values, bufcount, buftype)
          else
              nf90mpi_$1_var_$2_$3$8 = &
                 nfmpi_$1_vara_$5$8(ncid, varid, localStart, localCount, values)
@@ -396,13 +396,13 @@ dnl NBVAR(ncid, varid, values, start, count, stride, map, req)
 dnl
 define(`NBVAR',dnl
 `dnl
-   function nf90mpi_$1_var_$2_$3(ncid, varid, values, req, start, count, stride, map, buftype, nbuftypes)
+   function nf90mpi_$1_var_$2_$3(ncid, varid, values, req, start, count, stride, map, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
      integer,                                                intent(out) :: req
      $4 (kind=$3), dimension($6),                            intent( $7) :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
+     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
-     integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: nbuftypes
  
      integer                                                             :: nf90mpi_$1_var_$2_$3
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
@@ -427,7 +427,7 @@ define(`NBVAR',dnl
          localMap   (:size(map))    = map(:)
          if (present(buftype)) then
              nf90mpi_$1_var_$2_$3 = &
-                 nfmpi_$1_varm(ncid, varid, localStart, localCount, localStride, localMap, values, nbuftypes, buftype, req)
+                 nfmpi_$1_varm(ncid, varid, localStart, localCount, localStride, localMap, values, bufcount, buftype, req)
          else
              nf90mpi_$1_var_$2_$3 = &
                  nfmpi_$1_varm_$5(ncid, varid, localStart, localCount, localStride, localMap, values, req)
@@ -435,7 +435,7 @@ define(`NBVAR',dnl
      else if (present(stride)) then
          if (present(buftype)) then
              nf90mpi_$1_var_$2_$3 = &
-                 nfmpi_$1_vars(ncid, varid, localStart, localCount, localStride, values, nbuftypes, buftype, req)
+                 nfmpi_$1_vars(ncid, varid, localStart, localCount, localStride, values, bufcount, buftype, req)
          else
              nf90mpi_$1_var_$2_$3 = &
                  nfmpi_$1_vars_$5(ncid, varid, localStart, localCount, localStride, values, req)
@@ -443,7 +443,7 @@ define(`NBVAR',dnl
      else
          if (present(buftype)) then
              nf90mpi_$1_var_$2_$3 = &
-                 nfmpi_$1_vara(ncid, varid, localStart, localCount, values, nbuftypes, buftype, req)
+                 nfmpi_$1_vara(ncid, varid, localStart, localCount, values, bufcount, buftype, req)
          else
              nf90mpi_$1_var_$2_$3 = &
                  nfmpi_$1_vara_$5(ncid, varid, localStart, localCount, values, req)
