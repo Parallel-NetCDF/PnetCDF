@@ -19,11 +19,13 @@ SRCS    = test_subarray.c \
           test_darray.c \
           test_nonblocking.c
 
+HEADERS = test_dtype.h
+
 OBJS    = $(SRCS:.c=.o)
 PROGS   = $(SRCS:.c=)
 
 GARBAGE      = $(PROGS)
-PACKING_LIST = $(SRCS) Makefile.in README test_dtype.h
+PACKING_LIST = $(SRCS) $(HEADERS) Makefile.in README
 
 all: $(PROGS)
 

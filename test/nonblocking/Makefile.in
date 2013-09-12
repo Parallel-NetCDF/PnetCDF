@@ -33,7 +33,7 @@ OBJS      += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in README
+PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in README depend
 
 all: $(PROGS)
 

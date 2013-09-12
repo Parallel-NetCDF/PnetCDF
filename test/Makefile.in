@@ -33,6 +33,9 @@ SUBDIRS += nf90_test
 SUBDIRS += F90
 endif
 
+PACKING_LIST = Makefile.in
+
+PACKING_SUBDIRS = $(SUBDIRS) nf_test nf90_test F90
 
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) all ; ) ; done

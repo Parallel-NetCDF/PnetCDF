@@ -25,7 +25,7 @@ PROGS     = $(SRCS:.c=)
 
 GARBAGE   = $(PROGS)
 
-PACKING_LIST = $(SRCS) README
+PACKING_LIST = $(SRCS) README Makefile.in
 
 all: $(PROGS)
 	set -e; cd ../data && $(MAKE) all

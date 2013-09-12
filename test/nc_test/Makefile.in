@@ -26,6 +26,9 @@ M4_SRCS   = test_get.m4 \
             test_iget.m4 \
             test_iput.m4
 
+HEADERS   = tests.h \
+            error.h
+
 OBJS      = $(SRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 PROGS     = nc_test
@@ -35,13 +38,7 @@ time_log  = times
 GARBAGE      = $(PROGS) test.nc scratch.nc lint.out \
                $(time_log) $(M4_SRCS:.m4=.c)
 
-PACKING_LIST = $(SRCS) \
-               $(M4_SRCS) \
-               error.h \
-               tests.h \
-               Makefile.in \
-               depend \
-               README
+PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) Makefile.in depend README
 
 all: $(PROGS)
 

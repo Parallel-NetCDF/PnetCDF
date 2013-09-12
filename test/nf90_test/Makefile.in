@@ -32,6 +32,8 @@ F90_SRCS    = nf90_error.F90 \
 
 C_SRCS      = fortlib.c
 
+HEADERS     = tests.inc
+
 C_OBJS   = $(C_SRCS:.c=.o)
 F90_OBJS = $(F90_SRCS:.F90=.o) $(M4SRCS_F90:.F90=.o)
 OBJS     = $(C_OBJS) $(F90_OBJS)
@@ -47,13 +49,7 @@ GARBAGE  = $(time_log) \
            test.nc \
            $(M4SRCS_F90)
 
-PACKING_LIST = $(C_SRCS) \
-               $(F90_SRCS) \
-               $(M4SRCS) \
-               depend \
-               Makefile.in \
-               tests.inc \
-               README
+PACKING_LIST = $(C_SRCS) $(F90_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in README
 
 all: $(PROGS)
 

@@ -22,7 +22,7 @@ OBJS      = $(SRCS:.c=.o)
 PROGS     = $(SRCS:.c=)
 
 GARBAGE      = $(PROGS)
-PACKING_LIST = $(SRCS)
+PACKING_LIST = $(SRCS) Makefile.in README
 
 all: $(PROGS)
 

@@ -17,8 +17,7 @@ ifeq (@has_fortran@, yes)
 SUBDIRS += FLASH-IO
 endif
 
-PACKING_LIST = Makefile.in \
-               README
+PACKING_LIST = Makefile.in README
 
 PACKING_SUBDIRS = C FLASH-IO
 

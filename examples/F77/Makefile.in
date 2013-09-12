@@ -31,9 +31,7 @@ OBJS      = $(F77_SRCS:.f=.o)
 
 GARBAGE      = $(PROGS) *.nc
 
-PACKING_LIST = $(F77_SRCS) \
-               depend \
-               Makefile.in
+PACKING_LIST = $(F77_SRCS) depend Makefile.in
 
 all: $(PROGS)
 
