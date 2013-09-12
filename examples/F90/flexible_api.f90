@@ -150,7 +150,7 @@
           ! must explicitly use the argument keywords for the buffer type and
           ! number of buffer types, if any previous argument is skipped
           err = nf90mpi_put_var_all(ncid, varid, buf, starts, counts, &
-                                    BUFTYPE=subarray, NBUFTYPES=nTypes)
+                                    BUFCOUNT=nTypes, BUFTYPE=subarray)
           call check(err, 'In nf90mpi_put_var_all: ')
 
           call MPI_Type_free(subarray, err)
