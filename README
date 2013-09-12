@@ -1,8 +1,128 @@
-Parallel Netcdf 1.0.0
+Parallel Netcdf
 =====================
 
 
 Release Notes:
+
+version  1.3.1 (September 24, 2012)
+
+    This release is primarily a bug-fix release, tidying up a few issues and
+    incorporating some early feedback on our "buffered put" interface (see
+    http://trac.mcs.anl.gov/projects/parallel-netcdf/wiki/BufferedInterface for
+    more information)
+
+    - add a new API ncmpi_inq_buffer_usage/nfmpi_inq_buffer_usage for inquiring
+      the current usage of the internal buffer allocated by the "buffered"-put
+      APIs.
+    - bug fix to make bput APIs properly return error code NC_EINSUFFBUF.
+    - bug fixes for ncmpidump to avoid residue contents from a previous read
+      when it read beyond EOF.
+    - bug fixes in the the tutorial example codes.
+    - add more in-line comments for the tutorial example codes.
+    - add the error string for error code NC_ENOENT.
+
+version  1.3.0 (June 26, 2012)
+
+    - Bug fixes in new ncmpidiff tool.
+    - Small optimizations to reduce communication in library.
+    - Improved documentation, including more test programs and a QuickTutorial.
+    - Bug fixes in our Fortran90 support.
+    - Better compatibility with NetCDF-4: no need for a modified pnetcdf.h from
+      Unidata when building NetCDF-4 with PnetCDF support.
+    - PnetCDF now duplicates the MPI communicator internally, which fixed at
+      least one odd behavior seen in a pnetcdf-using application.
+    - Improvements to PnetCDF header and variable alignment (see wiki page
+      VariableAlignment).
+    - Add a checking for file create mode consistency across all processes and
+      an error code for it, NC_ECMODE.
+    - Bug fix for updating the number of record variables in nonblocking APIs.
+    - Bug fix for variable starting file offsets when defining multiple large
+      variables (> 232 elements) in one CDF-5 file.
+    - Add a new configure option that takes environment variable $RM to replace
+      the default "rm" command in all Makefiles.
+    - Bug fix for nonblocking varm APIs.
+    - Support for CDF-2's special2 characters in names (variables, attributes,
+      dimensions, etc.)
+    - Release of the official CDF-5 file format specification (see wiki page
+      CD-5).
+    - Support for CDF-5 data types: NC_UBYTE, NC_USHORT, NC_UINT, NC_INT64,
+      NC_UINT64, and NF_INT64.
+    - New C APIs: ncmpi_put_vara_ushort, ncmpi_put_vara_uint,
+      ncmpi_put_vara_longlong, and ncmpi_put_vara_ulonglong. Similarly for
+      var1, var, vars and varm APIs. Also for get and nonblocking APIs.
+    - New Fortran APIs: nfmpi_put_vars_int8 and similarly for var1, var, vars,
+      varm, get, and nonblocking APIs.
+    - Add a new error code, NC_ENOTSUPPORT, for not-yet-supported features.
+    - A new set of buffered put APIs (eg. ncmpi_bput_vara_float) is added (see
+      BufferedInterface). They make a copy of the user's buffer internally, so
+      the user's buffer can be reused when the call returns. Their usage are
+      similar to the iput APIs.
+    - Add new error codes for buffered put APIs: NC_ENULLBUF,
+      NC_EPREVATTACHBUF, NC_ENULLABUF, NC_EPENDINGBPUT, and NC_EINSUFFBUF.
+    - Add new test and example programs for the buffered put APIs.
+    - The error string returned by ncmpi_strerror() for an undefined error code
+      is updated from "Unknown Error" to "Unknown Error: Unrecognized PnetCDF
+      error code ID" to be more descriptive.
+    - Remove the use of POSIX error codes: EINVAL, ENOERR, ERANGE, and ENOMEM.
+      They are replaced by NC error codes now: NC_EINVAL, NC_NOERR, NC_ERANGE,
+      and NC_ENOMEM.
+    - A better translation of MPI-IO error classes to netCDF/PnetCDF error
+      codes. For example, MPI-IO error class MPI_ERR_NO_SUCH_FILE is translated
+      to NC_ENOENT.
+
+    - Compatibility note
+
+    - In testing with version 11.7 of the Portland Group compiler, some of the
+      Fortran test programs fail to compile if built with pgf77. The tests work
+      if built with the Fortran90 compiler.
+
+version  1.2.0 (August 19, 2010)
+
+    - Several bugs fixed, memory leaks reduced,
+
+    - Internal housekeeping
+
+    - Reduce the places where pnetcdf will call MPI_FILE_SYNC
+
+    - A new 'ncmpidiff' utility to compare two datasets in parallel
+
+    - Addressed a build failure when compiling with some versions of MVAPICH2.
+      See  http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2010-July/001045.html
+      for an example of the build failure.
+
+    - If you build this release and still get "undefined reference to 'yyin'",
+      then you have some stale object files. "make clean" and re-build.
+
+    - Additional error checking for collective routines
+
+    - We have also made API changes to our non-blocking interface. Our
+      non-blocking semantics have been relaxed somewhat, and should be more
+      usable in more situations.
+
+
+version  1.1.0 (November 2, 2009)
+
+    - A new file format, CDF-5, is introduced. This format allows defining
+      large array variables with more than 232 elements.
+
+    - A new optimization in parallel-netcdf with this release. If the hint
+      "striping_unit" is set, then pnetcdf will align the start of non-record
+      variables to a multiple of that value.
+
+    - A new set of APIs for reading/writing multiple variables. The existing
+      asynchronous APIs have also been improved to enable combination of
+      multiple variable access into fewer I/O requests.
+
+    - There is now a simple pnetcdf.F90 module for F90 codes. Please consider
+      this as an "early feedback" version and not a hard gaurantee of a fixed
+      F90 API (though we don't expect it to change drastically if at all).
+      This module is generated from the F77 'pnetcdf.inc': thanks to
+      Annette Koontz for the idea.
+
+    - The 'ncmpigen' utility can now create "big variable" (CDF-5) files, in
+      addition to the older "big file" (CDF-2) files.
+
+version  1.0.0 (July 27, 2005)
 
     - For platform-specific build instructions, see one of the README.<ARCH>
       files.  
