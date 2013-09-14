@@ -345,99 +345,69 @@ ncmpii_vara_create_filetype(NC               *ncp,
        (varp->ndims == 0 meaning this is a scalar variable)
        Otherwise, keep filetype MPI_BYTE
      */
-    if (varp->ndims > 0 && nelems > 0) {
-        int i, ndims, blklens[3], tag=0;
-        int *shape=NULL, *subcount=NULL, *substart=NULL; /* all in bytes */
-        MPI_Offset *shape64=NULL, *subcount64=NULL, *substart64=NULL;
-        MPI_Offset size, disps[3];
-        MPI_Datatype rectype, types[3], type1;
+    if (varp->ndims == 0 || nelems == 0) {
+        *offset_ptr   = offset;
+        *filetype_ptr = filetype;
 
-        ndims    = varp->ndims;
-        shape    = (int*) NCI_Malloc(3 * ndims * sizeof(int));
-        subcount = shape    + ndims;
-        substart = subcount + ndims;
+        return NC_NOERR;
+    }
 
-        /* here, request size has been checked and it must > 0 */
-        if (IS_RECVAR(varp)) {
-            subcount[0] = count[0];
-            substart[0] = 0;
-            shape[0]    = subcount[0];
+    /* hereinafter varp->ndims > 0 && nelems > 0 */
+    int i, ndims, blklens[3], tag=0;
+    int *shape=NULL, *subcount=NULL, *substart=NULL; /* all in bytes */
+    MPI_Offset *shape64=NULL, *subcount64=NULL, *substart64=NULL;
+    MPI_Offset size, disps[3];
+    MPI_Datatype rectype, types[3], type1;
 
-            if (ncp->recsize <= varp->len) {
-                /* the only record variable */
-                if (varp->ndims == 1) {
-                    shape[0] *= varp->xsz;
-                    subcount[0] *= varp->xsz;
+    ndims    = varp->ndims;
+    shape    = (int*) NCI_Malloc(3 * ndims * sizeof(int));
+    subcount = shape    + ndims;
+    substart = subcount + ndims;
+
+    /* previously, request size has been checked and it must > 0 */
+    if (IS_RECVAR(varp)) {
+        /* TODO: check MPI_Offset-to-int overflow */
+        subcount[0] = count[0];
+        substart[0] = 0;
+        shape[0]    = subcount[0];
+
+        if (ncp->recsize <= varp->len) { /* the only record variable */
+            if (varp->ndims == 1) {
+                shape[0] *= varp->xsz;
+                subcount[0] *= varp->xsz;
+            }
+            else {
+                for (dim = 1; dim < ndims-1; dim++) {
+                    shape[dim]    = varp->shape[dim];
+                    subcount[dim] = count[dim];
+                    substart[dim] = start[dim];
                 }
-                else {
-                    for (dim = 1; dim < ndims-1; dim++) {
-                        shape[dim]    = varp->shape[dim];
-                        subcount[dim] = count[dim];
-                        substart[dim] = start[dim];
-                    }
-                    shape[dim]    = varp->xsz * varp->shape[dim];
-                    subcount[dim] = varp->xsz * count[dim];
-                    substart[dim] = varp->xsz * start[dim];
-                }
-                offset += start[0] * ncp->recsize;
+                shape[dim]    = varp->xsz * varp->shape[dim];
+                subcount[dim] = varp->xsz * count[dim];
+                substart[dim] = varp->xsz * start[dim];
+            }
+            offset += start[0] * ncp->recsize;
 
-                MPI_Type_create_subarray(ndims, shape, subcount, substart,
-                                         MPI_ORDER_C, MPI_BYTE, &filetype);
+            MPI_Type_create_subarray(ndims, shape, subcount, substart,
+                                     MPI_ORDER_C, MPI_BYTE, &filetype);
+            MPI_Type_commit(&filetype);
+        }
+        else { /* more than one record variables */
+            check_recsize_too_big(ncp);
+
+            offset += start[0] * ncp->recsize;
+            if (varp->ndims == 1) {
+#if (MPI_VERSION < 2)
+                MPI_Type_hvector(subcount[0], varp->xsz, ncp->recsize,
+                                 MPI_BYTE, &filetype);
+#else
+                MPI_Type_create_hvector(subcount[0], varp->xsz, ncp->recsize,
+                                        MPI_BYTE, &filetype);
+#endif
                 MPI_Type_commit(&filetype);
             }
             else {
-                check_recsize_too_big(ncp);
-                /* more than one record variables */
-
-                offset += start[0] * ncp->recsize;
-                if (varp->ndims == 1) {
-#if (MPI_VERSION < 2)
-                    MPI_Type_hvector(subcount[0], varp->xsz, ncp->recsize,
-                                     MPI_BYTE, &filetype);
-#else
-                    MPI_Type_create_hvector(subcount[0], varp->xsz, ncp->recsize,
-                                            MPI_BYTE, &filetype);
-#endif
-                    MPI_Type_commit(&filetype);
-                }
-                else {
-                    for (dim = 1; dim < ndims-1; dim++) {
-                        shape[dim]    = varp->shape[dim];
-                        subcount[dim] = count[dim];
-                        substart[dim] = start[dim];
-                    }
-                    shape[dim]    = varp->xsz * varp->shape[dim];
-                    subcount[dim] = varp->xsz * count[dim];
-                    substart[dim] = varp->xsz * start[dim];
-
-                    MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
-                                             MPI_ORDER_C, MPI_BYTE, &rectype);
-                    MPI_Type_commit(&rectype);
-#if (MPI_VERSION < 2)
-                    MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype,
-                                     &filetype);
-#else
-                    MPI_Type_create_hvector(subcount[0], 1, ncp->recsize, rectype,
-                                            &filetype);
-#endif
-                    MPI_Type_commit(&filetype);
-                    MPI_Type_free(&rectype);
-                }
-            }
-        }
-        else { /* non record variable */
-            tag = 0;
-            for (dim=0; dim< ndims-1; dim++) {
-                if (varp->shape[dim] > 2147483647) { /* if shape > 2^31-1 */
-                    tag = 1;
-                    break;
-                }
-            }
-            if ((varp->shape[dim]*varp->xsz)  > 2147483647)
-                tag = 1;
-
-            if (tag == 0) {
-                for (dim = 0; dim < ndims-1; dim++ ) {
+                for (dim = 1; dim < ndims-1; dim++) {
                     shape[dim]    = varp->shape[dim];
                     subcount[dim] = count[dim];
                     substart[dim] = start[dim];
@@ -446,92 +416,128 @@ ncmpii_vara_create_filetype(NC               *ncp,
                 subcount[dim] = varp->xsz * count[dim];
                 substart[dim] = varp->xsz * start[dim];
 
-                MPI_Type_create_subarray(ndims, shape, subcount, substart,
-                                         MPI_ORDER_C, MPI_BYTE, &filetype);
-                MPI_Type_commit(&filetype);
-            }
-            else {
-                shape64 = (MPI_Offset*) NCI_Malloc(3 * ndims * sizeof(MPI_Offset));
-                subcount64 = shape64    + ndims;
-                substart64 = subcount64 + ndims;
-
-                if (ndims == 1) {  // for 64-bit support,  added July 23, 2008
-                    shape64[0]    = varp->shape[0];
-                    subcount64[0] = count[0];
-                    substart64[0] = start[0];
-
-                    offset += start[0]*varp->xsz;
-
-                    MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
-                    MPI_Type_commit(&type1);
+                MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
+                                         MPI_ORDER_C, MPI_BYTE, &rectype);
+                MPI_Type_commit(&rectype);
 #if (MPI_VERSION < 2)
-                    MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
-                                     MPI_BYTE, &filetype);
+                MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype,
+                                 &filetype);
 #else
-                    MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
-                                            type1, &filetype);
+                MPI_Type_create_hvector(subcount[0], 1, ncp->recsize, rectype,
+                                        &filetype);
 #endif
-                    MPI_Type_commit(&filetype);
-                    MPI_Type_free(&type1);
-                }
-                else {
-                    for (dim = 0; dim < ndims-1; dim++ ) {
-                        shape64[dim]    = varp->shape[dim];
-                        subcount64[dim] = count[dim];
-                        substart64[dim] = start[dim];
-                    }
-                    shape64[dim]    = varp->xsz * varp->shape[dim];
-                    subcount64[dim] = varp->xsz * count[dim];
-                    substart64[dim] = varp->xsz * start[dim];
-
-                    MPI_Type_hvector(subcount64[dim-1],
-                                     subcount64[dim],
-                                     varp->xsz * varp->shape[dim],
-                                     MPI_BYTE,
-                                     &type1);
-                    MPI_Type_commit(&type1);
-
-                    size = shape[dim];
-                    for (i=dim-2; i>=0; i--) {
-                        size *= shape[i+1];
-                        MPI_Type_hvector(subcount64[i],
-                                         1,
-                                         size,
-                                         type1,
-                                         &filetype);
-                        MPI_Type_commit(&filetype);
-
-                        MPI_Type_free(&type1);
-                        type1 = filetype;
-                    }
-                    disps[1] = substart64[dim];
-                    size = 1;
-                    for (i=dim-1; i>=0; i--) {
-                        size *= shape64[i+1];
-                        disps[1] += size*substart64[i];
-                    }
-                    disps[2] = 1;
-                    for (i=0; i<ndims; i++) disps[2] *= shape64[i];
-
-                    disps[0] = 0;
-                    blklens[0] = blklens[1] = blklens[2] = 1;
-                    types[0] = MPI_LB;
-                    types[1] = type1;
-                    types[2] = MPI_UB;
-
-                    MPI_Type_struct(3,
-                                    blklens,
-                                    (MPI_Aint*) disps,
-                                    types,
-                                    &filetype);
-
-                    MPI_Type_free(&type1);
-                }
-                NCI_Free(shape64);
+                MPI_Type_commit(&filetype);
+                MPI_Type_free(&rectype);
             }
         }
-        NCI_Free(shape);
     }
+    else { /* non record variable */
+        tag = 0;
+        for (dim=0; dim< ndims-1; dim++) {
+            if (varp->shape[dim] > 2147483647) { /* if shape > 2^31-1 */
+                tag = 1;
+                break;
+            }
+        }
+        if ((varp->shape[dim]*varp->xsz)  > 2147483647)
+            tag = 1;
+
+        if (tag == 0) {
+            for (dim = 0; dim < ndims-1; dim++ ) {
+                shape[dim]    = varp->shape[dim];
+                subcount[dim] = count[dim];
+                substart[dim] = start[dim];
+            }
+            shape[dim]    = varp->xsz * varp->shape[dim];
+            subcount[dim] = varp->xsz * count[dim];
+            substart[dim] = varp->xsz * start[dim];
+
+            MPI_Type_create_subarray(ndims, shape, subcount, substart,
+                                     MPI_ORDER_C, MPI_BYTE, &filetype);
+            MPI_Type_commit(&filetype);
+        }
+        else {
+            shape64 = (MPI_Offset*) NCI_Malloc(3 * ndims * sizeof(MPI_Offset));
+            subcount64 = shape64    + ndims;
+            substart64 = subcount64 + ndims;
+
+            if (ndims == 1) {  // for 64-bit support,  added July 23, 2008
+                shape64[0]    = varp->shape[0];
+                subcount64[0] = count[0];
+                substart64[0] = start[0];
+
+                offset += start[0]*varp->xsz;
+
+                MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
+                MPI_Type_commit(&type1);
+#if (MPI_VERSION < 2)
+                /* Why use the arguments differently between MPI-1 and 2 ? */
+                MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
+                                 MPI_BYTE, &filetype);
+#else
+                MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
+                                        type1, &filetype);
+#endif
+                MPI_Type_commit(&filetype);
+                MPI_Type_free(&type1);
+            }
+            else {
+                for (dim = 0; dim < ndims-1; dim++ ) {
+                    shape64[dim]    = varp->shape[dim];
+                    subcount64[dim] = count[dim];
+                    substart64[dim] = start[dim];
+                }
+                shape64[dim]    = varp->xsz * varp->shape[dim];
+                subcount64[dim] = varp->xsz * count[dim];
+                substart64[dim] = varp->xsz * start[dim];
+
+                MPI_Type_hvector(subcount64[dim-1],
+                                 subcount64[dim],
+                                 varp->xsz * varp->shape[dim],
+                                 MPI_BYTE,
+                                 &type1);
+                MPI_Type_commit(&type1);
+
+                size = shape[dim];
+                for (i=dim-2; i>=0; i--) {
+                    size *= shape[i+1];
+                    MPI_Type_hvector(subcount64[i],
+                                     1,
+                                     size,
+                                     type1,
+                                     &filetype);
+                    MPI_Type_commit(&filetype);
+
+                    MPI_Type_free(&type1);
+                    type1 = filetype;
+                }
+                disps[1] = substart64[dim];
+                size = 1;
+                for (i=dim-1; i>=0; i--) {
+                    size *= shape64[i+1];
+                    disps[1] += size*substart64[i];
+                }
+                disps[2] = 1;
+                for (i=0; i<ndims; i++) disps[2] *= shape64[i];
+
+                disps[0] = 0;
+                blklens[0] = blklens[1] = blklens[2] = 1;
+                types[0] = MPI_LB;
+                types[1] = type1;
+                types[2] = MPI_UB;
+
+                MPI_Type_struct(3,
+                                blklens,
+                                (MPI_Aint*) disps,
+                                types,
+                                &filetype);
+
+                MPI_Type_free(&type1);
+            }
+            NCI_Free(shape64);
+        }
+    }
+    NCI_Free(shape);
 
     if (filetype != MPI_BYTE) *blocklen = 1;
 
@@ -554,7 +560,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
                             MPI_Datatype     *filetype_ptr)
 {
     int          dim, status;
-    MPI_Offset   offset, nelems=1;
+    MPI_Offset   offset, stride_off, nelems=1;
     MPI_Datatype filetype;
 
     if (stride == NULL)
@@ -602,34 +608,48 @@ ncmpii_vars_create_filetype(NC               *ncp,
        Otherwise, keep filetype MPI_BYTE
      */
     if (varp->ndims > 0 && nelems > 0) {
-        int ndims;
+        int ndims, *blockcounts, *blocklens; 
+        MPI_Aint *blockstride;
         MPI_Datatype tmptype;
-        MPI_Offset *blocklens, *blockstride, *blockcount;
 
         ndims       = varp->ndims;
-        blocklens   = (MPI_Offset*) NCI_Malloc(3 * ndims * sizeof(MPI_Offset));
-        blockstride = blocklens   + ndims;
-        blockcount  = blockstride + ndims;
+        blockcounts = (int*) NCI_Malloc(2 * ndims * sizeof(int));
+        blocklens   = blockcounts + ndims;
+
+        blockstride = (MPI_Aint*) NCI_Malloc(ndims * sizeof(MPI_Aint));
 
         tmptype = MPI_BYTE;
 
+        blockcounts[ndims-1] = count[ndims-1];
+        /* check 4-byte integer overflow (blockcounts in MPI_Type_hvector
+           is of type int while count[] is of type MPI_Offset */
+        if (count[ndims-1] != blockcounts[ndims-1])
+            return NC_EINTOVERFLOW;
+        /* blocklens[] is unlikely a big value */
         blocklens[ndims-1]  = varp->xsz;
-        blockcount[ndims-1] = count[ndims-1];
+
         if (ndims == 1 && IS_RECVAR(varp)) {
             check_recsize_too_big(ncp);
-            blockstride[ndims-1] = stride[ndims-1] * ncp->recsize;
+            stride_off = stride[ndims-1] * ncp->recsize;
+            blockstride[ndims-1] = stride_off;
             offset += start[ndims - 1] * ncp->recsize;
         } else {
-            blockstride[ndims-1] = stride[ndims-1] * varp->xsz;
+            stride_off = stride[ndims-1] * varp->xsz;
+            blockstride[ndims-1] = stride_off;
             offset += start[ndims-1] * varp->xsz;
         }
+#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
+        /* check 4-byte integer overflow */
+        if (stride_off != blockstride[ndims-1])
+            return NC_EINTOVERFLOW;
+#endif
 
         for (dim=ndims-1; dim>=0; dim--) {
 #if (MPI_VERSION < 2)
-            MPI_Type_hvector(blockcount[dim], blocklens[dim], blockstride[dim],
+            MPI_Type_hvector(blockcounts[dim], blocklens[dim], blockstride[dim],
                              tmptype, &filetype);
 #else
-            MPI_Type_create_hvector(blockcount[dim], blocklens[dim],
+            MPI_Type_create_hvector(blockcounts[dim], blocklens[dim],
                                     blockstride[dim], tmptype, &filetype);
 #endif
             MPI_Type_commit(&filetype);
@@ -639,17 +659,28 @@ ncmpii_vars_create_filetype(NC               *ncp,
 
             if (dim - 1 >= 0) {
                 blocklens[dim-1]  = 1;
-                blockcount[dim-1] = count[dim - 1];
+                blockcounts[dim-1] = count[dim - 1];
+                /* check 4-byte integer overflow */
+                if (count[dim-1] != blockcounts[dim-1])
+                    return NC_EINTOVERFLOW;
+
                 if (dim-1 == 0 && IS_RECVAR(varp)) {
-                    blockstride[dim-1] = stride[dim-1] * ncp->recsize;
+                    stride_off = stride[dim-1] * ncp->recsize;
+                    blockstride[dim-1] = stride_off;
                     offset += start[dim-1] * ncp->recsize;
                 } else {
-                    blockstride[dim-1] = stride[dim-1] * varp->dsizes[dim]
-                                       * varp->xsz;
+                    stride_off = stride[dim-1] * varp->dsizes[dim] * varp->xsz;
+                    blockstride[dim-1] = stride_off;
                     offset += start[dim-1] * varp->dsizes[dim] * varp->xsz;
                 }
+#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
+                /* check 4-byte integer overflow */
+                if (stride_off != blockstride[dim-1])
+                    return NC_EINTOVERFLOW;
+#endif
             }
         }
+        NCI_Free(blockstride);
         NCI_Free(blocklens);
     }
 
