@@ -10,8 +10,9 @@
 
 #include "common.fh"
 
-      integer ierr
-      integer i
+      integer i, argc, ierr
+      character(len=128) executable
+      logical isArgvRight
 
       double precision time_io(3), time_begin
       double precision chk_io, corner_io, nocorner_io
@@ -22,11 +23,37 @@
 
 ! initialize MPI and get the rank and size
       call MPI_INIT(ierr)
-      
       call MPI_Comm_Rank (MPI_Comm_World, MyPE, ierr)
       call MPI_Comm_Size (MPI_Comm_World, NumPEs, ierr)
 
       MasterPE = 0
+
+      ! root process reads command-line arguments
+      if (MyPE .EQ. MasterPE) then
+         isArgvRight = .TRUE.
+         argc = IARGC()
+         call getarg(0, executable)
+         if (argc .GT. 1) then
+            print *, &
+            'Usage: ',trim(executable),' <ouput file base name>'
+            isArgvRight = .FALSE.
+         else
+            if (argc .EQ. 1) then
+               call getarg(1, basenm)
+            else ! default file name prefix
+               basenm = "flash_io_test_"
+            endif
+         endif
+      endif
+
+      ! broadcast if command-line arguments are valid
+      call MPI_Bcast(isArgvRight, 1, MPI_LOGICAL, MasterPE, &
+                     MPI_COMM_WORLD, ierr)
+      if (.NOT. isArgvRight) goto 999
+
+      ! broadcast file base name prefix
+      call MPI_Bcast(basenm, 128, MPI_CHARACTER, MasterPE, &
+                     MPI_COMM_WORLD, ierr)
 
 ! put ~100 blocks on each processor -- make it vary a little, since it does
 ! in the real application.  This is the maximum that we can fit on Blue 
@@ -52,9 +79,6 @@
         unk(i,:,:,:,:) = float(i)
       enddo
 
-! setup the file properties
-      basenm = "flash_io_test_"
-
 !---------------------------------------------------------------------------
 ! netCDF checkpoint file
 !---------------------------------------------------------------------------
@@ -79,7 +103,7 @@
       call report_io_performance(local_blocks, time_io, chk_io, &
                                  corner_io, nocorner_io)
 
-      call MPI_Finalize(ierr)
+ 999  call MPI_Finalize(ierr)
 
       end program flash_benchmark_io
 

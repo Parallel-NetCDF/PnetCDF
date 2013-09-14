@@ -42,6 +42,10 @@ To compile:
 
 To run:
     mpiexec -n 512 flash_benchmark_io
+    (this will use the default file base name prefix: "")
+  or
+    mpiexec -n 512 flash_benchmark_io /pvfs2/flash_io_test_
+    (this will use file base name prefix: "/pvfs2/flash_io_test_")
 
 Example output from stdout:
 
