@@ -681,7 +681,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
             }
         }
         NCI_Free(blockstride);
-        NCI_Free(blocklens);
+        NCI_Free(blockcounts);
     }
 
     *offset_ptr   = offset;
