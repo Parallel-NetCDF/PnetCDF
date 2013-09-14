@@ -21,6 +21,9 @@
 
       integer, parameter :: local_blocks = INT(0.8*maxblocks)
 
+      ! declare external functions
+      integer IARGC
+
 ! initialize MPI and get the rank and size
       call MPI_INIT(ierr)
       call MPI_Comm_Rank (MPI_Comm_World, MyPE, ierr)
