@@ -69,7 +69,7 @@ foreach exe (block_cyclic \
              flexible_api \
              get_info \
              hints \
-             put_vara \
+             put_var \
              put_varn_int \
              put_varn_real)
     echo "---- ${EXE_DIR}/F90/$exe ----"
