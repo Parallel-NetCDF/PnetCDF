@@ -24,9 +24,9 @@
  *
  *    % mpicc -O2 -o aggregation aggregation.c -lpnetcdf
  *
- *    % mpiexec -l -n 4 aggregation 5 testfile.nc
+ *    % mpiexec -l -n 4 ./aggregation 5 /pvfs2/wkliao/testfile.nc
  *
- *    % ncmpidump testfile.nc
+ *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *      netcdf testfile {
  *      // file format: CDF-5 (big variables)
  *      dimensions:
