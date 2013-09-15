@@ -32,8 +32,8 @@
  * the output file.
  *
  *    % mpicc -O2 -o mput mput.c -lpnetcdf
- *    % mpiexec -l -n 4 ./mput testfile.nc
- *    % ncmpidump testfile.nc
+ *    % mpiexec -l -n 4 ./mput /pvfs2/wkliao/testfile.nc
+ *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
  *    dimensions:
@@ -55,6 +55,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
+    char *filename="testfile.nc";
     int i, rank, nprocs, err;
     int ncid, cmode, varid, dimid[2], num_reqs, *buffer, **bufs, *nvarids;
     MPI_Offset w_len, **starts, **counts, *bufcounts;
@@ -64,17 +65,19 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
+
     if (nprocs != 4 && rank == 0)
         printf("Warning: this program is intended to run on 4 processes\n");
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     ERR
 
     /* create a global array of size NY * NX */

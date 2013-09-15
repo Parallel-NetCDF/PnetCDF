@@ -35,9 +35,9 @@
  *
  *    % mpicc -O2 -o flexible_api flexible_api.c -lpnetcdf
  *
- *    % mpiexec -l -n 4 ./flexible_api testfile.nc
+ *    % mpiexec -l -n 4 ./flexible_api /pvfs2/wkliao/testfile.nc
  *
- *    % ncmpidump testfile.nc
+ *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
  *    dimensions:
@@ -84,11 +84,11 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
-    int i, rank, nprocs, err;
+    char *filename="testfile.nc";
+    int i, rank, nprocs, err, req, status, ghost_len=3;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
-    float *buf_yx;
-    int req, status, ghost_len=3;
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
+    float *buf_yx;
     MPI_Offset start[2], count[2];
     MPI_Datatype  subarray;
 
@@ -96,15 +96,16 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     ERR
 
     /* define 3 dimensions */

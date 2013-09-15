@@ -29,7 +29,7 @@
  * the output file. In this example, block_len = 2.
  *
  *    % mpicc -O2 -o block_cyclic block_cyclic.c -lpnetcdf
- *    % mpiexec -l -n 4 ./block_cyclic testfile.nc
+ *    % mpiexec -l -n 4 ./block_cyclic /pvfs2/wkliao/testfile.nc
  *    0:  0: NY=10 myNX=  4 myOff=  0
  *    1:  1: NY=10 myNX=  4 myOff=  4
  *    2:  2: NY=10 myNX=  4 myOff=  8
@@ -51,7 +51,7 @@
  *    3: [i=2] iput() start=  0  14 count= 10   1
  *    3: [i=3] iput() start=  0  15 count= 10   1
  *
- *    % ncmpidump testfile.nc
+ *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
  *    dimensions:
@@ -80,6 +80,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
+    char *filename="testfile.nc";
     int i, j, verbose, rank, nprocs, err, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
@@ -90,15 +91,16 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     verbose = 1;
-    if (argc != 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     ERR
 
     /* the global array is NY * (NX * nprocs) */
@@ -181,7 +183,7 @@ int main(int argc, char** argv) {
 
     /* open an existing file created earlier for read -----------------------*/
     cmode = NC_NOWRITE;
-    err = ncmpi_open(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     ERR
 
     /* the global array is NY * (NX * nprocs) */

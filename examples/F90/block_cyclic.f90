@@ -18,9 +18,9 @@
 ! the output file. In this example, block_len = 2.
 !
 !    % mpif90 -O2 -o block_cyclic block_cyclic.f90 -lpnetcdf
-!    % mpiexec -n 4 block_cyclic testfile.nc
+!    % mpiexec -n 4 ./block_cyclic /pvfs2/wkliao/testfile.nc
 !
-!    % ncmpidump testfile.nc
+!    % ncmpidump /pvfs2/wkliao/testfile.nc
 !    netcdf testfile {
 !    // file format: CDF-5 (big variables)
 !    dimensions:
@@ -66,7 +66,7 @@
           integer NY, NX
           PARAMETER(NX=10, NY=4)
 
-          character(LEN=128) filename
+          character(LEN=128) filename, cmd
           integer i, j, rank, nprocs, err, num_reqs, argc, iargc
           integer ncid, cmode, varid, dimid(2), stride, block_len
           integer, dimension(:,:), allocatable :: buf
@@ -80,12 +80,14 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
+          call getarg(0, cmd)
           argc = IARGC()
-          if (argc .NE. 1) then
-              print*,'Usage: block_cyclic filename'
-              STOP
+          if (argc .GT. 1) then
+              print*,'Usage: ',trim(cmd),' [filename]'
+              goto 999
           endif
-          call getarg(1, filename)
+          filename = "testfile.nc"
+          if (argc .EQ. 1) call getarg(1, filename)
 
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
@@ -255,6 +257,6 @@
           deallocate(reqs)
           deallocate(sts)
 
-          call MPI_Finalize(err)
+ 999      call MPI_Finalize(err)
 
       end program main

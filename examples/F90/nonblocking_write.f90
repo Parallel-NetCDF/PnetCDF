@@ -11,8 +11,8 @@
 !    To compile:
 !        mpif90 -O2 nonblocking_write.f90 -o nonblocking_write -lpnetcdf
 !    To run:
-!        mpiexec -n 32 ./nonblocking_write 100 /orangefs/testfile.nc
-!    where len=100 decides the size of each local array, which is
+!        mpiexec -n num_processes ./nonblocking_write len [filename]
+!    where len decides the size of each local array, which is
 !    len x len x len. Each non-record variable is of size
 !          len*len*len * nprocs * sizeof(int)
 !    All variables are partitioned among all processes in a 3D
@@ -41,7 +41,7 @@
           integer NDIMS, NUM_VARS
           PARAMETER(NDIMS=3, NUM_VARS=10)
 
-          character(LEN=128) filename, str
+          character(LEN=128) filename, cmd, str
           integer i, j, cmode, argc, iargc, err
           integer rank, nprocs, len, bufsize, ncid
           integer psizes(NDIMS), dimids(NDIMS), varids(NUM_VARS)
@@ -60,14 +60,16 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
+          call getarg(0, cmd)
           argc = IARGC()
-          if (argc .NE. 2) then
-              print*,'Usage: nonblocking_write len filename'
-              STOP
+          if (argc .GT. 2) then
+              print*,'Usage: ',trim(cmd),' len [filename]'
+              goto 999
           endif
           call getarg(1, str)
           read (str,'(I10)') len
-          call getarg(2, filename)
+          filename = "testfile.nc"
+          if (argc .EQ. 1) call getarg(2, filename)
 
           do i=1,NDIMS
              psizes(i) = 0
@@ -145,7 +147,7 @@
              deallocate(buf(i)%p)
           enddo
 
-          call MPI_Finalize(err)
+ 999      call MPI_Finalize(err)
 
       end program main
 

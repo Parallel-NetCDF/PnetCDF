@@ -21,9 +21,9 @@
 ! the output file. Note ncdump is in C order (row major).
 !
 !    % mpif77 -O2 -o column_wise column_wise.f -lpnetcdf
-!    % mpiexec -n 4 ./column_wise testfile.nc
+!    % mpiexec -n 4 ./column_wise /pvfs2/wkliao/testfile.nc
 !
-!    % ncmpidump testfile.nc
+!    % ncmpidump /pvfs2/wkliao/testfile.nc
 !    netcdf testfile {
 !    // file format: CDF-5 (big variables)
 !    dimensions:
@@ -69,7 +69,7 @@
           integer NY, NX
           PARAMETER(NX=10, NY=4)
 
-          character(LEN=128) filename
+          character(LEN=128) filename, cmd
           integer i, j, rank, nprocs, err, num_reqs, argc, iargc
           integer ncid, cmode, varid, dimid(2), stride
           integer buf(NX, NY)
@@ -83,12 +83,14 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
+          call getarg(0, cmd)
           argc = IARGC()
-          if (argc .NE. 1) then
-              print*,'Usage: block_cyclic filename'
-              STOP
+          if (argc .GT. 1) then
+              print*,'Usage: ',trim(cmd),' [filename]'
+              goto 999
           endif
-          call getarg(1, filename)
+          filename = "testfile.nc"
+          if (argc .EQ. 1) call getarg(1, filename)
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
@@ -163,6 +165,6 @@
           err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close: ')
 
-          call MPI_Finalize(err)
+ 999      call MPI_Finalize(err)
 
       end program main

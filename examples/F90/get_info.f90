@@ -10,7 +10,7 @@
 !    To compile:
 !        mpif90 -O2 get_info.f90 -o get_info -lpnetcdf
 !    To run:
-!        mpiexec -n 4 get_info filename
+!        mpiexec -n 4 ./get_info /pvfs2/wkliao/filename
 !
 !    prints all MPI-IO hints used
 !
@@ -42,18 +42,20 @@
         use pnetcdf
         implicit none
 
+        character(len = 256) :: filename, cmd
         integer argc, IARGC, ncid, rank, info, omode, ierr
-        character(len = 256) :: filename
 
         call MPI_Init(ierr)
         call MPI_Comm_rank (MPI_COMM_WORLD, rank, ierr)
 
+        call getarg(0, cmd)
         argc = IARGC()
-        if (argc .NE. 1) then
-            print *, 'Usage: get_info filename'
+        if (argc .GT. 1) then
+            print*,'Usage: ',trim(cmd),' [filename]'
             goto 999
         endif
-        call getarg(1, filename)
+        filename = "testfile.nc"
+        if (argc .EQ. 1) call getarg(1, filename)
 
         omode = NF90_NOWRITE + NF90_64BIT_OFFSET
         ierr = nf90mpi_open(MPI_COMM_WORLD, trim(filename), omode, &
