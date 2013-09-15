@@ -14,11 +14,13 @@
  *    To compile:
  *        mpicc -O2 nonblocking_write.c -o nonblocking_write -lpnetcdf
  *    To run:
- *        mpiexec -n 32 ./nonblocking_write 100 /orangefs/wkliao/testfile.nc
+ *        mpiexec -n num_processes ./nonblocking_write len [filename]
  *    where len decides the size of each local array, which is len x len x len.
  *    So, each non-record variable is of size len*len*len * nprocs * sizeof(int)
  *    All variables are partitioned among all processes in a 3D
- *    block-block-block fashion. Below is an example standard output.
+ *    block-block-block fashion. Below is an example standard output from
+ *    command:
+ *        mpiexec -n 32 ./nonblocking_write 100 /pvfs2/wkliao/testfile.nc
  *
  *    MPI hint: cb_nodes        = 2
  *    MPI hint: cb_buffer_size  = 16777216
@@ -78,7 +80,7 @@ int main(int argc, char **argv)
     int gsizes[NDIMS], array_of_distribs[NDIMS];
     int array_of_dargs[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
-    char *filename, str[512];
+    char *filename="testfile.nc", str[512];
     int ncid, dimids[NDIMS], varids[NUM_VARS], req[NUM_VARS], st[NUM_VARS];
     MPI_Offset starts[NDIMS], counts[NDIMS], write_size, sum_write_size;
     MPI_Info info_used;
@@ -87,13 +89,13 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 3) {
-        if (!rank) printf("Usage: %s len filename\n",argv[0]);
+    if (argc > 3) {
+        if (!rank) printf("Usage: %s len [filename]\n",argv[0]);
         MPI_Finalize();
         return 1;
     }
     len = atoi(argv[1]);
-    filename = argv[2];
+    if (argc == 3) filename = argv[2];
 
     for (i=0; i<NDIMS; i++) {
         array_of_distribs[i] = MPI_DISTRIBUTE_BLOCK;

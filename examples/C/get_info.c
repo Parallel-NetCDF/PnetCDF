@@ -11,7 +11,7 @@
  *    To compile:
  *        mpicc -O2 get_info.c -o get_info -lpnetcdf
  *    To run:
- *        mpiexec -n 4 collective_write len filename
+ *        mpiexec -n 4 ./get_info [filename]
  *
  *    Example standard output:
 
@@ -71,23 +71,25 @@ void print_info(MPI_Info *info_used)
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
+    char *filename="testfile.nc";
     int rank, ncid, err;
     MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc != 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 1;
     }
+    if (argc == 2) filename = argv[1];
 
     /* create the file */
-    err = ncmpi_create(MPI_COMM_WORLD, argv[1], NC_CLOBBER|NC_64BIT_DATA,
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
                        MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error: ncmpi_create() file %s (%s)\n",argv[1],ncmpi_strerror(err));
+        printf("Error: ncmpi_create() file %s (%s)\n",filename,ncmpi_strerror(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
     }

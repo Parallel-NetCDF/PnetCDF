@@ -12,8 +12,8 @@
 ! the output file.
 !
 !    % mpif77 -O2 -o put_varn_real put_varn_real.f -lpnetcdf
-!    % mpiexec -n 4 ./put_varn_real testfile.nc
-!    % ncmpidump testfile.nc
+!    % mpiexec -n 4 ./put_varn_real /pvfs2/wkliao/testfile.nc
+!    % ncmpidump /pvfs2/wkliao/testfile.nc
 !    netcdf testfile {
 !    // file format: CDF-5 (big variables)
 !    dimensions:
@@ -53,7 +53,7 @@
           integer NDIMS
           PARAMETER(NDIMS=2)
 
-          character(LEN=128) filename
+          character(LEN=128) filename, cmd
           integer i, rank, nprocs, err, num_reqs, argc, iargc
           integer ncid, cmode, varid, dimid(2), y, x
           real buffer(13)
@@ -69,12 +69,14 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
+          call getarg(0, cmd)
           argc = IARGC()
-          if (argc .NE. 1) then
-              print*,'Usage: block_cyclic filename'
-              STOP
+          if (argc .GT. 1) then
+              print*,'Usage: ',trim(cmd),' [filename]'
+              goto 999
           endif
-          call getarg(1, filename)
+          filename = "testfile.nc"
+          if (argc .EQ. 1) call getarg(1, filename)
 
           if (nprocs .NE. 4 .AND. rank .EQ. 0)
      +        print*,"Warning: this program is intended to run on ",
@@ -230,7 +232,7 @@
           err = nfmpi_close(ncid);
           call check(err, 'In nfmpi_close: ')
 
-          call MPI_Finalize(err)
+ 999      call MPI_Finalize(err)
 
       end program
 

@@ -26,7 +26,7 @@
  *
  *    % mpicc -O2 -o hints hints.c -lpnetcdf
  *
- *    % mpiexec -l -n 4 ./hints testfile.nc
+ *    % mpiexec -l -n 4 ./hints /pvfs2/wkliao/testfile.nc
  *
  *    nc_header_align_size      set to = 1024
  *    nc_var_align_size         set to = 512
@@ -95,6 +95,7 @@ void print_hints(int ncid,
 }
 
 int main(int argc, char** argv) {
+    char *filename="testfile.nc";
     int i, rank, nprocs, err;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
     float *buf_yx;
@@ -105,11 +106,12 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_header_align_size",      "1024"); /* size in bytes */
@@ -119,7 +121,7 @@ int main(int argc, char** argv) {
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); ERR
     MPI_Info_free(&info);
 
     /* define 3 dimensions */

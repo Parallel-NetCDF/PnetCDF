@@ -32,7 +32,7 @@
  * the output file.
  *
  *    % mpicc -O2 -o column_wise column_wise.c -lpnetcdf
- *    % mpiexec -l -n 4 ./column_wise testfile.nc
+ *    % mpiexec -l -n 4 ./column_wise /pvfs2/wkliao/testfile.nc
  *    0:  0: myOff=  0 myNX=  4
  *    1:  1: myOff=  4 myNX=  4
  *    2:  2: myOff=  8 myNX=  4
@@ -42,7 +42,7 @@
  *    2:  2: start=  0   2 count= 10   1
  *    3:  3: start=  0   3 count= 10   1
  *
- *    % ncmpidump testfile.nc
+ *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
  *    dimensions:
@@ -69,6 +69,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
+    char *filename = "testfile.nc";
     int i, j, debug, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset start[2], count[2];
@@ -78,14 +79,15 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     debug = 1;
-    if (argc != 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
 
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     ERR
 
     /* the global array is NY * (NX * nprocs) */

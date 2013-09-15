@@ -16,7 +16,7 @@
 !
 !    % mpif90 -O2 -o hints hints.f90 -lpnetcdf
 !
-!    % mpiexec -n 4 ./hints testfile.nc
+!    % mpiexec -n 4 ./hints /pvfs2/wkliao/testfile.nc
 !
 !    nc_header_align_size      set to = 1024
 !    nc_var_align_size         set to = 512
@@ -148,7 +148,7 @@
       use pnetcdf
       implicit none
 
-      character(len = 256) :: filename
+      character(len = 256) :: filename, cmd
       integer NZ, NY, NX
       integer argc, IARGC, ncid, rank, nprocs, info, cmode, err
       integer varid0, varid1, dimid(3), dimid2(2)
@@ -162,12 +162,14 @@
       NY = 5
       NX = 5
 
+      call getarg(0, cmd)
       argc = IARGC()
-      if (argc .NE. 1) then
-          print *, 'Usage: hints filename'
+      if (argc .GT. 1) then
+          print*,'Usage: ',trim(cmd),' [filename]'
           goto 999
       endif
-      call getarg(1, filename)
+      filename = "testfile.nc"
+      if (argc .EQ. 1) call getarg(1, filename)
 
       call MPI_Info_create(info, err)
       call MPI_Info_set(info, "nc_header_align_size",      "1024", err)

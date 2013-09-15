@@ -20,9 +20,9 @@
 ! NC file produced by this example program:
 !
 !    % mpif90 -O2 -o flexible_api flexible_api.f90 -lpnetcdf
-!    % mpiexec -n 4 ./flexible_api testfile.nc
+!    % mpiexec -n 4 ./flexible_api /pvfs2/wkliao/testfile.nc
 !
-!    % ncmpidump testfile.nc
+!    % ncmpidump /pvfs2/wkliao/testfile.nc
 !    netcdf testfile {
 !    // file format: CDF-5 (big variables)
 !    dimensions:
@@ -70,7 +70,7 @@
           use pnetcdf
           implicit none
 
-          character(LEN=128) filename
+          character(LEN=128) filename, cmd
           integer argc, IARGC, err, nprocs, rank, i, j, ghost_len
           integer cmode, ncid, varid, dimid(2)
           integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
@@ -86,12 +86,14 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
+          call getarg(0, cmd)
           argc = IARGC()
-          if (argc .GE. 1) then
-              call getarg(1, filename)
-          else
-              filename  = 'testfile.nc'
+          if (argc .GT. 1) then
+              print*,'Usage: ',trim(cmd),' [filename]'
+              goto 999
           endif
+          filename = "testfile.nc"
+          if (argc .EQ. 1) call getarg(1, filename)
 
           ! set parameters
           global_nx = nx
@@ -159,6 +161,6 @@
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')
 
-          call MPI_Finalize(err)
+ 999      call MPI_Finalize(err)
       end program main
 

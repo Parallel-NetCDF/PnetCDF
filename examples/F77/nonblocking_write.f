@@ -10,11 +10,10 @@
 !    Usage: (for example)
 !    To compile:
 !        mpif77 -O2 nonblocking_write.f -o nonblocking_write -lpnetcdf
-!    To run:
-!        mpiexec -n 32 nonblocking_write /orangefs/testfile.nc
-!    where len is set to 8. The size of each local array is
-!    len x len x len. Each non-record variable is of size
-!          len*len*len * nprocs * sizeof(int)
+!    To run (for example):
+!        mpiexec -n 32 ./nonblocking_write 10 /pvfs2/wkliao/testfile.nc
+!    The size of each local array is len x len x len. Each non-record
+!    variable is of size len*len*len * nprocs * sizeof(int)
 !    All variables are partitioned among all processes in a 3D
 !    block-block-block fashion.
 !
@@ -38,12 +37,12 @@
           include "mpif.h"
           include "pnetcdf.inc"
 
-          integer NDIMS, NUM_VARS, LEN, BUFSIZE
-          PARAMETER(NDIMS=3, NUM_VARS=10, LEN=8, BUFSIZE=512)
+          integer NDIMS, NUM_VARS, BUFSIZE
+          PARAMETER(NDIMS=3, NUM_VARS=10, BUFSIZE=512)
 
-          character(LEN=128) filename, str
+          character(LEN=128) filename, cmd, str
           integer i, j, cmode, argc, iargc, err
-          integer rank, nprocs, ncid
+          integer rank, nprocs, ncid, len
           integer buf(BUFSIZE, NUM_VARS)
           integer psizes(NDIMS), dimids(NDIMS), varids(NUM_VARS)
           integer req(NUM_VARS), st(NUM_VARS)
@@ -55,12 +54,16 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
+          call getarg(0, cmd)
           argc = IARGC()
-          if (argc .NE. 1) then
-              print*,'Usage: nonblocking_write filename'
-              STOP
+          if (argc .GT. 2) then
+              print*,'Usage: ',trim(cmd),' len [filename]'
+              goto 999
           endif
-          call getarg(1, filename)
+          call getarg(1, str)
+          read (str,'(I10)') len
+          filename = "testfile.nc"
+          if (argc .EQ. 1) call getarg(2, filename)
 
           do i=1,NDIMS
              psizes(i) = 0
@@ -73,9 +76,9 @@
           starts(3) = mod((rank / (psizes(1) * psizes(2))), psizes(3))
 
           do i=1,NDIMS
-              gsizes(i) = LEN * psizes(i)
-              starts(i) = starts(i) * LEN + 1
-              counts(i) = LEN
+              gsizes(i) = len * psizes(i)
+              starts(i) = starts(i) * len + 1
+              counts(i) = len
           enddo
 
           buf = rank
@@ -128,7 +131,7 @@
           err = nfmpi_close(ncid);
           call check(err, 'In nfmpi_close')
 
-          call MPI_Finalize(err)
+ 999      call MPI_Finalize(err)
 
       end program main
 

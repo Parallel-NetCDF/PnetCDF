@@ -30,9 +30,9 @@
  * Example commands for MPI run and outputs from running ncmpidump on the
  * NC file produced by this example program:
  *
- *    % mpiexec -n 4 ./put_vara testfile.nc
+ *    % mpiexec -n 4 ./put_vara /pvfs2/wkliao/testfile.nc
  *
- *    % ncmpidump testfile.nc
+ *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
  *    dimensions:
@@ -60,7 +60,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
-    char *filename;
+    char *filename="testfile.nc";
     int i, j, rank, nprocs, err;
     int ncid, cmode, varid, dimid[2], buf[NY][NX];
     MPI_Offset  global_ny, global_nx;
@@ -71,11 +71,10 @@ int main(int argc, char** argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (argc > 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
-    filename = "testfile.nc";
     if (argc == 2) filename = argv[1];
 
     /* create a new file for writing ----------------------------------------*/
