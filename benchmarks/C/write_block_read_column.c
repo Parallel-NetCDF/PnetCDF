@@ -21,9 +21,9 @@
  *
  *    % mpicc -O2 -o write_block_read_column write_block_read_column.c -lpnetcdf
  *
- *    % mpiexec -l -n 4 write_block_read_column 128 testfile.nc
+ *    % mpiexec -l -n 4 ./write_block_read_column 128 /pvfs2/wkliao/testfile.nc
  *
- *    % ncmpidump -h testfile.nc
+ *    % ncmpidump -h /pvfs2/wkliao/testfile.nc
  *      netcdf testfile {
  *      // file format: CDF-5 (big variables)
  *      dimensions:
