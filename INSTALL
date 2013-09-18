@@ -1,3 +1,164 @@
+PnetCDF Installation Guide
+=====================
+
+1.  Getting Started
+2.  Alternate Configure Options
+3.  Testing the PnetCDF installation
+4.  Reporting Installation or Usage Problems
+
+
+-------------------------------------------------------------------------
+
+1. Getting Started
+==================
+
+The following instructions take you through a sequence of steps to get
+the default configuration of PnetCDF up and running.
+
+(a) You will need the following prerequisites.
+
+    - REQUIRED: This tar file
+
+    - REQUIRED: An MPI C compiler
+
+    - OPTIONAL: An MPI C++ compiler, if C++ applications are to be used.
+      If you do not require support for C++ applications,
+      you can disable this support using the configure option
+      --disable-cxx (configuring PnetCDF is described in step 1(d)
+      below).
+
+    - OPTIONAL: An MPI Fortran 77 compiler, if Fortran 77 applications are
+      to be used. If you do not require
+      support for Fortran 77 applications, you can disable this
+      support using --disable-f77 (configuring PnetCDF is described in
+      step 1(d) below).
+
+    - OPTIONAL: An MPI Fortran 90 compiler, if Fortran 90 applications are
+      to be used. If you do not require
+      support for Fortran 90 applications, you can disable this
+      support using --disable-fc. Note that Fortran 77 support is a
+      prerequisite for Fortran 90 support (configuring PnetCDF is
+      described in step 1(d) below).
+
+    Also, you need to know what shell you are using since different shell
+    has different command syntax. Command "echo $SHELL" prints out the
+    current shell used by your terminal program.
+
+(b) Unpack the tar file and go to the top level directory:
+
+      gunzip parallel-netcdf-1.4.0.tar.gz
+      tar xf parallel-netcdf-1.4.0.tar
+      cd parallel-netcdf-1.4.0
+
+(c) Choose an installation directory, say $HOME/PnetCDF
+
+(d) Configure PnetCDF specifying the installation directory:
+
+      ./configure --prefix=$HOME/PnetCDF
+
+(e) Build PnetCDF:
+
+      make
+
+(f) Install PnetCDF
+
+      make install
+
+    If a non-default install directory is desired, use command:
+
+      make install prefix=/OTHER/DIRECTORY
+
+(g) Add the bin subdirectory of the installation directory to your
+    path in your startup script (.bashrc for bash, .cshrc for csh,
+    etc.):
+
+    for csh and tcsh:
+
+      setenv PATH $HOME/PnetCDF/bin:$PATH
+
+    for bash and sh:
+  
+      PATH=$HOME/PnetCDF/bin:$PATH ; export PATH
+
+    Check that everything is in order at this point by doing:
+
+      which ncmpidump
+      which ncmpidiff
+
+    These commands should display the path to your bin subdirectory of
+    your install directory.
+
+If you have completed all of the above steps, you have successfully
+installed PnetCDF.
+
+-------------------------------------------------------------------------
+
+2. Alternate Configure Options
+=================
+
+PnetCDF has a number of configure features.  A complete list of configuration
+options can be found using:
+
+   ./configure --help
+
+Here lists a few important options:
+
+  --disable-largefile     omit support for large files
+  --disable-mpi-io-test   Disable check for MPI-IO support in MPI
+                          implementation, if you know your MPI implementation
+                          has MPI-IO support but the configure test fails to
+                          find it. [default: no]
+  --enable-strict         Turn on strict debugging with gcc. [default: no]
+  --disable-fortran       Turn off support for the Fortran interface, if you
+                          only need the C interface. [default: no]
+  --enable-coverage       Compile with coverage support (gcc-based only)
+  --disable-file-sync     Disable MPI file sync if you know your file system
+                          can provide data consistency. [default: no]
+Optional Packages:
+  --with-mpi=/path/to/implementation
+                          installation prefix for MPI implementation
+
+PnetCDF can automatically detect the available MPI compilers and compile
+flags. If alternate compilers or flags are desired, they can be specified
+by the follwoing environment variables and/or configure options.
+
+Some influential environment variables:
+    CFLAGS, CPPFLAGS, CXXFLAGS, FFLAGS, FCFLAGS, LDFLAGS and LIBS
+    Setting these compile flags would result in the PnetCDF library being built
+    with these flags.
+
+    MPICC, MPICXX, MPIF77, MPIF90
+    Setting these variables would result in the PnetCDF library being
+    built with these compilers.
+
+
+ - For platform-specific build instructions, see one of the README.<ARCH>
+   files.  
+
+
+-------------------------------------------------------------------------
+
+3. Testing the PnetCDF installation
+==================================
+
+To test PnetCDF, you can run the test suite using:
+
+     make testing
+
+
+-------------------------------------------------------------------------
+
+4. Reporting Installation or Usage Problems
+===========================================
+
+Please send an email to parallel-netcdf@mcs.anl.gov
+
+
+
+-----------------------------------------------------------------------------
+Notes from previous releases
+-----------------------------------------------------------------------------
+
 To INSTALL parallel netCDF library:
 
     1. 'autoreconf' (only necessary if you make changes to configure.in or
