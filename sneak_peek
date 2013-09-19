@@ -94,17 +94,25 @@ This is essentially a placeholder for the next release note ...
 
   o New synchronization for number of records
     In collective data mode, the number of records cached in memory is
-    synchronized across all processes. In independent mode, the value can
-    be inconsistent, unless ncmpi_sync_numrecs() (a collective API) is called
-    explicitly. Otherwise, the synchronization will have to wait until the call
-    to ncmpi_end_indep_data().
-    Flushing the number of records to file (when changed) is delayed until a
-    call to ncmpi_close() or ncmpi_sync(). If a strong file consistency is
-    desired, users can enable NC_SHARE mode when opening the file. However,
-    note that in this mode any header change will cause file I/O to flush 
-    the dirty header data (not just number of records). For programs that do
-    not change header frequently, enabling NC_SHARE should have no significant
-    performance impact.
+    always synchronized across all processes. In independent mode, the value
+    can be inconsistent, unless ncmpi_sync_numrecs() (a collective API) is
+    called explicitly. Otherwise, the synchronization will have to wait until
+    the call to ncmpi_end_indep_data().
+
+    Flushing the number of records to file when it is changed used to be
+    delayed until ncmpi_close() or ncmpi_sync() is called. If a strong file
+    consistency is desired, users must enable NC_SHARE mode when opening the
+    file. However, note that in this mode any header change will cause file
+    I/O to flush  the dirty header data (not just number of records). For
+    programs that do not change header frequently, enabling NC_SHARE should
+    have no significant performance impact.
+
+    This flushing behavior has been changed in 1.4.0 to the following. At the
+    end of collective calls, if the number of records increases, the changed
+    value will be written to the file, no matter if NC_SHARE mode is used or
+    not. This change is to ensure the number of records is up-to-dated in
+    file, in case the appication prorgam does not close file (due to crash
+    or programming error). Note this change applies to collective APIs only.
 
   o New optimization: I/O request aggregation
     The original design of nonblocking I/O is to concatenate the fileviews of
