@@ -42,7 +42,8 @@ PACKING_LIST	= \
 		README.jazz \
 		README.large_files \
 		README.SP \
-		README.SX
+		README.SX \
+		RELEASE_NOTES
 
 PACKING_SUBDIRS	= \
 		src \
