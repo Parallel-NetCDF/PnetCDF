@@ -4,7 +4,7 @@ This is essentially a placeholder for the next release note ...
 
   o New APIs
     * Fortran 90 APIs (adopted from netcdf-fortran-4.2). All F90 APIs have
-      prefix name "nf90mpi_".
+      prefix name "nf90mpi_". The APIs support function overloading.
     * get/put_varn_<type> for reading/writing a list of subrequests (each is
       specified by starts[i][ndims] and counts[i][ndims] for subrequest i.
       ndims is the number of dimension of the variable) to a single variable.
