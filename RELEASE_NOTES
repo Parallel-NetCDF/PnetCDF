@@ -41,7 +41,7 @@ version  1.4.0 (September ?? 2013)
       usually happens due to MPI-IO data type constructor APIs' arguments using
       4-byte integers.
 
-  o New environment variable
+  o New run-time environment variable
     * PNETCDF_SAFE_MODE environment variable can be used to enable/disable the
       internal checking for data/argument consistency across all processes (by
       calling collective MPI_Allreduce). Set it to 1 to enable the checking.
@@ -72,7 +72,8 @@ version  1.4.0 (September ?? 2013)
     * benchmarks/C/write_block_read_column.c -- writes variables and reads back
       using different data partitioning patterns
     * benchmarks/FLASH-IO -- I/O kernel of FLASH, a reacting hydrodynamics code
-      developed at University of Chicago
+      developed at University of Chicago. This benchmark can be built
+      independently from PnetCDF release.
 
   o New test program
     * test/F90 contains test programs adopted from netcdf-fortran-4.2
