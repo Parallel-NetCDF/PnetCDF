@@ -1077,7 +1077,9 @@ AC_LANG_POP([Fortran])dnl
 # AC_PROG_FC_MOD
 # ---------------
 dnl Note that Mac OSX file system is case-insensitive, so this function does
-dnl not work on Mac
+dnl not work precisely on Mac. Hence, we check whether the file system can
+dnl find the file with name in lowercase. If not, we say the mod file is in
+dnl uppercase.
 AC_DEFUN([UD_PROG_FC_UPPERCASE_MOD],
 [
 AC_LANG_PUSH(Fortran)
