@@ -1239,7 +1239,8 @@ define([TEST_NFMPI_PUT_ATT],dnl
                                      NFT_ITYPE($1))
 3                   continue
                     ! err = nf90mpi_put_att(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN(j,i)))
-                    ! cannot use F90 API, as type casting is performed
+                    ! cannot use F90 API, as type casting is performed,
+                    ! as ATT_TYPE(j,i) may not be the same as value's type
                     err = nfmpi_put_att_$1(ncid, i, ATT_NAME(j,i), &
                                            ATT_TYPE(j,i), ATT_LEN(j,i), value)
                     if (allInExtRange) then
