@@ -77,6 +77,10 @@ This is essentially a placeholder for the next release note ...
     * test/nf90_test contains test programs adopted from test/nf_test
     * testcases/alignment_test.c -- test for header and fixed variable file
       offset alignments when entering redef mode
+    * testcases/nonblocking.c -- test nonblocking APIs ncmpi_iput_vara_int()
+      and ncmpi_iget_vara_int()
+    * testcases/flexible.c -- test flexible API ncmpi_get_vara_int_all() using
+      an MPI derived data type created by MPI_Type_create_hindex()
 
   o New semantics for attribute APIs in data mode
     The following APIs can modify file header while being called in data mode.
