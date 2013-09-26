@@ -5,3 +5,5 @@ ncmpi_vars_null_stride.o: ncmpi_vars_null_stride.c
 redef1.o: redef1.cpp
 test_varm.o: test_varm.c
 vectors.o: vectors.c
+flexible.o: flexible.c
+nonblocking.o: nonblocking.c

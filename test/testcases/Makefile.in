@@ -20,7 +20,9 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            vectors.c \
            collective_error.c \
            test_varm.c \
-           alignment_test.c
+           alignment_test.c \
+           flexible.c \
+           nonblocking.c
 
 CXX_SRCS = redef1.cpp
 
@@ -68,11 +70,19 @@ test_varm: test_varm.o $(LIBRARY)
 alignment_test: alignment_test.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+flexible: flexible.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+nonblocking: nonblocking.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 testing check: $(PROGS)
 	@./ncmpi_vars_null_stride test.nc
 	@./vectors
 	@./test_varm
 	@./alignment_test testfile.nc
+	@./nonblocking testfile.nc
+	@./flexible testfile.nc
 ifeq (@has_fortran@, yes)
 	@./bigrecords
 endif
@@ -85,6 +95,8 @@ verbose_testing : $(PROGS)
 	./vectors
 	./test_varm
 	./alignment_test testfile.nc
+	./nonblocking testfile.nc
+	./flexible testfile.nc
 ifeq (@has_fortran@, yes)
 	./bigrecords
 endif
