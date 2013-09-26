@@ -35,8 +35,7 @@ PACKING_LIST	= \
 		README.bgl \
 		README.bgp \
 		README.bgq \
-		README.CRAY-X1 \
-		README.CRAY-XE6 \
+		README.CRAY \
 		README.ifc_linux \
 		README.IRIX64 \
 		README.jazz \
