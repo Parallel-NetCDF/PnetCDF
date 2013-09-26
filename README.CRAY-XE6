@@ -1,13 +1,13 @@
 # $Id$
 
-May 9 2013
+Sep. 26, 2013
 
 Building pnetcdf on the Cray XE6 (tested on Hopper @ NERSC)
 http://www.nersc.gov/users/computational-systems/hopper
 
 ./configure --prefix=/path/to/install \
             --with-mpi=/path/to/mpi/implementation \
-            CFLAGS=-O2 FFLAGS=-O2
+            CFLAGS=-fast FFLAGS=-fast FCFLAGS=-fast
 
 
 The configure command above works for PGI, GNU, and Intel
