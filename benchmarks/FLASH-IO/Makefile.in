@@ -6,7 +6,7 @@
 #
 # @configure_input@
 
-.SUFFIXES:      .o .mod .F90
+.SUFFIXES:      .o .F90
 
 srcdir  = @srcdir@
 VPATH   = @srcdir@
@@ -14,9 +14,10 @@ VPATH   = @srcdir@
 RM           = @RM@
 F90          = @MPIF90@
 
-FPPFLAGS     = @FC_DEFINE@N_DIM=3 @FC_DEFINE@MAXBLOCKS=100 @FC_DEFINE@IONMAX=13
+FPPFLAGS     = @FC_MODINC@@PNETCDF_INC@ -I$(srcdir)
+FPPFLAGS    += @FC_DEFINE@N_DIM=3 @FC_DEFINE@MAXBLOCKS=100 @FC_DEFINE@IONMAX=13
 
-FCFLAGS      = @FCFLAGS@ -I@PNETCDF_INC@ -I$(srcdir)
+FCFLAGS      = @FCFLAGS@
 COMPILE.F90  = $(F90) -c $(FCFLAGS) $(FPPFLAGS)
 FCLDFLAGS    = @LDFLAGS@ -L@PNETCDF_LIB@
 FCLIBS       = @LIBS@ -lpnetcdf

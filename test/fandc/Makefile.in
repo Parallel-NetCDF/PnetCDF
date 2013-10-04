@@ -13,7 +13,7 @@ VPATH  = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-FPPFLAGS += -I../../src/libf -I../../src/libf90
+FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib -L../common
 LIBS     += -ltestutils -lpnetcdf $(MATHLIB)
 

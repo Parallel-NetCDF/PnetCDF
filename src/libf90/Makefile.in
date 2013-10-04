@@ -19,10 +19,12 @@ INCLUDES = -I. -I$(srcdir)/../lib -I../lib
 LIBRARY = ../lib/libpnetcdf.a
 MANUAL	=
 
-PNETCDF_MOD = pnetcdf.mod
+PNETCDF_MOD = pnetcdf.@FC_MODEXT@
 ifeq (@UPPER_CASE_MOD@, yes)
-  PNETCDF_MOD = PNETCDF.mod
+  PNETCDF_MOD = PNETCDF.@FC_MODEXT@
 endif
+
+F90FLAGS += @FC_MODOUT@.
 
 M4_SRCS = getput_text.m4 \
           getput_var.m4 \
