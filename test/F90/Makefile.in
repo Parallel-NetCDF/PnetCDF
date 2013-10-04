@@ -12,7 +12,8 @@ VPATH   = @srcdir@
 include ../../macros.make
 
 INCLUDES  =
-FPPFLAGS += -I../../src/libf90
+FPPFLAGS += @FC_MODINC@../../src/libf90
+F90FLAGS += @FC_MODOUT@.
 LDFLAGS  += -L../../src/lib
 LIBS     += -lpnetcdf
 
@@ -33,7 +34,7 @@ F90_SRCS = tst_f90.f90 \
 PROGS    = $(F90_SRCS:.f90=)
 OBJS     = $(F90_SRCS:.f90=.o)
 
-GARBAGE  = $(PROGS) *.mod *.nc
+GARBAGE  = $(PROGS) *.nc *.@FC_MODEXT@
 
 PACKING_LIST = $(F90_SRCS) Makefile.in depend
 

@@ -76,56 +76,6 @@ dnl Check if MPIF90 is a valid MPI compiler
 FC=${MPIF90}
 AC_PROG_FC
 
-dnl steal from autoconf 2.69
-AC_DEFUN([UD_FC_PP_SRCEXT],
-[AC_LANG_PUSH(Fortran)dnl
-AC_CACHE_CHECK([for Fortran flag to compile preprocessed .$1 files],
-                ac_cv_fc_pp_srcext_$1,
-[ac_ext=$1
-ac_fcflags_pp_srcext_save=$ac_fcflags_srcext
-ac_fcflags_srcext=
-ac_cv_fc_pp_srcext_$1=unknown
-case $ac_ext in #(
-  [[fF]]77) ac_try=f77-cpp-input;; #(
-  *) ac_try=f95-cpp-input;;
-esac
-for ac_flag in none -ftpp -fpp -Tf "-fpp -Tf" -xpp=fpp -Mpreprocess "-e Z" \
-               -cpp -xpp=cpp -qsuffix=cpp=$1 "-x $ac_try" +cpp -Cpp; do
-  test "x$ac_flag" != xnone && ac_fcflags_srcext="$ac_flag"
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
-#if 0
-#include <ac_nonexistent.h>
-      choke me
-#endif]])],
-    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
-#if 1
-#include <ac_nonexistent.h>
-      choke me
-#endif]])],
-       [],
-       [ac_cv_fc_pp_srcext_$1=$ac_flag; break])])
-done
-rm -f conftest.$ac_objext conftest.$1
-ac_fcflags_srcext=$ac_fcflags_pp_srcext_save
-])
-if test "x$ac_cv_fc_pp_srcext_$1" = xunknown; then
-  m4_default([$3],
-             [AC_MSG_ERROR([Fortran could not compile preprocessed .$1 files])])
-else
-  ac_fc_srcext=$1
-  if test "x$ac_cv_fc_pp_srcext_$1" = xnone; then
-    ac_fcflags_srcext=""
-    FCFLAGS_[]$1[]=""
-  else
-    ac_fcflags_srcext=$ac_cv_fc_pp_srcext_$1
-    FCFLAGS_[]$1[]=$ac_cv_fc_pp_srcext_$1
-  fi
-  AC_SUBST(FCFLAGS_[]$1)
-  $2
-fi
-AC_LANG_POP(Fortran)dnl
-])# UD_FC_PP_SRCEXT
-
 dnl find compile flags for handling files with .F .F90 .f90 extensions
 dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make UD_FC_PP_SRCEXT
 UD_FC_PP_SRCEXT([F90])
@@ -133,47 +83,6 @@ AC_SUBST(FCFLAGS_F90)
 
 FPPFLAGS=${FPPFLAGS-}
 AC_SUBST(FPPFLAGS)
-
-dnl steal from autoconf 2.69
-AC_DEFUN([UD_FC_PP_DEFINE],
-[AC_LANG_PUSH([Fortran])dnl
-ac_fc_pp_define_srcext_save=$ac_fc_srcext
-ac_ext_saved=$ac_ext
-UD_FC_PP_SRCEXT([F])
-ac_ext=F
-AC_CACHE_CHECK([how to define symbols for preprocessed Fortran],
-  [ac_cv_fc_pp_define],
-[ac_fc_pp_define_srcext_save=$ac_fc_srcext
-ac_cv_fc_pp_define=unknown
-ac_fc_pp_define_FCFLAGS_save=$FCFLAGS
-for ac_flag in -D -WF,-D -Wp,-D -Wc,-D
-do
-  FCFLAGS="$ac_fc_pp_define_FCFLAGS_save ${ac_flag}FOOBAR ${ac_flag}ZORK=42"
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
-#ifndef FOOBAR
-      choke me
-#endif
-#if ZORK != 42
-      choke me
-#endif]])],
-    [ac_cv_fc_pp_define=$ac_flag])
-  test x"$ac_cv_fc_pp_define" != xunknown && break
-done
-FCFLAGS=$ac_fc_pp_define_FCFLAGS_save
-])
-ac_fc_srcext=$ac_fc_pp_define_srcext_save
-if test "x$ac_cv_fc_pp_define" = xunknown; then
-  FC_DEFINE=
-  m4_default([$2],
-             [AC_MSG_ERROR([Fortran does not allow to define preprocessor symbols], 77)])
-else
-  FC_DEFINE=$ac_cv_fc_pp_define
-  $1
-fi
-ac_ext=$ac_ext_saved
-AC_SUBST([FC_DEFINE])dnl
-AC_LANG_POP([Fortran])dnl
-])
 
 dnl compiler command-line define preprocess flag, result in FC_DEFINE
 UD_FC_PP_DEFINE
@@ -198,6 +107,10 @@ fi
 AC_SUBST(MPIF90)
 FC=$MPIF90
 
+UD_FC_MODULE_FLAG
+dnl UD_FC_MODULE_FLAG defines FC_MODINC
+UD_MSG_DEBUG([FC_MODINC=$FC_MODINC])
+
 PNETCDF_INSTALL=""
 AC_ARG_WITH(pnetcdf,
     [AS_HELP_STRING([--with-pnetcdf=/path/to/implementation],
@@ -220,6 +133,8 @@ LIBS+=" -lpnetcdf"
 have_pnetcdf=no
 
 AC_LANG_PUSH([Fortran])
+FCFLAGS_save=${FCFLAGS}
+FCFLAGS="${FCFLAGS} ${FC_MODINC}${PNETCDF_INC}"
 AC_LINK_IFELSE([AC_LANG_CALL([], [nfmpi_create])],
    [AC_MSG_RESULT(works)
     have_pnetcdf=yes],
@@ -227,6 +142,7 @@ AC_LINK_IFELSE([AC_LANG_CALL([], [nfmpi_create])],
     unset FC
    ]
 )
+FCFLAGS=${FCFLAGS_save}
 AC_LANG_POP([Fortran])
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)

@@ -697,6 +697,21 @@ if test "$enable_fortran" = yes ; then
    if test "x${F90FLAGS}" = x ; then
       F90FLAGS=${FCFLAGS}
    fi
+
+   UD_FC_MODULE_EXTENSION
+   dnl UD_FC_MODULE_EXTENSION defines FC_MODEXT
+   if test "x${FC_MODEXT}" = x ; then
+      AC_MSG_ERROR([cannot determine Fortran module file extension!])
+   fi
+   UD_MSG_DEBUG([FC_MODEXT=$FC_MODEXT])
+
+   UD_FC_MODULE_FLAG
+   dnl UD_FC_MODULE_FLAG defines FC_MODINC
+   UD_MSG_DEBUG([FC_MODINC=$FC_MODINC])
+
+   UD_FC_MODULE_OUTPUT_FLAG
+   dnl UD_FC_MODULE_OUTPUT_FLAG defines FC_MODOUT
+   UD_MSG_DEBUG([FC_MODOUT=$FC_MODOUT])
 fi
 
 has_fortran=$enable_fortran
