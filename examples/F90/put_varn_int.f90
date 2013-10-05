@@ -114,7 +114,7 @@
           ! now we are in data mode
 
           ! pick arbitrary numbers of requests for 4 processes
-          num_reqs = 1
+          num_reqs = 0
           if (rank .EQ. 0) then
               num_reqs = 3
           elseif (rank .EQ. 1) then
