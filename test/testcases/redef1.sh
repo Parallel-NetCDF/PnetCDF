@@ -12,7 +12,7 @@ fi
 REFERENCE=redef1-a-${RANDOM}-${RANDOM}-${RANDOM}.nc
 
 # dataset via ncmpigen:
-../../src/utils/ncgen/ncmpigen -v 2 -o $REFERENCE $2
+../../src/utils/ncmpigen/ncmpigen -v 2 -o $REFERENCE $2
 
 # dataset via test
 $1
