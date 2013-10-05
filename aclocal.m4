@@ -1082,6 +1082,7 @@ dnl find the file with name in lowercase. If not, we say the mod file is in
 dnl uppercase.
 AC_DEFUN([UD_PROG_FC_UPPERCASE_MOD],
 [
+AC_REQUIRE([UD_FC_MODULE_EXTENSION])
 AC_LANG_PUSH(Fortran)
 AC_MSG_CHECKING([if Fortran 90 compiler capitalizes .mod filenames])
 AC_COMPILE_IFELSE(
@@ -1092,11 +1093,11 @@ AC_COMPILE_IFELSE(
 )
 dnl ac_try='$F90 ${F90FLAGS} conftest.f90 ${F90LIBS}>&AS_MESSAGE_LOG_FD'
 dnl AC_TRY_EVAL(ac_try)
-if test -f conftest.mod ; then
+if test -f conftest.${FC_MODEXT} ; then
    ac_cv_prog_f90_uppercase_mod=no
 else
    ac_cv_prog_f90_uppercase_mod=yes
-   ${RM} -f CONFTEST.mod
+   ${RM} -f CONFTEST.${FC_MODEXT}
 fi
 AC_MSG_RESULT($ac_cv_prog_f90_uppercase_mod)
 ${RM} -f conftest*
