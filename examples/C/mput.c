@@ -91,11 +91,11 @@ int main(int argc, char** argv) {
     ERR
 
     /* pick arbitrary numbers of requests for 4 processes */
-    num_reqs = 1;
-    if (rank == 0)     num_reqs = 4;
-    else if (rank ==1) num_reqs = 6;
-    else if (rank ==2) num_reqs = 5;
-    else if (rank ==3) num_reqs = 4;
+    num_reqs = 0;
+    if (rank == 0)      num_reqs = 4;
+    else if (rank == 1) num_reqs = 6;
+    else if (rank == 2) num_reqs = 5;
+    else if (rank == 3) num_reqs = 4;
 
     starts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
     counts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));

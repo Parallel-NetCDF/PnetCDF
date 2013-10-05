@@ -99,7 +99,7 @@
           call check(err, 'In nf90mpi_enddef: ')
 
           ! pick arbitrary numbers of requests for 4 processes
-          num_reqs = 1
+          num_reqs = 0
           if (rank .EQ.  0) then
               num_reqs = 8
           elseif (rank .EQ. 1) then

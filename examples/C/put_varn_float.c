@@ -83,11 +83,11 @@ int main(int argc, char** argv) {
     ERR
 
     /* pick arbitrary numbers of requests for 4 processes */
-    num_reqs = 1;
-    if (rank == 0)     num_reqs = 8;
-    else if (rank ==1) num_reqs = 13;
-    else if (rank ==2) num_reqs = 9;
-    else if (rank ==3) num_reqs = 10;
+    num_reqs = 0;
+    if (rank == 0)      num_reqs = 8;
+    else if (rank == 1) num_reqs = 13;
+    else if (rank == 2) num_reqs = 9;
+    else if (rank == 3) num_reqs = 10;
 
     starts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
     starts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
