@@ -92,35 +92,35 @@
      +                       IOR(NF_CLOBBER,NF_64BIT_DATA), 
      +                       MPI_INFO_NULL, ncid)
 
-        call check_err(iret)
+        call check_err("nfmpi_create(): ", iret)
   
 ! define dimensions
 
         iret = nfmpi_def_dim(ncid, 'time', NFMPI_UNLIMITED, time_dim)
-        call check_err(iret)
+        call check_err("nfmpi_def_dim(): time ", iret)
 
         i8_size = 41943042
 
         iret = nfmpi_def_dim(ncid, 'cells', i8_size, cells_dim)
-        call check_err(iret)
+        call check_err("nfmpi_def_dim(): cells ", iret)
 
         i8_size = 26
         iret = nfmpi_def_dim(ncid, 'interfaces', 
      +                       i8_size, interfaces_dim)
-        call check_err(iret)
+        call check_err("nfmpi_def_dim(): interfaces ", iret)
 ! define variables
         time_dims(1) = time_dim
 
         iret = nfmpi_def_var(ncid, 'time', NF_DOUBLE, 
      +                       time_rank, time_dims, 
      +                       time_id)
-        call check_err(iret)
+        call check_err("nfmpi_def_var(): time ", iret)
         interfaces_dims(1) = interfaces_dim
 
         iret = nfmpi_def_var(ncid, 'interfaces', NF_REAL, 
      +                       interfaces_rank, 
      +                       interfaces_dims, interfaces_id)
-        call check_err(iret)
+        call check_err("nfmpi_def_var(): interfaces ", iret)
 
         pressure_dims(3) = time_dim
         pressure_dims(2) = cells_dim
@@ -132,44 +132,44 @@
      +                     pressure_dims, 
      +                     pressure_id)
 
-        call check_err(iret)
+        call check_err("nfmpi_def_var(): pressure ", iret)
 ! assign attributes
 
         longlen = 4
         iret = nfmpi_put_att_text(ncid, time_id, 'long_name', 
      +                            longlen, 'Time')
-        call check_err(iret)
+        call check_err("nfmpi_put_att_text(): long_name ", iret)
         longlen = 21
         iret = nfmpi_put_att_text(ncid, time_id, 'units', 
      +                            longlen, 
      +                           'days since 1901-01-01')
-        call check_err(iret)
+        call check_err("nfmpi_put_att_text(): units ", iret)
 
         longlen = 41
         iret = nfmpi_put_att_text(ncid, interfaces_id, 'long_name', 
      +                            longlen,
      +                     'Vertical interfaces, in terms of pressure')
-        call check_err(iret)
+        call check_err("nfmpi_put_att_text(): long_name ", iret)
 
         longlen = 2
         iret = nfmpi_put_att_text(ncid, interfaces_id, 'units', 
      +                            longlen, 'Pa')
-        call check_err(iret)
+        call check_err("nfmpi_put_att_text(): units ", iret)
 
         longlen = 8
         iret = nfmpi_put_att_text(ncid, pressure_id, 'long_name', 
      +                            longlen, 
      1                       'Pressure')
-        call check_err(iret)
+        call check_err("nfmpi_put_att_text(): ", iret)
 
         longlen = 2
         iret = nfmpi_put_att_text(ncid, pressure_id, 'units', 
      +                            longlen, 'Pa')
-        call check_err(iret)
+        call check_err("nfmpi_put_att_text(): units ", iret)
 
 ! leave define mode
         iret = nfmpi_enddef(ncid)
-        call check_err(iret)
+        call check_err("nfmpi_enddef(): ", iret)
 
         start1d(1) = 1
         count1d(1) = 26
@@ -177,7 +177,7 @@
 ! store interfaces
         iret = nfmpi_put_vara_real_all(ncid, interfaces_id,
      +                                 start1d, count1d, interfaces)
-        call check_err(iret)
+        call check_err("nfmpi_put_vara_real_all(): ", iret)
 
         time(1) = 0.0
         time(2) = 20.0
@@ -199,7 +199,7 @@
           iret = nfmpi_put_vara_double_all(ncid, time_id, 
      +                                     time_start, time_count,
      +                                     time(n))
-          call check_err(iret)
+          call check_err("nfmpi_put_vara_double_all(): ", iret)
         enddo
 
         iret = nfmpi_close(ncid)
@@ -213,20 +213,20 @@
      +                   IOR(NF_CLOBBER,NF_64BIT_DATA),
      +                   MPI_INFO_NULL,
      +                   ncid)
-      call check_err(iret)
+      call check_err("nfmpi_open(): ", iret)
 
       iret = nfmpi_inq_varid(ncid, 'time', time_id);
-      call check_err(iret)
+      call check_err("nfmpi_inq_varid(): time ", iret)
 
       ! deliberately want all processes to end up with the full time array
       time_start(1) = 1
       time_count(1) = 4
       iret = nfmpi_get_vara_double_all(ncid, time_id,
      +                               time_start, time_count, time);
-      call check_err(iret)
+      call check_err("nfmpi_get_vara_double_all(): ", iret)
 
       iret = nfmpi_close(ncid)
-      call check_err(iret)
+      call check_err("nfmpi_close(): ", iret)
 
 !     write(6,*) "Time array: ", time
 !      if ( (time(1) .eq. 0) .and. (time(2) .eq. 20.0)
@@ -296,19 +296,22 @@
      +                                   time_start, time_count,
      +                                   time)
 
-        call check_err(iret)
+        call check_err("nfmpi_put_vara_double_all(): ", iret)
       enddo
        
       end subroutine writerecs
        
-      subroutine check_err(iret)
+      subroutine check_err(msg, iret)
 
       include "pnetcdf.inc"
 
+      character(len=*) msg
       integer iret
 
       if (iret .ne. NF_NOERR) then
-          print *, nfmpi_strerror(iret)
+          print *, msg, nfmpi_strerror(iret)
+          print*,'** TESTING Fortran bigrecords.F   NF_64BIT_DATA ',
+     +           '                  ------ failed'
           stop
       endif
       end subroutine check_err
