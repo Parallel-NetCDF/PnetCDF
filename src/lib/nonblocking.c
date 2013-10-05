@@ -1636,17 +1636,19 @@ ncmpii_wait_getput(NC     *ncp,
             }
         }
 
-        if (io_method == COLL_IO) {
-            /* even this process does not write to record variable, others
-             * might. Note ncmpii_sync_numrecs() is collective */
-            err = ncmpii_sync_numrecs(ncp, newnumrecs);
-            if (status == NC_NOERR) status = err;
-            /* retain the first error if there is any */
-        }
-        else { /* INDEP_IO */
-            if (ncp->numrecs < newnumrecs) {
-                ncp->numrecs = newnumrecs;
-                set_NC_ndirty(ncp);
+        if (num_reqs > 0) {
+            if (io_method == COLL_IO) {
+                /* even this process does not write to record variable, others
+                 * might. Note ncmpii_sync_numrecs() is collective */
+                err = ncmpii_sync_numrecs(ncp, newnumrecs);
+                if (status == NC_NOERR) status = err;
+                /* retain the first error if there is any */
+            }
+            else { /* INDEP_IO */
+                if (ncp->numrecs < newnumrecs) {
+                    ncp->numrecs = newnumrecs;
+                    set_NC_ndirty(ncp);
+                }
             }
         }
     }
