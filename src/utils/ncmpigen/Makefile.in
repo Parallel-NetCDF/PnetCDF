@@ -2,8 +2,6 @@
 # Copyright (C) 2012, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
-# Makefile for ncmpigen(1).
-#
 # $Id$
 #
 # @configure_input@
@@ -13,34 +11,35 @@ VPATH = @srcdir@
 
 include ../../../macros.make
 
+lex		= @LEX@ -Pncmpi
+yacc		= @YACC@ -p ncmpi
+
 NCDUMP		= ../ncdump/ncmpidump
 PROGRAM		= ncmpigen
 INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir) -I. -I../../lib
 MANUAL		= ncmpigen.1
+
+LIB_PNETCDF	= ../../../src/lib/libpnetcdf.a
+LD_PNETCDF	= -L../../../src/lib -lpnetcdf
+
+C_SOURCES       = escapes.c genlib.c getfill.c init.c load.c main.c
+HEADERS         = generic.h genlib.h ncmpigen.h
+
+PROGRAM_SRCS	= $(C_SOURCES) ncmpigentab.c
+
+OBJS		= $(PROGRAM_SRCS:.c=.o)
+
+PACKING_LIST    = $(C_SOURCES) $(HEADERS) $(MANUAL) \
+                  depend Makefile.in \
+                  ncmpigen.l ncmpigen.y c0.cdl
+
 GARBAGE		= $(PROGRAM) \
-		  ncgentab.c ncgentab.h \
+		  ncmpigentab.c ncmpigentab.h \
 		  c0.nc c1.cdl c1.nc c2.cdl \
 		  f0.nc \
 		  ctest.c ctest ctest0.nc ctest1.cdl \
 		  ftest.f ftest ftest0.nc ftest1.cdl \
-		  ncgenyy.c
-
-lib_netcdf	= ../../../src/lib/libpnetcdf.a
-ld_netcdf	= -L../../../src/lib -lpnetcdf
-
-PACKING_LIST	= Makefile.in depend escapes.c generic.h \
-		  genlib.c genlib.h getfill.c init.c load.c \
-		  main.c ncmpigen.1 ncgen.h ncgen.l ncgen.y c0.cdl
-
-OBJS		= main.o load.o ncgentab.o escapes.o \
-		  getfill.o init.o genlib.o
-
-lex		= @LEX@ -Pncmpi
-yacc		= @YACC@ -p ncmpi
-
-
-program_srcs	= main.c load.c ncgentab.c escapes.c \
-		  getfill.c init.c genlib.c
+		  ncmpigenyy.c
 
 all:		$(PROGRAM)
 
@@ -59,31 +58,31 @@ uninstall:
 	$(RM) -f $(BINDIR)/$(PROGRAM)
 	$(RM) -f $(MANDIR)/man1/$(MANUAL)
 
-$(PROGRAM):	$(OBJS) $(lib_netcdf)
-	$(LINK.c) $(OBJS) $(ld_netcdf) $(LIBS) 
+$(PROGRAM):	$(OBJS) $(LIB_PNETCDF)
+	$(LINK.c) $(OBJS) $(LD_PNETCDF) $(LIBS) 
 
-ncgentab.c \
-ncgentab.h:	ncgen.y ncgenyy.c ncgen.h
-	$(yacc) -d $(srcdir)/ncgen.y; \
-	mv y.tab.c ncgentab.c; \
-	mv y.tab.h ncgentab.h
+ncmpigentab.c \
+ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
+	$(yacc) -d $(srcdir)/ncmpigen.y; \
+	mv y.tab.c ncmpigentab.c; \
+	mv y.tab.h ncmpigentab.h
 
-ncgenyy.c:	ncgen.l
-	$(lex) $(srcdir)/ncgen.l; \
-	mv lex.ncmpi.c ncgenyy.c
+ncmpigenyy.c:	ncmpigen.l
+	$(lex) $(srcdir)/ncmpigen.l; \
+	mv lex.ncmpi.c ncmpigenyy.c
 
 vmstab.h \
-vmstab.c:	ncgen.y
+vmstab.c:	ncmpigen.y
 	@echo 1>&2 "$@ is out-of-date with respect to $?"
 	@echo 1>&2 "It must be recreated via POSIX yacc(1) on a VMS system"
 	false
-vms_yy.c:	ncgenyy.c
+vms_yy.c:	ncmpigenyy.c
 	@echo 1>&2 "$@ is out-of-date with respect to $?"
 	@echo 1>&2 "It must be recreated via POSIX lex(1) on a VMS system"
 	false
 
 #
-# test "-b" option of ncgen
+# test "-b" option of ncmpigen
 #
 b-test:		$(PROGRAM) c1.cdl
 	@./$(PROGRAM) -b c1.cdl && \
@@ -96,11 +95,11 @@ b-test:		$(PROGRAM) c1.cdl
 	fi
 
 #
-# test "-c" option of ncgen
+# test "-c" option of ncmpigen
 #
 c-test:	$(PROGRAM) c1.cdl
 	./$(PROGRAM) -c -o ctest0.nc $(srcdir)/c0.cdl > ctest.c && \
-	$(CC) -o ctest $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) ctest.c $(ld_netcdf) $(LIBS) && \
+	$(CC) -o ctest $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) ctest.c $(LD_PNETCDF) $(LIBS) && \
 	./ctest	&& \
 	$(NCDUMP) -n c1 `pwd`/ctest0.nc > ctest1.cdl
 	@if diff c1.cdl ctest1.cdl; then \
@@ -115,7 +114,7 @@ c1.cdl:	$(PROGRAM) c0.cdl
 	$(NCDUMP) -n c1 `pwd`/c0.nc > $@
 
 #
-# test "-f" option of ncgen
+# test "-f" option of ncmpigen
 #
 f-test:	$(PROGRAM) c0.cdl c1.cdl
 	@if [ -n "$(FC)" ]; then \
@@ -133,7 +132,7 @@ f-test:	$(PROGRAM) c0.cdl c1.cdl
 ftest1.cdl: $(PROGRAM) c0.cdl pnetcdf.inc
 	./$(PROGRAM) -f -o ftest0.nc $(srcdir)/c0.cdl > ftest.f
 	$(COMPILE.f) ftest.f
-	$(FC) $(FFLAGS) $(LDFLAGS) -o ftest ftest.o $(ld_netcdf) $(LIBS)
+	$(FC) $(FFLAGS) $(LDFLAGS) -o ftest ftest.o $(LD_PNETCDF) $(LIBS)
 	./ftest
 	$(NCDUMP) -n c1 ftest0.nc > ftest1.cdl
 
@@ -144,14 +143,14 @@ pnetcdf.inc:
 	    echo 1>&2 "\`$@' not made because no FORTRAN compiler"; \
 	fi
 
-$(PROGRAM)_src : $(program_srcs)
+$(PROGRAM)_src : $(PROGRAM_SRCS)
 	#setopt primary_language C
-	#load -C $(CPPFLAGS) $(program_srcs)
+	#load -C $(CPPFLAGS) $(PROGRAM_SRCS)
 	#load -C $(LIBS)
 	#load -C /usr/lang/SC2.0.1/libansi.a
 	#setopt program_name gribtonc
 
-$(PROGRAM)_obj : $(program_srcs)
+$(PROGRAM)_obj : $(PROGRAM_SRCS)
 	#setopt primary_language C
 	#load -C $(CPPFLAGS) $(OBJS)
 	#load -C $(LIBS)

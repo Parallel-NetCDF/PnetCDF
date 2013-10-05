@@ -75,7 +75,7 @@ extern void nc_putfill ( nc_type  type, void* val, union generic* gval );
 extern void nc_fill ( nc_type  type, size_t num, void* datp,
 	union generic fill_val );
 
-/* reset symbol table to empty, defined in ncgen.y */
+/* reset symbol table to empty, defined in ncmpigen.y */
 extern void clearout(void);
 
 #ifdef __cplusplus

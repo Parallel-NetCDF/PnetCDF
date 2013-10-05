@@ -6,8 +6,8 @@
  *   $Header$
  *********************************************************************/
 
-#define MAX_NC_ATTSIZE    20000	/* max size of attribute (for ncgen) */
-#define MAXTRST		  5000	/* max size of string value (for ncgen) */
+#define MAX_NC_ATTSIZE    20000	/* max size of attribute (for ncmpigen) */
+#define MAXTRST		  5000	/* max size of string value (for ncmpigen) */
 
 #include <stdlib.h>  /* size_t */
 #include "generic.h"

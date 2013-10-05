@@ -1,7 +1,6 @@
 #
 # generated from command "gcc -MM file.c"
 #
-validator: validator.c
 mpinetcdf.o: mpinetcdf.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
 header.o: header.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h macro.h
 mpincio.o: mpincio.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h rnd.h macro.h

@@ -2,8 +2,6 @@
 # Copyright (C) 2012, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
-# Makefile for ncmpidump(1).
-#
 # $Id$
 #
 # @configure_input@
@@ -15,25 +13,26 @@ include ../../../macros.make
 
 INCLUDES	= -I$(srcdir)/../../../src/lib -I../../lib -I$(srcdir) 
 
+LIB_PNETCDF	= ../../../src/lib/libpnetcdf.a
+LD_PNETCDF	= -L../../../src/lib -lpnetcdf
+
 C_SOURCES	= ncmpidiff.c
 HEADERS		=
+
+OBJS		= $(C_SOURCES:.c=.o)
 
 PROGRAM		= ncmpidiff
 MANUAL		= ncmpidiff.1
 
-PACKING_LIST	= $(C_SOURCES) $(HEADERS) depend \
-		  ncmpidiff.1 Makefile.in
+PACKING_LIST	= $(C_SOURCES) $(HEADERS) $(MANUAL) \
+                  depend Makefile.in
 
-LIB_NETCDF	= ../../../src/lib/libpnetcdf.a
-LD_NETCDF	= -L../../../src/lib -lpnetcdf
-
-OBJS		= ncmpidiff.o
 GARBAGE		= $(PROGRAM)
 
 all:		$(PROGRAM)
 
-$(PROGRAM):	$(LIB_NETCDF) $(OBJS)
-	$(LINK.c) $(OBJS) $(LD_NETCDF) $(LIBS) 
+$(PROGRAM):	$(LIB_PNETCDF) $(OBJS)
+	$(LINK.c) $(OBJS) $(LD_PNETCDF) $(LIBS) 
 
 install:	
 	$(INSTALL) -d -m 755 $(MANDIR)/man1

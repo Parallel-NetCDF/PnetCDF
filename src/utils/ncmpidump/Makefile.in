@@ -2,8 +2,6 @@
 # Copyright (C) 2012, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
-# Makefile for ncmpidump(1).
-#
 # $Id$
 #
 # @configure_input@
@@ -13,29 +11,30 @@ VPATH = @srcdir@
 
 include ../../../macros.make
 
-NCGEN		= ../ncgen/ncmpigen
+NCGEN		= ../ncmpigen/ncmpigen
 INCLUDES	= -I$(srcdir)/../../../src/lib -I../../lib -I$(srcdir) 
 
-c_sources	= ncdump.c vardata.c dumplib.c
-headers		= ncdump.h vardata.h dumplib.h
+LIB_PNETCDF	= ../../../src/lib/libpnetcdf.a
+LD_PNETCDF	= -L../../../src/lib -lpnetcdf
+
+C_SOURCES	= ncmpidump.c vardata.c dumplib.c
+HEADERS		= ncmpidump.h vardata.h dumplib.h
+
+OBJS            = $(C_SOURCES:.c=.o)
 
 PROGRAM		= ncmpidump
-
-PACKING_LIST	= $(c_sources) $(headers) depend \
-		  test0.cdl ncmpidump.1 Makefile.in
-
 MANUAL		= ncmpidump.1
 
-lib_netcdf	= ../../../src/lib/libpnetcdf.a
-ld_netcdf	= -L../../../src/lib -lpnetcdf
+PACKING_LIST    = $(C_SOURCES) $(HEADERS) $(MANUAL) \
+                  depend Makefile.in \
+                  test0.cdl
 
-OBJS		=  ncdump.o vardata.o dumplib.o
 GARBAGE		= $(PROGRAM) test0.nc test1.nc test1.cdl test2.cdl
 
 all:		$(PROGRAM)
 
-$(PROGRAM):	$(lib_netcdf) $(OBJS)
-	$(LINK.c) $(OBJS) $(ld_netcdf) $(LIBS) 
+$(PROGRAM):	$(LIB_PNETCDF) $(OBJS)
+	$(LINK.c) $(OBJS) $(LD_PNETCDF) $(LIBS) 
 
 test:		$(PROGRAM) FORCE
 	$(NCGEN) -b $(srcdir)/test0.cdl -o `pwd`/test0.nc
@@ -56,9 +55,9 @@ uninstall:
 	$(RM) -f $(BINDIR)/$(PROGRAM)
 	$(RM) -f $(MANDIR)/man1/$(MANUAL)
 
-$(PROGRAM)_oc : $(c_sources)
+$(PROGRAM)_oc : $(C_SOURCES)
 	#setopt primary_language C
-	#load -C $(CPPFLAGS) $(c_sources)
+	#load -C $(CPPFLAGS) $(C_SOURCES)
 	#load -C $(LIBS)
 	#setopt program_name $(PROGRAM)
 
