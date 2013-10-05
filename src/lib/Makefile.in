@@ -17,10 +17,7 @@ include ../../macros.make
 INCLUDES = -I. -I$(srcdir)
 
 LIBRARY  = libpnetcdf.a
-PROGRAM  = validator
 HEADER   = pnetcdf.h
-
-PROG_CSRCS = validator.c
 
 M4_SRCS   = getput.m4 \
             i_getput.m4 \
@@ -69,7 +66,6 @@ LIB_CSRCS = mpinetcdf.c \
 
 PACKING_LIST = $(LIB_CSRCS) \
                $(M4_SRCS) \
-               $(PROG_CSRCS) \
                $(HEADER_SRCS) \
                pnetcdf.h.in \
                depend \
@@ -81,13 +77,11 @@ PACKING_LIST = $(LIB_CSRCS) \
 
 LIB_OBJS   = $(LIB_CSRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
-PROG_OBJS  = $(PROG_CSRCS:.c=.o)
-
-GARBAGE    = $(LIBRARY) $(PROGRAM) $(M4_SRCS:.m4=.c)
+GARBAGE    = $(LIBRARY) $(M4_SRCS:.m4=.c)
 
 DIST_GARBAGE = ncconfig.h pnetcdf.h
 
-all:  $(LIBRARY) $(PROGRAM)
+all:  $(LIBRARY)
 
 $(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
@@ -98,16 +92,10 @@ install:
 	$(INSTALL_DATA) $(LIBRARY) $(LIBDIR)/$(LIBRARY)
 	$(INSTALL) -d -m 755 $(INCDIR)
 	$(INSTALL_DATA) $(HEADER) $(INCDIR)/$(HEADER)
-	$(INSTALL) -d -m 755 $(BINDIR)
-	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
 
 uninstall:
 	$(RM) -f $(LIBDIR)/$(LIBRARY)
 	$(RM) -f $(INCDIR)/$(HEADER)
-	$(RM) -f $(BINDIR)/$(PROGRAM)
-
-$(PROGRAM): $(PROG_OBJS) $(LIB_OBJS)
-	$(LINK.c) $(PROG_OBJS) $(LIB_OBJS)
 
 include $(srcdir)/../../rules.make
 

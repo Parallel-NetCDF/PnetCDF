@@ -17,7 +17,7 @@
 #endif /* NO_FLOAT_H */
 
 #include <pnetcdf.h>
-#include "ncdump.h"
+#include "ncmpidump.h"
 #include "dumplib.h"
 #include "vardata.h"
 

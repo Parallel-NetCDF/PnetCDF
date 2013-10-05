@@ -5,7 +5,7 @@
  *   $Id$
  *********************************************************************/
 
-/* lex specification for tokens for ncgen */
+/* lex specification for tokens for ncmpigen */
 
 /* Fill value used by ncdump from version 2.4 and later.  Should match
    definition of FILL_STRING in ../ncdump/vardata.h */
@@ -19,7 +19,7 @@ char errstr[100];		/* for short error messages */
 #include <ctype.h>
 #include <errno.h>   /* errno */
 #include "genlib.h"
-#include "ncgentab.h"
+#include "ncmpigentab.h"
 
 #define YY_BREAK                /* defining as nothing eliminates unreachable
 				   statement warnings from flex output, 

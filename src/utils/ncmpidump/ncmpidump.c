@@ -14,7 +14,7 @@
 
 #include <mpi.h>
 #include <pnetcdf.h>
-#include "ncdump.h"
+#include "ncmpidump.h"
 #include "dumplib.h"
 #include "vardata.h"
 

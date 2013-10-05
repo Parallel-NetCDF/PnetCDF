@@ -779,9 +779,10 @@ CONFIG_FILES="macros.make \
               src/lib/Makefile \
               src/lib/pnetcdf.h \
               src/utils/Makefile \
-              src/utils/ncdump/Makefile \
-              src/utils/ncdiff/Makefile \
-              src/utils/ncgen/Makefile \
+              src/utils/ncmpidump/Makefile \
+              src/utils/ncmpidiff/Makefile \
+              src/utils/ncmpigen/Makefile \
+              src/utils/ncmpivalid/Makefile \
               test/Makefile \
               test/common/Makefile \
               test/nc_test/Makefile \

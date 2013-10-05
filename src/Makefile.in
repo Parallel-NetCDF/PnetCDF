@@ -11,11 +11,13 @@ VPATH  = @srcdir@
 
 include ../macros.make
 
-SUBDIRS = lib utils
+SUBDIRS = lib
 ifeq (@has_fortran@, yes)
    SUBDIRS += libf
    SUBDIRS += libf90
 endif
+# build utils after libf and libf90
+SUBDIRS += utils
 
 PACKING_LIST = Makefile.in
 

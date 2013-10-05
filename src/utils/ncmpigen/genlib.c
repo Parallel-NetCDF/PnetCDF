@@ -16,7 +16,7 @@
 #endif /* !NO_STDARG */
 #include <pnetcdf.h>
 #include "generic.h"
-#include "ncgen.h"
+#include "ncmpigen.h"
 #include "genlib.h"
 
 #include <mpi.h>
@@ -1599,7 +1599,7 @@ close_netcdf(void)
 void
 check_err(int stat) {
     if (stat != NC_NOERR) {
-	fprintf(stderr, "ncgen: %s\n", ncmpi_strerror(stat));
+	fprintf(stderr, "ncmpigen: %s\n", ncmpi_strerror(stat));
 	derror_count++;
     }
 }

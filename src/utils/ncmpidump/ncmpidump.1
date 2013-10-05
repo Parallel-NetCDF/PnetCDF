@@ -1,14 +1,13 @@
 .\" $Header$
 .TH NCDUMP 1 "$Date$" "Printed: \n(yr-\n(mo-\n(dy" "UNIDATA UTILITIES"
 .SH NAME
-ncdump \- Convert netCDF files to ASCII form (CDL)
+ncmpidump \- Convert netCDF files to ASCII form (CDL)
 .SH SYNOPSIS
 .ft B
 .HP
-ncdump
+ncmpidump
 .nh
-\%[-c]
-\%[-h]
+\%[-ch]
 \%[-v \fIvar1,...\fP]
 \%[-b \fIlang\fP]
 \%[-f \fIlang\fP]
@@ -16,21 +15,31 @@ ncdump
 \%[-n \fIname\fP]
 \%[-p \fIf_digits[,d_digits]\fP]
 \%\fIfile\fP
+.br
+.ft B
+.HP
+ncdump
+.nh
+\%-k
+\%\fIfile\fP
 .hy
 .ft
 .SH DESCRIPTION
-\fBncdump\fP generates an ASCII representation of a specified netCDF file on
+\fBncmpidump\fP generates an ASCII representation of a specified netCDF file on
 standard output.  The ASCII representation is in a form called CDL
 (``network Common Data form Language'') that can be viewed, edited, or serve
 as input to \fBncgen\fP.  \fBncgen\fP is a companion program that can
 generate a binary netCDF file from a CDL file.  Hence \fBncgen\fP and
-\fBncdump\fP can be used as inverses to transform the data representation
+\fBncmpidump\fP can be used as inverses to transform the data representation
 between binary and ASCII representations.  See \fBncgen\fP for a description
 of CDL and netCDF representations.
 .LP
-\fBncdump\fP defines a default format used for each type of netCDF data, but
+\fBncdump\fP may also be used to determine what kind of netCDF file is used
+(which variant of the netCDF file format) with the -k option.
+.LP
+\fBncmpidump\fP defines a default format used for each type of netCDF data, but
 this can be changed if a `C_format' attribute is defined for a netCDF
-variable.  In this case, \fBncdump\fP will use the `C_format' attribute to
+variable.  In this case, \fBncmpidump\fP will use the `C_format' attribute to
 format each value.  For example, if floating-point data for the netCDF
 variable `Z' is known to be accurate to only three significant digits, it
 would be appropriate to use the variable attribute
@@ -39,12 +48,12 @@ would be appropriate to use the variable attribute
 Z:C_format = "%.3g"
 .RE
 .LP
-\fBncdump\fP may also be used as a simple browser for netCDF data
+\fBncmpidump\fP may also be used as a simple browser for netCDF data
 files, to display the dimension names and sizes; variable names, types,
 and shapes; attribute names and values; and optionally, the values of
 data for all variables or selected variables in a netCDF file.
 .LP
-\fBncdump\fP uses `_' to represent data values that are equal to the
+\fBncmpidump\fP uses `_' to represent data values that are equal to the
 `_FillValue' attribute for a variable, intended to represent data that
 has not yet been written.  If a variable has no `_FillValue' attribute, the
 default fill value for the variable type is used if the variable is not of
@@ -98,13 +107,13 @@ Changes the default maximum line length (80) used in formatting lists of
 non-character data values.
 .IP "\fB-n\fP \fIname\fP"
 CDL requires a name for a netCDF data set, for use by \fBncgen -b\fP in
-generating a default netCDF file name.  By default, \fIncdump\fP constructs
+generating a default netCDF file name.  By default, \fIncmpidump\fP constructs
 this name from the last component of the pathname of the input netCDF file
 by stripping off any extension it has.  Use the \fB-n\fP option to specify a
 different name.  Although the output file name used by \fBncgen -b\fP can be
-specified, it may be wise to have \fIncdump\fP change the default name to
+specified, it may be wise to have \fIncmpidump\fP change the default name to
 avoid inadvertantly overwriting a valuable netCDF file when using
-\fBncdump\fP, editing the resulting CDL file, and using \fBncgen -b\fP to
+\fBncmpidump\fP, editing the resulting CDL file, and using \fBncgen -b\fP to
 generate a new netCDF file from the edited CDL file.
 .IP "\fB-p\fP \fIfloat_digits[,double_digits]\fP"
 Specifies default precision (number of significant digits) to use in displaying
@@ -124,20 +133,28 @@ If you really want every last bit of precision from the netCDF file
 represented in the CDL file for all possible floating-point values, you will
 have to specify this with \fB-p 9,17\fP (according to Theorem 15 of the
 paper listed under REFERENCES).
+.IP "\fB-k\fP"
+Reports the kind of netCDF file: classic, 64-bit offset, or 64-bit data.
+Before netCDF version 3.6, there was only one kind of netCDF file,
+designated as `classic' (also know as format variant 1 or CDF-1).
+Large file support introduced another variant of the format, designated as
+`64-bit offset' (known as format variant 2 or CDF-2).
+Large data support introduced another variant of the format, designated as
+`64-bit data' (known as format variant 5 or CDF-5).
 
 .SH EXAMPLES
 .LP
 Look at the structure of the data in the netCDF file `\fBfoo.nc\fP':
 .RS
 .HP
-ncdump -c foo.nc
+ncmpidump -c foo.nc
 .RE
 .LP
 Produce an annotated CDL version of the structure and data in the
 netCDF file `\fBfoo.nc\fP', using C-style indexing for the annotations:
 .RS
 .HP
-ncdump -b c foo.nc > foo.cdl
+ncmpidump -b c foo.nc > foo.cdl
 .RE
 .LP
 Output data for only the variables `uwind' and `vwind' from the netCDF file
@@ -145,7 +162,7 @@ Output data for only the variables `uwind' and `vwind' from the netCDF file
 digits of precision:
 .RS
 .HP
-ncdump -v uwind,vwind -p 3 foo.nc
+ncmpidump -v uwind,vwind -p 3 foo.nc
 .RE
 .LP
 Produce a fully-annotated (one data value per line) listing of the data for
@@ -153,7 +170,7 @@ the variable `omega', using Fortran conventions for indices, and changing the
 netCDF dataset name in the resulting CDL file to `omega':
 .RS
 .HP
-ncdump -v omega -f fortran -n omega foo.nc > Z.cdl
+ncmpidump -v omega -f fortran -n omega foo.nc > Z.cdl
 .RE
 .SH REFERENCES
  \fIWhat

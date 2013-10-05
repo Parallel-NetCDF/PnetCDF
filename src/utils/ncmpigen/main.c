@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 #include "generic.h"
-#include "ncgen.h"
+#include "ncmpigen.h"
 #include "genlib.h"
 
 extern int	ncmpiparse(void);
