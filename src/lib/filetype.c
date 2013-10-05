@@ -41,8 +41,8 @@ check_recsize_too_big(NC *ncp)
         ret = NC_ESMALL;
     }
     /* the assert here might harsh, but without it, users will get corrupt
-     * data.  */
-    assert (ncp->recsize == (MPI_Aint)ncp->recsize);
+     * data. Now, we just skip this request to avoid this assertion. */
+    // assert (ncp->recsize == (MPI_Aint)ncp->recsize);
     return ret;
 }
 
@@ -393,7 +393,8 @@ ncmpii_vara_create_filetype(NC               *ncp,
             MPI_Type_commit(&filetype);
         }
         else { /* more than one record variables */
-            check_recsize_too_big(ncp);
+            status = check_recsize_too_big(ncp);
+            if (status != NC_NOERR) return status;
 
             offset += start[0] * ncp->recsize;
             if (varp->ndims == 1) {
@@ -629,7 +630,8 @@ ncmpii_vars_create_filetype(NC               *ncp,
         blocklens[ndims-1]  = varp->xsz;
 
         if (ndims == 1 && IS_RECVAR(varp)) {
-            check_recsize_too_big(ncp);
+            status = check_recsize_too_big(ncp);
+            if (status != NC_NOERR) return status;
             stride_off = stride[ndims-1] * ncp->recsize;
             blockstride[ndims-1] = stride_off;
             offset += start[ndims - 1] * ncp->recsize;
