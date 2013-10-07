@@ -89,7 +89,7 @@
           call getarg(0, cmd)
           argc = IARGC()
           if (argc .GT. 1) then
-              print*,'Usage: ',trim(cmd),' [filename]'
+              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
               goto 999
           endif
           filename = "testfile.nc"

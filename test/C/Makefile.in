@@ -36,10 +36,15 @@ pres_temp_4D_rd.o: pres_temp_4D_rd.c
 pres_temp_4D_rd: pres_temp_4D_rd.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-testing: pres_temp_4D_wr pres_temp_4D_rd
+check testing: $(PROGS)
 	./pres_temp_4D_wr && ./pres_temp_4D_rd
 
 verbose_testing: testing
+
+ptest: $(PROGS)
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
 
 include $(srcdir)/../../rules.make
 

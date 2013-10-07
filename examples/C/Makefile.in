@@ -15,17 +15,17 @@ INCLUDES  = -I../../src/lib
 LDFLAGS  += -L../../src/lib
 LIBS     += -lpnetcdf
 
-C_SRCS  = block_cyclic.c \
-          collective_write.c \
+C_SRCS  = collective_write.c \
+          nonblocking_write.c \
           column_wise.c \
+          block_cyclic.c \
           flexible_api.c \
           get_info.c \
           hints.c \
-          nonblocking_write.c \
+          mput.c \
           put_vara.c \
           put_varn_float.c \
-          put_varn_int.c \
-          mput.c
+          put_varn_int.c
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
@@ -72,6 +72,26 @@ put_varn_int: put_varn_int.o $(LIBRARY)
 
 put_varn_float: put_varn_float.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+ptest: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+	@for i in mput put_varn_int put_varn_float ; do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+	@for i in mput put_varn_int put_varn_float ; do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make

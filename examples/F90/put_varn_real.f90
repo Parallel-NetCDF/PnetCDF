@@ -72,15 +72,15 @@
           call getarg(0, cmd)
           argc = IARGC()
           if (argc .GT. 1) then
-              print*,'Usage: ',trim(cmd),' [filename]'
+              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
               goto 999
           endif
           filename = "testfile.nc"
           if (argc .EQ. 1) call getarg(1, filename)
 
           if (nprocs .NE. 4 .AND. rank .EQ. 0) &
-              print*,"Warning: this program is intended to run on ", &
-                     "4 processes"
+              print*,'Warning: ',trim(cmd),' is intended to run on ', &
+                     '4 processes'
 
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)

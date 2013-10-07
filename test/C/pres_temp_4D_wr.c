@@ -35,7 +35,7 @@
 #define NREC 2
 #define REC_NAME "time"
 #define LVL_NAME "level"
-#define NLVL 2
+#define NLVL 4
 
 /* Names of things. */
 #define PRES_NAME "pressure"
@@ -99,10 +99,18 @@ main(int argc, char ** argv)
    /* Error handling. */
    int retval;
 
-   MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   char *filename=FILE_NAME;
 
+   MPI_Init(&argc, &argv);
+   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+   if (argc > 2) {
+       if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+       MPI_Finalize();
+       return 0;
+   }
+   if (argc == 2) filename = argv[1];
 
    /* Create some pretend data. If this wasn't an example program, we
     * would have some real data to write, for example, model
@@ -121,7 +129,7 @@ main(int argc, char ** argv)
 	 }
 
    /* Create the file. */
-   if ((retval = ncmpi_create(MPI_COMM_WORLD, FILE_NAME, NC_CLOBBER, MPI_INFO_NULL, &ncid)))
+   if ((retval = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid)))
 
 	check_err(retval,__LINE__,__FILE__);
 
@@ -204,7 +212,7 @@ main(int argc, char ** argv)
                     &data[0][0][0]);
      timestep to write.) */
    count[0] = 1;
-   count[1] = NLVL;
+   count[1] = NLVL/nprocs;
    count[2] = NLAT;
    count[3] = NLON;
    start[1] = 0;
@@ -229,9 +237,11 @@ main(int argc, char ** argv)
    if ((retval = ncmpi_close(ncid)))
       check_err(retval,__LINE__,__FILE__);
    
-   char cmd_str[80];
-   sprintf(cmd_str, "*** TESTING %s for writing file %s ", argv[0],FILE_NAME);
-   printf("%-66s ------ pass\n", cmd_str);
+   if (rank == 0) {
+       char cmd_str[80];
+       sprintf(cmd_str, "*** TESTING %s for writing file %s ", argv[0],filename);
+       printf("%-66s ------ pass\n", cmd_str);
+   }
 
    MPI_Finalize();
 

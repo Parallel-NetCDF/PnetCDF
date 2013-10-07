@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vector>
 #include <iostream>
 #include <pnetcdf.h>
@@ -11,28 +12,32 @@ void PNCDF_Error(const int status, const char *const msg)  {
   }  
 }
 
-char dset_name[] = "redef1.nc";
 
 int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 
-
   int ncid;
   int cmode = NC_64BIT_OFFSET;
   MPI_Comm comm = MPI_COMM_WORLD;
 
-  int commsize;
+  int commsize, rank;
   MPI_Comm_size(comm, &commsize);
+  MPI_Comm_rank(comm, &rank);
 
-  if ( commsize  > 1 ) {
-    std::cerr << "run it with one process" << std::endl;
-    MPI_Abort(comm, -1);
-  }
+  if (commsize > 1 && rank == 0)
+      printf("Warning: %s is designed to run on 1 process\n",argv[0]);
   
+  char filename[128]="redef1.nc";
+  if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+  }
+  if (argc == 2) strcpy(filename, argv[1]);
 
   int status;
-  status = ncmpi_create(comm, dset_name, cmode, MPI_INFO_NULL, &ncid);
+  status = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid);
   PNCDF_Error(status, "open");
   
   int dim0id;
@@ -90,6 +95,7 @@ int main(int argc, char** argv)
   for (size_t i=0; i<len0; i++)
     for (size_t j=0; j<len1; j++)
       data[i*len1+j] = k++;
+  if (rank > 0) count[0] = count[1] = 0;
   status = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
   PNCDF_Error(status, "put1");  
     
@@ -100,6 +106,7 @@ int main(int argc, char** argv)
     for (size_t i=0; i<len0; i++)
       for (size_t j=0; j<len5; j++)
         data[i*len5+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
     status = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
     PNCDF_Error(status, "put3");  
   }
@@ -112,6 +119,7 @@ int main(int argc, char** argv)
     for (size_t i=0; i<len0; i++)
       for (size_t j=0; j<len9; j++)
         data[i*len9+j] = k++;
+    if (rank > 0) count[0] = count[1] = 0;
     status = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
     PNCDF_Error(status, "put4");  
   }
@@ -119,7 +127,7 @@ int main(int argc, char** argv)
   status = ncmpi_close(ncid);
   PNCDF_Error(status, "close");  
 
-  status = ncmpi_open(comm, dset_name, NC_WRITE|NC_64BIT_OFFSET, 
+  status = ncmpi_open(comm, filename, NC_WRITE|NC_64BIT_OFFSET, 
 		  MPI_INFO_NULL, &ncid);
 #endif
 
@@ -150,6 +158,7 @@ int main(int argc, char** argv)
         data[i*len2+j] = (k*k);
         k++;
       }
+    if (rank > 0) count[0] = count[1] = 0;
     status = ncmpi_put_vara_double_all(ncid, var2id, start, count, &data[0]);
     PNCDF_Error(status, "put2");  
   }
@@ -157,11 +166,13 @@ int main(int argc, char** argv)
   status = ncmpi_close(ncid);
   PNCDF_Error(status, "close");  
 
-  MPI_Finalize();
+  if (rank == 0) {
+     char cmd_str[80];
+     sprintf(cmd_str, "*** TESTING %s for entering re-define mode ", argv[0]);
+     printf("%-66s ------ pass\n", cmd_str);
+  }
 
-  char cmd_str[80];
-  sprintf(cmd_str, "*** TESTING %s for entering re-define mode ", argv[0]);
-  printf("%-66s ------ pass\n", cmd_str);
+  MPI_Finalize();
 
   return 0;
 }

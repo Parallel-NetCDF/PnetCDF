@@ -21,20 +21,28 @@
       integer(kind=MPI_OFFSET_KIND) bufsize
       real  var(6,4)
 
+      integer argc, IARGC, Write_File
+      character(len=256) :: filename, cmd
+
       call MPI_INIT(err)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
 
-      if (nprocs > 1) then
-          print*,"This test is designed to run on one process"
-          if (rank > 0) then
-              call MPI_Finalize(err)
-              Stop
-          endif
+      if (nprocs > 1 .AND. rank .EQ. 0) then
+          print*,"Warning: this test is designed to run on one process"
       endif
 
+      call getarg(0, cmd)
+      argc = IARGC()
+      if (argc .GT. 1) then
+          if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+          goto 999
+      endif
+      filename = "testfile.nc"
+      if (argc .EQ. 1) call getarg(1, filename)
+
       cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-      err = nf90mpi_create(MPI_COMM_WORLD, 'testfile.nc', cmode,  &
+      err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode,  &
                            MPI_INFO_NULL, ncid)
       if (err < NF90_NOERR) print*,'Error at nf90mpi_create ', &
                                    nf90mpi_strerror(err)
@@ -83,6 +91,11 @@
       imap(1)   = 6
       imap(2)   = 1   ! imap would be {1, 4} if not transposing
 
+      if (rank .GT. 0) then
+         count(1)  = 0
+         count(2)  = 0
+      endif
+
       ! write the first two columns of the NC variable in the matrix transposed way
       start(1)  = 1
       start(2)  = 1
@@ -126,19 +139,21 @@
 
       ! check if the contents of write buffer have been altered (should not be)
       no_err = 0
-      do j = 1, 4
-         do i = 1, 6
-            if (var(i,j) .NE. (j-1)*6+(i-1) + 50) then
+      if (rank .EQ. 0) then
+         do j = 1, 4
+            do i = 1, 6
+               if (var(i,j) .NE. (j-1)*6+(i-1) + 50) then
 ! #ifdef PRINT_ERR_ON_SCREEN
-!                 ! this error is a pntecdf internal error, if occurs */
-!                 print*,
-!                 'Error: nf90mpi_bput_var write buffer has been altered at j=',
-!      &          j,' i=',i,' var=',var(i,j)
+!                  ! this error is a pntecdf internal error, if occurs */
+!                  print*, &
+!                  'Error: nf90mpi_bput_var write buffer has been altered at j=', &
+!                  j,' i=',i,' var=',var(i,j)
 ! #endif
-                no_err = no_err + 1
-             endif
+                   no_err = no_err + 1
+                endif
+            enddo
          enddo
-      enddo
+      endif
 
       err = nf90mpi_close(ncid)
       if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &
@@ -146,15 +161,15 @@
 
       if (rank .EQ. 0) then
           if (no_err .GT. 0) then
-              print*,'** TESTING Fortran test_bputf.f90 for nf90mpi_bput_var ', &
-                     '           ------ failed'
+              print*,'** TESTING Fortran test_bputf.f90 for ', &
+                     'nf90mpi_bput_var            ------ failed'
           else
-              print*,'** TESTING Fortran test_bputf.f90 for nf90mpi_bput_var ', &
-                     '           ------ pass'
+              print*,'** TESTING Fortran test_bputf.f90 for ', &
+                     'nf90mpi_bput_var            ------ pass'
           endif
       endif
 
-      CALL MPI_Finalize(err)
+ 999  CALL MPI_Finalize(err)
 
       end program
 

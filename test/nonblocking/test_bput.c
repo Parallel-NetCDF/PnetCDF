@@ -10,7 +10,7 @@
 #include <string.h>
 #include <pnetcdf.h>
 
-#define FILE_NAME "test.nc"
+#define FILE_NAME "testfile.nc"
 
 #define ERRCODE 2
 #define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); exit(ERRCODE);}
@@ -18,25 +18,26 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
     int i, j, ncid, dimid[2], varid, retval, err=0, rank, nprocs;
-    int req[2], status[2]; 
-    MPI_Offset start[2];
-    MPI_Offset count[2];
-    MPI_Offset stride[2];
-    MPI_Offset imap[2];
+    int req[2], status[2];
     float  var[4][6];
+    char *filename="testfile.nc";
     MPI_Offset bufsize;
+    MPI_Offset start[2], count[2], stride[2], imap[2];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    if (nprocs > 1)
-        printf("This test is designed to run on one process\n");
-    if (rank > 0) {
+    if (nprocs > 1 && rank == 0)
+        printf("Warning: this test is designed to run on one process\n");
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
 
-    if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, FILE_NAME,
+    if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, filename,
         NC_CLOBBER | NC_64BIT_DATA, MPI_INFO_NULL, &ncid)))
        ERR(retval);
 
@@ -64,6 +65,9 @@ int main(int argc, char **argv) {
     count[0]  = 6; count[1]  = 2;
     stride[0] = 1; stride[1] = 1;
     imap[0]   = 1; imap[1]   = 6;   /* would be {4, 1} if not transposing */
+
+    if (rank > 0) /* non-root processes just participate the call */
+        count[0] = count[1] = 0;
 
     /* write the first two columns of the NC variable in the matrix transposed way */
     start[0]  = 0; start[1]  = 0;
@@ -110,15 +114,17 @@ int main(int argc, char **argv) {
     }
     if (NC_NOERR != (retval = ncmpi_close(ncid))) ERR(retval);
 
+    if (rank == 0) {
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING %s for bput API ", argv[0]);
+
+        if (err)
+            printf("%-66s ------ failed\n", cmd_str);
+        else
+            printf("%-66s ------ pass\n", cmd_str);
+    }
     MPI_Finalize();
 
-    char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING %s for bput API ", argv[0]);
-
-    if (err)
-        printf("%-66s ------ failed\n", cmd_str);
-    else
-        printf("%-66s ------ pass\n", cmd_str);
     return err;
 }
 

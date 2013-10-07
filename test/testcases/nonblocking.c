@@ -54,8 +54,13 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+    }
     strcpy(filename, "testfile.nc");
-    if (rank == 0 && argc > 1) strcpy(filename, argv[1]);
+    if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     MPI_Info_create(&info);
@@ -64,7 +69,7 @@ int main(int argc, char **argv) {
      * filetype is contiguous and buftype is non-contiguous.
      * Fix: Add POSIX I/O hint to force ADIO driever to use POSIX I/O
      * by un-commenting the line below */
-    // MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
+    MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); ERR
     MPI_Info_free(&info);

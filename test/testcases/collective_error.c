@@ -25,6 +25,7 @@
 
 int main(int argc, char *argv[])
 {
+   char *filename="testfile.nc";
    int rank, nproc, ncid, err, varid, dimids[1];
    int req, status;
    MPI_Offset start[1], count[1];
@@ -34,14 +35,18 @@ int main(int argc, char *argv[])
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
-   if (nproc != 2) {
-       printf("Program requires 2 processors\n");
+   if (nproc != 2 && rank == 0)
+       printf("Warning: %s is designed to run on 2 processes\n",argv[0]);
+
+   if (argc > 2) {
+       if (!rank) printf("Usage: %s [filename]\n",argv[0]);
        MPI_Finalize();
-       return 1;
+       return 0;
    }
+   if (argc == 2) filename = argv[1];
 
    /* Create a 2 element vector of doubles */
-   err = ncmpi_create(MPI_COMM_WORLD, "testfile.nc", NC_CLOBBER, MPI_INFO_NULL, &ncid);
+   err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
    assert(err == NC_NOERR);
 
    err = ncmpi_def_dim(ncid, "dim", 2, &dimids[0]);
@@ -60,6 +65,8 @@ int main(int argc, char *argv[])
        start[0] = 2; /* illegal for a start > defined shape */
        count[0] = 0;
    }
+   else
+       count[0] = 0;
 
    err = ncmpi_put_vara_all(ncid, varid, start, count,
 			    buf, count[0], MPI_DOUBLE);
@@ -91,6 +98,12 @@ int main(int argc, char *argv[])
 
    err = ncmpi_close(ncid);
    assert(err == NC_NOERR);
+
+    if (rank == 0) {
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING %s for collective abort ", argv[0]);
+        printf("%-66s ------ pass\n", cmd_str);
+    }
 
    MPI_Finalize();
    return 0;

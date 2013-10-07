@@ -15,12 +15,12 @@ INCLUDES  = -I../../src/lib -I../../src/libf
 LDFLAGS  += -L../../src/lib
 LIBS     += -lpnetcdf
 
-F77_SRCS  = block_cyclic.f \
+F77_SRCS  = nonblocking_write.f \
             column_wise.f \
+            block_cyclic.f \
             flexible_api.f \
             get_info.f \
             hints.f \
-            nonblocking_write.f \
             put_vara.f \
             put_varn_real.f \
             put_varn_int.f
@@ -64,6 +64,26 @@ put_varn_int: put_varn_int.o $(LIBRARY)
 
 put_varn_real: put_varn_real.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+ptest: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+	@for i in put_varn_int put_varn_real; do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+	@for i in put_varn_int put_varn_real; do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make

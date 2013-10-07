@@ -19,13 +19,24 @@
       integer(kind=MPI_OFFSET_KIND) bufsize
       integer(kind=MPI_OFFSET_KIND) put_size
       real  var(6,4)
+      character(len=256) filename, cmd
+      integer argc, IARGC
 
       call MPI_INIT(err)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
 
+      call getarg(0, cmd)
+      argc = IARGC()
+      if (argc .GT. 1) then
+          if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+          goto 999
+      endif
+      filename = "testfile.nc"
+      if (argc .EQ. 1) call getarg(1, filename)
+
       cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-      err = nf90mpi_create(MPI_COMM_WORLD, 'test.nc', cmode, &
+      err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
                          MPI_INFO_NULL, ncid)
       if (err < NF90_NOERR) print*,'Error at nf90mpi_create ', &
                                    nf90mpi_strerror(err)
@@ -140,6 +151,6 @@
       if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &
                                    nf90mpi_strerror(err)
 
-      CALL MPI_Finalize(err)
+ 999  CALL MPI_Finalize(err)
       end program
 

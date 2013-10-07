@@ -88,6 +88,8 @@ LINK.f		= $(F77) $(FFLAGS)   -o $@
 LINK.F		= $(FC)  $(FCFLAGS)  -o $@
 LINK.F90	= $(F90) $(F90FLAGS) -o $@
 
+TEST_MPIRUN	= @TEST_MPIRUN@
+TEST_OUT_DIR	= @TEST_OUT_DIR@
 
 # Manual pages:
 WHATIS		= @WHATIS@

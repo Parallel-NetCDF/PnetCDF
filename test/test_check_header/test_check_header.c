@@ -34,7 +34,7 @@
  *      data:  // data written for variables
  *          square  = 0, 1, 2, 3,  ... , 9999;
  *          cube    = 0, 1, 2, 3,  ... , 999999;
- *	    time    = 0, 1, 2, 3,  ... , 99;    // 100 records
+ *        time    = 0, 1, 2, 3,  ... , 99;    // 100 records
  *          xytime  = 0, 1, 2, 3,  ... , 9999;  // 100 records
  *   }
  *
@@ -49,18 +49,14 @@
 
 
 
-#include <mpi.h>
 #include <stdio.h>
-#include <pnetcdf.h>
+#include <stdlib.h>
 #include <string.h>
+#include <mpi.h>
+#include <pnetcdf.h>
 #include "testutils.h"
 
-/* Prototype for functions used only in this file */
-static void handle_error(int status);
-
-static void handle_error(int status) {
-  fprintf(stderr, "%s\n", ncmpi_strerror(status));
-}
+#define ERR {if(status!=NC_NOERR)printf("Error at line %d: %s\n",__LINE__,ncmpi_strerror(status));}
 
 int main(int argc, char **argv) {
   MPI_Offset i, j, k;
@@ -75,7 +71,7 @@ int main(int argc, char **argv) {
   MPI_Offset time_start[1], time_count[1] = {25};
   int square_id, cube_id, xytime_id, time_id;
   static char title[] = "example netCDF dataset";
-  static char description[] = "2-D integer array";
+  char *description = "2-D integer array";
   int data[100][50][50], buffer[100];
   int rank;
   int nprocs;
@@ -88,7 +84,7 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (rank == 0) 
-	  fprintf(stderr, "Testing write ... \n");
+      fprintf(stderr, "Testing write ... \n");
   parse_write_args(argc, argv, rank, &opts);
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -103,35 +99,40 @@ int main(int argc, char **argv) {
    */
 
   status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
 
 
   /**
    * Create a global attribute:
    *    :title = "example netCDF dataset";
-   */
+   *
+   * this will cause inconsistent header, but not serious enough to make
+   * PnetCDF to return an NC error code */
   sprintf(title, "%s:%d of %d", title, rank, nprocs);
   printf("title:%s\n", title);
   status = ncmpi_put_att_text (ncid, NC_GLOBAL, "title",
                           strlen(title), title);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
   
    
   /**
    * Add 4 pre-defined dimensions:
    *   x = 100, y = 100, z = 100, time = NC_UNLIMITED
    */
-  if (rank == 0)
- 	 status = ncmpi_def_dim(ncid, "x", 100L, &dimid1);
+
+  /* this will cause inconsistent header, PnetCDF should return an NC error
+   * code, considered a fatal one so that the program should not continue. */
+  if (rank == 0) /* make it inconsistent on purpose (a fatal error) */
+      status = ncmpi_def_dim(ncid, "x", 100, &dimid1);
   else 
- 	 status = ncmpi_def_dim(ncid, "x", 99L, &dimid1);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "y", 100L, &dimid2);
-  if (status != NC_NOERR) handle_error(status);
-  status = ncmpi_def_dim(ncid, "z", 100L, &dimid3);
-  if (status != NC_NOERR) handle_error(status);
+      status = ncmpi_def_dim(ncid, "x", 99, &dimid1);
+  ERR
+  status = ncmpi_def_dim(ncid, "y", 100, &dimid2);
+  ERR
+  status = ncmpi_def_dim(ncid, "z", 100, &dimid3);
+  ERR
   status = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &udimid);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
 
   /**
    * Define the dimensionality and then add 4 variables:
@@ -144,23 +145,26 @@ int main(int argc, char **argv) {
   xytime_dim[0] = udimid;
   time_dim[0] = udimid;
   status = ncmpi_def_var (ncid, "square", NC_INT, 2, square_dim, &square_id);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
   status = ncmpi_def_var (ncid, "cube", NC_INT, 3, cube_dim, &cube_id);
-  if (status != NC_NOERR) handle_error(status);
- // status = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
+  ERR
   status = ncmpi_def_var (ncid, "time", NC_INT, 1, time_dim, &time_id);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
   status = ncmpi_def_var (ncid, "xytime", NC_INT, 3, xytime_dim, &xytime_id);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
 
   /**
    * Add an attribute for variable: 
    *    square: decsription = "2-D integer array"
    */
 
+  if (rank == 1) description = "Some different value on rank 1";
+  /* this will cause inconsistent header, but not serious enough to make
+   * PnetCDF to return an NC error code */
+
   status = ncmpi_put_att_text (ncid, square_id, "description",
                           strlen(description), description);
-  if (status != NC_NOERR) handle_error(status);
+  ERR
 
   /**
    * End Define Mode (switch to data mode)
@@ -168,14 +172,14 @@ int main(int argc, char **argv) {
    */
 
   status = ncmpi_enddef(ncid);
-  if (status != NC_NOERR){  
-	handle_error(status);
-  	status = ncmpi_close(ncid);
- 	if (status != NC_NOERR) handle_error(status);
-	if (rank == 0) {
-	  fprintf(stderr, "Fatal Error: file header is inconsistent!\n");
-	}
- }
+  if ((rank == 0 && status != NC_EMULTIDEFINE) ||
+      (rank  > 0 && status != NC_EDIMS_SIZE_MULTIDEFINE)) {  
+      fprintf(stderr, "%d: Unexpected Error: %s!\n",rank, ncmpi_strerror(status));
+      status = ncmpi_close(ncid);
+      ERR
+  }
+
+#ifdef NOT_YET
   /**
    * Data Partition (Assume 4 processors):
    *   square: 2-D, (Block, Block), 50*50 from 100*100 
@@ -184,9 +188,9 @@ int main(int argc, char **argv) {
    *   time:   1-D, Block-wise, 25 from 100
    */
   else {
-	  square_start[0] = cube_start[1] = xytime_start[1] = (rank/2) * 50;
-	  square_start[1] = cube_start[2] = xytime_start[2] = (rank%2) * 50;
-	  time_start[0] = (rank%4) * 25;
+      square_start[0] = cube_start[1] = xytime_start[1] = (rank/2) * 50;
+      square_start[1] = cube_start[2] = xytime_start[2] = (rank%2) * 50;
+      time_start[0] = (rank%4) * 25;
 
 
   /**
@@ -194,14 +198,14 @@ int main(int argc, char **argv) {
    */
 
   /* Data for variable: time */
-	  for ( i = time_start[0]; i < time_start[0] + time_count[0]; i++ )
-	    buffer[i - time_start[0]] = i;   
+      for ( i = time_start[0]; i < time_start[0] + time_count[0]; i++ )
+        buffer[i - time_start[0]] = i;   
 
   /* Data for variable: square, cube and xytime */
-	  for ( i = 0; i < 100; i++ )
-	    for ( j = square_start[0]; j < square_start[0]+square_count[0]; j++ )
-	      for ( k = square_start[1]; k < square_start[1]+square_count[1]; k++ )
-	        data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
+      for ( i = 0; i < 100; i++ )
+        for ( j = square_start[0]; j < square_start[0]+square_count[0]; j++ )
+          for ( k = square_start[1]; k < square_start[1]+square_count[1]; k++ )
+            data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
 
   /**
    * Write data into variables: square, cube, time and xytime  
@@ -209,32 +213,36 @@ int main(int argc, char **argv) {
    *   Data Mode API: collective
    */ 
   
-	  status = ncmpi_put_vara_int_all(ncid, square_id,
+      MPI_Offset dimlen;
+      ncmpi_inq_dimlen(ncid, dimid1, &dimlen);
+      printf("dimid1 len = %lld\n",dimlen);
+
+      status = ncmpi_put_vara_int_all(ncid, square_id,
                     square_start, square_count,
                     &data[0][0][0]);
-	  if (status != NC_NOERR) handle_error(status);
-	  status = ncmpi_put_vara_int_all(ncid, cube_id,
+      ERR
+      status = ncmpi_put_vara_int_all(ncid, cube_id,
                     cube_start, cube_count,
                     &data[0][0][0]);
-	  if (status != NC_NOERR) handle_error(status);
-	  status = ncmpi_put_vara_int_all(ncid, time_id,
+      ERR
+      status = ncmpi_put_vara_int_all(ncid, time_id,
                     time_start, time_count,
                     (void *)buffer);
-	  if (status != NC_NOERR) handle_error(status);
-	  status = ncmpi_put_vara_int_all(ncid, xytime_id,
+      ERR
+      status = ncmpi_put_vara_int_all(ncid, xytime_id,
                     xytime_start, xytime_count,
                     &data[0][0][0]);
-	  if (status != NC_NOERR) handle_error(status);
+      ERR
 
 /*
 status = ncmpi_sync(ncid);
-if (status != NC_NOERR) handle_error(status); 
+ERR
 status = ncmpi_redef(ncid);
-if (status != NC_NOERR) handle_error(status);
+ERR
 status = ncmpi_del_att(ncid, square_id, "description");
-if (status != NC_NOERR) handle_error(status); 
+ERR
 status = ncmpi_enddef(ncid);
-if (status != NC_NOERR) handle_error(status);
+ERR
 */
 
   /**
@@ -242,18 +250,20 @@ if (status != NC_NOERR) handle_error(status);
    *   Dataset API:  collective
    */
 
-	  status = ncmpi_close(ncid);
-	  if (status != NC_NOERR) handle_error(status);
+      status = ncmpi_close(ncid);
+      ERR
   /*******************  END OF NETCDF ACCESS  ****************/
 
-	MPI_Barrier(MPI_COMM_WORLD); 
-	TotalWriteTime = MPI_Wtime() - TotalWriteTime;
+    MPI_Barrier(MPI_COMM_WORLD); 
+    TotalWriteTime = MPI_Wtime() - TotalWriteTime;
 
-	if (rank == 0) {
-	  fprintf(stderr, "OK\nFile written to: %s!\n", opts.outfname);
-	  fprintf(stderr, "Total Write Time = %10.8f\n", TotalWriteTime);
-	}
+    if (rank == 0) {
+      fprintf(stderr, "OK\nFile written to: %s!\n", opts.outfname);
+      fprintf(stderr, "Total Write Time = %10.8f\n", TotalWriteTime);
+    }
   }
+#endif
+
   MPI_Finalize();
   return 0;
 }
