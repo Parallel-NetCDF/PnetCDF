@@ -507,6 +507,19 @@ struct NC {
 
 #define NC_increase_numrecs(ncp, nrecs) \
         {if((nrecs) > (ncp)->numrecs) ((ncp)->numrecs = (nrecs));}
+
+#define ErrIsHeaderDiff(err) \
+        (err == NC_EMULTIDEFINE             || \
+         err == NC_EDIMS_NELEMS_MULTIDEFINE || \
+         err == NC_EDIMS_SIZE_MULTIDEFINE   || \
+         err == NC_EVARS_NELEMS_MULTIDEFINE || \
+         err == NC_EVARS_NDIMS_MULTIDEFINE  || \
+         err == NC_EVARS_DIMIDS_MULTIDEFINE || \
+         err == NC_EVARS_TYPE_MULTIDEFINE   || \
+         err == NC_EVARS_LEN_MULTIDEFINE    || \
+         err == NC_EVARS_BEGIN_MULTIDEFINE  || \
+         err == NC_ENUMRECS_MULTIDEFINE)
+
 /* Begin defined in nc.c */
 
 extern int

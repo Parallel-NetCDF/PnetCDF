@@ -142,6 +142,8 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_MAX, comm);
     if (errcheck > 0) {
         status = (status != NC_NOERR) ? status : NC_EMULTIDEFINE;
+        /* note status may be inconsistent among processes 
+         * but at least no one returns NC_NOERR */
     }
     else if (hsz != hsz_0) {
         /* TODO !!!! need to replace the local NC object with root's.
@@ -745,10 +747,15 @@ write_NC(NC *ncp)
     if (ncp->safe_mode == 1)
         MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
-    if (status != NC_NOERR) {
+    if (status != NC_NOERR && !ErrIsHeaderDiff(status)) {
         NCI_Free(buf);
         return status;
     }
+    /* we should continue to write header to the file, even if header is
+     * inconsistent among processes, as root's header wins the write.
+     * However, if ErrIsHeaderDiff(status) is true, this error should
+     * be considered fatal, as inconsistency is about the data structure,
+     * rather then contents (such as attribute values) */
 
     /* the fileview is already entire file visible */
 
@@ -1114,8 +1121,13 @@ ncmpii_NC_enddef(NC *ncp)
  
     /* write header to file, also sync header buffer across all processes */
     status = write_NC(ncp);
-    if (status != NC_NOERR)
+    if (status != NC_NOERR && !ErrIsHeaderDiff(status))
         return status;
+    /* we should continue to exit define mode, even if header is inconsistent
+     * among processes, so the program can proceed, say to close file properly.
+     * However, if ErrIsHeaderDiff(status) is true, this error should
+     * be considered fatal, as inconsistency is about the data structure,
+     * rather then contents (such as attribute values) */
  
     if (ncp->old != NULL) {
         ncmpii_free_NC(ncp->old);
@@ -1127,7 +1139,7 @@ ncmpii_NC_enddef(NC *ncp)
         /* calling MPI_File_sync() */
         ncmpiio_sync(ncp->nciop);
 
-    return NC_NOERR;
+    return status;
 }
 
 /* Public */
