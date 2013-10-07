@@ -79,6 +79,8 @@
      + 377.5, 367.59, 360.06, 353.85999, 348.66, 342.5, 336, 328.5, 320,
      + 310, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 199.10001/
 
+      character(len = 256) :: filename, cmd
+      integer argc, IARGC
 
 ! attribute vectors
 ! enter define mode
@@ -88,7 +90,16 @@
       call MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, numprocs, ierr)
 
-      iret = nfmpi_create( MPI_COMM_WORLD, 'pressure_test.nc', 
+      call getarg(0, cmd)
+      argc = IARGC()
+      if (argc .GT. 1) then
+          if (myid .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+          goto 999
+      endif
+      filename = "testfile.nc"
+      if (argc .EQ. 1) call getarg(1, filename)
+
+      iret = nfmpi_create( MPI_COMM_WORLD, filename,
      +                       IOR(NF_CLOBBER,NF_64BIT_DATA), 
      +                       MPI_INFO_NULL, ncid)
 
@@ -173,6 +184,7 @@
 
         start1d(1) = 1
         count1d(1) = 26
+        if (myid .GT. 0) count1d = 0
 
 ! store interfaces
         iret = nfmpi_put_vara_real_all(ncid, interfaces_id,
@@ -209,7 +221,7 @@
 ! todo: insert code to re-open dataset, read time variable all at onece
 ! 
       iret = nfmpi_open ( MPI_COMM_SELF,
-     +                   'pressure_test.nc',
+     +                   filename,
      +                   IOR(NF_CLOBBER,NF_64BIT_DATA),
      +                   MPI_INFO_NULL,
      +                   ncid)
@@ -236,10 +248,11 @@
 !           write(6,*) "Error: time array was ", time
 !      endif
 
-      print*,'** TESTING Fortran bigrecords.F   NF_64BIT_DATA ',
-     +       '                  ------ pass'
+      if (myid .EQ. 0)
+     +   print*,'** TESTING Fortran bigrecords.F   NF_64BIT_DATA ',
+     +          '                  ------ pass'
 
-      call MPI_FINALIZE(ierr)
+ 999  call MPI_FINALIZE(ierr)
       end program main
        
       subroutine writerecs(ncid,time_id,pressure_id)

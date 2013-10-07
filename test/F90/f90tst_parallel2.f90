@@ -63,19 +63,29 @@ program f90tst_parallel
   integer :: p, my_rank, ierr
   integer(KIND=MPI_OFFSET_KIND) :: start(MAX_DIMS), count(MAX_DIMS), stride(MAX_DIMS)
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
+  character(LEN=128) filename, cmd
+  integer argc, iargc
 
   call MPI_Init(ierr)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
   call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
-  if (my_rank .eq. 0) then
-     write(*,"(A)",advance="no") '*** Testing PnetCDF parallel I/O with strided access.'
+  ! take filename from command-line argument if there is any
+  call getarg(0, cmd)
+  argc = IARGC() 
+  if (argc .GT. 1) then 
+     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+     goto 999 
+  endif   
+  filename = FILE_NAME
+  if (argc .EQ. 1) call getarg(1, filename)
+
+  if (p .ne. 4 .AND. my_rank .eq. 0) then
+     print *, 'Warning: ',trim(cmd),' is design to run on 4 processes.'
   endif
 
-  ! There must be 4 procs for this test.
-  if (p .ne. 4) then
-     print *, 'Sorry, this test program must be run on four processors.'
-     stop 2 
+  if (my_rank .eq. 0) then
+     write(*,"(A)",advance="no") '*** Testing PnetCDF parallel I/O with strided access.'
   endif
 
   ! Create some pretend data.
@@ -87,7 +97,7 @@ program f90tst_parallel
 
   ! Create the netCDF file. 
   mode_flag = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-  call handle_err(nf90mpi_create(MPI_COMM_WORLD, FILE_NAME, mode_flag, MPI_INFO_NULL, ncid))
+  call handle_err(nf90mpi_create(MPI_COMM_WORLD, filename, mode_flag, MPI_INFO_NULL, ncid))
 
   ! Define the dimensions.
   nx_ll = NX
@@ -114,6 +124,9 @@ program f90tst_parallel
      start = (/ 1, NY / 2 + 1 /)
   else if (my_rank .eq. 3) then
      start = (/ NX / 2 + 1, NY / 2 + 1 /)
+  else
+     start = (/ 1, 1 /)
+     count = 0
   endif
 
   ! Write this processor's data.
@@ -124,7 +137,7 @@ program f90tst_parallel
   call handle_err(nf90mpi_close(ncid))
 
   ! Reopen the file.
-  call handle_err(nf90mpi_open(MPI_COMM_WORLD, FILE_NAME, nf90_nowrite, MPI_INFO_NULL, ncid))
+  call handle_err(nf90mpi_open(MPI_COMM_WORLD, filename, nf90_nowrite, MPI_INFO_NULL, ncid))
   
   ! Check some stuff out.
   call handle_err(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
@@ -136,18 +149,20 @@ program f90tst_parallel
        stride = stride))
 
   ! Check the data.
-  do x = 1, NX / 4
-     do y = 1, NY / 4
-        if (data_in(y, x) .ne. my_rank) stop 4
+  if (my_rank .LT. 4) then
+     do x = 1, NX / 4
+        do y = 1, NY / 4
+           if (data_in(y, x) .ne. my_rank) stop 4
+        end do
      end do
-  end do
+  endif
 
   ! Close the file. 
   call handle_err(nf90mpi_close(ncid))
 
   if (my_rank .eq. 0)   write(*,"(A)") '              ------ pass'
 
-  call MPI_Finalize(ierr)
+ 999 call MPI_Finalize(ierr)
 
 contains
 !     This subroutine handles errors by printing an error message and

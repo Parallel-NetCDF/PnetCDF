@@ -26,6 +26,8 @@ PACKING_SUBDIRS = C tutorial F77 F90
 
 all:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ; ) ; done
+ptest:
+	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) ptest ; ) ; done
 
 install:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) install ; ) ; done

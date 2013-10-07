@@ -773,6 +773,17 @@ PNETCDF_LIB=${BUILDDIR}/src/lib
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
+AC_ARG_VAR(TEST_MPIRUN, [MPI run command for running test])
+AC_ARG_VAR(TEST_OUT_DIR, [Output file directory for running test])
+if test "x${TEST_MPIRUN}" = x ; then
+    TEST_MPIRUN=mpiexec
+fi
+if test "x${TEST_OUT_DIR}" = x ; then
+    TEST_OUT_DIR=.
+fi
+AC_SUBST(TEST_MPIRUN)
+AC_SUBST(TEST_OUT_DIR)
+
 CONFIG_FILES="macros.make \
               Makefile \
               src/Makefile \

@@ -14,13 +14,13 @@
  *    To compile:
  *        mpicc -O2 collective_write.c -o collective_write -lpnetcdf
  *    To run:
- *        mpiexec -n num_processes ./collective_write len [filename]
+ *        mpiexec -n num_processes ./collective_write [filename] [len]
  *    where len decides the size of each local array, which is len x len x len.
  *    So, each non-record variable is of size len*len*len * nprocs * sizeof(int)
  *    All variables are partitioned among all processes in a 3D
  *    block-block-block fashion. Below is an example standard output from
  *    command:
- *        mpiexec -n 32 ./collective_write 100 /pvfs2/wkliao/testfile.nc
+ *        mpiexec -n 32 ./collective_write /pvfs2/wkliao/testfile.nc 100
  *
  *    MPI hint: cb_nodes        = 2
  *    MPI hint: cb_buffer_size  = 16777216
@@ -88,12 +88,13 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (argc > 3) {
-        if (!rank) printf("Usage: %s len [filename]\n",argv[0]);
+        if (!rank) printf("Usage: %s [filename] [len]\n",argv[0]);
         MPI_Finalize();
         return 1;
     }
-    len = atoi(argv[1]);
-    if (argc == 3) filename = argv[2];
+    if (argc >= 2) filename = argv[1];
+    len = 10;
+    if (argc == 3) len = atoi(argv[2]);
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;

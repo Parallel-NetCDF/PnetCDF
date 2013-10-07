@@ -41,9 +41,7 @@ all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) all ; ) ; done
 
 # Eventually, this target will run all of the relevant tests
-check testing:
-	# no tests in 'common' just common routines
-	cd common && $(MAKE)
+check testing: all
 	cd nc_test && $(MAKE) testing
 	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) testing ; fi
 	if [ @has_fortran@ = yes ] ; then cd nf90_test && $(MAKE) testing ; fi
@@ -52,9 +50,7 @@ check testing:
 	cd nonblocking && $(MAKE) testing
 	cd testcases && $(MAKE) testing
 
-verbose_check verbose_testing:
-	# no tests in 'common' just common routines
-	cd common && $(MAKE)
+verbose_check verbose_testing: all
 	cd nc_test && $(MAKE) verbose_testing
 	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) verbose_testing ; fi
 	if [ @has_fortran@ = yes ] ; then cd nf90_test && $(MAKE) verbose_testing ; fi
@@ -62,6 +58,12 @@ verbose_check verbose_testing:
 	cd C && $(MAKE) verbose_testing
 	cd nonblocking && $(MAKE) verbose_testing
 	cd testcases && $(MAKE) verbose_testing
+
+ptest: all
+	if [ @has_fortran@ = yes ] ; then cd F90 && $(MAKE) ptest ; fi
+	cd C && $(MAKE) ptest
+	cd nonblocking && $(MAKE) ptest
+	cd testcases && $(MAKE) ptest
 
 include $(srcdir)/../rules.make
 

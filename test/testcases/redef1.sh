@@ -5,7 +5,7 @@
 
 if [ $# -ne 2 ] ; then
 	echo "usage: $0 <executable> <reference>"
-	echo "example: $0 redef redef-good.ncdump"
+	echo "example: $0 redef1 redef-good.ncdump"
 	exit -1
 fi
 

@@ -34,7 +34,7 @@
 #define NREC 2
 #define REC_NAME "time"
 #define LVL_NAME "level"
-#define NLVL 2
+#define NLVL 4
 
 /* Names of things. */
 #define PRES_NAME "pressure"
@@ -64,7 +64,7 @@
 int
 main(int argc, char **argv)
 {
-   int ncid, pres_varid, temp_varid;
+   int rank, nprocs, nerr=0, ncid, pres_varid, temp_varid;
    int lat_varid, lon_varid;
 
    /* The start and count arrays will tell the netCDF library where to
@@ -85,10 +85,21 @@ main(int argc, char **argv)
    /* Error handling. */
    int retval;
 
+   char *filename = FILE_NAME;
+
    MPI_Init(&argc, &argv);
+   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+   if (argc > 2) {
+       if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+       MPI_Finalize();
+       return 0;
+   }
+   if (argc == 2) filename = argv[1];
 
    /* Open the file. */
-   if ((retval = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, MPI_INFO_NULL, &ncid)))
+   if ((retval = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid)))
       ERR(retval);
 
    /* Get the varids of the latitude and longitude coordinate
@@ -123,7 +134,7 @@ main(int argc, char **argv)
     * that the data arrays in this program are the correct size to
     * hold one timestep. */
    count[0] = 1;
-   count[1] = NLVL;
+   count[1] = NLVL/nprocs;
    count[2] = NLAT;
    count[3] = NLON;
    start[1] = 0;
@@ -143,7 +154,7 @@ main(int argc, char **argv)
 
       /* Check the data. */
       i = 0;
-      for (lvl = 0; lvl < NLVL; lvl++)
+      for (lvl = 0; lvl < NLVL/nprocs; lvl++)
 	 for (lat = 0; lat < NLAT; lat++)
 	    for (lon = 0; lon < NLON; lon++)
 	    {
@@ -160,9 +171,12 @@ main(int argc, char **argv)
    if ((retval = ncmpi_close(ncid)))
       ERR(retval);
 
-   char cmd_str[80];
-   sprintf(cmd_str, "*** TESTING %s for reading file %s ", argv[0],FILE_NAME);
-   printf("%-66s ------ pass\n", cmd_str);
+   if (rank == 0) {
+       char cmd_str[80];
+       sprintf(cmd_str, "*** TESTING %s for reading file %s ", argv[0],filename);
+       printf("%-66s ------ pass\n", cmd_str);
+   }
 
+   MPI_Finalize();
    return 0;
 }

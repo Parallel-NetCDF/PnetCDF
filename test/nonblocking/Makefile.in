@@ -75,6 +75,16 @@ ifeq (@has_fortran@, yes)
 	./test_bputf77 -v
 endif
 
+ptest : $(PROGS)
+	$(TEST_MPIRUN) -n 4 ./mcoll_perf -f $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./test_bput     $(TEST_OUT_DIR)/testfile.nc
+ifeq (@has_fortran@, yes)
+	$(TEST_MPIRUN) -n 4 ./mcoll_testf   $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./mcoll_testf77 $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./test_bputf    $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./test_bputf77  $(TEST_OUT_DIR)/testfile.nc
+endif
+
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
 

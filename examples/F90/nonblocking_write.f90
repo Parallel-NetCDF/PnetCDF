@@ -11,7 +11,7 @@
 !    To compile:
 !        mpif90 -O2 nonblocking_write.f90 -o nonblocking_write -lpnetcdf
 !    To run:
-!        mpiexec -n num_processes ./nonblocking_write len [filename]
+!        mpiexec -n num_processes ./nonblocking_write [filename] [len]
 !    where len decides the size of each local array, which is
 !    len x len x len. Each non-record variable is of size
 !          len*len*len * nprocs * sizeof(int)
@@ -63,13 +63,17 @@
           call getarg(0, cmd)
           argc = IARGC()
           if (argc .GT. 2) then
-              print*,'Usage: ',trim(cmd),' len [filename]'
+              if (rank .EQ. 0) print*,'Usage: ',trim(cmd), &
+                                      ' [filename] [len]'
               goto 999
           endif
-          call getarg(1, str)
-          read (str,'(I10)') len
           filename = "testfile.nc"
-          if (argc .EQ. 1) call getarg(2, filename)
+          if (argc .GE. 1) call getarg(1, filename)
+          len = 10
+          if (argc .EQ. 2) then
+             call getarg(2, str)
+             read (str,'(I10)') len
+          endif
 
           do i=1,NDIMS
              psizes(i) = 0

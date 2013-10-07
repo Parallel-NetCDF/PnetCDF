@@ -48,12 +48,9 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    if (nprocs > 2) {
-        if (rank == 0) printf("Demonstrates trasposistion with one proc only\n");
-        MPI_Finalize();
-        exit(-1);
-    }
-	
+    if (nprocs > 2 && rank == 0)
+        printf("Warning: demonstrates trasposistion with one proc only\n");
+
     ret = ncmpi_create(MPI_COMM_WORLD, argv[1], 
 	    NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
@@ -90,8 +87,6 @@ int main(int argc, char **argv) {
     ret = ncmpi_enddef(ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-    
-
     nitems = dim_sizes[0]*dim_sizes[1]*dim_sizes[2];
     data = calloc(nitems, sizeof(double));
     transposed_data = calloc(nitems, sizeof(double));
@@ -116,12 +111,14 @@ int main(int argc, char **argv) {
     count[0] = dim_sizes[0];
     count[1] = dim_sizes[1];
     count[2] = dim_sizes[2];
+    if (rank > 0) nitems = count[0] = count[1] = count[2] = 0;
     ret = ncmpi_put_vara_all(ncfile, varid1, start, count, data, nitems, MPI_DOUBLE);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     count[0] = dim_sizes[1];
     count[1] = dim_sizes[2];
     count[2] = dim_sizes[0];
+    if (rank > 0) nitems = count[0] = count[1] = count[2] = 0;
     ret = ncmpi_put_vara_all(ncfile, transposed_varid, start, count, 
 	    transposed_data, nitems, MPI_DOUBLE);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);

@@ -15,12 +15,12 @@ INCLUDES    = -I../../src/lib @FC_MODINC@../../src/libf90
 F90LDFLAGS += -L../../src/lib
 LIBS       += -lpnetcdf
 
-F90_SRCS  = block_cyclic.f90 \
+F90_SRCS  = nonblocking_write.f90 \
             column_wise.f90 \
+            block_cyclic.f90 \
             flexible_api.f90 \
             get_info.f90 \
             hints.f90 \
-            nonblocking_write.f90 \
             put_var.f90 \
             put_varn_real.f90 \
             put_varn_int.f90
@@ -64,6 +64,26 @@ put_varn_int: put_varn_int.o $(LIBRARY)
 
 put_varn_real: put_varn_real.o $(LIBRARY)
 	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+ptest: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+	@for i in put_varn_int put_varn_real; do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+	@for i in put_varn_int put_varn_real; do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make

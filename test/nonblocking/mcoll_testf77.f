@@ -21,7 +21,7 @@
 
       implicit none
       include "mpif.h"
-
+      include "pnetcdf.inc"
 
 !     -----------------------
 !     Parameter declarations.
@@ -57,6 +57,9 @@
                                           !   determined by MPI where a
                                           !   zero is specified
 
+      integer argc, IARGC, rank, Write_File
+      character(len=256) :: filename, cmd
+
       real*4  filsiz
               
       real*4  rdt_g(2)
@@ -81,8 +84,17 @@
 !     ----------------
 
       call MPI_Init (ierr)
+      call MPI_Comm_Size(MPI_COMM_WORLD, totpes, ierr)
+      call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
-      call MPI_Comm_Size (MPI_COMM_WORLD, totpes, ierr)
+      call getarg(0, cmd)
+      argc = IARGC()
+      if (argc .GT. 1) then
+          if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+          goto 999
+      endif
+      filename = "testfile.nc"
+      if (argc .EQ. 1) call getarg(1, filename)
 
       call MPI_Dims_Create (totpes, 3, numpes, ierr)
 
@@ -148,9 +160,13 @@
       locsiz = locsiz_3d(1) * locsiz_3d(2) * locsiz_3d(3)
 
 !     ===============
-      call Write_File("testfile.nc", NWRITES, mype, comm_cart,
+      ierr = Write_File(filename, NWRITES, mype, comm_cart,
      +                istart, jstart, kstart, locsiz, locsiz_3d,
      +                TOTSIZ_3D, wrt_l)
+      if (ierr .NE. NF_NOERR) then
+          write(6,*) trim(nfmpi_strerror(ierr))
+          goto 999
+      endif
 !!!   Write (6,*) wrt_l(1), wrt_l(2)
 
 !     ----------------------------
@@ -179,10 +195,12 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
-      print*,'** TESTING Fortran mcoll_testf77.f for iput API',
-     +       '                   ------ pass'
+      if (rank .EQ. 0) then
+          print*,'** TESTING Fortran mcoll_testf77.f for iput API',
+     +           '                   ------ pass'
+      endif
 
-      call MPI_Finalize  (ierr)
+ 999  call MPI_Finalize  (ierr)
 
       Stop
 
@@ -192,7 +210,7 @@
 !     ------------
 
 
-      subroutine Write_File(filename, nwrites, mype, comm_cart,
+      integer function Write_File(filename, nwrites, mype, comm_cart,
      +                      istart, jstart, kstart, locsiz,
      +                      locsiz_3d, totsiz_3d, wrt_l)
 
@@ -267,14 +285,20 @@
         t1 = MPI_Wtime ( )
 
 !       =================
-        ierr = nfmpi_create(comm_cart, filename, NF_CLOBBER,
+        Write_File = nfmpi_create(comm_cart, filename, NF_CLOBBER,
      +                      MPI_INFO_NULL, ncid)
+        if (Write_File .NE. NF_NOERR) return
 
 !       ==================
-        ierr = nfmpi_def_dim(ncid, "level",     totsiz_3d(1)*nwrites,
-     +                       lon_id)
-        ierr = nfmpi_def_dim(ncid, "latitude",  totsiz_3d(2), lat_id)
-        ierr = nfmpi_def_dim(ncid, "longitude", totsiz_3d(3), lev_id)
+        Write_File = nfmpi_def_dim(ncid, "level",
+     +               totsiz_3d(1)*nwrites, lon_id)
+        if (Write_File .NE. NF_NOERR) return
+        Write_File = nfmpi_def_dim(ncid, "latitude",  totsiz_3d(2),
+     +                             lat_id)
+        if (Write_File .NE. NF_NOERR) return
+        Write_File = nfmpi_def_dim(ncid, "longitude", totsiz_3d(3),
+     +                             lev_id)
+        if (Write_File .NE. NF_NOERR) return
 !       ==================
 
         dim_id(1) = lon_id
@@ -282,28 +306,34 @@
         dim_id(3) = lev_id
 
 !       ==================
-        ierr = nfmpi_def_var(ncid, "tt1", NF_REAL, 3, dim_id, tt1_id)
+        Write_File = nfmpi_def_var(ncid, "tt1", NF_REAL, 3, dim_id,
+     +                             tt1_id)
+        if (Write_File .NE. NF_NOERR) return
 
 !       =================
-        ierr = nfmpi_enddef (ncid)
+        Write_File = nfmpi_enddef (ncid)
+        if (Write_File .NE. NF_NOERR) return
 !       =================
 
         t2 = MPI_Wtime ( )
 
       do nw = 1, nwrites
 
-         ierr = nfmpi_iput_vara_real(ncid, tt1_id, start_3d, count_3d,
-     +                               tt1, req1)
+         Write_File = nfmpi_iput_vara_real(ncid, tt1_id, start_3d,
+     +                               count_3d, tt1, req1)
+        if (Write_File .NE. NF_NOERR) return
          req(nw)=req1
 !        if (mype == 0) Write (6,900) mype, req1
 
          start_3d(1) = start_3d(1) + count_3d(1)
       end do
 
-      ierr = nfmpi_wait_all(ncid, nwrites, req, stat)
+      Write_File = nfmpi_wait_all(ncid, nwrites, req, stat)
+      if (Write_File .NE. NF_NOERR) return
 
 !       ================
-        ierr = nfmpi_close (ncid)
+      Write_File = nfmpi_close (ncid)
+      if (Write_File .NE. NF_NOERR) return
 !       ================
 
  900  format ("mynod:", i1, " reqid : ", i1)

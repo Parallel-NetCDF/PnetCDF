@@ -11,7 +11,7 @@
 !    To compile:
 !        mpif77 -O2 nonblocking_write.f -o nonblocking_write -lpnetcdf
 !    To run (for example):
-!        mpiexec -n 32 ./nonblocking_write 10 /pvfs2/wkliao/testfile.nc
+!        mpiexec -n 32 ./nonblocking_write /pvfs2/wkliao/testfile.nc 10
 !    The size of each local array is len x len x len. Each non-record
 !    variable is of size len*len*len * nprocs * sizeof(int)
 !    All variables are partitioned among all processes in a 3D
@@ -57,13 +57,17 @@
           call getarg(0, cmd)
           argc = IARGC()
           if (argc .GT. 2) then
-              print*,'Usage: ',trim(cmd),' len [filename]'
+              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),
+     +                                ' [filename] [len]'
               goto 999
           endif
-          call getarg(1, str)
-          read (str,'(I10)') len
           filename = "testfile.nc"
-          if (argc .EQ. 1) call getarg(2, filename)
+          if (argc .GE. 1) call getarg(1, filename)
+          len = 10
+          if (argc .EQ. 2) then
+             call getarg(2, str)
+             read (str,'(I10)') len
+          endif
 
           do i=1,NDIMS
              psizes(i) = 0

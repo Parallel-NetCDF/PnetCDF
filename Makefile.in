@@ -86,6 +86,9 @@ check testing: tests
 verbose_check verbose_testing: tests
 	@cd test && $(MAKE) verbose_testing
 
+ptest: tests
+	for i in test examples ; do ( cd $$i && $(MAKE) ptest ; ) ; done
+
 clean_macros:
 	@$(RM) -f macros.make
 

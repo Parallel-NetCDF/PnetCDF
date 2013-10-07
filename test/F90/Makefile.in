@@ -40,21 +40,6 @@ PACKING_LIST = $(F90_SRCS) Makefile.in depend
 
 all: $(PROGS)
 
-testing check: $(PROGS)
-	./tst_f90
-	./tst_io
-	./f90tst_vars
-	./tst_types2
-	./tst_f90_cdf5
-	./f90tst_vars2
-	./f90tst_vars3
-	./f90tst_vars4
-	./tst_flarge
-
-install:
-
-uninstall:
-
 tst_f90: tst_f90.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
@@ -93,6 +78,30 @@ f90tst_parallel3: f90tst_parallel3.o $(LIBRARY)
 
 f90tst_parallel4: f90tst_parallel4.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+testing check: $(PROGS)
+	./tst_f90
+	./tst_io
+	./f90tst_vars
+	./tst_types2
+	./tst_f90_cdf5
+	./f90tst_vars2
+	./f90tst_vars3
+	./f90tst_vars4
+	./tst_flarge
+
+PARALLEL_PROGS = f90tst_parallel f90tst_parallel2 f90tst_parallel3 f90tst_parallel4
+
+ptest: $(PARALLEL_PROGS)
+	$(TEST_MPIRUN) -n 4 ./f90tst_parallel  $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./f90tst_parallel2 $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./f90tst_parallel3 $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 8 ./f90tst_parallel4 $(TEST_OUT_DIR)/testfile.nc
+
+
+install:
+
+uninstall:
 
 
 include $(srcdir)/depend

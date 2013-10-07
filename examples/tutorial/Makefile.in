@@ -89,4 +89,15 @@ pnetcdf-write-bufferedf77: pnetcdf-write-bufferedf77.o $(LIBRARY)
 pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+ptest: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+
+include $(srcdir)/depend
 include $(srcdir)/../../rules.make
+
+

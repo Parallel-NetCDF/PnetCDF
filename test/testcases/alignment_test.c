@@ -33,6 +33,7 @@
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 int main(int argc, char** argv) {
+    char *filename="redef1.nc";
     int i, j, rank, nprocs, err, verbose=0, nfailed=0, nfailed_all;
     int ncid, cmode, varid[NVARS], dimid[2], *buf;
     char str[32];
@@ -45,15 +46,16 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc != 2) {
-        if (!rank) printf("Usage: %s filename\n",argv[0]);
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, argv[1], cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); ERR
 
     /* define dimension */
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
@@ -110,7 +112,7 @@ int main(int argc, char** argv) {
     MPI_Info_set(info, "nc_var_align_size",    "197"); /* size in bytes */
 
     /* open the file for adding more metadata */
-    err = ncmpi_open(MPI_COMM_WORLD, argv[1], NC_WRITE, info, &ncid); ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid); ERR
 
     /* get header size and extent, and offsets of all variables */
     err = ncmpi_inq_header_size(ncid, &header_size[0]); ERR

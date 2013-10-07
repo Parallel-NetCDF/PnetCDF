@@ -10,7 +10,6 @@
 #include <string.h>
 #include <pnetcdf.h>
 
-#define FILE_NAME "test.nc"
 
 #define ERRCODE 2
 #define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); exit(ERRCODE);}
@@ -26,18 +25,22 @@ int main(int argc, char **argv) {
     int   var[6][4];
     float rh[4][6];
     signed char  varT[4][6];
+    char *filename="testfile.nc";
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    if (nprocs > 1)
-        printf("This test is designed to run on one process\n");
-    if (rank > 0) {
+    if (nprocs > 1 && rank == 0)
+        printf("Warning: %s is designed to run on 1 process\n", argv[0]);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
+    if (argc == 2) filename = argv[1];
 
-    if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, FILE_NAME,
+    if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, filename,
         NC_CLOBBER | NC_64BIT_DATA, MPI_INFO_NULL, &ncid)))
        ERR(retval);
 
@@ -60,10 +63,12 @@ int main(int argc, char **argv) {
 
     start[0] = 0; start[1] = 0;
     count[0] = 6; count[1] = 4;
+    if (rank > 0) count[0] = count[1] = 0;
     if (NC_NOERR != (retval = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0])))
         ERR(retval);
 
     /* read the variable back in the matrix transposed way, rh is 4 x 6 */
+    count[0] = 6; count[1] = 4;
     stride[0] = 1; stride[1] = 1;
     imap[0]   = 1; imap[1] = 6;   /* would be {4, 1} if not transposing */
 #define TEST_NON_BLOCKING_API
@@ -113,7 +118,10 @@ int main(int argc, char **argv) {
 
     /* testing get_varm(), first zero-out the variable in the file */
     memset(&var[0][0], 0, 6*4*sizeof(int));
-    if (NC_NOERR != (retval = ncmpi_put_var_int_all(ncid, varid, &var[0][0])))
+    start[0] = 0; start[1] = 0;
+    count[0] = 6; count[1] = 4;
+    if (rank > 0) count[0] = count[1] = 0;
+    if (NC_NOERR != (retval = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0])))
         ERR(retval);
 
     /* set the contents of the write buffer varT, a 4 x 6 char array
@@ -129,6 +137,7 @@ int main(int argc, char **argv) {
     count[0]  = 6; count[1]  = 4;
     stride[0] = 1; stride[1] = 1;
     imap[0]   = 1; imap[1]   = 6;   /* would be {4, 1} if not transposing */
+    if (rank > 0) count[0] = count[1] = 0;
 #ifdef TEST_NON_BLOCKING_API
     if (NC_NOERR != (retval = ncmpi_iput_varm_schar(ncid, varid, start, count, stride, imap, &varT[0][0], &req)))
         ERR(retval);
@@ -167,15 +176,18 @@ int main(int argc, char **argv) {
     }
     if (NC_NOERR != (retval = ncmpi_close(ncid))) ERR(retval);
 
+    if (rank == 0) {
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING %s for get/put varm ", argv[0]);
+
+        if (err)
+            printf("%-66s ------ failed\n", cmd_str);
+        else
+            printf("%-66s ------ pass\n", cmd_str);
+    }
+
     MPI_Finalize();
 
-    char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING %s for get/put varm ", argv[0]);
-
-    if (err)
-        printf("%-66s ------ failed\n", cmd_str);
-    else
-        printf("%-66s ------ pass\n", cmd_str);
     return err;
 }
 
