@@ -49,10 +49,26 @@ program f90tst_vars3
   integer :: cache_size_in, cache_nelems_in, cache_preemption_in
   integer :: cmode, err
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
-
-  write(*,"(A)",advance="no") '*** Testing definition of netCDF vars from Fortran 90.'
+  character(LEN=128) filename, cmd, msg
+  integer argc, iargc, my_rank, p
 
   call MPI_Init(err)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+
+  ! take filename from command-line argument if there is any
+  call getarg(0, cmd)
+  argc = IARGC()
+  if (argc .GT. 1) then
+     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+     goto 999
+  endif
+  filename = FILE_NAME
+  if (argc .EQ. 1) call getarg(1, filename)
+
+  if (p .ne. 1 .AND. my_rank .eq. 0) then
+     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
+  endif
 
   ! Create some pretend data.
   do x = 1, NX
@@ -66,7 +82,7 @@ program f90tst_vars3
 
   ! Create the netCDF file. 
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-  call check(nf90mpi_create(MPI_COMM_WORLD, FILE_NAME, cmode, MPI_INFO_NULL, ncid))
+  call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncid))
 
   ! Define the dimensions.
   nx_ll = NX
@@ -97,7 +113,7 @@ program f90tst_vars3
   call check(nf90mpi_close(ncid))
 
   ! Reopen the file.
-  call check(nf90mpi_open(MPI_COMM_WORLD, FILE_NAME, nf90_nowrite, MPI_INFO_NULL, ncid))
+  call check(nf90mpi_open(MPI_COMM_WORLD, filename, nf90_nowrite, MPI_INFO_NULL, ncid))
   
   ! Check some stuff out.
   call check(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
@@ -160,9 +176,10 @@ program f90tst_vars3
   ! Close the file. 
   call check(nf90mpi_close(ncid))
 
-  write(*,"(A)") '             ------ pass'
+   msg = '*** TESTING F90 '//trim(cmd)//' for def_var API'
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
-  call MPI_Finalize(err)
+ 999 call MPI_Finalize(err)
 
 contains
 !     This subroutine handles errors by printing an error message and

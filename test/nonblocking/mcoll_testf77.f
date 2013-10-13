@@ -58,7 +58,7 @@
                                           !   zero is specified
 
       integer argc, IARGC, rank, Write_File
-      character(len=256) :: filename, cmd
+      character(len=256) :: filename, cmd, msg
 
       real*4  filsiz
               
@@ -195,10 +195,8 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
-      if (rank .EQ. 0) then
-          print*,'** TESTING Fortran mcoll_testf77.f for iput API',
-     +           '                   ------ pass'
-      endif
+      msg = '*** TESTING F77 '//trim(cmd)//' for iput API'
+      if (rank .EQ. 0) write(*,"(A67,A)") msg,'------ pass'
 
  999  call MPI_Finalize  (ierr)
 
@@ -236,7 +234,7 @@
 !     Local variable declarations.
 !     ----------------------------
 
-      integer ierr
+      integer ierr, info
       integer lon_id, lat_id, lev_id
       integer ncid
       integer nw
@@ -285,9 +283,14 @@
         t1 = MPI_Wtime ( )
 
 !       =================
+       call MPI_Info_create(info, ierr)
+       call MPI_Info_set(info, "romio_ds_write", "disable", ierr)
+
         Write_File = nfmpi_create(comm_cart, filename, NF_CLOBBER,
-     +                      MPI_INFO_NULL, ncid)
+     +                            info, ncid)
         if (Write_File .NE. NF_NOERR) return
+
+       call MPI_Info_free(info, ierr)
 
 !       ==================
         Write_File = nfmpi_def_dim(ncid, "level",

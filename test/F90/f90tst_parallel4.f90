@@ -17,7 +17,7 @@ program f90tst
   integer :: dimid(3)
   integer(KIND=MPI_OFFSET_KIND) :: start(3), count(3)
   real :: f(3)
-  character(LEN=128) filename, cmd
+  character(LEN=128) filename, cmd, msg
   integer argc, iargc
 
   call MPI_INIT(ierr)
@@ -36,10 +36,6 @@ program f90tst
 
   if (nprocs .ne. 8 .AND. my_rank .eq. 0) then
      print *, 'Warning: ',trim(cmd),' is design to run on 8 processes.'
-  endif
-
-  if (my_rank .eq. 0) then
-     write(*,"(A)",advance="no") '*** Testing PnetCDF parallel I/O from Fortran 90.'
   endif
 
   nmode = ior(NF90_CLOBBER,NF90_64BIT_DATA)
@@ -82,7 +78,8 @@ program f90tst
 
   call handle_err(nf90mpi_close(fh))
 
-  if (my_rank .eq. 0) write(*,"(A)") '                  ------ pass'
+   msg = '*** TESTING F90 '//trim(cmd)
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
  999 call MPI_Finalize(ierr)
 

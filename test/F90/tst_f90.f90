@@ -61,7 +61,7 @@ program netcdfTest
   ! Local variables
   integer (kind = EightByteInt), parameter :: numLats = 4, numLons = 3, &
                         numFrTimes = 2, timeStringLen = 20
-  character (len = *), parameter :: fileName = "tst_f90.nc"
+  character (len = *), parameter :: FILE_NAME = "tst_f90.nc"
   integer :: counter, err
   real, dimension(numLons, numLats, numFrTimes) :: pressure
   integer (kind = FourByteInt), dimension(numFrTimes) :: frTimeVals
@@ -70,9 +70,26 @@ program netcdfTest
   character (len = 20) frTimeUnits
   real (kind = FourByteReal), dimension(numLats) :: latVarBuf
   real (kind = FourByteReal), dimension(numLons) :: lonVarBuf
-  
-  write(*,"(A)",advance="no") '*** TESTING Fortran 90 APIs'
+  character(LEN=128) filename, cmd, msg
+  integer argc, iargc, my_rank, p
+
   call MPI_Init(err)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+
+  ! take filename from command-line argument if there is any
+  call getarg(0, cmd)
+  argc = IARGC()
+  if (argc .GT. 1) then
+     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+     goto 999
+  endif
+  filename = FILE_NAME
+  if (argc .EQ. 1) call getarg(1, filename)
+
+  if (p .ne. 1 .AND. my_rank .eq. 0) then
+     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
+  endif
 
 ! --------------------
   ! Code begins
@@ -83,7 +100,7 @@ program netcdfTest
   end if
     
   ! Create the file
-  call check(nf90mpi_create(MPI_COMM_WORLD, trim(fileName), nf90_clobber, MPI_INFO_NULL, ncFileID))
+  call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, MPI_INFO_NULL, ncFileID))
   
   ! Define the dimensions
   call check(nf90mpi_def_dim(ncid = ncFileID, name = "lat",     len = numLats,        dimid = latDimID))
@@ -157,7 +174,7 @@ program netcdfTest
   call check(nf90mpi_close(ncFileID))
 
   ! Now open the file to read and check a few values
-  call check(nf90mpi_open(MPI_COMM_WORLD, trim(fileName), NF90_NOWRITE, MPI_INFO_NULL, ncFileID))
+  call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, MPI_INFO_NULL, ncFileID))
   call check(nf90mpi_inq_varid(ncFileID,"frtime",frTimeVarID))
   call check(nf90mpi_get_att(ncFileID,frTimeVarID,"units",frTimeUnits))
   if(frTimeUnits .ne. "hours") then
@@ -166,9 +183,10 @@ program netcdfTest
   endif
   call check(nf90mpi_close(ncFileID))
 
-  write(*,"(A)") '                                        ------ pass'
+   msg = '*** TESTING F90 '//trim(cmd)
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
-  call MPI_Finalize(err)
+ 999 call MPI_Finalize(err)
 
 contains
   ! Internal subroutine - checks error status after each netcdf, prints out text message each time

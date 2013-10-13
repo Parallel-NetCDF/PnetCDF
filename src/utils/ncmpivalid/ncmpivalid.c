@@ -288,7 +288,7 @@ val_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap) {
       if (status != NC_NOERR) {
 	printf("dimension[%d] in ", dim);
         ncap->ndefined = dpp - ncap->value;
-        ncmpii_free_NC_dimarrayV(ncap);
+        ncmpii_free_NC_dimarray(ncap);
         return status;
       }
     }
@@ -477,7 +477,7 @@ val_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap){
       if (status != NC_NOERR) {
 	printf("attribute[%d] of ", att);
         ncap->ndefined = app - ncap->value;
-        ncmpii_free_NC_attrarrayV(ncap);
+        ncmpii_free_NC_attrarray(ncap);
         return status;
       }
     }
@@ -621,7 +621,7 @@ val_get_NC_vararray(bufferinfo *gbp, NC_vararray *ncap) {
       if (status != NC_NOERR) {
         printf("variable[%d] in ", var);
         ncap->ndefined = vpp - ncap->value;
-        ncmpii_free_NC_vararrayV(ncap);
+        ncmpii_free_NC_vararray(ncap);
         return status;
       }
     }

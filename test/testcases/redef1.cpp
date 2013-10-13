@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
 
-  int ncid;
+  int ncid, verbose;
   int cmode = NC_64BIT_OFFSET;
   MPI_Comm comm = MPI_COMM_WORLD;
 
@@ -25,9 +25,6 @@ int main(int argc, char** argv)
   MPI_Comm_size(comm, &commsize);
   MPI_Comm_rank(comm, &rank);
 
-  if (commsize > 1 && rank == 0)
-      printf("Warning: %s is designed to run on 1 process\n",argv[0]);
-  
   char filename[128]="redef1.nc";
   if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -36,6 +33,10 @@ int main(int argc, char** argv)
   }
   if (argc == 2) strcpy(filename, argv[1]);
 
+  verbose = 0;
+  if (commsize > 1 && rank == 0 && verbose)
+      printf("Warning: %s is designed to run on 1 process\n",argv[0]);
+  
   int status;
   status = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid);
   PNCDF_Error(status, "open");
@@ -168,7 +169,7 @@ int main(int argc, char** argv)
 
   if (rank == 0) {
      char cmd_str[80];
-     sprintf(cmd_str, "*** TESTING %s for entering re-define mode ", argv[0]);
+     sprintf(cmd_str, "*** TESTING C   %s for entering re-define mode ", argv[0]);
      printf("%-66s ------ pass\n", cmd_str);
   }
 

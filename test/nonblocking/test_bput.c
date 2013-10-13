@@ -17,18 +17,20 @@
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int i, j, ncid, dimid[2], varid, retval, err=0, rank, nprocs;
+    int i, j, ncid, dimid[2], varid, retval, err=0, rank, nprocs, verbose;
     int req[2], status[2];
     float  var[4][6];
     char *filename="testfile.nc";
-    MPI_Offset bufsize;
-    MPI_Offset start[2], count[2], stride[2], imap[2];
+    MPI_Offset bufsize,  start[2], count[2], stride[2], imap[2];
+    MPI_Info info;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    if (nprocs > 1 && rank == 0)
-        printf("Warning: this test is designed to run on one process\n");
+
+    verbose = 0;
+    if (nprocs > 1 && rank == 0 && verbose)
+        printf("Warning: %s is designed to run on 1 process\n", argv[0]);
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -37,9 +39,13 @@ int main(int argc, char **argv) {
     }
     if (argc == 2) filename = argv[1];
 
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "romio_ds_write",    "disable");
+
     if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, filename,
-        NC_CLOBBER | NC_64BIT_DATA, MPI_INFO_NULL, &ncid)))
+        NC_CLOBBER | NC_64BIT_DATA, info, &ncid)))
        ERR(retval);
+    MPI_Info_free(&info);
 
     /* define a variable of a 6 x 4 integer array in the nc file */
     if (NC_NOERR != (retval = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]))) ERR(retval);
@@ -116,7 +122,7 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         char cmd_str[80];
-        sprintf(cmd_str, "*** TESTING %s for bput API ", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for bput API ", argv[0]);
 
         if (err)
             printf("%-66s ------ failed\n", cmd_str);

@@ -37,6 +37,14 @@ aggregation: aggregation.o $(LIBRARY)
 write_block_read_column: write_block_read_column.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+ptest: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i 5 $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN) -n 4 ./$$i 5 $(TEST_OUT_DIR)/testfile.nc \
+	; ) ; done
+
 include $(srcdir)/depend
 
 include $(srcdir)/../../rules.make

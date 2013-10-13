@@ -31,14 +31,30 @@ program tst_types2
        data7_out(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN, DLEN)
   integer (kind = 8), parameter :: REALLY_BIG = 9223372036854775807_8
 
-  integer :: rank, nprocs, cmode, info, err
+  integer :: cmode, info, err
   integer(KIND=MPI_OFFSET_KIND) :: dlen_ll
+  character(LEN=128) filename, cmd, msg
+  integer my_rank, p, argc, iargc
+  logical verbose
 
   call MPI_Init(err)
-  call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
-  call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
 
-  write(*,"(A)",advance="no") '*** Testing netCDF 64-bit integer types from Fortran 90.'
+  ! take filename from command-line argument if there is any
+  call getarg(0, cmd)
+  argc = IARGC()
+  if (argc .GT. 1) then
+     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+     goto 999
+  endif
+  filename = FILE_NAME
+  if (argc .EQ. 1) call getarg(1, filename)
+
+  verbose = .FALSE.
+  if (p .ne. 4 .AND. my_rank .eq. 0 .AND. verbose) then
+     print *, 'Warning: ',trim(cmd),' is design to run on 4 processes.'
+  endif
 
   do i1 = 1, DLEN
      data1_out(i1) = REALLY_BIG
@@ -106,7 +122,7 @@ program tst_types2
   
   ! Create the netCDF file. 
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-  call check(nf90mpi_create(MPI_COMM_WORLD, FILE_NAME, cmode, MPI_INFO_NULL, ncid))
+  call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncid))
 
   ! Define dimensions.
   dlen_ll = DLEN
@@ -172,7 +188,7 @@ program tst_types2
   call check(nf90mpi_close(ncid))
 
   ! Reopen the netCDF file. 
-  call check(nf90mpi_open(MPI_COMM_WORLD, FILE_NAME, nf90_nowrite, MPI_INFO_NULL, ncid))
+  call check(nf90mpi_open(MPI_COMM_WORLD, filename, nf90_nowrite, MPI_INFO_NULL, ncid))
 
   ! Read in the large numbers.
   call check(nf90mpi_get_var_all(ncid, varid1, data1_in))
@@ -255,9 +271,10 @@ program tst_types2
   ! Close the file. 
   call check(nf90mpi_close(ncid))
   
-  write(*,"(A)") '           ------ pass'
+   msg = '*** TESTING F90 '//trim(cmd)//' for 64-bit integer types'
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
-  call MPI_Finalize(err)
+ 999 call MPI_Finalize(err)
 
 !     This subroutine handles errors by printing an error message and
 !     exiting with a non-zero status.

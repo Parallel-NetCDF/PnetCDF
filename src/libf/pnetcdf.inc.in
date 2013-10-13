@@ -161,24 +161,13 @@
       integer NF_EFILE
       integer NF_EREAD
       integer NF_EWRITE
-      integer NF_EMULTIDEFINE
       integer NF_EOFILE
       integer NF_EMULTITYPES
       integer NF_EIOMISMATCH
       integer NF_ENEGATIVECNT
       integer NF_EUNSPTETYPE
-      integer NF_EDIMS_NELEMS_MULTIDEFINE
-      integer NF_EDIMS_SIZE_MULTIDEFINE
-      integer NF_EVARS_NELEMS_MULTIDEFINE
-      integer NF_EVARS_NDIMS_MULTIDEFINE
-      integer NF_EVARS_DIMIDS_MULTIDEFINE
-      integer NF_EVARS_TYPE_MULTIDEFINE
-      integer NF_EVARS_LEN_MULTIDEFINE
-      integer NF_EVARS_BEGIN_MULTIDEFINE
-      integer NF_ENUMRECS_MULTIDEFINE
       integer NF_EINVAL_REQUEST
       integer NF_EAINT_TOO_SMALL
-      integer NF_ECMODE
       integer NF_ENOTSUPPORT
       integer NF_ENULLBUF
       integer NF_EPREVATTACHBUF
@@ -188,74 +177,116 @@
       integer NF_ENOENT
       integer NF_EINTOVERFLOW
 
-      PARAMETER (NF_NOERR        = 0)   ! No Error
-      PARAMETER (NF2_ERR         = -1)  ! Returned for all errors in the v2 API
-      PARAMETER (NF_EBADID       = -33) ! Not a netcdf id
-      PARAMETER (NF_ENFILE       = -34) ! Too many netcdfs open
-      PARAMETER (NF_EEXIST       = -35) ! netcdf file exists and NF_NOCLOBBER
-      PARAMETER (NF_EINVAL       = -36) ! Invalid Argument
-      PARAMETER (NF_EPERM        = -37) ! Write to read only
-      PARAMETER (NF_ENOTINDEFINE = -38) ! Operation not allowed in data mode
-      PARAMETER (NF_EINDEFINE    = -39) ! Operation not allowed in define mode
-      PARAMETER (NF_EINVALCOORDS = -40) ! Index exceeds dimension bound
-      PARAMETER (NF_EMAXDIMS     = -41) ! NF_MAX_DIMS exceeded
-      PARAMETER (NF_ENAMEINUSE   = -42) ! String match to name in use
-      PARAMETER (NF_ENOTATT      = -43) ! Attribute not found
-      PARAMETER (NF_EMAXATTS     = -44) ! NF_MAX_ATTRS exceeded
-      PARAMETER (NF_EBADTYPE     = -45) ! Not a netcdf data type
-      PARAMETER (NF_EBADDIM      = -46) ! Invalid dimension id or name
-      PARAMETER (NF_EUNLIMPOS    = -47) ! NF_UNLIMITED in the wrong index
-      PARAMETER (NF_EMAXVARS     = -48) ! NF_MAX_VARS exceeded
-      PARAMETER (NF_ENOTVAR      = -49) ! Variable not found
-      PARAMETER (NF_EGLOBAL      = -50) ! Action prohibited on NF_GLOBAL varid
-      PARAMETER (NF_ENOTNC       = -51) ! Not a netcdf file
-      PARAMETER (NF_ESTS         = -52) ! In Fortran, string too short
-      PARAMETER (NF_EMAXNAME     = -53) ! NF_MAX_NAME exceeded
-      PARAMETER (NF_EUNLIMIT     = -54) ! NF_UNLIMITED size already in use
-      PARAMETER (NF_ENORECVARS   = -55) ! nc_rec op when there are no record vars
-      PARAMETER (NF_ECHAR        = -56) ! Attempt to convert between text & numbers
-      PARAMETER (NF_EEDGE        = -57) ! Edge+start exceeds dimension bound
-      PARAMETER (NF_ESTRIDE      = -58) ! Illegal stride
-      PARAMETER (NF_EBADNAME     = -59) ! Attribute or variable name contains illegal characters
-      PARAMETER (NF_ERANGE       = -60) ! Math result not representable
-      PARAMETER (NF_ENOMEM       = -61) ! Memory allocation (malloc) failure
-      PARAMETER (NF_EVARSIZE     = -62) ! One or more variable sizes violate format constraints
-      PARAMETER (NF_EDIMSIZE     = -63) ! Invalid dimension size
+      integer NF_EMULTIDEFINE
+      integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
+      integer NF_EMULTIDEFINE_DIM_NUM,    NF_EDIMS_NELEMS_MULTIDEFINE
+      integer NF_EMULTIDEFINE_DIM_SIZE,   NF_EDIMS_SIZE_MULTIDEFINE
+      integer NF_EMULTIDEFINE_DIM_NAME,   NF_EDIMS_NAME_MULTIDEFINE
+      integer NF_EMULTIDEFINE_VAR_NUM,    NF_EVARS_NELEMS_MULTIDEFINE
+      integer NF_EMULTIDEFINE_VAR_NAME,   NF_EVARS_NAME_MULTIDEFINE
+      integer NF_EMULTIDEFINE_VAR_NDIMS,  NF_EVARS_NDIMS_MULTIDEFINE
+      integer NF_EMULTIDEFINE_VAR_DIMIDS, NF_EVARS_DIMIDS_MULTIDEFINE
+      integer NF_EMULTIDEFINE_VAR_TYPE,   NF_EVARS_TYPE_MULTIDEFINE
+      integer NF_EMULTIDEFINE_VAR_LEN,    NF_EVARS_LEN_MULTIDEFINE
+      integer NF_EMULTIDEFINE_VAR_BEGIN,  NF_EVARS_BEGIN_MULTIDEFINE
+      integer NF_EMULTIDEFINE_NUMRECS,    NF_ENUMRECS_MULTIDEFINE
+      integer NF_EMULTIDEFINE_ATTR_NUM
+      integer NF_EMULTIDEFINE_ATTR_SIZE
+      integer NF_EMULTIDEFINE_ATTR_NAME
+      integer NF_EMULTIDEFINE_ATTR_TYPE
+      integer NF_EMULTIDEFINE_ATTR_LEN
+      integer NF_EMULTIDEFINE_ATTR_VAL
 
-! PnetCDF error codes start here
-      PARAMETER (NF_ESMALL                   = -201) ! size of off_t too small for format
-      PARAMETER (NF_ENOTINDEP                = -202) ! Operation not allowed in collective data mode
-      PARAMETER (NF_EINDEP                   = -203) ! Operation not allowed in independent data mode
-      PARAMETER (NF_EFILE                    = -204) ! Unknown error in file operation
-      PARAMETER (NF_EREAD                    = -205) ! Unknown error in reading file
-      PARAMETER (NF_EWRITE                   = -206) ! Unknown error in writting to file
-      PARAMETER (NF_EMULTIDEFINE             = -207) ! NC definitions on multiprocesses conflict
-      PARAMETER (NF_EOFILE                   = -208) ! file open/creation failed
-      PARAMETER (NF_EMULTITYPES              = -209) ! Multiple types used in memory data
-      PARAMETER (NF_EIOMISMATCH              = -210) ! Input/Output data amount mismatch
-      PARAMETER (NF_ENEGATIVECNT             = -211) ! Negative count is specified
-      PARAMETER (NF_EUNSPTETYPE              = -212) ! Unsupported etype in memory MPI datatype
-      PARAMETER (NF_EDIMS_NELEMS_MULTIDEFINE = -213) ! Different number of dim defines on multiprocesses conflict
-      PARAMETER (NF_EDIMS_SIZE_MULTIDEFINE   = -214) ! Different size of dim defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_NELEMS_MULTIDEFINE = -215) ! Different number of var defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_NDIMS_MULTIDEFINE  = -216) ! Different dim number of var defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_DIMIDS_MULTIDEFINE = -217) ! Different dimid defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_TYPE_MULTIDEFINE   = -218) ! Different type of var defines on multiprocesses conflict
-      PARAMETER (NF_EVARS_LEN_MULTIDEFINE    = -219) ! Different var lenght defines size on multiprocesses conflict
-      PARAMETER (NF_EVARS_BEGIN_MULTIDEFINE  = -220) ! Different var begin defines size on multiprocesses conflict
-      PARAMETER (NF_ENUMRECS_MULTIDEFINE     = -221) ! Different number records on multiprocesses conflict
-      PARAMETER (NF_EINVAL_REQUEST           = -222) ! invalid nonblocking request ID
-      PARAMETER (NF_EAINT_TOO_SMALL          = -223) ! MPI_Aint not large enough to hold requested value
-      PARAMETER (NF_ECMODE                   = -224) ! file create modes are inconsistent among processes
-      PARAMETER (NF_ENOTSUPPORT              = -225) ! feature is not yet supported
-      PARAMETER (NF_ENULLBUF                 = -226) ! trying to attach a NULL buffer
-      PARAMETER (NF_EPREVATTACHBUF           = -227) ! previous attached buffer is found
-      PARAMETER (NF_ENULLABUF                = -228) ! no attached buffer is found
-      PARAMETER (NF_EPENDINGBPUT             = -229) ! pending bput is found, cannot detach buffer
-      PARAMETER (NF_EINSUFFBUF               = -230) ! attached buffer is too small
-      PARAMETER (NF_ENOENT                   = -231) ! File does not exist when calling nfmpi_open()
-      PARAMETER (NF_EINTOVERFLOW             = -232) ! Overflow when type cast to 4-byte integer
+      PARAMETER (NF_NOERR        = 0)     ! No Error
+      PARAMETER (NF2_ERR         = -1)    ! Returned for all errors in the v2 API
+      PARAMETER (NF_EBADID       = -33)   ! Not a netcdf id
+      PARAMETER (NF_ENFILE       = -34)   ! Too many netcdfs open
+      PARAMETER (NF_EEXIST       = -35)   ! netcdf file exists and NF_NOCLOBBER
+      PARAMETER (NF_EINVAL       = -36)   ! Invalid Argument
+      PARAMETER (NF_EPERM        = -37)   ! Write to read only
+      PARAMETER (NF_ENOTINDEFINE = -38)   ! Operation not allowed in data mode
+      PARAMETER (NF_EINDEFINE    = -39)   ! Operation not allowed in define mode
+      PARAMETER (NF_EINVALCOORDS = -40)   ! Index exceeds dimension bound
+      PARAMETER (NF_EMAXDIMS     = -41)   ! NF_MAX_DIMS exceeded
+      PARAMETER (NF_ENAMEINUSE   = -42)   ! String match to name in use
+      PARAMETER (NF_ENOTATT      = -43)   ! Attribute not found
+      PARAMETER (NF_EMAXATTS     = -44)   ! NF_MAX_ATTRS exceeded
+      PARAMETER (NF_EBADTYPE     = -45)   ! Not a netcdf data type
+      PARAMETER (NF_EBADDIM      = -46)   ! Invalid dimension id or name
+      PARAMETER (NF_EUNLIMPOS    = -47)   ! NF_UNLIMITED in the wrong index
+      PARAMETER (NF_EMAXVARS     = -48)   ! NF_MAX_VARS exceeded
+      PARAMETER (NF_ENOTVAR      = -49)   ! Variable not found
+      PARAMETER (NF_EGLOBAL      = -50)   ! Action prohibited on NF_GLOBAL varid
+      PARAMETER (NF_ENOTNC       = -51)   ! Not a netcdf file
+      PARAMETER (NF_ESTS         = -52)   ! In Fortran, string too short
+      PARAMETER (NF_EMAXNAME     = -53)   ! NF_MAX_NAME exceeded
+      PARAMETER (NF_EUNLIMIT     = -54)   ! NF_UNLIMITED size already in use
+      PARAMETER (NF_ENORECVARS   = -55)   ! nc_rec op when there are no record vars
+      PARAMETER (NF_ECHAR        = -56)   ! Attempt to convert between text & numbers
+      PARAMETER (NF_EEDGE        = -57)   ! Edge+start exceeds dimension bound
+      PARAMETER (NF_ESTRIDE      = -58)   ! Illegal stride
+      PARAMETER (NF_EBADNAME     = -59)   ! Attribute or variable name contains illegal characters
+      PARAMETER (NF_ERANGE       = -60)   ! Math result not representable
+      PARAMETER (NF_ENOMEM       = -61)   ! Memory allocation (malloc) failure
+      PARAMETER (NF_EVARSIZE     = -62)   ! One or more variable sizes violate format constraints
+      PARAMETER (NF_EDIMSIZE     = -63)   ! Invalid dimension size
 
+! PnetCDF error codes start from -201
+      PARAMETER (NF_ESMALL                  = -201)   ! size of off_t too small for format
+      PARAMETER (NF_ENOTINDEP               = -202)   ! Operation not allowed in collective data mode
+      PARAMETER (NF_EINDEP                  = -203)   ! Operation not allowed in independent data mode
+      PARAMETER (NF_EFILE                   = -204)   ! Unknown error in file operation
+      PARAMETER (NF_EREAD                   = -205)   ! Unknown error in reading file
+      PARAMETER (NF_EWRITE                  = -206)   ! Unknown error in writting to file
+      PARAMETER (NF_EOFILE                  = -207)   ! file open/creation failed
+      PARAMETER (NF_EMULTITYPES             = -208)   ! Multiple types used in memory data
+      PARAMETER (NF_EIOMISMATCH             = -209)   ! Input/Output data amount mismatch
+      PARAMETER (NF_ENEGATIVECNT            = -210)   ! Negative count is specified
+      PARAMETER (NF_EUNSPTETYPE             = -211)   ! Unsupported etype in memory MPI datatype
+      PARAMETER (NF_EINVAL_REQUEST          = -212)   ! invalid nonblocking request ID
+      PARAMETER (NF_EAINT_TOO_SMALL         = -213)   ! MPI_Aint not large enough to hold requested value
+      PARAMETER (NF_ENOTSUPPORT             = -214)   ! feature is not yet supported
+      PARAMETER (NF_ENULLBUF                = -215)   ! trying to attach a NULL buffer
+      PARAMETER (NF_EPREVATTACHBUF          = -216)   ! previous attached buffer is found
+      PARAMETER (NF_ENULLABUF               = -217)   ! no attached buffer is found
+      PARAMETER (NF_EPENDINGBPUT            = -218)   ! pending bput is found, cannot detach buffer
+      PARAMETER (NF_EINSUFFBUF              = -219)   ! attached buffer is too small
+      PARAMETER (NF_ENOENT                  = -220)   ! File does not exist when calling nfmpi_open()
+      PARAMETER (NF_EINTOVERFLOW            = -221)   ! Overflow when type cast to 4-byte integer
+
+! PnetCDF header inconsistency errors start from -250
+      PARAMETER (NF_EMULTIDEFINE            = -250)   ! NC definitions on multiprocesses conflict
+      PARAMETER (NF_EMULTIDEFINE_OMODE      = -251)   ! file create/open modes are inconsistent
+      PARAMETER (NF_EMULTIDEFINE_DIM_NUM    = -252)   ! inconsistent number of dimensions
+      PARAMETER (NF_EMULTIDEFINE_DIM_SIZE   = -253)   ! inconsistent size of dimension
+      PARAMETER (NF_EMULTIDEFINE_DIM_NAME   = -254)   ! inconsistent dimension names
+      PARAMETER (NF_EMULTIDEFINE_VAR_NUM    = -255)   ! inconsistent number of variables
+      PARAMETER (NF_EMULTIDEFINE_VAR_NAME   = -256)   ! inconsistent variable name
+      PARAMETER (NF_EMULTIDEFINE_VAR_NDIMS  = -257)   ! inconsistent variable's number of dimensions
+      PARAMETER (NF_EMULTIDEFINE_VAR_DIMIDS = -258)   ! inconsistent variable's dimid
+      PARAMETER (NF_EMULTIDEFINE_VAR_TYPE   = -259)   ! inconsistent variable's data type
+      PARAMETER (NF_EMULTIDEFINE_VAR_LEN    = -260)   ! inconsistent variable's size
+      PARAMETER (NF_EMULTIDEFINE_NUMRECS    = -261)   ! inconsistent number of records
+      PARAMETER (NF_EMULTIDEFINE_VAR_BEGIN  = -262)   ! inconsistent variable file begin offset (internal use)
+      PARAMETER (NF_EMULTIDEFINE_ATTR_NUM   = -263)   ! inconsistent number of attributes
+      PARAMETER (NF_EMULTIDEFINE_ATTR_SIZE  = -264)   ! inconsistent memory space used by attribute (internal use)
+      PARAMETER (NF_EMULTIDEFINE_ATTR_NAME  = -265)   ! inconsistent attribute name
+      PARAMETER (NF_EMULTIDEFINE_ATTR_TYPE  = -266)   ! inconsistent attribute type
+      PARAMETER (NF_EMULTIDEFINE_ATTR_LEN   = -267)   ! inconsistent attribute length
+      PARAMETER (NF_EMULTIDEFINE_ATTR_VAL   = -268)   ! inconsistent attribute value
+
+      PARAMETER(NF_ECMODE                  =NF_EMULTIDEFINE_OMODE)
+      PARAMETER(NF_EDIMS_NELEMS_MULTIDEFINE=NF_EMULTIDEFINE_DIM_NUM)
+      PARAMETER(NF_EDIMS_SIZE_MULTIDEFINE  =NF_EMULTIDEFINE_DIM_SIZE)
+      PARAMETER(NF_EDIMS_NAME_MULTIDEFINE  =NF_EMULTIDEFINE_DIM_NAME)
+      PARAMETER(NF_EVARS_NELEMS_MULTIDEFINE=NF_EMULTIDEFINE_VAR_NUM)
+      PARAMETER(NF_EVARS_NAME_MULTIDEFINE  =NF_EMULTIDEFINE_VAR_NAME)
+      PARAMETER(NF_EVARS_NDIMS_MULTIDEFINE =NF_EMULTIDEFINE_VAR_NDIMS)
+      PARAMETER(NF_EVARS_DIMIDS_MULTIDEFINE=NF_EMULTIDEFINE_VAR_DIMIDS)
+      PARAMETER(NF_EVARS_TYPE_MULTIDEFINE  =NF_EMULTIDEFINE_VAR_TYPE)
+      PARAMETER(NF_EVARS_LEN_MULTIDEFINE   =NF_EMULTIDEFINE_VAR_LEN)
+      PARAMETER(NF_ENUMRECS_MULTIDEFINE    =NF_EMULTIDEFINE_NUMRECS)
+      PARAMETER(NF_EVARS_BEGIN_MULTIDEFINE =NF_EMULTIDEFINE_VAR_BEGIN)
 
 ! error handling modes:
 !

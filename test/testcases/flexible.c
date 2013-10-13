@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
     MPI_Allreduce(MPI_IN_PLACE, &pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
     char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING %s for using ncmpi_put_vara_all() ", argv[0]);
+    sprintf(cmd_str, "*** TESTING C   %s for using ncmpi_put_vara_all() ", argv[0]);
     if (rank == 0) {
         if (pass) printf("%-66s ------ pass\n", cmd_str);
         else      printf("%-66s ------ failed\n", cmd_str);

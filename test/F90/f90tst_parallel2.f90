@@ -63,7 +63,7 @@ program f90tst_parallel
   integer :: p, my_rank, ierr
   integer(KIND=MPI_OFFSET_KIND) :: start(MAX_DIMS), count(MAX_DIMS), stride(MAX_DIMS)
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
-  character(LEN=128) filename, cmd
+  character(LEN=128) filename, cmd, msg
   integer argc, iargc
 
   call MPI_Init(ierr)
@@ -82,10 +82,6 @@ program f90tst_parallel
 
   if (p .ne. 4 .AND. my_rank .eq. 0) then
      print *, 'Warning: ',trim(cmd),' is design to run on 4 processes.'
-  endif
-
-  if (my_rank .eq. 0) then
-     write(*,"(A)",advance="no") '*** Testing PnetCDF parallel I/O with strided access.'
   endif
 
   ! Create some pretend data.
@@ -160,7 +156,8 @@ program f90tst_parallel
   ! Close the file. 
   call handle_err(nf90mpi_close(ncid))
 
-  if (my_rank .eq. 0)   write(*,"(A)") '              ------ pass'
+   msg = '*** TESTING F90 '//trim(cmd)//' for strided access'
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
  999 call MPI_Finalize(ierr)
 

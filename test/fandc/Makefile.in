@@ -15,7 +15,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib -L../common
-LIBS     += -ltestutils -lpnetcdf $(MATHLIB)
+LIBS     += -lpnetcdf $(MATHLIB)
 
 C_SRCS = pnctest.c \
          csnap.c

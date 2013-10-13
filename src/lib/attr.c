@@ -24,6 +24,7 @@
 #include "macro.h"
 
 
+/*----< ncmpii_free_NC_attr() >-----------------------------------------------*/
 /*
  * Free attr
  * Formerly
@@ -32,11 +33,11 @@ NC_free_attr()
 void
 ncmpii_free_NC_attr(NC_attr *attrp)
 {
+    if (attrp == NULL) return;
 
-	if(attrp == NULL)
-		return;
-	ncmpii_free_NC_string(attrp->name);
-	NCI_Free(attrp);
+    ncmpii_free_NC_string(attrp->name);
+
+    NCI_Free(attrp);
 }
 
 
@@ -100,143 +101,116 @@ ncmpii_new_x_NC_attr(
 }
 
 
+/*----< ncmpii_new_NC_attr() >------------------------------------------------*/
 /*
  * Formerly
 NC_new_attr(name,type,count,value)
  */
 static NC_attr *
-ncmpii_new_NC_attr(
-	const char *name,
-	nc_type type,
-	MPI_Offset nelems)
+ncmpii_new_NC_attr(const char *name,
+                   MPI_Offset  nchars,
+	           nc_type     type,
+	           MPI_Offset  nelems)
 {
-	NC_string *strp;
-	NC_attr *attrp;
+    NC_string *strp;
+    NC_attr *attrp;
 
-	assert(name != NULL && *name != 0);
-
-	strp = ncmpii_new_NC_string(strlen(name), name);
-	if(strp == NULL)
-		return NULL;
+    assert(name != NULL && *name != 0);
+    
+    strp = ncmpii_new_NC_string(nchars, name);
+    if (strp == NULL) return NULL;
 	
-	attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
-	if(attrp == NULL)
-	{
-		ncmpii_free_NC_string(strp);
-		return NULL;
-	}
+    attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
+    if (attrp == NULL) {
+        ncmpii_free_NC_string(strp);
+        return NULL;
+    }
 
-	return(attrp);
+    return(attrp);
 }
 
 
-static NC_attr *
+/*----< dup_NC_attr() >-------------------------------------------------------*/
+NC_attr *
 dup_NC_attr(const NC_attr *rattrp)
 {
-	NC_attr *attrp = ncmpii_new_NC_attr(rattrp->name->cp,
-		 rattrp->type, rattrp->nelems);
-	if(attrp == NULL)
-		return NULL;
-	(void) memcpy(attrp->xvalue, rattrp->xvalue, rattrp->xsz);
-	return attrp;
+    NC_attr *attrp = ncmpii_new_NC_attr(rattrp->name->cp,
+                                        rattrp->name->nchars,
+    	                                rattrp->type, rattrp->nelems);
+    if (attrp == NULL) return NULL;
+    memcpy(attrp->xvalue, rattrp->xvalue, rattrp->xsz);
+    return attrp;
 }
 
 /* attrarray */
 
-/*
- * Free the stuff "in" (referred to by) an NC_attrarray.
- * Leaves the array itself allocated.
- */
-void
-ncmpii_free_NC_attrarrayV0(NC_attrarray *ncap)
-{
-	assert(ncap != NULL);
-
-	if(ncap->ndefined == 0)
-		return;
-
-	assert(ncap->value != NULL);
-
-	{
-		NC_attr **app = ncap->value;
-		NC_attr *const *const end = &app[ncap->ndefined];
-		for( /*NADA*/; app < end; app++)
-		{
-			ncmpii_free_NC_attr(*app);
-			*app = NULL;
-		}
-	}
-	ncap->ndefined = 0;
-}
-
-
+/*----< ncmpii_free_NC_attrarray() >------------------------------------------*/
 /*
  * Free NC_attrarray values.
  * formerly
 NC_free_array()
  */
 void
-ncmpii_free_NC_attrarrayV(NC_attrarray *ncap)
+ncmpii_free_NC_attrarray(NC_attrarray *ncap)
 {
-	assert(ncap != NULL);
-	
-	if(ncap->nalloc == 0)
-		return;
+    int i;
 
-	assert(ncap->value != NULL);
+    assert(ncap != NULL);
 
-	ncmpii_free_NC_attrarrayV0(ncap);
+    if (ncap->nalloc == 0) return;
 
-	NCI_Free(ncap->value);
-	ncap->value = NULL;
-	ncap->nalloc = 0;
+    assert(ncap->value != NULL);
+
+    for (i=0; i<ncap->ndefined; i++) {
+        ncmpii_free_NC_attr(ncap->value[i]);
+        ncap->value[i] = NULL;
+    }
+    ncap->ndefined = 0;
+
+    NCI_Free(ncap->value);
+    ncap->value = NULL;
+    ncap->nalloc = 0;
 }
 
-
+/*----< ncmpii_dup_NC_attrarray() >-------------------------------------------*/
 int
-ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
+ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
 {
-	int status = NC_NOERR;
+    int i, status=NC_NOERR;
 
-	assert(ref != NULL);
-	assert(ncap != NULL);
+    assert(ref != NULL);
+    assert(ncap != NULL);
 
-	if(ref->ndefined != 0)
-	{
-		const size_t sz = ref->ndefined * sizeof(NC_attr *);
-		ncap->value = (NC_attr **) NCI_Malloc(sz);
-		if(ncap->value == NULL)
-			return NC_ENOMEM;
+    if (ref->nalloc == 0) {
+        ncap->nalloc   = 0;
+        ncap->ndefined = 0;
+        ncap->value    = NULL;
+        return NC_NOERR;
+    }
 
-		(void) memset(ncap->value, 0, sz);
-		ncap->nalloc = ref->ndefined;
-	}
+    if (ref->nalloc > 0) {
+        ncap->value = (NC_attr **) NCI_Calloc(ref->nalloc, sizeof(NC_attr *));
+        if (ncap->value == NULL) return NC_ENOMEM;
+        ncap->nalloc = ref->nalloc;
+    }
 
-	ncap->ndefined = 0;
-	{
-		NC_attr **app = ncap->value;
-		const NC_attr **drpp = (const NC_attr **)ref->value;
-		NC_attr *const *const end = &app[ref->ndefined];
-		for( /*NADA*/; app < end; drpp++, app++, ncap->ndefined++)
-		{
-			*app = dup_NC_attr(*drpp);
-			if(*app == NULL)
-			{
-				status = NC_ENOMEM;
-				break;
-			}
-		}
-	}
+    ncap->ndefined = 0;
+    for (i=0; i<ref->ndefined; i++) {
+        ncap->value[i] = dup_NC_attr(ref->value[i]);
+        if (ncap->value[i] == NULL) {
+            status = NC_ENOMEM;
+            break;
+        }
+    }
 
-	if(status != NC_NOERR)
-	{
-		ncmpii_free_NC_attrarrayV(ncap);
-		return status;
-	}
+    if (status != NC_NOERR) {
+        ncmpii_free_NC_attrarray(ncap);
+        return status;
+    }
 
-	assert(ncap->ndefined == ref->ndefined);
+    ncap->ndefined = ref->ndefined;
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 
@@ -245,7 +219,7 @@ ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref)
  * Formerly
 NC_incr_array(array, tail)
  */
-static int
+int
 incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 {
 	NC_attr **vp;
@@ -324,14 +298,17 @@ static int
 ncmpii_NC_findattr(const NC_attrarray *ncap,
                    const char         *name)
 {
-    int i;
+    int i, nchars;
 
     assert(ncap != NULL);
+
+    nchars = strlen(name);
 
     // if (ncap->ndefined == 0) return NULL; /* none created yet */
 
     for (i=0; i<ncap->ndefined; i++) {
-        if (strcmp(ncap->value[i]->name->cp, name) == 0)
+        if (ncap->value[i]->name->nchars == nchars &&
+            strncmp(ncap->value[i]->name->cp, name, nchars) == 0)
             return i;
     }
     return -1;
@@ -646,7 +623,7 @@ ncmpi_copy_att(int         ncid_in,
             return NC_EMAXATTS;
     }
 
-    attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
+    attrp = ncmpii_new_NC_attr(name, strlen(name), iattrp->type, iattrp->nelems);
     if (attrp == NULL)
         return NC_ENOMEM;
 
@@ -1196,7 +1173,7 @@ ncmpii_put_att(int         ncid,
     }
 
     /* create a new attribute object */
-    attrp = ncmpii_new_NC_attr(name, filetype, nelems);
+    attrp = ncmpii_new_NC_attr(name, strlen(name), filetype, nelems);
     if (attrp == NULL) return NC_ENOMEM;
 
     if (nelems != 0) { /* non-zero length attribute */

@@ -29,10 +29,28 @@ program tst_io
   ! needed for netcdf
   integer :: ncid, x1id, x2id, x3id, x4id, vrid
   integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
+  character(LEN=128) dirpath, cmd, msg
+  integer argc, iargc, my_rank, p
+
+  call MPI_Init(err)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+
+  ! take filename from command-line argument if there is any
+  call getarg(0, cmd)
+  argc = IARGC()
+  if (argc .GT. 1) then
+     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [dirpath]'
+     goto 999
+  endif
+  dirpath = '.'
+  if (argc .EQ. 1) call getarg(1, dirpath)
+
+  if (p .ne. 1 .AND. my_rank .eq. 0) then
+     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
+  endif
 
   psr = 1.7/real(prsz1)
-  write(*,"(A)",advance="no") '*** TESTING Fortran tst_io.f90 '
-  call MPI_Init(err)
   ! print *, "Starting data initialization."
   size = (prsz1 * prsz2 * prsz3 * prsz4 )/ 250000
   do i1 = 1, prsz1
@@ -52,7 +70,7 @@ program tst_io
      enddo
   enddo
 
-  call setupNetCDF (nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+  call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
        x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
   call system_clock(start)
   call check(nfmpi_begin_indep_data(ncid), 11)
@@ -68,7 +86,7 @@ program tst_io
 
   call system_clock(start)
   do i1 = 1, repct
-     call setupNetCDF (nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+     call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
           x1id, x2id, x3id, x4id, NF90_CLOBBER, 130)
      call check(nfmpi_begin_indep_data(ncid), 11)
      call check (NF90MPI_PUT_VAR(ncid, vrid, x), 23 + i1)
@@ -82,21 +100,21 @@ program tst_io
 4 format("Time for", i5, "MB", i3, a22, i7, " msec. Spd ratio = ", f5.2)
 
 !  call system_clock(start)
-!  call setupNetCDF (nclFilenm3, ncid, vrids, s, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm3, ncid, vrids, s, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
-!  call setupNetCDF (nclFilenm4, ncid, vridt, t, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm4, ncid, vridt, t, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 30)
-!  call setupNetCDF (nclFilenm5, ncid, vridu, u, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm5, ncid, vridu, u, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 40)
-!  call setupNetCDF (nclFilenm6, ncid, vridv, v, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm6, ncid, vridv, v, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 50)
-!  call setupNetCDF (nclFilenm7, ncid, vridw, w, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm7, ncid, vridw, w, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 60)
-!  call setupNetCDF (nclFilenm8, ncid, vridx, x, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm8, ncid, vridx, x, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 70)
-!  call setupNetCDF (nclFilenm9, ncid, vridy, y, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm9, ncid, vridy, y, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 80)
-!  call setupNetCDF (nclFilenm10, ncid, vridz, z, prsz1, prsz2, prsz3, prsz4, &
+!  call setupNetCDF (trim(dirpath)//'/'//nclFilenm10, ncid, vridz, z, prsz1, prsz2, prsz3, prsz4, &
 !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 90)
 !  call check(nfmpi_begin_indep_data(ncid), 11)
 !  call check (NF90MPI_PUT_VAR(ncid, vrids, s), 118)
@@ -114,9 +132,10 @@ program tst_io
 !   print 4, size, 8, " netcdf file writes = ", ncint3 * clockRate, &
 !        real(ncint3)/real(wrint3);
 
-  write(*,"(A)") '                                    ------ pass'
+   msg = '*** TESTING F90 '//trim(cmd)
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
-  call MPI_Finalize(err)
+ 999 call MPI_Finalize(err)
 
 contains
   subroutine check (st, n) ! checks the return error code

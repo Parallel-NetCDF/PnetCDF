@@ -176,8 +176,6 @@ ncmpi_strerror(int err)
             return "Unknow error occurs in reading file";
 	case NC_EWRITE:
 	    return "Unknow error occurs in writting file";
-	case NC_EMULTIDEFINE:
-	    return "File header is inconsistent among processes";
 	case NC_EOFILE:
 	    return "Can not open/create file";
 	case NC_EMULTITYPES:
@@ -188,30 +186,10 @@ ncmpi_strerror(int err)
 	    return "Negative count is prohibited";
 	case NC_EUNSPTETYPE:
 	    return "Unsupported etype is used in MPI datatype for memory data";
-	case NC_EDIMS_NELEMS_MULTIDEFINE:
-	    return "Number of dimensions is defined inconsistently among processes.";
-	case NC_EDIMS_SIZE_MULTIDEFINE:
-	    return "Dimension size is defined inconsistently among processes.";
-	case NC_EVARS_NELEMS_MULTIDEFINE:
-	    return "Number of variables is defined inconsistently among processes.";
-	case NC_EVARS_NDIMS_MULTIDEFINE:
-	    return "Dimensionality of this variable is defined inconsistently among processes.";
-	case NC_EVARS_DIMIDS_MULTIDEFINE:
-	    return "Dimension IDs used to define this variable is inconsistent among processes.";
-	case NC_EVARS_TYPE_MULTIDEFINE:
-	    return "Data type of this variable is defined inconsistently among processes.";
-	case NC_EVARS_LEN_MULTIDEFINE:
-	    return "Total number of elements of this variable is defined inconsistently among processes.";
-	case NC_EVARS_BEGIN_MULTIDEFINE:
-	    return "(Internal error) beginning file offset of this variable is inconsistent among processes.";
-	case NC_ENUMRECS_MULTIDEFINE:
-	    return "Number of records is inconsistent among processes.";
 	case NC_EINVAL_REQUEST:
 	    return "Invalid nonblocking request ID.";
 	case NC_EAINT_TOO_SMALL:
 	    return "MPI_Aint not large enough to hold requested value.";
-	case NC_ECMODE:
-	    return "Bad file create/open mode or modes are inconsistent across processes.";
 	case NC_ENOTSUPPORT:
 	    return "Feature is not yet supported.";
 	case NC_ENULLBUF:
@@ -228,6 +206,42 @@ ncmpi_strerror(int err)
 	    return "The specified netCDF file does not exist when calling ncmpi_open().";
 	case NC_EINTOVERFLOW:
 	    return "Overflow when type cast to 4-byte integer.";
+	case NC_EMULTIDEFINE:
+	    return "File header is inconsistent among processes";
+	case NC_EMULTIDEFINE_OMODE:
+	    return "Bad file create/open mode or modes are inconsistent across processes.";
+	case NC_EMULTIDEFINE_DIM_NUM:
+	    return "Number of dimensions is defined inconsistently among processes.";
+	case NC_EMULTIDEFINE_DIM_SIZE:
+	    return "Dimension size is defined inconsistently among processes.";
+	case NC_EMULTIDEFINE_VAR_NUM:
+	    return "Number of variables is defined inconsistently among processes.";
+        case NC_EMULTIDEFINE_VAR_NAME:
+            return "Variable names are defined inconsistently among processes.";
+	case NC_EMULTIDEFINE_VAR_NDIMS:
+	    return "Dimensionality of this variable is defined inconsistently among processes.";
+	case NC_EMULTIDEFINE_VAR_DIMIDS:
+	    return "Dimension IDs used to define this variable is inconsistent among processes.";
+	case NC_EMULTIDEFINE_VAR_TYPE:
+	    return "Data type of this variable is defined inconsistently among processes.";
+	case NC_EMULTIDEFINE_VAR_LEN:
+	    return "Total number of elements of this variable is defined inconsistently among processes.";
+	case NC_EMULTIDEFINE_VAR_BEGIN:
+	    return "(Internal error) beginning file offset of this variable is inconsistent among processes.";
+	case NC_EMULTIDEFINE_NUMRECS:
+	    return "Number of records is inconsistent among processes.";
+        case NC_EMULTIDEFINE_ATTR_NUM:
+            return "Number of attributes is inconsistent among processes.";
+        case NC_EMULTIDEFINE_ATTR_SIZE:
+            return "Memory space used by attribute (internal use) is inconsistent among processes.";
+        case NC_EMULTIDEFINE_ATTR_NAME:
+            return "Attribute name is inconsistent among processes.";
+        case NC_EMULTIDEFINE_ATTR_TYPE:
+            return "Attribute type is inconsistent among processes.";
+        case NC_EMULTIDEFINE_ATTR_LEN:
+            return "Attribute length is inconsistent among processes.";
+        case NC_EMULTIDEFINE_ATTR_VAL:
+            return "Attribute value is inconsistent among processes.";
 	default:
 	    return unknown;
 	}

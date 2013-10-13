@@ -1147,7 +1147,7 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
             status = hdr_get_NC_dim(gbp, ncap->value + i);
             if (status != NC_NOERR) {
                 ncap->ndefined = i;
-                ncmpii_free_NC_dimarrayV(ncap);
+                ncmpii_free_NC_dimarray(ncap);
                 return status;
             }
         }
@@ -1324,7 +1324,7 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
             status = hdr_get_NC_attr(gbp, ncap->value + i);
             if (status != NC_NOERR) {
                 ncap->ndefined = i;
-                ncmpii_free_NC_attrarrayV(ncap);
+                ncmpii_free_NC_attrarray(ncap);
                 return status;
             }
         }
@@ -1497,7 +1497,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
             status = hdr_get_NC_var(gbp, ncap->value + i);
             if (status != NC_NOERR) {
                 ncap->ndefined = i;
-                ncmpii_free_NC_vararrayV(ncap);
+                ncmpii_free_NC_vararray(ncap);
                 return status;
             }
         }
@@ -1663,404 +1663,508 @@ ncmpii_hdr_get_NC(NC *ncp)
 
 /* End Of get NC */
 
-#define METADATA_CONSISTENCY_CHECK
-/* TODO: this should be set at the configure time by a user option */
-
 #define WARN_STR "Warning (inconsistent metadata):"
 
+/*----< ncmpii_comp_dims() >--------------------------------------------------*/
+/* compare the local copy of dim_list against root's
+ * If inconsistency is detected, overwrite local's with root's
+ */
 static int
-ncmpii_comp_dims(NC_dimarray *nc_dim1,
-                 NC_dimarray *nc_dim2)
+ncmpii_comp_dims(int          safe_mode,
+                 NC_dimarray *root_dim,
+                 NC_dimarray *local_dim)
 {
-    int i;
-    if (nc_dim1->ndefined != nc_dim2->ndefined) {
-        fprintf(stderr,"Error: number of dimensions defined is inconsistent %d != %d\n",
-                nc_dim1->ndefined, nc_dim2->ndefined);
-        return NC_EDIMS_NELEMS_MULTIDEFINE;
+    int i, err, status=NC_NOERR;
+
+    if (root_dim->ndefined != local_dim->ndefined) {
+        if (safe_mode)
+            printf("%s number of dimensions (local=%d, root=%d)\n",
+                   WARN_STR, local_dim->ndefined, root_dim->ndefined);
+        status = NC_EMULTIDEFINE_DIM_NUM;
     }
 
-    for (i=0; i<nc_dim1->ndefined; i++) {
-#ifdef METADATA_CONSISTENCY_CHECK
-        NC_string *name1, *name2;
-        name1 = nc_dim1->value[i]->name;
-        name2 = nc_dim2->value[i]->name;
+    for (i=0; i<root_dim->ndefined; i++) {
 
-        if (name1->nchars != name2->nchars ||
-            strncmp(name1->cp, name2->cp, name1->nchars) != 0)
-            printf("%s dimension name %s != %s\n", WARN_STR,
-                   name1->cp,name2->cp);
-#endif
-        if (nc_dim1->value[i]->size != nc_dim2->value[i]->size) {
-            /* inconsistency in dimension size is fatal */
-            fprintf(stderr,"Error: dimension %s's size inconsistent %lld != %lld\n",
-                    nc_dim1->value[i]->name->cp,nc_dim1->value[i]->size,
-                    nc_dim2->value[i]->size);
-            return NC_EDIMS_SIZE_MULTIDEFINE;
+        if (i >= local_dim->ndefined) { /* if local list is shorter */
+            /* copy root's dim to local */
+            NC_dim *new_dim = dup_NC_dim(root_dim->value[i]);
+            err = incr_NC_dimarray(local_dim, new_dim);
+            if (status == NC_NOERR) status = err;
+            continue;
+        }
+
+        /* check dimension name */
+        NC_string *root_name, *local_name;
+        root_name  = root_dim->value[i]->name;
+        local_name = local_dim->value[i]->name;
+
+        err = NC_NOERR;
+        if (root_name->nchars != local_name->nchars) {
+            if (safe_mode)
+                printf("%s dimension name length (local=%d, root=%d)\n",
+                       WARN_STR, local_name->nchars, root_name->nchars);
+            err = NC_EMULTIDEFINE_DIM_NAME;
+        }
+        else if (strncmp(root_name->cp, local_name->cp, root_name->nchars) != 0) {
+            if (safe_mode)
+                printf("%s dimension name (local=%s, root=%s)\n",
+                       WARN_STR, local_name->cp, root_name->cp);
+            err = NC_EMULTIDEFINE_DIM_NAME;
+        }
+        else if (root_dim->value[i]->size != local_dim->value[i]->size) {
+            /* check dimension size */
+            if (safe_mode)
+                printf("%s dimension %s's size (local=%lld, root=%lld)\n",
+                       WARN_STR, root_dim->value[i]->name->cp,
+                       root_dim->value[i]->size, local_dim->value[i]->size);
+            err = NC_EMULTIDEFINE_DIM_SIZE;
+        }
+        if (status == NC_NOERR) status = err;
+
+        /* overwrite local's dim with root's */
+        if (err != NC_NOERR) {
+            ncmpii_free_NC_dim(local_dim->value[i]);
+            local_dim->value[i] = dup_NC_dim(root_dim->value[i]);
         }
     }
-    return NC_NOERR;
+
+    /* delete extra dimensions defined only in local copy */
+    for (; i<local_dim->ndefined; i++)
+        ncmpii_free_NC_dim(local_dim->value[i]);
+
+    local_dim->ndefined = root_dim->ndefined;
+
+    return status;
 }
 
+/*----< ncmpii_comp_attrs() >-------------------------------------------------*/
+/* compare the local copy of attr_list against root's
+ * If inconsistency is detected, overwrite local's with root's
+ */
 static int
-ncmpii_comp_attrs(NC_attrarray *nc_attr1,
-                  NC_attrarray *nc_attr2)
+ncmpii_comp_attrs(int           safe_mode,
+                  NC_attrarray *root_attr,
+                  NC_attrarray *local_attr)
 {
-    int     i, j, num;
-    schar  *sba,  *sbb;
-    uchar  *uba,  *ubb;
-    short  *ssa,  *ssb;
-    ushort *usa,  *usb;
-    int    *sia,  *sib;
-    uint   *uia,  *uib;
-    float  *fa,   *fb;
-    double *da,   *db;
-    int64  *slla, *sllb;
-    uint64 *ulla, *ullb;
+    int i, j, err, status=NC_NOERR;
+    char *msg;
 
-    if (nc_attr1->ndefined != nc_attr2->ndefined) {
-        printf("%s number of attributes (%d != %d)\n", WARN_STR,
-               nc_attr1->ndefined, nc_attr2->ndefined);
-        return NC_NOERR;
-        /* no need to compare further */
+    /* check if the numbers of attributes are the same */
+    if (root_attr->ndefined != local_attr->ndefined) {
+        if (safe_mode)
+            printf("%s number of attributes (root=%d, local=%d)\n",
+                   WARN_STR, root_attr->ndefined, local_attr->ndefined);
+        status = NC_EMULTIDEFINE_ATTR_NUM;
     }
 
-    for (i=0; i<nc_attr1->ndefined; i++) {
-        NC_attr *v1 = nc_attr1->value[i];
-        NC_attr *v2 = nc_attr2->value[i];
+    for (i=0; i<root_attr->ndefined; i++) {
 
-        if (v1->name->nchars != v2->name->nchars ||
-            strncmp(v1->name->cp, v2->name->cp, v1->name->nchars) != 0)
-            printf("%s attribute name (%s != %s)\n", WARN_STR,
-                   v1->name->cp,v2->name->cp);
-
-        if (v1->xsz != v2->xsz)
-            printf("%s attribute \"%s\" size (%lld != %lld)\n", WARN_STR,
-                   v1->name->cp,lld(v1->xsz),lld(v2->xsz));
-
-        if (v1->type != v2->type)
-            printf("%s attribute \"%s\" type (%d != %d)\n", WARN_STR,
-                   v1->name->cp,v1->type,v2->type);
-
-        if (v1->nelems != v2->nelems)
-            printf("%s attribute \"%s\" length (%lld != %lld)\n", WARN_STR,
-                   v1->name->cp,lld(v1->nelems),lld(v2->nelems));
-
-        num = MIN(v1->nelems, v2->nelems);
-        switch (v1->type) {
-            case NC_CHAR: {
-                if (strncmp(v1->xvalue, v2->xvalue, num))
-                    printf("%s attribute \"%s\" CHAR (%s != %s)\n", WARN_STR,
-                           v1->name->cp,(char*)v1->xvalue,(char*)v2->xvalue);
-                break;
-            }
-            case NC_BYTE:
-                sba = v1->xvalue;
-                sbb = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (sba[j] != sbb[j]) {
-                        printf("%s attribute \"%s\" BYTE (%hhdb != %hhdb)\n",
-                               WARN_STR,
-                               v1->name->cp,sba[j],sbb[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_UBYTE:
-                uba = v1->xvalue;
-                ubb = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (uba[j] != ubb[j]) {
-                        printf("%s attribute \"%s\" UBYTE (%hhuub != %hhuub)\n",
-                               WARN_STR,
-                               v1->name->cp,uba[j],ubb[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_SHORT:
-                ssa = v1->xvalue;
-                ssb = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (ssa[j] != ssb[j]) {
-                        printf("%s attribute \"%s\" SHORT (%hds != %hds)\n",
-                               WARN_STR,
-                               v1->name->cp,ssa[j],ssb[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_USHORT:
-                usa = v1->xvalue;
-                usb = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (usa[j] != usb[j]) {
-                        printf("%s attribute \"%s\" USHORT (%huus != %huus)\n",
-                               WARN_STR,
-                               v1->name->cp,usa[j],usb[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_INT:
-                sia = v1->xvalue;
-                sib = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (sia[j] != sib[j]) {
-                        printf("%s attribute \"%s\" INT (%d != %d)\n",
-                               WARN_STR,
-                               v1->name->cp,sia[j],sib[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_UINT:
-                uia = v1->xvalue;
-                uib = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (uia[j] != uib[j]) {
-                        printf("%s attribute \"%s\" UINT (%uu != %uu)\n",
-                               WARN_STR,
-                               v1->name->cp,uia[j],uib[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_FLOAT:
-                fa = v1->xvalue;
-                fb = v2->xvalue;
-                for (j=0; j<num; j++) {
-			/* floating-point inequality here but we genuinely do
-			 * expect all processors to set bit-for-bit identical
-			 * headers */
-                    if (fa[j] != fb[j]) {
-                        printf("%s attribute \"%s\" FLOAT (%f != %f)\n",
-                               WARN_STR,
-                               v1->name->cp,fa[j],fb[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_DOUBLE:
-                da = v1->xvalue;
-                db = v2->xvalue;
-                for (j=0; j<num; j++) {
-			/* floating-point inequality here but we genuinely do
-			 * expect all processors to set bit-for-bit identical
-			 * headers */
-                    if (da[j] != db[j]) {
-                        printf("%s attribute \"%s\" DOUBLE (%f != %f)\n",
-                               WARN_STR,
-                               v1->name->cp,da[j],db[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_INT64:
-                slla = v1->xvalue;
-                sllb = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (slla[j] != sllb[j]) {
-                        printf("%s attribute \"%s\" INT64 (%lldll != %lldll)\n",
-                               WARN_STR,
-                               v1->name->cp,slla[j],sllb[j]);
-                        break;
-                    }
-                }
-                break;
-            case NC_UINT64:
-                ulla = v1->xvalue;
-                ullb = v2->xvalue;
-                for (j=0; j<num; j++) {
-                    if (ulla[j] != ullb[j]) {
-                       printf("%s attribute \"%s\" UINT64 (%llull != %llull)\n",
-                               WARN_STR,
-                               v1->name->cp,ulla[j],ullb[j]);
-                        break;
-                    }
-                }
-                break;
-            default: break;
-        }
-    }
-    return NC_NOERR;
-}
-
-static int
-ncmpii_comp_vars(NC_vararray *nc_var1,
-                 NC_vararray *nc_var2)
-{
-    int i, j;
-    if (nc_var1->ndefined != nc_var2->ndefined) {
-        fprintf(stderr,"Error: number of defined variables is inconsistent %d != %d\n",
-                nc_var1->ndefined, nc_var2->ndefined);
-        return NC_EVARS_NELEMS_MULTIDEFINE;
-    }
-
-    for (i=0; i<nc_var1->ndefined; i++) {
-        NC_var *v1 = nc_var1->value[i];
-        NC_var *v2 = nc_var2->value[i];
-
-#ifdef METADATA_CONSISTENCY_CHECK
-        if (v1->name->nchars != v2->name->nchars ||
-            strncmp(v1->name->cp, v2->name->cp, v1->name->nchars) != 0)
-            printf("%s variable name %s != %s\n", WARN_STR,
-                   v1->name->cp,v2->name->cp);
-#endif
-        if (v1->ndims != v2->ndims) {
-            fprintf(stderr,"Error: variable %s's ndims is inconsistent %d != %d\n",
-                    v1->name->cp, (int)v1->ndims, (int)v2->ndims);
-            return NC_EVARS_NDIMS_MULTIDEFINE;
+        if (i >= local_attr->ndefined) { /* if local list is shorter */
+            /* copy root's attr to local */
+            NC_attr *new_attr = dup_NC_attr(root_attr->value[i]);
+            err = incr_NC_attrarray(local_attr, new_attr);
+            if (status == NC_NOERR) status = err;
+            continue;
         }
 
-        for (j=0; j<v1->ndims; j++) {
-            if (v1->dimids[j] != v2->dimids[j]) {
-                fprintf(stderr,"Error: variable %s's %dth dim ID is inconsistent %d != %d\n",
-                        v1->name->cp, j, v1->dimids[j], v2->dimids[j]);
-                return NC_EVARS_DIMIDS_MULTIDEFINE;
+        NC_attr *v1 = root_attr->value[i];
+        NC_attr *v2 = local_attr->value[i];
+        char *name = v1->name->cp;
+
+#define ATTR_WARN(msg, attr, root, local) \
+    if (safe_mode) printf(msg, WARN_STR, attr, root, local);
+
+#define ATTR_WARN_J(msg, attr, j, root, local) \
+    if (safe_mode) printf(msg, WARN_STR, attr, j, root, local);
+
+        err = NC_NOERR;
+        if (v1->name->nchars != v2->name->nchars ||
+            strncmp(name, v2->name->cp, v1->name->nchars) != 0) {
+            msg ="%s attribute %s (root=%s, local=%s)\n";
+            ATTR_WARN(msg, "name", name, v2->name->cp)
+            err = NC_EMULTIDEFINE_ATTR_NAME;
+        }
+        else if (v1->type != v2->type) {
+            msg = "%s attribute \"%s\" type (root=%d, local=%d)\n";
+            ATTR_WARN(msg, name, v1->type, v2->type)
+            err = NC_EMULTIDEFINE_ATTR_TYPE;
+        }
+        else if (v1->nelems != v2->nelems) {
+            msg = "%s attribute \"%s\" length (root=%lld, local=%lld)\n";
+            ATTR_WARN(msg, name, lld(v1->nelems), lld(v2->nelems))
+            err = NC_EMULTIDEFINE_ATTR_LEN;
+        }
+        else if (v1->xsz != v2->xsz) { /* internal check */
+            msg = "%s attribute \"%s\" size (root=%lld, local=%lld)\n";
+            ATTR_WARN(msg, name, lld(v1->xsz), lld(v2->xsz))
+            err = NC_EMULTIDEFINE_ATTR_SIZE;
+        }
+        /* hereandafter, we have v1->nelems == v2->nelems */
+        else if (v1->type == NC_CHAR) {
+            if (strncmp(v1->xvalue, v2->xvalue, v1->nelems)) {
+                msg = "%s attribute \"%s\" CHAR (root=%s, local=%s)\n";
+                ATTR_WARN(msg, name, (char*)v1->xvalue, (char*)v2->xvalue);
+                err = NC_EMULTIDEFINE_ATTR_VAL;
             }
         }
-
-        if (v1->type != v2->type) {
-            fprintf(stderr,"Error: variable %s's type is inconsistent %d != %d\n",
-                    v1->name->cp, v1->type, v2->type);
-            return NC_EVARS_TYPE_MULTIDEFINE;
+        else if (v1->type == NC_BYTE) {
+            schar *sba = v1->xvalue;
+            schar *sbb = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (sba[j] != sbb[j]) {
+                    msg = "%s attribute \"%s\"[%d] BYTE (root=%hhdb, local=%hhdb)\n";
+                    ATTR_WARN_J(msg, name, j, sba[j], sbb[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
         }
-
-        if (v1->len != v2->len) {
-            fprintf(stderr,"Error: variable %s's len is inconsistent %lld != %lld\n",
-                    v1->name->cp, v1->len, v2->len);
-            return NC_EVARS_LEN_MULTIDEFINE;
+        else if (v1->type == NC_UBYTE) {
+            uchar *uba = v1->xvalue;
+            uchar *ubb = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (uba[j] != ubb[j]) {
+                    msg = "%s attribute \"%s\"[%d] UBYTE (root=%hhuub, local=%hhuub)\n";
+                    ATTR_WARN_J(msg, name, j, uba[j], ubb[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
         }
-
-        if (v1->begin != v2->begin) {
-            fprintf(stderr,"Error: variable %s's begin is inconsistent %lld != %lld\n",
-                    v1->name->cp, v1->begin, v2->begin);
-            return NC_EVARS_BEGIN_MULTIDEFINE;
+        else if (v1->type == NC_SHORT) {
+            short *ssa = v1->xvalue;
+            short *ssb = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (ssa[j] != ssb[j]) {
+                    msg = "%s attribute \"%s\"[%d] SHORT (root=%hds, local=%hds)\n";
+                    ATTR_WARN_J(msg, name, j, ssa[j], ssb[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
         }
+        else if (v1->type == NC_USHORT) {
+            ushort *usa = v1->xvalue;
+            ushort *usb = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (usa[j] != usb[j]) {
+                    msg = "%s attribute \"%s\"[%d] USHORT (root=%huus, local=%huus)\n";
+                    ATTR_WARN_J(msg, name, j, usa[j], usb[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
+        }
+        else if (v1->type == NC_INT) {
+            int *sia = v1->xvalue;
+            int *sib = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (sia[j] != sib[j]) {
+                    msg = "%s attribute \"%s\"[%d] INT (root=%d, local=%d)\n";
+                    ATTR_WARN_J(msg, name, j, sia[j], sib[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
+        }
+        else if (v1->type == NC_UINT) {
+            uint *uia = v1->xvalue;
+            uint *uib = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (uia[j] != uib[j]) {
+                    msg = "%s attribute \"%s\"[%d] UINT (root=%uu, local=%uu)\n";
+                    ATTR_WARN_J(msg, name, j, uia[j], uib[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
+        }
+        else if (v1->type == NC_FLOAT) {
+            float *fa = v1->xvalue;
+            float *fb = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                /* floating-point inequality here but we genuinely do
+                 * expect all processors to set bit-for-bit identical
+                 * headers */
+                if (fa[j] != fb[j]) {
+                    msg = "%s attribute \"%s\"[%d] FLOAT (root=%f, local=%f)\n";
+                    ATTR_WARN_J(msg, name, j, fa[j], fb[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
+        }
+        else if (v1->type == NC_DOUBLE) {
+            double *da = v1->xvalue;
+            double *db = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                /* floating-point inequality here but we genuinely do
+                 * expect all processors to set bit-for-bit identical
+                 * headers */
+                if (da[j] != db[j]) {
+                    msg = "%s attribute \"%s\"[%d] DOUBLE (root=%f, local=%f)\n";
+                    ATTR_WARN_J(msg, name, j, da[j], db[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
+        }
+        else if (v1->type == NC_INT64) {
+            int64 *slla = v1->xvalue;
+            int64 *sllb = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (slla[j] != sllb[j]) {
+                    msg = "%s attribute \"%s\"[%d] INT64 (root=%lldll, local=%lldll)\n";
+                    ATTR_WARN_J(msg, name, j, slla[j], sllb[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
+        }
+        else if (v1->type == NC_UINT64) {
+            uint64 *ulla = v1->xvalue;
+            uint64 *ullb = v2->xvalue;
+            for (j=0; j<v1->nelems; j++) {
+                if (ulla[j] != ullb[j]) {
+                    msg = "%s attribute \"%s\"[%d] UINT64 (root=%llull, local=%llull)\n";
+                    ATTR_WARN_J(msg, name, j, ulla[j], ullb[j])
+                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    break;
+                }
+            }
+        }
+        if (status == NC_NOERR) status = err;
 
-#ifdef METADATA_CONSISTENCY_CHECK
-        /* compare variable's attributes */
-        ncmpii_comp_attrs(&(v1->attrs), &(v2->attrs));
-#endif
+        /* overwrite local's attr with root's */
+        if (ErrIsHeaderDiff(err)) {
+            ncmpii_free_NC_attr(local_attr->value[i]);
+            local_attr->value[i] = dup_NC_attr(root_attr->value[i]);
+        }
     }
-    return NC_NOERR;
+
+    /* delete extra attributes defined only in local copy */
+    for (; i<local_attr->ndefined; i++)
+        ncmpii_free_NC_attr(local_attr->value[i]);
+
+    local_attr->ndefined = root_attr->ndefined;
+
+    return status;
 }
 
+/*----< ncmpii_comp_vars() >--------------------------------------------------*/
+/* compare the local copy of var_list against root's
+ * If inconsistency is detected, overwrite local's with root's
+ */
+static int
+ncmpii_comp_vars(int          safe_mode,
+                 NC_vararray *root_var,
+                 NC_vararray *local_var)
+{
+    int i, j, err, status=NC_NOERR;
+    char *msg;
+
+    /* check if the numbers of variables are the same */
+    if (root_var->ndefined != local_var->ndefined) {
+        if (safe_mode)
+            printf("%s number of variables (root=%d, local=%d)\n",
+                   WARN_STR, root_var->ndefined, local_var->ndefined);
+        status = NC_EMULTIDEFINE_VAR_NUM;
+    }
+
+    for (i=0; i<root_var->ndefined; i++) {
+
+        if (i >= local_var->ndefined) { /* if local list is shorter */
+            /* copy root's variable to local */
+            NC_var *new_var = dup_NC_var(root_var->value[i]);
+            err = incr_NC_vararray(local_var, new_var);
+            if (status == NC_NOERR) status = err;
+            /* local_var->ndefined is increased by 1 in incr_NC_vararray() */
+            continue;
+        }
+
+        NC_var *v1 = root_var->value[i];
+        NC_var *v2 = local_var->value[i];
+        char name[128];
+        strncpy(name, v1->name->cp, v1->name->nchars);
+        name[v1->name->nchars] = '\0';
+
+#define VAR_WARN(msg, var, root, local) \
+    if (safe_mode) printf(msg, WARN_STR, var, root, local);
+
+#define VAR_WARN_J(msg, var, j, root, local) \
+    if (safe_mode) printf(msg, WARN_STR, var, j, root, local);
+
+        err = NC_NOERR;
+        if (v1->name->nchars != v2->name->nchars ||
+            strncmp(v1->name->cp, v2->name->cp, v1->name->nchars) != 0) {
+            msg = "%s variable %s (root=%s, local=%s)\n";
+            VAR_WARN(msg, "name", name, v2->name->cp)
+            err = NC_EMULTIDEFINE_VAR_NAME;
+        }
+        else if (v1->ndims != v2->ndims) {
+            msg = "%s variable %s's ndims (root=%d, local=%d)\n";
+            VAR_WARN(msg, name, v1->ndims, v2->ndims)
+            err = NC_EMULTIDEFINE_VAR_NDIMS;
+        }
+        else if (v1->type != v2->type) {
+            msg = "%s variable %s's type (root=%d, local=%d)\n";
+            VAR_WARN(msg, name, v1->type, v2->type)
+            err = NC_EMULTIDEFINE_VAR_TYPE;
+        }
+        else if (v1->len != v2->len) {
+            msg = "%s variable %s's len (root=%lld, local=%lld)\n";
+            VAR_WARN(msg, name, v1->len, v2->len)
+            err = NC_EMULTIDEFINE_VAR_LEN;
+        }
+        else if (v1->begin != v2->begin) {
+            /* this is redundant, as any variable's inconsistency should be
+               caught by now */
+            msg = "%s variable %s's begin (root=%lld, local=%lld)\n";
+            VAR_WARN(msg, name, v1->begin, v2->begin)
+            err = NC_EMULTIDEFINE_VAR_BEGIN;
+        }
+        else {
+            for (j=0; j<v1->ndims; j++) {
+                if (v1->dimids[j] != v2->dimids[j]) {
+                    msg = "%s variable %s's %dth dim ID (root=%d, local=%ld)\n";
+                    VAR_WARN_J(msg, name, j, v1->dimids[j], v2->dimids[j])
+                    err = NC_EMULTIDEFINE_VAR_DIMIDS;
+                    break;
+                }
+            }
+        }
+        /* compare variable's attributes if by far no inconsistecy is found */
+        if (err == NC_NOERR)
+            err = ncmpii_comp_attrs(safe_mode, &(v1->attrs), &(v2->attrs));
+
+        if (status == NC_NOERR) status = err;
+
+        /* overwrite local's var with root's */
+        if (ErrIsHeaderDiff(err)) {
+            ncmpii_free_NC_var(local_var->value[i]);
+            local_var->value[i] = dup_NC_var(root_var->value[i]);
+            /* note once a new var is created, one must call
+             * ncmpii_NC_computeshapes() to recalculate the shape */
+        }
+    }
+
+    /* delete extra variables defined only in local copy */
+    for (; i<local_var->ndefined; i++)
+        ncmpii_free_NC_var(local_var->value[i]);
+
+    local_var->ndefined = root_var->ndefined;
+
+    return status;
+}
+
+/*----< ncmpii_hdr_check_NC() >-----------------------------------------------*/
+/* check the header of local copy against root's */
 int
 ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
-                    NC         *ncp) {
-    int rank, status;
+                    NC         *ncp)
+{
+    int rank, err, status=NC_NOERR;
+    char *root_magic;
     schar magic[sizeof(ncmagic)];
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
-    NC *temp_ncp;
     MPI_Aint pos_addr, base_addr;
-
-#ifdef CHECK_MAGIC_CONSISTENCY
-    char *root_magic;
-#endif
+    NC *root_ncp;
 
     assert(ncp != NULL);
+    assert(getbuf != NULL);
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* check header's magic */
     memset(magic, 0, sizeof(magic));
-    status = ncmpix_getn_schar_schar(
+    err = ncmpix_getn_schar_schar(
             (const void **)&getbuf->pos, sizeof(magic), magic);
     getbuf->index += sizeof(magic);
     /* don't need to worry about CDF-1 or CDF-2
      * if the first bits are not 'CDF-'  */
-    if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0)
-        return NC_ENOTNC;
+    if (memcmp(magic, ncmagic, sizeof(ncmagic)-1) != 0) {
+        /* Fatal error, as root's header is significant */
+        fprintf(stderr,"Error: root's header indicates not a CDF file\n");
+        return NC_ENOTNC; /* should not continue */
+    }
 
-    temp_ncp = ncmpii_new_NC(&chunksize);
+    root_ncp = ncmpii_new_NC(&chunksize);
 
     /* consistency of magic numbers should have already been checked during
      * ncmpi_create()
      */
-#ifdef CHECK_MAGIC_CONSISTENCY
-    if (magic[sizeof(ncmagic)-1] == 0x5)
-        root_magic = "CDF-5";
-    else if (magic[sizeof(ncmagic)-1] == 0x2)
-        root_magic = "CDF-2";
-    else if (magic[sizeof(ncmagic)-1] == 0x1)
-        root_magic = "CDF-1";
-    else
-        return NC_ENOTNC;
-
-    /* check version number in last byte of magic */
-    if (ncp->flags & NC_64BIT_DATA) {
-        if (magic[sizeof(ncmagic)-1] != 0x5) {
-            fprintf(stderr,"Error: file format inconsistent (local=%s, root=%s)\n", "CDF-5", root_magic);
-            return NC_ECMODE;
-        }
-        getbuf->version = 5;
-        fSet(temp_ncp->flags, NC_64BIT_DATA);
-
-        /* shouldn't this check have already been done? */
-        if (sizeof(MPI_Offset) != 8)
-            return NC_ESMALL;
-    }
-    else if (ncp->flags & NC_64BIT_OFFSET) {
-        if (magic[sizeof(ncmagic)-1] != 0x2) {
-            fprintf(stderr,"Error: file format inconsistent (local=%s, root=%s)\n", "CDF-2", root_magic);
-            return NC_ECMODE;
-        }
-        getbuf->version = 2;
-        fSet(temp_ncp->flags, NC_64BIT_OFFSET);
-
-        /* shouldn't this check have already been done? */
-        if (sizeof(MPI_Offset) != 8)
-            /* take the easy way out: if we can't support all CDF-2
-             * files, return immediately */
-            return NC_ESMALL;
-    }
-    else {
-        if (magic[sizeof(ncmagic)-1] != 0x1) {
-            fprintf(stderr,"Error: file format inconsistent (local=%s, root=%s)\n", "CDF-1", root_magic);
-            return NC_ECMODE;
-        }
-        getbuf->version = 1;
-    }
-#else
     if (magic[sizeof(ncmagic)-1] == 0x5) {
-        getbuf->version = 5;
-        fSet(temp_ncp->flags, NC_64BIT_DATA);
-        if (sizeof(MPI_Offset) != 8)
-            return NC_ESMALL;
+        root_magic = "CDF-5";
+        fSet(root_ncp->flags, NC_64BIT_DATA);
     }
     else if (magic[sizeof(ncmagic)-1] == 0x2) {
-        getbuf->version = 2;
-        fSet(temp_ncp->flags, NC_64BIT_OFFSET);
-        if (sizeof(MPI_Offset) != 8)
-            return NC_ESMALL;
+        root_magic = "CDF-2";
+        fSet(root_ncp->flags, NC_64BIT_OFFSET);
     }
     else if (magic[sizeof(ncmagic)-1] == 0x1)
-        getbuf->version = 1;
-    else
-        return NC_ENOTNC;
-#endif
+        root_magic = "CDF-1";
+    else {
+        /* Fatal error, as root's header is significant */
+        fprintf(stderr,"Error: root's header indicates not CDF 1/2/5 format\n");
+        return NC_ENOTNC; /* should not continue */
+    }
 
-    status = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
-    if (status != NC_NOERR)
-        return status;
+    /* check version number in last byte of magic */
+    int local_ver, root_ver;
+    if (ncp->flags & NC_64BIT_DATA)        local_ver = 0x5;
+    else if (ncp->flags & NC_64BIT_OFFSET) local_ver = 0x2;
+    else                                   local_ver = 0x1;
 
-    status = ncmpix_get_size_t((const void **)(&getbuf->pos), &nrecs,
-                               (getbuf->version == 5) ? 8 : 4);
+    root_ver = magic[sizeof(ncmagic)-1];
+    if (local_ver != root_ver) {
+        if (ncp->safe_mode)
+            printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
+                   WARN_STR, local_ver, root_ver);
+
+        /* overwrite the local header */
+             if (local_ver == 0x5) fClr(ncp->flags, NC_64BIT_DATA);
+        else if (local_ver == 0x2) fClr(ncp->flags, NC_64BIT_OFFSET);
+
+             if (root_ver  == 0x5) fSet(ncp->flags, NC_64BIT_DATA);
+        else if (root_ver  == 0x2) fSet(ncp->flags, NC_64BIT_OFFSET);
+
+        if (status == NC_NOERR) status = NC_EMULTIDEFINE_OMODE;
+    }
+    getbuf->version = root_ver;
+
+    if (root_ver > 1 && sizeof(MPI_Offset) != 8) {
+        /* for NC_64BIT_DATA or NC_64BIT_OFFSET, MPI_Offset must be 8 bytes
+         * Fatal error, can't support all CDF-2, CDF-5 */
+        return NC_ESMALL; /* should not continue */
+    }
+
+    /* move on to the next element in header: number of records */
+    err = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
+    if (err != NC_NOERR)
+        /* Fatal error, can't read root's header */
+        return err; /* should not continue */
+
+    err = ncmpix_get_size_t((const void **)(&getbuf->pos), &nrecs,
+                            (getbuf->version == 5) ? 8 : 4);
+    if (err != NC_NOERR)
+        /* Fatal error, can't read root's header */
+        return err; /* should not continue */
 
     if (getbuf->version == 5)
         getbuf->index += X_SIZEOF_LONG;
     else
         getbuf->index += X_SIZEOF_SIZE_T;
 
-    if (status != NC_NOERR)
-        return status;
+    root_ncp->numrecs = nrecs;
 
-    temp_ncp->numrecs = nrecs;
-
-    if (temp_ncp->numrecs != ncp->numrecs) {
-        fprintf(stderr,"Error: number of record variables is inconsistent %lld != %lld\n",
-                temp_ncp->numrecs, ncp->numrecs);
-        return NC_ENUMRECS_MULTIDEFINE;
+    if (root_ncp->numrecs != ncp->numrecs) {
+        /* TODO: not sure how this can happen ... */
+        if (ncp->safe_mode)
+            printf("%s number of records (local=%d, root=%d)\n",
+                   WARN_STR, ncp->numrecs, root_ncp->numrecs);
+        /* overwrite the local vopy */
+        ncp->numrecs = root_ncp->numrecs;
+        if (status == NC_NOERR) err = NC_EMULTIDEFINE_NUMRECS;
     }
 
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -2072,36 +2176,44 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 #endif
     assert(pos_addr < base_addr + getbuf->size);
 
-    status = hdr_get_NC_dimarray(getbuf, &temp_ncp->dims);
-    if (status != NC_NOERR)
-        return status;
+    /* get the next header element dim_list from getbuf to root_ncp */
+    err = hdr_get_NC_dimarray(getbuf, &root_ncp->dims);
+    if (err != NC_NOERR) return err; /* fatal error */
 
-    status = ncmpii_comp_dims(&temp_ncp->dims, &ncp->dims);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_comp_dims(ncp->safe_mode, &root_ncp->dims, &ncp->dims);
+    if (status == NC_NOERR) status = err;
 
-    status = hdr_get_NC_attrarray(getbuf, &temp_ncp->attrs);
-    if (status != NC_NOERR)
-        return status;
+    /* get the next header element gatt_list from getbuf to root_ncp */
+    err = hdr_get_NC_attrarray(getbuf, &root_ncp->attrs);
+    if (err != NC_NOERR) return err; /* fatal error */
 
-#ifdef METADATA_CONSISTENCY_CHECK
-    status = ncmpii_comp_attrs(&temp_ncp->attrs, &ncp->attrs);
-    if (status != NC_NOERR)
-        return status;
-#endif
+    /* get the next header element att_list from getbuf to root_ncp */
+    err = ncmpii_comp_attrs(ncp->safe_mode, &root_ncp->attrs, &ncp->attrs);
+    if (status == NC_NOERR) status = err;
 
-    status = hdr_get_NC_vararray(getbuf, &temp_ncp->vars);
-    if (status != NC_NOERR)
-        return status;
+    /* get the next header element var_list from getbuf to root_ncp */
+    err = hdr_get_NC_vararray(getbuf, &root_ncp->vars);
+    if (err != NC_NOERR) return err; /* fatal error */
 
-    status = ncmpii_comp_vars(&temp_ncp->vars, &ncp->vars);
-    if (status != NC_NOERR)
-        return status;
+    err = ncmpii_comp_vars(ncp->safe_mode, &root_ncp->vars, &ncp->vars);
+    if (status == NC_NOERR) status = err;
+    if (err != NC_NOERR) { /* header has been sync-ed with root */
+        /* recompute shape is required for every new variable created */
+        err = ncmpii_NC_computeshapes(ncp);
+        if (status == NC_NOERR) status = err;
+    }
 
-    temp_ncp->xsz = ncmpii_hdr_len_NC(temp_ncp);
-    status = ncmpii_NC_computeshapes(temp_ncp);
-  
-    ncmpii_free_NC(temp_ncp);
+    if (ErrIsHeaderDiff(status)) /* header has been sync-ed with root */
+        /* recompute header size */
+        ncp->xsz = ncmpii_hdr_len_NC(ncp);
+
+    if (ncp->safe_mode) {
+        root_ncp->xsz = ncmpii_hdr_len_NC(root_ncp);
+        assert(root_ncp->xsz == ncp->xsz);
+        // ncmpii_NC_computeshapes(root_ncp);
+        // if (status == NC_NOERR) status = err;
+    } 
+    ncmpii_free_NC(root_ncp);
     return status;
 }
 
@@ -2111,7 +2223,7 @@ int ncmpii_write_header(NC *ncp)
 {
     int rank, status=NC_NOERR;
 
-    /* Write the entire header to the file. Noet that we cannot just
+    /* Write the entire header to the file. Note that we cannot just
      * change the variable name in the file header, as if the file space
      * occupied by the name shrink, all following metadata must be moved
      * ahead.
@@ -2150,3 +2262,93 @@ int ncmpii_write_header(NC *ncp)
 
     return status;
 }
+
+#if 0
+/*----< ncmpii_hdr_copy() >---------------------------------------------------*/
+/* copy the contents of getbuf to header object.
+ * getbuf contains the entire header received from root process.
+ */
+int
+ncmpii_hdr_copy(NC         *ncp,
+                bufferinfo *buf)
+{
+    int status;
+    schar magic[sizeof(ncmagic)];
+    MPI_Offset nrecs = 0;
+    MPI_Aint pos_addr, base_addr;
+
+    assert(ncp != NULL);
+    assert(buf != NULL);
+
+    /* some values have been set in the local copy, keep them */
+    char *path = ncp->nciop->path;
+    int   fd = ncp->nciop->fd;
+    ncp->nciop       = buf->nciop;
+    ncp->nciop->path = buf->nciop->path
+    ncp->nciop->fd   = buf->nciop->fd
+    /* ncp->flags */
+
+    buf->index = 0;
+
+    /* get numrecs from buf->into ncp */
+    status = ncmpix_get_size_t((const void **)(&buf->pos), &nrecs,
+                               (buf->version == 5) ? 8 : 4);
+    if (status != NC_NOERR) {
+        NCI_Free(buf->base);
+        return status;
+    }
+
+    if (buf->version == 5)
+        buf->index += X_SIZEOF_LONG;
+    else
+        buf->index += X_SIZEOF_SIZE_T;
+
+    ncp->numrecs = nrecs;
+
+#ifdef HAVE_MPI_GET_ADDRESS
+    MPI_Get_address(buf->pos,  &pos_addr);
+    MPI_Get_address(buf->base, &base_addr);
+#else
+    MPI_Address(buf->pos,  &pos_addr);
+    MPI_Address(buf->base, &base_addr);
+#endif
+    assert(pos_addr < base_addr + buf->size);
+
+    /* get dim_list from buf->into ncp */
+    status = hdr_get_NC_dimarray(&buf-> &ncp->dims);
+    if (status != NC_NOERR) {
+        NCI_Free(buf->base);
+        return status;
+    }
+
+    /* get gatt_list from buf->into ncp */
+    status = hdr_get_NC_attrarray(&buf-> &ncp->attrs); 
+    if (status != NC_NOERR) {
+        NCI_Free(buf->base);
+        return status;
+    }
+
+    /* get var_list from buf->into ncp */
+    status = hdr_get_NC_vararray(&buf-> &ncp->vars);
+    if (status != NC_NOERR) {
+        NCI_Free(buf->base);
+        return status; 
+    }
+  
+    /* get the un-aligned size occupied by the file header */
+    ncp->xsz = ncmpii_hdr_len_NC(ncp);
+
+    /* Recompute the shapes of all variables
+     * Sets ncp->begin_var to start of first variable.
+     * Sets ncp->begin_rec to start of first record variable.
+     */ 
+    status = ncmpii_NC_computeshapes(ncp);
+
+    NCI_Free(buf->base);
+
+    ncp->nciop->put_size += buf->put_size;
+    ncp->nciop->get_size += buf->get_size;
+  
+    return status;
+}
+#endif

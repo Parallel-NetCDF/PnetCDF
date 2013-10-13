@@ -25,7 +25,7 @@ static void handle_error_nc(int ncerr, char *str)
 #define STRIDE   5
 int main(int argc, char ** argv)
 {
-    int ncid, dimid, varid, rank, nprocs;
+    int ncid, dimid, varid, rank, nprocs, verbose;
     MPI_Datatype vtype, rtype, usertype;
     MPI_Aint lb, extent;
     int userbufsz, *userbuf, *cmpbuf, i, errs=0;
@@ -38,15 +38,16 @@ int main(int argc, char ** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (nprocs > 2 && rank == 0)
-        printf("Warning: %s is designed to run on 1 process\n",argv[0]);
-
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
     if (argc == 2) filename = argv[1];
+
+    verbose = 0;
+    if (nprocs > 2 && rank == 0 && verbose)
+        printf("Warning: %s is designed to run on 1 process\n",argv[0]);
 
     ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
             &ncid);
@@ -100,7 +101,7 @@ int main(int argc, char ** argv)
 
     if (rank == 0) {
         char cmd_str[80];
-        sprintf(cmd_str, "*** TESTING %s for put_vara/get_vara ", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for put_vara/get_vara ", argv[0]);
         printf("%-66s ------ pass\n", cmd_str);
     }
     MPI_Finalize();

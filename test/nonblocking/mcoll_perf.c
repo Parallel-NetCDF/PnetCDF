@@ -315,7 +315,7 @@ int main(int argc, char **argv)
     int status;
     MPI_Offset sizes[3], array_of_starts[3], stride[3];
     char basename[256], filename[256];
-    char filename1[100], filename2[100], filename3[100];
+    char filename1[256], filename2[256], filename3[256];
     char dimname[20], varname[20];
     int ncid, dimids0[3], dimids1[3], rank_dim[3], *varid;
     MPI_Info info;
@@ -344,7 +344,7 @@ int main(int argc, char **argv)
         case 'v':               /* verbose mode */
           verbose = 1;
           break;
-        case 'f':               /* verbose mode */
+        case 'f':               /* file base name */
           strcpy(basename, optarg);
           break;
         case '?':
@@ -453,6 +453,8 @@ int main(int argc, char **argv)
         buf_var[i] = mynod + 1;  
 
     MPI_Info_create(&info);
+
+    MPI_Info_set(info, "romio_ds_write", "disable");
 
 /*
  *  MPI_Info_set(info, "group_cyclic_fd", "enable");
@@ -691,9 +693,9 @@ int main(int argc, char **argv)
     free(starts_list);
     free(count_list);
 
-    if (n_fails == 0) {
+    if (n_fails == 0 && mynod == 0) {
        char cmd_str[80];
-       sprintf(cmd_str, "*** TESTING %s for mput/iput APIs ", argv[0]);
+       sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
        printf("%-66s ------ pass\n", cmd_str);
     }
 

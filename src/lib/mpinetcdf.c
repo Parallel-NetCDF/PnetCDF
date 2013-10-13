@@ -40,7 +40,7 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int status, safe_mode=0;
+    int err, status=NC_NOERR, safe_mode=0;
     char *env_str=NULL;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
@@ -53,24 +53,23 @@ ncmpi_create(MPI_Comm    comm,
 
     if (safe_mode) {
         /* check if cmode are consistent across all processes */
-        int my_cmode, cmode_sum, nprocs;
+        int rank, nprocs;
+        MPI_Offset cmode_sum, my_cmode=cmode;
         MPI_Comm_size(comm, &nprocs);
+        MPI_Comm_rank(comm, &rank);
 
         /* Note if cmode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
            In pnetcdf.h, they both are defined the same value, 0.
          */
 
-        my_cmode = 1;
-        if (cmode & NC_64BIT_OFFSET)  my_cmode = 2;
-        if (cmode & NC_64BIT_DATA)    my_cmode = 5;
-
-        MPI_Allreduce(&my_cmode, &cmode_sum, 1, MPI_INT, MPI_SUM, comm);
+        MPI_Allreduce(&my_cmode, &cmode_sum, 1, MPI_OFFSET, MPI_SUM, comm);
         if (cmode_sum != my_cmode * nprocs) {
-            // fprintf(stderr,"Error: create modes are inconsistent\n");
-            *ncidp = -1;  /* cause NC_EBADID for any further opertion */
-            return NC_ECMODE;
+            /* cmodes are inconsistent, overwrite local cmode with root's */
+            MPI_Bcast(&cmode, 1, MPI_INT, 0, comm);
+            if (rank == 0)
+                printf("Warning: inconsistent file create mode, overwrite with root's\n");
+            status = NC_EMULTIDEFINE_OMODE;
         }
-        /* if cmodes are inconsistent, then it is a fatal error to continue */
     }
 
     /* get header chunk size from user info */
@@ -112,11 +111,8 @@ ncmpi_create(MPI_Comm    comm,
 
     fSet(ncp->flags, NC_NOFILL);
 
-    status = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
-    if (status != NC_NOERR) {
-        ncmpii_free_NC(ncp);
-        return status;
-    }
+    err = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
+    if (err != NC_NOERR) return err;
 
     fSet(ncp->flags, NC_CREAT);
 
@@ -175,7 +171,7 @@ ncmpi_open(MPI_Comm    comm,
         if (omode_sum != omode * nprocs) {
             // fprintf(stderr,"Error: create modes are inconsistent\n");
             *ncidp = -1;  /* cause NC_EBADID for any further opertion */
-            return NC_ECMODE;
+            return NC_EMULTIDEFINE_OMODE;
         }
         /* if omodes are inconsistent, then it is a fatal error to continue */
     }
