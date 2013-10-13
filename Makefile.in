@@ -89,7 +89,7 @@ verbose_check verbose_testing: tests
 PTEST_DIRS = test examples benchmarks
 
 ptest: tests
-	for i in $(PTEST_DIRS) benchmarks ; do ( cd $$i && $(MAKE) ptest ; ) ; done
+	for i in $(PTEST_DIRS) ; do ( cd $$i && $(MAKE) ptest ; ) ; done
 
 clean_macros:
 	@$(RM) -f macros.make
