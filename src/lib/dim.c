@@ -57,12 +57,13 @@ ncmpii_new_x_NC_dim(NC_string *name)
  */
 static NC_dim *
 ncmpii_new_NC_dim(const char *name,
+                  MPI_Offset  name_nchars,
                   MPI_Offset  size)
 {
     NC_string *strp;
     NC_dim *dimp;
 
-    strp = ncmpii_new_NC_string(strlen(name), name);
+    strp = ncmpii_new_NC_string(name_nchars, name);
     if (strp == NULL) return NULL;
 
     dimp = ncmpii_new_x_NC_dim(strp);
@@ -77,10 +78,10 @@ ncmpii_new_NC_dim(const char *name,
 }
 
 
-static NC_dim *
+NC_dim *
 dup_NC_dim(const NC_dim *dimp)
 {
-	return ncmpii_new_NC_dim(dimp->name->cp, dimp->size);
+    return ncmpii_new_NC_dim(dimp->name->cp, dimp->name->nchars, dimp->size);
 }
 
 /*----< ncmpii_find_NC_Udim() >----------------------------------------------*/
@@ -121,6 +122,7 @@ ncmpii_find_NC_Udim(const NC_dimarray  *ncap,
 static int
 NC_finddim(const NC_dimarray  *ncap,
            const char         *name,
+           MPI_Offset          nchars,
            NC_dim            **dimpp)
 {
     int dimid;
@@ -131,7 +133,8 @@ NC_finddim(const NC_dimarray  *ncap,
 
     /* note that the number of dimensions allowed is < 2^32 */
     for (dimid=0; dimid<ncap->ndefined; dimid++)
-        if (strcmp(ncap->value[dimid]->name->cp, name) == 0) {
+        if (ncap->value[dimid]->name->nchars == nchars &&
+            strncmp(ncap->value[dimid]->name->cp, name, nchars) == 0) {
             /* found the mateched name */
             if (dimpp != NULL)
                 *dimpp = ncap->value[dimid];
@@ -146,99 +149,70 @@ NC_finddim(const NC_dimarray  *ncap,
 /* dimarray */
 
 
-/*
- * Free the stuff "in" (referred to by) an NC_dimarray.
- * Leaves the array itself allocated.
- */
-void
-ncmpii_free_NC_dimarrayV0(NC_dimarray *ncap)
-{
-	assert(ncap != NULL);
-
-	if(ncap->ndefined == 0)
-		return;
-
-	assert(ncap->value != NULL);
-
-	{
-		NC_dim **dpp = ncap->value;
-		NC_dim *const *const end = &dpp[ncap->ndefined];
-		for( /*NADA*/; dpp < end; dpp++)
-		{
-			ncmpii_free_NC_dim(*dpp);
-			*dpp = NULL;
-		}
-	}
-	ncap->ndefined = 0;
-}
-
-
+/*----< ncmpii_free_NC_dimarray() >-------------------------------------------*/
 /*
  * Free NC_dimarray values.
  * formerly
 NC_free_array()
  */
 void
-ncmpii_free_NC_dimarrayV(NC_dimarray *ncap)
+ncmpii_free_NC_dimarray(NC_dimarray *ncap)
 {
-	assert(ncap != NULL);
-	
-	if(ncap->nalloc == 0)
-		return;
+    int i;
 
-	assert(ncap->value != NULL);
+    assert(ncap != NULL);
+    if (ncap->nalloc == 0) return;
+    assert(ncap->value != NULL);
 
-	ncmpii_free_NC_dimarrayV0(ncap);
+    for (i=0; i<ncap->ndefined; i++)
+        ncmpii_free_NC_dim(ncap->value[i]);
 
-	NCI_Free(ncap->value);
-	ncap->value = NULL;
-	ncap->nalloc = 0;
+    NCI_Free(ncap->value);
+    ncap->value    = NULL;
+    ncap->nalloc   = 0;
+    ncap->ndefined = 0;
 }
 
 
+/*----< ncmpii_dup_NC_dimarray() >--------------------------------------------*/
 int
-ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref)
+ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
 {
-	int status = NC_NOERR;
+    int i, status=NC_NOERR;
 
-	assert(ref != NULL);
-	assert(ncap != NULL);
+    assert(ref != NULL);
+    assert(ncap != NULL);
 
-	if(ref->ndefined != 0)
-	{
-		const MPI_Offset sz = ref->ndefined * sizeof(NC_dim *);
-		ncap->value = (NC_dim **) NCI_Malloc(sz);
-		if(ncap->value == NULL)
-			return NC_ENOMEM;
-		(void) memset(ncap->value, 0, sz);
-		ncap->nalloc = ref->ndefined;
-	}
+    if (ref->nalloc == 0) {
+        ncap->nalloc   = 0;
+        ncap->ndefined = 0;
+        ncap->value    = NULL;
+        return NC_NOERR;
+    }
 
-	ncap->ndefined = 0;
-	{
-		NC_dim **dpp = ncap->value;
-		const NC_dim **drpp = (const NC_dim **)ref->value;
-		NC_dim *const *const end = &dpp[ref->ndefined];
-		for( /*NADA*/; dpp < end; drpp++, dpp++, ncap->ndefined++)
-		{
-			*dpp = dup_NC_dim(*drpp);
-			if(*dpp == NULL)
-			{
-				status = NC_ENOMEM;
-				break;
-			}
-		}
-	}
+    if (ref->nalloc > 0) {
+        ncap->value = (NC_dim **) NCI_Calloc(ref->nalloc, sizeof(NC_dim *));
+        if (ncap->value == NULL) return NC_ENOMEM;
+        ncap->nalloc = ref->nalloc;
+    }
 
-	if(status != NC_NOERR)
-	{
-		ncmpii_free_NC_dimarrayV(ncap);
-		return status;
-	}
+    ncap->ndefined = 0;
+    for (i=0; i<ref->ndefined; i++) {
+        ncap->value[i] = dup_NC_dim(ref->value[i]);
+        if (ncap->value[i] == NULL) {
+            status = NC_ENOMEM;
+            break;
+        }
+    }
 
-	assert(ncap->ndefined == ref->ndefined);
+    if (status != NC_NOERR) {
+        ncmpii_free_NC_dimarray(ncap);
+        return status;
+    }
 
-	return NC_NOERR;
+    ncap->ndefined = ref->ndefined;
+
+    return NC_NOERR;
 }
 
 
@@ -247,7 +221,7 @@ ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref)
  * Add a new handle to the end of an array of handles
  * Formerly, NC_incr_array(array, tail)
  */
-static int
+int
 incr_NC_dimarray(NC_dimarray *ncap,
                  NC_dim      *newdimp)
 {
@@ -361,11 +335,11 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     if (ncp->dims.ndefined >= NC_MAX_DIMS) return NC_EMAXDIMS;
 
     /* check if the name string is previously used */
-    dimid = NC_finddim(&ncp->dims, name, &dimp);
+    dimid = NC_finddim(&ncp->dims, name, strlen(name), &dimp);
     if (dimid != -1) return NC_ENAMEINUSE;
     
     /* create a new dimension object */
-    dimp = ncmpii_new_NC_dim(name, size);
+    dimp = ncmpii_new_NC_dim(name, strlen(name), size);
     if (dimp == NULL) return NC_ENOMEM;
 
     /* Add a new handle to the end of an array of handles */
@@ -394,7 +368,7 @@ ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr)
 	if(status != NC_NOERR)
 		return status;
 
-	dimid = NC_finddim(&ncp->dims, name, NULL);
+	dimid = NC_finddim(&ncp->dims, name, strlen(name), NULL);
 
 	if(dimid == -1)
 		return NC_EBADDIM;
@@ -515,7 +489,7 @@ ncmpi_rename_dim(int         ncid,
     status = ncmpii_NC_check_name(newname, file_ver);
     if (status != NC_NOERR) return status;
 
-    existid = NC_finddim(&ncp->dims, newname, &dimp);
+    existid = NC_finddim(&ncp->dims, newname, strlen(newname), &dimp);
     if (existid != -1)
         return NC_ENAMEINUSE;
 

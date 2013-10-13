@@ -54,7 +54,7 @@ program f90tst_parallel3
   integer(KIND=MPI_OFFSET_KIND) :: start(MAX_DIMS), count(MAX_DIMS)
   integer :: ret, cmode
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
-  character(LEN=128) filename, cmd
+  character(LEN=128) filename, cmd, msg
   integer argc, iargc
 
   call MPI_Init(ierr)
@@ -73,10 +73,6 @@ program f90tst_parallel3
 
   if (p .ne. 4 .AND. my_rank .eq. 0) then
      print *, 'Warning: ',trim(cmd),' is design to run on 4 processes.'
-  endif
-
-  if (my_rank .eq. 0) then
-     write(*,"(A)",advance="no") '*** Testing PnetCDF parallel I/O from Fortran 90.'
   endif
 
   ! Create some pretend data.
@@ -175,7 +171,8 @@ program f90tst_parallel3
   ! Close the file. 
   call check(nf90mpi_close(ncid))
 
-  if (my_rank .eq. 0) write(*,"(A)") '                  ------ pass'
+   msg = '*** TESTING F90 '//trim(cmd)
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
  999 call MPI_Finalize(ierr)
 

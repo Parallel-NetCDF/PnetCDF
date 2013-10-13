@@ -776,9 +776,11 @@ AC_SUBST(PNETCDF_LIB)
 AC_ARG_VAR(TEST_MPIRUN, [MPI run command for running test])
 AC_ARG_VAR(TEST_OUT_DIR, [Output file directory for running test])
 if test "x${TEST_MPIRUN}" = x ; then
+    dnl set default to mpiexec
     TEST_MPIRUN=mpiexec
 fi
 if test "x${TEST_OUT_DIR}" = x ; then
+    dnl set default to current directory
     TEST_OUT_DIR=.
 fi
 AC_SUBST(TEST_MPIRUN)
@@ -806,7 +808,7 @@ CONFIG_FILES="macros.make \
               test/fandc/Makefile \
               test/testcases/Makefile \
               test/nonblocking/Makefile \
-              test/test_check_header/Makefile \
+              test/header/Makefile \
               test/test_inq_format/Makefile \
               test/largefile/Makefile \
               test/data/Makefile \

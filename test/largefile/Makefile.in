@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 LDFLAGS  += -L../../src/lib -L../common
-LIBS     += -ltestutils -lpnetcdf
+LIBS     += -lpnetcdf
 
 SRCS    = large_files.c
 

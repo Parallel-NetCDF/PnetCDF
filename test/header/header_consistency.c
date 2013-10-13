@@ -1,0 +1,471 @@
+/*
+ *  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
+/* This program tests if PnetCDF can detect file header inconsistency and
+ * overwrite the inconsistent header with root's
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+
+#define ERR_MSG(e, e1) {if (e != NC_EMULTIDEFINE && e != e1) { printf("Error (line %d): expecting error code %d or %d but got %d\n", __LINE__, NC_EMULTIDEFINE, e1, e); nerr++; }}
+
+#define ERR {if(err!=NC_NOERR)printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err));}
+
+/*----< test_open_mode() >----------------------------------------------------*/
+int test_open_mode(char *filename, int safe_mode)
+{
+    int err, rank, ncid, cmode, nerr=0;
+    MPI_Offset dimlen;
+    MPI_Info info=MPI_INFO_NULL;
+    MPI_Comm comm=MPI_COMM_WORLD;
+
+    MPI_Comm_rank(comm, &rank);
+    cmode = NC_CLOBBER|NC_64BIT_OFFSET;
+
+    /* Test inconsistent cmode -----------------------------------------------*/
+    if (rank == 0) cmode = NC_CLOBBER;
+    err = ncmpi_create(comm, filename, cmode, info, &ncid);
+    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
+    if (safe_mode) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+    else           ERR
+    err = ncmpi_close(ncid);
+    if (safe_mode) ERR
+    else           ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+
+    int format;
+    err = ncmpi_inq_file_format(filename, &format); ERR
+    if (format != 1) {
+        printf("Error (line %d): output file should be in CDF-1 format\n",__LINE__);
+        nerr++;
+    }
+    return nerr;
+}
+
+/*----< test_dim() >----------------------------------------------------------*/
+int test_dim(char *filename)
+{
+    int err, rank, ncid, cmode, ndims, dimid1, dimid2, dimid3, nerr=0;
+    MPI_Offset dimlen;
+    MPI_Info info=MPI_INFO_NULL;
+    MPI_Comm comm=MPI_COMM_WORLD;
+
+    MPI_Comm_rank(comm, &rank);
+    cmode = NC_CLOBBER|NC_64BIT_OFFSET;
+
+    /* Test inconsistency on number of dimensions ----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "x", 100, &dimid1); ERR
+    if (rank == 0) {
+        err = ncmpi_def_dim(ncid, "y", 100, &dimid2); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_NUM */
+    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NUM)
+
+    err = ncmpi_inq_ndims(ncid, &ndims); ERR
+    if (ndims != 2) {
+        printf("Error (line %d): number of dimesnions (%d) defined should be 2\n",__LINE__,ndims);
+        nerr++;
+    }
+    /* all processes should be able to see dim "y" */
+    err = ncmpi_inq_dimid(ncid, "y", &dimid2);
+    if (err != NC_NOERR) {
+        printf("Error (line %d): all processes should be able to see dim \"y\"\n",__LINE__);
+        nerr++;
+        ERR
+    }
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistency on number of dimensions ----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "x", 100, &dimid1); ERR
+    if (rank > 0) {
+        err = ncmpi_def_dim(ncid, "y", 100, &dimid2); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_NUM */
+    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NUM)
+
+    err = ncmpi_inq_ndims(ncid, &ndims); ERR
+    if (ndims != 1) {
+        printf("Error (line %d): number of dimesnions (%d) defined should be 1\n",__LINE__,ndims);
+        nerr++;
+    }
+    /* no process should be able to get dim "y" */
+    err = ncmpi_inq_dimid(ncid, "y", &dimid2);
+    ERR_MSG(err, NC_EBADDIM)
+
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistency on dimension names ---------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    if (rank == 0)
+        err = ncmpi_def_dim(ncid, "y", 100, &dimid1);
+    else
+        err = ncmpi_def_dim(ncid, "xx", 100, &dimid1);
+    ERR
+    err = ncmpi_enddef(ncid);
+    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_NAME */
+    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NAME)
+
+    /* all processes should be able to get dim "y" */
+    err = ncmpi_inq_dimid(ncid, "y", &dimid2); ERR
+
+    /* no process should be able to get dim "x" */
+    err = ncmpi_inq_dimid(ncid, "xx", &dimid3);
+    ERR_MSG(err, NC_EBADDIM)
+
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistency on dimension size ----------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    if (rank == 0)
+        err = ncmpi_def_dim(ncid, "x", 99, &dimid1);
+    else
+        err = ncmpi_def_dim(ncid, "x", 100, &dimid1);
+    ERR
+    err = ncmpi_enddef(ncid);
+    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_SIZE */
+    ERR_MSG(err, NC_EMULTIDEFINE_DIM_SIZE)
+
+    /* all processes should be able to get dim "x" of size == 99 */
+    err = ncmpi_inq_dimlen(ncid, dimid1, &dimlen); ERR
+    if (dimlen != 99) {
+        printf("Error (line %d): dimesnion size (%d) should be 99\n",__LINE__,dimlen);
+        nerr++;
+    }
+
+    err = ncmpi_close(ncid); ERR
+    return nerr;
+}
+
+/*----< test_attr() >---------------------------------------------------------*/
+int test_attr(char *filename)
+{
+    int err, rank, ncid, cmode, nerr=0;
+    char  gattr[128];
+    int   int_attr;
+    float flt_attr;
+    MPI_Info info=MPI_INFO_NULL;
+    MPI_Comm comm=MPI_COMM_WORLD;
+
+    MPI_Comm_rank(comm, &rank);
+    cmode = NC_CLOBBER|NC_64BIT_OFFSET;
+
+    /* Test inconsistent global attribute numbers ----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    int_attr = 1;
+    flt_attr = 1.0;
+    err = ncmpi_put_att_int(ncid, NC_GLOBAL, "gattr_1", NC_INT, 1, &int_attr);
+    ERR
+    if (rank == 0) {
+        err = ncmpi_put_att_float(ncid, NC_GLOBAL, "gattr_2", NC_FLOAT, 1,
+                                  &flt_attr); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_NUM)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute name -------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    int_attr = 1;
+    sprintf(gattr, "gattr_name.%d",rank);
+    err = ncmpi_put_att_int(ncid, NC_GLOBAL, gattr, NC_INT, 1, &int_attr); ERR
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_NAME)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute type -------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    if (rank == 0)
+        err = ncmpi_put_att_int(ncid, NC_GLOBAL, "gatt", NC_INT, 1, &int_attr);
+    else
+        err = ncmpi_put_att_float(ncid, NC_GLOBAL, "gatt", NC_FLOAT, 1, &flt_attr);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_TYPE)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute length -----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    int intv[2]={1,2};
+    if (rank == 0)
+        err = ncmpi_put_att_int(ncid, NC_GLOBAL, "gatt", NC_INT, 2, intv);
+    else
+        err = ncmpi_put_att_int(ncid, NC_GLOBAL, "gatt", NC_INT, 1, intv);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_LEN)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute length -----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    if (rank == 0) intv[1]=3;
+    err = ncmpi_put_att_int(ncid, NC_GLOBAL, "gatt", NC_INT, 2, intv);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_VAL)
+    err = ncmpi_close(ncid); ERR
+
+    return nerr;
+}
+
+/*----< test_var() >----------------------------------------------------------*/
+int test_var(char *filename)
+{
+    int err, rank, ncid, cmode, nerr=0;
+    int ndims, dimid[3], natts, nvars, varid1, varid2, varid3;
+    char name[128];
+    nc_type xtype;
+    MPI_Offset dimlen;
+    MPI_Info info=MPI_INFO_NULL;
+    MPI_Comm comm=MPI_COMM_WORLD;
+
+    MPI_Comm_rank(comm, &rank);
+    cmode = NC_CLOBBER|NC_64BIT_OFFSET;
+
+    /* Test inconsistent number of variables ---------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); ERR
+    if (rank == 0) {
+        err = ncmpi_def_var(ncid, "var2", NC_INT, 1, dimid, &varid2); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_VAR_NUM)
+
+    err = ncmpi_inq_nvars(ncid, &nvars); ERR
+    if (nvars != 2) {
+        printf("Error (line %d): all processes should see 2 variables\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent variable name ---------------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    sprintf(name, "var.%d",rank);
+    err = ncmpi_def_var(ncid, name, NC_INT, 1, dimid, &varid1); ERR
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_VAR_NAME)
+
+    err = ncmpi_inq_varname(ncid, varid1, name); ERR
+    if (strcmp(name, "var.0")) {
+        printf("Error (line %d): all processes should see variable name: \"var.0\"\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent variable ndims --------------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim0", 3, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "dim1", 2, &dimid[1]); ERR
+    if (rank == 0)
+        err = ncmpi_def_var(ncid, "var", NC_FLOAT, 2, dimid, &varid1);
+    else
+        err = ncmpi_def_var(ncid, "var", NC_FLOAT, 1, dimid, &varid1);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_VAR_NDIMS)
+
+    err = ncmpi_inq_varndims(ncid, varid1, &ndims); ERR
+    if (ndims != 2) {
+        printf("Error (line %d): all processes should see var has 2 dimensions\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent variable type ---------------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    if (rank == 0)
+        err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid, &varid1);
+    else
+        err = ncmpi_def_var(ncid, "var", NC_FLOAT, 1, dimid, &varid1);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_VAR_TYPE)
+
+    err = ncmpi_inq_vartype(ncid, varid1, &xtype); ERR
+    if (xtype != NC_INT) {
+        printf("Error (line %d): all processes should see var is of type NC_INT\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent variable length -------------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim0", 5, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "dim1", 4, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "dim2", 3, &dimid[2]); ERR
+    if (rank == 0) {
+        err = ncmpi_def_var(ncid, "var", NC_FLOAT, 2, dimid, &varid1); ERR
+    }
+    else {
+        err = ncmpi_def_var(ncid, "var", NC_FLOAT, 2, dimid+1, &varid1); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_VAR_LEN)
+
+    err = ncmpi_inq_vardimid(ncid, varid1, dimid); ERR
+    err = ncmpi_inq_dimname(ncid, dimid[0], name); ERR
+    if (strcmp(name, "dim0")) {
+        printf("Error (line %d): all processes should see var's dim[0] name \"dim0\"\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_inq_dimname(ncid, dimid[1], name); ERR
+    if (strcmp(name, "dim1")) {
+        printf("Error (line %d): all processes should see var's dim[1] name \"dim1\"\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_inq_dimlen(ncid, dimid[0], &dimlen); ERR
+    if (dimlen != 5) {
+        printf("Error (line %d): all processes should see var's dim[0] len == 5\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_inq_dimlen(ncid, dimid[1], &dimlen); ERR
+    if (dimlen != 4) {
+        printf("Error (line %d): all processes should see var's dim[1] len == 4\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent variable dimension IDs ------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "Z", 3, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "Y", 3, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "X", 3, &dimid[2]); ERR
+    if (rank == 0) {
+        err = ncmpi_def_var(ncid, "var", NC_FLOAT, 2, dimid+1, &varid1); ERR
+    }
+    else {
+        err = ncmpi_def_var(ncid, "var", NC_FLOAT, 2, dimid, &varid1); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_VAR_DIMIDS)
+
+    err = ncmpi_inq_vardimid(ncid, varid1, dimid); ERR
+    err = ncmpi_inq_dimname(ncid, dimid[0], name); ERR
+    if (strcmp(name, "Y")) {
+        printf("Error (line %d): all processes should see var's dim[0] name \"Y\"\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_inq_dimname(ncid, dimid[1], name); ERR
+    if (strcmp(name, "X")) {
+        printf("Error (line %d): all processes should see var's dim[1] name \"X\"\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_close(ncid); ERR
+
+    return nerr;
+}
+
+/*----< test_dim_var() >------------------------------------------------------*/
+int test_dim_var(char *filename)
+{
+    int i, err, rank, ncid, cmode, nerr=0;
+    int ndims, dimid[3], natts, nvars, varid1, varid2, varid3;
+    char name[128], dimname[128];
+    nc_type xtype;
+    MPI_Offset dimlen;
+    MPI_Info info=MPI_INFO_NULL;
+    MPI_Comm comm=MPI_COMM_WORLD;
+
+    MPI_Comm_rank(comm, &rank);
+    cmode = NC_CLOBBER|NC_64BIT_OFFSET;
+
+    /* Test inconsistent of dimensions impact to variables -------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", 5, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "dim2", 4, &dimid[1]); ERR
+    if (rank == 0) {
+        err = ncmpi_def_dim(ncid, "dim3", 3, &dimid[2]); ERR
+        err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimid+1, &varid1); ERR
+    }
+    else {
+        err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimid, &varid1); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NUM)
+
+    err = ncmpi_inq_ndims(ncid, &ndims); ERR
+    if (ndims != 3) {
+        printf("Error (line %d): all processes should see 3 dimensions\n",__LINE__);
+        nerr++;
+    }
+    dimid[0] = dimid[1] = dimid[2] = -1;
+    err = ncmpi_inq_vardimid(ncid, varid1, dimid); ERR
+    for (i=0; i<2; i++) {
+        err = ncmpi_inq_dimname(ncid, dimid[i], name); ERR
+        sprintf(dimname, "dim%d", i);
+        if (!strcmp(name, dimname)) {
+            printf("Error (line %d): all processes should see dimid[%d] name \"%s\"\n",__LINE__,dimname);
+            nerr++;
+        }
+    }
+    err = ncmpi_inq_dimlen(ncid, dimid[0], &dimlen); ERR
+    if (dimlen != 4) {
+        printf("Error (line %d): all processes should see dimid[%d] len = 4\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_inq_dimlen(ncid, dimid[1], &dimlen); ERR
+    if (dimlen != 3) {
+        printf("Error (line %d): all processes should see dimid[%d] len = 3\n",__LINE__);
+        nerr++;
+    }
+    err = ncmpi_close(ncid); ERR
+
+
+    return nerr;
+}
+
+/*----< main() >--------------------------------------------------------------*/
+int main(int argc, char **argv)
+{
+    char *filename="testfile.nc";
+    int rank, verbose, nerr=0, sum_nerr;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+    }
+    if (argc == 2) filename = argv[1];
+
+    /* test with safe mode enabled */
+    verbose = 0;
+    if (verbose) setenv("PNETCDF_SAFE_MODE", "1", 1);
+
+    nerr += test_open_mode(filename, verbose);
+
+    nerr += test_dim(filename);
+
+    nerr += test_attr(filename);
+
+    nerr += test_var(filename);
+
+    nerr += test_dim_var(filename);
+
+    MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (rank == 0) {
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING C   %s for header consistency", argv[0]);
+        if (sum_nerr == 0)
+            printf("%-66s ------ pass\n", cmd_str);
+        else
+            printf("%-66s ------ failed\n", cmd_str);
+    }
+    MPI_Finalize();
+    return 0;
+}
+

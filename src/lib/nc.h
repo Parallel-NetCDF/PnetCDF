@@ -141,16 +141,19 @@ ncmpii_new_x_NC_dim(NC_string *name);
 extern int
 ncmpii_find_NC_Udim(const NC_dimarray *ncap, NC_dim **dimpp);
 
+extern int
+incr_NC_dimarray(NC_dimarray *ncap, NC_dim *newdimp);
+
+extern NC_dim*
+dup_NC_dim(const NC_dim *dimp);
+
 /* dimarray */
 
 extern void
-ncmpii_free_NC_dimarrayV0(NC_dimarray *ncap);
-
-extern void
-ncmpii_free_NC_dimarrayV(NC_dimarray *ncap);
+ncmpii_free_NC_dimarray(NC_dimarray *ncap);
 
 extern int
-ncmpii_dup_NC_dimarrayV(NC_dimarray *ncap, const NC_dimarray *ref);
+ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref);
 
 extern NC_dim *
 ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
@@ -199,16 +202,19 @@ ncmpii_free_NC_attr(NC_attr *attrp);
 extern NC_attr *
 ncmpii_new_x_NC_attr(NC_string *strp, nc_type type, MPI_Offset nelems);
 
+extern int
+incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp);
+
+extern NC_attr*
+dup_NC_attr(const NC_attr *rattrp);
+
 /* attrarray */
 
 extern void
-ncmpii_free_NC_attrarrayV0(NC_attrarray *ncap);
-
-extern void
-ncmpii_free_NC_attrarrayV(NC_attrarray *ncap);
+ncmpii_free_NC_attrarray(NC_attrarray *ncap);
 
 extern int
-ncmpii_dup_NC_attrarrayV(NC_attrarray *ncap, const NC_attrarray *ref);
+ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref);
 
 extern NC_attr *
 ncmpii_elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem);
@@ -326,16 +332,19 @@ ncmpii_free_NC_var(NC_var *varp);
 extern NC_var *
 ncmpii_new_x_NC_var(NC_string *strp, int ndims);
 
+extern NC_var*
+dup_NC_var(const NC_var *rvarp);
+
+extern int
+incr_NC_vararray(NC_vararray *ncap, NC_var *newvarp);
+
 /* vararray */
 
 extern void
-ncmpii_free_NC_vararrayV0(NC_vararray *ncap);
-
-extern void
-ncmpii_free_NC_vararrayV(NC_vararray *ncap);
+ncmpii_free_NC_vararray(NC_vararray *ncap);
 
 extern int
-ncmpii_dup_NC_vararrayV(NC_vararray *ncap, const NC_vararray *ref);
+ncmpii_dup_NC_vararray(NC_vararray *ncap, const NC_vararray *ref);
 
 extern int
 ncmpii_NC_var_shape64(NC *ncp, NC_var *varp, const NC_dimarray *dims);
@@ -509,16 +518,8 @@ struct NC {
         {if((nrecs) > (ncp)->numrecs) ((ncp)->numrecs = (nrecs));}
 
 #define ErrIsHeaderDiff(err) \
-        (err == NC_EMULTIDEFINE             || \
-         err == NC_EDIMS_NELEMS_MULTIDEFINE || \
-         err == NC_EDIMS_SIZE_MULTIDEFINE   || \
-         err == NC_EVARS_NELEMS_MULTIDEFINE || \
-         err == NC_EVARS_NDIMS_MULTIDEFINE  || \
-         err == NC_EVARS_DIMIDS_MULTIDEFINE || \
-         err == NC_EVARS_TYPE_MULTIDEFINE   || \
-         err == NC_EVARS_LEN_MULTIDEFINE    || \
-         err == NC_EVARS_BEGIN_MULTIDEFINE  || \
-         err == NC_ENUMRECS_MULTIDEFINE)
+        (NC_EMULTIDEFINE >= err && err >= NC_EMULTIDEFINE_ATTR_VAL)
+
 
 /* Begin defined in nc.c */
 

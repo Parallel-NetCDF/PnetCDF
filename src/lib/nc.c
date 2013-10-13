@@ -230,12 +230,11 @@ ncmpii_NC_check_id(int  ncid,
 void
 ncmpii_free_NC(NC *ncp)
 {
-        if(ncp == NULL)
-                return;
-        ncmpii_free_NC_dimarrayV(&ncp->dims);
-        ncmpii_free_NC_attrarrayV(&ncp->attrs);
-        ncmpii_free_NC_vararrayV(&ncp->vars);
-        NCI_Free(ncp);
+    if (ncp == NULL) return;
+    ncmpii_free_NC_dimarray(&ncp->dims);
+    ncmpii_free_NC_attrarray(&ncp->attrs);
+    ncmpii_free_NC_vararray(&ncp->vars);
+    NCI_Free(ncp);
 }
 
 
@@ -296,11 +295,11 @@ ncmpii_dup_NC(const NC *ref)
                 return NULL;
         memset(ncp, 0, sizeof(NC));
 
-        if(ncmpii_dup_NC_dimarrayV(&ncp->dims, &ref->dims) != NC_NOERR)
+        if(ncmpii_dup_NC_dimarray(&ncp->dims, &ref->dims) != NC_NOERR)
                 goto err;
-        if(ncmpii_dup_NC_attrarrayV(&ncp->attrs, &ref->attrs) != NC_NOERR)
+        if(ncmpii_dup_NC_attrarray(&ncp->attrs, &ref->attrs) != NC_NOERR)
                 goto err;
-        if(ncmpii_dup_NC_vararrayV(&ncp->vars, &ref->vars) != NC_NOERR)
+        if(ncmpii_dup_NC_vararray(&ncp->vars, &ref->vars) != NC_NOERR)
                 goto err;
 
         ncp->xsz = ref->xsz;
@@ -694,14 +693,14 @@ int
 ncmpii_read_NC(NC *ncp) {
   int status = NC_NOERR;
 
-  ncmpii_free_NC_dimarrayV(&ncp->dims);
-  ncmpii_free_NC_attrarrayV(&ncp->attrs);
-  ncmpii_free_NC_vararrayV(&ncp->vars); 
+  ncmpii_free_NC_dimarray(&ncp->dims);
+  ncmpii_free_NC_attrarray(&ncp->attrs);
+  ncmpii_free_NC_vararray(&ncp->vars); 
 
   status = ncmpii_hdr_get_NC(ncp);
 
-  if(status == NC_NOERR)
-    fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
+  if (status == NC_NOERR)
+      fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
 
   return status;
 }
@@ -766,7 +765,7 @@ write_NC(NC *ncp)
                                       hsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            status = NC_EWRITE;
+            if (status == NC_NOERR) status = NC_EWRITE;
         }
         else {
             int put_size;
@@ -781,7 +780,7 @@ write_NC(NC *ncp)
     NCI_Free(buf);
  
     return status;
-} 
+}
 
 int
 ncmpii_dset_has_recvars(NC *ncp) 
@@ -818,7 +817,7 @@ ncmpii_NC_sync(NC  *ncp,
        4) ncmpii_NC_close()
        only 1) needs to call MPI_File_sync() here
      */
-    int status = NC_NOERR, didWrite = 0;
+    int status=NC_NOERR, didWrite=0, has_recvars=0;
     MPI_Offset numrecs;
 
     assert(!NC_readonly(ncp));
@@ -828,7 +827,8 @@ ncmpii_NC_sync(NC  *ncp,
      * check */
 
     numrecs = ncp->numrecs;
-    if (ncmpii_dset_has_recvars(ncp))
+    has_recvars = ncmpii_dset_has_recvars(ncp);
+    if (has_recvars)
 	MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
                       ncp->nciop->comm);
 
@@ -838,7 +838,7 @@ ncmpii_NC_sync(NC  *ncp,
         status = write_NC(ncp);
         didWrite = 1;
     }
-    else {  /* only numrecs in the header is dirty */
+    else if (has_recvars) {  /* only numrecs in the header is dirty */
         status = ncmpii_write_numrecs(ncp, numrecs, NC_ndirty(ncp));
         didWrite = 1;
     }
@@ -1144,9 +1144,11 @@ ncmpii_NC_enddef(NC *ncp)
 
 /* Public */
 
+/*----< ncmpii_NC_close() >---------------------------------------------------*/
 int 
-ncmpii_NC_close(NC *ncp) {
-    int num_reqs, status=NC_NOERR, *req_ids=NULL, *statuses=NULL;
+ncmpii_NC_close(NC *ncp)
+{
+    int num_reqs, err, status=NC_NOERR, *req_ids=NULL, *statuses=NULL;
     NC_req *cur_req;
 
     if (NC_indef(ncp)) { /* currently in define mode */
@@ -1187,9 +1189,8 @@ ncmpii_NC_close(NC *ncp) {
 
     if (!NC_readonly(ncp)) { /* file is open for write */
         /* check if header is dirty, if yes, flush it to file */
-        status = ncmpii_NC_sync(ncp, 0);
-        if (status != NC_NOERR)
-            return status;
+        err = ncmpii_NC_sync(ncp, 0);
+        if (status == NC_NOERR) status = err;
     }
  
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE))

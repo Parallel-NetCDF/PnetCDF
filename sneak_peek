@@ -37,6 +37,25 @@ This is essentially a placeholder for the next release note ...
     * NC_EINTOVERFLOW reports the error of 4-byte integer overflow. This
       usually happens due to MPI-IO data type constructor APIs' arguments using
       4-byte integers.
+    * Error codes to report metadata defined inconsistently across processes.
+        NC_EMULTIDEFINE_OMODE      - create/open mode
+        NC_EMULTIDEFINE_DIM_NUM    - number of dimensions
+        NC_EMULTIDEFINE_DIM_SIZE   - size of dimension
+        NC_EMULTIDEFINE_DIM_NAME   - dimension names
+        NC_EMULTIDEFINE_VAR_NUM    - number of variables
+        NC_EMULTIDEFINE_VAR_NAME   - variable name
+        NC_EMULTIDEFINE_VAR_NDIMS  - variable's number of dimensions
+        NC_EMULTIDEFINE_VAR_DIMIDS - variable's dimid
+        NC_EMULTIDEFINE_VAR_TYPE   - variable's data type
+        NC_EMULTIDEFINE_VAR_LEN    - variable's size
+        NC_EMULTIDEFINE_NUMRECS    - number of records
+        NC_EMULTIDEFINE_VAR_BEGIN  - variable file begin offset
+        NC_EMULTIDEFINE_ATTR_NUM   - number of attributes
+        NC_EMULTIDEFINE_ATTR_SIZE  - memory space used by attribute
+        NC_EMULTIDEFINE_ATTR_NAME  - attribute name
+        NC_EMULTIDEFINE_ATTR_TYPE  - attribute type
+        NC_EMULTIDEFINE_ATTR_LEN   - attribute length
+        NC_EMULTIDEFINE_ATTR_VAL   - attribute value
 
   o New run-time environment variable
     * PNETCDF_SAFE_MODE environment variable can be used to enable/disable the
@@ -81,6 +100,8 @@ This is essentially a placeholder for the next release note ...
       and ncmpi_iget_vara_int()
     * testcases/flexible.c -- test flexible API ncmpi_get_vara_int_all() using
       an MPI derived data type created by MPI_Type_create_hindex()
+    * test/header/header_consistency.c -- test header inconsistency and see if
+      inconsistent metadata is overwritten by root's
 
   o New semantics for attribute APIs in data mode
     The following APIs can modify file header while being called in data mode.

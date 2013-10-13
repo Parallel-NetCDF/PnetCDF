@@ -11,40 +11,57 @@ program tst_f90_nc4
   use mpi
   use pnetcdf
   implicit none
-  integer :: fh, ierr, dimid, varid, ndim, nvar
+  integer :: fh, cmode, err, dimid, varid, ndim, nvar
   character (len = *), parameter :: FILE_NAME = "tst_f90_nc4.nc"
-  integer :: cmode, err
   integer(KIND=MPI_OFFSET_KIND) :: ten=10
-
-  write(*,"(A)",advance="no") '*** Testing simple netCDF file from Fortran 90.'
+  character(LEN=128) filename, cmd, msg
+  integer argc, iargc, my_rank, p
 
   call MPI_Init(err)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+
+  ! take filename from command-line argument if there is any
+  call getarg(0, cmd)
+  argc = IARGC()
+  if (argc .GT. 1) then
+     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+     goto 999
+  endif
+  filename = FILE_NAME
+  if (argc .EQ. 1) call getarg(1, filename)
+
+  if (p .ne. 1 .AND. my_rank .eq. 0) then
+     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
+  endif
 
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-  call check(nf90mpi_create(MPI_COMM_WORLD, FILE_NAME, cmode, MPI_INFO_NULL, fh))
+  call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, fh))
   call check(nf90mpi_def_dim(fh, 'fred', ten, dimid))
   call check(nf90mpi_def_var(fh, 'john', NF90_INT, (/dimid/), varid))
   call check(nf90mpi_close(fh))
   
   ! Check the file.
-  call check(nf90mpi_open(MPI_COMM_WORLD, FILE_NAME, NF90_WRITE, MPI_INFO_NULL, fh))
+  call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_WRITE, MPI_INFO_NULL, fh))
   call check(nf90mpi_inquire(fh, nDimensions = ndim, nVariables = nvar))
   if (nvar .ne. 1 .or. ndim .ne. 1) stop 3
   call check(nf90mpi_close(fh))
 
-  call check(nf90mpi_create(MPI_COMM_WORLD, FILE_NAME, cmode, MPI_INFO_NULL, fh))
+  call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, fh))
   call check(nf90mpi_def_dim(fh, 'fred', ten, dimid))
   call check(nf90mpi_def_var(fh, 'john', NF90_INT, (/dimid/), varid))
   call check(nf90mpi_close(fh))
   
   ! Check the file.
-  call check(nf90mpi_open(MPI_COMM_WORLD, FILE_NAME, NF90_WRITE, MPI_INFO_NULL, fh))
+  call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_WRITE, MPI_INFO_NULL, fh))
   call check(nf90mpi_inquire(fh, nDimensions = ndim, nVariables = nvar))
   if (nvar .ne. 1 .or. ndim .ne. 1) stop 3
   call check(nf90mpi_close(fh))
 
-  write(*,"(A)") '                    ------ pass'
-  call MPI_Finalize(err)
+   msg = '*** TESTING F90 '//trim(cmd)
+   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
+
+ 999 call MPI_Finalize(err)
 
 contains
 !     This subroutine handles errors by printing an error message and

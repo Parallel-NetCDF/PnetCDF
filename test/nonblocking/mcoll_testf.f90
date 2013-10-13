@@ -51,7 +51,7 @@
                                           !   determined by MPI where a
                                           !   zero is specified
       integer argc, IARGC, rank, Write_File
-      character(len=256) :: filename, cmd
+      character(len=256) :: filename, cmd, msg
 
       real*4  filsiz
       real*4  rdt_g(2)
@@ -183,11 +183,8 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
-      if (rank .EQ. 0) then
-          print*, &
-          '** TESTING Fortran mcoll_testf.f90 for nf90mpi_iput_var API', &
-          '       ------ pass'
-      endif
+      msg = '*** TESTING F90 '//trim(cmd)//' for nf90mpi_iput_var API'
+      if (rank .EQ. 0) write(*,"(A67,A)") msg,'------ pass'
 
  999  call MPI_Finalize(ierr)
 
@@ -222,7 +219,7 @@
 !     Local variable declarations.
 !     ----------------------------
 
-      integer ierr
+      integer ierr, info
       integer lon_id, lat_id, lev_id
       integer ncid
       integer nw
@@ -263,9 +260,14 @@
         t1 = MPI_Wtime ( )
 
 !       =================
+        call MPI_Info_create(info, ierr)
+        call MPI_Info_set(info, "romio_ds_write", "disable", ierr)
+
         Write_File = nf90mpi_create(comm_cart, filename, NF90_CLOBBER, &
-                              MPI_INFO_NULL, ncid)
+                                    info, ncid)
         if (Write_File .NE. NF_NOERR) return
+
+        call MPI_Info_free(info, ierr)
 
 !       ==================
         Write_File = nf90mpi_def_dim(ncid, "level",     totsiz_3d(1)*nwrites, &

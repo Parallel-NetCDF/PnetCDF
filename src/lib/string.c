@@ -31,9 +31,9 @@ NC_free_string()
 void
 ncmpii_free_NC_string(NC_string *ncstrp)
 {
-	if(ncstrp==NULL)
-		return;
-	NCI_Free(ncstrp);
+    if (ncstrp==NULL) return;
+    /* ncstrp->cp is allocated as part of ncstrp object */
+    NCI_Free(ncstrp);
 }
 
 static int ncmpii_NC_check_name_CDF1(const char *name);
@@ -282,30 +282,31 @@ NC_new_string(count, str)
 NC_string *
 ncmpii_new_NC_string(MPI_Offset slen, const char *str)
 {
-	NC_string *ncstrp;
-	MPI_Offset sz = M_RNDUP(sizeof(NC_string)) + slen + 1;
+    /* str may not be NULL terminated */
+    NC_string *ncstrp;
+    int sizeof_NC_string = M_RNDUP(sizeof(NC_string));
+    MPI_Offset sz = sizeof_NC_string + slen + 1;
+    /* one char more space for NULL terminate char */
 
 #if 0
-	sz = _RNDUP(sz, X_ALIGN);
+    sz = _RNDUP(sz, X_ALIGN);
 #endif
-		
-	ncstrp = (NC_string *)NCI_Malloc(sz);
-	if( ncstrp == NULL )
-		return NULL;
-	(void) memset(ncstrp, 0, sz);
 
-        /* Isn't the line below the same as "sz = slen"? */
-	ncstrp->nchars = sz - M_RNDUP(sizeof(NC_string)) - 1;
-	assert(ncstrp->nchars + 1 > slen);
-	ncstrp->cp = (char *)ncstrp + M_RNDUP(sizeof(NC_string));
+    ncstrp = (NC_string *)NCI_Malloc(sz);
+    if (ncstrp == NULL) return NULL;
 
-	if(str != NULL && *str != 0)
-	{
-		(void) strncpy(ncstrp->cp, str, ncstrp->nchars +1);
-		ncstrp->cp[ncstrp->nchars] = 0;
-	}
-	
-	return(ncstrp);
+    memset(ncstrp, 0, sz);
+
+    /* make space occupied by ncstrp->cp part of ncstrp */
+    ncstrp->nchars = slen;
+    ncstrp->cp = (char *)ncstrp + sizeof_NC_string;
+
+    if (str != NULL) {
+        strncpy(ncstrp->cp, str, slen);
+        ncstrp->cp[slen] = '\0';  /* NULL terminated */
+    }
+
+    return(ncstrp);
 }
 
 

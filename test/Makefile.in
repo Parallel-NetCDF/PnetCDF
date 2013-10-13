@@ -23,7 +23,7 @@ SUBDIRS = common \
           largefile \
           nonblocking \
           test_inq_format \
-          test_check_header \
+          header \
           testcases \
           data
 
@@ -64,6 +64,7 @@ ptest: all
 	cd C && $(MAKE) ptest
 	cd nonblocking && $(MAKE) ptest
 	cd testcases && $(MAKE) ptest
+	cd header && $(MAKE) ptest
 
 include $(srcdir)/../rules.make
 

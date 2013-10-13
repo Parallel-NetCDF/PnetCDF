@@ -10,10 +10,10 @@
       include "mpif.h"
       include "pnetcdf.inc"
 
-      integer i, j, ncid, varid, retval, err, rank, nprocs
+      logical verbose
+      integer i, j, ncid, varid, retval, err, rank, nprocs, info
       integer no_err, cmode
-      integer dimid(2)
-      integer req(2), status(2)
+      integer dimid(2), req(2), status(2)
       integer(kind=MPI_OFFSET_KIND) start(2)
       integer(kind=MPI_OFFSET_KIND) count(2)
       integer(kind=MPI_OFFSET_KIND) stride(2)
@@ -22,15 +22,11 @@
       real  var(6,4)
 
       integer argc, IARGC, Write_File
-      character(len=256) :: filename, cmd
+      character(len=256) :: filename, cmd, msg
 
       call MPI_INIT(err)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
-
-      if (nprocs > 1 .AND. rank .EQ. 0) then
-          print*,"Warning: this test is designed to run on one process"
-      endif
 
       call getarg(0, cmd)
       argc = IARGC()
@@ -41,11 +37,22 @@
       filename = "testfile.nc"
       if (argc .EQ. 1) call getarg(1, filename)
 
+      verbose = .FALSE.
+      if (nprocs > 1 .AND. rank .EQ. 0 .AND. verbose) then
+          print*,'Warning: ',trim(cmd),
+     +           ' is designed to run on 1 process'
+      endif
+
+      call MPI_Info_create(info, err)
+      call MPI_Info_set(info, "romio_ds_write", "disable", err)
+
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, 'testfile.nc', cmode,
-     +                   MPI_INFO_NULL, ncid)
+     +                   info, ncid)
       if (err < NF_NOERR) print*,'Error at nfmpi_create ',
      +                           nfmpi_strerror(err)
+
+      call MPI_Info_free(info, err)
 
       ! define a variable of a 4 x 6 integer array in the nc file
       err = nfmpi_def_dim(ncid, 'X', 4_MPI_OFFSET_KIND, dimid(1))
@@ -160,12 +167,11 @@
      +                           nfmpi_strerror(err)
 
       if (rank .EQ. 0) then
+         msg = '*** TESTING F77 '//trim(cmd)//' for bput_varm_real API'
          if (no_err .GT. 0) then
-             print*,'** TESTING Fortran test_bputf77.f for ',
-     +              'nfmpi_bput_varm_real        ------ failed'
+             write(*,"(A67,A)") msg,'------ failed'
          else
-             print*,'** TESTING Fortran test_bputf77.f for ',
-     +              'nfmpi_bput_varm_real        ------ pass'
+             write(*,"(A67,A)") msg,'------ pass'
          endif
       endif
 

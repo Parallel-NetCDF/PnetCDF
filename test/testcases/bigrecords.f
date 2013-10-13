@@ -79,7 +79,7 @@
      + 377.5, 367.59, 360.06, 353.85999, 348.66, 342.5, 336, 328.5, 320,
      + 310, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 199.10001/
 
-      character(len = 256) :: filename, cmd
+      character(len = 256) :: filename, cmd, msg
       integer argc, IARGC
 
 ! attribute vectors
@@ -248,9 +248,8 @@
 !           write(6,*) "Error: time array was ", time
 !      endif
 
-      if (myid .EQ. 0)
-     +   print*,'** TESTING Fortran bigrecords.F   NF_64BIT_DATA ',
-     +          '                  ------ pass'
+      msg = '*** TESTING F77 '//trim(cmd)//' for NF_64BIT_DATA'
+      if (myid .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
  999  call MPI_FINALIZE(ierr)
       end program main

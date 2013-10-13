@@ -173,7 +173,7 @@ main(int argc, char **argv)
 
    if (rank == 0) {
        char cmd_str[80];
-       sprintf(cmd_str, "*** TESTING %s for reading file %s ", argv[0],filename);
+       sprintf(cmd_str, "*** TESTING C   %s for reading file", argv[0]);
        printf("%-66s ------ pass\n", cmd_str);
    }
 
