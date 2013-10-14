@@ -56,14 +56,15 @@ ncmpii_new_x_NC_dim(NC_string *name)
  * Formerly, NC_new_dim(const char *name, long size)
  */
 static NC_dim *
-ncmpii_new_NC_dim(const char *name,
-                  MPI_Offset  name_nchars,
+ncmpii_new_NC_dim(const char *name,   /* dimension name */
+                  MPI_Offset  nchars, /* length of name. Note the name string
+                                         may not be NULL terminated */
                   MPI_Offset  size)
 {
     NC_string *strp;
     NC_dim *dimp;
 
-    strp = ncmpii_new_NC_string(name_nchars, name);
+    strp = ncmpii_new_NC_string(nchars, name);
     if (strp == NULL) return NULL;
 
     dimp = ncmpii_new_x_NC_dim(strp);
@@ -122,10 +123,10 @@ ncmpii_find_NC_Udim(const NC_dimarray  *ncap,
 static int
 NC_finddim(const NC_dimarray  *ncap,
            const char         *name,
-           MPI_Offset          nchars,
            NC_dim            **dimpp)
 {
     int dimid;
+    MPI_Offset nchars = strlen(name);
 
     assert(ncap != NULL);
 
@@ -133,6 +134,7 @@ NC_finddim(const NC_dimarray  *ncap,
 
     /* note that the number of dimensions allowed is < 2^32 */
     for (dimid=0; dimid<ncap->ndefined; dimid++)
+        /* use strncmp() as name->nchars may not be NULL terminated */
         if (ncap->value[dimid]->name->nchars == nchars &&
             strncmp(ncap->value[dimid]->name->cp, name, nchars) == 0) {
             /* found the mateched name */
@@ -335,7 +337,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     if (ncp->dims.ndefined >= NC_MAX_DIMS) return NC_EMAXDIMS;
 
     /* check if the name string is previously used */
-    dimid = NC_finddim(&ncp->dims, name, strlen(name), &dimp);
+    dimid = NC_finddim(&ncp->dims, name, &dimp);
     if (dimid != -1) return NC_ENAMEINUSE;
     
     /* create a new dimension object */
@@ -368,7 +370,7 @@ ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr)
 	if(status != NC_NOERR)
 		return status;
 
-	dimid = NC_finddim(&ncp->dims, name, strlen(name), NULL);
+	dimid = NC_finddim(&ncp->dims, name, NULL);
 
 	if(dimid == -1)
 		return NC_EBADDIM;
@@ -489,7 +491,7 @@ ncmpi_rename_dim(int         ncid,
     status = ncmpii_NC_check_name(newname, file_ver);
     if (status != NC_NOERR) return status;
 
-    existid = NC_finddim(&ncp->dims, newname, strlen(newname), &dimp);
+    existid = NC_finddim(&ncp->dims, newname, &dimp);
     if (existid != -1)
         return NC_ENAMEINUSE;
 

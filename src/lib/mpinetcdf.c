@@ -52,24 +52,21 @@ ncmpi_create(MPI_Comm    comm,
     if (env_str != NULL && *env_str == '1') safe_mode = 1;
 
     if (safe_mode) {
-        /* check if cmode are consistent across all processes */
-        int rank, nprocs;
-        MPI_Offset cmode_sum, my_cmode=cmode;
-        MPI_Comm_size(comm, &nprocs);
-        MPI_Comm_rank(comm, &rank);
+        /* check if cmode is consistent with root's */
+        int root_cmode=cmode;
 
-        /* Note if cmode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
-           In pnetcdf.h, they both are defined the same value, 0.
-         */
+        MPI_Bcast(&root_cmode, 1, MPI_INT, 0, comm);
 
-        MPI_Allreduce(&my_cmode, &cmode_sum, 1, MPI_OFFSET, MPI_SUM, comm);
-        if (cmode_sum != my_cmode * nprocs) {
+        if (root_cmode != cmode) {
+            int rank;
+            MPI_Comm_rank(comm, &rank);
             /* cmodes are inconsistent, overwrite local cmode with root's */
-            MPI_Bcast(&cmode, 1, MPI_INT, 0, comm);
-            if (rank == 0)
-                printf("Warning: inconsistent file create mode, overwrite with root's\n");
+            printf("rank %d: Warning - inconsistent file create mode, overwrite with root's\n",rank);
+            cmode = root_cmode;
             status = NC_EMULTIDEFINE_OMODE;
         }
+        /* when safe_mode is disabled, NC_EMULTIDEFINE_OMODE will be reported at
+         * the time ncmpi_enddef() returns */
     }
 
     /* get header chunk size from user info */
@@ -112,7 +109,10 @@ ncmpi_create(MPI_Comm    comm,
     fSet(ncp->flags, NC_NOFILL);
 
     err = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
-    if (err != NC_NOERR) return err;
+    if (err != NC_NOERR) {
+        ncmpii_free_NC(ncp);
+        return err;
+    }
 
     fSet(ncp->flags, NC_CREAT);
 
@@ -147,7 +147,7 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)
 {
-    int status=NC_NOERR, safe_mode=0;
+    int err, status=NC_NOERR, safe_mode=0;
     char *env_str=NULL;
     NC *ncp;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
@@ -159,21 +159,23 @@ ncmpi_open(MPI_Comm    comm,
     if (env_str != NULL && *env_str == '1') safe_mode = 1;
 
     if (safe_mode) {
-        /* check if omode are consistent across all processes */
-        int omode_sum, nprocs;
-        MPI_Comm_size(comm, &nprocs);
+        /* check if omode is consistent with root's */
+        int root_omode=omode;
 
         /* Note if omode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
            In pnetcdf.h, they both are defined the same value, 0.
          */
 
-        MPI_Allreduce(&omode, &omode_sum, 1, MPI_INT, MPI_SUM, comm);
-        if (omode_sum != omode * nprocs) {
-            // fprintf(stderr,"Error: create modes are inconsistent\n");
-            *ncidp = -1;  /* cause NC_EBADID for any further opertion */
-            return NC_EMULTIDEFINE_OMODE;
+        MPI_Bcast(&root_omode, 1, MPI_INT, 0, comm);
+
+        if (root_omode != omode) {
+            int rank;
+            MPI_Comm_rank(comm, &rank);
+            /* omodes are inconsistent, overwrite local omode with root's */
+            printf("rank %d: Warning - inconsistent file open mode, overwrite with root's\n",rank);
+            omode = root_omode;
+            status = NC_EMULTIDEFINE_OMODE;
         }
-        /* if omodes are inconsistent, then it is a fatal error to continue */
     }
 
     /* get header chunk size from user info, if provided */
@@ -192,10 +194,10 @@ ncmpi_open(MPI_Comm    comm,
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
 
-    status = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
-    if (status != NC_NOERR) {
+    err = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
+    if (err != NC_NOERR) {
         ncmpii_free_NC(ncp);
-        return status;
+        return err;
     } 
 
     assert(ncp->flags == 0); 
@@ -211,11 +213,11 @@ ncmpi_open(MPI_Comm    comm,
         fSet(ncp->flags, NC_HSYNC);  /* sync header */
     }
 
-    status = ncmpii_hdr_get_NC(ncp); /* read header from file */
-    if (status != NC_NOERR) {
+    err = ncmpii_hdr_get_NC(ncp); /* read header from file */
+    if (err != NC_NOERR) {
         ncmpiio_close(ncp->nciop, 0);
         ncmpii_free_NC(ncp);
-        return status;
+        return err;
     }
     ncp->head = NULL;
     ncp->tail = NULL;
@@ -334,8 +336,10 @@ ncmpi_redef(int ncid) {
     if (status != NC_NOERR) 
         return status; 
 
-    if (NC_readonly(ncp)) 
+    if (NC_readonly(ncp))
         return NC_EPERM;
+        /* if open mode is inconsistent, then this return might cause parallel
+         * program to hang */
 
     if (NC_indef(ncp))
         return NC_EINDEFINE;

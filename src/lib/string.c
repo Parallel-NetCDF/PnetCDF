@@ -292,16 +292,14 @@ ncmpii_new_NC_string(MPI_Offset slen, const char *str)
     sz = _RNDUP(sz, X_ALIGN);
 #endif
 
-    ncstrp = (NC_string *)NCI_Malloc(sz);
+    ncstrp = (NC_string *) NCI_Calloc(sz, sizeof(char));
     if (ncstrp == NULL) return NULL;
-
-    memset(ncstrp, 0, sz);
 
     /* make space occupied by ncstrp->cp part of ncstrp */
     ncstrp->nchars = slen;
     ncstrp->cp = (char *)ncstrp + sizeof_NC_string;
 
-    if (str != NULL) {
+    if (str != NULL && *str != '\0') {
         strncpy(ncstrp->cp, str, slen);
         ncstrp->cp[slen] = '\0';  /* NULL terminated */
     }
