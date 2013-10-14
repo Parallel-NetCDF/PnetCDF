@@ -2079,6 +2079,12 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     memset(magic, 0, sizeof(magic));
     err = ncmpix_getn_schar_schar(
             (const void **)&getbuf->pos, sizeof(magic), magic);
+    if (err != NC_NOERR) {
+        /* Fatal error, as root's header is significant */
+        fprintf(stderr,"Error: reading file magic from root's header\n");
+        return err;
+    }
+
     getbuf->index += sizeof(magic);
     /* don't need to worry about CDF-1 or CDF-2
      * if the first bits are not 'CDF-'  */
@@ -2133,22 +2139,24 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     getbuf->version = root_ver;
 
     if (root_ver > 1 && sizeof(MPI_Offset) != 8) {
-        /* for NC_64BIT_DATA or NC_64BIT_OFFSET, MPI_Offset must be 8 bytes
-         * Fatal error, can't support all CDF-2, CDF-5 */
+        /* for NC_64BIT_DATA or NC_64BIT_OFFSET, MPI_Offset must be 8 bytes */
+        fprintf(stderr,"Error: cannot support CDF-2 and CDF-5 on this machine\n");
         return NC_ESMALL; /* should not continue */
     }
 
     /* move on to the next element in header: number of records */
     err = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
-    if (err != NC_NOERR)
-        /* Fatal error, can't read root's header */
+    if (err != NC_NOERR) {
+        fprintf(stderr,"Error: cannott read root's header for numrecs\n");
         return err; /* should not continue */
+    }
 
     err = ncmpix_get_size_t((const void **)(&getbuf->pos), &nrecs,
                             (getbuf->version == 5) ? 8 : 4);
-    if (err != NC_NOERR)
-        /* Fatal error, can't read root's header */
+    if (err != NC_NOERR) {
+        fprintf(stderr,"Error: cannott read root's header for numrecs\n");
         return err; /* should not continue */
+    }
 
     if (getbuf->version == 5)
         getbuf->index += X_SIZEOF_LONG;
@@ -2263,92 +2271,3 @@ int ncmpii_write_header(NC *ncp)
     return status;
 }
 
-#if 0
-/*----< ncmpii_hdr_copy() >---------------------------------------------------*/
-/* copy the contents of getbuf to header object.
- * getbuf contains the entire header received from root process.
- */
-int
-ncmpii_hdr_copy(NC         *ncp,
-                bufferinfo *buf)
-{
-    int status;
-    schar magic[sizeof(ncmagic)];
-    MPI_Offset nrecs = 0;
-    MPI_Aint pos_addr, base_addr;
-
-    assert(ncp != NULL);
-    assert(buf != NULL);
-
-    /* some values have been set in the local copy, keep them */
-    char *path = ncp->nciop->path;
-    int   fd = ncp->nciop->fd;
-    ncp->nciop       = buf->nciop;
-    ncp->nciop->path = buf->nciop->path
-    ncp->nciop->fd   = buf->nciop->fd
-    /* ncp->flags */
-
-    buf->index = 0;
-
-    /* get numrecs from buf->into ncp */
-    status = ncmpix_get_size_t((const void **)(&buf->pos), &nrecs,
-                               (buf->version == 5) ? 8 : 4);
-    if (status != NC_NOERR) {
-        NCI_Free(buf->base);
-        return status;
-    }
-
-    if (buf->version == 5)
-        buf->index += X_SIZEOF_LONG;
-    else
-        buf->index += X_SIZEOF_SIZE_T;
-
-    ncp->numrecs = nrecs;
-
-#ifdef HAVE_MPI_GET_ADDRESS
-    MPI_Get_address(buf->pos,  &pos_addr);
-    MPI_Get_address(buf->base, &base_addr);
-#else
-    MPI_Address(buf->pos,  &pos_addr);
-    MPI_Address(buf->base, &base_addr);
-#endif
-    assert(pos_addr < base_addr + buf->size);
-
-    /* get dim_list from buf->into ncp */
-    status = hdr_get_NC_dimarray(&buf-> &ncp->dims);
-    if (status != NC_NOERR) {
-        NCI_Free(buf->base);
-        return status;
-    }
-
-    /* get gatt_list from buf->into ncp */
-    status = hdr_get_NC_attrarray(&buf-> &ncp->attrs); 
-    if (status != NC_NOERR) {
-        NCI_Free(buf->base);
-        return status;
-    }
-
-    /* get var_list from buf->into ncp */
-    status = hdr_get_NC_vararray(&buf-> &ncp->vars);
-    if (status != NC_NOERR) {
-        NCI_Free(buf->base);
-        return status; 
-    }
-  
-    /* get the un-aligned size occupied by the file header */
-    ncp->xsz = ncmpii_hdr_len_NC(ncp);
-
-    /* Recompute the shapes of all variables
-     * Sets ncp->begin_var to start of first variable.
-     * Sets ncp->begin_rec to start of first record variable.
-     */ 
-    status = ncmpii_NC_computeshapes(ncp);
-
-    NCI_Free(buf->base);
-
-    ncp->nciop->put_size += buf->put_size;
-    ncp->nciop->get_size += buf->get_size;
-  
-    return status;
-}
-#endif

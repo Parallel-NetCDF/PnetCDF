@@ -107,8 +107,9 @@ ncmpii_new_x_NC_attr(
 NC_new_attr(name,type,count,value)
  */
 static NC_attr *
-ncmpii_new_NC_attr(const char *name,
-                   MPI_Offset  nchars,
+ncmpii_new_NC_attr(const char *name,    /* attribute name (note: the name string
+                                           may not be NULL terminated */
+                   MPI_Offset  nchars,  /* length of name */
 	           nc_type     type,
 	           MPI_Offset  nelems)
 {
@@ -136,7 +137,8 @@ dup_NC_attr(const NC_attr *rattrp)
 {
     NC_attr *attrp = ncmpii_new_NC_attr(rattrp->name->cp,
                                         rattrp->name->nchars,
-    	                                rattrp->type, rattrp->nelems);
+    	                                rattrp->type,
+    	                                rattrp->nelems);
     if (attrp == NULL) return NULL;
     memcpy(attrp->xvalue, rattrp->xvalue, rattrp->xsz);
     return attrp;
@@ -161,15 +163,13 @@ ncmpii_free_NC_attrarray(NC_attrarray *ncap)
 
     assert(ncap->value != NULL);
 
-    for (i=0; i<ncap->ndefined; i++) {
+    for (i=0; i<ncap->ndefined; i++)
         ncmpii_free_NC_attr(ncap->value[i]);
-        ncap->value[i] = NULL;
-    }
-    ncap->ndefined = 0;
 
     NCI_Free(ncap->value);
-    ncap->value = NULL;
-    ncap->nalloc = 0;
+    ncap->value    = NULL;
+    ncap->nalloc   = 0;
+    ncap->ndefined = 0;
 }
 
 /*----< ncmpii_dup_NC_attrarray() >-------------------------------------------*/
@@ -268,7 +268,7 @@ elem_NC_attrarray(const NC_attrarray *ncap, MPI_Offset elem)
 	return ncap->value[elem];
 }
 
-/* End attarray per se */
+/* End attrarray per se */
 
 /*----< NC_attrarray0() >----------------------------------------------------*/
 /*
@@ -309,6 +309,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
     for (i=0; i<ncap->ndefined; i++) {
         if (ncap->value[i]->name->nchars == nchars &&
             strncmp(ncap->value[i]->name->cp, name, nchars) == 0)
+            /* name->cp may not be NULL terminated */
             return i;
     }
     return -1;

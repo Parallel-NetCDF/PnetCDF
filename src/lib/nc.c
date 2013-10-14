@@ -226,7 +226,7 @@ ncmpii_NC_check_id(int  ncid,
 }
 
 
-/* static */
+/*----< ncmpii_free_NC() >----------------------------------------------------*/
 void
 ncmpii_free_NC(NC *ncp)
 {
@@ -828,6 +828,8 @@ ncmpii_NC_sync(NC  *ncp,
 
     numrecs = ncp->numrecs;
     has_recvars = ncmpii_dset_has_recvars(ncp);
+    /* if independent data mode is used to write data, ncp->numrecs might be
+     * inconsistent among processes. */
     if (has_recvars)
 	MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
                       ncp->nciop->comm);

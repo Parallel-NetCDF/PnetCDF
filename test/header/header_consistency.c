@@ -16,25 +16,25 @@
 
 #define ERR_MSG(e, e1) {if (e != NC_EMULTIDEFINE && e != e1) { printf("Error (line %d): expecting error code %d or %d but got %d\n", __LINE__, NC_EMULTIDEFINE, e1, e); nerr++; }}
 
-#define ERR {if(err!=NC_NOERR)printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
 
 /*----< test_open_mode() >----------------------------------------------------*/
 int test_open_mode(char *filename, int safe_mode)
 {
-    int err, rank, ncid, cmode, nerr=0;
+    int err, rank, ncid, cmode, omode, nerr=0;
     MPI_Offset dimlen;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
-    cmode = NC_CLOBBER|NC_64BIT_OFFSET;
 
     /* Test inconsistent cmode -----------------------------------------------*/
+    cmode = NC_CLOBBER|NC_64BIT_OFFSET;
     if (rank == 0) cmode = NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid);
     /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
-    if (safe_mode) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
-    else           ERR
+    if (safe_mode && rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+    else                       ERR
     err = ncmpi_close(ncid);
     if (safe_mode) ERR
     else           ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
@@ -45,6 +45,16 @@ int test_open_mode(char *filename, int safe_mode)
         printf("Error (line %d): output file should be in CDF-1 format\n",__LINE__);
         nerr++;
     }
+
+    /* Test inconsistent omode -----------------------------------------------*/
+    omode = NC_WRITE;
+    if (rank == 0) omode = NC_NOWRITE;
+    err = ncmpi_open(comm, filename, omode, info, &ncid);
+    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
+    if (safe_mode && rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+    else                       ERR
+    err = ncmpi_close(ncid); ERR
+
     return nerr;
 }
 
@@ -429,8 +439,8 @@ int test_dim_var(char *filename)
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    char *filename="testfile.nc";
-    int rank, verbose, nerr=0, sum_nerr;
+    char *filename="testfile.nc", *mode[2] = {"0", "1"};
+    int i, rank, verbose, nerr=0, sum_nerr;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -442,19 +452,21 @@ int main(int argc, char **argv)
     }
     if (argc == 2) filename = argv[1];
 
-    /* test with safe mode enabled */
     verbose = 0;
-    if (verbose) setenv("PNETCDF_SAFE_MODE", "1", 1);
+    for (i=0; i<=verbose; i++) {
+        /* test with safe mode off and on*/
+        setenv("PNETCDF_SAFE_MODE", mode[i], 1);
 
-    nerr += test_open_mode(filename, verbose);
+        nerr += test_open_mode(filename, i);
 
-    nerr += test_dim(filename);
+        nerr += test_dim(filename);
 
-    nerr += test_attr(filename);
+        nerr += test_attr(filename);
 
-    nerr += test_var(filename);
+        nerr += test_var(filename);
 
-    nerr += test_dim_var(filename);
+        nerr += test_dim_var(filename);
+    }
 
     MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {

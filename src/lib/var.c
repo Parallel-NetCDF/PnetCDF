@@ -97,8 +97,9 @@ ncmpii_new_x_NC_var(NC_string *strp,
  * Formerly, NC_new_var()
  */
 static NC_var *
-ncmpii_new_NC_var(const char *name,
-                  MPI_Offset  nchars,
+ncmpii_new_NC_var(const char *name,   /* variable name */
+                  MPI_Offset  nchars, /* length of name. Note the name string
+                                         may not be NULL terminated */
                   nc_type     type,
                   int         ndims,
                   const int  *dimids)
@@ -174,13 +175,12 @@ ncmpii_free_NC_vararray(NC_vararray *ncap)
     for (i=0; i<ncap->ndefined; i++) {
         if (ncap->value[i] != NULL)
             ncmpii_free_NC_var(ncap->value[i]);
-        ncap->value[i] = NULL;
     }
-    ncap->ndefined = 0;
 
     NCI_Free(ncap->value);
-    ncap->value = NULL;
-    ncap->nalloc = 0;
+    ncap->value    = NULL;
+    ncap->nalloc   = 0;
+    ncap->ndefined = 0;
 }
 
 
@@ -307,6 +307,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     slen = strlen(name);
 
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
+        /* use strncmp() because  name->cp may not be NULL terminated */
         if ((*loc)->name->nchars == slen &&
             strncmp((*loc)->name->cp, name, slen) == 0) {
             if (varpp != NULL)
