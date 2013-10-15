@@ -64,6 +64,10 @@ LIB_CSRCS = mpinetcdf.c \
             utf8proc.c \
             swap.c
 
+ifeq (@enable_subfiling@, yes)
+LIB_CSRCS += subfile.c
+endif
+
 PACKING_LIST = $(LIB_CSRCS) \
                $(M4_SRCS) \
                $(HEADER_SRCS) \

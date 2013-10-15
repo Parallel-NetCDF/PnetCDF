@@ -1,0 +1,55 @@
+#
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir = @srcdir@
+VPATH  = @srcdir@
+
+include ../../macros.make
+
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+FPPFLAGS += -I../../src/libf -I../../src/libf90
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf
+
+C_SRCS   = test_subfile.c
+
+CXX_SRCS = 
+
+F77_SRCS = 
+
+PROGS    = $(C_SRCS:.c=)
+OBJS     = $(C_SRCS:.c=.o)
+ifeq (@has_mpicxx@, yes)
+PROGS   += $(CXX_SRCS:.cpp=)
+OBJS    += $(CXX_SRCS:.cpp=.o)
+endif
+
+ifeq (@has_fortran@, yes)
+PROGS   += $(F77_SRCS:.f=)
+OBJS    += $(F77_SRCS:.f=.o)
+endif
+
+GARBAGE      = $(PROGS) *.nc
+PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(CXX_SRCS) Makefile.in depend
+
+all: $(PROGS)
+
+test_subfile: test_subfile.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+testing check: $(PROGS)
+	@mpiexec -n 2 $(srcdir)/test_subfile -f test_subfile.nc -s 2
+
+verbose_testing : $(PROGS)
+
+testing-collective_error:
+	echo "please run with 2 processes. e.g. mpiexec -n 2 collective_error"
+
+include $(srcdir)/../../rules.make
+include $(srcdir)/depend
+

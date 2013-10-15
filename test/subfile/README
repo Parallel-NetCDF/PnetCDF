@@ -1,0 +1,9 @@
+
+In order to use the subfiling module, pnetcdf must be configured with "--enable-subfiling" option.
+
+This is a test run to create two subfiles. Note that the number of MPI processes must be equal or larger than the number of subfiles.
+
+$ mpiexec -n 2 ./test_subfile -f test_subfile.nc -s 2
+
+This will create 1 master file (the original file, i.e., test_subfile.nc) and two subfiles, test_subfile.nc.subfile_0.nc and test_subfile.nc.subfile_1.nc.
+Since the file is intended to subfiled, the original file does not have any data; all data is stored in two subfiles.

@@ -100,6 +100,9 @@ void ncmpiio_extract_hints(ncio     *nciop,
     nciop->hints.header_align_size      = 0;
     nciop->hints.var_align_size         = 0;
     nciop->hints.header_read_chunk_size = 0;
+#ifdef ENABLE_SUBFILING
+    nciop->hints.num_subfiles           = 0;
+#endif
 
     /* extract NC hints */
     if (info != MPI_INFO_NULL) {
@@ -118,6 +121,12 @@ void ncmpiio_extract_hints(ncio     *nciop,
                      value, &flag);
         if (flag) nciop->hints.header_read_chunk_size = atoll(value);
 
+#ifdef ENABLE_SUBFILING
+	MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
+		     value, &flag);
+	if (flag) nciop->hints.num_subfiles = atoll(value);
+#endif
+
         /* nc_header_align_size and nc_var_align_size take effect when a file
            is created or opened and later adding more header or variable data */
 
@@ -127,6 +136,15 @@ void ncmpiio_extract_hints(ncio     *nciop,
             nciop->hints.var_align_size = 0;
         if (nciop->hints.header_read_chunk_size < 0)
             nciop->hints.header_read_chunk_size = 0;
+#ifdef ENABLE_SUBFILING
+	if (nciop->hints.num_subfiles < 0)
+	    nciop->hints.num_subfiles = 0;
+	/* override subfile hints if env var is set */
+	char *num_sf_env;
+	num_sf_env = getenv("NC_NUM_SUBFILES");
+	if (num_sf_env != NULL)
+	    nciop->hints.num_subfiles = atoi(num_sf_env);
+#endif
     }
 }
 

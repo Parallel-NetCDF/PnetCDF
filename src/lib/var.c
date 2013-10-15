@@ -36,6 +36,10 @@ ncmpii_free_NC_var(NC_var *varp)
     if (varp == NULL) return;
     ncmpii_free_NC_attrarray(&varp->attrs);
     ncmpii_free_NC_string(varp->name);
+#ifdef ENABLE_SUBFILING
+    if(varp->num_subfiles > 1) /* deallocate it */ 
+	free(varp->dimids_org); 
+#endif
     NCI_Free(varp);
 }
 
@@ -586,6 +590,10 @@ ncmpi_inq_var(int ncid,
         NC *ncp;
         NC_var *varp;
         MPI_Offset ii;
+#ifdef ENABLE_SUBFILING
+	NC *ncp_sf;
+	NC_var *varp_sf;
+#endif
 
         status = ncmpii_NC_check_id(ncid, &ncp); 
         if(status != NC_NOERR)
@@ -603,9 +611,38 @@ ncmpi_inq_var(int ncid,
 
         if(typep != 0)
                 *typep = varp->type;
+#ifdef ENABLE_SUBFILING
+	/* check attr for subfiles */ 
+	nc_type type; 
+	MPI_Offset attlen; 
+	int status1; 
+	status1 = ncmpi_inq_att(ncp->nciop->fd, varid, "num_subfiles", 
+				&type, &attlen); 
+	if (status1 == NC_NOERR) { 
+	    status1 = ncmpi_get_att_int(ncp->nciop->fd, varid, "num_subfiles", 
+					&varp->num_subfiles);  
+	    /* TODO: should check status??? */ 
+	    ncp->nc_num_subfiles = varp->num_subfiles; 
+	}
+#endif
         if(ndimsp != 0)
         {
+#ifndef ENABLE_SUBFILING
+	    *ndimsp = varp->ndims;
+#else
+	    int ndims_org; 
+	    if (varp->num_subfiles > 1) { 
+#ifdef SUBFILE_DEBUG 
+		status1 = ncmpi_get_att_int (ncp->nciop->fd, varid,  
+					     "ndims_org", &ndims_org); 
+		printf("%s: ncp->nc_num_subfiles=%d, ndims_org=%d\n",  
+		       __func__, ncp->nc_num_subfiles, ndims_org); 
+#endif 
+		*ndimsp = ndims_org; 
+	    } 
+	    else
                 *ndimsp = varp->ndims;
+#endif
         }
         if(dimids != 0)
         {
@@ -685,7 +722,17 @@ ncmpi_inq_varndims(int ncid,  int varid, int *ndimsp)
 
         if(ndimsp != 0)
         {
+#ifndef ENABLE_SUBFILNIG
+	    *ndimsp = (int) varp->ndims;
+#else
+	    if (varp->num_subfiles > 1) 
+		{ 
+		    status = ncmpi_get_att_int (ncp->nciop->fd, varid, 
+						"ndims_org", ndimsp); 
+		} 
+	    else
                 *ndimsp = (int) varp->ndims;
+#endif
         }
 
         return NC_NOERR;
@@ -699,6 +746,9 @@ ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
         NC *ncp;
         NC_var *varp;
         MPI_Offset ii;
+#ifdef ENABLE_SUBFILING
+	int varp_ndims;
+#endif
 
         status = ncmpii_NC_check_id(ncid, &ncp); 
         if(status != NC_NOERR)
@@ -710,10 +760,18 @@ ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
 
         if(dimids != 0)
         {
+#ifndef ENABLE_SUBFILING
                 for(ii = 0; ii < varp->ndims; ii++)
                 {
                         dimids[ii] = varp->dimids[ii];
                 }
+#else
+		int _ndims = (varp->num_subfiles>1?varp->ndims_org:varp->ndims);
+                for(ii = 0; ii < _ndims; ii++)
+                {
+                        dimids[ii] = varp->dimids[ii];
+                }
+#endif
         }
 
         return NC_NOERR;

@@ -742,6 +742,7 @@ AC_ARG_ENABLE([subfiling],
 )
 if test "x$enable_subfiling" = "xyes" ; then
    AC_DEFINE(ENABLE_SUBFILING)
+   AC_SUBST(enable_subfiling)
 fi
 
 AC_PATH_PROG([LATEX],  [latex])
@@ -831,6 +832,9 @@ if test "$enable_fortran" = yes ; then
                  examples/F77/Makefile \
                  examples/F90/Makefile"
 fi
+if test "$enable_subfiling" = yes; then
+   CONFIG_FILES="${CONFIG_FILES} test/subfile/Makefile"
+fi
 AC_CONFIG_FILES(${CONFIG_FILES})
 AC_OUTPUT
 echo "--------------------------------------------------------------------"
@@ -854,6 +858,7 @@ echo \
               Build Fortran APIs               - ${enable_fortran}
               Build nonblocking APIs           - ${enable_nonblocking}
               Build CDF-5 support              - ${enable_cdf5}
+	      Build subfiling support          - ${enable_subfiling}
 
    Compilers: MPICC       = ${MPICC}
               MPICXX      = ${MPICXX}

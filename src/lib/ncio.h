@@ -35,6 +35,9 @@ typedef struct {
     MPI_Offset header_align_size;
     MPI_Offset var_align_size;
     MPI_Offset header_read_chunk_size;
+#ifdef ENABLE_SUBFILING
+    int num_subfiles;
+#endif
 } nc_hints;
 
 /*
