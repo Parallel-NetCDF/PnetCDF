@@ -112,6 +112,25 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
         nelems *= count[_i];                                                  \
 }
 
+#ifdef ENABLE_SUBFILING
+#define GET_FULL_DIMENSIONS(start, count) {                                   \
+    int _i;                                                                   \
+    int _ndims;                                                               \
+    _ndims = (varp->num_subfiles>1?varp->ndims_org:varp->ndims);              \
+    start = (MPI_Offset*) NCI_Malloc(2 * _ndims * sizeof(MPI_Offset));        \
+    count = start + _ndims;                                                   \
+                                                                              \
+    for (_i=0; _i<_ndims; _i++) {                                             \
+        NC_dim *dimp;                                                         \
+        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)varp->num_subfiles>1?varp->dimids_org[_i]:varp->dimids[_i]); \
+        if (dimp->size == NC_UNLIMITED)                                       \
+            count[_i] = NC_get_numrecs(ncp);                                  \
+        else                                                                  \
+            count[_i] = dimp->size;                                           \
+        start[_i] = 0;                                                        \
+    }                                                                         \
+}
+#else /* without subfiling */
 #define GET_FULL_DIMENSIONS(start, count) {                                   \
     int _i;                                                                   \
     start = (MPI_Offset*) NCI_Malloc(2 * varp->ndims * sizeof(MPI_Offset));   \
@@ -127,6 +146,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
         start[_i] = 0;                                                        \
     }                                                                         \
 }
+#endif
 
 #define CHECK_NELEMS(varp, fnelems, fcount, bnelems, bufcount, nbytes, err) { \
     int _i;                                                                   \

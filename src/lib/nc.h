@@ -118,6 +118,11 @@ typedef struct {
     /* all xdr'd */
     NC_string *name;
     MPI_Offset size;
+#ifdef ENABLE_SUBFILING
+    int range[2]; /* subfile range {start, end} */
+    MPI_Offset rcount; /* subfile range count */
+    int num_subfiles;
+#endif
 } NC_dim;
 
 /* the dimension ID returned from ncmpi_def_dim() is an integer pointer
@@ -308,13 +313,22 @@ typedef struct {
     MPI_Offset   *dsizes; /* the right to left product of shape */
     NC_string    *name;   /* name of the variable */
     int           ndims;  /* number of dimensions */
+#ifdef ENABLE_SUBFILING
+    int           ndims_org; /* ndims before subfiling */
+#endif
     int          *dimids; /* array of dimension IDs */
+#ifdef ENABLE_SUBFILING
+    int          *dimids_org; /* dimids before subfiling */
+#endif
     NC_attrarray  attrs;  /* attribute array */
     nc_type       type;   /* variable's data type */
     MPI_Offset    len;    /* this is the "vsize" defined in header format, the
                              total size in bytes of the array variable.
                              For record variable, this is the record size */
     MPI_Offset    begin;  /* starting file offset of this variable */
+#ifdef ENABLE_SUBFILING
+    int           num_subfiles;
+#endif
 } NC_var;
 
 /* note: we only allow less than 2^31 variables defined in a file */
@@ -444,6 +458,10 @@ struct NC {
     /* links to make list of open netcdf's */
     struct NC *next;
     struct NC *prev;
+#ifdef ENABLE_SUBFILING
+    int nc_num_subfiles; /* # of subfiles */ 
+    int ncid_sf; /* ncid of subfile */
+#endif
     /* contains the previous NC during redef. */
     struct NC *old;
     /* flags */

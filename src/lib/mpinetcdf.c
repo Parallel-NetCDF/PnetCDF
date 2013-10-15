@@ -84,6 +84,10 @@ ncmpi_create(MPI_Comm    comm,
 
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
+#ifdef ENABLE_SUBFILING
+    ncp->ncid_sf = -1; /* subfile ncid; init to -1 */ 
+    ncp->nc_num_subfiles = 0; /* num_subfiles; init to 0 */
+#endif
     assert(ncp->flags == 0);
 
     /* set the file format version beased on the create mode, cmode */
@@ -193,6 +197,10 @@ ncmpi_open(MPI_Comm    comm,
 
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
+#ifdef ENABLE_SUBFILING
+    ncp->ncid_sf   = -1;
+    ncp->nc_num_subfiles = 0;
+#endif
 
     err = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
     if (err != NC_NOERR) {
@@ -224,6 +232,37 @@ ncmpi_open(MPI_Comm    comm,
 
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
+
+#ifdef ENABLE_SUBFILING
+    /* check attr for subfiles */
+    nc_type type;
+    MPI_Offset attlen;
+    int ndims1, nvars1, natts1, unlimdimid1;
+    int i;
+    status = ncmpi_inq_att(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
+			   &type, &attlen);
+    if (status == NC_NOERR) {
+	status = ncmpi_get_att_int (ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
+				    &ncp->nc_num_subfiles); 
+	/* TODO: check status */
+
+	status = ncmpi_inq(ncp->nciop->fd, &ndims1, &nvars1, &natts1, &unlimdimid1);
+	for (i=0; i<nvars1; i++) {
+	    status = ncmpi_get_att_int (ncp->nciop->fd, i, "num_subfiles",
+					&ncp->vars.value[i]->num_subfiles); 
+	    if (ncp->vars.value[i]->num_subfiles > 1) {
+		status = ncmpi_get_att_int (ncp->nciop->fd, i, "ndims_org",
+					    &ncp->vars.value[i]->ndims_org);
+	    }
+	}
+    }
+    else
+	status = NC_NOERR;
+
+    if (ncp->nc_num_subfiles > 1) {
+	status = ncmpii_subfile_open (ncp, &ncp->ncid_sf);
+    }
+#endif
 
     return status;
 }
@@ -321,6 +360,11 @@ ncmpi_get_file_info(int       ncid,
 
     sprintf(value, "%lld", ncp->nciop->hints.header_read_chunk_size);
     MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
+
+#ifdef ENABLE_SUBFILING
+    sprintf(value, "%lld", ncp->nciop->hints.num_subfiles);
+    MPI_Info_set(*info_used, "nc_num_subfiles", value);
+#endif
 
     return NC_NOERR;
 }
@@ -596,6 +640,13 @@ ncmpi_close(int ncid) {
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
         return status;
+
+#ifdef ENABLE_SUBFILING
+    /* TODO: should check ncid_sf? */
+    /* if the file has subfiles, close them first */
+    if (ncp->nc_num_subfiles > 1)
+	ncmpii_subfile_close (ncp);
+#endif
 
     /* release NC object, close the file and write dirty numrecs if necessary */
     return ncmpii_NC_close(ncp);

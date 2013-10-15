@@ -21,6 +21,9 @@
 #include "rnd.h"
 #include "ncx.h"
 #include "macro.h"
+#ifdef ENABLE_SUBFILING
+#include "subfile.h"
+#endif
 
 /* list of open netcdf's */
 static NC *NClist = NULL;
@@ -1019,6 +1022,9 @@ ncmpii_NC_enddef(NC *ncp)
     int i, flag, striping_unit, status=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
     MPI_Offset h_align, v_align, all_var_size;
+#ifdef ENABLE_SUBFILING
+    NC *ncp_sf;
+#endif
 
     assert(!NC_readonly(ncp));
 
@@ -1075,6 +1081,20 @@ ncmpii_NC_enddef(NC *ncp)
     sprintf(value, "%lld", v_align);
     MPI_Info_set(ncp->nciop->mpiinfo, "nc_var_align_size", value);
 
+#ifdef ENABLE_SUBFILING
+    /* num of subfiles has been determined already */ 
+    ncp->nc_num_subfiles = ncp->nciop->hints.num_subfiles; 
+
+    if (ncp->nc_num_subfiles > 1) { 
+	/* TODO: should return subfile-related msg when there's an error */ 
+	status = ncmpii_subfile_partition(ncp, &ncp->ncid_sf); 
+	if (status != NC_NOERR) { 
+	    printf( "error in ncmpii_subfile_partition()\n" ); 
+	    return status; 
+	} 
+    }
+#endif
+
     /* serial netcdf calls a check on dimension lenghths here, i.e.
      *         status = NC_check_vlens(ncp);
      * To be updated */
@@ -1084,7 +1104,19 @@ ncmpii_NC_enddef(NC *ncp)
      * variable offsets as many as possible
      */
     NC_begins(ncp, h_align, v_align);
- 
+
+#ifdef ENABLE_SUBFILING 
+    if (ncp->nc_num_subfiles > 1) {  
+	/* get ncp info for the subfile */  
+	status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);  
+	if (status != NC_NOERR) { 
+	    printf( "error on ncmpii_NC_check_id()\n" ); 
+	    return status; 
+	} 
+	NC_begins(ncp_sf, h_align, v_align);  
+    }
+#endif
+
     if (ncp->old != NULL) {
         /* the current define mode was entered from ncmpi_redef,
            not from ncmpi_create */
@@ -1130,12 +1162,26 @@ ncmpii_NC_enddef(NC *ncp)
      * However, if ErrIsHeaderDiff(status) is true, this error should
      * be considered fatal, as inconsistency is about the data structure,
      * rather then contents (such as attribute values) */
+
+#ifdef ENABLE_SUBFILING
+    /* write header to subfile */
+    if (ncp->nc_num_subfiles > 1) { 
+	status = write_NC(ncp_sf); 
+	if (status != NC_NOERR) 
+	    return status; 
+    }
+#endif
  
     if (ncp->old != NULL) {
         ncmpii_free_NC(ncp->old);
         ncp->old = NULL;
     }
     fClr(ncp->flags, NC_CREAT | NC_INDEF);
+
+#ifdef ENABLE_SUBFILING
+    if (ncp->nc_num_subfiles > 1) 
+	fClr(ncp_sf->flags, NC_CREAT | NC_INDEF);
+#endif
 
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE))
         /* calling MPI_File_sync() */

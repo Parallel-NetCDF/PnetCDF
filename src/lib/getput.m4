@@ -758,6 +758,19 @@ ncmpii_getput_vars(NC               *ncp,
     /* "API error" will abort this API call, but not the entire program */
     err = status = warning = NC_NOERR;
 
+#ifdef ENABLE_SUBFILING
+    /* call a separate routine if variable is stored in subfiles */
+    if (varp->num_subfiles > 1) {
+#ifdef SUBFILE_DEBUG
+	printf("var(%s) is stored in subfiles\n", varp->name->cp);
+#endif
+	status = ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
+					    buf, bufcount, buftype,
+					    rw_flag, io_method);
+	return status;
+    }
+#endif
+
     if (varp->ndims > 0) {
         assert(start != NULL);
         assert(count != NULL);
