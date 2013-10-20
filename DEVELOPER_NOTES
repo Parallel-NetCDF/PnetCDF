@@ -1,0 +1,79 @@
+$Id$
+
+=====================================================
+Tasks before a new release
+=====================================================
+   $PNETCDF_VERSION is defined in configure.in, the 2nd argument of AC_INIT
+   call. Revise that string and do svn commit to update the svn property
+   of $LastChangedDate$ that is used for the release date.
+
+   AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
+
+ - after run configure, command "make dist" will produce two tar balls
+   for PnetCDF release. For example,
+      parallel-netcdf-$(PNETCDF_VERSION).tar.gz
+      parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
+
+ - create an SVN tag by running the below command to copy from the
+   current trunk:
+
+   svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
+            https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1.4.0.pre1 \
+            -m "Tagging pre-release version 1.4.0.pre1"
+
+ - To generate an SHA1 checksum, run command:
+   openssl sha1 parallel-netcdf-1.4.0.pre1.tar.gz
+
+   command-line output:
+   SHA1(parallel-netcdf-1.4.0.pre1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+
+
+=====================================================
+Note on adding new MPI compiler candidates
+=====================================================
+ - In configure.in, check the following variables
+      CANDIDATE_MPICC
+      CANDIDATE_MPICXX
+      CANDIDATE_MPIF77
+      CANDIDATE_MPIF90
+   To make configure command automatically detect MPI compilers,
+   add any new MPI compiler names to the list of the above variables.
+
+
+=====================================================
+Note on autotools version
+=====================================================
+ - configure.in is developed based on autotools v2.59
+   I, Wei-keng, tend to test it using v2.59, in case PnetCDF users have
+   autotools as old as 2.59.
+
+   However, 2.59 generates a buggy configure file and failed on processing
+   libraries from linker command line when running on Carver @nersc
+
+   For official release of PnetCDF, use a newer autotools to generate file
+   configure.
+
+=====================================================
+Working on configure.in
+=====================================================
+ - Debugging: change the value of variable _DEBUG to yes
+   This will print some messages for debugging purpose.
+
+=====================================================
+Conform with netCDF
+=====================================================
+ - PnetCDF uses the same following constants as netCDF
+       data types: nc_type
+       file open/create modes
+       error codes
+       (in principle, all constants should conform with netCDF)
+
+ - Make sure file src/lib/pnetcdf.h.in is updated with the latest netCDF
+   header
+
+ - Similarly, check Fortran parameters defined in
+       src/libf/pnetcdf.inc.in
+       src/libf90/nf90_constants.f90
+       src/libf90/nfmpi_constants.f90
+
+ - PnetCDF error codes start in -250
