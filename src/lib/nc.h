@@ -545,7 +545,7 @@ extern int
 ncmpii_NC_check_id(int ncid, NC **ncpp);
 
 extern int
-ncmpii_cktype(nc_type datatype);
+ncmpii_cktype(int cdf_ver, nc_type datatype);
 
 extern MPI_Offset
 ncmpix_howmany(nc_type type, MPI_Offset xbufsize);
@@ -602,6 +602,8 @@ extern int
 ncmpi_get_default_format(void);
 
 /* End defined in nc.c */
+
+#if 0
 /* Begin defined in v1hpg.c */
 
 extern size_t
@@ -615,7 +617,6 @@ nc_get_NC( NC *ncp);
 
 /* End defined in v1hpg.c */
 
-#if 0
 /* Begin defined in putget.c */
 
 extern int
@@ -698,7 +699,7 @@ NC_computeshapes(NC *ncp);
 /* end defined in mpincio.h */
 
 /* begin defined in error.c */
-const char * nc_strerror(int err);
+const char* ncmpi_strerror(int err);
 
 int ncmpii_handle_error(int mpi_errorcode, char *msg);
 

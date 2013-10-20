@@ -48,9 +48,22 @@
       ELSE IF (DATATYPE .EQ. NF90_DOUBLE) THEN
           MIN = X_DOUBLE_MIN
           MAX = X_DOUBLE_MAX
+      ELSE IF (DATATYPE .EQ. NF90_UBYTE) THEN
+          MIN = 0
+          MAX = X_UCHAR_MAX
+      ELSE IF (DATATYPE .EQ. NF90_USHORT) THEN
+          MIN = 0
+          MAX = X_USHORT_MAX
+      ELSE IF (DATATYPE .EQ. NF90_UINT) THEN
+          MIN = 0
+          MAX = X_UINT_MAX
       ELSE IF (DATATYPE .EQ. NF90_INT64) THEN
-          INRANGE = (VALUE .GE. X_INT8_MIN) .AND.  &
+          INRANGE = (VALUE .GE. X_INT8_MIN) .AND. &
                     (VALUE .LE. X_INT8_MAX)
+          return
+      ELSE IF (DATATYPE .EQ. NF90_UINT64) THEN
+          INRANGE = (VALUE .GE. 0) .AND. &
+                    (VALUE .LE. X_UINT8_MAX)
           return
       ELSE
           CALL UD_ABORT
@@ -115,9 +128,21 @@
               MIN = X_DOUBLE_MIN
               MAX = X_DOUBLE_MAX
           END IF
+      ELSE IF (DATATYPE .EQ. NF90_UBYTE) THEN
+          MIN = 0
+          MAX = X_UCHAR_MAX
+      ELSE IF (DATATYPE .EQ. NF90_USHORT) THEN
+          MIN = 0
+          MAX = X_USHORT_MAX
+      ELSE IF (DATATYPE .EQ. NF90_UINT) THEN
+          MIN = 0
+          MAX = X_UINT_MAX
       ELSE IF (DATATYPE .EQ. NF90_INT64) THEN
           MIN = X_INT8_MIN
           MAX = X_INT8_MAX
+      ELSE IF (DATATYPE .EQ. NF90_UINT64) THEN
+          MIN = 0
+          MAX = X_UINT8_MAX
       ELSE
           CALL UD_ABORT
       END IF
@@ -342,8 +367,16 @@
                   hash = X_FLOAT_MIN
               else if (type .eq. NF90_DOUBLE) then
                   hash = X_DOUBLE_MIN
+              else if (type .eq. NF90_UBYTE) then
+                  hash = 0
+              else if (type .eq. NF90_USHORT) then
+                  hash = 0
+              else if (type .eq. NF90_UINT) then
+                  hash = 0
               else if (type .eq. NF90_INT64) then
                   hash = X_INT_MIN - 128.0
+              else if (type .eq. NF90_UINT64) then
+                  hash = 0
               else
                   call ud_abort
               end if
@@ -360,8 +393,16 @@
                   hash = X_FLOAT_MAX
               else if (type .eq. NF90_DOUBLE) then
                   hash = X_DOUBLE_MAX
+              else if (type .eq. NF90_UBYTE) then
+                  hash = X_UCHAR_MAX
+              else if (type .eq. NF90_USHORT) then
+                  hash = X_USHORT_MAX
+              else if (type .eq. NF90_UINT) then
+                  hash = X_UINT_MAX
               else if (type .eq. NF90_INT64) then
                   hash = X_INT_MAX + 128.0
+              else if (type .eq. NF90_UINT64) then
+                  hash = X_UINT_MAX + 128.0
               else
                   call ud_abort
               end if
@@ -378,7 +419,15 @@
                   hash = X_FLOAT_MIN
               else if (type .eq. NF90_DOUBLE) then
                   hash = -1.0
+              else if (type .eq. NF90_UBYTE) then
+                  hash = -1.0
+              else if (type .eq. NF90_USHORT) then
+                  hash = -1.0
+              else if (type .eq. NF90_UINT) then
+                  hash = -1.0
               else if (type .eq. NF90_INT64) then
+                  hash = -1.0
+              else if (type .eq. NF90_UINT64) then
                   hash = -1.0
               else
                   call ud_abort
@@ -396,7 +445,15 @@
                   hash = X_FLOAT_MAX
               else if (type .eq. NF90_DOUBLE) then
                   hash = 1.0
+              else if (type .eq. NF90_UBYTE) then
+                  hash = X_UCHAR_MAX + 1.0
+              else if (type .eq. NF90_USHORT) then
+                  hash = X_USHORT_MAX + 1.0
+              else if (type .eq. NF90_UINT) then
+                  hash = X_UINT_MAX + 1.0
               else if (type .eq. NF90_INT64) then
+                  hash = 1.0
+              else if (type .eq. NF90_UINT64) then
                   hash = 1.0
               else
                   call ud_abort
@@ -415,9 +472,18 @@
               base = -9
           else if (type .eq. NF90_DOUBLE) then
               base = -10
+          else if (type .eq. NF90_UBYTE) then
+              base = 2
+          else if (type .eq. NF90_USHORT) then
+              base = 5
+          else if (type .eq. NF90_UINT) then
+              base = 20
           else if (type .eq. NF90_INT64) then
               base = -20
+          else if (type .eq. NF90_UINT64) then
+              base = 20
           else
+              print*, 'Error: no such nc_type ',type
               stop 'in hash()'
           end if
 
@@ -472,8 +538,16 @@
           char2type = NF90_FLOAT
       else if (letter .eq. 'd') then
           char2type = NF90_DOUBLE
+      else if (letter .eq. 'y') then
+          char2type = NF_UBYTE
+      else if (letter .eq. 't') then
+          char2type = NF_USHORT
+      else if (letter .eq. 'u') then
+          char2type = NF_UINT
       else if (letter .eq. 'x') then
-          char2type = NF90_INT64
+          char2type = NF_INT64
+      else if (letter .eq. 'z') then
+          char2type = NF_UINT64
       else
         stop 'char2type(): invalid type-letter'
       end if
@@ -507,7 +581,7 @@
       integer   attid
       integer   char2type
 
-      do 1, attid = 1, NTYPES
+      do 1, attid = 1, numTypes
           gatt_name(attid) = 'G' // type_letter(attid)
           gatt_len(attid) = attid
           gatt_type(attid) = char2type(type_letter(attid))
@@ -553,7 +627,7 @@
         integer an              !/* origin-0 cumulative attribute index */
         integer nvars
         integer jj
-        integer ntypes
+        integer n_types
         integer tc
         integer(kind=MPI_OFFSET_KIND) tmp(MAX_RANK)
         integer ac              !/* attribute index */
@@ -563,7 +637,8 @@
         integer err
 
         data    max_dim_len     /0, MAX_DIM_LEN, MAX_DIM_LEN/
-        data    type_letter     /'c', 'b', 's', 'i', 'f', 'd', 'x'/
+        data    type_letter     /'c', 'b', 's', 'i', 'f', 'd', 'y', &
+                                 't', 'u', 'x', 'z'/
         data    digit           /'r', '1', '2', '3', '4', '5', &
                                  '6', '7', '8', '9'/
 
@@ -583,13 +658,13 @@
             do 2, jj = 1, nvars                         !/* 1, 5, 20, 80 */
                 !/* number types of this shape */
                 if (rank .lt. 2) then
-                    ntypes = NTYPES                     !/* 6 */
+                    n_types = numTypes                     !/* 6 */
                 else
-                    ntypes = 1
+                    n_types = 1
                 end if
 
                 !/* Loop over external data types */
-                do 3, tc = 1, ntypes                    !/* 6, 1 */
+                do 3, tc = 1, n_types                    !/* 6, 1 */
                     var_name(vn) = type_letter(xtype)
                     var_type(vn) = char2type(type_letter(xtype))
                     var_rank(vn) = rank
@@ -601,10 +676,10 @@
 
                     do 4, ac = 1, var_natts(vn)
                         attname(ac,vn) =  &
-                            type_letter(1+mod(an, NTYPES))
+                            type_letter(1+mod(an, numTypes))
                         attlen(ac,vn) = an
                         atttype(ac,vn) = &
-                            char2type(type_letter(1+mod(an, NTYPES)))
+                            char2type(type_letter(1+mod(an, numTypes)))
                         an = an + 1
 4                   continue
 
@@ -633,7 +708,7 @@
 6                   continue
 
                     vn = vn + 1
-                    xtype = 1 + mod(xtype, NTYPES)
+                    xtype = 1 + mod(xtype, numTypes)
 3               continue
 2           continue
 1       continue
@@ -681,11 +756,11 @@
         integer         i
         integer         var_id
 
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_def_var(ncid, var_name(i), var_type(i),  &
                              var_dimid(1:var_rank(i),i), var_id)
             if (err .ne. 0) then
-                call errore('5 nf90mpi_def_var: ', err)
+                call errore('nf90mpi_def_var: ', err)
             end if
 1       continue
         end
@@ -708,7 +783,7 @@
         double precision        att(MAX_NELS)
         character*(MAX_NELS+2)  catt
 
-        do 1, i = 0, NVARS      !/* var 0 => NF90_GLOBAL attributes */
+        do 1, i = 0, numVars      !/* var 0 => NF90_GLOBAL attributes */
             do 2, j = 1, NATTS(i)
                 if (NF90_CHAR .eq. ATT_TYPE(j,i)) then
                     catt = ' '
@@ -782,7 +857,7 @@
 1       continue
 
         err = nf90mpi_begin_indep_data(ncid)
-        do 2, i = 1, NVARS
+        do 2, i = 1, numVars
             allInRange = .true.
             do 3, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
@@ -844,8 +919,10 @@
 
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
+        integer flags
 
-        err = nf90mpi_create(comm, filename, NF90_CLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_CLOBBER, extra_flags)
+        err = nf90mpi_create(comm, filename, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -924,7 +1001,7 @@
         nok = 0
         err = nf90mpi_begin_indep_data(ncid)
 
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             isChar = var_type(i) .eq. NF90_CHAR
             err = nf90mpi_inquire_variable(ncid, i, name, datatype, ndims, dimids,  &
                 natt)
@@ -1016,7 +1093,7 @@
 
         nok = 0
 
-        do 1, vid = 0, NVARS
+        do 1, vid = 0, numVars
             i = varid(vid)
 
             do 2, j = 1, NATTS(i)
@@ -1134,7 +1211,7 @@
       INTEGER VID
 #include "tests.inc"
       IF (VID .LT. 1) THEN
-          NATTS = NGATTS
+          NATTS = numGatts
       ELSE
           NATTS = VAR_NATTS(VID)
       ENDIF

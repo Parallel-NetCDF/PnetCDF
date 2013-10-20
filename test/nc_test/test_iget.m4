@@ -53,7 +53,7 @@ test_ncmpi_iget_var1_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
@@ -165,7 +165,7 @@ test_ncmpi_iget_var_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -292,7 +292,7 @@ test_ncmpi_iget_vara_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -515,7 +515,7 @@ test_ncmpi_iget_vars_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -731,7 +731,7 @@ test_ncmpi_iget_varm_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);

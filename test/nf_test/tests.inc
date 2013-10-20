@@ -38,9 +38,8 @@
 #undef NF_B
 #undef NF_S
 
-#define NTYPES 7
+#define NTYPES 11
 #define NDIMS 5
-#define NVARS 142
 #define NRECS 2
 #define NGATTS NTYPES
 #define RECDIM 1
@@ -49,10 +48,21 @@
 #define MAX_DIM_LEN 4
 #define MAX_NATTS 3
 
+#define NVARS 166
+!
+!  #define NVARS 136   when NTYPES==6
+!  #define NVARS 142   when NTYPES==7
+!  #define NVARS 148   when NTYPES==8
+!  #define NVARS 154   when NTYPES==9
+!  #define NVARS 160   when NTYPES==10
+!  #define NVARS 166   when NTYPES==11
+!  c:char, b:byte, s:short, i:int, f:float, d:double, y:ubyte, t:ushort,
+!  u:uint, x:int64, z:uint64
+!
 
-!/*
-! * Limits of external types (based on those in ncx.h):
-! */
+!
+!  Limits of external types (based on those in ncx.h):
+!
 #define X_CHAR_MIN 0
 #define X_CHAR_MAX 127
 #define X_INT1_MIN (-128)
@@ -75,6 +85,8 @@
 #define X_DOUBLE_MIN (-X_DOUBLE_MAX)
 #define X_INT8_MIN (-9223372036854775807_8)
 #define X_INT8_MAX 9223372036854775807_8
+#define X_UINT8_MIN (-18446744073709551615.0)
+#define X_UINT8_MAX 18446744073709551615.0
 
 #define X_BYTE_MIN X_INT1_MIN
 #define X_BYTE_MAX X_INT1_MAX
@@ -83,6 +95,14 @@
 #define X_FLOAT_MIN X_REAL_MIN
 #define X_FLOAT_MAX X_REAL_MAX
 
+#define X_UCHAR_MAX     255
+#define X_UCHAR_MIN     0
+#define X_UBYTE_MAX     X_UCHAR_MAX
+#define X_UBYTE_MIN     X_UCHAR_MIN
+#define X_USHORT_MAX    65535
+#define X_USHORT_MIN    0
+#define X_UINT_MAX      4294967295_8
+#define X_UINT_MIN      0
 
 !/*
 ! * Examples of invalid argument values:
@@ -238,3 +258,8 @@
       DOUBLEPRECISION   INTERNAL_MAX
       DOUBLEPRECISION   EXTERNAL_MIN
       DOUBLEPRECISION   EXTERNAL_MAX
+
+      integer numTypes, numVars, numGatts, cdf_format, extra_flags
+      common / PROBLEM_SIZE / numTypes, numVars, numGatts, cdf_format,
+     +                        extra_flags
+

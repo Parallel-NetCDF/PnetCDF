@@ -49,35 +49,36 @@ C
         data    status(26) / NF_ESTRIDE /
         data    status(27) / NF_EBADNAME /
 
-        data    msg(1)  / 'No error' /
-        data    msg(2)  / 'Not a netCDF id' /
-        data    msg(3)  / 'netCDF file exists && NC_NOCLOBBER' /
-        data    msg(4)  / 'Invalid argument' /
-        data    msg(5)  / 'Write to read only' /
-        data    msg(6)  / 'Operation not allowed in data mode' /
-        data    msg(7)  / 'Operation not allowed in define mode' /
-        data    msg(8)  / 'Index exceeds dimension bound' /
-        data    msg(9)  / 'NC_MAX_DIMS exceeded' /
-        data    msg(10) / 'String match to name in use' /
-        data    msg(11) / 'Attribute not found' /
-        data    msg(12) / 'NC_MAX_ATTRS exceeded' /
-        data    msg(13)
-     +      / 'Not a netCDF data type or _FillValue type mismatch' /
-        data    msg(14) / 'Invalid dimension id or name' /
-        data    msg(15) / 'NC_UNLIMITED in the wrong index' /
-        data    msg(16) / 'NC_MAX_VARS exceeded' /
-        data    msg(17) / 'Variable not found' /
-        data    msg(18) / 'Action prohibited on NC_GLOBAL varid' /
-        data    msg(19) / 'Not a netCDF file' /
-        data    msg(20) / 'In Fortran, string too short' /
-        data    msg(21) / 'NC_MAX_NAME exceeded' /
-        data    msg(22) / 'NC_UNLIMITED size already in use' /
-        data    msg(23) / 'nc_rec op when there are no record vars' /
-        data    msg(24) / 'Attempt to convert between text & numbers' /
-        data    msg(25) / 'Edge+start exceeds dimension bound' /
-        data    msg(26) / 'Illegal stride' /
-        data    msg(27) 
-     +      / 'Attribute or variable name contains illegal characters' /
+        data msg(1)  / 'No error' /
+        data msg(2)  / 'NetCDF: Not a valid ID' /
+        data msg(3)  / 'NetCDF: File exists && NC_NOCLOBBER' /
+        data msg(4)  / 'NetCDF: Invalid argument' /
+        data msg(5)  / 'NetCDF: Write to read only' /
+        data msg(6)  / 'NetCDF: Operation not allowed in data mode' /
+        data msg(7)  / 'NetCDF: Operation not allowed in define mode' /
+        data msg(8)  / 'NetCDF: Index exceeds dimension bound' /
+        data msg(9)  / 'NetCDF: NC_MAX_DIMS exceeded' /
+        data msg(10) / 'NetCDF: String match to name in use' /
+        data msg(11) / 'NetCDF: Attribute not found' /
+        data msg(12) / 'NetCDF: NC_MAX_ATTRS exceeded' /
+        data msg(13)
+     +  / 'NetCDF: Not a valid data type or _FillValue type mismatch' /
+        data msg(14) / 'NetCDF: Invalid dimension ID or name' /
+        data msg(15) / 'NetCDF: NC_UNLIMITED in the wrong index' /
+        data msg(16) / 'NetCDF: NC_MAX_VARS exceeded' /
+        data msg(17) / 'NetCDF: Variable not found' /
+        data msg(18) / 'NetCDF: Action prohibited on NC_GLOBAL varid' /
+        data msg(19) / 'NetCDF: Unknown file format' /
+        data msg(20) / 'NetCDF: In Fortran, string too short' /
+        data msg(21) / 'NetCDF: NC_MAX_NAME exceeded' /
+        data msg(22) / 'NetCDF: NC_UNLIMITED size already in use' /
+        data msg(23)
+     +  / 'NetCDF: nc_rec op when there are no record vars' /
+        data msg(24)
+     +  /'NetCDF: Attempt to convert between text & numbers'/
+        data msg(25) / 'NetCDF: Start+count exceeds dimension bound' /
+        data msg(26) / 'NetCDF: Illegal stride' /
+        data msg(27) / 'NetCDF: Name contains illegal characters' /
 
         nok = 0
 
@@ -121,7 +122,7 @@ C On exit, any open netCDF files are closed.
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        integer err
+        integer err, flags
         integer ncid
         integer ncid2
         integer         nok
@@ -134,17 +135,12 @@ C       /* Try to open a nonexistent file */
         if (err .eq. NF_NOERR) then
             call error
      +      ('nfmpi_open of nonexistent file should have failed')
+        elseif (err .ne. NF_ENOENT) then
+            call error('nfmpi_open of nonexistent file should '//
+     +                 'have returned NF_ENOENT')
         else
-            print*,
-     +      "Expected error message complaining: "//
-     +      "File tooth-fairy.nc does not exist"
-            nok = nok + 1
-        endif
-        if (err .ne. NF_ENOENT) then
-            call error(
-     +  'nfmpi_open of nonexistent file should 
-     +   have returned NF_ENOENT')
-        else
+C            print*, "Expected error message complaining: "//
+C     +              "File tooth-fairy.nc does not exist"
             nok = nok + 1
         endif
 
@@ -183,7 +179,8 @@ C       /* Opened OK, see if can open again and get a different netCDF ID */
      +   nfmpi_open calls should differ')
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nfmpi_create(comm, scratch, NF_NOCLOBBER,
+            flags = IOR(NF_NOCLOBBER, extra_flags)
+            err = nfmpi_create(comm, scratch, flags,
      +                         MPI_INFO_NULL, ncid2)
             if (err .ne. 0) then
                 call errore('nfmpi_create: ', err)
@@ -221,7 +218,7 @@ C
         include "pnetcdf.inc"
 #include "tests.inc"
         integer ncid
-        integer err
+        integer err, flags
         integer nok
 
         nok = 0
@@ -268,7 +265,8 @@ C       /* Close in data mode */
         endif
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nfmpi_create(comm, scratch, NF_NOCLOBBER,
+            flags = IOR(NF_NOCLOBBER, extra_flags)
+            err = nfmpi_create(comm, scratch, flags,
      +                         MPI_INFO_NULL, ncid)
             if (err .ne. 0) 
      +          call errore('nfmpi_create: ', err)
@@ -307,7 +305,7 @@ C On exit, any open netCDF files are closed.
         integer nvars                   !/* number of variables */
         integer ngatts                  !/* number of global attributes */
         integer recdim                  !/* id of unlimited dimension */
-        integer err
+        integer err, flags
         integer ndims0
         integer nvars0
         integer ngatts0
@@ -339,10 +337,10 @@ C       /* Try on bad handle */
         else if (ndims .ne. NDIMS) then
             call errori
      +      ('nfmpi_inq: wrong number of dimensions returned: ', ndims)
-        else if (nvars .ne. NVARS) then
+        else if (nvars .ne. numVars) then
             call errori
      +      ('nfmpi_inq: wrong number of variables returned: ', nvars)
-        else if (ngatts .ne. NGATTS) then
+        else if (ngatts .ne. numGatts) then
             call errori(
      +          'nfmpi_inq: wrong number of global atts returned: ',
      +          ngatts)
@@ -354,7 +352,8 @@ C       /* Try on bad handle */
         end if
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nfmpi_create(comm, scratch, NF_NOCLOBBER,
+            flags = IOR(NF_NOCLOBBER, extra_flags)
+            err = nfmpi_create(comm, scratch, flags,
      +                         MPI_INFO_NULL, ncid2)
             if (err .ne. 0) then
                 call errore('nfmpi_create: ', err)
@@ -482,7 +481,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         err = nfmpi_inq_natts(ncid, ngatts)
         if (err .ne. 0) then
             call errore('nfmpi_inq_natts: ', err)
-        else if (ngatts .ne. NGATTS) then
+        else if (ngatts .ne. numGatts) then
             call errori
      +      ('nfmpi_inq_natts: wrong number of global atts returned, ',
      +        ngatts)
@@ -557,7 +556,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         err = nfmpi_inq_nvars(ncid, nvars)
         if (err .ne. 0) then
             call errore('nfmpi_inq_nvars: ', err)
-        else if (nvars .ne. NVARS) then
+        else if (nvars .ne. numVars) then
             call errori
      +      ('nfmpi_inq_nvars: wrong number returned, ', nvars)
         else
@@ -816,7 +815,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         if (err .ne. NF_ENOTVAR)
      +      call errore('bad ncid: ', err)
 
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_inq_varid(BAD_ID, var_name(i), vid)
             if (err .ne. NF_EBADID) then
                 call errore('bad ncid: ', err)
@@ -860,7 +859,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +                   ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_inq_var(BAD_ID, i, name, datatype, ndims, 
      +            dimids, na)
             if (err .ne. NF_EBADID) then
@@ -916,7 +915,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +                   ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_inq_vardimid(BAD_ID, i, dimids)
             if (err .ne. NF_EBADID) then
                 call errore('bad ncid: ', err)
@@ -963,7 +962,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +                   ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_inq_varname(BAD_ID, i, name)
             if (err .ne. NF_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1008,7 +1007,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +                   ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 0, NVARS    ! start with global attributes
+        do 1, i = 0, numVars    ! start with global attributes
             err = nfmpi_inq_varnatts(BAD_ID, i, na)
             if (err .ne. NF_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1053,7 +1052,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +                   ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_inq_varndims(BAD_ID, i, ndims)
             if (err .ne. NF_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1098,7 +1097,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
      +                   ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_inq_vartype(BAD_ID, i, datatype)
             if (err .ne. NF_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1145,7 +1144,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         if (err .ne. 0) 
      +      call errore('nfmpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 err = nfmpi_inq_att(BAD_ID, i, ATT_NAME(j,i), t, n)
                 if (err .ne. NF_EBADID) then
@@ -1204,7 +1203,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nfmpi_inq_attlen(ncid, i, 'noSuch', len)
             if (err .ne. NF_ENOTATT) then
                 call errore('Bad attribute name: ', err)
@@ -1262,7 +1261,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nfmpi_inq_atttype(ncid, i, 'noSuch', datatype)
             if (err .ne. NF_ENOTATT) then
                 call errore('Bad attribute name: ', err)
@@ -1321,7 +1320,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nfmpi_inq_attname(ncid, i, BAD_ATTNUM, name)
             if (err .ne. NF_ENOTATT) then
                 call errore('Bad attribute number: ', err)
@@ -1383,7 +1382,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nfmpi_inq_attid(ncid, i, 'noSuch', attnum)
             if (err .ne. NF_ENOTATT) then
                 call errore('Bad attribute name: ', err)

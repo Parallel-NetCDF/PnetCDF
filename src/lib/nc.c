@@ -324,25 +324,15 @@ NCcktype()
  * Sense of the return is changed.
  */
 int
-ncmpii_cktype(nc_type type)
+ncmpii_cktype(int     cdf_ver,
+              nc_type type)
 {
-    switch ((int)type) {
-        case NC_BYTE:
-        case NC_CHAR:
-        case NC_SHORT:
-        case NC_INT:
-        case NC_FLOAT:
-        case NC_DOUBLE:
-        /* case NC_LONG: */
-        case NC_UBYTE:
-        case NC_USHORT:
-        case NC_UINT:
-        case NC_INT64:
-        case NC_UINT64:
-        case NC_STRING:
-             return (NC_NOERR);
-    }
-    return (NC_EBADTYPE);
+    if (type <= 0   || type > NC_STRING) return NC_EBADTYPE;
+
+    /* For CDF-1 and CDF-2 files, only classic types are allowed. */
+    if (cdf_ver < 5 && type > NC_DOUBLE) return NC_ESTRICTNC3;
+
+    return NC_NOERR;
 }
 
 

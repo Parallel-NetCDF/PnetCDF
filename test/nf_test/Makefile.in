@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I../../src/libf -I$(srcdir) -I$(srcdir)/../../src/libf
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     += -lpnetcdf @LCOV_LIB@
 
 M4SRCS    = test_get.m4 \
             test_put.m4  \
@@ -36,16 +36,10 @@ C_OBJS  = $(C_SRCS:.c=.o)
 F_OBJS  = $(F_SRCS:.F=.o) $(M4SRCS_F:.F=.o)
 OBJS    = $(C_OBJS) $(F_OBJS)
 
-time_log = times
-
 PROGS  = nf_test
 
-GARBAGE = $(time_log) \
-          lint.out \
-          $(PROGS) \
-          scratch.nc \
-          test.nc \
-          $(M4SRCS_F)
+GARBAGE = $(PROGS) $(M4SRCS_F) \
+          scratch.nc test.nc
 
 PACKING_LIST = $(C_SRCS) $(F_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in README
 
@@ -54,28 +48,21 @@ all: $(PROGS)
 nf_test: $(OBJS) $(LIBRARY)
 	$(LINK.F) $(OBJS) $(LDFLAGS) $(LIBS)
 
-test: nf_test test.nc
-	./nf_test
-	@echo '*** Success ***'
-
-readonly: nf_test test.nc
-	./nf_test -r
-
-test.nc: nf_test
-	./nf_test -c
-
-
 tags: $(F_SRCS) $(C_SRCS) FORCE
 	ctags -t $(F_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c
 
 # This simple testing target ensures that the test files are present
-testing check: test.nc nf_test
-	$(RM) -f scratch.nc
-	./nf_test
+testing check: all
+	$(RM) -f scratch.nc test.nc
+	./nf_test -c    && ./nf_test
+	./nf_test -c -2 && ./nf_test -2
+	./nf_test -c -5 && ./nf_test -5
 
-verbose_testing: test.nc nf_test
-	$(RM) -f scratch.nc
-	./nf_test -v
+verbose_testing: all
+	$(RM) -f scratch.nc test.nc
+	./nf_test -v -c    && ./nf_test -v
+	./nf_test -v -c -2 && ./nf_test -v -2
+	./nf_test -v -c -5 && ./nf_test -v -5
 
 #test.nc: 
 #	(cd ../nc_test && $(MAKE) nc_test && ./nc_test -c)

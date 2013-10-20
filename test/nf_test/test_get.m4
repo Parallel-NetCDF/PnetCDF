@@ -87,7 +87,7 @@ define([TEST_NFMPI_GET_VAR1],[dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_begin_indep_data(ncid)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             do 2, j = 1, var_rank(i)
@@ -188,7 +188,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             err = nfmpi_get_var_$1_all(BAD_ID, i, value)
@@ -294,7 +294,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assert'
@@ -501,7 +501,7 @@ define([TEST_NFMPI_GET_VARS],dnl
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assert'
@@ -728,7 +728,7 @@ define([TEST_NFMPI_GET_VARM],dnl
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv. 
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assertion'
@@ -951,7 +951,7 @@ define([TEST_NFMPI_GET_ATT],dnl
         if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 canConvert = (ATT_TYPE(j,i) .eq. NF_CHAR) .eqv.
      +                       (NFT_ITYPE($1) .eq. NFT_TEXT)

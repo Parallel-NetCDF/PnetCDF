@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common -I$(srcdir)
 LDFLAGS  += -L../../src/lib -L../common
-LIBS     += -lpnetcdf $(MATHLIB)
+LIBS     += -lpnetcdf $(MATHLIB) @LCOV_LIB@
 
 SRCS      = nc_test.c \
             test_read.c \
@@ -33,46 +33,29 @@ OBJS      = $(SRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 PROGS     = nc_test
 
-time_log  = times
-
-GARBAGE      = $(PROGS) test.nc scratch.nc lint.out \
-               $(time_log) $(M4_SRCS:.m4=.c)
+GARBAGE      = $(PROGS) $(M4_SRCS:.m4=.c) \
+               test.nc scratch.nc
 
 PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) Makefile.in depend README
 
 all: $(PROGS)
 
-test: nc_test test.nc
-	./nc_test
-	@echo '*** Success ***'
-
-readonly: nc_test test.nc
-	./nc_test -r
-
-test.nc:  nc_test
-	./nc_test -c
-
 nc_test: $(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS)
 
-nctime: nctime.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-time: nctime
-	time ./nctime 24 13 19 17 > $(time_log)
-	$(AWK) -f timesum.awk < $(time_log)
-
-saber_src:
-	#load -C $(CPPFLAGS) $(SRCS) $(ld_pnetcdf) $(ld_math) $(LIBS)
-
 # This simple testing target ensures that the test files are present
-check testing: test.nc nc_test
-	$(RM) -f scratch.nc
-	./nc_test && ./nc_test -c -2 && ./nc_test
+check testing: all
+	$(RM) -f scratch.nc test.nc
+	./nc_test -c    && ./nc_test
+	./nc_test -c -2 && ./nc_test -2
+	./nc_test -c -5 && ./nc_test -5
 
-verbose_testing: test.nc nc_test
-	$(RM) -f scratch.nc
-	./nc_test -v && ./nc_test -c -v -2 && ./nc_test -v
+verbose_testing: all
+	$(RM) -f scratch.nc test.nc
+	./nc_test -c -v    && ./nc_test -v
+	./nc_test -c -v -2 && ./nc_test -v -2
+	./nc_test -c -v -5 && ./nc_test -v -5
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
+

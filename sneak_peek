@@ -191,6 +191,9 @@ This is essentially a placeholder for the next release note ...
       recognize keyword KIND. In that case, please set MPIF77 to the MPI
       Fortran 90 compiler, e.g. ./configure MPIF77=mpif90
     * configure now automatically checks Fortran module compile flags
+    * Support additional Fortran netCDF data types: nf_ubyte, nf_ushort,
+      nf_uint, nf_uint64, nf90_ubyte, nf90_ushort, nf90_uint, nf90_uint64.
+    * Error codes and messages conform with netCDF's
 
   o Bug fixes
     * Argument unlimdimid of nfmpi_inq() returns -1 when no unlimited length
@@ -207,4 +210,6 @@ This is essentially a placeholder for the next release note ...
       variables' file starting offsets should only be changed when it is bigger
       than the old ones
     * Fix some Fortran API intent in/out argument declarations
+    * ncmpi_def_var is fixed to detect if CDF-5 data types is used on CDF-1 or
+      CDF-2 files. Error code NC_ESTRICTNC3 will return.
 

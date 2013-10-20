@@ -535,7 +535,7 @@ static void
 init_gatts(const char *type_letter)
 {
     int attid;
-    for (attid = 0; attid < NGATTS; attid++) {
+    for (attid = 0; attid < numGatts; attid++) {
         gatt_name[attid][0] = 'G';
         gatt_name[attid][1] = type_letter[attid];
         gatt_name[attid][2] = '\0';
@@ -580,7 +580,7 @@ init_gvars (void)
 
     init_dims(digit);
 
-    for (vn=0; vn<NVARS; vn++)
+    for (vn=0; vn<numVars; vn++)
         memset(var_name[vn], 0, 2+MAX_RANK);
 
     vn    = 0;
@@ -594,10 +594,10 @@ init_gvars (void)
         int jj;
         for (jj=0; jj<nvars; jj++) {
             /* number types of this shape */
-            const int ntypes = rank < 2 ? NTYPES : 1;
+            const int ntypes = rank < 2 ? numTypes : 1;
 
             int ac, tc;
-            for (tc=0; tc<ntypes; tc++, vn++, xtype = (xtype + 1) % NTYPES) {
+            for (tc=0; tc<ntypes; tc++, vn++, xtype = (xtype + 1) % numTypes) {
                 MPI_Offset tmp[MAX_RANK];
 
                 var_name[vn][0] = type_letter[xtype];
@@ -607,10 +607,10 @@ init_gvars (void)
 
                 /* ac block */
                 for (ac=0; ac<var_natts[vn]; ac++, an++) {
-                     att_name[vn][ac][0] = type_letter[an % NTYPES];
+                     att_name[vn][ac][0] = type_letter[an % numTypes];
                      att_name[vn][ac][1] = '\0';
                      att_len[vn][ac]     = an;
-                     att_type[vn][ac]    = char2type(type_letter[an % NTYPES]);
+                     att_type[vn][ac]    = char2type(type_letter[an % numTypes]);
                 }
 #ifndef NDEBUG
                 assert(toMixedBase(jj, rank, max_dim_len, tmp) == 0);
@@ -657,7 +657,7 @@ def_vars(int ncid)
 {
     int i, err, var_id;
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         err = ncmpi_def_var(ncid, var_name[i], var_type[i], var_rank[i],
                             var_dimid[i], &var_id);
         IF (err) error("ncmpi_def_var: %s", ncmpi_strerror(err));
@@ -674,7 +674,7 @@ put_atts(int ncid)
     char catt[MAX_NELS];
     double att[MAX_NELS];
 
-    for (i=-1; i<NVARS; i++) {  /* -1: global attribute */
+    for (i=-1; i<numVars; i++) {  /* -1: global attribute */
         for (j=0; j<NATTS(i); j++) {
             if (ATT_TYPE(i,j) == NC_CHAR) {
                 for (k=0; k<ATT_LEN(i,j); k++) {
@@ -714,7 +714,7 @@ put_vars(int ncid)
     char text[MAX_NELS];
 
     for (j = 0; j < MAX_RANK; j++) start[j] = 0;
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         for (allInRange = 1, j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err) error("toMixedBase");
@@ -804,7 +804,7 @@ check_vars(int  ncid)
     nc_type datatype;
     MPI_Offset length;
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         isChar = var_type[i] == NC_CHAR;
         err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
         IF (err) 
@@ -877,7 +877,7 @@ check_atts(int  ncid)
     double expect, value[MAX_NELS];
     int nok = 0;      /* count of valid comparisons */
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             err = ncmpi_inq_attname(ncid, i, j, name);
             IF (err) 

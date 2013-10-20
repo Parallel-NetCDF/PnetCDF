@@ -27,12 +27,138 @@ static int ncmpii_end_indep_data(NC *ncp);
 /*----< ncmpi_inq_libvers() >------------------------------------------------*/
 inline const char*
 ncmpi_inq_libvers(void) {
-    return "version = " PNETCDF_VERSION " of 24 Sep 2012";
+
+    /* match the style used by netCDF API nc_inq_libvers()
+     * for example, "4.3.0 of Jun 16 2013 12:11:30 $" */
+    return PNETCDF_VERSION " of " PNETCDF_RELEASE_DATE;
 }
 
 /* Begin Of Dataset Functions */
 
 /*----< ncmpi_create() >-----------------------------------------------------*/
+/**  \ingroup datasets
+Create a new netCDF file.
+
+This function creates a new netCDF dataset, returning a netCDF ID that can
+subsequently be used to refer to the netCDF dataset in other PnetCDF function
+calls. The new netCDF dataset opened for write access and placed in define
+mode, ready for you to add dimensions, variables, and attributes.
+
+\param comm The MPI communicator. This API is a collective routine: all
+processes must provide the same value for cmode, and all processes must provide
+filenames that reference the same file. (Values for info may vary.) comm must
+be an MPI intracommunicator. 
+
+\param path The file name of the new netCDF dataset.
+
+\param cmode The creation mode flag. The following flags are available:
+NC_NOCLOBBER, NC_SHARE, NC_64BIT_OFFSET, and NC_64BIT_DATA.
+
+\param info MPI info object. It is used to provide file access hints,including
+existing MPI hints as well as PnetCDF hints.  For MPI hints, users are referred
+to MPI user guide for further information. For PnetCDF hints see below.
+
+\param ncidp Pointer to location where returned netCDF ID is to be stored.
+
+<h2>The cmode Flag</h2>
+
+The cmode flag is used to control the type of file created, and some aspects of
+how it may be used. 
+
+Setting NC_NOCLOBBER means you do not want to clobber (overwrite) an existing
+dataset; an error (NC_EEXIST) is returned if the specified dataset already
+exists.
+
+The NC_SHARE flag is appropriate to synchronize the metadata across all
+processes.  The metadata is store in the file header. For example, the number
+of records may be increased by requests from only a subset of processes. Using
+this flag will ensure the number of records (and other metadata) synchronized
+across all the processes opening the same shared file.
+
+Setting NC_64BIT_OFFSET causes PnetCDF to create a 64-bit offset format file
+(CDF-2), instead of a netCDF classic format file.  The 64-bit offset format
+imposes far fewer restrictions on large (i.e. over 2 GB) data files.  See Large
+File Support (The PnetCDF Users Guide).
+
+Setting NC_64BIT_DATA causes PnetCDF to create a 64-bit data format file
+(CDF-5). The 64-bit data format allows define variables with more than 4
+billion array elements. See Large File Support (The PnetCDF Users Guide).
+
+A zero value (defined for convenience as NC_CLOBBER) specifies the default
+behavior: overwrite any existing dataset with the same file name.
+
+<h2>The info object Flag</h2>
+
+Starting from version 1.3.1, the following PnetCDF hints are available:
+
+- nc_header_align_size: This hint allows some extra space between the end of
+the header describing the entire file and the first variable. If you have an
+application that periodically wishes to add more variables to an already
+existing file, expanding the file header size may result in an expensive move
+of the entire data file to make room for the definition of the new variables.
+Hence, setting this hint to a value that is big enough to accommodate any
+additional variables means you may leave your application code as-is and yet
+still see tremendous performance improvements.
+
+- nc_var_align_size: If you are writing to a block-based parallel file system,
+such as IBM's GPFS or Lustre, then an application write becomes a block write
+at the file system layer. If a write straddles two blocks, then locks must be
+acquired for both blocks. Aligning the start of a variable to a block boundary,
+combined with collective I/O optimizations in the MPI-IO library can often
+eliminate all unaligned file system accesses.
+
+- nc_header_read_chunk_size: PnetCDF reads the file headers in chunks. This
+hint indicates the chunk size (in bytes). The default is 256 KB.
+
+\returns ::NC_NOERR No error.
+\returns ::NC_ENOMEM System out of memory.
+\returns ::NC_EEXIST Specified file name exists when using NC_NOCLOBBER.
+Can be use to check if the file exists.
+\returns ::NC_EMULTIDEFINE_OMODE Bad file create/open mode or modes are
+inconsistent across processes
+\returns ::NC_EOFILE: Can not open/create file (MPI-IO errors)
+\returns ::NC_EFILE: Unknown error in file operation
+
+<h1>Examples</h1>
+
+In this example we create a netCDF dataset named foo.nc; we want the dataset to
+be created in the current directory only if a dataset with that name does not
+already exist:
+
+@code
+     #include <mpi.h>
+     #include <pnetcdf.h>
+        ...
+     int status;
+     int ncid;
+     MPI_Info info;
+        ...
+     MPI_Info_create (&info);
+     MPI_Info_set (info, "romio_no_indep_rw",    "true");
+     MPI_Info_set (info, "nc_header_align_size", "4194304");
+     MPI_Info_set (info, "nc_var_align_size",    "1048576");
+
+     status = ncmpi_create(MPI_COMM_WORLD, "foo.nc", NC_NOCLOBBER, info, &ncid);
+     if (status != NC_NOERR) handle_error(status);
+     MPI_Info_free(&info);
+@endcode
+
+In this example we create a netCDF dataset named foo.nc. It will
+be in the CDF-5 format.
+
+@code
+     #include <mpi.h>
+     #include <pnetcdf.h>
+        ...
+     int status;
+     int ncid;
+     int cmode = NC_NOCLOBBER | NC_64BIT_DATA;
+     MPI_Info info = MPI_INFO_NULL;
+        ...
+     status = ncmpi_create(MPI_COMM_WORLD, "foo.nc", cmode, info, &ncid);
+     if (status != NC_NOERR) handle_error(status);
+@endcode
+*/
 int 
 ncmpi_create(MPI_Comm    comm,
              const char *path,

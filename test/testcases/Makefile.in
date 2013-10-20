@@ -14,9 +14,10 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     += -lpnetcdf @LCOV_LIB@
 
-NCMPIGEN = ../../src/utils/ncmpigen/ncmpigen
+NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
+NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff
 
 C_SRCS   = ncmpi_vars_null_stride.c \
            vectors.c \
@@ -114,7 +115,7 @@ ptest: $(PROGS)
 	; ) ; done
 ifeq (@has_mpicxx@, yes)
 	@$(NCMPIGEN) -v 2 -o $(TEST_OUT_DIR)/redef1.nc $(srcdir)/redef-good.ncdump
-	@diff --brief $(TEST_OUT_DIR)/testfile.nc $(TEST_OUT_DIR)/redef1.nc
+	@$(NCMPIDIFF) $(TEST_OUT_DIR)/testfile.nc $(TEST_OUT_DIR)/redef1.nc
 endif
 
 include $(srcdir)/../../rules.make

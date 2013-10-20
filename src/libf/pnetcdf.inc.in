@@ -3,7 +3,7 @@
 !
 
 !
-! external netcdf data types:
+! external netcdf data types: (must conform with netCDF release)
 !
       integer nf_byte
       integer nf_int1
@@ -11,11 +11,14 @@
       integer nf_short
       integer nf_int2
       integer nf_int
-      integer nf_int64
       integer nf_float
       integer nf_real
       integer nf_double
-      integer nf_request
+      integer nf_ubyte
+      integer nf_ushort
+      integer nf_uint
+      integer nf_int64
+      integer nf_uint64
 
       parameter (nf_byte = 1)
       parameter (nf_int1 = nf_byte)
@@ -26,7 +29,11 @@
       parameter (nf_float = 5)
       parameter (nf_real = nf_float)
       parameter (nf_double = 6)
+      parameter (nf_ubyte = 7)
+      parameter (nf_ushort = 8)
+      parameter (nf_uint = 9)
       parameter (nf_int64 = 10)
+      parameter (nf_uint64 = 11)
 
 !
 ! default fill values:
@@ -118,7 +125,7 @@
       parameter (nf_max_var_dims = nf_max_dims)
 
 !
-! error codes:
+! error codes: (conform with netCDF release)
 !
       integer NF_NOERR
       integer NF2_ERR
@@ -154,7 +161,106 @@
       integer NF_EVARSIZE
       integer NF_EDIMSIZE
 
+      PARAMETER (NF_NOERR        = 0)     ! No Error
+      PARAMETER (NF2_ERR         = -1)    ! Returned for all errors in the v2 API
+      PARAMETER (NF_EBADID       = -33)   ! Not a netcdf id
+      PARAMETER (NF_ENFILE       = -34)   ! Too many netcdfs open
+      PARAMETER (NF_EEXIST       = -35)   ! netcdf file exists and NF_NOCLOBBER
+      PARAMETER (NF_EINVAL       = -36)   ! Invalid Argument
+      PARAMETER (NF_EPERM        = -37)   ! Write to read only
+      PARAMETER (NF_ENOTINDEFINE = -38)   ! Operation not allowed in data mode
+      PARAMETER (NF_EINDEFINE    = -39)   ! Operation not allowed in define mode
+      PARAMETER (NF_EINVALCOORDS = -40)   ! Index exceeds dimension bound
+      PARAMETER (NF_EMAXDIMS     = -41)   ! NF_MAX_DIMS exceeded
+      PARAMETER (NF_ENAMEINUSE   = -42)   ! String match to name in use
+      PARAMETER (NF_ENOTATT      = -43)   ! Attribute not found
+      PARAMETER (NF_EMAXATTS     = -44)   ! NF_MAX_ATTRS exceeded
+      PARAMETER (NF_EBADTYPE     = -45)   ! Not a netcdf data type
+      PARAMETER (NF_EBADDIM      = -46)   ! Invalid dimension id or name
+      PARAMETER (NF_EUNLIMPOS    = -47)   ! NF_UNLIMITED in the wrong index
+      PARAMETER (NF_EMAXVARS     = -48)   ! NF_MAX_VARS exceeded
+      PARAMETER (NF_ENOTVAR      = -49)   ! Variable not found
+      PARAMETER (NF_EGLOBAL      = -50)   ! Action prohibited on NF_GLOBAL varid
+      PARAMETER (NF_ENOTNC       = -51)   ! Not a netcdf file
+      PARAMETER (NF_ESTS         = -52)   ! In Fortran, string too short
+      PARAMETER (NF_EMAXNAME     = -53)   ! NF_MAX_NAME exceeded
+      PARAMETER (NF_EUNLIMIT     = -54)   ! NF_UNLIMITED size already in use
+      PARAMETER (NF_ENORECVARS   = -55)   ! nc_rec op when there are no record vars
+      PARAMETER (NF_ECHAR        = -56)   ! Attempt to convert between text & numbers
+      PARAMETER (NF_EEDGE        = -57)   ! Edge+start exceeds dimension bound
+      PARAMETER (NF_ESTRIDE      = -58)   ! Illegal stride
+      PARAMETER (NF_EBADNAME     = -59)   ! Attribute or variable name contains illegal characters
+      PARAMETER (NF_ERANGE       = -60)   ! Math result not representable
+      PARAMETER (NF_ENOMEM       = -61)   ! Memory allocation (malloc) failure
+      PARAMETER (NF_EVARSIZE     = -62)   ! One or more variable sizes violate format constraints
+      PARAMETER (NF_EDIMSIZE     = -63)   ! Invalid dimension size
+
+!
+! netCDF-4 error codes (copied from netCDF release)
+!
+      integer NF_EHDFERR
+      integer NF_ECANTREAD
+      integer NF_ECANTWRITE
+      integer NF_ECANTCREATE
+      integer NF_EFILEMETA
+      integer NF_EDIMMETA
+      integer NF_EATTMETA
+      integer NF_EVARMETA
+      integer NF_ENOCOMPOUND
+      integer NF_EATTEXISTS
+      integer NF_ENOTNC4
+      integer NF_ESTRICTNC3
+      integer NF_ENOTNC3
+      integer NF_ENOPAR
+      integer NF_EPARINIT
+      integer NF_EBADGRPID
+      integer NF_EBADTYPID
+      integer NF_ETYPDEFINED
+      integer NF_EBADFIELD
+      integer NF_EBADCLASS
+      integer NF_EMAPTYPE
+      integer NF_ELATEFILL
+      integer NF_ELATEDEF
+      integer NF_EDIMSCALE
+      integer NF_ENOGRP
+      integer NF_ESTORAGE
+      integer NF_EBADCHUNK
+      integer NF_ENOTBUILT
+      integer NF_EDISKLESS
+
+      PARAMETER (NF_EHDFERR      = -101)  ! Error at HDF5 layer. 
+      PARAMETER (NF_ECANTREAD    = -102)  ! Can't read. 
+      PARAMETER (NF_ECANTWRITE   = -103)  ! Can't write. 
+      PARAMETER (NF_ECANTCREATE  = -104)  ! Can't create. 
+      PARAMETER (NF_EFILEMETA    = -105)  ! Problem with file metadata. 
+      PARAMETER (NF_EDIMMETA     = -106)  ! Problem with dimension metadata. 
+      PARAMETER (NF_EATTMETA     = -107)  ! Problem with attribute metadata. 
+      PARAMETER (NF_EVARMETA     = -108)  ! Problem with variable metadata. 
+      PARAMETER (NF_ENOCOMPOUND  = -109)  ! Not a compound type. 
+      PARAMETER (NF_EATTEXISTS   = -110)  ! Attribute already exists. 
+      PARAMETER (NF_ENOTNC4      = -111)  ! Attempting netcdf-4 operation on netcdf-3 file.   
+      PARAMETER (NF_ESTRICTNC3   = -112)  ! Attempting netcdf-4 operation on strict nc3 netcdf-4 file.   
+      PARAMETER (NF_ENOTNC3      = -113)  ! Attempting netcdf-3 operation on netcdf-4 file.   
+      PARAMETER (NF_ENOPAR       = -114)  ! Parallel operation on file opened for non-parallel access.   
+      PARAMETER (NF_EPARINIT     = -115)  ! Error initializing for parallel access.   
+      PARAMETER (NF_EBADGRPID    = -116)  ! Bad group ID.   
+      PARAMETER (NF_EBADTYPID    = -117)  ! Bad type ID.   
+      PARAMETER (NF_ETYPDEFINED  = -118)  ! Type has already been defined and may not be edited. 
+      PARAMETER (NF_EBADFIELD    = -119)  ! Bad field ID.   
+      PARAMETER (NF_EBADCLASS    = -120)  ! Bad class.   
+      PARAMETER (NF_EMAPTYPE     = -121)  ! Mapped access for atomic types only.   
+      PARAMETER (NF_ELATEFILL    = -122)  ! Attempt to define fill value when data already exists. 
+      PARAMETER (NF_ELATEDEF     = -123)  ! Attempt to define var properties, like deflate, after enddef.
+      PARAMETER (NF_EDIMSCALE    = -124)  ! Probem with HDF5 dimscales.
+      PARAMETER (NF_ENOGRP       = -125)  ! No group found.
+      PARAMETER (NF_ESTORAGE     = -126)  ! Can't specify both contiguous and chunking.
+      PARAMETER (NF_EBADCHUNK    = -127)  ! Bad chunksize.
+      PARAMETER (NF_ENOTBUILT    = -128)  ! Attempt to use feature that was not turned on when netCDF was built.
+      PARAMETER (NF_EDISKLESS    = -129)  ! Error in using diskless  access.
+
+!
 ! PnetCDF error codes start here
+!
       integer NF_ESMALL
       integer NF_ENOTINDEP
       integer NF_EINDEP
@@ -197,41 +303,9 @@
       integer NF_EMULTIDEFINE_ATTR_LEN
       integer NF_EMULTIDEFINE_ATTR_VAL
 
-      PARAMETER (NF_NOERR        = 0)     ! No Error
-      PARAMETER (NF2_ERR         = -1)    ! Returned for all errors in the v2 API
-      PARAMETER (NF_EBADID       = -33)   ! Not a netcdf id
-      PARAMETER (NF_ENFILE       = -34)   ! Too many netcdfs open
-      PARAMETER (NF_EEXIST       = -35)   ! netcdf file exists and NF_NOCLOBBER
-      PARAMETER (NF_EINVAL       = -36)   ! Invalid Argument
-      PARAMETER (NF_EPERM        = -37)   ! Write to read only
-      PARAMETER (NF_ENOTINDEFINE = -38)   ! Operation not allowed in data mode
-      PARAMETER (NF_EINDEFINE    = -39)   ! Operation not allowed in define mode
-      PARAMETER (NF_EINVALCOORDS = -40)   ! Index exceeds dimension bound
-      PARAMETER (NF_EMAXDIMS     = -41)   ! NF_MAX_DIMS exceeded
-      PARAMETER (NF_ENAMEINUSE   = -42)   ! String match to name in use
-      PARAMETER (NF_ENOTATT      = -43)   ! Attribute not found
-      PARAMETER (NF_EMAXATTS     = -44)   ! NF_MAX_ATTRS exceeded
-      PARAMETER (NF_EBADTYPE     = -45)   ! Not a netcdf data type
-      PARAMETER (NF_EBADDIM      = -46)   ! Invalid dimension id or name
-      PARAMETER (NF_EUNLIMPOS    = -47)   ! NF_UNLIMITED in the wrong index
-      PARAMETER (NF_EMAXVARS     = -48)   ! NF_MAX_VARS exceeded
-      PARAMETER (NF_ENOTVAR      = -49)   ! Variable not found
-      PARAMETER (NF_EGLOBAL      = -50)   ! Action prohibited on NF_GLOBAL varid
-      PARAMETER (NF_ENOTNC       = -51)   ! Not a netcdf file
-      PARAMETER (NF_ESTS         = -52)   ! In Fortran, string too short
-      PARAMETER (NF_EMAXNAME     = -53)   ! NF_MAX_NAME exceeded
-      PARAMETER (NF_EUNLIMIT     = -54)   ! NF_UNLIMITED size already in use
-      PARAMETER (NF_ENORECVARS   = -55)   ! nc_rec op when there are no record vars
-      PARAMETER (NF_ECHAR        = -56)   ! Attempt to convert between text & numbers
-      PARAMETER (NF_EEDGE        = -57)   ! Edge+start exceeds dimension bound
-      PARAMETER (NF_ESTRIDE      = -58)   ! Illegal stride
-      PARAMETER (NF_EBADNAME     = -59)   ! Attribute or variable name contains illegal characters
-      PARAMETER (NF_ERANGE       = -60)   ! Math result not representable
-      PARAMETER (NF_ENOMEM       = -61)   ! Memory allocation (malloc) failure
-      PARAMETER (NF_EVARSIZE     = -62)   ! One or more variable sizes violate format constraints
-      PARAMETER (NF_EDIMSIZE     = -63)   ! Invalid dimension size
-
+!
 ! PnetCDF error codes start from -201
+!
       PARAMETER (NF_ESMALL                  = -201)   ! size of off_t too small for format
       PARAMETER (NF_ENOTINDEP               = -202)   ! Operation not allowed in collective data mode
       PARAMETER (NF_EINDEP                  = -203)   ! Operation not allowed in independent data mode
@@ -254,7 +328,9 @@
       PARAMETER (NF_ENOENT                  = -220)   ! File does not exist when calling nfmpi_open()
       PARAMETER (NF_EINTOVERFLOW            = -221)   ! Overflow when type cast to 4-byte integer
 
+!
 ! PnetCDF header inconsistency errors start from -250
+!
       PARAMETER (NF_EMULTIDEFINE            = -250)   ! NC definitions on multiprocesses conflict
       PARAMETER (NF_EMULTIDEFINE_OMODE      = -251)   ! file create/open modes are inconsistent
       PARAMETER (NF_EMULTIDEFINE_DIM_NUM    = -252)   ! inconsistent number of dimensions

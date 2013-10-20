@@ -50,35 +50,36 @@
         data    status(26) / NF90_ESTRIDE /
         data    status(27) / NF90_EBADNAME /
 
-        data    msg(1)  / 'No error' /
-        data    msg(2)  / 'Not a netCDF id' /
-        data    msg(3)  / 'netCDF file exists && NC_NOCLOBBER' /
-        data    msg(4)  / 'Invalid argument' /
-        data    msg(5)  / 'Write to read only' /
-        data    msg(6)  / 'Operation not allowed in data mode' /
-        data    msg(7)  / 'Operation not allowed in define mode' /
-        data    msg(8)  / 'Index exceeds dimension bound' /
-        data    msg(9)  / 'NC_MAX_DIMS exceeded' /
-        data    msg(10) / 'String match to name in use' /
-        data    msg(11) / 'Attribute not found' /
-        data    msg(12) / 'NC_MAX_ATTRS exceeded' /
-        data    msg(13) &
-            / 'Not a netCDF data type or _FillValue type mismatch' /
-        data    msg(14) / 'Invalid dimension id or name' /
-        data    msg(15) / 'NC_UNLIMITED in the wrong index' /
-        data    msg(16) / 'NC_MAX_VARS exceeded' /
-        data    msg(17) / 'Variable not found' /
-        data    msg(18) / 'Action prohibited on NC_GLOBAL varid' /
-        data    msg(19) / 'Not a netCDF file' /
-        data    msg(20) / 'In Fortran, string too short' /
-        data    msg(21) / 'NC_MAX_NAME exceeded' /
-        data    msg(22) / 'NC_UNLIMITED size already in use' /
-        data    msg(23) / 'nc_rec op when there are no record vars' /
-        data    msg(24) / 'Attempt to convert between text & numbers' /
-        data    msg(25) / 'Edge+start exceeds dimension bound' /
-        data    msg(26) / 'Illegal stride' /
-        data    msg(27)  &
-            / 'Attribute or variable name contains illegal characters' /
+        data msg(1)  / 'No error' /
+        data msg(2)  / 'NetCDF: Not a valid ID' /
+        data msg(3)  / 'NetCDF: File exists && NC_NOCLOBBER' /
+        data msg(4)  / 'NetCDF: Invalid argument' /
+        data msg(5)  / 'NetCDF: Write to read only' /
+        data msg(6)  / 'NetCDF: Operation not allowed in data mode' /
+        data msg(7)  / 'NetCDF: Operation not allowed in define mode' /
+        data msg(8)  / 'NetCDF: Index exceeds dimension bound' /
+        data msg(9)  / 'NetCDF: NC_MAX_DIMS exceeded' /
+        data msg(10) / 'NetCDF: String match to name in use' /
+        data msg(11) / 'NetCDF: Attribute not found' /
+        data msg(12) / 'NetCDF: NC_MAX_ATTRS exceeded' /
+        data msg(13) &
+        / 'NetCDF: Not a valid data type or _FillValue type mismatch' /
+        data msg(14) / 'NetCDF: Invalid dimension ID or name' /
+        data msg(15) / 'NetCDF: NC_UNLIMITED in the wrong index' /
+        data msg(16) / 'NetCDF: NC_MAX_VARS exceeded' /
+        data msg(17) / 'NetCDF: Variable not found' /
+        data msg(18) / 'NetCDF: Action prohibited on NC_GLOBAL varid' /
+        data msg(19) / 'NetCDF: Unknown file format' /
+        data msg(20) / 'NetCDF: In Fortran, string too short' /
+        data msg(21) / 'NetCDF: NC_MAX_NAME exceeded' /
+        data msg(22) / 'NetCDF: NC_UNLIMITED size already in use' /
+        data msg(23) &
+        / 'NetCDF: nc_rec op when there are no record vars' /
+        data msg(24) &
+        /'NetCDF: Attempt to convert between text & numbers'/
+        data msg(25) / 'NetCDF: Start+count exceeds dimension bound' /
+        data msg(26) / 'NetCDF: Illegal stride' /
+        data msg(27) / 'NetCDF: Name contains illegal characters' /
 
         nok = 0
 
@@ -125,7 +126,7 @@
         integer err
         integer ncid
         integer ncid2
-        integer         nok
+        integer         nok, flags
 
         nok = 0
 
@@ -135,15 +136,12 @@
         if (err .eq. NF90_NOERR) then
             call error &
             ('nf90mpi_open of nonexistent file should have failed')
-        else
-            print*, "Expected error message complaining: "// &
-                    "File tooth-fairy.nc does not exist"
-            nok = nok + 1
-        endif
-        if (err .ne. NF90_ENOENT) then
+        elseif (err .ne. NF90_ENOENT) then
             call error('nf90mpi_open of nonexistent file should '// &
                        'have returned NF90_ENOENT')
         else
+!           print*, "Expected error message complaining: "// &
+!                   "File tooth-fairy.nc does not exist"
             nok = nok + 1
         endif
 
@@ -180,7 +178,8 @@
                        'nf90mpi_open calls should differ')
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, &
+            flags = IOR(NF90_NOCLOBBER, extra_flags)
+            err = nf90mpi_create(comm, scratch, flags, &
                                MPI_INFO_NULL, ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_create: ', err)
@@ -219,7 +218,7 @@
 #include "tests.inc"
         integer ncid
         integer err
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -265,7 +264,8 @@
         endif
 
         if (.not. readonly) then        !/* tests using netCDF scratch file */
-            err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, &
+            flags = IOR(NF90_NOCLOBBER, extra_flags)
+            err = nf90mpi_create(comm, scratch, flags, &
                                MPI_INFO_NULL, ncid)
             if (err .NE. NF90_NOERR)  &
                 call errore('nf90mpi_create: ', err)
@@ -313,7 +313,7 @@
         integer vid
         integer(kind=MPI_OFFSET_KIND) length
         integer VDIMS(1)
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -336,10 +336,10 @@
         else if (ndims .ne. NDIMS) then
             call errori &
             ('nf90mpi_inquire: wrong number of dimensions returned: ', ndims)
-        else if (nvars .ne. NVARS) then
+        else if (nvars .ne. numVars) then
             call errori &
             ('nf90mpi_inquire: wrong number of variables returned: ', nvars)
-        else if (ngatts .ne. NGATTS) then
+        else if (ngatts .ne. numGatts) then
             call errori( &
                 'nf90mpi_inquire: wrong number of global atts returned: ', &
                 ngatts)
@@ -351,7 +351,8 @@
         end if
 
         if (.not. readonly) then  ! tests using netCDF scratch file
-            err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, &
+            flags = IOR(NF90_NOCLOBBER, extra_flags)
+            err = nf90mpi_create(comm, scratch, flags, &
                                MPI_INFO_NULL, ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_create: ', err)
@@ -478,7 +479,7 @@
         err = nf90mpi_inquire(ncid, nAttributes=ngatts)
         if (err .NE. NF90_NOERR) then
             call errore('nf90mpi_inquire: ', err)
-        else if (ngatts .ne. NGATTS) then
+        else if (ngatts .ne. numGatts) then
             call errori &
             ('nf90mpi_inquire: wrong number of global atts returned, ', &
               ngatts)
@@ -553,7 +554,7 @@
         err = nf90mpi_inquire(ncid, nVariables=nvars)
         if (err .NE. NF90_NOERR) then
             call errore('nf90mpi_inquire: ', err)
-        else if (nvars .ne. NVARS) then
+        else if (nvars .ne. numVars) then
             call errori &
             ('nf90mpi_inquire: wrong number returned, ', nvars)
         else
@@ -812,7 +813,7 @@
         if (err .ne. NF90_ENOTVAR) &
             call errore('bad ncid: ', err)
 
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_inq_varid(BAD_ID, var_name(i), vid)
             if (err .ne. NF90_EBADID) then
                 call errore('bad ncid: ', err)
@@ -856,7 +857,7 @@
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_inquire_variable(BAD_ID, i, name, datatype, ndims,  &
                   dimids, na)
             if (err .ne. NF90_EBADID) then
@@ -912,7 +913,7 @@
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_inquire_variable(BAD_ID, i, dimids=dimids)
             if (err .ne. NF90_EBADID) then
                 call errore('bad ncid: ', err)
@@ -959,7 +960,7 @@
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_inquire_variable(BAD_ID, i, name)
             if (err .ne. NF90_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1004,7 +1005,7 @@
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 0, NVARS    ! start with global attributes
+        do 1, i = 0, numVars    ! start with global attributes
             err = nf90mpi_inquire_variable(BAD_ID, i, nAtts=na)
             if (err .ne. NF90_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1053,7 +1054,7 @@
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_inquire_variable(BAD_ID, i, ndims=ndims)
             if (err .ne. NF90_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1098,7 +1099,7 @@
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_inquire_variable(BAD_ID, i, xtype=datatype)
             if (err .ne. NF90_EBADID) then
                 call errore('bad ncid: ', err)
@@ -1140,7 +1141,7 @@
         if (err .NE. NF90_NOERR)  &
             call errore('nf90mpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             ! NF90_GLOBAL is defined to be 0
             do 2, j = 1, NATTS(i)
                 err = nf90mpi_inquire_attribute(BAD_ID, i, ATT_NAME(j,i), type, alen)
@@ -1204,7 +1205,7 @@
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nf90mpi_inquire_attribute(ncid, i, 'noSuch', len=len)
             if (err .ne. NF90_ENOTATT) then
                 call errore('Bad attribute name: ', err)
@@ -1262,7 +1263,7 @@
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nf90mpi_inquire_attribute(ncid, i, 'noSuch', datatype)
             if (err .ne. NF90_ENOTATT) then
                 call errore('Bad attribute name: ', err)
@@ -1321,7 +1322,7 @@
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nf90mpi_inq_attname(ncid, i, BAD_ATTNUM, name)
             if (err .ne. NF90_ENOTATT) then
                 call errore('Bad attribute number: ', err)
@@ -1383,7 +1384,7 @@
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             err = nf90mpi_inquire_attribute(ncid, i, 'noSuch', attnum=attnum)
             if (err .ne. NF90_ENOTATT) then
                 call errore('Bad attribute name: ', err)

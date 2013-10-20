@@ -22,7 +22,7 @@ SUBDIRS = common \
           fandc \
           largefile \
           nonblocking \
-          test_inq_format \
+          cdf_format \
           header \
           testcases \
           data
@@ -53,6 +53,7 @@ check testing: all
 	cd C && $(MAKE) testing
 	cd nonblocking && $(MAKE) testing
 	cd testcases && $(MAKE) testing
+	cd cdf_format && $(MAKE) testing
 	if [ @enable_subfiling@ = yes ] ; then cd subfile && $(MAKE) testing ; fi
 
 verbose_check verbose_testing: all
@@ -63,6 +64,7 @@ verbose_check verbose_testing: all
 	cd C && $(MAKE) verbose_testing
 	cd nonblocking && $(MAKE) verbose_testing
 	cd testcases && $(MAKE) verbose_testing
+	cd cdf_format && $(MAKE) verbose_testing
 	if [ @enable_subfiling@ = yes] ; then cd subfile && $(MAKE) verbose_testing ; fi
 
 ptest: all

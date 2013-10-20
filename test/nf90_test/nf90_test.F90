@@ -34,6 +34,9 @@
         call error('       nf90_test [-c]')
         call error('   [-h] Print help' )
         call error('   [-c] Create file test.nc (Do not do tests)' )
+        call error('   [-1] test CDF-1 format' )
+        call error('   [-2] test CDF-2 format' )
+        call error('   [-5] test CDF-5 format' )
         call error('   [-r] Just do read-only tests' )
         call error('   [-v] Verbose mode' )
         call error( &
@@ -63,6 +66,7 @@
             print *, ' '
             print *, '  ### ', nfails, ' FAILURES TESTING ', name,  &
                      '! ###'
+            stop
         end if
         end
 
@@ -94,6 +98,7 @@
 #else
         implicit        none
         integer         iargc
+        character*128   msg, cmd
 #endif
 #if defined(__crayx1)
         integer         ipxfargc 
@@ -417,12 +422,16 @@
         verbose = .false.
         max_nmpt = 8
         skiparg = .false.
+        cdf_format = 1
+        extra_flags = 0
 
 #if defined(__crayx1)
         argc = ipxfargc()
 #else
         argc = iargc()
 #endif
+        call getarg(0, cmd)
+
         do 1, iarg = 1, argc
             if (skiparg) then
                 skiparg = .false.
@@ -446,6 +455,14 @@
                             read (arg, '(i6)') max_nmpt
                             skiparg = .true.
                             go to 1
+                        else if (opt .eq. '1') then
+                            cdf_format = 1
+                        else if (opt .eq. '2') then
+                            cdf_format = 2
+                            extra_flags = NF_64BIT_OFFSET
+                        else if (opt .eq. '5') then
+                            cdf_format = 5
+                            extra_flags = NF_64BIT_DATA
                         else
                             call usage
                             call ud_exit(1)
@@ -457,6 +474,15 @@
                 end if
             end if
 1       continue
+
+        numGatts = 6
+        numVars  = 136
+        numTypes = 6
+        if (cdf_format .EQ. 5) then
+            numGatts = NGATTS
+            numVars  = NVARS
+            numTypes = NTYPES
+        endif
 
 !       /* Initialize global variables defining test file */
         call init_gvars
@@ -791,10 +817,11 @@
         end if
 
         if (nfailsTotal .eq. 0) then
-          print*,'** TESTING Fortran nf90_test                    ', &
-                 '                  ------ pass'
+          write(msg,"(A,I1)") '*** TESTING F90 '//trim(cmd)//' for CDF-', &
+                              cdf_format
+          write(*,"(A67,A)") msg,'------ pass'
         else
-          print *,'*** TESTING nf90_test expects to see 0 failures'
+          print *,'*** TESTING F90 '//trim(cmd)//' expects to see 0 failure'
           print *,'Total number of failures: ', nfailsTotal
         endif
         ! if (nfailsTotal .eq. 0) call ud_exit(0)

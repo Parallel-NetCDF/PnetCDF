@@ -54,182 +54,118 @@ strerror(int errnum)
 static const char *
 vms_strerror( int status )
 {
-	short msglen;
-	static char msgbuf[256];
-	$DESCRIPTOR(message, msgbuf);
-	register ret;
+    short msglen;
+    static char msgbuf[256];
+    $DESCRIPTOR(message, msgbuf);
+    register ret;
 
-	msgbuf[0] = 0;
-	ret = SYS$GETMSG(status, &msglen, &message, 15, 0);
-	
-	if(ret != SS$_BUFFEROVF && ret != SS$_NORMAL) {
-		(void) strcpy(msgbuf, "EVMSERR");
-	}
-	return(msgbuf);
+    msgbuf[0] = 0;
+    ret = SYS$GETMSG(status, &msglen, &message, 15, 0);
+    
+    if(ret != SS$_BUFFEROVF && ret != SS$_NORMAL) {
+        (void) strcpy(msgbuf, "EVMSERR");
+    }
+    return(msgbuf);
 }
 #endif /* vms */
 
 
-static char unknown[64];
+/* must copy nc_strerror() from netCDF release */
+static const char* nc_strerror(int ncerr1);
+
+static char nc_unknown_err_msg[128];
 
 const char *
 ncmpi_strerror(int err)
 {
-    sprintf(unknown,"Unknown Error: Unrecognized PnetCDF error code %5d\n",err);
+    sprintf(nc_unknown_err_msg,"Unknown Error: Unrecognized PnetCDF error code %5d\n",err);
 
 #ifdef vms 
-	if(err == EVMSERR)
-	{
-		return vms_strerror(err);
-	}	
-	/* else */
+    if(err == EVMSERR)
+    {
+        return vms_strerror(err);
+    }    
+    /* else */
 #endif /* vms */
 
-	if(NC_ISSYSERR(err))
-	{
-		const char *cp = (const char *) strerror(err);
-		if(cp == NULL)
-			return unknown;
-		/* else */
-		return cp;
-	}
-	/* else */
+    if(NC_ISSYSERR(err))
+    {
+        const char *cp = (const char *) strerror(err);
+        if(cp == NULL)
+            return nc_unknown_err_msg;
+        /* else */
+        return cp;
+    }
+    /* else */
 
-	switch (err) {
-	case NC_NOERR:
-	    return "No error";
-	case NC_EBADID:
-	    return "Not a netCDF id";
-	case NC_ENFILE:
-	    return "Too many netCDF files open";
-	case NC_EEXIST:
-	    return "netCDF file exists && NC_NOCLOBBER";
-	case NC_EINVAL:
-	    return "Invalid argument";
-	case NC_EPERM:
-	    return "Write to read only";
-	case NC_ENOTINDEFINE:
-	    return "Operation not allowed in data mode";
-	case NC_EINDEFINE:
-	    return "Operation not allowed in define mode";
-	case NC_EINVALCOORDS:
-	    return "Index exceeds dimension bound";
-	case NC_EMAXDIMS:
-	    return "NC_MAX_DIMS exceeded";
-	case NC_ENAMEINUSE:
-	    return "String match to name in use";
-	case NC_ENOTATT:
-	    return "Attribute not found";
-	case NC_EMAXATTS:
-	    return "NC_MAX_ATTRS exceeded";
-	case NC_EBADTYPE:
-	    return "Not a netCDF data type or _FillValue type mismatch";
-	case NC_EBADDIM:
-	    return "Invalid dimension id or name";
-	case NC_EUNLIMPOS:
-	    return "NC_UNLIMITED in the wrong index";
-	case NC_EMAXVARS:
-	    return "NC_MAX_VARS exceeded";
-	case NC_ENOTVAR:
-	    return "Variable not found";
-	case NC_EGLOBAL:
-	    return "Action prohibited on NC_GLOBAL varid";
-	case NC_ENOTNC:
-	    return "Not a netCDF file";
-	case NC_ESTS:
-	    return "In Fortran, string too short";
-	case NC_EMAXNAME:
-	    return "NC_MAX_NAME exceeded";
-	case NC_EUNLIMIT:
-	    return "NC_UNLIMITED size already in use";
-	case NC_ENORECVARS:
-	    return "nc_rec op when there are no record vars";
-	case NC_ECHAR:
-	    return "Attempt to convert between text & numbers";
-	case NC_EEDGE:
-	    return "Edge+start exceeds dimension bound";
-	case NC_ESTRIDE:
-	    return "Illegal stride";
-	case NC_EBADNAME:
-	    return "Attribute or variable name contains illegal characters";
-	case NC_ERANGE:
-	    return "Numeric conversion not representable";
-	case NC_ENOMEM:
-	    return "Memory allocation (malloc) failure";
-	case NC_EVARSIZE:
-	    return "One or more variable sizes violate format constraints";
-	case NC_EDIMSIZE:
-	    return "Invalid dimension size";
-        case NC_ETRUNC:
-            return "File likely truncated or possibly corrupted";
-
-        /* start of PnetCDF errors */
-	case NC_ESMALL:
-	    return "Size of MPI_Offset too small for requested format ";
-	case NC_ENOTINDEP:
-	    return "Operation not allowed in collective data mode";
-	case NC_EINDEP:
-	    return "Operation not allowed in independent data mode";
-	case NC_EFILE:
-	    return "Unknown error in file operation";
+    switch (err) {
+        /* PnetCDF errors */
+        case NC_ESMALL:
+            return "Size of MPI_Offset too small for requested format ";
+        case NC_ENOTINDEP:
+            return "Operation not allowed in collective data mode";
+        case NC_EINDEP:
+            return "Operation not allowed in independent data mode";
+        case NC_EFILE:
+            return "Unknown error in file operation";
         case NC_EREAD:
             return "Unknow error occurs in reading file";
-	case NC_EWRITE:
-	    return "Unknow error occurs in writting file";
-	case NC_EOFILE:
-	    return "Can not open/create file";
-	case NC_EMULTITYPES:
-	    return "Multiple types used in memory data";
-	case NC_EIOMISMATCH:
-	    return "Input/Output data amount mismatch";
-	case NC_ENEGATIVECNT:
-	    return "Negative count is prohibited";
-	case NC_EUNSPTETYPE:
-	    return "Unsupported etype is used in MPI datatype for memory data";
-	case NC_EINVAL_REQUEST:
-	    return "Invalid nonblocking request ID.";
-	case NC_EAINT_TOO_SMALL:
-	    return "MPI_Aint not large enough to hold requested value.";
-	case NC_ENOTSUPPORT:
-	    return "Feature is not yet supported.";
-	case NC_ENULLBUF:
-	    return "Trying to attach a NULL buffer or the buffer size is <= 0.";
-	case NC_EPREVATTACHBUF:
-	    return "Previous attached buffer is found.";
-	case NC_ENULLABUF:
-	    return "No attached buffer is found.";
-	case NC_EPENDINGBPUT:
-	    return "Cannot detach buffer as a pending bput request is found.";
-	case NC_EINSUFFBUF:
-	    return "Attached buffer is too small.";
-	case NC_ENOENT:
-	    return "The specified netCDF file does not exist when calling ncmpi_open().";
-	case NC_EINTOVERFLOW:
-	    return "Overflow when type cast to 4-byte integer.";
-	case NC_EMULTIDEFINE:
-	    return "File header is inconsistent among processes";
-	case NC_EMULTIDEFINE_OMODE:
-	    return "Bad file create/open mode or modes are inconsistent across processes.";
-	case NC_EMULTIDEFINE_DIM_NUM:
-	    return "Number of dimensions is defined inconsistently among processes.";
-	case NC_EMULTIDEFINE_DIM_SIZE:
-	    return "Dimension size is defined inconsistently among processes.";
-	case NC_EMULTIDEFINE_VAR_NUM:
-	    return "Number of variables is defined inconsistently among processes.";
+        case NC_EWRITE:
+            return "Unknow error occurs in writting file";
+        case NC_EOFILE:
+            return "Can not open/create file";
+        case NC_EMULTITYPES:
+            return "Multiple types used in memory data";
+        case NC_EIOMISMATCH:
+            return "Input/Output data amount mismatch";
+        case NC_ENEGATIVECNT:
+            return "Negative count is prohibited";
+        case NC_EUNSPTETYPE:
+            return "Unsupported etype is used in MPI datatype for memory data";
+        case NC_EINVAL_REQUEST:
+            return "Invalid nonblocking request ID.";
+        case NC_EAINT_TOO_SMALL:
+            return "MPI_Aint not large enough to hold requested value.";
+        case NC_ENOTSUPPORT:
+            return "Feature is not yet supported.";
+        case NC_ENULLBUF:
+            return "Trying to attach a NULL buffer or the buffer size is <= 0.";
+        case NC_EPREVATTACHBUF:
+            return "Previous attached buffer is found.";
+        case NC_ENULLABUF:
+            return "No attached buffer is found.";
+        case NC_EPENDINGBPUT:
+            return "Cannot detach buffer as a pending bput request is found.";
+        case NC_EINSUFFBUF:
+            return "Attached buffer is too small.";
+        case NC_ENOENT:
+            return "The specified netCDF file does not exist when calling ncmpi_open().";
+        case NC_EINTOVERFLOW:
+            return "Overflow when type cast to 4-byte integer.";
+        case NC_EMULTIDEFINE:
+            return "File header is inconsistent among processes";
+        case NC_EMULTIDEFINE_OMODE:
+            return "Bad file create/open mode or modes are inconsistent across processes.";
+        case NC_EMULTIDEFINE_DIM_NUM:
+            return "Number of dimensions is defined inconsistently among processes.";
+        case NC_EMULTIDEFINE_DIM_SIZE:
+            return "Dimension size is defined inconsistently among processes.";
+        case NC_EMULTIDEFINE_VAR_NUM:
+            return "Number of variables is defined inconsistently among processes.";
         case NC_EMULTIDEFINE_VAR_NAME:
             return "Variable names are defined inconsistently among processes.";
-	case NC_EMULTIDEFINE_VAR_NDIMS:
-	    return "Dimensionality of this variable is defined inconsistently among processes.";
-	case NC_EMULTIDEFINE_VAR_DIMIDS:
-	    return "Dimension IDs used to define this variable is inconsistent among processes.";
-	case NC_EMULTIDEFINE_VAR_TYPE:
-	    return "Data type of this variable is defined inconsistently among processes.";
-	case NC_EMULTIDEFINE_VAR_LEN:
-	    return "Total number of elements of this variable is defined inconsistently among processes.";
-	case NC_EMULTIDEFINE_VAR_BEGIN:
-	    return "(Internal error) beginning file offset of this variable is inconsistent among processes.";
-	case NC_EMULTIDEFINE_NUMRECS:
-	    return "Number of records is inconsistent among processes.";
+        case NC_EMULTIDEFINE_VAR_NDIMS:
+            return "Dimensionality of this variable is defined inconsistently among processes.";
+        case NC_EMULTIDEFINE_VAR_DIMIDS:
+            return "Dimension IDs used to define this variable is inconsistent among processes.";
+        case NC_EMULTIDEFINE_VAR_TYPE:
+            return "Data type of this variable is defined inconsistently among processes.";
+        case NC_EMULTIDEFINE_VAR_LEN:
+            return "Total number of elements of this variable is defined inconsistently among processes.";
+        case NC_EMULTIDEFINE_VAR_BEGIN:
+            return "(Internal error) beginning file offset of this variable is inconsistent among processes.";
+        case NC_EMULTIDEFINE_NUMRECS:
+            return "Number of records is inconsistent among processes.";
         case NC_EMULTIDEFINE_ATTR_NUM:
             return "Number of attributes is inconsistent among processes.";
         case NC_EMULTIDEFINE_ATTR_SIZE:
@@ -242,26 +178,19 @@ ncmpi_strerror(int err)
             return "Attribute length is inconsistent among processes.";
         case NC_EMULTIDEFINE_ATTR_VAL:
             return "Attribute value is inconsistent among processes.";
-	default:
-	    return unknown;
-	}
-	/* default */
-	return unknown;
+        default:
+            /* check netCDF-3 and netCDF-4 errors */
+            return nc_strerror(err);
+    }
+    /* default */
+    return nc_unknown_err_msg;
 }
 
 int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
                         char *err_msg)       /* extra error message */
 {
-    int rank, errorclass;
-    int errorStringLen;
+    int rank, errorclass, errorStringLen;
     char errorString[MPI_MAX_ERROR_STRING];
-
-    /* we report the world rank */
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
-    if (err_msg == NULL) err_msg = "";
-    printf("rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
 
     /* check for specific error codes understood by PnetCDF */
 
@@ -282,7 +211,244 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
     if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
 #endif
 
+    /* other errors that currently cannot be described by PnetCDF error codes */
+
+    /* we report the world rank */
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
+    if (err_msg == NULL) err_msg = "";
+    printf("rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
+
     return NC_EOFILE; /* general file I/O error */
+}
+
+
+/*-----------------------------------------------------------------------------
+ *     Copy nc_strerror() from netCDF release to ensure the same error
+ *     message is returned.
+ *----------------------------------------------------------------------------*/
+
+/** \defgroup error Error Handling
+NetCDF functions non-zero status codes on error.
+
+Each netCDF function returns an integer status value. If the returned
+status value indicates an error, you may handle it in any way desired,
+from printing an associated error message and exiting to ignoring the
+error indication and proceeding (not recommended!). For simplicity,
+the examples in this guide check the error status and call a separate
+function, handle_err(), to handle any errors. One possible definition
+of handle_err() can be found within the documentation of
+nc_strerror().
+
+The nc_strerror() function is available to convert a returned integer
+error status into an error message string.
+
+Occasionally, low-level I/O errors may occur in a layer below the
+netCDF library. For example, if a write operation causes you to exceed
+disk quotas or to attempt to write to a device that is no longer
+available, you may get an error from a layer below the netCDF library,
+but the resulting write error will still be reflected in the returned
+status value.
+
+ */
+
+/**
+\ingroup error
+ Given an error number, return an error message. 
+
+This function returns a static reference to an error message string
+corresponding to an integer netCDF error status or to a system error
+number, presumably returned by a previous call to some other netCDF
+function. The error codes are defined in netcdf.h.
+
+\param ncerr1 error number
+
+\returns short string containing error message.
+
+\section Example
+
+Here is an example of a simple error handling function that uses
+nc_strerror to print the error message corresponding to the netCDF
+error status returned from any netCDF function call and then exit:
+
+\code
+     #include <netcdf.h>
+        ...
+     void handle_error(int status) {
+     if (status != NC_NOERR) {
+        fprintf(stderr, "%s\n", nc_strerror(status));
+        exit(-1);
+        }
+     }
+\endcode
+*/
+static const char *
+nc_strerror(int ncerr1)
+{
+   /* System error? */
+   if(NC_ISSYSERR(ncerr1))
+   {
+      const char *cp = (const char *) strerror(ncerr1);
+      if(cp == NULL)
+         return "Unknown Error";
+      return cp;
+   }
+
+   /* If we're here, this is a netcdf error code. */
+   switch(ncerr1)
+   {
+      case NC_NOERR:
+         return "No error";
+      case NC_EBADID:
+         return "NetCDF: Not a valid ID";
+      case NC_ENFILE:
+         return "NetCDF: Too many files open";
+      case NC_EEXIST:
+         return "NetCDF: File exists && NC_NOCLOBBER";
+      case NC_EINVAL:
+         return "NetCDF: Invalid argument";
+      case NC_EPERM:
+         return "NetCDF: Write to read only";
+      case NC_ENOTINDEFINE:
+         return "NetCDF: Operation not allowed in data mode";
+      case NC_EINDEFINE:
+         return "NetCDF: Operation not allowed in define mode";
+      case NC_EINVALCOORDS:
+         return "NetCDF: Index exceeds dimension bound";
+      case NC_EMAXDIMS:
+         return "NetCDF: NC_MAX_DIMS exceeded";
+      case NC_ENAMEINUSE:
+         return "NetCDF: String match to name in use";
+      case NC_ENOTATT:
+         return "NetCDF: Attribute not found";
+      case NC_EMAXATTS:
+         return "NetCDF: NC_MAX_ATTRS exceeded";
+      case NC_EBADTYPE:
+         return "NetCDF: Not a valid data type or _FillValue type mismatch";
+      case NC_EBADDIM:
+         return "NetCDF: Invalid dimension ID or name";
+      case NC_EUNLIMPOS:
+         return "NetCDF: NC_UNLIMITED in the wrong index";
+      case NC_EMAXVARS:
+         return "NetCDF: NC_MAX_VARS exceeded";
+      case NC_ENOTVAR:
+         return "NetCDF: Variable not found";
+      case NC_EGLOBAL:
+         return "NetCDF: Action prohibited on NC_GLOBAL varid";
+      case NC_ENOTNC:
+         return "NetCDF: Unknown file format";
+      case NC_ESTS:
+         return "NetCDF: In Fortran, string too short";
+      case NC_EMAXNAME:
+         return "NetCDF: NC_MAX_NAME exceeded";
+      case NC_EUNLIMIT:
+         return "NetCDF: NC_UNLIMITED size already in use";
+      case NC_ENORECVARS:
+         return "NetCDF: nc_rec op when there are no record vars";
+      case NC_ECHAR:
+         return "NetCDF: Attempt to convert between text & numbers";
+      case NC_EEDGE:
+         return "NetCDF: Start+count exceeds dimension bound";
+      case NC_ESTRIDE:
+         return "NetCDF: Illegal stride";
+      case NC_EBADNAME:
+         return "NetCDF: Name contains illegal characters";
+      case NC_ERANGE:
+         return "NetCDF: Numeric conversion not representable";
+      case NC_ENOMEM:
+         return "NetCDF: Memory allocation (malloc) failure";
+      case NC_EVARSIZE:
+         return "NetCDF: One or more variable sizes violate format constraints";
+      case NC_EDIMSIZE:
+         return "NetCDF: Invalid dimension size";
+      case NC_ETRUNC:
+         return "NetCDF: File likely truncated or possibly corrupted";
+      case NC_EAXISTYPE:
+         return "NetCDF: Illegal axis type";
+      case NC_EDAP:
+         return "NetCDF: DAP failure";
+      case NC_ECURL:
+         return "NetCDF: libcurl failure";
+      case NC_EIO:
+         return "NetCDF: I/O failure";
+      case NC_ENODATA:
+         return "NetCDF: Variable has no data in DAP request";
+      case NC_EDAPSVC:
+         return "NetCDF: DAP server error";
+      case NC_EDAS:
+         return "NetCDF: Malformed or inaccessible DAP DAS";
+      case NC_EDDS:
+         return "NetCDF: Malformed or inaccessible DAP DDS";
+      case NC_EDATADDS:
+         return "NetCDF: Malformed or inaccessible DAP DATADDS";
+      case NC_EDAPURL:
+         return "NetCDF: Malformed URL";
+      case NC_EDAPCONSTRAINT:
+         return "NetCDF: Malformed or unexpected Constraint";
+      case NC_ETRANSLATION:
+         return "NetCDF: Untranslatable construct";
+      case NC_EHDFERR:
+         return "NetCDF: HDF error";
+      case NC_ECANTREAD:
+         return "NetCDF: Can't read file";
+      case NC_ECANTWRITE:
+         return "NetCDF: Can't write file";
+      case NC_ECANTCREATE:
+         return "NetCDF: Can't create file";
+      case NC_EFILEMETA:
+         return "NetCDF: Can't add HDF5 file metadata";
+      case NC_EDIMMETA:      
+         return "NetCDF: Can't define dimensional metadata";
+      case NC_EATTMETA:
+         return "NetCDF: Can't open HDF5 attribute";
+      case NC_EVARMETA:
+         return "NetCDF: Problem with variable metadata.";
+      case NC_ENOCOMPOUND:
+         return "NetCDF: Can't create HDF5 compound type";
+      case NC_EATTEXISTS:
+         return "NetCDF: Attempt to create attribute that alread exists";
+      case NC_ENOTNC4:
+         return "NetCDF: Attempting netcdf-4 operation on netcdf-3 file";
+      case NC_ESTRICTNC3:
+         return "NetCDF: Attempting netcdf-4 operation on strict nc3 netcdf-4 file";
+      case NC_ENOTNC3:
+         return "NetCDF: Attempting netcdf-3 operation on netcdf-4 file";
+      case NC_ENOPAR:
+         return "NetCDF: Parallel operation on file opened for non-parallel access";
+      case NC_EPARINIT:
+         return "NetCDF: Error initializing for parallel access";
+      case NC_EBADGRPID:
+         return "NetCDF: Bad group ID";
+      case NC_EBADTYPID:
+         return "NetCDF: Bad type ID";
+      case NC_ETYPDEFINED:
+         return "NetCDF: Type has already been defined and may not be edited";
+      case NC_EBADFIELD:
+         return "NetCDF: Bad field ID";
+      case NC_EBADCLASS:
+         return "NetCDF: Bad class";
+      case NC_EMAPTYPE:
+         return "NetCDF: Mapped access for atomic types only";
+      case NC_ELATEFILL:
+         return "NetCDF: Attempt to define fill value when data already exists.";
+      case NC_ELATEDEF:
+         return "NetCDF: Attempt to define var properties, like deflate, after enddef.";
+      case NC_EDIMSCALE:
+         return "NetCDF: Probem with HDF5 dimscales.";
+      case NC_ENOGRP:
+         return "NetCDF: No group found.";
+      case NC_ESTORAGE:
+         return "NetCDF: Cannot specify both contiguous and chunking.";
+      case NC_EBADCHUNK:
+         return "NetCDF: Bad chunk sizes.";
+      case NC_ENOTBUILT:
+         return "NetCDF: Attempt to use feature that was not turned on "
+            "when netCDF was built.";
+      case NC_EDISKLESS:
+         return "NetCDF: Error in using diskless access";
+      default:
+         return nc_unknown_err_msg;
+   }
 }
 
 
