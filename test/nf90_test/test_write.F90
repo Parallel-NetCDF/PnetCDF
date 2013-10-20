@@ -26,7 +26,7 @@
         integer flags
         integer nok
 
-        flags = NF90_NOCLOBBER
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
         nok = 0
         do 1, clobber = 0, 1
             err = nf90mpi_create(comm, scratch, flags,  MPI_INFO_NULL, &
@@ -69,10 +69,11 @@
                 call errore('nf90mpi_close: ', err)
             end if
 
-            flags = NF90_CLOBBER
+            flags = IOR(NF90_CLOBBER, extra_flags)
 1       continue
 
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER,  MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags,  MPI_INFO_NULL, &
                            ncid)
         if (err .ne. NF90_EEXIST) then
             call errore('attempt to overwrite file: ', err)
@@ -112,7 +113,7 @@
         integer                 ncid            !/* netcdf id */
         integer                 dimid           !/* dimension id */
         integer                 vid             !/* variable id */
-        integer                 err
+        integer                 err, flags
         character*(title_len)   title
         doubleprecision         var
         character*(NF90_MAX_NAME) name
@@ -158,7 +159,8 @@
             call errore('nf90mpi_close: ', err)
 
 !           /* tests using scratch file */
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -283,7 +285,7 @@
 
         integer ncidw         !/* netcdf id for writing */
         integer ncidr         !/* netcdf id for reading */
-        integer err
+        integer err, flags
         integer nok
 
         nok = 0
@@ -296,7 +298,8 @@
         endif
 
 !           /* create scratch file & try nf90mpi_sync in define mode */
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncidw)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -365,7 +368,7 @@
 #include "tests.inc"
 
         integer ncid          !/* netcdf id */
-        integer err
+        integer err, flags
         integer ndims
         integer nvars
         integer ngatts
@@ -383,7 +386,8 @@
         endif
 
 !           /* create scratch file & try nf90mpi_abort in define mode */
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -409,7 +413,8 @@
 !            do nf90mpi_enddef & nf90mpi_redef
 !            define new dims, vars, atts
 !            try nf90mpi_abort: should restore previous state (no dims, vars, atts)
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -451,7 +456,8 @@
             call errore('nf90mpi_close: ', err)
 
 !           /* try nf90mpi_abort in data mode - should just close */
-        err = nf90mpi_create(comm, scratch, NF90_CLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_CLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -499,7 +505,7 @@
         integer i
         integer dimid         !/* dimension id */
         integer(kind=MPI_OFFSET_KIND) length
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -513,7 +519,8 @@
         endif
 
 !           /* data mode test */
-        err = nf90mpi_create(comm, scratch, NF90_CLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_CLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -625,7 +632,7 @@
         integer ncid
         integer err             !/* status */
         character*(NF90_MAX_NAME) name
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -638,7 +645,8 @@
         endif
 
 !           /* main tests */
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -702,7 +710,7 @@
         character*(NF90_MAX_NAME) name
         integer dimids(MAX_RANK)
         integer datatype
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -715,7 +723,8 @@
         endif
 
 !       scalar tests
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -772,14 +781,15 @@
             call errorc('delete of scratch file failed: ', scratch)
 
 !           /* general tests using global vars */
-        err = nf90mpi_create(comm, scratch, NF90_CLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_CLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
             return
         end if
         call def_dims(ncid)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_def_var(ncid, var_name(i), var_type(i),  &
                              var_dimid(1:var_rank(i),i), vid)
             if (err .ne. 0)  then
@@ -826,11 +836,12 @@
         integer err
         integer i
         character*(NF90_MAX_NAME) name
-        integer nok
+        integer nok, flags
 
         nok = 0
 
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -846,14 +857,14 @@
         call def_vars(ncid)
 
 !           /* Prefix "new_" to each name */
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nf90mpi_rename_var(BAD_ID, i, 'newName')
             if (err .ne. NF90_EBADID) then
                 call errore('bad ncid: ', err)
             else
                 nok = nok + 1
             endif
-            err = nf90mpi_rename_var(ncid, i, var_name(NVARS))
+            err = nf90mpi_rename_var(ncid, i, var_name(numVars))
             if (err .ne. NF90_ENAMEINUSE) then
                 call errore('duplicate name: ', err)
             else
@@ -878,7 +889,7 @@
         err = nf90mpi_enddef(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_enddef: ', err)
-        do 2, i = 1, NVARS
+        do 2, i = 1, numVars
             name = 'even_longer_' // var_name(i)
             err = nf90mpi_rename_var(ncid, i, name)
             if (err .ne. NF90_ENOTINDEFINE) then
@@ -938,14 +949,15 @@
         integer datatype                !/* of att */
         integer(kind=MPI_OFFSET_KIND) length                  !/* of att */
         character*1     value
-        integer nok
+        integer nok, flags
 
         nok = 0
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
                          ncid_in)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid_out)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -954,7 +966,7 @@
         call def_dims(ncid_out)
         call def_vars(ncid_out)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             vid = VARID(i)
             do 2, j = 1, NATTS(i)
                 name = ATT_NAME(j,i)
@@ -1029,7 +1041,7 @@
         err = nf90mpi_enddef(ncid_out)
         if (err .ne. 0) &
             call errore('nf90mpi_enddef: ', err)
-        do 3, i = 1, NVARS
+        do 3, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nf90mpi_rename_att(ncid_out, i,  &
                       att_name(1,i), 'a')
@@ -1051,7 +1063,7 @@
                          ncid_out)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
-        do 4, i = 1, NVARS
+        do 4, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nf90mpi_inquire_attribute(ncid_out, i, 'a',  &
                       datatype, length)
@@ -1093,7 +1105,7 @@
 
         integer ncid
         integer vid
-        integer err
+        integer err, flags
         integer i
         integer j
         integer  k
@@ -1114,7 +1126,8 @@
 
         nok = 0
 
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1127,7 +1140,7 @@
         call def_vars(ncid)
         call put_atts(ncid)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             vid = VARID(i)
             do 2, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
@@ -1160,7 +1173,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
 
-        do 3, i = 0, NVARS
+        do 3, i = 0, numVars
             vid = VARID(i)
             do 4, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
@@ -1220,7 +1233,7 @@
 !           /* Now in data mode */
 !           /* Try making names even longer. Then restore original names */
 
-        do 7, i = 0, NVARS
+        do 7, i = 0, numVars
             vid = VARID(i)
             do 8, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
@@ -1262,7 +1275,7 @@
 #include "tests.inc"
 
         integer ncid
-        integer err
+        integer err, flags
         integer i
         integer j
         integer attnum
@@ -1274,7 +1287,8 @@
 
         nok = 0
 
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1290,7 +1304,7 @@
         call def_vars(ncid)
         call put_atts(ncid)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             vid = VARID(i)
             numatts = NATTS(i)
             do 2, j = 1, numatts
@@ -1349,7 +1363,7 @@
             call errore('nf90mpi_inquire: ', err)
         if (na .ne. 0) &
             call errori('natts: expected 0, got ', na)
-        do 3, i = 0, NVARS
+        do 3, i = 0, numVars
             vid = VARID(i)
             err = nf90mpi_inquire(ncid, nAttributes=na)
             if (err .ne. 0) &
@@ -1367,7 +1381,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_enddef: ', err)
 
-        do 4, i = 0, NVARS
+        do 4, i = 0, numVars
             vid = VARID(i)
             numatts = NATTS(i)
             do 5, j = 1, numatts
@@ -1407,7 +1421,7 @@
 
         integer ncid
         integer vid
-        integer err
+        integer err, flags
         integer i
         integer j
         integer old_fillmode
@@ -1440,7 +1454,8 @@
             call errore('nf90mpi_close: ', err)
 
 !           /* create scratch */
-        err = nf90mpi_create(comm, scratch, NF90_NOCLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_NOCLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1490,7 +1505,7 @@
             call errore('nf90mpi_put_var: ', err)
 
 !           /* get all variables & check all values equal default fill */
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             if (var_type(i) .eq. NF90_CHAR) then
                 fill = NF90_FILL_CHAR
             else if (var_type(i) .eq. NF90_BYTE) then
@@ -1536,7 +1551,8 @@
         err = nf90mpi_close(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_create(comm, scratch, NF90_CLOBBER, MPI_INFO_NULL, &
+        flags = IOR(NF90_CLOBBER, extra_flags)
+        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1549,7 +1565,7 @@
         fill = 42
         text = char(int(fill))
         length = 1
-        do 3, i = 1, NVARS
+        do 3, i = 1, numVars
             if (var_type(i) .eq. NF90_CHAR) then
                 err = nf90mpi_put_att(ncid, i, '_FillValue', &
                    text)
@@ -1572,7 +1588,7 @@
             call errore('nf90mpi_put_var: ', err)
 
 !           /* get all variables & check all values equal 42 */
-        do 4, i = 1, NVARS
+        do 4, i = 1, numVars
             do 5, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
@@ -1622,7 +1638,7 @@
 #include "tests.inc"
       
       integer ncid
-      integer err
+      integer err, flags
       integer i
       integer version
       integer old_format
@@ -1638,7 +1654,8 @@
          err = nf90mpi_set_default_format(i, old_format)
          if (err .ne. 0)  &
                call errore("setting classic format: status = %d", err)
-         err = nf90mpi_create(comm, scratch, NF90_CLOBBER,  &
+         flags = IOR(NF90_CLOBBER, extra_flags)
+         err = nf90mpi_create(comm, scratch, flags,  &
                       MPI_INFO_NULL, ncid)
          if (err .ne. 0)  &
               call errore("bad nf90mpi_create: status = %d", err)

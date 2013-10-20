@@ -23,7 +23,11 @@
     nf90_real4  = nf90_float,   &
     nf90_double = 6,            &
     nf90_real8  = nf90_double,  &
-    nf90_int64  = 10
+    nf90_ubyte  = 7,            &
+    nf90_ushort = 8,            &
+    nf90_uint   = 9,            &
+    nf90_int64  = 10,           &
+    nf90_uint64 = 11
                         
   !
   ! default fill values:
@@ -143,6 +147,44 @@
     nf90_format_netcdf4 = 3,    &
     nf90_format_netcdf4_classic = 4, &
     nf90_format_64bit_data = 5
+
+  ! netCDF-4 error codes (copied from netCDF release)
+  integer, parameter, public :: &
+    NF90_EHDFERR      = -101, & ! Error at HDF5 layer. 
+    NF90_ECANTREAD    = -102, & ! Can't read. 
+    NF90_ECANTWRITE   = -103, & ! Can't write. 
+    NF90_ECANTCREATE  = -104, & ! Can't create. 
+    NF90_EFILEMETA    = -105, & ! Problem with file metadata. 
+    NF90_EDIMMETA     = -106, & ! Problem with dimension metadata. 
+    NF90_EATTMETA     = -107, & ! Problem with attribute metadata. 
+    NF90_EVARMETA     = -108, & ! Problem with variable metadata. 
+    NF90_ENOCOMPOUND  = -109, & ! Not a compound type. 
+    NF90_EATTEXISTS   = -110, & ! Attribute already exists. 
+    NF90_ENOTNC4      = -111, & ! Attempting netcdf-4 operation on netcdf-3 file.   
+    NF90_ESTRICTNC3   = -112, & ! Attempting netcdf-4 operation on strict nc3 netcdf-4 file.   
+    NF90_ENOTNC3      = -113, & ! Attempting netcdf-3 operation on netcdf-4 file.   
+    NF90_ENOPAR       = -114, & ! Parallel operation on file opened for non-parallel access.   
+    NF90_EPARINIT     = -115, & ! Error initializing for parallel access.   
+    NF90_EBADGRPID    = -116, & ! Bad group ID.   
+    NF90_EBADTYPID    = -117, & ! Bad type ID.   
+    NF90_ETYPDEFINED  = -118, & ! Type has already been defined and may not be edited. 
+    NF90_EBADFIELD    = -119, & ! Bad field ID.   
+    NF90_EBADCLASS    = -120, & ! Bad class.   
+    NF90_EMAPTYPE     = -121, & ! Mapped access for atomic types only.   
+    NF90_ELATEFILL    = -122, & ! Attempt to define fill value when data already exists. 
+    NF90_ELATEDEF     = -123, & ! Attempt to define var properties, like deflate, after enddef.
+    NF90_EDIMSCALE    = -124, & ! Probem with HDF5 dimscales.
+    NF90_ENOGRP       = -125, & ! No group found.
+    NF90_ESTORAGE     = -126, & ! Can't specify both contiguous and chunking.
+    NF90_EBADCHUNK    = -127, & ! Bad chunksize.
+    NF90_ENOTBUILT    = -128, & ! Attempt to use feature that was not turned on when netCDF was built.
+    NF90_EDISKLESS    = -129    ! Error in using diskless  access.
+
+  ! This is the position of NC_NETCDF4 in cmode, counting from the
+  ! right, starting (uncharacteristically for fortran) at 0. It's needed
+  ! for the BTEST function calls.
+  integer, parameter, private :: NETCDF4_BIT = 12
+
 
   ! PnetCDF error codes start here
   integer, parameter, public :: &

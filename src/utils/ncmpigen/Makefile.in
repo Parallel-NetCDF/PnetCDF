@@ -14,13 +14,15 @@ include ../../../macros.make
 lex		= @LEX@ -Pncmpi
 yacc		= @YACC@ -p ncmpi
 
+LIB_PNETCDF	= ../../lib/libpnetcdf.a
+
 NCDUMP		= ../ncdump/ncmpidump
 PROGRAM		= ncmpigen
-INCLUDES	= -I$(srcdir)/../../../src/lib -I$(srcdir) -I. -I../../lib
 MANUAL		= ncmpigen.1
 
-LIB_PNETCDF	= ../../../src/lib/libpnetcdf.a
-LD_PNETCDF	= -L../../../src/lib -lpnetcdf
+INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
+LDFLAGS        += -L../../lib
+LIBS           += -lpnetcdf @LCOV_LIB@
 
 C_SOURCES       = escapes.c genlib.c getfill.c init.c load.c main.c
 HEADERS         = generic.h genlib.h ncmpigen.h
@@ -39,7 +41,7 @@ GARBAGE		= $(PROGRAM) \
 		  f0.nc \
 		  ctest.c ctest ctest0.nc ctest1.cdl \
 		  ftest.f ftest ftest0.nc ftest1.cdl \
-		  ncmpigenyy.c
+		  ncmpigenyy.c lex.ncmpi.c y.tab.c y.tab.h
 
 all:		$(PROGRAM)
 
@@ -59,17 +61,17 @@ uninstall:
 	$(RM) -f $(MANDIR)/man1/$(MANUAL)
 
 $(PROGRAM):	$(OBJS) $(LIB_PNETCDF)
-	$(LINK.c) $(OBJS) $(LD_PNETCDF) $(LIBS) 
+	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
 
 ncmpigentab.c \
 ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
 	$(yacc) -d $(srcdir)/ncmpigen.y; \
-	mv y.tab.c ncmpigentab.c; \
-	mv y.tab.h ncmpigentab.h
+	cp -f y.tab.c ncmpigentab.c; \
+	cp -f y.tab.h ncmpigentab.h
 
 ncmpigenyy.c:	ncmpigen.l
 	$(lex) $(srcdir)/ncmpigen.l; \
-	mv lex.ncmpi.c ncmpigenyy.c
+	cp -f lex.ncmpi.c ncmpigenyy.c
 
 vmstab.h \
 vmstab.c:	ncmpigen.y
@@ -99,7 +101,7 @@ b-test:		$(PROGRAM) c1.cdl
 #
 c-test:	$(PROGRAM) c1.cdl
 	./$(PROGRAM) -c -o ctest0.nc $(srcdir)/c0.cdl > ctest.c && \
-	$(CC) -o ctest $(CFLAGS) $(LDFLAGS) $(CPPFLAGS) ctest.c $(LD_PNETCDF) $(LIBS) && \
+	$(CC) -o ctest $(CFLAGS) $(CPPFLAGS) ctest.c $(LDFLAGS) $(LIBS) && \
 	./ctest	&& \
 	$(NCDUMP) -n c1 `pwd`/ctest0.nc > ctest1.cdl
 	@if diff c1.cdl ctest1.cdl; then \
@@ -132,7 +134,7 @@ f-test:	$(PROGRAM) c0.cdl c1.cdl
 ftest1.cdl: $(PROGRAM) c0.cdl pnetcdf.inc
 	./$(PROGRAM) -f -o ftest0.nc $(srcdir)/c0.cdl > ftest.f
 	$(COMPILE.f) ftest.f
-	$(FC) $(FFLAGS) $(LDFLAGS) -o ftest ftest.o $(LD_PNETCDF) $(LIBS)
+	$(FC) $(FFLAGS) -o ftest ftest.o $(LDFLAGS) $(LIBS)
 	./ftest
 	$(NCDUMP) -n c1 ftest0.nc > ftest1.cdl
 

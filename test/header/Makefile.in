@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     += -lpnetcdf @LCOV_LIB@
 
 SRCS      = header_consistency.c
 

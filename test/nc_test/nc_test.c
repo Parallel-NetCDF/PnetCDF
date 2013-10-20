@@ -29,13 +29,6 @@
  */
 
 
-/*
- * global variables (defined by command line processing in main())
- * related use of CDF-1 vs CDF-2 file formats
- */
-int use_cdf2 = 0; 	/* 0: use CDF-1, 1: use CDF-2 */
-int extra_flags = 0; /* if using CDF-2 format, will be set to NC_64BIT_OFFSET */
-
 /* 
  * global variables (defined by function init_gvars) describing file test.nc
  */
@@ -122,11 +115,13 @@ main(int argc, char *argv[])
 
     MPI_Init(&argc, &argv);
 
+    cdf_format = 1; 	/* 1: CDF-1, 2: CDF-2 5: CDF-5 */
+    extra_flags = 0;    /* NC_64BIT_OFFSET or NC_64BIT_DATA */
     create_file = 0;            /* file test.nc will normally already exist */
     read_only = 0;               /* assume may write in test dir as default */
     verbose = 0;
     max_nmpt = 8;
-    while ((c = getopt(argc, argv, "c2hrvn:")) != EOF)
+    while ((c = getopt(argc, argv, "c25hrvn:")) != EOF)
       switch(c) {
 	case 'c':		/* Create file test.nc */
 	  create_file = 1;
@@ -141,14 +136,27 @@ main(int argc, char *argv[])
 	  max_nmpt = atoi(optarg);
 	  break;
 	case '2':
-	  use_cdf2 = 1;
+	  cdf_format = 2;
 	  extra_flags = NC_64BIT_OFFSET;
+	  break;
+	case '5':
+	  cdf_format = 5;
+	  extra_flags = NC_64BIT_DATA;
 	  break;
 	case 'h':
 	case '?':
 	  usage(argv[0]);
 	  return 1;
       }
+
+    numGatts = 6;
+    numVars  = 136;
+    numTypes = 6;
+    if (cdf_format == 5) {
+        numGatts = NGATTS;
+        numVars  = NVARS;
+        numTypes = NTYPES;
+    }
 
     /* Initialize global variables defining test file */
     init_gvars();
@@ -187,24 +195,24 @@ main(int argc, char *argv[])
     NC_TEST(ncmpi_inq_vartype);
     NC_TEST(ncmpi_get_var_text);
     NC_TEST(ncmpi_get_var_schar);
-    NC_TEST(ncmpi_get_var_uchar); 
     NC_TEST(ncmpi_get_var_short);
     NC_TEST(ncmpi_get_var_int);
     NC_TEST(ncmpi_get_var_long); 
     NC_TEST(ncmpi_get_var_float);
     NC_TEST(ncmpi_get_var_double);
+    NC_TEST(ncmpi_get_var_uchar); 
     NC_TEST(ncmpi_get_var_ushort);
     NC_TEST(ncmpi_get_var_uint);
     NC_TEST(ncmpi_get_var_longlong);
     NC_TEST(ncmpi_get_var_ulonglong);
     NC_TEST(ncmpi_get_var1_text);
     NC_TEST(ncmpi_get_var1_schar);
-    NC_TEST(ncmpi_get_var1_uchar); 
     NC_TEST(ncmpi_get_var1_short);
     NC_TEST(ncmpi_get_var1_int);
     NC_TEST(ncmpi_get_var1_long);
     NC_TEST(ncmpi_get_var1_float);
     NC_TEST(ncmpi_get_var1_double);
+    NC_TEST(ncmpi_get_var1_uchar); 
     NC_TEST(ncmpi_get_var1_ushort);
     NC_TEST(ncmpi_get_var1_uint);
     NC_TEST(ncmpi_get_var1_longlong);
@@ -214,12 +222,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_vara_text);
     NC_TEST(ncmpi_get_vara_schar);
-    NC_TEST(ncmpi_get_vara_uchar);
     NC_TEST(ncmpi_get_vara_short);
     NC_TEST(ncmpi_get_vara_int);
     NC_TEST(ncmpi_get_vara_long); 
     NC_TEST(ncmpi_get_vara_float);
     NC_TEST(ncmpi_get_vara_double);
+    NC_TEST(ncmpi_get_vara_uchar);
     NC_TEST(ncmpi_get_vara_ushort);
     NC_TEST(ncmpi_get_vara_uint);
     NC_TEST(ncmpi_get_vara_longlong);
@@ -229,12 +237,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_vars_text);
     NC_TEST(ncmpi_get_vars_schar);
-    NC_TEST(ncmpi_get_vars_uchar);
     NC_TEST(ncmpi_get_vars_short);
     NC_TEST(ncmpi_get_vars_int);
     NC_TEST(ncmpi_get_vars_long); 
     NC_TEST(ncmpi_get_vars_float);
     NC_TEST(ncmpi_get_vars_double);
+    NC_TEST(ncmpi_get_vars_uchar);
     NC_TEST(ncmpi_get_vars_ushort);
     NC_TEST(ncmpi_get_vars_uint);
     NC_TEST(ncmpi_get_vars_longlong);
@@ -244,12 +252,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_varm_text);
     NC_TEST(ncmpi_get_varm_schar);
-    NC_TEST(ncmpi_get_varm_uchar);
     NC_TEST(ncmpi_get_varm_short);
     NC_TEST(ncmpi_get_varm_int);
     NC_TEST(ncmpi_get_varm_long);
     NC_TEST(ncmpi_get_varm_float);
     NC_TEST(ncmpi_get_varm_double);
+    NC_TEST(ncmpi_get_varm_uchar);
     NC_TEST(ncmpi_get_varm_ushort);
     NC_TEST(ncmpi_get_varm_uint);
     NC_TEST(ncmpi_get_varm_longlong);
@@ -259,12 +267,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_get_att_text);
     NC_TEST(ncmpi_get_att_schar);
-    NC_TEST(ncmpi_get_att_uchar);
     NC_TEST(ncmpi_get_att_short);
     NC_TEST(ncmpi_get_att_int);
     NC_TEST(ncmpi_get_att_long);
     NC_TEST(ncmpi_get_att_float);
     NC_TEST(ncmpi_get_att_double);
+    NC_TEST(ncmpi_get_att_uchar);
     NC_TEST(ncmpi_get_att_ushort);
     NC_TEST(ncmpi_get_att_uint);
     NC_TEST(ncmpi_get_att_longlong);
@@ -281,24 +289,24 @@ main(int argc, char *argv[])
     /* nonblocking I/O */
     NC_TEST(ncmpi_iget_var_text);
     NC_TEST(ncmpi_iget_var_schar);
-    NC_TEST(ncmpi_iget_var_uchar); 
     NC_TEST(ncmpi_iget_var_short);
     NC_TEST(ncmpi_iget_var_int);
     NC_TEST(ncmpi_iget_var_long); 
     NC_TEST(ncmpi_iget_var_float);
     NC_TEST(ncmpi_iget_var_double);
+    NC_TEST(ncmpi_iget_var_uchar); 
     NC_TEST(ncmpi_iget_var_ushort);
     NC_TEST(ncmpi_iget_var_uint);
     NC_TEST(ncmpi_iget_var_longlong);
     NC_TEST(ncmpi_iget_var_ulonglong);
     NC_TEST(ncmpi_iget_var1_text);
     NC_TEST(ncmpi_iget_var1_schar);
-    NC_TEST(ncmpi_iget_var1_uchar); 
     NC_TEST(ncmpi_iget_var1_short);
     NC_TEST(ncmpi_iget_var1_int);
     NC_TEST(ncmpi_iget_var1_long);
     NC_TEST(ncmpi_iget_var1_float);
     NC_TEST(ncmpi_iget_var1_double);
+    NC_TEST(ncmpi_iget_var1_uchar); 
     NC_TEST(ncmpi_iget_var1_ushort);
     NC_TEST(ncmpi_iget_var1_uint);
     NC_TEST(ncmpi_iget_var1_longlong);
@@ -308,12 +316,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_iget_vara_text);
     NC_TEST(ncmpi_iget_vara_schar);
-    NC_TEST(ncmpi_iget_vara_uchar);
     NC_TEST(ncmpi_iget_vara_short);
     NC_TEST(ncmpi_iget_vara_int);
     NC_TEST(ncmpi_iget_vara_long); 
     NC_TEST(ncmpi_iget_vara_float);
     NC_TEST(ncmpi_iget_vara_double);
+    NC_TEST(ncmpi_iget_vara_uchar);
     NC_TEST(ncmpi_iget_vara_ushort);
     NC_TEST(ncmpi_iget_vara_uint);
     NC_TEST(ncmpi_iget_vara_longlong);
@@ -323,12 +331,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_iget_vars_text);
     NC_TEST(ncmpi_iget_vars_schar);
-    NC_TEST(ncmpi_iget_vars_uchar);
     NC_TEST(ncmpi_iget_vars_short);
     NC_TEST(ncmpi_iget_vars_int);
     NC_TEST(ncmpi_iget_vars_long); 
     NC_TEST(ncmpi_iget_vars_float);
     NC_TEST(ncmpi_iget_vars_double);
+    NC_TEST(ncmpi_iget_vars_uchar);
     NC_TEST(ncmpi_iget_vars_ushort);
     NC_TEST(ncmpi_iget_vars_uint);
     NC_TEST(ncmpi_iget_vars_longlong);
@@ -338,12 +346,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
     NC_TEST(ncmpi_iget_varm_text);
     NC_TEST(ncmpi_iget_varm_schar);
-    NC_TEST(ncmpi_iget_varm_uchar);
     NC_TEST(ncmpi_iget_varm_short);
     NC_TEST(ncmpi_iget_varm_int);
     NC_TEST(ncmpi_iget_varm_long);
     NC_TEST(ncmpi_iget_varm_float);
     NC_TEST(ncmpi_iget_varm_double);
+    NC_TEST(ncmpi_iget_varm_uchar);
     NC_TEST(ncmpi_iget_varm_ushort);
     NC_TEST(ncmpi_iget_varm_uint);
     NC_TEST(ncmpi_iget_varm_longlong);
@@ -364,24 +372,24 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_def_var);
 	NC_TEST(ncmpi_put_var_text);
 	NC_TEST(ncmpi_put_var_schar);
-	NC_TEST(ncmpi_put_var_uchar);
 	NC_TEST(ncmpi_put_var_short);
 	NC_TEST(ncmpi_put_var_int);
 	NC_TEST(ncmpi_put_var_long); 
 	NC_TEST(ncmpi_put_var_float);
 	NC_TEST(ncmpi_put_var_double);
+	NC_TEST(ncmpi_put_var_uchar);
 	NC_TEST(ncmpi_put_var_ushort);
 	NC_TEST(ncmpi_put_var_uint);
 	NC_TEST(ncmpi_put_var_longlong);
 	NC_TEST(ncmpi_put_var_ulonglong);
 	NC_TEST(ncmpi_put_var1_text);
 	NC_TEST(ncmpi_put_var1_schar);
-	NC_TEST(ncmpi_put_var1_uchar); 
 	NC_TEST(ncmpi_put_var1_short);
 	NC_TEST(ncmpi_put_var1_int);
 	NC_TEST(ncmpi_put_var1_long); 
 	NC_TEST(ncmpi_put_var1_float);
 	NC_TEST(ncmpi_put_var1_double);
+	NC_TEST(ncmpi_put_var1_uchar); 
 	NC_TEST(ncmpi_put_var1_ushort);
 	NC_TEST(ncmpi_put_var1_uint);
 	NC_TEST(ncmpi_put_var1_longlong);
@@ -391,12 +399,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_put_vara_text);
 	NC_TEST(ncmpi_put_vara_schar); 
-	NC_TEST(ncmpi_put_vara_uchar);
 	NC_TEST(ncmpi_put_vara_short);
 	NC_TEST(ncmpi_put_vara_int);
 	NC_TEST(ncmpi_put_vara_long);
 	NC_TEST(ncmpi_put_vara_float);
 	NC_TEST(ncmpi_put_vara_double);
+	NC_TEST(ncmpi_put_vara_uchar);
 	NC_TEST(ncmpi_put_vara_ushort);
 	NC_TEST(ncmpi_put_vara_uint);
 	NC_TEST(ncmpi_put_vara_longlong);
@@ -406,12 +414,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_put_vars_text);
 	NC_TEST(ncmpi_put_vars_schar);
-	NC_TEST(ncmpi_put_vars_uchar);
 	NC_TEST(ncmpi_put_vars_short);
 	NC_TEST(ncmpi_put_vars_int);
 	NC_TEST(ncmpi_put_vars_long); 
 	NC_TEST(ncmpi_put_vars_float);
 	NC_TEST(ncmpi_put_vars_double);
+	NC_TEST(ncmpi_put_vars_uchar);
 	NC_TEST(ncmpi_put_vars_ushort);
 	NC_TEST(ncmpi_put_vars_uint);
 	NC_TEST(ncmpi_put_vars_longlong);
@@ -421,12 +429,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_put_varm_text);
 	NC_TEST(ncmpi_put_varm_schar);
-	NC_TEST(ncmpi_put_varm_uchar);
 	NC_TEST(ncmpi_put_varm_short);
 	NC_TEST(ncmpi_put_varm_int);
 	NC_TEST(ncmpi_put_varm_long);
 	NC_TEST(ncmpi_put_varm_float);
 	NC_TEST(ncmpi_put_varm_double);
+	NC_TEST(ncmpi_put_varm_uchar);
 	NC_TEST(ncmpi_put_varm_ushort);
 	NC_TEST(ncmpi_put_varm_uint);
 	NC_TEST(ncmpi_put_varm_longlong);
@@ -437,12 +445,12 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_rename_var);
 	NC_TEST(ncmpi_put_att_text);
 	NC_TEST(ncmpi_put_att_schar);
-	NC_TEST(ncmpi_put_att_uchar);
 	NC_TEST(ncmpi_put_att_short);
 	NC_TEST(ncmpi_put_att_int);
 	NC_TEST(ncmpi_put_att_long);
 	NC_TEST(ncmpi_put_att_float);
 	NC_TEST(ncmpi_put_att_double);
+	NC_TEST(ncmpi_put_att_uchar);
 	NC_TEST(ncmpi_put_att_ushort);
 	NC_TEST(ncmpi_put_att_uint);
 	NC_TEST(ncmpi_put_att_longlong);
@@ -460,24 +468,24 @@ main(int argc, char *argv[])
         /* test nonblocking APIs */
 	NC_TEST(ncmpi_iput_var_text);
 	NC_TEST(ncmpi_iput_var_schar);
-	NC_TEST(ncmpi_iput_var_uchar);
 	NC_TEST(ncmpi_iput_var_short);
 	NC_TEST(ncmpi_iput_var_int);
 	NC_TEST(ncmpi_iput_var_long); 
 	NC_TEST(ncmpi_iput_var_float);
 	NC_TEST(ncmpi_iput_var_double);
+	NC_TEST(ncmpi_iput_var_uchar);
 	NC_TEST(ncmpi_iput_var_ushort);
 	NC_TEST(ncmpi_iput_var_uint);
 	NC_TEST(ncmpi_iput_var_longlong);
 	NC_TEST(ncmpi_iput_var_ulonglong);
 	NC_TEST(ncmpi_iput_var1_text);
 	NC_TEST(ncmpi_iput_var1_schar);
-	NC_TEST(ncmpi_iput_var1_uchar); 
 	NC_TEST(ncmpi_iput_var1_short);
 	NC_TEST(ncmpi_iput_var1_int);
 	NC_TEST(ncmpi_iput_var1_long); 
 	NC_TEST(ncmpi_iput_var1_float);
 	NC_TEST(ncmpi_iput_var1_double);
+	NC_TEST(ncmpi_iput_var1_uchar); 
 	NC_TEST(ncmpi_iput_var1_ushort);
 	NC_TEST(ncmpi_iput_var1_uint);
 	NC_TEST(ncmpi_iput_var1_longlong);
@@ -487,12 +495,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_iput_vara_text);
 	NC_TEST(ncmpi_iput_vara_schar); 
-	NC_TEST(ncmpi_iput_vara_uchar);
 	NC_TEST(ncmpi_iput_vara_short);
 	NC_TEST(ncmpi_iput_vara_int);
 	NC_TEST(ncmpi_iput_vara_long);
 	NC_TEST(ncmpi_iput_vara_float);
 	NC_TEST(ncmpi_iput_vara_double);
+	NC_TEST(ncmpi_iput_vara_uchar);
 	NC_TEST(ncmpi_iput_vara_ushort);
 	NC_TEST(ncmpi_iput_vara_uint);
 	NC_TEST(ncmpi_iput_vara_longlong);
@@ -502,12 +510,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_iput_vars_text);
 	NC_TEST(ncmpi_iput_vars_schar);
-	NC_TEST(ncmpi_iput_vars_uchar);
 	NC_TEST(ncmpi_iput_vars_short);
 	NC_TEST(ncmpi_iput_vars_int);
 	NC_TEST(ncmpi_iput_vars_long); 
 	NC_TEST(ncmpi_iput_vars_float);
 	NC_TEST(ncmpi_iput_vars_double);
+	NC_TEST(ncmpi_iput_vars_uchar);
 	NC_TEST(ncmpi_iput_vars_ushort);
 	NC_TEST(ncmpi_iput_vars_uint);
 	NC_TEST(ncmpi_iput_vars_longlong);
@@ -517,12 +525,12 @@ main(int argc, char *argv[])
 #endif /* TEST_VOIDSTAR */
 	NC_TEST(ncmpi_iput_varm_text);
 	NC_TEST(ncmpi_iput_varm_schar);
-	NC_TEST(ncmpi_iput_varm_uchar);
 	NC_TEST(ncmpi_iput_varm_short);
 	NC_TEST(ncmpi_iput_varm_int);
 	NC_TEST(ncmpi_iput_varm_long);
 	NC_TEST(ncmpi_iput_varm_float);
 	NC_TEST(ncmpi_iput_varm_double);
+	NC_TEST(ncmpi_iput_varm_uchar);
 	NC_TEST(ncmpi_iput_varm_ushort);
 	NC_TEST(ncmpi_iput_varm_uint);
 	NC_TEST(ncmpi_iput_varm_longlong);
@@ -534,7 +542,7 @@ main(int argc, char *argv[])
     MPI_Finalize();
 
     char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING %s ", argv[0]);
+    sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
     if (nfailsTotal == 0)  {
         printf("%-66s ------ pass\n", cmd_str);
     }

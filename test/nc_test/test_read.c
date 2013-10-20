@@ -22,39 +22,38 @@ test_ncmpi_strerror(void)
 	int status;
 	const char *msg;
     } ncerrs[] = {
-	{NC_NOERR, "No error"},
-	{NC_EBADID, "Not a netCDF id"},
-	{NC_ENFILE, "Too many netCDF files open"},
-	{NC_EEXIST, "netCDF file exists && NC_NOCLOBBER"},
-	{NC_EINVAL, "Invalid argument"},
-	{NC_EPERM, "Write to read only"},
-	{NC_ENOTINDEFINE, "Operation not allowed in data mode"},
-	{NC_EINDEFINE, "Operation not allowed in define mode"},
-	{NC_EINVALCOORDS, "Index exceeds dimension bound"},
-	{NC_EMAXDIMS, "NC_MAX_DIMS exceeded"},
-	{NC_ENAMEINUSE, "String match to name in use"},
-	{NC_ENOTATT, "Attribute not found"},
-	{NC_EMAXATTS, "NC_MAX_ATTRS exceeded"},
-	{NC_EBADTYPE, "Not a netCDF data type or _FillValue type mismatch"},
-	{NC_EBADDIM, "Invalid dimension id or name"},
-	{NC_EUNLIMPOS, "NC_UNLIMITED in the wrong index"},
-	{NC_EMAXVARS, "NC_MAX_VARS exceeded"},
-	{NC_ENOTVAR, "Variable not found"},
-	{NC_EGLOBAL, "Action prohibited on NC_GLOBAL varid"},
-	{NC_ENOTNC, "Not a netCDF file"},
-	{NC_ESTS, "In Fortran, string too short"},
-	{NC_EMAXNAME, "NC_MAX_NAME exceeded"},
-	{NC_EUNLIMIT, "NC_UNLIMITED size already in use"},
-	{NC_ENORECVARS, "nc_rec op when there are no record vars"},
-	{NC_ECHAR, "Attempt to convert between text & numbers"},
-	{NC_EEDGE, "Edge+start exceeds dimension bound"},
-	{NC_ESTRIDE, "Illegal stride"},
-	{NC_EBADNAME, "Attribute or variable name contains illegal characters"},
-	{NC_ERANGE, "Numeric conversion not representable"},
-	{NC_ENOMEM, "Memory allocation (malloc) failure"},
-        {NC_EVARSIZE, "One or more variable sizes violate format constraints"},
-        {NC_EDIMSIZE, "Invalid dimension size"}
-
+        {NC_NOERR, "No error"},
+        {NC_EBADID, "NetCDF: Not a valid ID"},
+        {NC_ENFILE, "NetCDF: Too many files open"},
+        {NC_EEXIST, "NetCDF: File exists && NC_NOCLOBBER"},
+        {NC_EINVAL, "NetCDF: Invalid argument"},
+        {NC_EPERM, "NetCDF: Write to read only"},
+        {NC_ENOTINDEFINE, "NetCDF: Operation not allowed in data mode"},
+        {NC_EINDEFINE, "NetCDF: Operation not allowed in define mode"},
+        {NC_EINVALCOORDS, "NetCDF: Index exceeds dimension bound"},
+        {NC_EMAXDIMS, "NetCDF: NC_MAX_DIMS exceeded"},
+        {NC_ENAMEINUSE, "NetCDF: String match to name in use"},
+        {NC_ENOTATT, "NetCDF: Attribute not found"},
+        {NC_EMAXATTS, "NetCDF: NC_MAX_ATTRS exceeded"},
+        {NC_EBADTYPE, "NetCDF: Not a valid data type or _FillValue type mismatch"},
+        {NC_EBADDIM, "NetCDF: Invalid dimension ID or name"},
+        {NC_EUNLIMPOS, "NetCDF: NC_UNLIMITED in the wrong index"},
+        {NC_EMAXVARS, "NetCDF: NC_MAX_VARS exceeded"},
+        {NC_ENOTVAR, "NetCDF: Variable not found"},
+        {NC_EGLOBAL, "NetCDF: Action prohibited on NC_GLOBAL varid"},
+        {NC_ENOTNC, "NetCDF: Unknown file format"},
+        {NC_ESTS, "NetCDF: In Fortran, string too short"},
+        {NC_EMAXNAME, "NetCDF: NC_MAX_NAME exceeded"},
+        {NC_EUNLIMIT, "NetCDF: NC_UNLIMITED size already in use"},
+        {NC_ENORECVARS, "NetCDF: nc_rec op when there are no record vars"},
+        {NC_ECHAR, "NetCDF: Attempt to convert between text & numbers"},
+        {NC_EEDGE, "NetCDF: Start+count exceeds dimension bound"},
+        {NC_ESTRIDE, "NetCDF: Illegal stride"},
+        {NC_EBADNAME, "NetCDF: Name contains illegal characters"},
+        {NC_ERANGE, "NetCDF: Numeric conversion not representable"},
+        {NC_ENOMEM, "NetCDF: Memory allocation (malloc) failure"},
+        {NC_EVARSIZE, "NetCDF: One or more variable sizes violate format constraints"},
+        {NC_EDIMSIZE, "NetCDF: Invalid dimension size"}
     };
 
     /* Try on a bad error status */
@@ -102,7 +101,7 @@ test_ncmpi_open(void)
     IF (err != NC_ENOENT)
 	error("ncmpi_open of nonexistent file should have returned NC_ENOENT");
     else {
-        printf("Expected error message complaining: \"File tooth-fairy.nc does not exist\"\n");
+        /* printf("Expected error message complaining: \"File tooth-fairy.nc does not exist\"\n"); */
         nok++;
     }
 
@@ -246,9 +245,9 @@ test_ncmpi_inq(void)
 	error("ncmpi_inq: %s", ncmpi_strerror(err));
     else IF (ndims != NDIMS)
 	error("ncmpi_inq: wrong number of dimensions returned, %d", ndims);
-    else IF (nvars != NVARS)
+    else IF (nvars != numVars)
 	error("ncmpi_inq: wrong number of variables returned, %d", nvars);
-    else IF (ngatts != NGATTS)
+    else IF (ngatts != numGatts)
 	error("ncmpi_inq: wrong number of global atts returned, %d", ngatts);
     else IF (recdim != RECDIM)
 	error("ncmpi_inq: wrong record dimension ID returned, %d", recdim);
@@ -261,21 +260,21 @@ test_ncmpi_inq(void)
     ELSE_NOK
 
     /* Inguire for subsets of info */
-    ngatts = NGATTS - 1;	/* wipe out previous correct value */
+    ngatts = numGatts - 1;	/* wipe out previous correct value */
     err = ncmpi_inq(ncid, 0, 0, &ngatts, 0);
     IF (err)
 	error("ncmpi_inq for one item failed: %s", ncmpi_strerror(err));
-    else IF (ngatts != NGATTS)
+    else IF (ngatts != numGatts)
 	error("ncmpi_inq subset: wrong number of global atts returned, %d", ngatts);
     ELSE_NOK
     ndims = NDIMS - 1;
-    nvars = NVARS - 1;
+    nvars = numVars - 1;
     err = ncmpi_inq(ncid, &ndims, &nvars, 0, 0);
     IF (err)
 	error("ncmpi_inq for two items failed: %s", ncmpi_strerror(err));
     else IF (ndims != NDIMS)
 	error("ncmpi_inq subset: wrong number of dimensions returned, %d", ndims);
-    else IF (nvars != NVARS)
+    else IF (nvars != numVars)
 	error("ncmpi_inq subset: wrong number of variables returned, %d", nvars);
     ELSE_NOK
 
@@ -382,7 +381,7 @@ test_ncmpi_inq_natts(void)
     err = ncmpi_inq_natts(ncid, &ngatts);
     IF (err)
 	error("ncmpi_inq_natts: %s", ncmpi_strerror(err));
-    else IF (ngatts != NGATTS)
+    else IF (ngatts != numGatts)
 	error("ncmpi_inq_natts: wrong number of global atts returned, %d", ngatts);
     ELSE_NOK
     err = ncmpi_close(ncid);
@@ -438,7 +437,7 @@ test_ncmpi_inq_nvars(void)
     err = ncmpi_inq_nvars(ncid, &nvars);
     IF (err)
 	error("ncmpi_inq_nvars: %s", ncmpi_strerror(err));
-    else IF (nvars != NVARS)
+    else IF (nvars != numVars)
 	error("ncmpi_inq_nvars: wrong number returned, %d", nvars);
     ELSE_NOK
     err = ncmpi_close(ncid);
@@ -653,7 +652,7 @@ test_ncmpi_inq_varid(void)
 	error("bad ncid: status = %d", err);
     ELSE_NOK
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	err = ncmpi_inq_varid(BAD_ID, var_name[i], &varid);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
@@ -689,7 +688,7 @@ test_ncmpi_inq_var(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	err = ncmpi_inq_var(BAD_ID, i, name, &datatype, &ndims, dimids, &natts);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
@@ -766,7 +765,7 @@ test_ncmpi_inq_vardimid(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	err = ncmpi_inq_vardimid(BAD_ID, i, dimids);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
@@ -801,7 +800,7 @@ test_ncmpi_inq_varname(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	err = ncmpi_inq_varname(BAD_ID, i, name);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
@@ -836,7 +835,7 @@ test_ncmpi_inq_varnatts(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	err = ncmpi_inq_varnatts(BAD_ID, i, &natts);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
@@ -871,7 +870,7 @@ test_ncmpi_inq_varndims(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	err = ncmpi_inq_varndims(BAD_ID, i, &ndims);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
@@ -906,7 +905,7 @@ test_ncmpi_inq_vartype(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	err = ncmpi_inq_vartype(BAD_ID, i, &datatype);
         IF (err != NC_EBADID)
 	    error("bad ncid: status = %d", err);
@@ -949,7 +948,7 @@ test_ncmpi_get_var1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	for (j = 0; j < var_rank[i]; j++)
 	    index[j] = 0;
         err = ncmpi_get_var1(BAD_ID, i, index, buf);
@@ -1027,7 +1026,7 @@ test_ncmpi_get_vara(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -1157,7 +1156,7 @@ test_ncmpi_get_vars(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -1328,7 +1327,7 @@ test_ncmpi_get_varm(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -1473,7 +1472,7 @@ test_ncmpi_get_att(void)
     IF (err) 
 	error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
 	    err = ncmpi_get_att(BAD_ID, i, ATT_NAME(i,j), buf);
 	    IF (err != NC_EBADID) 
@@ -1542,7 +1541,7 @@ test_ncmpi_inq_att(void)
     IF (err) 
 	error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
 	    err = ncmpi_inq_att(BAD_ID, i, ATT_NAME(i,j), &t, &n);
 	    IF (err != NC_EBADID) 
@@ -1590,7 +1589,7 @@ test_ncmpi_inq_attlen(void)
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	err = ncmpi_inq_attlen(ncid, i, "noSuch", &len);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute name: status = %d", err);
@@ -1636,7 +1635,7 @@ test_ncmpi_inq_atttype(void)
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	err = ncmpi_inq_atttype(ncid, i, "noSuch", &datatype);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute name: status = %d", err);
@@ -1682,7 +1681,7 @@ test_ncmpi_inq_attname(void)
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	err = ncmpi_inq_attname(ncid, i, BAD_ATTNUM, name);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute number: status = %d", err);
@@ -1732,7 +1731,7 @@ test_ncmpi_inq_attid(void)
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	err = ncmpi_inq_attid(ncid, i, "noSuch", &attnum);
 	IF (err != NC_ENOTATT)
 	    error("Bad attribute name: status = %d", err);

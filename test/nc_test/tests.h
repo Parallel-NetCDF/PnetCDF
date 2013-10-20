@@ -133,6 +133,17 @@
  */
 #define NVARS 166
 
+/*
+ *  * global variables (defined by command line processing in main())
+ *   * related use of CDF-1 vs CDF-2 file formats
+ *    */
+int cdf_format;  /* 1: CDF-1, 2: CDF-2 5: CDF-5 */
+int extra_flags; /* if using CDF-2 format, will be set to NC_64BIT_OFFSET */
+int numGatts;  /* number of global attributes */
+int numVars;   /* number of variables */
+int numTypes;  /* number of netCDF data types to test */
+
+
 /* Here is how NVARS is acalculated in init_gvars().
 MAX_RANK=3
 MAX_DIM_LEN==4
@@ -275,7 +286,7 @@ extern MPI_Comm comm;
     /* varid is -1 for NC_GLOBAL so can do global atts in same loop */
 
 #define VARID(varid)      (varid < 0 ? NC_GLOBAL : varid)
-#define NATTS(varid)      (varid < 0 ? NGATTS : var_natts[varid])
+#define NATTS(varid)      (varid < 0 ? numGatts : var_natts[varid])
 #define ATT_NAME(varid,j) (varid < 0 ? gatt_name[j] : att_name[varid][j])
 #define ATT_TYPE(varid,j) (varid < 0 ? gatt_type[j] : att_type[varid][j])
 #define ATT_LEN(varid,j)  (varid < 0 ? gatt_len[j] : att_len[varid][j])

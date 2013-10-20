@@ -1089,6 +1089,12 @@ ncmpii_put_att(int         ncid,
     if (nelems < 0 || (nelems > X_INT_MAX && file_ver <= 2))
         return NC_EINVAL; /* Invalid nelems */
 
+    /* check if filetype is valid, as filetype is given by user
+     * no need to check buftype, as buftype is set internally
+     */
+    status = ncmpii_cktype(file_ver, filetype);
+    if (status != NC_NOERR) return status;
+
     /* No character conversions are allowed. */
     if (filetype != buftype &&
         (filetype == NC_CHAR   || buftype == NC_CHAR ||
@@ -1097,12 +1103,6 @@ ncmpii_put_att(int         ncid,
 
     /* check if the attribute name is legal */
     status = ncmpii_NC_check_name(name, file_ver);
-    if (status != NC_NOERR) return status;
-
-    /* check if filetype is valid, as filetype is given by user
-     * no need to check buftype, as buftype is set internally
-     */
-    status = ncmpii_cktype(filetype);
     if (status != NC_NOERR) return status;
 
     /* get the pointer to the attribute array */

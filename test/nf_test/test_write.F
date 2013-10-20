@@ -26,7 +26,7 @@ C On exit, delete this file
         integer flags
         integer nok
 
-        flags = NF_NOCLOBBER
+        flags = IOR(NF_NOCLOBBER, extra_flags)
         nok = 0
         do 1, clobber = 0, 1
             err = nfmpi_create(comm, scratch, flags,  MPI_INFO_NULL,
@@ -69,10 +69,11 @@ C On exit, delete this file
                 call errore('nfmpi_close: ', err)
             end if
 
-            flags = NF_CLOBBER
+            flags = IOR(NF_CLOBBER, extra_flags)
 1       continue
 
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER,  MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags,  MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_EEXIST) then
             call errore('attempt to overwrite file: ', err)
@@ -120,8 +121,7 @@ C    check file: vars & atts
         integer(kind=MPI_OFFSET_KIND)                 length
         integer                 intlen
         integer                 dimids(1)
-        integer                 nok
-
+        integer                 nok, flags
         nok = 0
 
         title = 'Not funny'
@@ -158,7 +158,8 @@ C           /* read-only tests */
      +      call errore('nfmpi_close: ', err)
 
 C           /* tests using scratch file */
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -284,7 +285,7 @@ C    try writing with one handle, reading with another on same netCDF
         integer ncidw         !/* netcdf id for writing */
         integer ncidr         !/* netcdf id for reading */
         integer err
-        integer nok
+        integer nok, flags
 
         nok = 0
 C           /* BAD_ID test */
@@ -296,7 +297,8 @@ C           /* BAD_ID test */
         endif
 
 C           /* create scratch file & try nfmpi_sync in define mode */
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncidw)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -370,7 +372,7 @@ C    try after writing variable
         integer nvars
         integer ngatts
         integer recdim
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -383,7 +385,8 @@ C           /* BAD_ID test */
         endif
 
 C           /* create scratch file & try nfmpi_abort in define mode */
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -409,7 +412,8 @@ C            create scratch file
 C            do nfmpi_enddef & nfmpi_redef
 C            define new dims, vars, atts
 C            try nfmpi_abort: should restore previous state (no dims, vars, atts)
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -451,7 +455,8 @@ C            try nfmpi_abort: should restore previous state (no dims, vars, atts
      +      call errore('nfmpi_close: ', err)
 
 C           /* try nfmpi_abort in data mode - should just close */
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -499,7 +504,7 @@ C    try to define a second unlimited dimension, check error
         integer i
         integer dimid         !/* dimension id */
         integer(kind=MPI_OFFSET_KIND) length
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -513,7 +518,8 @@ C           /* BAD_ID test */
         endif
 
 C           /* data mode test */
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -626,7 +632,7 @@ C    try with bad dimension handle, check error
         integer ncid
         integer err             !/* status */
         character*(NF_MAX_NAME) name
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -639,7 +645,8 @@ C           /* BAD_ID test */
         endif
 
 C           /* main tests */
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -703,7 +710,7 @@ C    try with bad dimension ids, check error
         character*(NF_MAX_NAME) name
         integer dimids(MAX_RANK)
         integer datatype
-        integer nok
+        integer nok, flags
 
         nok = 0
 
@@ -716,7 +723,8 @@ C           /* BAD_ID test */
         endif
 
 C           /* scalar tests */
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -780,14 +788,15 @@ C           /* scalar tests */
      +      call errorc('delete of scratch file failed: ', scratch)
 
 C           /* general tests using global vars */
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
             return
         end if
         call def_dims(ncid)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
      +                       var_rank(i), var_dimid(:,i), vid)
             if (err .ne. 0)  then
@@ -834,11 +843,12 @@ C    try in data mode, check error
         integer err
         integer i
         character*(NF_MAX_NAME) name
-        integer nok
+        integer nok, flags
 
         nok = 0
 
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -854,14 +864,14 @@ C    try in data mode, check error
         call def_vars(ncid)
 
 C           /* Prefix "new_" to each name */
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             err = nfmpi_rename_var(BAD_ID, i, 'newName')
             if (err .ne. NF_EBADID) then
                 call errore('bad ncid: ', err)
             else
                 nok = nok + 1
             endif
-            err = nfmpi_rename_var(ncid, i, var_name(NVARS))
+            err = nfmpi_rename_var(ncid, i, var_name(numVars))
             if (err .ne. NF_ENAMEINUSE) then
                 call errore('duplicate name: ', err)
             else
@@ -886,7 +896,7 @@ C           /* Try making names even longer. Then restore original names */
         err = nfmpi_enddef(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
-        do 2, i = 1, NVARS
+        do 2, i = 1, numVars
             name = 'even_longer_' // var_name(i)
             err = nfmpi_rename_var(ncid, i, name)
             if (err .ne. NF_ENOTINDEFINE) then
@@ -946,14 +956,15 @@ C    try with same ncid for source and target, same variable
         integer datatype                !/* of att */
         integer(kind=MPI_OFFSET_KIND) length                  !/* of att */
         character*1     value
-        integer nok
+        integer nok, flags
 
         nok = 0
         err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
      +                   ncid_in)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid_out)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -962,7 +973,7 @@ C    try with same ncid for source and target, same variable
         call def_dims(ncid_out)
         call def_vars(ncid_out)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             vid = VARID(i)
             do 2, j = 1, NATTS(i)
                 name = ATT_NAME(j,i)
@@ -1037,7 +1048,7 @@ C           if this att. exists them copy ':a' to it
         err = nfmpi_enddef(ncid_out)
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
-        do 3, i = 1, NVARS
+        do 3, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nfmpi_rename_att(ncid_out, i, 
      +                att_name(1,i), 'a')
@@ -1059,7 +1070,7 @@ C           /* Reopen & check */
      +                   ncid_out)
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
-        do 4, i = 1, NVARS
+        do 4, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nfmpi_inq_att(ncid_out, i, 'a', 
      +                datatype, length)
@@ -1101,7 +1112,7 @@ C    try in data mode, check error
 
         integer ncid
         integer vid
-        integer err
+        integer err, flags
         integer i
         integer j
         integer  k
@@ -1122,7 +1133,8 @@ C    try in data mode, check error
 
         nok = 0
 
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -1135,7 +1147,7 @@ C    try in data mode, check error
         call def_vars(ncid)
         call put_atts(ncid)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             vid = VARID(i)
             do 2, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
@@ -1168,7 +1180,7 @@ C           /* Close. Reopen & check */
         if (err .ne. 0)
      +      call errore('nfmpi_open: ', err)
 
-        do 3, i = 0, NVARS
+        do 3, i = 0, numVars
             vid = VARID(i)
             do 4, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
@@ -1228,7 +1240,7 @@ C           /* Close. Reopen & check */
 C           /* Now in data mode */
 C           /* Try making names even longer. Then restore original names */
 
-        do 7, i = 0, NVARS
+        do 7, i = 0, numVars
             vid = VARID(i)
             do 8, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
@@ -1270,7 +1282,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
 #include "tests.inc"
 
         integer ncid
-        integer err
+        integer err, flags
         integer i
         integer j
         integer attnum
@@ -1282,7 +1294,8 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
 
         nok = 0
 
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -1298,7 +1311,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
         call def_vars(ncid)
         call put_atts(ncid)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             vid = VARID(i)
             numatts = NATTS(i)
             do 2, j = 1, numatts
@@ -1356,7 +1369,7 @@ C           /* Close. Reopen & check no attributes left */
      +      call errore('nfmpi_inq_natts: ', err)
         if (na .ne. 0)
      +      call errori('natts: expected 0, got ', na)
-        do 3, i = 0, NVARS
+        do 3, i = 0, numVars
             vid = VARID(i)
             err = nfmpi_inq_varnatts(ncid, vid, na)
             if (err .ne. 0)
@@ -1374,7 +1387,7 @@ C           /* restore attributes. change to data mode. try to delete */
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
 
-        do 4, i = 0, NVARS
+        do 4, i = 0, numVars
             vid = VARID(i)
             numatts = NATTS(i)
             do 5, j = 1, numatts
@@ -1414,7 +1427,7 @@ C    close file & create again for test using attribute _FillValue
 
         integer ncid
         integer vid
-        integer err
+        integer err, flags
         integer i
         integer j
         integer old_fillmode
@@ -1447,7 +1460,8 @@ C           /* try in read-only mode */
      +      call errore('nfmpi_close: ', err)
 
 C           /* create scratch */
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -1497,7 +1511,7 @@ C       /* Assumes variable cr is char vector with UNLIMITED dimension */
      +      call errore('nfmpi_put_var1_text: ', err)
 
 C           /* get all variables & check all values equal default fill */
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             if (var_type(i) .eq. NF_CHAR) then
                 fill = NF_FILL_CHAR
             else if (var_type(i) .eq. NF_BYTE) then
@@ -1544,7 +1558,8 @@ C       /* close scratch & create again for test using attribute _FillValue */
         err = nfmpi_close(ncid)
         if (err .ne. 0)
      +      call errore('nfmpi_close: ', err)
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -1557,7 +1572,7 @@ C           /* set _FillValue = 42 for all vars */
         fill = 42
         text = char(int(fill))
         length = 1
-        do 3, i = 1, NVARS
+        do 3, i = 1, numVars
             if (var_type(i) .eq. NF_CHAR) then
                 err = nfmpi_put_att_text(ncid, i, '_FillValue', length, 
      +             text)
@@ -1581,7 +1596,7 @@ C           /* data mode. write records */
      +      call errore('nfmpi_put_var1_text: ', err)
 
 C           /* get all variables & check all values equal 42 */
-        do 4, i = 1, NVARS
+        do 4, i = 1, numVars
             do 5, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
@@ -1632,7 +1647,7 @@ C *    close file & create again for test using attribute _FillValue
 #include "tests.inc"
       
       integer ncid
-      integer err
+      integer err, flags
       integer i
       integer version
       integer old_format
@@ -1648,7 +1663,8 @@ C    /* Cycle through available formats. */
          err = nfmpi_set_default_format(i, old_format)
          if (err .ne. 0) 
      +         call errore("setting classic format: status = %d", err)
-         err = nfmpi_create(comm, scratch, NF_CLOBBER, 
+         flags = IOR(NF_CLOBBER, extra_flags)
+         err = nfmpi_create(comm, scratch, flags,
      +                MPI_INFO_NULL, ncid)
          if (err .ne. 0) 
      +        call errore("bad nfmpi_create: status = %d", err)

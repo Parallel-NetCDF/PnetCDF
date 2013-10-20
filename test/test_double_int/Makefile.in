@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 LDFLAGS  += -L../../src/lib -L../common
-LIBS     += -ltestutils -lpnetcdf
+LIBS     += -ltestutils -lpnetcdf @LCOV_LIB@
 
 SRCS      = test_read.c \
             test_read_indep.c \

@@ -11,16 +11,16 @@ VPATH   = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-LDFLAGS  += -L../../src/lib -L../common
-LIBS     += -ltestutils -lpnetcdf
+INCLUDES  = -I../../src/lib
+LDFLAGS  += -L../../src/lib
+LIBS     += -lpnetcdf @LCOV_LIB@
 
-SRCS    = test_inq_format.c 
+SRCS    = test_inq_format.c cdf_type.c
 
 OBJS    = $(SRCS:.c=.o)
 PROGS   = $(SRCS:.c=)
 
-GARBAGE      = $(PROGS)
+GARBAGE      = $(PROGS) testfile.nc
 PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
@@ -28,6 +28,17 @@ all: $(PROGS)
 
 test_inq_format: test_inq_format.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+cdf_type: cdf_type.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+testing check: all
+	@./test_inq_format
+	@./cdf_type
+
+verbose_testing: all
+	./test_inq_format
+	./cdf_type
 
 include $(srcdir)/../../rules.make
 

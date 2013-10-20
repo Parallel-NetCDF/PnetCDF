@@ -155,7 +155,7 @@ C
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_begin_indep_data(ncid)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (canConvert)  then
@@ -262,7 +262,7 @@ C */
 
         nok = 0
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 canConvert = (ATT_TYPE(j,i) .eq. NF_CHAR) .eqv.
      +                       (NFT_ITYPE($1) .eq. NFT_TEXT)
@@ -347,7 +347,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         integer ncid
         integer i
         integer j
-        integer err
+        integer err, flags
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         DATATYPE_VAR1($1, value)
@@ -355,7 +355,8 @@ define([TEST_NFMPI_PUT_VAR1],dnl
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -367,7 +368,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         err = nfmpi_begin_indep_data(ncid)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             do 2, j = 1, var_rank(i)
@@ -445,7 +446,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         integer vid
         integer i
         integer j
-        integer err
+        integer err, flags
         integer nels
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
@@ -453,7 +454,8 @@ define([TEST_NFMPI_PUT_VAR],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
 
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -465,7 +467,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         err = nfmpi_begin_indep_data(ncid)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             err = nfmpi_put_var_$1(BAD_ID, i, value)
@@ -523,7 +525,7 @@ C       Assumes variable cr is char vector with UNLIMITED dimension.
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_put_var1_text: ', err)
 
-        do 5 i = 1, NVARS
+        do 5 i = 1, numVars
 C           Only test record variables here
             if (var_rank(i) .ge. 1 .and.
      +          var_dimid(var_rank(i),i) .eq. RECDIM) then
@@ -595,7 +597,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         integer j
         integer k
         integer d
-        integer err
+        integer err, flags
         integer nslabs
         integer nels
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
@@ -608,7 +610,8 @@ define([TEST_NFMPI_PUT_VARA],dnl
         doubleprecision val
         integer ud_shift
 
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -620,7 +623,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
 
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK))
@@ -693,15 +696,21 @@ C           /* Check correct error returned even when nothing to put */
                     start(j) = 1
                 endif
 21          continue
-            err = nfmpi_put_vara_$1_all(ncid, i, start,
-     +          edge, value)
-            if (canConvert) then
-                if (err .ne. NF_NOERR) 
-     +              call error(nfmpi_strerror(err))
-            else
-                if (err .ne. NF_ECHAR)
-     +              call errore('wrong type: ', err)
-            endif
+
+! wkliao: this test below of put_vara is redundant and incorrectly uses the
+!         value[] set from the previously iteration. There is no such test
+!         in put_vars and put_varm.
+!
+!           err = nfmpi_put_vara_$1_all(ncid, i, start,
+!    +          edge, value)
+!           if (canConvert) then
+!               if (err .ne. NF_NOERR) 
+!    +              call error(nfmpi_strerror(err))
+!           else
+!               if (err .ne. NF_ECHAR)
+!    +              call errore('wrong type: ', err)
+!           endif
+
             do 22, j = 1, var_rank(i)
                 edge(j) = 1
 22          continue
@@ -787,7 +796,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         integer j
         integer k
         integer m
-        integer err
+        integer err, flags
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
@@ -805,7 +814,8 @@ define([TEST_NFMPI_PUT_VARS],dnl
         doubleprecision val
         integer ud_shift
 
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -817,7 +827,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
 
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK))
@@ -991,7 +1001,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         integer j
         integer k
         integer m
-        integer err
+        integer err, flags
         integer nels
         integer nslabs
         integer nstarts        !/* number of different starts */
@@ -1010,7 +1020,8 @@ define([TEST_NFMPI_PUT_VARM],dnl
         doubleprecision val
         integer ud_shift
 
-        err = nfmpi_create(comm, scratch, NF_CLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_CLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -1022,7 +1033,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
 
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF_CHAR) .eqv.
      +                   (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK))
@@ -1202,12 +1213,13 @@ define([TEST_NFMPI_PUT_ATT],dnl
         integer j
         integer k
         integer(kind=MPI_OFFSET_KIND) ndx(1)
-        integer err
+        integer err, flags
         DATATYPE($1, value, (MAX_NELS))
         logical allInExtRange  !/* all values within external range? */
         doubleprecision val
 
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -1216,7 +1228,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
         call def_dims(ncid)
         call def_vars(ncid)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 if (.not.(ATT_TYPE(j,i) .eq. NF_CHAR)) then
                     if (.not.((ATT_LEN(j,i) .le. MAX_NELS)))
@@ -1387,10 +1399,11 @@ TEST_NFMPI_PUT_VARM(double)
         integer i
         integer j
         integer(kind=MPI_OFFSET_KIND) k
-        integer err
+        integer err, flags
         character(len=MAX_NELS) value
 
-        err = nfmpi_create(comm, scratch, NF_NOCLOBBER, MPI_INFO_NULL,
+        flags = IOR(NF_NOCLOBBER, extra_flags)
+        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -1399,7 +1412,7 @@ TEST_NFMPI_PUT_VARM(double)
         call def_dims(ncid)
         call def_vars(ncid)
 
-        do 1, i = 0, NVARS
+        do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 if (ATT_TYPE(j,i) .eq. NF_CHAR) then
                     if (.not.(ATT_LEN(j,i) .le. MAX_NELS))

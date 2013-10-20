@@ -25,6 +25,13 @@ if test x${PNETCDF_VERSION_SUB} != x ; then
    fi
 fi
 
+dnl Do not change the following line, It is set by SVN automatically.
+SVN_DATE="$LastChangedDate$"
+saved_IFS=${IFS}
+IFS="\ " read t_key t_date t_time t_zone t_string <<< ${SVN_DATE}
+IFS="() $," read t_day PNETCDF_RELEASE_DATE <<< $t_string
+IFS=${saved_IFS}
+
 dnl user defined macro for printing messages for debugging
 _DEBUG=no
 AC_DEFUN([UD_MSG_DEBUG],
@@ -39,12 +46,14 @@ UD_MSG_DEBUG([PNETCDF_VERSION_MINOR=$PNETCDF_VERSION_MINOR])
 UD_MSG_DEBUG([PNETCDF_VERSION_SUB=$PNETCDF_VERSION_SUB])
 UD_MSG_DEBUG([PNETCDF_VERSION_PRE=$PNETCDF_VERSION_PRE])
 UD_MSG_DEBUG([PNETCDF_VERSION=$PNETCDF_VERSION])
+UD_MSG_DEBUG([PNETCDF_RELEASE_DATE=$PNETCDF_RELEASE_DATE])
 
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MAJOR, $PNETCDF_VERSION_MAJOR, major version number)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MINOR, $PNETCDF_VERSION_MINOR, minor version number)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_SUB, $PNETCDF_VERSION_SUB, sub version number)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_PRE, $PNETCDF_VERSION_PRE, pre-release string)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION, ["$PNETCDF_VERSION"], full pnetcdf version string)
+AC_DEFINE_UNQUOTED(PNETCDF_RELEASE_DATE, ["$PNETCDF_RELEASE_DATE"], pnetcdf latest release date string)
 
 AC_SUBST(PNETCDF_VERSION_MAJOR)
 AC_SUBST(PNETCDF_VERSION_MINOR)
@@ -69,6 +78,7 @@ AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 
 dnl an option to use a customized rm command
+AC_ARG_VAR(RM, Command for deleting files or directories. default: rm)
 if test "x${RM}" != x ; then
    AC_MSG_CHECKING(rm )
    if ! test -f ${RM} ; then
@@ -720,18 +730,44 @@ AC_SUBST(has_fortran)
 UD_MAKEWHATIS
 
 dnl
+dnl GNU coverage
+dnl
+dnl This is for internal testing only. It should not be enabled for building a
+dnl production PnetCDF. This is because when run an executable compiled with
+dnl converage will produce an output file named "gmon.out". Since coverage is
+dnl not parallelized, runnning a program compiled with coverage may cuase
+dnl problems on concurrently writing to gmon.out in conflicts, possible
+dnl corrupting the file or program hanging. Thus, make target "ptest" should
+dnl also be disabled when coverage is enabled.
+dnl
 dnl After all other tests, optionally enable coverage.  we do this last
 dnl because legend has it that sometimes on some compilers the coverage flags
 dnl mess up other checks
 dnl
-
-AC_ARG_ENABLE(coverage,
+AC_ARG_ENABLE([coverage],
    [AS_HELP_STRING([--enable-coverage],
-       [Compile with coverage support (gcc-based only)])],
-   CFLAGS="${CFLAFS} -pg -fprofile-arcs -ftest-coverage --coverage -O0"
-   FFLAGS="${FFLAFS} -pg -fprofile-arcs -ftest-coverage --coverage -O0"
-   LIBS="${LIBS} -lgcov",
-[])
+       [Compile with coverage support (gcc-based only). @<:@default: no@:>@])],
+   [enable_coverage=${enableval}], [enable_coverage=no]
+)
+if test "x${enable_coverage}" = xyes; then
+   if test "x${GCC}" = xyes; then
+       dnl it is GNU compiler
+       LCOV_FLAGS="-pg -fprofile-arcs -ftest-coverage --coverage -O0"
+       CFLAGS="${CFLAGS} ${LCOV_FLAGS}"
+       FFLAGS="${FFLAGS} ${LCOV_FLAGS}"
+       if test "x${has_mpicxx}" = xyes ; then
+          CXXFLAGS="${CXXFLAGS} ${LCOV_FLAGS}"
+       fi
+       if test "$enable_fortran" = yes ; then
+          FCFLAGS="${FCFLAGS} ${LCOV_FLAGS}"
+          F90FLAGS="${F90FLAGS} ${LCOV_FLAGS}"
+       fi
+       LCOV_LIB=-lgcov
+       AC_SUBST(LCOV_LIB)
+   else
+      AC_MSG_WARN([--enable-coverage is for GNU compiler only])
+   fi
+fi
 
 chmod u+x ${srcdir}/scripts/install-sh
 
@@ -810,7 +846,7 @@ CONFIG_FILES="macros.make \
               test/testcases/Makefile \
               test/nonblocking/Makefile \
               test/header/Makefile \
-              test/test_inq_format/Makefile \
+              test/cdf_format/Makefile \
               test/largefile/Makefile \
               test/data/Makefile \
               examples/C/Makefile \

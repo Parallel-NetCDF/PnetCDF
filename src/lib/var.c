@@ -515,7 +515,7 @@ ncmpi_def_var(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* check if type is a valid netcdf type */
-    status = ncmpii_cktype(type);
+    status = ncmpii_cktype(file_ver, type);
     if (status != NC_NOERR) return status;
 
     /* TODO: can ndims > 2^32 in CDF-5 ? */

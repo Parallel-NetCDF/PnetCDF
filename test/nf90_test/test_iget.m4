@@ -94,7 +94,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
             do 2, j = 1, var_rank(i)
@@ -189,7 +189,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv. &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
             err = nf90mpi_iget_var(BAD_ID, i, value,reqid(1))
@@ -297,7 +297,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv.  &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assert'
@@ -510,7 +510,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv.  &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assert'
@@ -721,7 +721,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
-        do 1, i = 1, NVARS
+        do 1, i = 1, numVars
             canConvert = (var_type(i) .eq. NF90_CHAR) .eqv.  &
                          (NFT_ITYPE($1) .eq. NFT_TEXT)
             if (.not.(var_rank(i) .le. MAX_RANK)) stop 'assertion'

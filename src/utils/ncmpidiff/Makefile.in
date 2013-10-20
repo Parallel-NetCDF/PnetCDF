@@ -11,10 +11,11 @@ VPATH  = @srcdir@
 
 include ../../../macros.make
 
-INCLUDES	= -I$(srcdir)/../../../src/lib -I../../lib -I$(srcdir) 
+LIB_PNETCDF	= ../../lib/libpnetcdf.a
 
-LIB_PNETCDF	= ../../../src/lib/libpnetcdf.a
-LD_PNETCDF	= -L../../../src/lib -lpnetcdf
+INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
+LDFLAGS        += -L../../lib
+LIBS           += -lpnetcdf @LCOV_LIB@
 
 C_SOURCES	= ncmpidiff.c
 HEADERS		=
@@ -32,7 +33,7 @@ GARBAGE		= $(PROGRAM)
 all:		$(PROGRAM)
 
 $(PROGRAM):	$(LIB_PNETCDF) $(OBJS)
-	$(LINK.c) $(OBJS) $(LD_PNETCDF) $(LIBS) 
+	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
 
 install:	
 	$(INSTALL) -d -m 755 $(MANDIR)/man1

@@ -21,7 +21,12 @@
       nf_float = 5, &
       nf_real = nf_float, &
       nf_double = 6, &
-      nf_int64 = 10
+      nf_ubyte = 7, &
+      nf_ushort = 8, &
+      nf_uint = 9, &
+      nf_int64 = 10, &
+      nf_uint64 = 11, &
+      nf_string = 12
 
 !
 ! default fill values:
@@ -123,7 +128,41 @@
       NF_ERANGE       = -60, & ! Math result not representable
       NF_ENOMEM       = -61, & ! Memory allocation (malloc) failure
       NF_EVARSIZE     = -62, & ! One or more variable sizes violate format constraints
-      NF_EDIMSIZE     = -63    ! Invalid dimension size
+      NF_EDIMSIZE     = -63, & ! Invalid dimension size
+      NF_ETRUNC       = -64    ! File likely truncated or possibly corrupted
+
+! netCDF-4 error codes (copied from netCDF release)
+      integer, parameter, public :: &
+      NF_EHDFERR      = -101, & ! Error at HDF5 layer. 
+      NF_ECANTREAD    = -102, & ! Can't read. 
+      NF_ECANTWRITE   = -103, & ! Can't write. 
+      NF_ECANTCREATE  = -104, & ! Can't create. 
+      NF_EFILEMETA    = -105, & ! Problem with file metadata. 
+      NF_EDIMMETA     = -106, & ! Problem with dimension metadata. 
+      NF_EATTMETA     = -107, & ! Problem with attribute metadata. 
+      NF_EVARMETA     = -108, & ! Problem with variable metadata. 
+      NF_ENOCOMPOUND  = -109, & ! Not a compound type. 
+      NF_EATTEXISTS   = -110, & ! Attribute already exists. 
+      NF_ENOTNC4      = -111, & ! Attempting netcdf-4 operation on netcdf-3 file.   
+      NF_ESTRICTNC3   = -112, & ! Attempting netcdf-4 operation on strict nc3 netcdf-4 file.   
+      NF_ENOTNC3      = -113, & ! Attempting netcdf-3 operation on netcdf-4 file.   
+      NF_ENOPAR       = -114, & ! Parallel operation on file opened for non-parallel access.   
+      NF_EPARINIT     = -115, & ! Error initializing for parallel access.   
+      NF_EBADGRPID    = -116, & ! Bad group ID.   
+      NF_EBADTYPID    = -117, & ! Bad type ID.   
+      NF_ETYPDEFINED  = -118, & ! Type has already been defined and may not be edited. 
+      NF_EBADFIELD    = -119, & ! Bad field ID.   
+      NF_EBADCLASS    = -120, & ! Bad class.   
+      NF_EMAPTYPE     = -121, & ! Mapped access for atomic types only.   
+      NF_ELATEFILL    = -122, & ! Attempt to define fill value when data already exists. 
+      NF_ELATEDEF     = -123, & ! Attempt to define var properties, like deflate, after enddef.
+      NF_EDIMSCALE    = -124, & ! Probem with HDF5 dimscales.
+      NF_ENOGRP       = -125, & ! No group found.
+      NF_ESTORAGE     = -126, & ! Can't specify both contiguous and chunking.
+      NF_EBADCHUNK    = -127, & ! Bad chunksize.
+      NF_ENOTBUILT    = -128, & ! Attempt to use feature that was not turned on when netCDF was built.
+      NF_EDISKLESS    = -129    ! Error in using diskless  access.
+
 
 ! PnetCDF error codes start here
       integer, parameter, public :: &

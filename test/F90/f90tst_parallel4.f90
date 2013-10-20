@@ -59,7 +59,10 @@ program f90tst
   start(1) = mod(my_rank,2)*3+1
   start(2) = my_rank/2+1
   start(3) = 1
-  if (my_rank .GE. 8) count = 0
+  if (my_rank .GE. 8) then
+      start = 1
+      count = 0
+  endif
 
   call handle_err(nf90mpi_put_var_all(fh, varid, f,start=start,count=count))
 
@@ -72,7 +75,10 @@ program f90tst
  
   if (my_rank .LE. 8) then
      do i=1,3
-        if (f(i) .ne. my_rank*3+i) stop 3
+        if (f(i) .ne. my_rank*3+i) then
+           print *, 'Error: unexpected read value ',f(i),' should be ', my_rank*3+i
+           goto 999
+        endif
      end do
   endif 
 

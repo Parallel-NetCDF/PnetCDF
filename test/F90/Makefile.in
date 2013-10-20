@@ -15,7 +15,7 @@ INCLUDES  =
 FPPFLAGS += @FC_MODINC@../../src/libf90
 F90FLAGS += @FC_MODOUT@.
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     += -lpnetcdf @LCOV_LIB@
 
 F90_SRCS = tst_f90.f90 \
            tst_io.f90 \

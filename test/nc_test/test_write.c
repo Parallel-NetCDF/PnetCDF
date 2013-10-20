@@ -681,7 +681,7 @@ test_ncmpi_def_var(void)
         return nok;
     }
     def_dims(ncid);
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         err = ncmpi_def_var(ncid, var_name[i], var_type[i], var_rank[i],
             var_dimid[i], &varid);
         IF (err) 
@@ -732,7 +732,7 @@ test_ncmpi_put_var1(void)
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
         err = ncmpi_put_var1(BAD_ID, i, index, buf);
@@ -815,7 +815,7 @@ test_ncmpi_put_vara(void)
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -939,7 +939,7 @@ test_ncmpi_put_vars(void)
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -1100,7 +1100,7 @@ test_ncmpi_put_varm(void)
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
         for (j = 0; j < var_rank[i]; j++) {
@@ -1254,12 +1254,12 @@ test_ncmpi_rename_var(void)
     def_vars(ncid);
 
 	/* Prefix "new_" to each name */
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         err = ncmpi_rename_var(BAD_ID, i, "newName");
         IF (err != NC_EBADID)
             error("bad ncid: status = %d", err);
         ELSE_NOK
-        err = ncmpi_rename_var(ncid, i, var_name[NVARS-1]);
+        err = ncmpi_rename_var(ncid, i, var_name[numVars-1]);
         IF (err != NC_ENAMEINUSE)
             error("duplicate name: status = %d", err);
         ELSE_NOK
@@ -1281,7 +1281,7 @@ test_ncmpi_rename_var(void)
     err = ncmpi_enddef(ncid);
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	strcpy(name, "even_longer_");
 	strcat(name, var_name[i]);
         err = ncmpi_rename_var(ncid, i, name);
@@ -1338,7 +1338,7 @@ test_ncmpi_put_att(void)
     def_dims(ncid);
     def_vars(ncid);
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
 	    name = ATT_NAME(i,j);
@@ -1427,7 +1427,7 @@ test_ncmpi_copy_att(void)
     def_dims(ncid_out);
     def_vars(ncid_out);
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
             name = ATT_NAME(i,j);
@@ -1497,7 +1497,7 @@ test_ncmpi_copy_att(void)
     err = ncmpi_enddef(ncid_out);
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
 	    err = ncmpi_rename_att(ncid_out, i, att_name[i][0], "a");
 	    IF (err)
@@ -1516,7 +1516,7 @@ test_ncmpi_copy_att(void)
     err = ncmpi_open(comm, scratch, NC_WRITE, MPI_INFO_NULL, &ncid_out);
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
 	    err = ncmpi_inq_att(ncid_out, i, "a", &datatype, &length);
 	    IF (err)
@@ -1588,7 +1588,7 @@ test_ncmpi_rename_att(void)
     def_vars(ncid);
     put_atts(ncid);
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
 	    attname = ATT_NAME(i,j);
@@ -1622,7 +1622,7 @@ test_ncmpi_rename_att(void)
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
 	    attname = ATT_NAME(i,j);
@@ -1669,7 +1669,7 @@ test_ncmpi_rename_att(void)
 	/* Now in data mode */
 	/* Try making names even longer. Then restore original names */
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         varid = VARID(i);
         for (j = 0; j < NATTS(i); j++) {
 	    attname = ATT_NAME(i,j);
@@ -1738,7 +1738,7 @@ test_ncmpi_del_att(void)
     def_vars(ncid);
     put_atts(ncid);
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	varid = VARID(i);
 	numatts = NATTS(i);
         for (j = 0; j < numatts; j++) {
@@ -1785,7 +1785,7 @@ test_ncmpi_del_att(void)
 	error("ncmpi_inq_natts: %s", ncmpi_strerror(err));
     IF (natts != 0)
 	error("natts: expected %d, got %d", 0, natts);
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	varid = VARID(i);
 	err = ncmpi_inq_varnatts(ncid, varid, &natts);
 	IF (err)
@@ -1803,7 +1803,7 @@ test_ncmpi_del_att(void)
     IF (err)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
 	varid = VARID(i);
 	numatts = NATTS(i);
         for (j = 0; j < numatts; j++) {
@@ -1918,7 +1918,7 @@ test_ncmpi_set_fill(void)
         error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
 
 	/* get all variables & check all values equal default fill */
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	switch (var_type[i]) {
 	    case NC_CHAR:   fill = NC_FILL_CHAR; break;
 	    case NC_BYTE:   fill = NC_FILL_BYTE; break;
@@ -1963,7 +1963,7 @@ test_ncmpi_set_fill(void)
 
 	/* set _FillValue = 42 for all vars */
     text = fill = 42;
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	if (var_type[i] == NC_CHAR) {
 	    err = ncmpi_put_att_text(ncid, i, "_FillValue", 1, &text);
 	    IF (err)
@@ -1985,7 +1985,7 @@ test_ncmpi_set_fill(void)
         error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
 
 	/* get all variables & check all values equal 42 */
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
 	for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err)

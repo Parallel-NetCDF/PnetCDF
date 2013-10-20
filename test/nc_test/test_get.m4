@@ -53,7 +53,7 @@ test_ncmpi_get_var1_$1(void)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
     ncmpi_begin_indep_data(ncid);
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         for (j = 0; j < var_rank[i]; j++)
             index[j] = 0;
@@ -168,7 +168,7 @@ test_ncmpi_get_var_$1(void)
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -289,7 +289,7 @@ test_ncmpi_get_vara_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -481,7 +481,7 @@ test_ncmpi_get_vars_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -677,7 +677,7 @@ test_ncmpi_get_varm_$1(void)
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
-    for (i = 0; i < NVARS; i++) {
+    for (i = 0; i < numVars; i++) {
         canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
         assert(var_rank[i] <= MAX_RANK);
         assert(var_nels[i] <= MAX_NELS);
@@ -867,7 +867,7 @@ test_ncmpi_get_att_$1(void)
     IF (err != NC_NOERR) 
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
-    for (i = -1; i < NVARS; i++) {
+    for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             canConvert = (ATT_TYPE(i,j) == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
             err = ncmpi_get_att_$1(BAD_ID, i, ATT_NAME(i,j), value);
