@@ -122,7 +122,9 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
                                                                               \
     for (_i=0; _i<_ndims; _i++) {                                             \
         NC_dim *dimp;                                                         \
-        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t)varp->num_subfiles>1?varp->dimids_org[_i]:varp->dimids[_i]); \
+	size_t _dimid;                                                        \
+	_dimid = varp->num_subfiles>1?varp->dimids_org[_i]:varp->dimids[_i];  \
+        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, _dimid);                   \
         if (dimp->size == NC_UNLIMITED)                                       \
             count[_i] = NC_get_numrecs(ncp);                                  \
         else                                                                  \

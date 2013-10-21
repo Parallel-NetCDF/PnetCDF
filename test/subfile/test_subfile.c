@@ -269,10 +269,6 @@ int main(int argc, char **argv)
     char tmp[10];
     sprintf(tmp, "%d", num_sf);
     MPI_Info_set(info, "nc_num_subfiles", tmp);
-#if 0
-    if (nprocs >= 2048) /* exact value: 24*64 = 1,536 */
-        MPI_Info_set(info, "cb_nodes", "64");
-#endif
 
     sprintf(filename, "%s.%d.%d.%d.nc", basename1, length, 1, 0);
 
@@ -347,15 +343,7 @@ int main(int argc, char **argv)
 
     status = ncmpi_get_file_info(ncid, &info_used);
     TEST_HANDLE_ERR(status);
-#if 0    
-    if (num_sf > 1) {
-        NC *ncp_sf;
-        
-        status = ncmpii_NC_check_id(ncid, &ncp_sf);
-        status = ncmpi_get_file_info(ncp_sf->nciop->fd, &info_used_sf);
-        TEST_HANDLE_ERR(status);
-    }
-#endif
+
     stim = MPI_Wtime();
     ncmpi_close(ncid);
     close_tim = MPI_Wtime() - stim;
@@ -421,11 +409,11 @@ end:
     char path[1024], fnameonly[128];
     find_path_and_fname (filename, path, fnameonly);
     if (do_read == 1) drop_caches(path);
-
+#if 0
     if (mynod == 0) {
         print_info(&info_used);
     }
-
+#endif
     MPI_Finalize();
 
     return 0;
