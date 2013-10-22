@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
@@ -39,15 +39,15 @@ typedef struct {
 		ncmpi_strerror((status)) );				\
 }
 
-int ncmpii_subfile_create(NC *ncp, int *ncidp);
+extern int ncmpii_subfile_create(NC *ncp, int *ncidp);
 
-int ncmpii_subfile_open(NC *ncp, int *ncidp);
+extern int ncmpii_subfile_open(NC *ncp, int *ncidp);
 
-int ncmpii_subfile_close(NC *ncp);
+extern int ncmpii_subfile_close(NC *ncp);
 
-int ncmpii_subfile_partition(NC *ncp, int *ncidp);
+extern int ncmpii_subfile_partition(NC *ncp, int *ncidp);
 
-int ncmpii_subfile_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset start[],
+extern int ncmpii_subfile_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset start[],
                                const MPI_Offset count[], const MPI_Offset  stride[],
                                void *buf, MPI_Offset bufcount,
                                MPI_Datatype buftype, int rw_flag, int io_method);
