@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
@@ -13,40 +13,15 @@
 #endif
 #include <stdlib.h>
 #include <math.h>
-
-#include <sys/ioctl.h>
-#include <time.h>
-#include <fcntl.h> /* O_DIRECT & IO operations */
-
-#if HAVE_LUSTRE_USER_H
-#include <lustre/lustre_user.h>
-#endif
-
-#include <unistd.h>
-#include <errno.h>
-extern int errno;
-
-#define MAX_LOV_UUID_COUNT 1000
+#include "ncmpidtype.h"
 
 static int DEBUG = 1;
 enum {ONE, BALANCED};
-enum {LMT, PROBING, NODETECT};
-enum {PFS, STAGING};
+int min_ndims = 1;
 
 /* set default values for the following values */
 int delegate_scheme = BALANCED; /* default: any proc can be delegate proc */
-int ost_detect_scheme = NODETECT; /* default: no detection */
-int io_scheme = PFS;
-int min_ndims = 3;
-int max_ostno = 156; /* default: all OSTs */
-int min_ostno = 128; 
-int got_env = 0;
 int is_partitioned = 0;
-time_t now, last;
-struct tm newyear;
-double seconds;
-
-#define PROBE_FILE_SZ 16 /* 16 MiB */
 
 #define check_err(fn_name_)                                                   \
     do {                                                                      \
@@ -62,10 +37,7 @@ double seconds;
         }                                                                     \
     } while (0)
 
-int ost_list[156];
-double ost_bw[156], ost_bw_sorted[156];
-
-int my_itoa(int val, char* buf)
+static int ncmpii_itoa(int val, char* buf)
 {
     const unsigned int radix = 10;
 
@@ -110,260 +82,6 @@ int my_itoa(int val, char* buf)
     return len;
 }
 
-int compare (const void *a, const void *b)
-{
-    return ( *(double *)b - *(double *)a); /* high to low sorting */
-}
-
-/* http://www.apl.jhu.edu/Notes/CGI/johnson/cstrings.c */
-void find_path_and_fname(char *fullpath, char *path, char *file)
-{
-    char tmp1[200];
-    char *justfile, *justdir;
-    strcpy(tmp1, fullpath);
-    
-    if (justdir = strrchr(tmp1, '/'))
-    {
-        *(++justdir) = '\0';
-        strcpy(path, tmp1);
-    }
-    else *path = '\0';
-
-    justfile = strrchr(fullpath, '/');
-
-    if (justfile) 
-        justfile++;
-    else 
-        justfile = fullpath;
-    strcpy(file, justfile);
-}
-
-/* this is called whenever ncmpii_subfile_partition() gets called and
-   the corresponding file is not closed. */
-void get_env(int nprocs, int myrank, NC *ncp)
-{
-    int i=0, j, color;
-    char *env_var;
-    MPI_Comm scomm;
-
-    time(&now); /* get current time */
-    if (newyear.tm_year == 0) { /* for the 1st time, init to new year */
-        newyear = *localtime(&now);
-        newyear.tm_hour = 0; newyear.tm_min = 0; newyear.tm_sec = 0;
-        newyear.tm_mon = 0;  newyear.tm_mday = 1;
-        last = now;
-    }
-    else { /* newyear is already set */
-        seconds = difftime(now, last);
-        if (seconds < 300) /* skip remaining as timediff is less than 300 sec */
-            return;
-        else
-            last = now; /* update the last probing time */
-    }
-
-    /* if nprocs >= 24*156, then the first proc in each compute node 
-       participates b/w probing. 
-       otherwise, probing processes will be distributed evenly. */
-    if (nprocs >= 24*156) 
-        color = ((myrank%24 == 0)?0:1);
-    else {
-        double ratio, rem;
-        ratio = (double)nprocs/(double)156;
-        rem = fmod((double)myrank, ratio);
-        color = ((int)rem==0?0:1);
-    }
-
-    env_var = getenv("SCHEME");
-    if (env_var != NULL)
-    {
-        if (strcmp (env_var, "BALANCED") == 0)
-            delegate_scheme = BALANCED;
-        else if (strcmp (env_var, "ONE") == 0)
-            delegate_scheme = ONE;
-    }
-
-    env_var = getenv("DETECT_SCHEME");
-    if (env_var != NULL)
-    {
-        if (strcmp (env_var, "LMT") == 0)
-            ost_detect_scheme = LMT;
-        else if (strcmp (env_var, "PROBING") == 0)
-            ost_detect_scheme = PROBING;
-        else if (strcmp (env_var, "NODETECT") == 0)
-            ost_detect_scheme = NODETECT;
-    }
-
-    env_var = getenv("IO_SCHEME");
-    if (env_var != NULL)
-    {
-        if (strcmp (env_var, "PFS") == 0)
-            io_scheme = PFS;
-        else if (strcmp (env_var, "STAGING") == 0)
-            io_scheme = STAGING;
-    }
-
-    env_var = getenv("NC_MIN_NDIMS");
-    if (env_var != NULL)
-        min_ndims = atoi (env_var);
-
-    env_var = getenv("NC_MIN_OSTNO");
-    if (env_var != NULL)
-        min_ostno = atoi (env_var);
-
-    if (ost_detect_scheme == LMT) {
-        char filename[] = "ost.list";
-        FILE *file = fopen (filename, "r");
-    
-        if (file != NULL) {
-            while (fscanf(file, "%d", &ost_list[i]) != EOF)
-                i++;
-            fclose(file);
-        }
-        else
-            perror (filename);
-    }
-    else if (ost_detect_scheme == PROBING) {
-        /* split the original comm into two: rank0 in each compute nodes and others */
-        if (myrank==0) /* debug */
-            printf("%s: myrank=%d, color=%d\n", __func__, myrank, color);
-        MPI_Comm_split (ncp->nciop->comm, color, myrank, &scomm);
-        if (color == 0) {
-            int srank, fd;
-            char *buf;
-            char filename[128];
-            double s_time, wr_bw, wr_time;
-            int err;
-            int access_mode = O_WRONLY|O_CREAT|O_DIRECT;
-#if HAVE_LUSTRE_USER_H
-            struct lov_user_md lum = {0};
-            __u32 striping_unit = 1048576;
-            __u16 striping_factor = 1;
-            __u16 start_iodevice;
-#else
-            size_t striping_unit = 1048576;
-#endif
-            size_t write_sz = PROBE_FILE_SZ*1024*1024;
-
-            MPI_Comm_rank (scomm, &srank);
-            char offset[10], path[1024], file[1024];
-            my_itoa(srank, offset);
-            find_path_and_fname ((char*)ncp->nciop->path, path, file);
-            sprintf(filename, "%sddtest.%d", path, srank);
-
-            posix_memalign((void **)&buf, striping_unit, write_sz);
-            buf[0] = myrank;
-#if HAVE_LUSTRE_USER_H
-            access_mode |= O_LOV_DELAY_CREATE;
-#endif
-
-            fd = open(filename, access_mode, 0664);
-            if (fd < 0) {
-                printf("Error: open file %s (%s)\n", filename, strerror(errno));
-                exit(-1);
-            }
-#if HAVE_LUSTRE_USER_H            
-            lum.lmm_magic = LOV_USER_MAGIC;
-            lum.lmm_stripe_size = striping_unit;
-            lum.lmm_stripe_count = striping_factor;
-            start_iodevice = srank;
-            lum.lmm_stripe_offset = start_iodevice;
-
-            err = ioctl(fd, LL_IOC_LOV_SETSTRIPE, &lum);
-
-            if (err == -1)
-                printf("Error: ioctl() set striping failed (errno=%d: %s)\n",
-                       errno, strerror(errno));
-#endif
-            /* start I/O timing */
-            s_time = MPI_Wtime();
-            /* Write to file */
-            write(fd, buf, write_sz);
-            //fsync(*fd); /* for now, DO NOT use fsync as O_DIRECT is used */
-            /* end I/O timing */
-            wr_time = MPI_Wtime() - s_time;
-
-            close(fd);
-            unlink(filename); /* delete file used for probing */
-            free(buf);
-
-            /* get write bandwidth in MiB/s */
-            wr_bw = (double)(PROBE_FILE_SZ)/wr_time;
-
-            printf("%3d: time = %f (sec), write bandwidth = %f (MiB/s)\n", 
-                   srank, wr_time, wr_bw);
-
-            MPI_Allgather(&wr_bw, 1, MPI_DOUBLE, &ost_bw[0], 1, MPI_DOUBLE, scomm);
-#if 0 /* finding lb by avg-stdev; no longer used */
-            double sum=0.0, sum_var=0.0, avg, var, stdev;
-
-            for(i=0; i<156; i++)
-                sum += ost_bw[i];
-            avg = sum/156;
-            for (i=0; i<156; i++)
-                sum_var += pow((ost_bw[i]-avg), 2.0);
-            var = sum_var/(double)(155); /* 156-1 */
-            stdev = sqrt(var);
-            if (myrank == 0) /* debug */
-                printf("avg=%f, stdev=%f\n", avg, stdev);
-            //lb = avg - stdev;
-#endif
-            memcpy (ost_bw_sorted, ost_bw, sizeof(double)*156);
-            qsort (ost_bw_sorted, 156, sizeof(double), compare);
-            
-            if (myrank == 0) /* DEBUG */
-            {
-                for (i=0; i<156; i++)
-                    printf("ost_bw[%d]=%f\n", i, ost_bw[i]);
-                for (i=0; i<156; i++)
-                    printf("ost_bw_sorted[%d]=%f\n", i, ost_bw_sorted[i]);
-            }
-
-            double max_agg_bw=0.0, lb;
-            for (i=0; i<156; i++) {
-                double agg_bw = ost_bw_sorted[i]*(i+1);
-                if (agg_bw >= max_agg_bw | i < min_ostno) {
-                    max_agg_bw = agg_bw;
-                    lb = ost_bw_sorted[i];
-                }
-            }
-            if (srank == 0) printf("max_agg_bw=%f\n", max_agg_bw);
-
-            for (i=0,j=0; i<156; i++)
-                if (ost_bw[i] >= lb)
-                    ost_list[j++] = i;
-            MPI_Bcast(&j, 1, MPI_INT, 0, ncp->nciop->comm); /* j */
-            MPI_Bcast(&ost_list, 156, MPI_INT, 0, ncp->nciop->comm); /* ost_list */
-        }
-        else { /* color == 1 */
-            MPI_Bcast(&j, 1, MPI_INT, 0, ncp->nciop->comm); /* j */
-            MPI_Bcast(&ost_list, 156, MPI_INT, 0, ncp->nciop->comm); /* ost_list */
-        }
-
-        max_ostno = j;
-
-#ifdef SUBFILE_DEBUG
-        if (myrank == 0) /* debug */
-        {
-            printf("PROBING: max_ostno=%d\n", max_ostno);
-            for (i=0; i<156; i++) /* print out upto max_ostno? */
-                printf("ost_list[%d]=%d\n", i, ost_list[i]);
-        }
-#endif
-        MPI_Comm_free(&scomm);
-    } 
-    else if (ost_detect_scheme == NODETECT) {
-        for (i=0; i<156; i++)
-            ost_list[i] = i;
-	max_ostno = ncp->nc_num_subfiles;
-#ifdef SUBFILE_DEBUG
-        if (myrank == 0) /* debug */
-            printf("NODETECT: max_ostno=%d\n", max_ostno);
-#endif
-    }/* end if() LMT or PROBING or NODETECT*/
-
-    got_env = 1;
-} /* get_env() */
-
 int ncmpii_subfile_create(NC *ncp, int *ncidp)
 {
     int status=NC_NOERR;
@@ -399,16 +117,10 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
      * for now, just passing 0 value. */
     MPI_Comm_split(ncp->nciop->comm, color, myrank, &comm_sf);
 
-    //char path[1024], file[1024];
-    //find_path_and_fname (ncp->nciop->path, path, file);
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->nciop->path, color, "nc");
-    char offset[10];
-    my_itoa(ost_list[color], offset);
-    //printf("ost_list[%d]=%d, offset=%s\n", color, ost_list[color], offset);
 
-    MPI_Info_set(info, "romio_lustre_start_iodevice", offset);
-    MPI_Info_set(info, "striping_factor", "1");
-    //MPI_Info_set(info, "cb_nodes", "1");
+    //MPI_Info_set(info, "romio_lustre_start_iodevice", offset);
+    //MPI_Info_set(info, "striping_factor", "1");
 
     status = ncmpi_create(comm_sf, path_sf, NC_CLOBBER|NC_64BIT_DATA, info, ncidp);  
     if (status != NC_NOERR) {
@@ -484,7 +196,6 @@ int ncmpii_subfile_close (NC *ncp)
         return status;
     
     /* reset values to 0 */
-    got_env = 0; 
     is_partitioned = 0;
 
     return status;
@@ -504,16 +215,10 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
 #ifdef SUBFILE_DEBUG
     if (myrank==0)  /* debug */
     {
-        printf("rank(%d): got_env=%d\n", myrank, got_env);
         printf("rank(%d): is_partitioned=%d\n", myrank, is_partitioned);
     }
 #endif
     if (is_partitioned == 1) return NC_NOERR;
-
-    if (got_env == 0) get_env(nprocs, myrank, ncp);
-    /* override nc_num_subfiles */
-    ncp->nciop->hints.num_subfiles = max_ostno;
-    ncp->nc_num_subfiles = max_ostno;
 
     if (nprocs > ncp->nc_num_subfiles) {
         ratio = (double)nprocs/(double)ncp->nc_num_subfiles;
@@ -663,7 +368,7 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
 		for (jj=0; jj < ncp->nc_num_subfiles; jj++) {
 		    char ss[80];
                     double xx, yy;
-		    snprintf(key[jj][j], strlen(dpp[vpp[i]->dimids[j]]->name->cp) + my_itoa(jj, ss) + 17, "range(%s).subfile.%d", dpp[vpp[i]->dimids[j]]->name->cp, jj); /* dim name*/ 
+		    snprintf(key[jj][j], strlen(dpp[vpp[i]->dimids[j]]->name->cp) + ncmpii_itoa(jj, ss) + 17, "range(%s).subfile.%d", dpp[vpp[i]->dimids[j]]->name->cp, jj); /* dim name*/ 
                     xx = x*(double)jj;
                     min = xx+(jj==0||(xx-(int)xx==0.0)?0:1);
 		    yy = x*(double)(jj+1);
@@ -836,7 +541,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     for (i=0; i<ncp->nc_num_subfiles; i++) {
         int flag = 0; /* set to 1 if par_dim_id is partitioned, initially 0 */
         double ratio = (double)nprocs/(double)ncp->nc_num_subfiles;
-        int aproc; /* I/O delegate proc in subfile group */
+        int aproc=-1; /* I/O delegate proc in subfile group */
 
         if (delegate_scheme == BALANCED) {
             double scaled, xx, yy;
@@ -1032,9 +737,6 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #endif
 
     MPI_Offset buf_offset[nprocs];
-    int etype_size = varp->xsz;
-    //nc_type etype = varp->type;
-
     for (i=0; i<nprocs; i++)
         buf_offset[i] = 0;
 
@@ -1051,7 +753,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     MPI_Datatype ptype;
     int el_size;
     int isderived, buftype_is_contig;
-    MPI_Offset fnelems, bnelems, nbytes; /* fnelems and nbytes not used now */
+    MPI_Offset bnelems;
     MPI_Aint lb, extent;
 
     status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
@@ -1173,7 +875,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t52);
 #endif
-    //check_err(MPI_Waitall);
+    check_err(MPI_Waitall);
     free(statuses);
     free(requests);
 
@@ -1215,7 +917,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t53);
 #endif
-    //check_err(MPI_Waitall);
+    check_err(MPI_Waitall);
 
 #ifdef SUBFILE_DEBUG
     /* DEBUG: print out others_req.{start,count} */
@@ -1317,7 +1019,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t54);
 #endif
-    //check_err(MPI_Waitall);
+    check_err(MPI_Waitall);
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t55, "SSON --- getput_vars igetput", "", TAU_USER);
