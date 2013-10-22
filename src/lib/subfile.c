@@ -341,21 +341,24 @@ void get_env(int nprocs, int myrank, NC *ncp)
 
         max_ostno = j;
 
+#ifdef SUBFILE_DEBUG
         if (myrank == 0) /* debug */
         {
             printf("PROBING: max_ostno=%d\n", max_ostno);
             for (i=0; i<156; i++) /* print out upto max_ostno? */
                 printf("ost_list[%d]=%d\n", i, ost_list[i]);
         }
-
+#endif
         MPI_Comm_free(&scomm);
     } 
     else if (ost_detect_scheme == NODETECT) {
         for (i=0; i<156; i++)
             ost_list[i] = i;
 	max_ostno = ncp->nc_num_subfiles;
+#ifdef SUBFILE_DEBUG
         if (myrank == 0) /* debug */
             printf("NODETECT: max_ostno=%d\n", max_ostno);
+#endif
     }/* end if() LMT or PROBING or NODETECT*/
 
     got_env = 1;
@@ -498,12 +501,13 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
 
     MPI_Comm_rank (ncp->nciop->comm, &myrank);
     MPI_Comm_size (ncp->nciop->comm, &nprocs);
-
+#ifdef SUBFILE_DEBUG
     if (myrank==0)  /* debug */
     {
         printf("rank(%d): got_env=%d\n", myrank, got_env);
         printf("rank(%d): is_partitioned=%d\n", myrank, is_partitioned);
     }
+#endif
     if (is_partitioned == 1) return NC_NOERR;
 
     if (got_env == 0) get_env(nprocs, myrank, ncp);
@@ -1341,9 +1345,9 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     TAU_PHASE_STOP(t55);
 #endif
 
-//#ifdef SUBFILE_DEBUG
+#ifdef SUBFILE_DEBUG
     printf("rank(%d): nasyncios=%d\n", myrank, nasyncios);
-//#endif
+#endif
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t56, "SSON --- getput_vars ncmpi_wait_all", "", TAU_USER);

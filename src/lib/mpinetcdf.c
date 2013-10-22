@@ -20,6 +20,9 @@
 #include "nc.h"
 #include "ncx.h"
 #include "macro.h"
+#ifdef ENABLE_SUBFILING
+#include "subfile.h"
+#endif
 
 /* Prototypes for functions used only in this file */
 static int ncmpii_end_indep_data(NC *ncp);

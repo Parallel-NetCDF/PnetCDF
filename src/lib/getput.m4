@@ -26,6 +26,9 @@ dnl
 #include "ncx.h"
 #include "ncmpidtype.h"
 #include "macro.h"
+#ifdef ENABLE_SUBFILING
+#include "subfile.h"
+#endif
 
 
 dnl

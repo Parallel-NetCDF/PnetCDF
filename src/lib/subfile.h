@@ -3,8 +3,8 @@
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
-#ifndef SUBFILE_INCLUDE
-#define SUBFILE_INCLUDE
+#ifndef SUBFILE_H
+#define SUBFILE_H
 
 #include "pnetcdf.h"
 #include "nc.h"
@@ -39,8 +39,6 @@ typedef struct {
 		ncmpi_strerror((status)) );				\
 }
 
-int my_itoa(int val, char* buf);
-
 int ncmpii_subfile_create(NC *ncp, int *ncidp);
 
 int ncmpii_subfile_open(NC *ncp, int *ncidp);
@@ -54,4 +52,4 @@ int ncmpii_subfile_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset start[],
                                void *buf, MPI_Offset bufcount,
                                MPI_Datatype buftype, int rw_flag, int io_method);
 
-#endif /* end of SUBFILE_INCLUDE */
+#endif /* end of SUBFILE_H */

@@ -39,7 +39,7 @@ static void handle_error(int status) {
 
 extern find_path_and_fname(char *fullpath, char *path, char *file);
 
-void drop_caches(char *path)
+static void drop_caches(char *path)
 {
     int fd, result;
     DIR *d;
@@ -67,7 +67,7 @@ void drop_caches(char *path)
 }
 
 /*----< print_info() >------------------------------------------------------*/
-void print_info(MPI_Info *info_used)
+static void print_info(MPI_Info *info_used)
 {
     int  i, nkeys;
 
@@ -97,13 +97,11 @@ int main(int argc, char **argv)
     MPI_Offset sizes[3], array_of_starts[3], stride[3];
     char *basename = NULL, *basename1 = NULL, filename[100];
     char dimname[20], varname[20];
-    int ncid, dimids0[3], dimids1[3], rank_dim[3], *varid;
+    int ncid, dimids0[3], rank_dim[3], *varid;
     MPI_Info info;
     MPI_Offset **starts_list, **count_list;
     MPI_Offset *bufcount_list;
     int ndims=3, nvars=1, ngatts, unlimdimid;
-    int *buf_var;
-    int k;
     MPI_Datatype *datatype_list;
     int length = 128; /* 8MB per proc */
     double stim, write_tim, new_write_tim, write_bw;
@@ -113,7 +111,7 @@ int main(int argc, char **argv)
     int num_sf = 2;
     int par_dim_id = 0; /* default is 0 */
     int do_read = 0;
-    MPI_Info info_used, info_used_sf;
+    MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
@@ -259,11 +257,7 @@ int main(int argc, char **argv)
 	for (j=0; j<bufcount; j++)
 	    buf[i][j]=mynod+1;
     }
-/*
-    buf_var = (int *)malloc(bufcount*nprocs*sizeof(int));
-    for (i=0; i<bufcount*nprocs; i++)
-        buf_var[i] = mynod + 1; 
-*/
+
     MPI_Info_create(&info);
     //set all non-record variable to be subfiled
     char tmp[10];
