@@ -37,53 +37,6 @@ static void handle_error(int status) {
 		   ncmpi_strerror((status)) );		\
     }
 
-extern find_path_and_fname(char *fullpath, char *path, char *file);
-
-static void drop_caches(char *path)
-{
-    int fd, result;
-    DIR *d;
-    struct dirent *dir;
-    d = opendir(path);
-    if (d == NULL)
-        return;
-    while ((dir = readdir(d))) {
-        char filename[1024];
-        if (strcmp(dir->d_name, ".") == 0 ||
-            strcmp(dir->d_name, "..") == 0) 
-            continue;
-        sprintf(filename, "%s/%s", path, dir->d_name);
-        printf("Opening: %s\n", filename);
-        fd = open(filename, O_RDWR);
-        printf("FD: %d\n",fd);
-        /* result = posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED); */
-        result = posix_fadvise(fd, 0, 0, 4);
-        printf("Result: %d\n",result);
-        close(fd);
-    }
-    closedir(d);
-
-    return;
-}
-
-/*----< print_info() >------------------------------------------------------*/
-static void print_info(MPI_Info *info_used)
-{
-    int  i, nkeys;
-
-    MPI_Info_get_nkeys(*info_used, &nkeys);
-    printf("MPI File Info: nkeys = %d\n",nkeys);
-    for (i=0; i<nkeys; i++) {
-        char key[MPI_MAX_INFO_KEY], value[MPI_MAX_INFO_VAL];
-        int  valuelen, flag;
-
-        MPI_Info_get_nthkey(*info_used, i, key);
-        MPI_Info_get_valuelen(*info_used, key, &valuelen, &flag);
-        MPI_Info_get(*info_used, key, valuelen+1, value, &flag);
-        printf("MPI File Info: [%2d] key = %24s, value = %s\n",i,key,value);
-    }
-}
-
 int main(int argc, char **argv)
 {
     int opt;
@@ -400,14 +353,6 @@ end:
     free(count_list);
     free(basename1);
 
-    char path[1024], fnameonly[128];
-    find_path_and_fname (filename, path, fnameonly);
-    if (do_read == 1) drop_caches(path);
-#if 0
-    if (mynod == 0) {
-        print_info(&info_used);
-    }
-#endif
     MPI_Finalize();
 
     return 0;
