@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# Copyright (C) 2013, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
 # $Id$
@@ -11,7 +11,7 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+INCLUDES  = -I../../src/lib
 FPPFLAGS += -I../../src/libf -I../../src/libf90
 LDFLAGS  += -L../../src/lib
 LIBS     += -lpnetcdf
@@ -42,13 +42,8 @@ all: $(PROGS)
 test_subfile: test_subfile.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-testing check: $(PROGS)
-	@mpiexec -n 2 $(srcdir)/test_subfile -f test_subfile.nc -s 2
-
-verbose_testing : $(PROGS)
-
-testing-collective_error:
-	echo "please run with 2 processes. e.g. mpiexec -n 2 collective_error"
+ptest : $(PROGS)
+	$(TEST_MPIRUN) -n 2 ./test_subfile -f $(TEST_OUT_DIR)/test_subfile.nc -s 2
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend

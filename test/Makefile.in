@@ -54,7 +54,6 @@ check testing: all
 	cd nonblocking && $(MAKE) testing
 	cd testcases && $(MAKE) testing
 	cd cdf_format && $(MAKE) testing
-	if [ @enable_subfiling@ = yes ] ; then cd subfile && $(MAKE) testing ; fi
 
 verbose_check verbose_testing: all
 	cd nc_test && $(MAKE) verbose_testing
@@ -65,7 +64,6 @@ verbose_check verbose_testing: all
 	cd nonblocking && $(MAKE) verbose_testing
 	cd testcases && $(MAKE) verbose_testing
 	cd cdf_format && $(MAKE) verbose_testing
-	if [ @enable_subfiling@ = yes] ; then cd subfile && $(MAKE) verbose_testing ; fi
 
 ptest: all
 	if [ @has_fortran@ = yes ] ; then cd F90 && $(MAKE) ptest ; fi
@@ -73,6 +71,7 @@ ptest: all
 	cd nonblocking && $(MAKE) ptest
 	cd testcases && $(MAKE) ptest
 	cd header && $(MAKE) ptest
+	if [ @enable_subfiling@ = yes ] ; then cd subfile && $(MAKE) ptest ; fi
 
 include $(srcdir)/../rules.make
 
