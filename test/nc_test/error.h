@@ -1,8 +1,9 @@
-/*********************************************************************
- *   Copyright 1993, University Corporation for Atmospheric Research
- *   See netcdf/COPYRIGHT file for copying and redistribution conditions.
- *   $Header $
- *********************************************************************/
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
 
 #ifdef __cplusplus
 extern "C" {

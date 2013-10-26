@@ -1,8 +1,10 @@
-!/*********************************************************************
-! *   Copyright 1996, UCAR/Unidata
-! *   See netcdf/COPYRIGHT file for copying and redistribution conditions.
-! *   $Id: tests.inc 1292 2013-06-10 15:41:02Z wkliao $
-! *********************************************************************/
+!
+!  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
+!  See COPYRIGHT notice in top-level directory.
+!
+!  $Id$ 
+!
+
 !!!!
 ! Do not tabify this unless you like hitting the 72 char limit !!!
 !!!

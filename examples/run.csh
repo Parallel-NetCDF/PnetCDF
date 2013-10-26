@@ -17,7 +17,7 @@ set EXE_DIR=${PWD}
 foreach exe (collective_write \
              nonblocking_write)
     echo "---- ${EXE_DIR}/C/$exe ----"
-    ${MPI_RUN} ${EXE_DIR}/C/$exe 10 $FS
+    ${MPI_RUN} ${EXE_DIR}/C/$exe $FS 10
     echo""
 end 
 
@@ -39,7 +39,7 @@ end
 # run example programs in directory F77
 foreach exe (nonblocking_write)
     echo "---- ${EXE_DIR}/F77/$exe ----"
-    ${MPI_RUN} ${EXE_DIR}/F77/$exe 10 $FS
+    ${MPI_RUN} ${EXE_DIR}/F77/$exe $FS 10
     echo""
 end 
 
@@ -60,7 +60,7 @@ end
 # run example programs in directory F90
 foreach exe (nonblocking_write)
     echo "---- ${EXE_DIR}/F90/$exe ----"
-    ${MPI_RUN} ${EXE_DIR}/F90/$exe 10 $FS
+    ${MPI_RUN} ${EXE_DIR}/F90/$exe $FS 10
     echo""
 end 
 

@@ -1,3 +1,10 @@
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
+
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>

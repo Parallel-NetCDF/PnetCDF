@@ -1,7 +1,10 @@
-/* This is part of the netCDF package.
-   Copyright 2006 University Corporation for Atmospheric Research/Unidata.
-   See COPYRIGHT file for conditions of use.
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
 
+/*
    This is an example which reads some 4D pressure and
    temperatures. The data file read by this program is produced by the
    companion program pres_temp_4D_wr.c. It is intended to illustrate
@@ -13,7 +16,7 @@
    Full documentation of the netCDF C API can be found at:
    http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-c
 
-   $Id: pres_temp_4D_rd.c,v 1.5 2006/06/26 20:37:31 russ Exp $
+   $Id$
 */
 
 #include <stdio.h>
