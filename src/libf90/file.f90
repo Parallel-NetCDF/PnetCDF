@@ -80,26 +80,11 @@ function nf90mpi_redef(ncid)
   nf90mpi_redef = nfmpi_redef(ncid)
 end function nf90mpi_redef
 ! -------
-function nf90mpi_enddef(ncid, h_minfree, v_align, v_minfree, r_align)
-  integer,           intent( in) :: ncid
-  integer, optional, intent( in) :: h_minfree, v_align, v_minfree, r_align
-  integer                        :: nf90mpi_enddef
+function nf90mpi_enddef(ncid)
+  integer, intent( in) :: ncid
+  integer              :: nf90mpi_enddef
 
-  integer :: hMinFree, VAlign, VMinFree, RAlign
-
-!  if(.not. any( (/ present(h_minfree), present(v_align), &
-!       present(v_minfree), present(r_align) /) ) )then
-     nf90mpi_enddef = nfmpi_enddef(ncid)
-!  else 
-!     ! Default values per the man page
-!     hMinFree = 0; VMinFree = 0
-!     VAlign   = 4; RAlign   = 4
-!     if(present(h_minfree)) HMinFree = h_minfree
-!     if(present(v_align  )) VAlign   = v_align
-!     if(present(v_minfree)) VMinFree = v_minfree
-!     if(present(r_align  )) RAlign   = r_align
-!     nf90mpi_enddef = nfmpi__enddef(ncid, hMinFree, VAlign, VMinFree, RAlign)
-!  end if
+  nf90mpi_enddef = nfmpi_enddef(ncid)
 end function nf90mpi_enddef
 ! -------
 function nf90mpi_sync(ncid)
