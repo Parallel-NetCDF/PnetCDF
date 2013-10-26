@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
     for (j=0; j<NY; j++)
         for (i=0; i<NX; i++)
             if (buf[j][i] != j)
-                printf("buf[%d][%d] != %d\n",j,i,j,buf[j][i]);
+                printf("buf[%d][%d] != %d\n",j,i,buf[j][i]);
  
     err = ncmpi_close(ncid); ERR
 
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
         int val = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
             if (buf[j][i] != val) {
-                printf("Unexpected buf[%d][%d] != %d\n",j,i,val,buf[j][i]);
+                printf("Unexpected buf[%d][%d]=%d != %d\n",j,i,buf[j][i],val);
                 pass = 0;
             }
     }

@@ -19,7 +19,7 @@
 
 
 ! Is value within external type range? */
-      FUNCTION INRANGE(VALUE, DATATYPE)
+      logical FUNCTION INRANGE(VALUE, DATATYPE)
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
@@ -28,6 +28,9 @@
 
       DOUBLEPRECISION   MIN
       DOUBLEPRECISION   MAX
+
+      MIN = X_DOUBLE_MIN
+      MAX = X_DOUBLE_MAX
 
       IF (DATATYPE .EQ. NF_CHAR) THEN
           MIN = X_CHAR_MIN
@@ -72,12 +75,13 @@
       END
 
 
-      FUNCTION INRANGE_UCHAR(VALUE, DATATYPE)
+      logical FUNCTION INRANGE_UCHAR(VALUE, DATATYPE)
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
       include "pnetcdf.inc"
 #include "tests.inc"
+      LOGICAL INRANGE
 
       IF (DATATYPE .EQ. NF_BYTE) THEN
           ! INRANGE_UCHAR = (VALUE .GE. 0) .AND. (VALUE .LE. 255)
@@ -88,16 +92,20 @@
       END
 
 
-      FUNCTION INRANGE_FLOAT(VALUE, DATATYPE)
+      logical FUNCTION INRANGE_FLOAT(VALUE, DATATYPE)
       IMPLICIT  NONE
       DOUBLEPRECISION   VALUE
       INTEGER           DATATYPE
       include "pnetcdf.inc"
 #include "tests.inc"
+      double precision internal_max
 
       DOUBLEPRECISION   MIN
       DOUBLEPRECISION   MAX
       REAL              FVALUE
+
+      MIN = X_DOUBLE_MIN
+      MAX = X_DOUBLE_MAX
 
       IF (DATATYPE .EQ. NF_CHAR) THEN
           MIN = X_CHAR_MIN
@@ -156,13 +164,14 @@
 
 
 ! wrapper for inrange to handle special NF_BYTE/uchar adjustment */
-      function inrange3(value, datatype, itype)
+      logical function inrange3(value, datatype, itype)
       implicit          none
       doubleprecision   value
       integer           datatype
       integer           itype
       include "pnetcdf.inc"
 #include "tests.inc"
+      logical inrange_float, inrange
 
       if (itype .eq. NFT_REAL) then
           inrange3 = inrange_float(value, datatype)
@@ -176,7 +185,7 @@
 !  Does x == y, where one is internal and other external (netCDF)?  
 !  Use tolerant comparison based on IEEE FLT_EPSILON or DBL_EPSILON.
 !
-      function equal(x, y, extType, itype)
+      logical function equal(x, y, extType, itype)
       implicit  none
       doubleprecision   x
       doubleprecision   y
@@ -197,7 +206,7 @@
 
 
 ! Test whether two int vectors are equal. If so return 1, else 0  */
-        function int_vec_eq(v1, v2, n)
+        logical function int_vec_eq(v1, v2, n)
         implicit        none
         integer n
         integer v1(n)
@@ -225,7 +234,7 @@
 !  Generate random integer from 0 through n-1
 !  Like throwing an n-sided dice marked 0, 1, 2, ..., n-1
 !
-      function roll(n)
+      integer function roll(n)
       implicit  none
       include "pnetcdf.inc"
 #include "tests.inc"
@@ -246,7 +255,7 @@
 !      Authors: Harvey Davies, Unidata/UCAR, Boulder, Colorado
 !                Steve Emmerson, (same place)
 !
-        function index2ncindexes(index, rank, base, indexes)
+        integer function index2ncindexes(index, rank, base, indexes)
         implicit        none
         integer         index           !!/* index to be converted */
         integer         rank            !/* number of dimensions */
@@ -282,7 +291,7 @@
 !      Authors: Harvey Davies, Unidata/UCAR, Boulder, Colorado
 !                Steve Emmerson, (same place)
 !
-        function index2indexes(index, rank, base, indexes)
+        integer function index2indexes(index, rank, base, indexes)
         implicit        none
         integer         index           !/* index to be converted */
         integer         rank            !/* number of dimensions */
@@ -318,7 +327,7 @@
 !      Authors: Harvey Davies, Unidata/UCAR, Boulder, Colorado
 !                Steve Emmerson, (same place)
 !
-        function indexes2index(rank, indexes, base)
+        integer function indexes2index(rank, indexes, base)
         implicit        none
         integer         rank            !/* number of dimensions */
         integer         indexes(rank)   !/* FORTRAN indexes */
@@ -338,7 +347,7 @@
 
 
 ! Generate data values as function of type, rank (-1 for attribute), index */
-      function hash(type, rank, index) 
+      double precision function hash(type, rank, index) 
       implicit  none
       integer   type
       integer   rank
@@ -352,6 +361,7 @@
 
         !/* If vector then elements 1 & 2 are min & max. Elements 3 & 4 are */
         !/* just < min & > max (except for NF_CHAR & NF_DOUBLE) */
+      hash = 0
       if (abs(rank) .eq. 1 .and. index(1) .le. 4) then
           if (index(1) .eq. 1) then
               if (type .eq. NF_CHAR) then
@@ -508,12 +518,14 @@
 
 
 ! wrapper for hash to handle special NC_BYTE/uchar adjustment */
-      function hash4(type, rank, index, itype)
+      double precision function hash4(type, rank, index, itype)
       implicit  none
       integer   type
       integer   rank
       include "pnetcdf.inc"
 #include "tests.inc"
+      double precision hash
+
       integer(kind=MPI_OFFSET_KIND)   index(*)
       integer   itype
 
@@ -619,6 +631,7 @@
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2ncindexes
 
         integer(kind=MPI_OFFSET_KIND)         max_dim_len(MAX_RANK)
         character*1     type_letter(NTYPES)
@@ -775,6 +788,11 @@
         integer         ncid
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer VARID, NATTS, ATT_TYPE
+        CHARACTER*2 ATT_NAME
+        double precision hash
+        logical inrange
 
         integer                 err             !/* netCDF status */
         integer                 i               !/* variable index (0 => global 
@@ -846,6 +864,9 @@
         integer                 ncid
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes
+        double precision hash
+        logical inrange
 
         integer(kind=MPI_OFFSET_KIND)                 start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
@@ -983,6 +1004,9 @@
         integer         ncid
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes
+        double precision hash
+        logical inrange, equal
 
         integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
         integer                 err             !/* netCDF status */
@@ -1079,6 +1103,11 @@
         integer         ncid
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer VARID, NATTS, ATT_TYPE
+        CHARACTER*2 ATT_NAME
+        double precision hash
+        logical inrange, equal
 
         integer                 err             !/* netCDF status */
         integer                 i
@@ -1195,7 +1224,7 @@
 ! be handled in the same loop as variable attributes.
 !
 
-      FUNCTION VARID(VID)
+      integer FUNCTION VARID(VID)
       IMPLICIT NONE
       INTEGER VID
       include "pnetcdf.inc"
@@ -1208,7 +1237,7 @@
       end
 
 
-      FUNCTION NATTS(VID)
+      integer FUNCTION NATTS(VID)
       IMPLICIT  NONE
       INTEGER VID
       include "pnetcdf.inc"
@@ -1221,7 +1250,7 @@
       END
 
 
-      FUNCTION ATT_NAME(J,VID)
+      character*2 FUNCTION ATT_NAME(J,VID)
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
@@ -1235,7 +1264,7 @@
       END
 
 
-      FUNCTION ATT_TYPE(J,VID)
+      integer FUNCTION ATT_TYPE(J,VID)
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
@@ -1249,7 +1278,7 @@
       END
 
 
-      FUNCTION ATT_LEN(J,VID)
+      integer FUNCTION ATT_LEN(J,VID)
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
@@ -1266,13 +1295,13 @@
 !
 ! Return the minimum value of an internal type.
 !
-        function internal_min(type)
+        doubleprecision function internal_min(type)
         implicit        none
         integer         type
         doubleprecision min_schar
         doubleprecision min_short
         doubleprecision min_int
-        doubleprecision min_long
+        ! doubleprecision min_long
         doubleprecision max_float
         doubleprecision max_double
         doubleprecision min_int64
@@ -1343,13 +1372,13 @@
 !
 ! Return the maximum value of an internal type.
 !
-        function internal_max(type)
+        doubleprecision function internal_max(type)
         implicit        none
         integer         type
         doubleprecision max_schar
         doubleprecision max_short
         doubleprecision max_int
-        doubleprecision max_long
+        ! doubleprecision max_long
         doubleprecision max_float
         doubleprecision max_double
         doubleprecision max_int64
@@ -1420,7 +1449,7 @@
 !
 ! Return the minimum value of an external type.
 !
-        function external_min(type)
+        doubleprecision function external_min(type)
         implicit        none
         integer         type
         include "pnetcdf.inc"
@@ -1449,7 +1478,7 @@
 !
 ! Return the maximum value of an internal type.
 !
-        function external_max(type)
+        doubleprecision function external_max(type)
         implicit        none
         integer         type
         include "pnetcdf.inc"
@@ -1478,31 +1507,16 @@
 !
 ! Indicate whether or not a value lies in the range of an internal type.
 !
-        function in_internal_range(itype, value)
+        logical function in_internal_range(itype, value)
         implicit        none
         integer         itype
         doubleprecision value
         include "pnetcdf.inc"
 #include "tests.inc"
+        double precision internal_min, internal_max
 
         in_internal_range = value .ge. internal_min(itype) .and.
      +                      value .le. internal_max(itype)
         end
 
 
-!
-! Return the length of a character variable minus any trailing blanks.
-!
-        function len_trim(string)
-        implicit        none
-        character*(*)   string
-        include "pnetcdf.inc"
-#include "tests.inc"
-
-        do 1, len_trim = len(string), 1, -1
-            if (string(len_trim:len_trim) .ne. ' ')
-     +          goto 2
-1       continue
-
-2       return
-        end

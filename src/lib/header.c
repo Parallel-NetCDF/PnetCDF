@@ -1701,7 +1701,7 @@ ncmpii_comp_dims(int          safe_mode,
         err = NC_NOERR;
         if (root_name->nchars != local_name->nchars) {
             if (safe_mode)
-                printf("%s dimension name length (local=%d, root=%d)\n",
+                printf("%s dimension name length (local=%lld, root=%lld)\n",
                        WARN_STR, local_name->nchars, root_name->nchars);
             err = NC_EMULTIDEFINE_DIM_NAME;
         }
@@ -2168,7 +2168,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     if (root_ncp->numrecs != ncp->numrecs) {
         /* TODO: not sure how this can happen ... */
         if (ncp->safe_mode)
-            printf("%s number of records (local=%d, root=%d)\n",
+            printf("%s number of records (local=%lld, root=%lld)\n",
                    WARN_STR, ncp->numrecs, root_ncp->numrecs);
         /* overwrite the local vopy */
         ncp->numrecs = root_ncp->numrecs;

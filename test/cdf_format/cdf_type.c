@@ -17,11 +17,11 @@
 #define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
 
 /*----< test_attr_types() >---------------------------------------------------*/
+static
 int test_attr_types(char *filename,
                     int   format)
 {
-    int i, err, rank, ncid, cmode, nerr=0;
-    int dimid, varid[5], attr=0;
+    int i, err, rank, ncid, cmode, nerr=0, attr=0;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
     nc_type xtype[5]={NC_UBYTE, NC_USHORT, NC_UINT, NC_INT64, NC_UINT64};
@@ -47,6 +47,7 @@ int test_attr_types(char *filename,
 }
 
 /*----< test_var_types() >----------------------------------------------------*/
+static
 int test_var_types(char *filename,
                    int   format)
 {
@@ -80,7 +81,7 @@ int test_var_types(char *filename,
 int main(int argc, char **argv)
 {
     char *filename="testfile.nc";
-    int i, rank, nerr=0;
+    int rank, nerr=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

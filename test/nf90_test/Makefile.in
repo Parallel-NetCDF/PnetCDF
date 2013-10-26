@@ -66,7 +66,7 @@ verbose_testing: all
 	./nf90_test -v -c -5 && ./nf90_test -v -5
 
 #test.nc: 
-#	(cd ../nc_test && $(MAKE) nc_test && ./nc_test -c)
+#	(cd ../nc_test && $(MAKE) $(MFLAGS) nc_test && ./nc_test -c)
 #	cp ../nc_test/test.nc .
 
 include $(srcdir)/../../rules.make

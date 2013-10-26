@@ -54,7 +54,7 @@
           PARAMETER(NDIMS=2)
 
           character(LEN=128) filename, cmd
-          integer i, rank, nprocs, err, num_reqs, argc, iargc
+          integer rank, nprocs, err, num_reqs, argc, iargc
           integer ncid, cmode, varid, dimid(2), y, x
           real buffer(13)
           integer(kind=MPI_OFFSET_KIND) NY, NX

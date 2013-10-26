@@ -254,7 +254,7 @@
  999  call MPI_FINALIZE(ierr)
       end program main
        
-      subroutine writerecs(ncid,time_id,pressure_id)
+      subroutine writerecs(ncid,time_id)
 
       include "mpif.h"
       include "pnetcdf.inc"
@@ -263,7 +263,6 @@
       integer  ncid
 ! variable ids
       integer  time_id
-      integer  pressure_id
 
 ! error status return
       integer  iret
@@ -281,9 +280,7 @@
       parameter (pressure_rank = 3)
 ! starts and counts for array sections of record variables
       integer(kind=MPI_OFFSET_KIND) :: time_start(1), time_count(1)
-      integer  pressure_start(pressure_rank),
-     +         pressure_count(pressure_rank)
-       
+
 ! data variables
        
       integer  time_nr

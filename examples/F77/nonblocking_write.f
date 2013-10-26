@@ -41,7 +41,7 @@
           PARAMETER(NDIMS=3, NUM_VARS=10, BUFSIZE=512)
 
           character(LEN=128) filename, cmd, str
-          integer i, j, cmode, argc, iargc, err
+          integer i, cmode, argc, iargc, err
           integer rank, nprocs, ncid, len
           integer buf(BUFSIZE, NUM_VARS)
           integer psizes(NDIMS), dimids(NDIMS), varids(NUM_VARS)

@@ -11,7 +11,7 @@
       implicit none
 
       logical verbose
-      integer i, j, ncid, varid, retval, err, rank, nprocs, info
+      integer i, j, ncid, varid, err, rank, nprocs, info
       integer no_err, cmode
       integer dimid(2), req(2), status(2)
       integer(kind=MPI_OFFSET_KIND) start(2)
@@ -21,7 +21,7 @@
       integer(kind=MPI_OFFSET_KIND) bufsize
       real  var(6,4)
 
-      integer argc, IARGC, Write_File
+      integer argc, IARGC
       character(len=256) :: filename, cmd, msg
 
       call MPI_INIT(err)

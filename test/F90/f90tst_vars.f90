@@ -23,8 +23,8 @@ program f90tst_vars
   integer :: data_out(NY, NX), data_in(NY, NX)
 
   ! We need these ids and other gunk for netcdf.
-  integer :: ncid, varid, dimids(MAX_DIMS), chunksizes(MAX_DIMS), chunksizes_in(MAX_DIMS)
-  integer :: x_dimid, y_dimid, contig
+  integer :: ncid, varid, dimids(MAX_DIMS)
+  integer :: x_dimid, y_dimid
   integer :: mode_flag
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
   integer :: x, y

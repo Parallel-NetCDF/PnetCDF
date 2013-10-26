@@ -29,7 +29,7 @@ GARBAGE      = $(PROGS)
 PACKING_LIST = $(SRCS) Makefile.in README header.txt
 
 all: $(PROGS)
-	set -e; cd ../data && $(MAKE) all
+	set -e; cd ../data && $(MAKE) $(MFLAGS) all
 
 test_read: test_read.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)

@@ -945,6 +945,8 @@ C    try with same ncid for source and target, same variable
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, NATTS, ATT_LEN
 
         integer ncid_in
         integer ncid_out
@@ -1109,6 +1111,10 @@ C    try in data mode, check error
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, ATT_TYPE, NATTS, ATT_LEN
+        double precision hash
+        logical equal, inrange
 
         integer ncid
         integer vid
@@ -1159,7 +1165,7 @@ C    try in data mode, check error
      +                  'newName')
                 if (err .ne. NF_ENOTATT)
      +              call errore('bad attname: ', err)
-                newname = 'new_' // atnam
+                newname = 'new_' // trim(atnam)
                 err = nfmpi_rename_att(ncid, vid, atnam, newname)
                 if (err .ne. 0)
      +              call errore('nfmpi_rename_att: ', err)
@@ -1186,7 +1192,7 @@ C           /* Close. Reopen & check */
                 atnam = ATT_NAME(j,i)
                 attyp = ATT_TYPE(j,i)
                 attlength = ATT_LEN(j,i)
-                newname = 'new_' // atnam
+                newname = 'new_' // trim(atnam)
                 err = nfmpi_inq_attname(ncid, vid, j, name)
                 if (err .ne. 0)
      +              call errore('nfmpi_inq_attname: ', err)
@@ -1244,8 +1250,8 @@ C           /* Try making names even longer. Then restore original names */
             vid = VARID(i)
             do 8, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
-                oldname = 'new_' // atnam
-                newname = 'even_longer_' // atnam
+                oldname = 'new_' // trim(atnam)
+                newname = 'even_longer_' // trim(atnam)
                 err = nfmpi_rename_att(ncid, vid, oldname, newname)
                 if (err .ne. NF_ENOTINDEFINE)
      +              call errore('longer name in data mode: ', err)
@@ -1280,6 +1286,8 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, NATTS
 
         integer ncid
         integer err, flags
@@ -1423,7 +1431,13 @@ C    close file & create again for test using attribute _FillValue
         subroutine test_nfmpi_set_fill()
         implicit none
         include "pnetcdf.inc"
+
+        integer nok             !/* count of valid comparisons */
+        nok = 0
+#if 0   
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, ATT_TYPE, NATTS
 
         integer ncid
         integer vid
@@ -1431,15 +1445,12 @@ C    close file & create again for test using attribute _FillValue
         integer i
         integer j
         integer old_fillmode
-        integer nok             !/* count of valid comparisons */
         character*1 text
         doubleprecision value
         doubleprecision fill
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) length
 
-        nok = 0
-#if 0   
         value = 0
 
 C           /* bad ncid */
@@ -1693,7 +1704,7 @@ C     This function looks in a file for the netCDF magic number.
 #include "tests.inc"
       
       character*(*) path
-      integer version, iosnum
+      integer version
       character magic*4
       integer ver
       integer f

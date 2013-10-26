@@ -1293,7 +1293,7 @@
      +         nfmpi_get_varn_int2,   nfmpi_get_varn_int2_all,
      +         nfmpi_get_varn_int,    nfmpi_get_varn_int_all,
      +         nfmpi_get_varn_real,   nfmpi_get_varn_real_all,
-     +         nfmpi_get_varn_double, nfmpi_get_varn_double_all
+     +         nfmpi_get_varn_double, nfmpi_get_varn_double_all,
      +         nfmpi_get_varn_int8,   nfmpi_get_varn_int8_all
 
       external nfmpi_get_varn,        nfmpi_get_varn_all,

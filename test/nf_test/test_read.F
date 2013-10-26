@@ -12,6 +12,7 @@ C
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer         number_of_messages
         parameter       (number_of_messages = 27)
 
@@ -122,6 +123,7 @@ C On exit, any open netCDF files are closed.
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer err, flags
         integer ncid
         integer ncid2
@@ -217,6 +219,7 @@ C
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer err, flags
         integer nok
@@ -299,6 +302,7 @@ C On exit, any open netCDF files are closed.
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer ncid2                   !/* for scratch netCDF dataset */
         integer ndims                   !/* number of dimensions */
@@ -461,6 +465,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer ngatts                  !/* number of global attributes */
         integer err
@@ -499,6 +504,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer ndims
         integer err
@@ -536,6 +542,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer nvars
         integer err
@@ -573,6 +580,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer unlimdim
         integer err
@@ -611,6 +619,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer dimid
         integer i
@@ -657,6 +666,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer i
         integer err
@@ -708,6 +718,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer i
         integer err
@@ -753,6 +764,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer i
         integer err
@@ -798,6 +810,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer vid
         integer i
@@ -843,6 +856,8 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        logical int_vec_eq
+
         integer ncid
         integer i
         integer err
@@ -903,6 +918,8 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        logical int_vec_eq
+
         integer ncid
         integer i
         integer err
@@ -950,6 +967,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer i
         integer err
@@ -995,6 +1013,8 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer VARID, NATTS
+
         integer ncid
         integer i
         integer err
@@ -1023,7 +1043,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
             err = nfmpi_inq_varnatts(ncid, VARID(i), na)
             if (err .ne. 0) then
                 call errore('nfmpi_inq_varnatts: ', err)
-            else if (NATTS(i) .ne. na) then	! works for global attributes
+            else if (NATTS(i) .ne. na) then ! works for global attributes
                 call errori('natts unexpected: ', na)
             else
                 nok = nok + 1
@@ -1040,6 +1060,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer i
         integer err
@@ -1085,6 +1106,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+
         integer ncid
         integer i
         integer err
@@ -1129,6 +1151,10 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, NATTS
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+
         integer ncid
         integer i
         integer j
@@ -1189,6 +1215,10 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer NATTS
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+
         integer ncid
         integer i
         integer j
@@ -1247,6 +1277,9 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, NATTS
+
         integer ncid
         integer i
         integer j
@@ -1306,6 +1339,9 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer NATTS
+
         integer ncid
         integer i
         integer j
@@ -1368,6 +1404,9 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer NATTS
+
         integer ncid
         integer i
         integer j

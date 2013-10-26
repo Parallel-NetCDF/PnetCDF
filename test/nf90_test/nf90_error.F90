@@ -61,7 +61,7 @@
 
         nfails = nfails + 1
         if (nfails .le. max_nmpt) print *, msg, &
-            string(1:len_trim(string))
+            trim(string)
         end
 
 
