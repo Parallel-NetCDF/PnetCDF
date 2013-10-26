@@ -78,17 +78,17 @@ lib:		$(LIBRARY)
 shared_library:
 	@case `uname -sr` in \
 	HP-UX*) \
-	    $(MAKE) hpux_shared_library;; \
+	    $(MAKE) $(MFLAGS) hpux_shared_library;; \
 	IRIX*) \
-	    $(MAKE) irix_shared_library;; \
+	    $(MAKE) $(MFLAGS) irix_shared_library;; \
 	Linux*) \
-	    $(MAKE) linux_shared_library;; \
+	    $(MAKE) $(MFLAGS) linux_shared_library;; \
 	OSF1*) \
-	    $(MAKE) osf1_shared_library;; \
+	    $(MAKE) $(MFLAGS) osf1_shared_library;; \
 	'SunOS 4'*) \
-	    $(MAKE) sunos4_shared_library;; \
+	    $(MAKE) $(MFLAGS) sunos4_shared_library;; \
 	'SunOS 5'*) \
-	    $(MAKE) sunos5_shared_library;; \
+	    $(MAKE) $(MFLAGS) sunos5_shared_library;; \
 	*) \
 	    echo 1>&2 "Don't know how to make a shared library" \
 		"on this system"; \
@@ -153,18 +153,18 @@ $(BINDIR)/$(PROGRAM):	$(BINDIR) $(PROGRAM)
 #$(MANDIR)/man3f90 :		$(MANDIR)
 #	-test -d $@ || mkdir $@
 
-$(MANDIR)/man1/$(MANUAL):	$(MANDIR)/man1 $(MANUAL)
-	$(INSTALL) $(srcdir)/$(MANUAL) $@
-$(MANDIR)/man3/$(MANUAL):	$(MANDIR)/man3 $(MANUAL)
-	$(INSTALL) $(srcdir)/$(MANUAL) $@
-$(MANDIR)/man3f/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
-				$(MANDIR)/man3f
-	$(RM) -f $@
-	$(LN_S) $(MANDIR)/man3/$(MANUAL) $@
-$(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
-				$(MANDIR)/man3f90
-	$(RM) -f $@
-	$(LN_S) $(MANDIR)/man3/$(MANUAL) $@
+# $(MANDIR)/man1/$(MANUAL):	$(MANDIR)/man1 $(MANUAL)
+# 	$(INSTALL) $(srcdir)/$(MANUAL) $@
+# $(MANDIR)/man3/$(MANUAL):	$(MANDIR)/man3 $(MANUAL)
+# 	$(INSTALL) $(srcdir)/$(MANUAL) $@
+# $(MANDIR)/man3f/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
+# 				$(MANDIR)/man3f
+# 	$(RM) -f $@
+# 	$(LN_S) $(MANDIR)/man3/$(MANUAL) $@
+# $(MANDIR)/man3f90/$(MANUAL):	$(MANDIR)/man3 $(MANDIR)/man3/$(MANUAL) \
+# 				$(MANDIR)/man3f90
+# 	$(RM) -f $@
+# 	$(LN_S) $(MANDIR)/man3/$(MANUAL) $@
 
 ################################################################################
 # Cleanup:
@@ -173,25 +173,28 @@ clean:		FORCE
 	@if [ -n "$(SUBDIRS)" ]; then \
 	    subdirs="$(SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
-		(cd $$subdir && \
-		$(MAKE) clean) || exit 1; \
+		(cd $$subdir && $(MAKE) $(MFLAGS) clean) || exit 1; \
 	    done; \
 	fi
-	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core $(GARBAGE) \
-		*.gcda *.gcno gmon.out
+	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
+		  *.gcda *.gcno gmon.out
 
 distclean:	FORCE
 	@if [ -n "$(SUBDIRS)" ]; then \
 	    subdirs="$(SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
-		(cd $$subdir && \
-		$(MAKE) distclean) || exit 1; \
+		(cd $$subdir && $(MAKE) $(MFLAGS) distclean) || exit 1; \
+	    done; \
+	fi
+	@if [ -n "$(SUBDIRS)" ]; then \
+	    subdirs="$(SUBDIRS)"; \
+	    for subdir in $$subdirs; do \
 		if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $$subdir ; fi \
 	    done; \
 	fi
 	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
-	    MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files \
-		*.gcda *.gcno gmon.out
+		  *.gcda *.gcno gmon.out \
+	          MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files
 	@$(RM) -rf SunWS_cache
 
 ################################################################################
@@ -222,7 +225,7 @@ MANIFEST.echo:	FORCE
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && \
 		echo 1>&2 Creating $@ in `pwd` && \
-		$(MAKE) MANIFEST.echo | sed "s|^|$$subdir/|") || exit 1; \
+		$(MAKE) $(MFLAGS) MANIFEST.echo | sed "s|^|$$subdir/|") || exit 1; \
 	    done; \
 	else \
 	   :; \
@@ -237,7 +240,7 @@ ensure_manifest:	$(PACKING_LIST) FORCE
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && \
 		echo 1>&2 Creating $@ in `pwd` && \
-		$(MAKE) ensure_manifest) || exit 1; \
+		$(MAKE) $(MFLAGS) ensure_manifest) || exit 1; \
 	    done; \
 	else \
 	   :; \
