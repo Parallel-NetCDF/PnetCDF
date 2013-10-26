@@ -6,8 +6,8 @@ dnl
 AC_PREREQ(2.59)
 AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 
-dnl src/lib/ncconfig.h must be the first, as it will be created by autoreconf (autoheader)
-AC_CONFIG_HEADERS([src/lib/ncconfig.h src/libf/nfconfig_inc])
+dnl ncconfig.h.in will be created by autoreconf (autoheader)
+AC_CONFIG_HEADERS([src/lib/ncconfig.h])
 
 AC_CONFIG_AUX_DIR(./scripts)
 AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
@@ -62,6 +62,7 @@ AC_SUBST(PNETCDF_VERSION_PRE)
 AC_SUBST(PNETCDF_VERSION)
 
 dnl these used to live in acconfig.h
+dnl autoheader only adds these templates to the first invocation of AC_CONFIG_HEADERS
 AH_TEMPLATE([NCBYTE_T],                 [Type of NC_BYTE])
 AH_TEMPLATE([NCSHORT_T],                [Type of NC_SHORT])
 AH_TEMPLATE([NF_DOUBLEPRECISION_IS_C_], [C type for Fortran dobule])
@@ -572,6 +573,7 @@ dnl Check for presence of various MPI error classes.
 dnl These could be enums, so we have to do compile checks.
 UD_HAS_MPI_CONST(MPI_ERR_FILE_EXISTS)
 UD_HAS_MPI_CONST(MPI_ERR_NO_SUCH_FILE)
+UD_HAS_MPI_CONST(MPI_ERR_AMODE)
 
 dnl Check for presence of an MPI datatype.
 dnl These could be enums, so we have to do compile checks.
@@ -724,6 +726,12 @@ if test "x$ac_cv_prog_f90_uppercase_mod" = xyes ; then
 fi
 AC_SUBST(UPPER_CASE_MOD)
 
+if test "$enable_fortran" = yes ; then
+   if test "x${enable_strict}" = xyes; then
+      FPPFLAGS="${FPPFLAGS} -Wall"
+   fi
+fi
+
 has_fortran=$enable_fortran
 AC_SUBST(has_fortran)
 
@@ -856,17 +864,18 @@ CONFIG_FILES="macros.make \
               man/Makefile \
               scripts/Makefile \
               benchmarks/Makefile \
-              benchmarks/C/Makefile \
-              benchmarks/FLASH-IO/Makefile \
-              src/libf/Makefile \
-              src/libf/pnetcdf.inc \
-              src/libf90/Makefile"
+              benchmarks/C/Makefile"
 if test "$enable_fortran" = yes ; then
+   AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
    CONFIG_FILES="${CONFIG_FILES} test/nf_test/Makefile \
                  test/nf90_test/Makefile \
                  test/F90/Makefile \
                  examples/F77/Makefile \
-                 examples/F90/Makefile"
+                 examples/F90/Makefile \
+                 src/libf90/Makefile \
+                 src/libf/Makefile \
+                 src/libf/pnetcdf.inc \
+                 benchmarks/FLASH-IO/Makefile"
 fi
 if test "$enable_subfiling" = yes; then
    CONFIG_FILES="${CONFIG_FILES} test/subfile/Makefile"
