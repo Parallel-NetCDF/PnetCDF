@@ -11,25 +11,42 @@ VPATH = @srcdir@
 
 include ../macros.make
 
-MANUAL = pnetcdf.3
+MANUAL_C   = pnetcdf.3
+MANUAL_F77 = pnetcdf_f77.3
+MANUAL_F90 = $(srcdir)/pnetcdf_f90.3
 
-PACKING_LIST = Makefile.in \
-	       netcdf.m4
+MANUAL = $(MANUAL_C)
+ifeq (@has_fortran@, yes)
+MANUAL += $(MANUAL_F77)
+MANUAL += $(MANUAL_F90)
+endif
 
-GARBAGE = $(MANUAL)
+PACKING_LIST = pnetcdf.m4 $(MANUAL_F90) \
+               Makefile.in
+
+GARBAGE = $(MANUAL_C) $(MANUAL_F77)
 
 all: $(MANUAL)
 
-$(MANUAL): $(srcdir)/netcdf.m4
-	$(M4) $(M4FLAGS) -DAPI=C $? >$@  || $(RM) -f $@
+pnetcdf.3: pnetcdf.m4
+	$(M4) $(M4FLAGS) -DAPI=C $? > $@  || $(RM) -f $@
+
+pnetcdf_f77.3: pnetcdf.m4
+	$(M4) $(M4FLAGS) -DAPI=F $? > $@  || $(RM) -f $@
 
 test:
 
 install: $(MANUAL)
 	$(INSTALL) -d -m 755 $(MANDIR)/man3
-	$(INSTALL_DATA) $(MANUAL) $(MANDIR)/man3/$(MANUAL)
+	@for i in $(MANUAL) ; do ( \
+	    fn=`basename $$i` ; \
+	    $(INSTALL_DATA) $$i $(MANDIR)/man3/$$fn \
+	; ) ; done
 
 uninstall:
-	$(RM) -f $(MANDIR)/man3/$(MANUAL)
+	@for i in $(MANUAL) ; do ( \
+	    fn=`basename $$i` ; \
+	    $(RM) -f $(MANDIR)/man3/$$fn \
+	; ) ; done
 
 include $(srcdir)/../rules.make
