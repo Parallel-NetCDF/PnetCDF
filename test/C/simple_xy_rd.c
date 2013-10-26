@@ -12,7 +12,7 @@
    Full documentation of the netCDF C API can be found at:
    http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-c
 
-   $Id: simple_xy_rd.c,v 1.9 2006/08/17 23:00:55 russ Exp $
+   $Id$
 */
 #include <stdlib.h>
 #include <stdio.h>

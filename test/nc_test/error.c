@@ -1,8 +1,9 @@
-/*********************************************************************
- *   Copyright 1996, UCAR/Unidata
- *   See netcdf/COPYRIGHT file for copying and redistribution conditions.
- *   $Id$
- *********************************************************************/
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ *  $Id$
+ */
 
 #include <stddef.h>	/* because gcc 2.7.2.2 doesn't define size_t */
 			/* in <stdio.h> and it cannot hurt */

@@ -13,7 +13,7 @@
    Full documentation of the netCDF C API can be found at:
    http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-c
 
-   $Id: sfc_pres_temp_wr.c,v 1.3 2006/06/13 20:46:16 ed Exp $
+   $Id$
 */
 
 #include <stdio.h>

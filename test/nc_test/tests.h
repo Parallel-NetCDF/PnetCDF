@@ -1,8 +1,9 @@
-/*********************************************************************
- *   Copyright 1996, UCAR/Unidata
- *   See netcdf/COPYRIGHT file for copying and redistribution conditions.
- *   $Id$
- *********************************************************************/
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
 
 #include <stdio.h>
 #include <string.h>

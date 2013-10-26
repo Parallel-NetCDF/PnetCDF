@@ -28,10 +28,10 @@ and the I/O time of which dominates the entire benchmark.
 
 For some detailed description and an illustration of data partitioning pattern,
 please refer to the following paper.
-    W. Liao and A. Choudhary. Dynamically Adapting File Domain Partitioning
-    Methods for Collective I/O Based on Underlying Parallel File System
-    Locking Protocols. In the Proceedings of International Conference for
-    High Performance Computing, Networking, Storage and Analysis, Austin,
+    Wei-keng Liao and Alok Choudhary. Dynamically Adapting File Domain
+    Partitioning Methods for Collective I/O Based on Underlying Parallel File
+    System Locking Protocols. In the Proceedings of International Conference
+    for High Performance Computing, Networking, Storage and Analysis, Austin,
     Texas, November 2008.
 
 To compile:

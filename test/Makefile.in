@@ -39,7 +39,7 @@ endif
 
 PACKING_LIST = Makefile.in
 
-PACKING_SUBDIRS = $(SUBDIRS) nf_test nf90_test F90
+PACKING_SUBDIRS = $(SUBDIRS) nf_test nf90_test F90 subfile
 
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) all ; ) ; done

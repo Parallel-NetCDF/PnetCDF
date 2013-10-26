@@ -1,7 +1,11 @@
-/******************************************************************************
+/*
+ *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
 
-  This is to test MPInetcdf, the parallel netCDF library being developed
-  at Argonne National Lab and Northwestern Univ.
+
+/******************************************************************************
 
   This code writes one or two arrays, tt[k][j][i] (and smf[j][i], if
   'only_3d' is 0), into the file 'csnap.nc.' It then reads the field(s)
