@@ -51,6 +51,9 @@ PACKING_LIST = $(F90_SRCS) \
                varn_interface.m4 \
                varnx_interface.m4
 
+# varn_interface.m4 varnx_interface.m4 are currenly not used
+# save them for future use.
+
 GARBAGE		= $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90)
 DIST_GARBAGE	=
 
