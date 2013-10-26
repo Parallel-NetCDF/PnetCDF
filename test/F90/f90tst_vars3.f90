@@ -24,7 +24,6 @@ program f90tst_vars3
 
   ! We need these ids and other gunk for netcdf.
   integer :: ncid, varid1, varid2, varid3, varid4, varid5, dimids(MAX_DIMS)
-  integer :: chunksizes(MAX_DIMS), chunksizes_in(MAX_DIMS)
   integer :: x_dimid, y_dimid
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
   integer :: x, y
@@ -43,10 +42,7 @@ program f90tst_vars3
   integer :: varid1_in, varid2_in, varid3_in, varid4_in, varid5_in
   integer :: xtype_in, ndims_in, natts_in, dimids_in(MAX_DIMS)
   character (len = nf90_max_name) :: name_in
-  integer :: endianness_in, deflate_level_in
-  logical :: shuffle_in, fletcher32_in, contiguous_in
   integer (kind = 8) :: toe_san_in(1)
-  integer :: cache_size_in, cache_nelems_in, cache_preemption_in
   integer :: cmode, err
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
   character(LEN=128) filename, cmd, msg
@@ -92,7 +88,6 @@ program f90tst_vars3
   dimids =  (/ y_dimid, x_dimid /)
 
   ! Define some variables. 
-  chunksizes = (/ NY, NX /)
   call check(nf90mpi_def_var(ncid, VAR1_NAME, NF90_INT, dimids, varid1))
   call check(nf90mpi_def_var(ncid, VAR2_NAME, NF90_INT, dimids, varid2))
   call check(nf90mpi_def_var(ncid, VAR3_NAME, NF90_INT64, varid3))

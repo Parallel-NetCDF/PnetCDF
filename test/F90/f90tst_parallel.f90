@@ -50,12 +50,12 @@ program f90tst_parallel
   integer, parameter :: MAX_DIMS = 2
   integer, parameter :: NX = 16, NY = 16
   integer, parameter :: NUM_PROC = 4
-  integer :: ncid, varid, dimids(MAX_DIMS), chunksizes(MAX_DIMS), chunksizes_in(MAX_DIMS)
-  integer :: x_dimid, y_dimid, contig
+  integer :: ncid, varid, dimids(MAX_DIMS)
+  integer :: x_dimid, y_dimid
   integer :: data_out(NY / 2, NX / 2), data_in(NY / 2, NX / 2)
   integer :: mode_flag
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
-  integer :: x, y, retval
+  integer :: x, y
   integer :: p, my_rank, ierr
   integer(KIND=MPI_OFFSET_KIND) :: start(MAX_DIMS), count(MAX_DIMS)
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll

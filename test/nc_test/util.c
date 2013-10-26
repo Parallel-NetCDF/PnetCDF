@@ -41,6 +41,7 @@ inRange(const double value, const nc_type datatype)
     }
 }
 
+#ifdef OLD_CODES
 static int
 inRange_uchar(const double value, const nc_type datatype)
 {
@@ -59,6 +60,7 @@ inRange_uchar(const double value, const nc_type datatype)
     /* else */
     return inRange(value, datatype);
 }
+#endif
 
 static int
 inRange_float(const double value, const nc_type datatype)

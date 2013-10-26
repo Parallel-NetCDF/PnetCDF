@@ -217,48 +217,6 @@
      *                          MAX_NMPT,
      *                          NFAILSTOTAL
 
-
-!    /* Functions for accessing attribute test data */
-!    /* varid is -1 for NC_GLOBAL so can do global atts in same loop */
-
-!/*      EXTERNAL       ATT_NAME */
-
-      INTEGER           VARID
-      INTEGER           NATTS
-      CHARACTER*2       ATT_NAME
-      INTEGER           ATT_TYPE
-      integer(kind=MPI_OFFSET_KIND) ATT_LEN
-
-
-      LOGICAL           INRANGE
-      LOGICAL           INRANGE_UCHAR
-      LOGICAL           INRANGE_FLOAT
-
-      LOGICAL           INRANGE3
-      LOGICAL           IN_INTERNAL_RANGE
-      LOGICAL           EQUAL
-      LOGICAL           INT_VEC_EQ
-      INTEGER           ROLL
-      INTEGER           INDEX2INDEXES
-      INTEGER           INDEX2NCINDEXES
-      INTEGER           INDEXES2INDEX
-      INTEGER           NC2DBL
-      INTEGER           DBL2NC
-      INTEGER           LEN_TRIM
-      DOUBLEPRECISION   HASH
-      DOUBLEPRECISION   HASH4
-      DOUBLEPRECISION   HASH_TEXT
-      DOUBLEPRECISION   HASH_INT1
-      DOUBLEPRECISION   HASH_INT2
-      DOUBLEPRECISION   HASH_INT
-      DOUBLEPRECISION   HASH_INT8
-      DOUBLEPRECISION   HASH_REAL
-      DOUBLEPRECISION   HASH_DOUBLE
-      DOUBLEPRECISION   INTERNAL_MIN
-      DOUBLEPRECISION   INTERNAL_MAX
-      DOUBLEPRECISION   EXTERNAL_MIN
-      DOUBLEPRECISION   EXTERNAL_MAX
-
       integer numTypes, numVars, numGatts, cdf_format, extra_flags
       common / PROBLEM_SIZE / numTypes, numVars, numGatts, cdf_format,
      +                        extra_flags

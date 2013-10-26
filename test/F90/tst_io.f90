@@ -14,11 +14,11 @@ program tst_io
   implicit none
   integer(kind=8), parameter :: prsz1 = 50, prsz2 = 50, &
        prsz3 = 50, prsz4 = 50, repct = 10
-  integer :: i1, i2, i3, i4, j, k, ticksPerSec
+  integer :: i1, i2, i3, i4
   real :: psr
-  integer :: clockRate, err
-  integer :: start, now, wrint1, ncint1, wrint2, ncint2, &
-       wrint3, ncint3, iosb, iosn, size
+  integer :: err
+  integer :: start, now, ncint1, ncint2, size
+  ! integer :: wrint1, wrint2, wrint3, ncint3
   real, dimension (prsz1, prsz2, prsz3, prsz4) :: s, t, u, v, w, x, y, z
   character(len = *), parameter :: nclFilenm1 = 'tst_io1.nc', &
        nclFilenm2 = 'tst_io2.nc', nclFilenm3 = 'tst_io3.nc', &
@@ -28,7 +28,7 @@ program tst_io
        nclFilenm10 = 'tst_io10.nc', nclFilenm11 = 'tst_io11.nc'
   ! needed for netcdf
   integer :: ncid, x1id, x2id, x3id, x4id, vrid
-  integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
+  ! integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
   character(LEN=128) dirpath, cmd, msg
   integer argc, iargc, my_rank, p
 
@@ -80,7 +80,7 @@ program tst_io
   ncint1 = now - start
 !   print 3, size, "MB"," netcdf write = ", ncint1 * clockRate, &
 !        real(ncint1)/real (wrint1)
-3 format("Time for", i5, a, a25, i7, " msec. Spd ratio = ", f5.2)
+! 3 format("Time for", i5, a, a25, i7, " msec. Spd ratio = ", f5.2)
 
   call check (NF90MPI_CLOSE(ncid), 14)
 
@@ -97,7 +97,7 @@ program tst_io
   ncint2 = now - start
 !   print 4, size, repct, " repeated netcdf writes = ", ncint2 * clockRate, &
 !        real(ncint2)/real(wrint2);
-4 format("Time for", i5, "MB", i3, a22, i7, " msec. Spd ratio = ", f5.2)
+! 4 format("Time for", i5, "MB", i3, a22, i7, " msec. Spd ratio = ", f5.2)
 
 !  call system_clock(start)
 !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm3, ncid, vrids, s, prsz1, prsz2, prsz3, prsz4, &

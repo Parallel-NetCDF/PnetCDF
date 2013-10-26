@@ -112,7 +112,6 @@
         character*1     opt
         integer         lastopt
         logical         skiparg
-        integer         status
         integer         err                       
 
         external        test_nfmpi_strerror

@@ -70,12 +70,12 @@
           PARAMETER(NX=10, NY=4)
 
           character(LEN=128) filename, cmd
-          integer i, j, rank, nprocs, err, num_reqs, argc, iargc
-          integer ncid, cmode, varid, dimid(2), stride
+          integer i, rank, nprocs, err, num_reqs, argc, iargc
+          integer ncid, cmode, varid, dimid(2)
           integer buf(NX, NY)
           integer reqs(NY), sts(NY)
           integer(kind=MPI_OFFSET_KIND) G_NY, myOff, block_start,
-     +                                  block_len, global_nx, global_ny
+     +                                  block_len, global_nx
           integer(kind=MPI_OFFSET_KIND) start(2), count(2)
 
           call MPI_Init(err)

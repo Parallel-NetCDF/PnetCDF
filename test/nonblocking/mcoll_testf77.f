@@ -62,13 +62,10 @@
 
       real*4  filsiz
               
-      real*4  rdt_g(2)
       real*4  rdt_l(2)
       real*4  wrt_g(2)
       real*4  wrt_l(2)
               
-      real*4  rrates_g(2)
-      real*4  rrates_l(2)
       real*4  wrates_g(2)
       real*4  wrates_l(2)
 
@@ -147,10 +144,10 @@
 !     &  locsiz_3d(1), locsiz_3d(2), locsiz_3d(3),
 !     &  kstart, jstart, istart
 
- 900  format ("mype  pe_coords    totsiz_3d         locsiz_3d       ",
-     +        "kstart,jstart,istart")
- 902  format (i3,3x,i2,1x,i2,1x,i2,2x,i4,1x,i4,1x,i4,4x,i4,1x,i4,1x,
-     +        i4,3x,i6,1x,i6,1x,i6)
+! 900  format ("mype  pe_coords    totsiz_3d         locsiz_3d       ",
+!     +        "kstart,jstart,istart")
+! 902  format (i3,3x,i2,1x,i2,1x,i2,2x,i4,1x,i4,1x,i4,4x,i4,1x,i4,1x,
+!     +        i4,3x,i6,1x,i6,1x,i6)
 
 
 !     -------------------------
@@ -160,7 +157,7 @@
       locsiz = locsiz_3d(1) * locsiz_3d(2) * locsiz_3d(3)
 
 !     ===============
-      ierr = Write_File(filename, NWRITES, mype, comm_cart,
+      ierr = Write_File(filename, NWRITES, comm_cart,
      +                istart, jstart, kstart, locsiz, locsiz_3d,
      +                TOTSIZ_3D, wrt_l)
       if (ierr .NE. NF_NOERR) then
@@ -186,11 +183,11 @@
 !        Write (6,910) wrates_g(1), wrates_g(2)
 !      end if 
 
- 905  format ("File size: ", e10.3, " MB")
- 910  format ("    Write: ", f9.3, " MB/s  (eff., ", f9.3, " MB/s)")
- 915  format ("    Read : ", f9.3, " MB/s  (eff., ", f9.3, " MB/s)")
- 920  format ("Total number PEs: ", i4)
- 922  format (e11.3, e11.3, f9.3, e11.3, e11.3, f9.3)
+! 905  format ("File size: ", e10.3, " MB")
+! 910  format ("    Write: ", f9.3, " MB/s  (eff., ", f9.3, " MB/s)")
+! 915  format ("    Read : ", f9.3, " MB/s  (eff., ", f9.3, " MB/s)")
+! 920  format ("Total number PEs: ", i4)
+! 922  format (e11.3, e11.3, f9.3, e11.3, e11.3, f9.3)
 
 
       call MPI_Comm_Free (comm_cart, ierr)
@@ -208,7 +205,7 @@
 !     ------------
 
 
-      integer function Write_File(filename, nwrites, mype, comm_cart,
+      integer function Write_File(filename, nwrites, comm_cart,
      +                      istart, jstart, kstart, locsiz,
      +                      locsiz_3d, totsiz_3d, wrt_l)
 
@@ -222,7 +219,6 @@
 
       character (len=*) filename
       integer nwrites
-      integer mype
       integer comm_cart
       INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart
       INTEGER(KIND=MPI_OFFSET_KIND) locsiz
@@ -239,9 +235,7 @@
       integer ncid
       integer nw
       integer tt1_id
-      integer tt2_id
       integer req1
-      integer req2
       integer req(nwrites)
       integer stat(nwrites)
         
@@ -255,7 +249,6 @@
       integer max_loc_size
       parameter( max_loc_size = 20000000 )
       real*4  tt1(max_loc_size)   ! Need tt(locsiz)
-      real*4  tt2(max_loc_size)   ! Need tt(locsiz)
 
 
       if (locsiz .gt. MAX_LOC_SIZE) then
@@ -326,7 +319,6 @@
      +                               count_3d, tt1, req1)
         if (Write_File .NE. NF_NOERR) return
          req(nw)=req1
-!        if (mype == 0) Write (6,900) mype, req1
 
          start_3d(1) = start_3d(1) + count_3d(1)
       end do
@@ -339,7 +331,7 @@
       if (Write_File .NE. NF_NOERR) return
 !       ================
 
- 900  format ("mynod:", i1, " reqid : ", i1)
+! 900  format ("mynod:", i1, " reqid : ", i1)
 
 
       call MPI_Barrier (comm_cart, ierr)
@@ -348,10 +340,6 @@
 
       if (t2 - t1 < wrt_l(1)) wrt_l(1) = t2 - t1
       if (t3 - t2 < wrt_l(2)) wrt_l(2) = t3 - t2
-
-!        if (mype == 0) Write (6,950) nw, t2-t1, t3-t2
-
- 950  format ("write ", i1, ": ", e10.3, 1x, e10.3)
 
       Return
 
@@ -456,7 +444,7 @@
 !     ------------
 
 
-      subroutine Compare_Vec(mype, comm_cart, locsiz, tt, buf)
+      subroutine Compare_Vec(comm_cart, locsiz, tt, buf)
 
       implicit none
       include "mpif.h"
@@ -465,7 +453,6 @@
 !     Argument declarations.
 !     ----------------------
 
-      integer mype
       integer comm_cart
       INTEGER(KIND=MPI_OFFSET_KIND) locsiz
       real*4  tt (locsiz)
@@ -517,10 +504,6 @@
       delmax = Sqrt (wr(3) * delmax/wr(2))  ! normalized max difference
       delmin = Sqrt (wr(3) * delmin/wr(2))  ! normalized min difference
 
-
-!      if (mype == 0) Write (6,990) diff, delmax, delmin
-
- 990  format ("diff, delmax, delmin = ", e10.3, 1x, e10.3, 1x, e10.3)
 
       Return
 

@@ -31,7 +31,7 @@ program tst_types2
        data7_out(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN, DLEN)
   integer (kind = 8), parameter :: REALLY_BIG = 9223372036854775807_8
 
-  integer :: cmode, info, err
+  integer :: cmode, err
   integer(KIND=MPI_OFFSET_KIND) :: dlen_ll
   character(LEN=128) filename, cmd, msg
   integer my_rank, p, argc, iargc

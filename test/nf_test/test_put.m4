@@ -97,7 +97,7 @@ define([HASH],
 C
 C ensure hash value within range for internal TYPE
 C
-        function hash_$1(type, rank, index, itype)
+        doubleprecision function hash_$1(type, rank, index, itype)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -107,6 +107,7 @@ C
         integer itype
         doubleprecision minimum
         doubleprecision maximum
+        doubleprecision internal_min, internal_max, hash4
 
         minimum = internal_min(itype)
         maximum = internal_max(itype)
@@ -128,6 +129,10 @@ C
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes
+        double precision hash4
+        logical equal, inRange3, in_internal_range
+
         character*(*)   filename
         integer  ncid          !/* netCDF id */
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -244,6 +249,12 @@ C */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, NATTS
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        double precision hash4
+        logical equal, inRange3, in_internal_range
+
         integer ncid
         integer  err
         integer  i
@@ -344,6 +355,10 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer i
         integer j
@@ -442,6 +457,10 @@ define([TEST_NFMPI_PUT_VAR],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer vid
         integer i
@@ -592,6 +611,10 @@ define([TEST_NFMPI_PUT_VARA],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer i
         integer j
@@ -790,6 +813,10 @@ define([TEST_NFMPI_PUT_VARS],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        double precision hash_$1
+        logical inRange3
+        integer roll, index2indexes
+
         integer ncid
         integer d
         integer i
@@ -995,6 +1022,10 @@ define([TEST_NFMPI_PUT_VARM],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer d
         integer i
@@ -1208,6 +1239,12 @@ define([TEST_NFMPI_PUT_ATT],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, NATTS
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer i
         integer j
@@ -1395,6 +1432,11 @@ TEST_NFMPI_PUT_VARM(double)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, NATTS
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        double precision hash
+
         integer ncid
         integer i
         integer j

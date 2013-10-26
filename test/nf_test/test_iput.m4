@@ -98,6 +98,10 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer i
         integer j
@@ -195,6 +199,10 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer vid
         integer i
@@ -352,6 +360,10 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer i
         integer j
@@ -536,6 +548,10 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer d
         integer i
@@ -731,6 +747,10 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash_$1
+        logical inRange3
+
         integer ncid
         integer d
         integer i

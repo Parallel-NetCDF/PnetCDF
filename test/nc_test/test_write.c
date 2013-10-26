@@ -1410,10 +1410,10 @@ test_ncmpi_copy_att(void)
     int varid;
     int err, nok=0;
     int i;
-    int j;
+    int j=0;
     char *name;                 /* of att */
     nc_type datatype;           /* of att */
-    MPI_Offset length;              /* of att */
+    MPI_Offset length;          /* of att */
     char  value;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid_in);

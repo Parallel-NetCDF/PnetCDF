@@ -219,7 +219,7 @@
 ! create a character variable to hold the string representation of the block
 ! number.  Note this is set to be 4 characters long (i.e. max = 9999).  
       character*4  fnum_string
-      character*80 filename, outstr
+      character*80 filename
 
 ! create a temporary array to hold the 4 character variable names
 ! this will include those defined in definitions.fh and network_common.fh
@@ -236,7 +236,9 @@
 
       character (len=40) :: flash_release
       double precision unk_buf(1,nxb,nyb,nzb,maxblocks)
+#ifdef TIMERS
       double precision time_start, time_io
+#endif
       double precision coord_buf(ndim,lnblocks)
       double precision bs_buf(ndim,lnblocks)
       double precision bb_buf(2,ndim,lnblocks)
@@ -502,7 +504,9 @@
 ! processor.  The HDF 5 memory space functionality will pick just the 
 ! interior cells to write to disk.
 !-----------------------------------------------------------------------------
+#ifdef TIMERS
       time_io = 0.e0
+#endif
 
       do i = 1, nvar
          record_label = unklabels(i)

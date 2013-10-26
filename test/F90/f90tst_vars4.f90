@@ -21,15 +21,13 @@ program f90tst_vars4
   integer :: data_out(NY, NX), data_in(NY, NX)
 
   ! We need these ids and other gunk for netcdf.
-  integer :: ncid, varid, dimids(MAX_DIMS), chunksizes(MAX_DIMS)
-  integer :: x_dimid, y_dimid, contig
+  integer :: ncid, varid, dimids(MAX_DIMS)
+  integer :: x_dimid, y_dimid
   integer :: mode_flag
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
   integer :: x, y
   integer, parameter :: CACHE_SIZE = 1000000
-  integer :: xtype_in, natts_in, dimids_in(MAX_DIMS), chunksizes_in(MAX_DIMS)
-  logical :: contiguous_in, shuffle_in, fletcher32_in
-  integer :: deflate_level_in, endianness_in
+  integer :: xtype_in, natts_in, dimids_in(MAX_DIMS)
   character (len = NF90_MAX_NAME) :: name_in
   integer :: err
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
@@ -73,7 +71,6 @@ program f90tst_vars4
   dimids =  (/ y_dimid, x_dimid /)
 
   ! Define the variable. 
-  chunksizes = (/ 256, 10 /)
   call handle_err(nf90mpi_def_var(ncid, 'data', NF90_INT, dimids, varid))
 
   ! enddef must be called.

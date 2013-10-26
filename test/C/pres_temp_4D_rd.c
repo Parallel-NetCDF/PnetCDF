@@ -64,7 +64,7 @@
 int
 main(int argc, char **argv)
 {
-   int rank, nprocs, nerr=0, ncid, pres_varid, temp_varid;
+   int rank, nprocs, ncid, pres_varid, temp_varid;
    int lat_varid, lon_varid;
 
    /* The start and count arrays will tell the netCDF library where to

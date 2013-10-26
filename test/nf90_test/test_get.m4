@@ -104,6 +104,10 @@ define([TEST_NFMPI_GET_VAR1],[dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        integer index2indexes
+        double precision hash4
+        logical inRange3, in_internal_range, equal
+
         integer ncid
         integer i
         integer j
@@ -200,6 +204,10 @@ define([TEST_NFMPI_GET_VAR],[dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        integer index2indexes
+        double precision hash4
+        logical inrange3, in_internal_range, equal
+
         integer ncid
         integer i
         integer j
@@ -298,6 +306,10 @@ define([TEST_NFMPI_GET_VARA],[dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash4
+        logical inrange3, in_internal_range, equal
+
         integer ncid
         integer d
         integer i
@@ -499,6 +511,10 @@ define([TEST_NFMPI_GET_VARS],dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash4
+        logical inrange3, in_internal_range, equal
+
         integer ncid
         integer d
         integer i
@@ -721,6 +737,10 @@ define([TEST_NFMPI_GET_VARM],dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        integer index2indexes, roll
+        double precision hash4
+        logical inrange3, in_internal_range, equal
+
         integer ncid
         integer d
         integer i
@@ -952,6 +972,12 @@ define([TEST_NFMPI_GET_ATT],dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, NATTS
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        double precision hash4
+        logical equal, inRange3, in_internal_range
+
         integer ncid
         integer i
         integer j

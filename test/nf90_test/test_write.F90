@@ -938,6 +938,8 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, NATTS, ATT_LEN
 
         integer ncid_in
         integer ncid_out
@@ -1102,6 +1104,10 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, ATT_TYPE, NATTS, ATT_LEN
+        double precision hash
+        logical equal, inrange
 
         integer ncid
         integer vid
@@ -1152,7 +1158,7 @@
                         'newName')
                 if (err .ne. NF90_ENOTATT) &
                     call errore('bad attname: ', err)
-                newname = 'new_' // atnam
+                newname = 'new_' // trim(atnam)
                 err = nf90mpi_rename_att(ncid, vid, atnam, newname)
                 if (err .ne. 0) &
                     call errore('nf90mpi_rename_att: ', err)
@@ -1179,7 +1185,7 @@
                 atnam = ATT_NAME(j,i)
                 attyp = ATT_TYPE(j,i)
                 attlength = ATT_LEN(j,i)
-                newname = 'new_' // atnam
+                newname = 'new_' // trim(atnam)
                 err = nf90mpi_inq_attname(ncid, vid, j, name)
                 if (err .ne. 0) &
                     call errore('nf90mpi_inq_attname: ', err)
@@ -1237,8 +1243,8 @@
             vid = VARID(i)
             do 8, j = 1, NATTS(i)
                 atnam = ATT_NAME(j,i)
-                oldname = 'new_' // atnam
-                newname = 'even_longer_' // atnam
+                oldname = 'new_' // trim(atnam)
+                newname = 'even_longer_' // trim(atnam)
                 err = nf90mpi_rename_att(ncid, vid, oldname, newname)
                 if (err .ne. NF90_ENOTINDEFINE) &
                     call errore('longer name in data mode: ', err)
@@ -1273,6 +1279,8 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, NATTS
 
         integer ncid
         integer err, flags
@@ -1417,7 +1425,13 @@
         subroutine test_nf90mpi_set_fill()
         use pnetcdf
         implicit none
+
+        integer nok             !/* count of valid comparisons */
+        nok = 0
+#if 0   
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer VARID, ATT_TYPE, NATTS
 
         integer ncid
         integer vid
@@ -1425,15 +1439,12 @@
         integer i
         integer j
         integer old_fillmode
-        integer nok             !/* count of valid comparisons */
         character*1 text
         doubleprecision value
         doubleprecision fill
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) length
 
-        nok = 0
-#if 0   
         value = 0
 
 !           /* bad ncid */
@@ -1684,7 +1695,7 @@
 #include "tests.inc"
       
       character*(*) path
-      integer version, iosnum
+      integer version
       character magic*4
       integer ver
       integer f

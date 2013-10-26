@@ -314,7 +314,10 @@ ncmpii_concatenate_datatypes(NC           *ncp,
                              MPI_Datatype *dtypes,        /* IN: [num] */
                              MPI_Datatype *datatype)      /* OUT: */
 {
-    int i, mpireturn, status=NC_NOERR;
+#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
+    int i;
+#endif
+    int mpireturn, status=NC_NOERR;
     MPI_Aint *addrs;
 
     *datatype = MPI_BYTE;

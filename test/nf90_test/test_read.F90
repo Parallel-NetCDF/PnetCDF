@@ -841,6 +841,8 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        LOGICAL INT_VEC_EQ
+
         integer ncid
         integer i
         integer err
@@ -901,6 +903,8 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        LOGICAL INT_VEC_EQ
+
         integer ncid
         integer i
         integer err
@@ -993,6 +997,8 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        integer VARID, NATTS
+
         integer ncid
         integer i
         integer err
@@ -1131,6 +1137,9 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, ATT_LEN, NATTS
+
         integer ncid, i, j, err, type, nok
         integer(kind=MPI_OFFSET_KIND) alen
 
@@ -1191,6 +1200,9 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        integer ATT_LEN, NATTS
+        character*2 ATT_NAME
+
         integer ncid
         integer i
         integer j
@@ -1249,6 +1261,9 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer ATT_TYPE, NATTS
+
         integer ncid
         integer i
         integer j
@@ -1308,6 +1323,9 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer NATTS
+
         integer ncid
         integer i
         integer j
@@ -1370,6 +1388,9 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
+        character*2 ATT_NAME
+        integer NATTS
+
         integer ncid
         integer i
         integer j
