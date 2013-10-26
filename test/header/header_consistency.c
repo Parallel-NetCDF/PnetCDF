@@ -19,10 +19,10 @@
 #define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
 
 /*----< test_open_mode() >----------------------------------------------------*/
+static
 int test_open_mode(char *filename, int safe_mode)
 {
     int err, rank, ncid, cmode, omode, nerr=0;
-    MPI_Offset dimlen;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -51,14 +51,20 @@ int test_open_mode(char *filename, int safe_mode)
     if (rank == 0) omode = NC_NOWRITE;
     err = ncmpi_open(comm, filename, omode, info, &ncid);
     /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
-    if (safe_mode && rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
-    else                       ERR
-    err = ncmpi_close(ncid); ERR
+    if (safe_mode) {
+        if (rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+        err = ncmpi_close(ncid); ERR
+    }
+    else {
+        /* expected errors: NC_NOERR, NC_EMULTIDEFINE, NC_EMULTIDEFINE_OMODE */
+        if (err != NC_NOERR) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+    }
 
     return nerr;
 }
 
 /*----< test_dim() >----------------------------------------------------------*/
+static
 int test_dim(char *filename)
 {
     int err, rank, ncid, cmode, ndims, dimid1, dimid2, dimid3, nerr=0;
@@ -148,7 +154,7 @@ int test_dim(char *filename)
     /* all processes should be able to get dim "x" of size == 99 */
     err = ncmpi_inq_dimlen(ncid, dimid1, &dimlen); ERR
     if (dimlen != 99) {
-        printf("Error (line %d): dimesnion size (%d) should be 99\n",__LINE__,dimlen);
+        printf("Error (line %d): dimesnion size (%lld) should be 99\n",__LINE__,dimlen);
         nerr++;
     }
 
@@ -157,6 +163,7 @@ int test_dim(char *filename)
 }
 
 /*----< test_attr() >---------------------------------------------------------*/
+static
 int test_attr(char *filename)
 {
     int err, rank, ncid, cmode, nerr=0;
@@ -228,10 +235,11 @@ int test_attr(char *filename)
 }
 
 /*----< test_var() >----------------------------------------------------------*/
+static
 int test_var(char *filename)
 {
     int err, rank, ncid, cmode, nerr=0;
-    int ndims, dimid[3], natts, nvars, varid1, varid2, varid3;
+    int ndims, dimid[3], nvars, varid1, varid2;
     char name[128];
     nc_type xtype;
     MPI_Offset dimlen;
@@ -378,12 +386,12 @@ int test_var(char *filename)
 }
 
 /*----< test_dim_var() >------------------------------------------------------*/
+static
 int test_dim_var(char *filename)
 {
     int i, err, rank, ncid, cmode, nerr=0;
-    int ndims, dimid[3], natts, nvars, varid1, varid2, varid3;
+    int ndims, dimid[3], varid1;
     char name[128], dimname[128];
-    nc_type xtype;
     MPI_Offset dimlen;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -416,18 +424,18 @@ int test_dim_var(char *filename)
         err = ncmpi_inq_dimname(ncid, dimid[i], name); ERR
         sprintf(dimname, "dim%d", i);
         if (!strcmp(name, dimname)) {
-            printf("Error (line %d): all processes should see dimid[%d] name \"%s\"\n",__LINE__,dimname);
+            printf("Error (line %d): all processes should see dimid[%d] name \"%s\"\n",__LINE__,i,dimname);
             nerr++;
         }
     }
     err = ncmpi_inq_dimlen(ncid, dimid[0], &dimlen); ERR
     if (dimlen != 4) {
-        printf("Error (line %d): all processes should see dimid[%d] len = 4\n",__LINE__);
+        printf("Error (line %d): all processes should see dimid[0] len = 4\n",__LINE__);
         nerr++;
     }
     err = ncmpi_inq_dimlen(ncid, dimid[1], &dimlen); ERR
     if (dimlen != 3) {
-        printf("Error (line %d): all processes should see dimid[%d] len = 3\n",__LINE__);
+        printf("Error (line %d): all processes should see dimid[1] len = 3\n",__LINE__);
         nerr++;
     }
     err = ncmpi_close(ncid); ERR
@@ -456,7 +464,6 @@ int main(int argc, char **argv)
     for (i=0; i<=verbose; i++) {
         /* test with safe mode off and on*/
         setenv("PNETCDF_SAFE_MODE", mode[i], 1);
-
         nerr += test_open_mode(filename, i);
 
         nerr += test_dim(filename);

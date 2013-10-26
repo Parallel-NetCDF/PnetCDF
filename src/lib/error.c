@@ -210,8 +210,16 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
 #ifdef HAVE_MPI_ERR_NO_SUCH_FILE
     if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
 #endif
+#ifdef HAVE_MPI_ERR_AMODE
+    /* MPI-IO may or may not report MPI_ERR_AMODE if inconsistent amode is
+     * detected. MPI_ERR_AMODE can also indicate other conflict amode used
+     * on each process. But in PnetCDF, MPI_ERR_AMODE can only be caused by
+     * inconsistent file open/create mode. So, if MPI-IO returns this error
+     * we are sure it is because of the inconsistent mode */
+    if (errorclass == MPI_ERR_AMODE) return NC_EMULTIDEFINE_OMODE;
+#endif
 
-    /* other errors that currently cannot be described by PnetCDF error codes */
+    /* other errors that currently have no corresponding PnetCDF error codes */
 
     /* we report the world rank */
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
