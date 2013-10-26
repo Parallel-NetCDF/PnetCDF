@@ -21,18 +21,30 @@ define(`TEXTVAR1',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: start, count, stride, map
 
      integer                                                            :: nf90mpi_$1_var_text$3
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride, localMap
+     integer                                                            :: numDims, counter
  
      ! Set local arguments to default values
+     numDims         = size(shape(values))
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
      localStride(:)  = 1
-          
+     localMap(1)     = 1
+     do counter = 1, numDims - 1
+        localMap(counter+1) = localMap(counter) * localCount(counter)
+     enddo
+
      if(present(start))  localStart (:size(start) ) = start(:)
      if(present(count))  localCount (:size(count) ) = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
-
-     nf90mpi_$1_var_text$3 = nfmpi_$1_vars_text$3(ncid, varid, localStart, localCount, localStride, values)
+     if(present(map))  then
+       localMap   (:size(map))    = map(:)
+       nf90mpi_$1_var_text$3 = &
+          nfmpi_$1_varm_text$3(ncid, varid, localStart, localCount, localStride, localMap, values)
+     else
+       nf90mpi_$1_var_text$3 = &
+          nfmpi_$1_vars_text$3(ncid, varid, localStart, localCount, localStride, values)
+     end if
    end function nf90mpi_$1_var_text$3
 ')dnl
 
@@ -68,7 +80,7 @@ define(`TEXTVAR',dnl
      ! Set local arguments to default values
      numDims                 = size(shape(values))
      localStart (:         ) = 1
-     localCount ( :numDims+1) = (/ LEN(values($4)), shape(values) /)
+     localCount (:numDims+1) = (/ LEN(values($4)), shape(values) /)
      localCount (numDims+2:) = 0
      localStride(:         ) = 1
      ! localMap   (:numDims  ) = (/ 1, (product(localCount(:counter)), counter = 1, numDims - 1) /)
@@ -143,18 +155,30 @@ define(`NBTEXTVAR1',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
 
      integer                                                             :: nf90mpi_$1_var_text
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
+     integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
+     numDims         = size(shape(values))
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
      localStride(:)  = 1
+     localMap(1)     = 1
+     do counter = 1, numDims - 1
+        localMap(counter+1) = localMap(counter) * localCount(counter)
+     enddo
           
      if(present(start))  localStart (:size(start) ) = start(:)
      if(present(count))  localCount (:size(count) ) = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
-
-     nf90mpi_$1_var_text = nfmpi_$1_vars_text(ncid, varid, localStart, localCount, localStride, values, req)
+     if(present(map))  then
+       localMap   (:size(map))    = map(:)
+       nf90mpi_$1_var_text = &
+          nfmpi_$1_varm_text(ncid, varid, localStart, localCount, localStride, localMap, values, req)
+     else
+       nf90mpi_$1_var_text = &
+          nfmpi_$1_vars_text(ncid, varid, localStart, localCount, localStride, values, req)
+     end if
    end function nf90mpi_$1_var_text
 ')dnl
 
