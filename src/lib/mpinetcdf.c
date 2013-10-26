@@ -27,6 +27,14 @@
 /* Prototypes for functions used only in this file */
 static int ncmpii_end_indep_data(NC *ncp);
 
+
+/* The const string below is for the RCS ident(1) command to find a string
+ * like "$Id$ in
+ * the library file (libpnetcdf.a).
+ */
+static const char pnetcdf_libvers[] =
+        "\044Id: \100(#) pnetcdf library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE" $";
+
 /*----< ncmpi_inq_libvers() >------------------------------------------------*/
 inline const char*
 ncmpi_inq_libvers(void) {
@@ -581,7 +589,10 @@ ncmpii_sync_numrecs(NC         *ncp,
 int
 ncmpi_begin_indep_data(int ncid)
 {
-    int mpireturn, status=NC_NOERR;
+#ifndef DISABLE_FILE_SYNC
+    int mpireturn;
+#endif
+    int status=NC_NOERR;
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
@@ -627,7 +638,10 @@ ncmpi_end_indep_data(int ncid) {
 /*----< ncmpii_end_indep_data() >--------------------------------------------*/
 static int 
 ncmpii_end_indep_data(NC *ncp) {
-    int mpireturn, status=NC_NOERR;
+#ifndef DISABLE_FILE_SYNC
+    int mpireturn;
+#endif
+    int status=NC_NOERR;
 
     if (!NC_readonly(ncp)) {
         /* do memory and file sync for numrecs, number or records */
