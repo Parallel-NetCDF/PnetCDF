@@ -117,8 +117,8 @@
 !     Compute file size in 1d6 bytes.
 !     -------------------------------
 
-      filsiz = (TOTSIZ_3D(1) * TOTSIZ_3D(2) * TOTSIZ_3D(3)) * &
-               1.0d-6 * 4.0d0
+      filsiz = real((TOTSIZ_3D(1) * TOTSIZ_3D(2) * TOTSIZ_3D(3)) * &
+               1.0d-6 * 4.0d0)
 
 !     -------------------------------------
 !     Print data decomposition information.
@@ -311,8 +311,8 @@
       call MPI_Barrier (comm_cart, ierr)
       t3 = MPI_Wtime ( )
 
-      if (t2 - t1 < wrt_l(1)) wrt_l(1) = t2 - t1
-      if (t3 - t2 < wrt_l(2)) wrt_l(2) = t3 - t2
+      if (t2 - t1 < wrt_l(1)) wrt_l(1) = real(t2 - t1)
+      if (t3 - t2 < wrt_l(2)) wrt_l(2) = real(t3 - t2)
 
       end
 
@@ -385,14 +385,14 @@
 
       ind = 1
 
-      do kk = 1, locsiz_3d(3)
-        do jj = 1, locsiz_3d(2)
-          do ii = 1, locsiz_3d(1)
+      do kk = 1, int(locsiz_3d(3))
+        do jj = 1, int(locsiz_3d(2))
+          do ii = 1, int(locsiz_3d(1))
 
-             tt(ii,jj,kk) = &
+             tt(ii,jj,kk) = real( &
                (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 +  &
                        (jj - 1) + totsiz_3d(2)*(kstart-1 +  &
-                       (kk-1)))) * 1.0d-3
+                       (kk-1)))) * 1.0d-3)
              ind = ind + 1
 
           end do
@@ -434,11 +434,11 @@
 
       ws(1) = 0.0d0      ! diff
       ws(2) = 0.0d0      ! sumsq
-      ws(3) = locsiz     ! locsiz
+      ws(3) = real(locsiz)     ! locsiz
       ws(4) = 0.0d0      ! delmax
       ws(5) = 1.0d38     ! Huge (ws)  ! delmin
 
-      do ii = 1, locsiz
+      do ii = 1, int(locsiz)
         delta = (tt(ii) - buf(ii)) * (tt(ii) - buf(ii))
         ws(1) = ws(1) + delta
         ws(2) = ws(2) + tt(ii) * tt(ii)

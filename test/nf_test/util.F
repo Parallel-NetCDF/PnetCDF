@@ -157,7 +157,7 @@
       IF (.NOT.((VALUE .GE. MIN) .AND. (VALUE .LE. MAX))) THEN
           INRANGE_FLOAT = .FALSE.
       ELSE
-          FVALUE = VALUE
+          FVALUE = real(VALUE)
           INRANGE_FLOAT = (FVALUE .GE. MIN) .AND. (FVALUE .LE. MAX)
       END IF
       END
@@ -243,7 +243,7 @@
       doubleprecision   ud_rand
       external          ud_rand
 
-1     roll = (ud_rand(0) * (n-1)) + 0.5
+1     roll = int((ud_rand(0) * (n-1)) + 0.5)
       if (roll .ge. n) goto 1
       end
 
@@ -261,8 +261,8 @@
         integer         rank            !/* number of dimensions */
         include "pnetcdf.inc"
 #include "tests.inc"
-        integer(kind=MPI_OFFSET_KIND)         base(rank)      !/* base(rank) ignored */
-        integer(kind=MPI_OFFSET_KIND)         indexes(rank)   !/* returned FORTRAN indexes */
+        integer(kind=MPI_OFFSET_KIND) base(rank)      !/* base(rank) ignored */
+        integer(kind=MPI_OFFSET_KIND) indexes(rank)   !/* returned FORTRAN indexes */
 
         integer i
         integer offset
@@ -275,9 +275,9 @@
                     index2ncindexes = 1
                     return
                 end if
-                intbase = base(i)
+                intbase = int(base(i))
                 indexes(i) = 1 + mod(offset, intbase)
-                offset = offset / base(i)
+                offset = offset / intbase
 1           continue
         end if
         index2ncindexes = 0
@@ -311,9 +311,9 @@
                     index2indexes = 1
                     return
                 end if
-                intbase = base(i)
+                intbase = int(base(i))
                 indexes(i) = 1 + mod(offset, intbase)
-                offset = offset / base(i)
+                offset = offset / intbase
 1           continue
         end if
         index2indexes = 0
@@ -615,7 +615,7 @@
 
       prod = 1
       do 1, i = 1, nn
-          prod = prod * sp(i)
+          prod = prod * int(sp(i))
 1     continue
       end
 
@@ -702,7 +702,7 @@
                     !/* Construct initial shape vector */
                     err = index2ncindexes(jj, rank, max_dim_len, tmp)
                     do 5, dn = 1, rank
-                        var_dimid(dn,vn) = tmp(1+rank-dn)
+                        var_dimid(dn,vn) = int(tmp(1+rank-dn))
 5                   continue
 
                     var_nels(vn) = 1
@@ -720,7 +720,8 @@
                         else
                             var_shape(dn,vn) = NRECS
                         end if
-                        var_nels(vn) = var_nels(vn) * var_shape(dn,vn)
+                        var_nels(vn) = var_nels(vn) *
+     +                                 int(var_shape(dn,vn))
 6                   continue
 
                     vn = vn + 1
@@ -788,8 +789,8 @@
         integer         ncid
         include "pnetcdf.inc"
 #include "tests.inc"
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
-        integer VARID, NATTS, ATT_TYPE
+        integer VARID, NATTS, ATT_TYPE, ATT_LEN
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
         CHARACTER*2 ATT_NAME
         double precision hash
         logical inrange
@@ -823,9 +824,10 @@
                     catt(ATT_LEN(j,i)+1:ATT_LEN(j,i)+1) = char(1)
                     catt(ATT_LEN(j,i)+2:ATT_LEN(j,i)+2) = char(0)
 
+                    ATT_LEN_LL = ATT_LEN(j,i)
                     err = nfmpi_put_att_text(ncid, varid(i), 
      +                                    ATT_NAME(j,i),
-     +                                    ATT_LEN(j,i), catt)
+     +                                    ATT_LEN_LL, catt)
                     if (err .ne. 0) then
                         call errore('nfmpi_put_att_text: ', err)
                     end if
@@ -837,10 +839,11 @@
                         allInRange = allInRange .and.
      +                               inRange(att(k), ATT_TYPE(j,i))
 4                   continue
+                    ATT_LEN_LL = ATT_LEN(j,i)
                     err = nfmpi_put_att_double(ncid, varid(i),
      +                                      ATT_NAME(j,i),
      +                                      ATT_TYPE(j,i),
-     +                                      ATT_LEN(j,i), att)
+     +                                      ATT_LEN_LL, att)
                     if (allInRange) then
                         if (err .ne. 0) then
                             call errore('nfmpi_put_att_double: ', err)
@@ -1103,8 +1106,7 @@
         integer         ncid
         include "pnetcdf.inc"
 #include "tests.inc"
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
-        integer VARID, NATTS, ATT_TYPE
+        integer VARID, NATTS, ATT_TYPE, ATT_LEN
         CHARACTER*2 ATT_NAME
         double precision hash
         logical inrange, equal
@@ -1285,7 +1287,7 @@
       include "pnetcdf.inc"
 #include "tests.inc"
       IF (VID .LT. 1) THEN
-          ATT_LEN = GATT_LEN(J)
+          ATT_LEN = int(GATT_LEN(J))
       ELSE
           ATT_LEN = ATTLEN(J,VID)
       ENDIF

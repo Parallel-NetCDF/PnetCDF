@@ -73,7 +73,7 @@
                                              !   determined by MPI where a
                                              !   zero is specified
 
-      real*4  filsiz
+      double precision  filsiz
               
       real*4  rdt_g(2)
       real*4  rdt_l(2)
@@ -184,11 +184,11 @@
 !     Compute and print I/O rates.
 !     ----------------------------
 
-      wrates_l(1) = filsiz / wrt_l(2)               ! write rate
-      wrates_l(2) = filsiz / (wrt_l(1) + wrt_l(2))  ! effective write rate
+      wrates_l(1) = real(filsiz / wrt_l(2))               ! write rate
+      wrates_l(2) = real(filsiz / (wrt_l(1) + wrt_l(2)))  ! effective write rate
 
-      rrates_l(1) = filsiz / rdt_l(2)               ! read rate
-      rrates_l(2) = filsiz / (rdt_l(1) + rdt_l(2))  ! effective read  rate
+      rrates_l(1) = real(filsiz / rdt_l(2))               ! read rate
+      rrates_l(2) = real(filsiz / (rdt_l(1) + rdt_l(2)))  ! effective read  rate
 
 
       call MPI_Allreduce
@@ -357,8 +357,8 @@
         t3 = MPI_Wtime ( )
 
 
-        if (t2 - t1 < wrt_l(1)) wrt_l(1) = t2 - t1
-        if (t3 - t2 < wrt_l(2)) wrt_l(2) = t3 - t2
+        if (t2 - t1 < wrt_l(1)) wrt_l(1) = real(t2 - t1)
+        if (t3 - t2 < wrt_l(2)) wrt_l(2) = real(t3 - t2)
 
         if (mype == 0) Write (6,950) nw, t2-t1, t3-t2
 
@@ -444,7 +444,7 @@
 
       do nr = 1, nreads
 
-         do ii=1,locsiz
+         do ii=1, int(locsiz)
             buf(ii) =  -99.99
          enddo
 
@@ -483,8 +483,8 @@
         t3 = MPI_Wtime ( )
 
 
-        if (t2 - t1 < rdt_l(1)) rdt_l(1) = t2 - t1
-        if (t3 - t2 < rdt_l(2)) rdt_l(2) = t3 - t2
+        if (t2 - t1 < rdt_l(1)) rdt_l(1) = real(t2 - t1)
+        if (t3 - t2 < rdt_l(2)) rdt_l(2) = real(t3 - t2)
 
         if (mype == 0) Write (6,970) nr, t2-t1, t3-t2
 
@@ -594,14 +594,14 @@
       ind = 1
 
 
-      do kk = 1, locsiz_3d(3)
-        do jj = 1, locsiz_3d(2)
-          do ii = 1, locsiz_3d(1)
+      do kk = 1, int(locsiz_3d(3))
+        do jj = 1, int(locsiz_3d(2))
+          do ii = 1, int(locsiz_3d(1))
 
-             tt(ind) =
+             tt(ind) = real(
      &         (istart-1 +(ii - 1) + 1 + totsiz_3d(3)*(jstart-1 + 
      &                 (jj - 1) + totsiz_3d(2)*(kstart-1 + 
-     &                 (kk-1)))) * 1.0d-3
+     &                 (kk-1)))) * 1.0d-3)
              ind = ind + 1
 
           end do
@@ -656,12 +656,12 @@
 
       ws(1) = 0.0d0      ! diff
       ws(2) = 0.0d0      ! sumsq
-      ws(3) = locsiz     ! locsiz
+      ws(3) = int(locsiz)     ! locsiz
       ws(4) = 0.0d0      ! delmax
       ws(5) = 1.0d38     ! Huge (ws)  ! delmin
 
 
-      do ii = 1, locsiz
+      do ii = 1, int(locsiz)
         delta = (tt(ii) - buf(ii)) * (tt(ii) - buf(ii))
         ws(1) = ws(1) + delta
         ws(2) = ws(2) + tt(ii) * tt(ii)

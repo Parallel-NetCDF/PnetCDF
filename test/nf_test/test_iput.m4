@@ -240,7 +240,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
      +          call errore('bad var id: ', err)
             nels = 1
             do 3, j = 1, var_rank(i)
-                nels = nels * var_shape(j,i)
+                nels = nels * int(var_shape(j,i))
 3           continue
             allInExtRange = .true.
             do 4, j = 1, var_nels(i)
@@ -305,7 +305,7 @@ C           Only test record variables here
 
                 nels = 1
                 do 6 j = 1, var_rank(i)
-                    nels = nels * var_shape(j,i)
+                    nels = nels * int(var_shape(j,i))
 6               continue
                 allInExtRange = .true.
                 do 7, j = 1, nels
@@ -489,7 +489,7 @@ C           /* Check correct error returned even when nothing to put */
                         start(j) = 1 + mid(j)
                         edge(j) = var_shape(j,i) - mid(j)
                     end if
-                    nels = nels * edge(j)
+                    nels = nels * int(edge(j))
 6               continue
                 allInExtRange = .true.
                 do 7, j = 1, nels
@@ -663,7 +663,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                         stride(j) = 1
                     end if
                     sstride(j) = stride(j)
-                    nstarts = nstarts * stride(j)
+                    nstarts = nstarts * int(stride(j))
 6               continue
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
@@ -672,7 +672,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                     nels = 1
                     do 8, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
-                        nels = nels * count(j)
+                        nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
                     !/* Random choice of forward or backward */
@@ -865,7 +865,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                         stride(j) = 1
                     end if
                     sstride(j) = stride(j)
-                    nstarts = nstarts * stride(j)
+                    nstarts = nstarts * int(stride(j))
 6               continue
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
@@ -874,7 +874,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                     nels = 1
                     do 8, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
-                        nels = nels * count(j)
+                        nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
                     !/* Random choice of forward or backward */

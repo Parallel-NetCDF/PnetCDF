@@ -784,8 +784,8 @@
         implicit        none
         integer         ncid
 #include "tests.inc"
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
-        integer VARID, NATTS, ATT_TYPE
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
+        integer VARID, NATTS, ATT_TYPE, ATT_LEN
         CHARACTER*2 ATT_NAME
         double precision hash
         logical inrange
@@ -833,8 +833,9 @@
                                      inRange(att(k), ATT_TYPE(j,i))
 4                   continue
                     ! cannot use nf90mpi_put_att, as it checks data types
+                    ATT_LEN_LL = ATT_LEN(j,i)
                     err = nfmpi_put_att_double(ncid, varid(i), ATT_NAME(j,i), &
-                                               ATT_TYPE(j,i), ATT_LEN(j,i), att)
+                                               ATT_TYPE(j,i), ATT_LEN_LL, att)
                     if (allInRange) then
                         if (err .ne. 0) then
                             call errore('nf90mpi_put_att: ', err)
@@ -1099,8 +1100,7 @@
         implicit        none
         integer         ncid
 #include "tests.inc"
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
-        integer VARID, NATTS, ATT_TYPE
+        integer VARID, NATTS, ATT_TYPE, ATT_LEN
         CHARACTER*2 ATT_NAME
         double precision hash
         logical inrange, equal
