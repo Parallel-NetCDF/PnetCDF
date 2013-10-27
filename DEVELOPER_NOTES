@@ -77,3 +77,18 @@ Conform with netCDF
        src/libf90/nfmpi_constants.f90
 
  - PnetCDF error codes start in -250
+
+
+===============================================================
+config.guess, config.sub, install-sh in directory scripts
+===============================================================
+Copy config.guess, config.sub, and install-sh from GNU libtool.
+http://www.gnu.org/software/libtool/
+
+
+Or get the latest version by running the following commands.
+
+wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'
+
+wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'
+
