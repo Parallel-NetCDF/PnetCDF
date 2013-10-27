@@ -31,9 +31,11 @@ static void handle_error(int status) {
    Array size 128^3. For other array sizes, change array_of_gsizes below.*/
 #define TEST_HANDLE_ERR(status)                         \
     {                                                   \
-        if ((status) != NC_NOERR)                       \
+        if ((status) != NC_NOERR) {                     \
             printf("Error at line %d (%s)\n", __LINE__, \
-		   ncmpi_strerror((status)) );		\
+                   ncmpi_strerror((status)) );          \
+            nerr++;                                     \
+        }                                               \
     }
 
 int main(int argc, char **argv)
@@ -63,6 +65,7 @@ int main(int argc, char **argv)
     int num_sf = 2;
     int par_dim_id = 0; /* default is 0 */
     int do_read = 0;
+    int nerr=0, sum_nerr;
     MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
@@ -351,6 +354,16 @@ end:
     free(starts_list);
     free(count_list);
     free(basename1);
+
+    MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (mynod == 0) {
+        char cmd_str[80];
+        sprintf(cmd_str, "*** TESTING C   %s for subfiling", argv[0]);
+        if (sum_nerr == 0)
+            printf("%-66s ------ pass\n", cmd_str);
+        else
+            printf("%-66s ------ failed\n", cmd_str);
+    }
 
     MPI_Finalize();
 
