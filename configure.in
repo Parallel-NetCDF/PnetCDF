@@ -8,9 +8,9 @@ AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
 AC_CONFIG_HEADERS([src/lib/ncconfig.h])
+AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 
 AC_CONFIG_AUX_DIR(./scripts)
-AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 
 dnl parse the version numbers to 4 env variables
 saved_IFS=${IFS}
@@ -293,6 +293,7 @@ if test "x${enable_strict}" = xyes; then
       CXXCPPFLAGS="${CXXCPPFLAGS} -Wall -Wundef -Wpointer-arith"
    else
       AC_MSG_WARN([--enable-strict is for GNU compiler only])
+      enable_strict=no
    fi
 fi
 AC_SUBST(CXXCPPFLAGS)
