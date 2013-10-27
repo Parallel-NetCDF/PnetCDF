@@ -623,21 +623,16 @@ ncmpi_inq_var(int ncid,
 #endif
         if(ndimsp != 0)
         {
-#ifndef ENABLE_SUBFILING
 	    *ndimsp = varp->ndims;
-#else
-	    int ndims_org; 
+#ifdef ENABLE_SUBFILING
 	    if (varp->num_subfiles > 1) { 
-#ifdef SUBFILE_DEBUG 
+	        int ndims_org; 
 		status1 = ncmpi_get_att_int (ncp->nciop->fd, varid,  
 					     "ndims_org", &ndims_org); 
 		printf("%s: ncp->nc_num_subfiles=%d, ndims_org=%d\n",  
 		       __func__, ncp->nc_num_subfiles, ndims_org); 
-#endif 
 		*ndimsp = ndims_org; 
 	    } 
-	    else
-                *ndimsp = varp->ndims;
 #endif
         }
         if(dimids != 0)
