@@ -65,7 +65,8 @@ LIB_CSRCS = mpinetcdf.c \
             swap.c
 
 ifeq (@enable_subfiling@, yes)
-LIB_CSRCS += subfile.c
+LIB_CSRCS   += subfile.c
+HEADER_SRCS += subfile.h
 endif
 
 PACKING_LIST = $(LIB_CSRCS) \
