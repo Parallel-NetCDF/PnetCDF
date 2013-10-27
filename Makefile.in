@@ -25,7 +25,6 @@ PACKING_LIST	= \
 		configure	\
 		configure.in	\
 		macros.make.in	\
-		macros.make.def	\
 		rules.make \
 		COPYRIGHT \
 		CREDITS \
