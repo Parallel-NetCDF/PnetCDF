@@ -205,7 +205,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
      +          call errore('bad var id: ', err)
             nels = 1
             do 3, j = 1, var_rank(i)
-                nels = nels * var_shape(j,i)
+                nels = nels * int(var_shape(j,i))
 3           continue
             allInExtRange = .true.
             allInIntRange = .true.
@@ -406,7 +406,7 @@ C           bits of k determine whether to get lower or upper part of dim
                         start(j) = 1 + mid(j)
                         edge(j) = var_shape(j,i) - mid(j)
                     end if
-                    nels = nels * edge(j)
+                    nels = nels * int(edge(j))
 6               continue
                 allInIntRange = .true.
                 allInExtRange = .true.
@@ -601,7 +601,7 @@ C           choose random stride from 1 to edge
                     else
                         sstride(j) = 1
                     end if
-                    nstarts = nstarts * stride(j)
+                    nstarts = nstarts * int(stride(j))
 6               continue
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, 
@@ -612,7 +612,7 @@ C           choose random stride from 1 to edge
                     do 8, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / 
      +                                  stride(j)
-                        nels = nels * count(j)
+                        nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
 C                   Random choice of forward or backward 
@@ -826,7 +826,7 @@ C            * choose random stride from 1 to edge */
                         stride(j) = 1
                     end if
                     sstride(j) = stride(j)
-                    nstarts = nstarts * stride(j)
+                    nstarts = nstarts * int(stride(j))
 6               continue
                 do 7, m = 1, nstarts
                     err = index2indexes(m, var_rank(i), sstride, index)
@@ -836,7 +836,7 @@ C            * choose random stride from 1 to edge */
                     do 8, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / 
      +                                  stride(j)
-                        nels = nels * count(j)
+                        nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
 C                   Random choice of forward or backward 

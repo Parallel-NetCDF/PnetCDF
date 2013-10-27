@@ -213,7 +213,7 @@ C
      +                                          var_name(i))
                                         call error('index:')
                                         do 4, d = 1, var_rank(i)
-                                            intindex = index(d)
+                                            intindex = int(index(d))
                                             call errori(' ', intindex)
 4                                       continue
                                         call errord('expect: ', expect)
@@ -250,8 +250,7 @@ C */
         include "pnetcdf.inc"
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash4
         logical equal, inRange3, in_internal_range
 
@@ -290,7 +289,7 @@ C */
      +                  stop 'assert(length .le. MAX_NELS)'
                     nInIntRange = 0
                     nInExtRange = 0
-                    do 4, k = 1, length
+                    do 4, k = 1, int(length)
                         ndx(1) = k
                         expect(k) = hash4( datatype, -1, ndx, 
      +                                    NFT_ITYPE($1))
@@ -312,7 +311,7 @@ C */
                         if (err .ne. NF_NOERR .and. err .ne. NF_ERANGE)
      +                      call errore('OK or Range error: ', err)
                     end if
-                    do 3, k = 1, length
+                    do 3, k = 1, int(length)
                         if (inRange3(expect(k),datatype,NFT_ITYPE($1))
      +                          .and. 
      +                          in_internal_range(NFT_ITYPE($1), 
@@ -497,7 +496,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
      +          call errore('bad var id: ', err)
             nels = 1
             do 3, j = 1, var_rank(i)
-                nels = nels * var_shape(j,i)
+                nels = nels * int(var_shape(j,i))
 3           continue
             allInExtRange = .true.
             do 4, j = 1, var_nels(i)
@@ -558,7 +557,7 @@ C           Only test record variables here
 
                 nels = 1
                 do 6 j = 1, var_rank(i)
-                    nels = nels * var_shape(j,i)
+                    nels = nels * int(var_shape(j,i))
 6               continue
                 allInExtRange = .true.
                 do 7, j = 1, nels
@@ -757,7 +756,7 @@ C           /* Check correct error returned even when nothing to put */
                         start(j) = 1 + mid(j)
                         edge(j) = var_shape(j,i) - mid(j)
                     end if
-                    nels = nels * edge(j)
+                    nels = nels * int(edge(j))
 6               continue
                 allInExtRange = .true.
                 do 7, j = 1, nels
@@ -949,7 +948,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                     nels = 1
                     do 8, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
-                        nels = nels * count(j)
+                        nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
                     !/* Random choice of forward or backward */
@@ -1161,7 +1160,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                     nels = 1
                     do 8, j = 1, var_rank(i)
                         count(j) = 1 + (edge(j) - index(j)) / stride(j)
-                        nels = nels * count(j)
+                        nels = nels * int(count(j))
                         index(j) = index(j) + start(j) - 1
 8                   continue
                     !/* Random choice of forward or backward */
@@ -1240,8 +1239,8 @@ define([TEST_NFMPI_PUT_ATT],dnl
         include "pnetcdf.inc"
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
         double precision hash_$1
         logical inRange3
 
@@ -1268,26 +1267,27 @@ define([TEST_NFMPI_PUT_ATT],dnl
         do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 if (.not.(ATT_TYPE(j,i) .eq. NF_CHAR)) then
-                    if (.not.((ATT_LEN(j,i) .le. MAX_NELS)))
-     +                  stop 'assert(ATT_LEN(j,i) .le. MAX_NELS)'
+                    ATT_LEN_LL = ATT_LEN(j,i)
+                    if (.not.((ATT_LEN_LL .le. MAX_NELS)))
+     +                  stop 'assert(ATT_LEN_LL .le. MAX_NELS)'
                     err = nfmpi_put_att_$1(BAD_ID, i,
      +                                  ATT_NAME(j,i), 
      +                                  ATT_TYPE(j,i), 
-     +                                  ATT_LEN(j,i), value)
+     +                                  ATT_LEN_LL, value)
                     if (err .ne. NF_EBADID)
      +                  call errore('bad ncid: ', err)
                     err = nfmpi_put_att_$1(ncid, BAD_VARID,
      +                  ATT_NAME(j,i), 
-     +                  ATT_TYPE(j,i), ATT_LEN(j,i), value)
+     +                  ATT_TYPE(j,i), ATT_LEN_LL, value)
                     if (err .ne. NF_ENOTVAR)
      +                  call errore('bad var id: ', err)
                     err = nfmpi_put_att_$1(ncid, i,
      +                  ATT_NAME(j,i), BAD_TYPE, 
-     +                  ATT_LEN(j,i), value)
+     +                  ATT_LEN_LL, value)
                     if (err .ne. NF_EBADTYPE)
      +                  call errore('bad type: ', err)
                     allInExtRange = .true.
-                    do 3, k = 1, ATT_LEN(j,i)
+                    do 3, k = 1, int(ATT_LEN_LL)
                         ndx(1) = k
                         VAR_ELEM($1, value, k) = hash_$1(ATT_TYPE(j,i),
      +                                      -1, ndx, NFT_ITYPE($1))
@@ -1297,7 +1297,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
      +                               NFT_ITYPE($1))
 3                   continue
                     err = nfmpi_put_att_$1(ncid, i, ATT_NAME(j,i), 
-     +                                  ATT_TYPE(j,i), ATT_LEN(j,i), 
+     +                                  ATT_TYPE(j,i), ATT_LEN_LL, 
      +                                  value)
                     if (allInExtRange) then
                         if (err .ne. NF_NOERR)
@@ -1433,8 +1433,8 @@ TEST_NFMPI_PUT_VARM(double)
         include "pnetcdf.inc"
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
         double precision hash
 
         integer ncid
@@ -1457,23 +1457,24 @@ TEST_NFMPI_PUT_VARM(double)
         do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 if (ATT_TYPE(j,i) .eq. NF_CHAR) then
-                    if (.not.(ATT_LEN(j,i) .le. MAX_NELS))
-     +                  stop 'assert(ATT_LEN(j,i) .le. MAX_NELS)'
+                    ATT_LEN_LL = ATT_LEN(j,i)
+                    if (.not.(ATT_LEN_LL .le. MAX_NELS))
+     +                  stop 'assert(ATT_LEN_LL .le. MAX_NELS)'
                     err = nfmpi_put_att_text(BAD_ID, i,
-     +                  ATT_NAME(j,i), ATT_LEN(j,i), value)
+     +                  ATT_NAME(j,i), ATT_LEN_LL, value)
                     if (err .ne. NF_EBADID)
      +                  call errore('bad ncid: ', err)
                     err = nfmpi_put_att_text(ncid, BAD_VARID, 
      +                                    ATT_NAME(j,i), 
-     +                                    ATT_LEN(j,i), value)
+     +                                    ATT_LEN_LL, value)
                     if (err .ne. NF_ENOTVAR)
      +                  call errore('bad var id: ', err)
-                    do 3, k = 1, ATT_LEN(j,i)
+                    do 3, k = 1, int(ATT_LEN_LL)
                         value(k:k) = char(int(hash(ATT_TYPE(j,i),
      +                                             -1, k)))
 3                   continue
                     err = nfmpi_put_att_text(ncid, i, ATT_NAME(j,i), 
-     +                  ATT_LEN(j,i), value)
+     +                  ATT_LEN_LL, value)
                     if (err .ne. NF_NOERR)
      +                  call error(nfmpi_strerror(err))
                 end if

@@ -499,7 +499,7 @@ ncmpi_get_file_info(int       ncid,
     MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
 
 #ifdef ENABLE_SUBFILING
-    sprintf(value, "%lld", ncp->nciop->hints.num_subfiles);
+    sprintf(value, "%d", ncp->nciop->hints.num_subfiles);
     MPI_Info_set(*info_used, "nc_num_subfiles", value);
 #endif
 
@@ -788,7 +788,7 @@ ncmpi_close(int ncid) {
     /* TODO: should check ncid_sf? */
     /* if the file has subfiles, close them first */
     if (ncp->nc_num_subfiles > 1)
-	ncmpii_subfile_close (ncp);
+	ncmpii_subfile_close(ncp);
 #endif
 
     /* release NC object, close the file and write dirty numrecs if necessary */

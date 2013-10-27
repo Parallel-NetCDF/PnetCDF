@@ -239,7 +239,7 @@ C           /* check scratch file written as expected */
         if (name .ne. "abc")
      +      call errori('Unexpected dim name in netCDF ', ncid)
         if (length .ne. 8) then
-            intlen = length
+            intlen = int(length)
             call errori('Unexpected dim length: ', intlen)
         end if
         err = nfmpi_begin_indep_data(ncid)
@@ -1210,7 +1210,7 @@ C           /* Close. Reopen & check */
                     err = nfmpi_get_att_text(ncid, vid, name, text)
                     if (err .ne. 0)
      +                  call errore('nfmpi_get_att_text: ', err)
-                    do 5, k = 1, attlength
+                    do 5, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
                         expect = hash(datatype, -1, ndx)
                         if (ichar(text(k:k)) .ne. expect) then
@@ -1225,7 +1225,7 @@ C           /* Close. Reopen & check */
      +                     value)
                     if (err .ne. 0)
      +                  call errore('nfmpi_get_att_double: ', err)
-                    do 6, k = 1, attlength
+                    do 6, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
                         expect = hash(datatype, -1, ndx)
                         if (inRange(expect, datatype)) then

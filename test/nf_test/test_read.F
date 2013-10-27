@@ -701,7 +701,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
                 call errorc('name unexpected: ', name)
                 print *, ' expected ', dim_name(i),' for the ',i,'entry'
             else if (dim_len(i) .ne. length) then
-                intlen = length
+                intlen = int(length)
                 call errori('size unexpected: ', intlen)
             else
                 nok = nok + 1
@@ -746,7 +746,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
             if (err .ne. 0) then
                 call errore('nfmpi_inq_dimlen: ', err)
             else if (dim_len(i) .ne. length) then
-                intlen = length
+                intlen = int(length)
                 call errori('size unexpected: ', intlen)
                 print *, 'expected ', dim_len(i),' for the ',i,'entry'
             else
@@ -1152,8 +1152,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         include "pnetcdf.inc"
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
 
         integer ncid
         integer i
@@ -1216,8 +1215,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         include "pnetcdf.inc"
 #include "tests.inc"
         character*2 ATT_NAME
-        integer NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer NATTS, ATT_LEN
 
         integer ncid
         integer i

@@ -277,8 +277,7 @@ define([CHECK_ATTS],dnl
         implicit        none
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash4
         logical equal, inRange3, in_internal_range
 
@@ -1241,8 +1240,8 @@ define([TEST_NFMPI_PUT_ATT],dnl
         implicit        none
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
+        integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
         double precision hash_$1
         logical inRange3
 
@@ -1269,8 +1268,9 @@ define([TEST_NFMPI_PUT_ATT],dnl
         do 1, i = 0, numVars
             do 2, j = 1, NATTS(i)
                 if (.not.(ATT_TYPE(j,i) .eq. NF90_CHAR)) then
-                    if (.not.((ATT_LEN(j,i) .le. MAX_NELS))) &
-                        stop 'assert(ATT_LEN(j,i) .le. MAX_NELS)'
+                    ATT_LEN_LL = ATT_LEN(j,i)
+                    if (.not.((ATT_LEN_LL .le. MAX_NELS))) &
+                        stop 'assert(ATT_LEN_LL .le. MAX_NELS)'
                     err = nf90mpi_put_att(BAD_ID, i, ATT_NAME(j,i), value)
                     if (err .ne. NF90_EBADID) &
                         call errore('bad ncid: ', err)
@@ -1278,7 +1278,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
                     if (err .ne. NF90_ENOTVAR) &
                         call errore('bad var id: ', err)
                     allInExtRange = .true.
-                    do 3, k = 1, ATT_LEN(j,i)
+                    do 3, k = 1, ATT_LEN_LL
                         ndx(1) = k
                         VAR_ELEM($1, value, k) = hash_$1(ATT_TYPE(j,i), &
                                             -1, ndx, NFT_ITYPE($1))
@@ -1287,11 +1287,11 @@ define([TEST_NFMPI_PUT_ATT],dnl
                             inRange3(val, ATT_TYPE(j,i),  &
                                      NFT_ITYPE($1))
 3                   continue
-                    ! err = nf90mpi_put_att(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN(j,i)))
+                    ! err = nf90mpi_put_att(ncid, i, ATT_NAME(j,i), value(1:ATT_LEN_LL))
                     ! cannot use F90 API, as type casting is performed,
                     ! as ATT_TYPE(j,i) may not be the same as value's type
                     err = nfmpi_put_att_$1(ncid, i, ATT_NAME(j,i), &
-                                           ATT_TYPE(j,i), ATT_LEN(j,i), value)
+                                           ATT_TYPE(j,i), ATT_LEN_LL, value)
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
                             call errore('nf90mpi_put_att: ', err)
@@ -1427,8 +1427,7 @@ TEST_NFMPI_PUT_VARM(double)
         implicit        none
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash
 
         integer ncid

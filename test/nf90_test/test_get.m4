@@ -973,8 +973,7 @@ define([TEST_NFMPI_GET_ATT],dnl
         implicit        none
 #include "tests.inc"
         character*2 ATT_NAME
-        integer ATT_TYPE, NATTS
-        integer(kind=MPI_OFFSET_KIND) ATT_LEN
+        integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash4
         logical equal, inRange3, in_internal_range
 

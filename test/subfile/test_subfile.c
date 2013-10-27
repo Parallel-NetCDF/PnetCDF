@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     MPI_Offset bufcount;
     int array_of_dargs[3], array_of_psizes[3];
     int status;
-    MPI_Offset sizes[3], array_of_starts[3], stride[3];
+    MPI_Offset sizes[3], array_of_starts[3];
     char *basename = NULL, *basename1 = NULL, filename[100];
     char dimname[20], varname[20];
     int ncid, dimids0[3], rank_dim[3], *varid;

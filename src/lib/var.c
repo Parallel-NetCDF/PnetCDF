@@ -590,10 +590,6 @@ ncmpi_inq_var(int ncid,
         NC *ncp;
         NC_var *varp;
         MPI_Offset ii;
-#ifdef ENABLE_SUBFILING
-	NC *ncp_sf;
-	NC_var *varp_sf;
-#endif
 
         status = ncmpii_NC_check_id(ncid, &ncp); 
         if(status != NC_NOERR)
@@ -746,9 +742,6 @@ ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
         NC *ncp;
         NC_var *varp;
         MPI_Offset ii;
-#ifdef ENABLE_SUBFILING
-	int varp_ndims;
-#endif
 
         status = ncmpii_NC_check_id(ncid, &ncp); 
         if(status != NC_NOERR)
