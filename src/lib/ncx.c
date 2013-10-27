@@ -133,7 +133,9 @@ ncmpix_put_size_t(void             **xpp,
                   int                sizeof_t) /* 4 or 8 */
 {
     /* similar to put_ix_int() */
+#ifndef WORDS_BIGENDIAN
     uchar *cp = (uchar *) *xpp;
+#endif
 
     /* No negative offsets stored in netcdf */
     /* if (lp < 0) return NC_ERANGE; */
