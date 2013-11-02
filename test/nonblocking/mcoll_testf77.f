@@ -197,8 +197,6 @@
 
  999  call MPI_Finalize  (ierr)
 
-      Stop
-
       end program Mcoll_Testf
 
 
