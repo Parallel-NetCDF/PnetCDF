@@ -37,6 +37,9 @@ PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in README depend
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 mcoll_perf: mcoll_perf.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

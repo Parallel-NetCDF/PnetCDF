@@ -36,6 +36,9 @@ PACKING_LIST = $(C_SRCS) depend Makefile.in
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 install:
 
 uninstall:

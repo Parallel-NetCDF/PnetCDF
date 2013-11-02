@@ -14,8 +14,6 @@ include ../../../macros.make
 lex		= @LEX@ -Pncmpi
 yacc		= @YACC@ -p ncmpi
 
-LIB_PNETCDF	= ../../lib/libpnetcdf.a
-
 NCDUMP		= ../ncdump/ncmpidump
 PROGRAM		= ncmpigen
 MANUAL		= ncmpigen.1
@@ -60,8 +58,11 @@ uninstall:
 	$(RM) -f $(BINDIR)/$(PROGRAM)
 	$(RM) -f $(MANDIR)/man1/$(MANUAL)
 
-$(PROGRAM):	$(OBJS) $(LIB_PNETCDF)
+$(PROGRAM):	$(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
+
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 ncmpigentab.c \
 ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h

@@ -11,8 +11,6 @@ VPATH = @srcdir@
 
 include ../../../macros.make
 
-LIB_PNETCDF	= ../../lib/libpnetcdf.a
-
 NCGEN		= ../ncmpigen/ncmpigen
 
 INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
@@ -35,8 +33,11 @@ GARBAGE		= $(PROGRAM) test0.nc test1.nc test1.cdl test2.cdl
 
 all:		$(PROGRAM)
 
-$(PROGRAM):	$(LIB_PNETCDF) $(OBJS)
+$(PROGRAM):	$(LIBRARY) $(OBJS)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
+
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 test:		$(PROGRAM) FORCE
 	$(NCGEN) -b $(srcdir)/test0.cdl -o `pwd`/test0.nc

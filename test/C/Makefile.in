@@ -26,6 +26,9 @@ PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 pres_temp_4D_wr.o: pres_temp_4D_wr.c 
 
 pres_temp_4D_wr: pres_temp_4D_wr.o $(LIBRARY)

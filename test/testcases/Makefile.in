@@ -53,6 +53,9 @@ PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(CXX_SRCS) Makefile.in depend \
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 ncmpi_vars_null_stride: ncmpi_vars_null_stride.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
