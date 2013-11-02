@@ -99,7 +99,7 @@ program netcdfTest
     stop
   end if
 
-! pvfs2 driver has a problem of using data sieving
+! PVFS2 driver has a problem of ADIOI_Set_lock when data sieving is enabled
   call MPI_Info_create(info, err)
   call MPI_Info_set(info, "romio_ds_read", "disable", err)
   call MPI_Info_set(info, "romio_ds_write", "disable", err)
