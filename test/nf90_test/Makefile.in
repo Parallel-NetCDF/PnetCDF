@@ -14,7 +14,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir) -I$(srcdir)/../../src/libf
 INCLUDES += @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf @LCOV_LIB@
+LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 M4SRCS      = test_get.m4 \
               test_put.m4  \
@@ -54,20 +54,25 @@ tags: $(F90_SRCS) $(C_SRCS) FORCE
 
 # This simple testing target ensures that the test files are present
 testing check: all
-	$(RM) -f scratch.nc test.nc
-	./nf90_test -c    && ./nf90_test
-	./nf90_test -c -2 && ./nf90_test -2
-	./nf90_test -c -5 && ./nf90_test -5
+	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
+	$(TEST_SEQRUN) ./nf90_test -c    -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf90_test    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf90_test -c -2 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf90_test -2 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf90_test -c -5 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf90_test -5 -d $(TEST_OUTDIR)
 
 verbose_testing: all
-	$(RM) -f scratch.nc test.nc
-	./nf90_test -v -c    && ./nf90_test -v
-	./nf90_test -v -c -2 && ./nf90_test -v -2
-	./nf90_test -v -c -5 && ./nf90_test -v -5
+	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
+	$(TEST_SEQRUN) ./nf90_test -v -c    -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf90_test -v    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf90_test -v -c -2 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf90_test -v -2 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf90_test -v -c -5 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf90_test -v -5 -d $(TEST_OUTDIR)
 
 #test.nc: 
 #	(cd ../nc_test && $(MAKE) $(MFLAGS) nc_test && ./nc_test -c)
 #	cp ../nc_test/test.nc .
 
+ptest:
+
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
+
+.NOTPARALLEL: testing check verbose_testing ptest
+

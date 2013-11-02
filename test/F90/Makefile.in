@@ -15,7 +15,7 @@ INCLUDES  =
 FPPFLAGS += @FC_MODINC@../../src/libf90
 F90FLAGS += @FC_MODOUT@.
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf @LCOV_LIB@
+LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 F90_SRCS = tst_f90.f90 \
            tst_io.f90 \
@@ -79,32 +79,32 @@ f90tst_parallel3: f90tst_parallel3.o $(LIBRARY)
 f90tst_parallel4: f90tst_parallel4.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
-testing check: $(PROGS)
-	./tst_f90
-	./tst_io
-	./f90tst_vars
-	./tst_types2
-	./tst_f90_cdf5
-	./f90tst_vars2
-	./f90tst_vars3
-	./f90tst_vars4
-	./tst_flarge
+testing check verbose_testing: $(PROGS)
+	$(TEST_SEQRUN) ./tst_f90      $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./f90tst_vars  $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./tst_types2   $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./tst_f90_cdf5 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./f90tst_vars2 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./f90tst_vars3 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./f90tst_vars4 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./tst_flarge   $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./tst_io       $(TEST_OUTDIR)
 
 PARALLEL_PROGS = f90tst_parallel f90tst_parallel2 f90tst_parallel3 f90tst_parallel4
 
 ptest: $(PARALLEL_PROGS)
-	$(TEST_MPIRUN) -n 4 ./f90tst_parallel  $(TEST_OUT_DIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./f90tst_parallel2 $(TEST_OUT_DIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./f90tst_parallel3 $(TEST_OUT_DIR)/testfile.nc
-	$(TEST_MPIRUN) -n 8 ./f90tst_parallel4 $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./f90tst_parallel  $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./f90tst_parallel2 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./f90tst_parallel3 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN) -n 8 ./f90tst_parallel4 $(TEST_OUTDIR)/testfile.nc
 
 
 install:
 
 uninstall:
 
-
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
+.NOTPARALLEL: testing check verbose_testing ptest
 

@@ -14,7 +14,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf @LCOV_LIB@
+LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff
@@ -80,44 +80,33 @@ flexible: flexible.o $(LIBRARY)
 nonblocking: nonblocking.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-testing check: $(PROGS)
-	@./ncmpi_vars_null_stride
-	@./vectors
-	@./test_varm
-	@./alignment_test
-	@./nonblocking
-	@./flexible
+testing check verbose_testing : $(PROGS)
+	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
+	$(TEST_SEQRUN) ./ncmpi_vars_null_stride $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./vectors                $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_varm              $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./alignment_test         $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./nonblocking            $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./flexible               $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
-	@./bigrecords
+	$(TEST_SEQRUN) ./bigrecords             $(TEST_OUTDIR)/testfile.nc
 endif
 ifeq (@has_mpicxx@, yes)
-	@$(srcdir)/redef1.sh ./redef1 $(srcdir)/redef-good.ncdump
+	$(TEST_SEQRUN) ./redef1                 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) $(NCMPIGEN) -v 2 -o $(TEST_OUTDIR)/redef1.nc $(srcdir)/redef-good.ncdump
+	$(TEST_SEQRUN) $(NCMPIDIFF) $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 endif
 
-verbose_testing : $(PROGS)
-	./ncmpi_vars_null_stride
-	./vectors
-	./test_varm
-	./alignment_test
-	./nonblocking
-	./flexible
-ifeq (@has_fortran@, yes)
-	./bigrecords
-endif
-ifeq (@has_mpicxx@, yes)
-	$(srcdir)/redef1.sh ./redef1 $(srcdir)/redef-good.ncdump
-endif
-
-# redef1 must be the last one in $(PROGS) for ptest
+# Some of these tests are designed to run on one processes,
+# Run them on 4 processes to see if they can handle well
 ptest: $(PROGS)
+	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-ifeq (@has_mpicxx@, yes)
-	@$(NCMPIGEN) -v 2 -o $(TEST_OUT_DIR)/redef1.nc $(srcdir)/redef-good.ncdump
-	@$(NCMPIDIFF) $(TEST_OUT_DIR)/testfile.nc $(TEST_OUT_DIR)/redef1.nc
-endif
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

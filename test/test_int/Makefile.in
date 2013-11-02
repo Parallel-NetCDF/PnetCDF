@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 LDFLAGS  += -L../../src/lib -L../common
-LIBS     += -ltestutils -lpnetcdf @LCOV_LIB@
+LIBS     := -ltestutils -lpnetcdf $(LIBS) @LCOV_LIB@
 
 SRCS    = test_read.c \
           test_read_indep.c \
@@ -49,5 +49,11 @@ test_write64: test_write64.o $(LIBRARY)
 test_read64: test_read64.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+testing check verbose_testing:
+
+ptest:
+
 include $(srcdir)/../../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

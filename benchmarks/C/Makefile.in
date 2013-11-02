@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     := -lpnetcdf $(LIBS)
 
 C_SRCS    = aggregation.c \
             write_block_read_column.c
@@ -40,12 +40,15 @@ write_block_read_column: write_block_read_column.o $(LIBRARY)
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 4 ./$$i 5 $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i 5 $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 4 ./$$i 5 $(TEST_OUT_DIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 4 ./$$i 5 $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	@echo "-----------------------------------------------------"
 
 include $(srcdir)/depend
 
 include $(srcdir)/../../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

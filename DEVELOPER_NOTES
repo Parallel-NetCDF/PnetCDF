@@ -9,8 +9,8 @@ Tasks before a new release
 
    AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 
- - after run configure, command "make dist" will produce two tar balls
-   for PnetCDF release. For example,
+ - after run configure (must enable subfiling and not disable fortran), run command
+   "make dist" to produce two tar balls for PnetCDF release:
       parallel-netcdf-$(PNETCDF_VERSION).tar.gz
       parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
 

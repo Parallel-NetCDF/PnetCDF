@@ -159,17 +159,17 @@ if test "x${have_pnetcdf}" = xno; then
 fi
 
 AC_ARG_VAR(TEST_MPIRUN, [MPI run command for running test])
-AC_ARG_VAR(TEST_OUT_DIR, [Output file directory for running test])
+AC_ARG_VAR(TEST_OUTDIR, [Output file directory for running test])
 if test "x${TEST_MPIRUN}" = x ; then
     dnl set default to mpiexec
     TEST_MPIRUN=mpiexec
 fi
-if test "x${TEST_OUT_DIR}" = x ; then
+if test "x${TEST_OUTDIR}" = x ; then
     dnl set default to current directory
-    TEST_OUT_DIR=.
+    TEST_OUTDIR=.
 fi
 AC_SUBST(TEST_MPIRUN)
-AC_SUBST(TEST_OUT_DIR)
+AC_SUBST(TEST_OUTDIR)
 
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT

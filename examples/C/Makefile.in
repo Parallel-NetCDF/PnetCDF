@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     := -lpnetcdf $(LIBS)
 
 C_SRCS  = collective_write.c \
           nonblocking_write.c \
@@ -76,24 +76,25 @@ put_varn_float: put_varn_float.o $(LIBRARY)
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 	@for i in mput put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 	@for i in mput put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
+.NOTPARALLEL: testing check verbose_testing ptest
 

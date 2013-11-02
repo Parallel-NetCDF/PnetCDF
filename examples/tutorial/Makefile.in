@@ -14,7 +14,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     := -lpnetcdf $(LIBS)
 
 C_SRCS = pnetcdf-write-from-master.c \
          pnetcdf-read-from-master.c \
@@ -92,12 +92,13 @@ pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
+.NOTPARALLEL: testing check verbose_testing ptest
 

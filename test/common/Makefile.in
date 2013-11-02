@@ -31,5 +31,11 @@ libtestutils.a: $(OBJS)
 
 testutils.o: testutils.c testutils.h
 
+testing check verbose_testing:
+
+ptest:
+
 include $(srcdir)/../../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

@@ -15,7 +15,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib -L../common
-LIBS     += -lpnetcdf $(MATHLIB) @LCOV_LIB@
+LIBS     := -lpnetcdf $(LIBS) $(MATHLIB) @LCOV_LIB@
 
 C_SRCS = pnctest.c \
          csnap.c
@@ -49,6 +49,12 @@ pnctestf: pnctestf.o $(LIBRARY)
 pnf_test:  pnf_test.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
+testing check verbose_testing:
+
+ptest:
+
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
+
+.NOTPARALLEL: testing check verbose_testing ptest
 
