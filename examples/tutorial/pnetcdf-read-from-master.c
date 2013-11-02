@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
             }
         }
         /* oddity: there's no predefined MPI_Offset type */
-        MPI_Bcast(&var_size, 1, MPI_LONG_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&var_size, 1, MPI_OFFSET, 0, MPI_COMM_WORLD);
 
         data = calloc(var_size, sizeof(int));
 
