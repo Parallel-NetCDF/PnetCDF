@@ -30,17 +30,12 @@ PACKING_LIST	= \
 		CREDITS \
 		INSTALL \
 		README \
-		README.AIX \
-		README.bgl \
-		README.bgp \
-		README.bgq \
 		README.CRAY \
-		README.ifc_linux \
-		README.IRIX64 \
-		README.jazz \
-		README.large_files \
-		README.SP \
+		README.IBM \
+		README.LINUX \
+		README.SGI \
 		README.SX \
+		README.large_files \
 		RELEASE_NOTES
 
 PACKING_SUBDIRS	= \
