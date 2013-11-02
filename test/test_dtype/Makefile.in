@@ -29,6 +29,9 @@ PACKING_LIST = $(SRCS) $(HEADERS) Makefile.in README
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 test_subarray: test_subarray.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

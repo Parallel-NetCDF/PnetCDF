@@ -55,7 +55,7 @@ all: $(PROGS)
 .F90.o:
 	$(COMPILE.F90) $<
 
-$(PROGS): $(OBJS) $(LIBRARY)
+$(PROGS): $(OBJS)
 	$(LINK.F90) $(OBJS) $(FCLDFLAGS) $(FCLIBS)
 
 ptest: $(PROGS)

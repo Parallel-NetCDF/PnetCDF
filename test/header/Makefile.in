@@ -26,6 +26,9 @@ PACKING_LIST = $(SRCS) test_check_header.c test_check_header1.c \
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 header_consistency: header_consistency.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

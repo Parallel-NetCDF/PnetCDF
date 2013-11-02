@@ -24,7 +24,10 @@ GARBAGE      = $(PROGS) testfile.nc
 PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
-	set -e; cd ../data && $(MAKE) $(MFLAGS) all
+	set -e ; cd ../data && $(MAKE) $(MFLAGS) all
+
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 test_inq_format: test_inq_format.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)

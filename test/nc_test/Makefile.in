@@ -40,6 +40,9 @@ PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) Makefile.in depend README
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 nc_test: $(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS)
 

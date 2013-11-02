@@ -46,6 +46,9 @@ PACKING_LIST = $(C_SRCS) $(F90_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in REA
 
 all: $(PROGS)
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 nf90_test: $(OBJS) $(LIBRARY)
 	$(LINK.F90) $(OBJS) $(LDFLAGS) $(LIBS)
 

@@ -29,6 +29,9 @@ PACKING_LIST = $(SRCS) Makefile.in README
 all: $(PROGS)
 	set -e; cd ../data && $(MAKE) $(MFLAGS) all
 
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
 test_read: test_read.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

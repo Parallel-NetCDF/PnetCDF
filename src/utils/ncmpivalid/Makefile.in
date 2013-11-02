@@ -11,8 +11,6 @@ VPATH  = @srcdir@
 
 include ../../../macros.make
 
-LIB_PNETCDF	= ../../lib/libpnetcdf.a
-
 INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
 LDFLAGS        += -L../../lib
 LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
@@ -32,8 +30,11 @@ GARBAGE		= $(PROGRAM)
 
 all:		$(PROGRAM)
 
-$(PROGRAM):	$(LIB_PNETCDF) $(OBJS)
+$(PROGRAM):	$(LIBRARY) $(OBJS)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
+
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 install:	
 	$(INSTALL) -d -m 755 $(MANDIR)/man1
