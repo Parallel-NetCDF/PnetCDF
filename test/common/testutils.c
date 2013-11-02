@@ -19,9 +19,9 @@ void parse_read_args(int argc, char **argv, int rank, params *p)
 			strncpy(p->infname, argv[1], PATH_MAX);
 			strncpy(p->outfname, argv[2], PATH_MAX);
 		} else if (argc == 0) {
-			strncpy(p->infname, "pvfs:../data/test_double.nc", 
+			strncpy(p->infname, "../data/test_double.nc", 
 					PATH_MAX);
-			strncpy(p->outfname, "pvfs:testread.nc", PATH_MAX);
+			strncpy(p->outfname, "testread.nc", PATH_MAX);
 		} else {
 			fprintf(stderr, "Usage: %s: <source> <destination>\n", 
 					argv[0]);
@@ -43,7 +43,7 @@ void parse_write_args(int argc, char **argv, int rank, params *p)
 		if (argc == 2 ) {
 			strncpy(p->outfname, argv[1], PATH_MAX);
 		} else if (argc == 0) {
-			strncpy(p->outfname, "pvfs:testwrite.nc", PATH_MAX);
+			strncpy(p->outfname, "testwrite.nc", PATH_MAX);
 		} else {
 			fprintf(stderr, "Usage: %s: <destination>\n", argv[0]);
 			MPI_Abort(MPI_COMM_WORLD, 1);

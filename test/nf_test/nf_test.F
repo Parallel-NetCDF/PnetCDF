@@ -492,7 +492,8 @@
             numTypes = NTYPES
         endif
 
-C       pvfs2 driver has a problem of using data sieving
+C       PVFS2 driver has a problem of ADIOI_Set_lock when data sieving is
+C       enabled
         call MPI_Info_create(info, err)
         call MPI_Info_set(info, "romio_ds_read", "disable", err)
         call MPI_Info_set(info, "romio_ds_write", "disable", err)
