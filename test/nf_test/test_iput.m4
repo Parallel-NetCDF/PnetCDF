@@ -115,8 +115,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, info,
-     +                     ncid)
+        err = nfmpi_create(comm, scratch, flags, info, ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
@@ -217,8 +216,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, info,
-     +                     ncid)
+        err = nfmpi_create(comm, scratch, flags, info, ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
@@ -384,8 +382,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, info,
-     +                     ncid)
+        err = nfmpi_create(comm, scratch, flags, info, ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
@@ -578,8 +575,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, info,
-     +                     ncid)
+        err = nfmpi_create(comm, scratch, flags, info, ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
@@ -778,8 +774,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, info,
-     +                     ncid)
+        err = nfmpi_create(comm, scratch, flags, info, ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return

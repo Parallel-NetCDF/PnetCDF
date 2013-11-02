@@ -948,10 +948,9 @@
         integer flags
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, filename, flags, info,
-     +                     ncid)
+        err = nfmpi_create(comm, filename, flags, info, ncid)
         if (err .ne. 0) then
-            call errore('nfmpi_create: ', err)
+            call errore('nfmpi_create: '//trim(filename), err)
         end if
 
         call def_dims(ncid)
@@ -1205,8 +1204,7 @@
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
 
-        err = nfmpi_open(comm, filename, NF_NOWRITE, info,
-     +                   ncid)
+        err = nfmpi_open(comm, filename, NF_NOWRITE, info, ncid)
         if (err .ne. 0) then
             call errore('nfmpi_open: ', err)
         else

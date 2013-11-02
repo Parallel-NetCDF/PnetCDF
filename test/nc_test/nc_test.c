@@ -159,7 +159,8 @@ main(int argc, char *argv[])
       }
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
+    MPI_Info_set(info, "romio_ds_read", "disable");
+    MPI_Info_set(info, "romio_ds_write", "disable");
 
     numGatts = 6;
     numVars  = 136;

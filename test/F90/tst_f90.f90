@@ -71,7 +71,7 @@ program netcdfTest
   real (kind = FourByteReal), dimension(numLats) :: latVarBuf
   real (kind = FourByteReal), dimension(numLons) :: lonVarBuf
   character(LEN=128) filename, cmd, msg
-  integer argc, iargc, my_rank, p
+  integer argc, iargc, my_rank, p, info
 
   call MPI_Init(err)
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
@@ -98,9 +98,14 @@ program netcdfTest
     print *, "Compiler does not appear to support required kinds of variables."
     stop
   end if
-    
+
+! pvfs2 driver has a problem of using data sieving
+  call MPI_Info_create(info, err)
+  call MPI_Info_set(info, "romio_ds_read", "disable", err)
+  call MPI_Info_set(info, "romio_ds_write", "disable", err)
+
   ! Create the file
-  call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, MPI_INFO_NULL, ncFileID))
+  call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, info, ncFileID))
   
   ! Define the dimensions
   call check(nf90mpi_def_dim(ncid = ncFileID, name = "lat",     len = numLats,        dimid = latDimID))
@@ -174,7 +179,7 @@ program netcdfTest
   call check(nf90mpi_close(ncFileID))
 
   ! Now open the file to read and check a few values
-  call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, MPI_INFO_NULL, ncFileID))
+  call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, info, ncFileID))
   call check(nf90mpi_inq_varid(ncFileID,"frtime",frTimeVarID))
   call check(nf90mpi_get_att(ncFileID,frTimeVarID,"units",frTimeUnits))
   if(frTimeUnits .ne. "hours") then
@@ -182,9 +187,10 @@ program netcdfTest
      stop 2
   endif
   call check(nf90mpi_close(ncFileID))
+  call MPI_Info_free(info, err)
 
-   msg = '*** TESTING F90 '//trim(cmd)
-   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
+  msg = '*** TESTING F90 '//trim(cmd)
+  if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
 
  999 call MPI_Finalize(err)
 
