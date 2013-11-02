@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf @LCOV_LIB@
+LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 SRCS      = header_consistency.c
 
@@ -29,10 +29,14 @@ all: $(PROGS)
 header_consistency: header_consistency.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+testing check verbose_testing:
+
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN) -n 2 ./$$i $(TEST_OUT_DIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 2 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/../../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

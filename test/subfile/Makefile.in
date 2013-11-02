@@ -12,9 +12,10 @@ VPATH  = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib
-FPPFLAGS += -I../../src/libf -I../../src/libf90
+FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
+F90FLAGS += @FC_MODOUT@.
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf
+LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 C_SRCS   = test_subfile.c
 
@@ -42,9 +43,13 @@ all: $(PROGS)
 test_subfile: test_subfile.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+testing check verbose_testing:
+
 ptest : $(PROGS)
-	$(TEST_MPIRUN) -n 2 ./test_subfile -f $(TEST_OUT_DIR)/test_subfile.nc -s 2
+	$(TEST_MPIRUN) -n 2 ./test_subfile -f $(TEST_OUTDIR)/test_subfile.nc -s 2
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

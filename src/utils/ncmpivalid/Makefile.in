@@ -15,7 +15,7 @@ LIB_PNETCDF	= ../../lib/libpnetcdf.a
 
 INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
 LDFLAGS        += -L../../lib
-LIBS           += -lpnetcdf @LCOV_LIB@
+LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 C_SOURCES	= ncmpivalid.c
 HEADERS		=

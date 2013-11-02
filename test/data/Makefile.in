@@ -39,5 +39,11 @@ test_int.nc: test_int.nc.gz
 unzip:
 	set -e; for i in $(NC_ZIP_FILES); do ( if [ ! -f $$i ] ; then gzip -dc $(srcdir)/$$i.gz > $$i ; fi ) ; done
 
+testing check verbose_testing:
+
+ptest:
+
 include $(srcdir)/../../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

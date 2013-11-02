@@ -48,32 +48,13 @@ all:
 
 # Eventually, this target will run all of the relevant tests
 check testing: all
-	cd nc_test && $(MAKE) $(MFLAGS) testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) $(MFLAGS) testing ; fi
-	if [ @has_fortran@ = yes ] ; then cd nf90_test && $(MAKE) $(MFLAGS) testing ; fi
-	if [ @has_fortran@ = yes ] ; then cd F90       && $(MAKE) $(MFLAGS) testing ; fi
-	cd C && $(MAKE) $(MFLAGS) testing
-	cd nonblocking && $(MAKE) $(MFLAGS) testing
-	cd testcases && $(MAKE) $(MFLAGS) testing
-	cd cdf_format && $(MAKE) $(MFLAGS) testing
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) testing ; ) ; done
 
 verbose_check verbose_testing: all
-	cd nc_test && $(MAKE) $(MFLAGS) verbose_testing
-	if [ @has_fortran@ = yes ] ; then cd nf_test   && $(MAKE) $(MFLAGS) verbose_testing ; fi
-	if [ @has_fortran@ = yes ] ; then cd nf90_test && $(MAKE) $(MFLAGS) verbose_testing ; fi
-	if [ @has_fortran@ = yes ] ; then cd F90       && $(MAKE) $(MFLAGS) verbose_testing ; fi
-	cd C && $(MAKE) $(MFLAGS) verbose_testing
-	cd nonblocking && $(MAKE) $(MFLAGS) verbose_testing
-	cd testcases && $(MAKE) $(MFLAGS) verbose_testing
-	cd cdf_format && $(MAKE) $(MFLAGS) verbose_testing
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) verbose_testing ; ) ; done
 
 ptest: all
-	if [ @has_fortran@ = yes ] ; then cd F90 && $(MAKE) $(MFLAGS) ptest ; fi
-	cd C && $(MAKE) $(MFLAGS) ptest
-	cd nonblocking && $(MAKE) $(MFLAGS) ptest
-	cd testcases && $(MAKE) $(MFLAGS) ptest
-	cd header && $(MAKE) $(MFLAGS) ptest
-	if [ @enable_subfiling@ = yes ] ; then cd subfile && $(MAKE) $(MFLAGS) ptest ; fi
+	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) ptest ; ) ; done
 
 include $(srcdir)/../rules.make
 

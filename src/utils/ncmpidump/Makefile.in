@@ -17,7 +17,7 @@ NCGEN		= ../ncmpigen/ncmpigen
 
 INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
 LDFLAGS        += -L../../lib
-LIBS           += -lpnetcdf @LCOV_LIB@
+LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 C_SOURCES	= ncmpidump.c vardata.c dumplib.c
 HEADERS		= ncmpidump.h vardata.h dumplib.h

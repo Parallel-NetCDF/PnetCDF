@@ -13,7 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf @LCOV_LIB@
+LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 SRCS    = test_inq_format.c cdf_type.c
 
@@ -32,13 +32,13 @@ test_inq_format: test_inq_format.o $(LIBRARY)
 cdf_type: cdf_type.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-testing check: all
-	@./test_inq_format
-	@./cdf_type
+testing check verbose_testing: all
+	$(TEST_SEQRUN) ./test_inq_format
+	$(TEST_SEQRUN) ./cdf_type $(TEST_OUTDIR)/testfile.nc
 
-verbose_testing: all
-	./test_inq_format
-	./cdf_type
+ptest:
 
 include $(srcdir)/../../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

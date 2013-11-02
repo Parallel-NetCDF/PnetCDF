@@ -14,7 +14,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib
-LIBS     += -lpnetcdf $(MATHLIB) @LCOV_LIB@
+LIBS     := -lpnetcdf $(LIBS) $(MATHLIB) @LCOV_LIB@
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c
@@ -56,35 +56,37 @@ test_bputf77: test_bputf77.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 check testing: $(PROGS)
-	@./mcoll_perf
-	@./test_bput
+	$(TEST_SEQRUN) ./mcoll_perf -f $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bput     $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
-	@./mcoll_testf
-	@./mcoll_testf77
-	@./test_bputf
-	@./test_bputf77
+	$(TEST_SEQRUN) ./mcoll_testf   $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./mcoll_testf77 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bputf    $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bputf77  $(TEST_OUTDIR)/testfile.nc
 endif
 
 verbose_check verbose_testing: $(PROGS)
-	./mcoll_perf -v
-	./test_bput -v
+	$(TEST_SEQRUN) ./mcoll_perf -v -f $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bput -v     $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
-	./mcoll_testf -v
-	./mcoll_testf77 -v
-	./test_bputf -v
-	./test_bputf77 -v
+	$(TEST_SEQRUN) ./mcoll_testf -v   $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./mcoll_testf77 -v $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bputf -v    $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bputf77 -v  $(TEST_OUTDIR)/testfile.nc
 endif
 
 ptest : $(PROGS)
-	$(TEST_MPIRUN) -n 4 ./mcoll_perf -f $(TEST_OUT_DIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./test_bput     $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./mcoll_perf -f $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./test_bput     $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
-	$(TEST_MPIRUN) -n 4 ./mcoll_testf   $(TEST_OUT_DIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./mcoll_testf77 $(TEST_OUT_DIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./test_bputf    $(TEST_OUT_DIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./test_bputf77  $(TEST_OUT_DIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./mcoll_testf   $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./mcoll_testf77 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./test_bputf    $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN) -n 4 ./test_bputf77  $(TEST_OUTDIR)/testfile.nc
 endif
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

@@ -22,7 +22,7 @@ MANUAL		= ncmpigen.1
 
 INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
 LDFLAGS        += -L../../lib
-LIBS           += -lpnetcdf @LCOV_LIB@
+LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
 
 C_SOURCES       = escapes.c genlib.c getfill.c init.c load.c main.c
 HEADERS         = generic.h genlib.h ncmpigen.h

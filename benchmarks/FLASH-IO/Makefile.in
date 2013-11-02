@@ -21,8 +21,11 @@ FPPFLAGS    += @FC_DEFINE@N_DIM=3 @FC_DEFINE@MAXBLOCKS=100 @FC_DEFINE@IONMAX=13
 FCFLAGS      = @FCFLAGS@
 COMPILE.F90  = $(F90) -c $(FCFLAGS) $(FPPFLAGS)
 FCLDFLAGS    = @LDFLAGS@ -L@PNETCDF_LIB@
-FCLIBS       = @LIBS@ -lpnetcdf
+FCLIBS       = -lpnetcdf @LIBS@
 LINK.F90     = $(F90) $(FCFLAGS) -o $@
+
+TEST_MPIRUN  = @TEST_MPIRUN@
+TEST_OUTDIR  = @TEST_OUTDIR@
 
 PROGS        = flash_benchmark_io
 
@@ -56,7 +59,7 @@ $(PROGS): $(OBJS) $(LIBRARY)
 	$(LINK.F90) $(OBJS) $(FCLDFLAGS) $(FCLIBS)
 
 ptest: $(PROGS)
-	@TEST_MPIRUN@ -n 4 ./$(PROGS) @TEST_OUT_DIR@/flash_io_test_
+	$(TEST_MPIRUN) -n 4 ./$(PROGS) $(TEST_OUTDIR)/flash_io_test_
 
 MANIFEST.echo: FORCE
 	echo $(PACKING_LIST) | fmt -1
@@ -81,4 +84,6 @@ distclean: clean
 	@$(RM) -rf $(DIST_GARBAGE)
 
 .PHONY: FORCE all clean distclean install uninstall dist
+
+.NOTPARALLEL: ptest
 
