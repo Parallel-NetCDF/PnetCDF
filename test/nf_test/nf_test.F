@@ -31,7 +31,8 @@
         include "pnetcdf.inc"
 #include "tests.inc"
 
-        call error('usage: nf_test [-hrv] [-n <MAX_NMPT>]')
+        call error('Usage: '//trim(progname)//
+     +             ' [-c | -hrv -n <MAX_NMPT>]')
         call error('       nf_test [-c]')
         call error('   [-h] Print help' )
         call error('   [-c] Create file test.nc (Do not do tests)' )
@@ -39,9 +40,11 @@
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
         call error('   [-r] Just do read-only tests' )
+        call error(
+     +  '   [-d directory] directory for storing input/output files' )
         call error('   [-v] Verbose mode' )
         call error(
-     +  '   [-n <max>] max. number of messages per test (Default: 8)')
+     +  '   [-n <max>] max. number of messages per test (Default: 20)')
         end
 
 
@@ -86,10 +89,10 @@
 
         program nf_test
 #if defined(VISUAL_CPLUSPLUS)
-!	DIGITAL Visual Fortran needs DFLIB for getarg
-	USE DFLIB
-!	DIGITAL Visual Fortran needs DFPORT for iargc
-	USE DFPORT
+!       DIGITAL Visual Fortran needs DFLIB for getarg
+        USE DFLIB
+!       DIGITAL Visual Fortran needs DFPORT for iargc
+        USE DFPORT
         implicit        none
 #elif defined(NAGf90Fortran)
         USE F90_UNIX_ENV, only : iargc, getarg
@@ -419,7 +422,7 @@
         create_file = .false.   !/* file test.nc will normally already exist */
         readonly = .false.      !/* assume may write in test dir as default */
         verbose = .false.
-        max_nmpt = 8
+        max_nmpt = 20
         skiparg = .false.
         cdf_format = 1
         extra_flags = 0
@@ -462,6 +465,12 @@
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF_64BIT_DATA
+                        else if (opt .eq. 'd') then
+                            call getarg(iarg+1, arg)
+                            testfile = trim(arg) // "/test.nc"
+                            scratch = trim(arg) // "/scratch.nc"
+                            skiparg = .true.
+                            go to 1
                         else
                             call usage
                             call ud_exit(1)
@@ -482,6 +491,11 @@
             numVars  = NVARS
             numTypes = NTYPES
         endif
+
+C       pvfs2 driver has a problem of using data sieving
+        call MPI_Info_create(info, err)
+        call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",
+     +                    err)
 
 C       /* Initialize global variables defining test file */
         call init_gvars
@@ -814,6 +828,8 @@ C           /* Test write functions */
      +                test_nfmpi_set_default_format);
 #endif
         end if
+
+        call MPI_Info_free(info, err)
 
         if (nfailsTotal .eq. 0) then
           write(msg,"(A,I1)") '*** TESTING F77 '//trim(cmd)//

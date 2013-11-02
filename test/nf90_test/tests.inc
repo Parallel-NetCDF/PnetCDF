@@ -154,8 +154,8 @@
 
 !    /* Global variables - filenames */
 
-      CHARACTER*80      testfile  !/* netCDF read-only test data */
-      CHARACTER*80      scratch   !/* netCDF test file for writing */
+      CHARACTER*128      testfile  !/* netCDF read-only test data */
+      CHARACTER*128      scratch   !/* netCDF test file for writing */
 
 !    /* Global variables - command-line arguments */
 
@@ -220,7 +220,7 @@
                                 NFAILSTOTAL
 
 
-      integer numTypes, numVars, numGatts, cdf_format, extra_flags
+      integer numTypes, numVars, numGatts, cdf_format, extra_flags, info
       common / PROBLEM_SIZE / numTypes, numVars, numGatts, cdf_format, &
-                              extra_flags
+                              extra_flags, info
 

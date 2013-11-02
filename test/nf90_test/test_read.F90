@@ -132,7 +132,7 @@
 
 !       /* Try to open a nonexistent file */
         err = nf90mpi_open(comm, 'tooth-fairy.nc', NF90_NOWRITE, &
-                         MPI_INFO_NULL, ncid)!/* should fail */
+                         info, ncid)!/* should fail */
         if (err .eq. NF90_NOERR) then
             call error &
             ('nf90mpi_open of nonexistent file should have failed')
@@ -147,7 +147,7 @@
 
 !       Open a file that is not a netCDF file. This call should fail
         err = nf90mpi_open(comm, 'test_get.F90', NF90_NOWRITE, &
-                           MPI_INFO_NULL, ncid)
+                           info, ncid)
         if (err .ne. NF90_ENOTNC .and. err .ne. NF90_EOFILE) then
             call errore('nf90mpi_open of non-netCDF file: ', err)
         else
@@ -155,7 +155,7 @@
         endif
 
 !       Open a netCDF file in read-only mode, check that write fails
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, ncid)
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, ncid)
         if (err .NE. NF90_NOERR) then
             call errore('nf90mpi_open: ', err)
         else
@@ -165,7 +165,7 @@
         if (err .ne. NF90_EPERM) &
             call error('nf90mpi_redef of read-only file should fail')
 !       Opened OK, see if can open again and get a different netCDF ID
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid2)
         if (err .NE. NF90_NOERR) then
             call errore('nf90mpi_open: ', err)
@@ -180,13 +180,13 @@
         if (.not. readonly) then        !/* tests using netCDF scratch file */
             flags = IOR(NF90_NOCLOBBER, extra_flags)
             err = nf90mpi_create(comm, scratch, flags, &
-                               MPI_INFO_NULL, ncid2)
+                               info, ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_create: ', err)
             else 
                 err = nf90mpi_close(ncid2)
             end if
-            err = nf90mpi_open(comm, scratch, NF90_WRITE, MPI_INFO_NULL, &
+            err = nf90mpi_open(comm, scratch, NF90_WRITE, info, &
                              ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_open: ', err)
@@ -194,7 +194,7 @@
                 err = nf90mpi_close(ncid2)
                 nok = nok + 1
             end if
-            err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+            err = nf90mpi_delete(scratch, info)
             if (err .NE. NF90_NOERR)  &
                 call errorc('delete of scratch file failed: ', scratch)
         end if
@@ -222,7 +222,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -252,7 +252,7 @@
         endif
 
 !       /* Close in data mode */
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -266,7 +266,7 @@
         if (.not. readonly) then        !/* tests using netCDF scratch file */
             flags = IOR(NF90_NOCLOBBER, extra_flags)
             err = nf90mpi_create(comm, scratch, flags, &
-                               MPI_INFO_NULL, ncid)
+                               info, ncid)
             if (err .NE. NF90_NOERR)  &
                 call errore('nf90mpi_create: ', err)
             err = nf90mpi_close(ncid)
@@ -275,7 +275,7 @@
             else
                 nok = nok + 1
             endif
-            err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+            err = nf90mpi_delete(scratch, info)
             if (err .NE. NF90_NOERR) then
                 call errorc('delete of scratch file failed: ',  &
                     scratch)
@@ -317,7 +317,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -353,7 +353,7 @@
         if (.not. readonly) then  ! tests using netCDF scratch file
             flags = IOR(NF90_NOCLOBBER, extra_flags)
             err = nf90mpi_create(comm, scratch, flags, &
-                               MPI_INFO_NULL, ncid2)
+                               info, ncid2)
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_create: ', err)
             else                ! add dim, var, gatt, check inq
@@ -441,7 +441,7 @@
                     nok = nok + 1
                 end if
                 err = nf90mpi_close(ncid2)
-                err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+                err = nf90mpi_delete(scratch, info)
                 if (err .NE. NF90_NOERR) &
                     call errorc('delete of scratch file failed: ',  &
                         scratch)
@@ -472,7 +472,7 @@
         else
             nok = nok + 1
         endif
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -510,7 +510,7 @@
         else
             nok = nok + 1
         endif
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                            ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -547,7 +547,7 @@
         else
             nok = nok + 1
         endif
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -584,7 +584,7 @@
         else
             nok = nok + 1
         endif
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                            ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -617,7 +617,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -665,7 +665,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -715,7 +715,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -759,7 +759,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -804,7 +804,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -855,7 +855,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -913,7 +913,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -960,7 +960,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -1007,7 +1007,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -1056,7 +1056,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -1101,7 +1101,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -1145,7 +1145,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR)  &
             call errore('nf90mpi_open: ', err)
@@ -1212,7 +1212,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -1273,7 +1273,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -1335,7 +1335,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -1400,7 +1400,7 @@
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .NE. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)

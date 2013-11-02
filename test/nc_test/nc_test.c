@@ -61,20 +61,22 @@ int  max_nmpt;		/* max. number of messages per test */
  * Misc. global variables
  */
 int  nfails;		/* number of failures in specific test */
-char testfile[] = "test.nc";    /* read-only testfile */
-char scratch[] = "scratch.nc";  /* writable scratch file */
+char testfile[128];
+char scratch[128];
 MPI_Comm comm = MPI_COMM_WORLD; /* mpi communicator for parallel-netcdf */
+MPI_Info info;
 
 static void
 usage(char *progname)
 {
-    error("%s [-hrv] [-n <MAX_NMPT>]\n", progname);
+    error("%s [-c | -hrv -n <MAX_NMPT>]\n", progname);
     error("   [-h] Print help\n" );
     error("   [-c] Create file test.nc (Do not do tests)\n" );
     error("   [-r] Just do read-only tests\n" );
     error("   [-v] Verbose mode\n" );
     error("   [-2] (with -c) create file with CDF-2 format\n" );
     error("   [-n <MAX_NMPT>] max. number of messages per test (Default: 8)\n");
+    error("   [-d directory] directory for storing input/output files\n");
 }
 
 #define NC_TEST(func) {                                                  \
@@ -122,7 +124,10 @@ main(int argc, char *argv[])
     read_only = 0;               /* assume may write in test dir as default */
     verbose = 0;
     max_nmpt = 8;
-    while ((c = getopt(argc, argv, "c25hrvn:")) != EOF)
+    strcpy(testfile, "test.nc");    /* read-only testfile */
+    strcpy(scratch, "scratch.nc");  /* writable scratch file */
+
+    while ((c = getopt(argc, argv, "c25hrvn:d:")) != EOF)
       switch(c) {
 	case 'c':		/* Create file test.nc */
 	  create_file = 1;
@@ -143,12 +148,18 @@ main(int argc, char *argv[])
 	case '5':
 	  cdf_format = 5;
 	  extra_flags = NC_64BIT_DATA;
+	case 'd':
+          sprintf(testfile, "%s/test.nc", optarg);
+          sprintf(scratch, "%s/scratch.nc", optarg);
 	  break;
 	case 'h':
 	case '?':
 	  usage(argv[0]);
 	  return 1;
       }
+
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
 
     numGatts = 6;
     numVars  = 136;
@@ -540,7 +551,7 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_iput_varm);
 #endif /* TEST_VOIDSTAR */
     }
-    MPI_Finalize();
+    MPI_Info_free(&info);
 
     char cmd_str[80];
     sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
@@ -551,5 +562,6 @@ main(int argc, char *argv[])
         print("\n%s: expects 0 failures ... ",argv[0]);
         print("Total number of failures: %d\n\n", nfailsTotal);
     }
+    MPI_Finalize();
     return nfailsTotal > 0;
 }

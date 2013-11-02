@@ -94,7 +94,7 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, & 
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, & 
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -193,7 +193,7 @@ define([TEST_NFMPI_IGET_VAR],[dnl
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info,  &
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -305,7 +305,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -522,7 +522,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
@@ -737,7 +737,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
 
         nok = 0
 
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)

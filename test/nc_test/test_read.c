@@ -81,7 +81,7 @@ test_ncmpi_strerror(void)
  *    Try to open a non-existent netCDF file, check error return.
  *    Open a file that is not a netCDF file, check error return.
  *    Open a netCDF file with a bad mode argument, check error return.
- *    Open a netCDF file with NC_NOWRITE, MPI_INFO_NULL mode, try to write, check error.
+ *    Open a netCDF file with NC_NOWRITE, info mode, try to write, check error.
  *    Try to open a netcdf twice, check whether returned netcdf ids different.
  * If in writable section of tests,
  *    Open a netCDF file with NC_WRITE mode, write something, close it.
@@ -96,7 +96,7 @@ test_ncmpi_open(void)
     int nok=0;
     
     /* Try to open a nonexistent file */
-    err = ncmpi_open(comm, "tooth-fairy.nc", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
+    err = ncmpi_open(comm, "tooth-fairy.nc", NC_NOWRITE, info, &ncid);/* should fail */
     IF (err == NC_NOERR)
 	error("ncmpi_open of nonexistent file should have failed");
     IF (err != NC_ENOENT)
@@ -107,13 +107,13 @@ test_ncmpi_open(void)
     }
 
     /* Open a file that is not a netCDF file. */
-    err = ncmpi_open(comm, "test_get.c", NC_NOWRITE, MPI_INFO_NULL, &ncid);/* should fail */
+    err = ncmpi_open(comm, "test_get.c", NC_NOWRITE, info, &ncid);/* should fail */
     IF (err != NC_ENOTNC && err != NC_EOFILE)
 	error("ncmpi_open of non-netCDF file: status = %d", err);
     ELSE_NOK
 
     /* Open a netCDF file in read-only mode, check that write fails */
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     ELSE_NOK
@@ -121,7 +121,7 @@ test_ncmpi_open(void)
     IF (err != NC_EPERM)
 	error("ncmpi_redef of read-only file should fail");
     /* Opened OK, see if can open again and get a different netCDF ID */
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid2);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid2);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     else {
@@ -132,19 +132,19 @@ test_ncmpi_open(void)
 	error("netCDF IDs for first and second ncmpi_open calls should differ");
 
     if (! read_only) {		/* tests using netCDF scratch file */
-	err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid2);
+	err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid2);
 	IF (err) 
 	    error("ncmpi_create: %s", ncmpi_strerror(err));
 	else 
 	    ncmpi_close(ncid2);
-	err = ncmpi_open(comm, scratch, NC_WRITE, MPI_INFO_NULL, &ncid2);
+	err = ncmpi_open(comm, scratch, NC_WRITE, info, &ncid2);
 	IF (err) 
 	    error("ncmpi_open: %s", ncmpi_strerror(err));
 	else {
 	    ncmpi_close(ncid2);
             nok++;
         }
-	err = ncmpi_delete(scratch, MPI_INFO_NULL);
+	err = ncmpi_delete(scratch, info);
 	IF (err) 
 	    error("remove of %s failed", scratch);
     }
@@ -166,7 +166,7 @@ int
 test_ncmpi_close(void)
 {
     int ncid, nok=0;
-    int err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    int err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
 
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
@@ -188,7 +188,7 @@ test_ncmpi_close(void)
     ELSE_NOK
 
     /* Close in data mode */
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_close(ncid);
@@ -197,14 +197,14 @@ test_ncmpi_close(void)
     ELSE_NOK
 
     if (! read_only) {		/* tests using netCDF scratch file */
-        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
         IF (err) 
             error("ncmpi_create: %s", ncmpi_strerror(err));
 	err = ncmpi_close(ncid);
 	IF (err)
 	    error("ncmpi_close in define mode: %s", ncmpi_strerror(err));
         ELSE_NOK
-        err = ncmpi_delete(scratch, MPI_INFO_NULL);
+        err = ncmpi_delete(scratch, info);
         IF (err)
             error("remove of %s failed", scratch);
     }
@@ -229,7 +229,7 @@ test_ncmpi_inq(void)
     int nvars;			/* number of variables */
     int ngatts;			/* number of global attributes */
     int recdim;			/* id of unlimited dimension */
-    int err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    int err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     int nok=0;
 
     IF (err)
@@ -282,7 +282,7 @@ test_ncmpi_inq(void)
     if (! read_only) {		/* tests using netCDF scratch file */
 	int ncid2;		/* for scratch netCDF dataset */
 
-        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid2);
+        err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid2);
         IF (err) {
             error("ncmpi_create: %s", ncmpi_strerror(err));
 	} else {		/* add dim, var, gatt, check inq */
@@ -352,7 +352,7 @@ test_ncmpi_inq(void)
 		error("ncmpi_inq in define mode: ngatts wrong, %d", ngatts);
             ELSE_NOK
 	    ncmpi_close(ncid2);
-	    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+	    err = ncmpi_delete(scratch, info);
 	    IF (err)
 		error("remove of %s failed", scratch);
 	}
@@ -376,7 +376,7 @@ test_ncmpi_inq_natts(void)
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
     ELSE_NOK
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_natts(ncid, &ngatts);
@@ -404,7 +404,7 @@ test_ncmpi_inq_ndims(void)
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
     ELSE_NOK
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_ndims(ncid, &ndims);
@@ -432,7 +432,7 @@ test_ncmpi_inq_nvars(void)
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
     ELSE_NOK
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_nvars(ncid, &nvars);
@@ -460,7 +460,7 @@ test_ncmpi_inq_unlimdim(void)
     IF (err != NC_EBADID)
 	error("bad ncid: status = %d", err);
     ELSE_NOK
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_unlimdim(ncid, &unlimdim);
@@ -485,7 +485,7 @@ test_ncmpi_inq_dimid(void)
     int err;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_dimid(ncid, "noSuch", &dimid);
@@ -521,7 +521,7 @@ test_ncmpi_inq_dim(void)
     MPI_Offset length;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NDIMS; i++) {
@@ -574,7 +574,7 @@ test_ncmpi_inq_dimlen(void)
     MPI_Offset  length;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NDIMS; i++) {
@@ -609,7 +609,7 @@ test_ncmpi_inq_dimname(void)
     char name[NC_MAX_NAME];
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < NDIMS; i++) {
@@ -644,7 +644,7 @@ test_ncmpi_inq_varid(void)
     int err;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -686,7 +686,7 @@ test_ncmpi_inq_var(void)
     int natts;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -763,7 +763,7 @@ test_ncmpi_inq_vardimid(void)
     int dimids[MAX_RANK];
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -798,7 +798,7 @@ test_ncmpi_inq_varname(void)
     char name[NC_MAX_NAME];
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -833,7 +833,7 @@ test_ncmpi_inq_varnatts(void)
     int natts;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = -1; i < numVars; i++) {
@@ -868,7 +868,7 @@ test_ncmpi_inq_varndims(void)
     int ndims;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -903,7 +903,7 @@ test_ncmpi_inq_vartype(void)
     nc_type datatype;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -946,7 +946,7 @@ test_ncmpi_get_var1(void)
     double buf[1];		/* (void *) buffer */
     double value;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -1024,7 +1024,7 @@ test_ncmpi_get_vara(void)
     double expect;
     double got;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -1154,7 +1154,7 @@ test_ncmpi_get_vars(void)
     double expect;
     double got;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -1325,7 +1325,7 @@ test_ncmpi_get_varm(void)
     double expect;
     double got;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
 	error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -1469,7 +1469,7 @@ test_ncmpi_get_att(void)
     double got;
     int nok = 0;      /* count of valid comparisons */
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err) 
 	error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -1538,7 +1538,7 @@ test_ncmpi_inq_att(void)
     MPI_Offset n;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err) 
 	error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -1586,7 +1586,7 @@ test_ncmpi_inq_attlen(void)
     MPI_Offset len;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -1632,7 +1632,7 @@ test_ncmpi_inq_atttype(void)
     nc_type datatype;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -1678,7 +1678,7 @@ test_ncmpi_inq_attname(void)
     char name[NC_MAX_NAME];
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -1728,7 +1728,7 @@ test_ncmpi_inq_attid(void)
     int attnum;
     int nok=0;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 

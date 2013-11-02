@@ -29,7 +29,7 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         nok = 0
         do 1, clobber = 0, 1
-            err = nf90mpi_create(comm, scratch, flags,  MPI_INFO_NULL, &
+            err = nf90mpi_create(comm, scratch, flags,  info, &
                                ncid)
             if (err .ne. 0) then
                 call errore('nf90mpi_create: ', err)
@@ -39,7 +39,7 @@
             if (err .ne. 0) then
                 call errore('nf90mpi_close: ', err)
             end if
-            err = nf90mpi_open(comm, scratch, NF90_NOWRITE, MPI_INFO_NULL,  &
+            err = nf90mpi_open(comm, scratch, NF90_NOWRITE, info,  &
                              ncid)
             if (err .ne. 0) then
                 call errore('nf90mpi_open: ', err)
@@ -73,13 +73,13 @@
 1       continue
 
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags,  MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags,  info, &
                            ncid)
         if (err .ne. NF90_EEXIST) then
             call errore('attempt to overwrite file: ', err)
         end if
         nok = nok + 1
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) then
             call errori('delete of scratch file failed: ', err)
         end if
@@ -140,7 +140,7 @@
         nok = nok + 1
 
         ! read-only tests
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
@@ -160,7 +160,7 @@
 
 !           /* tests using scratch file */
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -231,7 +231,7 @@
 !           /* check scratch file written as expected */
         call check_file(scratch)
         err = nf90mpi_open(comm, scratch, NF90_NOWRITE, &
-              MPI_INFO_NULL, ncid)
+              info, ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_inquire_dimension(ncid, dimid, name, length)
@@ -256,7 +256,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
 
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete failed for netCDF: ', err)
         call print_nok(nok)
@@ -299,7 +299,7 @@
 
 !           /* create scratch file & try nf90mpi_sync in define mode */
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncidw)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -328,7 +328,7 @@
         endif
 
 !           /* open another handle, nf90mpi_sync, read (check) */
-        err = nf90mpi_open(comm, scratch, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, scratch, NF90_NOWRITE, info, &
                          ncidr)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
@@ -350,7 +350,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
 
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
@@ -387,7 +387,7 @@
 
 !           /* create scratch file & try nf90mpi_abort in define mode */
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -405,7 +405,7 @@
         err = nf90mpi_close(ncid)    !/* should already be closed */
         if (err .ne. NF90_EBADID) &
             call errore('bad ncid: ', err)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)    !/* should already be deleted */
+        err = nf90mpi_delete(scratch, info)    !/* should already be deleted */
         if (err .eq. 0) &
             call errori('scratch file should not exist: ', err)
 
@@ -414,7 +414,7 @@
 !            define new dims, vars, atts
 !            try nf90mpi_abort: should restore previous state (no dims, vars, atts)
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -438,7 +438,7 @@
         err = nf90mpi_close(ncid)    !/* should already be closed */
         if (err .ne. NF90_EBADID) &
             call errore('bad ncid: ', err)
-        err = nf90mpi_open(comm, scratch, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, scratch, NF90_NOWRITE, info, &
                          ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
@@ -457,7 +457,7 @@
 
 !           /* try nf90mpi_abort in data mode - should just close */
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -480,7 +480,7 @@
         if (err .ne. NF90_EBADID) &
             call errore('bad ncid: ', err)
         call check_file(scratch)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
@@ -520,7 +520,7 @@
 
 !           /* data mode test */
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -612,7 +612,7 @@
         err = nf90mpi_close(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
@@ -646,7 +646,7 @@
 
 !           /* main tests */
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -678,7 +678,7 @@
         err = nf90mpi_close(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
@@ -724,7 +724,7 @@
 
 !       scalar tests
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -776,13 +776,13 @@
         err = nf90mpi_close(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errorc('delete of scratch file failed: ', scratch)
 
 !           /* general tests using global vars */
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -813,7 +813,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
 
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errorc('delete of scratch file failed: ', scratch)
         call print_nok(nok)
@@ -841,7 +841,7 @@
         nok = 0
 
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -917,7 +917,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
 
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errorc('delete of scratch file failed: ', scratch)
         call print_nok(nok)
@@ -954,12 +954,12 @@
         integer nok, flags
 
         nok = 0
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid_in)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid_out)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1018,7 +1018,7 @@
         err = nf90mpi_close(ncid_out)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_open(comm, scratch, NF90_WRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, scratch, NF90_WRITE, info, &
                          ncid_out)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
@@ -1061,7 +1061,7 @@
             call errore('nf90mpi_close: ', err)
 
 !           /* Reopen & check */
-        err = nf90mpi_open(comm, scratch, NF90_WRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, scratch, NF90_WRITE, info, &
                          ncid_out)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
@@ -1086,7 +1086,7 @@
         err = nf90mpi_close(ncid_out)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errorc('delete of scratch file failed', scratch)
         call print_nok(nok)
@@ -1133,7 +1133,7 @@
         nok = 0
 
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1174,7 +1174,7 @@
         err = nf90mpi_close(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_open(comm, scratch, NF90_WRITE, MPI_INFO_NULL,  &
+        err = nf90mpi_open(comm, scratch, NF90_WRITE, info,  &
             ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
@@ -1263,7 +1263,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
 
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete of scratch file failed: ', err)
         end
@@ -1296,7 +1296,7 @@
         nok = 0
 
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1363,7 +1363,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_open(comm, scratch, NF90_WRITE,  &
-           MPI_INFO_NULL, ncid)
+           info, ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_inquire(ncid, nAttributes=na)
@@ -1406,7 +1406,7 @@
         err = nf90mpi_close(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
@@ -1453,7 +1453,7 @@
             call errore('bad ncid: ', err)
 
 !           /* try in read-only mode */
-        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_open: ', err)
@@ -1466,7 +1466,7 @@
 
 !           /* create scratch */
         flags = IOR(NF90_NOCLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1563,7 +1563,7 @@
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, scratch, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1628,7 +1628,7 @@
         err = nf90mpi_close(ncid)
         if (err .ne. 0) &
             call errore('nf90mpi_close: ', err)
-        err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+        err = nf90mpi_delete(scratch, info)
         if (err .ne. 0) &
             call errori('delete of scratch file failed: ', err)
 #endif
@@ -1667,7 +1667,7 @@
                call errore("setting classic format: status = %d", err)
          flags = IOR(NF90_CLOBBER, extra_flags)
          err = nf90mpi_create(comm, scratch, flags,  &
-                      MPI_INFO_NULL, ncid)
+                      info, ncid)
          if (err .ne. 0)  &
               call errore("bad nf90mpi_create: status = %d", err)
          err = nf90mpi_put_att_text(ncid, NF90_GLOBAL, "testatt",  &

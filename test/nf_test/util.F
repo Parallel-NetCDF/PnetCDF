@@ -948,7 +948,7 @@
         integer flags
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, filename, flags, MPI_INFO_NULL,
+        err = nfmpi_create(comm, filename, flags, info,
      +                     ncid)
         if (err .ne. 0) then
             call errore('nfmpi_create: ', err)
@@ -1071,6 +1071,8 @@
                     if (ichar(text) .ne. expect) then
                         call errori(
      +              'Var value read not that expected for variable ', i)
+                        call errori('expecting ',expect,'but got ',
+     +                              ichar(text))
                     else
                         nok = nok + 1
                     end if
@@ -1203,7 +1205,7 @@
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
 
-        err = nfmpi_open(comm, filename, NF_NOWRITE, MPI_INFO_NULL,
+        err = nfmpi_open(comm, filename, NF_NOWRITE, info,
      +                   ncid)
         if (err .ne. 0) then
             call errore('nfmpi_open: ', err)
