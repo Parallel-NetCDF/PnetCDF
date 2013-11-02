@@ -188,10 +188,10 @@ CANDIDATE_MPIF77="${CANDIDATE_MPIF77} ftn"
 CANDIDATE_MPIF90="${CANDIDATE_MPIF90} ftn"
 
 dnl add Intel MPI compiler wrappers
-CANDIDATE_MPICC="${CANDIDATE_MPICC} mpiicc"
-CANDIDATE_MPICXX="${CANDIDATE_MPICXX} mpiicpc"
-CANDIDATE_MPIF77="${CANDIDATE_MPIF77} mpiifort mpiifc"
-CANDIDATE_MPIF90="${CANDIDATE_MPIF90} mpiifort mpiifc"
+CANDIDATE_MPICC="${CANDIDATE_MPICC} mpiicc icc"
+CANDIDATE_MPICXX="${CANDIDATE_MPICXX} mpiicpc icpc"
+CANDIDATE_MPIF77="${CANDIDATE_MPIF77} mpiifort mpiifc ifort"
+CANDIDATE_MPIF90="${CANDIDATE_MPIF90} mpiifort mpiifc ifort"
 
 UD_CHECK_MPI_COMPILER([MPICC], [$CANDIDATE_MPICC])
 if test "x${MPICC}" = x ; then
@@ -235,14 +235,17 @@ fi
 
 # check if MPICC works for basic MPI call: MPI_Comm_rank()
 AC_CHECK_FUNC([MPI_Comm_rank], [],
-   [AC_MSG_ERROR([
+   dnl maybe -lmpi is needed at link stage
+   [AC_SEARCH_LIBS([MPI_Comm_rank], [mpi mpich], [],
+                 [AC_MSG_ERROR([
     ------------------------------------------------------------
      Invalid MPI compiler specified or detected: "${MPICC}"
      A working MPI compiler is required. Please specify the location
      of one either with the MPICC environment variable or the
      --with-mpi configure flag
     ------------------------------------------------------------])
-])
+])])
+
 
 AC_ARG_ENABLE([mpi-io-test],
    [AS_HELP_STRING([--disable-mpi-io-test],
@@ -255,15 +258,19 @@ AC_ARG_ENABLE([mpi-io-test],
 
 if test "x${enable_mpi_io_test}" = xyes ; then
    AC_CHECK_FUNC([MPI_File_open], [],
-           [AC_MSG_ERROR([
+      dnl maybe -lmpio is needed at link stage
+      [AC_SEARCH_LIBS([MPI_File_open], [mpio], [],
+                    [AC_MSG_ERROR([
             ------------------------------------------------------------
              MPI implementation does not support MPI-IO
              PnetCDF requires MPI-IO support to work properly.
             ------------------------------------------------------------])]
-   )
+   )])
    if test "x${has_mpicxx}" = xyes ; then
        AC_LANG_PUSH(C++)
        AC_CHECK_FUNC([MPI_File_close], [],
+          dnl maybe -lmpi++ is needed at link stage
+          [AC_SEARCH_LIBS([MPI_File_close], [mpi++ mpichcxx mpi_cxx], [],
               [has_mpicxx=no
                MPICXX=
                AC_MSG_WARN([
@@ -271,7 +278,7 @@ if test "x${enable_mpi_io_test}" = xyes ; then
                 MPI C++ implementation does not support MPI-IO
                 Disabling C++ testing programs
                ------------------------------------------------------------])]
-       )
+       )])
        AC_LANG_POP(C++)
    fi
 fi
@@ -819,18 +826,20 @@ PNETCDF_LIB=${BUILDDIR}/src/lib
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
-AC_ARG_VAR(TEST_MPIRUN, [MPI run command for running test])
-AC_ARG_VAR(TEST_OUT_DIR, [Output file directory for running test])
+TEST_SEQRUN=
+AC_ARG_VAR(TEST_SEQRUN, [Run command (on one process) for make target check on cross-compile environment. Example: "aprun -n 1". @<:@default: none@:>@])
+AC_ARG_VAR(TEST_MPIRUN, [MPI run command for make target ptest, @<:@default: mpiexec@:>@])
+AC_ARG_VAR(TEST_OUTDIR, [Output file directory for make target ptest, @<:@default: ./@:>@])
 if test "x${TEST_MPIRUN}" = x ; then
     dnl set default to mpiexec
     TEST_MPIRUN=mpiexec
 fi
-if test "x${TEST_OUT_DIR}" = x ; then
+if test "x${TEST_OUTDIR}" = x ; then
     dnl set default to current directory
-    TEST_OUT_DIR=.
+    TEST_OUTDIR=.
 fi
 AC_SUBST(TEST_MPIRUN)
-AC_SUBST(TEST_OUT_DIR)
+AC_SUBST(TEST_OUTDIR)
 
 CONFIG_FILES="macros.make \
               Makefile \
@@ -907,13 +916,22 @@ echo \
 	      Build subfiling support          - ${enable_subfiling}
 
    Compilers: MPICC       = ${MPICC}
-              MPICXX      = ${MPICXX}
+              MPICXX      = ${MPICXX}"
+if test "$enable_fortran" = yes ; then
+  echo "\
               MPIF77      = ${MPIF77}
-              MPIF90      = ${MPIF90}
-              CFLAGS      = ${CFLAGS}
+              MPIF90      = ${MPIF90}"
+fi
+echo "\
+              CFLAGS      = ${CFLAGS}"
+if test "$enable_fortran" = yes ; then
+  echo "\
               FFLAGS      = ${FFLAGS}
               FCFLAGS     = ${FCFLAGS}
               F90FLAGS    = ${F90FLAGS}
+              FPPFLAGS    = ${FPPFLAGS}"
+fi
+echo "\
               CPPFLAGS    = ${CPPFLAGS}
               LDFLAGS     = ${LDFLAGS}
               LIBS        = ${LIBS}
