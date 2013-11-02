@@ -49,7 +49,7 @@ test_ncmpi_get_var1_$1(void)
     double expect;
     $1 value;
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -165,7 +165,7 @@ test_ncmpi_get_var_$1(void)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -287,7 +287,7 @@ test_ncmpi_get_vara_$1(void)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -479,7 +479,7 @@ test_ncmpi_get_vars_$1(void)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -675,7 +675,7 @@ test_ncmpi_get_varm_$1(void)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
@@ -864,7 +864,7 @@ test_ncmpi_get_att_$1(void)
     double expect[MAX_NELS];
     $1 value[MAX_NELS];
 
-    err = ncmpi_open(comm, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR) 
         error("ncmpi_open: %s", ncmpi_strerror(err));
 

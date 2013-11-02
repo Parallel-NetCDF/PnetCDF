@@ -752,7 +752,7 @@ write_file(char *filename)
 {
     int  err, ncid;
 
-    err = ncmpi_create(comm, filename, NC_CLOBBER|extra_flags, MPI_INFO_NULL,
+    err = ncmpi_create(comm, filename, NC_CLOBBER|extra_flags, info,
                        &ncid);
     IF (err) error("ncmpi_create: %s", ncmpi_strerror(err));
 
@@ -932,7 +932,7 @@ check_file(char *filename)
 {
     int ncid, err;
 
-    err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
     IF (err) {
         error("ncmpi_open: %s", ncmpi_strerror(err));
     } else {

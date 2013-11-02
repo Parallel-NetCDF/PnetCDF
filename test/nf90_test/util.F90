@@ -943,7 +943,7 @@
         integer flags
 
         flags = IOR(NF90_CLOBBER, extra_flags)
-        err = nf90mpi_create(comm, filename, flags, MPI_INFO_NULL, &
+        err = nf90mpi_create(comm, filename, flags, info, &
                            ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_create: ', err)
@@ -1197,7 +1197,7 @@
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
 
-        err = nf90mpi_open(comm, filename, NF90_NOWRITE, MPI_INFO_NULL, &
+        err = nf90mpi_open(comm, filename, NF90_NOWRITE, info, &
                          ncid)
         if (err .ne. 0) then
             call errore('nf90mpi_open: ', err)

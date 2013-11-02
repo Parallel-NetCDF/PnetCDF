@@ -219,7 +219,7 @@
      *                          MAX_NMPT,
      *                          NFAILSTOTAL
 
-      integer numTypes, numVars, numGatts, cdf_format, extra_flags
+      integer numTypes, numVars, numGatts, cdf_format, extra_flags, info
       common / PROBLEM_SIZE / numTypes, numVars, numGatts, cdf_format,
-     +                        extra_flags
+     +                        extra_flags, info
 

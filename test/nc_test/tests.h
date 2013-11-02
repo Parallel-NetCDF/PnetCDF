@@ -249,8 +249,8 @@ typedef unsigned long long ulonglong;
 
     /* Global variables - filenames */
 
-extern char testfile[];		/* netCDF read-only test data */
-extern char scratch[];		/* netCDF test file for writing */
+extern char testfile[128];		/* netCDF read-only test data */
+extern char scratch[128];		/* netCDF test file for writing */
 
     /* Global variables - command-line arguments */
 
@@ -282,6 +282,7 @@ extern size_t gatt_len[NGATTS];
 
 /* Global variables: MPI data */
 extern MPI_Comm comm;
+extern MPI_Info info;
 
     /* Macros for accessing attribute test data */
     /* varid is -1 for NC_GLOBAL so can do global atts in same loop */

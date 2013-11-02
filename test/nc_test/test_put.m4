@@ -98,7 +98,7 @@ check_vars_$1(const char *filename)
     int nok = 0;      /* count of valid comparisons */
     double expect;
 
-    err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
@@ -288,7 +288,7 @@ test_ncmpi_put_var1_$1(void)
     int canConvert;        /* Both text or both numeric */
     $1 value = 5;        /* any value would do - only for error cases */
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -360,7 +360,7 @@ test_ncmpi_put_var1_$1(void)
 
     nok += check_vars_$1(scratch);
 
-    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -399,7 +399,7 @@ test_ncmpi_put_var_$1(void)
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -517,7 +517,7 @@ test_ncmpi_put_var_$1(void)
 
     nok += check_vars_$1(scratch);
 
-    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -561,7 +561,7 @@ test_ncmpi_put_vara_$1(void)
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -706,7 +706,7 @@ test_ncmpi_put_vara_$1(void)
 
     nok += check_vars_$1(scratch);
 
-    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -756,7 +756,7 @@ test_ncmpi_put_vars_$1(void)
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -894,7 +894,7 @@ test_ncmpi_put_vars_$1(void)
 
     nok += check_vars_$1(scratch);
 
-    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -945,7 +945,7 @@ test_ncmpi_put_varm_$1(void)
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -1090,7 +1090,7 @@ test_ncmpi_put_varm_$1(void)
 
     nok += check_vars_$1(scratch);
 
-    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -1121,7 +1121,7 @@ test_ncmpi_put_att_text(void)
     int err;
     text value[MAX_NELS];
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -1169,7 +1169,7 @@ test_ncmpi_put_att_text(void)
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
@@ -1191,7 +1191,7 @@ test_ncmpi_put_att_$1(void)
     $1 value[MAX_NELS];
     int allInExtRange;  /* all values within external range? */
 
-    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
@@ -1243,7 +1243,7 @@ test_ncmpi_put_att_$1(void)
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
-    err = ncmpi_delete(scratch, MPI_INFO_NULL);
+    err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;

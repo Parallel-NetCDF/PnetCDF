@@ -86,7 +86,7 @@ define([TEST_NFMPI_GET_VAR1],[dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+        err = nfmpi_open(comm, testfile, NF_NOWRITE, info,
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
@@ -192,7 +192,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL, 
+        err = nfmpi_open(comm, testfile, NF_NOWRITE, info, 
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
@@ -302,7 +302,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+        err = nfmpi_open(comm, testfile, NF_NOWRITE, info,
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
@@ -513,7 +513,7 @@ define([TEST_NFMPI_GET_VARS],dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+        err = nfmpi_open(comm, testfile, NF_NOWRITE, info,
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
@@ -744,7 +744,7 @@ define([TEST_NFMPI_GET_VARM],dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+        err = nfmpi_open(comm, testfile, NF_NOWRITE, info,
      +                   ncid)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
@@ -971,7 +971,7 @@ define([TEST_NFMPI_GET_ATT],dnl
 
         nok = 0
 
-        err = nfmpi_open(comm, testfile, NF_NOWRITE, MPI_INFO_NULL,
+        err = nfmpi_open(comm, testfile, NF_NOWRITE, info,
      +                   ncid)
         if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_open: ', err)

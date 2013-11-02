@@ -38,9 +38,11 @@
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
         call error('   [-r] Just do read-only tests' )
+        call error( &
+        '   [-d directory] directory for storing input/output files' )
         call error('   [-v] Verbose mode' )
         call error( &
-        '   [-n <max>] max. number of messages per test (Default: 8)')
+        '   [-n <max>] max. number of messages per test (Default: 20)')
         end
 
 
@@ -87,10 +89,10 @@
         program nf_test
         use pnetcdf
 #if defined(VISUAL_CPLUSPLUS)
-!	DIGITAL Visual Fortran needs DFLIB for getarg
-	USE DFLIB
-!	DIGITAL Visual Fortran needs DFPORT for iargc
-	USE DFPORT
+!       DIGITAL Visual Fortran needs DFLIB for getarg
+        USE DFLIB
+!       DIGITAL Visual Fortran needs DFPORT for iargc
+        USE DFPORT
         implicit        none
 #elif defined(NAGf90Fortran)
         USE F90_UNIX_ENV, only : iargc, getarg
@@ -419,7 +421,7 @@
         create_file = .false.   !/* file test.nc will normally already exist */
         readonly = .false.      !/* assume may write in test dir as default */
         verbose = .false.
-        max_nmpt = 8
+        max_nmpt = 20
         skiparg = .false.
         cdf_format = 1
         extra_flags = 0
@@ -462,6 +464,12 @@
                         else if (opt .eq. '5') then
                             cdf_format = 5
                             extra_flags = NF_64BIT_DATA
+                        else if (opt .eq. 'd') then
+                            call getarg(iarg+1, arg)
+                            testfile = trim(arg) // "/test.nc"
+                            scratch = trim(arg) // "/scratch.nc"
+                            skiparg = .true.
+                            go to 1
                         else
                             call usage
                             call ud_exit(1)
@@ -473,6 +481,11 @@
                 end if
             end if
 1       continue
+
+!       pvfs2 driver has a problem of using data sieving
+        call MPI_Info_create(info, err)
+        call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable", &
+                          err)
 
         numGatts = 6
         numVars  = 136
@@ -495,7 +508,7 @@
 
 !       /* delete any existing scratch netCDF file */
         if ( .not. readonly ) &
-            err = nf90mpi_delete(scratch, MPI_INFO_NULL)
+            err = nf90mpi_delete(scratch, info)
 
 !       /* Test read-only functions, using pregenerated test-file */
         call test('nf90mpi_strerror', test_nf90mpi_strerror)
@@ -814,6 +827,8 @@
                       test_nf90mpi_set_default_format);
 #endif
         end if
+
+        call MPI_Info_free(info, err)
 
         if (nfailsTotal .eq. 0) then
           write(msg,"(A,I1)") '*** TESTING F90 '//trim(cmd)//' for CDF-', &

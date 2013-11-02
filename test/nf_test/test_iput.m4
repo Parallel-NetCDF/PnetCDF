@@ -115,7 +115,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
+        err = nfmpi_create(comm, scratch, flags, info,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -183,7 +183,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
 
         call check_vars_$1(scratch)
 
-        err = nfmpi_delete(scratch, MPI_INFO_NULL)
+        err = nfmpi_delete(scratch, info)
         if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
@@ -217,7 +217,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
+        err = nfmpi_create(comm, scratch, flags, info,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -344,7 +344,7 @@ C           Only test record variables here
 
         call check_vars_$1(scratch)
 
-        err = nfmpi_delete(scratch, MPI_INFO_NULL)
+        err = nfmpi_delete(scratch, info)
         if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', 
      +                  scratch)
@@ -384,7 +384,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
+        err = nfmpi_create(comm, scratch, flags, info,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -532,7 +532,7 @@ C           /* Check correct error returned even when nothing to put */
 
         call check_vars_$1(scratch)
 
-        err = nfmpi_delete(scratch, MPI_INFO_NULL)
+        err = nfmpi_delete(scratch, info)
         if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', 
      +          scratch)
@@ -578,7 +578,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_CLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
+        err = nfmpi_create(comm, scratch, flags, info,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -729,7 +729,7 @@ C*/
 
         call check_vars_$1(scratch)
 
-        err = nfmpi_delete(scratch, MPI_INFO_NULL)
+        err = nfmpi_delete(scratch, info)
         if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
@@ -778,7 +778,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer err_w, reqid(1), st(1)
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
-        err = nfmpi_create(comm, scratch, flags, MPI_INFO_NULL,
+        err = nfmpi_create(comm, scratch, flags, info,
      +                     ncid)
         if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
@@ -938,7 +938,7 @@ C*/
 
         call check_vars_$1(scratch)
 
-        err = nfmpi_delete(scratch, MPI_INFO_NULL)
+        err = nfmpi_delete(scratch, info)
         if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed:', 
      +          scratch)
