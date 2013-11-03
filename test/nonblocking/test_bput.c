@@ -40,7 +40,8 @@ int main(int argc, char **argv) {
     if (argc == 2) filename = argv[1];
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_ds_write",    "disable");
+    MPI_Info_set(info, "romio_pvfs2_posix_write","enable");
+    MPI_Info_set(info, "romio_ds_write",         "disable");
 
     if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, filename,
         NC_CLOBBER | NC_64BIT_DATA, info, &ncid)))

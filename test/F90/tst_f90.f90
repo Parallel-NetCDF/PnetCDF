@@ -101,6 +101,7 @@ program netcdfTest
 
 ! PVFS2 driver has a problem of ADIOI_Set_lock when data sieving is enabled
   call MPI_Info_create(info, err)
+  call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",err)
   call MPI_Info_set(info, "romio_ds_read", "disable", err)
   call MPI_Info_set(info, "romio_ds_write", "disable", err)
 

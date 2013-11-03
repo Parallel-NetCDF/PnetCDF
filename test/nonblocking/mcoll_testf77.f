@@ -275,6 +275,7 @@
 
 !       =================
        call MPI_Info_create(info, ierr)
+       call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",ierr)
        call MPI_Info_set(info, "romio_ds_write", "disable", ierr)
 
         Write_File = nfmpi_create(comm_cart, filename, NF_CLOBBER,
