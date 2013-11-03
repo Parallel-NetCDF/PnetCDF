@@ -178,7 +178,8 @@ ncmpi_create(MPI_Comm    comm,
              int        *ncidp)
 {
     int err, status=NC_NOERR, safe_mode=0;
-    char *env_str=NULL;
+    char *env_str=NULL, *hint_str;
+    MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
 
@@ -206,11 +207,38 @@ ncmpi_create(MPI_Comm    comm,
          * the time ncmpi_enddef() returns */
     }
 
+    /* take hints from the environment variable PNETCDF_HINTS
+     * a string of hints separated by ";" and each hint is in the
+     * form of hint=value. E.g. cb_nodes=16;cb_config_list=*:6
+     * If this environment variable is set, it  overrides any values that
+     * were set by using calls to MPI_Info_set in the application code.
+     */
+    env_str = getenv("PNETCDF_HINTS");
+    env_info = info;
+    if (env_str != NULL) {
+        if (info == MPI_INFO_NULL) {
+            err = MPI_Info_create(&env_info);
+            if (err != MPI_SUCCESS) /* ignore this error */
+                env_info = MPI_INFO_NULL;
+        }
+        hint_str = strtok(env_str, ";");
+        while (hint_str != NULL && env_info != MPI_INFO_NULL) {
+            char key[128], *val;
+            strcpy(key, hint_str);
+            val = strchr(key, '=');
+            *val = '\0';
+            val++;
+            /* printf("env hint: key=%s val=%s\n",key,val); */
+            MPI_Info_set(env_info, key, val); /* override */
+            hint_str = strtok(NULL, ";");
+        }
+    }
+
     /* get header chunk size from user info */
-    if (info != MPI_INFO_NULL) {
+    if (env_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int  flag;
-        MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+        MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) chunksize = atoll(value);
     }
@@ -249,7 +277,7 @@ ncmpi_create(MPI_Comm    comm,
 
     fSet(ncp->flags, NC_NOFILL);
 
-    err = ncmpiio_create(comm, path, cmode, info, &ncp->nciop);  
+    err = ncmpiio_create(comm, path, cmode, env_info, &ncp->nciop);  
     if (err != NC_NOERR) {
         ncmpii_free_NC(ncp);
         return err;
@@ -277,6 +305,8 @@ ncmpi_create(MPI_Comm    comm,
     ncmpii_add_to_NCList(ncp);
     *ncidp = ncp->nciop->fd;
 
+    if (env_info != info) MPI_Info_free(&env_info);
+
     return status;
 }
 
@@ -289,9 +319,10 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)
 {
     int err, status=NC_NOERR, safe_mode=0;
-    char *env_str=NULL;
-    NC *ncp;
+    char *env_str=NULL, *hint_str;
+    MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
+    NC *ncp;
   
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
@@ -319,11 +350,38 @@ ncmpi_open(MPI_Comm    comm,
         }
     }
 
+    /* take hints from the environment variable PNETCDF_HINTS
+     * a string of hints separated by ";" and each hint is in the
+     * form of hint=value. E.g. cb_nodes=16;cb_config_list=*:6
+     * If this environment variable is set, it  overrides any values that
+     * were set by using calls to MPI_Info_set in the application code.
+     */
+    env_str = getenv("PNETCDF_HINTS");
+    env_info = info;
+    if (env_str != NULL) {
+        if (info == MPI_INFO_NULL) {
+            err = MPI_Info_create(&env_info);
+            if (err != MPI_SUCCESS) /* ignore this error */
+                env_info = MPI_INFO_NULL;
+        }
+        hint_str = strtok(env_str, ";");
+        while (hint_str != NULL && env_info != MPI_INFO_NULL) {
+            char key[128], *val;
+            strcpy(key, hint_str);
+            val = strchr(key, '=');
+            *val = '\0';
+            val++;
+            /* printf("env hint: key=%s val=%s\n",key,val); */
+            MPI_Info_set(env_info, key, val); /* override */
+            hint_str = strtok(NULL, ";");
+        }
+    }
+
     /* get header chunk size from user info, if provided */
-    if (info != MPI_INFO_NULL) {
+    if (env_info != MPI_INFO_NULL) {
         char value[MPI_MAX_INFO_VAL];
         int  flag;
-        MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+        MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) chunksize = atoll(value);
     }
@@ -339,7 +397,7 @@ ncmpi_open(MPI_Comm    comm,
     ncp->nc_num_subfiles = 0;
 #endif
 
-    err = ncmpiio_open(comm, path, omode, info, &ncp->nciop);
+    err = ncmpiio_open(comm, path, omode, env_info, &ncp->nciop);
     if (err != NC_NOERR) {
         ncmpii_free_NC(ncp);
         return err;
@@ -400,6 +458,8 @@ ncmpi_open(MPI_Comm    comm,
 	status = ncmpii_subfile_open (ncp, &ncp->ncid_sf);
     }
 #endif
+
+    if (env_info != info) MPI_Info_free(&env_info);
 
     return status;
 }

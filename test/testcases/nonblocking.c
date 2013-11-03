@@ -127,7 +127,8 @@ int main(int argc, char **argv) {
         int val = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
             if (buf[j][i] != val) {
-                printf("Unexpected buf[%d][%d]=%d != %d\n",j,i,buf[j][i],val);
+                printf("Unexpected read buf[%d][%d]=%d, should be %d\n",
+                       j,i,buf[j][i],val);
                 pass = 0;
             }
     }

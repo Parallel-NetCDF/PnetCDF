@@ -57,11 +57,18 @@ This is essentially a placeholder for the next release note ...
         NC_EMULTIDEFINE_ATTR_LEN   - attribute length
         NC_EMULTIDEFINE_ATTR_VAL   - attribute value
 
-  o New run-time environment variable
+  o New run-time environment variables
     * PNETCDF_SAFE_MODE environment variable can be used to enable/disable the
       internal checking for data/argument consistency across all processes (by
       calling collective MPI_Allreduce). Set it to 1 to enable the checking.
       Default is 0, i.e. disabled.
+    * PNETCDF_HINTS environment variable can be used to pass the I/O hints to
+      PnetCDF library. Hints include both PnetCDF and MPI-IO hints.
+      PNETCDF_HINTS is a string of hints separated by ";" and each hint is in
+      the form of hint=value. E.g.
+          romio_ds_write=disable;nc_header_align_size=1048576
+      If this environment variable is set, it overrides any values that
+      were set by using calls to MPI_Info_set in the application code.
 
   o New example programs
     * example programs are now categorized into C, F77, and F90 directories
