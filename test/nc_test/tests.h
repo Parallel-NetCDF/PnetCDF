@@ -153,12 +153,12 @@ rank==0, nvars=1      ntypes=NTYPES  (if rank < 2)
 rank==1, nvars=5      ntypes=NTYPES  (if rank < 2)
 rank==2, nvars=5*4    ntypes=1       (if rank >= 2)
 rank==3, nvars=5*4*4  ntypes=1       (if rank >= 2)
-nv=1* 6+5* 6+5*4+5*4*4= 7+35+20+80 = 136 (if NTYPES==6)
+nv=1* 6+5* 6+5*4+5*4*4= 6+30+20+80 = 136 (if NTYPES==6)
 nv=1* 7+5* 7+5*4+5*4*4= 7+35+20+80 = 142 (if NTYPES==7)
 nv=1* 8+5* 8+5*4+5*4*4= 8+40+20+80 = 148 (if NTYPES==8)
-nv=1* 9+5* 9+5*4+5*4*4= 8+40+20+80 = 154 (if NTYPES==9)
-nv=1*10+5*10+5*4+5*4*4= 8+40+20+80 = 160 (if NTYPES==10)
-nv=1*11+5*11+5*4+5*4*4= 8+40+20+80 = 166 (if NTYPES==11)
+nv=1* 9+5* 9+5*4+5*4*4= 9+45+20+80 = 154 (if NTYPES==9)
+nv=1*10+5*10+5*4+5*4*4=10+50+20+80 = 160 (if NTYPES==10)
+nv=1*11+5*11+5*4+5*4*4=11+55+20+80 = 166 (if NTYPES==11)
 */
 
     /* Limits of internal types */
