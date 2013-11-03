@@ -453,7 +453,7 @@ int main(int argc, char **argv)
         buf_var[i] = mynod + 1;  
 
     MPI_Info_create(&info);
-
+    MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
     MPI_Info_set(info, "romio_ds_write", "disable");
 
 /*
