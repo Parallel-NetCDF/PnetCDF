@@ -332,10 +332,8 @@
       ! set up MPI I/O hints for performance enhancement
       call MPI_Info_create(file_info, err)
 
-      ! disable ROMIO data sieving
-      call MPI_Info_set(file_info, 'romio_ds_write',    'disable', err)
-      call MPI_Info_set(file_info, 'romio_ds_read',     'disable', err)
-      call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true',    err)
+      ! use some ROMIO hints
+      call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true', err)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, trim(filename), cmode, &

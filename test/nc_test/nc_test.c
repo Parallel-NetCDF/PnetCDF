@@ -93,8 +93,10 @@ usage(char *progname)
         else                                                             \
             print("\n");                                                 \
     }                                                                    \
-    else if (nfails > 0)                                                 \
+    else if (nfails > 0) {                                               \
         print("\n\t### %d FAILURES TESTING %s! ###\n",nfails,func_name); \
+        goto fn_exit;                                                    \
+    }                                                                    \
 }
 
 #if 1		/* both CRAY MPP and OSF/1 Alpha systems need this */
@@ -159,9 +161,7 @@ main(int argc, char *argv[])
       }
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
-    MPI_Info_set(info, "romio_ds_read", "disable");
-    MPI_Info_set(info, "romio_ds_write", "disable");
+    // MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
 
     numGatts = 6;
     numVars  = 136;
@@ -553,6 +553,8 @@ main(int argc, char *argv[])
 	NC_TEST(ncmpi_iput_varm);
 #endif /* TEST_VOIDSTAR */
     }
+
+fn_exit:
     MPI_Info_free(&info);
 
     char cmd_str[80];

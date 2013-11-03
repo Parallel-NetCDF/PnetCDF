@@ -155,7 +155,6 @@ int benchmark_write(char       *filename,
     // MPI_Info_set(info, "nc_header_align_size", "1"); /* size in bytes */
     // MPI_Info_set(info, "nc_var_align_size",    "1"); /* size in bytes */
     /* note that set the above values to 1 to disable the alignment */
-    MPI_Info_set(info, "romio_ds_write", "disable");
 
     /* initialize I/O buffer with random numbers */
     srand(rank);

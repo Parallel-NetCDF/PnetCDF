@@ -453,15 +453,13 @@ int main(int argc, char **argv)
         buf_var[i] = mynod + 1;  
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
-    MPI_Info_set(info, "romio_ds_write", "disable");
-
 /*
- *  MPI_Info_set(info, "group_cyclic_fd", "enable");
- *  MPI_Info_set(info, "cb_buffer_size", "1024");
- *  MPI_Info_set(info, "cb_buffer_size", "16777216");
- *  MPI_Info_set(info, "romio_no_indep_rw", "true");
- *   MPI_Info_set(info, "romio_cb_write", "true");
+    MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
+    MPI_Info_set(info, "group_cyclic_fd", "enable");
+    MPI_Info_set(info, "cb_buffer_size", "1024");
+    MPI_Info_set(info, "cb_buffer_size", "16777216");
+    MPI_Info_set(info, "romio_no_indep_rw", "true");
+    MPI_Info_set(info, "romio_cb_write", "true");
  */
 
     for (k=0; k<=9; k++){
