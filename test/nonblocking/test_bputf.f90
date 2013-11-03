@@ -44,8 +44,7 @@
       endif
 
       call MPI_Info_create(info, err)
-      call MPI_Info_set(info, "romio_pvfs2_posix_write","enable",err)
-      call MPI_Info_set(info, "romio_ds_write", "disable", err)
+      ! call MPI_Info_set(info, "romio_pvfs2_posix_write","enable",err)
 
       cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
       err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode,  &
