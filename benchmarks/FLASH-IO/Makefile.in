@@ -64,6 +64,8 @@ ptest: $(PROGS)
 MANIFEST.echo: FORCE
 	echo $(PACKING_LIST) | fmt -1
 
+ensure_manifest:
+
 dist:
 	id=FLASH-IO-PnetCDF \
 	&& $(RM) -rf $$id \
