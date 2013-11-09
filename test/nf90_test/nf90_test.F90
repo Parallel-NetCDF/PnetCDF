@@ -45,6 +45,21 @@
         '   [-n <max>] max. number of messages per test (Default: 20)')
         end
 
+        subroutine report_test
+        implicit        none
+        character*128   msg
+#include "tests.inc"
+
+        write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
+                            ' for CDF-', cdf_format
+        if (nfailsTotal .eq. 0) then
+          write(*,"(A67,A)") msg,'------ pass'
+        else
+          write(*,*) trim(PROGNAME)//' expects to see 0 failure ... '//&
+                     'Total number of failures: ', nfailsTotal
+          write(*,"(A67,A)") msg,'------ failed'
+        endif
+        end
 
         subroutine test(name, func)
         use pnetcdf
@@ -67,7 +82,8 @@
         if ( nfails .ne. 0) then
             print *, ' '
             print *, '  ### ', nfails, ' FAILURES TESTING ', name,  &
-                     '! ###'
+                     '! Stop ... ###'
+            call report_test
             stop
         end if
         end
@@ -100,7 +116,6 @@
 #else
         implicit        none
         integer         iargc
-        character*128   msg, cmd
 #endif
 #if defined(__crayx1)
         integer         ipxfargc 
@@ -431,7 +446,7 @@
 #else
         argc = iargc()
 #endif
-        call getarg(0, cmd)
+        call getarg(0, PROGNAME)
 
         do 1, iarg = 1, argc
             if (skiparg) then
@@ -828,14 +843,8 @@
 
         call MPI_Info_free(info, err)
 
-        if (nfailsTotal .eq. 0) then
-          write(msg,"(A,I1)") '*** TESTING F90 '//trim(cmd)//' for CDF-', &
-                              cdf_format
-          write(*,"(A67,A)") msg,'------ pass'
-        else
-          print *,'*** TESTING F90 '//trim(cmd)//' expects to see 0 failure'
-          print *,'Total number of failures: ', nfailsTotal
-        endif
+        call report_test
+
         ! if (nfailsTotal .eq. 0) call ud_exit(0)
         call ud_exit(0)
         end
