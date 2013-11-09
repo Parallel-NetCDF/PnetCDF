@@ -184,8 +184,10 @@ This is essentially a placeholder for the next release note ...
     * A new configure option "--disable-file-sync" to disable calling file
       sync. This is to be used when the underlying file system provides data
       consistency control.
-    * add build recipe README.bgq for BGQ (e.g. Vesta/Mira/Cetus @ANL)
-    * add build recipe for CRAY-XE6 (e.g. Hopper @NERSC) in README.CRAY
+    * add build recipe for IBM BGQ (e.g. Vesta/Mira/Cetus @ANL) in README.IBM
+    * add build recipe for CRAY-XE6, Hopper @NERSC in README.CRAY
+    * add build recipe for CRAY-XC30, Edison @NERSC in README.CRAY
+    * add build recipe for Endeavour @ NASA in README.SGI
     * add declaration of flexible APIs for Fortran90
     * "make testing" now hides most of the stdout. Use "make verbose_testing"
       for verbose output.
@@ -214,7 +216,7 @@ This is essentially a placeholder for the next release note ...
     * set the nonblocking request ID to NULL when the request length is zero
     * report error when bogus request IDs are passed in ncmpi_wait
     * when entering redef with different alignment hints, fixed-sized
-      variables' file starting offsets should only be changed when it is bigger
+      variables' file starting offsets will only be changed when it is bigger
       than the old ones
     * Fix some Fortran API intent in/out argument declarations
     * ncmpi_def_var is fixed to detect if CDF-5 data types is used on CDF-1 or

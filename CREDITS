@@ -32,6 +32,3 @@ help from the community.  A partial list follows.  Thanks everyone!
 - Kurt Glaesemann <kurt.glaesemann@pnl.gov> contributed numerous cleanups for
   pnetcdf on ia64 with HP-MPI
 
-- Kui Gao, Northwestern University <kgao@eecs.northwestern.edu> implemented the
-  CDF-5 (large variable) file format work.
-
