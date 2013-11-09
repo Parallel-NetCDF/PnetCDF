@@ -33,5 +33,4 @@ swap.o: swap.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
 bput.o: bput.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 getput.o: getput.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 i_getput.o: i_getput.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
-
-
+subfile.o: subfile.c ncconfig.h subfile.h pnetcdf.h nc.h ncio.h fbits.h rnd.h ncx.h nctypes.h macro.h ncmpidtype.h
