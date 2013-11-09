@@ -184,7 +184,7 @@
       integer(kind=MPI_OFFSET_KIND) GATT_LEN(NGATTS)
 
 !    /* Miscellaneous global variables: */
-      CHARACTER*80              PROGNAME   !/* name of the program */
+      CHARACTER*128              PROGNAME   !/* name of the program */
       INTEGER                   COMM       !/* MPI communicator */
 
       INTEGER                   NFAILSTOTAL

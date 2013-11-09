@@ -94,7 +94,8 @@ usage(char *progname)
             print("\n");                                                 \
     }                                                                    \
     else if (nfails > 0) {                                               \
-        print("\n\t### %d FAILURES TESTING %s! ###\n",nfails,func_name); \
+        print("\n\t### %d FAILURES TESTING %s! Stop ... ###\n",          \
+              nfails,func_name);                                         \
         goto fn_exit;                                                    \
     }                                                                    \
 }
@@ -564,7 +565,8 @@ fn_exit:
     }
     else {
         print("\n%s: expects 0 failures ... ",argv[0]);
-        print("Total number of failures: %d\n\n", nfailsTotal);
+        print("Total number of failures: %d\n", nfailsTotal);
+        printf("%-66s ------ failed\n\n", cmd_str);
     }
     MPI_Finalize();
     return nfailsTotal > 0;
