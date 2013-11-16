@@ -25,7 +25,7 @@ Tasks before a new release
 
  - run command "configure"
 
- - after run configure (must enable subfiling and not disable fortran), run command
+ - after run configure (must not disable fortran), run command
    "make dist" to produce two tar balls for PnetCDF release:
       parallel-netcdf-$(PNETCDF_VERSION).tar.gz
       parallel-netcdf-$(PNETCDF_VERSION).tar.bz2

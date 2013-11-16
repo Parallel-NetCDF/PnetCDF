@@ -42,6 +42,9 @@ endif
 PACKING_SUBDIRS = $(SUBDIRS)
 
 PACKING_LIST = Makefile.in
+ifeq (@enable_subfiling@, no)
+PACKING_LIST += subfile
+endif
 
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) all ; ) ; done
