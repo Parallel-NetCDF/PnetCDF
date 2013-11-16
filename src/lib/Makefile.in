@@ -80,6 +80,10 @@ PACKING_LIST = $(LIB_CSRCS) \
                varnx_api_header.m4 \
                varn_api_header.m4
 
+ifeq (@enable_subfiling@, no)
+PACKING_LIST += subfile.c subfile.h
+endif
+
 LIB_OBJS   = $(LIB_CSRCS:.c=.o) $(M4_SRCS:.m4=.o)
 
 GARBAGE    = $(LIBRARY) $(M4_SRCS:.m4=.c)
