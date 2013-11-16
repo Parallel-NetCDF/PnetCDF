@@ -3,16 +3,16 @@ $Id$
 =====================================================
 Tasks before a new release
 =====================================================
+ - Edit the release version
+
    $PNETCDF_VERSION is defined in configure.in, the 2nd argument of AC_INIT
    call. Revise that string and do svn commit to update the svn property
    of $LastChangedDate$ that is used for the release date.
 
    AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 
- - after run configure (must enable subfiling and not disable fortran), run command
-   "make dist" to produce two tar balls for PnetCDF release:
-      parallel-netcdf-$(PNETCDF_VERSION).tar.gz
-      parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
+ - Copy file "sneak_peek" to file "RELEASE_NOTES"
+   clear up file sneak_peek
 
  - create an SVN tag by running the below command to copy from the
    current trunk:
@@ -20,6 +20,15 @@ Tasks before a new release
    svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1.4.0.pre1 \
             -m "Tagging pre-release version 1.4.0.pre1"
+
+ - run command "autoreconf"
+
+ - run command "configure"
+
+ - after run configure (must enable subfiling and not disable fortran), run command
+   "make dist" to produce two tar balls for PnetCDF release:
+      parallel-netcdf-$(PNETCDF_VERSION).tar.gz
+      parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
 
  - To generate an SHA1 checksum, run command:
    openssl sha1 parallel-netcdf-1.4.0.pre1.tar.gz
