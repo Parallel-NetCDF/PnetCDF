@@ -13,7 +13,7 @@ include ../macros.make
 
 MANUAL_C   = pnetcdf.3
 MANUAL_F77 = pnetcdf_f77.3
-MANUAL_F90 = $(srcdir)/pnetcdf_f90.3
+MANUAL_F90 = pnetcdf_f90.3
 
 MANUAL = $(MANUAL_C)
 ifeq (@has_fortran@, yes)
@@ -39,8 +39,10 @@ test:
 install: $(MANUAL)
 	$(INSTALL) -d -m 755 $(MANDIR)/man3
 	@for i in $(MANUAL) ; do ( \
+	    if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
+	    else file=$$i; fi; \
 	    fn=`basename $$i` ; \
-	    $(INSTALL_DATA) $$i $(MANDIR)/man3/$$fn \
+	    $(INSTALL_DATA) $$file $(MANDIR)/man3/$$fn \
 	; ) ; done
 
 uninstall:
