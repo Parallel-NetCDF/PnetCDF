@@ -2,8 +2,228 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
-version  1.4.0 (September ?? 2013)
+version  1.4.0 (November 16 2013)
 -------------------------------------
+
+  o New APIs
+    * Fortran 90 APIs (adopted from netcdf-fortran-4.2). All F90 APIs have
+      prefix name "nf90mpi_". The APIs support function overloading.
+    * get/put_varn_<type> for reading/writing a list of subrequests (each is
+      specified by starts[i][ndims] and counts[i][ndims] for subrequest i.
+      ndims is the number of dimension of the variable) to a single variable.
+    * multiple put/get requests with explicit buffer type names:
+      ncmpi_mput_var_type(), ncmpi_mput_var1_type(), ncmpi_mput_vara_type(),
+      ncmpi_mput_vars_type(), ncmpi_mput_varm_type(). Similar for get APIs.
+      "type" is one of the followings: text, schar, uchar, short, ushort, int,
+      uint, long, float, double, longlong, or ulonglong.
+    * ncmpi_inq_nreqs() reports the number of pending nonblocking requests
+    * ncmpi_inq_header_size() reports the size of the file header
+    * ncmpi_inq_header_extent() reports the space currently allocated for the
+      file header, (also the file offset of the first variable)
+    * ncmpi_inq_put_size() reports the write amount committed by far
+    * ncmpi_inq_get_size() reports the read amount committed by far
+    * ncmpi_sync_numrecs() a collective API that can be called in independent
+      data mode to synchronize the number of records in memory across all
+      processes, and update to the file if NC_SHARE is set.
+
+  o Syntax change for Fortran put APIs
+    * intent of buffer argument in all Fortran APIs is changed to inout, as
+      byte-swap might be performed directly on the buffer. This change is
+      for performance consideration. For example, if the buffer is declared
+      as Fortran parameter, then compile will fail.
+
+  o New PnetCDF hint
+    * nc_header_read_chunk_size: PnetCDF reads the file headers in chunks. This
+      hint indicates the chunk size (in bytes). The default is 256 KB.
+
+  o New error code
+    * NC_EINTOVERFLOW reports the error of 4-byte integer overflow. This
+      usually happens due to MPI-IO data type constructor APIs' arguments using
+      4-byte integers.
+    * Error codes to report metadata defined inconsistently across processes.
+        NC_EMULTIDEFINE_OMODE      - create/open mode
+        NC_EMULTIDEFINE_DIM_NUM    - number of dimensions
+        NC_EMULTIDEFINE_DIM_SIZE   - size of dimension
+        NC_EMULTIDEFINE_DIM_NAME   - dimension names
+        NC_EMULTIDEFINE_VAR_NUM    - number of variables
+        NC_EMULTIDEFINE_VAR_NAME   - variable name
+        NC_EMULTIDEFINE_VAR_NDIMS  - variable's number of dimensions
+        NC_EMULTIDEFINE_VAR_DIMIDS - variable's dimid
+        NC_EMULTIDEFINE_VAR_TYPE   - variable's data type
+        NC_EMULTIDEFINE_VAR_LEN    - variable's size
+        NC_EMULTIDEFINE_NUMRECS    - number of records
+        NC_EMULTIDEFINE_VAR_BEGIN  - variable file begin offset
+        NC_EMULTIDEFINE_ATTR_NUM   - number of attributes
+        NC_EMULTIDEFINE_ATTR_SIZE  - memory space used by attribute
+        NC_EMULTIDEFINE_ATTR_NAME  - attribute name
+        NC_EMULTIDEFINE_ATTR_TYPE  - attribute type
+        NC_EMULTIDEFINE_ATTR_LEN   - attribute length
+        NC_EMULTIDEFINE_ATTR_VAL   - attribute value
+
+  o New run-time environment variables
+    * PNETCDF_SAFE_MODE environment variable can be used to enable/disable the
+      internal checking for data/argument consistency across all processes (by
+      calling collective MPI_Allreduce). Set it to 1 to enable the checking.
+      Default is 0, i.e. disabled.
+    * PNETCDF_HINTS environment variable can be used to pass the I/O hints to
+      PnetCDF library. Hints include both PnetCDF and MPI-IO hints.
+      PNETCDF_HINTS is a string of hints separated by ";" and each hint is in
+      the form of hint=value. E.g.
+          romio_ds_write=disable;nc_header_align_size=1048576
+      If this environment variable is set, it overrides any values that
+      were set by using calls to MPI_Info_set in the application code.
+
+  o New example programs
+    * example programs are now categorized into C, F77, and F90 directories
+    * nonblocking_write.f and nonblocking_write.f90 are the Fortran version of
+      nonblocking_write.c
+    * put_varn_float.c for using the new APIs ncmpi_put_varn_float_all()
+      put_varn_real.f and put_varn_real.f90 are the Fortran versions
+    * put_varn_int.c, put_varn_int.f, and put_varn_int.f90, for using the new
+      APIs ncmpi_put_varn_int_all() and nfmpi_put_varn_int_all()
+    * hints.c, hints.f, and hints.f90 for using PnetCDF hints
+    * flexible_api.c, flexible_api.f, and flexible_api.f90, for using blocking
+      and nonblocking flexible APIs
+    * mput.c for using ncmpi_mput_vara_all() to write a series of arbitrary
+      start[] and count[]
+    * block_cyclic.c, block_cyclic.f, and block_cyclic.f90 are for a
+      *-(block-cyclic) 2D partitioning pattern
+    * column_wise.c, for a *-cyclic 2D partitioning pattern
+    * put_vara.c, put_vara.f, and put_var.f90 for using for
+      nfmpi_put_vara_int_all()
+
+  o New programs for I/O benchmarks
+    * benchmarks/C/aggregation.c -- evaluate PnetCDF's performance on I/O
+      aggregation across multiple requests with different data access patterns.
+    * benchmarks/C/write_block_read_column.c -- writes variables and reads back
+      using different data partitioning patterns
+    * benchmarks/FLASH-IO -- I/O kernel of FLASH, a reacting hydrodynamics code
+      developed at University of Chicago. This benchmark can be built
+      independently from PnetCDF release.
+
+  o New test program
+    * test/F90 contains test programs adopted from netcdf-fortran-4.2
+    * test/nf90_test contains test programs adopted from test/nf_test
+    * testcases/alignment_test.c -- test for header and fixed variable file
+      offset alignments when entering redef mode
+    * testcases/nonblocking.c -- test nonblocking APIs ncmpi_iput_vara_int()
+      and ncmpi_iget_vara_int()
+    * testcases/flexible.c -- test flexible API ncmpi_get_vara_int_all() using
+      an MPI derived data type created by MPI_Type_create_hindex()
+    * test/header/header_consistency.c -- test header inconsistency and see if
+      inconsistent metadata is overwritten by root's
+
+  o New semantics for attribute APIs in data mode
+    The following APIs can modify file header while being called in data mode.
+    Note that these APIs can only modify existing attributes, rename variables
+    or dimensions, given that the new attributes and names do not take more
+    file space than the old ones. Otherwise, these APIs are prohibited in data
+    mode.
+      ncmpi_rename_dim(),
+      ncmpi_rename_var(),
+      ncmpi_copy_att(),
+      ncmpi_rename_att(), and
+      ncmpi_put_att_<type>()
+    Starting from this release of PnetCDF, these APIs must be called
+    collectively when in data mode. This new requirement is to ensure the
+    file header cached in memory is consistent across all processes.
+
+  o New synchronization for number of records
+    In collective data mode, the number of records cached in memory is
+    always synchronized across all processes. In independent mode, the value
+    can be inconsistent, unless ncmpi_sync_numrecs() (a collective API) is
+    called explicitly. Otherwise, the synchronization will have to wait until
+    the call to ncmpi_end_indep_data().
+
+    Flushing the number of records to file when it is changed used to be
+    delayed until ncmpi_close() or ncmpi_sync() is called. If a strong file
+    consistency is desired, users must enable NC_SHARE mode when opening the
+    file. However, note that in this mode any header change will cause file
+    I/O to flush  the dirty header data (not just number of records). For
+    programs that do not change header frequently, enabling NC_SHARE should
+    have no significant performance impact.
+
+    This flushing behavior has been changed in 1.4.0 to the following. At the
+    end of collective calls, if the number of records increases, the changed
+    value will be written to the file, no matter if NC_SHARE mode is used or
+    not. This change is to ensure the number of records is up-to-dated in
+    file, in case the appication prorgam does not close file (due to crash
+    or programming error). Note this change applies to collective APIs only.
+
+  o New optimization: I/O request aggregation
+    The original design of nonblocking I/O is to concatenate the fileviews of
+    individual nonblocking requests and serve them with a single MPI-IO call,
+    if possible. However, because MPI-IO requires the file displacements of
+    the flattened fileview be in an monotonically nondecreasing order, the
+    original approach (in v1.3.1 and prior) divides the nonblocking requests
+    into groups such that each group abides by this MPI-IO fileview
+    requirement. Each group is then carried out by a separate MPI-IO call.
+    Performance can be poor if there are multiple groups and each group's
+    aggregate access region is non-contiguous in the file.
+
+    This revision fixes this problem by 1) sorting the starting offset of all
+    nonblocking requests into a non-decreasing order; 2) dividing the requests
+    into groups (two types of groups are identified: interleaving and
+    non-interleaving); 3) for each non-interleaving group, concatenating
+    fileviews of all requests in the group; 4) for each interleaving group,
+    flattening fileviews of all requests in the group, merging the
+    offset-length pairs, and concatenating them into a new integrated fileview;
+    5) concatenating the fileviews of all groups into a single one; 6) the
+    final combined fileview is used by a single MPI-IO call to carry out the
+    requests.  Performance is expected to be improved as the number of MPI-IO
+    calls is reduced to one.
+
+    However, be warned about the additional memory requirement. The additional
+    memory needed for flattening the fileviews might be more than the I/O data
+    itself. For example, a request to accessing a single column of a 2D integer
+    array will result in offset-length pairs, each representing only a 4-byte
+    integer where the C struct in PnetCDF for storing an offset-length pair
+    takes 3*sizeof(MPI_Offset)=24 bytes (offset, length, and I/O buffer
+    pointer).
+
+  o Other updates:
+    * configure.in and Makefile.in have been revised to detect MPI compilers
+      and other compile options automatically.
+    * A new configure option "--disable-file-sync" to disable calling file
+      sync. This is to be used when the underlying file system provides data
+      consistency control.
+    * add build recipe for IBM BGQ (e.g. Vesta/Mira/Cetus @ANL) in README.IBM
+    * add build recipe for CRAY-XE6, Hopper @NERSC in README.CRAY
+    * add build recipe for CRAY-XC30, Edison @NERSC in README.CRAY
+    * add build recipe for Endeavour @ NASA in README.SGI
+    * add declaration of flexible APIs for Fortran90
+    * "make testing" now hides most of the stdout. Use "make verbose_testing"
+      for verbose output.
+    * ncmpidump: add the command-line option "-k" to report the format of
+      netCDF file.
+    * ncvalid is renamed to ncmpivalid, a tool to validate the structure of
+      netCDF files for conforming with CDF formats.
+    * Fortran type NFMPI_OFFSET is removed. It was merely a shortcut to
+      integer(KIND=MPI_OFFSET_KIND). Some Fortran 77 compiler does not
+      recognize keyword KIND. In that case, please set MPIF77 to the MPI
+      Fortran 90 compiler, e.g. ./configure MPIF77=mpif90
+    * configure now automatically checks Fortran module compile flags
+    * Support additional Fortran netCDF data types: nf_ubyte, nf_ushort,
+      nf_uint, nf_uint64, nf90_ubyte, nf90_ushort, nf90_uint, nf90_uint64.
+    * Error codes and messages conform with netCDF's
+
+  o Bug fixes
+    * Argument unlimdimid of nfmpi_inq() returns -1 when no unlimited length
+      dimension has been defined (to conform nf_inq()).
+    * Argument varid of nfmpi_inq_varoffset() is fixed to be the C's varid
+      plus one.
+    * For collective APIs, many places have been changed to prevent program
+      from hanging if a subset of the processes got errors. The fix will allow
+      all processes participating the MPI collective calls in the PnetCDF, even
+      if errors are detected on a subset of processes.
+    * set the nonblocking request ID to NULL when the request length is zero
+    * report error when bogus request IDs are passed in ncmpi_wait
+    * when entering redef with different alignment hints, fixed-sized
+      variables' file starting offsets will only be changed when it is bigger
+      than the old ones
+    * Fix some Fortran API intent in/out argument declarations
+    * ncmpi_def_var is fixed to detect if CDF-5 data types is used on CDF-1 or
+      CDF-2 files. Error code NC_ESTRICTNC3 will return.
 
 
 
