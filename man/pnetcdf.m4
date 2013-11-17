@@ -429,7 +429,7 @@ divert(0)dnl
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH PNETCDF 3 "2013-10-19" "Printed: \n(yr-\n(mo-\n(dy" "LIBRARY FUNCTIONS"
+.TH PNETCDF 3 RELEASE_DATE "Printed: \n(yr-\n(mo-\n(dy" "LIBRARY FUNCTIONS"
 .SH N<<>>AME
 PnetCDF \- Parallel library for accessing files in Network Common Data Form (CDF, CDF-2 and CDF-5 formats)
 .SH SYNOPSIS
@@ -460,12 +460,13 @@ DECL(RETSTR(), inq_libvers, (VOID_ARG))
 FOLD(inq_libvers)
 .sp
 Returns a string identifying the version of the PnetCDF library, and
-when it was built, like: "1.4.0 of 19 Oct 2013".
+when it was built, like: "RELEASE_STR".
 .LP
 The RCS \fBident(1)\fP command will find a string like
-"$\|Id: @\|(#) pnetcdf library version 1.4.0 of 19 Oct 2013 $"
+"$\|Id: @\|(#) PnetCDF library version 
+RELEASE_STR $"
 in the library. The SCCS \fBwhat(1)\fP command will find a string like
-"netcdf library version 1.4.0 of 19 Oct 2013".
+"PnetCDF library version RELEASE_STR".
 .SH "RETURN VALUES"
 .LP
 All PnetCDF functions (except

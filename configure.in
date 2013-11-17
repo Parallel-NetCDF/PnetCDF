@@ -28,7 +28,7 @@ fi
 dnl Do not change the following line, It is set by SVN automatically.
 SVN_DATE="$LastChangedDate$"
 saved_IFS=${IFS}
-IFS="\ " read t_key t_date t_time t_zone t_string <<< ${SVN_DATE}
+IFS="\ " read t_key PNETCDF_RELEASE_DATE2 t_time t_zone t_string <<< ${SVN_DATE}
 IFS="() $," read t_day PNETCDF_RELEASE_DATE <<< $t_string
 IFS=${saved_IFS}
 
@@ -53,13 +53,15 @@ AC_DEFINE_UNQUOTED(PNETCDF_VERSION_MINOR, $PNETCDF_VERSION_MINOR, minor version 
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_SUB, $PNETCDF_VERSION_SUB, sub version number)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_PRE, $PNETCDF_VERSION_PRE, pre-release string)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION, ["$PNETCDF_VERSION"], full pnetcdf version string)
-AC_DEFINE_UNQUOTED(PNETCDF_RELEASE_DATE, ["$PNETCDF_RELEASE_DATE"], pnetcdf latest release date string)
+AC_DEFINE_UNQUOTED(PNETCDF_RELEASE_DATE, ["$PNETCDF_RELEASE_DATE"], pnetcdf release date string)
 
 AC_SUBST(PNETCDF_VERSION_MAJOR)
 AC_SUBST(PNETCDF_VERSION_MINOR)
 AC_SUBST(PNETCDF_VERSION_SUB)
 AC_SUBST(PNETCDF_VERSION_PRE)
 AC_SUBST(PNETCDF_VERSION)
+AC_SUBST(PNETCDF_RELEASE_DATE)
+AC_SUBST(PNETCDF_RELEASE_DATE2)
 
 dnl these used to live in acconfig.h
 dnl autoheader only adds these templates to the first invocation of AC_CONFIG_HEADERS
