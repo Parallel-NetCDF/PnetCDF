@@ -1,5 +1,8 @@
 .\" $Header$
-.TH NCDUMP 1 "$Date$" "Printed: \n(yr-\n(mo-\n(dy" "UNIDATA UTILITIES"
+.nr yr \n(yr+1900
+.af mo 01
+.af dy 01
+.TH NCMPIDUMP 1 "2013-11-17" "Printed: \n(yr-\n(mo-\n(dy" "UTILITIES"
 .SH NAME
 ncmpidump \- Convert netCDF files to ASCII form (CDL)
 .SH SYNOPSIS
@@ -18,7 +21,7 @@ ncmpidump
 .br
 .ft B
 .HP
-ncdump
+ncmpidump
 .nh
 \%-k
 \%\fIfile\fP
@@ -28,13 +31,13 @@ ncdump
 \fBncmpidump\fP generates an ASCII representation of a specified netCDF file on
 standard output.  The ASCII representation is in a form called CDL
 (``network Common Data form Language'') that can be viewed, edited, or serve
-as input to \fBncgen\fP.  \fBncgen\fP is a companion program that can
-generate a binary netCDF file from a CDL file.  Hence \fBncgen\fP and
+as input to \fBncmpigen\fP.  \fBncmpigen\fP is a companion program that can
+generate a binary netCDF file from a CDL file.  Hence \fBncmpigen\fP and
 \fBncmpidump\fP can be used as inverses to transform the data representation
-between binary and ASCII representations.  See \fBncgen\fP for a description
+between binary and ASCII representations.  See \fBncmpigen\fP for a description
 of CDL and netCDF representations.
 .LP
-\fBncdump\fP may also be used to determine what kind of netCDF file is used
+\fBncmpidump\fP may also be used to determine what kind of netCDF file is used
 (which variant of the netCDF file format) with the -k option.
 .LP
 \fBncmpidump\fP defines a default format used for each type of netCDF data, but
@@ -106,14 +109,14 @@ appears on a separate line, fully identified.
 Changes the default maximum line length (80) used in formatting lists of
 non-character data values.
 .IP "\fB-n\fP \fIname\fP"
-CDL requires a name for a netCDF data set, for use by \fBncgen -b\fP in
+CDL requires a name for a netCDF data set, for use by \fBncmpigen -b\fP in
 generating a default netCDF file name.  By default, \fIncmpidump\fP constructs
 this name from the last component of the pathname of the input netCDF file
 by stripping off any extension it has.  Use the \fB-n\fP option to specify a
-different name.  Although the output file name used by \fBncgen -b\fP can be
+different name.  Although the output file name used by \fBncmpigen -b\fP can be
 specified, it may be wise to have \fIncmpidump\fP change the default name to
 avoid inadvertantly overwriting a valuable netCDF file when using
-\fBncmpidump\fP, editing the resulting CDL file, and using \fBncgen -b\fP to
+\fBncmpidump\fP, editing the resulting CDL file, and using \fBncmpigen -b\fP to
 generate a new netCDF file from the edited CDL file.
 .IP "\fB-p\fP \fIfloat_digits[,double_digits]\fP"
 Specifies default precision (number of significant digits) to use in displaying
@@ -179,8 +182,10 @@ Goldberg, \fBACM Computing Surveys, Vol. 23, No. 1\fP, March 1991, pp. 5-48.
 
 .SH "SEE ALSO"
 .LP
-.BR ncgen (1),
-.BR netcdf (3)
+.BR ncmpigen (1),
+.BR pnetcdf (3)
+.SH DATE
+$Date$
 .SH BUGS
 .LP
 Character arrays that contain a null-byte are treated like C strings, so no

@@ -1,11 +1,14 @@
 .\" $Header$
-.TH NCMPIDIFF 1
+.nr yr \n(yr+1900
+.af mo 01
+.af dy 01
+.TH NCMPIDIFF 1 2013-11-17 "Printed: \n(yr-\n(mo-\n(dy" "UTILITIES"
 .SH NAME
-ncmpidiff \- compares two netCDF files
+ncmpidiff \- compares two netCDF files in parallel
 .SH SYNOPSIS
 .ft B
 .HP
-ncmpidiff
+mpiexec -n 4 ncmpidiff
 .nh
 \%[-b]
 \%[-h]
@@ -30,11 +33,9 @@ Compare only the given list of variables
 .SH "SEE ALSO"
 .LP
 .BR ncmpidump (1),
-.BR netcdf (3)
+.BR pnetcdf (3)
 .SH DATE
-Fri Aug 27 22:55:07 2010
-.SH AUTHOR
-Wei-keng Liao
+$Date$
 .LP
 
 

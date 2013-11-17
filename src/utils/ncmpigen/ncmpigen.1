@@ -1,11 +1,14 @@
 .\" $Header$
-.TH NCGEN 1 "$Date$" "Printed: \n(yr-\n(mo-\n(dy" "UNIDATA UTILITIES"
+.nr yr \n(yr+1900
+.af mo 01
+.af dy 01
+.TH NCMPIGEN 1 2013-11-17 "Printed: \n(yr-\n(mo-\n(dy" "UTILITIES"
 .SH NAME
-ncgen \- From a CDL file generate a netCDF file, a C program, or a Fortran
+ncmpigen \- From a CDL file generate a netCDF file, a C program, or a Fortran
 program
 .SH SYNOPSIS
 .HP
-ncgen
+ncmpigen
 .nh
 \%[-b]
 \%[-c]
@@ -16,21 +19,21 @@ ncgen
 .hy
 .ft
 .SH DESCRIPTION
-\fBncgen\fP generates either a netCDF file, or C or Fortran source code to
-create a netCDF file.  The input to \fBncgen\fP is a description of a netCDF
+\fBncmpigen\fP generates either a netCDF file, or C or Fortran source code to
+create a netCDF file.  The input to \fBncmpigen\fP is a description of a netCDF
 file in a small language known as CDL (network Common Data form Language),
 described below.
-If no options are specified in invoking \fBncgen\fP, it merely checks the
+If no options are specified in invoking \fBncmpigen\fP, it merely checks the
 syntax of the input CDL file, producing error messages for
 any violations of CDL syntax.  Other options can be used to create the
 corresponding netCDF file, to generate a C program that uses the netCDF C
 interface to create the netCDF file, or to generate a Fortran program that
 uses the netCDF Fortran interface to create the same netCDF file.
 .LP
-\fBncgen\fP may be used with the companion program \fBncdump\fP to perform
+\fBncmpigen\fP may be used with the companion program \fBncmpidump\fP to perform
 some simple operations on netCDF files.  For example, to rename a dimension
-in a netCDF file, use \fBncdump\fP to get a CDL version of the netCDF file,
-edit the CDL file to change the name of the dimensions, and use \fBncgen\fP
+in a netCDF file, use \fBncmpidump\fP to get a CDL version of the netCDF file,
+edit the CDL file to change the name of the dimensions, and use \fBncmpigen\fP
 to generate the corresponding netCDF file from the edited CDL file.
 .SH OPTIONS
 .IP "\fB-b\fP"
@@ -65,14 +68,14 @@ for backward compatibility.
 Check the syntax of the CDL file `\fBfoo.cdl\fP':
 .RS
 .HP
-ncgen foo.cdl
+ncmpigen foo.cdl
 .RE
 .LP
 From the CDL file `\fBfoo.cdl\fP', generate an equivalent binary netCDF file
 named `\fBx.nc\fP':
 .RS
 .HP
-ncgen -o x.nc foo.cdl
+ncmpigen -o x.nc foo.cdl
 .RE
 .LP
 From the CDL file `\fBfoo.cdl\fP', generate a C program containing the
@@ -80,7 +83,7 @@ netCDF function invocations necessary to create an equivalent binary netCDF
 file named `\fBx.nc\fP':
 .RS
 .HP
-ncgen -c -o x.nc foo.cdl
+ncmpigen -c -o x.nc foo.cdl
 .RE
 .LP
 .SH USAGE
@@ -219,17 +222,17 @@ in either upper or lower case.
 Bytes differ from characters in that they are intended to hold a full eight
 bits of data, and the zero byte has no special significance, as it
 does for character data.
-\fBncgen\fP converts \fBbyte\fP declarations to \fBchar\fP
+\fBncmpigen\fP converts \fBbyte\fP declarations to \fBchar\fP
 declarations in the output C code and to the nonstandard \fBBYTE\fP
 declaration in output Fortran code.
 .LP
 Shorts can hold values between -32768 and 32767.
-\fBncgen\fP converts \fBshort\fP declarations to \fBshort\fP
+\fBncmpigen\fP converts \fBshort\fP declarations to \fBshort\fP
 declarations in the output C code and to the nonstandard \fBINTEGER*2\fP
 declaration in output Fortran code.
 .LP
 Longs can hold values between -2147483648 and 2147483647.
-\fBncgen\fP converts \fBlong\fP declarations to \fBlong\fP
+\fBncmpigen\fP converts \fBlong\fP declarations to \fBlong\fP
 declarations in the output C code and to \fBINTEGER\fP
 declarations in output Fortran code.  \fBint\fP and \fBinteger\fP are
 accepted as synonyms for \fBlong\fP in CDL declarations.
@@ -238,14 +241,14 @@ be better to use the \fBint\fP synonym to avoid confusion.
 .LP
 Floats can hold values between about -3.4+38 and 3.4+38.  Their
 external representation is as 32-bit IEEE normalized single-precision
-floating point numbers.  \fBncgen\fP converts \fBfloat\fP
+floating point numbers.  \fBncmpigen\fP converts \fBfloat\fP
 declarations to \fBfloat\fP declarations in the output C code and to
 \fBREAL\fP declarations in output Fortran code.  \fBreal\fP is accepted
 as a synonym for \fBfloat\fP in CDL declarations.
 .LP
 Doubles can hold values between about -1.7+308 and 1.7+308.  Their
 external representation is as 64-bit IEEE standard normalized
-double-precision floating point numbers.  \fBncgen\fP converts
+double-precision floating point numbers.  \fBncmpigen\fP converts
 \fBdouble\fP declarations to \fBdouble\fP declarations in the output C
 code and to \fBDOUBLE PRECISION\fP declarations in output Fortran
 code.
@@ -283,7 +286,7 @@ string escape conventions are honored.  For example
 Note that the netCDF character array "a" would fit in a one-element
 variable, since no terminating NULL character is assumed.  However, a zero
 byte in a character array is interpreted as the end of the significant
-characters by the \fBncdump\fP program, following the C convention.
+characters by the \fBncmpidump\fP program, following the C convention.
 Therefore, a NULL byte should not be embedded in a character string unless
 at the end: use the \fIbyte\fP data type instead for byte arrays that
 contain the zero byte.  NetCDF and CDL have no string type, but only
@@ -344,10 +347,11 @@ For example the following are all acceptable \fIdouble\fP constants:
 1.d
 .fi
 .RE
-
+.SH DATE
+$Date$
 .SH BUGS
 .LP
-The programs generated by \fBncgen\fP when using the \fB-c\fP or \fB-f\fP
+The programs generated by \fBncmpigen\fP when using the \fB-c\fP or \fB-f\fP
 use initialization statements to store data in variables, and will fail to
 produce compilable programs if you try to use them for large datasets, since
 the resulting statements may exceed the line length or number of
