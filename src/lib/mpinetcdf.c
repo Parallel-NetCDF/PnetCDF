@@ -28,12 +28,12 @@
 static int ncmpii_end_indep_data(NC *ncp);
 
 
-/* The const string below is for the RCS ident(1) command to find a string
- * like "$Id$ in
- * the library file (libpnetcdf.a).
+/* The const string below is for the RCS ident(1) command to find a string like
+ * "\044Id: \100(#) PnetCDF library version 1.4.0 of 16 Nov 2013 $"
+ * in the library file (libpnetcdf.a).
  */
 static const char pnetcdf_libvers[] =
-        "\044Id: \100(#) pnetcdf library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE" $";
+        "\044Id: \100(#) PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE" $";
 
 /*----< ncmpi_inq_libvers() >------------------------------------------------*/
 inline const char*

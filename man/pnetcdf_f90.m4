@@ -1,7 +1,7 @@
 .nr yr \n(yr+1900
 .af mo 01
 .af dy 01
-.TH PNETCDF 3f90 "2013-10-19" "Printed: \n(yr.\n(mo.\n(dy" "LIBRARY FUNCTIONS"
+.TH PNETCDF 3f90 "RELEASE_DATE" "Printed: \n(yr.\n(mo.\n(dy" "LIBRARY FUNCTIONS"
 .SH NAME
 PnetCDF \- Parallel library for accessing files in Network Common Data Form (CDF, CDF-2 and CDF-5 formats)
 .SH SYNOPSIS
@@ -28,13 +28,14 @@ for the Fortran-90 programming language.
 character(len=80) :: nf90mpi_inq_libvers\fR
 .RE
 .sp
-Returns a string identifying the version of the netCDF library, and
-when it was built, like: "1.4.0 of 19 Oct 2013".
+Returns a string identifying the version of the PnetCDF library, and
+when it was built, like: "RELEASE_STR".
 .LP
 The RCS \fBident(1)\fP command will find a string like
-"$\|Id: @\|(#) pnetcdf library version 1.4.0 of 19 Oct 2013 $"
+"$\|Id: @\|(#) PnetCDF library version
+RELEASE_STR $"
 in the library. The SCCS \fBwhat(1)\fP command will find a string like
-"pnetcdf library version 1.4.0 of 19 Oct 2013".
+"PnetCDF library version RELEASE_STR".
 .SH "ROUTINE DESCRIPTIONS"
 .LP
 All PnetCDF functions (except
@@ -644,7 +645,7 @@ zero or more alphanumeric characters including the underscore
 The maximum allowable number of characters 
 is \fBnf90_max_name\fR.
 Names that begin with an underscore (`_') are reserved for use
-by the netCDF interface.
+by the netCDF and PnetCDF interfaces.
 .TP
 integer \fIxtype\fP
 specifies the external data type of a netCDF variable or attribute and
