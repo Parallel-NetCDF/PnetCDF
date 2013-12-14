@@ -207,7 +207,7 @@ c       should not enter indep mode in define mode
         length = len(title)
         err = nfmpi_put_att_text(ncid, NF_GLOBAL, 'title', length, 
      +                        title)
-        if (err .ne NF_NOERR)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_put_att_text: ', err)
         err = nfmpi_enddef(ncid)
         if (err .ne. NF_NOERR)

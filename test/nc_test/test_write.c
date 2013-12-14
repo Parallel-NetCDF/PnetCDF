@@ -205,7 +205,7 @@ test_ncmpi_redef(void)
     err = ncmpi_end_indep_data(ncid);
     IF (err != NC_ENOTINDEP)
         error("ncmpi_end_indep_data: in collective mode status = %s", ncmpi_strerror(err));
-    err ncmpi_begin_indep_data(ncid);
+    err = ncmpi_begin_indep_data(ncid);
     IF (err != NC_NOERR) 
 	error("ncmpi_begin_indep_data: %s", ncmpi_strerror(err));
     err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
