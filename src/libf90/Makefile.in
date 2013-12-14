@@ -25,6 +25,7 @@ ifeq (@UPPER_CASE_MOD@, yes)
 endif
 
 F90FLAGS += @FC_MODOUT@.
+M4FLAGS  += -Dinout=@INOUT@
 
 M4_SRCS = getput_text.m4 \
           getput_var.m4 \
