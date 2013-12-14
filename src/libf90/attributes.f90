@@ -53,9 +53,8 @@
     integer,             intent(out), optional :: xtype, attnum
     integer (kind=MPI_OFFSET_KIND), intent(out), optional :: len
     integer                                    :: nf90mpi_inquire_attribute
-
-    integer                          :: local_xtype
-    integer (kind=MPI_OFFSET_KIND)   :: local_len
+    integer                                    :: local_xtype
+    integer (kind=MPI_OFFSET_KIND)             :: local_len
 
     ! Do we need to worry about not saving the state from this call?
     if(present(attnum)) &
@@ -110,8 +109,8 @@
     character(len = *),                         intent( in) :: name
     integer (kind =  OneByteInt),               intent( in) :: values
     integer                                                 :: nf90mpi_put_att_one_OneByteInt
-
     integer (kind =  OneByteInt), dimension(1)              :: valuesA
+
     valuesA(1) = values
     nf90mpi_put_att_one_OneByteInt = nfmpi_put_att_int1(ncid, varid, name, nf90_int1, 1_MPI_OFFSET_KIND, valuesA)
   end function nf90mpi_put_att_one_OneByteInt
@@ -130,30 +129,30 @@
     character(len = *),                         intent( in) :: name
     integer (kind =  OneByteInt),               intent(out) :: values
     integer                                                 :: nf90mpi_get_att_one_OneByteInt
-
     integer (kind =  OneByteInt), dimension(1)              :: valuesA
+
     nf90mpi_get_att_one_OneByteInt = nfmpi_get_att_int1(ncid, varid, name, valuesA)
     values = valuesA(1)
   end function nf90mpi_get_att_one_OneByteInt
   ! -------
   function nf90mpi_put_att_TwoByteInt(ncid, varid, name, values)
-    integer,                                    intent(in)    :: ncid, varid
-    character(len = *),                         intent(in)    :: name
-    integer (kind =  TwoByteInt), dimension(:), intent(@INOUT@) :: values
-    integer                                                   :: nf90mpi_put_att_TwoByteInt
-    integer (kind=MPI_OFFSET_KIND)                            :: ilen
+    integer,                                    intent(in)  :: ncid, varid
+    character(len = *),                         intent(in)  :: name
+    integer (kind =  TwoByteInt), dimension(:), intent(in)  :: values
+    integer                                                 :: nf90mpi_put_att_TwoByteInt
+    integer (kind=MPI_OFFSET_KIND)                          :: ilen
 
     ilen = size(values)
     nf90mpi_put_att_TwoByteInt = nfmpi_put_att_int2(ncid, varid, name, nf90_int2, ilen, values)
   end function nf90mpi_put_att_TwoByteInt
   ! -------
   function nf90mpi_put_att_one_TwoByteInt(ncid, varid, name, values)
-    integer,                                    intent(in)    :: ncid, varid
-    character(len = *),                         intent(in)    :: name
-    integer (kind =  TwoByteInt),               intent(@INOUT@) :: values
-    integer                                                   :: nf90mpi_put_att_one_TwoByteInt
+    integer,                                    intent(in)  :: ncid, varid
+    character(len = *),                         intent(in)  :: name
+    integer (kind =  TwoByteInt),               intent(in)  :: values
+    integer                                                 :: nf90mpi_put_att_one_TwoByteInt
+    integer (kind =  TwoByteInt), dimension(1)              :: valuesA
 
-    integer (kind =  TwoByteInt), dimension(1)                :: valuesA
     valuesA(1) = values
     nf90mpi_put_att_one_TwoByteInt = nfmpi_put_att_int2(ncid, varid, name, nf90_int2, 1_MPI_OFFSET_KIND, valuesA)
   end function nf90mpi_put_att_one_TwoByteInt
@@ -172,30 +171,30 @@
     character(len = *),                         intent( in) :: name
     integer (kind =  TwoByteInt),               intent(out) :: values
     integer                                                 :: nf90mpi_get_att_one_TwoByteInt
-
     integer (kind =  TwoByteInt), dimension(1)              :: valuesA
+
     nf90mpi_get_att_one_TwoByteInt = nfmpi_get_att_int2(ncid, varid, name, valuesA)
     values = valuesA(1)
   end function nf90mpi_get_att_one_TwoByteInt
   ! -------
   function nf90mpi_put_att_FourByteInt(ncid, varid, name, values)
-    integer,                                    intent(in)    :: ncid, varid
-    character(len = *),                         intent(in)    :: name
-    integer (kind = FourByteInt), dimension(:), intent(@INOUT@) :: values
-    integer                                                   :: nf90mpi_put_att_FourByteInt
-    integer (kind=MPI_OFFSET_KIND)                            :: ilen
+    integer,                                    intent(in)  :: ncid, varid
+    character(len = *),                         intent(in)  :: name
+    integer (kind = FourByteInt), dimension(:), intent(in)  :: values
+    integer                                                 :: nf90mpi_put_att_FourByteInt
+    integer (kind=MPI_OFFSET_KIND)                          :: ilen
 
     ilen = size(values)
     nf90mpi_put_att_FourByteInt = nfmpi_put_att_int(ncid, varid, name, nf90_int, ilen, values)
   end function nf90mpi_put_att_FourByteInt
   ! -------
   function nf90mpi_put_att_one_FourByteInt(ncid, varid, name, values)
-    integer,                                    intent(in)    :: ncid, varid
-    character(len = *),                         intent(in)    :: name
-    integer (kind = FourByteInt),               intent(@INOUT@) :: values
-    integer                                                   :: nf90mpi_put_att_one_FourByteInt
+    integer,                                    intent(in)  :: ncid, varid
+    character(len = *),                         intent(in)  :: name
+    integer (kind = FourByteInt),               intent(in)  :: values
+    integer                                                 :: nf90mpi_put_att_one_FourByteInt
+    integer (kind = FourByteInt), dimension(1)              :: valuesA
 
-    integer (kind = FourByteInt), dimension(1)                :: valuesA
     valuesA(1) = int(values)
     nf90mpi_put_att_one_FourByteInt = nfmpi_put_att_int(ncid, varid, name, nf90_int, 1_MPI_OFFSET_KIND, valuesA)
   end function nf90mpi_put_att_one_FourByteInt
@@ -205,7 +204,6 @@
     character(len = *),                         intent(in)  :: name
     integer (kind = FourByteInt), dimension(:), intent(out) :: values
     integer                                                 :: nf90mpi_get_att_FourByteInt
-    
     integer, dimension(size(values))                        :: defaultInteger
 
     nf90mpi_get_att_FourByteInt = nfmpi_get_att_int(ncid, varid, name, defaultInteger)
@@ -217,7 +215,6 @@
     character(len = *),                         intent(in)  :: name
     integer (kind = FourByteInt),               intent(out) :: values
     integer                                                 :: nf90mpi_get_att_one_FourByteInt
-
     integer, dimension(1)                                   :: defaultInteger
 
     nf90mpi_get_att_one_FourByteInt = nfmpi_get_att_int(ncid, varid, name, defaultInteger)
@@ -225,21 +222,21 @@
   end function nf90mpi_get_att_one_FourByteInt
   ! -------
   function nf90mpi_put_att_EightByteInt(ncid, varid, name, values)
-    integer,                                     intent(in)    :: ncid, varid
-    character(len = *),                          intent(in)    :: name
-    integer (kind = EightByteInt), dimension(:), intent(@INOUT@) :: values
-    integer                                                    :: nf90mpi_put_att_EightByteInt
-    integer (kind=MPI_OFFSET_KIND)                             :: ilen
+    integer,                                     intent(in) :: ncid, varid
+    character(len = *),                          intent(in) :: name
+    integer (kind = EightByteInt), dimension(:), intent(in) :: values
+    integer                                                 :: nf90mpi_put_att_EightByteInt
+    integer (kind=MPI_OFFSET_KIND)                          :: ilen
 
     ilen = size(values)
     nf90mpi_put_att_EightByteInt = nfmpi_put_att_int8(ncid, varid, name, nf90_int, ilen, values)
   end function nf90mpi_put_att_EightByteInt
   ! -------
   function nf90mpi_put_att_one_EightByteInt(ncid, varid, name, values)
-    integer,                                     intent(in)    :: ncid, varid
-    character(len = *),                          intent(in)    :: name
-    integer (kind = EightByteInt),               intent(@INOUT@) :: values
-    integer                                                    :: nf90mpi_put_att_one_EightByteInt
+    integer,                                     intent(in) :: ncid, varid
+    character(len = *),                          intent(in) :: name
+    integer (kind = EightByteInt),               intent(in) :: values
+    integer                                                 :: nf90mpi_put_att_one_EightByteInt
 
     integer (kind = EightByteInt), dimension(1) :: valuesA
     valuesA(1) = values
@@ -270,21 +267,21 @@
   ! Real attributes
   ! -------
   function nf90mpi_put_att_FourByteReal(ncid, varid, name, values)
-    integer,                                   intent(in)    :: ncid, varid
-    character(len = *),                        intent(in)    :: name
-    real (kind =  FourByteReal), dimension(:), intent(@INOUT@) :: values
-    integer                                                  :: nf90mpi_put_att_FourByteReal
-    integer (kind=MPI_OFFSET_KIND)                           :: ilen
+    integer,                                   intent(in)  :: ncid, varid
+    character(len = *),                        intent(in)  :: name
+    real (kind =  FourByteReal), dimension(:), intent(in)  :: values
+    integer                                                :: nf90mpi_put_att_FourByteReal
+    integer (kind=MPI_OFFSET_KIND)                         :: ilen
 
     ilen = size(values)
     nf90mpi_put_att_FourByteReal = nfmpi_put_att_real(ncid, varid, name, nf90_real4, ilen, values)
   end function nf90mpi_put_att_FourByteReal
   ! -------
   function nf90mpi_put_att_one_FourByteReal(ncid, varid, name, values)
-    integer,                                   intent(in)     :: ncid, varid
-    character(len = *),                        intent(in)     :: name
-    real (kind =  FourByteReal),               intent( @INOUT@) :: values
-    integer                                                   :: nf90mpi_put_att_one_FourByteReal
+    integer,                                   intent(in)  :: ncid, varid
+    character(len = *),                        intent(in)  :: name
+    real (kind =  FourByteReal),               intent(in)  :: values
+    integer                                                :: nf90mpi_put_att_one_FourByteReal
 
     real (kind =  FourByteReal), dimension(1) :: valuesA
     valuesA(1) = values
@@ -312,21 +309,21 @@
   end function nf90mpi_get_att_one_FourByteReal
   ! -------
   function nf90mpi_put_att_EightByteReal(ncid, varid, name, values)
-    integer,                                   intent(in)    :: ncid, varid
-    character(len = *),                        intent(in)    :: name
-    real (kind = EightByteReal), dimension(:), intent(@INOUT@) :: values
-    integer                                                  :: nf90mpi_put_att_EightByteReal
-    integer (kind=MPI_OFFSET_KIND)                           :: ilen
+    integer,                                   intent(in)  :: ncid, varid
+    character(len = *),                        intent(in)  :: name
+    real (kind = EightByteReal), dimension(:), intent(in)  :: values
+    integer                                                :: nf90mpi_put_att_EightByteReal
+    integer (kind=MPI_OFFSET_KIND)                         :: ilen
 
     ilen = size(values)
     nf90mpi_put_att_EightByteReal = nfmpi_put_att_double(ncid, varid, name, nf90_real8, ilen, values)
   end function nf90mpi_put_att_EightByteReal
   ! -------
   function nf90mpi_put_att_one_EightByteReal(ncid, varid, name, values)
-    integer,                                   intent(in)    :: ncid, varid
-    character(len = *),                        intent(in)    :: name
-    real (kind = EightByteReal),               intent(@INOUT@) :: values
-    integer                                                  :: nf90mpi_put_att_one_EightByteReal
+    integer,                                   intent(in)  :: ncid, varid
+    character(len = *),                        intent(in)  :: name
+    real (kind = EightByteReal),               intent(in)  :: values
+    integer                                                :: nf90mpi_put_att_one_EightByteReal
 
     real (kind = EightByteReal), dimension(1) :: valuesA
     valuesA(1) = values

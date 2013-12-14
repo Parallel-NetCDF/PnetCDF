@@ -274,7 +274,7 @@ INTERFACE
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
     END FUNCTION   nfmpi_put_att_int2
 
     INTEGER        FUNCTION nfmpi_get_att_int2(ncid, varid, name, i2vals)
@@ -291,7 +291,7 @@ INTERFACE
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                            INTEGER,                       INTENT(IN)  :: ivals(*)
     END FUNCTION   nfmpi_put_att_int
 
     INTEGER        FUNCTION nfmpi_get_att_int(ncid, varid, name, IVALS)
@@ -308,7 +308,7 @@ INTERFACE
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            REAL,                          INTENT(@INOUT@) :: rvals(*)
+                            REAL,                          INTENT(IN)  :: rvals(*)
     END FUNCTION   nfmpi_put_att_real
 
     INTEGER        FUNCTION nfmpi_get_att_real(ncid, varid, name, rvals)
@@ -325,7 +325,7 @@ INTERFACE
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                            DOUBLE PRECISION,              INTENT(IN)  :: dvals(*)
     END FUNCTION   nfmpi_put_att_double
 
     INTEGER        FUNCTION nfmpi_get_att_double(ncid, varid, name, dvals)
@@ -342,7 +342,7 @@ INTERFACE
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
     END FUNCTION   nfmpi_put_att_int8
 
     INTEGER        FUNCTION nfmpi_get_att_int8(ncid, varid, name, i8vals)
