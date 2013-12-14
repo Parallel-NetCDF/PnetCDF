@@ -1070,8 +1070,8 @@
                     if (ichar(text) .ne. expect) then
                         call errori(
      +              'Var value read not that expected for variable ', i)
-                        call errori('expecting ',expect,'but got ',
-     +                              ichar(text))
+                        call errori(' expecting ',expect)
+                        call errori(' but got ', ichar(text))
                     else
                         nok = nok + 1
                     end if
