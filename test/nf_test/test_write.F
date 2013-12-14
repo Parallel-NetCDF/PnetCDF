@@ -30,20 +30,20 @@ C On exit, delete this file
         nok = 0
         do 1, clobber = 0, 1
             err = nfmpi_create(comm, scratch, flags,  info, ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF_NOERR) then
                 call errore('nfmpi_create: ', err)
             end if
             nok = nok + 1
             err = nfmpi_close(ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF_NOERR) then
                 call errore('nfmpi_close: ', err)
             end if
             err = nfmpi_open(comm, scratch, NF_NOWRITE, info, ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF_NOERR) then
                 call errore('nfmpi_open: ', err)
             end if
             err = nfmpi_inq(ncid, ndims, nvars, ngatts, recdim)
-            if (err .ne. 0) then
+            if (err .ne. NF_NOERR) then
                 call errore('nfmpi_inq: ', err)
             else if (ndims .ne. 0) then
                 call errori(
@@ -63,7 +63,7 @@ C On exit, delete this file
      +              recdim)
             end if
             err = nfmpi_close(ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF_NOERR) then
                 call errore('nfmpi_close: ', err)
             end if
 
@@ -77,7 +77,7 @@ C On exit, delete this file
         end if
         nok = nok + 1
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errori('delete of scratch file failed: ', err)
         end if
         call print_nok(nok)
@@ -137,7 +137,7 @@ C           /* BAD_ID tests */
 
 C           /* read-only tests */
         err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_redef(ncid)
         if (err .ne. NF_EPERM) then
@@ -150,13 +150,13 @@ C           /* read-only tests */
         endif
         nok = nok + 1
         err = nfmpi_close(ncid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_close: ', err)
 
 C           /* tests using scratch file */
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -164,7 +164,7 @@ C           /* tests using scratch file */
         call def_vars(ncid)
         call put_atts(ncid)
         err = nfmpi_inq_varid(ncid, 'd', vid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_inq_varid: ', err)
         var = 1.0
 c       should not enter indep mode in define mode
@@ -176,15 +176,15 @@ c       should not enter indep mode in define mode
         if (err .ne. NF_EINDEFINE)
      +      call errore('nfmpi_put_var... in define mode: ', err)
         err = nfmpi_end_indep_data(ncid)
-        if (err .ne. NF_EINDEFINE)
-     +    call errore('nfmpi_end_indep_data... in define mode: ', err)
+        if (err .ne. NF_ENOTINDEP)
+     +    call errore('nfmpi_end_indep_data... not in indep mode: ',err)
         err = nfmpi_redef(ncid)
         if (err .ne. NF_EINDEFINE) then
             call errore('nfmpi_redef in define mode: ', err)
         endif
         nok = nok + 1
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
         length = 8
@@ -192,46 +192,50 @@ c       should not enter indep mode in define mode
         if (err .ne. NF_ENOTINDEFINE)
      +      call errore('nfmpi_def_dim in define mode: ', err)
         err = nfmpi_redef(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_redef: ', err)
         endif
         nok = nok + 1
         length = 8
         err = nfmpi_def_dim(ncid, 'abc', length, dimid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_def_dim: ', err)
         dimids(1) = 0
         err = nfmpi_def_var(ncid, 'abc', NF_INT, 0, dimids, vid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_def_var: ', err)
         length = len(title)
         err = nfmpi_put_att_text(ncid, NF_GLOBAL, 'title', length, 
      +                        title)
-        if (err .ne .0)
+        if (err .ne NF_NOERR)
      +      call errore('nfmpi_put_att_text: ', err)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         var = 1.0
         err = nfmpi_end_indep_data(ncid)
         if (err .ne. NF_ENOTINDEP)
-     +   call errore('nfmpi_end_indep_data... in collective mode: ',err)
+     +     call errore('nfmpi_end_indep_data: in collective mode: ',err)
         err = nfmpi_begin_indep_data(ncid)
+        if (err .ne. NF_NOERR)
+     +      call errore('nfmpi_begin_indep_data: ', err)
         err = nfmpi_put_var1_double(ncid, vid, start, var)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_put_var1_double: ', err)
         err = nfmpi_end_indep_data(ncid)       
+        if (err .ne. NF_NOERR)
+     +      call errore('nfmpi_end_indep_data: ', err)
         err = nfmpi_close(ncid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_close: ', err)
 
 C           /* check scratch file written as expected */
         call check_file(scratch)
         err = nfmpi_open(comm, scratch, NF_NOWRITE, info, ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_inq_dim(ncid, dimid, name, length)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_inq_dim: ', err)
         if (name .ne. "abc")
      +      call errori('Unexpected dim name in netCDF ', ncid)
@@ -241,7 +245,7 @@ C           /* check scratch file written as expected */
         end if
         err = nfmpi_begin_indep_data(ncid)
         err = nfmpi_get_var1_double(ncid, vid, start, var)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_get_var1_double: ', err)
         if (var .ne. 1.0)
      +      call errori(
@@ -249,11 +253,11 @@ C           /* check scratch file written as expected */
      +          , ncid)
         err = nfmpi_end_indep_data(ncid)
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete failed for netCDF: ', err)
         call print_nok(nok)
         end
@@ -296,7 +300,7 @@ C           /* BAD_ID test */
 C           /* create scratch file & try nfmpi_sync in define mode */
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncidw)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -312,11 +316,11 @@ C           /* write using same handle */
         call def_vars(ncidw)
         call put_atts(ncidw)
         err = nfmpi_enddef(ncidw)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncidw)
         err = nfmpi_sync(ncidw)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_sync of ncidw failed: ', err)
         else
             nok = nok + 1
@@ -324,10 +328,10 @@ C           /* write using same handle */
 
 C           /* open another handle, nfmpi_sync, read (check) */
         err = nfmpi_open(comm, scratch, NF_NOWRITE, info, ncidr)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_sync(ncidr)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_sync of ncidr failed: ', err)
         else
             nok = nok + 1
@@ -338,14 +342,14 @@ C           /* open another handle, nfmpi_sync, read (check) */
 
 C           /* close both handles */
         err = nfmpi_close(ncidr)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_close(ncidw)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -382,7 +386,7 @@ C           /* BAD_ID test */
 C           /* create scratch file & try nfmpi_abort in define mode */
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -390,7 +394,7 @@ C           /* create scratch file & try nfmpi_abort in define mode */
         call def_vars(ncid)
         call put_atts(ncid)
         err = nfmpi_abort(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_abort of ncid failed: ', err)
         else
             nok = nok + 1
@@ -399,7 +403,7 @@ C           /* create scratch file & try nfmpi_abort in define mode */
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
         err = nfmpi_delete(scratch, info)    !/* should already be deleted */
-        if (err .eq. 0)
+        if (err .eq. NF_NOERR)
      +      call errori('scratch file should not exist: ', err)
 
 C            create scratch file
@@ -408,21 +412,21 @@ C            define new dims, vars, atts
 C            try nfmpi_abort: should restore previous state (no dims, vars, atts)
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         err = nfmpi_redef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_redef: ', err)
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
         err = nfmpi_abort(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_abort of ncid failed: ', err)
         else
             nok = nok + 1
@@ -431,10 +435,10 @@ C            try nfmpi_abort: should restore previous state (no dims, vars, atts
         if (err .ne. NF_EBADID)
      +      call errore('bad ncid: ', err)
         err = nfmpi_open(comm, scratch, NF_NOWRITE, info, ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_inq (ncid, ndims, nvars, ngatts, recdim)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_inq: ', err)
         if (ndims .ne. 0)
      +      call errori('ndims should be ', 0)
@@ -443,13 +447,13 @@ C            try nfmpi_abort: should restore previous state (no dims, vars, atts
         if (ngatts .ne. 0)
      +      call errori('ngatts should be ', 0)
         err = nfmpi_close (ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
 C           /* try nfmpi_abort in data mode - should just close */
         flags = IOR(NF_CLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -457,11 +461,11 @@ C           /* try nfmpi_abort in data mode - should just close */
         call def_vars(ncid)
         call put_atts(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
         err = nfmpi_abort(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_abort of ncid failed: ', err)
         else
             nok = nok + 1
@@ -471,7 +475,7 @@ C           /* try nfmpi_abort in data mode - should just close */
      +      call errore('bad ncid: ', err)
         call check_file(scratch)
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -511,12 +515,12 @@ C           /* BAD_ID test */
 C           /* data mode test */
         flags = IOR(NF_CLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         length = 8
         err = nfmpi_def_dim(ncid, 'abc', length, dimid)
@@ -528,11 +532,11 @@ C           /* data mode test */
 
 C           /* define-mode tests: unlimited dim */
         err = nfmpi_redef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_redef: ', err)
         length = NFMPI_UNLIMITED
         err = nfmpi_def_dim(ncid, dim_name(1), length, dimid)
-        if (err .ne. 0)  then
+        if (err .ne. NF_NOERR)  then
             call errore('nfmpi_def_dim: ', err)
         else
             nok = nok + 1
@@ -540,7 +544,7 @@ C           /* define-mode tests: unlimited dim */
         if (dimid .ne. 1) 
      +      call errori('Unexpected dimid: ', dimid)
         err = nfmpi_inq_unlimdim(ncid, dimid)
-        if (err .ne. 0) 
+        if (err .ne. NF_NOERR) 
      +      call errore('nfmpi_inq_unlimdim: ', err)
         if (dimid .ne. RECDIM) 
      +      call error('Unexpected recdim: ')
@@ -580,7 +584,7 @@ C           /* define-mode tests: remaining dims */
             endif
             err = nfmpi_def_dim(ncid, dim_name(i), 
      &               dim_len(i), dimid)
-            if (err .ne. 0)  then
+            if (err .ne. NF_NOERR)  then
                 call errore('nfmpi_def_dim: ', err)
             else
                 nok = nok + 1
@@ -592,7 +596,7 @@ C           /* define-mode tests: remaining dims */
 C           /* Following just to expand unlimited dim */
         call def_vars(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         call put_vars(ncid)
 
@@ -600,10 +604,10 @@ C           /* Check all dims */
         call check_dims(ncid)
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -637,7 +641,7 @@ C           /* BAD_ID test */
 C           /* main tests */
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -649,7 +653,7 @@ C           /* main tests */
             nok = nok + 1
         endif
         err = nfmpi_rename_dim(ncid, 3, 'abc')
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_rename_dim: ', err)
         else
             nok = nok + 1
@@ -665,10 +669,10 @@ C           /* main tests */
         endif
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -714,19 +718,19 @@ C           /* BAD_ID test */
 C           /* scalar tests */
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
         err = nfmpi_def_var(ncid, 'abc', NF_SHORT, 0, dimids, vid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_def_var: ', err)
         else
             nok = nok + 1
         endif
         err = nfmpi_inq_var(ncid, vid, name, datatype, ndims, dimids, 
      +                   na)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_inq_var: ', err)
         if (name .ne. 'abc')
      +      call errorc('Unexpected name: ', name)
@@ -734,8 +738,7 @@ C           /* scalar tests */
      +      call error('Unexpected datatype')
         if (ndims .ne. 0)
      +      call error('Unexpected rank')
-        err = nfmpi_def_var(ncid, BAD_NAME, NF_SHORT, 
-     &         0, dimids, vid)
+        err = nfmpi_def_var(ncid, BAD_NAME, NF_SHORT, 0, dimids, vid)
         if (err .ne. NF_EBADNAME) then
             call errore('bad name: ', err)
         else
@@ -760,7 +763,7 @@ C           /* scalar tests */
             nok = nok + 1
         endif
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         err = nfmpi_def_var(ncid, 'ABC', NF_SHORT, 0, dimids, vid)
         if (err .ne. NF_ENOTINDEFINE) then
@@ -769,16 +772,16 @@ C           /* scalar tests */
             nok = nok + 1
         endif
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', scratch)
 
 C           /* general tests using global vars */
         flags = IOR(NF_CLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -786,7 +789,7 @@ C           /* general tests using global vars */
         do 1, i = 1, numVars
             err = nfmpi_def_var(ncid, var_name(i), var_type(i), 
      +                       var_rank(i), var_dimid(:,i), vid)
-            if (err .ne. 0)  then
+            if (err .ne. NF_NOERR)  then
                 call errore('nfmpi_def_var: ', err)
             else
                 nok = nok + 1
@@ -804,11 +807,11 @@ C           /* try bad dim ids */
             nok = nok + 1
         endif
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', scratch)
         call print_nok(nok)
         end
@@ -836,7 +839,7 @@ C    try in data mode, check error
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -865,13 +868,13 @@ C           /* Prefix "new_" to each name */
             endif
             name = 'new_' // var_name(i)
             err = nfmpi_rename_var(ncid, i, name)
-            if (err .ne. 0) then
+            if (err .ne. NF_NOERR) then
                 call errore('nfmpi_rename_var: ', err)
             else
                 nok = nok + 1
             endif
             err = nfmpi_inq_varid(ncid, name, vid)
-            if (err .ne. 0)
+            if (err .ne. NF_NOERR)
      +          call errore('nfmpi_inq_varid: ', err)
             if (vid .ne. i)
      +          call error('Unexpected varid')
@@ -880,7 +883,7 @@ C           /* Prefix "new_" to each name */
 C           /* Change to data mode */
 C           /* Try making names even longer. Then restore original names */
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         do 2, i = 1, numVars
             name = 'even_longer_' // var_name(i)
@@ -891,13 +894,13 @@ C           /* Try making names even longer. Then restore original names */
                 nok = nok + 1
             endif
             err = nfmpi_rename_var(ncid, i, var_name(i))
-            if (err .ne. 0) then
+            if (err .ne. NF_NOERR) then
                 call errore('nfmpi_rename_var: ', err)
             else
                 nok = nok + 1
             endif
             err = nfmpi_inq_varid(ncid, var_name(i), vid)
-            if (err .ne. 0)
+            if (err .ne. NF_NOERR)
      +          call errore('nfmpi_inq_varid: ', err)
             if (vid .ne. i)
      +          call error('Unexpected varid')
@@ -907,11 +910,11 @@ C           /* Try making names even longer. Then restore original names */
         call check_vars(ncid)
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed: ', scratch)
         call print_nok(nok)
         end
@@ -942,17 +945,17 @@ C    try with same ncid for source and target, same variable
         integer j
         character*(NF_MAX_NAME) name    !/* of att */
         integer datatype                !/* of att */
-        integer(kind=MPI_OFFSET_KIND) length                  !/* of att */
+        integer(kind=MPI_OFFSET_KIND) length  !/* of att */
         character*1     value
         integer nok, flags
 
         nok = 0
         err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid_in)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid_out)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -990,27 +993,27 @@ C    try with same ncid for source and target, same variable
                 nok = nok + 1
                 err = nfmpi_copy_att(ncid_in, vid, name, 
      +                 ncid_out, vid)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_copy_att: ', err)
                 nok = nok + 1
                 err = nfmpi_copy_att(ncid_out, vid, name,
      +                                ncid_out, vid)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('source = target: ', err)
                 nok = nok + 1
 2           continue
 1       continue
 
         err = nfmpi_close(ncid_in)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
 C           /* Close scratch. Reopen & check attributes */
         err = nfmpi_close(ncid_out)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_open(comm, scratch, NF_WRITE, info, ncid_out)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         call check_atts(ncid_out)
 
@@ -1018,11 +1021,11 @@ C           change to define mode
 C           define single char. global att. ':a' with value 'A'
 C           This will be used as source for following copies
         err = nfmpi_redef(ncid_out)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_redef: ', err)
         length = 1
         err = nfmpi_put_att_text(ncid_out, NF_GLOBAL, 'a', length, 'A')
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_put_att_text: ', err)
 
 C           change to data mode
@@ -1031,41 +1034,41 @@ C           try copy to existing att. change type & decrease length
 C           rename 1st existing att of each var (if any) 'a'
 C           if this att. exists them copy ':a' to it
         err = nfmpi_enddef(ncid_out)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         do 3, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nfmpi_rename_att(ncid_out, i, 
      +                att_name(1,i), 'a')
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_rename_att: ', err)
                 err = nfmpi_copy_att(ncid_out, NF_GLOBAL, 'a',
      +                                ncid_out, i)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_copy_att: ', err)
                 nok = nok + 1
             end if
 3       continue
         err = nfmpi_close(ncid_out)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
 C           /* Reopen & check */
         err = nfmpi_open(comm, scratch, NF_WRITE, info, ncid_out)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         do 4, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nfmpi_inq_att(ncid_out, i, 'a', 
      +                datatype, length)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_inq_att: ', err)
                 if (datatype .ne. NF_CHAR)
      +              call error('Unexpected type')
                 if (length .ne. 1)
      +              call error('Unexpected length')
                 err = nfmpi_get_att_text(ncid_out, i, 'a', value)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_get_att_text: ', err)
                 if (value .ne. 'A')
      +              call error('Unexpected value')
@@ -1073,10 +1076,10 @@ C           /* Reopen & check */
 4       continue                                                   
 
         err = nfmpi_close(ncid_out)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errorc('delete of scratch file failed', scratch)
         call print_nok(nok)
         end
@@ -1123,7 +1126,7 @@ C    try in data mode, check error
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -1148,10 +1151,10 @@ C    try in data mode, check error
      +              call errore('bad attname: ', err)
                 newname = 'new_' // trim(atnam)
                 err = nfmpi_rename_att(ncid, vid, atnam, newname)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_rename_att: ', err)
                 err = nfmpi_inq_attid(ncid, vid, newname, attnum)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_inq_attid: ', err)
                 if (attnum .ne. j)
      +              call error('Unexpected attnum')
@@ -1160,10 +1163,10 @@ C    try in data mode, check error
 
 C           /* Close. Reopen & check */
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_open(comm, scratch, NF_WRITE, info, ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
 
         do 3, i = 0, numVars
@@ -1174,13 +1177,13 @@ C           /* Close. Reopen & check */
                 attlength = ATT_LEN(j,i)
                 newname = 'new_' // trim(atnam)
                 err = nfmpi_inq_attname(ncid, vid, j, name)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_inq_attname: ', err)
                 if (name .ne. newname)
      +              call error('nfmpi_inq_attname: unexpected name')
                 err = nfmpi_inq_att(ncid, vid, name, 
      +              datatype, length)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_inq_att: ', err)
                 if (datatype .ne. attyp)
      +              call error('nfmpi_inq_att: unexpected type')
@@ -1188,7 +1191,7 @@ C           /* Close. Reopen & check */
      +              call error('nfmpi_inq_att: unexpected length')
                 if (datatype .eq. NF_CHAR) then
                     err = nfmpi_get_att_text(ncid, vid, name, text)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call errore('nfmpi_get_att_text: ', err)
                     do 5, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
@@ -1203,7 +1206,7 @@ C           /* Close. Reopen & check */
                 else
                     err = nfmpi_get_att_double(ncid, vid, name, 
      +                     value)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call errore('nfmpi_get_att_double: ', err)
                     do 6, k = 1, ATT_LEN(j,i)
                         ndx(1) = k
@@ -1236,10 +1239,10 @@ C           /* Try making names even longer. Then restore original names */
                 if (err .ne. NF_ENOTINDEFINE)
      +              call errore('longer name in data mode: ', err)
                 err = nfmpi_rename_att(ncid, vid, oldname, atnam)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_rename_att: ', err)
                 err = nfmpi_inq_attid(ncid, vid, atnam, attnum)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_inq_attid: ', err)
                 if (attnum .ne. j)
      +              call error('Unexpected attnum')
@@ -1247,11 +1250,11 @@ C           /* Try making names even longer. Then restore original names */
 7       continue
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
         end
 
@@ -1284,7 +1287,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -1316,7 +1319,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
                     nok = nok + 1
                 endif
                 err = nfmpi_del_att(ncid, vid, name)
-                if (err .ne. 0) then
+                if (err .ne. NF_NOERR) then
                     call errore('nfmpi_del_att: ', err)
                 else
                     nok = nok + 1
@@ -1326,7 +1329,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
      +              call errore('bad attname: ', err)
                 if (i .lt. 1) then
                     err = nfmpi_inq_natts(ncid, na)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call errore('nfmpi_inq_natts: ', err)
                     if (na .ne. numatts-j) then
                         call errori('natts: expected: ', numatts-j)
@@ -1334,7 +1337,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
                     end if
                 end if
                 err = nfmpi_inq_varnatts(ncid, vid, na)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_inq_natts: ', err)
                 if (na .ne. numatts-j) then
                     call errori('natts: expected: ', numatts-j)
@@ -1345,20 +1348,20 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
 
 C           /* Close. Reopen & check no attributes left */
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_open(comm, scratch, NF_WRITE, info, ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_inq_natts(ncid, na)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_inq_natts: ', err)
         if (na .ne. 0)
      +      call errori('natts: expected 0, got ', na)
         do 3, i = 0, numVars
             vid = VARID(i)
             err = nfmpi_inq_varnatts(ncid, vid, na)
-            if (err .ne. 0)
+            if (err .ne. NF_NOERR)
      +          call errore('nfmpi_inq_natts: ', err)
             if (na .ne. 0)
      +          call errori('natts: expected 0, got ', na)
@@ -1366,11 +1369,11 @@ C           /* Close. Reopen & check no attributes left */
 
 C           /* restore attributes. change to data mode. try to delete */
         err = nfmpi_redef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_redef: ', err)
         call put_atts(ncid)
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
 
         do 4, i = 0, numVars
@@ -1388,10 +1391,10 @@ C           /* restore attributes. change to data mode. try to delete */
 4       continue
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -1438,19 +1441,19 @@ C           /* bad ncid */
 
 C           /* try in read-only mode */
         err = nfmpi_open(comm, testfile, NF_NOWRITE, info, ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_open: ', err)
         err = nfmpi_set_fill(ncid, NF_NOFILL, old_fillmode)
         if (err .ne. NF_EPERM)
      +      call errore('read-only: ', err)
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
 
 C           /* create scratch */
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -1462,12 +1465,12 @@ C           /* BAD_FILLMODE */
 
 C           /* proper calls */
         err = nfmpi_set_fill(ncid, NF_NOFILL, old_fillmode)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_set_fill: ', err)
         if (old_fillmode .ne. NF_FILL)
      +      call errori('Unexpected old fill mode: ', old_fillmode)
         err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_set_fill: ', err)
         if (old_fillmode .ne. NF_NOFILL)
      +      call errori('Unexpected old fill mode: ', old_fillmode)
@@ -1478,10 +1481,10 @@ C           /* define dims & vars */
 
 C           /* Change to data mode. Set fillmode again */
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_set_fill: ', err)
         if (old_fillmode .ne. NF_FILL)
      +      call errori('Unexpected old fill mode: ', old_fillmode)
@@ -1489,12 +1492,12 @@ C           /* Change to data mode. Set fillmode again */
 C       /* Write record number NRECS to force writing of preceding records */
 C       /* Assumes variable cr is char vector with UNLIMITED dimension */
         err = nfmpi_inq_varid(ncid, 'cr', vid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_inq_varid: ', err)
         index(1) = NRECS
         text = char(NF_FILL_CHAR)
         err = nfmpi_put_var1_text(ncid, vid, index, text)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_put_var1_text: ', err)
 
 C           /* get all variables & check all values equal default fill */
@@ -1518,17 +1521,17 @@ C           /* get all variables & check all values equal default fill */
             do 2, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call error('error in index2indexes()')
                 if (var_type(i) .eq. NF_CHAR) then
                     err = nfmpi_get_var1_text(ncid, i, index, text)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call errore('nfmpi_get_var1_text failed: ',err)
                     value = ichar(text)
                 else
                     err = nfmpi_get_var1_double(ncid, i, index, 
      +                 value)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call errore
      +                           ('nfmpi_get_var1_double failed: ',err)
                 end if
@@ -1543,11 +1546,11 @@ C           /* get all variables & check all values equal default fill */
 
 C       /* close scratch & create again for test using attribute _FillValue */
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         flags = IOR(NF_CLOBBER, extra_flags)
         err = nfmpi_create(comm, scratch, flags, info, ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF_NOERR) then
             call errore('nfmpi_create: ', err)
             return
         end if
@@ -1562,23 +1565,23 @@ C           /* set _FillValue = 42 for all vars */
             if (var_type(i) .eq. NF_CHAR) then
                 err = nfmpi_put_att_text(ncid, i, '_FillValue', length, 
      +             text)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_put_att_text: ', err)
             else
                 err = nfmpi_put_att_double(ncid, i, '_FillValue',
      +                                  var_type(i),length,fill)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call errore('nfmpi_put_att_double: ', err)
             end if
 3       continue
 
 C           /* data mode. write records */
         err = nfmpi_enddef(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         index(1) = NRECS
         err = nfmpi_put_var1_text(ncid, vid, index, text)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_put_var1_text: ', err)
 
 C           /* get all variables & check all values equal 42 */
@@ -1586,17 +1589,17 @@ C           /* get all variables & check all values equal 42 */
             do 5, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
-                if (err .ne. 0)
+                if (err .ne. NF_NOERR)
      +              call error('error in index2indexes')
                 if (var_type(i) .eq. NF_CHAR) then
                     err = nfmpi_get_var1_text(ncid, i, index, text)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call errore('nfmpi_get_var1_text failed: ',err)
                     value = ichar(text)
                 else
                     err = nfmpi_get_var1_double(ncid, i, 
      +                     index, value)
-                    if (err .ne. 0)
+                    if (err .ne. NF_NOERR)
      +                  call errore
      +                          ('nfmpi_get_var1_double failed: ', err)
                 end if
@@ -1610,10 +1613,10 @@ C           /* get all variables & check all values equal 42 */
 4       continue
 
         err = nfmpi_close(ncid)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errore('nfmpi_close: ', err)
         err = nfmpi_delete(scratch, info)
-        if (err .ne. 0)
+        if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
 #endif
         call print_nok(nok)
@@ -1641,32 +1644,34 @@ C *    close file & create again for test using attribute _FillValue
       
 C     /* bad format */
       err = nfmpi_set_default_format(3, old_format)
-      IF (err .ne. NF_EINVAL)
+      if (err .ne. NF_EINVAL)
      +     call errore("bad default format: status = %d", err)
      
 C    /* Cycle through available formats. */
       do 1 i=1, 2
          err = nfmpi_set_default_format(i, old_format)
-         if (err .ne. 0) 
-     +         call errore("setting classic format: status = %d", err)
+         if (err .ne. NF_NOERR) 
+     +       call errore("setting classic format: status = %d", err)
          flags = IOR(NF_CLOBBER, extra_flags)
          err = nfmpi_create(comm, scratch, flags, info, ncid)
-         if (err .ne. 0) 
-     +        call errore("bad nfmpi_create: status = %d", err)
+         if (err .ne. NF_NOERR) 
+     +       call errore("bad nfmpi_create: status = %d", err)
          err = nfmpi_put_att_text(ncid, NF_GLOBAL, "testatt", 
-     +        4, "blah")
-         if (err .ne. 0) call errore("bad put_att: status = %d", err)
+     +       4, "blah")
+         if (err .ne. NF_NOERR)
+     +       call errore("bad put_att: status = %d", err)
          err = nfmpi_close(ncid)
-         if (err .ne. 0) call errore("bad close: status = %d", err)
+         if (err .ne. NF_NOERR)
+     +       call errore("bad close: status = %d", err)
          err = nfmpi_get_file_version(scratch, version)
-         if (err .ne. 0) call errore("bad file version = %d", err)
+         if (err .ne. NF_NOERR) call errore("bad file version = %d",err)
          if (version .ne. i)
-     +        call errore("bad file version = %d", err)
+     +       call errore("bad file version = %d", err)
  1    continue
 
 C    /* Remove the left-over file. */
       err = nfmpi_delete(scratch)
-      if (err .ne. 0) call errore("remove failed", err)
+      if (err .ne. NF_NOERR) call errore("remove failed", err)
       end
 
 #endif

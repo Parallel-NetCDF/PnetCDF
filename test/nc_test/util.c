@@ -649,7 +649,7 @@ def_dims(int ncid)
     for (i=0; i<NDIMS; i++) {
         err = ncmpi_def_dim(ncid, dim_name[i],
                             i==0 ? NC_UNLIMITED : dim_len[i], &dimid);
-        IF (err) error("ncmpi_def_dim: %s", ncmpi_strerror(err));
+        IF (err != NC_NOERR) error("ncmpi_def_dim: %s", ncmpi_strerror(err));
     }
 }
 
@@ -663,7 +663,7 @@ def_vars(int ncid)
     for (i = 0; i < numVars; i++) {
         err = ncmpi_def_var(ncid, var_name[i], var_type[i], var_rank[i],
                             var_dimid[i], &var_id);
-        IF (err) error("ncmpi_def_var: %s", ncmpi_strerror(err));
+        IF (err != NC_NOERR) error("ncmpi_def_var: %s", ncmpi_strerror(err));
     }
 }
 
@@ -685,7 +685,7 @@ put_atts(int ncid)
                 }
                 err = ncmpi_put_att_text(ncid, i, ATT_NAME(i,j),
                                          ATT_LEN(i,j), catt);
-                IF (err) 
+                IF (err != NC_NOERR) 
                     error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
             } else {
                 for (allInRange=1, k=0; k<ATT_LEN(i,j); k++) {
@@ -695,7 +695,7 @@ put_atts(int ncid)
                 err = ncmpi_put_att_double(ncid, i, ATT_NAME(i,j),
                                            ATT_TYPE(i,j), ATT_LEN(i,j), att);
                 if (allInRange) {
-                    IF (err)
+                    IF (err != NC_NOERR)
                         error("ncmpi_put_att_double: %s", ncmpi_strerror(err));
                 } else {
                     IF (err != NC_ERANGE)
@@ -720,7 +720,7 @@ put_vars(int ncid)
     for (i = 0; i < numVars; i++) {
         for (allInRange = 1, j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err) error("toMixedBase");
+            IF (err != NC_NOERR) error("toMixedBase");
             if (var_name[i][0] == 'c') {
                 text[j] = hash(var_type[i], var_rank[i], index);
             } else {
@@ -754,19 +754,19 @@ write_file(char *filename)
 
     err = ncmpi_create(comm, filename, NC_CLOBBER|extra_flags, info,
                        &ncid);
-    IF (err) error("ncmpi_create: %s", ncmpi_strerror(err));
+    IF (err != NC_NOERR) error("ncmpi_create: %s", ncmpi_strerror(err));
 
     def_dims(ncid);
     def_vars(ncid);
     put_atts(ncid);
 
     err = ncmpi_enddef(ncid);
-    IF (err) error("ncmpi_enddef: %s", ncmpi_strerror(err));
+    IF (err != NC_NOERR) error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     put_vars(ncid);
 
     err = ncmpi_close (ncid);
-    IF (err) error("ncmpi_close: %s", ncmpi_strerror(err));
+    IF (err != NC_NOERR) error("ncmpi_close: %s", ncmpi_strerror(err));
 }
 
 
@@ -782,7 +782,7 @@ check_dims(int  ncid)
 
     for (i = 0; i < NDIMS; i++) {
         err = ncmpi_inq_dim(ncid, i, name, &length);
-        IF (err)
+        IF (err != NC_NOERR)
             error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
         IF (strcmp(name, dim_name[i]) != 0)
             error("Unexpected name of dimension %d", i);
@@ -810,7 +810,7 @@ check_vars(int  ncid)
     for (i = 0; i < numVars; i++) {
         isChar = var_type[i] == NC_CHAR;
         err = ncmpi_inq_var(ncid, i, name, &datatype, &ndims, dimids, NULL);
-        IF (err) 
+        IF (err != NC_NOERR) 
             error("ncmpi_inq_var: %s", ncmpi_strerror(err));
         IF (strcmp(name, var_name[i]) != 0) 
             error("Unexpected var_name");
@@ -820,20 +820,20 @@ check_vars(int  ncid)
             error("Unexpected rank");
         for (j = 0; j < ndims; j++) {
             err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
-            IF (err) 
+            IF (err != NC_NOERR) 
                 error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
             IF (length != var_shape[i][j]) 
                 error("Unexpected shape");
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err) 
+            IF (err != NC_NOERR) 
                 error("error in toMixedBase 2");
             expect = hash( var_type[i], var_rank[i], index );
             if (isChar) {
                 ncmpi_begin_indep_data(ncid);
                 err = ncmpi_get_var1_text(ncid, i, index, &text);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("ncmpi_get_var1_text: %s", ncmpi_strerror(err));
                 IF (text != expect) {
                     error("Var %s value read 0x%02x not that expected 0x%02x ",
@@ -847,7 +847,7 @@ check_vars(int  ncid)
                 ncmpi_begin_indep_data(ncid);
                 err = ncmpi_get_var1_double(ncid, i, index, &value); 
                 if (inRange(expect,var_type[i])) {
-                    IF (err) {
+                    IF (err != NC_NOERR) {
                         error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
                     } else {
                         IF (!equal(value,expect,var_type[i], NCT_DOUBLE)) {
@@ -883,12 +883,12 @@ check_atts(int  ncid)
     for (i = -1; i < numVars; i++) {
         for (j = 0; j < NATTS(i); j++) {
             err = ncmpi_inq_attname(ncid, i, j, name);
-            IF (err) 
+            IF (err != NC_NOERR) 
                 error("ncmpi_inq_attname: %s", ncmpi_strerror(err));
             IF (strcmp(name, ATT_NAME(i,j)) != 0)
                 error("ncmpi_inq_attname: unexpected name");
             err = ncmpi_inq_att(ncid, i, name, &datatype, &length);
-            IF (err) 
+            IF (err != NC_NOERR) 
                 error("ncmpi_inq_att: %s", ncmpi_strerror(err));
             IF (datatype != ATT_TYPE(i,j))
                 error("ncmpi_inq_att: unexpected type");
@@ -896,7 +896,7 @@ check_atts(int  ncid)
                 error("ncmpi_inq_att: unexpected length");
             if (datatype == NC_CHAR) {
                 err = ncmpi_get_att_text(ncid, i, name, text);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
                 for (k = 0; k < ATT_LEN(i,j); k++) {
                     IF (text[k] != hash(datatype, -1, &k)) {
@@ -910,7 +910,7 @@ check_atts(int  ncid)
                 for (k = 0; k < ATT_LEN(i,j); k++) {
                     expect = hash(datatype, -1, &k);
                     if (inRange(expect,ATT_TYPE(i,j))) {
-                        IF (err)
+                        IF (err != NC_NOERR)
                             error("ncmpi_get_att_double: %s", ncmpi_strerror(err));
                         IF (!equal(value[k], expect, ATT_TYPE(i,j), NCT_DOUBLE)) {
                             error("Att value read not that expected");
@@ -933,14 +933,14 @@ check_file(char *filename)
     int ncid, err;
 
     err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_open: %s", ncmpi_strerror(err));
     } else {
         check_dims(ncid);
         check_vars(ncid);
         check_atts(ncid);
         err = ncmpi_close (ncid);
-        IF (err) 
+        IF (err != NC_NOERR) 
             error("ncmpi_close: %s", ncmpi_strerror(err));
     }
 }
