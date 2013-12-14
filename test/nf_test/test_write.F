@@ -176,8 +176,8 @@ c       should not enter indep mode in define mode
         if (err .ne. NF_EINDEFINE)
      +      call errore('nfmpi_put_var... in define mode: ', err)
         err = nfmpi_end_indep_data(ncid)
-        if (err .ne. NF_ENOTINDEP)
-     +    call errore('nfmpi_end_indep_data... not in indep mode: ',err)
+        if (err .ne. NF_EINDEFINE)
+     +    call errore('nfmpi_end_indep_data... in define mode: ', err)
         err = nfmpi_redef(ncid)
         if (err .ne. NF_EINDEFINE) then
             call errore('nfmpi_redef in define mode: ', err)
@@ -213,6 +213,9 @@ c       should not enter indep mode in define mode
         if (err .ne. 0)
      +      call errore('nfmpi_enddef: ', err)
         var = 1.0
+        err = nfmpi_end_indep_data(ncid)
+        if (err .ne. NF_ENOTINDEP)
+     +   call errore('nfmpi_end_indep_data... in collective mode: ',err)
         err = nfmpi_begin_indep_data(ncid)
         err = nfmpi_put_var1_double(ncid, vid, start, var)
         if (err .ne. 0)
