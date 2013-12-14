@@ -648,6 +648,16 @@ fi
 
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
+dnl For big endian, put buffer needs no byte swap and hence can be declared as
+dnl INTENT(IN). For little endian, put buffer may be used for byte swap in
+dnl place and hence must be declared as INTENT(INOUT).
+dnl This will configure/produce the file src/libf90/api.f90
+if test "x${ac_cv_c_bigendian}" = xyes ; then
+   INOUT="IN"
+else
+   INOUT="INOUT"
+fi
+AC_SUBST(INOUT)
 
 AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
@@ -885,6 +895,7 @@ if test "$enable_fortran" = yes ; then
                  examples/F77/Makefile \
                  examples/F90/Makefile \
                  src/libf90/Makefile \
+                 src/libf90/api.f90 \
                  src/libf/Makefile \
                  src/libf/pnetcdf.inc \
                  benchmarks/FLASH-IO/Makefile"
