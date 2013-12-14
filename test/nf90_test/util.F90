@@ -750,7 +750,7 @@
                 err = nf90mpi_def_dim(ncid, dim_name(i), dim_len(i), &
                                  dimid)
             end if
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_def_dim: ', err)
             end if
 1       continue
@@ -771,7 +771,7 @@
         do 1, i = 1, numVars
             err = nf90mpi_def_var(ncid, var_name(i), var_type(i),  &
                              var_dimid(1:var_rank(i),i), var_id)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_def_var: ', err)
             end if
 1       continue
@@ -821,7 +821,7 @@
 
                     err = nf90mpi_put_att(ncid, varid(i), ATT_NAME(j,i), &
                                           catt(1:ATT_LEN(j,i)))
-                    if (err .ne. 0) then
+                    if (err .ne. NF90_NOERR) then
                         call errore('nf90mpi_put_att: ', err)
                     end if
                 else
@@ -837,7 +837,7 @@
                     err = nfmpi_put_att_double(ncid, varid(i), ATT_NAME(j,i), &
                                                ATT_TYPE(j,i), ATT_LEN_LL, att)
                     if (allInRange) then
-                        if (err .ne. 0) then
+                        if (err .ne. NF90_NOERR) then
                             call errore('nf90mpi_put_att: ', err)
                         end if
                     ! F90 skips this error check
@@ -883,7 +883,7 @@
             do 3, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
-                if (err .ne. 0) then
+                if (err .ne. NF90_NOERR) then
                     call errori( &
                         'Error calling index2indexes() for var ', j)
                 end if
@@ -908,14 +908,14 @@
                 text(var_nels(i)+2:var_nels(i)+2) = char(0)
                 err = nf90mpi_put_var(ncid, i, text, start, &
                                           var_shape(:,i))
-                if (err .ne. 0) then
+                if (err .ne. NF90_NOERR) then
                     call errore('nf90mpi_put_var: ', err)
                 end if
             else
                 err = nf90mpi_put_var(ncid, i, value, start, &
                                             var_shape(:,i))
                 if (allInRange) then
-                    if (err .ne. 0) then
+                    if (err .ne. NF90_NOERR) then
                         call errore('nf90mpi_put_var: ', err)
                     end if
                 else
@@ -945,7 +945,7 @@
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = nf90mpi_create(comm, filename, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
         end if
 
@@ -953,13 +953,13 @@
         call def_vars(ncid)
         call put_atts(ncid)
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_enddef: ', err)
         end if
         call put_vars(ncid)
 
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_close: ', err)
         end if
         end
@@ -981,7 +981,7 @@
 
         do 1, i = 1, NDIMS
             err = nf90mpi_inquire_dimension(ncid, i, name, length)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_inquire_dimension: ', err)
             end if
             if (name .ne. dim_name(i)) then
@@ -1029,7 +1029,7 @@
             isChar = var_type(i) .eq. NF90_CHAR
             err = nf90mpi_inquire_variable(ncid, i, name, datatype, ndims, dimids,  &
                 natt)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_inquire_variable: ', err)
             end if
             if (name .ne. var_name(i)) then
@@ -1043,7 +1043,7 @@
             end if
             do 2, j = 1, ndims
                 err = nf90mpi_inquire_dimension(ncid, dimids(j), name, length)
-                if (err .ne. 0) then
+                if (err .ne. NF90_NOERR) then
                     call errore('nf90mpi_inquire_dimension: ', err)
                 end if
                 if (length .ne. var_shape(j,i))  then
@@ -1053,14 +1053,14 @@
             do 3, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                         index)
-                if (err .ne. 0)  then
+                if (err .ne. NF90_NOERR)  then
                     call errori('error in index2indexes() 2, variable ', &
                                 i)
                 end if
                 expect = hash(var_type(i), var_rank(i), index )
                 if (isChar) then
                     err = nf90mpi_get_var(ncid, i, text, index)
-                    if (err .ne. 0) then
+                    if (err .ne. NF90_NOERR) then
                         call errore('nf90mpi_get_var: ', err)
                     end if
                     if (ichar(text) .ne. expect) then
@@ -1072,7 +1072,7 @@
                 else
                     err = nf90mpi_get_var(ncid, i, value, index)
                     if (inRange(expect,var_type(i))) then
-                        if (err .ne. 0) then
+                        if (err .ne. NF90_NOERR) then
                             call errore('nf90mpi_get_var: ', err)
                         else
                             if (.not. equal(value,expect,var_type(i), &
@@ -1126,7 +1126,7 @@
 
             do 2, j = 1, NATTS(i)
                 err = nf90mpi_inq_attname(ncid, i, j, name)
-                if (err .ne. 0) then
+                if (err .ne. NF90_NOERR) then
                     call errore('nf90mpi_inq_attname: ', err)
                 end if
                 if (name .ne. ATT_NAME(j,i)) then
@@ -1134,7 +1134,7 @@
                        'nf90mpi_inq_attname: unexpected name for var ', i)
                 end if
                 err = nf90mpi_inquire_attribute(ncid, i, name, datatype, length)
-                if (err .ne. 0) then
+                if (err .ne. NF90_NOERR) then
                     call errore('nf90mpi_inquire_attribute: ', err)
                 end if
                 if (datatype .ne. ATT_TYPE(j,i)) then
@@ -1147,7 +1147,7 @@
                 end if
                 if (datatype .eq. NF90_CHAR) then
                     err = nf90mpi_get_att(ncid, i, name, text)
-                    if (err .ne. 0) then
+                    if (err .ne. NF90_NOERR) then
                         call errore('nf90mpi_get_att: ', err)
                     end if
                     do 3, k = 1, ATT_LEN(j,i)
@@ -1167,7 +1167,7 @@
                         ndx(1) = k
                         expect = hash(datatype, -1, ndx)
                         if (inRange(expect,ATT_TYPE(j,i))) then
-                            if (err .ne. 0) then
+                            if (err .ne. NF90_NOERR) then
                                 call errore( &
                                     'nf90mpi_get_att: ', err)
                             end if
@@ -1199,14 +1199,14 @@
 
         err = nf90mpi_open(comm, filename, NF90_NOWRITE, info, &
                          ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_open: ', err)
         else
             call check_dims(ncid)
             call check_vars(ncid)
             call check_atts(ncid)
             err = nf90mpi_close (ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_close: ', err)
             end if
         end if

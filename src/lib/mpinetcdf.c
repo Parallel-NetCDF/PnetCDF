@@ -690,9 +690,6 @@ ncmpi_end_indep_data(int ncid) {
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_indef(ncp))  /* must not be in define mode */
-        return NC_EINDEFINE;
-
     if (!NC_indep(ncp)) /* must be in independent data mode */
         return NC_ENOTINDEP;
 

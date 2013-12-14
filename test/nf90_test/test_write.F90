@@ -31,21 +31,21 @@
         do 1, clobber = 0, 1
             err = nf90mpi_create(comm, scratch, flags,  info, &
                                ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_create: ', err)
             end if
             nok = nok + 1
             err = nf90mpi_close(ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_close: ', err)
             end if
             err = nf90mpi_open(comm, scratch, NF90_NOWRITE, info,  &
                              ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_open: ', err)
             end if
             err = nf90mpi_inquire(ncid, ndims, nvars, ngatts, recdim)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_inquire: ', err)
             else if (ndims .ne. 0) then
                 call errori( &
@@ -65,7 +65,7 @@
                     recdim)
             end if
             err = nf90mpi_close(ncid)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_close: ', err)
             end if
 
@@ -80,7 +80,7 @@
         end if
         nok = nok + 1
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errori('delete of scratch file failed: ', err)
         end if
         call print_nok(nok)
@@ -142,7 +142,7 @@
         ! read-only tests
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_redef(ncid)
         if (err .ne. NF90_EPERM) then
@@ -155,14 +155,14 @@
         endif
         nok = nok + 1
         err = nf90mpi_close(ncid)
-        if (err .ne. 0)  &
+        if (err .ne. NF90_NOERR)  &
             call errore('nf90mpi_close: ', err)
 
 !           /* tests using scratch file */
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -170,7 +170,7 @@
         call def_vars(ncid)
         call put_atts(ncid)
         err = nf90mpi_inq_varid(ncid, 'd', vid)
-        if (err .ne. 0)  &
+        if (err .ne. NF90_NOERR)  &
             call errore('nf90mpi_inq_varid: ', err)
         var = 1.0
 !       should not enter indep mode in define mode
@@ -182,15 +182,15 @@
         if (err .ne. NF90_EINDEFINE) &
             call errore('nf90mpi_put_var... in define mode: ', err)
         err = nf90mpi_end_indep_data(ncid)
-        if (err .ne. NF90_EINDEFINE) &
-          call errore('nf90mpi_end_indep_data... in define mode: ', err)
+        if (err .ne. NF90_ENOTINDEP) &
+          call errore('nf90mpi_end_indep_data... not in indep mode: ', err)
         err = nf90mpi_redef(ncid)
         if (err .ne. NF90_EINDEFINE) then
             call errore('nf90mpi_redef in define mode: ', err)
         endif
         nok = nok + 1
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         call put_vars(ncid)
         length = 8
@@ -198,47 +198,51 @@
         if (err .ne. NF90_ENOTINDEFINE) &
             call errore('nf90mpi_def_dim in define mode: ', err)
         err = nf90mpi_redef(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_redef: ', err)
         endif
         nok = nok + 1
         length = 8
         err = nf90mpi_def_dim(ncid, 'abc', length, dimid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_def_dim: ', err)
         dimids(1) = 0
         err = nf90mpi_def_var(ncid, 'abc', NF90_INT, varid=vid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_def_var: ', err)
         length = len(title)
         err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'title', &
                               title)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_put_att: ', err)
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         var = 1.0
         err = nf90mpi_end_indep_data(ncid)
         if (err .ne. NF90_ENOTINDEP) &
-          call errore('nf90mpi_end_indep_data... in collective mode: ',err)
+          call errore('nf90mpi_end_indep_data: in collective mode: ',err)
         err = nf90mpi_begin_indep_data(ncid)
+        if (err .ne. NF90_NOERR) &
+            call errore('nf90mpi_begin_indep_data: ', err)
         err = nf90mpi_put_var(ncid, vid, var, start)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_put_var: ', err)
         err = nf90mpi_end_indep_data(ncid)       
+        if (err .ne. NF90_NOERR) &
+            call errore('nf90mpi_end_indep_data: ', err)
         err = nf90mpi_close(ncid)
-        if (err .ne. 0)  &
+        if (err .ne. NF90_NOERR)  &
             call errore('nf90mpi_close: ', err)
 
 !           /* check scratch file written as expected */
         call check_file(scratch)
         err = nf90mpi_open(comm, scratch, NF90_NOWRITE, &
               info, ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_inquire_dimension(ncid, dimid, name, length)
-        if (err .ne. 0)  &
+        if (err .ne. NF90_NOERR)  &
             call errore('nf90mpi_inquire_dimension: ', err)
         if (name .ne. "abc") &
             call errori('Unexpected dim name in netCDF ', ncid)
@@ -248,7 +252,7 @@
         end if
         err = nf90mpi_begin_indep_data(ncid)
         err = nf90mpi_get_var(ncid, vid, var, start)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_get_var: ', err)
         if (var .ne. 1.0) &
             call errori( &
@@ -256,11 +260,11 @@
                 , ncid)
         err = nf90mpi_end_indep_data(ncid)
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete failed for netCDF: ', err)
         call print_nok(nok)
         end
@@ -304,7 +308,7 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncidw)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -320,11 +324,11 @@
         call def_vars(ncidw)
         call put_atts(ncidw)
         err = nf90mpi_enddef(ncidw)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         call put_vars(ncidw)
         err = nf90mpi_sync(ncidw)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_sync of ncidw failed: ', err)
         else
             nok = nok + 1
@@ -333,10 +337,10 @@
 !           /* open another handle, nf90mpi_sync, read (check) */
         err = nf90mpi_open(comm, scratch, NF90_NOWRITE, info, &
                          ncidr)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_sync(ncidr)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_sync of ncidr failed: ', err)
         else
             nok = nok + 1
@@ -347,14 +351,14 @@
 
 !           /* close both handles */
         err = nf90mpi_close(ncidr)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_close(ncidw)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -392,7 +396,7 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -400,7 +404,7 @@
         call def_vars(ncid)
         call put_atts(ncid)
         err = nf90mpi_abort(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_abort of ncid failed: ', err)
         else
             nok = nok + 1
@@ -409,7 +413,7 @@
         if (err .ne. NF90_EBADID) &
             call errore('bad ncid: ', err)
         err = nf90mpi_delete(scratch, info)    !/* should already be deleted */
-        if (err .eq. 0) &
+        if (err .eq. NF90_NOERR) &
             call errori('scratch file should not exist: ', err)
 
 !            create scratch file
@@ -419,21 +423,21 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         err = nf90mpi_redef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_redef: ', err)
         call def_dims(ncid)
         call def_vars(ncid)
         call put_atts(ncid)
         err = nf90mpi_abort(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_abort of ncid failed: ', err)
         else
             nok = nok + 1
@@ -443,10 +447,10 @@
             call errore('bad ncid: ', err)
         err = nf90mpi_open(comm, scratch, NF90_NOWRITE, info, &
                          ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_inquire(ncid, ndims, nvars, ngatts, recdim)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_inquire: ', err)
         if (ndims .ne. 0) &
             call errori('ndims should be ', 0)
@@ -455,14 +459,14 @@
         if (ngatts .ne. 0) &
             call errori('ngatts should be ', 0)
         err = nf90mpi_close (ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
 !           /* try nf90mpi_abort in data mode - should just close */
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -470,11 +474,11 @@
         call def_vars(ncid)
         call put_atts(ncid)
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         call put_vars(ncid)
         err = nf90mpi_abort(ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_abort of ncid failed: ', err)
         else
             nok = nok + 1
@@ -484,7 +488,7 @@
             call errore('bad ncid: ', err)
         call check_file(scratch)
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -525,12 +529,12 @@
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         length = 8
         err = nf90mpi_def_dim(ncid, 'abc', length, dimid)
@@ -542,11 +546,11 @@
 
 !           /* define-mode tests: unlimited dim */
         err = nf90mpi_redef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_redef: ', err)
         length = NFMPI_UNLIMITED
         err = nf90mpi_def_dim(ncid, dim_name(1), length, dimid)
-        if (err .ne. 0)  then
+        if (err .ne. NF90_NOERR)  then
             call errore('nf90mpi_def_dim: ', err)
         else
             nok = nok + 1
@@ -554,7 +558,7 @@
         if (dimid .ne. 1)  &
             call errori('Unexpected dimid: ', dimid)
         err = nf90mpi_inquire(ncid, unlimitedDimId=dimid)
-        if (err .ne. 0)  &
+        if (err .ne. NF90_NOERR)  &
             call errore('nf90mpi_inquire: ', err)
         if (dimid .ne. RECDIM)  &
             call error('Unexpected recdim: ')
@@ -593,7 +597,7 @@
                 nok = nok + 1
             endif
             err = nf90mpi_def_dim(ncid, dim_name(i), dim_len(i), dimid)
-            if (err .ne. 0)  then
+            if (err .ne. NF90_NOERR)  then
                 call errore('nf90mpi_def_dim: ', err)
             else
                 nok = nok + 1
@@ -605,7 +609,7 @@
 !           /* Following just to expand unlimited dim */
         call def_vars(ncid)
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         call put_vars(ncid)
 
@@ -613,10 +617,10 @@
         call check_dims(ncid)
 
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -651,7 +655,7 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -663,7 +667,7 @@
             nok = nok + 1
         endif
         err = nf90mpi_rename_dim(ncid, 3, 'abc')
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_rename_dim: ', err)
         else
             nok = nok + 1
@@ -679,10 +683,10 @@
         endif
 
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -729,19 +733,19 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
         err = nf90mpi_def_var(ncid, 'abc', NF90_SHORT, varid=vid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_def_var: ', err)
         else
             nok = nok + 1
         endif
         err = nf90mpi_inquire_variable(ncid, vid, name, datatype, ndims, dimids,  &
                          na)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_inquire_variable: ', err)
         if (name .ne. 'abc') &
             call errorc('Unexpected name: ', name)
@@ -768,7 +772,7 @@
             nok = nok + 1
         endif
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         err = nf90mpi_def_var(ncid, 'ABC', NF90_SHORT, varid=vid)
         if (err .ne. NF90_ENOTINDEFINE) then
@@ -777,17 +781,17 @@
             nok = nok + 1
         endif
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed: ', scratch)
 
 !           /* general tests using global vars */
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -795,7 +799,7 @@
         do 1, i = 1, numVars
             err = nf90mpi_def_var(ncid, var_name(i), var_type(i),  &
                              var_dimid(1:var_rank(i),i), vid)
-            if (err .ne. 0)  then
+            if (err .ne. NF90_NOERR)  then
                 call errore('nf90mpi_def_var: ', err)
             else
                 nok = nok + 1
@@ -813,11 +817,11 @@
             nok = nok + 1
         endif
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed: ', scratch)
         call print_nok(nok)
         end
@@ -846,7 +850,7 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -875,13 +879,13 @@
             endif
             name = 'new_' // var_name(i)
             err = nf90mpi_rename_var(ncid, i, name)
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_rename_var: ', err)
             else
                 nok = nok + 1
             endif
             err = nf90mpi_inq_varid(ncid, name, vid)
-            if (err .ne. 0) &
+            if (err .ne. NF90_NOERR) &
                 call errore('nf90mpi_inq_varid: ', err)
             if (vid .ne. i) &
                 call error('Unexpected varid')
@@ -890,7 +894,7 @@
 !           /* Change to data mode */
 !           /* Try making names even longer. Then restore original names */
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         do 2, i = 1, numVars
             name = 'even_longer_' // var_name(i)
@@ -901,13 +905,13 @@
                 nok = nok + 1
             endif
             err = nf90mpi_rename_var(ncid, i, var_name(i))
-            if (err .ne. 0) then
+            if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_rename_var: ', err)
             else
                 nok = nok + 1
             endif
             err = nf90mpi_inq_varid(ncid, var_name(i), vid)
-            if (err .ne. 0) &
+            if (err .ne. NF90_NOERR) &
                 call errore('nf90mpi_inq_varid: ', err)
             if (vid .ne. i) &
                 call error('Unexpected varid')
@@ -917,11 +921,11 @@
         call check_vars(ncid)
 
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed: ', scratch)
         call print_nok(nok)
         end
@@ -959,12 +963,12 @@
         nok = 0
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid_in)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid_out)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -1002,28 +1006,28 @@
                 nok = nok + 1
                 err = nf90mpi_copy_att(ncid_in, vid, name,  &
                        ncid_out, vid)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_copy_att: ', err)
                 nok = nok + 1
                 err = nf90mpi_copy_att(ncid_out, vid, name, &
                                       ncid_out, vid)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('source = target: ', err)
                 nok = nok + 1
 2           continue
 1       continue
 
         err = nf90mpi_close(ncid_in)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
 !           /* Close scratch. Reopen & check attributes */
         err = nf90mpi_close(ncid_out)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_open(comm, scratch, NF90_WRITE, info, &
                          ncid_out)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         call check_atts(ncid_out)
 
@@ -1031,11 +1035,11 @@
 !           define single char. global att. ':a' with value 'A'
 !           This will be used as source for following copies
         err = nf90mpi_redef(ncid_out)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_redef: ', err)
         length = 1
         err = nf90mpi_put_att(ncid_out, NF90_GLOBAL, 'a', 'A')
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_put_att: ', err)
 
 !           change to data mode
@@ -1044,42 +1048,42 @@
 !           rename 1st existing att of each var (if any) 'a'
 !           if this att. exists them copy ':a' to it
         err = nf90mpi_enddef(ncid_out)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         do 3, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nf90mpi_rename_att(ncid_out, i,  &
                       att_name(1,i), 'a')
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_rename_att: ', err)
                 err = nf90mpi_copy_att(ncid_out, NF90_GLOBAL, 'a', &
                                       ncid_out, i)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_copy_att: ', err)
                 nok = nok + 1
             end if
 3       continue
         err = nf90mpi_close(ncid_out)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
 !           /* Reopen & check */
         err = nf90mpi_open(comm, scratch, NF90_WRITE, info, &
                          ncid_out)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         do 4, i = 1, numVars
             if (NATTS(i) .gt. 0 .and. ATT_LEN(1,i) .gt. 0) then
                 err = nf90mpi_inquire_attribute(ncid_out, i, 'a',  &
                       datatype, length)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_inquire_attribute: ', err)
                 if (datatype .ne. NF90_CHAR) &
                     call error('Unexpected type')
                 if (length .ne. 1) &
                     call error('Unexpected length')
                 err = nf90mpi_get_att(ncid_out, i, 'a', value)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_get_att: ', err)
                 if (value .ne. 'A') &
                     call error('Unexpected value')
@@ -1087,10 +1091,10 @@
 4       continue                                                   
 
         err = nf90mpi_close(ncid_out)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errorc('delete of scratch file failed', scratch)
         call print_nok(nok)
         end
@@ -1138,7 +1142,7 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -1163,10 +1167,10 @@
                     call errore('bad attname: ', err)
                 newname = 'new_' // trim(atnam)
                 err = nf90mpi_rename_att(ncid, vid, atnam, newname)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_rename_att: ', err)
                 err = nf90mpi_inquire_attribute(ncid, vid, newname, attnum=attnum)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_inquire_attribute: ', err)
                 if (attnum .ne. j) &
                     call error('Unexpected attnum')
@@ -1175,11 +1179,11 @@
 
 !           /* Close. Reopen & check */
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_open(comm, scratch, NF90_WRITE, info,  &
             ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
 
         do 3, i = 0, numVars
@@ -1190,13 +1194,13 @@
                 attlength = ATT_LEN(j,i)
                 newname = 'new_' // trim(atnam)
                 err = nf90mpi_inq_attname(ncid, vid, j, name)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_inq_attname: ', err)
                 if (name .ne. newname) &
                     call error('nf90mpi_inq_attname: unexpected name')
                 err = nf90mpi_inquire_attribute(ncid, vid, name,  &
                     datatype, length)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_inquire_attribute: ', err)
                 if (datatype .ne. attyp) &
                     call error('nf90mpi_inquire_attribute: unexpected type')
@@ -1204,7 +1208,7 @@
                     call error('nf90mpi_inquire_attribute: unexpected length')
                 if (datatype .eq. NF90_CHAR) then
                     err = nf90mpi_get_att(ncid, vid, name, text)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_get_att: ', err)
                     do 5, k = 1, attlength
                         ndx(1) = k
@@ -1219,7 +1223,7 @@
                 else
                     err = nf90mpi_get_att(ncid, vid, name,  &
                            value)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_get_att: ', err)
                     do 6, k = 1, attlength
                         ndx(1) = k
@@ -1252,10 +1256,10 @@
                 if (err .ne. NF90_ENOTINDEFINE) &
                     call errore('longer name in data mode: ', err)
                 err = nf90mpi_rename_att(ncid, vid, oldname, atnam)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_rename_att: ', err)
                 err = nf90mpi_inquire_attribute(ncid, vid, atnam, attnum=attnum)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_inquire_attribute: ', err)
                 if (attnum .ne. j) &
                     call error('Unexpected attnum')
@@ -1263,11 +1267,11 @@
 7       continue
 
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
         end
 
@@ -1301,7 +1305,7 @@
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -1333,7 +1337,7 @@
                     nok = nok + 1
                 endif
                 err = nf90mpi_del_att(ncid, vid, name)
-                if (err .ne. 0) then
+                if (err .ne. NF90_NOERR) then
                     call errore('nf90mpi_del_att: ', err)
                 else
                     nok = nok + 1
@@ -1343,7 +1347,7 @@
                     call errore('bad attname: ', err)
                 if (i .lt. 1) then
                     err = nf90mpi_inquire(ncid, nAttributes=na)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_inquire: ', err)
                     if (na .ne. numatts-j) then
                         call errori('natts: expected: ', numatts-j)
@@ -1351,7 +1355,7 @@
                     endif
                 else
                     err = nf90mpi_inquire_variable(ncid, vid, nAtts=na)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_inquire_variable: ', err)
                     if (na .ne. numatts-j) then
                         call errori('natts: expected: ', numatts-j)
@@ -1363,21 +1367,21 @@
 
 !           /* Close. Reopen & check no attributes left */
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_open(comm, scratch, NF90_WRITE,  &
            info, ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_inquire(ncid, nAttributes=na)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_inquire: ', err)
         if (na .ne. 0) &
             call errori('natts: expected 0, got ', na)
         do 3, i = 0, numVars
             vid = VARID(i)
             err = nf90mpi_inquire(ncid, nAttributes=na)
-            if (err .ne. 0) &
+            if (err .ne. NF90_NOERR) &
                 call errore('nf90mpi_inquire: ', err)
             if (na .ne. 0) &
                 call errori('natts: expected 0, got ', na)
@@ -1385,11 +1389,11 @@
 
 !           /* restore attributes. change to data mode. try to delete */
         err = nf90mpi_redef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_redef: ', err)
         call put_atts(ncid)
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
 
         do 4, i = 0, numVars
@@ -1407,10 +1411,10 @@
 4       continue
 
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
         call print_nok(nok)
         end
@@ -1458,20 +1462,20 @@
 !           /* try in read-only mode */
         err = nf90mpi_open(comm, testfile, NF90_NOWRITE, info, &
                          ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_open: ', err)
         err = nf90mpi_set_fill(ncid, NF90_NOFILL, old_fillmode)
         if (err .ne. NF90_EPERM) &
             call errore('read-only: ', err)
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
 
 !           /* create scratch */
         flags = IOR(NF90_NOCLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -1483,12 +1487,12 @@
 
 !           /* proper calls */
         err = nf90mpi_set_fill(ncid, NF90_NOFILL, old_fillmode)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_set_fill: ', err)
         if (old_fillmode .ne. NF90_FILL) &
             call errori('Unexpected old fill mode: ', old_fillmode)
         err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_set_fill: ', err)
         if (old_fillmode .ne. NF90_NOFILL) &
             call errori('Unexpected old fill mode: ', old_fillmode)
@@ -1499,10 +1503,10 @@
 
 !           /* Change to data mode. Set fillmode again */
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_set_fill: ', err)
         if (old_fillmode .ne. NF90_FILL) &
             call errori('Unexpected old fill mode: ', old_fillmode)
@@ -1510,12 +1514,12 @@
 !       /* Write record number NRECS to force writing of preceding records */
 !       /* Assumes variable cr is char vector with UNLIMITED dimension */
         err = nf90mpi_inq_varid(ncid, 'cr', vid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_inq_varid: ', err)
         index(1) = NRECS
         text = char(NF90_FILL_CHAR)
         err = nf90mpi_put_var(ncid, vid, text, index)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_put_var: ', err)
 
 !           /* get all variables & check all values equal default fill */
@@ -1539,16 +1543,16 @@
             do 2, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call error('error in index2indexes()')
                 if (var_type(i) .eq. NF90_CHAR) then
                     err = nf90mpi_get_var(ncid, i, text, index)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_get_var failed: ',err)
                     value = ichar(text)
                 else
                     err = nf90mpi_get_var(ncid, i, value, index)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore &
                                  ('nf90mpi_get_var failed: ',err)
                 end if
@@ -1563,12 +1567,12 @@
 
 !       /* close scratch & create again for test using attribute _FillValue */
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = nf90mpi_create(comm, scratch, flags, info, &
                            ncid)
-        if (err .ne. 0) then
+        if (err .ne. NF90_NOERR) then
             call errore('nf90mpi_create: ', err)
             return
         end if
@@ -1583,22 +1587,22 @@
             if (var_type(i) .eq. NF90_CHAR) then
                 err = nf90mpi_put_att(ncid, i, '_FillValue', &
                    text)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_put_att: ', err)
             else
                 err = nf90mpi_put_att(ncid, i, '_FillValue', fill)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_put_att: ', err)
             end if
 3       continue
 
 !           /* data mode. write records */
         err = nf90mpi_enddef(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         index(1) = NRECS
         err = nf90mpi_put_var(ncid, vid, text, index)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_put_var: ', err)
 
 !           /* get all variables & check all values equal 42 */
@@ -1606,16 +1610,16 @@
             do 5, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
-                if (err .ne. 0) &
+                if (err .ne. NF90_NOERR) &
                     call error('error in index2indexes')
                 if (var_type(i) .eq. NF90_CHAR) then
                     err = nf90mpi_get_var(ncid, i, text, index)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_get_var failed: ',err)
                     value = ichar(text)
                 else
                     err = nf90mpi_get_var(ncid, i, value, index)
-                    if (err .ne. 0) &
+                    if (err .ne. NF90_NOERR) &
                         call errore &
                                 ('nf90mpi_get_var failed: ', err)
                 end if
@@ -1629,10 +1633,10 @@
 4       continue
 
         err = nf90mpi_close(ncid)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_close: ', err)
         err = nf90mpi_delete(scratch, info)
-        if (err .ne. 0) &
+        if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
 #endif
         call print_nok(nok)
@@ -1666,27 +1670,27 @@
 !    /* Cycle through available formats. */
       do 1 i=1, 2
          err = nf90mpi_set_default_format(i, old_format)
-         if (err .ne. 0)  &
+         if (err .ne. NF90_NOERR)  &
                call errore("setting classic format: status = %d", err)
          flags = IOR(NF90_CLOBBER, extra_flags)
          err = nf90mpi_create(comm, scratch, flags,  &
                       info, ncid)
-         if (err .ne. 0)  &
+         if (err .ne. NF90_NOERR)  &
               call errore("bad nf90mpi_create: status = %d", err)
          err = nf90mpi_put_att_text(ncid, NF90_GLOBAL, "testatt",  &
               "blah")
-         if (err .ne. 0) call errore("bad put_att: status = %d", err)
+         if (err .ne. NF90_NOERR) call errore("bad put_att: status = %d", err)
          err = nf90mpi_close(ncid)
-         if (err .ne. 0) call errore("bad close: status = %d", err)
+         if (err .ne. NF90_NOERR) call errore("bad close: status = %d", err)
          err = nf90mpi_get_file_version(scratch, version)
-         if (err .ne. 0) call errore("bad file version = %d", err)
+         if (err .ne. NF90_NOERR) call errore("bad file version = %d", err)
          if (version .ne. i) &
               call errore("bad file version = %d", err)
  1    continue
 
 !    /* Remove the left-over file. */
       err = nf90mpi_delete(scratch)
-      if (err .ne. 0) call errore("remove failed", err)
+      if (err .ne. NF90_NOERR) call errore("remove failed", err)
       end
 
 #endif

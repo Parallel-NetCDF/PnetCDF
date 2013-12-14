@@ -31,17 +31,17 @@ test_ncmpi_create(void)
 
     for (clobber = 0; clobber < 2; clobber++) {
 	err = ncmpi_create(comm, scratch, clobber ? NC_CLOBBER|extra_flags : NC_NOCLOBBER, info, &ncid);
-	IF (err)
+	IF (err != NC_NOERR)
 	    error("ncmpi_create: %s", ncmpi_strerror(err));
         ELSE_NOK
 	err = ncmpi_close(ncid);
-	IF (err)
+	IF (err != NC_NOERR)
 	    error("ncmpi_close: %s", ncmpi_strerror(err));
 	err = ncmpi_open(comm, scratch, NC_NOWRITE, info, &ncid);
-	IF (err)
+	IF (err != NC_NOERR)
 	    error("ncmpi_open: %s", ncmpi_strerror(err));
 	err = ncmpi_inq(ncid, &ndims, &nvars, &ngatts, &recdim);
-	IF (err)
+	IF (err != NC_NOERR)
 	    error("ncmpi_inq: %s", ncmpi_strerror(err));
 	else IF (ndims != 0)
 	    error("ncmpi_inq: wrong number of dimensions returned, %d", ndims);
@@ -53,7 +53,7 @@ test_ncmpi_create(void)
 	    error("ncmpi_inq: wrong record dimension ID returned, %d", recdim);
         ELSE_NOK
 	err = ncmpi_close(ncid);
-	IF (err)
+	IF (err != NC_NOERR)
 	    error("ncmpi_close: %s", ncmpi_strerror(err));
     }
 
@@ -63,7 +63,7 @@ test_ncmpi_create(void)
     ELSE_NOK
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
 	error("remove of %s failed", scratch);
     return nok;
 }
@@ -114,7 +114,7 @@ test_ncmpi_redef(void)
 
     /* read-only tests */
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_redef(ncid);
     IF (err != NC_EPERM)
@@ -125,13 +125,13 @@ test_ncmpi_redef(void)
 	error("ncmpi_endfef in NC_NOWRITE, info mode: status = %d", err);
     ELSE_NOK
     err = ncmpi_close(ncid);
-    IF (err) 
+    IF (err != NC_NOERR) 
 	error("ncmpi_close: %s", ncmpi_strerror(err));
 
     /* tests using scratch file */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
     /* err = ncmpi__create(scratch, NC_NOCLOBBER|extra_flags, 0, &sizehint, &ncid); */
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -142,7 +142,7 @@ test_ncmpi_redef(void)
     def_vars(ncid);
     put_atts(ncid);
     err = ncmpi_inq_varid(ncid, "d", &varid);
-    IF (err) 
+    IF (err != NC_NOERR) 
 	error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     var = 1.0;
     err = ncmpi_begin_indep_data(ncid);
@@ -152,14 +152,14 @@ test_ncmpi_redef(void)
     IF (err != NC_EINDEFINE)
         error("ncmpi_put_var... in define mode: status = %d", err);
     err = ncmpi_end_indep_data(ncid);
-    IF (err != NC_EINDEFINE)
-        error("ncmpi_end_indep_data... in define mode: status = %d", err);
+    IF (err != NC_ENOTINDEP)
+        error("ncmpi_end_indep_data... not in indep mode: status = %d", err);
     err = ncmpi_redef(ncid);
     IF (err != NC_EINDEFINE)
         error("ncmpi_redef in define mode: status = %d", err);
     ELSE_NOK
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     ELSE_NOK
     put_vars(ncid);
@@ -167,22 +167,22 @@ test_ncmpi_redef(void)
     IF (err != NC_ENOTINDEFINE)
         error("ncmpi_def_dim in define mode: status = %d", err);
     err = ncmpi_redef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     ELSE_NOK
 #if 0
     err = ncmpi_set_fill(ncid, NC_NOFILL, NULL);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
 #endif
     err = ncmpi_def_dim(ncid, "abc", sizehint, &dimid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_def_dim: %s", ncmpi_strerror(err));
     err = ncmpi_def_var(ncid, "abcScalar", NC_INT, 0, NULL, &varid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_def_var: %s", ncmpi_strerror(err));
     err = ncmpi_def_var(ncid, "abc", NC_INT, 1, &dimid, &varid1);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_def_var: %s", ncmpi_strerror(err));
     {
 	int dimids[NDIMS +1];
@@ -191,36 +191,40 @@ test_ncmpi_redef(void)
 		dimids[ii] = ii;
 	dimids[NDIMS] = dimid;
     	err = ncmpi_def_var(ncid, "abcRec", NC_INT, NDIMS, dimids, &varid1);
-    	IF (err)
+    	IF (err != NC_NOERR)
         	error("ncmpi_def_var: %s", ncmpi_strerror(err));
     }
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "title", 1+strlen(title), title);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     ELSE_NOK
     var = 1.0;
     err = ncmpi_end_indep_data(ncid);
     IF (err != NC_ENOTINDEP)
         error("ncmpi_end_indep_data: in collective mode status = %s", ncmpi_strerror(err));
-    ncmpi_begin_indep_data(ncid);
+    err ncmpi_begin_indep_data(ncid);
+    IF (err != NC_NOERR) 
+	error("ncmpi_begin_indep_data: %s", ncmpi_strerror(err));
     err = ncmpi_put_var1_double(ncid, varid, NULL, &var);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_put_var1_double: %s", ncmpi_strerror(err));
-    ncmpi_end_indep_data(ncid);
+    err = ncmpi_end_indep_data(ncid);
+    IF (err != NC_NOERR) 
+	error("ncmpi_begin_indep_data: %s", ncmpi_strerror(err));
     err = ncmpi_close(ncid);
-    IF (err) 
+    IF (err != NC_NOERR) 
 	error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* check scratch file written as expected */
     check_file(scratch);
     err = ncmpi_open(comm, scratch, NC_NOWRITE, info, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_dim(ncid, dimid, name, &length);
-    IF (err) 
+    IF (err != NC_NOERR) 
 	error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
     IF (strcmp(name, "abc") != 0) 
 	error("Unexpected dim name");
@@ -228,17 +232,17 @@ test_ncmpi_redef(void)
 	error("Unexpected dim length");
     ncmpi_begin_indep_data(ncid);
     err = ncmpi_get_var1_double(ncid, varid, NULL, &var);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_get_var1_double: %s", ncmpi_strerror(err));
     ncmpi_end_indep_data(ncid);
     IF (var != 1.0)
         error("ncmpi_get_var1_double: unexpected value");
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -276,7 +280,7 @@ test_ncmpi_sync(void)
 
         /* create scratch file & try ncmpi_sync in define mode */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncidw);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
 	return nok;
     }
@@ -290,20 +294,20 @@ test_ncmpi_sync(void)
     def_vars(ncidw);
     put_atts(ncidw);
     err = ncmpi_enddef(ncidw);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     put_vars(ncidw);
     err = ncmpi_sync(ncidw);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_sync of ncidw failed: %s", ncmpi_strerror(err));
     ELSE_NOK
 
     /* open another handle, ncmpi_sync, read (check) */
     err = ncmpi_open(comm, scratch, NC_NOWRITE, info, &ncidr);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_sync(ncidr);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_sync of ncidr failed: %s", ncmpi_strerror(err));
     ELSE_NOK
     check_dims(ncidr);
@@ -312,14 +316,14 @@ test_ncmpi_sync(void)
 
     /* close both handles */
     err = ncmpi_close(ncidr);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_close(ncidw);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -350,7 +354,7 @@ test_ncmpi_abort(void)
 
         /* create scratch file & try ncmpi_abort in define mode */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -358,7 +362,7 @@ test_ncmpi_abort(void)
     def_vars(ncid);
     put_atts(ncid);
     err = ncmpi_abort(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_abort of ncid failed: %s", ncmpi_strerror(err));
     ELSE_NOK
     err = ncmpi_close(ncid);	/* should already be closed */
@@ -375,31 +379,31 @@ test_ncmpi_abort(void)
 	 * try ncmpi_abort: should restore previous state (no dims, vars, atts)
 	 */ 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_redef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     def_dims(ncid);
     def_vars(ncid);
     put_atts(ncid);
     err = ncmpi_abort(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_abort of ncid failed: %s", ncmpi_strerror(err));
     ELSE_NOK
     err = ncmpi_close(ncid);	/* should already be closed */
     IF (err != NC_EBADID)
         error("bad ncid: status = %d", err);
     err = ncmpi_open(comm, scratch, NC_NOWRITE, info, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq (ncid, &ndims, &nvars, &ngatts, NULL);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_inq: %s", ncmpi_strerror(err));
     IF (ndims != 0)
         error("ndims should be 0");
@@ -408,12 +412,12 @@ test_ncmpi_abort(void)
     IF (ngatts != 0)
         error("ngatts should be 0");
     err = ncmpi_close (ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     /* try ncmpi_abort in data mode - should just close */
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -421,11 +425,11 @@ test_ncmpi_abort(void)
     def_vars(ncid);
     put_atts(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     put_vars(ncid);
     err = ncmpi_abort(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_abort of ncid failed: %s", ncmpi_strerror(err));
     ELSE_NOK
     err = ncmpi_close(ncid);       /* should already be closed */
@@ -433,7 +437,7 @@ test_ncmpi_abort(void)
         error("bad ncid: status = %d", err);
     check_file(scratch);
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -466,12 +470,12 @@ test_ncmpi_def_dim(void)
 
         /* data mode test */
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_def_dim(ncid, "abc", 8, &dimid);
     IF (err != NC_ENOTINDEFINE)
@@ -480,17 +484,17 @@ test_ncmpi_def_dim(void)
 
     /* define-mode tests: unlimited dim */
     err = ncmpi_redef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     err = ncmpi_def_dim(ncid, dim_name[0], NC_UNLIMITED, &dimid);
-    IF (err) 
+    IF (err != NC_NOERR) 
 	error("ncmpi_def_dim: %s", ncmpi_strerror(err));
     ELSE_NOK
     IF (dimid != 0) 
 	error("Unexpected dimid");
     ELSE_NOK
     err = ncmpi_inq_unlimdim(ncid, &dimid);
-    IF (err) 
+    IF (err != NC_NOERR) 
 	error("ncmpi_inq_unlimdim: %s", ncmpi_strerror(err));
     IF (dimid != 0) 
 	error("Unexpected recdim");
@@ -517,7 +521,7 @@ test_ncmpi_def_dim(void)
 	    error("bad size: status = %d", err);
         ELSE_NOK
         err = ncmpi_def_dim(ncid, dim_name[i], dim_len[i], &dimid);
-        IF (err) 
+        IF (err != NC_NOERR) 
 	    error("ncmpi_def_dim: %s", ncmpi_strerror(err));
         ELSE_NOK
 	IF (dimid != i) 
@@ -527,7 +531,7 @@ test_ncmpi_def_dim(void)
         /* Following just to expand unlimited dim */
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     put_vars(ncid);
 
@@ -535,10 +539,10 @@ test_ncmpi_def_dim(void)
     check_dims(ncid);
 
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
 	error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -566,7 +570,7 @@ test_ncmpi_rename_dim(void)
 
         /* main tests */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -576,7 +580,7 @@ test_ncmpi_rename_dim(void)
         error("bad dimid: status = %d", err);
     ELSE_NOK
     err = ncmpi_rename_dim(ncid, 2, "abc");
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_rename_dim: %s", ncmpi_strerror(err));
     ELSE_NOK
     err = ncmpi_inq_dimname(ncid, 2, name);
@@ -588,10 +592,10 @@ test_ncmpi_rename_dim(void)
     ELSE_NOK
 
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -631,16 +635,16 @@ test_ncmpi_def_var(void)
 
         /* scalar tests */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     err = ncmpi_def_var(ncid, "abc", NC_SHORT, 0, NULL, &varid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_def_var: %s", ncmpi_strerror(err));
     ELSE_NOK
     err = ncmpi_inq_var(ncid, varid, name, &datatype, &ndims, dimids, &natts);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_inq_var: %s", ncmpi_strerror(err));
     IF (strcmp(name, "abc") != 0)
         error("Unexpected name: %s", name);
@@ -665,22 +669,22 @@ test_ncmpi_def_var(void)
         error("bad rank: status = %d", err);
     ELSE_NOK
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
 	error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_def_var(ncid, "ABC", NC_SHORT, 0, dimids, &varid);
     IF (err != NC_ENOTINDEFINE)
         error("ncmpi_def_var called in data mode: status = %d", err);
     ELSE_NOK
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
 
     /* general tests using global vars */
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -688,7 +692,7 @@ test_ncmpi_def_var(void)
     for (i = 0; i < numVars; i++) {
         err = ncmpi_def_var(ncid, var_name[i], var_type[i], var_rank[i],
             var_dimid[i], &varid);
-        IF (err) 
+        IF (err != NC_NOERR) 
 	    error("ncmpi_def_var: %s", ncmpi_strerror(err));
         ELSE_NOK
 	IF (varid != i)
@@ -703,11 +707,11 @@ test_ncmpi_def_var(void)
         error("bad dim ids: status = %d", err);
     ELSE_NOK
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -726,14 +730,14 @@ test_ncmpi_put_var1(void)
     double buf[1];		/* (void *) buffer */
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
@@ -759,18 +763,18 @@ test_ncmpi_put_var1(void)
         }
         for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("error in toMixedBase");
             value = hash( var_type[i], var_rank[i], index);
 	    if (inRange(value, var_type[i])) {
 		err = dbl2nc(value, var_type[i], buf);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("error in dbl2nc");
 		if (var_rank[i] == 0 && i%2 == 0)
 		    err = ncmpi_put_var1(ncid, i, NULL, buf);
 		else
 		    err = ncmpi_put_var1(ncid, i, index, buf);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("%s", ncmpi_strerror(err));
                 ELSE_NOK
 	    }
@@ -779,11 +783,11 @@ test_ncmpi_put_var1(void)
 
     check_vars(ncid);
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -809,14 +813,14 @@ test_ncmpi_put_vara(void)
     double value;
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
@@ -873,7 +877,7 @@ test_ncmpi_put_vara(void)
 	    p = (char *) buf;
 	    for (j = 0; j < nels; j++) {
 		err = toMixedBase(j, var_rank[i], edge, index);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("error in toMixedBase");
 		for (d = 0; d < var_rank[i]; d++)
 		    index[d] += start[d];
@@ -881,7 +885,7 @@ test_ncmpi_put_vara(void)
 		if (!inRange(value, var_type[i]))
 		    value = 0;
 		err = dbl2nc(value, var_type[i], p);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("error in dbl2nc");
 		p += nctypelen(var_type[i]);
             }
@@ -889,7 +893,7 @@ test_ncmpi_put_vara(void)
 		err = ncmpi_put_vara(ncid, i, NULL, NULL, buf);
             else
 		err = ncmpi_put_vara(ncid, i, start, edge, buf);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("%s", ncmpi_strerror(err));
             ELSE_NOK
         }
@@ -897,11 +901,11 @@ test_ncmpi_put_vara(void)
 
     check_vars(ncid);
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -933,14 +937,14 @@ test_ncmpi_put_vars(void)
     double value;
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
@@ -1005,7 +1009,7 @@ test_ncmpi_put_vars(void)
             }
             for (m = 0; m < nstarts; m++) {
                 err = toMixedBase(m, var_rank[i], sstride, index);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("error in toMixedBase");
                 nels = 1;
                 for (j = 0; j < var_rank[i]; j++) {
@@ -1025,7 +1029,7 @@ test_ncmpi_put_vars(void)
 		p = (char *) buf;
 		for (j = 0; j < nels; j++) {
 		    err = toMixedBase(j, var_rank[i], count, index2);
-		    IF (err)
+		    IF (err != NC_NOERR)
 			error("error in toMixedBase");
 		    for (d = 0; d < var_rank[i]; d++)
 			index2[d] = index[d] + index2[d] * stride[d];
@@ -1033,7 +1037,7 @@ test_ncmpi_put_vars(void)
 		    if (!inRange(value, var_type[i]))
 			value = 0;
 		    err = dbl2nc(value, var_type[i], p);
-		    IF (err)
+		    IF (err != NC_NOERR)
 			error("error in dbl2nc");
 		    p += nctypelen(var_type[i]);
 		}
@@ -1041,7 +1045,7 @@ test_ncmpi_put_vars(void)
 		    err = ncmpi_put_vars(ncid, i, NULL, NULL, NULL, buf);
 		else
 		    err = ncmpi_put_vars(ncid, i, index, count, stride, buf);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("%s", ncmpi_strerror(err));
                 ELSE_NOK
             }
@@ -1050,11 +1054,11 @@ test_ncmpi_put_vars(void)
 
     check_vars(ncid);
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -1094,14 +1098,14 @@ test_ncmpi_put_varm(void)
     double value;
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
     def_dims(ncid);
     def_vars(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = 0; i < numVars; i++) {
@@ -1121,13 +1125,13 @@ test_ncmpi_put_varm(void)
 	p = (char *) buf;
 	for (j = 0; j < var_nels[i]; j++) {
 	    err = toMixedBase(j, var_rank[i], var_shape[i], index);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("error in toMixedBase");
 	    value = hash( var_type[i], var_rank[i], index);
 	    if (!inRange(value, var_type[i]))
 		value = 0;
 	    err = dbl2nc(value, var_type[i], p);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("error in dbl2nc");
 	    p += nctypelen(var_type[i]);
 	}
@@ -1189,7 +1193,7 @@ test_ncmpi_put_varm(void)
 		    err = ncmpi_put_varm(ncid, i, NULL, NULL, NULL, NULL, buf);
 		} else {
 		    err = toMixedBase(m, var_rank[i], sstride, index);
-		    IF (err)
+		    IF (err != NC_NOERR)
 			error("error in toMixedBase");
 		    for (j = 0; j < var_rank[i]; j++) {
 			count[j] = 1 + (edge[j] - index[j] - 1) / stride[j];
@@ -1208,7 +1212,7 @@ test_ncmpi_put_varm(void)
                     p = (char *) buf + j * nctypelen(var_type[i]);
 		    err = ncmpi_put_varm(ncid, i, index, count, stride, imap2, p);
 		}
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("%s", ncmpi_strerror(err));
                 ELSE_NOK
             }
@@ -1217,11 +1221,11 @@ test_ncmpi_put_varm(void)
 
     check_vars(ncid);
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -1246,7 +1250,7 @@ test_ncmpi_rename_var(void)
     char name[NC_MAX_NAME];
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -1270,11 +1274,11 @@ test_ncmpi_rename_var(void)
 	strcpy(name, "new_");
 	strcat(name, var_name[i]);
         err = ncmpi_rename_var(ncid, i, name);
-        IF (err)
+        IF (err != NC_NOERR)
 	    error("ncmpi_rename_var: %s", ncmpi_strerror(err));
         ELSE_NOK
         err = ncmpi_inq_varid(ncid, name, &varid);
-        IF (err)
+        IF (err != NC_NOERR)
 	    error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
         IF (varid != i)
 	    error("Unexpected varid");
@@ -1283,7 +1287,7 @@ test_ncmpi_rename_var(void)
 	/* Change to data mode */
 	/* Try making names even longer. Then restore original names */
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
 	strcpy(name, "even_longer_");
@@ -1293,11 +1297,11 @@ test_ncmpi_rename_var(void)
             error("longer name in data mode: status = %d", err);
         ELSE_NOK
         err = ncmpi_rename_var(ncid, i, var_name[i]);
-        IF (err)
+        IF (err != NC_NOERR)
 	    error("ncmpi_rename_var: %s", ncmpi_strerror(err));
         ELSE_NOK
         err = ncmpi_inq_varid(ncid, var_name[i], &varid);
-        IF (err)
+        IF (err != NC_NOERR)
 	    error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
         IF (varid != i)
 	    error("Unexpected varid");
@@ -1307,11 +1311,11 @@ test_ncmpi_rename_var(void)
     check_vars(ncid);
 
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -1335,7 +1339,7 @@ test_ncmpi_put_att(void)
     double value;
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -1370,12 +1374,12 @@ test_ncmpi_put_att(void)
 		if (!inRange(value, datatype))
 		    value = 0;
 		err = dbl2nc(value, datatype, p);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("error in dbl2nc");
 		p += nctypelen(datatype);
 	    }
             err = ncmpi_put_att(ncid, varid, name, datatype, length, buf);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("%s", ncmpi_strerror(err));
             ELSE_NOK
         }
@@ -1383,11 +1387,11 @@ test_ncmpi_put_att(void)
 
     check_atts(ncid);
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -1421,10 +1425,10 @@ test_ncmpi_copy_att(void)
     char  value;
 
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid_in);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid_out);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -1456,26 +1460,26 @@ test_ncmpi_copy_att(void)
 		error("bad attname: status = %d", err);
             ELSE_NOK
 	    err = ncmpi_copy_att(ncid_in, varid, name, ncid_out, varid);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_copy_att: %s", ncmpi_strerror(err));
             ELSE_NOK
 	    err = ncmpi_copy_att(ncid_out, varid, name, ncid_out, varid);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("source = target: %s", ncmpi_strerror(err));
             ELSE_NOK
 	}
     }
 
     err = ncmpi_close(ncid_in);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
         /* Close scratch. Reopen & check attributes */
     err = ncmpi_close(ncid_out);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_open(comm, scratch, NC_WRITE, info, &ncid_out);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     check_atts(ncid_out);
 
@@ -1485,10 +1489,10 @@ test_ncmpi_copy_att(void)
 	* This will be used as source for following copies
 	*/
     err = ncmpi_redef(ncid_out);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     err = ncmpi_put_att_text(ncid_out, NC_GLOBAL, "a", 1, "A");
-    IF (err)
+    IF (err != NC_NOERR)
 	error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
 
        /* 
@@ -1499,38 +1503,38 @@ test_ncmpi_copy_att(void)
 	* if this att. exists them copy ':a' to it
 	*/
     err = ncmpi_enddef(ncid_out);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
 	if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
 	    err = ncmpi_rename_att(ncid_out, i, att_name[i][0], "a");
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_rename_att: %s", ncmpi_strerror(err));
 	    err = ncmpi_copy_att(ncid_out, NC_GLOBAL, "a", ncid_out, i);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_copy_att: %s", ncmpi_strerror(err));
             ELSE_NOK
 	}
     }
     err = ncmpi_close(ncid_out);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* Reopen & check */
     err = ncmpi_open(comm, scratch, NC_WRITE, info, &ncid_out);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     for (i = 0; i < numVars; i++) {
 	if (NATTS(i) > 0 && ATT_LEN(i,j) > 0) {
 	    err = ncmpi_inq_att(ncid_out, i, "a", &datatype, &length);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_inq_att: %s", ncmpi_strerror(err));
 	    IF (datatype != NC_CHAR)
 		error("Unexpected type");
 	    IF (length != 1)
 		error("Unexpected length");
 	    err = ncmpi_get_att_text(ncid_out, i, "a", &value);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
 	    IF (value != 'A')
 		error("Unexpected value");
@@ -1538,10 +1542,10 @@ test_ncmpi_copy_att(void)
     }                                                   
 
     err = ncmpi_close(ncid_out);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -1580,7 +1584,7 @@ test_ncmpi_rename_att(void)
     double expect;
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -1607,11 +1611,11 @@ test_ncmpi_rename_att(void)
 	    strcpy(newname, "new_");
 	    strcat(newname, attname);
 	    err = ncmpi_rename_att(ncid, varid, attname, newname);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_rename_att: %s", ncmpi_strerror(err));
             ELSE_NOK
 	    err = ncmpi_inq_attid(ncid, varid, newname, &attnum);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_inq_attid: %s", ncmpi_strerror(err));
 	    IF (attnum != j)
 		error("Unexpected attnum");
@@ -1620,10 +1624,10 @@ test_ncmpi_rename_att(void)
 
     /* Close. Reopen & check */
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_open(comm, scratch, NC_WRITE, info, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
 
     for (i = -1; i < numVars; i++) {
@@ -1635,12 +1639,12 @@ test_ncmpi_rename_att(void)
             strcpy(newname, "new_");
             strcat(newname, attname);
             err = ncmpi_inq_attname(ncid, varid, j, name);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("ncmpi_inq_attname: %s", ncmpi_strerror(err));
             IF (strcmp(name, newname) != 0)
                 error("ncmpi_inq_attname: unexpected name");
             err = ncmpi_inq_att(ncid, varid, name, &datatype, &length);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("ncmpi_inq_att: %s", ncmpi_strerror(err));
             IF (datatype != atttype)
                 error("ncmpi_inq_att: unexpected type");
@@ -1648,7 +1652,7 @@ test_ncmpi_rename_att(void)
                 error("ncmpi_inq_att: unexpected length");
             if (datatype == NC_CHAR) {
                 err = ncmpi_get_att_text(ncid, varid, name, text);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
                 for (k = 0; k < attlength; k++) {
                     expect = hash(datatype, -1, &k);
@@ -1657,7 +1661,7 @@ test_ncmpi_rename_att(void)
                 }
             } else {
                 err = ncmpi_get_att_double(ncid, varid, name, value);
-                IF (err)
+                IF (err != NC_NOERR)
                     error("ncmpi_get_att_double: %s", ncmpi_strerror(err));
                 for (k = 0; k < attlength; k++) {
                     expect = hash(datatype, -1, &k);
@@ -1686,11 +1690,11 @@ test_ncmpi_rename_att(void)
 		error("longer name in data mode: status = %d", err);
             ELSE_NOK
 	    err = ncmpi_rename_att(ncid, varid, oldname, attname);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_rename_att: %s", ncmpi_strerror(err));
             ELSE_NOK
 	    err = ncmpi_inq_attid(ncid, varid, attname, &attnum);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_inq_attid: %s", ncmpi_strerror(err));
 	    IF (attnum != j)
 		error("Unexpected attnum");
@@ -1698,11 +1702,11 @@ test_ncmpi_rename_att(void)
     }
 
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -1730,7 +1734,7 @@ test_ncmpi_del_att(void)
     char *name;                 /* of att */
 
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -1756,7 +1760,7 @@ test_ncmpi_del_att(void)
 		error("bad attname: status = %d", err);
             ELSE_NOK
 	    err = ncmpi_del_att(ncid, varid, name);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_del_att: %s", ncmpi_strerror(err));
             ELSE_NOK
 	    err = ncmpi_inq_attid(ncid, varid, name, &attnum);
@@ -1764,13 +1768,13 @@ test_ncmpi_del_att(void)
 		error("bad attname: status = %d", err);
 	    if (i < 0) {
 		err = ncmpi_inq_natts(ncid, &natts);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("ncmpi_inq_natts: %s", ncmpi_strerror(err));
 		IF (natts != numatts-j-1)
 		    error("natts: expected %d, got %d", numatts-j-1, natts);
 	    }
 	    err = ncmpi_inq_varnatts(ncid, varid, &natts);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_inq_natts: %s", ncmpi_strerror(err));
 	    IF (natts != numatts-j-1)
 		error("natts: expected %d, got %d", numatts-j-1, natts);
@@ -1779,20 +1783,20 @@ test_ncmpi_del_att(void)
 
         /* Close. Reopen & check no attributes left */
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_open(comm, scratch, NC_WRITE, info, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_inq_natts(ncid, &natts);
-    IF (err)
+    IF (err != NC_NOERR)
 	error("ncmpi_inq_natts: %s", ncmpi_strerror(err));
     IF (natts != 0)
 	error("natts: expected %d, got %d", 0, natts);
     for (i = -1; i < numVars; i++) {
 	varid = VARID(i);
 	err = ncmpi_inq_varnatts(ncid, varid, &natts);
-	IF (err)
+	IF (err != NC_NOERR)
 	    error("ncmpi_inq_natts: %s", ncmpi_strerror(err));
 	IF (natts != 0)
 	    error("natts: expected %d, got %d", 0, natts);
@@ -1800,11 +1804,11 @@ test_ncmpi_del_att(void)
 
 	/* restore attributes. change to data mode. try to delete */
     err = ncmpi_redef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     put_atts(ncid);
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
 
     for (i = -1; i < numVars; i++) {
@@ -1820,10 +1824,10 @@ test_ncmpi_del_att(void)
     }
 
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
     return nok;
 }
@@ -1864,18 +1868,18 @@ test_ncmpi_set_fill(void)
 
 	/* try in read-only mode */
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_open: %s", ncmpi_strerror(err));
     err = ncmpi_set_fill(ncid, NC_NOFILL, &old_fillmode);
     IF (err != NC_EPERM)
 	error("read-only: status = %d", err);
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
 
 	/* create scratch */
     err = ncmpi_create(comm, scratch, NC_NOCLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -1887,12 +1891,12 @@ test_ncmpi_set_fill(void)
 
 	/* proper calls */
     err = ncmpi_set_fill(ncid, NC_NOFILL, &old_fillmode);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
     IF (old_fillmode != NC_FILL)
         error("Unexpected old fill mode: %d", old_fillmode);
     err = ncmpi_set_fill(ncid, NC_FILL, &old_fillmode);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
     IF (old_fillmode != NC_NOFILL)
         error("Unexpected old fill mode: %d", old_fillmode);
@@ -1903,10 +1907,10 @@ test_ncmpi_set_fill(void)
 
 	/* Change to data mode. Set fillmode again */
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_set_fill(ncid, NC_FILL, &old_fillmode);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
     IF (old_fillmode != NC_FILL)
         error("Unexpected old fill mode: %d", old_fillmode);
@@ -1914,11 +1918,11 @@ test_ncmpi_set_fill(void)
 	/* Write record number NRECS to force writing of preceding records */
 	/* Assumes variable cr is char vector with UNLIMITED dimension */
     err = ncmpi_inq_varid(ncid, "cr", &varid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     index[0] = NRECS;
     err = ncmpi_put_var1_text(ncid, varid, index, &text);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
 
 	/* get all variables & check all values equal default fill */
@@ -1934,16 +1938,16 @@ test_ncmpi_set_fill(void)
 	}
 	for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("error in toMixedBase");
 	    if (var_type[i] == NC_CHAR) {
 		err = ncmpi_get_var1_text(ncid, i, index, &text);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("ncmpi_get_var1_text failed: %s", ncmpi_strerror(err));
 		value = text;
 	    } else {
 		err = ncmpi_get_var1_double(ncid, i, index, &value);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("ncmpi_get_var1_double failed: %s", ncmpi_strerror(err));
 	    }
 	    IF (value != fill && fabs((fill - value)/fill) > DBL_EPSILON)
@@ -1955,10 +1959,10 @@ test_ncmpi_set_fill(void)
 
 	/* close scratch & create again for test using attribute _FillValue */
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
-    IF (err) {
+    IF (err != NC_NOERR) {
         error("ncmpi_create: %s", ncmpi_strerror(err));
         return nok;
     }
@@ -1970,38 +1974,38 @@ test_ncmpi_set_fill(void)
     for (i = 0; i < numVars; i++) {
 	if (var_type[i] == NC_CHAR) {
 	    err = ncmpi_put_att_text(ncid, i, "_FillValue", 1, &text);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_put_att_text: %s", ncmpi_strerror(err));
 	} else {
 	    err = ncmpi_put_att_double(ncid, i, "_FillValue",var_type[i],1,&fill);
-	    IF (err)
+	    IF (err != NC_NOERR)
 		error("ncmpi_put_att_double: %s", ncmpi_strerror(err));
 	}
     }
 
 	/* data mode. write records */
     err = ncmpi_enddef(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     index[0] = NRECS;
     err = ncmpi_put_var1_text(ncid, varid, index, &text);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
 
 	/* get all variables & check all values equal 42 */
     for (i = 0; i < numVars; i++) {
 	for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
-            IF (err)
+            IF (err != NC_NOERR)
                 error("error in toMixedBase");
 	    if (var_type[i] == NC_CHAR) {
 		err = ncmpi_get_var1_text(ncid, i, index, &text);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("ncmpi_get_var1_text failed: %s", ncmpi_strerror(err));
 		value = text;
 	    } else {
 		err = ncmpi_get_var1_double(ncid, i, index, &value);
-		IF (err)
+		IF (err != NC_NOERR)
 		    error("ncmpi_get_var1_double failed: %s", ncmpi_strerror(err));
 	    }
 	    IF (value != fill)
@@ -2010,10 +2014,10 @@ test_ncmpi_set_fill(void)
         }
     }
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
 
     return nok;
@@ -2081,7 +2085,7 @@ test_ncmpi_set_default_format(void)
 
     /* NULL old_formatp */
     err = ncmpi_set_default_format(NC_FORMAT_64BIT, NULL);
-    IF (err)
+    IF (err != NC_NOERR)
        error("null old_fortmatp: status = %d", err);
     ELSE_NOK
 
@@ -2125,13 +2129,13 @@ test_ncmpi_delete(void)
     int ncid;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
-    IF (err)
+    IF (err != NC_NOERR)
 	error("error creating scratch file %s, status = %d\n", scratch,err);
     err = ncmpi_close(ncid);
-    IF (err)
+    IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     err = ncmpi_delete(scratch, info);
-    IF (err)
+    IF (err != NC_NOERR)
 	error("remove of %s failed", scratch);
     ELSE_NOK
     return nok;
