@@ -29,7 +29,8 @@ F90_SRCS = tst_f90.f90 \
            f90tst_parallel.f90 \
            f90tst_parallel2.f90 \
            f90tst_parallel3.f90 \
-           f90tst_parallel4.f90
+           f90tst_parallel4.f90 \
+           test_intent.f90
 
 PROGS    = $(F90_SRCS:.f90=)
 OBJS     = $(F90_SRCS:.f90=.o)
@@ -82,7 +83,11 @@ f90tst_parallel3: f90tst_parallel3.o $(LIBRARY)
 f90tst_parallel4: f90tst_parallel4.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
+test_intent: test_intent.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
 testing check verbose_testing: $(PROGS)
+	$(TEST_SEQRUN) ./test_intent  $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./tst_f90      $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./f90tst_vars  $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./tst_types2   $(TEST_OUTDIR)/testfile.nc

@@ -2,6 +2,25 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
+version  1.4.1 (December 14 2013)
+-------------------------------------
+
+  o Bug fix:
+    * Improve pnetcdf.inc portability for fixed/free-form Fortran programs
+
+  o Fortran API syntax changes
+    * For nfmpi_put_att and nf90mpi_put_att family, the intent modifier for
+      the put buffer arguments are now declared as INTENT(IN).
+    * For nfmpi_put_var* and nf90mpi_put_var family
+      + On Big Endian machines, the the intent modifier for the put buffer
+        arguments are now declared as INTENT(IN).
+      + On Little Endian machines, the the intent modifier for the put buffer
+        arguments are still declared as INTENT(INOUT). This is because PnetCDF
+        does in-place byte-swap on user's put buffer. If user's buffer is
+        declared as parameter, then segment fault can happen when PnetCDF
+        tries to byte-swap a read-only memory.
+
+-------------------------------------
 version  1.4.0 (November 17 2013)
 -------------------------------------
 
