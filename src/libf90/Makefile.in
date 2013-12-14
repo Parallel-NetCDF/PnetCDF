@@ -35,20 +35,22 @@ F90_SRCS = nfmpi_constants.f90 \
            nf90_constants.f90 \
            overloads.f90 \
            visibility.f90 \
-           api.f90 \
            file.f90 \
            dims.f90 \
-           attributes.f90 \
            variables.f90 \
            pnetcdf.f90
 
-SRCS = $(F90_SRCS) $(M4_SRCS:.m4=.f90)
+SRCS     = $(F90_SRCS) $(M4_SRCS:.m4=.f90) \
+           api.f90 \
+           attributes.f90
 
 LIB_OBJS = pnetcdf.o
 
 PACKING_LIST = $(F90_SRCS) \
                $(M4_SRCS) \
                Makefile.in \
+               api.f90.in \
+               attributes.f90.in \
                varn_interface.m4 \
                varnx_interface.m4
 
@@ -56,7 +58,7 @@ PACKING_LIST = $(F90_SRCS) \
 # save them for future use.
 
 GARBAGE		= $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90)
-DIST_GARBAGE	=
+DIST_GARBAGE	= api.f90 attributes.f90
 
 all: $(MANUAL) $(PNETCDF_MOD) $(LIBRARY)
 
