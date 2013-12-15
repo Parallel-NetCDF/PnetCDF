@@ -840,7 +840,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 				     my_req[myrank].count, 
                                      stride, 
                                      NULL,
-				     cbuf+buf_offset[myrank], 
+				     (char*)cbuf+buf_offset[myrank], 
 				     buf_count_my[myrank],
 				     (!buftype_is_contig?ptype:buftype),
 				     &array_of_requests[nasyncios++],
@@ -1007,7 +1007,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             printf("rank(%d): send to rank %d: buf_offset[%d]=%d, buf_count_my[%d]=%d\n", myrank, i, i, buf_offset[i], i, buf_count_my[i]);
 #endif
 
-	    MPI_Isend(cbuf+buf_offset[i], buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
+	    MPI_Isend((char*)cbuf+buf_offset[i], buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
         } /* end if() */
     } /* end for() */     
 

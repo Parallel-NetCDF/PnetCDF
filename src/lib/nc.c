@@ -1013,7 +1013,7 @@ ncmpii_NC_enddef(NC *ncp)
     char value[MPI_MAX_INFO_VAL];
     MPI_Offset h_align, v_align, all_var_size;
 #ifdef ENABLE_SUBFILING
-    NC *ncp_sf;
+    NC *ncp_sf=NULL;
 #endif
 
     assert(!NC_readonly(ncp));
