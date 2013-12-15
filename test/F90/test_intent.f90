@@ -5,7 +5,8 @@
 ! $Id$
 
 !
-! This program tests put_att on Little Endian
+! This program tests put_att on Little Endian when using parameter
+! buffer (read-only memory)
 !
       subroutine check(err, message)
           use mpi
@@ -30,8 +31,21 @@
           integer argc, IARGC, err, rank
           integer cmode, ncid
 
-          integer buf(3)
-          PARAMETER(buf=(/1,2,3/))
+          character(LEN=3)  cbuf
+          integer*1        i1buf(3)
+          integer*2         sbuf(3)
+          integer           ibuf(3)
+          real              rbuf(3)
+          double precision  dbuf(3)
+          integer*8        i8buf(3)
+
+          PARAMETER( cbuf="123")
+          PARAMETER(i1buf=(/1,2,3/))
+          PARAMETER( sbuf=(/1,2,3/))
+          PARAMETER( ibuf=(/1,2,3/))
+          PARAMETER( rbuf=(/1.0,2.0,3.0/))
+          PARAMETER( dbuf=(/1.0,2.0,3.0/))
+          PARAMETER(i8buf=(/1_8,2_8,3_8/))
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -52,11 +66,35 @@
                                MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
 
-          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'attr1', buf)
+          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_text', cbuf)
+          call check(err, 'In nf90mpi_put_att: ')
+          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_int1', i1buf)
+          call check(err, 'In nf90mpi_put_att: ')
+          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_int2', sbuf)
+          call check(err, 'In nf90mpi_put_att: ')
+          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_int', ibuf)
+          call check(err, 'In nf90mpi_put_att: ')
+          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_real', rbuf)
+          call check(err, 'In nf90mpi_put_att: ')
+          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_double', dbuf)
+          call check(err, 'In nf90mpi_put_att: ')
+          err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_int8', i8buf)
           call check(err, 'In nf90mpi_put_att: ')
 
-          err = nfmpi_put_att_int(ncid, NF_GLOBAL, 'attr2', NF_INT, 3_8, buf)
+          err = nfmpi_put_att_text(ncid, NF_GLOBAL, 'nf_attr_text', 3_8, cbuf)
+          call check(err, 'In nfmpi_put_att_text: ')
+          err = nfmpi_put_att_int1(ncid, NF_GLOBAL, 'nf_attr_int1', NF_INT1, 3_8, i1buf)
+          call check(err, 'In nfmpi_put_att_int1: ')
+          err = nfmpi_put_att_int2(ncid, NF_GLOBAL, 'nf_attr_int2', NF_INT2, 3_8, sbuf)
+          call check(err, 'In nfmpi_put_att_int2: ')
+          err = nfmpi_put_att_int(ncid, NF_GLOBAL, 'nf_attr_int', NF_INT, 3_8, ibuf)
           call check(err, 'In nfmpi_put_att_int: ')
+          err = nfmpi_put_att_real(ncid, NF_GLOBAL, 'nf_attr_real', NF_FLOAT, 3_8, rbuf)
+          call check(err, 'In nfmpi_put_att_real: ')
+          err = nfmpi_put_att_double(ncid, NF_GLOBAL, 'nf_attr_double', NF_DOUBLE, 3_8, dbuf)
+          call check(err, 'In nfmpi_put_att_double: ')
+          err = nfmpi_put_att_int8(ncid, NF_GLOBAL, 'nf_attr_int8', NF_INT64, 3_8, i8buf)
+          call check(err, 'In nfmpi_put_att_int8: ')
 
           ! close the file
           err = nf90mpi_close(ncid)

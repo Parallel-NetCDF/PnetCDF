@@ -100,7 +100,7 @@ AC_SUBST(RM)
 
 AC_ARG_ENABLE(echo,
    [AS_HELP_STRING([--enable-echo],
-                   [Turn on strong echoing. @<:@default: no@:>@])],
+                   [Turn on strong echoing. @<:@default: disabled@:>@])],
    [set -x]
 )
 
@@ -254,7 +254,7 @@ AC_ARG_ENABLE([mpi-io-test],
                    [Disable check for MPI-IO support in MPI implementation,
                     if you know your MPI implementation has MPI-IO support
                     but the configure test fails to find it.
-                    @<:@default: no@:>@])],
+                    @<:@default: enabled@:>@])],
    [enable_mpi_io_test=${enableval}], [enable_mpi_io_test=yes]
 )
 
@@ -292,7 +292,7 @@ dnl and I was having a tough time figuring out how to get it back! -- RobR
 dnl Note this must be done after the type of C compiler is determined
 AC_ARG_ENABLE(strict,
     [AS_HELP_STRING([--enable-strict],
-                    [Turn on strict debugging with gcc. @<:@default: no@:>@])],
+                    [Turn on strict debugging with gcc. @<:@default: disabled@:>@])],
     [enable_strict=${enableval}], [enable_strict=no]
 )
 
@@ -310,7 +310,7 @@ AC_SUBST(CXXCPPFLAGS)
 AC_ARG_ENABLE(fortran,
     [AS_HELP_STRING([--disable-fortran],
                     [Turn off support for the Fortran interface,
-                     if you only need the C interface. @<:@default: no@:>@])],
+                     if you only need the C interface. @<:@default: enabled@:>@])],
     [enable_fortran=${enableval}], [enable_fortran=auto]
 )
 
@@ -355,12 +355,22 @@ if test "x${MPIF90}" != x ; then
    UD_FC_PP_DEFINE
 
    AC_LANG_PUSH([Fortran])
+
+   dnl get flag for Fortran free form (this flag is only used in testing)
+   saved_FCFLAGS=${FCFLAGS}
+   AC_FC_FREEFORM
+   dnl FFREEFORMFLAG=${FCFLAGS#$saved_FCFLAGS}
+   FFREEFORMFLAG=${ac_cv_fc_freeform}
+   UD_MSG_DEBUG([FC=$FC FCFLAGS=$FCFLAGS FFREEFORMFLAG=$FFREEFORMFLAG])
+   FCFLAGS=${saved_FCFLAGS}
+
    AC_FC_SRCEXT([f90])
    AC_SUBST(FCFLAGS_f90)
 
    AC_COMPILE_IFELSE([AC_LANG_CALL([],[MPI_Comm_rank])],
                      [valid_mpif90=yes],[valid_mpif90=no]
    )
+   AC_FC_SRCEXT([f])
    AC_LANG_POP([Fortran])
    if test "x${valid_mpif90}" = xno && test "x${enable_fortran}" = xyes ; then
       AC_MSG_ERROR([
@@ -458,6 +468,7 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(F90LIBS)
    AC_SUBST(FLDFLAGS)
    AC_SUBST(F90LDFLAGS)
+   AC_SUBST(FFREEFORMFLAG)
 fi
 
 AC_PROG_INSTALL
@@ -774,7 +785,7 @@ dnl mess up other checks
 dnl
 AC_ARG_ENABLE([coverage],
    [AS_HELP_STRING([--enable-coverage],
-       [Compile with coverage support (gcc-based only). @<:@default: no@:>@])],
+       [Compile with coverage support (gcc-based only). @<:@default: disabled@:>@])],
    [enable_coverage=${enableval}], [enable_coverage=no]
 )
 if test "x${enable_coverage}" = xyes; then
@@ -801,7 +812,7 @@ chmod u+x ${srcdir}/scripts/install-sh
 
 AC_ARG_ENABLE([subfiling],
    [AS_HELP_STRING([--enable-subfiling],
-                   [Turns on subfiling support. @<:@default: no@:>@])],
+                   [Turns on subfiling support. @<:@default: disabled@:>@])],
    [enable_subfiling=${enableval}], [enable_subfiling=no]
 )
 if test "x$enable_subfiling" = "xyes" ; then
@@ -825,7 +836,7 @@ AC_SUBST(BUILDDIR)
 AC_ARG_ENABLE([file-sync],
     [AS_HELP_STRING([--disable-file-sync],
                     [Disable MPI file sync if you know your file system can
-                     provide data consistency. @<:@default: no@:>@])],
+                     provide data consistency. @<:@default: enabled@:>@])],
     [file_sync=${enableval}], [file_sync=yes]
 )
 if test "x${file_sync}" = xno ; then

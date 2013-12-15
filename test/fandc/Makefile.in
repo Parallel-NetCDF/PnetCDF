@@ -17,11 +17,12 @@ FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  += -L../../src/lib -L../common
 LIBS     := -lpnetcdf $(LIBS) $(MATHLIB) @LCOV_LIB@
 
-C_SRCS = pnctest.c \
-         csnap.c
+C_SRCS   = pnctest.c \
+           csnap.c
 
 F77_SRCS = pnf_test.f \
-           pnctestf.f
+           pnctestf.f \
+           freeform.f
 
 F90_SRCS =
 
@@ -50,6 +51,12 @@ pnctestf: pnctestf.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 pnf_test:  pnf_test.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+freeform.o: freeform.f
+	$(COMPILE.f) @FFREEFORMFLAG@ $<
+
+freeform: freeform.o
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 testing check verbose_testing:
