@@ -127,12 +127,12 @@ C On exit, any open netCDF files are closed.
         integer err, flags
         integer ncid
         integer ncid2
-        integer         nok
+        integer nok
 
         nok = 0
 
-C       /* Try to open a nonexistent file */
-        err = nfmpi_open(comm, 'tooth-fairy.nc', NF_NOWRITE, info, ncid)!/* should fail */
+!       Try to open a nonexistent file, this call should fail
+        err = nfmpi_open(comm, 'tooth-fairy.nc', NF_NOWRITE, info, ncid)
         if (err .eq. NF_NOERR) then
             call error
      +      ('nfmpi_open of nonexistent file should have failed')
