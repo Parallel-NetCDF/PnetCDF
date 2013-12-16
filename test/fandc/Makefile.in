@@ -53,12 +53,14 @@ pnctestf: pnctestf.o $(LIBRARY)
 pnf_test:  pnf_test.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
+# check F77 program to see if accept Fortran free form
 freeform.o: freeform.f
 	$(COMPILE.f) @FFREEFORMFLAG@ $<
 
 freeform: freeform.o
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
+# check F90 program to see if accept Fortran fixed form
 fixedform.o: fixedform.f90
 	$(COMPILE.f90) @FFIXEDFORMFLAG@ $<
 

@@ -1293,7 +1293,7 @@ dnl steal from autoconf 2.69
 #        -ffree-form: GNU g77, gfortran, g95
 #         -FR, -free: Intel compiler (icc, ecc, ifort)
 #              -free: Compaq compiler (fort), Sun compiler (f95)
-#             -qfree: IBM compiler (xlf)
+# -qfree=f90, -qfree: IBM compiler (xlf)
 # -Mfree, -Mfreeform: Portland Group compiler
 #          -freeform: SGI compiler
 #        -8, -f free: Absoft Fortran
@@ -1309,7 +1309,7 @@ AC_CACHE_CHECK([for Fortran flag needed to accept free-form source],
 	       [ac_cv_fc_freeform],
 [ac_cv_fc_freeform=unknown
 ac_fc_freeform_FCFLAGS_save=$FCFLAGS
-for ac_flag in none -ffree-form -FR -free -qfree -Mfree -Mfreeform \
+for ac_flag in none -ffree-form -FR -free -qfree=f90 -qfree -Mfree -Mfreeform \
 	       -freeform "-f free" -8 +source=free -nfix --nfix -Free
 do
   test "x$ac_flag" != xnone && FCFLAGS="$ac_fc_freeform_FCFLAGS_save $ac_flag"
