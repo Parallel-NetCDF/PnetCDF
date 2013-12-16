@@ -1280,7 +1280,70 @@ esac])dnl
 ])
 
 dnl steal from autoconf 2.69
-# UD_FC_FIXEDFORM([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# AC_FC_FREEFORM([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# ------------------------------------------------------------------
+# Look for a compiler flag to make the Fortran (FC) compiler accept
+# free-format source code, and adds it to FCFLAGS.  Call
+# ACTION-IF-SUCCESS (defaults to nothing) if successful (i.e. can
+# compile code using new extension) and ACTION-IF-FAILURE (defaults to
+# failing with an error message) if not.  (Defined via DEFUN_ONCE to
+# prevent flag from being added to FCFLAGS multiple times.)
+#
+# The known flags are:
+#        -ffree-form: GNU g77, gfortran, g95
+#         -FR, -free: Intel compiler (icc, ecc, ifort)
+#              -free: Compaq compiler (fort), Sun compiler (f95)
+#             -qfree: IBM compiler (xlf)
+# -Mfree, -Mfreeform: Portland Group compiler
+#          -freeform: SGI compiler
+#        -8, -f free: Absoft Fortran
+#       +source=free: HP Fortran
+#    (-)-nfix, -Free: Lahey/Fujitsu Fortran
+#              -free: NAGWare
+#         -f, -Wf,-f: f2c (but only a weak form of "free-form" and long lines)
+# We try to test the "more popular" flags first, by some prejudiced
+# notion of popularity.
+AC_DEFUN_ONCE([UD_FC_FREEFORM],
+[AC_LANG_PUSH([Fortran])dnl
+AC_CACHE_CHECK([for Fortran flag needed to accept free-form source],
+	       [ac_cv_fc_freeform],
+[ac_cv_fc_freeform=unknown
+ac_fc_freeform_FCFLAGS_save=$FCFLAGS
+for ac_flag in none -ffree-form -FR -free -qfree -Mfree -Mfreeform \
+	       -freeform "-f free" -8 +source=free -nfix --nfix -Free
+do
+  test "x$ac_flag" != xnone && FCFLAGS="$ac_fc_freeform_FCFLAGS_save $ac_flag"
+dnl Use @&t@ below to ensure that editors don't turn 8+ spaces into tab.
+  AC_COMPILE_IFELSE([[
+  program freeform
+       ! FIXME: how to best confuse non-freeform compilers?
+       print *, 'Hello ', &
+     @&t@     'world.'
+       end]],
+		    [ac_cv_fc_freeform=$ac_flag; break])
+done
+${RM} -f conftest.err conftest.$ac_objext conftest.$ac_ext
+FCFLAGS=$ac_fc_freeform_FCFLAGS_save
+])
+if test "x$ac_cv_fc_freeform" = xunknown; then
+  m4_default([$2],
+	     [AC_MSG_WARN([Fortran does not accept free-form source], 77)])
+  ac_cv_fc_freeform=
+else
+  dnl Do not append to FCFLAGS
+  dnl if test "x$ac_cv_fc_freeform" != xnone; then
+  dnl   FCFLAGS="$FCFLAGS $ac_cv_fc_freeform"
+  dnl fi
+  if test "x$ac_cv_fc_freeform" = xnone; then
+     ac_cv_fc_freeform=
+  fi
+  $1
+fi
+AC_LANG_POP([Fortran])dnl
+])# AC_FC_FREEFORM
+
+dnl steal from autoconf 2.69
+# AC_FC_FIXEDFORM([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
 # ------------------------------------------------------------------
 # Look for a compiler flag to make the Fortran (FC) compiler accept
 # fixed-format source code, and adds it to FCFLAGS.  Call
@@ -1323,13 +1386,18 @@ FCFLAGS=$ac_fc_fixedform_FCFLAGS_save
 ])
 if test "x$ac_cv_fc_fixedform" = xunknown; then
   m4_default([$2],
-             [AC_MSG_ERROR([Fortran does not accept fixed-form source], 77)])
+             [AC_MSG_WARN([Fortran does not accept fixed-form source], 77)])
+  ac_cv_fc_fixedform=
 else
-  if test "x$ac_cv_fc_fixedform" != xnone; then
-    FCFLAGS="$FCFLAGS $ac_cv_fc_fixedform"
+  dnl Do not append to FCFLAGS
+  dnl if test "x$ac_cv_fc_fixedform" != xnone; then
+  dnl   FCFLAGS="$FCFLAGS $ac_cv_fc_fixedform"
+  dnl fi
+  if test "x$ac_cv_fc_fixedform" = xnone; then
+     ac_cv_fc_fixedform=
   fi
   $1
 fi
 AC_LANG_POP([Fortran])dnl
-])# UD_FC_FIXEDFORM
+])# AC_FC_FIXEDFORM
 

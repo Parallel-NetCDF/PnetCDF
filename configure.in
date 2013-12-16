@@ -355,33 +355,13 @@ if test "x${MPIF90}" != x ; then
    UD_FC_PP_DEFINE
 
    AC_LANG_PUSH([Fortran])
-
-   dnl get flag for Fortran free form (this flag is only used in testing)
-   saved_FCFLAGS=${FCFLAGS}
-   AC_FC_FREEFORM
-   dnl FFREEFORMFLAG=${FCFLAGS#$saved_FCFLAGS}
-   if [test "x${ac_cv_fc_freeform}" != xnone] && [test "x${ac_cv_fc_freeform}" != xunknown] ; then
-      FFREEFORMFLAG=${ac_cv_fc_freeform}
-   else
-      FFREEFORMFLAG=
-   fi
-   UD_MSG_DEBUG([FC=$FC FCFLAGS=$FCFLAGS FFREEFORMFLAG=$FFREEFORMFLAG])
-   FCFLAGS=${saved_FCFLAGS}
-
    AC_FC_SRCEXT([f90])
    AC_SUBST(FCFLAGS_f90)
 
    dnl get flag for Fortran fixed form (this flag is only used in testing)
-   saved_FCFLAGS=${FCFLAGS}
    UD_FC_FIXEDFORM
-   dnl FFIXEDFORMFLAG=${FCFLAGS#$saved_FCFLAGS}
-   if [test "x${ac_cv_fc_fixedform}" != xnone] && [test "x${ac_cv_fc_fixedform}" != xunknown] ; then
-      FFIXEDFORMFLAG=${ac_cv_fc_fixedform}
-   else
-      FFIXEDFORMFLAG=
-   fi
+   FFIXEDFORMFLAG=${ac_cv_fc_fixedform}
    UD_MSG_DEBUG([FC=$FC FCFLAGS=$FCFLAGS FFIXEDFORMFLAG=$FFIXEDFORMFLAG])
-   FCFLAGS=${saved_FCFLAGS}
 
    AC_COMPILE_IFELSE([AC_LANG_CALL([],[MPI_Comm_rank])],
                      [valid_mpif90=yes],[valid_mpif90=no]
@@ -404,6 +384,14 @@ if test "x${MPIF77}" != x ; then
    F77=${MPIF77}
    AC_PROG_F77
    dnl FFLAGS is set in AC_PROG_F77
+
+   dnl get flag for Fortran free form (this flag is only used in testing)
+   FC_saved=${FC}
+   FC=${F77}
+   UD_FC_FREEFORM
+   FFREEFORMFLAG=${ac_cv_fc_freeform}
+   UD_MSG_DEBUG([FC=$FC FCFLAGS=$FCFLAGS FFREEFORMFLAG=$FFREEFORMFLAG])
+   FC=${FC_saved}
 
    AC_LANG_PUSH([Fortran 77])
    AC_COMPILE_IFELSE([AC_LANG_CALL([],[MPI_Comm_rank])],
