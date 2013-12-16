@@ -332,10 +332,8 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
                 int min, max;
                 
 		dim_sz = dpp[vpp[i]->dimids[j]]->size; /* init both to org dim sz */
-		/* determine the most significant dimension */
-		if (j == par_dim_id) {
-		    x = (double)(dpp[vpp[i]->dimids[j]]->size)/(double)(ncp->nc_num_subfiles);
-		}
+		/* determine partition ratio */
+		x = (double)(dpp[vpp[i]->dimids[j]]->size)/(double)(ncp->nc_num_subfiles);
                 
 		/* don't partition dim if dim size is less than ratio x */
 		if ((int)x < 1 && j == par_dim_id)
