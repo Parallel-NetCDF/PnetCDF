@@ -24,7 +24,7 @@ F77_SRCS = pnf_test.f \
            pnctestf.f \
            freeform.f
 
-F90_SRCS =
+F90_SRCS = fixedform.f90
 
 PROGS  = $(C_SRCS:.c=)
 OBJS   = $(C_SRCS:.c=.o)
@@ -58,6 +58,12 @@ freeform.o: freeform.f
 
 freeform: freeform.o
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+fixedform.o: fixedform.f90
+	$(COMPILE.f90) @FFIXEDFORMFLAG@ $<
+
+fixedform: fixedform.o
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 testing check verbose_testing:
 
