@@ -21,6 +21,7 @@
         err = nfmpi_create(MPI_COMM_WORLD, filename, IOR(NF_CLOBBER,    &
      &                     NF_64BIT_DATA), MPI_INFO_NULL, ncid)
 
+        err = nfmpi_enddef(ncid)
         err = nfmpi_close(ncid)
 
         call MPI_Finalize(err)
