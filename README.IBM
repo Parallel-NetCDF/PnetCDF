@@ -23,17 +23,6 @@ nodes are available).
 ./configure --host powerpc64-bgq-linux --build ppc64-redhat-linux \
             MPICC=mpicc MPICXX=mpicxx MPIF77=mpif77 MPIF90=mpif90
 
-* You might see errors similar to below when running "make" in test/fandc, try
-  set the environment variable DARSHAN_DISABLE to 1.
-  /soft/perftools/darshan/darshan-2.2.7/lib/libdarshan-mpi-io.a(darshan-pnetcdf.o): In function `__wrap_ncmpi_close':
-  /soft/perftools/darshan/darshan-2.2.7/build/darshan-2.2.7/darshan-runtime/lib/darshan-pnetcdf.c:152: undefined reference to `ncmpi_close'
-  /soft/perftools/darshan/darshan-2.2.7/lib/libdarshan-mpi-io.a(darshan-pnetcdf.o): In function `__wrap_ncmpi_open':
-  /soft/perftools/darshan/darshan-2.2.7/build/darshan-2.2.7/darshan-runtime/lib/darshan-pnetcdf.c:108: undefined reference to `ncmpi_open'
-  /soft/perftools/darshan/darshan-2.2.7/lib/libdarshan-mpi-io.a(darshan-pnetcdf.o): In function `__wrap_ncmpi_create':
-  /soft/perftools/darshan/darshan-2.2.7/build/darshan-2.2.7/darshan-runtime/lib/darshan-pnetcdf.c:62: undefined reference to `ncmpi_create'
-  collect2: ld returned 1 exit status
-
-
 It's possible to build pnetcdf with the IBM xl compilers:
 
 ./configure --host powerpc64-bgq-linux --build ppc64-redhat-linux \
