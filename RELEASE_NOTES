@@ -2,7 +2,7 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
-version  1.4.1 (December 14 2013)
+version  1.4.1 (December 20 2013)
 -------------------------------------
 
   o Bug fix:
@@ -19,6 +19,18 @@ version  1.4.1 (December 14 2013)
         does in-place byte-swap on user's put buffer. If user's buffer is
         declared as parameter, then segment fault can happen when PnetCDF
         tries to byte-swap a read-only memory.
+
+  o Subfiling
+    * Subfiling is a new PnetCDF feature that divides a file transparently
+      into several smaller subfiles and each subfile stores subarrays
+      in CDF file formats. The file name supplied by the users serves as a
+      master file that contains all metadata about array partitioning
+      information among the subfiles. Because data partitioning is made
+      transparnetly from users, data accessing is kept the same through
+      the conventional PnetCDF APIs and the master file.
+    * To enable this feature at configure time, add configure option
+      "--enable-subfiling".
+
 
 -------------------------------------
 version  1.4.0 (November 17 2013)
