@@ -4,7 +4,7 @@ dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
 AC_PREREQ(2.59)
-AC_INIT([parallel-netcdf], [1.4.0], [parallel-netcdf@mcs.anl.gov])
+AC_INIT([parallel-netcdf], [1.4.1], [parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
 AC_CONFIG_HEADERS([src/lib/ncconfig.h])

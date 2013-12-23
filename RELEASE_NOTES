@@ -2,7 +2,7 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
-version  1.4.1 (December 20 2013)
+version  1.4.1 (December 23 2013)
 -------------------------------------
 
   o Bug fix:
@@ -22,7 +22,7 @@ version  1.4.1 (December 20 2013)
 
   o Subfiling
     * Subfiling is a new PnetCDF feature that divides a file transparently
-      into several smaller subfiles and each subfile stores subarrays
+      into several smaller subfiles, each of which stores subarrays
       in CDF file formats. The file name supplied by the users serves as a
       master file that contains all metadata about array partitioning
       information among the subfiles. Because data partitioning is made
