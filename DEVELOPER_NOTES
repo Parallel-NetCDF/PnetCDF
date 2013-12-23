@@ -3,7 +3,7 @@ $Id$
 =====================================================
 Tasks before a new release
 =====================================================
- - Edit the release version
+ - Edit the release version and date
 
    $PNETCDF_VERSION is defined in configure.in, the 2nd argument of AC_INIT
    call. Revise that string and do svn commit to update the svn property
@@ -13,6 +13,7 @@ Tasks before a new release
 
  - Copy file "sneak_peek" to file "RELEASE_NOTES"
    clear up file sneak_peek
+   add release date
 
  - create an SVN tag by running the below command to copy from the
    current trunk:
