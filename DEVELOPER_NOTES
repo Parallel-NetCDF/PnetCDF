@@ -19,8 +19,8 @@ Tasks before a new release
    current trunk:
 
    svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-            https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1.4.0.pre1 \
-            -m "Tagging pre-release version 1.4.0.pre1"
+            https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-4-1 \
+            -m "Tagging pre-release version 1.4.1"
 
  - run command "autoreconf"
 
