@@ -29,7 +29,10 @@
 
           character(LEN=128) filename, cmd
           integer argc, IARGC, err, rank
-          integer cmode, ncid
+          integer cmode, ncid, varid, dimid(1), req(1), status(1)
+          integer(kind=MPI_OFFSET_KIND) start(1)
+          integer(kind=MPI_OFFSET_KIND) count(1)
+          integer(kind=MPI_OFFSET_KIND) bufsize
 
           character(LEN=3)  cbuf
           integer*1        i1buf(3)
@@ -95,6 +98,36 @@
           call check(err, 'In nfmpi_put_att_double: ')
           err = nfmpi_put_att_int8(ncid, NF_GLOBAL, 'nf_attr_int8', NF_INT64, 3_8, i8buf)
           call check(err, 'In nfmpi_put_att_int8: ')
+
+          ! define a variable of an integer array of size 3 in the nc file
+          err = nfmpi_def_dim(ncid, 'X', 3_MPI_OFFSET_KIND, dimid(1))
+          call check(err, 'In nfmpi_def_dim: ')
+
+          err = nfmpi_def_var(ncid, 'var', NF_INT, 1, dimid, varid)
+          call check(err, 'In nfmpi_def_var: ')
+
+          err = nfmpi_enddef(ncid)
+          call check(err, 'In nfmpi_enddef: ')
+
+          ! bufsize must be max of data type converted before and after
+          bufsize = 3*4
+          err = nfmpi_buffer_attach(ncid, bufsize)
+          call check(err, 'In nfmpi_buffer_attach: ')
+
+          start(1) = 1
+          count(1) = 3
+          err = nfmpi_bput_vara_int(ncid, varid, start, count, ibuf(1), req(1))
+          call check(err, 'In nfmpi_bput_vara_int: ')
+
+          err = nfmpi_wait_all(ncid, 1, req, status)
+          call check(err, 'In nfmpi_wait_all: ')
+
+          if (status(1) .ne. NF_NOERR) then
+              print*,'Error at bput status ', nfmpi_strerror(status(1))
+          endif
+
+          err = nfmpi_buffer_detach(ncid)
+          call check(err, 'In nfmpi_buffer_detach: ')
 
           ! close the file
           err = nf90mpi_close(ncid)

@@ -38,7 +38,7 @@
           include "pnetcdf.inc"
 
           integer NDIMS, NUM_VARS, BUFSIZE
-          PARAMETER(NDIMS=3, NUM_VARS=10, BUFSIZE=512)
+          PARAMETER(NDIMS=3, NUM_VARS=10, BUFSIZE=1000)
 
           character(LEN=128) filename, cmd, str
           integer i, cmode, argc, iargc, err
@@ -48,6 +48,7 @@
           integer req(NUM_VARS), st(NUM_VARS)
           integer(kind=MPI_OFFSET_KIND) gsizes(NDIMS)
           integer(kind=MPI_OFFSET_KIND) starts(NDIMS), counts(NDIMS)
+          integer(kind=MPI_OFFSET_KIND) bbufsize
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -68,6 +69,10 @@
              call getarg(2, str)
              read (str,'(I10)') len
           endif
+          if (len .GT. 10) then
+             print*,'Maximum len is 10, change it to 10'
+             len = 10
+          endif
 
           do i=1,NDIMS
              psizes(i) = 0
@@ -79,10 +84,12 @@
           starts(2) = mod((rank / psizes(2)), psizes(2))
           starts(3) = mod((rank / (psizes(1) * psizes(2))), psizes(3))
 
+          bbufsize = 1
           do i=1,NDIMS
               gsizes(i) = len * psizes(i)
               starts(i) = starts(i) * len + 1
               counts(i) = len
+              bbufsize  = bbufsize * len
           enddo
 
           buf = rank
@@ -113,7 +120,7 @@
           err = nfmpi_enddef(ncid)
           call check(err, 'In nfmpi_enddef: ')
 
-          ! write one variable at a time
+          ! write one variable at a time using iput
           do i=1, NUM_VARS
              write(str,'(I2)') i
              err = nfmpi_iput_vara_int(ncid, varids(i), starts,
@@ -130,6 +137,36 @@
              write(str,'(I2)') i
              call check(st(i), 'In nfmpi_wait_all req '//trim(str))
           enddo
+
+          ! write one variable at a time using bput
+
+          ! bbufsize must be max of data type converted before and after
+          bbufsize = bbufsize * NUM_VARS * 4  ! 4 is size of integer
+          err = nfmpi_buffer_attach(ncid, bbufsize)
+          call check(err, 'In nfmpi_buffer_attach')
+
+           do i=1, NUM_VARS
+             write(str,'(I2)') i
+             err = nfmpi_bput_vara_int(ncid, varids(i), starts,
+     +                                 counts, buf(:,i), req(i))
+             call check(err, 'In nfmpi_bput_vara_int '//trim(str))
+
+             ! can safely change the contents of buf(:,i) now
+           enddo
+
+          ! wait for the nonblocking I/O to complete
+          err = nfmpi_wait_all(ncid, NUM_VARS, req, st)
+          call check(err, 'In nfmpi_wait_all')
+
+          ! check the status of each nonblocking request
+          do i=1, NUM_VARS
+             write(str,'(I2)') i
+             call check(st(i), 'In nfmpi_wait_all req '//trim(str))
+          enddo
+
+          ! detach the temporary buffer
+          err = nfmpi_buffer_detach(ncid)
+          call check(err, 'In nfmpi_buffer_detach')
 
           ! close the file
           err = nfmpi_close(ncid);
