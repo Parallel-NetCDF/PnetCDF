@@ -83,6 +83,7 @@ int main(int argc, char **argv)
     char *filename="testfile.nc", str[512];
     int ncid, dimids[NDIMS], varids[NUM_VARS], req[NUM_VARS], st[NUM_VARS];
     MPI_Offset starts[NDIMS], counts[NDIMS], write_size, sum_write_size;
+    MPI_Offset bbufsize;
     MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
@@ -158,7 +159,7 @@ int main(int argc, char **argv)
     err = ncmpi_get_file_info(ncid, &info_used);
     HANDLE_ERROR
 
-    /* write one variable at a time */
+    /* write one variable at a time using iput */
     for (i=0; i<NUM_VARS; i++) {
         err = ncmpi_iput_vara_int(ncid, varids[i], starts, counts, buf[i], &req[i]);
         HANDLE_ERROR
@@ -172,6 +173,32 @@ int main(int argc, char **argv)
             printf("Error: nonblocking write fails on request %d (%s)\n",
                    i, ncmpi_strerror(st[i]));
     }
+
+    /* write one variable at a time using bput */
+
+    /* bbufsize must be max of data type converted before and after */
+    bbufsize = bufsize * NUM_VARS * sizeof(int);
+    err = ncmpi_buffer_attach(ncid, bbufsize);
+    HANDLE_ERROR
+
+    for (i=0; i<NUM_VARS; i++) {
+        err = ncmpi_bput_vara_int(ncid, varids[i], starts, counts, buf[i], &req[i]);
+        HANDLE_ERROR
+        /* can safely change contents or free up the buf[i] here */
+    }
+
+    /* wait for the nonblocking I/O to complete */
+    err = ncmpi_wait_all(ncid, NUM_VARS, req, st);
+    HANDLE_ERROR
+    for (i=0; i<NUM_VARS; i++) {
+        if (st[i] != NC_NOERR)
+            printf("Error: nonblocking write fails on request %d (%s)\n",
+                   i, ncmpi_strerror(st[i]));
+    }
+
+    /* detach the temporary buffer */
+    err = ncmpi_buffer_detach(ncid);
+    HANDLE_ERROR
 
     MPI_Offset put_size;
     ncmpi_inq_put_size(ncid, &put_size);

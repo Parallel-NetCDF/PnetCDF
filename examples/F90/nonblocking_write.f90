@@ -48,6 +48,7 @@
           integer req(NUM_VARS), st(NUM_VARS)
           integer(kind=MPI_OFFSET_KIND) gsizes(NDIMS)
           integer(kind=MPI_OFFSET_KIND) starts(NDIMS), counts(NDIMS)
+          integer(kind=MPI_OFFSET_KIND) bbufsize
 
           ! define an array of pointers
           type intp
@@ -125,12 +126,12 @@
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 
-          ! write one variable at a time
+          ! write one variable at a time using iput
           do i=1, NUM_VARS
              write(str,'(I2)') i
              err = nf90mpi_iput_var(ncid, varids(i), buf(i)%p, req(i), &
                                     starts, counts)
-             call check(err, 'In nf90mpi_iput_vara_int '//trim(str))
+             call check(err, 'In nf90mpi_iput_var '//trim(str))
           enddo
 
           ! wait for the nonblocking I/O to complete
@@ -143,13 +144,40 @@
              call check(st(i), 'In nf90mpi_wait_all req '//trim(str))
           enddo
 
+          ! write one variable at a time using bput
+
+          ! bbufsize must be max of data type converted before and after
+          bbufsize = bufsize * NUM_VARS * 4  ! 4 is size of integer
+          err = nf90mpi_buffer_attach(ncid, bbufsize)
+          call check(err, 'In nf90mpi_buffer_attach')
+
+          do i=1, NUM_VARS
+             write(str,'(I2)') i
+             err = nf90mpi_bput_var(ncid, varids(i), buf(i)%p, req(i), &
+                                    starts, counts)
+             call check(err, 'In nf90mpi_bput_var '//trim(str))
+
+             ! can safely free up the buffer here
+             deallocate(buf(i)%p)
+          enddo
+
+          ! wait for the nonblocking I/O to complete
+          err = nf90mpi_wait_all(ncid, NUM_VARS, req, st)
+          call check(err, 'In nf90mpi_wait_all')
+
+          ! check the status of each nonblocking request
+          do i=1, NUM_VARS
+             write(str,'(I2)') i
+             call check(st(i), 'In nf90mpi_wait_all req '//trim(str))
+          enddo
+
+          ! detach the temporary buffer
+          err = nf90mpi_buffer_detach(ncid)
+          call check(err, 'In nf90mpi_buffer_detach')
+
           ! close the file
           err = nf90mpi_close(ncid);
           call check(err, 'In nf90mpi_close')
-
-          do i=1, NUM_VARS
-             deallocate(buf(i)%p)
-          enddo
 
  999      call MPI_Finalize(err)
 
