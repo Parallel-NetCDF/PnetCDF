@@ -2332,20 +2332,14 @@ sub ncfxutil {
     $OUTFD = "NCFXUTIL";
     open( $OUTFD, ">nfxutil.c" ) || die "Cannot open nfxutil.c\n";
     $files[$#files+1] = "nfxutil.c";
+    &print_copyright( );
     print $OUTFD "
-#include \"nc.h\"
-#include \"mpinetcdf_impl.h\"
 int ncmpixVardim( int ncid, int varid ) 
 {
-  NC_var *varp;
-  NC     *ncp;
-  int    status;
-
-  status = ncmpii_NC_check_id(ncid, &ncp);
-  if (status != NC_NOERR) return status;
-  varp = ncmpii_NC_lookupvar(ncp, varid);
-  if (varp == NULL) return NC_ENOTVAR;
-  return varp->ndims;
+    int ndims, status;
+    status = ncmpi_inq_varndims(ncid, varid, &ndims);
+    if (status != NC_NOERR) return status;
+    return ndims;
 }\n";
     close ($OUTFD);
 }
