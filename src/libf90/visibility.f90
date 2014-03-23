@@ -17,7 +17,7 @@
             nf90mpi_sync, nf90mpi_abort, nf90mpi_close, nf90mpi_delete
             
   ! File level inquiry
-  public :: nf90mpi_inquire
+  public :: nf90mpi_inquire, nf90mpi_inq_striping
   
   ! Dimension routines
   public :: nf90mpi_def_dim, nf90mpi_inq_dimid, nf90mpi_rename_dim, nf90mpi_inquire_dimension
@@ -84,7 +84,8 @@
         nfmpi_inq_ndims, &
         nfmpi_inq_nvars, &
         nfmpi_inq_natts, &
-        nfmpi_inq_unlimdim
+        nfmpi_inq_unlimdim, &
+        nfmpi_inq_striping
 !
 ! dimension subroutines:
 !

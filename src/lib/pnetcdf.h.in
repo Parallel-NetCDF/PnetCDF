@@ -457,6 +457,8 @@ int ncmpi_inq_file_format(char *filename, int *formatp);
 
 int ncmpi_inq_version(int ncid, int *NC_mode);
 
+int ncmpi_inq_striping(int ncid, int *striping_size, int *striping_count);
+
 int ncmpi_inq_ndims(int ncid, int *ndimsp);
 
 int ncmpi_inq_nvars(int ncid, int *nvarsp);

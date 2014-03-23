@@ -48,6 +48,7 @@ C2F_SRCS = createf.c \
 	inq_formatf.c \
 	inq_file_formatf.c \
 	inq_versionf.c \
+	inq_stripingf.c \
 	inq_ndimsf.c \
 	inq_nvarsf.c \
 	inq_nattsf.c \

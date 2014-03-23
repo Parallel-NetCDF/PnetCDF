@@ -30,6 +30,7 @@ extern FORTRAN_API int FORT_CALL nfmpi_inq_ ( int *v1, MPI_Fint *v2, MPI_Fint *v
 extern FORTRAN_API int FORT_CALL nfmpi_inq_format_ ( int *v1, MPI_Fint *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_file_format_ ( char *v1 FORT_MIXED_LEN(d1), MPI_Fint *v2 FORT_END_LEN(d1) );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_version_ ( int *v1, MPI_Fint *v2 );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_striping_ ( int *v1, MPI_Fint *v2, MPI_Fint *v3 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_ndims_ ( int *v1, MPI_Fint *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_nvars_ ( int *v1, MPI_Fint *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_inq_natts_ ( int *v1, MPI_Fint *v2 );

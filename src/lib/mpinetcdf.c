@@ -962,3 +962,34 @@ ncmpi_inq_get_size(int         ncid,
     *size = ncp->nciop->get_size;
     return NC_NOERR;
 }
+
+/*----< ncmpi_inq_striping() >------------------------------------------------*/
+/* return file (system) striping settings, striping size and count, if they are
+ * available from MPI-IO hint. Otherwise, 0s are returned.
+ */
+int
+ncmpi_inq_striping(int  ncid,
+                   int *striping_size,
+                   int *striping_count)
+{
+    int flag, status=NC_NOERR;
+    char value[MPI_MAX_INFO_VAL];
+    NC *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
+
+    MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    *striping_size = 0;
+    if (flag) *striping_size = atoi(value);
+
+    MPI_Info_get(ncp->nciop->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    *striping_count = 0;
+    if (flag) *striping_count = atoi(value);
+
+    return NC_NOERR;
+}
+
