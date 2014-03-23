@@ -60,6 +60,10 @@ the default configuration of PnetCDF up and running.
 
       make
 
+   Or if "make" runs slow, try parallel make, e.g. (using 8 simultaneous jobs)
+
+      make -j8
+
 (f) Install PnetCDF
 
       make install
@@ -124,7 +128,7 @@ Optional Packages:
 
 PnetCDF can automatically detect the available MPI compilers and compile
 flags. If alternate compilers or flags are desired, they can be specified
-by the follwoing environment variables and/or configure options.
+by the following environment variables and/or configure options.
 
 Some influential environment variables:
     CFLAGS, CPPFLAGS, CXXFLAGS, FFLAGS, FCFLAGS, LDFLAGS and LIBS

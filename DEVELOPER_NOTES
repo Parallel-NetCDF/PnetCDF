@@ -38,7 +38,7 @@ Tasks before a new release
    SHA1(parallel-netcdf-1.4.0.pre1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
 
 
- - Convention of setting version numbders.
+ - Convention of setting version numbers.
    http://semver.org/
 
    Given a version number MAJOR.MINOR.PATCH, increment the:

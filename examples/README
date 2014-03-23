@@ -46,7 +46,7 @@ command and the number of MPI processes.
 
 
 ./C/collective_write.c
-    This example defined NUM_VARS 3D integer non-record vaiables in a file.
+    This example defined NUM_VARS 3D integer non-record variables in a file.
     All variables are partitioned among processes in a 3D block-block-block
     fashion. The I/O is carried out by making NUM_VARS calls to 
     ncmpi_put_vara_int_all(), one for each variable. Performance measurements
@@ -86,8 +86,8 @@ command and the number of MPI processes.
   ./C/get_info.c
 ./F77/get_info.f
 ./F90/get_info.f90
-    These two example progrms print the PnetCDF and MPI-IO hints to the
-    stardard output.
+    These two example programs print the PnetCDF and MPI-IO hints to the
+    standard output.
 
 
   ./C/hints.c
