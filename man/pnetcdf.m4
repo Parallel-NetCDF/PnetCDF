@@ -678,7 +678,7 @@ Learn about a varaible length array type.
 .HP
 FDECL(free_vlen, (nc_vlen_t *vl))
 .sp
-Free memory comsumed by reading data of a varaible length array type.
+Free memory consumed by reading data of a variable length array type.
 .HP
 FDECL(put_vlen_element, (INCID(), INCTYPE(), IVOIDP(vlen_element), ISIZET(len), IVOIDP(data)))
 .sp
@@ -690,7 +690,7 @@ Read one VLEN.
 .HP
 FDECL(free_string, (ISIZET(len), char **data))
 .sp
-Free memory comsumed by reading data of a string type.
+Free memory consumed by reading data of a string type.
 .HP
 FDECL(inq_user_type, (INCID(), INCTYPE(), ONAME(), OSIZET(), ONCTYPE(), OSIZET(), OINT()))
 .sp
@@ -1180,7 +1180,7 @@ FREF(varinq)
 function.
 .TP
 IINDEX()
-specifies the indicial coordinates of the netCDF data value to be accessed.
+specifies the  coordinates of the netCDF data value to be accessed.
 The indices start at ifelse(API,C,0,1);
 thus, for example, the first data value of a
 two-dimensional variable is ifelse(API,C,(0,0),(1,1)).

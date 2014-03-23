@@ -4,7 +4,7 @@ This is essentially a placeholder for the next release note ...
 
   o New APIs
     * ncmpi_inq_striping, nfmpi_inq_striping, nf90mpi_inq_striping report the
-      file system striping settings, strping size and count, if the underneath
+      file system striping settings, striping size and count, if the underneath
       MPI-IO can find their values from the file system.
 
   o Syntax change for Fortran put APIs

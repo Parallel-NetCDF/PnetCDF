@@ -1,7 +1,7 @@
 
 Parallel netCDF (PnetCDF) is a library providing high-performance parallel I/O
 while still maintaining file-format compatibility with Unidata's NetCDF,
-specifically the file foramts CDF and CDF-2. Note starting from version 4,
+specifically the file formats CDF and CDF-2. Note starting from version 4,
 NetCDF supports parallel I/O, but the file format is in HDF5.
 
 NetCDF gives scientific programmers a space-efficient and portable means for
@@ -21,7 +21,7 @@ Requirements:
 
     - Parallel-NetCDF relies on MPI-IO.  ROMIO, the most common MPI-IO
       implementation, can make use of a prefix in front of the file name to
-      specify the underlying file system and override ROMIO's autodetection. A
+      specify the underlying file system and override ROMIO's auto detection. A
       typical prefix would look like "nfs:" or "pvfs2:".  Bear this in mind if
       you use a file name with ':' characters.  In some cases, ROMIO might
       think you are passing in a prefix and will complain about an unsupported

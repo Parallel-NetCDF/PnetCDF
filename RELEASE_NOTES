@@ -26,7 +26,7 @@ version  1.4.1 (December 23 2013)
       in CDF file formats. The file name supplied by the users serves as a
       master file that contains all metadata about array partitioning
       information among the subfiles. Because data partitioning is made
-      transparnetly from users, data accessing is kept the same through
+      transparently from users, data accessing is kept the same through
       the conventional PnetCDF APIs and the master file.
     * To enable this feature at configure time, add configure option
       "--enable-subfiling".
@@ -178,7 +178,7 @@ version  1.4.0 (November 17 2013)
     end of collective calls, if the number of records increases, the changed
     value will be written to the file, no matter if NC_SHARE mode is used or
     not. This change is to ensure the number of records is up-to-dated in
-    file, in case the appication prorgam does not close file (due to crash
+    file, in case the application program does not close file (due to crash
     or programming error). Note this change applies to collective APIs only.
 
   o New optimization: I/O request aggregation
@@ -377,7 +377,7 @@ version  1.1.0 (November 2, 2009)
       multiple variable access into fewer I/O requests.
 
     - There is now a simple pnetcdf.F90 module for F90 codes. Please consider
-      this as an "early feedback" version and not a hard gaurantee of a fixed
+      this as an "early feedback" version and not a hard guarantee of a fixed
       F90 API (though we don't expect it to change drastically if at all).
       This module is generated from the F77 'pnetcdf.inc': thanks to
       Annette Koontz for the idea.
