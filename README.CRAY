@@ -18,6 +18,10 @@ http://www.nersc.gov/users/software/compilers/intel-fortran-c-and-c/
             CFLAGS="-fast -no-ipo" FFLAGS="-fast -no-ipo" FCFLAGS="-fast -no-ipo"
 
 
+Note if running make is slow, try parallel make, e.g.
+
+    make -j8
+
 ===============================================================================
     Cray XE6
 ===============================================================================

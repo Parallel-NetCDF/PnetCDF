@@ -23,6 +23,10 @@ nodes are available).
 ./configure --host powerpc64-bgq-linux --build ppc64-redhat-linux \
             MPICC=mpicc MPICXX=mpicxx MPIF77=mpif77 MPIF90=mpif90
 
+Note if running make is slow, try parallel make, e.g.
+
+    make -j8
+
 It's possible to build PnetCDF with the IBM xl compilers:
 
 ./configure --host powerpc64-bgq-linux --build ppc64-redhat-linux \
