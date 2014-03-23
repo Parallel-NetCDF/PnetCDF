@@ -19,6 +19,7 @@ INTERFACE
     logical        FUNCTION nfmpi_issyserr(ncerr)
                             INTEGER,                       INTENT(IN)  :: ncerr
     END FUNCTION   nfmpi_issyserr
+
 !
 ! control subroutines:
 !
@@ -100,6 +101,12 @@ INTERFACE
                             INTEGER,                       INTENT(OUT) :: ngatts
                             INTEGER,                       INTENT(OUT) :: unlimdimid
     END FUNCTION   nfmpi_inq
+
+    INTEGER        FUNCTION nfmpi_inq_striping(ncid, striping_size, striping_count)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(OUT) :: striping_size
+                            INTEGER,                       INTENT(OUT) :: striping_count
+    END FUNCTION   nfmpi_inq_striping
 
     INTEGER        FUNCTION nfmpi_inq_ndims(ncid, ndims)
                             INTEGER,                       INTENT(IN)  :: ncid

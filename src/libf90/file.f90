@@ -137,6 +137,15 @@ function nf90mpi_inquire(ncid, nDimensions, nVariables, nAttributes, unlimitedDi
   endif
 end function nf90mpi_inquire
 
+! -------
+function nf90mpi_inq_striping(ncid, striping_size, striping_count)
+  integer,            intent( in) :: ncid
+  integer,            intent(out) :: striping_size
+  integer,            intent(out) :: striping_count
+  integer                         :: nf90mpi_inq_striping
+
+  nf90mpi_inq_striping = nfmpi_inq_striping(ncid, striping_size, striping_count)
+end function nf90mpi_inq_striping
 
 ! -------
 function nf90mpi_begin_indep_data(ncid)
