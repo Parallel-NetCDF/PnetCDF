@@ -30,13 +30,13 @@ the default configuration of PnetCDF up and running.
     - OPTIONAL: An MPI Fortran 77 compiler, if Fortran 77 applications are
       to be used. If you do not require
       support for Fortran 77 applications, you can disable this
-      support using --disable-f77 (configuring PnetCDF is described in
+      support using --disable-fortran (configuring PnetCDF is described in
       step 1(d) below).
 
     - OPTIONAL: An MPI Fortran 90 compiler, if Fortran 90 applications are
       to be used. If you do not require
       support for Fortran 90 applications, you can disable this
-      support using --disable-fc. Note that Fortran 77 support is a
+      support using --disable-fortran. Note that Fortran 77 support is a
       prerequisite for Fortran 90 support (configuring PnetCDF is
       described in step 1(d) below).
 
@@ -103,17 +103,21 @@ options can be found using:
 
 Here lists a few important options:
 
+  --enable-echo           Turn on strong echoing. [default: disabled]
   --disable-largefile     omit support for large files
   --disable-mpi-io-test   Disable check for MPI-IO support in MPI
                           implementation, if you know your MPI implementation
                           has MPI-IO support but the configure test fails to
-                          find it. [default: no]
-  --enable-strict         Turn on strict debugging with gcc. [default: no]
+                          find it. [default: enabled]
+  --enable-strict         Turn on strict debugging with gcc. [default:
+                          disabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
-                          only need the C interface. [default: no]
-  --enable-coverage       Compile with coverage support (gcc-based only)
+                          only need the C interface. [default: enabled]
+  --enable-coverage       Compile with coverage support (gcc-based only).
+                          [default: disabled]
+  --enable-subfiling      Turns on subfiling support. [default: disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
-                          can provide data consistency. [default: no]
+                          can provide data consistency. [default: enabled]
 Optional Packages:
   --with-mpi=/path/to/implementation
                           installation prefix for MPI implementation
