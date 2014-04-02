@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     HANDLE_ERROR
 
     /* get all the hints used */
-    err = ncmpi_get_file_info(ncid, &info_used);
+    err = ncmpi_inq_file_info(ncid, &info_used);
     HANDLE_ERROR
 
     /* close the file */

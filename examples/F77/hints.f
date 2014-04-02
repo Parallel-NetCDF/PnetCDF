@@ -69,8 +69,8 @@
           err = nfmpi_inq_varoffset(ncid, varid1, var_yx_start)
           call check(err, 'In nfmpi_inq_varoffset varid1: ')
 
-          err = nfmpi_get_file_info(ncid, info_used)
-          call check(err, 'In nfmpi_get_file_info : ')
+          err = nfmpi_inq_file_info(ncid, info_used)
+          call check(err, 'In nfmpi_inq_file_info : ')
 
           call MPI_Info_get_valuelen(info_used, "nc_header_align_size",
      +                               len, flag, err)

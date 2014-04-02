@@ -49,7 +49,7 @@
   public :: nf90mpi_begin_indep_data, nf90mpi_end_indep_data, &
             nf90mpi_inq_put_size, nf90mpi_inq_get_size, &
             nf90mpi_inq_header_size, nf90mpi_inq_header_extent, &
-            nf90mpi_inq_varoffset, nf90mpi_get_file_info
+            nf90mpi_inq_varoffset, nf90mpi_inq_file_info, nf90mpi_get_file_info
 
 !
 ! F77 APIs
@@ -67,6 +67,7 @@
         nfmpi_open, &
         nfmpi_inq_format, &
         nfmpi_inq_file_format, &
+        nfmpi_inq_file_info, &
         nfmpi_get_file_info, &
         nfmpi_delete, &
         nfmpi_enddef, &

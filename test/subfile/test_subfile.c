@@ -290,7 +290,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Collective write time = %f sec, Collective write bandwidth = %f Mbytes/sec\n", new_write_tim, write_bw);
     }
 
-    status = ncmpi_get_file_info(ncid, &info_used);
+    status = ncmpi_inq_file_info(ncid, &info_used);
     TEST_HANDLE_ERR(status);
 
     stim = MPI_Wtime();
@@ -336,7 +336,7 @@ read:
         fprintf(stderr, "Collective read time = %f sec, Collective read bandwidth = %f Mbytes/sec\n", new_read_tim, read_bw);
     }
 
-    status = ncmpi_get_file_info(ncid, &info_used);
+    status = ncmpi_inq_file_info(ncid, &info_used);
     TEST_HANDLE_ERR(status);
 
 end:    

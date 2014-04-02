@@ -49,6 +49,11 @@ INTERFACE
                             INTEGER,                       INTENT(OUT)  :: format
     END FUNCTION   nfmpi_inq_file_format
 
+    INTEGER        FUNCTION nfmpi_inq_file_info(ncid, mpi_info)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(OUT) :: mpi_info
+    END FUNCTION   nfmpi_inq_file_info
+
     INTEGER        FUNCTION nfmpi_get_file_info(ncid, mpi_info)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(OUT) :: mpi_info

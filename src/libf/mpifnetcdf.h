@@ -10,6 +10,7 @@
 
 extern FORTRAN_API int FORT_CALL nfmpi_create_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, MPI_Fint *v4, MPI_Fint *v5 FORT_END_LEN(d2) );
 extern FORTRAN_API int FORT_CALL nfmpi_open_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2), int *v3, MPI_Fint *v4, MPI_Fint *v5 FORT_END_LEN(d2) );
+extern FORTRAN_API int FORT_CALL nfmpi_inq_file_info_ ( int *v1, MPI_Fint *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_get_file_info_ ( int *v1, MPI_Fint *v2 );
 extern FORTRAN_API int FORT_CALL nfmpi_delete_ ( char *v1 FORT_MIXED_LEN(d1), MPI_Fint *v2 FORT_END_LEN(d1) );
 extern FORTRAN_API int FORT_CALL nfmpi_enddef_ ( int *v1 );

@@ -56,7 +56,7 @@ void print_hints(int ncid,
     err = ncmpi_inq_varoffset(ncid, varid0, &var_zy_start); ERR
     err = ncmpi_inq_varoffset(ncid, varid1, &var_yx_start); ERR
 
-    err = ncmpi_get_file_info(ncid, &info_used); ERR
+    err = ncmpi_inq_file_info(ncid, &info_used); ERR
     MPI_Info_get_valuelen(info_used, "nc_header_align_size", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, "nc_header_align_size", len+1, value, &flag);

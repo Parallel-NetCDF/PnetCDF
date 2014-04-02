@@ -28,6 +28,7 @@ UTIL_SRCS = issyserrf.c \
 
 C2F_SRCS = createf.c \
 	openf.c \
+	inq_file_infof.c \
 	get_file_infof.c \
 	deletef.c \
 	enddeff.c \

@@ -62,8 +62,8 @@
         if (ierr .ne. NF_NOERR) call handle_err('nfmpi_open',ierr)
 
 
-        ierr = nfmpi_get_file_info(ncid, info)
-        if (ierr .ne. NF_NOERR) call handle_err('nfmpi_get_file_info',
+        ierr = nfmpi_inq_file_info(ncid, info)
+        if (ierr .ne. NF_NOERR) call handle_err('nfmpi_inq_file_info',
      +                                          ierr)
 
         ierr = nfmpi_close(ncid)
