@@ -1083,6 +1083,13 @@ err_check:
                 xbuf = cbuf;
             }
             if (need_swap) {
+#ifdef DISABLE_IN_PLACE_SWAP
+                if (xbuf == buf) {
+                    /* allocate xbuf and copy buf to xbuf, xbuf is to be freed */
+                    xbuf = NCI_Malloc(nbytes);
+                    memcpy(xbuf, buf, nbytes);
+                }
+#endif
                 /* perform array in-place byte swap on xbuf */
                 ncmpii_in_swapn(xbuf, fnelems, ncmpix_len_nctype(varp->type));
                 if (xbuf == buf)
