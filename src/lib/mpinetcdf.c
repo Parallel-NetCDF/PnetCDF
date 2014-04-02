@@ -522,9 +522,9 @@ ncmpi_inq_file_format(char *filename,
     return 0;
 }
 
-/*----< ncmpi_get_file_info() >----------------------------------------------*/
+/*----< ncmpi_inq_file_info() >-----------------------------------------------*/
 int
-ncmpi_get_file_info(int       ncid,
+ncmpi_inq_file_info(int       ncid,
                     MPI_Info *info_used)
 {
     int mpireturn, status=NC_NOERR;
@@ -564,6 +564,14 @@ ncmpi_get_file_info(int       ncid,
 #endif
 
     return NC_NOERR;
+}
+
+/*----< ncmpi_get_file_info() >-----------------------------------------------*/
+int
+ncmpi_get_file_info(int       ncid,
+                    MPI_Info *info_used)
+{
+    return ncmpi_inq_file_info(ncid, info_used);
 }
 
 /*----< ncmpi_redef() >------------------------------------------------------*/

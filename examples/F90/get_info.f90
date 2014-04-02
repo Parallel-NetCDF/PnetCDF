@@ -63,9 +63,9 @@
         if (ierr .ne. NF90_NOERR) call handle_err('nf90mpi_open',ierr)
 
 
-        ierr = nf90mpi_get_file_info(ncid, info)
+        ierr = nf90mpi_inq_file_info(ncid, info)
         if (ierr .ne. NF90_NOERR) then
-            call handle_err('nf90mpi_get_file_info', ierr)
+            call handle_err('nf90mpi_inq_file_info', ierr)
         endif
 
         ierr = nf90mpi_close(ncid)

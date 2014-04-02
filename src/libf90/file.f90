@@ -218,6 +218,15 @@ function nf90mpi_inq_nreqs(ncid, nreqs)
 end function nf90mpi_inq_nreqs
 
 ! -------
+function nf90mpi_inq_file_info(ncid, mpi_info)
+  integer, intent( in) :: ncid
+  integer, intent(out) :: mpi_info
+  integer              :: nf90mpi_inq_file_info
+
+  nf90mpi_inq_file_info = nfmpi_inq_file_info(ncid, mpi_info)
+end function nf90mpi_inq_file_info
+
+! -------
 function nf90mpi_get_file_info(ncid, mpi_info)
   integer, intent( in) :: ncid
   integer, intent(out) :: mpi_info

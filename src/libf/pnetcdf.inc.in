@@ -611,6 +611,7 @@
       integer  nfmpi_open
       integer  nfmpi_inq_format
       integer  nfmpi_inq_file_format
+      integer  nfmpi_inq_file_info
       integer  nfmpi_get_file_info
       integer  nfmpi_delete
       integer  nfmpi_enddef
@@ -625,6 +626,7 @@
       external nfmpi_open
       external nfmpi_inq_format
       external nfmpi_inq_file_format
+      external nfmpi_inq_file_info
       external nfmpi_get_file_info
       external nfmpi_delete
       external nfmpi_enddef
