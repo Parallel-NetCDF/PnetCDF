@@ -78,6 +78,7 @@ AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does sytem have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
+AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 
 dnl an option to use a customized rm command
@@ -662,13 +663,23 @@ if test "$enable_fortran" = yes ; then
     UD_HAS_MPI_DATATYPE(MPI_COMPLEX32)
 fi
 
+AC_ARG_ENABLE([in-place-swap],
+    [AS_HELP_STRING([--disable-in-place-swap],
+                    [Disable memory in-place byte swap on Little Endian
+                     machines. @<:@default: enabled@:>@])],
+    [in_place_swap=${enableval}], [in_place_swap=yes]
+)
+if test "x${in_place_swap}" = xno ; then
+    AC_DEFINE(DISABLE_IN_PLACE_SWAP)
+fi
+
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
 dnl For big endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little endian, put buffer may be used for byte swap in
 dnl place and hence must be declared as INTENT(INOUT).
 dnl This will configure/produce the file src/libf90/api.f90
-if test "x${ac_cv_c_bigendian}" = xyes ; then
+if test "x${ac_cv_c_bigendian}" = xyes  || (test "x${in_place_swap}" = xno) ; then
    INOUT="IN"
 else
    INOUT="INOUT"
@@ -942,7 +953,13 @@ echo \
               Build Fortran APIs               - ${enable_fortran}
               Build nonblocking APIs           - ${enable_nonblocking}
               Build CDF-5 support              - ${enable_cdf5}
-	      Build subfiling support          - ${enable_subfiling}
+	      Build subfiling support          - ${enable_subfiling}"
+if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
+  echo "\
+	      Memory in-place byte swap        - disabled"
+fi
+
+echo "\
 
    Compilers: MPICC       = ${MPICC}
               MPICXX      = ${MPICXX}"

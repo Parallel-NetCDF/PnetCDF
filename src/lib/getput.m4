@@ -54,7 +54,7 @@ ncmpi_put_var$1(int           ncid,
 
     /* put_var is a special case of put_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)buf,
-                                bufcount, buftype, WRITE_REQ, $2);
+                                bufcount, buftype, WRITE_REQ, $2, 0);
     if (varp->ndims > 0) NCI_Free(start);
     return status;
 }
@@ -87,7 +87,7 @@ ncmpi_get_var$1(int           ncid,
 
     /* get_var is a special case of get_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, buf,
-                                bufcount, buftype, READ_REQ, $2);
+                                bufcount, buftype, READ_REQ, $2, 0);
     if (varp->ndims > 0) NCI_Free(start);
     return status;
 }
@@ -119,7 +119,7 @@ ncmpi_put_var_$1(int       ncid,
 
     /* put_var is a special case of put_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)op,
-                                nelems, $3, WRITE_REQ, $4);
+                                nelems, $3, WRITE_REQ, $4, 0);
     if (varp->ndims > 0) NCI_Free(start);
     return status;
 }
@@ -177,7 +177,7 @@ ncmpi_get_var_$1(int  ncid,
 
     /* get_var is a special case of get_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, ip,
-                                nelems, $3, READ_REQ, $4);
+                                nelems, $3, READ_REQ, $4, 0);
     if (varp->ndims > 0) NCI_Free(start);
     return status;
 }
@@ -231,7 +231,7 @@ ncmpi_put_var1(int               ncid,
     GET_ONE_COUNT(count)
 
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)buf,
-                                bufcount, buftype, WRITE_REQ, INDEP_IO);
+                                bufcount, buftype, WRITE_REQ, INDEP_IO, 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -258,7 +258,7 @@ ncmpi_put_var1_$1(int               ncid,
 
     /* put_var1 is a special case of put_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)op,
-                                1, $3, WRITE_REQ, INDEP_IO);
+                                1, $3, WRITE_REQ, INDEP_IO, 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -297,7 +297,7 @@ ncmpi_get_var1(int               ncid,
     GET_ONE_COUNT(count)
 
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, buf,
-                                bufcount, buftype, READ_REQ, INDEP_IO);
+                                bufcount, buftype, READ_REQ, INDEP_IO, 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -324,7 +324,7 @@ ncmpi_get_var1_$1(int               ncid,
 
     /* get_var1 is a special case of get_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, ip,
-                                1, $3, READ_REQ, INDEP_IO);
+                                1, $3, READ_REQ, INDEP_IO, 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -368,7 +368,7 @@ ncmpi_put_vara$1(int               ncid,
 
     /* put_vara is a special case of put_vars */
     return ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)buf,
-                              bufcount, buftype, WRITE_REQ, $2);
+                              bufcount, buftype, WRITE_REQ, $2, 0);
 }
 ')dnl
 
@@ -399,7 +399,7 @@ ncmpi_get_vara$1(int               ncid,
 
     /* get_vara is a special case of get_vars */
     return ncmpii_getput_vars(ncp, varp, start, count, NULL, buf,
-                              bufcount, buftype, READ_REQ, $2);
+                              bufcount, buftype, READ_REQ, $2, 0);
 }
 ')dnl
 
@@ -430,7 +430,7 @@ ncmpi_put_vara_$1(int               ncid,
 
     /* put_vara is a special case of put_vars */
     return ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)op,
-                              nelems, $3, WRITE_REQ, $4);
+                              nelems, $3, WRITE_REQ, $4, 0);
 }
 ')dnl
 
@@ -488,7 +488,7 @@ ncmpi_get_vara_$1(int               ncid,
 
     /* get_vara is a special case of get_vars */
     return ncmpii_getput_vars(ncp, varp, start, count, NULL, ip,
-                              nelems, $3, READ_REQ, $4);
+                              nelems, $3, READ_REQ, $4, 0);
 }
 ')dnl
 
@@ -545,7 +545,7 @@ ncmpi_put_vars$1(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, $2, status)
 
     return ncmpii_getput_vars(ncp, varp, start, count, stride, (void*)buf,
-                              bufcount, buftype, WRITE_REQ, $2);
+                              bufcount, buftype, WRITE_REQ, $2, 0);
 }
 ')dnl
 
@@ -576,7 +576,7 @@ ncmpi_get_vars$1(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, $2, status)
 
     return ncmpii_getput_vars(ncp, varp, start, count, stride, buf,
-                              bufcount, buftype, READ_REQ, $2);
+                              bufcount, buftype, READ_REQ, $2, 0);
 }
 ')dnl
 
@@ -608,7 +608,7 @@ ncmpi_put_vars_$1(int               ncid,
     GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_getput_vars(ncp, varp, start, count, stride, (void*)op,
-                              nelems, $3, WRITE_REQ, $4);
+                              nelems, $3, WRITE_REQ, $4, 0);
 }
 ')dnl
 
@@ -667,7 +667,7 @@ ncmpi_get_vars_$1(int               ncid,
     GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_getput_vars(ncp, varp, start, count, stride, ip,
-                              nelems, $3, READ_REQ, $4);
+                              nelems, $3, READ_REQ, $4, 0);
 }
 ')dnl
 
@@ -747,7 +747,8 @@ ncmpii_getput_vars(NC               *ncp,
                    MPI_Offset        bufcount,
                    MPI_Datatype      buftype,  /* data type of the bufer */
                    int               rw_flag,
-                   int               io_method)
+                   int               io_method,
+                   int               isTempBuf) /* if is an internal buf */
 {
     void *xbuf=NULL, *cbuf=NULL;
     int isderived, el_size, mpireturn;
@@ -847,7 +848,15 @@ ncmpii_getput_vars(NC               *ncp,
             if (status == NC_NOERR) status = err;
         }
     } else if (need_swap) {
-        if (rw_flag == WRITE_REQ) { /* perform array in-place byte swap */
+        if (rw_flag == WRITE_REQ) {
+#ifdef DISABLE_IN_PLACE_SWAP
+            if (isTempBuf == 0 && cbuf == buf) {
+                /* allocate cbuf and copy buf to cbuf, cbuf is to be freed */
+                cbuf = NCI_Malloc(nbytes);
+                memcpy(cbuf, buf, nbytes);
+            }
+#endif
+            /* perform array in-place byte swap on cbuf */
             ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
             is_buf_swapped = (cbuf == buf) ? 1 : 0;
             /* is_buf_swapped indicates if the contents of the original user
@@ -1291,16 +1300,19 @@ ncmpii_getput_varm(NC               *ncp,
     err = status = warning = NC_NOERR;
     imaptype = MPI_DATATYPE_NULL;
 
+    /* check if this is a true varm call */
     if (imap == NULL || varp->ndims == 0) {
         /* when imap == NULL, no mapping, same as vars.
            when varp->ndims == 0, reduced to scalar var, only one value
            at one fixed place */
         return ncmpii_getput_vars(ncp, varp, start, count, stride, buf,
-                                  bufcount, buftype, rw_flag, io_method);
+                                  bufcount, buftype, rw_flag, io_method, 0);
     }
 
-    /* test each dim's contiguity in imap[] until the 1st non-contiguous dim
-       is reached */
+    /* continue to check if this is a true varm call:
+     * test each dim's contiguity in imap[] until the 1st non-contiguous dim
+     * is reached
+     */
     imap_contig_blocklen = 1;
     dim = varp->ndims;
     while ( --dim >= 0 && imap_contig_blocklen == imap[dim] ) {
@@ -1310,14 +1322,14 @@ ncmpii_getput_varm(NC               *ncp,
         }
         imap_contig_blocklen *= count[dim];
     }
-
-    if (dim == -1) /* imap is a contiguous layout */
+    if (dim == -1) /* not a true varm call, as imap is a contiguous layout */
         return ncmpii_getput_vars(ncp, varp, start, count, stride, buf,
-                                  bufcount, buftype, rw_flag, io_method);
+                                  bufcount, buftype, rw_flag, io_method, 0);
 
-    /* else imap gives non-contiguous layout, we will do pack/unpack I/O
-       buffer based on imap[], but first must check if buftype is contiguous
-       in case for flexible APIs
+    /* else case indicates we have a true varm call, as
+     * imap gives non-contiguous layout, we will do pack/unpack I/O
+     * buffer based on imap[], but first must check if buftype is contiguous
+     * in case for flexible APIs
      */
 
     /* find the ptype (primitive MPI data type) from buftype
@@ -1395,7 +1407,7 @@ err_check:
             MPI_Offset *zeros;
             zeros = (MPI_Offset *) NCI_Calloc(varp->ndims, sizeof(MPI_Offset));
             ncmpii_getput_vars(ncp, varp, zeros, zeros, NULL, buf,
-                               0, MPI_BYTE, rw_flag, io_method);
+                               0, MPI_BYTE, rw_flag, io_method, 0);
             NCI_Free(zeros);
         }
         if (lbuf != NULL && lbuf != buf) NCI_Free(lbuf);
@@ -1407,7 +1419,7 @@ err_check:
 
     /* now, we can use cbuf and cnelems to call getput_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, stride, cbuf,
-                                cnelems, ptype, rw_flag, io_method);
+                                cnelems, ptype, rw_flag, io_method, 1);
     if (status != NC_NOERR)
         goto err_check2;
 

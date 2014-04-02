@@ -2,6 +2,27 @@
 This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
+  o New features
+    * A new configure option "--disable-in-place-swap" is added. It disables
+      the byte swap operations running in-place on the user's write buffers.
+      The purpose of providing this option is to solve the problem when a
+      Fortran program uses a put buffer which is immutable, e.g. declared as
+      a PARAMETER, and in-place byte swap on user buffer can cause segmentation
+      fault. See discussion threads of
+      http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2013-July/001498.html
+
+      Impacts:
+      1. It takes effect only on Little Endian machines.
+      2. It only affects put/iput data APIs, but not attribute APIs.
+      3. The INTENT of put buffer arguments in Fortran 90 put/iput APIs will be
+         declared as "IN". Without this setting, the default is "INOUT".
+      4. It has an impact on performance, as an internal temporary buffer will
+         be allocated to copy data over from user's put buffer, so byte-swap
+         can be performed on the temporary buffer.
+
+      The default setting is to enable in-place byte swap. PnetCDF tries not to
+      allocate additional memory space, due to performance concern.
+
   o New APIs
     * ncmpi_inq_striping, nfmpi_inq_striping, nf90mpi_inq_striping report the
       file system striping settings, striping size and count, if the underneath

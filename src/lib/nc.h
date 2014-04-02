@@ -800,7 +800,7 @@ extern int
 ncmpii_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 void *buf, MPI_Offset bufcount, MPI_Datatype datatype,
-                int rw_flag, int io_method);
+                int rw_flag, int io_method, int isTempBuf);
 
 extern int
 ncmpii_getput_varm(NC *ncp, NC_var *varp, const MPI_Offset start[],
