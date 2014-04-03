@@ -1273,10 +1273,10 @@ sub print_weak_decl {
     my $basename = lc($name);
     $basename =~ s/_*$//;
     if (defined($altweak{$basename})) {
-	print $OUTFD "extern FORT_DLL_SPEC $altweakrtype{$basename} FORT_CALL $name($altweak{$basename});\n";
+	print $OUTFD "extern FORTRAN_API $altweakrtype{$basename} FORT_CALL $name($altweak{$basename});\n";
     }
     else {
-	print $OUTFD "extern FORT_DLL_SPEC $returnType FORT_CALL $name";
+	print $OUTFD "extern FORTRAN_API $returnType FORT_CALL $name";
 	&print_args( $OUTFD, $args, 1, $lcname );
 	print $OUTFD ";\n";
     }
@@ -2149,7 +2149,7 @@ sub checkdatarep_in_decl {
 # /* Else leave name alone */
 # #endif
 # /* Add the prototype so the routine knows what this is */
-# extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+# extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 # #endif
 # ";
 #     }
@@ -2584,10 +2584,10 @@ sub clean_args {
 sub print_routine_type_decl {
     my $OUTFD = $_[0];
     my $lcname = $_[1];
-    # The name "FORT_DLL_SPEC" may be use to tell the compiler that
+    # The name "FORTRAN_API" may be use to tell the compiler that
     # 
     if ($do_subdecls) {
-	print $OUTFD "FORT_DLL_SPEC $returnType FORT_CALL ";
+	print $OUTFD "FORTRAN_API $returnType FORT_CALL ";
     }
     else {
 	print $OUTFD "$returnType ";
@@ -2677,10 +2677,10 @@ sub build_specials {
    this file.  Note that the last argument is a character array, so
    we need to include the elements of the Fortran character \"dope vector\".
 */
-FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *, void *, void *, void *, 
+FORTRAN_API void FORT_CALL mpirinitc_( void *, void *, void *, void *, 
                                          void *, void * FORT_MIXED_LEN_DECL 
                                          FORT_END_LEN_DECL );
-FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char * FORT_MIXED_LEN_DECL 
+FORTRAN_API void FORT_CALL mpirinitc2_( char * FORT_MIXED_LEN_DECL 
                                           FORT_END_LEN_DECL );
 ";
     # These are here rather than in initf.c to solve some link order 
@@ -2720,7 +2720,7 @@ void *MPI_F_ARGVS_NULL      = 0;
 
 
     print $OUTFD "
-FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d, 
+FORTRAN_API void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d, 
                                          void *e, void *f FORT_MIXED_LEN(d1) 
                                          FORT_END_LEN(d1) )
 {
@@ -2734,7 +2734,7 @@ FORT_DLL_SPEC void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d,
 /* Initialize the Fortran ARGV_NULL to a blank.  Using this routine
    avoids potential problems with string manipulation routines that
    exist in the Fortran runtime but not in the C runtime libraries */
-FORT_DLL_SPEC void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1) 
+FORTRAN_API void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1) 
                                           FORT_END_LEN(d1) )
 {
     *a = ' ';
@@ -3347,7 +3347,7 @@ sub ReadAndProcessInterface {
 		}
 		&print_header( $routine_name, $lcname, $args );
 		if ($do_subdecls) {
-		    print $OUTFD "FORT_DLL_SPEC $returnType FORT_CALL ";
+		    print $OUTFD "FORTRAN_API $returnType FORT_CALL ";
 		}
 		else {
 		    print $OUTFD "$returnType ";
@@ -3396,7 +3396,7 @@ sub ReadAndProcessInterface {
 		}
 		if ($build_prototypes) {
 		    if ($do_subdecls) {
-			print PROTOFD "extern FORT_DLL_SPEC $returnType FORT_CALL ${out_prefix}${lcname}_ ";
+			print PROTOFD "extern FORTRAN_API $returnType FORT_CALL ${out_prefix}${lcname}_ ";
 		    }
 		    else {
 			print PROTOFD "extern $returnType ${out_prefix}${lcname}_ ";
@@ -3698,9 +3698,9 @@ sub ReplaceIfDifferent {
 	    print STDERR "Replacing $oldfilename\n";
 	    unlink $oldfilename;
 	}
-	else {
-	    print STDERR "Creating $oldfilename\n";
-	}
+	# else {
+	#     print STDERR "Creating $oldfilename\n";
+	# }
 	rename $newfilename, $oldfilename || 
 	    die "Could not replace $oldfilename";
     }
@@ -3740,10 +3740,10 @@ sub HelperForRegister_datarep {
        Like the attribute null functions, we provide multiple weak versions
        of this if possible */
 #if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORTRAN_API int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 /* */
 #ifndef MPICH_MPI_FROM_PMPI
 #pragma weak mpi_conversion_fn_null__ = mpi_conversion_fn_null_
@@ -3764,14 +3764,14 @@ extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2
 #endif /* Test on name mapping */
 
 /* Add the prototype so the routine knows what this is */
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 
 
 #endif /* Test on use multiple weak symbols */
 #ifndef MPICH_MPI_FROM_PMPI
 
 /* This isn't a callable function */
-FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
+FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
     return 0;
 }
 #endif
