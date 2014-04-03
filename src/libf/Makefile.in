@@ -326,8 +326,6 @@ PACKING_LIST = \
 	pnetcdf.inc.in \
 	mpifnetcdf.h \
 	mpinetcdf_impl.h \
-	varn_external.m4 \
-	varnx_external.m4 \
 	buildiface \
 	defs \
 	createffiles \

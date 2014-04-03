@@ -115,3 +115,22 @@ wget -O config.guess 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_pl
 
 wget -O config.sub 'http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'
 
+
+===============================================================
+Extra files used for idea development, not for release
+===============================================================
+This file "DEVELOPER_NOTES".
+
+src/lib:
+    varnx.m4
+    varnx_api_header.m4
+    varn_api_header.m4
+
+src/libf:
+    varn_external.m4
+    varnx_external.m4
+
+src/libf90:
+    varn_interface.m4
+    varnx_interface.m4
+
