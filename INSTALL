@@ -117,11 +117,14 @@ Here lists a few important options:
                           disabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
                           only need the C interface. [default: enabled]
+  --disable-in-place-swap Disable memory in-place byte swap on Little Endian
+                          machines. [default: enabled]
   --enable-coverage       Compile with coverage support (gcc-based only).
                           [default: disabled]
   --enable-subfiling      Turns on subfiling support. [default: disabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
                           can provide data consistency. [default: enabled]
+
 Optional Packages:
   --with-mpi=/path/to/implementation
                           installation prefix for MPI implementation

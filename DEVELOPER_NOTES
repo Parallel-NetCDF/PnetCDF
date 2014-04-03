@@ -129,6 +129,7 @@ src/lib:
 src/libf:
     varn_external.m4
     varnx_external.m4
+    createffiles
 
 src/libf90:
     varn_interface.m4
