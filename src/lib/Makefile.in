@@ -75,10 +75,7 @@ PACKING_LIST = $(LIB_CSRCS) \
                pnetcdf.h.in \
                depend \
                Makefile.in \
-               ncconfig.h.in \
-               varnx.m4 \
-               varnx_api_header.m4 \
-               varn_api_header.m4
+               ncconfig.h.in
 
 ifeq (@enable_subfiling@, no)
 PACKING_LIST += subfile.c subfile.h
