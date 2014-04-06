@@ -531,7 +531,7 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MEMCMP
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memset setlocale sqrt strchr strerror strrchr strtol access])
+AC_CHECK_FUNCS([memset setlocale sqrt strchr strerror strrchr strtol access unlink])
 dnl AC_CHECK_LIB([m], [tanh])
 UD_CHECK_LIB_MATH
 
