@@ -60,6 +60,9 @@ This is essentially a placeholder for the next release note ...
     * Fix build target dependency for parallel make. Now parallel make. e.g.
       "make -j8" runs much faster on many platforms, including Cray and BGQ.
 
+    * File create is revised for handling NC_CLOBBER and NC_NOCLOBBER modes.
+      On systems where Unix calls access() and unlink() are available, they
+      are used to check if a file exits and delete an existing file.
   o Bug fixes
     * 
 
