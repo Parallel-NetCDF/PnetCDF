@@ -255,6 +255,9 @@ ncmpiio_create(MPI_Comm     comm,
          * systems. Here is a not-so-perfect solution: check errno to see if
          * it set to EEXIST. Note usually rank 0 makes the file open call and
          * can be the only one having errno set.
+         *
+         * Once MPI-IO can returns MPI_ERR_FILE_EXISTS correctly, the if
+         * condition code block below should be removed.
          */
         if (fIsSet(ioflags, NC_NOCLOBBER)) { /* MPI_MODE_EXCL is used in open */
             MPI_Bcast(&errno, 1, MPI_INT, 0, comm);
