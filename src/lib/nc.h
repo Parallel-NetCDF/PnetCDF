@@ -675,11 +675,11 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, NC *ncp);
 /* begin defined in mpincio.c */
 extern int
 ncmpiio_create(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
-               ncio **nciopp);
+               NC *ncp);
 
 extern int
 ncmpiio_open(MPI_Comm comm, const char *path, int ioflags, MPI_Info info,
-             ncio **nciopp);
+             NC *ncp);
 extern int
 ncmpiio_sync(ncio *nciop);
 

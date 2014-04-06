@@ -277,7 +277,7 @@ ncmpi_create(MPI_Comm    comm,
 
     fSet(ncp->flags, NC_NOFILL);
 
-    err = ncmpiio_create(comm, path, cmode, env_info, &ncp->nciop);  
+    err = ncmpiio_create(comm, path, cmode, env_info, ncp);  
     if (err != NC_NOERR) {
         ncmpii_free_NC(ncp);
         return err;
@@ -397,7 +397,7 @@ ncmpi_open(MPI_Comm    comm,
     ncp->nc_num_subfiles = 0;
 #endif
 
-    err = ncmpiio_open(comm, path, omode, env_info, &ncp->nciop);
+    err = ncmpiio_open(comm, path, omode, env_info, ncp);
     if (err != NC_NOERR) {
         ncmpii_free_NC(ncp);
         return err;
