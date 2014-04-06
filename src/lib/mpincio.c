@@ -154,27 +154,31 @@ ncmpiio_create(MPI_Comm     comm,
                const char  *path,
                int          ioflags,
                MPI_Info     info, 
-               ncio       **nciopp)
+               NC          *ncp)
 {
     ncio *nciop;
     int i, rank, mpireturn, err;
     int mpiomode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
-    /* TODO: use MPI_Allreduce to check for valid path, so error can be
-       returned collectively */
-    if (path == NULL || *path == 0)
-        return NC_EINVAL;
+    /* TODO: check whether path are the same across all processes */
+    if (ncp->safe_mode) {
+        int isPathValid=1;
+        if (path == NULL || *path == 0) isPathValid = 0;
+        MPI_Allreduce(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
+        if (err == 0) return NC_EINVAL;
+    }
 
     MPI_Comm_rank(comm, &rank);
 
+    /* NC_CLOBBER is the default mode, even if it is not used in cmode */ 
     if (fIsSet(ioflags, NC_NOCLOBBER)) {
         /* check if file exists: NetCDF requires NC_EEXIST returned if the file
-         * already exists and NC_NOCLOBBER is used in ioflags(cmode)
+         * already exists and NC_NOCLOBBER mode is used in create
          */
 #ifdef HAVE_ACCESS
         int file_exist;
-        /* if access() is available, use it to check if file already exists
-         * rank 0 calls access() and broadcast if file exists */
+        /* if access() is available, use it to check whether file already exists
+         * rank 0 calls access() and broadcasts file_exist */
         if (rank == 0) {
             /* remove the file system type prefix name if there is any.
              * For example, path=="lustre:/home/foo/testfile.nc",
@@ -196,15 +200,15 @@ ncmpiio_create(MPI_Comm     comm,
         fSet(mpiomode, MPI_MODE_EXCL);
 #endif
     }
-    else { /* NC_CLOBBER */
-        /* rank 0 deletes the file and ignores error of file not exists
+    else { /* NC_CLOBBER is the default mode in create */
+        /* rank 0 deletes the file and ignores error code for file not exist
          * Note calling MPI_File_set_size is expensive as it calls truncate()
          */
         if (rank == 0) {
 #ifdef HAVE_UNLINK
             err = unlink(path);
             if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
-                err = NC_EOFILE;
+                err = NC_EOFILE; /* other error */
             else
                 err = NC_NOERR;
 #else
@@ -233,13 +237,15 @@ ncmpiio_create(MPI_Comm     comm,
 
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
+
+    /* duplicate communicator as user may free it later */
     mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
 
     ncmpiio_extract_hints(nciop, info);
 
-    mpireturn = MPI_File_open(comm, (char *)path, mpiomode,
+    mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode,
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
@@ -250,7 +256,7 @@ ncmpiio_create(MPI_Comm     comm,
          * it set to EEXIST. Note usually rank 0 makes the file open call and
          * can be the only one having errno set.
          */
-        if (fIsSet(ioflags, NC_NOCLOBBER)) {
+        if (fIsSet(ioflags, NC_NOCLOBBER)) { /* MPI_MODE_EXCL is used in open */
             MPI_Bcast(&errno, 1, MPI_INT, 0, comm);
             if (errno == EEXIST) return NC_EEXIST;
         }
@@ -281,7 +287,7 @@ ncmpiio_create(MPI_Comm     comm,
     /* collective I/O mode is the default mode */
     set_NC_collectiveFh(nciop);
 
-    *nciopp = nciop;
+    ncp->nciop = nciop;
     return NC_NOERR;  
 }
 
@@ -291,16 +297,19 @@ ncmpiio_open(MPI_Comm     comm,
              const char  *path,
              int          ioflags,
              MPI_Info     info,
-             ncio       **nciopp)
+             NC          *ncp)
 {
     ncio *nciop;
     int i, mpireturn;
     int mpiomode = fIsSet(ioflags, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
-    /* TODO: use MPI_Allreduce to check for valid path, so error can be
-       returned collectively */
-    if (path == NULL || *path == 0)
-        return NC_EINVAL;
+    /* TODO: check whether path are the same across all processes */
+    if (ncp->safe_mode) {
+        int isPathValid=1, err;
+        if (path == NULL || *path == 0) isPathValid = 0;
+        MPI_Allreduce(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
+        if (err == 0) return NC_EINVAL;
+    }
  
     nciop = ncmpiio_new(path, ioflags);
     if (nciop == NULL)
@@ -308,7 +317,11 @@ ncmpiio_open(MPI_Comm     comm,
  
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
-    MPI_Comm_dup(comm, &(nciop->comm));
+
+    /* duplicate communicator as user may free it later */
+    mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
  
     ncmpiio_extract_hints(nciop, info);
 
@@ -332,7 +345,7 @@ ncmpiio_open(MPI_Comm     comm,
  
     set_NC_collectiveFh(nciop);
  
-    *nciopp = nciop;
+    ncp->nciop = nciop;
     return NC_NOERR; 
 }
 
