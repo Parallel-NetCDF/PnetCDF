@@ -52,7 +52,9 @@ This is essentially a placeholder for the next release note ...
     * 
 
   o New test program
-    * 
+    * testcase/noclobber.c check if error code NC_EEXIST can be returned
+      correctly when NC_NOCLOBBER modes is used in ncmpi_create and the file
+      exists.
 
   o New optimization
 
