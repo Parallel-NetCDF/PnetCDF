@@ -71,6 +71,7 @@
         nfmpi_get_file_info, &
         nfmpi_delete, &
         nfmpi_enddef, &
+        nfmpi__enddef, &
         nfmpi_redef, &
         nfmpi_set_default_format, &
         nfmpi_sync, &
