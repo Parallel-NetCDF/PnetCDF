@@ -40,7 +40,7 @@ static void handle_error(int status) {
 
 int main(int argc, char **argv)
 {
-    int opt;
+    int opt, verbose=0;
     extern char *optarg;
     extern int optind;
     int i, j, array_of_gsizes[3],array_of_distribs[3];
@@ -177,8 +177,9 @@ int main(int argc, char **argv)
         bufcount *= length;
     }
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
-    for(i=0; i<ndims&&mynod==0; i++)
-	printf("array_of_psizes[%d]=%d\n", i, array_of_psizes[i]);
+    if (verbose)
+        for(i=0; i<ndims&&mynod==0; i++)
+	    printf("array_of_psizes[%d]=%d\n", i, array_of_psizes[i]);
 
     /* subarray in each process is len x len x len */
     for (i=0; i<ndims; i++)
@@ -232,9 +233,8 @@ int main(int argc, char **argv)
     
     MPI_Allreduce(&open_tim, &new_open_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
-    if (mynod == 0) {
-        fprintf(stderr, "create time = %f sec\n", new_open_tim);
-    }
+    if (verbose && mynod == 0)
+        printf("create time = %f sec\n", new_open_tim);
 
     /* define dimensions */
     for (i=0; i<ndims; i++){
@@ -284,10 +284,10 @@ int main(int argc, char **argv)
     MPI_Allreduce(&write_tim, &new_write_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
 
-    if (mynod == 0) {
+    if (verbose && mynod == 0) {
         write_bw = ((double)array_of_gsizes[0]*(double)array_of_gsizes[1]*(double)array_of_gsizes[2]*(double)sizeof(int)*(double)nvars)/(new_write_tim*1024.0*1024.0);
-        fprintf(stderr, "Global array size %d x %d x %d integers\n", array_of_gsizes[0], array_of_gsizes[1], array_of_gsizes[2]);
-        fprintf(stderr, "Collective write time = %f sec, Collective write bandwidth = %f Mbytes/sec\n", new_write_tim, write_bw);
+        printf("Global array size %d x %d x %d integers\n", array_of_gsizes[0], array_of_gsizes[1], array_of_gsizes[2]);
+        printf("Collective write time = %f sec, Collective write bandwidth = %f Mbytes/sec\n", new_write_tim, write_bw);
     }
 
     status = ncmpi_inq_file_info(ncid, &info_used);
@@ -300,7 +300,7 @@ int main(int argc, char **argv)
     MPI_Allreduce(&close_tim, &new_close_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
 
-    if (mynod == 0) {
+    if (verbose && mynod == 0) {
         fprintf(stderr, "close time = %f sec\n", new_close_tim);
     }
 
@@ -331,9 +331,9 @@ read:
     MPI_Allreduce(&read_tim, &new_read_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
     
-    if (mynod == 0) {
+    if (verbose && mynod == 0) {
         read_bw = ((double)array_of_gsizes[0]*(double)array_of_gsizes[1]*(double)array_of_gsizes[2]*sizeof(int)*(double)nvars)/(new_read_tim*1024.0*1024.0);
-        fprintf(stderr, "Collective read time = %f sec, Collective read bandwidth = %f Mbytes/sec\n", new_read_tim, read_bw);
+        printf("Collective read time = %f sec, Collective read bandwidth = %f Mbytes/sec\n", new_read_tim, read_bw);
     }
 
     status = ncmpi_inq_file_info(ncid, &info_used);

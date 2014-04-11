@@ -412,6 +412,9 @@ int ncmpi_delete(char *filename, MPI_Info info);
 
 int ncmpi_enddef(int ncid);
 
+int ncmpi__enddef(int ncid, MPI_Offset h_minfree, MPI_Offset v_align,
+                  MPI_Offset v_minfree, MPI_Offset r_align);
+
 int ncmpi_redef(int ncid);
 
 int ncmpi_set_default_format(int format, int *old_formatp);

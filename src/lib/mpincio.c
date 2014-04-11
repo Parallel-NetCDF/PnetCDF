@@ -97,8 +97,9 @@ void ncmpiio_extract_hints(ncio     *nciop,
                            MPI_Info  info)
 { 
     /* value 0 indicates the hint is not set */
-    nciop->hints.header_align_size      = 0;
-    nciop->hints.var_align_size         = 0;
+    nciop->hints.h_align                = 0;
+    nciop->hints.v_align                = 0;
+    nciop->hints.r_align                = 0;
     nciop->hints.header_read_chunk_size = 0;
 #ifdef ENABLE_SUBFILING
     nciop->hints.num_subfiles           = 0;
@@ -111,11 +112,15 @@ void ncmpiio_extract_hints(ncio     *nciop,
 
         MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
                      &flag);
-        if (flag) nciop->hints.header_align_size = atoll(value);
+        if (flag) nciop->hints.h_align = atoll(value);
 
         MPI_Info_get(info, "nc_var_align_size",    MPI_MAX_INFO_VAL-1, value,
                      &flag);
-        if (flag) nciop->hints.var_align_size = atoll(value);
+        if (flag) nciop->hints.v_align = atoll(value);
+
+        MPI_Info_get(info, "nc_record_var_align_size",    MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) nciop->hints.r_align = atoll(value);
 
         MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
@@ -127,13 +132,16 @@ void ncmpiio_extract_hints(ncio     *nciop,
 	if (flag) nciop->hints.num_subfiles = atoll(value);
 #endif
 
-        /* nc_header_align_size and nc_var_align_size take effect when a file
-           is created or opened and later adding more header or variable data */
+        /* nc_header_align_size, nc_var_align_size, and nciop->hints.r_align
+         * take effect when a file is created or opened and later adding more
+         * header or variable data */
 
-        if (nciop->hints.header_align_size < 0)
-            nciop->hints.header_align_size = 0;
-        if (nciop->hints.var_align_size < 0)
-            nciop->hints.var_align_size = 0;
+        if (nciop->hints.h_align < 0)
+            nciop->hints.h_align = 0;
+        if (nciop->hints.v_align < 0)
+            nciop->hints.v_align = 0;
+        if (nciop->hints.r_align < 0)
+            nciop->hints.r_align = 0;
         if (nciop->hints.header_read_chunk_size < 0)
             nciop->hints.header_read_chunk_size = 0;
 #ifdef ENABLE_SUBFILING

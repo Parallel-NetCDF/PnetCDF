@@ -24,6 +24,10 @@ This is essentially a placeholder for the next release note ...
       allocate additional memory space, due to performance concern.
 
   o New APIs
+    * ncmpi__enddef, nfmpi__enddef, and nf90mpi_enddef - these APIs correspond
+      to netCDF nc__enddef, nf__enddef, and nf90_enddef (with additional
+      optional arguments).
+
     * ncmpi_inq_file_info - the naming for ncmpi_get_file_info may cause
       confusion, as "get" has a different meaning on PnetCDF. The correct
       name should use "inq". However, ncmpi_get_file_info is kept for backward
