@@ -68,6 +68,15 @@ INTERFACE
                             INTEGER,                       INTENT(IN)  :: ncid
     END FUNCTION   nfmpi_enddef
 
+    INTEGER        FUNCTION nfmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: h_minfree
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: v_align
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: v_minfree
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: r_align
+    END FUNCTION   nfmpi__enddef
+
     INTEGER        FUNCTION nfmpi_redef(ncid)
                             INTEGER,                       INTENT(IN)  :: ncid
     END FUNCTION   nfmpi_redef

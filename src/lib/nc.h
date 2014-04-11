@@ -578,7 +578,11 @@ extern int
 ncmpii_read_NC(NC *ncp);
 
 extern int 
-ncmpii_NC_enddef(NC *ncp);
+ncmpii_enddef(NC *ncp);
+
+extern int
+ncmpii__enddef(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
+               MPI_Offset v_minfree, MPI_Offset r_align);
 
 extern int 
 ncmpii_NC_close(NC *ncp);

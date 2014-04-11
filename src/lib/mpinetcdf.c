@@ -118,6 +118,9 @@ acquired for both blocks. Aligning the start of a variable to a block boundary,
 combined with collective I/O optimizations in the MPI-IO library can often
 eliminate all unaligned file system accesses.
 
+- nc_record_var_align_size: This hint aligns the starting file offset of the
+record variable section.
+
 - nc_header_read_chunk_size: PnetCDF reads the file headers in chunks. This
 hint indicates the chunk size (in bytes). The default is 256 KB.
 
@@ -145,9 +148,10 @@ already exist:
      MPI_Info info;
         ...
      MPI_Info_create (&info);
-     MPI_Info_set (info, "romio_no_indep_rw",    "true");
-     MPI_Info_set (info, "nc_header_align_size", "4194304");
-     MPI_Info_set (info, "nc_var_align_size",    "1048576");
+     MPI_Info_set (info, "romio_no_indep_rw",        "true");
+     MPI_Info_set (info, "nc_header_align_size",     "4194304");
+     MPI_Info_set (info, "nc_var_align_size",        "1048576");
+     MPI_Info_set (info, "nc_record_var_align_size", "1048576");
 
      status = ncmpi_create(MPI_COMM_WORLD, "foo.nc", NC_NOCLOBBER, info, &ncid);
      if (status != NC_NOERR) handle_error(status);
@@ -549,11 +553,14 @@ ncmpi_inq_file_info(int       ncid,
     }
 #endif
 
-    sprintf(value, "%lld", ncp->nciop->hints.header_align_size);
+    sprintf(value, "%lld", ncp->nciop->hints.h_align);
     MPI_Info_set(*info_used, "nc_header_align_size", value);
 
-    sprintf(value, "%lld", ncp->nciop->hints.var_align_size);
+    sprintf(value, "%lld", ncp->nciop->hints.v_align);
     MPI_Info_set(*info_used, "nc_var_align_size", value);
+
+    sprintf(value, "%lld", ncp->nciop->hints.r_align);
+    MPI_Info_set(*info_used, "nc_record_var_align_size", value);
 
     sprintf(value, "%lld", ncp->nciop->hints.header_read_chunk_size);
     MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
@@ -748,7 +755,28 @@ ncmpi_enddef(int ncid) {
     if (!NC_indef(ncp)) /* must currently in define mode */
         return NC_ENOTINDEFINE;
 
-    return ncmpii_NC_enddef(ncp);
+    return ncmpii_enddef(ncp);
+}
+
+/*----< ncmpi__enddef() >-----------------------------------------------------*/
+int
+ncmpi__enddef(int        ncid,
+              MPI_Offset h_minfree,
+              MPI_Offset v_align,
+              MPI_Offset v_minfree,
+              MPI_Offset r_align)
+{
+    int status;
+    NC *ncp;
+
+    /* check if file ID ncid is valid */
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR) return status;
+
+    if (!NC_indef(ncp)) /* must currently in define mode */
+        return NC_ENOTINDEFINE;
+
+    return ncmpii__enddef(ncp, h_minfree, v_align, v_minfree, r_align);
 }
 
 /*----< ncmpi_sync_numrecs() >------------------------------------------------*/

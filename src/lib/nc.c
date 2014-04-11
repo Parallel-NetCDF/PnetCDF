@@ -44,7 +44,6 @@ static int default_create_format = NC_FORMAT_CLASSIC;
 /* Prototypes for functions used only in this file */
 static int move_recs_r(NC *ncp, NC *old);
 static int write_NC(NC *ncp);
-static int NC_begins(NC *ncp, MPI_Offset h_align, MPI_Offset v_align);
 static int NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp);
 
 #if 0
@@ -373,12 +372,14 @@ ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
  */
 static int
 NC_begins(NC         *ncp,
-          MPI_Offset  h_align, /* file alignment hint for header */
-          MPI_Offset  v_align) /* file alignment hint for fixed variables */
+          MPI_Offset  h_align,  /* header alignment */
+          MPI_Offset  h_minfree,/* free space for header */
+          MPI_Offset  v_align,  /* alignment for each fixed variable */
+          MPI_Offset  v_minfree,/* free space for fixed variable section */
+          MPI_Offset  r_align)  /* alignment for record variable section */
 {
     int i, j, sizeof_off_t;
-    MPI_Offset max_xsz;
-    off_t index = 0;
+    MPI_Offset max_xsz, end_var=0;
     NC_var *last = NULL;
     NC_var *first_var = NULL;       /* first "non-record" var */
 
@@ -412,19 +413,23 @@ NC_begins(NC         *ncp,
     /* if the existing begin_var is already >= max_xsz, then leave the
        begin_var as is (in case some header data is deleted) */
 
+    /* expand header free space to at least of size h_minfree */
+    if (h_minfree > 0 && ncp->begin_var < max_xsz + h_minfree)
+        ncp->begin_var = D_RNDUP(max_xsz + h_minfree, h_align);
+
     if (ncp->old != NULL) {
         /* check whether the new begin_var is smaller */
         if (ncp->begin_var < ncp->old->begin_var)
             ncp->begin_var = ncp->old->begin_var;
     }
 
-    index = ncp->begin_var;
-    /* this is the aligned starting file offset for the first variable,
-       also the reserved size for header */
+    /* ncp->begin_var is the aligned starting file offset for the first
+       variable, also the reserved size for header */
 
-    /* Now find the starting file offsets for all variables.
+    /* Now calculate the starting file offsets for all variables.
        loop thru vars, first pass is for the 'non-record' vars */
-    j = 0;
+    j       = 0;
+    end_var = ncp->begin_var;
     for (i=0; i<ncp->vars.ndefined; i++) {
         if (IS_RECVAR(ncp->vars.value[i]))
             /* skip record variables on this pass */
@@ -432,13 +437,13 @@ NC_begins(NC         *ncp,
         if (first_var == NULL) first_var = ncp->vars.value[i];
 
         /* for CDF-1 check if over the file size limit */
-        if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+        if (sizeof_off_t == 4 && (end_var > X_OFF_MAX || end_var < 0))
             return NC_EVARSIZE;
 
         /* this will pad out non-record variables with zero to the
          * requested alignment.  record variables are a bit trickier.
          * we don't do anything special with them */
-        ncp->vars.value[i]->begin = D_RNDUP(index, v_align);
+        ncp->vars.value[i]->begin = D_RNDUP(end_var, v_align);
 
         if (ncp->old != NULL) {
             /* move to the next fixed variable */
@@ -454,10 +459,11 @@ NC_begins(NC         *ncp,
                 j++;
             }
         }
-        index = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
+        /* end_var is the end offset of variable i */
+        end_var = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
     }
 
-    /* index now is pointing to the end of non-record variables */
+    /* end_var now is pointing to the end of last non-record variable */
 
     /* only (re)calculate begin_rec if there is not sufficient
      * space at end of non-record variables or if start of record
@@ -465,9 +471,17 @@ NC_begins(NC         *ncp,
      * If the existing begin_rec is already >= index, then leave the
      * begin_rec as is (in case some non-record variables are deleted)
      */
-    if (ncp->begin_rec < index ||
+    if (ncp->begin_rec < end_var ||
         ncp->begin_rec != D_RNDUP(ncp->begin_rec, v_align))
-        ncp->begin_rec = D_RNDUP(index, v_align);
+        ncp->begin_rec = D_RNDUP(end_var, v_align);
+
+    /* expand free space for fixed variable section */
+    if (ncp->begin_rec < end_var + v_minfree)
+        ncp->begin_rec = D_RNDUP(end_var + v_minfree, v_align);
+
+    /* align the starting offset for record variable section */
+    if (r_align > 1)
+        ncp->begin_rec = D_RNDUP(ncp->begin_rec, r_align);
 
     if (ncp->old != NULL) {
         /* check whether the new begin_rec is smaller */
@@ -480,30 +494,31 @@ NC_begins(NC         *ncp,
     else
         ncp->begin_var = ncp->begin_rec;
 
-    index = ncp->begin_rec;
-    /* index now is pointing to the beginning of record variables
-     * note that this can be larger than the end of all non-record variables
+    end_var = ncp->begin_rec;
+    /* end_var now is pointing to the beginning of record variables
+     * note that this can be larger than the end of last non-record variable
      */
 
     ncp->recsize = 0;
 
     /* TODO: alignment for record variables (maybe using a new hint) */
 
-    /* loop thru vars, second pass is for the 'record' vars */
+    /* loop thru vars, second pass is for the 'record' vars,
+     * re-calculate the straing offset for each record variable */
     j = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
         if (!IS_RECVAR(ncp->vars.value[i]))
             /* skip non-record variables on this pass */
             continue;
 
-        if (sizeof_off_t == 4 && (index > X_OFF_MAX || index < 0))
+        if (sizeof_off_t == 4 && (end_var > X_OFF_MAX || end_var < 0))
             return NC_EVARSIZE;
 
         /* A few attempts at aligning record variables have failed
          * (either with range error or 'value read not that expected',
          * or with an error in ncmpi_redef )).  Not sufficent to align
          * 'begin', but haven't figured out what else to adjust */
-        ncp->vars.value[i]->begin = index;
+        ncp->vars.value[i]->begin = end_var;
 
         if (ncp->old != NULL) {
             /* move to the next record variable */
@@ -517,7 +532,8 @@ NC_begins(NC         *ncp,
                 j++;
             }
         }
-        index += ncp->vars.value[i]->len;
+        end_var += ncp->vars.value[i]->len;
+        /* end_var is the end offset of record variable i */
 
         /* check if record size must fit in 32-bits */
 #if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
@@ -778,14 +794,14 @@ write_NC(NC *ncp)
 int
 ncmpii_dset_has_recvars(NC *ncp) 
 {
-	/* possible further optimzation: set a flag on the header data
-	 * structure when record variable created so we can skip this loop*/
+    /* possible further optimzation: set a flag on the header data
+     * structure when record variable created so we can skip this loop*/
     int i;
     NC_var **vpp;
 
     vpp = ncp->vars.value;
     for (i=0; i< ncp->vars.ndefined; i++, vpp++) {
-	    if (IS_RECVAR(*vpp)) return 1;
+        if (IS_RECVAR(*vpp)) return 1;
     }
     return 0;
 }
@@ -824,7 +840,7 @@ ncmpii_NC_sync(NC  *ncp,
     /* if independent data mode is used to write data, ncp->numrecs might be
      * inconsistent among processes. */
     if (has_recvars)
-	MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
+        MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
                       ncp->nciop->comm);
 
     if (NC_hdirty(ncp)) {  /* header is dirty */
@@ -1006,82 +1022,55 @@ ncmpii_NC_check_vlens(NC *ncp)
 #define HEADER_ALIGNMENT_LB 4
 
 /*----< ncmpii_NC_enddef() >-------------------------------------------------*/
-int 
-ncmpii_NC_enddef(NC *ncp)
+static int 
+ncmpii_NC_enddef(NC         *ncp,
+                 MPI_Offset  h_align,
+                 MPI_Offset  h_minfree,
+                 MPI_Offset  v_align,
+                 MPI_Offset  v_minfree,
+                 MPI_Offset  r_align)
 {
-    int i, flag, striping_unit, status=NC_NOERR;
+    int status=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
-    MPI_Offset h_align, v_align, all_var_size;
 #ifdef ENABLE_SUBFILING
     NC *ncp_sf=NULL;
 #endif
 
     assert(!NC_readonly(ncp));
-
-    /* calculate a good align size for PnetCDF level hints:
-     * header_align_size and var_align_size based on the MPI-IO hint
-     * striping_unit
-     */
-    MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
-                 value, &flag);
-    striping_unit = 0;
-    if (flag) striping_unit = atoi(value);
-
-    all_var_size = 0;  /* sum of all defined variables */
-    for (i=0; i<ncp->vars.ndefined; i++)
-        all_var_size += ncp->vars.value[i]->len;
-
-    /* align file offsets for file header space and fixed variables */
-    h_align = ncp->nciop->hints.header_align_size;
-    v_align = ncp->nciop->hints.var_align_size;
-
-    if (h_align == 0) { /* user does not set hint header_align_size */
-        if (striping_unit &&
-            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
-            /* if striping_unit is available and file size sufficiently large */
-            h_align = striping_unit;
-        else
-            h_align = DEFAULT_ALIGNMENT;
-    }
-    /* else respect user hint */
-
-    if (v_align == 0) { /* user does not set hint var_align_size */
-        if (striping_unit &&
-            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
-            /* if striping_unit is available and file size sufficiently large */
-            v_align = striping_unit;
-        else
-            v_align = DEFAULT_ALIGNMENT;
-    }
-    /* else respect user hint */
+    assert(h_align > 0);  /* alignment size cannot be zero */
+    assert(v_align > 0);
+    assert(r_align > 0);
 
     /* all CDF formats require 4-bytes alignment */
     h_align = D_RNDUP(h_align, 4);
     v_align = D_RNDUP(v_align, 4);
-
-    /* adjust the hints to be used by PnetCDF */
-    ncp->nciop->hints.header_align_size = h_align;
-    ncp->nciop->hints.var_align_size    = v_align;
+    r_align = D_RNDUP(r_align, 4);
 
     /* reflect the hint changes to the MPI info object, so the user can
      * query extacly what hint values are being used
      */
+    ncp->nciop->hints.h_align = h_align;
+    ncp->nciop->hints.v_align = v_align;
+    ncp->nciop->hints.r_align = r_align;
+
     sprintf(value, "%lld", h_align);
     MPI_Info_set(ncp->nciop->mpiinfo, "nc_header_align_size", value);
     sprintf(value, "%lld", v_align);
     MPI_Info_set(ncp->nciop->mpiinfo, "nc_var_align_size", value);
+    sprintf(value, "%lld", r_align);
+    MPI_Info_set(ncp->nciop->mpiinfo, "nc_record_var_align_size", value);
 
 #ifdef ENABLE_SUBFILING
     /* num of subfiles has been determined already */ 
     ncp->nc_num_subfiles = ncp->nciop->hints.num_subfiles; 
 
     if (ncp->nc_num_subfiles > 1) { 
-	/* TODO: should return subfile-related msg when there's an error */ 
-	status = ncmpii_subfile_partition(ncp, &ncp->ncid_sf); 
-	if (status != NC_NOERR) { 
-	    printf( "error in ncmpii_subfile_partition()\n" ); 
-	    return status; 
-	} 
+        /* TODO: should return subfile-related msg when there's an error */ 
+        status = ncmpii_subfile_partition(ncp, &ncp->ncid_sf); 
+        if (status != NC_NOERR) { 
+            printf( "error in ncmpii_subfile_partition()\n" ); 
+            return status; 
+        } 
     }
 #endif
 
@@ -1093,17 +1082,17 @@ ncmpii_NC_enddef(NC *ncp)
      * and offset for record variables as well. Otherwise, re-used all
      * variable offsets as many as possible
      */
-    NC_begins(ncp, h_align, v_align);
+    NC_begins(ncp, h_align, h_minfree, v_align, v_minfree, r_align);
 
 #ifdef ENABLE_SUBFILING 
     if (ncp->nc_num_subfiles > 1) {  
-	/* get ncp info for the subfile */  
-	status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);  
-	if (status != NC_NOERR) { 
-	    printf( "error on ncmpii_NC_check_id()\n" ); 
-	    return status; 
-	} 
-	NC_begins(ncp_sf, h_align, v_align);  
+        /* get ncp info for the subfile */  
+        status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);  
+        if (status != NC_NOERR) { 
+            printf( "error on ncmpii_NC_check_id()\n" ); 
+            return status; 
+        } 
+        NC_begins(ncp_sf, h_align, h_minfree, v_align, v_minfree, r_align);  
     }
 #endif
 
@@ -1156,9 +1145,9 @@ ncmpii_NC_enddef(NC *ncp)
 #ifdef ENABLE_SUBFILING
     /* write header to subfile */
     if (ncp->nc_num_subfiles > 1) { 
-	status = write_NC(ncp_sf); 
-	if (status != NC_NOERR) 
-	    return status; 
+        status = write_NC(ncp_sf); 
+        if (status != NC_NOERR) 
+            return status; 
     }
 #endif
  
@@ -1170,7 +1159,7 @@ ncmpii_NC_enddef(NC *ncp)
 
 #ifdef ENABLE_SUBFILING
     if (ncp->nc_num_subfiles > 1) 
-	fClr(ncp_sf->flags, NC_CREAT | NC_INDEF);
+        fClr(ncp_sf->flags, NC_CREAT | NC_INDEF);
 #endif
 
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE))
@@ -1180,7 +1169,132 @@ ncmpii_NC_enddef(NC *ncp)
     return status;
 }
 
-/* Public */
+/*----< ncmpii_enddef() >----------------------------------------------------*/
+int 
+ncmpii_enddef(NC *ncp)
+{
+    int i, flag, striping_unit;
+    char value[MPI_MAX_INFO_VAL];
+    MPI_Offset h_align, v_align, r_align, all_var_size;
+
+    assert(!NC_readonly(ncp));
+
+    /* calculate a good align size for PnetCDF level hints:
+     * header_align_size and var_align_size based on the MPI-IO hint
+     * striping_unit
+     */
+    MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    striping_unit = 0;
+    if (flag) striping_unit = atoi(value);
+
+    all_var_size = 0;  /* sum of all defined variables */
+    for (i=0; i<ncp->vars.ndefined; i++)
+        all_var_size += ncp->vars.value[i]->len;
+
+    /* align file offsets for file header space and fixed variables */
+    h_align = ncp->nciop->hints.h_align;
+    v_align = ncp->nciop->hints.v_align;
+    r_align = ncp->nciop->hints.r_align;
+
+    if (h_align == 0) { /* user does not set hint nc_header_align_size */
+        if (striping_unit &&
+            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+            /* if striping_unit is available and file size sufficiently large */
+            h_align = striping_unit;
+        else
+            h_align = DEFAULT_ALIGNMENT;
+    }
+    /* else respect user hint */
+
+    if (v_align == 0) { /* user does not set hint nc_var_align_size */
+        if (striping_unit &&
+            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+            /* if striping_unit is available and file size sufficiently large */
+            v_align = striping_unit;
+        else
+            v_align = DEFAULT_ALIGNMENT;
+    }
+    /* else respect user hint */
+
+    if (r_align == 0) { /* user does not set hint nc_record_var_align_size */
+        if (striping_unit)
+            r_align = striping_unit;
+        else
+            r_align = DEFAULT_ALIGNMENT;
+    }
+    /* else respect user hint */
+
+    return ncmpii_NC_enddef(ncp, h_align, 0, v_align, 0, r_align);
+}
+
+/*----< ncmpii__enddef() >---------------------------------------------------*/
+int 
+ncmpii__enddef(NC         *ncp,
+               MPI_Offset  h_minfree,
+               MPI_Offset  v_align,
+               MPI_Offset  v_minfree,
+               MPI_Offset  r_align)
+{
+    int i, flag, striping_unit;
+    char value[MPI_MAX_INFO_VAL];
+    MPI_Offset h_align, all_var_size;
+
+    assert(!NC_readonly(ncp));
+
+    /* calculate a good align size for PnetCDF level hints:
+     * header_align_size and var_align_size based on the MPI-IO hint
+     * striping_unit
+     */
+    MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    striping_unit = 0;
+    if (flag) striping_unit = atoi(value);
+
+    all_var_size = 0;  /* sum of all defined variables */
+    for (i=0; i<ncp->vars.ndefined; i++)
+        all_var_size += ncp->vars.value[i]->len;
+
+    /* align file offsets for file header space and fixed variables */
+    h_align = ncp->nciop->hints.h_align;
+
+    if (v_align == 0) /* 0 means let PnetCDF decide, 1 means no align */
+        v_align = ncp->nciop->hints.v_align;
+
+    if (r_align == 0) /* 0 means let PnetCDF decide, 1 means no align */
+        r_align = ncp->nciop->hints.r_align;
+
+    if (h_align == 0) { /* user does not set hint nc_header_align_size */
+        if (striping_unit &&
+            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+            /* if striping_unit is available and file size sufficiently large */
+            h_align = striping_unit;
+        else
+            h_align = DEFAULT_ALIGNMENT;
+    }
+    /* else respect user hint */
+
+    if (v_align == 0) { /* user does not set hint nc_var_align_size */
+        if (striping_unit &&
+            all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
+            /* if striping_unit is available and file size sufficiently large */
+            v_align = striping_unit;
+        else
+            v_align = DEFAULT_ALIGNMENT;
+    }
+    /* else respect user hint */
+
+    if (r_align == 0) { /* user does not set hint nc_record_var_align_size */
+        if (striping_unit)
+            r_align = striping_unit;
+        else
+            r_align = DEFAULT_ALIGNMENT;
+    }
+    /* else respect user hint */
+
+    return ncmpii_NC_enddef(ncp, h_align, h_minfree, v_align, v_minfree,
+                            r_align);
+}
 
 /*----< ncmpii_NC_close() >---------------------------------------------------*/
 int 
@@ -1190,7 +1304,7 @@ ncmpii_NC_close(NC *ncp)
     NC_req *cur_req;
 
     if (NC_indef(ncp)) { /* currently in define mode */
-        status = ncmpii_NC_enddef(ncp); /* TODO: defaults */
+        status = ncmpii_enddef(ncp); /* TODO: defaults */
         if (status != NC_NOERR ) {
             /* To do: Abort new definition, if any */
             if (ncp->old != NULL) {
@@ -1245,6 +1359,7 @@ ncmpii_NC_close(NC *ncp)
     return status;
 }
 
+/* Public */
 
 int
 ncmpi_inq(int  ncid,

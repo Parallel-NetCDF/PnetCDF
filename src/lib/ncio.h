@@ -32,8 +32,9 @@
  * I/O hints used by PnetCDF, but MPI-IO
  */
 typedef struct {
-    MPI_Offset header_align_size;
-    MPI_Offset var_align_size;
+    MPI_Offset h_align; /* file alignment size for header */
+    MPI_Offset v_align; /* file alignment size for each fixed variable */
+    MPI_Offset r_align; /* file alignment size for record variable section */
     MPI_Offset header_read_chunk_size;
 #ifdef ENABLE_SUBFILING
     int num_subfiles;

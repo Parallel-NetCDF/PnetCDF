@@ -30,6 +30,7 @@ C2F_SRCS = createf.c \
 	get_file_infof.c \
 	deletef.c \
 	enddeff.c \
+	_enddeff.c \
 	redeff.c \
 	set_default_formatf.c \
 	syncf.c \

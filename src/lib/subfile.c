@@ -227,10 +227,8 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
     else 
 	color = myrank%ncp->nc_num_subfiles;
 
-    if (myrank == 0) /* debug */
-        printf("%s: rank(%d): color=%d\n", __func__, myrank, color);
 #ifdef SUBFILE_DEBUG     
-    printf("rank(%d): color=%d\n", myrank, color);
+    printf("%s: rank(%d): color=%d\n", __func__, myrank, color);
 #endif
 
     /* check whether file is already partitioned */
@@ -255,8 +253,9 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
     TEST_HANDLE_ERR ("ncmpii_NC_check_id", status);
     
     /* adjust the hints to be used by PnetCDF; use the same value in master */
-    ncp_sf->nciop->hints.header_align_size = ncp->nciop->hints.header_align_size;
-    ncp_sf->nciop->hints.var_align_size    = ncp->nciop->hints.var_align_size;
+    ncp_sf->nciop->hints.h_align = ncp->nciop->hints.h_align;
+    ncp_sf->nciop->hints.v_align = ncp->nciop->hints.v_align;
+    ncp_sf->nciop->hints.r_align = ncp->nciop->hints.r_align;
     
     for(i=0; i<ncp->vars.ndefined; i++) { /* travere all variables */
 	NC_var **vpp = ncp->vars.value;
