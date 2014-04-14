@@ -8,7 +8,7 @@ AC_INIT([parallel-netcdf], [1.4.1], [parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
 AC_CONFIG_HEADERS([src/lib/ncconfig.h])
-AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
+AC_CONFIG_SRCDIR([src/lib/pnetcdf.h])
 
 AC_CONFIG_AUX_DIR(./scripts)
 
@@ -827,9 +827,9 @@ fi
 chmod u+x ${srcdir}/scripts/install-sh
 
 AC_ARG_ENABLE([subfiling],
-   [AS_HELP_STRING([--enable-subfiling],
-                   [Turns on subfiling support. @<:@default: disabled@:>@])],
-   [enable_subfiling=${enableval}], [enable_subfiling=no]
+   [AS_HELP_STRING([--disable-subfiling],
+                   [Turns off subfiling support. @<:@default: enabled@:>@])],
+   [enable_subfiling=${enableval}], [enable_subfiling=yes]
 )
 if test "x$enable_subfiling" = "xyes" ; then
    AC_DEFINE(ENABLE_SUBFILING)
@@ -880,57 +880,52 @@ fi
 AC_SUBST(TEST_MPIRUN)
 AC_SUBST(TEST_OUTDIR)
 
-CONFIG_FILES="macros.make \
-              Makefile \
-              src/Makefile \
-              src/lib/Makefile \
-              src/lib/pnetcdf.h \
-              src/utils/Makefile \
-              src/utils/ncmpidump/Makefile \
-              src/utils/ncmpidiff/Makefile \
-              src/utils/ncmpigen/Makefile \
-              src/utils/ncmpivalid/Makefile \
-              test/Makefile \
-              test/common/Makefile \
-              test/nc_test/Makefile \
-              test/C/Makefile \
-              test/test_int/Makefile \
-              test/test_float/Makefile \
-              test/test_double/Makefile \
-              test/test_double_int/Makefile \
-              test/test_dtype/Makefile \
-              test/fandc/Makefile \
-              test/testcases/Makefile \
-              test/nonblocking/Makefile \
-              test/header/Makefile \
-              test/cdf_format/Makefile \
-              test/largefile/Makefile \
-              test/data/Makefile \
-              examples/C/Makefile \
-              examples/tutorial/Makefile \
-              examples/Makefile \
-              doc/Makefile \
-              man/Makefile \
-              scripts/Makefile \
-              benchmarks/Makefile \
-              benchmarks/C/Makefile"
-if test "$enable_fortran" = yes ; then
-   AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
-   CONFIG_FILES="${CONFIG_FILES} test/nf_test/Makefile \
-                 test/nf90_test/Makefile \
-                 test/F90/Makefile \
-                 examples/F77/Makefile \
-                 examples/F90/Makefile \
-                 src/libf90/Makefile \
-                 src/libf90/api.f90 \
-                 src/libf/Makefile \
-                 src/libf/pnetcdf.inc \
-                 benchmarks/FLASH-IO/Makefile"
-fi
-if test "$enable_subfiling" = yes; then
-   CONFIG_FILES="${CONFIG_FILES} test/subfile/Makefile"
-fi
-AC_CONFIG_FILES(${CONFIG_FILES})
+AC_CONFIG_HEADERS([src/libf/nfconfig_inc])
+AC_CONFIG_FILES(macros.make \
+                Makefile \
+                src/Makefile \
+                src/lib/Makefile \
+                src/utils/Makefile \
+                src/utils/ncmpidump/Makefile \
+                src/utils/ncmpidiff/Makefile \
+                src/utils/ncmpigen/Makefile \
+                src/utils/ncmpivalid/Makefile \
+                test/Makefile \
+                test/common/Makefile \
+                test/nc_test/Makefile \
+                test/C/Makefile \
+                test/test_int/Makefile \
+                test/test_float/Makefile \
+                test/test_double/Makefile \
+                test/test_double_int/Makefile \
+                test/test_dtype/Makefile \
+                test/fandc/Makefile \
+                test/testcases/Makefile \
+                test/nonblocking/Makefile \
+                test/header/Makefile \
+                test/cdf_format/Makefile \
+                test/largefile/Makefile \
+                test/data/Makefile \
+                examples/C/Makefile \
+                examples/tutorial/Makefile \
+                examples/Makefile \
+                doc/Makefile \
+                man/Makefile \
+                scripts/Makefile \
+                benchmarks/Makefile \
+                benchmarks/C/Makefile \
+                test/nf_test/Makefile \
+                test/nf90_test/Makefile \
+                test/F90/Makefile \
+                examples/F77/Makefile \
+                examples/F90/Makefile \
+                src/libf90/Makefile \
+                src/libf90/api.f90 \
+                src/libf/Makefile \
+                src/libf/pnetcdf.inc \
+                benchmarks/FLASH-IO/Makefile \
+                test/subfile/Makefile)
+
 AC_OUTPUT
 echo "--------------------------------------------------------------------"
 

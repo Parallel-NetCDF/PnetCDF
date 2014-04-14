@@ -114,9 +114,17 @@
 #define ULLONG_MAX  0xffffffffffffffffULL
 #endif
 
+#ifndef X_INT64_MAX
 #define X_INT64_MAX    LLONG_MAX
+#endif
+
+#ifndef X_INT64_MIN
 #define X_INT64_MIN    LLONG_MIN
+#endif
+
+#ifndef X_UINT64_MAX
 #define X_UINT64_MAX  ULLONG_MAX
+#endif
 
 /* alias poorly named limits.h macros */
 #define  SHORT_MAX  SHRT_MAX

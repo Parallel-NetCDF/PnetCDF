@@ -73,10 +73,18 @@
 #define ULLONG_MAX  0xffffffffffffffffULL
 #endif
 
+#ifndef X_INT64_MAX
 #define X_INT64_MAX    LLONG_MAX
+#endif
+#ifndef X_INT64_MIN
 #define X_INT64_MIN    LLONG_MIN
+#endif
+#ifndef X_UINT64_MAX
 #define X_UINT64_MAX  ULLONG_MAX
+#endif
+#ifndef X_UINT64_MIN
 #define X_UINT64_MIN  ULLONG_MIN
+#endif
 
 
 #if defined(_SX) && _SX != 0 /* NEC SUPER UX */

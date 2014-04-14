@@ -1,0 +1,13 @@
+#PBS -q regular
+#PBS -l walltime=00:10:00
+#PBS -l mppwidth=8
+
+cd $PBS_O_WORKDIR
+
+# test seqential programs
+make check TEST_MPIRUN=aprun TEST_OUTDIR=$SCRATCH TEST_SEQRUN="aprun -n 1"
+
+# test parallel programs
+make ptest TEST_MPIRUN=aprun TEST_OUTDIR=$SCRATCH TEST_SEQRUN="aprun -n 1"
+
+

@@ -37,11 +37,13 @@ This is essentially a placeholder for the next release note ...
       file system striping settings, striping size and count, if the underneath
       MPI-IO can find their values from the file system.
 
-  o Syntax change for Fortran put APIs
+  o Syntax changes
     * 
 
   o New PnetCDF hint
-    * 
+    * nc_record_align_size - aligns the starting file offset of the record
+      variable section. Note this is for the starting offset of the section,
+      not individual records.
 
   o New error code
     * 
@@ -60,15 +62,40 @@ This is essentially a placeholder for the next release note ...
       correctly when NC_NOCLOBBER modes is used in ncmpi_create and the file
       exists.
 
+    * Some test programs are developed to run in parallel. The test mechanism
+      for parallel runs is command "make ptest". Two environment variables
+      can be used to set the MPI run command and output file directory:
+      TEST_MPIRUN and TEST_OUTDIR. Their defaults are mpiexec and "." (current
+      directory), respectively. For example,
+          make ptest TEST_MPIRUN=aprun TEST_OUTDIR=/scratch
+
+    * A sample PBS script file is added to test parallel programs on a batch
+      queue system: pbs.script. This example script can be submitted from the
+      build root directory (where you run "make" command to build PnetCDF
+      library).
+
+    * For cross compile environment (and batch queue system), the environment
+      variable TEST_SEQRUN can be used to set the MPI run command. For example,
+      the command for testing sequential programs:
+          make check TEST_SEQRUN="aprun -n 1" TEST_OUTDIR=/scratch
+
+      For non-cross compile environment, there is no need to set the environment
+      variables, as long as one can run the MPI executable without mpirun or
+      mpiexec.
+
   o New optimization
 
   o Other updates:
     * Fix build target dependency for parallel make. Now parallel make. e.g.
       "make -j8" runs much faster on many platforms, including Cray and BGQ.
 
-    * File create is revised for handling NC_CLOBBER and NC_NOCLOBBER modes.
+    * File create was revised for handling NC_CLOBBER and NC_NOCLOBBER modes.
       On systems where Unix calls access() and unlink() are available, they
       are used to check if a file exits and delete an existing file.
+
+    * subfiling is now enabled by default. Use --disable-subfiling to disable
+      it
+
   o Bug fixes
     * 
 
