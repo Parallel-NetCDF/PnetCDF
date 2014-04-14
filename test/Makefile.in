@@ -28,7 +28,7 @@ SUBDIRS = common \
           data
 
 # Packing subdirs must include all directories
-PACKING_SUBDIRS = $(SUBDIRS) nf_test nf90_test F90 subfile
+PACKING_SUBDIRS := $(SUBDIRS) nf_test nf90_test F90 subfile
 
 ifeq (@has_fortran@, yes)
 SUBDIRS += nf_test
