@@ -180,14 +180,14 @@ clean:		FORCE
 		  *.gcda *.gcno gmon.out
 
 distclean:	FORCE
-	@if [ -n "$(SUBDIRS)" ]; then \
-	    subdirs="$(SUBDIRS)"; \
+	@if [ -n "$(PACKING_SUBDIRS)" ]; then \
+	    subdirs="$(PACKING_SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
 		(cd $$subdir && $(MAKE) $(MFLAGS) distclean) || exit 1; \
 	    done; \
 	fi
-	@if [ -n "$(SUBDIRS)" ]; then \
-	    subdirs="$(SUBDIRS)"; \
+	@if [ -n "$(PACKING_SUBDIRS)" ]; then \
+	    subdirs="$(PACKING_SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
 		if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $$subdir ; fi \
 	    done; \
