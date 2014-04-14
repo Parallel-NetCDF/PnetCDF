@@ -1058,7 +1058,7 @@ ncmpii_NC_enddef(NC         *ncp,
     sprintf(value, "%lld", v_align);
     MPI_Info_set(ncp->nciop->mpiinfo, "nc_var_align_size", value);
     sprintf(value, "%lld", r_align);
-    MPI_Info_set(ncp->nciop->mpiinfo, "nc_record_var_align_size", value);
+    MPI_Info_set(ncp->nciop->mpiinfo, "nc_record_align_size", value);
 
 #ifdef ENABLE_SUBFILING
     /* num of subfiles has been determined already */ 
@@ -1217,7 +1217,7 @@ ncmpii_enddef(NC *ncp)
     }
     /* else respect user hint */
 
-    if (r_align == 0) { /* user does not set hint nc_record_var_align_size */
+    if (r_align == 0) { /* user does not set hint nc_record_align_size */
         if (striping_unit)
             r_align = striping_unit;
         else
@@ -1284,7 +1284,7 @@ ncmpii__enddef(NC         *ncp,
     }
     /* else respect user hint */
 
-    if (r_align == 0) { /* user does not set hint nc_record_var_align_size */
+    if (r_align == 0) { /* user does not set hint nc_record_align_size */
         if (striping_unit)
             r_align = striping_unit;
         else

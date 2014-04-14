@@ -118,7 +118,7 @@ void ncmpiio_extract_hints(ncio     *nciop,
                      &flag);
         if (flag) nciop->hints.v_align = atoll(value);
 
-        MPI_Info_get(info, "nc_record_var_align_size",    MPI_MAX_INFO_VAL-1,
+        MPI_Info_get(info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) nciop->hints.r_align = atoll(value);
 
