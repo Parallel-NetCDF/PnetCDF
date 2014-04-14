@@ -121,7 +121,7 @@ Here lists a few important options:
                           machines. [default: enabled]
   --enable-coverage       Compile with coverage support (gcc-based only).
                           [default: disabled]
-  --enable-subfiling      Turns on subfiling support. [default: disabled]
+  --disable-subfiling     Turns off subfiling support. [default: enabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
                           can provide data consistency. [default: enabled]
 
