@@ -27,6 +27,9 @@ SUBDIRS = common \
           testcases \
           data
 
+# Packing subdirs must include all directories
+PACKING_SUBDIRS = $(SUBDIRS) nf_test nf90_test F90 subfile
+
 ifeq (@has_fortran@, yes)
 SUBDIRS += nf_test
 SUBDIRS += nf90_test
@@ -37,14 +40,7 @@ ifeq (@enable_subfiling@, yes)
 SUBDIRS += subfile
 endif
 
-# Packing subdirs must include all directories
-# thus, configure must enable fortran and subfiling in order to run "make dist"
-PACKING_SUBDIRS = $(SUBDIRS)
-
 PACKING_LIST = Makefile.in
-ifeq (@enable_subfiling@, no)
-PACKING_LIST += subfile
-endif
 
 all:
 	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) all ; ) ; done
