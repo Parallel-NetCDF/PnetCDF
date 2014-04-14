@@ -12,17 +12,6 @@
 #include <string.h>
 #include <unistd.h>
 
-/* need this for SIZEOF_INT so we get the correct printf output */
-#include "ncconfig.h" 
-
-#ifdef SIZEOF_INT
-# if SIZEOF_INT == 4
-#  define lld(x) (x)
-# elif  SIZEOF_INT == 8
-#  define lld(x) (long long)(x)
-# endif
-#endif
-
 /* The file name is taken as a command-line argument. */
 
 static int verbose;
@@ -161,7 +150,7 @@ int ncmpi_diff(char *filename1, char *filename2) {
             sprintf(str,"attribute[%d] %s: type1(%d) != type2(%d)\n",i,name1,type1,type2);
         HANDLE_DIFF(str)
         if (attlen1 != attlen2)
-            sprintf(str,"attribute[%d] %s: attlen1(%lld) != attlen2(%lld)\n",i,name1,(long long int) attlen1,(long long int)attlen2);
+            sprintf(str,"attribute[%d] %s: attlen1(%lld) != attlen2(%lld)\n",i,name1, attlen1, attlen2);
         HANDLE_DIFF(str)
         switch (type1) {
             case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text,   NC_CHAR)
@@ -228,7 +217,7 @@ int ncmpi_diff(char *filename1, char *filename2) {
                 sprintf(str,"variable[%d] %s: attr type[%d] (%d) != (%d)\n",i,name,j,type1,type2);
             HANDLE_DIFF(str)
             if (attlen1 != attlen2)
-                sprintf(str,"variable[%d] %s: attr attlen[%d] (%lld) != (%lld)\n",i,name,j,(long long int)attlen1,(long long int)attlen2);
+                sprintf(str,"variable[%d] %s: attr attlen[%d] (%lld) != (%lld)\n",i,name,j, attlen1, attlen2);
             HANDLE_DIFF(str)
 
             switch (type1) {

@@ -339,7 +339,7 @@ all: $(LIB_CSRCS) $(LIBRARY) nfconfig.inc
 $(LIB_CSRCS): mpifnetcdf.h
 
 mpifnetcdf.h: defs createffiles buildiface
-	$(srcdir)/buildiface -infile=../lib/pnetcdf.h -deffile=$(srcdir)/defs
+	$(srcdir)/buildiface -infile=$(srcdir)/../lib/pnetcdf.h -deffile=$(srcdir)/defs
 
 createffiles: ../lib/pnetcdf.h
 
