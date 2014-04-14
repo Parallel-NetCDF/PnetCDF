@@ -11,7 +11,7 @@ VPATH   = @srcdir@
 
 include ../../macros.make
 
-INCLUDES    = -I../../src/lib @FC_MODINC@../../src/libf90
+INCLUDES    = @FC_MODINC@../../src/libf90
 F90LDFLAGS += -L../../src/lib
 LIBS       := -lpnetcdf $(LIBS)
 

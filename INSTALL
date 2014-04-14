@@ -152,10 +152,25 @@ Some influential environment variables:
 3. Testing the PnetCDF installation
 ==================================
 
-To test PnetCDF, you can run the test suite using:
-
+Two type of testings are implemented in PnetCDF: sequential and parallel.
+For testing sequential programs, the command is
      make testing
+For testing parallel programs, the command is
+     make ptest
+The parallel test uses up to 8 MPI processes.
 
+There are three environment variables that can be used to run testing on
+a cross compile platform.
+ - TEST_MPIRUN : command to launch MPI jobs. default: mpiexec
+ - TEST_SEQRUN : command to run MPI executable sequentially. default: ./
+ - TEST_OUTDIR : output directory. default: ./
+
+Examples:
+    make testing TEST_OUTDIR=/scratch
+    make ptest TEST_MPIRUN=aprun TEST_OUTDIR=/scratch
+
+One can also run "make ptest" on batch queue systems. One example PBS
+script is provide "pbs.script".
 
 -------------------------------------------------------------------------
 
