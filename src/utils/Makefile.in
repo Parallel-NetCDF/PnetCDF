@@ -11,7 +11,7 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-SUBDIRS = ncmpigen ncmpidump ncmpidiff ncmpivalid
+SUBDIRS = ncmpigen ncmpidump ncmpidiff ncmpivalid pnetcdf_version
 
 PACKING_LIST = Makefile.in
 

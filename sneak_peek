@@ -88,6 +88,9 @@ This is essentially a placeholder for the next release note ...
 
   o New optimization
 
+  o New utility program
+    * pnetcdf_version prints the version information of the PnetCDF library
+
   o Other updates:
     * Fix build target dependency for parallel make. Now parallel make. e.g.
       "make -j8" runs much faster on many platforms, including Cray and BGQ.

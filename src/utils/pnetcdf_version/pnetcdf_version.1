@@ -1,0 +1,45 @@
+.\" $Header$
+.nr yr \n(yr+1900
+.af mo 01
+.af dy 01
+.TH PNETCDF_VERSION 1 2014-04-15 "Printed: \n(yr-\n(mo-\n(dy" "UTILITIES"
+.SH NAME
+pnetcdf_version \- print the version information of PnetCDF library
+.SH SYNOPSIS
+.ft B
+.HP
+pnetcdf_version
+.nh
+
+\%[-v]
+\%[-d]
+\%[-c]
+\%[-b]
+\%[-h]
+.hy
+.ft
+.SH DESCRIPTION
+\fBpnetcdf_version\fP prints the version information of PnetCDF library and
+the configure command line used to build the library
+
+If no argument is given, all information is printed.
+.SH OPTIONS
+.IP "\fB-v\fP"
+Version number of this PnetCDF release.
+.IP "\fB-d\fP"
+Release date.
+.IP "\fB-c\fP"
+Configure command-line arguments used to build this PnetCDF
+.IP "\fB-b\fP"
+MPI compilers used to build this PnetCDF library
+.IP "\fB-h\fP"
+Print the available command-line options of pnetcdf_version
+
+.SH "SEE ALSO"
+.LP
+.BR pnetcdf (3)
+.SH DATE
+$Date$
+.LP
+
+

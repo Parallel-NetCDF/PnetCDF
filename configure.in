@@ -12,6 +12,8 @@ AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 
 AC_CONFIG_AUX_DIR(./scripts)
 
+CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
+
 dnl parse the version numbers to 4 env variables
 saved_IFS=${IFS}
 IFS=. read PNETCDF_VERSION_MAJOR PNETCDF_VERSION_MINOR PNETCDF_VERSION_SUB PNETCDF_VERSION_PRE <<< "$PACKAGE_VERSION"
@@ -49,6 +51,7 @@ AC_DEFINE_UNQUOTED(PNETCDF_VERSION_SUB, $PNETCDF_VERSION_SUB, sub version number
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION_PRE, $PNETCDF_VERSION_PRE, pre-release string)
 AC_DEFINE_UNQUOTED(PNETCDF_VERSION, ["$PNETCDF_VERSION"], full PnetCDF version string)
 AC_DEFINE_UNQUOTED(PNETCDF_RELEASE_DATE, ["$PNETCDF_RELEASE_DATE"], PnetCDF release date string)
+AC_DEFINE_UNQUOTED(CONFIGURE_ARGS_CLEAN, ["$CONFIGURE_ARGS_CLEAN"], configure command-line arguments used)
 
 AC_SUBST(PNETCDF_VERSION_MAJOR)
 AC_SUBST(PNETCDF_VERSION_MINOR)
@@ -58,6 +61,7 @@ AC_SUBST(PNETCDF_VERSION)
 AC_SUBST(PNETCDF_RELEASE_DATE)
 AC_SUBST(PNETCDF_RELEASE_DATE2)
 AC_SUBST(PACKAGE_VERSION)
+AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
 dnl these used to live in acconfig.h
 dnl autoheader only adds these templates to the first invocation of AC_CONFIG_HEADERS
@@ -887,6 +891,7 @@ AC_CONFIG_FILES(macros.make \
                 src/utils/ncmpidiff/Makefile \
                 src/utils/ncmpigen/Makefile \
                 src/utils/ncmpivalid/Makefile \
+                src/utils/pnetcdf_version/Makefile \
                 test/Makefile \
                 test/common/Makefile \
                 test/nc_test/Makefile \

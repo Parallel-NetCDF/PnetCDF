@@ -1,0 +1,51 @@
+#
+# Copyright (C) 2014, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include ../../../macros.make
+
+DEFS           += -DMPICC="\"$(CC)\""   -DCFLAGS="\"$(CFLAGS)\""
+DEFS           += -DMPICXX="\"$(CXX)\"" -DCXXFLAGS="\"$(CXXFLAGS)\""
+DEFS           += -DMPIF77="\"$(F77)\"" -DFCFLAGS="\"$(FCFLAGS)\""
+DEFS           += -DMPIF90="\"$(F90)\"" -DF90FLAGS="\"$(F90FLAGS)\""
+INCLUDES	= -I../../lib
+
+C_SOURCES	= pnetcdf_version.c
+
+OBJS            = $(C_SOURCES:.c=.o)
+
+PROGRAM		= pnetcdf_version
+MANUAL		= pnetcdf_version.1
+
+PACKING_LIST    = $(C_SOURCES) $(MANUAL) \
+                  Makefile.in
+
+GARBAGE		= $(PROGRAM)
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJS)
+	$(LINK.c) $(OBJS)
+
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
+install:	
+	$(INSTALL) -d -m 755 $(MANDIR)/man1
+	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
+
+	$(INSTALL) -d $(BINDIR)
+	$(INSTALL) -m 755 $(PROGRAM) $(BINDIR)/$(PROGRAM)
+
+uninstall:
+	$(RM) -f $(BINDIR)/$(PROGRAM)
+	$(RM) -f $(MANDIR)/man1/$(MANUAL)
+
+include $(srcdir)/../../../rules.make
