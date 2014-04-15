@@ -31,8 +31,7 @@ M4_SRCS = getput_text.m4 \
           getput_var.m4 \
           getput_varn.m4
 
-F90_SRCS = nfmpi_constants.f90 \
-           nf90_constants.f90 \
+F90_SRCS = nf90_constants.f90 \
            overloads.f90 \
            visibility.f90 \
            file.f90 \
@@ -42,17 +41,18 @@ F90_SRCS = nfmpi_constants.f90 \
            pnetcdf.f90
 
 SRCS     = $(F90_SRCS) $(M4_SRCS:.m4=.f90) \
-           api.f90
+           api.f90 nfmpi_constants.f90
 
 LIB_OBJS = pnetcdf.o
 
 PACKING_LIST = $(F90_SRCS) \
                $(M4_SRCS) \
                Makefile.in \
-               api.f90.in
+               api.f90.in \
+               nfmpi_constants.f90.in
 
 GARBAGE		= $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90)
-DIST_GARBAGE	= api.f90
+DIST_GARBAGE	= api.f90 nfmpi_constants.f90
 
 all: $(MANUAL) $(LIBRARY)
 
