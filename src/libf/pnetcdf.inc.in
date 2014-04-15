@@ -3,6 +3,17 @@
 !
 
 !
+! PnetCDF library version numbders
+!
+      integer PNETCDF_VERSION_MAJOR
+      integer PNETCDF_VERSION_MINOR
+      integer PNETCDF_VERSION_SUB
+
+      parameter (PNETCDF_VERSION_MAJOR = @PNETCDF_VERSION_MAJOR@)
+      parameter (PNETCDF_VERSION_MINOR = @PNETCDF_VERSION_MINOR@)
+      parameter (PNETCDF_VERSION_SUB   = @PNETCDF_VERSION_SUB@)
+
+!
 ! external netcdf data types: (must conform with netCDF release)
 !
       integer nf_byte

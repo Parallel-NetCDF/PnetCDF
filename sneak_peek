@@ -23,6 +23,9 @@ This is essentially a placeholder for the next release note ...
       The default setting is to enable in-place byte swap. PnetCDF tries not to
       allocate additional memory space, due to performance concern.
 
+    * Add Fortran paramaters for PnetCDF library version numbers:
+      PNETCDF_VERSION_MAJOR, PNETCDF_VERSION_MINOR, and PNETCDF_VERSION_SUB
+
   o New APIs
     * ncmpi__enddef, nfmpi__enddef, and nf90mpi_enddef - these APIs correspond
       to netCDF nc__enddef, nf__enddef, and nf90_enddef (with additional
