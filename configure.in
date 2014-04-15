@@ -8,7 +8,7 @@ AC_INIT([parallel-netcdf], [1.4.1], [parallel-netcdf@mcs.anl.gov])
 
 dnl ncconfig.h.in will be created by autoreconf (autoheader)
 AC_CONFIG_HEADERS([src/lib/ncconfig.h])
-AC_CONFIG_SRCDIR([src/lib/pnetcdf.h])
+AC_CONFIG_SRCDIR([src/lib/pnetcdf.h.in])
 
 AC_CONFIG_AUX_DIR(./scripts)
 
@@ -885,6 +885,7 @@ AC_CONFIG_FILES(macros.make \
                 Makefile \
                 src/Makefile \
                 src/lib/Makefile \
+                src/lib/pnetcdf.h \
                 src/utils/Makefile \
                 src/utils/ncmpidump/Makefile \
                 src/utils/ncmpidiff/Makefile \

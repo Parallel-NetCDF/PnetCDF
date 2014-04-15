@@ -16,6 +16,7 @@ include ../../macros.make
 
 INCLUDES = -I. -I../lib -I$(srcdir) -I$(srcdir)/../lib
 
+HEADER    = ../lib/pnetcdf.h
 LIBRARY   = ../lib/libpnetcdf.a
 ld_netcdf = -L../lib -lpnetcdf
 
@@ -339,9 +340,9 @@ all: $(LIB_CSRCS) $(LIBRARY) nfconfig.inc
 $(LIB_CSRCS): mpifnetcdf.h
 
 mpifnetcdf.h: defs createffiles buildiface
-	$(srcdir)/buildiface -infile=$(srcdir)/../lib/pnetcdf.h -deffile=$(srcdir)/defs
+	$(srcdir)/buildiface -infile=$(HEADER) -deffile=$(srcdir)/defs
 
-createffiles: ../lib/pnetcdf.h
+createffiles: $(HEADER)
 
 $(LIBRARY): $(LIB_OBJS)
 	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
