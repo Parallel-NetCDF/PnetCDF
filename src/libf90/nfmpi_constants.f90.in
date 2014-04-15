@@ -9,7 +9,7 @@
 !
 
 !
-! PnetCDF library version numbders
+! PnetCDF library version numbers
 !
       integer PNETCDF_VERSION_MAJOR
       integer PNETCDF_VERSION_MINOR
