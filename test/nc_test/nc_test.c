@@ -178,6 +178,7 @@ main(int argc, char *argv[])
 
     if ( create_file ) {
 	write_file(testfile);
+        MPI_Info_free(&info);
 	MPI_Finalize();
 	return nfailsTotal > 0;
     }
