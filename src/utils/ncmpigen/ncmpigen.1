@@ -15,6 +15,7 @@ ncmpigen
 \%[-f]
 \%[-n]
 \%[-o \fInetcdf_filename\fP]
+\%[-v \fIfile_format\fP]
 \%\fIinput_file\fP
 .hy
 .ft
@@ -63,6 +64,13 @@ Like \fB-b\fP option, except creates netCDF file with the obsolete `.cdf'
 extension instead of the `.nc' extension, in the absence of an output
 filename specified by the \fB-o\fP option.  This option is only supported
 for backward compatibility.
+.IP "\fB-v\fP \fRfile_format\fP"
+File format of the output netCDF file. The value of \fRfile_format\fP can
+be:
+1 or classic for CDF-1 format.
+2 or 64-bit-offset is CDF-2.
+5 or 64-bit-variable for CDF-5.
+The default (if this option is not given) is CDF-1, the classic format.
 .SH EXAMPLES
 .LP
 Check the syntax of the CDL file `\fBfoo.cdl\fP':
