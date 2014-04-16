@@ -47,7 +47,7 @@ nc_getfill(
 void
 nc_fill(
      nc_type type,		/* netcdf type code  */
-     size_t num,		/* number of values to fill */
+     MPI_Offset num,		/* number of values to fill */
      void *datp,		/* where to start filling */
      union generic fill_val)	/* value to use */
 {

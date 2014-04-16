@@ -28,9 +28,9 @@ extern const char* ncatype ( nc_type  type );
 extern const char* nfstype ( nc_type  type );
 extern const char* nfftype ( nc_type  type );
 extern char* fstring ( nc_type  type, void* valp, int num );
-extern char* cstrstr ( const char* valp, size_t len );
-extern char* fstrstr ( const char* str, size_t ilen );
-extern size_t nctypesize( nc_type type );
+extern char* cstrstr ( const char* valp, MPI_Offset len );
+extern char* fstrstr ( const char* str, MPI_Offset ilen );
+extern MPI_Offset nctypesize( nc_type type );
 
 extern void	derror ( const char *fmt, ... )
 #ifdef _GNUC_
@@ -72,7 +72,7 @@ extern void nc_getfill ( nc_type  type, union generic* gval );
 extern void nc_putfill ( nc_type  type, void* val, union generic* gval );
 
 /* fills a generic array with a value, defined in getfill.c */
-extern void nc_fill ( nc_type  type, size_t num, void* datp,
+extern void nc_fill ( nc_type  type, MPI_Offset num, void* datp,
 	union generic fill_val );
 
 /* reset symbol table to empty, defined in ncmpigen.y */
