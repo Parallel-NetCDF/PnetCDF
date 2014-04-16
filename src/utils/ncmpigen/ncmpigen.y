@@ -498,7 +498,7 @@ dconst:
 				      multiple of record size */
 			       ptrdiff_t rec_inc = (char *)rec_cur
 				   - (char *)rec_start;
-			       var_len += rec_len * (1 + valnum )/rec_len;
+			       var_len = rec_len * (1 + valnum )/rec_len;
 			       rec_start = erealloc(rec_start, var_len*var_size);
 			       rec_cur = (char *)rec_start + rec_inc;
 			       char_valp = (char *) rec_cur;

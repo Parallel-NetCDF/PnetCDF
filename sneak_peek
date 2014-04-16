@@ -103,5 +103,7 @@ This is essentially a placeholder for the next release note ...
       it
 
   o Bug fixes
-    * 
+    * fix ncmpigen.y on parsing CDL file to get the number of records. The bug
+      failed the command "make b-test", due to getting a wrong number of
+      records (current value for the unlimted dimension).
 

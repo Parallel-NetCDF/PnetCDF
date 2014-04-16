@@ -288,7 +288,7 @@ version  1.3.0 (June 26, 2012)
     - Better compatibility with NetCDF-4: no need for a modified pnetcdf.h from
       Unidata when building NetCDF-4 with PnetCDF support.
     - PnetCDF now duplicates the MPI communicator internally, which fixed at
-      least one odd behavior seen in a pnetcdf-using application.
+      least one odd behavior seen in a PnetCDF-using application.
     - Improvements to PnetCDF header and variable alignment (see wiki page
       VariableAlignment).
     - Add a checking for file create mode consistency across all processes and
@@ -342,7 +342,7 @@ version  1.2.0 (August 19, 2010)
 
     - Internal housekeeping
 
-    - Reduce the places where pnetcdf will call MPI_FILE_SYNC
+    - Reduce the places where PnetCDF will call MPI_FILE_SYNC
 
     - A new 'ncmpidiff' utility to compare two datasets in parallel
 
@@ -366,10 +366,10 @@ version  1.1.0 (November 2, 2009)
 -------------------------------------
 
     - A new file format, CDF-5, is introduced. This format allows defining
-      large array variables with more than 232 elements.
+      large array variables with more than 2^32 elements.
 
     - A new optimization in parallel-netcdf with this release. If the hint
-      "striping_unit" is set, then pnetcdf will align the start of non-record
+      "striping_unit" is set, then PnetCDF will align the start of non-record
       variables to a multiple of that value.
 
     - A new set of APIs for reading/writing multiple variables. The existing
