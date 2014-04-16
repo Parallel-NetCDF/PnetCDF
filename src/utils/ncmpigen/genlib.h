@@ -6,6 +6,7 @@
  *   $Header$
  *********************************************************************/
 #include <stdlib.h>
+#include <stdio.h>  /* FILE */
 #include <limits.h>
 
 extern const char *progname;	/* for error messages */
@@ -77,6 +78,19 @@ extern void nc_fill ( nc_type  type, MPI_Offset num, void* datp,
 
 /* reset symbol table to empty, defined in ncmpigen.y */
 extern void clearout(void);
+
+extern int ncmpiwrap(void);
+extern int ncmpiget_lineno(void);
+extern FILE *ncmpiget_in(void);
+extern FILE *ncmpiget_out(void);
+extern int ncmpiget_leng(void);
+extern char *ncmpiget_text(void);
+extern void ncmpiset_lineno(int  line_number);
+extern void ncmpiset_in(FILE *in_str);
+extern void ncmpiset_out (FILE *out_str);
+extern int ncmpiget_debug(void);
+extern void ncmpiset_debug(int  bdebug);
+extern int ncmpilex_destroy(void);
 
 #ifdef __cplusplus
 }
