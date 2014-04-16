@@ -254,10 +254,10 @@ gen_c(
 	cline("   /* dimension lengths */");
 	for (idim = 0; idim < ndims; idim++) {
 	    if (dims[idim].size == NC_UNLIMITED) {
-		sprintf(stmnt, "   size_t %s_len = NC_UNLIMITED;",
+		sprintf(stmnt, "   MPI_Offset %s_len = NC_UNLIMITED;",
 			dims[idim].lname);
 	    } else {
-		sprintf(stmnt, "   size_t %s_len = %lu;",
+		sprintf(stmnt, "   MPI_Offset %s_len = %lu;",
 			dims[idim].lname,
 			(unsigned long) dims[idim].size);
 	    }
@@ -581,7 +581,7 @@ gen_fortran(
      * for each type of attribute. */
     int ntypes = 6;		/* number of netCDF types, NC_BYTE, ... */
     nc_type types[6];		/* at least ntypes */
-    size_t max_atts[NC_DOUBLE + 1];
+    MPI_Offset max_atts[NC_DOUBLE + 1];
 
     types[0] = NC_BYTE;
     types[1] = NC_CHAR;
@@ -988,7 +988,7 @@ ncatype(
 
 
 /* return internal size for values of specified netCDF type */
-size_t
+MPI_Offset
 nctypesize(
      nc_type type)			/* netCDF type code */
 {
@@ -1078,7 +1078,7 @@ fstring(
 char *
 cstrstr(
      const char *valp,		/* pointer to vector of characters*/
-     size_t len)		/* number of characters in valp */
+     MPI_Offset len)		/* number of characters in valp */
 {
     static char *sp;
     char *cp;
@@ -1147,7 +1147,7 @@ cstrstr(
 char *
 fstrstr(
      const char *str,			/* pointer to vector of characters */
-     size_t ilen)			/* number of characters in istr */
+     MPI_Offset ilen)			/* number of characters in istr */
 {
     static char *ostr;
     char *cp, tstr[12];
@@ -1155,7 +1155,7 @@ fstrstr(
     char *istr, *istr0;		/* for null-terminated copy */
     int ii;
 
-    if(12*ilen != (size_t)(12*ilen)) {
+    if(12*ilen != (MPI_Offset)(12*ilen)) {
 	derror("too much character data!");
 	exit(9);
     }
@@ -1488,7 +1488,7 @@ cl_fortran(void)
                 if (v->has_data) {
                     fline(v->data_stmnt);
                 } else {		/* generate data statement for FILL record */
-                    size_t rec_len = 1;
+                    MPI_Offset rec_len = 1;
                     for (idim = 1; idim < v->ndims; idim++) {
                         rec_len *= dims[v->dims[idim]].size;
                     }

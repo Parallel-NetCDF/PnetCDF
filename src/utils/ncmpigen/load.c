@@ -66,7 +66,7 @@ gen_load_c(
     float *floatvalp = NULL;
     double *doublevalp = NULL;
     char stmnt[C_MAX_STMNT];
-    size_t stmnt_len;
+    MPI_Offset stmnt_len;
     char s2[C_MAX_STMNT];
 
     if (!vars[varnum].has_data)
@@ -78,11 +78,11 @@ gen_load_c(
 
     if (vars[varnum].ndims > 0) {
 	if (vars[varnum].dims[0] == rec_dim) {
-	    sprintf(stmnt, "    static size_t %s_start[RANK_%s];",
+	    sprintf(stmnt, "    static MPI_Offset %s_start[RANK_%s];",
 		    vars[varnum].lname, vars[varnum].lname);
 	    cline(stmnt);
 
-	    sprintf(stmnt, "    static size_t %s_count[RANK_%s];",
+	    sprintf(stmnt, "    static MPI_Offset %s_count[RANK_%s];",
 		    vars[varnum].lname, vars[varnum].lname);
 	    cline(stmnt);
 	}
@@ -299,7 +299,7 @@ static void
 fstrcat(
     char *s,			/* source string of stement being built */
     const char *t,		/* string to be appended to source */
-    size_t *slenp			/* pointer to length of source string */
+    MPI_Offset *slenp			/* pointer to length of source string */
     )
 {
     *slenp += strlen(t);
@@ -330,7 +330,7 @@ f_var_init(
     float *floatvalp;
     double *doublevalp;
     char stmnt[FORT_MAX_STMNT];
-    size_t stmnt_len;
+    MPI_Offset stmnt_len;
     char s2[FORT_MAX_STMNT];
     int ival;
     

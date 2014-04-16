@@ -144,9 +144,9 @@ dimdecl:        dimd '=' INT_CONST
 				derror("dimension length must be positive");
 			if (double_val > 4294967295.0)
 				derror("dimension too large");
-			if (double_val - (size_t) double_val > 0)
+			if (double_val - (MPI_Offset) double_val > 0)
 				derror("dimension length must be an integer");
-			dims[ndims].size = (size_t) double_val;
+			dims[ndims].size = (MPI_Offset) double_val;
 			ndims++;
 		   }
                 | dimd '=' NC_UNLIMITED_K
@@ -365,7 +365,7 @@ attconst:      CHAR_CONST
 		       atype_code = NC_CHAR;
 		       {
 			   /* don't null-terminate attribute strings */
-			   size_t len = strlen(termstring);
+			   MPI_Offset len = strlen(termstring);
 			   if (len == 0) /* need null if that's only value */
 			       len = 1;
 			   (void)strncpy(char_valp,termstring,len);
@@ -430,13 +430,13 @@ datadecl:       avar
 		       for(dimnum = 1; dimnum < vars[varnum].ndims; dimnum++)
 			 var_len = var_len*dims[vars[varnum].dims[dimnum]].size;
 		       /* allocate memory for variable data */
-		       if (var_len*var_size != (size_t)(var_len*var_size)) {
+		       if (var_len*var_size != (MPI_Offset)(var_len*var_size)) {
 			   derror("variable %s too large for memory",
 				  vars[varnum].name);
 			   exit(9);
 		       }
 		       rec_len = var_len;
-		       rec_start = malloc ((size_t)(rec_len*var_size));
+		       rec_start = malloc ((MPI_Offset)rec_len*var_size);
 		       if (rec_start == 0) {
 			   derror ("out of memory\n");
 			   exit(3);
@@ -574,7 +574,7 @@ const:         CHAR_CONST
 		       not_a_string = 0;
 		       atype_code = NC_CHAR;
 		       {
-			   size_t len = strlen(termstring);
+			   MPI_Offset len = strlen(termstring);
 
 			   if(valnum + len > var_len) {
 			       if (vars[varnum].dims[0] != rec_dim) {
@@ -594,7 +594,7 @@ const:         CHAR_CONST
 			     case NC_CHAR:
 			       {
 				   int ld;
-				   size_t i, sl;
+				   MPI_Offset i, sl;
 				   (void)strncpy(char_valp,termstring,len);
 				   
 				   ld = vars[varnum].ndims-1;

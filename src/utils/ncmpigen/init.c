@@ -25,9 +25,9 @@ int dimnum;			/* dimension number index for variables */
 int varnum;			/* variable number index for attributes */
 int valnum;			/* value number index for attributes */
 int rec_dim;			/* number of the unlimited dimension, if any */
-size_t var_len;			/* variable length (product of dimensions) */
-size_t rec_len;			/* number of elements for a record of data */
-size_t var_size;		/* size of each element of variable */
+MPI_Offset var_len;			/* variable length (product of dimensions) */
+MPI_Offset rec_len;			/* number of elements for a record of data */
+MPI_Offset var_size;		/* size of each element of variable */
 
 struct vars *vars;		/* a malloc'ed list */
 
