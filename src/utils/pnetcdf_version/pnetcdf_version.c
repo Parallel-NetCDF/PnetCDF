@@ -4,14 +4,16 @@
  */
 /* $Id$ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #if HAVE_CONFIG_H
 # include <ncconfig.h>
 #else
 #error "ncconfig.h is required to build this program"
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h> /* getopt */
 
 typedef enum {
     Version_number = 0,
