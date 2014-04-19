@@ -1387,8 +1387,9 @@ ncmpi_inq(int  ncid,
     return NC_NOERR;
 }
 
+/*----< ncmpi_inq_version() >-----------------------------------------------*/
 int
-ncmpi_inq_version(int ncid, int *NC_mode)
+ncmpi_inq_version(int ncid, int *nc_mode)
 {
     int status;
     NC *ncp;
@@ -1396,18 +1397,16 @@ ncmpi_inq_version(int ncid, int *NC_mode)
     status = ncmpii_NC_check_id(ncid, &ncp);
     if(status != NC_NOERR)
         return status;
-        
 
-    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-        *NC_mode = NC_64BIT_DATA;
-    } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
-        *NC_mode = NC_64BIT_OFFSET;
-    } else {
-        *NC_mode = 0;
-    }
-    return 0;
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        *nc_mode = NC_64BIT_DATA;
+    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        *nc_mode = NC_64BIT_OFFSET;
+    else
+        *nc_mode = NC_CLASSIC_MODEL;
+
+    return NC_NOERR;
 }
-
 
 
 int 
