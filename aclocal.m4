@@ -19,7 +19,14 @@ AC_DEFUN(UD_PROG_M4,
     esac
     AC_MSG_CHECKING(m4 flags)
     case "${M4FLAGS-unset}" in
-	unset) M4FLAGS=-B10000 ;;
+	unset) dnl test if M4 takes option -B1000
+               `${M4} -B10000 < /dev/null >& conftest.err`
+               ac_cv_m4_stdout=`cat conftest.err`
+               if test "x$ac_cv_m4_stdout" = x; then
+                  M4FLAGS=-B10000
+               fi
+               ${RM} -f conftest.err
+               ;;
     esac
     AC_MSG_RESULT($M4FLAGS)
     AC_SUBST(M4FLAGS)

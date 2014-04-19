@@ -102,6 +102,10 @@ This is essentially a placeholder for the next release note ...
     * subfiling is now enabled by default. Use --disable-subfiling to disable
       it
 
+    * man page of ncmpigen is updated to add the description for option "-v"
+      which lets users to specify the desired output file formats, e.g.
+      CDF-1, CDF-2, or CDF-5.
+
   o Bug fixes
     * fix ncmpigen.y on parsing CDL file to get the number of records. The bug
       failed the command "make b-test", due to getting a wrong number of
