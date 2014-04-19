@@ -83,7 +83,7 @@ extern int ncmpiwrap(void);
 extern int ncmpiget_lineno(void);
 extern FILE *ncmpiget_in(void);
 extern FILE *ncmpiget_out(void);
-extern int ncmpiget_leng(void);
+extern size_t ncmpiget_leng(void);
 extern char *ncmpiget_text(void);
 extern void ncmpiset_lineno(int  line_number);
 extern void ncmpiset_in(FILE *in_str);
