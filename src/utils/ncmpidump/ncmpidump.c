@@ -56,7 +56,6 @@ usage(void)
            progname, USAGE);
     
     fprintf(stderr, "netcdf library version %s\n", ncmpi_inq_libvers());
-    exit(EXIT_FAILURE);
 }
 
 
@@ -675,12 +674,19 @@ main(int argc, char *argv[])
       0,            /* if -v specified, number of variables */
       0             /* if -v specified, list of variable names */
     };
-    int c;
-    int i;
+    int c, i, rank, err=EXIT_SUCCESS;
     int max_len = 80;        /* default maximum line length */
     int nameopt = 0;
 
     MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    /* If the user called ncmpidump without arguments, print the usage
+     * message and return peacefully. */
+    if (argc <= 1) {
+        if (rank == 0) usage();
+        goto fn_exit;
+    }
 
     opterr = 1;
     progname = argv[0];
@@ -716,7 +722,11 @@ main(int argc, char *argv[])
                         fspec.data_lang = LANG_F;
                         break;
                     default:
-                        error("invalid value for -b option: %s", optarg);
+                        if (rank == 0)
+                            fprintf(stderr,"invalid value for -b option: %s",
+                                    optarg);
+                        err = EXIT_FAILURE;
+                        goto fn_exit;
                 }
                 break;
             case 'f':        /* full comments in data section */
@@ -729,13 +739,23 @@ main(int argc, char *argv[])
                         fspec.data_lang = LANG_F;
                         break;
                     default:
-                        error("invalid value for -f option: %s", optarg);
+                        if (rank == 0)
+                            fprintf(stderr,"invalid value for -f option: %s",
+                                    optarg);
+                        err = EXIT_FAILURE;
+                        goto fn_exit;
                 }
                 break;
             case 'l':        /* maximum line length */
                 max_len = (int) strtol(optarg, 0, 0);
-                if (max_len < 10)
-                    error("unreasonably small line length specified: %d", max_len);
+                if (max_len < 10) {
+                    if (rank == 0)
+                        fprintf(stderr,
+                                "unreasonably small line length specified: %d",
+                                max_len);
+                    err = EXIT_FAILURE;
+                    goto fn_exit;
+                }
                 break;
             case 'v':        /* variable names */
                 /* make list of names of variables specified */
@@ -748,7 +768,9 @@ main(int argc, char *argv[])
                 set_precision(optarg);
                 break;
             case '?':
-                usage();
+                if (rank == 0) usage();
+                goto fn_exit;
+            default:
                 break;
         }
 
@@ -757,18 +779,45 @@ main(int argc, char *argv[])
     argc -= optind;
     argv += optind;
 
-    i = 0;
+#ifndef MULTI_FILE_DUMP
+    /* If no input file, print usage message. */
+    if (argc != 1) {
+        if (rank == 0) {
+            if (argc == 0)
+                fprintf(stderr,"Error: input filename is missing\n\n");
+            else
+                fprintf(stderr,"Error: only one input file is allowed\n\n");
+            usage();
+        }
+        err = EXIT_FAILURE;
+        goto fn_exit;
+    }
 
-    do {        
+    if (!nameopt) fspec.name = (char *)0;
+    do_ncdump(argv[0], &fspec);
+#else
+    /* support multiple input files */
+    if (argc < 1) {
+        if (rank == 0) {
+            fprintf(stderr,"Error: input filename(s) is missing\n\n");
+            usage();
+        }
+        err = EXIT_FAILURE;
+        goto fn_exit;
+    }
+    i = 0;
+    do {
         if (!nameopt) fspec.name = (char *)0;
         if (argc > 0)
               do_ncdump(argv[i], &fspec);
     } while (++i < argc);
+#endif
 
+fn_exit:
     MPI_Finalize();
 #ifdef vms
-    exit(EXIT_SUCCESS);
+    exit(err);
 #else
-    return EXIT_SUCCESS;
+    return err;
 #endif
 }
