@@ -92,6 +92,8 @@ This is essentially a placeholder for the next release note ...
     * pnetcdf_version prints the version information of the PnetCDF library
 
   o Other updates:
+    * To match ncdump, ncmpidump now only supports one input file.
+
     * Fix build target dependency for parallel make. Now parallel make. e.g.
       "make -j8" runs much faster on many platforms, including Cray and BGQ.
 
