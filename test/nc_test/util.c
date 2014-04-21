@@ -345,7 +345,7 @@ int dbl2nc ( const double d, const nc_type datatype, void *p)
             r = floor(0.5+d);
             if ( r < 0.0  ||  r > uint_max )  return 2;
 #if UINT_MAX >= X_UINT_MAX
-            *((int   *) p) = r;
+            *((unsigned int  *) p) = r;
 #else
             *((unsigned long *) p) = r;
 #endif
