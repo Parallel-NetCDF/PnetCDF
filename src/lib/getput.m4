@@ -754,7 +754,7 @@ ncmpii_getput_vars(NC               *ncp,
     int isderived, el_size, mpireturn;
     int warning, err, status; /* err is for API abort and status is not */
     int buftype_is_contig, need_swap=0, need_convert=0, is_buf_swapped=0;
-    MPI_Offset fnelems=1, bnelems, nbytes, offset=0;
+    MPI_Offset fnelems=1, bnelems, nbytes=0, offset=0;
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE;
     MPI_File fh;
@@ -802,6 +802,7 @@ ncmpii_getput_vars(NC               *ncp,
     if (err != NC_NOERR) goto err_check;   
 
     CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes, err)
+
     if (nbytes != (int)nbytes) {
         err = NC_EINTOVERFLOW;
         if (io_method == INDEP_IO) return err;
@@ -822,7 +823,7 @@ ncmpii_getput_vars(NC               *ncp,
     }
 
     if (!buftype_is_contig) { /* buf is noncontiguous in memory */
-        if (rw_flag == WRITE_REQ) {
+        if (rw_flag == WRITE_REQ && bufcount > 0) {
             /* pack buf into cbuf, a contiguous buffer */
             cbuf = (void*) NCI_Malloc(bnelems * el_size);
             err = ncmpii_data_repack((void*)buf, bufcount, buftype,
@@ -913,7 +914,7 @@ err_check:
      * time.  If caller passed in bad parameters, we'll still conduct a
      * zero-byte operation (everyone has to participate in the
      * collective I/O call) but return error */
-    if (err != NC_NOERR) {
+    if (err != NC_NOERR || bufcount == 0) {
         /* release allocated resources */
         if (filetype != MPI_BYTE)
             MPI_Type_free(&filetype);
@@ -1002,7 +1003,7 @@ err_check:
             ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
         }
 
-        if (!buftype_is_contig) {
+        if (!buftype_is_contig && bufcount > 0) {
             /* unpack cbuf to buf using buftype */
             err = ncmpii_data_repack(cbuf, bnelems, ptype,
                                      (void*)buf, bufcount, buftype);
@@ -1345,7 +1346,7 @@ ncmpii_getput_varm(NC               *ncp,
         /* buftype is not a contiguous of ptypes: pack buf to lbuf, a
            contiguous buffer, using buftype */
         lnelems *= bufcount;
-        if (rw_flag == WRITE_REQ) { /* only write needs this packing */
+        if (rw_flag == WRITE_REQ && bufcount > 0) { /* only write needs this packing */
             lbuf = NCI_Malloc(lnelems*el_size);
             status = ncmpii_data_repack((void*)buf, bufcount, buftype,
                                         lbuf, lnelems, ptype);
@@ -1384,7 +1385,7 @@ ncmpii_getput_varm(NC               *ncp,
     /* cbuf cannot be lbuf, as imap[] gives a non-contigous layout */
     cbuf = (void*) NCI_Malloc(cnelems*el_size);
 
-    if (rw_flag == WRITE_REQ) {
+    if (rw_flag == WRITE_REQ && cnelems > 0) {
         /* layout lbuf to cbuf based on imap */
         err = ncmpii_data_repack(lbuf, 1, imaptype, cbuf, cnelems, ptype);
         if (err != NC_NOERR) goto err_check;
@@ -1402,7 +1403,7 @@ err_check:
      * time.  If caller passed in bad parameters, we'll still conduct a
      * zero-byte operation (everyone has to participate in the
      * collective I/O call) but return error */
-    if (err != NC_NOERR) {  /* handle the error */
+    if (err != NC_NOERR || bufcount == 0) {  /* handle the error */
         if (io_method == COLL_IO) {
             MPI_Offset *zeros;
             zeros = (MPI_Offset *) NCI_Calloc(varp->ndims, sizeof(MPI_Offset));
@@ -1435,12 +1436,14 @@ err_check:
             lbuf = buf;
 
         /* layout cbuf to lbuf based on imap */
-        status = ncmpii_data_repack(cbuf, cnelems, ptype, lbuf, 1, imaptype);
-        if (status != NC_NOERR)
-            goto err_check2;
+        if (cnelems > 0) {
+            status = ncmpii_data_repack(cbuf, cnelems, ptype, lbuf, 1, imaptype);
+            if (status != NC_NOERR)
+                goto err_check2;
+        }
 
         /* layout lbuf to buf based on buftype */
-        if (!buftype_is_contig) {
+        if (!buftype_is_contig && bufcount > 0) {
             status = ncmpii_data_repack(lbuf, lnelems, ptype,
                                         (void *)buf, bufcount, buftype);
             /* if (status != NC_NOERR) goto err_check2; */
