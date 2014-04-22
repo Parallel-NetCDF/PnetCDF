@@ -706,6 +706,7 @@
 !
 ! attribute put/get routines:
 !
+      integer  nfmpi_put_att,        nfmpi_get_att
       integer  nfmpi_put_att_text,   nfmpi_get_att_text
       integer  nfmpi_put_att_int1,   nfmpi_get_att_int1
       integer  nfmpi_put_att_int2,   nfmpi_get_att_int2
@@ -714,6 +715,7 @@
       integer  nfmpi_put_att_double, nfmpi_get_att_double
       integer  nfmpi_put_att_int8,   nfmpi_get_att_int8
 
+      external nfmpi_put_att,        nfmpi_get_att
       external nfmpi_put_att_text,   nfmpi_get_att_text
       external nfmpi_put_att_int1,   nfmpi_get_att_int1
       external nfmpi_put_att_int2,   nfmpi_get_att_int2

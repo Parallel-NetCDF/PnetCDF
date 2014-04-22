@@ -862,6 +862,22 @@ ncmpii_get_att(int         ncid,
     return ncmpix_pad_getn(&xp, attrp->nelems, tp, attrp->type, buftype);
 }
 
+/*----< ncmpi_get_att() >-----------------------------------------------------*/
+int
+ncmpi_get_att(int         ncid,
+              int         varid,
+              const char *name,
+              void       *value)
+{
+    int status;
+    nc_type atttype;
+
+    status = ncmpi_inq_atttype(ncid, varid, name, &atttype);
+    if (status != NC_NOERR) return status;
+
+    return ncmpii_get_att(ncid, varid, name, value, atttype);
+}
+
 /*----< ncmpi_get_att_text() >-----------------------------------------------*/
 int
 ncmpi_get_att_text(int ncid, int varid, const char *name, char *value)
@@ -1200,6 +1216,18 @@ ncmpii_put_att(int         ncid,
     }
 
     return status;
+}
+
+/*----< ncmpi_put_att() >-----------------------------------------------------*/
+int
+ncmpi_put_att(int         ncid,
+              int         varid,
+              const char *name,
+              nc_type     xtype,
+              MPI_Offset  nelems,
+              const void *value)
+{
+    return ncmpii_put_att(ncid, varid, name, xtype, nelems, value, xtype);
 }
 
 /*----< ncmpi_put_att_text() >-----------------------------------------------*/

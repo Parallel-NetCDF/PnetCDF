@@ -741,6 +741,10 @@ void check_atts(int  ncid);
 
 void check_file(char *filename);
 
+int nctypelen(nc_type type);
+
+MPI_Datatype nc_mpi_type(nc_type type);
+
 #ifdef __cplusplus
 }
 #endif

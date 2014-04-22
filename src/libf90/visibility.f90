@@ -113,6 +113,9 @@
 !
 ! attribute put/get subroutines:
 !
+    integer nfmpi_put_att, nfmpi_get_att
+    external nfmpi_put_att, nfmpi_get_att
+
     public :: &
         nfmpi_put_att_text, &
         nfmpi_get_att_text, &

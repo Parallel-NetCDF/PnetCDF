@@ -662,6 +662,9 @@ int ncmpi_rename_att(int ncid, int varid, const char *name,
 
 int ncmpi_del_att(int ncid, int varid, const char *name);
 
+int ncmpi_put_att(int ncid, int varid, const char *name, nc_type xtype,
+                  MPI_Offset nelems, const void *value);
+
 int ncmpi_put_att_text(int ncid, int varid, const char *name, MPI_Offset len,
                   const char *op);
 
@@ -682,6 +685,8 @@ int ncmpi_put_att_double(int ncid, int varid, const char *name,
 
 int ncmpi_put_att_longlong(int ncid, int varid, const char *name,
                   nc_type xtype, MPI_Offset len, const long long *op);
+
+int ncmpi_get_att(int ncid, int varid, const char *name, void *value);
 
 int ncmpi_get_att_text(int ncid, int varid, const char *name, char *ip);
 
