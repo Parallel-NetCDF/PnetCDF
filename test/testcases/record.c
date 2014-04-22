@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); ERR
+    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); ERR
 
     /* define dimension and variable */
     err = ncmpi_def_dim(ncid, "DIM", NC_UNLIMITED, &dimid); ERR
