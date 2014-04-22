@@ -819,7 +819,7 @@ check_vars(int  ncid)
         IF (ndims != var_rank[i]) 
             error("Unexpected rank");
         for (j = 0; j < ndims; j++) {
-            err = ncmpi_inq_dim(ncid, dimids[j], 0, &length);
+            err = ncmpi_inq_dim(ncid, dimids[j], name, &length);
             IF (err != NC_NOERR) 
                 error("ncmpi_inq_dim: %s", ncmpi_strerror(err));
             IF (length != var_shape[i][j]) 
@@ -964,3 +964,42 @@ s_nc_type(nc_type type)
     }
     return "";
 }
+
+int
+nctypelen(nc_type type)
+{
+    switch(type){
+        case NC_BYTE :
+        case NC_CHAR :   return((int)sizeof(char));
+        case NC_SHORT :  return((int)sizeof(short));
+        case NC_INT :    return((int)sizeof(int));
+        case NC_FLOAT :  return((int)sizeof(float));
+        case NC_DOUBLE : return((int)sizeof(double));
+        case NC_UBYTE :  return(1);
+        case NC_USHORT : return((int)sizeof(unsigned short));
+        case NC_UINT :   return((int)sizeof(unsigned int));
+        case NC_INT64 :  return((int)sizeof(long long));
+        case NC_UINT64 : return((int)sizeof(unsigned long long));
+        default:         return -1;
+    }
+}
+
+MPI_Datatype
+nc_mpi_type(nc_type type)
+{
+    switch(type){
+        case NC_BYTE :   return MPI_BYTE;
+        case NC_CHAR :   return MPI_CHAR;
+        case NC_SHORT :  return MPI_SHORT;
+        case NC_INT :    return MPI_INT;
+        case NC_FLOAT :  return MPI_FLOAT;
+        case NC_DOUBLE : return MPI_DOUBLE;
+        case NC_UBYTE :  return MPI_UNSIGNED_CHAR;
+        case NC_USHORT : return MPI_UNSIGNED_SHORT;
+        case NC_UINT :   return MPI_UNSIGNED;
+        case NC_INT64 :  return MPI_LONG_LONG_INT;
+        case NC_UINT64 : return MPI_UNSIGNED_LONG_LONG;
+        default:         return -1;
+    }
+}
+
