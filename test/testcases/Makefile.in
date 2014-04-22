@@ -26,7 +26,8 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            alignment_test.c \
            flexible.c \
            nonblocking.c \
-           noclobber.c
+           noclobber.c \
+           record.c
 
 CXX_SRCS = redef1.cpp
 
@@ -87,6 +88,9 @@ nonblocking: nonblocking.o $(LIBRARY)
 noclobber: noclobber.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+record: record.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 testing check verbose_testing : $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	$(TEST_SEQRUN) ./ncmpi_vars_null_stride $(TEST_OUTDIR)/testfile.nc
@@ -96,6 +100,7 @@ testing check verbose_testing : $(PROGS)
 	$(TEST_SEQRUN) ./nonblocking            $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./flexible               $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./noclobber              $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./record                 $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
 	$(TEST_SEQRUN) ./bigrecords             $(TEST_OUTDIR)/testfile.nc
 endif
