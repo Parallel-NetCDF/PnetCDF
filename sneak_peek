@@ -61,7 +61,11 @@ This is essentially a placeholder for the next release note ...
     * 
 
   o New test program
-    * testcase/noclobber.c check if error code NC_EEXIST can be returned
+    * testcase/record.c checks if the number of records is updated correctly.
+      It writes to a variable's 2nd record and then 1st record. A call to
+      ncmpi_inq_dim() or ncmpi_inq_dimlen() should report 2 records.
+
+    * testcase/noclobber.c checks if error code NC_EEXIST can be returned
       correctly when NC_NOCLOBBER modes is used in ncmpi_create and the file
       exists.
 
@@ -113,3 +117,5 @@ This is essentially a placeholder for the next release note ...
       failed the command "make b-test", due to getting a wrong number of
       records (current value for the unlimted dimension).
 
+    * fix the update for number of records when writing to a record that is
+      not the last record.
