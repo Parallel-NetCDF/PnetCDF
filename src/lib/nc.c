@@ -683,7 +683,7 @@ ncmpii_write_numrecs(NC         *ncp,
         }
         NCI_Free(buf);
     }
-    ncp->numrecs = new_numrecs;
+    if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
 
     if (ncp->safe_mode == 1)
         MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
