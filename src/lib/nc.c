@@ -326,7 +326,7 @@ int
 ncmpii_cktype(int     cdf_ver,
               nc_type type)
 {
-    if (type <= 0   || type > NC_STRING) return NC_EBADTYPE;
+    if (type <= 0   || type > NC_MAX_ATOMIC_TYPE) return NC_EBADTYPE;
 
     /* For CDF-1 and CDF-2 files, only classic types are allowed. */
     if (cdf_ver < 5 && type > NC_DOUBLE) return NC_ESTRICTNC3;
