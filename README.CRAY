@@ -15,7 +15,8 @@ http://www.nersc.gov/users/software/compilers/intel-fortran-c-and-c/
 
 ./configure --prefix=/path/to/install \
             --with-mpi=/path/to/mpi/implementation \
-            CFLAGS="-fast -no-ipo" FFLAGS="-fast -no-ipo" FCFLAGS="-fast -no-ipo"
+            CFLAGS="-fast -no-ipo" CXXFLAGS="-fast -no-ipo" \
+            FFLAGS="-fast -no-ipo" FCFLAGS="-fast -no-ipo"
 
 
 Note if running make is slow, try parallel make, e.g.
@@ -31,7 +32,7 @@ http://www.nersc.gov/systems/hopper-cray-xe6/
 
 ./configure --prefix=/path/to/install \
             --with-mpi=/path/to/mpi/implementation \
-            CFLAGS=-fast FFLAGS=-fast FCFLAGS=-fast
+            CFLAGS=-fast CXXFLAGS=-fast FFLAGS=-fast FCFLAGS=-fast
 
 
 The configure command above works for PGI, GNU, and Intel
@@ -47,7 +48,7 @@ For Pathscale compilers, i.e.
     use command below:
     ./configure --prefix=/path/to/install \
                 --with-mpi=/path/to/mpi/implementation \
-                CFLAGS=-Ofast FFLAGS=-Ofast FCFLAGS=-Ofast
+                CFLAGS=-Ofast CXXFLAGS=-Ofast FFLAGS=-Ofast FCFLAGS=-Ofast
 
 
 For Cray compilers, i.e.
@@ -55,7 +56,7 @@ For Cray compilers, i.e.
     use command below:
     ./configure --prefix=/path/to/install \
                 --with-mpi=/path/to/mpi/implementation \
-                CFLAGS=-O2 FFLAGS=-O2 FCFLAGS="-O2 -emf" \
+                CFLAGS=-O2 CXXFLAGS=-O2 FFLAGS=-O2 FCFLAGS="-O2 -emf" \
                 LDFLAGS=-Wl,-z,muldefs
 
     Check crayftn man page for using option "-emf" in FCFLAGS:
