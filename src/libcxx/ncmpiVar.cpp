@@ -1070,7 +1070,6 @@ void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>
 // Writes the entire data into the netCDF variable.
 void NcmpiVar::putVar_all(const char* dataValues) const {
   ncmpiCheckDataMode(groupId);
-cout<<"putVar char="<<dataValues<<endl;
     ncmpiCheck(ncmpi_put_var_text_all(groupId, myId,dataValues),__FILE__,__LINE__);
 }
 // Writes the entire data into the netCDF variable.
