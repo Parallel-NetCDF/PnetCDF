@@ -1,0 +1,55 @@
+#
+# Copyright (C) 2014, Northwestern University and Argonne National Laboratory
+# See COPYRIGHT notice in top-level directory.
+#
+# $Id$
+#
+# @configure_input@
+
+srcdir	= @srcdir@
+VPATH	= @srcdir@
+
+include ../../macros.make
+
+INCLUDES  = -I../../src/lib -I../../src/libcxx -I$(srcdir)/../common
+LDFLAGS  += -L../../src/lib -L../common
+LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+
+SRCS    = nctst.cpp \
+          test_classic.cpp
+
+OBJS    = $(SRCS:.cpp=.o)
+PROGS   = $(SRCS:.cpp=)
+
+GARBAGE      = $(PROGS) *.nc
+PACKING_LIST = $(SRCS) Makefile.in
+
+all: $(PROGS)
+
+$(LIBRARY):
+	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
+
+nctst.o: nctst.cpp 
+
+nctst: nctst.o $(LIBRARY)
+	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
+
+test_classic.o: test_classic.cpp 
+
+test_classic: test_classic.o $(LIBRARY)
+	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
+
+check testing verbose_testing: $(PROGS)
+	$(TEST_SEQRUN) ./nctst $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_classic $(TEST_OUTDIR)/testfile.nc
+
+
+ptest: $(PROGS)
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+
+include $(srcdir)/../../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
+

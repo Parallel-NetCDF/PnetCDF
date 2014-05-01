@@ -7,7 +7,7 @@
 # @configure_input@
 
 srcdir = @srcdir@
-VPATH = @srcdir@
+VPATH  = @srcdir@
 
 include ../macros.make
 
@@ -28,7 +28,11 @@ SUBDIRS = common \
           data
 
 # Packing subdirs must include all directories
-PACKING_SUBDIRS := $(SUBDIRS) nf_test nf90_test F90 subfile
+PACKING_SUBDIRS := $(SUBDIRS) nf_test nf90_test F90 subfile CXX
+
+ifeq (@has_mpicxx@, yes)
+SUBDIRS += CXX
+endif
 
 ifeq (@has_fortran@, yes)
 SUBDIRS += nf_test
