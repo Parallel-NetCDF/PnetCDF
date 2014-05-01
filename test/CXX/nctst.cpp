@@ -495,43 +495,55 @@ void dump(const MPI_Comm &comm, const char* path)
 int
 main(int argc, char* argv[])	// test new netCDF interface
 {
-   int rank, nprocs;
+   char filename[128];
+   int rank, nprocs, pass=1, verbose=0;
 
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-   if (rank == 0)
+   if (argc > 2) {
+       if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+       MPI_Finalize();
+       return 0;
+   }
+   strcpy(filename, "testfile.nc");
+   if (argc == 2) strcpy(filename, argv[1]);
+
+   if (rank == 0 && verbose)
        cout << "*** Testing C++ API with " << NUM_FORMATS 
 	    << " different netCDF formats.\n";
 
    // Set up the format constants.
-   NcmpiFile::FileFormat format[NUM_FORMATS] = {NcmpiFile::classic, NcmpiFile::classic64, NcmpiFile::data64bits};
+   NcmpiFile::FileFormat format[NUM_FORMATS] =
+              {NcmpiFile::classic, NcmpiFile::classic64, NcmpiFile::data64bits};
 
-   // Set up the file names.
-   char file_name[NUM_FORMATS][NC_MAX_NAME] = 
-      {"nctst_classic.nc", "nctst_64bit_offset.nc", "nctst_64bit_data.nc"};
+   char format_name[NUM_FORMATS][NC_MAX_NAME] = 
+        {"classic", "classic64", "data64bit"};
 
    int errs = 0;
    for (int i = 0; i < NUM_FORMATS; i++)
-   // for (int i = 0; i < 1; i++)
    {
-      if (gen(MPI_COMM_WORLD, file_name[i], format[i]) || 
-	  read(MPI_COMM_WORLD, file_name[i], format[i]))
+      if (gen(MPI_COMM_WORLD, filename, format[i]) || 
+	  read(MPI_COMM_WORLD, filename, format[i]))
       {
-	 cout << "*** FAILURE with file " << file_name[i] << "\n";
+	 if (verbose)
+             cout << "*** FAILURE with format " << format_name[i] << "\n";
 	 errs++;
       }
-      else
-	 cout << "*** SUCCESS with file " << file_name[i] << "\n";
+      else if (verbose)
+	 cout << "*** SUCCESS with format " << format_name[i] << "\n";
    }
 
-   cout << "\n*** Total number of failures: " << errs << "\n";
-   if (errs)
-      cout << "*** nctst FAILURE!\n";
-   else
-      cout << "*** nctst SUCCESS!\n";
-      
+   if (verbose) cout << "\n*** Total number of failures: " << errs << "\n";
+
+   char cmd_str[80];
+   sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", argv[0]);
+   if (rank == 0) {
+       if (errs == 0) printf("%-66s ------ pass\n", cmd_str);
+       else           printf("%-66s ------ failed\n", cmd_str);
+   }
+
    MPI_Finalize();
    return errs;
 }
