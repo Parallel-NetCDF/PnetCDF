@@ -44,7 +44,7 @@ namespace PnetCDF
     const std::string getName() const;
 
     /*! The netCDF Id of this dimension. */
-    const int getId() const {return myId;};
+    int getId() const {return myId;};
     
     /*! Gets a  NcmpiGroup object of the parent group. */
     NcmpiGroup getParentGroup() const;
