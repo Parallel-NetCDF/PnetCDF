@@ -12,6 +12,9 @@ VPATH  = @srcdir@
 include ../macros.make
 
 SUBDIRS = lib
+ifeq (@has_mpicxx@, yes)
+   SUBDIRS += libcxx
+endif
 ifeq (@has_fortran@, yes)
    SUBDIRS += libf
    SUBDIRS += libf90
@@ -21,7 +24,7 @@ SUBDIRS += utils
 
 PACKING_LIST = Makefile.in
 
-PACKING_SUBDIRS = lib libf libf90 utils
+PACKING_SUBDIRS = lib libcxx libf libf90 utils
 
 all:
 	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) ; ) ; done

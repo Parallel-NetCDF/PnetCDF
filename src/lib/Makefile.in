@@ -4,8 +4,6 @@
 #
 # $Id$
 #
-# Makefile for netcdf libsrc
-#
 # @configure_input@
 
 srcdir = @srcdir@
