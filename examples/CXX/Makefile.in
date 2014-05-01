@@ -26,8 +26,10 @@ C_SRCS  = collective_write.cpp \
           put_varn_float.cpp \
           put_varn_int.cpp
 
-PROGS     = $(C_SRCS:.cpp=)
-OBJS      = $(C_SRCS:.cpp=.o)
+PROGS        = $(C_SRCS:.cpp=)
+OBJS         = $(C_SRCS:.cpp=.o)
+
+PAR_PROGS    = $(PROGS)
 
 GARBAGE      = $(PROGS) *.nc
 
@@ -72,20 +74,20 @@ put_varn_int: put_varn_int.o $(LIBRARY)
 put_varn_float: put_varn_float.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
-ptest: $(PROGS)
-	@for i in $(PROGS); do ( \
+ptest: $(PAR_PROGS)
+	@for i in $(PAR_PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in mput put_varn_int put_varn_float ; do ( \
+	@for i in put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in mput put_varn_int put_varn_float ; do ( \
+	@for i in put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
