@@ -21,6 +21,8 @@ SRCS    = nctst.cpp \
 OBJS    = $(SRCS:.cpp=.o)
 PROGS   = $(SRCS:.cpp=)
 
+PAR_PROGS =
+
 GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(SRCS) Makefile.in
 
@@ -40,12 +42,12 @@ test_classic: test_classic.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
 check testing verbose_testing: $(PROGS)
-	$(TEST_SEQRUN) ./nctst $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./nctst        $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./test_classic $(TEST_OUTDIR)/testfile.nc
 
 
-ptest: $(PROGS)
-	@for i in $(PROGS); do ( \
+ptest: $(PAR_PROGS)
+	@for i in $(PAR_PROGS); do ( \
 	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
