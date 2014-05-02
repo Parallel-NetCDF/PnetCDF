@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
         asctime_r(localtime(&ltime), str_att);
 
         /* make sure the time string are consistent among all processes */
-        MPI_Bcast(str_att, strlen(str_att), MPI_CHAR, 0, MPI_COMM_WORLD);
+        MPI_Bcast(str_att, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
         ncFile.putAtt(string("history"), string(str_att));
 
