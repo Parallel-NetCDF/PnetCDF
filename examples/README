@@ -25,6 +25,7 @@ command and the number of MPI processes.
 
 
   ./C/block_cyclic.c
+./CXX/block_cyclic.cpp
 ./F77/block_cyclic.f
 ./F90/block_cyclic.f90
 
@@ -46,6 +47,7 @@ command and the number of MPI processes.
 
 
 ./C/collective_write.c
+./CXX/collective_write.cpp
     This example defined NUM_VARS 3D integer non-record variables in a file.
     All variables are partitioned among processes in a 3D block-block-block
     fashion. The I/O is carried out by making NUM_VARS calls to 
@@ -54,6 +56,7 @@ command and the number of MPI processes.
 
 
   ./C/column_wise.c
+./CXX/column_wise.cpp
 ./F77/column_wise.f
 ./F90/column_wise.f90
     This example makes a number of nonblocking API calls, each writes a single
@@ -74,6 +77,7 @@ command and the number of MPI processes.
 
 
   ./C/flexible_api.c
+./CXX/flexible_api.cpp
 ./F77/flexible_api.f
 ./F90/flexible_api.f90
     This example shows how to use PnetCDF flexible APIs, ncmpi_put_vara_all()
@@ -84,6 +88,7 @@ command and the number of MPI processes.
 
 
   ./C/get_info.c
+./CXX/get_info.cpp
 ./F77/get_info.f
 ./F90/get_info.f90
     These two example programs print the PnetCDF and MPI-IO hints to the
@@ -91,6 +96,7 @@ command and the number of MPI processes.
 
 
   ./C/hints.c
+./CXX/hints.cpp
 ./F77/hints.f
 ./F90/hints.f90
     This example sets two PnetCDF hints:
@@ -115,6 +121,7 @@ command and the number of MPI processes.
 
 
   ./C/nonblocking_write.c
+./CXX/nonblocking_write.cpp
 ./F77/nonblocking_write.f
 ./F90/nonblocking_write.f90
     This example is almost the same as to collective_write.c but using
@@ -122,6 +129,7 @@ command and the number of MPI processes.
 
 
   ./C/put_vara.c
+./CXX/put_vara.cpp
 ./F77/put_vara.f
 ./F90/put_var.f90
     This example shows how to use nfmpi_put_vara_int_all() to write a 2D
@@ -148,6 +156,7 @@ command and the number of MPI processes.
 
 
   ./C/put_varn_float.c
+./CXX/put_varn_float.cpp
 ./F77/put_varn_real.f
 ./F90/put_varn_real.f90
     This example makes a single call of ncmpi_put_varn_float_all() to write a
@@ -158,6 +167,7 @@ command and the number of MPI processes.
 
 
   ./C/put_varn_int.c
+./CXX/put_varn_int.cpp
 ./F77/put_varn_int.f
 ./F90/put_varn_int.f90
     This example makes a single call of ncmpi_put_varn_int_all() to write a
