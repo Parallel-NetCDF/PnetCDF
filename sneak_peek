@@ -27,6 +27,9 @@ This is essentially a placeholder for the next release note ...
       PNETCDF_VERSION_MAJOR, PNETCDF_VERSION_MINOR, and PNETCDF_VERSION_SUB
 
   o New APIs
+    * C++ APIs are now available. They are developed based on netCDF-4 C++
+      library. However, users are encouraged to use C APIs, instead C++.
+
     * ncmpi_put_att, ncmpi_get_att, nfmpi_put_att, and nfmpi_get_att - these
       APIs correspond to nc_put_att, nc_get_att, nf_put_att, and nf_get_att.
       Note they are not the "flexible" APIs. Flexible APIs have an MPI derived
