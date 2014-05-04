@@ -11,10 +11,10 @@
  *
  * This example demonstrates the non-blocking read interface */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <stdio.h>
 
 static void handle_error(int status, int lineno)
 {
@@ -25,15 +25,11 @@ static void handle_error(int status, int lineno)
 int main(int argc, char **argv) {
 
     int i, j, rank, nprocs, ret;
-    int ncfile, ndims, nvars, ngatts, unlimited;
-    int var_ndims, var_natts;;
-    MPI_Offset *dim_sizes, var_size;
-    MPI_Offset *start, *count;
-    int *requests, *statuses;
+    int ncfile, ndims, nvars, ngatts, unlimited, var_ndims, var_natts;;
+    MPI_Offset *dim_sizes, var_size, *start, *count;
+    int *requests, *statuses, dimids[NC_MAX_VAR_DIMS], **data; 
     char varname[NC_MAX_NAME+1];
-    int dimids[NC_MAX_VAR_DIMS];
     nc_type type;
-    int **data; 
 
     MPI_Init(&argc, &argv);
 
@@ -47,7 +43,7 @@ int main(int argc, char **argv) {
     }
 
     ret = ncmpi_open(MPI_COMM_WORLD, argv[1], NC_NOWRITE, MPI_INFO_NULL,
-            &ncfile);
+                     &ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     /* reader knows nothing about dataset, but we can interrogate with query
@@ -64,7 +60,7 @@ int main(int argc, char **argv) {
      * reading in this example.  we could, in a different example, take the
      * name of a variable on the command line and read just that one */
 
-    dim_sizes = calloc(ndims, sizeof(MPI_Offset));
+    dim_sizes = (MPI_Offset*) calloc(ndims, sizeof(MPI_Offset));
     /* netcdf dimension identifiers are allocated sequentially starting
      * at zero; same for variable identifiers */
     for(i=0; i<ndims; i++)  {
@@ -72,20 +68,20 @@ int main(int argc, char **argv) {
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
     }
 
-    requests = calloc(nvars, sizeof(int));
-    statuses = calloc(nvars, sizeof(int));
+    requests = (int*) calloc(nvars, sizeof(int));
+    statuses = (int*) calloc(nvars, sizeof(int));
 
-    data =  malloc(nvars*sizeof(int*));
+    data = (int**) calloc(nvars, sizeof(int*));
 
     for(i=0; i<nvars; i++) { 
         /* much less coordination in this case compared to rank 0 doing all
          * the i/o: everyone already has the necessary information */
         ret = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
-                &var_natts);
+                            &var_natts);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        start = calloc(var_ndims, sizeof(MPI_Offset));
-        count = calloc(var_ndims, sizeof(MPI_Offset));
+        start = (MPI_Offset*) calloc(var_ndims, sizeof(MPI_Offset));
+        count = (MPI_Offset*) calloc(var_ndims, sizeof(MPI_Offset));
 
         /* we will simply decompose along one dimension.  Generally the
          * application has some algorithim for domain decomposistion.  Note
@@ -106,12 +102,12 @@ int main(int argc, char **argv) {
 
         switch(type) {
             case NC_INT:
-                data[i] = calloc(var_size, sizeof(int));
+                data[i] = (int*) calloc(var_size, sizeof(int));
                 /* as with the writes, this call is independent: we
                  * will do any coordination (if desired) in a
                  * subsequent ncmpi_wait_all() call */
                 ret = ncmpi_iget_vara(ncfile, i, start, count, data[i],
-                        var_size, MPI_INT, &requests[i]);
+                                      var_size, MPI_INT, &requests[i]);
                 if (ret != NC_NOERR) handle_error(ret, __LINE__);
                 break;
             default:
