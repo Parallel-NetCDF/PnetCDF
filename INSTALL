@@ -70,7 +70,7 @@ the default configuration of PnetCDF up and running.
 
     If a non-default install directory is desired, use command:
 
-      make install prefix=/OTHER/DIRECTORY
+      make install prefix=/OTHER/INSTALL/DIRECTORY
 
 (g) Add the bin subdirectory of the installation directory to your
     path in your startup script (.bashrc for bash, .cshrc for csh,
@@ -113,6 +113,8 @@ Here lists a few important options:
                           implementation, if you know your MPI implementation
                           has MPI-IO support but the configure test fails to
                           find it. [default: enabled]
+  --disable-cxx           Turn off support for the C++ interface, if you only
+                          need the C interface. [default: enabled]
   --enable-strict         Turn on strict debugging with gcc. [default:
                           disabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
