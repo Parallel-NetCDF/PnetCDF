@@ -904,11 +904,12 @@ ncmpii_getput_varnm(int                ncid,
         lbuf = buf;
         if (bufcount > 0) { /* flexible API is used */
             /* check if buftype is contiguous, if not, pack to one, lbuf */
-            if (! iscontig_of_ptypes) {
+            if (! iscontig_of_ptypes && bnelems > 0) {
                 /* pack buf into lbuf, a contiguous buffer, based on buftype */
-                lbuf = NCI_Malloc(bnelems*el_size);
-                status = ncmpii_data_repack(buf, bufcount, buftype,
-                                            lbuf, bnelems, ptype);
+                int position=0, outsize=bnelems*el_size;
+                lbuf = NCI_Malloc(outsize);
+                MPI_Pack(buf, bufcount, buftype, lbuf, outsize, &position,
+                         MPI_COMM_SELF);
             }
         }
     }
