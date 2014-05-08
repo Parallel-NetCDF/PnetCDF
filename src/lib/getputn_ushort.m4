@@ -267,7 +267,7 @@ PUT_USHORT(int,    if (*ip > X_USHORT_MAX || *ip < 0) return NC_ERANGE;)
 PUT_USHORT(float,  if (*ip > X_USHORT_MAX || *ip < 0) return NC_ERANGE;)
 PUT_USHORT(double, if (*ip > X_USHORT_MAX || *ip < 0) return NC_ERANGE;)
 PUT_USHORT(int64,  if (*ip > X_USHORT_MAX || *ip < 0) return NC_ERANGE;)
-PUT_USHORT(uint64, if (*ip > X_USHORT_MAX || *ip < 0) return NC_ERANGE;)
+PUT_USHORT(uint64, if (*ip > X_USHORT_MAX) return NC_ERANGE;)
 
 
 dnl
