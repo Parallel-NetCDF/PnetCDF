@@ -89,6 +89,7 @@ bool NcmpiDim::isUnlimited() const
   ncmpiCheck(ncmpi_inq_unlimdim(groupId,&dimid),__FILE__,__LINE__);
   return (myId == dimid);
 
+#if 0
   int numlimdims;
   int* unlimdimidsp=NULL;
   // get the number of unlimited dimensions
@@ -103,6 +104,7 @@ bool NcmpiDim::isUnlimited() const
 	  return it != unlimdimid.end();
   }
   return false;
+#endif
 }
 
 
