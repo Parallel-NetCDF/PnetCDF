@@ -137,8 +137,10 @@ int main(int argc, char **argv) {
     MPI_Type_free(&one_d);
     MPI_Type_free(&two_d);
 
+    nitems = 1;
+    if (rank > 0) nitems = 0;
     ret = ncmpi_put_vara_all(ncfile, flexible_varid, start, count, 
-	    data, 1, transposed_type);
+	    data, nitems, transposed_type);
 
     MPI_Type_free(&transposed_type);
 

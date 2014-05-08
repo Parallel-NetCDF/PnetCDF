@@ -1010,21 +1010,21 @@ err_check:
     xbuf = NULL;
 
     if (rw_flag == WRITE_REQ) {
+        int position, outsize;
 
         /* Step 1: pack buf into a contiguous buffer, lbuf */
+        lnelems = bnelems; /* (number of ptype in buftype) * bofcount */
         if (iscontig_of_ptypes) { /* buf is contiguous */
-            lnelems = bnelems / bufcount;
             lbuf = buf;
         }
-        else { /* pack buf into lbuf, a contiguous buffer, based on buftype */
-            lnelems = bnelems;
-            lbuf = NCI_Malloc(lnelems*el_size);
-            status = ncmpii_data_repack(buf, bufcount, buftype,
-                                        lbuf, lnelems, ptype);
-            if (status != NC_NOERR) {
-                NCI_Free(lbuf);
-                return ((warning != NC_NOERR) ? warning : status);
-            }
+        else if (lnelems > 0) {
+            /* pack buf into lbuf, a contiguous buffer, based on buftype */
+            outsize = lnelems*el_size;
+            lbuf = NCI_Malloc(outsize);
+
+            position = 0;
+            MPI_Pack(buf, bufcount, buftype, lbuf, outsize, &position,
+                     MPI_COMM_SELF);
         }
 
         /* Step 2: pack lbuf to cbuf if imap is non-contiguos */
@@ -1036,11 +1036,15 @@ err_check:
             for (dim--; dim>=0; dim--)
                 bnelems *= count[dim];
 
-            cbuf = NCI_Malloc(bnelems*el_size);
+            if (bnelems > 0) {
+                outsize = bnelems*el_size;
+                cbuf = NCI_Malloc(outsize);
 
-            /* pack lbuf to cbuf based on imaptype */
-            status = ncmpii_data_repack(lbuf, 1, imaptype,
-                                        cbuf, bnelems, ptype);
+                /* pack lbuf to cbuf, a contiguous buffer, based on imaptype */
+                position = 0;
+                MPI_Pack(lbuf, 1, imaptype, cbuf, outsize, &position,
+                         MPI_COMM_SELF);
+            }
             MPI_Type_free(&imaptype);
             imaptype = MPI_DATATYPE_NULL;
 

@@ -205,11 +205,11 @@ ncmpii_getput_varn(int               ncid,
         if (status != NC_NOERR) goto err_check;
 
         /* check if buftype is contiguous, if not, pack to one, cbuf */
-        if (! iscontig_of_ptypes) {
-            cbuf = NCI_Malloc(bnelems*el_size);
-            status = ncmpii_data_repack(buf, bufcount, buftype,
-                                        cbuf, bnelems, ptype);
-            if (status != NC_NOERR) goto err_check;
+        if (! iscontig_of_ptypes && bnelems > 0) {
+            int position=0, outsize=bnelems*el_size;
+            cbuf = NCI_Malloc(outsize);
+            MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
+                     MPI_COMM_SELF);
         }
     }
     else {

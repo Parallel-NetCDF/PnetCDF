@@ -103,7 +103,7 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
     /* split the orignial comm to subcomm */
     if (nprocs > ncp->nc_num_subfiles) {
         ratio = (double)nprocs/(double)(ncp->nc_num_subfiles);
-	color = (int)((double)myrank/ratio);
+        color = (int)((double)myrank/ratio);
     }
     else 
         color = myrank%ncp->nc_num_subfiles;
@@ -125,7 +125,7 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
     status = ncmpi_create(comm_sf, path_sf, NC_CLOBBER|NC_64BIT_DATA, info, ncidp);  
     if (status != NC_NOERR) {
       if (myrank == 0) fprintf(stderr, "%s: error in creating file(%s): %s\n", 
-		__func__, path_sf, ncmpi_strerror(status));
+                __func__, path_sf, ncmpi_strerror(status));
         return status;
     }
     MPI_Info_free(&info);
@@ -153,7 +153,7 @@ ncmpii_subfile_open(NC *ncp, int *ncidp)
     /* split the original comm to subcomm */
     if (nprocs > ncp->nc_num_subfiles) {
         ratio = (double)nprocs/(double)ncp->nc_num_subfiles;
-	color = (int)((double)myrank/ratio);
+        color = (int)((double)myrank/ratio);
     }
     else 
         color = myrank%ncp->nc_num_subfiles;
@@ -190,7 +190,7 @@ int ncmpii_subfile_close (NC *ncp)
     status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);
     if (status != NC_NOERR)
         return status;
-	
+        
     status = ncmpii_NC_close (ncp_sf);
     if (status != NC_NOERR)
         return status;
@@ -222,10 +222,10 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
 
     if (nprocs > ncp->nc_num_subfiles) {
         ratio = (double)nprocs/(double)ncp->nc_num_subfiles;
-	color = (int)((double)myrank/ratio);
+        color = (int)((double)myrank/ratio);
     }
     else 
-	color = myrank%ncp->nc_num_subfiles;
+        color = myrank%ncp->nc_num_subfiles;
 
 #ifdef SUBFILE_DEBUG     
     printf("%s: rank(%d): color=%d\n", __func__, myrank, color);
@@ -236,13 +236,13 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
     status = ncmpi_inq_att(ncp->nciop->fd, NC_GLOBAL, "num_subfiles", &type, &attlen);
     /* TODO: should check specific error like such attr doesn't exist? */
     if (status != NC_NOERR) {
-	status = ncmpii_subfile_create(ncp, ncidp);
-	TEST_HANDLE_ERR ("ncmpii_subfile_create", status);
-	
-	status = ncmpi_put_att_int (ncp->nciop->fd, NC_GLOBAL, 
-				    "num_subfiles", NC_INT, 1, 
-				    &ncp->nc_num_subfiles); 
-	TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
+        status = ncmpii_subfile_create(ncp, ncidp);
+        TEST_HANDLE_ERR ("ncmpii_subfile_create", status);
+        
+        status = ncmpi_put_att_int (ncp->nciop->fd, NC_GLOBAL, 
+                                    "num_subfiles", NC_INT, 1, 
+                                    &ncp->nc_num_subfiles); 
+        TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
     }
     
     /* TODO: ignore UNLIMITED dims */
@@ -258,179 +258,179 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
     ncp_sf->nciop->hints.r_align = ncp->nciop->hints.r_align;
     
     for(i=0; i<ncp->vars.ndefined; i++) { /* travere all variables */
-	NC_var **vpp = ncp->vars.value;
-	NC_dim **dpp = ncp->dims.value;
-	
-	/* check attr for subfiles */
-	int par_dim_id = (IS_RECVAR(vpp[i])?1:0); /* default is the most significant dim excluding NC_UNLIMITED */
+        NC_var **vpp = ncp->vars.value;
+        NC_dim **dpp = ncp->dims.value;
+        
+        /* check attr for subfiles */
+        int par_dim_id = (IS_RECVAR(vpp[i])?1:0); /* default is the most significant dim excluding NC_UNLIMITED */
 
-	/* skip if the var is partitioned already */
-	if (vpp[i]->dimids == NULL) continue; 
+        /* skip if the var is partitioned already */
+        if (vpp[i]->dimids == NULL) continue; 
 
         /* par_dim_id already exists? */
-	status = ncmpi_inq_att(ncp->nciop->fd, i, "par_dim_id",
-			       &type, &attlen);
-	if (status == NC_NOERR) {
-	    int par_dim_id_temp, i_temp;
-	    status = ncmpi_get_att_int (ncp->nciop->fd, i, 
-					"par_dim_id",
-					&par_dim_id_temp);
+        status = ncmpi_inq_att(ncp->nciop->fd, i, "par_dim_id",
+                               &type, &attlen);
+        if (status == NC_NOERR) {
+            int par_dim_id_temp, i_temp;
+            status = ncmpi_get_att_int (ncp->nciop->fd, i, 
+                                        "par_dim_id",
+                                        &par_dim_id_temp);
 #ifdef SUBFILE_DEBUG 
-	    printf("par_dim_id_temp=%d\n", par_dim_id_temp);
+            printf("par_dim_id_temp=%d\n", par_dim_id_temp);
 #endif
-	    /* convert par_dim_id to dim index defined in a var */
-	    for (i_temp = 0; i_temp <vpp[i]->ndims ; i_temp++)
-		if (vpp[i]->dimids[i_temp] == par_dim_id_temp) {
+            /* convert par_dim_id to dim index defined in a var */
+            for (i_temp = 0; i_temp <vpp[i]->ndims ; i_temp++)
+                if (vpp[i]->dimids[i_temp] == par_dim_id_temp) {
 #ifdef SUBFILE_DEBUG
-		    if (myrank == 0)
-			printf("dimids[%d]=%d\n", i_temp, 
-			       vpp[i]->dimids[i_temp]);
+                    if (myrank == 0)
+                        printf("dimids[%d]=%d\n", i_temp, 
+                               vpp[i]->dimids[i_temp]);
 #endif
-		    par_dim_id = i_temp;
-		    break;
-		}
+                    par_dim_id = i_temp;
+                    break;
+                }
 #ifdef SUBFILE_DEBUG
-	    printf("par_dim_id=%d\n", par_dim_id);
+            printf("par_dim_id=%d\n", par_dim_id);
 #endif
-	}
-	if (par_dim_id < vpp[i]->ndims)
-	    ncmpi_put_att_int (ncp->nciop->fd, i, "par_dim_index", 
-			       NC_INT, 1, &par_dim_id);
-	
+        }
+        if (par_dim_id < vpp[i]->ndims)
+            ncmpi_put_att_int (ncp->nciop->fd, i, "par_dim_index", 
+                               NC_INT, 1, &par_dim_id);
+        
 #ifdef SUBFILE_DEBUG
-	if (myrank == 0) 
-	    printf ("%s: var(%s): size of partitioning dim (id=%d)=%d\n", 
-		    __func__, (*vpp[i]).name->cp, par_dim_id, 
-		    dpp[par_dim_id]->size);
+        if (myrank == 0) 
+            printf ("%s: var(%s): size of partitioning dim (id=%d)=%d\n", 
+                    __func__, (*vpp[i]).name->cp, par_dim_id, 
+                    dpp[par_dim_id]->size);
 #endif
-	/* divide only when dim is partitionable */
-	/* 1. skip sizeof(par_dim_id) is smaller than num_subfiles */
-	/* 2. skip if ndims < min_ndims */
-	if ( (dpp[(*vpp[i]).dimids[par_dim_id]]->size)/(ncp->nc_num_subfiles) != 0 && (vpp[i]->ndims >= par_dim_id+1) && (vpp[i]->ndims >= min_ndims)) { 
-	    int varid, j, jj, k;
-	    int var_ndims = vpp[i]->ndims; /* keep org ndims */
-	    int dimids[var_ndims];
-	    char *key[ncp->nc_num_subfiles][var_ndims];
+        /* divide only when dim is partitionable */
+        /* 1. skip sizeof(par_dim_id) is smaller than num_subfiles */
+        /* 2. skip if ndims < min_ndims */
+        if ( (dpp[(*vpp[i]).dimids[par_dim_id]]->size)/(ncp->nc_num_subfiles) != 0 && (vpp[i]->ndims >= par_dim_id+1) && (vpp[i]->ndims >= min_ndims)) { 
+            int varid, j, jj, k;
+            int var_ndims = vpp[i]->ndims; /* keep org ndims */
+            int dimids[var_ndims];
+            char *key[ncp->nc_num_subfiles][var_ndims];
             
-	    for (jj=0; jj < ncp->nc_num_subfiles; jj++) 
-		for (k=0; k<var_ndims; k++)
-		    key[jj][k] = calloc(100, sizeof(char));
-	    
-	    /* save original value ndims to attribute before making to 0 */
-	    status = ncmpi_put_att_int (ncp->nciop->fd, i, "ndims_org", NC_INT, 1, &vpp[i]->ndims);
-	    TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
-	    
-	    int sf_range[ncp->nc_num_subfiles][var_ndims][3];
-	    
+            for (jj=0; jj < ncp->nc_num_subfiles; jj++) 
+                for (k=0; k<var_ndims; k++)
+                    key[jj][k] = NCI_Calloc(100, sizeof(char));
+            
+            /* save original value ndims to attribute before making to 0 */
+            status = ncmpi_put_att_int (ncp->nciop->fd, i, "ndims_org", NC_INT, 1, &vpp[i]->ndims);
+            TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
+            
+            int sf_range[ncp->nc_num_subfiles][var_ndims][3];
+            
             /* j: each dimension */
-	    /* subfile: create a var with partitioned dim sizes */
-	    for(j=0; j<var_ndims; j++) {
-		MPI_Offset dim_sz;
-		char str[80];
-		double x; /* = org dim size / num_subfiles */
+            /* subfile: create a var with partitioned dim sizes */
+            for(j=0; j<var_ndims; j++) {
+                MPI_Offset dim_sz;
+                char str[80];
+                double x; /* = org dim size / num_subfiles */
                 int min, max;
                 
-		dim_sz = dpp[vpp[i]->dimids[j]]->size; /* init both to org dim sz */
-		/* determine partition ratio */
-		x = (double)(dpp[vpp[i]->dimids[j]]->size)/(double)(ncp->nc_num_subfiles);
+                dim_sz = dpp[vpp[i]->dimids[j]]->size; /* init both to org dim sz */
+                /* determine partition ratio */
+                x = (double)(dpp[vpp[i]->dimids[j]]->size)/(double)(ncp->nc_num_subfiles);
                 
-		/* don't partition dim if dim size is less than ratio x */
-		if ((int)x < 1 && j == par_dim_id)
-		    continue;
+                /* don't partition dim if dim size is less than ratio x */
+                if ((int)x < 1 && j == par_dim_id)
+                    continue;
 
                 /* don't need to check? */
                 if (j == par_dim_id)
                 {
                     double xx = x*(double)color;
-		    double yy = x*(double)(color+1);
+                    double yy = x*(double)(color+1);
                     min = xx+(color==0||(xx-(int)xx==0.0)?0:1);
                     max = yy-(yy-(int)yy==0.0?1:0);
-		    if (max >= dpp[vpp[i]->dimids[j]]->size) max = dpp[vpp[i]->dimids[j]]->size-1;
-		    dim_sz = max-min+1;
-		}
+                    if (max >= dpp[vpp[i]->dimids[j]]->size) max = dpp[vpp[i]->dimids[j]]->size-1;
+                    dim_sz = max-min+1;
+                }
 
-		snprintf(str, strlen (dpp[vpp[i]->dimids[j]]->name->cp) +
-			 strlen (vpp[i]->name->cp) + 2, "%s.%s", 
-			 dpp[vpp[i]->dimids[j]]->name->cp, 
-			 vpp[i]->name->cp);
+                snprintf(str, strlen (dpp[vpp[i]->dimids[j]]->name->cp) +
+                         strlen (vpp[i]->name->cp) + 2, "%s.%s", 
+                         dpp[vpp[i]->dimids[j]]->name->cp, 
+                         vpp[i]->name->cp);
 #ifdef SUBFILE_DEBUG
-		printf("rank(%d): new dim name = %s, dim_sz=%d\n", myrank, str, dim_sz);
-#endif		    
-		status = ncmpi_def_dim(ncp->ncid_sf, str, 
-				       dim_sz, &dimids[j]);
-		TEST_HANDLE_ERR ("ncmpi_def_dim", status);
-		
-		//dpp_sf[color][j] = ncp_sf->dims.value[j];
+                printf("rank(%d): new dim name = %s, dim_sz=%d\n", myrank, str, dim_sz);
+#endif                    
+                status = ncmpi_def_dim(ncp->ncid_sf, str, 
+                                       dim_sz, &dimids[j]);
+                TEST_HANDLE_ERR ("ncmpi_def_dim", status);
                 
-		for (jj=0; jj < ncp->nc_num_subfiles; jj++) {
-		    char ss[80];
+                //dpp_sf[color][j] = ncp_sf->dims.value[j];
+                
+                for (jj=0; jj < ncp->nc_num_subfiles; jj++) {
+                    char ss[80];
                     double xx, yy;
-		    snprintf(key[jj][j], strlen(dpp[vpp[i]->dimids[j]]->name->cp) + ncmpii_itoa(jj, ss) + 17, "range(%s).subfile.%d", dpp[vpp[i]->dimids[j]]->name->cp, jj); /* dim name*/ 
+                    snprintf(key[jj][j], strlen(dpp[vpp[i]->dimids[j]]->name->cp) + ncmpii_itoa(jj, ss) + 17, "range(%s).subfile.%d", dpp[vpp[i]->dimids[j]]->name->cp, jj); /* dim name*/ 
                     xx = x*(double)jj;
                     min = xx+(jj==0||(xx-(int)xx==0.0)?0:1);
-		    yy = x*(double)(jj+1);
+                    yy = x*(double)(jj+1);
                     max = yy-(yy-(int)yy==0.0?1:0);
-		    if (max >= dpp[vpp[i]->dimids[j]]->size) max = dpp[vpp[i]->dimids[j]]->size-1;
+                    if (max >= dpp[vpp[i]->dimids[j]]->size) max = dpp[vpp[i]->dimids[j]]->size-1;
 #ifdef SUBFILE_DEBUG
                     if (myrank == 0) printf("subfile(%d): min=%d, max=%d\n", jj, min, max);
 #endif
-		    if (j == par_dim_id) { /* partitioning dims? */ 
-			sf_range[jj][j][0] = min;
+                    if (j == par_dim_id) { /* partitioning dims? */ 
+                        sf_range[jj][j][0] = min;
                         sf_range[jj][j][1] = max;
-			sf_range[jj][j][2] = (max-min+1);;
-		    } 
-		    else { 
-			sf_range[jj][j][0] = 0;
-			sf_range[jj][j][2] = dpp[vpp[i]->dimids[j]]->size;
-			sf_range[jj][j][1] = (dpp[vpp[i]->dimids[j]]->size!=0?(dpp[vpp[i]->dimids[j]]->size)-1:0);
-		    }
-		}
-	    } /* for each dim */
-	    
-	    /* master file: replace the original var with scalar var */
-	    vpp[i]->dimids_org = calloc(vpp[i]->ndims, sizeof(int));
-	    memcpy(vpp[i]->dimids_org, vpp[i]->dimids, vpp[i]->ndims*sizeof(int));
-	    vpp[i]->ndims_org = vpp[i]->ndims;
-	    vpp[i]->ndims = 0;
-	    vpp[i]->dimids = (IS_RECVAR(vpp[i])?&vpp[i]->dimids[0]:NULL);
-	    vpp[i]->len = vpp[i]->xsz; /* size of type  */
-	    vpp[i]->shape = NULL;
-	    vpp[i]->num_subfiles = ncp->nc_num_subfiles;
+                        sf_range[jj][j][2] = (max-min+1);;
+                    } 
+                    else { 
+                        sf_range[jj][j][0] = 0;
+                        sf_range[jj][j][2] = dpp[vpp[i]->dimids[j]]->size;
+                        sf_range[jj][j][1] = (dpp[vpp[i]->dimids[j]]->size!=0?(dpp[vpp[i]->dimids[j]]->size)-1:0);
+                    }
+                }
+            } /* for each dim */
             
-	    status = ncmpi_put_att_int (ncp->nciop->fd, i, "num_subfiles", 
-					NC_INT, 1, &ncp->nc_num_subfiles);
-	    TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
-	    
-	    for (jj=0; jj < ncp->nc_num_subfiles; jj++)
-		for (k=0; k < var_ndims; k++) {
-		    status = ncmpi_put_att_int (ncp->nciop->fd, i, 
-						key[jj][k], NC_INT, 
-						2, sf_range[jj][k]);
-		    TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
-		}
-	    
-	    /* define a var with new dim */
-	    status = ncmpi_def_var(ncp->ncid_sf, (*vpp[i]).name->cp, 
-				   vpp[i]->type, var_ndims, dimids, &varid);
-	    TEST_HANDLE_ERR ("ncmpi_def_var", status);
-	    
-	    /* add an attribute about each dim's range in subfile */
-	    /* varid: var id in subfile */
-	    for (k=0; k<var_ndims; k++) {
-		status = ncmpi_put_att_int (ncp->ncid_sf, varid, key[color][k], 
-					    NC_INT, 2, sf_range[color][k]); 
-		TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
-	    }
-	    
-	    /* deallocate buffers */
-	    for (jj=0; jj < ncp->nc_num_subfiles; jj++) 
-		for (k=0; k<var_ndims; k++)
-		    free(key[jj][k]);
-	    
-	    status = ncmpi_put_att_int (ncp->ncid_sf, varid, "subfile_index",
-					NC_INT, 1, &color);
-	    TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
-	} /* end if() */
+            /* master file: replace the original var with scalar var */
+            vpp[i]->dimids_org = NCI_Malloc(vpp[i]->ndims * sizeof(int));
+            memcpy(vpp[i]->dimids_org, vpp[i]->dimids, vpp[i]->ndims*sizeof(int));
+            vpp[i]->ndims_org = vpp[i]->ndims;
+            vpp[i]->ndims = 0;
+            vpp[i]->dimids = (IS_RECVAR(vpp[i])?&vpp[i]->dimids[0]:NULL);
+            vpp[i]->len = vpp[i]->xsz; /* size of type  */
+            vpp[i]->shape = NULL;
+            vpp[i]->num_subfiles = ncp->nc_num_subfiles;
+            
+            status = ncmpi_put_att_int (ncp->nciop->fd, i, "num_subfiles", 
+                                        NC_INT, 1, &ncp->nc_num_subfiles);
+            TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
+            
+            for (jj=0; jj < ncp->nc_num_subfiles; jj++)
+                for (k=0; k < var_ndims; k++) {
+                    status = ncmpi_put_att_int (ncp->nciop->fd, i, 
+                                                key[jj][k], NC_INT, 
+                                                2, sf_range[jj][k]);
+                    TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
+                }
+            
+            /* define a var with new dim */
+            status = ncmpi_def_var(ncp->ncid_sf, (*vpp[i]).name->cp, 
+                                   vpp[i]->type, var_ndims, dimids, &varid);
+            TEST_HANDLE_ERR ("ncmpi_def_var", status);
+            
+            /* add an attribute about each dim's range in subfile */
+            /* varid: var id in subfile */
+            for (k=0; k<var_ndims; k++) {
+                status = ncmpi_put_att_int (ncp->ncid_sf, varid, key[color][k], 
+                                            NC_INT, 2, sf_range[color][k]); 
+                TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
+            }
+            
+            /* deallocate buffers */
+            for (jj=0; jj < ncp->nc_num_subfiles; jj++) 
+                for (k=0; k<var_ndims; k++)
+                    NCI_Free(key[jj][k]);
+            
+            status = ncmpi_put_att_int (ncp->ncid_sf, varid, "subfile_index",
+                                        NC_INT, 1, &color);
+            TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
+        } /* end if() */
     } /* for each variable */
 
     is_partitioned = 1;
@@ -441,15 +441,15 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
 /*----< ncmpii_subfile_getput_vars() >---------------------------------------*/
 int
 ncmpii_subfile_getput_vars(NC               *ncp,
-			   NC_var           *varp,
-			   const MPI_Offset  start[],
-			   const MPI_Offset  count[],
-			   const MPI_Offset  stride[],
-			   void             *buf,
-			   MPI_Offset        bufcount,
-			   MPI_Datatype      buftype, /* data type of the buffer */
-			   int               rw_flag,
-			   int               io_method)
+                           NC_var           *varp,
+                           const MPI_Offset  start[],
+                           const MPI_Offset  count[],
+                           const MPI_Offset  stride[],
+                           void             *buf,
+                           MPI_Offset        bufcount,
+                           MPI_Datatype      buftype, /* data type of the buffer */
+                           int               rw_flag,
+                           int               io_method)
 {
     int err, errs=0, status;
     NC_subfile_access *my_req, *others_req;
@@ -491,11 +491,11 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     TEST_HANDLE_ERR("ncmpi_inq_varid", status);
 
     status = ncmpi_inq_att(ncp->nciop->fd, varid, "par_dim_index",
-				   &type, &attlen);
+                                   &type, &attlen);
     if (status == NC_NOERR) {
-	status = ncmpi_get_att_int (ncp->nciop->fd, varid,
-				    "par_dim_index",
-				    &par_dim_id);
+        status = ncmpi_get_att_int (ncp->nciop->fd, varid,
+                                    "par_dim_index",
+                                    &par_dim_id);
     }
 #ifdef SUBFILE_DEBUG
     if (myrank == 0)
@@ -507,10 +507,10 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     status = ncmpi_get_att_int (ncp_sf->nciop->fd, varid_sf, "subfile_index",
                                 &color);
 
-    count_my_req_per_proc = (int *)calloc(nprocs, sizeof(int));
-    count_others_req_per_proc = (int *)calloc(nprocs, sizeof(int));
-    buf_count_my = (MPI_Offset *)calloc(nprocs, sizeof(MPI_Offset));
-    buf_count_others = (MPI_Offset *)calloc(nprocs, sizeof(MPI_Offset));
+    count_my_req_per_proc = (int *)NCI_Calloc(nprocs, sizeof(int));
+    count_others_req_per_proc = (int *)NCI_Calloc(nprocs, sizeof(int));
+    buf_count_my = (MPI_Offset *)NCI_Calloc(nprocs, sizeof(MPI_Offset));
+    buf_count_others = (MPI_Offset *)NCI_Calloc(nprocs, sizeof(MPI_Offset));
 
     /* TODO: shouldn't it be initialized to 0? */
     for (i=0; i<nprocs; i++) {
@@ -519,13 +519,13 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     }
 
     /* allocate space for my_req */
-    my_req = (NC_subfile_access *)calloc (nprocs, sizeof(NC_subfile_access));
+    my_req = (NC_subfile_access *)NCI_Calloc (nprocs, sizeof(NC_subfile_access));
 
     /* init allocated my_req */
     for (i=0; i<nprocs; i++) {
-        my_req[i].start = (MPI_Offset *)calloc(ndims_org, sizeof(MPI_Offset));
-        my_req[i].count = (MPI_Offset *)calloc(ndims_org, sizeof(MPI_Offset));
-        my_req[i].start_org = (MPI_Offset *)calloc(ndims_org, sizeof(MPI_Offset));
+        my_req[i].start = (MPI_Offset *)NCI_Calloc(ndims_org, sizeof(MPI_Offset));
+        my_req[i].count = (MPI_Offset *)NCI_Calloc(ndims_org, sizeof(MPI_Offset));
+        my_req[i].start_org = (MPI_Offset *)NCI_Calloc(ndims_org, sizeof(MPI_Offset));
         /* init start/count to -1 */
         for (j=0; j<ndims_org; j++) {
             my_req[i].start[j] = -1;
@@ -546,9 +546,9 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             
             xx = (ratio)*(double)i; /* i: each subfile */
             min = xx+(i==0||(xx-(int)xx==0.0)?0:1);
-	    yy = (ratio)*(double)(i+1);
+            yy = (ratio)*(double)(i+1);
             max = yy-(yy-(int)yy==0.0?1:0);
-	    if (max >= nprocs) max = nprocs-1;
+            if (max >= nprocs) max = nprocs-1;
             //scaled = (double)rand()/RAND_MAX;
             scaled = (double)myrank/ratio-(double)color;
             aproc = (i==color)?myrank:(min+(max-min+1)*scaled);
@@ -570,16 +570,16 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         printf("rank(%d): color=%d, subfile=%d, aproc=%d\n", myrank, color, i, aproc);
 #endif
 
-	/* j: for each dim starting from par_dim_id in round-robin manner */
+        /* j: for each dim starting from par_dim_id in round-robin manner */
         for (j=par_dim_id; j<par_dim_id+ndims_org; j++) {
-	    int jx = j%ndims_org;
+            int jx = j%ndims_org;
             NC_dim *dimp = ncp_sf->dims.value[ncp_sf->vars.value[varid_sf]->dimids[jx]];
             int sf_range[2];
             int ii, jj, kk, stride_count;
-	    char key[80], *org_dim_name;
+            char key[80], *org_dim_name;
 
             org_dim_name = strtok(dimp->name->cp, ".");
-	    sprintf(key, "range(%s).subfile.%d", org_dim_name, i); /* dim name*/
+            sprintf(key, "range(%s).subfile.%d", org_dim_name, i); /* dim name*/
 #ifdef SUBFILE_DEBUG
             if (myrank == 0) {
                 printf("rank(%d): org_dim_name=%s\n", myrank, org_dim_name);
@@ -591,8 +591,8 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             TEST_HANDLE_ERR("ncmpi_inq_att", status);
             
             /* should get range info from the master file */
-	    status = ncmpi_get_att_int (ncp->nciop->fd, varid, key, sf_range);
-	    TEST_HANDLE_ERR("ncmpi_get_att_int", status);
+            status = ncmpi_get_att_int (ncp->nciop->fd, varid, key, sf_range);
+            TEST_HANDLE_ERR("ncmpi_get_att_int", status);
 
 #ifdef SUBFILE_DEBUG
             //if (myrank == 0) 
@@ -605,17 +605,17 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             ii=start[jx], jj=sf_range[0], kk=0;
             stride_count = (stride == NULL?1:stride[jx]);
             //printf("stride_count[%d]=%d\n", jx, stride_count);
-	    
-	    /* TODO: if sf_range is 1, count[] value is incorrect 
-	       e.g., size of par_dim is 4 and the nproc is also 4 */
-	    int is_unlimited_dim = sf_range[1]-sf_range[0];
+            
+            /* TODO: if sf_range is 1, count[] value is incorrect 
+               e.g., size of par_dim is 4 and the nproc is also 4 */
+            int is_unlimited_dim = sf_range[1]-sf_range[0];
 
             /* skip the remaining dim if par_dim is not 
                intersected with user's request */
             if (jx != par_dim_id && !flag) continue;
 
             while (ii < (start[jx]+(count[jx]*stride_count)) && 
-		   jj <= (is_unlimited_dim==0?(count[jx]*stride_count-1):sf_range[1]))
+                   jj <= (is_unlimited_dim==0?(count[jx]*stride_count-1):sf_range[1]))
             {
                 if (ii < jj)
                     ii+=stride_count;
@@ -623,15 +623,15 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                     jj++;
                 else {
 #ifdef SUBFILE_DEBUG
-		    printf("rank(%d): var(%s): i=%d, j=%d, ii=%d, jj=%d, kk=%d, jx=%d\n", myrank, varp->name->cp, i, j, ii, jj, kk, jx);
+                    printf("rank(%d): var(%s): i=%d, j=%d, ii=%d, jj=%d, kk=%d, jx=%d\n", myrank, varp->name->cp, i, j, ii, jj, kk, jx);
 #endif
                     if (kk == 0) {
-			my_req[aproc].start[jx] = ii;
+                        my_req[aproc].start[jx] = ii;
 #ifdef SUBFILE_DEBUG
-			printf("rank(%d): var(%s): my_req[%d].start[%d]=%d\n",
-			       myrank, varp->name->cp, aproc, jx, ii);
+                        printf("rank(%d): var(%s): my_req[%d].start[%d]=%d\n",
+                               myrank, varp->name->cp, aproc, jx, ii);
 #endif
-		    }
+                    }
                     if (jx == par_dim_id) flag = 1;
                     ii+=stride_count; jj++; kk++;
                 }
@@ -646,7 +646,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             }
 #ifdef SUBFILE_DEBUG
             //if (myrank == 0) {
-	    {
+            {
                 printf("rank(%d): my_req[%d].start[%d]=%d\n", myrank, aproc, 
                        jx, my_req[aproc].start[jx]);
                 printf("rank(%d): my_req[%d].count[%d]=%d\n", myrank, aproc,
@@ -695,12 +695,12 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         buf_count_my[myrank] *= my_req[myrank].count[i];
 
     /* build other proc's request */
-    others_req = (NC_subfile_access *)calloc (nprocs, sizeof(NC_subfile_access));
+    others_req = (NC_subfile_access *)NCI_Calloc (nprocs, sizeof(NC_subfile_access));
     /* init allocated others_req */
     for (i=0; i<nprocs; i++) {
-        others_req[i].start = (MPI_Offset *)calloc(ndims_org, sizeof(MPI_Offset));
-        others_req[i].count = (MPI_Offset *)calloc(ndims_org, sizeof(MPI_Offset));
-        others_req[i].start_org = (MPI_Offset *)calloc(ndims_org, sizeof(MPI_Offset));
+        others_req[i].start = (MPI_Offset *)NCI_Calloc(ndims_org, sizeof(MPI_Offset));
+        others_req[i].count = (MPI_Offset *)NCI_Calloc(ndims_org, sizeof(MPI_Offset));
+        others_req[i].start_org = (MPI_Offset *)NCI_Calloc(ndims_org, sizeof(MPI_Offset));
         /* init start/count to -1 */
         for (j=0; j<ndims_org; j++) {
             others_req[i].start[j] = -1;
@@ -754,7 +754,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     MPI_Aint lb, extent;
 
     status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
-				 &isderived, &buftype_is_contig);
+                                 &isderived, &buftype_is_contig);
     /* bnelems now is the number of ptype in a buftype */
     TEST_HANDLE_ERR("ncmpii_dtype_decode", status);
 
@@ -762,25 +762,23 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 
 #ifdef SUBFILE_DEBUG
     printf("rank(%d): var(%s): ptype=0x%x, el_size=%d, bnelems=%d, isderived=%d, buftype_is_contig=%d, lb=%d, extent=%d\n",
-	   myrank, varp->name->cp, ptype, el_size, bnelems, isderived, buftype_is_contig, lb, extent);
+           myrank, varp->name->cp, ptype, el_size, bnelems, isderived, buftype_is_contig, lb, extent);
 #endif
 
     /* if buftype is non-contiguous, pack to contiguous buffer*/
     /* NOTE: no conversion and byte swap are performed here
        as they are done underneath layer */
-    if (!buftype_is_contig) {
-	bnelems = bnelems*bufcount; /* update bnelems */
-	cbuf = (void *)calloc(bnelems, el_size);
-	if (cbuf == NULL)
-	    printf("calloc of cbuf error!!!!\n");
-	if (rw_flag == WRITE_REQ) {
-	    status = ncmpii_data_repack((void*)buf, bufcount, buftype,
-					cbuf, bnelems, ptype);
-	    TEST_HANDLE_ERR("ncmpii_data_repack", status);
-	}
+    if (!buftype_is_contig && bufcount > 0 && bnelems > 0) {
+        int position=0, outsize;
+        bnelems = bnelems*bufcount; /* update bnelems */
+        outsize = bnelems * el_size;
+        cbuf = NCI_Malloc(outsize);
+        if (rw_flag == WRITE_REQ)
+            MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
+                     MPI_COMM_SELF);
     }
     else
-	cbuf = (void *)buf;
+        cbuf = (void *)buf;
 
     int diff[ndims_org];
     for (i=0; i < ndims_org; i++) {
@@ -809,22 +807,22 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 
 #ifdef SUBFILE_DEBUG
     printf("rank(%d): buf_offset[%d]=%d, buf_count_my[%d]=%d\n", myrank, 
-	   myrank, buf_offset[myrank], myrank, buf_count_my[myrank]);
+           myrank, buf_offset[myrank], myrank, buf_count_my[myrank]);
 
     printf ("rank(%d): %s: var(%s)\n", myrank, __func__, varp->name->cp);
     for (i=0; i<ndims_org; i++)
         printf("my_req[%d].start[%d]=%ld, my_req[%d].count[%d]=%ld, my_req[%d].stride[%d]=%ld, bufcount=%ld\n",
                myrank, i, my_req[myrank].start[i], myrank, i, 
-	       my_req[myrank].count[i], myrank, i, 
-	       ((stride != NULL)?stride[i]:1), bufcount);
+               my_req[myrank].count[i], myrank, i, 
+               ((stride != NULL)?stride[i]:1), bufcount);
 #endif
 
     int *array_of_requests;
     int *array_of_statuses;
     /* TODO: each proc can't get more than nprocs-1?? */
-    array_of_requests = (int *)calloc(nprocs, sizeof(int));
+    array_of_requests = (int *)NCI_Malloc(nprocs * sizeof(int));
     for (i=0; i<nprocs; i++) 
-	array_of_requests[i] = NC_REQ_NULL; 
+        array_of_requests[i] = NC_REQ_NULL; 
 
 #ifdef SUBFILE_DEBUG
     printf("buf_count_my[%d]=%d\n", myrank, buf_count_my[myrank]);
@@ -832,18 +830,18 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     /* doing my portion of I/O */
     if (count_my_req_per_proc[myrank] != 0) {
         status = ncmpii_igetput_varm(ncp_sf, 
-				     ncp_sf->vars.value[varid_sf], 
-				     my_req[myrank].start, 
-				     my_req[myrank].count, 
+                                     ncp_sf->vars.value[varid_sf], 
+                                     my_req[myrank].start, 
+                                     my_req[myrank].count, 
                                      stride, 
                                      NULL,
-				     (char*)cbuf+buf_offset[myrank], 
-				     buf_count_my[myrank],
-				     (!buftype_is_contig?ptype:buftype),
-				     &array_of_requests[nasyncios++],
-				     rw_flag, 
-				     0);
-	TEST_HANDLE_ERR("ncmpii_igetput_varm1", status);
+                                     (char*)cbuf+buf_offset[myrank], 
+                                     buf_count_my[myrank],
+                                     (!buftype_is_contig?ptype:buftype),
+                                     &array_of_requests[nasyncios++],
+                                     rw_flag, 
+                                     0);
+        TEST_HANDLE_ERR("ncmpii_igetput_varm1", status);
     }
 #ifdef SUBFILE_DEBUG
     printf("rank(%d): var(%s): pushed local I/O to async calls...\n", myrank, varp->name->cp);
@@ -851,7 +849,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 
     ////////// doing other proc's request to my subfile
     /* TODO: each proc can't get more than nprocs?? */
-    requests = (MPI_Request *)malloc(2*nprocs*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc(2*nprocs*sizeof(MPI_Request));
     
     j = 0;
 #ifdef TAU_SSON
@@ -867,17 +865,17 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         if (count_others_req_per_proc[i] != 0 && i != myrank)
             MPI_Isend(&count_my_req_per_proc[i], 1, MPI_INT, i, i+myrank, ncp->nciop->comm, &requests[j++]);
 
-    statuses = (MPI_Status *)malloc(j*sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc(j*sizeof(MPI_Status));
     err = MPI_Waitall(j, requests, statuses);
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t52);
 #endif
     check_err(MPI_Waitall);
-    free(statuses);
-    free(requests);
+    NCI_Free(statuses);
+    NCI_Free(requests);
 
     j = 0;
-    requests = (MPI_Request *)malloc(2*nprocs*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc(2*nprocs*sizeof(MPI_Request));
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t53, "SSON --- getput_vars: exch start,count,", "", TAU_USER);
@@ -906,10 +904,10 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         }
     }
     
-    statuses = (MPI_Status *)malloc(j*sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc(j*sizeof(MPI_Status));
     err = MPI_Waitall(j, requests, statuses);
-    free(statuses);
-    free(requests);
+    NCI_Free(statuses);
+    NCI_Free(requests);
 
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t53);
@@ -948,9 +946,9 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #endif
 
     j = 0;
-    requests = (MPI_Request *)malloc(2*nprocs*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc(2*nprocs*sizeof(MPI_Request));
     
-    xbuf = (void *)calloc(nprocs, sizeof(void *));
+    xbuf = (void**)NCI_Calloc(nprocs, sizeof(void *));
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t54, "SSON --- getput_vars: exch buf", "", TAU_USER);
@@ -958,7 +956,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #endif
 
     for (i=0; i<nprocs; i++) {
-	//xbuf[i] = NULL;
+        //xbuf[i] = NULL;
         buf_count_others[i] = 1;
         if (count_others_req_per_proc[i] != 0 && i != myrank) {
             for (k=0; k<ndims_org; k++) {
@@ -967,7 +965,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #ifdef SUBFILE_DEBUG
             printf("rank(%d): recv from rank %d: buf_count_others[%d]=%d\n", myrank, i, i, buf_count_others[i]);
 #endif
-	    xbuf[i] = (void*)calloc(buf_count_others[i], el_size);
+            xbuf[i] = (void*)NCI_Calloc(buf_count_others[i], el_size);
             if (xbuf[i]==NULL) {
                 printf("Error allocating memory!\n"); //print an error message
                 return 1; //return with failure
@@ -1004,14 +1002,14 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             printf("rank(%d): send to rank %d: buf_offset[%d]=%d, buf_count_my[%d]=%d\n", myrank, i, i, buf_offset[i], i, buf_count_my[i]);
 #endif
 
-	    MPI_Isend((char*)cbuf+buf_offset[i], buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
+            MPI_Isend((char*)cbuf+buf_offset[i], buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
         } /* end if() */
     } /* end for() */     
 
-    statuses = (MPI_Status *)calloc(j, sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc(j * sizeof(MPI_Status));
     err = MPI_Waitall(j, requests, statuses);
-    free(statuses);
-    free(requests);
+    NCI_Free(statuses);
+    NCI_Free(requests);
 
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t54);
@@ -1032,8 +1030,8 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                                          stride, 
                                          NULL,
                                          xbuf[i], 
-					 buf_count_others[i],
-					 (!buftype_is_contig?ptype:buftype),
+                                         buf_count_others[i],
+                                         (!buftype_is_contig?ptype:buftype),
                                          &array_of_requests[nasyncios++], 
                                          rw_flag, 
                                          0);
@@ -1054,11 +1052,11 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #endif
     //double stime, wait_time;
     //stime = MPI_Wtime();
-    array_of_statuses = (int *)calloc(nasyncios, sizeof(int));
+    array_of_statuses = (int *)NCI_Malloc(nasyncios * sizeof(int));
     status = ncmpii_wait(ncp_sf, COLL_IO, nasyncios, array_of_requests, array_of_statuses);
     TEST_HANDLE_ERR("ncmpii_wait", status);
-    free(array_of_statuses);
-    free(array_of_requests);
+    NCI_Free(array_of_statuses);
+    NCI_Free(array_of_requests);
 
     //int pending_nreqs;
     //status = ncmpi_inq_nreqs(ncp->nciop->fd, &pending_nreqs);
@@ -1078,28 +1076,28 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     /* free all allocated memories */
 
     for(i=0; i<nprocs; i++)
-	if (xbuf[i] != NULL) free(xbuf[i]);
-    free(xbuf);
+        if (xbuf[i] != NULL) NCI_Free(xbuf[i]);
+    NCI_Free(xbuf);
 
     if (cbuf != NULL && cbuf != buf) {
-	free(cbuf);
+        NCI_Free(cbuf);
     }
 
-    free(count_my_req_per_proc);
-    free(count_others_req_per_proc);
-    free(buf_count_my);
-    free(buf_count_others);
+    NCI_Free(count_my_req_per_proc);
+    NCI_Free(count_others_req_per_proc);
+    NCI_Free(buf_count_my);
+    NCI_Free(buf_count_others);
 
     for (i=0; i<nprocs; i++) {
-        free(my_req[i].start);
-        free(my_req[i].count);
-        free(my_req[i].start_org);
-        free(others_req[i].start);
-        free(others_req[i].count);
-        free(others_req[i].start_org);
+        NCI_Free(my_req[i].start);
+        NCI_Free(my_req[i].count);
+        NCI_Free(my_req[i].start_org);
+        NCI_Free(others_req[i].start);
+        NCI_Free(others_req[i].count);
+        NCI_Free(others_req[i].start_org);
     }
-    free(my_req);
-    free(others_req);
+    NCI_Free(my_req);
+    NCI_Free(others_req);
 
     return status;
 }

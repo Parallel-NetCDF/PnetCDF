@@ -823,13 +823,14 @@ ncmpii_getput_vars(NC               *ncp,
     }
 
     if (!buftype_is_contig) { /* buf is noncontiguous in memory */
-        if (rw_flag == WRITE_REQ && bufcount > 0) {
+        if (rw_flag == WRITE_REQ && bufcount > 0 && bnelems > 0) {
             /* pack buf into cbuf, a contiguous buffer */
-            cbuf = (void*) NCI_Malloc(bnelems * el_size);
-            err = ncmpii_data_repack((void*)buf, bufcount, buftype,
-                                     cbuf, bnelems, ptype);
-            if (err != NC_NOERR) /* API error */
-                goto err_check;
+            int position = 0;
+            int outsize = bnelems * el_size;
+            cbuf = NCI_Malloc(outsize);
+
+            MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
+                     MPI_COMM_SELF);
         }
     } else {
         cbuf = (void*) buf;
@@ -1003,14 +1004,12 @@ err_check:
             ncmpii_in_swapn(cbuf, fnelems, ncmpix_len_nctype(varp->type));
         }
 
-        if (!buftype_is_contig && bufcount > 0) {
-            /* unpack cbuf to buf using buftype */
-            err = ncmpii_data_repack(cbuf, bnelems, ptype,
-                                     (void*)buf, bufcount, buftype);
-            if (err != NC_NOERR) {
-                FINAL_CLEAN_UP  /* free temp buffers */
-                return err;
-            }
+        if (!buftype_is_contig && bufcount > 0 && bnelems > 0) {
+            /* unpack cbuf, a contiguous buffer, to buf using buftype */
+            int position = 0;
+            int insize = bnelems * el_size;
+            MPI_Unpack(cbuf, insize, &position, buf, bufcount, buftype,
+                       MPI_COMM_SELF);
         }
     }
     else { /* WRITE_REQ */
@@ -1074,7 +1073,7 @@ err_check:
    These two layers of memory layout will both be represented in MPI 
    derived datatype, and if double layers of memory layout is used, 
    we need to elimilate the upper one passed in MPI_Datatype parameter
-   from the user, by repacking it to logic contig memory datastream view.
+   from the user, by packing it to logic contig memory datastream view.
 
    for put_varm:
      1. pack buf to lbuf based on buftype
@@ -1346,14 +1345,14 @@ ncmpii_getput_varm(NC               *ncp,
         /* buftype is not a contiguous of ptypes: pack buf to lbuf, a
            contiguous buffer, using buftype */
         lnelems *= bufcount;
-        if (rw_flag == WRITE_REQ && bufcount > 0) { /* only write needs this packing */
-            lbuf = NCI_Malloc(lnelems*el_size);
-            status = ncmpii_data_repack((void*)buf, bufcount, buftype,
-                                        lbuf, lnelems, ptype);
-            if (status != NC_NOERR) { /* API error */
-                err = ((warning != NC_NOERR) ? warning : status);
-                goto err_check;
-            }
+        if (rw_flag == WRITE_REQ && bufcount > 0 && lnelems > 0) {
+            /* only write needs this packing */
+            int position = 0;
+            int outsize = lnelems*el_size;
+            lbuf = NCI_Malloc(outsize);
+
+            MPI_Pack(buf, bufcount, buftype, lbuf, outsize, &position,
+                     MPI_COMM_SELF);
         }
     } else {
         lbuf = buf;
@@ -1386,9 +1385,12 @@ ncmpii_getput_varm(NC               *ncp,
     cbuf = (void*) NCI_Malloc(cnelems*el_size);
 
     if (rw_flag == WRITE_REQ && cnelems > 0) {
-        /* layout lbuf to cbuf based on imap */
-        err = ncmpii_data_repack(lbuf, 1, imaptype, cbuf, cnelems, ptype);
-        if (err != NC_NOERR) goto err_check;
+        /* layout lbuf to cbuf, a contiguous buffer, based on imap */
+        int position=0;
+        int outsize = cnelems*el_size;
+
+        MPI_Pack(lbuf, 1, imaptype, cbuf, outsize, &position, MPI_COMM_SELF);
+
         /* For write case, till now all request data has been packed into
            cbuf, so simply call ncmpii_getput_vars() to fulfill the write.
            lbuf is not needed anymore */
@@ -1425,6 +1427,7 @@ err_check:
         goto err_check2;
 
     if (rw_flag == READ_REQ) {
+        int position, insize;
         /* now, cbuf contains the data read from file and they are all
            type converted and byte-swapped */
 
@@ -1435,18 +1438,18 @@ err_check:
         else
             lbuf = buf;
 
-        /* layout cbuf to lbuf based on imap */
+        /* layout cbuf, a contiguous buffer, to lbuf based on imap */
         if (cnelems > 0) {
-            status = ncmpii_data_repack(cbuf, cnelems, ptype, lbuf, 1, imaptype);
-            if (status != NC_NOERR)
-                goto err_check2;
+            position = 0;
+            insize = cnelems * el_size;
+            MPI_Unpack(cbuf, insize, &position, lbuf, 1, imaptype, MPI_COMM_SELF);
         }
 
-        /* layout lbuf to buf based on buftype */
+        /* layout lbuf, a contiguous buffer, to buf based on buftype */
         if (!buftype_is_contig && bufcount > 0) {
-            status = ncmpii_data_repack(lbuf, lnelems, ptype,
-                                        (void *)buf, bufcount, buftype);
-            /* if (status != NC_NOERR) goto err_check2; */
+            position = 0;
+            insize = lnelems * el_size;
+            MPI_Unpack(lbuf, insize, &position, buf, bufcount, buftype, MPI_COMM_SELF);
         }
     }
 

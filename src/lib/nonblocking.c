@@ -723,6 +723,9 @@ ncmpii_wait(NC  *ncp,
              * It needs to be type-converted + byte-swapped to cbuf
              */
             void *cbuf, *lbuf;
+            int el_size, position, insize;
+
+            MPI_Type_size(ptype, &el_size);
 
             if (ncmpii_need_convert(varp->type, ptype)) {
                 if (cur_req->is_imap || !cur_req->iscontig_of_ptypes)
@@ -746,25 +749,17 @@ ncmpii_wait(NC  *ncp,
             if (cur_req->is_imap) { /* this request was made by get_varm() */
                 if (cur_req->iscontig_of_ptypes)
                     lbuf = cur_req->buf;
-                else {
-                    int el_size;
-                    MPI_Type_size(ptype, &el_size);
+                else
                     lbuf = NCI_Malloc(cur_req->lnelems*el_size);
-                }
 
                 /* unpack cbuf to lbuf based on imaptype */
-                err = ncmpii_data_repack(cbuf, cur_req->bnelems, ptype,
-                                         lbuf, 1, cur_req->imaptype);
-                if (*cur_req->status == NC_NOERR)
-                    /* keep the first error */
-                    *cur_req->status = err;
+                position = 0;
+                insize = cur_req->bnelems * el_size;
+                if (insize > 0)
+                    MPI_Unpack(cbuf, insize, &position, lbuf, 1,
+                               cur_req->imaptype, MPI_COMM_SELF);
                 MPI_Type_free(&cur_req->imaptype);
 
-                if (err != NC_NOERR) {
-                    FREE_REQUEST(cur_req)
-                    NCI_Free(cur_req);
-                    return ((status != NC_NOERR) ? status : err);
-                }
                 /* cbuf is no longer needed
                  * if (cur_req->is_imap) cbuf cannot be == cur_req->buf */
                 if (cbuf != cur_req->xbuf) NCI_Free(cbuf);
@@ -776,17 +771,12 @@ ncmpii_wait(NC  *ncp,
                 bnelems = cur_req->bnelems;
             }
 
-            if (!cur_req->iscontig_of_ptypes) {
+            if (!cur_req->iscontig_of_ptypes && bnelems > 0) {
                 /* unpack lbuf to buf based on buftype */
-                err = ncmpii_data_repack(lbuf, bnelems, ptype, cur_req->buf,
-                                         cur_req->bufcount, cur_req->buftype);
-                if (*cur_req->status == NC_NOERR) /* keep the first error */
-                    *cur_req->status = err;
-                if (err != NC_NOERR) {
-                    FREE_REQUEST(cur_req)
-                    NCI_Free(cur_req);
-                    return ((status != NC_NOERR) ? status : err);
-                }
+                position = 0;
+                insize = bnelems * el_size;
+                MPI_Unpack(lbuf, insize, &position, cur_req->buf,
+                           cur_req->bufcount, cur_req->buftype, MPI_COMM_SELF);
             }
             /* lbuf is no longer needed */
             if (lbuf != cur_req->buf && lbuf != cur_req->xbuf)
