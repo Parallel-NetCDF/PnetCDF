@@ -82,7 +82,6 @@ NcmpiFile::NcmpiFile(const MPI_Comm   &comm,
 	break;
     case NcmpiFile::BadFormat:
         throw NcNotNCF("NetCDF: Unknown file format",__FILE__,__LINE__);
-	break;
     }
   switch (fMode) 
     {
