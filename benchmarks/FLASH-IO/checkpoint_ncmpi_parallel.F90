@@ -130,7 +130,7 @@
               do k=1, 4
                  if (record_label(k:k) .EQ. ' ') record_label(k:k) = '_'
               enddo
-              record_label(5:5) = '\0'
+              record_label(5:5) = char(0)  ! string terminate char
               err = nfmpi_def_var(ncid, record_label, NF_DOUBLE, 4, dimids, varid(i+6))
               if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: record_label")
           enddo
@@ -220,6 +220,7 @@
 ! number.  Note this is set to be 4 characters long (i.e. max = 9999).  
       character*4  fnum_string
       character*80 filename
+      character*8 str
 
 ! create a temporary array to hold the 4 character variable names
 ! this will include those defined in definitions.fh and network_common.fh
@@ -244,8 +245,10 @@
       double precision bb_buf(2,ndim,lnblocks)
 
       integer ncid, cmode, file_info
-      integer(kind=MPI_OFFSET_KIND) starts(4), counts(4), put_size
+      integer(kind=MPI_OFFSET_KIND) starts(5), counts(4), put_size
+      integer gsizes(5), subsizes(5), buftype, reqs(nvar), stats(nvar)
 
+      logical use_nonblocking_io
 !-----------------------------------------------------------------------------
 ! compute the total number of blocks left of a given processor number
 !-----------------------------------------------------------------------------
@@ -504,37 +507,84 @@
 !-----------------------------------------------------------------------------
 #ifdef TIMERS
       time_io = 0.e0
+      time_start = MPI_Wtime()
 #endif
+
+      use_nonblocking_io = .TRUE.
+
+      if (use_nonblocking_io) then
+         ! create a derive data type for buffer unk
+         gsizes(1) = nvar
+         gsizes(2) = iu_bnd - il_bnd + 1
+         gsizes(3) = ju_bnd - jl_bnd + 1
+         gsizes(4) = ku_bnd - kl_bnd + 1
+         gsizes(5) = maxblocks
+         subsizes(1) = 1
+         subsizes(2) = nxb
+         subsizes(3) = nyb
+         subsizes(4) = nzb
+         subsizes(5) = lnblocks
+         starts(1) = 0
+         starts(2) = nguard
+         starts(3) = nguard*k2d
+         starts(4) = nguard*k3d
+         starts(5) = 0
+         call MPI_Type_create_subarray(5, gsizes, subsizes, starts, &
+                                       MPI_ORDER_FORTRAN, &
+                                       MPI_DOUBLE_PRECISION, buftype, &
+                                       err)
+         call MPI_Type_commit(buftype, err)
+      endif
+
+      starts(1) = 1
+      starts(2) = 1
+      starts(3) = 1
+      starts(4) = global_offset+1
+      counts(1) = nxb
+      counts(2) = nyb
+      counts(3) = nzb
+      counts(4) = lnblocks
 
       do i = 1, nvar
          record_label = unklabels(i)
 
-         unk_buf(1,1:nxb,1:nyb,1:nzb,:) = unk(i,nguard+1:nguard+nxb, & 
-              nguard*k2d+1:nguard*k2d+nyb, & 
-              nguard*k3d+1:nguard*k3d+nzb,:)
+         if (.NOT. use_nonblocking_io) then
+            ! when using nonblocking flexible API, we don't even need unk_buf
+            unk_buf(1, 1:nxb, 1:nyb, 1:nzb, :) =        &
+                unk(i, nguard+1     : nguard+nxb,       & 
+                       nguard*k2d+1 : nguard*k2d+nyb,   & 
+                       nguard*k3d+1 : nguard*k3d+nzb, :)
+         endif
 
-#ifdef TIMERS
-         time_start = MPI_Wtime()
-#endif
-
-         starts(1) = 1
-         starts(2) = 1
-         starts(3) = 1
-         starts(4) = global_offset+1
-         counts(1) = nxb
-         counts(2) = nyb
-         counts(3) = nzb
-         counts(4) = lnblocks
-         err = nfmpi_put_vara_double_all(ncid, varid(6+i), starts, counts, unk_buf)
-         if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: unknowns")
-
-#ifdef TIMERS
-         time_io = time_io + (MPI_Wtime() - time_start)
-#endif
-
+         if (use_nonblocking_io) then
+            err = nfmpi_iput_vara(ncid, varid(6+i), starts, counts, &
+                                  unk(i, 1, 1, 1, 1), 1_8, buftype, reqs(i))
+            if (err .NE. NF_NOERR) &
+                call check(err, "nfmpi_iput_vara: unknowns")
+         else
+            err = nfmpi_put_vara_double_all(ncid, varid(6+i), starts, counts, unk_buf)
+            if (err .NE. NF_NOERR) &
+                call check(err, "nfmpi_put_vara_double_all: unknowns")
+         endif
       enddo
 
+      if (use_nonblocking_io) then
+          ! wait for the nonblocking I/O to complete
+          err = nfmpi_wait_all(ncid, nvar, reqs, stats)
+          if (err .NE. NF_NOERR) &
+              call check(err, "nfmpi_wait_all: unknowns")
+
+          ! check the status of each nonblocking request
+          do i=1, nvar
+             write(str,'(I2)') i
+             if (stats(i) .NE. NF_NOERR) &
+                 call check(stats(i), 'In nfmpi_wait_all req '//trim(str))
+          enddo
+          call MPI_Type_free(buftype, err)
+      endif
+
 #ifdef TIMERS
+      time_io = time_io + (MPI_Wtime() - time_start)
       print *, 'unk: MyPE = ', MyPE, ' time = ', time_io
 #endif
 
