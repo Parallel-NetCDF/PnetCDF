@@ -85,8 +85,8 @@ using namespace PnetCDF::exceptions;
 
 int main(int argc, char** argv) {
     char filename[128];
-    int i, j, verbose, rank, nprocs, err, num_reqs;
-    int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
+    int i, j, verbose, rank, nprocs, num_reqs;
+    int *reqs, *sts, **buf;
     MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
     vector<MPI_Offset> start(2), count(2);
 

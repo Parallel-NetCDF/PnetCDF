@@ -74,13 +74,13 @@ void print_info(MPI_Info *info_used)
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j, err;
+    int i, j;
     int nprocs, len, *buf[NUM_VARS], bufsize, rank;
     int gsizes[NDIMS], array_of_distribs[NDIMS];
     int array_of_dargs[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     char filename[128], str[512];
-    int ncid, dimids[NDIMS], varids[NUM_VARS], req[NUM_VARS], st[NUM_VARS];
+    int req[NUM_VARS], st[NUM_VARS];
     MPI_Offset write_size, sum_write_size;
     vector<MPI_Offset> starts(NDIMS), counts(NDIMS);
     MPI_Offset bbufsize, put_size;

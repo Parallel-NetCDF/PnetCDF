@@ -51,8 +51,7 @@ using namespace PnetCDF::exceptions;
 
 int main(int argc, char** argv) {
     char filename[128];
-    int i, rank, nprocs, err;
-    int ncid, cmode, varid, dimid[2], num_reqs;
+    int i, rank, nprocs, num_reqs;
     float *buffer;
     MPI_Offset **starts;
 

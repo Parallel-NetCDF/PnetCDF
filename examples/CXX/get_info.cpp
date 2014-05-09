@@ -71,7 +71,7 @@ void print_info(MPI_Info *info_used)
 int main(int argc, char **argv)
 {
     char filename[128];
-    int rank, ncid, err;
+    int rank;
     MPI_Info info_used;
 
     MPI_Init(&argc,&argv);

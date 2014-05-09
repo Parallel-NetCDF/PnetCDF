@@ -76,8 +76,8 @@ void print_info(MPI_Info *info_used)
 int main(int argc, char **argv)
 {
     char filename[128], str[512];
-    int i, j, rank, nprocs, len, ncid, bufsize, err;
-    int *buf[NUM_VARS], psizes[NDIMS], dimids[NDIMS], varids[NUM_VARS];
+    int i, j, rank, nprocs, len, bufsize;
+    int *buf[NUM_VARS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     vector<MPI_Offset> starts(NDIMS), counts(NDIMS);
     MPI_Offset gsizes[NDIMS];

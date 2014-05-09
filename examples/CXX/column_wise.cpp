@@ -76,8 +76,8 @@ using namespace PnetCDF::exceptions;
 
 int main(int argc, char** argv) {
     char filename[128];
-    int i, j, debug, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
-    int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
+    int i, j, debug, rank, nprocs, myNX, G_NX, myOff, num_reqs;
+    int *reqs, *sts, **buf;
     vector<MPI_Offset> start(2), count(2);
 
     MPI_Init(&argc, &argv);
