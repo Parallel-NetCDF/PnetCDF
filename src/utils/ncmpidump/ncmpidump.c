@@ -674,7 +674,7 @@ main(int argc, char *argv[])
       0,            /* if -v specified, number of variables */
       0             /* if -v specified, list of variable names */
     };
-    int c, i, rank, err=EXIT_SUCCESS;
+    int c, rank, err=EXIT_SUCCESS;
     int max_len = 80;        /* default maximum line length */
     int nameopt = 0;
 
@@ -805,7 +805,7 @@ main(int argc, char *argv[])
         err = EXIT_FAILURE;
         goto fn_exit;
     }
-    i = 0;
+    int i = 0;
     do {
         if (!nameopt) fspec.name = (char *)0;
         if (argc > 0)
