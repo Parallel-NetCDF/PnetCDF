@@ -88,8 +88,8 @@ using namespace PnetCDF::exceptions;
 
 int main(int argc, char** argv) {
     char filename[128];
-    int i, rank, nprocs, err, ghost_len=3;
-    int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
+    int i, rank, nprocs, ghost_len=3;
+    int *buf_zy;
     float *buf_yx;
     MPI_Datatype  subarray;
 
