@@ -248,7 +248,6 @@
       integer(kind=MPI_OFFSET_KIND) starts(5), counts(4), put_size
       integer gsizes(5), subsizes(5), buftype, reqs(nvar+6), stats(nvar+6)
 
-      logical use_nonblocking_io
 !-----------------------------------------------------------------------------
 ! compute the total number of blocks left of a given processor number
 !-----------------------------------------------------------------------------
@@ -396,9 +395,6 @@
 #ifdef TIMERS
       time_start = MPI_Wtime()
 #endif
-
-      ! use nonblocking APIs
-      use_nonblocking_io = .TRUE.
 
       starts(1) = global_offset+1
       counts(1) = lnblocks

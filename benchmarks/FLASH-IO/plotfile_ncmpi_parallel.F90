@@ -33,7 +33,7 @@
           character(len=*) file_creation_time ! time and date stamp
           character(len=*) flash_version      ! FLASH version num
           integer total_blocks                ! total # of blocks
-          double precision time               ! simulation time
+          real    time                        ! simulation time
           integer nsteps                      ! total # of timestep
           integer nzones_block(3)             ! nxb, nyb, nzb
           character(len=4) unk_labels(*)      ! unknown labels
@@ -145,7 +145,7 @@
           if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_int: nzb")
           err = nfmpi_put_att_double(ncid, NF_GLOBAL, "time", NF_DOUBLE, 1_8, atime)
           if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_double: time")
-      
+
           err = nfmpi_enddef(ncid)
           if (err .NE. NF_NOERR) call check(err, "nfmpi_enddef")
       end subroutine write_header_info_sp
@@ -223,6 +223,7 @@
 ! number.  Note this is set to be 4 characters long (i.e. max = 9999).  
       character*4  fnum_string
       character*80 filename
+      character*8 str
 
 ! set the number of variables we are going to write out
       integer, parameter ::  num_out = 4
@@ -252,7 +253,8 @@
 
 ! allocate storage to hold the coordinate information and bounding box
 ! information
-      real (kind=single) :: xyz_single(mdim,maxblocks_tr)
+      real (kind=single) :: coord_single(mdim,maxblocks_tr)
+      real (kind=single) :: blk_sz_single(mdim,maxblocks_tr)
       real (kind=single) :: bnd_single(2,mdim,maxblocks_tr)
       real (kind=single) :: sp_var1, sp_var2
 
@@ -261,8 +263,8 @@
 
       logical corners
 
-      integer ncid, cmode, file_info
-      integer(kind=MPI_OFFSET_KIND) starts(4), counts(4), put_size
+      integer ncid, cmode, file_info, reqs(num_out+6), stats(num_out+6)
+      integer(kind=MPI_OFFSET_KIND) starts(4), counts(4), put_size, buf_size
 
       if (corners) then
          corner_t(1) = MPI_Wtime()
@@ -289,14 +291,14 @@
       call MPI_Allgather(lnblocks, 1,MPI_INTEGER, & 
                          n_to_left,1,MPI_INTEGER, & 
                          MPI_COMM_WORLD,err)
-      
+
 ! compute the total number of blocks
       tot_blocks = 0
 
       do i = 0,NumPEs-1
          tot_blocks = tot_blocks + n_to_left(i)
       end do
-      
+
 ! compute the number of procssors to the left of a processor
       do i = NumPEs-1,1,-1
          n_to_left(i) = n_to_left(i-1)
@@ -333,7 +335,7 @@
                gid(ngid,block_no) = neigh(1,j,block_no)
             end if
          end do
-        
+
 ! store the parent of the current block
          ngid = ngid + 1
          if (parent(1,block_no).gt.0) then
@@ -342,7 +344,7 @@
          else
             gid(ngid,block_no) = parent(1,block_no)
          end if
-         
+
 ! store the children of the current block
          do j = 1,nchild
             ngid = ngid + 1
@@ -431,20 +433,35 @@
 ! store the refinement level
       starts(1) = global_offset+1
       counts(1) = lnblocks
-      err = nfmpi_put_vara_int_all(ncid, varid(1), starts, counts, lrefine)
-      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: lrefine sp")
+      if (use_nonblocking_io) then
+          err = nfmpi_iput_vara_int(ncid, varid(1), starts, counts, lrefine, reqs(1))
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_iput_vara_int: lrefine sp")
+      else
+          err = nfmpi_put_vara_int_all(ncid, varid(1), starts, counts, lrefine)
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: lrefine sp")
+      endif
 
 ! store the nodetype
-      err = nfmpi_put_vara_int_all(ncid, varid(2), starts, counts, nodetype)
-      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: nodetype sp")
+      if (use_nonblocking_io) then
+          err = nfmpi_iput_vara_int(ncid, varid(2), starts, counts, nodetype, reqs(2))
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_iput_vara_int: nodetype sp")
+      else
+          err = nfmpi_put_vara_int_all(ncid, varid(2), starts, counts, nodetype)
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: nodetype sp")
+      endif
 
 ! store the global id
       starts(1) = 1
       starts(2) = global_offset+1
       counts(1) = NGID
       counts(2) = lnblocks
-      err = nfmpi_put_vara_int_all(ncid, varid(3), starts, counts, gid)
-      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: gid sp")
+      if (use_nonblocking_io) then
+          err = nfmpi_iput_vara_int(ncid, varid(3), starts, counts, gid, reqs(3))
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_iput_vara_int: gid sp")
+      else
+          err = nfmpi_put_vara_int_all(ncid, varid(3), starts, counts, gid)
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_int_all: gid sp")
+      endif
 
 !-----------------------------------------------------------------------------
 ! store the grid information
@@ -452,26 +469,36 @@
       
 ! store the coordinates
       do block_no = 1, lnblocks
-         xyz_single(:,block_no) = real(coord(:,block_no), kind = single)
+         coord_single(:,block_no) = real(coord(:,block_no), kind = single)
       enddo
       starts(1) = 1
       starts(2) = global_offset+1
       counts(1) = NDIM
       counts(2) = lnblocks
-      err = nfmpi_put_vara_real_all(ncid, varid(4), starts, counts, xyz_single)
-      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: coord sp")
+      if (use_nonblocking_io) then
+          err = nfmpi_iput_vara_real(ncid, varid(4), starts, counts, coord_single, reqs(4))
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_iput_vara_real: coord sp")
+      else
+          err = nfmpi_put_vara_real_all(ncid, varid(4), starts, counts, coord_single)
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_read_all: coord sp")
+      endif
 
 ! store the block size
       do block_no = 1, lnblocks
-         xyz_single(:,block_no) = real(size(:,block_no), kind = single)
+         blk_sz_single(:,block_no) = real(size(:,block_no), kind = single)
       enddo
 
       starts(1) = 1
       starts(2) = global_offset+1
       counts(1) = NDIM
       counts(2) = lnblocks
-      err = nfmpi_put_vara_real_all(ncid, varid(5), starts, counts, xyz_single)
-      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: size sp")
+      if (use_nonblocking_io) then
+          err = nfmpi_iput_vara_real(ncid, varid(5), starts, counts, blk_sz_single, reqs(5))
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_iput_vara_real: size sp")
+      else
+          err = nfmpi_put_vara_real_all(ncid, varid(5), starts, counts, blk_sz_single)
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_real_all: size sp")
+      endif
 
 ! store the bounding box
 
@@ -486,8 +513,21 @@
       counts(1) = 2
       counts(2) = NDIM
       counts(3) = lnblocks
-      err = nfmpi_put_vara_real_all(ncid, varid(6), starts, counts, bnd_single)
-      if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: bnd_box")
+      if (use_nonblocking_io) then
+          err = nfmpi_iput_vara_real(ncid, varid(6), starts, counts, bnd_single, reqs(6))
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_iput_vara_real: bnd_box")
+      else
+          err = nfmpi_put_vara_real_all(ncid, varid(6), starts, counts, bnd_single)
+          if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_real_all: bnd_box")
+      endif
+
+      if (use_nonblocking_io) then
+          ! calculate attach buffer size for using buffered PnetCDF APIs 
+          buf_size = (nxb+1) * (nyb+k2d) * (nzb+k3d) * maxblocks
+          buf_size = buf_size + nxb * nyb * nzb * maxblocks
+          buf_size = buf_size * num_out * 4
+          err = nfmpi_buffer_attach(ncid, buf_size)
+      endif
 
 !-----------------------------------------------------------------------------
 ! store the unknowns -- here we will pass the entire unk array on each 
@@ -565,8 +605,13 @@
             counts(2) = nyb+ik2d
             counts(3) = nzb+ik3d
             counts(4) = lnblocks
-            err = nfmpi_put_vara_real_all(ncid, varid(6+ivar), starts, counts, unkt_crn)
-            if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: unknowns sp")
+            if (use_nonblocking_io) then
+                err = nfmpi_bput_vara_real(ncid, varid(6+ivar), starts, counts, unkt_crn, reqs(ivar+6))
+                if (err .NE. NF_NOERR) call check(err, "nfmpi_bput_vara_real: unknowns sp")
+            else
+                err = nfmpi_put_vara_real_all(ncid, varid(6+ivar), starts, counts, unkt_crn)
+                if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_real_all: unknowns sp")
+            endif
 
          else
 
@@ -575,8 +620,6 @@
                                        nguard*k2d+1:nguard*k2d+nyb, & 
                                        nguard*k3d+1:nguard*k3d+nzb,:), & 
                                    kind = single)
-            
-            
 
             starts(1) = 1
             starts(2) = 1
@@ -586,11 +629,36 @@
             counts(2) = nyb
             counts(3) = nzb
             counts(4) = lnblocks
-            err = nfmpi_put_vara_real_all(ncid, varid(6+ivar), starts, counts, unkt)
-            if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: unknowns sp")
+            if (use_nonblocking_io) then
+                err = nfmpi_bput_vara_real(ncid, varid(6+ivar), starts, counts, unkt, reqs(ivar+6))
+                if (err .NE. NF_NOERR) call check(err, "nfmpi_bput_vara_real: unknowns sp")
+            else
+                err = nfmpi_put_vara_real_all(ncid, varid(6+ivar), starts, counts, unkt)
+                if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_real_all: unknowns sp")
+            endif
          endif
 
       enddo
+
+      ! wait for all nonblocking requests to complete
+      if (use_nonblocking_io) then
+          ! wait for the nonblocking I/O to complete
+          err = nfmpi_wait_all(ncid, num_out+6, reqs, stats)
+          if (err .NE. NF_NOERR) &
+              call check(err, "(sp) nfmpi_wait_all: ")
+
+          ! check the status of each nonblocking request
+          do i=1, num_out+6
+             write(str,'(I2)') i
+             if (stats(i) .NE. NF_NOERR) &
+                 call check(stats(i), '(sp) nfmpi_wait_all req '//trim(str))
+          enddo
+
+          ! detach the temporary buffer
+          err = nfmpi_buffer_detach(ncid)
+          if (err .NE. NF_NOERR) &
+              call check(err, "(sp) nfmpi_buffer_detach: ")
+      endif
 
 !-----------------------------------------------------------------------------
 ! close the file
@@ -605,6 +673,8 @@
       endif
 
       err = nfmpi_inq_put_size(ncid, put_size)
+      if (err .NE. NF_NOERR) &
+          call check(err, "(sp) nfmpi_inq_put_size: ")
 
       err = nfmpi_close(ncid)
       if (err .NE. NF_NOERR) call check(err, "nfmpi_close_file sp")
