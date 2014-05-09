@@ -77,6 +77,9 @@
       neigh(:,:,:) = -1
       empty(:) = 0
 
+      ! use nonblocking APIs
+      use_nonblocking_io = .TRUE.
+
 ! initialize the unknowns with the index of the variable
       do i = 1, nvar
         unk(i,:,:,:,:) = float(i)
