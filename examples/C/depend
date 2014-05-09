@@ -9,4 +9,6 @@ put_vara.o: put_vara.c
 put_varn_float.o: put_varn_float.c
 put_varn_int.o: put_varn_int.c
 mput.o: mput.c
-
+create_open.o: create_open.c
+global_attributes.o: global_attributes.c
+get_vara.o: get_vara.c

@@ -256,6 +256,7 @@
        
       subroutine writerecs(ncid,time_id)
 
+      implicit none
       include "mpif.h"
       include "pnetcdf.inc"
        
@@ -266,6 +267,7 @@
 
 ! error status return
       integer  iret
+      integer  n
        
 ! netCDF dimension sizes for dimensions used with record variables
       integer  cells_len

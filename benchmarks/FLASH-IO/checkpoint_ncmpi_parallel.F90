@@ -623,6 +623,7 @@
       chk_t(2) = chk_t(3) - chk_t(2)
 
       err = nfmpi_inq_put_size(ncid, put_size)
+      if (err .NE. NF_NOERR) call check(err, "nfmpi_inq_put_size")
 
       err = nfmpi_close(ncid);
       if (err .NE. NF_NOERR) call check(err, "nfmpi_close")
