@@ -496,7 +496,7 @@ int
 main(int argc, char* argv[])	// test new netCDF interface
 {
    char filename[128];
-   int rank, nprocs, pass=1, verbose=0;
+   int rank, nprocs, verbose=0;
 
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
