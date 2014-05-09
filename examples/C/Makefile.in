@@ -25,7 +25,10 @@ C_SRCS  = collective_write.c \
           mput.c \
           put_vara.c \
           put_varn_float.c \
-          put_varn_int.c
+          put_varn_int.c \
+          create_open.c \
+          global_attributes.c \
+          get_vara.c
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
@@ -74,6 +77,15 @@ put_varn_int: put_varn_int.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 put_varn_float: put_varn_float.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+create_open: create_open.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+global_attributes: global_attributes.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+get_vara: get_vara.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 ptest: $(PROGS)

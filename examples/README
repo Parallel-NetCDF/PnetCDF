@@ -175,3 +175,22 @@ command and the number of MPI processes.
     subrequests (starts[] and counts[]) are within the boundaries of a single
     variable.  See comments at the beginning of the source file for compile,
     run instructions, and example output.
+
+
+./C/create_open.c
+    This example shows how to use to create a new file, close it, and
+    open the file for read only.
+
+
+./C/global_attributes.c
+    This example creates a new file and add 2 global attributes, one is of text
+    type and the other 10 short integers. The file is closed and re-opened to
+    read back the attributes.
+
+./C/get_vara.c
+    This example is the read counterpart of example put_vara.c. It shows how to
+    use ncmpi_get_vara_int_all() to read a 2D 4-byte integer array in parallel.
+    It also reads a global attribute and two attribute of variable named "var".
+    The data partitioning pattern is a column-wise partitioning across all
+    proceses.
+

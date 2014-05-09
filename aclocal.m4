@@ -12,7 +12,7 @@ dnl Check for an m4(1) preprocessor utility.
 dnl
 AC_DEFUN(UD_PROG_M4,
 [
-    AC_CHECKING(for m4 preprocessor)
+    dnl AC_CHECKING(for m4 preprocessor)
     case "${M4-unset}" in
 	unset) AC_CHECK_PROGS(M4, m4 gm4, m4) ;;
 	*) AC_CHECK_PROGS(M4, $M4 m4 gm4, m4) ;;
@@ -37,7 +37,7 @@ dnl Check for an ar(1) utility.
 dnl
 AC_DEFUN(UD_PROG_AR,
 [
-    AC_CHECKING(for ar utility)
+    dnl AC_CHECKING(for ar utility)
     case "${AR-unset}" in
 	unset) AC_CHECK_PROGS(AR, ar, ar) ;;
 	*) AC_CHECK_PROGS(AR, $AR ar, ar) ;;
@@ -55,7 +55,7 @@ dnl Check for an nm(1) utility.
 dnl
 AC_DEFUN(UD_PROG_NM,
 [
-    AC_CHECKING(for nm utility)
+    dnl AC_CHECKING(for nm utility)
     case "${NM-unset}" in
 	unset) AC_CHECK_PROGS(NM, nm, nm) ;;
 	*) AC_CHECK_PROGS(NM, $NM nm, nm) ;;
@@ -977,7 +977,7 @@ dnl Check for the math library.
 dnl
 AC_DEFUN(UD_CHECK_LIB_MATH,
 [
-    AC_CHECKING(for math library)
+    dnl AC_CHECKING(for math library)
     case "${MATHLIB}" in
 	'')
 	    AC_CHECK_LIB(c, tanh, MATHLIB=,

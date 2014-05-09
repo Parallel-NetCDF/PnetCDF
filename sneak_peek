@@ -63,7 +63,9 @@ This is essentially a placeholder for the next release note ...
     * 
 
   o New example programs
-    * 
+    * Under examples/C, three examples are added: create_open.c,
+      global_attributes.c, get_vara.c. Please check examples/README for
+      their descriptions.
 
   o New programs for I/O benchmarks
     * 
@@ -108,7 +110,11 @@ This is essentially a placeholder for the next release note ...
     * pnetcdf_version prints the version information of the PnetCDF library
 
   o Other updates:
-    * Revise FLASH-IO benchmark to use nonblocking APIs for checkpoint write.
+    * Revise FLASH-IO benchmark to use nonblocking APIs for both checkpoint
+      and plot writes.  The control variable to switch between nonblocking and
+      blocking API is "use_nonblocking_io". Using nonblocking APIs is now the
+      default. Set it to .FALSE. in flash_benchmark_io.F90 to swtch to blocking
+      APIs.
 
     * To match ncdump, ncmpidump now only supports one input file.
 
