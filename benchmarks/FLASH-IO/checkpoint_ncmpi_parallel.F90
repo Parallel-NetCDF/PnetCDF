@@ -54,20 +54,18 @@
           integer(kind=MPI_OFFSET_KIND) i8NDIM, i8NGID, i8total_blocks
           integer(kind=MPI_OFFSET_KIND) i8nzones_block(3), string_size
           integer atotal_blocks(1), ansteps(1)
-          double precision time0, atime(1)
+          double precision atime(1)
 
           i8NDIM = NDIM
           i8NGID = NGID
           i8total_blocks = total_blocks
           i8nzones_block(:) = nzones_block(:)
-          string_size = 40
           atotal_blocks(1) = total_blocks
           ansteps(1) = nsteps
 
           ! to avoid inconsistent header metadata warning from PnetCDF
-          time0 = time
-          call MPI_Bcast(time0, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, err)
-          atime(1) = time0
+          atime(1) = time
+          call MPI_Bcast(atime, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, err)
 
           err = nfmpi_def_dim(ncid, "dim_tot_blocks", i8total_blocks, dim_tot_blocks)
           if (err .NE. NF_NOERR) call check(err, "nfmpi_def_dim: dim_tot_blocks")
@@ -135,8 +133,10 @@
               if (err .NE. NF_NOERR) call check(err, "nfmpi_def_var: record_label")
           enddo
 
+          string_size = LEN_TRIM(file_creation_time)
           err = nfmpi_put_att_text(ncid, NF_GLOBAL, "file_creation_time", string_size, file_creation_time)
           if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_text: file_creation_time")
+          string_size = LEN_TRIM(flash_version)
           err = nfmpi_put_att_text(ncid, NF_GLOBAL, "flash_version",  string_size, flash_version)
           if (err .NE. NF_NOERR) call check(err, "nfmpi_put_att_text: flash_version")
           err = nfmpi_put_att_int(ncid, NF_GLOBAL, "total_blocks",  NF_INT, 1_8, atotal_blocks)
