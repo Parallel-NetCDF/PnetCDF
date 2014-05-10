@@ -507,6 +507,10 @@ ncmpi_iput_vars(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
+    if (stride == NULL)
+        return ncmpi_iput_vara(ncid, varid, start, count, buf, bufcount,
+                               buftype, reqid);
+
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
@@ -539,6 +543,9 @@ ncmpi_iput_vars_$1(int               ncid,
     NC         *ncp;
     NC_var     *varp=NULL;
     MPI_Offset  nelems;
+
+    if (stride == NULL)
+        return ncmpi_iput_vara_$1(ncid, varid, start, count, op, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
@@ -586,6 +593,10 @@ ncmpi_iget_vars(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
+    if (stride == NULL)
+        return ncmpi_iget_vara(ncid, varid, start, count, buf, bufcount,
+                               buftype, reqid);
+
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
@@ -619,6 +630,9 @@ ncmpi_iget_vars_$1(int               ncid,
     NC         *ncp;
     NC_var     *varp=NULL;
     MPI_Offset  nelems;
+
+    if (stride == NULL)
+        return ncmpi_iget_vara_$1(ncid, varid, start, count, ip, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
@@ -684,6 +698,10 @@ ncmpi_iput_varm(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
+    if (imap == NULL)
+        return ncmpi_iput_vars(ncid, varid, start, count, stride, buf, bufcount,
+                               buftype, reqid);
+
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
 
@@ -717,6 +735,9 @@ ncmpi_iput_varm_$1(int               ncid,
     NC         *ncp;
     NC_var     *varp=NULL;
     MPI_Offset  nelems;
+
+    if (imap == NULL)
+        return ncmpi_iput_vars_$1(ncid, varid, start, count, stride, op, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
@@ -765,6 +786,10 @@ ncmpi_iget_varm(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
+    if (imap == NULL)
+        return ncmpi_iget_vars(ncid, varid, start, count, stride, buf, bufcount,
+                               buftype, reqid);
+
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
 
@@ -799,6 +824,9 @@ ncmpi_iget_varm_$1(int               ncid,
     NC         *ncp;
     NC_var     *varp=NULL;
     MPI_Offset  nelems;
+
+    if (imap == NULL)
+        return ncmpi_iget_vars_$1(ncid, varid, start, count, stride, ip, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_COLL_IO, status)
