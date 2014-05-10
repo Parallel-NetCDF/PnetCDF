@@ -92,14 +92,14 @@ ncmpi_mput_var_$1$5(int ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, NULL, NULL, NULL,
                               NULL, (void**)bufs, NULL, datatypes,
                               WRITE_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -176,14 +176,14 @@ ncmpi_mput_var1_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, NULL, NULL,
                               NULL, (void**)bufs, NULL, datatypes,
                               WRITE_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -263,14 +263,14 @@ ncmpi_mput_vara_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, counts, NULL,
                               NULL, (void**)bufs, NULL, datatypes,
                               WRITE_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -353,14 +353,14 @@ ncmpi_mput_vars_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, counts, strides,
                               NULL, (void**)bufs, NULL, datatypes,
                               WRITE_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -446,14 +446,14 @@ ncmpi_mput_varm_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, counts, strides,
                               imaps, (void**)bufs, NULL, datatypes,
                               WRITE_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -527,14 +527,14 @@ ncmpi_mget_var_$1$5(int ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, NULL, NULL, NULL,
                               NULL, (void**)bufs, NULL, datatypes,
                               READ_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -611,14 +611,14 @@ ncmpi_mget_var1_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, NULL, NULL,
                               NULL, (void**)bufs, NULL, datatypes,
                               READ_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -698,14 +698,14 @@ ncmpi_mget_vara_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, counts, NULL,
                               NULL, (void**)bufs, NULL, datatypes,
                               READ_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -788,14 +788,14 @@ ncmpi_mget_vars_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, counts, strides,
                               NULL, (void**)bufs, NULL, datatypes,
                               READ_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
@@ -881,14 +881,14 @@ ncmpi_mget_varm_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
     err = ncmpii_mgetput_varm(ncid, num, varids, starts, counts, strides,
                               imaps, (void**)bufs, NULL, datatypes,
                               READ_REQ, $4);
-    free(datatypes);
+    NCI_Free(datatypes);
     return err;
 }
 ')dnl
