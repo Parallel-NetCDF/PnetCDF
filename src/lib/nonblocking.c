@@ -121,8 +121,10 @@ ncmpii_abuf_free(NC *ncp, void *buf)
         NCI_Free(req->xbuf);                                                  \
     req->xbuf = NULL;                                                         \
                                                                               \
-    for (j=0; j<req->num_subreqs; j++)                                        \
+    for (j=0; j<req->num_subreqs; j++) {                                      \
         NCI_Free(req->subreqs[j].start);                                      \
+        if (req->subreqs[j].stride != NULL) NCI_Free(req->subreqs[j].stride); \
+    }                                                                         \
     if (req->num_subreqs > 0)                                                 \
         NCI_Free(req->subreqs);                                               \
     NCI_Free(req->start);                                                     \
@@ -1361,6 +1363,7 @@ ncmpii_req_aggregation(NC     *ncp,
                 ftypes[i] = btypes[i] = MPI_BYTE;
                 b_blocklengths[i] = 0;
                 f_blocklengths[i] = 0;
+                if (segs != NULL) NCI_Free(segs);
                 continue;
             }
             assert(nsegs > 0);
@@ -1597,7 +1600,10 @@ ncmpii_wait_getput(NC     *ncp,
     /* i is the number of valid requests */
     num_reqs = i;
 
-    if (num_reqs == 0 && io_method == INDEP_IO) return status;
+    if (num_reqs == 0 && io_method == INDEP_IO) {
+        if (reqs != NULL) NCI_Free(reqs);
+        return status;
+    }
 
     /* sort reqs[] based on reqs[].offset_start */
     fcnt = (int (*)(const void *, const void *))req_compare;
@@ -1646,7 +1652,7 @@ ncmpii_wait_getput(NC     *ncp,
         }
     }
 
-    if (num_reqs > 0) NCI_Free(reqs);
+    if (reqs != NULL) NCI_Free(reqs);
 
     return status;
 }
