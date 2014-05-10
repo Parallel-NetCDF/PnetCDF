@@ -1078,11 +1078,6 @@ err_check:
 
             /* for write case, lbuf is no longer needed */
             if (lbuf != buf) NCI_Free(lbuf);
-
-            if (status != NC_NOERR) {
-                NCI_Free(cbuf);
-                return ((warning != NC_NOERR) ? warning : status);
-            }
         }
         lbuf = NULL; /* no longer need lbuf */
 
