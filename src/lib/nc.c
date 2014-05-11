@@ -1315,6 +1315,14 @@ ncmpii_NC_close(NC *ncp)
         }
     }
 
+#ifdef ENABLE_SUBFILING
+    /* ncmpii_enddef() will update nc_num_subfiles */
+    /* TODO: should check ncid_sf? */
+    /* if the file has subfiles, close them first */
+    if (ncp->nc_num_subfiles > 1)
+        ncmpii_subfile_close(ncp);
+#endif
+
     /* cancel or complete all outstanding nonblocking I/O */
     num_reqs = 0;
     cur_req = ncp->head;
