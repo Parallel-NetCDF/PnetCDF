@@ -245,7 +245,10 @@ ncmpii_getput_varn(int               ncid,
         if (status != NC_NOERR) goto err_check;
         bufp += buflen * el_size;
     }
-    if (counts == NULL) NCI_Free(_counts);
+    if (counts == NULL) {
+        NCI_Free(_counts[0]);
+        NCI_Free(_counts);
+    }
 
 err_check:
     if (ncp->safe_mode == 1 && io_method == COLL_IO) {
