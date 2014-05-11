@@ -881,13 +881,6 @@ ncmpi_close(int ncid) {
     if (status != NC_NOERR)
         return status;
 
-#ifdef ENABLE_SUBFILING
-    /* TODO: should check ncid_sf? */
-    /* if the file has subfiles, close them first */
-    if (ncp->nc_num_subfiles > 1)
-	ncmpii_subfile_close(ncp);
-#endif
-
     /* release NC object, close the file and write dirty numrecs if necessary */
     return ncmpii_NC_close(ncp);
 }

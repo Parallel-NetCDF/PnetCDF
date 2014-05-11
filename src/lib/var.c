@@ -38,7 +38,7 @@ ncmpii_free_NC_var(NC_var *varp)
     ncmpii_free_NC_string(varp->name);
 #ifdef ENABLE_SUBFILING
     if(varp->num_subfiles > 1) /* deallocate it */ 
-	free(varp->dimids_org); 
+	NCI_Free(varp->dimids_org); 
 #endif
     NCI_Free(varp);
 }
