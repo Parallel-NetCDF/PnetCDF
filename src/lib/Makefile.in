@@ -85,11 +85,11 @@ GARBAGE    = $(LIBRARY) $(M4_SRCS:.m4=.c)
 
 DIST_GARBAGE = ncconfig.h pnetcdf.h
 
-all:  $(LIBRARY)
+all objs: $(LIBRARY)
 
 $(LIBRARY): $(LIB_OBJS)
-	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
-	$(RANLIB) $@
+	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
+	$(RANLIB) $(LIBRARY)
 
 install:
 	$(INSTALL) -d -m 755 $(LIBDIR)

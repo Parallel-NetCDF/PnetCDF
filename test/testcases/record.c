@@ -91,6 +91,13 @@ int main(int argc, char** argv) {
 
     err = ncmpi_close(ncid); ERR
 
+    /* check if PnetCDF freed all internal malloc */
+    MPI_Offset malloc_size;
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR && malloc_size > 0) /* this test is for running 1 process */
+        printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+               malloc_size);
+
     char cmd_str[80];
     sprintf(cmd_str, "*** TESTING C   %s for write records in reversed order", argv[0]);
     if (rank == 0) {

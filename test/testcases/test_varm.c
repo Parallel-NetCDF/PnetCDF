@@ -17,7 +17,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j, retval, err=0, rank, nprocs, verbose;
+    int i, j, retval, errs=0, rank, nprocs, verbose;
     int ncid, dimid[2], varid, req, status;
 
     MPI_Offset start[2];
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 #ifdef PRINT_ERR_ON_SCREEN
                 printf("get_varm unexpected value at j=%d i=%d\n",j,i);
 #endif
-                err++;
+                errs++;
                 break;
             }
             k += 1.0;
@@ -173,18 +173,28 @@ int main(int argc, char **argv)
                 /* this error is a pntecdf internal error, if occurs */
                 printf("Error: get_varm write buffer has been altered at j=%d i=%d\n",j,i);
 #endif
-                err++;
+                errs++;
                 break;
             }
         }
     }
     if (NC_NOERR != (retval = ncmpi_close(ncid))) ERR(retval);
 
+    /* check if PnetCDF freed all internal malloc */
+    MPI_Offset malloc_size, sum_size;
+    int err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+
     if (rank == 0) {
         char cmd_str[80];
         sprintf(cmd_str, "*** TESTING C   %s for get/put varm ", argv[0]);
 
-        if (err)
+        if (errs)
             printf("%-66s ------ failed\n", cmd_str);
         else
             printf("%-66s ------ pass\n", cmd_str);
@@ -192,6 +202,6 @@ int main(int argc, char **argv)
 
     MPI_Finalize();
 
-    return err;
+    return errs;
 }
 

@@ -31,13 +31,10 @@ GARBAGE		= $(PROGRAM)
 
 all: $(PROGRAM)
 
-$(PROGRAM): $(OBJS)
+$(PROGRAM): $(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS)
 
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
-
-install:	
+install: $(PROGRAM) $(MANUAL)
 	$(INSTALL) -d -m 755 $(MANDIR)/man1
 	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
 
@@ -49,3 +46,4 @@ uninstall:
 	$(RM) -f $(MANDIR)/man1/$(MANUAL)
 
 include $(srcdir)/../../../rules.make
+

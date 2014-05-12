@@ -184,7 +184,16 @@ int main(int argc, char** argv) {
     }
     catch(NcmpiException& e) {
        cout << e.what() << " error code=" << e.errorCode() << " Error!\n";
-       return 1;
+    }
+
+    /* check if there is any PnetCDF internal malloc residue */
+    MPI_Offset malloc_size, sum_size;
+    int err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
     }
 
     MPI_Finalize();

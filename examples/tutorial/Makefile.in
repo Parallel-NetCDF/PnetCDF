@@ -103,5 +103,5 @@ ptest: $(PROGS)
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.NOTPARALLEL: ptest
 

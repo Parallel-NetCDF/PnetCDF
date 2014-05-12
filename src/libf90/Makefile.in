@@ -17,7 +17,6 @@ include ../../macros.make
 INCLUDES = -I. -I$(srcdir)/../lib -I../lib
 
 LIBRARY = ../lib/libpnetcdf.a
-MANUAL	=
 
 PNETCDF_MOD = pnetcdf.@FC_MODEXT@
 ifeq (@UPPER_CASE_MOD@, yes)
@@ -54,11 +53,13 @@ PACKING_LIST = $(F90_SRCS) \
 GARBAGE		= $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90)
 DIST_GARBAGE	= api.f90 nfmpi_constants.f90
 
-all: $(MANUAL) $(LIBRARY)
+all: $(LIBRARY)
 
-$(LIBRARY): $(LIB_OBJS)
-	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
-	$(RANLIB) $@
+objs: $(LIB_OBJS)
+
+library $(LIBRARY): $(LIB_OBJS)
+	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
+	$(RANLIB) $(LIBRARY)
 
 $(LIB_OBJS): $(SRCS)
 	$(COMPILE.F90) $(srcdir)/pnetcdf.f90
@@ -66,7 +67,7 @@ $(LIB_OBJS): $(SRCS)
 $(PNETCDF_MOD): $(SRCS)
 	$(COMPILE.F90) $(srcdir)/pnetcdf.f90
 
-install: $(PNETCDF_MOD)
+install:
 	$(INSTALL) -d -m 755 $(INCDIR)
 	$(INSTALL_DATA) $(PNETCDF_MOD) $(INCDIR)
 

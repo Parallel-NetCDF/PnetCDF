@@ -27,7 +27,7 @@ int main (int argc, char *argv[]) {
   int ierr;
   int lat_id, lev_id, lon_id;
   int ncid;
-  int totpes;
+  int totpes, rank;
   int tt_id;
 
   int dim_id[3];
@@ -39,6 +39,7 @@ int main (int argc, char *argv[]) {
 
   MPI_Init (&argc, &argv);
   MPI_Comm_size (MPI_COMM_WORLD, &totpes);
+  MPI_Comm_size (MPI_COMM_WORLD, &rank);
 
   MPI_Dims_create (totpes, 3, numpes);
   MPI_Cart_create (MPI_COMM_WORLD, 3, numpes, isperiodic, reorder, &comm_cart);
@@ -61,8 +62,17 @@ int main (int argc, char *argv[]) {
 
   ierr = ncmpi_close (ncid);
 
-
   MPI_Comm_free (&comm_cart);
+
+    MPI_Offset malloc_size, sum_size;
+    ierr = ncmpi_inq_malloc_size(&malloc_size);
+    if (ierr == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+
   MPI_Finalize ( );
   return 0;
 }

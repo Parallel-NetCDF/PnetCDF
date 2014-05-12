@@ -53,13 +53,13 @@ int test_open_mode(char *filename, int safe_mode)
     /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
     if (safe_mode) {
         if (rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
-        err = ncmpi_close(ncid); ERR
     }
     else {
         /* expected errors: NC_NOERR, NC_EMULTIDEFINE, NC_EMULTIDEFINE_OMODE */
         if (err != NC_NOERR) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
     }
-
+    /* open mode inconsistent is not a fatal error, file is still opened */
+    err = ncmpi_close(ncid); ERR
     return nerr;
 }
 
@@ -473,6 +473,15 @@ int main(int argc, char **argv)
         nerr += test_var(filename);
 
         nerr += test_dim_var(filename);
+    }
+
+    MPI_Offset malloc_size, sum_size;
+    int err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
     }
 
     MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);

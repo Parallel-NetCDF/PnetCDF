@@ -84,13 +84,13 @@ static int ncmpii_itoa(int val, char* buf)
 
 int ncmpii_subfile_create(NC *ncp, int *ncidp)
 {
-    int status=NC_NOERR;
-    int myrank, nprocs, color;
+    int myrank, nprocs, color, status=NC_NOERR;
     char path_sf[1024];
+    double ratio;
     MPI_Comm comm_sf;
     MPI_Info info;
+
     MPI_Info_create(&info);
-    double ratio;
 
     MPI_Comm_rank (ncp->nciop->comm, &myrank);
     MPI_Comm_size (ncp->nciop->comm, &nprocs);
@@ -122,6 +122,7 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
     //MPI_Info_set(info, "romio_lustre_start_iodevice", offset);
     //MPI_Info_set(info, "striping_factor", "1");
 
+    /* TODO: Should cmode be ncp->flags ? */
     status = ncmpi_create(comm_sf, path_sf, NC_CLOBBER|NC_64BIT_DATA, info, ncidp);  
     if (status != NC_NOERR) {
       if (myrank == 0) fprintf(stderr, "%s: error in creating file(%s): %s\n", 
@@ -182,16 +183,16 @@ ncmpii_subfile_open(NC *ncp, int *ncidp)
     return status;
 }
 
-int ncmpii_subfile_close (NC *ncp)
+int ncmpii_subfile_close(NC *ncp)
 {
     int status = NC_NOERR;
     NC *ncp_sf;
-    
+
     status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);
     if (status != NC_NOERR)
         return status;
         
-    status = ncmpii_NC_close (ncp_sf);
+    status = ncmpii_NC_close(ncp_sf);
     if (status != NC_NOERR)
         return status;
     
@@ -202,7 +203,7 @@ int ncmpii_subfile_close (NC *ncp)
 }
 
 /*----< ncmpii_subfile_partition() >---------------------------------------*/
-int ncmpii_subfile_partition (NC *ncp, int *ncidp)
+int ncmpii_subfile_partition(NC *ncp, int *ncidp)
 {
     int i, color, myrank, nprocs, status=NC_NOERR;
     nc_type type;
@@ -306,7 +307,7 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
         /* divide only when dim is partitionable */
         /* 1. skip sizeof(par_dim_id) is smaller than num_subfiles */
         /* 2. skip if ndims < min_ndims */
-        if ( (dpp[(*vpp[i]).dimids[par_dim_id]]->size)/(ncp->nc_num_subfiles) != 0 && (vpp[i]->ndims >= par_dim_id+1) && (vpp[i]->ndims >= min_ndims)) { 
+        if ( (dpp[(*vpp[i]).dimids[par_dim_id]]->size)/(ncp->nc_num_subfiles) != 0 && (vpp[i]->ndims >= par_dim_id+1) && (vpp[i]->ndims >= min_ndims)) {
             int varid, j, jj, k;
             int var_ndims = vpp[i]->ndims; /* keep org ndims */
             int dimids[var_ndims];
@@ -403,9 +404,9 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
             
             for (jj=0; jj < ncp->nc_num_subfiles; jj++)
                 for (k=0; k < var_ndims; k++) {
-                    status = ncmpi_put_att_int (ncp->nciop->fd, i, 
-                                                key[jj][k], NC_INT, 
-                                                2, sf_range[jj][k]);
+                    status = ncmpi_put_att_int(ncp->nciop->fd, i, 
+                                               key[jj][k], NC_INT, 
+                                               2, sf_range[jj][k]);
                     TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
                 }
             
@@ -417,8 +418,8 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
             /* add an attribute about each dim's range in subfile */
             /* varid: var id in subfile */
             for (k=0; k<var_ndims; k++) {
-                status = ncmpi_put_att_int (ncp->ncid_sf, varid, key[color][k], 
-                                            NC_INT, 2, sf_range[color][k]); 
+                status = ncmpi_put_att_int(ncp->ncid_sf, varid, key[color][k], 
+                                           NC_INT, 2, sf_range[color][k]); 
                 TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
             }
             
@@ -427,8 +428,8 @@ int ncmpii_subfile_partition (NC *ncp, int *ncidp)
                 for (k=0; k<var_ndims; k++)
                     NCI_Free(key[jj][k]);
             
-            status = ncmpi_put_att_int (ncp->ncid_sf, varid, "subfile_index",
-                                        NC_INT, 1, &color);
+            status = ncmpi_put_att_int(ncp->ncid_sf, varid, "subfile_index",
+                                       NC_INT, 1, &color);
             TEST_HANDLE_ERR ("ncmpi_put_att_int", status);
         } /* end if() */
     } /* for each variable */

@@ -49,6 +49,7 @@
           integer(kind=MPI_OFFSET_KIND) gsizes(NDIMS)
           integer(kind=MPI_OFFSET_KIND) starts(NDIMS), counts(NDIMS)
           integer(kind=MPI_OFFSET_KIND) bbufsize
+          integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -171,6 +172,17 @@
           ! close the file
           err = nfmpi_close(ncid);
           call check(err, 'In nfmpi_close')
+
+          ! check if there is any PnetCDF internal malloc residue
+ 998      format(A,I13,A)
+          err = nfmpi_inq_malloc_size(malloc_size)
+          if (err == NF_NOERR) then
+              call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
+     +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998,
+     +            'heap memory allocated by PnetCDF internally has ', 
+     +            sum_size/1048576, ' MiB yet to be freed'
+          endif
 
  999      call MPI_Finalize(err)
 

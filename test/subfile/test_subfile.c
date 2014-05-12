@@ -253,8 +253,8 @@ int main(int argc, char **argv)
      
     if (par_dim_id != 0) {
         for (i=0; i<nvars; i++) {
-            status = ncmpi_put_att_int (ncid, varid[i], "par_dim_id",
-                                        NC_INT, 1, &dimids0[par_dim_id]);
+            status = ncmpi_put_att_int(ncid, varid[i], "par_dim_id",
+                                       NC_INT, 1, &dimids0[par_dim_id]);
             if (status != NC_NOERR) handle_error(status);
         }
     }
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
     for (i=0; i<nvars; i++) {
         status = ncmpi_put_vara_all(ncid, varid[i],
                                     starts_list[i], count_list[i],
-                                    (const void *)&buf[i][0],
+                                    buf[i],
                                     bufcount_list[i], MPI_INT);
         TEST_HANDLE_ERR(status);
     }
@@ -294,7 +294,8 @@ int main(int argc, char **argv)
     TEST_HANDLE_ERR(status);
 
     stim = MPI_Wtime();
-    ncmpi_close(ncid);
+    status = ncmpi_close(ncid);
+    TEST_HANDLE_ERR(status);
     close_tim = MPI_Wtime() - stim;
     
     MPI_Allreduce(&close_tim, &new_close_tim, 1, MPI_DOUBLE, MPI_MAX,
@@ -311,7 +312,7 @@ read:
     TEST_HANDLE_ERR(status);
     
     stim = MPI_Wtime();
-    
+
     /**
      * Inquire the dataset definitions of input dataset AND
      * Add dataset definitions for output dataset.
@@ -323,7 +324,7 @@ read:
     for (i=0; i<nvars; i++) {
         status = ncmpi_get_vara_all(ncid, i,
                                     starts_list[i], count_list[i],
-                                    &(buf[i][0]), bufcount_list[i], MPI_INT);
+                                    buf[i], bufcount_list[i], MPI_INT);
         TEST_HANDLE_ERR(status);
     }
     read_tim = MPI_Wtime() - stim;
@@ -337,6 +338,9 @@ read:
     }
 
     status = ncmpi_inq_file_info(ncid, &info_used);
+    TEST_HANDLE_ERR(status);
+
+    status = ncmpi_close(ncid);
     TEST_HANDLE_ERR(status);
 
 end:    
@@ -354,6 +358,22 @@ end:
     free(starts_list);
     free(count_list);
     free(basename1);
+
+    MPI_Offset malloc_size, sum_size;
+    int err, nfiles, ncids[10];
+
+    /* check if there are files still left opened */
+    err = ncmpi_inq_files_opened(&nfiles, ncids);
+    if (nfiles > 0) printf("nfiles %d still opened\n",nfiles);
+    
+    /* check for any PnetCDF internal malloc residues */
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (mynod == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
 
     MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (mynod == 0) {

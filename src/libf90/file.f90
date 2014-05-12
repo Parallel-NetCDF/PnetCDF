@@ -253,3 +253,35 @@ function nf90mpi_get_file_info(ncid, mpi_info)
   nf90mpi_get_file_info = nfmpi_get_file_info(ncid, mpi_info)
 end function nf90mpi_get_file_info
 
+! -------
+function nf90mpi_inq_malloc_size(size)
+  integer (kind = MPI_OFFSET_KIND), intent(out) :: size
+  integer                                       :: nf90mpi_inq_malloc_size
+
+  nf90mpi_inq_malloc_size = nfmpi_inq_malloc_size(size)
+end function nf90mpi_inq_malloc_size
+
+! -------
+function nf90mpi_inq_max_malloc_size(size)
+  integer (kind = MPI_OFFSET_KIND), intent(out) :: size
+  integer                                       :: nf90mpi_inq_max_malloc_size
+
+  nf90mpi_inq_max_malloc_size = nfmpi_inq_max_malloc_size(size)
+end function nf90mpi_inq_max_malloc_size
+
+! -------
+function nf90mpi_inq_malloc_walk()
+  integer                                       :: nf90mpi_inq_malloc_walk
+
+  nf90mpi_inq_malloc_walk = nfmpi_inq_malloc_walk()
+end function nf90mpi_inq_malloc_walk
+
+! -------
+function nf90mpi_inq_files_opened(nfiles, ncids)
+  integer,               intent(out) :: nfiles
+  integer, dimension(:), intent(out) :: ncids
+  integer                            :: nf90mpi_inq_files_opened
+
+  nf90mpi_inq_files_opened = nfmpi_inq_files_opened(nfiles, ncids)
+end function nf90mpi_inq_files_opened
+

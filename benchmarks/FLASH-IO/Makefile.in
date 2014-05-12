@@ -87,5 +87,3 @@ distclean: clean
 
 .PHONY: FORCE all clean distclean install uninstall dist
 
-.NOTPARALLEL: ptest
-

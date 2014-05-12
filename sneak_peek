@@ -26,6 +26,14 @@ This is essentially a placeholder for the next release note ...
     * Add Fortran parameters for PnetCDF library version numbers:
       PNETCDF_VERSION_MAJOR, PNETCDF_VERSION_MINOR, and PNETCDF_VERSION_SUB
 
+    * A new configure option "--enable-malloc-tracking" is added. It enables
+      an internal memory allocation tracking in PnetCDF. Default is disabled.
+      When enabled, a user program can call three new APIs
+      ncmpi_inq_malloc_size, ncmpi_inq_max_malloc_size, ncmpi_inq_malloc_walk
+      to obtain the size in bytes of current memory size allocated internally.
+      This feature uses a binary tree to manage all malloc buffers, e.g.
+      tsearch() and tdelete(). Users should expect a slightly additional cost.
+
   o New APIs
     * C++ APIs are now available. They are developed based on netCDF-4 C++
       library. However, users are encouraged to use C APIs, instead C++.
@@ -48,6 +56,20 @@ This is essentially a placeholder for the next release note ...
       file system striping settings, striping size and count, if the underneath
       MPI-IO can find their values from the file system.
 
+    * ncmpi_inq_malloc_size, ncmpi_inq_max_malloc_size, ncmpi_inq_malloc_walk
+      report the size in bytes of current memory size allocated internally by
+      PnetCDF. Similar APIs for Fortran 77 and 90 are also available. These APIs
+       are enabled only when PnetCDF is configured with option
+      --enable-malloc-tracking. When this option is not enabled, calling these
+      APIs will return error code NC_ENOTENABLED. These APIs are usefully for
+      debugging.
+
+    * ncmpi_inq_files_opened reports the number of files that are currently
+      opened. Similar API for Fortran 77 and 90 are also available. The API
+      takes 2 arguments: number of files and arrary of file IDs. If the second
+      argument, array of IDs, is not NULL, then it will filled with the file
+      IDs. This API is useful for debugging.
+
   o Syntax changes
     * 
 
@@ -57,12 +79,18 @@ This is essentially a placeholder for the next release note ...
       not individual records.
 
   o New error code
-    * 
+    * NC_ENOTENABLED indicates the API is only available when the corresponding
+      feature is enabled. For example, nfmpi_inq_malloc_size() returns this
+      error code when "malloc-tracking" is not enabled at configure.
 
   o New run-time environment variables
     * 
 
   o New example programs
+    * Example programs now report if there is any PnetCDF internal malloc
+      residues yet to be freed, if --enable-malloc-tracking option is used at
+      configure.
+
     * Under examples/C, three examples are added: create_open.c,
       global_attributes.c, get_vara.c. Please check examples/README for
       their descriptions.
@@ -71,6 +99,10 @@ This is essentially a placeholder for the next release note ...
     * 
 
   o New test program
+    * Many test programs now report if there is any PnetCDF internal malloc
+      residues yet to be freed, if --enable-malloc-tracking option is used at
+      configure.
+
     * add tests for flexible APIs. The tests borrow from nc_test/test_write.c
       that tests nc_put_var1, nc_put_vara, nc_put_vars, and nc_put_varm.
       Similarly for get APIs.
@@ -118,8 +150,8 @@ This is essentially a placeholder for the next release note ...
 
     * To match ncdump, ncmpidump now only supports one input file.
 
-    * Fix build target dependency for parallel make. Now parallel make. e.g.
-      "make -j8" runs much faster on many platforms, including Cray and BGQ.
+    * Makefiles are revised for better recursive make and fixed some build
+      target dependency for parallel make.
 
     * File create was revised for handling NC_CLOBBER and NC_NOCLOBBER modes.
       On systems where Unix calls access() and unlink() are available, they

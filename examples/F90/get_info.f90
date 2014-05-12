@@ -43,10 +43,11 @@
         implicit none
 
         character(len = 256) :: filename, cmd
-        integer argc, IARGC, ncid, rank, info, omode, ierr
+        integer argc, IARGC, ncid, rank, info, omode, err
+        integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
 
-        call MPI_Init(ierr)
-        call MPI_Comm_rank (MPI_COMM_WORLD, rank, ierr)
+        call MPI_Init(err)
+        call MPI_Comm_rank (MPI_COMM_WORLD, rank, err)
 
         call getarg(0, cmd)
         argc = IARGC()
@@ -58,23 +59,34 @@
         if (argc .EQ. 1) call getarg(1, filename)
 
         omode = NF90_NOWRITE + NF90_64BIT_OFFSET
-        ierr = nf90mpi_open(MPI_COMM_WORLD, trim(filename), omode, &
+        err = nf90mpi_open(MPI_COMM_WORLD, trim(filename), omode, &
                             MPI_INFO_NULL, ncid)
-        if (ierr .ne. NF90_NOERR) call handle_err('nf90mpi_open',ierr)
+        if (err .ne. NF90_NOERR) call handle_err('nf90mpi_open',err)
 
 
-        ierr = nf90mpi_inq_file_info(ncid, info)
-        if (ierr .ne. NF90_NOERR) then
-            call handle_err('nf90mpi_inq_file_info', ierr)
+        err = nf90mpi_inq_file_info(ncid, info)
+        if (err .ne. NF90_NOERR) then
+            call handle_err('nf90mpi_inq_file_info', err)
         endif
 
-        ierr = nf90mpi_close(ncid)
-        if (ierr .ne. NF90_NOERR) call handle_err('nf90mpi_close',ierr)
+        err = nf90mpi_close(ncid)
+        if (err .ne. NF90_NOERR) call handle_err('nf90mpi_close',err)
 
         if (rank .EQ. 0) call print_info(info)
-        call MPI_Info_free(info, ierr)
+        call MPI_Info_free(info, err)
 
- 999    call MPI_Finalize(ierr)
+        ! check if there is any PnetCDF internal malloc residue
+ 998    format(A,I13,A)
+        err = nfmpi_inq_malloc_size(malloc_size)
+        if (err == NF_NOERR) then
+            call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, &
+                            MPI_SUM, 0, MPI_COMM_WORLD, err)
+            if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998, &
+                'heap memory allocated by PnetCDF internally has ',  &
+                sum_size/1048576, ' MiB yet to be freed'
+        endif
+
+ 999    call MPI_Finalize(err)
 
         end program main
 
@@ -87,15 +99,15 @@
 
             ! local variables
             character*(MPI_MAX_INFO_VAL) key, value
-            integer nkeys, i, ierr
+            integer nkeys, i, err
             logical flag
 
-            call MPI_Info_get_nkeys(info_used, nkeys, ierr)
+            call MPI_Info_get_nkeys(info_used, nkeys, err)
             print *, 'MPI File Info: nkeys =', nkeys
             do i=0, nkeys-1
-                call MPI_Info_get_nthkey(info_used, i, key, ierr)
+                call MPI_Info_get_nthkey(info_used, i, key, err)
                 call MPI_Info_get(info_used, key, MPI_MAX_INFO_VAL, &
-                                  value, flag, ierr)
+                                  value, flag, err)
  123            format('MPI File Info: [',I2,'] key = ',A25, &
                        ', value =',A)
                 print 123, i, trim(key), trim(value)
@@ -114,10 +126,10 @@
             integer,       intent(in) :: errcode
 
             ! local variables
-            integer ierr 
+            integer err 
 
             print *, 'Error: ',trim(err_msg),' ',nf90mpi_strerror(errcode)
-            call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
+            call MPI_Abort(MPI_COMM_WORLD, -1, err)
             return
         end subroutine handle_err
 

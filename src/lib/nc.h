@@ -827,4 +827,16 @@ ncmpii_cancel(NC *ncp, int num_req, int *req_ids, int *statuses);
 extern int
 ncmpii_getput_zero_req(NC *ncp, int rw_flag, int sync_numrecs);
 
+extern void
+ncmpii_inq_malloc_size(MPI_Offset *size);
+
+extern int
+ncmpii_inq_max_malloc_size(MPI_Offset *size);
+
+extern int
+ncmpii_inq_malloc_walk(void);
+
+extern int
+ncmpii_inq_files_opened(int *num, int *ncids);
+
 #endif /* _NC_H_ */

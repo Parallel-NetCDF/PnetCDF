@@ -59,28 +59,41 @@ PACKING_LIST	= Makefile.in \
 
 PACKING_SUBDIRS	= $(SUBDIRS)
 
-all:
-	for i in $(LIB_SUBDIRS) ; do ( cd $$i && $(MAKE) $(MFLAGS) all ; ) ; done
+all: $(LIB_SUBDIRS)
+$(LIB_SUBDIRS):
+	$(MAKE) $(MFLAGS) -C $@
 
-install: all
-	for i in $(INSTALL_SUBDIRS) ; do ( cd $$i && $(MAKE) $(MFLAGS) install ; ) ; done
+TESTS_DIRS = $(TEST_SUBDIRS:%=tests-%)
+tests: all $(TESTS_DIRS)
+$(TESTS_DIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:tests-%=%)
 
-uninstall:
-	for i in $(INSTALL_SUBDIRS) ; do ( cd $$i && $(MAKE) $(MFLAGS) uninstall ; ) ; done
+CHECK_DIRS = $(TEST_SUBDIRS:%=check-%)
+check testing: tests $(CHECK_DIRS)
+$(CHECK_DIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:check-%=%) testing
 
-tests: all
-	for i in $(TEST_SUBDIRS) ; do ( cd $$i && $(MAKE) $(MFLAGS) ; ) ; done
+VCHECK_DIRS = $(TEST_SUBDIRS:%=vcheck-%)
+verbose_check verbose_testing: tests $(VCHECK_DIRS)
+$(VCHECK_DIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:vcheck-%=%) verbose_testing
 
-check testing: tests
-	for i in $(TEST_SUBDIRS) ; do ( cd $$i && $(MAKE) $(MFLAGS) testing ; ) ; done
+PTEST_SUBDIRS = $(TEST_SUBDIRS) examples benchmarks
 
-verbose_check verbose_testing: tests
-	for i in $(TEST_SUBDIRS) ; do ( cd $$i && $(MAKE) $(MFLAGS) verbose_testing ; ) ; done
+PTEST_DIRS = $(PTEST_SUBDIRS:%=ptest-%)
+ptest: tests $(PTEST_DIRS)
+$(PTEST_DIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
 
-PTEST_DIRS = test examples benchmarks
+INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
+install: $(INSTALLDIRS)
+$(INSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
 
-ptest: tests
-	for i in $(PTEST_DIRS) ; do ( cd $$i && $(MAKE) $(MFLAGS) ptest ; ) ; done
+UNINSTALLDIRS = $(INSTALL_SUBDIRS:%=uninstall-%)
+uninstall: $(UNINSTALLDIRS)
+$(UNINSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
 
 ################################################################################
 # Distribution:
@@ -164,3 +177,6 @@ cscope:
 	( cd $(srcdir); cscope -be -i $(srcdir)/cscope.files )
 
 include $(srcdir)/rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
+
