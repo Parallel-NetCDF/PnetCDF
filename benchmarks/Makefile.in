@@ -23,17 +23,26 @@ PACKING_SUBDIRS = C FLASH-IO
 
 GARBAGE =
 
-all:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) ; ) ; done
+all: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) $(MFLAGS) -C $@
 
-ptest:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) ptest ; ) ; done
+PTEST_DIRS = $(SUBDIRS:%=ptest-%)
+ptest: all $(PTEST_DIRS)
+$(PTEST_DIRS):
+	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
 
-install:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) install ; ) ; done
+INSTALLDIRS = $(SUBDIRS:%=install-%)
+install: all $(INSTALLDIRS)
+$(INSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
 
-uninstall:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) uninstall ; ) ; done
+UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
+uninstall: $(UNINSTALLDIRS)
+$(UNINSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
 
 include $(srcdir)/../rules.make
+
+.NOTPARALLEL: ptest
 

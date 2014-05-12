@@ -23,12 +23,14 @@ C_SRCS  = collective_write.c \
           get_info.c \
           hints.c \
           mput.c \
-          put_vara.c \
           put_varn_float.c \
           put_varn_int.c \
           create_open.c \
           global_attributes.c \
+          put_vara.c \
           get_vara.c
+
+# Note: put_vara must be run immediately before get_vara
 
 PROGS     = $(C_SRCS:.c=)
 OBJS      = $(C_SRCS:.c=.o)
@@ -111,5 +113,5 @@ ptest: $(PROGS)
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.NOTPARALLEL: ptest
 

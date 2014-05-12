@@ -308,15 +308,15 @@ int main(int argc, char **argv)
     char dimname[20], varname[20];
     int ncid, dimids0[3], dimids1[3], rank_dim[3], *varid;
     MPI_Info info;
-    MPI_Offset **starts_list, **count_list;
-    MPI_Offset *bufcount_list;
+    MPI_Offset **starts, **counts;
+    MPI_Offset *bufcounts;
     int ndims = 3;
     int nvars = 10;
     int k;
     MPI_Datatype *datatype_list;
     int length;
-    int *array_of_requests;
-    int *array_of_statuses;
+    int *reqs;
+    int *sts;
     int *buf_var;
 //    int buf_var[32] ={1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2,
 //                      3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4};
@@ -329,17 +329,17 @@ int main(int argc, char **argv)
     verbose = 0;
     strcpy(basename, "testfile");
     while ((c = getopt(argc, argv, "vf:")) != EOF)
-      switch(c) {
-        case 'v':               /* verbose mode */
-          verbose = 1;
-          break;
-        case 'f':               /* file base name */
-          strcpy(basename, optarg);
-          break;
-        case '?':
-          usage(argv[0]);
-          return 1;
-      }
+        switch(c) {
+            case 'v':               /* verbose mode */
+                verbose = 1;
+                break;
+            case 'f':               /* file base name */
+                strcpy(basename, optarg);
+                break;
+            case '?':
+                usage(argv[0]);
+                return 1;
+        }
 
     length = 2;
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
@@ -350,44 +350,44 @@ int main(int argc, char **argv)
     
     buf = (int **)malloc(nvars*sizeof(int*));
     if (buf == NULL){
-	printf("buf malloc error\n");
-        return 0;		
-    }	
-    bufcount_list = (MPI_Offset *)malloc(nvars*sizeof(MPI_Offset));
-    if (bufcount_list == NULL){
-	printf("bufcount_list malloc error\n");
-        return 0;		
-    }	
-    starts_list = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
-    if (starts_list== NULL){
-	printf("starts_list malloc error\n");
-        return 0;		
-    }	
-    count_list = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
-    if (count_list == NULL){
-	printf("count_list malloc error\n");
-        return 0;		
-    }	
+        printf("buf malloc error\n");
+        return 0;
+    }
+    bufcounts = (MPI_Offset *)malloc(nvars*sizeof(MPI_Offset));
+    if (bufcounts == NULL){
+        printf("bufcounts malloc error\n");
+        return 0;
+    }
+    starts = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
+    if (starts== NULL){
+        printf("starts malloc error\n");
+        return 0;
+    }
+    counts = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
+    if (counts == NULL){
+        printf("counts malloc error\n");
+        return 0;
+    }
     datatype_list = (MPI_Datatype*)malloc(nvars*sizeof(MPI_Datatype));
     if (datatype_list == NULL){
-	printf("count_list malloc error\n");
-        return 0;		
-    }	
+        printf("counts malloc error\n");
+        return 0;
+    }
     
-    array_of_requests = (int *)malloc(nvars*sizeof(int));
-    array_of_statuses = (int *)malloc(nvars*sizeof(int));
+    reqs = (int *)malloc(nvars*sizeof(int));
+    sts = (int *)malloc(nvars*sizeof(int));
     
     for (i=0; i<nvars; i++) {
-        starts_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
-        if (starts_list[i] == NULL){
-	    printf("starts_list[%d] malloc error\n", i);
-            return 0;		
-        }	
-        count_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
-        if (count_list[i] == NULL){
-            printf("count_list[%d] malloc error\n", i);
-            return 0;		
-        }	
+        starts[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+        if (starts[i] == NULL){
+            printf("starts[%d] malloc error\n", i);
+            return 0;
+        }
+        counts[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+        if (counts[i] == NULL){
+            printf("counts[%d] malloc error\n", i);
+            return 0;
+        }
     }
   
     array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
@@ -421,26 +421,33 @@ int main(int argc, char **argv)
 
     for (i=0; i<nvars; i++) {
         for (j=0; j<ndims; j++) {
-           starts_list[i][j] = array_of_starts[j];
-           count_list[i][j]  = length;
+           starts[i][j] = array_of_starts[j];
+           counts[i][j]  = length;
         }
-        bufcount_list[i] = bufcount;
+        bufcounts[i] = bufcount;
         datatype_list[i] = MPI_INT;
     }
 
-    for (i=0; i<nvars;i++){
-        buf[i] = (int *) malloc(bufcount * sizeof(int));
-        if (buf[i] == NULL){
-            printf("buf[i]malloc error\n");
-            return 0;		
-        }	
-	for (j=0; j<bufcount; j++)
-		buf[i][j]=mynod+1;
+    buf[0] = (int *) malloc(bufcount * nvars * sizeof(int));
+    if (buf[0] == NULL) {
+        printf("buf[i]malloc error\n");
+        return 0;
+    }
+    for (i=1; i<nvars; i++) buf[i] = buf[i-1] + bufcount;
+
+    for (i=0; i<nvars; i++) {
+        for (j=0; j<bufcount; j++)
+            buf[i][j]=mynod+1;
     }
     buf_var = (int *) malloc(bufcount*nprocs*sizeof(int));
     for (i=0; i<bufcount*nprocs; i++)
         buf_var[i] = mynod + 1;  
 
+    varid = (int *)malloc(nprocs*sizeof(int));
+    if (varid == NULL){
+        printf("varid malloc error\n");
+        return 0;
+    }
     MPI_Info_create(&info);
 /*
     MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
@@ -450,21 +457,19 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "romio_no_indep_rw", "true");
     MPI_Info_set(info, "romio_cb_write", "true");
  */
-
     for (k=0; k<=9; k++){
-//      sprintf(filename, "nc_%d.%d.%d.nc", length, nvars, k);
         sprintf(filename, "%s.%d.%d.%d.nc", basename, length, nvars, k);
-	if (k==0)
-	    strcpy(filename1, filename);
+        if (k==0)
+            strcpy(filename1, filename);
         else if (k==7)
-	    strcpy(filename2, filename);
-	else 
-	    strcpy(filename3, filename);
+            strcpy(filename2, filename);
+        else 
+            strcpy(filename3, filename);
 
-	status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_OFFSET,
-                        info, &ncid);
+        status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_OFFSET,
+                              info, &ncid);
         HANDLE_ERROR
-      /* define dimensions */
+        /* define dimensions */
         for (i=0; i<ndims; i++){
             sprintf(dimname, "dim0_%d", i);
             ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids0[i]);
@@ -478,11 +483,6 @@ int main(int argc, char **argv)
 
         /* define variables */
         if (k<7){
-            varid = (int *)malloc(nvars*sizeof(int));
-            if (varid == NULL){
-	        printf("varid malloc error\n");
-                return 0;		
-            }	
             for (i=0; i<2; i++){
                 sprintf(varname, "var0_%d", i);
                 ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
@@ -492,11 +492,6 @@ int main(int argc, char **argv)
                 ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids1, &varid[i]);
             }
         } else {
-            varid = (int *)malloc(nprocs*sizeof(int));
-            if (varid == NULL){
-	        printf("varid malloc error\n");
-                return 0;		
-            }	
             for (i=0; i<nprocs; i++){
                 sprintf(varname, "var0_%d", i);
                 ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
@@ -504,144 +499,130 @@ int main(int argc, char **argv)
         }
 
         status = ncmpi_enddef(ncid);
-        
+
         if (k == 0) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_put_vara_all() ...");
-	    for (i=0; i<nvars; i++){
-       		status = ncmpi_put_vara_all(ncid, varid[i],
-                            starts_list[i], count_list[i],
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT);
-	     	HANDLE_ERROR
-      	    }
-	}
-	if (k == 1) {
-	    if (mynod == 0 && verbose)
+            for (i=0; i<nvars; i++){
+                status = ncmpi_put_vara_all(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT);
+                HANDLE_ERROR
+            }
+        }
+
+        if (k == 1) {
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_put_vara() ...");
             ncmpi_begin_indep_data(ncid);
-	    for (i=0; i<nvars; i++){
-       	        status = ncmpi_put_vara(ncid, varid[i],
-                            starts_list[i], count_list[i],
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT);
-	     	HANDLE_ERROR
-      	    }
+            for (i=0; i<nvars; i++){
+                status = ncmpi_put_vara(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT);
+                HANDLE_ERROR
+            }
             ncmpi_end_indep_data(ncid);
-      	} 
-     	if (k == 2) {
-	     if (mynod == 0 && verbose)
-                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_mput_vara_all() ...");
-      	     status = ncmpi_mput_vara_all(ncid, nvars, varid,
-                                starts_list, count_list,
-                               (void **)buf, bufcount_list, datatype_list);
-      	     HANDLE_ERROR
-     	}
+        } 
+
+        if (k == 2) {
+            if (mynod == 0 && verbose)
+                printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_mput_vara_all() ...");
+            status = ncmpi_mput_vara_all(ncid, nvars, varid, starts, counts, (void**)buf, bufcounts, datatype_list);
+            HANDLE_ERROR
+        }
 
         if (k == 3) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vara() and ncmpi_wait() ...");
-	    for (i=0; i<nvars; i++){
-       	        status = ncmpi_iput_vara(ncid, varid[i],
-                            starts_list[i], count_list[i],
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR
-                ncmpi_begin_indep_data(ncid);
-	        status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	     	HANDLE_ERROR
-                ncmpi_end_indep_data(ncid);
-      	    }
-      	} 
+            ncmpi_begin_indep_data(ncid);
+            for (i=0; i<nvars; i++){
+                status = ncmpi_iput_vara(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT, &reqs[i]);
+                HANDLE_ERROR
+                status = ncmpi_wait(ncid, 1, &reqs[i], &sts[i]);
+                HANDLE_ERROR
+            }
+            ncmpi_end_indep_data(ncid);
+        } 
+
         if (k == 4) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vara() and ncmpi_wait_all() ...");
-	    for (i=0; i<nvars; i++){
-       	        status = ncmpi_iput_vara(ncid, varid[i],
-                            starts_list[i], count_list[i],
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR
-      	    }
-	    status = ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
-	    HANDLE_ERROR
-      	} 
+            for (i=0; i<nvars; i++){
+                status = ncmpi_iput_vara(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT, &reqs[i]);
+                HANDLE_ERROR
+            }
+            status = ncmpi_wait_all(ncid, nvars, reqs, sts);
+            HANDLE_ERROR
+        } 
 
         if (k == 5) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vars() and ncmpi_wait() ...");
-	    stride[0] = 1;
-	    stride[1] = 1;
-	    stride[2] = 1;
-	    for (i=0; i<nvars; i++){
-       	        status = ncmpi_iput_vars(ncid, varid[i],
-                            starts_list[i], count_list[i], stride,
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR
-                ncmpi_begin_indep_data(ncid);
-	        status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	     	HANDLE_ERROR
-                ncmpi_end_indep_data(ncid);
-      	    }
-      	} 
+            stride[0] = 1;
+            stride[1] = 1;
+            stride[2] = 1;
+            ncmpi_begin_indep_data(ncid);
+            for (i=0; i<nvars; i++){
+                status = ncmpi_iput_vars(ncid, varid[i], starts[i], counts[i], stride, buf[i], bufcounts[i], MPI_INT, &reqs[i]);
+                HANDLE_ERROR
+                status = ncmpi_wait(ncid, 1, &reqs[i], &sts[i]);
+                HANDLE_ERROR
+            }
+            ncmpi_end_indep_data(ncid);
+        } 
+
         if (k == 6) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vars() and ncmpi_wait_all() ...");
-	    stride[0] = 1;
-	    stride[1] = 1;
-	    stride[2] = 1;
-	    for (i=0; i<nvars; i++){
-       	        status = ncmpi_iput_vars(ncid, varid[i],
-                            starts_list[i], count_list[i], stride,
-                            (const void *)&(buf[i][0]), bufcount_list[i], MPI_INT, &array_of_requests[i]);
-	     	HANDLE_ERROR
-      	    }
-	    status = ncmpi_wait_all(ncid, nvars, array_of_requests, array_of_statuses);
-	    HANDLE_ERROR
+            stride[0] = 1;
+            stride[1] = 1;
+            stride[2] = 1;
+            for (i=0; i<nvars; i++){
+                status = ncmpi_iput_vars(ncid, varid[i], starts[i], counts[i], stride, buf[i], bufcounts[i], MPI_INT, &reqs[i]);
+                HANDLE_ERROR
+            }
+            status = ncmpi_wait_all(ncid, nvars, reqs, sts);
+            HANDLE_ERROR
         } 
         if (k == 7) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_put_var() ...", nprocs);
-	    ncmpi_begin_indep_data(ncid);
-	    status = ncmpi_put_var(ncid, varid[mynod],
-	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT);
-	    HANDLE_ERROR
-	    ncmpi_end_indep_data(ncid);
-	}
+            ncmpi_begin_indep_data(ncid);
+            status = ncmpi_put_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT);
+            HANDLE_ERROR
+            ncmpi_end_indep_data(ncid);
+        }
         if (k == 8) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_iput_var() and ncmpi_wait() ...", nprocs);
             i = 0;
-	    status = ncmpi_iput_var(ncid, varid[mynod],
-	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT, &array_of_requests[i]);
-
-	    HANDLE_ERROR
-	    ncmpi_begin_indep_data(ncid);
-	    status = ncmpi_wait(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	    HANDLE_ERROR
-	    ncmpi_end_indep_data(ncid);
-	}
+            status = ncmpi_iput_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT, &reqs[i]);
+            HANDLE_ERROR
+            ncmpi_begin_indep_data(ncid);
+            status = ncmpi_wait(ncid, 1, &reqs[i], &sts[i]);
+            HANDLE_ERROR
+            ncmpi_end_indep_data(ncid);
+        }
         if (k == 9) {
-	    if (mynod == 0 && verbose)
+            if (mynod == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_iput_var() and ncmpi_wait_all() ...", nprocs);
-            i = 0;
-	    status = ncmpi_iput_var(ncid, varid[mynod],
-	                 (const void *)(buf_var), bufcount*nprocs, MPI_INT, &array_of_requests[i]);
+            status = ncmpi_iput_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT, &reqs[0]);
+            HANDLE_ERROR
+            status = ncmpi_wait_all(ncid, 1, &reqs[0], &sts[0]);
+            HANDLE_ERROR
+        }
 
-	    HANDLE_ERROR
-	    status = ncmpi_wait_all(ncid, 1, &array_of_requests[i], &array_of_statuses[i]);
-	    HANDLE_ERROR
-	}
         ncmpi_close(ncid);
+
         if (status == NC_NOERR){
             if ((k>0)&&(k<7)){
-	        status = ncmpi_diff(filename1, filename3);
-	        if (mynod == 0 && status == NC_NOERR && verbose)
+            status = ncmpi_diff(filename1, filename3);
+            if (mynod == 0 && status == NC_NOERR && verbose)
+                printf("\t OK\n");                                       
+            } else if (k>7){
+                status = ncmpi_diff(filename2, filename3);
+                if (mynod == 0 && status == NC_NOERR && verbose)
                     printf("\t OK\n");                                       
-             } else if (k>7){
-	         status = ncmpi_diff(filename2, filename3);
-	        if (mynod == 0 && status == NC_NOERR && verbose)
-                     printf("\t OK\n");                                       
-	     } else {
-	         if (mynod == 0 && verbose)
-                     printf("\t OK\n");                                       
-             }
+            } else {
+             if (mynod == 0 && verbose)
+                 printf("\t OK\n");                                       
+            }
         }
     }
 
@@ -659,26 +640,34 @@ int main(int argc, char **argv)
         printf("MPI File Info: [%2d] key = %21s, flag = %d, valuelen = %d value = %s\n",
                i,key,flag,valuelen,value);
     }
-
-    MPI_Info_free(&info);
 */
 
     MPI_Info_free(&info);
     
     for (i=0; i<nvars; i++){
-        free(buf[i]);
-        free(starts_list[i]);
-        free(count_list[i]);
+        free(starts[i]);
+        free(counts[i]);
     }
+    free(buf[0]);
     free(buf);
     free(buf_var);
-    free(bufcount_list);
+    free(bufcounts);
     free(datatype_list);
-    free(array_of_requests);
-    free(array_of_statuses);
+    free(reqs);
+    free(sts);
     free(varid);
-    free(starts_list);
-    free(count_list);
+    free(starts);
+    free(counts);
+
+    /* check if PnetCDF freed all internal malloc */
+    MPI_Offset malloc_size, sum_size;
+    int err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (mynod == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
 
     if (n_fails == 0 && mynod == 0) {
        char cmd_str[80];

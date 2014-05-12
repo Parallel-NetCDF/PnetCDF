@@ -49,7 +49,10 @@
   public :: nf90mpi_begin_indep_data, nf90mpi_end_indep_data, &
             nf90mpi_inq_put_size, nf90mpi_inq_get_size, &
             nf90mpi_inq_header_size, nf90mpi_inq_header_extent, &
-            nf90mpi_inq_varoffset, nf90mpi_inq_file_info, nf90mpi_get_file_info
+            nf90mpi_inq_varoffset, nf90mpi_inq_file_info, &
+            nf90mpi_get_file_info, nf90mpi_inq_malloc_size, &
+            nf90mpi_inq_max_malloc_size, nf90mpi_inq_malloc_walk, &
+            nf90mpi_inq_files_opened
 
 !
 ! F77 APIs
@@ -447,7 +450,11 @@
         nfmpi_inq_header_size, &
         nfmpi_inq_header_extent, &
         nfmpi_inq_varoffset, &
-        nfmpi_inq_nreqs
+        nfmpi_inq_nreqs, &
+        nfmpi_inq_malloc_size, &
+        nfmpi_inq_max_malloc_size, &
+        nfmpi_inq_malloc_walk, &
+        nfmpi_inq_files_opened
 
 !
 ! Begin of varn subroutines:

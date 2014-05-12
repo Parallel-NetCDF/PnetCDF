@@ -153,7 +153,7 @@
 !---------------------------------------------------------------------------
       subroutine report_io_performance(local_blocks, time_io, chk_io, &
                                        corner_io, nocorner_io)
-
+       use pnetcdf
 #include "common.fh"
 
        integer local_blocks
@@ -163,6 +163,7 @@
        ! local variables
        integer ierr, striping_factor, striping_unit
        double precision tmax(3), time_total, io_amount, bw
+       integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
 
        call MPI_Reduce(chk_t, tmax, 3, MPI_DOUBLE_PRECISION, MPI_MAX, &
                        MasterPE, MPI_COMM_WORLD, ierr)
@@ -237,6 +238,25 @@
 
       endif
       call MPI_Info_free(info_used, ierr)
+
+      ! print info about PnetCDF internal malloc usage
+      ierr = nfmpi_inq_max_malloc_size(malloc_size)
+      if (ierr .EQ. NF_NOERR) then
+          call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, MPI_SUM, &
+                          MasterPE, MPI_COMM_WORLD, ierr)
+          if (MyPE .EQ. MasterPE) &
+              print 1002, &
+              'maximum heap memory allocted by PnetCDF internally is', &
+              sum_size/1048576, ' MiB'
+
+          ierr = nfmpi_inq_malloc_size(malloc_size)
+          call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, MPI_SUM, &
+                          MasterPE, MPI_COMM_WORLD, ierr)
+          if (MyPE .EQ. MasterPE .AND. sum_size .GT. 0_8) &
+              print 1002, &
+              'heap memory allocated by PnetCDF internally has ', &
+              sum_size/1048576, ' MiB yet to be freed'
+      endif
 
       end subroutine report_io_performance
 

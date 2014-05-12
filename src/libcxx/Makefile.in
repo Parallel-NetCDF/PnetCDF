@@ -57,12 +57,13 @@ PACKING_LIST = $(LIBS_HEADERS) $(LIB_SRCS) pnetcdf.in \
 GARBAGE      = $(LIB_OBJS)
 DIST_GARBAGE = pnetcdf
 
+all: $(CXX_HEADER) $(LIBRARY)
 
-all:  $(LIBRARY) $(CXX_HEADER)
+objs:  $(CXX_HEADER) $(LIB_OBJS)
 
-$(LIBRARY): $(LIB_OBJS)
-	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
-	$(RANLIB) $@
+library $(LIBRARY): $(LIB_OBJS)
+	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
+	$(RANLIB) $(LIBRARY)
 
 $(CXX_HEADER): $(LIBS_HEADERS)
 	cp -f $(srcdir)/pnetcdf.in $(CXX_HEADER)
@@ -70,7 +71,7 @@ $(CXX_HEADER): $(LIBS_HEADERS)
 	sed -e '/#ifndef/d' -e '/#define/d' -e '/#endif/d' -e '/#include/d' $(srcdir)/$$i >> $(CXX_HEADER); \
 	) ; done
 
-install: $(CXX_HEADER)
+install:
 	$(INSTALL) -d -m 755 $(INCDIR)
 	$(INSTALL_DATA) $(CXX_HEADER) $(INCDIR)
 

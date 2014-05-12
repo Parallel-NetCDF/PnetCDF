@@ -36,9 +36,6 @@ all:		$(PROGRAM)
 $(PROGRAM):	$(LIBRARY) $(OBJS)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
 
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
-
 test:		$(PROGRAM) FORCE
 	$(NCGEN) -b $(srcdir)/test0.cdl -o `pwd`/test0.nc
 	./$(PROGRAM) -n test1 test0.nc > test1.cdl
@@ -47,7 +44,7 @@ test:		$(PROGRAM) FORCE
 	@cmp test1.cdl test2.cdl && \
 	     echo "*** $(PROGRAM) test successful ***"
 
-install:	
+install: $(PROGRAM) $(MANUAL)
 	$(INSTALL) -d -m 755 $(MANDIR)/man1
 	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
 
@@ -69,3 +66,4 @@ TAGS:		FORCE
 
 include $(srcdir)/../../../rules.make
 include $(srcdir)/depend
+

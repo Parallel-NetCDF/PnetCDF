@@ -438,28 +438,34 @@ ncmpi_open(MPI_Comm    comm,
     MPI_Offset attlen;
     int ndims1, nvars1, natts1, unlimdimid1;
     int i;
-    status = ncmpi_inq_att(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
-			   &type, &attlen);
-    if (status == NC_NOERR) {
-	status = ncmpi_get_att_int (ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
-				    &ncp->nc_num_subfiles); 
-	/* TODO: check status */
+    /* we report the first encountered status if there is an error */
+    err = ncmpi_inq_att(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
+                        &type, &attlen);
+    if (err == NC_NOERR) {
+        err = ncmpi_get_att_int(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
+                                &ncp->nc_num_subfiles); 
+        if (status == NC_NOERR) status = err;
+        /* TODO: check err */
 
-	status = ncmpi_inq(ncp->nciop->fd, &ndims1, &nvars1, &natts1, &unlimdimid1);
-	for (i=0; i<nvars1; i++) {
-	    status = ncmpi_get_att_int (ncp->nciop->fd, i, "num_subfiles",
-					&ncp->vars.value[i]->num_subfiles); 
-	    if (ncp->vars.value[i]->num_subfiles > 1) {
-		status = ncmpi_get_att_int (ncp->nciop->fd, i, "ndims_org",
-					    &ncp->vars.value[i]->ndims_org);
-	    }
-	}
+        err = ncmpi_inq(ncp->nciop->fd, &ndims1, &nvars1, &natts1, &unlimdimid1);
+        if (status == NC_NOERR) status = err;
+
+        for (i=0; i<nvars1; i++) {
+            err = ncmpi_get_att_int(ncp->nciop->fd, i, "num_subfiles",
+                                    &ncp->vars.value[i]->num_subfiles); 
+            if (status == NC_NOERR) status = err;
+
+            if (ncp->vars.value[i]->num_subfiles > 1) {
+                err = ncmpi_get_att_int(ncp->nciop->fd, i, "ndims_org",
+                                        &ncp->vars.value[i]->ndims_org);
+                if (status == NC_NOERR) status = err;
+            }
+        }
     }
-    else
-	status = NC_NOERR;
 
     if (ncp->nc_num_subfiles > 1) {
-	status = ncmpii_subfile_open (ncp, &ncp->ncid_sf);
+        err = ncmpii_subfile_open(ncp, &ncp->ncid_sf);
+        if (status == NC_NOERR) status = err;
     }
 #endif
 
@@ -1020,5 +1026,48 @@ ncmpi_inq_striping(int  ncid,
     if (flag) *striping_count = atoi(value);
 
     return NC_NOERR;
+}
+
+/*----< ncmpi_inq_malloc_size() >--------------------------------------------*/
+/* report the current aggregate size allocated by malloc, yet to be freed */
+int ncmpi_inq_malloc_size(MPI_Offset *size)
+{
+#ifdef NC_TRACK_MALLOC
+    ncmpii_inq_malloc_size(size);
+    return NC_NOERR;
+#else
+    return NC_ENOTENABLED;
+#endif
+}
+
+/*----< ncmpi_inq_max_malloc_size() >----------------------------------------*/
+/* get the max watermark ever researched by malloc (aggregated amount) */
+int ncmpi_inq_max_malloc_size(MPI_Offset *size)
+{
+#ifdef NC_TRACK_MALLOC
+    ncmpii_inq_max_malloc_size(size);
+    return NC_NOERR;
+#else
+    return NC_ENOTENABLED;
+#endif
+}
+
+/*----< ncmpi_inq_malloc_walk() >--------------------------------------------*/
+/* walk the malloc tree and print yet-to-free malloc residues */
+int ncmpi_inq_malloc_walk(void)
+{
+#ifdef NC_TRACK_MALLOC
+    ncmpii_inq_malloc_walk();
+    return NC_NOERR;
+#else
+    return NC_ENOTENABLED;
+#endif
+}
+
+/*----< ncmpi_inq_files_opened() >-------------------------------------------*/
+int
+ncmpi_inq_files_opened(int *num, int *ncids)
+{
+    return ncmpii_inq_files_opened(num, ncids);
 }
 

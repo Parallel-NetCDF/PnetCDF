@@ -6,6 +6,7 @@
 
 !
 ! This program tests whether header file pnetcdf.inc conforms Fortran free form
+! for compilation only, not execution
 !
 
 program main

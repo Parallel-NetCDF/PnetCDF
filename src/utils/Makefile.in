@@ -17,13 +17,18 @@ PACKING_LIST = Makefile.in
 
 PACKING_SUBDIRS = $(SUBDIRS)
 
-all:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) ; ) ; done
+all: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) $(MFLAGS) -C $@
 
-install:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) install ; ) ; done
+INSTALLDIRS = $(SUBDIRS:%=install-%)
+install: $(INSTALLDIRS)
+$(INSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
 
-uninstall:
-	@set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) uninstall ; ) ; done
+UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
+uninstall: $(UNINSTALLDIRS)
+$(UNINSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
 
 include $(srcdir)/../../rules.make

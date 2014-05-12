@@ -298,6 +298,8 @@ C2F_SRCS = createf.c \
 	inq_get_sizef.c \
 	inq_header_sizef.c \
 	inq_header_extentf.c \
+	inq_malloc_sizef.c inq_max_malloc_sizef.c inq_malloc_walkf.c \
+	inq_files_openedf.c \
 	inq_nreqsf.c \
 	get_varnf.c            get_varn_allf.c \
 	get_varn_textf.c       get_varn_text_allf.c \
@@ -334,19 +336,19 @@ LIB_OBJS = $(LIB_CSRCS:.c=.o) $(LIB_FSRCS:.f=.o)
 GARBAGE		= nfconfig.inc $(LIB_CSRCS) mpifnetcdf.h
 DIST_GARBAGE	= nfconfig_inc pnetcdf.inc
 
+all: $(LIB_CSRCS) nfconfig.inc $(LIBRARY)
 
-all: $(LIB_CSRCS) $(LIBRARY) nfconfig.inc
+objs: $(LIB_CSRCS) nfconfig.inc $(LIB_OBJS)
+
+library $(LIBRARY): $(LIB_OBJS)
+	$(AR) $(ARFLAGS) $(LIBRARY) $(LIB_OBJS)
+	$(RANLIB) $(LIBRARY)
 
 $(LIB_CSRCS): mpifnetcdf.h
+$(LIB_OBJS): mpifnetcdf.h
 
-mpifnetcdf.h: defs createffiles buildiface
+mpifnetcdf.h: defs buildiface $(HEADER)
 	$(srcdir)/buildiface -infile=$(HEADER) -deffile=$(srcdir)/defs
-
-createffiles: $(HEADER)
-
-$(LIBRARY): $(LIB_OBJS)
-	$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
-	$(RANLIB) $@
 
 # Starting from 1.4.0, nfconfig.inc is only used in test/nf_test/tests.inc and
 # test/nf90_test/tests.inc
@@ -358,7 +360,7 @@ nfconfig.inc: nfconfig_inc
 	$(RM) -f $@
 	$(SED) -e "s%/\*%!%g" -e "s%\*/%%g" $< > $@
 
-install: pnetcdf.inc
+install:
 	$(INSTALL) -d -m 755 $(INCDIR)
 	$(INSTALL_DATA) pnetcdf.inc $(INCDIR)
 

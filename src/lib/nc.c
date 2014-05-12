@@ -228,6 +228,26 @@ ncmpii_NC_check_id(int  ncid,
 }
 
 
+/*----< ncmpii_inq_files_opened() >------------------------------------------*/
+int
+ncmpii_inq_files_opened(int *num, int *ncids)
+{
+    NC *ncp;
+
+for (ncp=NClist; ncp!=NULL; ncp=ncp->next) printf("still open %s\n",ncp->nciop->path);
+    *num = 0;
+    for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
+        (*num)++;
+
+    if (*num > 0 && ncids != NULL) {
+        int i=0;
+        for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
+            ncids[i] = ncp->nciop->fd;
+    }
+    return NC_EBADID;
+}
+
+
 /*----< ncmpii_free_NC() >----------------------------------------------------*/
 void
 ncmpii_free_NC(NC *ncp)
@@ -1070,7 +1090,7 @@ ncmpii_NC_enddef(NC         *ncp,
         if (status != NC_NOERR) { 
             printf( "error in ncmpii_subfile_partition()\n" ); 
             return status; 
-        } 
+        }
     }
 #endif
 

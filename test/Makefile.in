@@ -46,18 +46,36 @@ endif
 
 PACKING_LIST = Makefile.in
 
-all:
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) all ; ) ; done
+all: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) $(MFLAGS) -C $@
 
-# Eventually, this target will run all of the relevant tests
-check testing: all
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) testing ; ) ; done
+CHECK_DIRS = $(SUBDIRS:%=check-%)
+check testing: all $(CHECK_DIRS)
+$(CHECK_DIRS):
+	$(MAKE) $(MFLAGS) -C $(@:check-%=%) testing
 
-verbose_check verbose_testing: all
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) verbose_testing ; ) ; done
+VCHECK_DIRS = $(SUBDIRS:%=vcheck-%)
+verbose_check verbose_testing: all $(VCHECK_DIRS)
+$(VCHECK_DIRS):
+	$(MAKE) $(MFLAGS) -C $(@:vcheck-%=%) verbose_testing
 
-ptest: all
-	set -e; for i in $(SUBDIRS); do ( cd $$i && $(MAKE) $(MFLAGS) ptest ; ) ; done
+PTEST_DIRS = $(SUBDIRS:%=ptest-%)
+ptest: all $(PTEST_DIRS)
+$(PTEST_DIRS):
+	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+
+INSTALLDIRS = $(SUBDIRS:%=install-%)
+install: all $(INSTALLDIRS)
+$(INSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:install-%=%) install
+
+UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
+uninstall: $(UNINSTALLDIRS)
+$(UNINSTALLDIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
 
 include $(srcdir)/../rules.make
+
+.NOTPARALLEL: testing check verbose_testing ptest
 

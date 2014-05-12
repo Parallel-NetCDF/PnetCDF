@@ -18,7 +18,7 @@ static void handle_error(int status)
 #define NDIMS 1
 int main(int argc, char **argv)
 {
-    int ret, ncfile, dimid, varid, ndims=NDIMS;
+    int err, ncfile, dimid, varid, ndims=NDIMS;
     int i, nprocs, rank;
     MPI_Offset start[NDIMS] = {0};
     MPI_Offset count[NDIMS] = {0};
@@ -36,26 +36,36 @@ int main(int argc, char **argv)
     }
     if (argc == 2) filename = argv[1];
 
-    ret = ncmpi_create(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncfile);
-    if (ret != NC_NOERR) handle_error(ret);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncfile);
+    if (err != NC_NOERR) handle_error(err);
 
-    ret = ncmpi_def_dim(ncfile, "d1", nprocs, &dimid);
-    if (ret != NC_NOERR) handle_error(ret);
+    err = ncmpi_def_dim(ncfile, "d1", nprocs, &dimid);
+    if (err != NC_NOERR) handle_error(err);
 
-    ret = ncmpi_def_var(ncfile, "v1", NC_INT, ndims, &dimid, &varid);
-    if (ret != NC_NOERR) handle_error(ret);
+    err = ncmpi_def_var(ncfile, "v1", NC_INT, ndims, &dimid, &varid);
+    if (err != NC_NOERR) handle_error(err);
 
-    ret = ncmpi_enddef(ncfile);
-    if (ret != NC_NOERR) handle_error(ret);
+    err = ncmpi_enddef(ncfile);
+    if (err != NC_NOERR) handle_error(err);
 
     start[0] = rank;
     count[0] = 1;
     for (i=0; i<512; i++) buf[i] = rank;
-    ret = ncmpi_put_vars_int_all(ncfile, varid, start, count, NULL, buf);
-    if (ret != NC_NOERR) handle_error(ret);
+    err = ncmpi_put_vars_int_all(ncfile, varid, start, count, NULL, buf);
+    if (err != NC_NOERR) handle_error(err);
 
-    ret = ncmpi_close(ncfile);
-    if (ret != NC_NOERR) handle_error(ret);
+    err = ncmpi_close(ncfile);
+    if (err != NC_NOERR) handle_error(err);
+
+    /* check if PnetCDF freed all internal malloc */
+    MPI_Offset malloc_size, sum_size;
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
 
     if (rank == 0) {
         char cmd_str[80];

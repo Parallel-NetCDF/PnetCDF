@@ -47,7 +47,7 @@ all:		$(PROGRAM)
 #test:           $(PROGRAM) b-test c-test f-test FORCE
 test:           $(PROGRAM) b-test c-test FORCE
 
-install:	
+install: $(PROGRAM) $(MANUAL)
 	$(INSTALL) -d -m 755 $(MANDIR)/man1
 	$(INSTALL_DATA) $(srcdir)/$(MANUAL) $(MANDIR)/man1/$(MANUAL)
 
@@ -60,9 +60,6 @@ uninstall:
 
 $(PROGRAM):	$(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 ncmpigentab.c \
 ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
@@ -162,3 +159,4 @@ $(PROGRAM)_obj : $(PROGRAM_SRCS)
 include $(srcdir)/../../../rules.make
 
 include $(srcdir)/depend
+

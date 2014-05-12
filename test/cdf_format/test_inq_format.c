@@ -19,13 +19,7 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (rank > 0) {
-        MPI_Finalize();
-        return 0;
-    }
-
-    err = ncmpi_open(MPI_COMM_WORLD, "../data/test_int.nc", 0, MPI_INFO_NULL,
-                     &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, "../data/test_int.nc", 0, MPI_INFO_NULL, &ncid);
     ERR
  
     err = ncmpi_inq_format(ncid, &format); ERR
@@ -41,12 +35,22 @@ int main(int argc, char **argv) {
         nerr++;
     }
 
+    MPI_Offset malloc_size, sum_size;
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+
     char cmd_str[80];
     sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file format ", argv[0]);
-    if (nerr == 0)
-        printf("%-66s ------ pass\n", cmd_str);
-    else
-        printf("%-66s ------ failed\n", cmd_str);
+    MPI_Reduce(&nerr, &err, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (err == 0) printf("%-66s ------ pass\n", cmd_str);
+        else          printf("%-66s ------ failed\n", cmd_str);
+    }
 
     MPI_Finalize();
     return 0;

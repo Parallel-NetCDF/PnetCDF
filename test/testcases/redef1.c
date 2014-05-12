@@ -3,9 +3,9 @@
 #include <string.h>
 #include <pnetcdf.h>
 
-#define PNCDF_Error(status, msg) \
-    if (status != NC_NOERR) { \
-        printf("Error: %s (%s)\n", msg, ncmpi_strerror(status)); \
+#define PNCDF_Error(err, msg) \
+    if (err != NC_NOERR) { \
+        printf("Error: %s (%s)\n", msg, ncmpi_strerror(err)); \
         pass = 0; \
         goto fn_exit; \
     }  
@@ -13,7 +13,7 @@
 int main(int argc, char** argv)
 {
     char filename[128]="redef1.nc";
-    int i, j, k, commsize, rank, ncid, verbose=0, status, pass=1;
+    int i, j, k, commsize, rank, ncid, verbose=0, err, pass=1;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
     int *data;
@@ -36,39 +36,39 @@ int main(int argc, char** argv)
     if (commsize > 1 && rank == 0 && verbose)
         printf("Warning: %s is designed to run on 1 process\n",argv[0]);
   
-    status = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
+    err = ncmpi_create(comm, filename, NC_CLOBBER|NC_64BIT_OFFSET,
                           MPI_INFO_NULL, &ncid);
-    PNCDF_Error(status, "create")
+    PNCDF_Error(err, "create")
   
-    status = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
-    PNCDF_Error(status, "def_dim0")
+    err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id);
+    PNCDF_Error(err, "def_dim0")
 
-    status = ncmpi_def_dim(ncid, "dim1", len1, &dim1id);
-    PNCDF_Error(status, "def_dim1")
+    err = ncmpi_def_dim(ncid, "dim1", len1, &dim1id);
+    PNCDF_Error(err, "def_dim1")
 
-    status = ncmpi_def_dim(ncid, "dim5", len5, &dim5id);
-    PNCDF_Error(status, "def_dim5")
+    err = ncmpi_def_dim(ncid, "dim5", len5, &dim5id);
+    PNCDF_Error(err, "def_dim5")
 
-    status = ncmpi_def_dim(ncid, "dim9", len9, &dim9id);
-    PNCDF_Error(status, "def_dim9")
+    err = ncmpi_def_dim(ncid, "dim9", len9, &dim9id);
+    PNCDF_Error(err, "def_dim9")
   
     dimsid[0] = dim0id;
     dimsid[1] = dim1id;
-    status = ncmpi_def_var(ncid, "xyz", NC_INT, 2, dimsid, &varid);
-    PNCDF_Error(status, "def_var")
+    err = ncmpi_def_var(ncid, "xyz", NC_INT, 2, dimsid, &varid);
+    PNCDF_Error(err, "def_var")
  
     dimsid[0] = dim0id;
     dimsid[1] = dim5id;
-    status = ncmpi_def_var(ncid, "connect", NC_INT, 2, dimsid, &var3id);
-    PNCDF_Error(status, "def_var3")
+    err = ncmpi_def_var(ncid, "connect", NC_INT, 2, dimsid, &var3id);
+    PNCDF_Error(err, "def_var3")
 
     dimsid[0] = dim0id;
     dimsid[1] = dim9id;
-    status = ncmpi_def_var(ncid, "connect_exterior", NC_INT, 2, dimsid, &var4id);
-    PNCDF_Error(status, "def_var4")
+    err = ncmpi_def_var(ncid, "connect_exterior", NC_INT, 2, dimsid, &var4id);
+    PNCDF_Error(err, "def_var4")
 
-    status = ncmpi_enddef(ncid);
-    PNCDF_Error(status, "enddef")
+    err = ncmpi_enddef(ncid);
+    PNCDF_Error(err, "enddef")
 
     //put data
     start[0] = 0;
@@ -82,8 +82,8 @@ int main(int argc, char** argv)
         for (j=0; j<len1; j++)
             data[i*len1+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
-    status = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
-    PNCDF_Error(status, "put1")
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
+    PNCDF_Error(err, "put1")
     free(data);
     
     count[0] = len0;
@@ -94,8 +94,8 @@ int main(int argc, char** argv)
         for (j=0; j<len5; j++)
             data[i*len5+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
-    status = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
-    PNCDF_Error(status, "put3")
+    err = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
+    PNCDF_Error(err, "put3")
     free(data);
 
     count[0] = len0;
@@ -106,28 +106,28 @@ int main(int argc, char** argv)
         for (j=0; j<len9; j++)
             data[i*len9+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
-    status = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
-    PNCDF_Error(status, "put4")
+    err = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
+    PNCDF_Error(err, "put4")
     free(data);
 
-    status = ncmpi_close(ncid);
-    PNCDF_Error(status, "close")
+    err = ncmpi_close(ncid);
+    PNCDF_Error(err, "close")
 
-    status = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
 
-    status = ncmpi_redef(ncid);
-    PNCDF_Error(status, "redef")
+    err = ncmpi_redef(ncid);
+    PNCDF_Error(err, "redef")
 
-    status = ncmpi_def_dim(ncid, "dim2", len2, &dim2id);
-    PNCDF_Error(status, "def_dim")
+    err = ncmpi_def_dim(ncid, "dim2", len2, &dim2id);
+    PNCDF_Error(err, "def_dim")
   
     dims2id[0] = dim0id;
     dims2id[1] = dim2id;
-    status = ncmpi_def_var(ncid, "xyz_r", NC_DOUBLE, 2, dims2id, &var2id);
-    PNCDF_Error(status, "def_var")
+    err = ncmpi_def_var(ncid, "xyz_r", NC_DOUBLE, 2, dims2id, &var2id);
+    PNCDF_Error(err, "def_var")
 
-    status = ncmpi_enddef(ncid);
-    PNCDF_Error(status, "enddef")
+    err = ncmpi_enddef(ncid);
+    PNCDF_Error(err, "enddef")
 
     start[0] = 0;
     start[1] = 0;
@@ -141,12 +141,22 @@ int main(int argc, char** argv)
             k++;
         }
     if (rank > 0) count[0] = count[1] = 0;
-    status = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
-    PNCDF_Error(status, "put2")
+    err = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
+    PNCDF_Error(err, "put2")
     free(dbl_data);
 
-    status = ncmpi_close(ncid);
-    PNCDF_Error(status, "close")
+    err = ncmpi_close(ncid);
+    PNCDF_Error(err, "close")
+
+    /* check if PnetCDF freed all internal malloc */
+    MPI_Offset malloc_size, sum_size;
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
 
 fn_exit:
     if (rank == 0) {
