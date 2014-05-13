@@ -6,8 +6,8 @@ Tasks before a new release
  - Edit the release version and date
 
    $PNETCDF_VERSION is defined in configure.in, the 2nd argument of AC_INIT
-   call. Revise that string and do svn commit to update the svn property
-   of $LastChangedDate$ that is used for the release date.
+   call. Revise that string and run svn commit to get the svn property
+   \$LastChangedDate\$ updated that string will be used as the release date.
 
    AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 
@@ -161,4 +161,27 @@ If a new PnetCDF API is created, please make sure we do the followings.
    nf90mpi_inq_striping() is declared in visibility.f90
    The definition of nf90mpi_inq_striping() is defined in file.f90 by
    calling nfmpi_inq_striping().
+
+=====================================================
+Note on debugging
+=====================================================
+1. Enable malloc tracking option at the configure time which can track the
+   usage of malloc and if there is a malloc residue. All PnetCDF development
+   should call NCI_Malloc, NCI_Calloc, NCI_Realloc, and NCI_Free, instead of
+   malloc, calloc, realloc, and free. When adding a new test or example program,
+   please add a check for any malloc residue at the end. This is to make sure
+   PnetCDF proporly free up all malloc used internally. The code fragment is
+   something like below.
+
+    /* check if there is any PnetCDF internal malloc residue */
+    MPI_Offset malloc_size, sum_size;
+    int err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+    }
+
+
 
