@@ -34,9 +34,6 @@ PACKING_LIST = $(F90_SRCS) depend Makefile.in
 
 all: $(PROGS)
 
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
-
 install:
 
 uninstall:
@@ -91,5 +88,5 @@ ptest: $(PROGS)
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: ptest
+.PHONY: $(LIBRARY)
 
