@@ -33,9 +33,15 @@ $(SUBDIRS):
 	$(MAKE) $(MFLAGS) -C $@
 
 PTEST_DIRS = $(SUBDIRS:%=ptest-%)
-ptest: all $(PTEST_DIRS)
+ptest: $(PTEST_DIRS)
 $(PTEST_DIRS):
 	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+
+# make ptest cannot run in parallel. use dependency to ensure.
+ptest-tutorial: ptest-C
+ptest-CXX:      ptest-tutorial
+ptest-F77:      ptest-CXX
+ptest-F90:      ptest-F77
 
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)
@@ -48,6 +54,4 @@ $(UNINSTALLDIRS):
 	$(MAKE) $(MFLAGS) -C $(@:uninstall-%=%) uninstall
 
 include $(srcdir)/../rules.make
-
-.NOTPARALLEL: ptest
 
