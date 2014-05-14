@@ -4,35 +4,37 @@ This is essentially a placeholder for the next release note ...
 
   o New features
     * A new configure option "--disable-in-place-swap" is added. It disables
-      the byte swap operations running in-place on the user's write buffers.
-      The purpose of providing this option is to solve the problem when a
-      Fortran program uses a put buffer which is immutable, e.g. declared as
-      a PARAMETER, and in-place byte swap on user buffer can cause segmentation
-      fault. See discussion threads of
+      the byte-swap operations running in-place on the user's write buffers.
+      The purpose of providing this option is to deal wth the problem when a
+      Fortran program uses a immutable buffer for put APIs, e.g. the buffer is
+      declared as a PARAMETER, and in-place byte swap on this buffer causes
+      segmentation fault. See discussion threads of
       http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2013-July/001498.html
 
       Impacts:
       1. It takes effect only on Little Endian machines.
       2. It only affects put/iput data APIs, but not attribute APIs.
-      3. The INTENT of put buffer arguments in Fortran 90 put/iput APIs will be
+      3. The INTENT of buffer arguments in all Fortran 90 put/iput APIs will be
          declared as "IN". Without this setting, the default is "INOUT".
-      4. It has an impact on performance, as an internal temporary buffer will
-         be allocated to copy data over from user's put buffer, so byte-swap
-         can be performed on the temporary buffer.
+      4. It has an impact on performance, as an extra internal temporary buffer
+         will be allocated to copy data over from user's put buffer, so byte
+         swap can be run on the temporary buffer.
 
       The default setting is to enable in-place byte swap. PnetCDF tries not to
-      allocate additional memory space, due to performance concern.
-
-    * Add Fortran parameters for PnetCDF library version numbers:
-      PNETCDF_VERSION_MAJOR, PNETCDF_VERSION_MINOR, and PNETCDF_VERSION_SUB
+      allocate additional memory space, due to performance concern. Users are
+      discouraged to use Fortran PARAMETER buffers in put APIs.
 
     * A new configure option "--enable-malloc-tracking" is added. It enables
-      an internal memory allocation tracking in PnetCDF. Default is disabled.
-      When enabled, a user program can call three new APIs
+      a memory allocation tracking mechanism internal in PnetCDF. Default is
+      disabled. When enabled, a user program can call three new APIs below:
       ncmpi_inq_malloc_size, ncmpi_inq_max_malloc_size, ncmpi_inq_malloc_walk
-      to obtain the size in bytes of current memory size allocated internally.
-      This feature uses a binary tree to manage all malloc buffers, e.g.
-      tsearch() and tdelete(). Users should expect a slightly additional cost.
+      to obtain the size in bytes of current memory allocated internally. This
+      feature uses a binary tree to manage all malloc buffers, e.g. tsearch()
+      and tdelete().
+
+    * Add three Fortran parameters for PnetCDF library version numbers:
+      PNETCDF_VERSION_MAJOR, PNETCDF_VERSION_MINOR, and PNETCDF_VERSION_SUB.
+      Similarly in C programs, these are defined in pnetcdf.h as constants.
 
   o New APIs
     * C++ APIs are now available. They are developed based on netCDF-4 C++
@@ -53,35 +55,36 @@ This is essentially a placeholder for the next release note ...
       compatibility.
 
     * ncmpi_inq_striping, nfmpi_inq_striping, nf90mpi_inq_striping report the
-      file system striping settings, striping size and count, if the underneath
-      MPI-IO can find their values from the file system.
+      file system striping settings of the opened file: striping size and
+      striping count, if the underneath MPI-IO can find their values from the
+      file system in use.
 
     * ncmpi_inq_malloc_size, ncmpi_inq_max_malloc_size, ncmpi_inq_malloc_walk
-      report the size in bytes of current memory size allocated internally by
-      PnetCDF. Similar APIs for Fortran 77 and 90 are also available. These APIs
-       are enabled only when PnetCDF is configured with option
+      report the size in bytes of current memory allocated internally by
+      PnetCDF. Similar APIs for Fortran 77 and 90 are also available. These
+      APIs are enabled only when PnetCDF is configured with option
       --enable-malloc-tracking. When this option is not enabled, calling these
-      APIs will return error code NC_ENOTENABLED. These APIs are usefully for
-      debugging.
+      APIs will return the error code NC_ENOTENABLED. These APIs are usefully
+      for debugging.
 
     * ncmpi_inq_files_opened reports the number of files that are currently
       opened. Similar API for Fortran 77 and 90 are also available. The API
       takes 2 arguments: number of files and arrary of file IDs. If the second
-      argument, array of IDs, is not NULL, then it will filled with the file
-      IDs. This API is useful for debugging.
+      argument, array of IDs, is not NULL, then it will filled with the netCDF
+      dataset IDs. This API is useful for debugging.
 
   o Syntax changes
     * 
 
   o New PnetCDF hint
     * nc_record_align_size - aligns the starting file offset of the record
-      variable section. Note this is for the starting offset of the section,
-      not individual records.
+      variable section. Note this is for the entire section, not individual
+      records.
 
   o New error code
-    * NC_ENOTENABLED indicates the API is only available when the corresponding
+    * NC_ENOTENABLED indicates the API is available only when the corresponding
       feature is enabled. For example, nfmpi_inq_malloc_size() returns this
-      error code when "malloc-tracking" is not enabled at configure.
+      error code when "--enable-malloc-tracking" is not used at configure.
 
   o New run-time environment variables
     * 
@@ -91,9 +94,9 @@ This is essentially a placeholder for the next release note ...
       residues yet to be freed, if --enable-malloc-tracking option is used at
       configure.
 
-    * Under examples/C, three examples are added: create_open.c,
-      global_attributes.c, get_vara.c. Please check examples/README for
-      their descriptions.
+    * Under examples/C, three examples are added: create_open.c, get_vara.c,
+      and global_attributes.c. File examples/README contains their
+      descriptions.
 
   o New programs for I/O benchmarks
     * 
@@ -108,12 +111,13 @@ This is essentially a placeholder for the next release note ...
       Similarly for get APIs.
 
     * testcases/record.c checks if the number of records is updated correctly.
-      It writes to a variable's 2nd record and then 1st record. A call to
-      ncmpi_inq_dim() or ncmpi_inq_dimlen() should report 2 records.
+      It writes to a variable's 2nd record followed by the 1st record. A call
+      to ncmpi_inq_dim() or ncmpi_inq_dimlen() should report 2 records after
+      the writes complete.
 
     * testcases/noclobber.c checks if error code NC_EEXIST can be returned
-      correctly when NC_NOCLOBBER modes is used in ncmpi_create and the file
-      exists.
+      correctly when NC_NOCLOBBER modes is used in ncmpi_create and in the
+      meantime the file exists.
 
     * Some test programs are developed to run in parallel. The test mechanism
       for parallel runs is command "make ptest". Two environment variables
@@ -122,10 +126,10 @@ This is essentially a placeholder for the next release note ...
       directory), respectively. For example,
           make ptest TEST_MPIRUN=aprun TEST_OUTDIR=/scratch
 
-    * A sample PBS script file is added to test parallel programs on a batch
-      queue system: pbs.script. This example script can be submitted from the
-      build root directory (where you run "make" command to build PnetCDF
-      library).
+    * A sample PBS script file is provided to test "make ptest" on machines
+      with a batch queue system: pbs.script. This example script can be
+      submitted from the build root directory (where you run "make" command to
+      build PnetCDF library).
 
     * For cross compile environment (and batch queue system), the environment
       variable TEST_SEQRUN can be used to set the MPI run command. For example,
@@ -139,26 +143,27 @@ This is essentially a placeholder for the next release note ...
   o New optimization
 
   o New utility program
-    * pnetcdf_version prints the version information of the PnetCDF library
+    * pnetcdf_version prints the version information of the PnetCDF library and
+      command-line arguments used at configure
 
   o Other updates:
-    * Revise FLASH-IO benchmark to use nonblocking APIs for both checkpoint
-      and plot writes.  The control variable to switch between nonblocking and
-      blocking API is "use_nonblocking_io". Using nonblocking APIs is now the
-      default. Set it to .FALSE. in flash_benchmark_io.F90 to swtch to blocking
-      APIs.
+    * Revise FLASH-IO benchmark to use nonblocking APIs for both checkpoint and
+      plot writes. The control variable to switch between nonblocking and
+      blocking API is "use_nonblocking_io". Set it to .FALSE. in
+      flash_benchmark_io.F90 to swtch to blocking APIs. Using nonblocking APIs
+      is now the default.
 
     * To match ncdump, ncmpidump now only supports one input file.
 
     * Makefiles are revised for better recursive make and fixed some build
       target dependency for parallel make.
 
-    * File create was revised for handling NC_CLOBBER and NC_NOCLOBBER modes.
+    * File creation was revised for handling NC_CLOBBER and NC_NOCLOBBER modes.
       On systems where Unix calls access() and unlink() are available, they
-      are used to check if a file exits and delete an existing file.
+      are used to check if a file exits and to delete an existing file.
 
-    * subfiling is now enabled by default. Use --disable-subfiling to disable
-      it
+    * subfiling is now enabled by default. Users can use --disable-subfiling to
+      disable it
 
     * man page of ncmpigen is updated to add the description for option "-v"
       which lets users to specify the desired output file formats, e.g.
@@ -171,3 +176,4 @@ This is essentially a placeholder for the next release note ...
 
     * fix the update for number of records when writing to a record that is
       not the last record.
+
