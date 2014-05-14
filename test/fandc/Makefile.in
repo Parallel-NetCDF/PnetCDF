@@ -12,10 +12,9 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+INCLUDES  = -I../../src/lib
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-LDFLAGS  += -L../../src/lib -L../common
-LIBS     := -lpnetcdf $(LIBS) $(MATHLIB) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) $(MATHLIB) @LCOV_LIB@
 
 C_SRCS   = pnctest.c \
            csnap.c
@@ -37,9 +36,6 @@ GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in depend
 
 all: $(PROGS)
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 pnctest: pnctest.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
@@ -74,5 +70,5 @@ ptest:
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

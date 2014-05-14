@@ -45,5 +45,3 @@ ptest:
 
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
-

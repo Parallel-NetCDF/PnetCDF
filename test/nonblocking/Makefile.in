@@ -13,8 +13,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) $(MATHLIB) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) $(MATHLIB) @LCOV_LIB@
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c
@@ -36,9 +35,6 @@ GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in README depend
 
 all: $(PROGS)
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 mcoll_perf: mcoll_perf.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
@@ -91,5 +87,5 @@ endif
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

@@ -11,9 +11,8 @@ VPATH	= @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-LDFLAGS  += -L../../src/lib -L../common
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+INCLUDES  = -I../../src/lib
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 SRCS    = pres_temp_4D_wr.c \
           pres_temp_4D_rd.c
@@ -25,9 +24,6 @@ GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 pres_temp_4D_wr.o: pres_temp_4D_wr.c 
 
@@ -51,5 +47,5 @@ ptest: $(PROGS)
 
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

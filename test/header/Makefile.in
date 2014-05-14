@@ -12,8 +12,7 @@ VPATH   = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 SRCS      = header_consistency.c
 
@@ -25,9 +24,6 @@ PACKING_LIST = $(SRCS) test_check_header.c test_check_header1.c \
                Makefile.in README
 
 all: $(PROGS)
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 header_consistency: header_consistency.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
@@ -41,5 +37,5 @@ ptest: $(PROGS)
 
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

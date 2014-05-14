@@ -12,8 +12,7 @@ VPATH  = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 SRCS    = large_files.c
 
@@ -25,9 +24,6 @@ PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
 
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
-
 large_files: large_files.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
@@ -37,5 +33,5 @@ ptest:
 
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 
