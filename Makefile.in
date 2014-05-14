@@ -18,14 +18,10 @@ PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 
 PACKAGE_FILENAME  = $(PACKAGE_NAME)-$(PACKAGE_VERSION)
 
-LIB_SUBDIRS	= src
+INSTALL_SUBDIRS	= src man
 
-TEST_SUBDIRS	= test
-
-INSTALL_SUBDIRS	= $(LIB_SUBDIRS) man
-
-SUBDIRS		= $(LIB_SUBDIRS) \
-		  $(TEST_SUBDIRS) \
+SUBDIRS		= src \
+		  test \
 		  scripts \
 		  doc \
 		  man \
@@ -59,31 +55,26 @@ PACKING_LIST	= Makefile.in \
 
 PACKING_SUBDIRS	= $(SUBDIRS)
 
-all: $(LIB_SUBDIRS)
-$(LIB_SUBDIRS):
-	$(MAKE) $(MFLAGS) -C $@
+all:
+	$(MAKE) $(MFLAGS) -C src
 
-TESTS_DIRS = $(TEST_SUBDIRS:%=tests-%)
-tests: all $(TESTS_DIRS)
-$(TESTS_DIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:tests-%=%)
+tests:
+	$(MAKE) $(MFLAGS) -C test
 
-CHECK_DIRS = $(TEST_SUBDIRS:%=check-%)
-check testing: tests $(CHECK_DIRS)
-$(CHECK_DIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:check-%=%) testing
+check testing:
+	$(MAKE) $(MFLAGS) -C test testing
 
-VCHECK_DIRS = $(TEST_SUBDIRS:%=vcheck-%)
-verbose_check verbose_testing: tests $(VCHECK_DIRS)
-$(VCHECK_DIRS): 
-	$(MAKE) $(MFLAGS) -C $(@:vcheck-%=%) verbose_testing
+verbose_check verbose_testing:
+	$(MAKE) $(MFLAGS) -C test verbose_testing
 
-PTEST_SUBDIRS = $(TEST_SUBDIRS) examples benchmarks
-
+PTEST_SUBDIRS = test examples benchmarks
 PTEST_DIRS = $(PTEST_SUBDIRS:%=ptest-%)
 ptest: tests $(PTEST_DIRS)
 $(PTEST_DIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+# make sure ptest runs one directory after another
+ptest-example: ptest-test
+ptest-benchmarks: ptest-example
 
 INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
 install: $(INSTALLDIRS)
@@ -178,5 +169,4 @@ cscope:
 
 include $(srcdir)/rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
 

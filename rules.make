@@ -253,6 +253,6 @@ ensure_manifest:	$(PACKING_LIST) FORCE
 FORCE:
 
 .PHONY: FORCE all library objs clean distclean TAGS clean_macros rmdir_src_test b-test c-test f-test
-.PHONY: $(LIB_SUBDIRS) subdirs $(SUBDIRS) install $(INSTALLDIRS) uninstall $(UNINSTALLDIRS)
-.PHONY: tests $(TESTS_DIRS) check $(CHECK_DIRS) ptest $(PTEST_DIRS) verbose_check verbose_testing $(VCHECK_DIRS)
+.PHONY: subdirs $(SUBDIRS) install $(INSTALLDIRS) uninstall $(UNINSTALLDIRS)
+.PHONY: tests check testing $(CHECK_DIRS) ptest $(PTEST_DIRS) verbose_check verbose_testing $(VCHECK_DIRS)
 
