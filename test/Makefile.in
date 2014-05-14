@@ -50,6 +50,11 @@ all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) $(MFLAGS) -C $@
 
+test_int: common
+test_float: common
+test_double_int: common
+test_double: common
+
 CHECK_DIRS = $(SUBDIRS:%=check-%)
 check testing: $(CHECK_DIRS)
 $(CHECK_DIRS):
