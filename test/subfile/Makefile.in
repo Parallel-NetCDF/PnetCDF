@@ -14,8 +14,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 F90FLAGS += @FC_MODOUT@.
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 C_SRCS   = test_subfile.c
 
@@ -40,9 +39,6 @@ PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(CXX_SRCS) Makefile.in depend README
 
 all: $(PROGS)
 
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
-
 test_subfile: test_subfile.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
@@ -54,5 +50,5 @@ ptest : $(PROGS)
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

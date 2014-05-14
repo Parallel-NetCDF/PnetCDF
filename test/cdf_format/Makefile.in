@@ -12,8 +12,7 @@ VPATH   = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 SRCS    = test_inq_format.c cdf_type.c
 
@@ -25,9 +24,6 @@ PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
 	set -e ; cd ../data && $(MAKE) $(MFLAGS) all
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 test_inq_format: test_inq_format.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
@@ -43,5 +39,4 @@ ptest:
 
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
-
+.PHONY: $(LIBRARY)

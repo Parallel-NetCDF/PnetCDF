@@ -12,8 +12,7 @@ VPATH   = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 SRCS    = test_subarray.c \
           test_darray.c \
@@ -28,9 +27,6 @@ GARBAGE      = $(PROGS)
 PACKING_LIST = $(SRCS) $(HEADERS) Makefile.in README
 
 all: $(PROGS)
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 test_subarray: test_subarray.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
@@ -47,5 +43,5 @@ ptest:
 
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

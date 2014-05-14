@@ -14,8 +14,7 @@ include ../../macros.make
 INCLUDES  =
 FPPFLAGS += @FC_MODINC@../../src/libf90
 F90FLAGS += @FC_MODOUT@.
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 F90_SRCS = tst_f90.f90 \
            tst_io.f90 \
@@ -40,9 +39,6 @@ GARBAGE  = $(PROGS) *.nc *.@FC_MODEXT@
 PACKING_LIST = $(F90_SRCS) Makefile.in depend
 
 all: $(PROGS)
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 tst_f90: tst_f90.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
@@ -114,5 +110,5 @@ uninstall:
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

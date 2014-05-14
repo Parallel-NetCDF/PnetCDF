@@ -14,8 +14,7 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I../../src/libf
 INCLUDES += -I$(srcdir) -I$(srcdir)/../../src/libf
 INCLUDES += @FC_MODINC@../../src/libf90
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 M4SRCS      = test_get.m4 \
               test_put.m4  \
@@ -47,9 +46,6 @@ PACKING_LIST = $(C_SRCS) $(F90_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in REA
 
 all: $(PROGS)
 
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
-
 nf90_test: $(OBJS) $(LIBRARY)
 	$(LINK.F90) $(OBJS) $(LDFLAGS) $(LIBS)
 
@@ -78,5 +74,5 @@ ptest:
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

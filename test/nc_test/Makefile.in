@@ -11,9 +11,8 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib -I$(srcdir)/../common -I$(srcdir)
-LDFLAGS  += -L../../src/lib -L../common
-LIBS     := -lpnetcdf $(LIBS) $(MATHLIB) @LCOV_LIB@
+INCLUDES  = -I../../src/lib -I$(srcdir)
+LIBS     := $(LIBRARY) $(LIBS) $(MATHLIB) @LCOV_LIB@
 
 SRCS      = nc_test.c \
             test_read.c \
@@ -40,9 +39,6 @@ PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) Makefile.in depend README
 
 all: $(PROGS)
 
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
-
 nc_test: $(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS)
 
@@ -64,5 +60,5 @@ ptest:
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 

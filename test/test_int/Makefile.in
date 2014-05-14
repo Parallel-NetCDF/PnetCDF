@@ -12,8 +12,8 @@ VPATH   = @srcdir@
 include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
-LDFLAGS  += -L../../src/lib -L../common
-LIBS     := -ltestutils -lpnetcdf $(LIBS) @LCOV_LIB@
+LDFLAGS  += -L../common
+LIBS     := -ltestutils $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 SRCS    = test_read.c \
           test_read_indep.c \
@@ -30,9 +30,6 @@ PACKING_LIST = $(SRCS) Makefile.in README header.txt
 
 all: $(PROGS)
 	set -e; cd ../data && $(MAKE) $(MFLAGS) all
-
-$(LIBRARY):
-	set -e ; cd $(BUILDDIR)/src && $(MAKE) $(MFLAGS) all
 
 test_read: test_read.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
@@ -58,5 +55,5 @@ ptest:
 
 include $(srcdir)/../../rules.make
 
-.NOTPARALLEL: testing check verbose_testing ptest
+.PHONY: $(LIBRARY)
 
