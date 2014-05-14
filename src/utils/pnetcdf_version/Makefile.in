@@ -47,3 +47,4 @@ uninstall:
 
 include $(srcdir)/../../../rules.make
 
+.PHONY: $(LIBRARY)
