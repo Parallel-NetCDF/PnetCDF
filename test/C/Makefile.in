@@ -47,5 +47,5 @@ ptest: $(PROGS)
 
 include $(srcdir)/../../rules.make
 
-.PHONY: $(LIBRARY)
+$(LIBRARY): ;
 

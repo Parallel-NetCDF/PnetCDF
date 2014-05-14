@@ -94,5 +94,5 @@ ptest: $(PAR_PROGS)
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make
 
-.PHONY: $(LIBRARY)
+$(LIBRARY): ;
 
