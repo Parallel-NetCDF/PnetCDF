@@ -85,5 +85,3 @@ clean:
 distclean: clean
 	@$(RM) -rf $(DIST_GARBAGE)
 
-.PHONY: FORCE all clean distclean install uninstall dist
-
