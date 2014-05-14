@@ -67,7 +67,7 @@ library $(LIBRARY): $(LIB_OBJS)
 
 $(CXX_HEADER): $(LIBS_HEADERS)
 	cp -f $(srcdir)/pnetcdf.in $(CXX_HEADER)
-	@set -e; for i in $(LIBS_HEADERS); do ( \
+	set -e; for i in $(LIBS_HEADERS); do ( \
 	sed -e '/#ifndef/d' -e '/#define/d' -e '/#endif/d' -e '/#include/d' $(srcdir)/$$i >> $(CXX_HEADER); \
 	) ; done
 
