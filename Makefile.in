@@ -73,8 +73,8 @@ ptest: tests $(PTEST_DIRS)
 $(PTEST_DIRS): 
 	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
 # make sure ptest runs one directory after another
-ptest-example: ptest-test
-ptest-benchmarks: ptest-example
+ptest-examples: ptest-test
+ptest-benchmarks: ptest-examples
 
 INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
 install: $(INSTALLDIRS)
