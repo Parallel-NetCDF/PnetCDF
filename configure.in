@@ -23,6 +23,8 @@ dnl Note major, minor, and sub are required, but pre is not.
 PNETCDF_VERSION=${PACKAGE_VERSION}
 
 dnl Do not change the following line, It is set by SVN automatically.
+dnl It defines PNETCDF_RELEASE_DATE, a string that will be used in
+dnl ncmpi_inq_libvers() to generate release date
 SVN_DATE="$LastChangedDate$"
 saved_IFS=${IFS}
 IFS="\ " read t_key PNETCDF_RELEASE_DATE2 t_time t_zone t_string <<< ${SVN_DATE}
@@ -998,6 +1000,10 @@ echo \
 if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
   echo "\
 	      Memory in-place byte swap        - disabled"
+fi
+if test "x${malloc_tracking}" = xyes; then
+  echo "\
+	      Internal malloc tracking         - enabled"
 fi
 
 echo "\
