@@ -74,7 +74,11 @@ This is essentially a placeholder for the next release note ...
       dataset IDs. This API is useful for debugging.
 
   o Syntax changes
-    * 
+    * For all Fortran put/iput APIs, the INTENT of write buffer arguments is
+      changed to "INOUT" on Little Endian machines, if option
+      "--disable-in-place-swap" is not used at configuration. Otherwise, i.e.
+      on Big Endian machines or PnetCDF is configured with
+      "--disable-in-place-swap" on Little Endian machines, the INTENT is "IN".
 
   o New PnetCDF hint
     * nc_record_align_size - aligns the starting file offset of the record
