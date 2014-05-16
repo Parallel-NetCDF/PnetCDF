@@ -51,7 +51,7 @@
             nf90mpi_inq_header_size, nf90mpi_inq_header_extent, &
             nf90mpi_inq_varoffset, nf90mpi_inq_file_info, &
             nf90mpi_get_file_info, nf90mpi_inq_malloc_size, &
-            nf90mpi_inq_max_malloc_size, nf90mpi_inq_malloc_walk, &
+            nf90mpi_inq_malloc_max_size, nf90mpi_inq_malloc_walk, &
             nf90mpi_inq_files_opened
 
 !
@@ -452,7 +452,7 @@
         nfmpi_inq_varoffset, &
         nfmpi_inq_nreqs, &
         nfmpi_inq_malloc_size, &
-        nfmpi_inq_max_malloc_size, &
+        nfmpi_inq_malloc_max_size, &
         nfmpi_inq_malloc_walk, &
         nfmpi_inq_files_opened
 

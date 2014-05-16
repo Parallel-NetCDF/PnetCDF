@@ -240,7 +240,7 @@
       call MPI_Info_free(info_used, ierr)
 
       ! print info about PnetCDF internal malloc usage
-      ierr = nfmpi_inq_max_malloc_size(malloc_size)
+      ierr = nfmpi_inq_malloc_maxloc_size)
       if (ierr .EQ. NF_NOERR) then
           call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, MPI_SUM, &
                           MasterPE, MPI_COMM_WORLD, ierr)
