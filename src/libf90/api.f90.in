@@ -3125,10 +3125,10 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
     END FUNCTION   nfmpi_inq_malloc_size
 
-    INTEGER        FUNCTION nfmpi_inq_max_malloc_size(size)
+    INTEGER        FUNCTION nfmpi_inq_malloc_max_size(size)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
-    END FUNCTION   nfmpi_inq_max_malloc_size
+    END FUNCTION   nfmpi_inq_malloc_max_size
 
     INTEGER        FUNCTION nfmpi_inq_malloc_walk()
     END FUNCTION   nfmpi_inq_malloc_walk

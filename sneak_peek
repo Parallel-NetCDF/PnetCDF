@@ -27,7 +27,7 @@ This is essentially a placeholder for the next release note ...
     * A new configure option "--enable-malloc-tracking" is added. It enables
       a memory allocation tracking mechanism internal in PnetCDF. Default is
       disabled. When enabled, a user program can call three new APIs below:
-      ncmpi_inq_malloc_size, ncmpi_inq_max_malloc_size, ncmpi_inq_malloc_walk
+      ncmpi_inq_malloc_size, ncmpi_inq_malloc_max_size, ncmpi_inq_malloc_walk
       to obtain the size in bytes of current memory allocated internally. This
       feature uses a binary tree to manage all malloc buffers, e.g. tsearch()
       and tdelete().
@@ -59,7 +59,7 @@ This is essentially a placeholder for the next release note ...
       striping count, if the underneath MPI-IO can find their values from the
       file system in use.
 
-    * ncmpi_inq_malloc_size, ncmpi_inq_max_malloc_size, ncmpi_inq_malloc_walk
+    * ncmpi_inq_malloc_size, ncmpi_inq_malloc_max_size, ncmpi_inq_malloc_walk
       report the size in bytes of current memory allocated internally by
       PnetCDF. Similar APIs for Fortran 77 and 90 are also available. These
       APIs are enabled only when PnetCDF is configured with option

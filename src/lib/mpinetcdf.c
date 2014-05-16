@@ -1040,12 +1040,12 @@ int ncmpi_inq_malloc_size(MPI_Offset *size)
 #endif
 }
 
-/*----< ncmpi_inq_max_malloc_size() >----------------------------------------*/
+/*----< ncmpi_inq_malloc_max_size() >----------------------------------------*/
 /* get the max watermark ever researched by malloc (aggregated amount) */
-int ncmpi_inq_max_malloc_size(MPI_Offset *size)
+int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 {
 #ifdef NC_TRACK_MALLOC
-    ncmpii_inq_max_malloc_size(size);
+    ncmpii_inq_malloc_max_size(size);
     return NC_NOERR;
 #else
     return NC_ENOTENABLED;

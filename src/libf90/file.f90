@@ -262,12 +262,12 @@ function nf90mpi_inq_malloc_size(size)
 end function nf90mpi_inq_malloc_size
 
 ! -------
-function nf90mpi_inq_max_malloc_size(size)
+function nf90mpi_inq_malloc_max_size(size)
   integer (kind = MPI_OFFSET_KIND), intent(out) :: size
-  integer                                       :: nf90mpi_inq_max_malloc_size
+  integer                                       :: nf90mpi_inq_malloc_max_size
 
-  nf90mpi_inq_max_malloc_size = nfmpi_inq_max_malloc_size(size)
-end function nf90mpi_inq_max_malloc_size
+  nf90mpi_inq_malloc_max_size = nfmpi_inq_malloc_max_size(size)
+end function nf90mpi_inq_malloc_max_size
 
 ! -------
 function nf90mpi_inq_malloc_walk()

@@ -189,7 +189,7 @@ int main(int argc, char **argv)
 
     /* print info about PnetCDF internal malloc usage */
     MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_max_malloc_size(&malloc_size);
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0)

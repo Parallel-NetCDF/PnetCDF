@@ -831,7 +831,7 @@ extern void
 ncmpii_inq_malloc_size(MPI_Offset *size);
 
 extern int
-ncmpii_inq_max_malloc_size(MPI_Offset *size);
+ncmpii_inq_malloc_max_size(MPI_Offset *size);
 
 extern int
 ncmpii_inq_malloc_walk(void);

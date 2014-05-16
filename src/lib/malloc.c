@@ -53,9 +53,9 @@ int ncmpii_inq_malloc_size(MPI_Offset *size)
 #endif
 }
 
-/*----< ncmpii_inq_max_malloc_size() >----------------------------------------*/
+/*----< ncmpii_inq_malloc_max_size() >----------------------------------------*/
 /* get the max watermark ever researched by malloc */
-int ncmpii_inq_max_malloc_size(MPI_Offset *size)
+int ncmpii_inq_malloc_max_size(MPI_Offset *size)
 {
 #ifdef NC_TRACK_MALLOC
     *size = ncmpii_max_mem_alloc;
