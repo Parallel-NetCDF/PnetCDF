@@ -999,7 +999,7 @@ nc_mpi_type(nc_type type)
         case NC_UINT :   return MPI_UNSIGNED;
         case NC_INT64 :  return MPI_LONG_LONG_INT;
         case NC_UINT64 : return MPI_UNSIGNED_LONG_LONG;
-        default:         return -1;
+        default:         return MPI_DATATYPE_NULL;
     }
 }
 
