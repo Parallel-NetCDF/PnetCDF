@@ -187,7 +187,8 @@ command and the number of MPI processes.
     type and the other 10 short integers. The file is closed and re-opened to
     read back the attributes.
 
-./C/get_vara.c
+  ./C/get_vara.c
+./CXX/get_vara.cpp
     This example is the read counterpart of example put_vara.c. It shows how to
     use ncmpi_get_vara_int_all() to read a 2D 4-byte integer array in parallel.
     It also reads a global attribute and two attribute of variable named "var".

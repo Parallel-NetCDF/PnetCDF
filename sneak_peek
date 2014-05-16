@@ -5,7 +5,7 @@ This is essentially a placeholder for the next release note ...
   o New features
     * A new configure option "--disable-in-place-swap" is added. It disables
       the byte-swap operations running in-place on the user's write buffers.
-      The purpose of providing this option is to deal wth the problem when a
+      The purpose of providing this option is to deal with the problem when a
       Fortran program uses a immutable buffer for put APIs, e.g. the buffer is
       declared as a PARAMETER, and in-place byte swap on this buffer causes
       segmentation fault. See discussion threads of
@@ -69,7 +69,7 @@ This is essentially a placeholder for the next release note ...
 
     * ncmpi_inq_files_opened reports the number of files that are currently
       opened. Similar API for Fortran 77 and 90 are also available. The API
-      takes 2 arguments: number of files and arrary of file IDs. If the second
+      takes 2 arguments: number of files and array of file IDs. If the second
       argument, array of IDs, is not NULL, then it will filled with the netCDF
       dataset IDs. This API is useful for debugging.
 
@@ -97,6 +97,9 @@ This is essentially a placeholder for the next release note ...
     * Under examples/C, three examples are added: create_open.c, get_vara.c,
       and global_attributes.c. File examples/README contains their
       descriptions.
+
+    * Under examples/CXX, several example programs corresponding to those in
+      examples/C are added.
 
   o New programs for I/O benchmarks
     * 
@@ -150,7 +153,7 @@ This is essentially a placeholder for the next release note ...
     * Revise FLASH-IO benchmark to use nonblocking APIs for both checkpoint and
       plot writes. The control variable to switch between nonblocking and
       blocking API is "use_nonblocking_io". Set it to .FALSE. in
-      flash_benchmark_io.F90 to swtch to blocking APIs. Using nonblocking APIs
+      flash_benchmark_io.F90 to switch to blocking APIs. Using nonblocking APIs
       is now the default.
 
     * To match ncdump, ncmpidump now only supports one input file.

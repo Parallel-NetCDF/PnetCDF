@@ -22,9 +22,10 @@ C_SRCS  = collective_write.cpp \
           flexible_api.cpp \
           get_info.cpp \
           hints.cpp \
-          put_vara.cpp \
           put_varn_float.cpp \
-          put_varn_int.cpp
+          put_varn_int.cpp \
+          put_vara.cpp \
+          get_vara.cpp
 
 PROGS        = $(C_SRCS:.cpp=)
 OBJS         = $(C_SRCS:.cpp=.o)
@@ -69,6 +70,9 @@ put_varn_int: put_varn_int.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
 put_varn_float: put_varn_float.o $(LIBRARY)
+	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
+
+get_vara: get_vara.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
 ptest: $(PAR_PROGS)
