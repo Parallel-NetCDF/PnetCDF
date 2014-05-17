@@ -294,6 +294,9 @@
       integer NF_ENOENT
       integer NF_EINTOVERFLOW
       integer NF_ENOTENABLED
+      integer NF_EBAD_FILE
+      integer NF_ENO_SPACE
+      integer NF_EQUOTA
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -341,6 +344,9 @@
       PARAMETER (NF_ENOENT                  = -220)   ! File does not exist when calling nfmpi_open()
       PARAMETER (NF_EINTOVERFLOW            = -221)   ! Overflow when type cast to 4-byte integer
       PARAMETER (NF_ENOTENABLED             = -222)   ! feature is not enabled
+      PARAMETER (NF_EBAD_FILE               = -223)   ! Invalid file name (e.g., path name too long)
+      PARAMETER (NF_ENO_SPACE               = -224)   ! Not enough space
+      PARAMETER (NF_EQUOTA                  = -225)   ! Quota exceeded
 
 !
 ! PnetCDF header inconsistency errors start from -250

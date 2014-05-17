@@ -198,8 +198,10 @@
       NF_EINSUFFBUF               = -219, & ! attached buffer is too small
       NF_ENOENT                   = -220, & ! File does not exist when calling nfmpi_open()
       NF_EINTOVERFLOW             = -221, & ! Overflow when type cast to 4-byte integer
-      NF_ENOTENABLED              = -222    ! feature is not enabled
-
+      NF_ENOTENABLED              = -222, & ! feature is not enabled
+      NF_EBAD_FILE                = -223, & ! Invalid file name (e.g., path name too long)
+      NF_ENO_SPACE                = -224, & ! Not enough space
+      NF_EQUOTA                   = -225    ! Quota exceeded
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &

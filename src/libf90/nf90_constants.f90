@@ -210,6 +210,9 @@
       NF90_ENOENT                   = NF_ENOENT                   , & ! File does not exist when calling nfmpi_open()
       NF90_EINTOVERFLOW             = NF_EINTOVERFLOW             , & ! Overflow when type cast to 4-byte integer
       NF90_ENOTENABLED              = NF_ENOTENABLED              , & ! Overflow when type cast to 4-byte integer
+      NF90_EBAD_FILE                = NF_EBAD_FILE                , & ! Invalid file name (e.g., path name too long)
+      NF90_ENO_SPACE                = NF_ENO_SPACE                , & ! Not enough space
+      NF90_EQUOTA                   = NF_EQUOTA                   , & ! Quota exceeded
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions

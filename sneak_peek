@@ -90,6 +90,18 @@ This is essentially a placeholder for the next release note ...
       feature is enabled. For example, nfmpi_inq_malloc_size() returns this
       error code when "--enable-malloc-tracking" is not used at configure.
 
+    * NC_EBAD_FILE corresponds to MPI error code MPI_ERR_BAD_FILE, meaning
+      "Invalid file name (e.g., path name too long)."
+
+    * NC_ENO_SPACE corresponds to MPI error code MPI_ERR_NO_SPACE, meaning
+      "Not enough space."
+
+    * NC_EQUOTA corresponds to MPI error code MPI_ERR_QUOTA, meaning
+      "Quota exceeded."
+
+    * NC_EMULTIDEFINE_FNC_ARGS ponds to MPI error code MPI_ERR_NOT_SAME, meaning
+      "inconsistent function arguments used in collective API."
+
   o New run-time environment variables
     * 
 
