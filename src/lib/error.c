@@ -144,6 +144,12 @@ ncmpi_strerror(int err)
             return "Overflow when type cast to 4-byte integer.";
         case NC_ENOTENABLED:
             return "feature is not enabled at configure time.";
+        case NC_EBAD_FILE:
+            return "Invalid file name (e.g., path name too long).";
+        case NC_ENO_SPACE:
+            return "Not enough space.";
+        case NC_EQUOTA:
+            return "Quota exceeded.";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
         case NC_EMULTIDEFINE_OMODE:
@@ -190,6 +196,8 @@ ncmpi_strerror(int err)
     return nc_unknown_err_msg;
 }
 
+/*----< ncmpii_handle_error() ------------------------------------------------*/
+/* translate MPI error codes to PnetCDF/netCDF error codes */
 int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
                         char *err_msg)       /* extra error message */
 {
@@ -229,6 +237,21 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
      * inconsistent file open/create mode. So, if MPI-IO returns this error
      * we are sure it is because of the inconsistent mode */
     if (errorclass == MPI_ERR_AMODE) return NC_EMULTIDEFINE_OMODE;
+#endif
+#ifdef HAVE_MPI_ERR_READ_ONLY
+    if (errorclass == MPI_ERR_READ_ONLY) return NC_EPERM;
+#endif
+#ifdef HAVE_MPI_ERR_ACCESS
+    if (errorclass == MPI_ERR_ACCESS) return NC_EACCESS;
+#endif
+#ifdef HAVE_MPI_ERR_BAD_FILE
+    if (errorclass == MPI_ERR_BAD_FILE) return NC_EBAD_FILE;
+#endif
+#ifdef HAVE_MPI_ERR_NO_SPACE
+    if (errorclass == MPI_ERR_NO_SPACE) return NC_ENO_SPACE;
+#endif
+#ifdef HAVE_MPI_ERR_QUOTA
+    if (errorclass == MPI_ERR_QUOTA) return NC_EQUOTA;
 #endif
 
     /* other errors that currently have no corresponding PnetCDF error codes */
@@ -407,6 +430,14 @@ nc_strerror(int ncerr1)
          return "NetCDF: Malformed or unexpected Constraint";
       case NC_ETRANSLATION:
          return "NetCDF: Untranslatable construct";
+      case NC_EACCESS:
+         return "NetCDF: Access failure";
+      case NC_EAUTH:
+         return "NetCDF: Authorization failure";
+      case NC_ENOTFOUND:
+         return "NetCDF: file not found";
+      case NC_ECANTREMOVE:
+         return "NetCDF: cannot delete file";
       case NC_EHDFERR:
          return "NetCDF: HDF error";
       case NC_ECANTREAD:

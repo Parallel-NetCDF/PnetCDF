@@ -216,7 +216,7 @@ ncmpiio_create(MPI_Comm     comm,
 #ifdef HAVE_UNLINK
             err = unlink(path);
             if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
-                err = NC_EOFILE; /* other error */
+                err = NC_EFILE; /* other error */
             else
                 err = NC_NOERR;
 #else
@@ -227,7 +227,7 @@ ncmpiio_create(MPI_Comm     comm,
                 MPI_Error_class(mpireturn, &errorclass);
                 if (errorclass != MPI_ERR_NO_SUCH_FILE) {/* ignore this error */
                     ncmpii_handle_error(mpireturn, "MPI_File_delete");
-                    err = NC_EOFILE;
+                    err = NC_EFILE;
                 }
             }
 #endif
@@ -367,17 +367,13 @@ ncmpiio_sync(ncio *nciop) {
 
     if (NC_independentFhOpened(nciop)) {
         mpireturn = MPI_File_sync(nciop->independent_fh);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_sync");
-            return NC_EFILE;
-        }
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_File_sync");
     }
     if (NC_collectiveFhOpened(nciop)) {
         mpireturn = MPI_File_sync(nciop->collective_fh);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_sync");
-            return NC_EFILE;
-        }
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_File_sync");
     }
     MPI_Barrier(nciop->comm);
 #endif
@@ -393,30 +389,21 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
 
     if (NC_independentFhOpened(nciop)) {
         mpireturn = MPI_File_close(&(nciop->independent_fh));
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_close");
-            return NC_EFILE;
-        }
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_File_close");
     }
  
     if (NC_collectiveFhOpened(nciop)) {
         mpireturn = MPI_File_close(&(nciop->collective_fh));  
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_close");
-            return NC_EFILE;
-        }
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_File_close");
     }
     IDalloc[*((int *)&nciop->fd)] = 0;
 
     if (doUnlink) {
         mpireturn = MPI_File_delete((char *)nciop->path, nciop->mpiinfo);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_delete");
-            /* TODO: need to decide if we should return this error or just
-               report it
-            return NC_EFILE;
-            */
-        }
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_File_delete");
     }
     ncmpiio_free(nciop);
 

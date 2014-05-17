@@ -94,10 +94,10 @@ Conform with netCDF
  - Make sure file src/lib/pnetcdf.h.in is updated with the latest netCDF
    header
 
- - Similarly, check Fortran parameters defined in
+ - Similarly, check Fortran error codes defined as parameters in
        src/libf/pnetcdf.inc.in
        src/libf90/nf90_constants.f90
-       src/libf90/nfmpi_constants.f90
+       src/libf90/nfmpi_constants.f90.in
 
  - PnetCDF error codes start in -250
 
@@ -184,4 +184,19 @@ Note on debugging
     }
 
 
+=====================================================
+Note on adding a new error code
+=====================================================
+PnetCDF error codes start at -200 and the error codes for header/argument
+inconsistency of any kind start at -250.
+1. If the new error code is not related to data inconsistency, add the code to
+   the end before -250
+2. If the new error code is related to data inconsistency, add it to the end
+   of -250 section and make sure the number is between NC_EMULTIDEFINE_FIRST
+   and NC_EMULTIDEFINE_LAST in pnetcdf.h.in. Update NC_EMULTIDEFINE_LAST if
+   necessary.
+3. Again, check Fortran error codes defined as parameters in
+       src/libf/pnetcdf.inc.in
+       src/libf90/nf90_constants.f90
+       src/libf90/nfmpi_constants.f90.in
 

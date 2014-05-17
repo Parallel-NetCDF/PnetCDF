@@ -536,7 +536,7 @@ struct NC {
         {if((nrecs) > (ncp)->numrecs) ((ncp)->numrecs = (nrecs));}
 
 #define ErrIsHeaderDiff(err) \
-        (NC_EMULTIDEFINE >= err && err >= NC_EMULTIDEFINE_ATTR_VAL)
+        (NC_EMULTIDEFINE_FIRST >= err && err >= NC_EMULTIDEFINE_LAST)
 
 
 /* Begin defined in nc.c */
