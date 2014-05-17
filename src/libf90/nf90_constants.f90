@@ -194,24 +194,13 @@
       NF90_EFILE                    = NF_EFILE                    , & ! Unknown error in file operation
       NF90_EREAD                    = NF_EREAD                    , & ! Unknown error in reading file
       NF90_EWRITE                   = NF_EWRITE                   , & ! Unknown error in writting to file
-      NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EOFILE                   = NF_EOFILE                   , & ! file open/creation failed
       NF90_EMULTITYPES              = NF_EMULTITYPES              , & ! Multiple types used in memory data
       NF90_EIOMISMATCH              = NF_EIOMISMATCH              , & ! Input/Output data amount mismatch
       NF90_ENEGATIVECNT             = NF_ENEGATIVECNT             , & ! Negative count is specified
       NF90_EUNSPTETYPE              = NF_EUNSPTETYPE              , & ! Unsupported etype in memory MPI datatype
-      NF90_EDIMS_NELEMS_MULTIDEFINE = NF_EDIMS_NELEMS_MULTIDEFINE , & ! Different number of dim defines on multiprocesses conflict
-      NF90_EDIMS_SIZE_MULTIDEFINE   = NF_EDIMS_SIZE_MULTIDEFINE   , & ! Different size of dim defines on multiprocesses conflict
-      NF90_EVARS_NELEMS_MULTIDEFINE = NF_EVARS_NELEMS_MULTIDEFINE , & ! Different number of var defines on multiprocesses conflict
-      NF90_EVARS_NDIMS_MULTIDEFINE  = NF_EVARS_NDIMS_MULTIDEFINE  , & ! Different dim number of var defines on multiprocesses conflict
-      NF90_EVARS_DIMIDS_MULTIDEFINE = NF_EVARS_DIMIDS_MULTIDEFINE , & ! Different dimid defines on multiprocesses conflict
-      NF90_EVARS_TYPE_MULTIDEFINE   = NF_EVARS_TYPE_MULTIDEFINE   , & ! Different type of var defines on multiprocesses conflict
-      NF90_EVARS_LEN_MULTIDEFINE    = NF_EVARS_LEN_MULTIDEFINE    , & ! Different var lenght defines size on multiprocesses conflict
-      NF90_EVARS_BEGIN_MULTIDEFINE  = NF_EVARS_BEGIN_MULTIDEFINE  , & ! Different var begin defines size on multiprocesses conflict
-      NF90_ENUMRECS_MULTIDEFINE     = NF_ENUMRECS_MULTIDEFINE     , & ! Different number records on multiprocesses conflict
       NF90_EINVAL_REQUEST           = NF_EINVAL_REQUEST           , & ! invalid nonblocking request ID
       NF90_EAINT_TOO_SMALL          = NF_EAINT_TOO_SMALL          , & ! MPI_Aint not large enough to hold requested value
-      NF90_ECMODE                   = NF_ECMODE                   , & ! file create modes are inconsistent among processes
       NF90_ENOTSUPPORT              = NF_ENOTSUPPORT              , & ! feature is not yet supported
       NF90_ENULLBUF                 = NF_ENULLBUF                 , & ! trying to attach a NULL buffer
       NF90_EPREVATTACHBUF           = NF_EPREVATTACHBUF           , & ! previous attached buffer is found
@@ -220,8 +209,36 @@
       NF90_EINSUFFBUF               = NF_EINSUFFBUF               , & ! attached buffer is too small
       NF90_ENOENT                   = NF_ENOENT                   , & ! File does not exist when calling nfmpi_open()
       NF90_EINTOVERFLOW             = NF_EINTOVERFLOW             , & ! Overflow when type cast to 4-byte integer
-      NF90_ENOTENABLED              = NF_ENOTENABLED                  ! Overflow when type cast to 4-byte integer
-
-
-
-
+      NF90_ENOTENABLED              = NF_ENOTENABLED              , & ! Overflow when type cast to 4-byte integer
+      NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
+      NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
+      NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
+      NF90_EMULTIDEFINE_DIM_SIZE    = NF_EMULTIDEFINE_DIM_SIZE    , & ! inconsistent size of dimension
+      NF90_EMULTIDEFINE_DIM_NAME    = NF_EMULTIDEFINE_DIM_NAME    , & ! inconsistent dimension names
+      NF90_EMULTIDEFINE_VAR_NUM     = NF_EMULTIDEFINE_VAR_NUM     , & ! inconsistent number of variables
+      NF90_EMULTIDEFINE_VAR_NAME    = NF_EMULTIDEFINE_VAR_NAME    , & ! inconsistent variable name
+      NF90_EMULTIDEFINE_VAR_NDIMS   = NF_EMULTIDEFINE_VAR_NDIMS   , & ! inconsistent variable's number of dimensions
+      NF90_EMULTIDEFINE_VAR_DIMIDS  = NF_EMULTIDEFINE_VAR_DIMIDS  , & ! inconsistent variable's dimid
+      NF90_EMULTIDEFINE_VAR_TYPE    = NF_EMULTIDEFINE_VAR_TYPE    , & ! inconsistent variable's data type
+      NF90_EMULTIDEFINE_VAR_LEN     = NF_EMULTIDEFINE_VAR_LEN     , & ! inconsistent variable's size
+      NF90_EMULTIDEFINE_NUMRECS     = NF_EMULTIDEFINE_NUMRECS     , & ! inconsistent number of records
+      NF90_EMULTIDEFINE_VAR_BEGIN   = NF_EMULTIDEFINE_VAR_BEGIN   , & ! inconsistent variable file begin offset (internal use)
+      NF90_EMULTIDEFINE_ATTR_NUM    = NF_EMULTIDEFINE_ATTR_NUM    , & ! inconsistent number of attributes
+      NF90_EMULTIDEFINE_ATTR_SIZE   = NF_EMULTIDEFINE_ATTR_SIZE   , & ! inconsistent memory space used by attribute (internal use)
+      NF90_EMULTIDEFINE_ATTR_NAME   = NF_EMULTIDEFINE_ATTR_NAME   , & ! inconsistent attribute name
+      NF90_EMULTIDEFINE_ATTR_TYPE   = NF_EMULTIDEFINE_ATTR_TYPE   , & ! inconsistent attribute type
+      NF90_EMULTIDEFINE_ATTR_LEN    = NF_EMULTIDEFINE_ATTR_LEN    , & ! inconsistent attribute length
+      NF90_EMULTIDEFINE_ATTR_VAL    = NF_EMULTIDEFINE_ATTR_VAL    , & ! inconsistent attribute value
+      NF90_EMULTIDEFINE_FNC_ARGS    = NF_EMULTIDEFINE_FNC_ARGS    , & ! inconsistent function arguments used in collective API
+      NF90_ECMODE                   = NF_EMULTIDEFINE_OMODE       , &
+      NF90_EDIMS_NELEMS_MULTIDEFINE = NF_EMULTIDEFINE_DIM_NUM     , &
+      NF90_EDIMS_SIZE_MULTIDEFINE   = NF_EMULTIDEFINE_DIM_SIZE    , &
+      NF90_EDIMS_NAME_MULTIDEFINE   = NF_EMULTIDEFINE_DIM_NAME    , &
+      NF90_EVARS_NELEMS_MULTIDEFINE = NF_EMULTIDEFINE_VAR_NUM     , &
+      NF90_EVARS_NAME_MULTIDEFINE   = NF_EMULTIDEFINE_VAR_NAME    , &
+      NF90_EVARS_NDIMS_MULTIDEFINE  = NF_EMULTIDEFINE_VAR_NDIMS   , &
+      NF90_EVARS_DIMIDS_MULTIDEFINE = NF_EMULTIDEFINE_VAR_DIMIDS  , &
+      NF90_EVARS_TYPE_MULTIDEFINE   = NF_EMULTIDEFINE_VAR_TYPE    , &
+      NF90_EVARS_LEN_MULTIDEFINE    = NF_EMULTIDEFINE_VAR_LEN     , &
+      NF90_ENUMRECS_MULTIDEFINE     = NF_EMULTIDEFINE_NUMRECS     , &
+      NF90_EVARS_BEGIN_MULTIDEFINE  = NF_EMULTIDEFINE_VAR_BEGIN

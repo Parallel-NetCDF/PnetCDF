@@ -50,16 +50,28 @@ int test_open_mode(char *filename, int safe_mode)
     omode = NC_WRITE;
     if (rank == 0) omode = NC_NOWRITE;
     err = ncmpi_open(comm, filename, omode, info, &ncid);
-    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
     if (safe_mode) {
+        /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
         if (rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+
+        /* in safe mode, open mode inconsistent is not a fatal error, file is
+         * still opened, with root's omode overwriting others. Hence, once the
+         * test is done, we need to close the file */
+        err = ncmpi_close(ncid); ERR
     }
     else {
-        /* expected errors: NC_NOERR, NC_EMULTIDEFINE, NC_EMULTIDEFINE_OMODE */
-        if (err != NC_NOERR) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+        /* expected errors: NC_EMULTIDEFINE_OMODE or NC_EMULTIDEFINE_FNC_ARGS */
+        if (err != NC_EMULTIDEFINE_OMODE && err != NC_EMULTIDEFINE_FNC_ARGS)
+            ERR
+
+        /* When not in safe mode, the inconsistent omode will be passed to
+         * MPI_File_open(). MPI-IO should return error class MPI_ERR_NOT_SAME
+         * which will be translated to NC_EMULTIDEFINE_FNC_ARGS in PnetCDF.
+         * If MPI-IO reports error class MPI_ERR_AMODE instead, then it will be
+         * translated to NC_EMULTIDEFINE_OMODE in PnetCDF. In any case, the file
+         * will not be opened by MPI-IO and hence we need not close the file.
+         */
     }
-    /* open mode inconsistent is not a fatal error, file is still opened */
-    err = ncmpi_close(ncid); ERR
     return nerr;
 }
 

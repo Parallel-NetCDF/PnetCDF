@@ -642,6 +642,7 @@ dnl These could be enums, so we have to do compile checks.
 UD_HAS_MPI_CONST(MPI_ERR_FILE_EXISTS)
 UD_HAS_MPI_CONST(MPI_ERR_NO_SUCH_FILE)
 UD_HAS_MPI_CONST(MPI_ERR_AMODE)
+UD_HAS_MPI_CONST(MPI_ERR_NOT_SAME)
 
 dnl Check for presence of an MPI datatype.
 dnl These could be enums, so we have to do compile checks.

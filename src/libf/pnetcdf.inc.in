@@ -314,6 +314,7 @@
       integer NF_EMULTIDEFINE_ATTR_TYPE
       integer NF_EMULTIDEFINE_ATTR_LEN
       integer NF_EMULTIDEFINE_ATTR_VAL
+      integer NF_EMULTIDEFINE_FNC_ARGS
 
 !
 ! PnetCDF error codes start from -201
@@ -363,6 +364,7 @@
       PARAMETER (NF_EMULTIDEFINE_ATTR_TYPE  = -266)   ! inconsistent attribute type
       PARAMETER (NF_EMULTIDEFINE_ATTR_LEN   = -267)   ! inconsistent attribute length
       PARAMETER (NF_EMULTIDEFINE_ATTR_VAL   = -268)   ! inconsistent attribute value
+      PARAMETER (NF_EMULTIDEFINE_FNC_ARGS   = -269)   ! inconsistent function arguments used in collective API
 
       PARAMETER(NF_ECMODE                  =NF_EMULTIDEFINE_OMODE)
       PARAMETER(NF_EDIMS_NELEMS_MULTIDEFINE=NF_EMULTIDEFINE_DIM_NUM)
