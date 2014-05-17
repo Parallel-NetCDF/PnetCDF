@@ -141,9 +141,9 @@ ncmpi_strerror(int err)
         case NC_ENOENT:
             return "The specified netCDF file does not exist when calling ncmpi_open().";
         case NC_EINTOVERFLOW:
-            return "feature is not enabled at configure time.";
-        case NC_ENOTENABLED:
             return "Overflow when type cast to 4-byte integer.";
+        case NC_ENOTENABLED:
+            return "feature is not enabled at configure time.";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
         case NC_EMULTIDEFINE_OMODE:
