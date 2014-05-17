@@ -62,7 +62,7 @@ int test_open_mode(char *filename, int safe_mode)
     else {
         /* expected errors: NC_EMULTIDEFINE_OMODE or NC_EMULTIDEFINE_FNC_ARGS */
         if (err != NC_EMULTIDEFINE_OMODE && err != NC_EMULTIDEFINE_FNC_ARGS) {
-            printf("Error: unexpect error code %d at line %d: %s\n",
+            printf("Error: unexpected error code %d at line %d: %s\n",
                    err,__LINE__,ncmpi_strerror(err));
             nerr++;
         }
