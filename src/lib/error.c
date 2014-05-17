@@ -239,7 +239,7 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
     if (err_msg == NULL) err_msg = "";
     printf("rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
 
-    return NC_EOFILE; /* general file I/O error */
+    return NC_EFILE; /* other unknown file I/O error */
 }
 
 
