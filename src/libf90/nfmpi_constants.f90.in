@@ -216,12 +216,13 @@
       NF_EMULTIDEFINE_VAR_LEN     = -260, & ! inconsistent variable's size
       NF_EMULTIDEFINE_NUMRECS     = -261, & ! inconsistent number of records
       NF_EMULTIDEFINE_VAR_BEGIN   = -262, & ! inconsistent variable file begin offset (internal use)
-      NF_EMULTIDEFINE_ATTR_NUM    = -263, & ! inconsistent number of attributes */
+      NF_EMULTIDEFINE_ATTR_NUM    = -263, & ! inconsistent number of attributes
       NF_EMULTIDEFINE_ATTR_SIZE   = -264, & ! inconsistent memory space used by attribute (internal use)
       NF_EMULTIDEFINE_ATTR_NAME   = -265, & ! inconsistent attribute name
       NF_EMULTIDEFINE_ATTR_TYPE   = -266, & ! inconsistent attribute type
       NF_EMULTIDEFINE_ATTR_LEN    = -267, & ! inconsistent attribute length
       NF_EMULTIDEFINE_ATTR_VAL    = -268, & ! inconsistent attribute value
+      NF_EMULTIDEFINE_FNC_ARGS    = -269, & ! inconsistent function arguments used in collective API
       NF_ECMODE                   = NF_EMULTIDEFINE_OMODE,      &
       NF_EDIMS_NELEMS_MULTIDEFINE = NF_EMULTIDEFINE_DIM_NUM,    &
       NF_EDIMS_SIZE_MULTIDEFINE   = NF_EMULTIDEFINE_DIM_SIZE,   &

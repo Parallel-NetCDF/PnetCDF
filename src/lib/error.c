@@ -180,6 +180,8 @@ ncmpi_strerror(int err)
             return "Attribute length is inconsistent among processes.";
         case NC_EMULTIDEFINE_ATTR_VAL:
             return "Attribute value is inconsistent among processes.";
+        case NC_EMULTIDEFINE_FNC_ARGS:
+            return "inconsistent function arguments used in collective API.";
         default:
             /* check netCDF-3 and netCDF-4 errors */
             return nc_strerror(err);
@@ -211,6 +213,14 @@ int ncmpii_handle_error(int   mpi_errorcode, /* returned value from MPI call */
 #endif
 #ifdef HAVE_MPI_ERR_NO_SUCH_FILE
     if (errorclass == MPI_ERR_NO_SUCH_FILE) return NC_ENOENT;
+#endif
+#ifdef HAVE_MPI_ERR_NOT_SAME
+    /* MPI-IO should return MPI_ERR_NOT_SAME when one or more arguments of a
+     * collective MPI call are different. However, MPI-IO may not report this
+     * error code correctly. For instance, some MPI-IO returns MPI_ERR_AMODE
+     * instead when amode is found inconsistent. MPI_ERR_NOT_SAME can also
+     * report inconsistent file name. */
+    if (errorclass == MPI_ERR_NOT_SAME) return NC_EMULTIDEFINE_FNC_ARGS;
 #endif
 #ifdef HAVE_MPI_ERR_AMODE
     /* MPI-IO may or may not report MPI_ERR_AMODE if inconsistent amode is
