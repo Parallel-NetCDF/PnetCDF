@@ -293,6 +293,7 @@
       integer NF_EINSUFFBUF
       integer NF_ENOENT
       integer NF_EINTOVERFLOW
+      integer NF_ENOTENABLED
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -338,6 +339,7 @@
       PARAMETER (NF_EINSUFFBUF              = -219)   ! attached buffer is too small
       PARAMETER (NF_ENOENT                  = -220)   ! File does not exist when calling nfmpi_open()
       PARAMETER (NF_EINTOVERFLOW            = -221)   ! Overflow when type cast to 4-byte integer
+      PARAMETER (NF_ENOTENABLED             = -222)   ! feature is not enabled
 
 !
 ! PnetCDF header inconsistency errors start from -250

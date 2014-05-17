@@ -483,6 +483,7 @@ by the desired type. */
 #define NC_EINSUFFBUF			(-219) /**< attached buffer is too small */
 #define NC_ENOENT			(-220) /**< File does not exist when calling ncmpi_open() */
 #define NC_EINTOVERFLOW			(-221) /**< Overflow when type cast to 4-byte integer */
+#define NC_ENOTENABLED			(-222) /**< feature is not enabled */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
@@ -505,7 +506,6 @@ by the desired type. */
 #define NC_EMULTIDEFINE_ATTR_TYPE	(-266) /**< inconsistent attribute type */
 #define NC_EMULTIDEFINE_ATTR_LEN	(-267) /**< inconsistent attribute length */
 #define NC_EMULTIDEFINE_ATTR_VAL	(-268) /**< inconsistent attribute value */
-#define NC_ENOTENABLED			(-269) /**< feature is not enabled */
 
 /* backward compatible with PnetCDF 1.3.1 and earlier */
 #define NC_ECMODE			NC_EMULTIDEFINE_OMODE

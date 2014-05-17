@@ -219,7 +219,9 @@
       NF90_EPENDINGBPUT             = NF_EPENDINGBPUT             , & ! pending bput is found, cannot detach buffer
       NF90_EINSUFFBUF               = NF_EINSUFFBUF               , & ! attached buffer is too small
       NF90_ENOENT                   = NF_ENOENT                   , & ! File does not exist when calling nfmpi_open()
-      NF90_EINTOVERFLOW             = NF_EINTOVERFLOW                 ! Overflow when type cast to 4-byte integer
+      NF90_EINTOVERFLOW             = NF_EINTOVERFLOW             , & ! Overflow when type cast to 4-byte integer
+      NF90_ENOTENABLED              = NF_ENOTENABLED                  ! Overflow when type cast to 4-byte integer
+
 
 
 
