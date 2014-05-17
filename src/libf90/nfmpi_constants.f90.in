@@ -197,7 +197,9 @@
       NF_EPENDINGBPUT             = -218, & ! pending bput is found, cannot detach buffer
       NF_EINSUFFBUF               = -219, & ! attached buffer is too small
       NF_ENOENT                   = -220, & ! File does not exist when calling nfmpi_open()
-      NF_EINTOVERFLOW             = -221    ! Overflow when type cast to 4-byte integer
+      NF_EINTOVERFLOW             = -221, & ! Overflow when type cast to 4-byte integer
+      NF_ENOTENABLED              = -222    ! feature is not enabled
+
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &
