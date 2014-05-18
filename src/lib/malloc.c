@@ -136,7 +136,7 @@ void ncmpii_add_mem_entry(void       *buf,
     strcpy(node->func, func);
     node->func[strlen(func)] = '\0';
     strcpy(node->filename, filename);
-    node->func[strlen(filename)] = '\0';
+    node->filename[strlen(filename)] = '\0';
 
     /* search and add a new item */
     void *ret = tsearch(node, &ncmpii_mem_root, ncmpii_cmp);
