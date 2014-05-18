@@ -107,8 +107,8 @@
 ! error codes:
 !
       integer, parameter, public :: &
-      NF_NOERR          =  0, &  ! No Error
-      NF2_ERR           = -1, &  ! Returned for all errors in the v2 API
+      NF_NOERR          =  0,  & ! No Error
+      NF2_ERR           = -1,  & ! Returned for all errors in the v2 API
       NF_EBADID         = -33, & ! Not a netcdf id
       NF_ENFILE         = -34, & ! Too many netcdfs open
       NF_EEXIST         = -35, & ! netcdf file exists and NF_NOCLOBBER
@@ -154,7 +154,7 @@
       NF_EDDS           = -72, & ! Malformed or inaccessible DDS
       NF_EDATADDS       = -73, & ! Malformed or inaccessible DATADDS
       NF_EDAPURL        = -74, & ! Malformed DAP URL
-      NF_EDAPCONSTRAINT = -75,&! Malformed DAP Constraint
+      NF_EDAPCONSTRAINT = -75, & ! Malformed DAP Constraint
       NF_ETRANSLATION   = -76, & ! Untranslatable construct
       NF_EACCESS        = -77, & ! Access Failure
       NF_EAUTH          = -78    ! Authorization Failure
