@@ -17,6 +17,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h> /* strcpy(), strlen() */
 
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
@@ -77,6 +78,9 @@ typedef struct {
     void       *self;
     void       *buf;
     MPI_Offset  size;
+    int         lineno;
+    char       *func;
+    char       *filename;
 } ncmpii_mem_entry;
 
 static
@@ -93,7 +97,8 @@ static
 void walker(const void *node, const VISIT which, const int depth) {
     ncmpii_mem_entry *f;
     f = *(ncmpii_mem_entry **)node;
-    printf("walker: malloc residue buf=%p size=%lld\n", f->buf, f->size);
+    if (which == preorder || which == leaf)
+        printf("Warning: malloc yet to be freed (buf=%p size=%lld filename=%s func=%s line=%d)\n", f->buf, f->size, f->filename, f->func, f->lineno);
 }
 #endif
 
@@ -114,14 +119,25 @@ int ncmpii_inq_malloc_walk(void)
 /*----< ncmpii_add_mem_entry() >----------------------------------------------*/
 /* add a new malloc entry to the table */
 static
-void ncmpii_add_mem_entry(void   *buf,
-                          MPI_Offset  size)
+void ncmpii_add_mem_entry(void       *buf,
+                          MPI_Offset  size,
+                          const int   lineno,
+                          const char *func,
+                          const char *filename)
 {
     /* use C tsearch utility */
     ncmpii_mem_entry *node = (ncmpii_mem_entry*) malloc(sizeof(ncmpii_mem_entry));
-    node->self = node;
-    node->buf  = buf;
-    node->size = size;
+    node->self     = node;
+    node->buf      = buf;
+    node->size     = size;
+    node->lineno   = lineno;
+    node->func     = (char*)malloc(strlen(func)+1);
+    node->filename = (char*)malloc(strlen(filename)+1);
+    strcpy(node->func, func);
+    node->func[strlen(func)] = '\0';
+    strcpy(node->filename, filename);
+    node->func[strlen(filename)] = '\0';
+
     /* search and add a new item */
     void *ret = tsearch(node, &ncmpii_mem_root, ncmpii_cmp);
     if (ret == NULL) {
@@ -146,6 +162,11 @@ void ncmpii_del_mem_entry(void *buf)
             printf("Error: tdelete() buf=%p\n", buf);
             return;
         }
+        /* free space for func and filename */
+        free((*ret)->func);
+        free((*ret)->filename);
+
+        /* substract the space amount to be freed */
         ncmpii_mem_alloc -= (*ret)->size;
         void *tmp = (*ret)->self;
         ret = tdelete(&node, &ncmpii_mem_root, ncmpii_cmp);
@@ -158,55 +179,63 @@ void ncmpii_del_mem_entry(void *buf)
 }
 #endif
 
-void *NCI_Malloc_fn(size_t size, int lineno, const char *fname);
-void *NCI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname);
-void *NCI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
-void  NCI_Free_fn(void *ptr, int lineno, const char *fname);
-
-
-void *NCI_Malloc_fn(size_t size, int lineno, const char *fname)
+/*----< NCI_Malloc_fn() >-----------------------------------------------------*/
+void *NCI_Malloc_fn(size_t      size,
+                    const int   lineno,
+                    const char *func,
+                    const char *filename)
 {
 #ifdef NC_DEBUG
     if (size == 0)
-        fprintf(stderr, "Attempt to malloc zero-size in file %s, line %d\n", fname, lineno);
+        fprintf(stderr, "Attempt to malloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
     if (size == 0) return NULL;
     void *new = malloc(size);
     if (!new) {
-	fprintf(stderr, "malloc(%zd) failed in file %s, line %d\n", size, fname, lineno);
+	fprintf(stderr, "malloc(%zd) failed in file %s, line %d\n", size, filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 #ifdef NC_TRACK_MALLOC
-    ncmpii_add_mem_entry(new, size);
+    ncmpii_add_mem_entry(new, size, lineno, func, filename);
 #endif
     return new;
 }
 
 
-void *NCI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname)
+/*----< NCI_Calloc_fn() >-----------------------------------------------------*/
+void *NCI_Calloc_fn(size_t      nelem,
+                    size_t      elsize,
+                    const int   lineno,
+                    const char *func,
+                    const char *filename)
 {
 #ifdef NC_DEBUG
     if (nelem == 0 || elsize == 0)
-        fprintf(stderr, "Attempt to calloc zero-size in file %s, line %d\n", fname, lineno);
+        fprintf(stderr, "Attempt to calloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
     if (nelem == 0 || elsize == 0) return NULL;
     void *new =calloc(nelem, elsize);
     if (!new) {
-	fprintf(stderr, "calloc(%zd, %zd) failed in file %s, line %d\n", nelem, elsize, fname, lineno);
+	fprintf(stderr, "calloc(%zd, %zd) failed in file %s, line %d\n", nelem, elsize, filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 #ifdef NC_TRACK_MALLOC
-    ncmpii_add_mem_entry(new, nelem * elsize);
+    ncmpii_add_mem_entry(new, nelem * elsize, lineno, func, filename);
 #endif
     return new;
 }
 
 
-void *NCI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname)
+/*----< NCI_Realloc_fn() >----------------------------------------------------*/
+void *NCI_Realloc_fn(void       *ptr,
+                     size_t      size,
+                     const int   lineno,
+                     const char *func,
+                     const char *filename)
 {
 #ifdef NC_DEBUG
     if (size == 0)
-        fprintf(stderr, "Attempt to realloc zero-size in file %s, line %d\n", fname, lineno);
+        fprintf(stderr, "Attempt to realloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
 #ifdef NC_TRACK_MALLOC
     if (ptr != NULL) ncmpii_del_mem_entry(ptr);
@@ -214,21 +243,25 @@ void *NCI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname)
     if (size == 0) return NULL;
     void *new = (void *) realloc(ptr, size);
     if (!new) {
-	fprintf(stderr, "realloc failed in file %s, line %d\n", fname, lineno);
+	fprintf(stderr, "realloc failed in file %s, line %d\n", filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 #ifdef NC_TRACK_MALLOC
-    ncmpii_add_mem_entry(new, size);
+    ncmpii_add_mem_entry(new, size, lineno, func, filename);
 #endif
     return new;
 }
 
 
-void NCI_Free_fn(void *ptr, int lineno, const char *fname)
+/*----< NCI_Free_fn() >-------------------------------------------------------*/
+void NCI_Free_fn(void       *ptr,
+                 const int   lineno,
+                 const char *func,
+                 const char *filename)
 {
 #ifdef NC_DEBUG
     if (ptr == NULL)
-	fprintf(stderr, "Attempt to free null pointer in file %s, line %d\n", fname, lineno);
+	fprintf(stderr, "Attempt to free null pointer in file %s, line %d\n", filename, lineno);
 #endif
     if (ptr == NULL) return;
 #ifdef NC_TRACK_MALLOC
