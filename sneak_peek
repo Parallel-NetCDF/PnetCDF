@@ -99,8 +99,8 @@ This is essentially a placeholder for the next release note ...
     * NC_EQUOTA corresponds to MPI error code MPI_ERR_QUOTA, meaning
       "Quota exceeded."
 
-    * NC_EMULTIDEFINE_FNC_ARGS ponds to MPI error code MPI_ERR_NOT_SAME, meaning
-      "inconsistent function arguments used in collective API."
+    * NC_EMULTIDEFINE_FNC_ARGS corresponds to MPI error code MPI_ERR_NOT_SAME,
+      meaning "inconsistent function arguments used in collective API."
 
   o New run-time environment variables
     * 

@@ -171,6 +171,23 @@
       integer NF_ENOMEM
       integer NF_EVARSIZE
       integer NF_EDIMSIZE
+      integer NF_ETRUNC
+      integer NF_EAXISTYPE
+      integer NF_EDAP
+      integer NF_ECURL
+      integer NF_EIO
+      integer NF_ENODATA
+      integer NF_EDAPSVC
+      integer NF_EDAS
+      integer NF_EDDS
+      integer NF_EDATADDS
+      integer NF_EDAPURL
+      integer NF_EDAPCONSTRAINT
+      integer NF_ETRANSLATION
+      integer NF_EACCESS
+      integer NF_EAUTH
+      integer NF_ENOTFOUND
+      integer NF_ECANTREMOVE
 
       PARAMETER (NF_NOERR        = 0)     ! No Error
       PARAMETER (NF2_ERR         = -1)    ! Returned for all errors in the v2 API
@@ -205,6 +222,27 @@
       PARAMETER (NF_ENOMEM       = -61)   ! Memory allocation (malloc) failure
       PARAMETER (NF_EVARSIZE     = -62)   ! One or more variable sizes violate format constraints
       PARAMETER (NF_EDIMSIZE     = -63)   ! Invalid dimension size
+      PARAMETER (NF_ETRUNC       = -64)   ! File likely truncated or possibly corrupted
+      PARAMETER (NF_EAXISTYPE    = -65)   ! Unknown axis type
+
+! Following errors are added for DAP
+      PARAMETER (NF_EDAP         = -66)   ! Generic DAP error
+      PARAMETER (NF_ECURL        = -67)   ! Generic libcurl error
+      PARAMETER (NF_EIO          = -68)   ! Generic IO error
+      PARAMETER (NF_ENODATA      = -69)   ! Attempt to access variable with no data
+      PARAMETER (NF_EDAPSVC      = -70)   ! DAP server error
+      PARAMETER (NF_EDAS         = -71)   ! Malformed or inaccessible DAS
+      PARAMETER (NF_EDDS         = -72)   ! Malformed or inaccessible DDS
+      PARAMETER (NF_EDATADDS     = -73)   ! Malformed or inaccessible DATADDS
+      PARAMETER (NF_EDAPURL      = -74)   ! Malformed DAP URL
+      PARAMETER (NF_EDAPCONSTRAINT = -75) ! Malformed DAP Constraint
+      PARAMETER (NF_ETRANSLATION = -76)   ! Untranslatable construct
+      PARAMETER (NF_EACCESS      = -77)   ! Access Failure
+      PARAMETER (NF_EAUTH        = -78)   ! Authorization Failure
+
+! Misc. additional errors
+      PARAMETER (NF_ENOTFOUND    = -90)   ! No such file
+      PARAMETER (NF_ECANTREMOVE  = -91)   ! Can't remove file
 
 !
 ! netCDF-4 error codes (copied from netCDF release)
@@ -238,6 +276,8 @@
       integer NF_EBADCHUNK
       integer NF_ENOTBUILT
       integer NF_EDISKLESS
+      integer NF_ECANTEXTEND
+      integer NF_EMPI
 
       PARAMETER (NF_EHDFERR      = -101)  ! Error at HDF5 layer. 
       PARAMETER (NF_ECANTREAD    = -102)  ! Can't read. 
@@ -268,6 +308,8 @@
       PARAMETER (NF_EBADCHUNK    = -127)  ! Bad chunksize.
       PARAMETER (NF_ENOTBUILT    = -128)  ! Attempt to use feature that was not turned on when netCDF was built.
       PARAMETER (NF_EDISKLESS    = -129)  ! Error in using diskless  access.
+      PARAMETER (NF_ECANTEXTEND  = -130)  ! Attempt to extend dataset during ind. I/O operation.
+      PARAMETER (NF_EMPI         = -131)  ! MPI operation failed.
 
 !
 ! PnetCDF error codes start here
