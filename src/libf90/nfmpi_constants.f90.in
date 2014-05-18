@@ -97,82 +97,106 @@
 ! implementation limits:
 !
       integer, parameter, public :: &
-      nf_max_dims = 1024, &
-      nf_max_attrs = 8192, &
-      nf_max_vars = 8192, &
-      nf_max_name = 256, &
+      nf_max_dims     = 1024, &
+      nf_max_attrs    = 8192, &
+      nf_max_vars     = 8192, &
+      nf_max_name     = 256, &
       nf_max_var_dims = nf_max_dims
 
 !
 ! error codes:
 !
       integer, parameter, public :: &
-      NF_NOERR        =  0, &  ! No Error
-      NF2_ERR         = -1, &  ! Returned for all errors in the v2 API
-      NF_EBADID       = -33, & ! Not a netcdf id
-      NF_ENFILE       = -34, & ! Too many netcdfs open
-      NF_EEXIST       = -35, & ! netcdf file exists and NF_NOCLOBBER
-      NF_EINVAL       = -36, & ! Invalid Argument
-      NF_EPERM        = -37, & ! Write to read only
-      NF_ENOTINDEFINE = -38, & ! Operation not allowed in data mode
-      NF_EINDEFINE    = -39, & ! Operation not allowed in define mode
-      NF_EINVALCOORDS = -40, & ! Index exceeds dimension bound
-      NF_EMAXDIMS     = -41, & ! NF_MAX_DIMS exceeded
-      NF_ENAMEINUSE   = -42, & ! String match to name in use
-      NF_ENOTATT      = -43, & ! Attribute not found
-      NF_EMAXATTS     = -44, & ! NF_MAX_ATTRS exceeded
-      NF_EBADTYPE     = -45, & ! Not a netcdf data type
-      NF_EBADDIM      = -46, & ! Invalid dimension id or name
-      NF_EUNLIMPOS    = -47, & ! NF_UNLIMITED in the wrong index
-      NF_EMAXVARS     = -48, & ! NF_MAX_VARS exceeded
-      NF_ENOTVAR      = -49, & ! Variable not found
-      NF_EGLOBAL      = -50, & ! Action prohibited on NF_GLOBAL varid
-      NF_ENOTNC       = -51, & ! Not a netcdf file
-      NF_ESTS         = -52, & ! In Fortran, string too short
-      NF_EMAXNAME     = -53, & ! NF_MAX_NAME exceeded
-      NF_EUNLIMIT     = -54, & ! NF_UNLIMITED size already in use
-      NF_ENORECVARS   = -55, & ! nc_rec op when there are no record vars
-      NF_ECHAR        = -56, & ! Attempt to convert between text & numbers
-      NF_EEDGE        = -57, & ! Edge+start exceeds dimension bound
-      NF_ESTRIDE      = -58, & ! Illegal stride
-      NF_EBADNAME     = -59, & ! Attribute or variable name contains illegal characters
-      NF_ERANGE       = -60, & ! Math result not representable
-      NF_ENOMEM       = -61, & ! Memory allocation (malloc) failure
-      NF_EVARSIZE     = -62, & ! One or more variable sizes violate format constraints
-      NF_EDIMSIZE     = -63, & ! Invalid dimension size
-      NF_ETRUNC       = -64    ! File likely truncated or possibly corrupted
+      NF_NOERR          =  0, &  ! No Error
+      NF2_ERR           = -1, &  ! Returned for all errors in the v2 API
+      NF_EBADID         = -33, & ! Not a netcdf id
+      NF_ENFILE         = -34, & ! Too many netcdfs open
+      NF_EEXIST         = -35, & ! netcdf file exists and NF_NOCLOBBER
+      NF_EINVAL         = -36, & ! Invalid Argument
+      NF_EPERM          = -37, & ! Write to read only
+      NF_ENOTINDEFINE   = -38, & ! Operation not allowed in data mode
+      NF_EINDEFINE      = -39, & ! Operation not allowed in define mode
+      NF_EINVALCOORDS   = -40, & ! Index exceeds dimension bound
+      NF_EMAXDIMS       = -41, & ! NF_MAX_DIMS exceeded
+      NF_ENAMEINUSE     = -42, & ! String match to name in use
+      NF_ENOTATT        = -43, & ! Attribute not found
+      NF_EMAXATTS       = -44, & ! NF_MAX_ATTRS exceeded
+      NF_EBADTYPE       = -45, & ! Not a netcdf data type
+      NF_EBADDIM        = -46, & ! Invalid dimension id or name
+      NF_EUNLIMPOS      = -47, & ! NF_UNLIMITED in the wrong index
+      NF_EMAXVARS       = -48, & ! NF_MAX_VARS exceeded
+      NF_ENOTVAR        = -49, & ! Variable not found
+      NF_EGLOBAL        = -50, & ! Action prohibited on NF_GLOBAL varid
+      NF_ENOTNC         = -51, & ! Not a netcdf file
+      NF_ESTS           = -52, & ! In Fortran, string too short
+      NF_EMAXNAME       = -53, & ! NF_MAX_NAME exceeded
+      NF_EUNLIMIT       = -54, & ! NF_UNLIMITED size already in use
+      NF_ENORECVARS     = -55, & ! nc_rec op when there are no record vars
+      NF_ECHAR          = -56, & ! Attempt to convert between text & numbers
+      NF_EEDGE          = -57, & ! Edge+start exceeds dimension bound
+      NF_ESTRIDE        = -58, & ! Illegal stride
+      NF_EBADNAME       = -59, & ! Attribute or variable name contains illegal characters
+      NF_ERANGE         = -60, & ! Math result not representable
+      NF_ENOMEM         = -61, & ! Memory allocation (malloc) failure
+      NF_EVARSIZE       = -62, & ! One or more variable sizes violate format constraints
+      NF_EDIMSIZE       = -63, & ! Invalid dimension size
+      NF_ETRUNC         = -64, & ! File likely truncated or possibly corrupted
+      NF_EAXISTYPE      = -65    ! Unknown axis type
+
+! Following errors are added for DAP
+      integer, parameter, public :: &
+      NF_EDAP           = -66, & ! Generic DAP error
+      NF_ECURL          = -67, & ! Generic libcurl error
+      NF_EIO            = -68, & ! Generic IO error
+      NF_ENODATA        = -69, & ! Attempt to access variable with no data
+      NF_EDAPSVC        = -70, & ! DAP server error
+      NF_EDAS           = -71, & ! Malformed or inaccessible DAS
+      NF_EDDS           = -72, & ! Malformed or inaccessible DDS
+      NF_EDATADDS       = -73, & ! Malformed or inaccessible DATADDS
+      NF_EDAPURL        = -74, & ! Malformed DAP URL
+      NF_EDAPCONSTRAINT = -75,&! Malformed DAP Constraint
+      NF_ETRANSLATION   = -76, & ! Untranslatable construct
+      NF_EACCESS        = -77, & ! Access Failure
+      NF_EAUTH          = -78    ! Authorization Failure
+
+! Misc. additional errors
+      integer, parameter, public :: &
+      NF_ENOTFOUND      = -90, & ! No such file
+      NF_ECANTREMOVE    = -91    ! Can't remove file
 
 ! netCDF-4 error codes (copied from netCDF release)
       integer, parameter, public :: &
-      NF_EHDFERR      = -101, & ! Error at HDF5 layer. 
-      NF_ECANTREAD    = -102, & ! Can't read. 
-      NF_ECANTWRITE   = -103, & ! Can't write. 
-      NF_ECANTCREATE  = -104, & ! Can't create. 
-      NF_EFILEMETA    = -105, & ! Problem with file metadata. 
-      NF_EDIMMETA     = -106, & ! Problem with dimension metadata. 
-      NF_EATTMETA     = -107, & ! Problem with attribute metadata. 
-      NF_EVARMETA     = -108, & ! Problem with variable metadata. 
-      NF_ENOCOMPOUND  = -109, & ! Not a compound type. 
-      NF_EATTEXISTS   = -110, & ! Attribute already exists. 
-      NF_ENOTNC4      = -111, & ! Attempting netcdf-4 operation on netcdf-3 file.   
-      NF_ESTRICTNC3   = -112, & ! Attempting netcdf-4 operation on strict nc3 netcdf-4 file.   
-      NF_ENOTNC3      = -113, & ! Attempting netcdf-3 operation on netcdf-4 file.   
-      NF_ENOPAR       = -114, & ! Parallel operation on file opened for non-parallel access.   
-      NF_EPARINIT     = -115, & ! Error initializing for parallel access.   
-      NF_EBADGRPID    = -116, & ! Bad group ID.   
-      NF_EBADTYPID    = -117, & ! Bad type ID.   
-      NF_ETYPDEFINED  = -118, & ! Type has already been defined and may not be edited. 
-      NF_EBADFIELD    = -119, & ! Bad field ID.   
-      NF_EBADCLASS    = -120, & ! Bad class.   
-      NF_EMAPTYPE     = -121, & ! Mapped access for atomic types only.   
-      NF_ELATEFILL    = -122, & ! Attempt to define fill value when data already exists. 
-      NF_ELATEDEF     = -123, & ! Attempt to define var properties, like deflate, after enddef.
-      NF_EDIMSCALE    = -124, & ! Probem with HDF5 dimscales.
-      NF_ENOGRP       = -125, & ! No group found.
-      NF_ESTORAGE     = -126, & ! Can't specify both contiguous and chunking.
-      NF_EBADCHUNK    = -127, & ! Bad chunksize.
-      NF_ENOTBUILT    = -128, & ! Attempt to use feature that was not turned on when netCDF was built.
-      NF_EDISKLESS    = -129    ! Error in using diskless  access.
+      NF_EHDFERR        = -101, & ! Error at HDF5 layer. 
+      NF_ECANTREAD      = -102, & ! Can't read. 
+      NF_ECANTWRITE     = -103, & ! Can't write. 
+      NF_ECANTCREATE    = -104, & ! Can't create. 
+      NF_EFILEMETA      = -105, & ! Problem with file metadata. 
+      NF_EDIMMETA       = -106, & ! Problem with dimension metadata. 
+      NF_EATTMETA       = -107, & ! Problem with attribute metadata. 
+      NF_EVARMETA       = -108, & ! Problem with variable metadata. 
+      NF_ENOCOMPOUND    = -109, & ! Not a compound type. 
+      NF_EATTEXISTS     = -110, & ! Attribute already exists. 
+      NF_ENOTNC4        = -111, & ! Attempting netcdf-4 operation on netcdf-3 file.   
+      NF_ESTRICTNC3     = -112, & ! Attempting netcdf-4 operation on strict nc3 netcdf-4 file.   
+      NF_ENOTNC3        = -113, & ! Attempting netcdf-3 operation on netcdf-4 file.   
+      NF_ENOPAR         = -114, & ! Parallel operation on file opened for non-parallel access.   
+      NF_EPARINIT       = -115, & ! Error initializing for parallel access.   
+      NF_EBADGRPID      = -116, & ! Bad group ID.   
+      NF_EBADTYPID      = -117, & ! Bad type ID.   
+      NF_ETYPDEFINED    = -118, & ! Type has already been defined and may not be edited. 
+      NF_EBADFIELD      = -119, & ! Bad field ID.   
+      NF_EBADCLASS      = -120, & ! Bad class.   
+      NF_EMAPTYPE       = -121, & ! Mapped access for atomic types only.   
+      NF_ELATEFILL      = -122, & ! Attempt to define fill value when data already exists. 
+      NF_ELATEDEF       = -123, & ! Attempt to define var properties, like deflate, after enddef.
+      NF_EDIMSCALE      = -124, & ! Probem with HDF5 dimscales.
+      NF_ENOGRP         = -125, & ! No group found.
+      NF_ESTORAGE       = -126, & ! Can't specify both contiguous and chunking.
+      NF_EBADCHUNK      = -127, & ! Bad chunksize.
+      NF_ENOTBUILT      = -128, & ! Attempt to use feature that was not turned on when netCDF was built.
+      NF_EDISKLESS      = -129, & ! Error in using diskless  access.
+      NF_ECANTEXTEND    = -130, & ! Attempt to extend dataset during ind. I/O operation.
+      NF_EMPI           = -131    ! MPI operation failed.
 
 
 ! PnetCDF error codes start here
