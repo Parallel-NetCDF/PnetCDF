@@ -45,15 +45,21 @@ nc_test: $(OBJS) $(LIBRARY)
 # This simple testing target ensures that the test files are present
 check testing: all
 	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nc_test -c    -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nc_test -d    $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -2 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nc_test -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -5 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nc_test -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -c    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -d       $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -c -2 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -2 -d    $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -c -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -5 -d    $(TEST_OUTDIR)
 
 verbose_testing: all
 	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nc_test -c -v    -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nc_test -v -d    $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -v -2 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nc_test -v -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nc_test -c -v -5 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nc_test -v -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -c -v    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -v -d       $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -c -v -2 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -v -2 -d    $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -c -v -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nc_test -v -5 -d    $(TEST_OUTDIR)
 
 ptest:
 
