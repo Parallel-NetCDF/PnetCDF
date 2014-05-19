@@ -54,15 +54,21 @@ tags: $(F_SRCS) $(C_SRCS) FORCE
 # This simple testing target ensures that the test files are present
 testing check: all
 	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nf_test -c    -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf_test    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -c -2 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf_test -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -c -5 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf_test -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -c    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test       -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -c -2 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -2    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -c -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -5    -d $(TEST_OUTDIR)
 
 verbose_testing: all
 	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/test.nc
-	$(TEST_SEQRUN) ./nf_test -v -c    -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf_test -v    -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -v -c -2 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf_test -v -2 -d $(TEST_OUTDIR)
-	$(TEST_SEQRUN) ./nf_test -v -c -5 -d $(TEST_OUTDIR) && $(TEST_SEQRUN) ./nf_test -v -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -v -c    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -v       -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -v -c -2 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -v -2    -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -v -c -5 -d $(TEST_OUTDIR)
+	$(TEST_SEQRUN) ./nf_test -v -5    -d $(TEST_OUTDIR)
 
 #test.nc: 
 #	(cd ../nc_test && $(MAKE) $(MFLAGS) nc_test && ./nc_test -c)

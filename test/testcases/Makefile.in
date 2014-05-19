@@ -102,7 +102,7 @@ endif
 # Run them on 4 processes to see if they can handle well
 ptest: $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	@for i in $(PROGS); do ( \
+	for i in $(PROGS); do ( \
 	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
