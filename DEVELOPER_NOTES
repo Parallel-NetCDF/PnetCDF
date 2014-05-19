@@ -165,7 +165,7 @@ If a new PnetCDF API is created, please make sure we do the followings.
 =====================================================
 Note on debugging
 =====================================================
-1. Enable malloc tracking option at the configure time which can track the
+1. Enable malloc tracing option at the configure time which can trace the
    usage of malloc and if there is a malloc residue. All PnetCDF development
    should call NCI_Malloc, NCI_Calloc, NCI_Realloc, and NCI_Free, instead of
    malloc, calloc, realloc, and free. When adding a new test or example program,

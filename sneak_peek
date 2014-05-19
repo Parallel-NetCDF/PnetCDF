@@ -24,8 +24,8 @@ This is essentially a placeholder for the next release note ...
       allocate additional memory space, due to performance concern. Users are
       discouraged to use Fortran PARAMETER buffers in put APIs.
 
-    * A new configure option "--enable-malloc-tracking" is added. It enables
-      a memory allocation tracking mechanism internal in PnetCDF. Default is
+    * A new configure option "--enable-malloc-tracing" is added. It enables
+      a memory allocation tracing mechanism internal in PnetCDF. Default is
       disabled. When enabled, a user program can call three new APIs below:
       ncmpi_inq_malloc_size, ncmpi_inq_malloc_max_size, ncmpi_inq_malloc_walk
       to obtain the size in bytes of current memory allocated internally. This
@@ -63,7 +63,7 @@ This is essentially a placeholder for the next release note ...
       report the size in bytes of current memory allocated internally by
       PnetCDF. Similar APIs for Fortran 77 and 90 are also available. These
       APIs are enabled only when PnetCDF is configured with option
-      --enable-malloc-tracking. When this option is not enabled, calling these
+      --enable-malloc-tracing. When this option is not enabled, calling these
       APIs will return the error code NC_ENOTENABLED. These APIs are usefully
       for debugging.
 
@@ -88,7 +88,7 @@ This is essentially a placeholder for the next release note ...
   o New error code
     * NC_ENOTENABLED indicates the API is available only when the corresponding
       feature is enabled. For example, nfmpi_inq_malloc_size() returns this
-      error code when "--enable-malloc-tracking" is not used at configure.
+      error code when "--enable-malloc-tracing" is not used at configure.
 
     * NC_EBAD_FILE corresponds to MPI error code MPI_ERR_BAD_FILE, meaning
       "Invalid file name (e.g., path name too long)."
@@ -107,7 +107,7 @@ This is essentially a placeholder for the next release note ...
 
   o New example programs
     * Example programs now report if there is any PnetCDF internal malloc
-      residues yet to be freed, if --enable-malloc-tracking option is used at
+      residues yet to be freed, if --enable-malloc-tracing option is used at
       configure.
 
     * Under examples/C, three examples are added: create_open.c, get_vara.c,
@@ -122,7 +122,7 @@ This is essentially a placeholder for the next release note ...
 
   o New test program
     * Many test programs now report if there is any PnetCDF internal malloc
-      residues yet to be freed, if --enable-malloc-tracking option is used at
+      residues yet to be freed, if --enable-malloc-tracing option is used at
       configure.
 
     * add tests for flexible APIs. The tests borrow from nc_test/test_write.c
