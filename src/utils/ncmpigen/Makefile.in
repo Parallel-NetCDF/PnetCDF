@@ -22,24 +22,23 @@ INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
 LDFLAGS        += -L../../lib
 LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
 
-C_SOURCES       = escapes.c genlib.c getfill.c init.c load.c main.c
-HEADERS         = generic.h genlib.h ncmpigen.h
+C_SOURCES       = main.c load.c escapes.c getfill.c init.c genlib.c ncmpigentab.c
+HEADERS         = generic.h genlib.h ncmpigen.h ncmpigentab.h
 
-PROGRAM_SRCS	= $(C_SOURCES) ncmpigentab.c
+PROGRAM_SRCS	= $(C_SOURCES)
 
 OBJS		= $(PROGRAM_SRCS:.c=.o)
 
 PACKING_LIST    = $(C_SOURCES) $(HEADERS) $(MANUAL) \
-                  depend Makefile.in \
+                  ncmpigenyy.c depend Makefile.in \
                   ncmpigen.l ncmpigen.y c0.cdl
 
 GARBAGE		= $(PROGRAM) \
-		  ncmpigentab.c ncmpigentab.h \
 		  c0.nc c1.cdl c1.nc c2.cdl \
 		  f0.nc \
 		  ctest.c ctest ctest0.nc ctest1.cdl \
 		  ftest.f ftest ftest0.nc ftest1.cdl \
-		  ncmpigenyy.c lex.ncmpi.c y.tab.c y.tab.h
+		  lex.ncmpi.c y.tab.c y.tab.h
 
 all:		$(PROGRAM)
 
@@ -61,15 +60,25 @@ uninstall:
 $(PROGRAM):	$(OBJS) $(LIBRARY)
 	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS) 
 
+# Below is used if someone wants to rebuild ncmpigenyy.c or ncmpigentab.c
+# Otherwise never invoked, but records how to do it.
 ncmpigentab.c \
 ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
+ifeq (@build_ncmpigen@, yes)
 	$(yacc) -d $(srcdir)/ncmpigen.y; \
 	cp -f y.tab.c ncmpigentab.c; \
 	cp -f y.tab.h ncmpigentab.h
+else
+	@echo "Error: cannot find bison or yacc, required to generate $@"
+endif
 
 ncmpigenyy.c:	ncmpigen.l
+ifeq (@build_ncmpigen@, yes)
 	$(lex) $(srcdir)/ncmpigen.l; \
 	cp -f lex.ncmpi.c ncmpigenyy.c
+else
+	@echo "Error: cannot find flex or lex, required to generate $@"
+endif
 
 vmstab.h \
 vmstab.c:	ncmpigen.y
