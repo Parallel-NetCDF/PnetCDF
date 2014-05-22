@@ -500,8 +500,25 @@ if test "x${enable_fortran}" = xyes ; then
 fi
 
 AC_PROG_INSTALL
+
 AC_PROG_YACC
+dnl if neither bison nor byacc is found, YACC will be set to yacc
+build_ncmpigen=yes
+if test "x$YACC" = xyacc; then
+   AC_CHECK_PROGS(YACC_PATH, yacc)
+   if test "x$YACC_PATH" = x; then
+      dnl cannot find bison or yacc required to build ncmpigentab.c
+      build_ncmpigen=no
+   fi
+fi
+
 AC_PROG_LEX
+if (test "x$LEX" != xflex) && (test "x$LEX" != xlex) ; then
+   dnl cannot find flex or lex required to build ncmpigenyy.c
+   build_ncmpigen=no
+fi
+AC_SUBST(build_ncmpigen)
+
 AC_PROG_AWK
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
