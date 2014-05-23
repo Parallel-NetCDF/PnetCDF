@@ -64,7 +64,7 @@ $(PROGRAM):	$(OBJS) $(LIBRARY)
 # Otherwise never invoked, but records how to do it.
 ncmpigentab.c \
 ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
-ifeq (@build_ncmpigen@, yes)
+ifeq (@have_yacc_lex@, yes)
 	$(yacc) -d $(srcdir)/ncmpigen.y; \
 	cp -f y.tab.c ncmpigentab.c; \
 	cp -f y.tab.h ncmpigentab.h
@@ -73,7 +73,7 @@ else
 endif
 
 ncmpigenyy.c:	ncmpigen.l
-ifeq (@build_ncmpigen@, yes)
+ifeq (@have_yacc_lex@, yes)
 	$(lex) $(srcdir)/ncmpigen.l; \
 	cp -f lex.ncmpi.c ncmpigenyy.c
 else
