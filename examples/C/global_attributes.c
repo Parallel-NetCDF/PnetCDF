@@ -33,7 +33,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strlen() */
+#include <string.h> /* strlen(), strcpy() */
+#include <unistd.h> /* getopt() */
 #include <time.h>   /* time() localtime(), asctime() */
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -45,20 +46,41 @@
     } \
 }
 
-int main(int argc, char** argv) {
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
+int main(int argc, char** argv)
+{
+    extern int optind;
     char *filename="testfile.nc";
     char str_att[128], att_name[NC_MAX_NAME];
-    int rank, err, verbose=0, ncid, cmode, omode, ngatts;
+    int i, rank, err, verbose=0, ncid, cmode, omode, ngatts;
     short short_att[10], digit[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        goto fn_exit;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;

@@ -34,7 +34,8 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
 using namespace PnetCDF;
@@ -43,6 +44,17 @@ using namespace PnetCDF::exceptions;
 #define NZ 5
 #define NY 5
 #define NX 5
+
+static void
+usage(char *argv0)
+{
+    cerr <<
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n"
+    << argv0;
+}
 
 static
 void print_hints(NcmpiFile &ncFile,
@@ -101,9 +113,11 @@ void print_hints(NcmpiFile &ncFile,
     printf("var_yx start file offset         = %lld\n", var_yx_start);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
+    extern int optind;
     char filename[128];
-    int i, rank, nprocs, *buf_zy;
+    int i, rank, nprocs, verbose=1, *buf_zy;
     float *buf_yx;
     vector<MPI_Offset> start(2), count(2);
     MPI_Info info;
@@ -112,12 +126,19 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) strcpy(filename, argv[1]);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     try {
@@ -166,7 +187,7 @@ int main(int argc, char** argv) {
         count[0] = NY * nprocs; count[1] = NX;
         var1.putVar_all(start, count, buf_yx);
 
-        if (rank == 0) print_hints(ncFile, var0, var1);
+        if (rank == 0 && verbose) print_hints(ncFile, var0, var1);
 
         free(buf_zy);
         free(buf_yx);

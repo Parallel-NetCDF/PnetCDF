@@ -37,8 +37,9 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -47,6 +48,17 @@
     if (err != NC_NOERR)                              \
         printf("Error at line %d (%s)\n", __LINE__,   \
                ncmpi_strerror(err));                  \
+}
+
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
 }
 
 /*----< print_info() >------------------------------------------------------*/
@@ -71,19 +83,27 @@ void print_info(MPI_Info *info_used)
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
+    extern int optind;
     char *filename="testfile.nc";
-    int rank, ncid, err;
+    int i, rank, ncid, verbose=1, err;
     MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
     /* create the file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
@@ -106,7 +126,7 @@ int main(int argc, char **argv)
     err = ncmpi_close(ncid);
     HANDLE_ERROR
 
-    if (rank == 0) print_info(&info_used);
+    if (rank == 0 && verbose) print_info(&info_used);
     MPI_Info_free(&info_used);
 
     /* check if there is any PnetCDF internal malloc residue */

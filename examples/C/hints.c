@@ -6,16 +6,6 @@
  *********************************************************************/
 /* $Id$ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-
-#define NZ 5
-#define NY 5
-#define NX 5
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This example sets two PnetCDF hints:
  *    nc_header_align_size and nc_var_align_size
@@ -38,7 +28,30 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
+#include <assert.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+
+#define NZ 5
+#define NY 5
+#define NX 5
+
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
 
 static
 void print_hints(int ncid,
@@ -94,9 +107,11 @@ void print_hints(int ncid,
     printf("var_yx start file offset         = %lld\n", var_yx_start);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
+    extern int optind;
     char *filename="testfile.nc";
-    int i, rank, nprocs, err;
+    int i, rank, nprocs, verbose=1, err;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
     float *buf_yx;
     MPI_Offset start[2], count[2];
@@ -106,12 +121,19 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_header_align_size",      "1024"); /* size in bytes */
@@ -151,7 +173,7 @@ int main(int argc, char** argv) {
     count[0] = NY * nprocs; count[1] = NX;
     err = ncmpi_put_vara_float_all(ncid, varid1, start, count, buf_yx); ERR
 
-    if (rank == 0) print_hints(ncid, varid0, varid1);
+    if (rank == 0 && verbose) print_hints(ncid, varid0, varid1);
 
     err = ncmpi_close(ncid); ERR
 

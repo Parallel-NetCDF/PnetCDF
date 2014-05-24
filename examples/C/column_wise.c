@@ -6,19 +6,11 @@
  *********************************************************************/
 /* $Id$ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-
-#define NY 10
-#define NX 4
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This example makes a number of nonblocking API calls, each writes a single
  * column of a 2D integer array. Each process writes NX columns and any two
- * consecutive columns are of nprocs columns distance apart from each other.
- * In this case, the fileview of each process interleaves with all other processes.
+ * consecutive columns are of nprocs columns distance apart from each other. In
+ * this case, the fileview of each process interleaves with all other processes.
  * If simply concatenating fileviews of all the nonblocking calls will result
  * in a fileview that violates the MPI-IO requirement on the fileview of which
  * flattened file offsets must be monotonically non-decreasing. PnetCDF handles
@@ -66,11 +58,34 @@
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
+#include <mpi.h>
+#include <pnetcdf.h>
+
+#define NY 10
+#define NX 4
+
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
-int main(int argc, char** argv) {
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
+int main(int argc, char** argv)
+{
+    extern int optind;
     char *filename = "testfile.nc";
-    int i, j, debug, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
+    int i, j, verbose=1, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
     MPI_Offset start[2], count[2];
 
@@ -78,13 +93,19 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    debug = 1;
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
@@ -94,7 +115,7 @@ int main(int argc, char** argv) {
     G_NX  = NX * nprocs;
     myOff = NX * rank;
     myNX  = NX;
-    if (debug) printf("%2d: myOff=%3d myNX=%3d\n",rank,myOff,myNX);
+    if (verbose) printf("%2d: myOff=%3d myNX=%3d\n",rank,myOff,myNX);
 
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]);
     ERR
@@ -127,7 +148,7 @@ int main(int argc, char** argv) {
     /* each proc writes myNX single columns of the 2D array */
     start[0]  = 0;   start[1] = rank;
     count[0]  = NY;  count[1] = 1;
-    if (debug)
+    if (verbose)
         printf("%2d: start=%3lld %3lld count=%3lld %3lld\n",
                rank, start[0],start[1], count[0],count[1]);
 

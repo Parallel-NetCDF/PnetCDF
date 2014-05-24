@@ -43,20 +43,29 @@
         implicit none
 
         character(len = 256) :: filename, cmd
+        character(len = 4) :: quiet_mode
         integer argc, IARGC, ncid, rank, info, omode, err
         integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+        logical verbose
 
         call MPI_Init(err)
-        call MPI_Comm_rank (MPI_COMM_WORLD, rank, err)
+        call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
 
         call getarg(0, cmd)
         argc = IARGC()
-        if (argc .GT. 1) then
-            if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+        if (argc .GT. 2) then
+            if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [-q] [filename]'
             goto 999
         endif
+        verbose = .TRUE.
         filename = "testfile.nc"
-        if (argc .EQ. 1) call getarg(1, filename)
+        call getarg(1, quiet_mode)
+        if (quiet_mode(1:2) .EQ. '-q') then
+            verbose = .FALSE.
+            if (argc .EQ. 2) call getarg(2, filename)
+        else
+            if (argc .EQ. 1) call getarg(1, filename)
+        endif
 
         omode = NF90_NOWRITE + NF90_64BIT_OFFSET
         err = nf90mpi_open(MPI_COMM_WORLD, trim(filename), omode, &
@@ -72,7 +81,7 @@
         err = nf90mpi_close(ncid)
         if (err .ne. NF90_NOERR) call handle_err('nf90mpi_close',err)
 
-        if (rank .EQ. 0) call print_info(info)
+        if (rank .EQ. 0 .AND. verbose) call print_info(info)
         call MPI_Info_free(info, err)
 
         ! check if there is any PnetCDF internal malloc residue

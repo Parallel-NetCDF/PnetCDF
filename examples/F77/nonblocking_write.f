@@ -50,6 +50,8 @@
           integer(kind=MPI_OFFSET_KIND) starts(NDIMS), counts(NDIMS)
           integer(kind=MPI_OFFSET_KIND) bbufsize
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          character(len = 4) :: quiet_mode
+          logical verbose
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -58,21 +60,33 @@
           ! take filename from command-line argument if there is any
           call getarg(0, cmd)
           argc = IARGC()
-          if (argc .GT. 2) then
+          if (argc .GT. 3) then
               if (rank .EQ. 0) print*,'Usage: ',trim(cmd),
-     +                                ' [filename] [len]'
+     +                         ' [-q] [filename] [len]'
               goto 999
           endif
+          verbose = .TRUE.
           filename = "testfile.nc"
-          if (argc .GE. 1) call getarg(1, filename)
           len = 10
-          if (argc .EQ. 2) then
-             call getarg(2, str)
-             read (str,'(I10)') len
+          call getarg(1, quiet_mode)
+          if (quiet_mode(1:2) .EQ. '-q') then
+              verbose = .FALSE.
+              if (argc .GE. 2) call getarg(2, filename)
+              if (argc .EQ. 3) then
+                  call getarg(3, str)
+                  read (str,'(I10)') len
+              endif
+          else
+              if (argc .GE. 1) call getarg(1, filename)
+              if (argc .EQ. 2) then
+                  call getarg(2, str)
+                  read (str,'(I10)') len
+              endif
           endif
-          if (len .GT. 10) then
+
+          if (len .GT. BUFSIZE) then
              print*,'Maximum len is 10, change it to 10'
-             len = 10
+             len = BUFSIZE
           endif
 
           do i=1,NDIMS

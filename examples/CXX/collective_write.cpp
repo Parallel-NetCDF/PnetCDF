@@ -39,7 +39,8 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
 using namespace PnetCDF;
@@ -47,6 +48,18 @@ using namespace PnetCDF::exceptions;
 
 #define NDIMS    3
 #define NUM_VARS 10
+
+static void
+usage(char *argv0)
+{
+    cerr <<
+    "Usage: %s [-h] | [-q] [file_name] [len]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n"
+    "       [len] size of each dimension of the local array\n"
+    << argv0;
+}
 
 /*----< print_info() >------------------------------------------------------*/
 static
@@ -75,8 +88,9 @@ void print_info(MPI_Info *info_used)
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
+    extern int optind;
     char filename[128], str[512];
-    int i, j, rank, nprocs, len, bufsize;
+    int i, j, rank, nprocs, len, bufsize, verbose=1;
     int *buf[NUM_VARS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     vector<MPI_Offset> starts(NDIMS), counts(NDIMS);
@@ -88,15 +102,22 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 3) {
-        if (!rank) printf("Usage: %s [filename] [len]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    strcpy(filename, "testfile.nc");
-    if (argc >= 2) strcpy(filename, argv[1]);
-    len = 10;
-    if (argc == 3) len = atoi(argv[2]);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc >= 1) strcpy(filename, argv[0]); /* optional argument */
+    else           strcpy(filename, "testfile.nc");
+    len = 10; 
+    if (argc >= 2) len = atoi(argv[1]); /* optional argument */
 
     for (i=0; i<NDIMS; i++)
         psizes[i] = 0;
@@ -163,7 +184,7 @@ int main(int argc, char **argv)
     MPI_Reduce(&write_size, &sum_write_size, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
-    if (rank == 0) {
+    if (rank == 0 && verbose) {
         float subarray_size = (float)bufsize*sizeof(int)/1048576.0;
         print_info(&info_used);
         printf("Local array size %d x %d x %d integers, size = %.2f MB\n",len,len,len,subarray_size);
