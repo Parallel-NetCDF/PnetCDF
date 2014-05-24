@@ -6,15 +6,6 @@
  *********************************************************************/
 /* $Id$ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-
-#define NY 10
-#define NX 4
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This example, generalized from column_wise.c, makes a number of nonblocking
  * API calls, each writes a block of columns into a 2D integer array. In other
@@ -75,28 +66,59 @@
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
+#include <assert.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+
+#define NY 10
+#define NX 4
+
+#ifndef MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
 int main(int argc, char** argv) {
+    extern int optind;
     char *filename="testfile.nc";
-    int i, j, verbose, rank, nprocs, err, num_reqs;
+    int i, j, verbose=1, rank, nprocs, err, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts, **buf;
-    MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
+    MPI_Offset myNX, G_NX, myOff, block_start, block_len;
     MPI_Offset start[2], count[2];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    verbose = 1;
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;

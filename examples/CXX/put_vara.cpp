@@ -58,7 +58,8 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <time.h>   /* time() localtime(), asctime() */
 
 #include <pnetcdf>
@@ -69,9 +70,22 @@ using namespace PnetCDF::exceptions;
 #define NY 10
 #define NX 4
 
-int main(int argc, char** argv) {
+static void
+usage(char *argv0)
+{
+    cerr <<
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n"
+    << argv0;
+}
+
+int main(int argc, char** argv)
+{
+    extern int optind;
     char filename[128], str_att[128];
-    int i, j, rank, nprocs, buf[NY][NX];
+    int i, j, verbose=1, rank, nprocs, buf[NY][NX];
     float float_att[100];
     MPI_Offset  global_ny, global_nx;
 
@@ -79,12 +93,19 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) strcpy(filename, argv[1]);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     try {

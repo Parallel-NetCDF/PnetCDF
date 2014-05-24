@@ -22,6 +22,8 @@
 
 #include <iostream>
 #include <vector>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
 using namespace std;
@@ -35,11 +37,39 @@ static const int NY = 12;
 // Return this in event of a problem.
 static const int NC_ERR = 2;
 
+static void
+usage(char *argv0)
+{
+    cerr <<
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n"
+    << argv0;
+}
+
 int main(int argc, char *argv[])
 {
-    int err=0;
+    extern int optind;
+    char filename[128];
+    int i, err=0, verbose=1;
 
     MPI_Init(&argc, &argv);
+
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    else           strcpy(filename, "testfile.nc");
 
     // This is the data array we will write. It will just be filled
     // with a progression of numbers for this example.
@@ -57,7 +87,7 @@ int main(int argc, char *argv[])
     try {  
         // Create the file. The Replace parameter tells netCDF to overwrite
         // this file, if it already exists.
-        NcmpiFile dataFile(MPI_COMM_WORLD, "simple_xy.nc", NcmpiFile::replace);
+        NcmpiFile dataFile(MPI_COMM_WORLD, filename, NcmpiFile::replace);
       
         // Create netCDF dimensions
         NcmpiDim xDim = dataFile.addDim("x", NX);

@@ -6,22 +6,12 @@
  *********************************************************************/
 /* $Id$ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-
-#define NZ 5
-#define NY 5
-#define NX 5
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * This example shows how to use PnetCDF flexible APIs, ncmpi_put_vara_all()
  * and ncmpi_iput_vara() to write two 2D array variables (one is of 4-byte
- * integer byte and the other float type) in parallel.
- * It first defines 2 netCDF variables of sizes
+ * integer byte and the other float type) in parallel. It first defines 2 netCDF
+ * variables of sizes
  *    var_zy: NZ*nprocs x NY
  *    var_yx: NY x NX*nprocs
  *
@@ -81,11 +71,36 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
+#include <assert.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+
+#define NZ 5
+#define NY 5
+#define NX 5
+
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
-int main(int argc, char** argv) {
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
+int main(int argc, char** argv)
+{
+    extern int optind;
     char *filename="testfile.nc";
-    int i, rank, nprocs, err, req, status, ghost_len=3;
+    int i, rank, nprocs, verbose=1, err, req, status, ghost_len=3;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     float *buf_yx;
@@ -96,12 +111,19 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;

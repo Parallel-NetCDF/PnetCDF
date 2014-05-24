@@ -78,6 +78,8 @@
                                         block_len, global_nx
           integer(kind=MPI_OFFSET_KIND) start(2), count(2)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          character(len = 4) :: quiet_mode
+          logical verbose
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -86,12 +88,19 @@
           ! take filename from command-line argument if there is any
           call getarg(0, cmd)
           argc = IARGC()
-          if (argc .GT. 1) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
+          if (argc .GT. 2) then
+              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [-q] [filename]'
               goto 999
           endif
+          verbose = .TRUE.
           filename = "testfile.nc"
-          if (argc .EQ. 1) call getarg(1, filename)
+          call getarg(1, quiet_mode)
+          if (quiet_mode(1:2) .EQ. '-q') then
+              verbose = .FALSE.
+              if (argc .EQ. 2) call getarg(2, filename)
+          else
+              if (argc .EQ. 1) call getarg(1, filename)
+          endif
 
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)

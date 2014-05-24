@@ -72,7 +72,8 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
 using namespace PnetCDF;
@@ -83,9 +84,22 @@ using namespace PnetCDF::exceptions;
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
-int main(int argc, char** argv) {
+static void
+usage(char *argv0)
+{
+    cerr <<
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n"
+    << argv0;
+}
+
+int main(int argc, char** argv)
+{
+    extern int optind;
     char filename[128];
-    int i, j, verbose, rank, nprocs, num_reqs;
+    int i, j, verbose=1, rank, nprocs, num_reqs;
     int *reqs, *sts, **buf;
     MPI_Offset  myNX, G_NX, myOff, block_start, block_len;
     vector<MPI_Offset> start(2), count(2);
@@ -94,13 +108,19 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    verbose = 1;
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) strcpy(filename, argv[1]);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
     else           strcpy(filename, "testfile.nc");
 
     try {

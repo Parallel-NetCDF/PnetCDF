@@ -27,25 +27,47 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
-int main(int argc, char** argv) {
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
+int main(int argc, char** argv)
+{
+    extern int optind;
     char *filename="testfile.nc";
-    int rank, err;
+    int i, rank, verbose=1, err;
     int ncid, cmode, omode;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
     /* create a new file using clobber mode ----------------------------------*/
     cmode = NC_CLOBBER;

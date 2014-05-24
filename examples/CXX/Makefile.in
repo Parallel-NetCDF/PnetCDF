@@ -78,21 +78,21 @@ get_vara: get_vara.o $(LIBRARY)
 ptest: $(PAR_PROGS)
 	@for i in $(PAR_PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 4 ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 4 ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 	@for i in put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 8 ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 8 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 8 ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 	@for i in put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN) -n 3 ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 3 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN) -n 3 ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/depend

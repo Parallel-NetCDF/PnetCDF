@@ -6,16 +6,6 @@
  *********************************************************************/
 /* $Id$ */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-
-#define NY 4
-#define NX 10
-#define NDIMS 2
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * This example shows how to use a single call of ncmpi_put_varn_int_all() to
  * write a sequence of requests with arbitrary array indices and lengths.
@@ -51,12 +41,36 @@
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
+#include <assert.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+
+#define NY 4
+#define NX 10
+#define NDIMS 2
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
-int main(int argc, char** argv) {
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
+int main(int argc, char** argv)
+{
+    extern int optind;
     char *filename="testfile.nc";
-    int i, j, rank, nprocs, err;
+    int i, j, rank, nprocs, verbose=1, err;
     int ncid, cmode, varid, dimid[2], num_reqs, *buffer;
     MPI_Offset w_len, **starts, **counts;
 
@@ -64,14 +78,21 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    if (argc == 2) filename = argv[1];
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) filename = argv[0]; /* optional argument */
 
-    if (nprocs != 4 && rank == 0)
+    if (nprocs != 4 && rank == 0 && verbose)
         printf("Warning: this program is intended to run on 4 processes\n");
 
     /* create a new file for writing ----------------------------------------*/

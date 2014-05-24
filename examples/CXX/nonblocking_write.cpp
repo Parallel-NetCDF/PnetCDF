@@ -38,7 +38,8 @@
 #include <iostream>
 using namespace std;
 
-#include <string.h>
+#include <string.h> /* strcpy() */
+#include <unistd.h> /* getopt() */
 #include <pnetcdf>
 
 using namespace PnetCDF;
@@ -46,6 +47,18 @@ using namespace PnetCDF::exceptions;
 
 #define NDIMS    3
 #define NUM_VARS 10
+
+static void
+usage(char *argv0)
+{
+    cerr <<
+    "Usage: %s [-h] | [-q] [file_name] [len]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n"
+    "       [len] size of each dimension of the local array\n"
+    << argv0;
+}
 
 /*----< print_info() >------------------------------------------------------*/
 static
@@ -74,7 +87,8 @@ void print_info(MPI_Info *info_used)
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j;
+    extern int optind;
+    int i, j, verbose=1;
     int nprocs, len, *buf[NUM_VARS], bufsize, rank;
     int gsizes[NDIMS], array_of_distribs[NDIMS];
     int array_of_dargs[NDIMS], psizes[NDIMS];
@@ -90,15 +104,22 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 3) {
-        if (!rank) printf("Usage: %s [filename] [len]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    strcpy(filename, "testfile.nc");
-    if (argc >= 2) strcpy(filename, argv[1]);
-    len = 10;
-    if (argc == 3) len = atoi(argv[2]);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc >= 1) strcpy(filename, argv[0]); /* optional argument */
+    else           strcpy(filename, "testfile.nc");
+    len = 10; 
+    if (argc >= 2) len = atoi(argv[1]); /* optional argument */
 
     for (i=0; i<NDIMS; i++) {
         array_of_distribs[i] = MPI_DISTRIBUTE_BLOCK;
@@ -209,7 +230,7 @@ int main(int argc, char **argv)
 #endif
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
-    if (rank == 0) {
+    if (rank == 0 && verbose) {
         printf("\n");
         printf("Total amount writes to variables only   (exclude header) = %lld bytes\n", sum_write_size);
         printf("Total amount writes reported by pnetcdf (include header) = %lld bytes\n", put_size);
