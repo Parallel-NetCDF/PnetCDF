@@ -100,10 +100,11 @@ endif
 
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 ptest: $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	for i in $(PROGS); do ( \
-	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/../../rules.make

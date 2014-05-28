@@ -42,9 +42,11 @@ check testing verbose_testing: $(PROGS)
 	$(TEST_SEQRUN) ./test_classic $(TEST_OUTDIR)/testfile.nc
 
 
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+
 ptest: $(PAR_PROGS)
 	@for i in $(PAR_PROGS); do ( \
-	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/../../rules.make
