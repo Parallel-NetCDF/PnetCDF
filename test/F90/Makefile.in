@@ -96,11 +96,14 @@ testing check verbose_testing: $(PROGS)
 
 PARALLEL_PROGS = f90tst_parallel f90tst_parallel2 f90tst_parallel3 f90tst_parallel4
 
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
+
 ptest: $(PARALLEL_PROGS)
-	$(TEST_MPIRUN) -n 4 ./f90tst_parallel  $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./f90tst_parallel2 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./f90tst_parallel3 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN) -n 8 ./f90tst_parallel4 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./f90tst_parallel  $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./f90tst_parallel2 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./f90tst_parallel3 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_8) ./f90tst_parallel4 $(TEST_OUTDIR)/testfile.nc
 
 
 install:

@@ -39,10 +39,11 @@ check testing verbose_testing: $(PROGS)
 	$(TEST_SEQRUN) ./pres_temp_4D_wr $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./pres_temp_4D_rd $(TEST_OUTDIR)/testfile.nc
 
+TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
 
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN) -n 4 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/../../rules.make

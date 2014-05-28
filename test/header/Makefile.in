@@ -30,9 +30,11 @@ header_consistency: header_consistency.o $(LIBRARY)
 
 testing check verbose_testing:
 
+TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
+
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN) -n 2 ./$$i $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/../../rules.make

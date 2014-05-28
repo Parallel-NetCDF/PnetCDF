@@ -75,24 +75,28 @@ put_varn_float: put_varn_float.o $(LIBRARY)
 get_vara: get_vara.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
+TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
+
 ptest: $(PAR_PROGS)
 	@for i in $(PAR_PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 4 ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 4 ./$$i -q $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 	@for i in put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 8 ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 8 ./$$i -q $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 	@for i in put_varn_int put_varn_float ; do ( \
 	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN) -n 3 ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN) -n 3 ./$$i -q $(TEST_OUTDIR)/testfile.nc \
+	$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
 include $(srcdir)/depend

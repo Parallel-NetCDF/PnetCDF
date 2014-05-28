@@ -10,9 +10,9 @@ cd $PBS_O_WORKDIR
 set OUT_DIR = /output/file/directory
 
 # test seqential programs
-make check TEST_MPIRUN=aprun TEST_OUTDIR=$OUT_DIR TEST_SEQRUN="aprun -n 1"
+make check TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=$OUT_DIR TEST_SEQRUN="aprun -n 1"
 
 # test parallel programs
-make ptest TEST_MPIRUN=aprun TEST_OUTDIR=$OUT_DIR TEST_SEQRUN="aprun -n 1"
+make ptest TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=$OUT_DIR TEST_SEQRUN="aprun -n 1"
 
 

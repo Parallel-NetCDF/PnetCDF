@@ -74,14 +74,16 @@ ifeq (@has_fortran@, yes)
 	$(TEST_SEQRUN) ./test_bputf77 -v  $(TEST_OUTDIR)/testfile.nc
 endif
 
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+
 ptest : $(PROGS)
-	$(TEST_MPIRUN) -n 4 ./mcoll_perf -f $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./test_bput     $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./mcoll_perf -f $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./test_bput     $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
-	$(TEST_MPIRUN) -n 4 ./mcoll_testf   $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./mcoll_testf77 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./test_bputf    $(TEST_OUTDIR)/testfile.nc
-	$(TEST_MPIRUN) -n 4 ./test_bputf77  $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./mcoll_testf   $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./mcoll_testf77 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./test_bputf    $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./test_bputf77  $(TEST_OUTDIR)/testfile.nc
 endif
 
 include $(srcdir)/../../rules.make
