@@ -39,7 +39,7 @@ check testing verbose_testing: $(PROGS)
 	$(TEST_SEQRUN) ./pres_temp_4D_wr $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./pres_temp_4D_rd $(TEST_OUTDIR)/testfile.nc
 
-TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
