@@ -54,8 +54,8 @@ LIB_OBJS   = $(LIBS_HEADERS:.h=.o)
 PACKING_LIST = $(LIBS_HEADERS) $(LIB_SRCS) pnetcdf.in \
                Makefile.in depend
 
-GARBAGE      = $(LIB_OBJS)
-DIST_GARBAGE = pnetcdf
+GARBAGE      = $(LIB_OBJS) $(CXX_HEADER)
+DIST_GARBAGE =
 
 all: $(CXX_HEADER) $(LIBRARY)
 
