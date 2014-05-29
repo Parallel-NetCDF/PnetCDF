@@ -144,8 +144,8 @@ This is essentially a placeholder for the next release note ...
       TEST_MPIRUN and TEST_OUTDIR. Their defaults are mpiexec and "." (current
       directory), respectively. For example,
           make ptest TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=/scratch
-      Note the keyword "NP" will be replaced by the numbers of processes used
-      to run the tests.
+      Note the keyword "NP" will be replaced by the different numbers of
+      processes used to run the tests. The testing uses up to 8 MPI processes.
 
     * A sample PBS script file is provided to test "make ptest" on machines
       with a batch queue system: pbs.script. This example script can be
