@@ -71,16 +71,25 @@ V1R4M1. You may build with it using the wrappers in comm/xl:
  /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90
 
 
-* Running PnetCDF testing programs on mira @ ALCF, ANL
-Mira is an IMB BlueGene Q, a cross-compile system. Hence, one cannot run
-PnetCDF test programs on the login nodes. Test programs must run on the compute
-nodes through submitting a batch job. An example batch script file is provided
-in cobalt.script. The submission command for allocating 8 node with 30 minutes
-can be (note the testing requires at least 8 MPI processes and in this example
-the command requests 8 nodes and the script runs 1 MPI process per node):
+----
+* Note on running PnetCDF testing programs on Mira/Cetus @ ALCF, ANL
+----
+Mira and Cetus are IBM BlueGene Q, a cross-compile system. Hence, one cannot
+run PnetCDF test programs on the login nodes. Test programs must run on the
+compute nodes through submitting a batch job. An example batch script file is
+provided in cobalt.script. The submission command for allocating 8 node with 90
+minutes is given below. Note the testing requires at least 8 MPI processes and
+in this example the command requests 8 nodes and the script runs 1 MPI process
+per node.
 
 qsub -A YOUR_ACCOUNT -n 8 -t 30 --mode script ./cobalt.script
 
+Running "make testing" can take a while (more than one hour on Mira/Cetus).
+This is because the testing performs many small read/write requests and under
+BlueGene's I/O forwarding architecture, local file-system caching is not
+available on the compute nodes.
+
+Running "make ptest" will take approximately 10 minutes.
 
 -------------------------------------------------------------------------------
 2. Building PnetCDF on BGP
