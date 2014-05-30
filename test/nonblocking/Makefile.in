@@ -66,12 +66,12 @@ endif
 
 verbose_check verbose_testing: $(PROGS)
 	$(TEST_SEQRUN) ./mcoll_perf -v -f $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./test_bput -v     $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bput        $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
-	$(TEST_SEQRUN) ./mcoll_testf -v   $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./mcoll_testf77 -v $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./test_bputf -v    $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./test_bputf77 -v  $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./mcoll_testf      $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./mcoll_testf77    $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bputf       $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./test_bputf77     $(TEST_OUTDIR)/testfile.nc
 endif
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
