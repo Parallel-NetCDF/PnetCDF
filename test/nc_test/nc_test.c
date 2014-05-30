@@ -84,16 +84,17 @@ usage(char *progname)
     int noks;                                                            \
     nfails = 0;                                                          \
     sprintf(func_name, "test_%s",#func);                                 \
-    if (verbose) print( "*** Testing %-30s ... ",func_name);             \
     noks = test_ ## func();                                              \
     nfailsTotal += nfails;                                               \
     if (verbose && nfails == 0) {                                        \
+        if (verbose) printf( "*** Testing %-30s ... ",func_name);        \
         if (noks > 0)                                                    \
-            print("%4d good comparisons. ok\n", noks);                   \
+            printf("%4d good comparisons. ok\n", noks);                  \
         else                                                             \
-            print("\n");                                                 \
+            printf("\n");                                                \
     }                                                                    \
     else if (nfails > 0) {                                               \
+        if (verbose) print( "*** Testing %-30s ... ",func_name);         \
         print("\n\t### %d FAILURES TESTING %s! Stop ... ###\n",          \
               nfails,func_name);                                         \
         goto fn_exit;                                                    \
