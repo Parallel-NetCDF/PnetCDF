@@ -1699,8 +1699,21 @@ ncmpii_mgetput(NC           *ncp,
     }
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
 
-    /* create the I/O buffer derived data type */
-    if (num_reqs > 0) {
+    if (num_reqs == 0) { /* num_reqs == 0, simply participate the collective call */
+        buf = NULL;
+        len = 0;
+    }
+    else if (num_reqs == 1) {
+        MPI_Offset int8 = reqs[0].fnelems;
+        int8 *= reqs[0].varp->xsz;
+        len = int8;
+        if (len != int8) {
+            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+            len = 0; /* skip this request */
+        }
+        buf = reqs[0].xbuf;
+    }
+    else if (num_reqs > 1) { /* create the I/O buffer derived data type */
         int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
         MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
         MPI_Aint a0, ai;
@@ -1748,18 +1761,13 @@ ncmpii_mgetput(NC           *ncp,
             if (status == NC_NOERR) status = NC_EFILE;
         }
         else
-            MPI_Type_commit(&buf_type);
+            mpireturn = MPI_Type_commit(&buf_type);
 
         NCI_Free(disps);
         NCI_Free(blocklengths);
 
         len = 1;
         buf = reqs[0].xbuf;
-    }
-    else { /* num_reqs == 0, simply participate the collective call */
-        buf      = NULL;
-        len      = 0;
-        buf_type = MPI_BYTE;
     }
 
     if (rw_flag == READ_REQ) {
@@ -1804,7 +1812,7 @@ ncmpii_mgetput(NC           *ncp,
     }
 
     if (buf_type != MPI_BYTE)
-        MPI_Type_free(&buf_type);
+        mpireturn = MPI_Type_free(&buf_type);
 
     /* reset fileview so the entire file is visible again */
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
