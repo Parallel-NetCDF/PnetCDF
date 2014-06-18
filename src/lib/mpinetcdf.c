@@ -187,6 +187,11 @@ ncmpi_create(MPI_Comm    comm,
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
 
+#ifdef PNC_DEBUG
+    safe_mode = 1;
+    /* this configure time setting will be overwritten by the run-time
+     * environment variable PNETCDF_SAFE_MODE */
+#endif
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
      */
@@ -328,6 +333,11 @@ ncmpi_open(MPI_Comm    comm,
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
   
+#ifdef PNC_DEBUG
+    safe_mode = 1;
+    /* this configure time setting will be overwritten by the run-time
+     * environment variable PNETCDF_SAFE_MODE */
+#endif
     /* get environment variable PNETCDF_SAFE_MODE
      * if it is set to 1, then we perform a strict parameter consistent test
      */
@@ -1032,7 +1042,7 @@ ncmpi_inq_striping(int  ncid,
 /* report the current aggregate size allocated by malloc, yet to be freed */
 int ncmpi_inq_malloc_size(MPI_Offset *size)
 {
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     ncmpii_inq_malloc_size(size);
     return NC_NOERR;
 #else
@@ -1044,7 +1054,7 @@ int ncmpi_inq_malloc_size(MPI_Offset *size)
 /* get the max watermark ever researched by malloc (aggregated amount) */
 int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 {
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     ncmpii_inq_malloc_max_size(size);
     return NC_NOERR;
 #else
@@ -1052,12 +1062,12 @@ int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 #endif
 }
 
-/*----< ncmpi_inq_malloc_walk() >--------------------------------------------*/
-/* walk the malloc tree and print yet-to-free malloc residues */
-int ncmpi_inq_malloc_walk(void)
+/*----< ncmpi_inq_malloc_list() >--------------------------------------------*/
+/* walk the malloc tree and print yet-to-be-freed malloc residues */
+int ncmpi_inq_malloc_list(void)
 {
-#ifdef NC_TRACE_MALLOC
-    ncmpii_inq_malloc_walk();
+#ifdef PNC_DEBUG
+    ncmpii_inq_malloc_list();
     return NC_NOERR;
 #else
     return NC_ENOTENABLED;

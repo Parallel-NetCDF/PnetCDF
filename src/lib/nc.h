@@ -834,7 +834,7 @@ extern int
 ncmpii_inq_malloc_max_size(MPI_Offset *size);
 
 extern int
-ncmpii_inq_malloc_walk(void);
+ncmpii_inq_malloc_list(void);
 
 extern int
 ncmpii_inq_files_opened(int *num, int *ncids);

@@ -23,7 +23,7 @@
 #include <malloc.h>
 #endif
 
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
 #include <search.h> /* tsearch() and tdelete() */
 #endif
 
@@ -46,7 +46,7 @@ void ncmpii_init_malloc_tracing(void)
 /* get the current aggregate size allocated by malloc */
 int ncmpii_inq_malloc_size(MPI_Offset *size)
 {
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     *size = ncmpii_mem_alloc;
     return 1;
 #else
@@ -58,7 +58,7 @@ int ncmpii_inq_malloc_size(MPI_Offset *size)
 /* get the max watermark ever researched by malloc */
 int ncmpii_inq_malloc_max_size(MPI_Offset *size)
 {
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     *size = ncmpii_max_mem_alloc;
     return 1;
 #else
@@ -66,7 +66,7 @@ int ncmpii_inq_malloc_max_size(MPI_Offset *size)
 #endif
 }
 
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
@@ -103,9 +103,9 @@ void walker(const void *node, const VISIT which, const int depth) {
 #endif
 
 /* check if there is any malloc residue */
-int ncmpii_inq_malloc_walk(void)
+int ncmpii_inq_malloc_list(void)
 {
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     /* check if malloc tree is empty */
     if (ncmpii_mem_root != NULL)
         twalk(ncmpii_mem_root, walker);
@@ -115,7 +115,7 @@ int ncmpii_inq_malloc_walk(void)
 #endif
 }
 
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
 /*----< ncmpii_add_mem_entry() >----------------------------------------------*/
 /* add a new malloc entry to the table */
 static
@@ -195,7 +195,7 @@ void *NCI_Malloc_fn(size_t      size,
 	fprintf(stderr, "malloc(%zd) failed in file %s, line %d\n", size, filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     ncmpii_add_mem_entry(new, size, lineno, func, filename);
 #endif
     return new;
@@ -219,7 +219,7 @@ void *NCI_Calloc_fn(size_t      nelem,
 	fprintf(stderr, "calloc(%zd, %zd) failed in file %s, line %d\n", nelem, elsize, filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     ncmpii_add_mem_entry(new, nelem * elsize, lineno, func, filename);
 #endif
     return new;
@@ -237,7 +237,7 @@ void *NCI_Realloc_fn(void       *ptr,
     if (size == 0)
         fprintf(stderr, "Attempt to realloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     if (ptr != NULL) ncmpii_del_mem_entry(ptr);
 #endif
     if (size == 0) return NULL;
@@ -246,7 +246,7 @@ void *NCI_Realloc_fn(void       *ptr,
 	fprintf(stderr, "realloc failed in file %s, line %d\n", filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     ncmpii_add_mem_entry(new, size, lineno, func, filename);
 #endif
     return new;
@@ -264,7 +264,7 @@ void NCI_Free_fn(void       *ptr,
 	fprintf(stderr, "Attempt to free null pointer in file %s, line %d\n", filename, lineno);
 #endif
     if (ptr == NULL) return;
-#ifdef NC_TRACE_MALLOC
+#ifdef PNC_DEBUG
     ncmpii_del_mem_entry(ptr);
 #endif
     free(ptr);
