@@ -82,7 +82,7 @@ AH_TEMPLATE([NO_IEEE_FLOAT],            [Does sytem have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
-AH_TEMPLATE([NC_TRACE_MALLOC],          [Define if to enable malloc tracing])
+AH_TEMPLATE([PNC_DEBUG],                [Define if to enable debugging])
 
 dnl an option to use a customized rm command
 AC_ARG_VAR(RM, Command for deleting files or directories. default: rm)
@@ -574,24 +574,24 @@ AC_CHECK_FUNCS([memset setlocale sqrt strchr strerror strrchr strtol access unli
 dnl AC_CHECK_LIB([m], [tanh])
 UD_CHECK_LIB_MATH
 
-dnl enable memory allocation tracing. This relies on tdelete and tsearch
+dnl malloc memory allocation tracing relies on tdelete and tsearch
 AC_CHECK_HEADERS([search.h])
 AC_CHECK_FUNCS([tsearch tdelete])
 
-AC_ARG_ENABLE([malloc-tracing],
-    [AS_HELP_STRING([--enable-malloc-tracing],
-                    [Enable memory allocation tracing.
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug],
+                    [Enable PnetCDF internal debug mode. This also enables safe mode.
                      @<:@default: disabled@:>@])],
-    [malloc_tracing=${enableval}], [malloc_tracing=no]
+    [debug=${enableval}], [debug=no]
 )
-AC_MSG_CHECKING(memory allocation tracing)
-if test "x${malloc_tracing}" = xyes; then
+AC_MSG_CHECKING(PnetCDF debug mode)
+if test "x${debug}" = xyes; then
    if (test "x${ac_cv_func_tsearch}" = xyes) &&
       (test "x${ac_cv_func_tdelete}" = xyes) ; then
-      AC_DEFINE(NC_TRACE_MALLOC)
+      AC_DEFINE(PNC_DEBUG)
    fi
 fi
-AC_MSG_RESULT($malloc_tracing)
+AC_MSG_RESULT($debug)
 
 AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
 if test "x${ac_cv_type_MPI_Offset}" = xyes; then
@@ -1024,9 +1024,9 @@ if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; the
   echo "\
 	      Memory in-place byte swap        - disabled"
 fi
-if test "x${malloc_tracing}" = xyes; then
+if test "x${debug}" = xyes; then
   echo "\
-	      Internal malloc tracing          - enabled"
+	      PnetCDF internal debug mode      - enabled"
 fi
 
 echo "\

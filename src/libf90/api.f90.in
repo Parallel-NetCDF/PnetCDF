@@ -3130,8 +3130,8 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: size
     END FUNCTION   nfmpi_inq_malloc_max_size
 
-    INTEGER        FUNCTION nfmpi_inq_malloc_walk()
-    END FUNCTION   nfmpi_inq_malloc_walk
+    INTEGER        FUNCTION nfmpi_inq_malloc_list()
+    END FUNCTION   nfmpi_inq_malloc_list
 
     INTEGER        FUNCTION nfmpi_inq_files_opened(nfiles, ncids)
                             INTEGER,                       INTENT(OUT) :: nfiles

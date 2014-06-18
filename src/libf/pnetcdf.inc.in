@@ -713,7 +713,7 @@
       integer  nfmpi_inq_striping
       integer  nfmpi_inq_malloc_size
       integer  nfmpi_inq_malloc_max_size
-      integer  nfmpi_inq_malloc_walk
+      integer  nfmpi_inq_malloc_list
       integer  nfmpi_inq_files_opened
 
       external nfmpi_inq
@@ -724,7 +724,7 @@
       external nfmpi_inq_striping
       external nfmpi_inq_malloc_size
       external nfmpi_inq_malloc_max_size
-      external nfmpi_inq_malloc_walk
+      external nfmpi_inq_malloc_list
       external nfmpi_inq_files_opened
 !
 ! dimension routines:

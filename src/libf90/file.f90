@@ -270,11 +270,11 @@ function nf90mpi_inq_malloc_max_size(size)
 end function nf90mpi_inq_malloc_max_size
 
 ! -------
-function nf90mpi_inq_malloc_walk()
-  integer                                       :: nf90mpi_inq_malloc_walk
+function nf90mpi_inq_malloc_list()
+  integer                                       :: nf90mpi_inq_malloc_list
 
-  nf90mpi_inq_malloc_walk = nfmpi_inq_malloc_walk()
-end function nf90mpi_inq_malloc_walk
+  nf90mpi_inq_malloc_list = nfmpi_inq_malloc_list()
+end function nf90mpi_inq_malloc_list
 
 ! -------
 function nf90mpi_inq_files_opened(nfiles, ncids)
