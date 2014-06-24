@@ -178,6 +178,11 @@ sure the process allocation at least contains 8 processes.
 One can also run "make ptest" on batch queue systems. One example PBS
 script is provide "pbs.script".
 
+Note on setting TEST_OUTDIR. In order to run parallel test correctly, the
+output directory must be on a file system accessible to all MPI processes.
+We recommend to use parallel file systems or POSIX compliant file systems
+(Using NFS will most likely fail the parallel test.)
+
 -------------------------------------------------------------------------
 
 4. Reporting Installation or Usage Problems
