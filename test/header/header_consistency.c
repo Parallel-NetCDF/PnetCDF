@@ -14,7 +14,8 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define ERR_MSG(e, e1) {if (e != NC_EMULTIDEFINE && e != e1) { printf("Error (line %d): expecting error code %d or %d but got %d\n", __LINE__, NC_EMULTIDEFINE, e1, e); nerr++; }}
+#define ERR_EXP(e, exp) {if (e != exp) { printf("Error (line %d): expecting error code %d but got %d\n", __LINE__, exp, e); nerr++; }}
+#define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2) { printf("Error (line %d): expecting error code %d or %d but got %d\n", __LINE__, exp1, exp2, e); nerr++; }}
 
 #define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
 
@@ -32,12 +33,21 @@ int test_open_mode(char *filename, int safe_mode)
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
     if (rank == 0) cmode = NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid);
-    /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
-    if (safe_mode && rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+    /* if safe_mode is on, then we expect all non-root ranks to print a warning
+     * message "inconsistent file create mode, overwrite with root's" and error
+     * code NC_EMULTIDEFINE_OMODE from non-root processes.
+     * if safe_mode is off, then no error code should be returned.
+     */
+    if (safe_mode && rank > 0) ERR_EXP(err, NC_EMULTIDEFINE_OMODE)
     else                       ERR
+
     err = ncmpi_close(ncid);
+    /* if safe_mode is on, then no error code should be returned.
+     * if safe_mode is off, then we expect error code NC_EMULTIDEFINE_OMODE
+     * from all non-root processes and NC_EMULTIDEFINE from root process.
+     */
     if (safe_mode) ERR
-    else           ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+    else           ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_OMODE)
 
     int format;
     err = ncmpi_inq_file_format(filename, &format); ERR
@@ -51,8 +61,12 @@ int test_open_mode(char *filename, int safe_mode)
     if (rank == 0) omode = NC_NOWRITE;
     err = ncmpi_open(comm, filename, omode, info, &ncid);
     if (safe_mode) {
+        /* in safe_mode, we expect all non-root ranks to print a warning message
+         * "inconsistent file open mode, overwrite with root's" and error code
+         * code NC_EMULTIDEFINE_OMODE and no error on root process.
+         */
         /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_OMODE */
-        if (rank > 0) ERR_MSG(err, NC_EMULTIDEFINE_OMODE)
+        if (rank > 0) ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_OMODE)
 
         /* in safe mode, open mode inconsistent is not a fatal error, file is
          * still opened, with root's omode overwriting others. Hence, once the
@@ -61,11 +75,7 @@ int test_open_mode(char *filename, int safe_mode)
     }
     else {
         /* expected errors: NC_EMULTIDEFINE_OMODE or NC_EMULTIDEFINE_FNC_ARGS */
-        if (err != NC_EMULTIDEFINE_OMODE && err != NC_EMULTIDEFINE_FNC_ARGS) {
-            printf("Error: unexpected error code %d at line %d: %s\n",
-                   err,__LINE__,ncmpi_strerror(err));
-            nerr++;
-        }
+        ERR_EXP2(err, NC_EMULTIDEFINE_OMODE, NC_EMULTIDEFINE_FNC_ARGS)
 
         /* When not in safe mode, the inconsistent omode will be passed to
          * MPI_File_open(). MPI-IO should return error class MPI_ERR_NOT_SAME
@@ -98,7 +108,7 @@ int test_dim(char *filename)
     }
     err = ncmpi_enddef(ncid);
     /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_NUM */
-    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NUM)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_DIM_NUM)
 
     err = ncmpi_inq_ndims(ncid, &ndims); ERR
     if (ndims != 2) {
@@ -122,7 +132,7 @@ int test_dim(char *filename)
     }
     err = ncmpi_enddef(ncid);
     /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_NUM */
-    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NUM)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_DIM_NUM)
 
     err = ncmpi_inq_ndims(ncid, &ndims); ERR
     if (ndims != 1) {
@@ -131,7 +141,7 @@ int test_dim(char *filename)
     }
     /* no process should be able to get dim "y" */
     err = ncmpi_inq_dimid(ncid, "y", &dimid2);
-    ERR_MSG(err, NC_EBADDIM)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EBADDIM)
 
     err = ncmpi_close(ncid); ERR
 
@@ -144,14 +154,14 @@ int test_dim(char *filename)
     ERR
     err = ncmpi_enddef(ncid);
     /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_NAME */
-    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NAME)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_DIM_NAME)
 
     /* all processes should be able to get dim "y" */
     err = ncmpi_inq_dimid(ncid, "y", &dimid2); ERR
 
     /* no process should be able to get dim "x" */
     err = ncmpi_inq_dimid(ncid, "xx", &dimid3);
-    ERR_MSG(err, NC_EBADDIM)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EBADDIM)
 
     err = ncmpi_close(ncid); ERR
 
@@ -164,7 +174,7 @@ int test_dim(char *filename)
     ERR
     err = ncmpi_enddef(ncid);
     /* expected errors: NC_EMULTIDEFINE or NC_EMULTIDEFINE_DIM_SIZE */
-    ERR_MSG(err, NC_EMULTIDEFINE_DIM_SIZE)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_DIM_SIZE)
 
     /* all processes should be able to get dim "x" of size == 99 */
     err = ncmpi_inq_dimlen(ncid, dimid1, &dimlen); ERR
@@ -202,7 +212,7 @@ int test_attr(char *filename)
                                   &flt_attr); ERR
     }
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_NUM)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_NUM)
     err = ncmpi_close(ncid); ERR
 
     /* Test inconsistent global attribute name -------------------------------*/
@@ -211,7 +221,7 @@ int test_attr(char *filename)
     sprintf(gattr, "gattr_name.%d",rank);
     err = ncmpi_put_att_int(ncid, NC_GLOBAL, gattr, NC_INT, 1, &int_attr); ERR
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_NAME)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_NAME)
     err = ncmpi_close(ncid); ERR
 
     /* Test inconsistent global attribute type -------------------------------*/
@@ -222,7 +232,7 @@ int test_attr(char *filename)
         err = ncmpi_put_att_float(ncid, NC_GLOBAL, "gatt", NC_FLOAT, 1, &flt_attr);
     ERR
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_TYPE)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_TYPE)
     err = ncmpi_close(ncid); ERR
 
     /* Test inconsistent global attribute length -----------------------------*/
@@ -234,7 +244,7 @@ int test_attr(char *filename)
         err = ncmpi_put_att_int(ncid, NC_GLOBAL, "gatt", NC_INT, 1, intv);
     ERR
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_LEN)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_LEN)
     err = ncmpi_close(ncid); ERR
 
     /* Test inconsistent global attribute length -----------------------------*/
@@ -243,7 +253,7 @@ int test_attr(char *filename)
     err = ncmpi_put_att_int(ncid, NC_GLOBAL, "gatt", NC_INT, 2, intv);
     ERR
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_ATTR_VAL)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_VAL)
     err = ncmpi_close(ncid); ERR
 
     return nerr;
@@ -272,7 +282,7 @@ int test_var(char *filename)
         err = ncmpi_def_var(ncid, "var2", NC_INT, 1, dimid, &varid2); ERR
     }
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_VAR_NUM)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_VAR_NUM)
 
     err = ncmpi_inq_nvars(ncid, &nvars); ERR
     if (nvars != 2) {
@@ -287,7 +297,7 @@ int test_var(char *filename)
     sprintf(name, "var.%d",rank);
     err = ncmpi_def_var(ncid, name, NC_INT, 1, dimid, &varid1); ERR
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_VAR_NAME)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_VAR_NAME)
 
     err = ncmpi_inq_varname(ncid, varid1, name); ERR
     if (strcmp(name, "var.0")) {
@@ -306,7 +316,7 @@ int test_var(char *filename)
         err = ncmpi_def_var(ncid, "var", NC_FLOAT, 1, dimid, &varid1);
     ERR
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_VAR_NDIMS)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_VAR_NDIMS)
 
     err = ncmpi_inq_varndims(ncid, varid1, &ndims); ERR
     if (ndims != 2) {
@@ -324,7 +334,7 @@ int test_var(char *filename)
         err = ncmpi_def_var(ncid, "var", NC_FLOAT, 1, dimid, &varid1);
     ERR
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_VAR_TYPE)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_VAR_TYPE)
 
     err = ncmpi_inq_vartype(ncid, varid1, &xtype); ERR
     if (xtype != NC_INT) {
@@ -345,7 +355,7 @@ int test_var(char *filename)
         err = ncmpi_def_var(ncid, "var", NC_FLOAT, 2, dimid+1, &varid1); ERR
     }
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_VAR_LEN)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_VAR_LEN)
 
     err = ncmpi_inq_vardimid(ncid, varid1, dimid); ERR
     err = ncmpi_inq_dimname(ncid, dimid[0], name); ERR
@@ -382,7 +392,7 @@ int test_var(char *filename)
         err = ncmpi_def_var(ncid, "var", NC_FLOAT, 2, dimid, &varid1); ERR
     }
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_VAR_DIMIDS)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_VAR_DIMIDS)
 
     err = ncmpi_inq_vardimid(ncid, varid1, dimid); ERR
     err = ncmpi_inq_dimname(ncid, dimid[0], name); ERR
@@ -426,7 +436,7 @@ int test_dim_var(char *filename)
         err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimid, &varid1); ERR
     }
     err = ncmpi_enddef(ncid);
-    ERR_MSG(err, NC_EMULTIDEFINE_DIM_NUM)
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_DIM_NUM)
 
     err = ncmpi_inq_ndims(ncid, &ndims); ERR
     if (ndims != 3) {
@@ -476,8 +486,8 @@ int main(int argc, char **argv)
     if (argc == 2) filename = argv[1];
 
     verbose = 0;
-    for (i=0; i<=verbose; i++) {
-        /* test with safe mode off and on*/
+    for (i=verbose; i>=0; i--) {
+        /* test with safe mode off and on */
         setenv("PNETCDF_SAFE_MODE", mode[i], 1);
         nerr += test_open_mode(filename, i);
 
