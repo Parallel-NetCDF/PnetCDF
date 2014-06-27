@@ -1025,16 +1025,19 @@ ncmpi_inq_striping(int  ncid,
     if (status != NC_NOERR)
         return status;
 
-    MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
-                 value, &flag);
-    *striping_size = 0;
-    if (flag) *striping_size = atoi(value);
+    if (striping_size != NULL) {
+        MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        *striping_size = 0;
+        if (flag) *striping_size = atoi(value);
+    }
 
-    MPI_Info_get(ncp->nciop->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
-                 value, &flag);
-    *striping_count = 0;
-    if (flag) *striping_count = atoi(value);
-
+    if (striping_count != NULL) {
+        MPI_Info_get(ncp->nciop->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        *striping_count = 0;
+        if (flag) *striping_count = atoi(value);
+    }
     return NC_NOERR;
 }
 
