@@ -234,7 +234,12 @@ ncmpii_inq_files_opened(int *num, int *ncids)
 {
     NC *ncp;
 
-for (ncp=NClist; ncp!=NULL; ncp=ncp->next) printf("still open %s\n",ncp->nciop->path);
+/*
+    for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
+        printf("still open %s\n",ncp->nciop->path);
+*/
+    if (num == NULL) return NC_EINVAL;
+
     *num = 0;
     for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
         (*num)++;
@@ -244,7 +249,7 @@ for (ncp=NClist; ncp!=NULL; ncp=ncp->next) printf("still open %s\n",ncp->nciop->
         for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
             ncids[i] = ncp->nciop->fd;
     }
-    return NC_EBADID;
+    return NC_NOERR;
 }
 
 
