@@ -196,7 +196,10 @@ ncmpi_create(MPI_Comm    comm,
      * if it is set to 1, then we perform a strict parameter consistent test
      */
     env_str = getenv("PNETCDF_SAFE_MODE");
-    if (env_str != NULL && *env_str == '1') safe_mode = 1;
+    if (env_str != NULL) {
+        if (*env_str == '0') safe_mode = 0;
+        else                 safe_mode = 1;
+    }
 
     if (safe_mode) {
         /* check if cmode is consistent with root's */
@@ -342,7 +345,10 @@ ncmpi_open(MPI_Comm    comm,
      * if it is set to 1, then we perform a strict parameter consistent test
      */
     env_str = getenv("PNETCDF_SAFE_MODE");
-    if (env_str != NULL && *env_str == '1') safe_mode = 1;
+    if (env_str != NULL) {
+        if (*env_str == '0') safe_mode = 0;
+        else                 safe_mode = 1;
+    }
 
     if (safe_mode) {
         /* check if omode is consistent with root's */
