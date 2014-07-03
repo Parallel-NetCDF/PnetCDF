@@ -501,6 +501,7 @@ fi
 
 AC_PROG_INSTALL
 
+dnl Starting from 1.5.0, yacc and lex is no longer needed
 AC_PROG_YACC
 dnl if neither bison nor byacc is found, YACC will be set to yacc
 have_yacc_lex=yes
@@ -590,6 +591,11 @@ if test "x${debug}" = xyes; then
       (test "x${ac_cv_func_tdelete}" = xyes) ; then
       AC_DEFINE(PNC_DEBUG)
    fi
+   CFLAGS="${CFLAGS} -g"
+   CXXFLAGS="${CXXFLAGS} -g"
+   FFLAGS="${FFLAGS} -g"
+   FCFLAGS="${FCFLAGS} -g"
+   F90FLAGS="${F90FLAGS} -g"
 fi
 AC_MSG_RESULT($debug)
 
