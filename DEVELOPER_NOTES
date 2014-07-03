@@ -3,40 +3,46 @@ $Id$
 ==============================================================================
 Tasks immediately before a new release (in the following order)
 ==============================================================================
- 1. Edit the release version and date
+ 1. Update the release version
+    In file "configure.in", variable $PNETCDF_VERSION indicates the version.
+    It is automatically generated from the 2nd argument of AC_INIT call.
+    Revise that string to the right release version.  For example,
 
-    $PNETCDF_VERSION is defined in configure.in, the 2nd argument of AC_INIT
-    call. Revise that string and run svn commit to get the svn property
-    \$LastChangedDate\$ updated. That string will be used as the release date.
-    For example,
+    AC_INIT([parallel-netcdf], [1.5.0.pre1], [parallel-netcdf@mcs.anl.gov])
+                                ^^^^^^^^^^
 
-    AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
+ 2. Update file "RELEASE_NOTES"
+    Copy the contents of file "sneak_peek" into file "RELEASE_NOTES"
+    Clear up file "sneak_peek" (reset all items to none) and
+    add release version and date at the top of file "RELEASE_NOTES".
 
- 2. Copy the contents of file "sneak_peek" into file "RELEASE_NOTES"
-    Clear up file sneak_peek (reset all items to none)
-    Add release date at the top of RELEASE_NOTES
+ 3. Update the release date
+    run command "svn commit" to get the svn property \$LastChangedDate\$
+    updated. That string will be used as the release date.
 
- 3. Create an SVN tag by running the below command to copy from the
+    svn commit -m "set release date of version 1.5.0.pre1 to today"
+
+ 4. Create an SVN tag by running the below command to copy from the
     current trunk:
 
     svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-4-0pre \
-             -m "Tagging pre-release version 1.4.0"
+             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-5-0pre \
+             -m "Tagging pre-release version 1.5.0.pre1"
 
- 4. run command "autoreconf" to generate file "configure".
+ 5. run command "autoreconf" to generate file "configure".
 
- 5. run command "configure" to create Makefile at root directory, so we can
+ 6. run command "configure" to create Makefile at root directory, so we can
     run "make dist" to create the tar balls.
 
- 6. run command "make dist" to produce two tar balls for PnetCDF release:
+ 7. run command "make dist" to produce two tar balls for PnetCDF release:
       parallel-netcdf-$(PNETCDF_VERSION).tar.gz
       parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
 
- 7. To generate an SHA1 checksum, run command:
-    openssl sha1 parallel-netcdf-1.4.0.pre1.tar.gz
+ 8. To generate an SHA1 checksum, run command:
+    openssl sha1 parallel-netcdf-1.5.0.pre1.tar.gz
 
     command-line output:
-    SHA1(parallel-netcdf-1.4.0.pre1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+    SHA1(parallel-netcdf-1.5.0.pre1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
 
 =====================================================
 Convention of setting version numbers.
