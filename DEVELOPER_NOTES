@@ -1,45 +1,47 @@
 $Id$
 
-=====================================================
-Tasks before a new release
-=====================================================
- - Edit the release version and date
+==============================================================================
+Tasks immediately before a new release (in the following order)
+==============================================================================
+ 1. Edit the release version and date
 
-   $PNETCDF_VERSION is defined in configure.in, the 2nd argument of AC_INIT
-   call. Revise that string and run svn commit to get the svn property
-   \$LastChangedDate\$ updated that string will be used as the release date.
+    $PNETCDF_VERSION is defined in configure.in, the 2nd argument of AC_INIT
+    call. Revise that string and run svn commit to get the svn property
+    \$LastChangedDate\$ updated. That string will be used as the release date.
+    For example,
 
-   AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
+    AC_INIT([parallel-netcdf], [1.4.0.pre1], [parallel-netcdf@mcs.anl.gov])
 
- - Copy file "sneak_peek" to file "RELEASE_NOTES"
-   clear up file sneak_peek
-   add release date
+ 2. Copy the contents of file "sneak_peek" into file "RELEASE_NOTES"
+    Clear up file sneak_peek (reset all items to none)
+    Add release date at the top of RELEASE_NOTES
 
- - create an SVN tag by running the below command to copy from the
-   current trunk:
+ 3. Create an SVN tag by running the below command to copy from the
+    current trunk:
 
-   svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-            https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-4-1 \
-            -m "Tagging pre-release version 1.4.1"
+    svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
+             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-4-0pre \
+             -m "Tagging pre-release version 1.4.0"
 
- - run command "autoreconf"
+ 4. run command "autoreconf" to generate file "configure".
 
- - run command "configure"
+ 5. run command "configure" to create Makefile at root directory, so we can
+    run "make dist" to create the tar balls.
 
- - after run configure, run command
-   "make dist" to produce two tar balls for PnetCDF release:
+ 6. run command "make dist" to produce two tar balls for PnetCDF release:
       parallel-netcdf-$(PNETCDF_VERSION).tar.gz
       parallel-netcdf-$(PNETCDF_VERSION).tar.bz2
 
- - To generate an SHA1 checksum, run command:
-   openssl sha1 parallel-netcdf-1.4.0.pre1.tar.gz
+ 7. To generate an SHA1 checksum, run command:
+    openssl sha1 parallel-netcdf-1.4.0.pre1.tar.gz
 
-   command-line output:
-   SHA1(parallel-netcdf-1.4.0.pre1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+    command-line output:
+    SHA1(parallel-netcdf-1.4.0.pre1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
 
-
- - Convention of setting version numbers.
-   http://semver.org/
+=====================================================
+Convention of setting version numbers.
+http://semver.org/
+=====================================================
 
    Given a version number MAJOR.MINOR.PATCH, increment the:
 
@@ -165,13 +167,13 @@ If a new PnetCDF API is created, please make sure we do the followings.
 =====================================================
 Note on debugging
 =====================================================
-1. Enable malloc tracing option at the configure time which can trace the
-   usage of malloc and if there is a malloc residue. All PnetCDF development
-   should call NCI_Malloc, NCI_Calloc, NCI_Realloc, and NCI_Free, instead of
-   malloc, calloc, realloc, and free. When adding a new test or example program,
-   please add a check for any malloc residue at the end. This is to make sure
-   PnetCDF proporly free up all malloc used internally. The code fragment is
-   something like below.
+1. Enable debugging option (--enable-debug) at the configure time can trace the
+   usage of malloc and whether there is a malloc residue. All PnetCDF
+   development should call NCI_Malloc, NCI_Calloc, NCI_Realloc, and NCI_Free,
+   instead of malloc, calloc, realloc, and free. When adding a new test or
+   example program, please add a check for any malloc residue at the end. This
+   is to make sure PnetCDF proporly free up all malloc used internally. The
+   code fragment is something like below.
 
     /* check if there is any PnetCDF internal malloc residue */
     MPI_Offset malloc_size, sum_size;
