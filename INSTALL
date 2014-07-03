@@ -119,13 +119,17 @@ Here lists a few important options:
                           disabled]
   --disable-fortran       Turn off support for the Fortran interface, if you
                           only need the C interface. [default: enabled]
+  --enable-debug          Enable PnetCDF internal debug mode. This also
+                          enables safe mode. [default: disabled]
   --disable-in-place-swap Disable memory in-place byte swap on Little Endian
                           machines. [default: enabled]
   --enable-coverage       Compile with coverage support (gcc-based only).
                           [default: disabled]
-  --disable-subfiling     Turns off subfiling support. [default: enabled]
+  --disable-subfiling     Turns off subfiling support. [default:
+                          enabled]
   --disable-file-sync     Disable MPI file sync if you know your file system
-                          can provide data consistency. [default: enabled]
+                          can provide data consistency. [default:
+                          enabled]
 
 Optional Packages:
   --with-mpi=/path/to/implementation
