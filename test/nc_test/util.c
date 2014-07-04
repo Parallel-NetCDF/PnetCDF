@@ -325,12 +325,12 @@ int dbl2nc ( const double d, const nc_type datatype, void *p)
         case NC_SHORT:
             r = floor(0.5+d);
             if ( r < short_min  ||  r > short_max )  return 2;
-            *((short  *) p) = r;
+            *((short *) p) = r;
             break;
         case NC_USHORT:
             r = floor(0.5+d);
             if ( r < 0.0  ||  r > ushort_max )  return 2;
-            *((short  *) p) = r;
+            *((unsigned short *) p) = r;
             break;
         case NC_INT:
             r = floor(0.5+d);
