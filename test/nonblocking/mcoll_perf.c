@@ -443,7 +443,8 @@ int main(int argc, char **argv)
     for (i=0; i<bufcount*nprocs; i++)
         buf_var[i] = mynod + 1;  
 
-    varid = (int *)malloc(nprocs*sizeof(int));
+    int nvars2 = (nvars > nprocs) ? nvars : nprocs;
+    varid = (int *)malloc(nvars2*sizeof(int));
     if (varid == NULL){
         printf("varid malloc error\n");
         return 0;
