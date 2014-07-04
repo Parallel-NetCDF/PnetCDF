@@ -246,14 +246,9 @@ ncmpiio_create(MPI_Comm     comm,
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
 
-    /* duplicate communicator as user may free it later */
-    mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
-
     ncmpiio_extract_hints(nciop, info);
 
-    mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode,
+    mpireturn = MPI_File_open(comm, (char *)path, mpiomode,
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
@@ -280,9 +275,6 @@ ncmpiio_create(MPI_Comm     comm,
          */
     }
 
-    /* get the file info used by MPI-IO */
-    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
-
     for (i=0; i<MAX_NC_ID; i++)
         if (IDalloc[i] == 0)
             break;
@@ -297,6 +289,14 @@ ncmpiio_create(MPI_Comm     comm,
 
     /* collective I/O mode is the default mode */
     set_NC_collectiveFh(nciop);
+
+    /* duplicate communicator as user may free it later */
+    mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
+
+    /* get the file info used by MPI-IO */
+    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
 
     ncp->nciop = nciop;
     return NC_NOERR;  
@@ -325,27 +325,19 @@ ncmpiio_open(MPI_Comm     comm,
     nciop = ncmpiio_new(path, ioflags);
     if (nciop == NULL)
         return NC_ENOMEM;
- 
+
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
 
-    /* duplicate communicator as user may free it later */
-    mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
- 
     ncmpiio_extract_hints(nciop, info);
 
-    mpireturn = MPI_File_open(nciop->comm, (char *)path, mpiomode,
+    mpireturn = MPI_File_open(comm, (char *)path, mpiomode,
                               info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
         return ncmpii_handle_error(mpireturn, "MPI_File_open");
     }
 
-    /* get the file info used by MPI-IO */
-    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
- 
     for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
     if (i == MAX_NC_ID) {
         ncmpiio_free(nciop);
@@ -355,6 +347,14 @@ ncmpiio_open(MPI_Comm     comm,
     IDalloc[i] = 1;
  
     set_NC_collectiveFh(nciop);
+ 
+    /* duplicate communicator as user may free it later */
+    mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
+ 
+    /* get the file info used by MPI-IO */
+    MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
  
     ncp->nciop = nciop;
     return NC_NOERR; 
