@@ -321,7 +321,7 @@
 
       if (iret .ne. NF_NOERR) then
           print *, msg, nfmpi_strerror(iret)
-          print*,'** TESTING Fortran bigrecords.F   NF_64BIT_DATA ',
+          print*,'** TESTING Fortran bigrecords.f   NF_64BIT_DATA ',
      +           '                  ------ failed'
           stop
       endif
