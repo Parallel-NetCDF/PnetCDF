@@ -43,8 +43,8 @@
           integer*8        i8buf(3)
 
           PARAMETER( cbuf="123")
-          PARAMETER(i1buf=(/1,2,3/))
-          PARAMETER( sbuf=(/1,2,3/))
+          PARAMETER(i1buf=(/1_1,2_1,3_1/))
+          PARAMETER( sbuf=(/1_2,2_2,3_2/))
           PARAMETER( ibuf=(/1,2,3/))
           PARAMETER( rbuf=(/1.0,2.0,3.0/))
           PARAMETER( dbuf=(/1.0,2.0,3.0/))
