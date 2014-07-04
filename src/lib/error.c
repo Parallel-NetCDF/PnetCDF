@@ -101,7 +101,7 @@ ncmpi_strerror(int err)
     switch (err) {
         /* PnetCDF errors */
         case NC_ESMALL:
-            return "Size of MPI_Offset too small for requested format ";
+            return "Size of MPI_Offset or MPI_Aint too small for requested format ";
         case NC_ENOTINDEP:
             return "Operation not allowed in collective data mode";
         case NC_EINDEP:
