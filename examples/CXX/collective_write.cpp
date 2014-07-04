@@ -185,14 +185,15 @@ int main(int argc, char **argv)
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
     if (rank == 0 && verbose) {
+        double write_amount = sum_write_size;
         float subarray_size = (float)bufsize*sizeof(int)/1048576.0;
         print_info(&info_used);
         printf("Local array size %d x %d x %d integers, size = %.2f MB\n",len,len,len,subarray_size);
-        sum_write_size /= 1048576.0;
+        write_amount /= 1048576.0;
         printf("Global array size %lld x %lld x %lld integers, write size = %.2f GB\n",
-               gsizes[0], gsizes[1], gsizes[2], sum_write_size/1024.0);
+               gsizes[0], gsizes[1], gsizes[2], write_amount/1024.0);
 
-        write_bw = sum_write_size/max_write_timing;
+        write_bw = write_amount/max_write_timing;
         printf(" procs    Global array size  exec(sec)  write(MB/s)\n");
         printf("-------  ------------------  ---------  -----------\n");
         printf(" %4d    %4lld x %4lld x %4lld %8.2f  %10.2f\n", nprocs,
