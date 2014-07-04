@@ -78,8 +78,8 @@ program f90tst_parallel3
   ! Create some pretend data.
   do x = 1, HALF_NX
      do y = 1, HALF_NY
-        byte_out(y, x) = my_rank * (-1)
-        short_out(y, x) =  my_rank * (-2)
+        byte_out(y, x) = INT(my_rank,1) * (-1_1)
+        short_out(y, x) = INT2(my_rank) * (-2_2)
         int_out(y, x) = my_rank * (-4)
         areal_out(y, x) = my_rank * 2.5
         double_out(y, x) = my_rank * (-4.5)
