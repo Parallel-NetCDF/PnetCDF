@@ -67,6 +67,7 @@ program f90tst_vars
   ! Create the netCDF file. 
   mode_flag = IOR(NF90_CLOBBER, NF90_64BIT_DATA) 
   call handle_err(nf90mpi_create(MPI_COMM_WORLD, filename, mode_flag, info, ncid))
+  call MPI_Info_free(info, err)
 
   ! Define the dimensions.
   nx_ll = NX
