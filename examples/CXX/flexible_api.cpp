@@ -172,6 +172,7 @@ int main(int argc, char** argv)
         /* calling a blocking flexible API */
         var0.putVar_all(start, count, &buf_zy[0], 1, subarray);
         free(buf_zy);
+        MPI_Type_free(&subarray);
 
         /* var_yx is partitioned along X dimension */
         array_of_sizes[0]    = NY + 2*ghost_len;
@@ -196,6 +197,7 @@ int main(int argc, char** argv)
         /* calling a non-blocking flexible API */
         var1.putVar_all(start, count, buf_yx, 1, subarray);
         free(buf_yx);
+        MPI_Type_free(&subarray);
 
         /* file is close implicitly */
     }
