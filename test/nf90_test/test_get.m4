@@ -214,7 +214,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
         integer err
         logical allInExtRange   
         logical allInIntRange   
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer nok      
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         doubleprecision expect(MAX_NELS)
@@ -318,7 +318,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
         integer err
         logical allInExtRange   
         logical allInIntRange   
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
         integer nok      
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
@@ -429,7 +429,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
 6               continue
                 allInIntRange = .true.
                 allInExtRange = .true.
-                do 7, j = 1, nels
+                do 7, j = 1, INT(nels)
                     err = index2indexes(j, var_rank(i), edge, index)
                     if (err .ne. NF90_NOERR) &
                         call error('error in index2indexes 1')
@@ -463,7 +463,7 @@ define([TEST_NFMPI_GET_VARA],[dnl
                         if (err .ne. NF90_NOERR .and. err .ne. NF90_ERANGE) &
                             call errore('OK or Range error: ', err)
                     end if
-                    do 9, j = 1, nels
+                    do 9, j = 1, INT(nels)
                         if (inRange3(expect(j),var_type(i), &
                                      NFT_ITYPE($1)) .and. &
                             in_internal_range(NFT_ITYPE($1), expect(j))) &
@@ -524,9 +524,9 @@ define([TEST_NFMPI_GET_VARS],dnl
         integer err
         logical allInExtRange   
         logical allInIntRange   
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer nstarts         
+        integer(kind=MPI_OFFSET_KIND) nstarts         
         integer nok             
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
@@ -627,7 +627,7 @@ define([TEST_NFMPI_GET_VARS],dnl
                     end if
                     nstarts = nstarts * stride(j)
 6               continue
-                do 7, m = 1, nstarts
+                do 7, m = 1, INT(nstarts)
                     err = index2indexes(m, var_rank(i), sstride,  &
                                         index)
                     if (err .ne. NF90_NOERR) &
@@ -650,7 +650,7 @@ define([TEST_NFMPI_GET_VARS],dnl
 !    */
                     allInIntRange = .true.
                     allInExtRange = .true.
-                    do 9, j = 1, nels
+                    do 9, j = 1, INT(nels)
                         err = index2indexes(j, var_rank(i), count,  &
                                             index2)
                         if (err .ne. NF90_NOERR) &
@@ -687,7 +687,7 @@ define([TEST_NFMPI_GET_VARS],dnl
                                 err .ne. NF90_ERANGE) &
                                 call errore('OK or Range error: ', err)
                         end if
-                        do 11, j = 1, nels
+                        do 11, j = 1, INT(nels)
                             if (inRange3(expect(j),var_type(i), &
                                 NFT_ITYPE($1)) .and. &
                                 in_internal_range(NFT_ITYPE($1),  &
@@ -750,9 +750,9 @@ define([TEST_NFMPI_GET_VARM],dnl
         integer err
         logical allInExtRange   
         logical allInIntRange   
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer nstarts         
+        integer(kind=MPI_OFFSET_KIND) nstarts         
         integer nok             
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
@@ -857,7 +857,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                     sstride(j) = stride(j)
                     nstarts = nstarts * stride(j)
 6               continue
-                do 7, m = 1, nstarts
+                do 7, m = 1, INT(nstarts)
                     err = index2indexes(m, var_rank(i), sstride, index)
                     if (err .ne. NF90_NOERR) &
                         call error('error in index2indexes')
@@ -885,7 +885,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                     end if
                     allInIntRange = .true.
                     allInExtRange = .true.
-                    do 10, j = 1, nels
+                    do 10, j = 1, INT(nels)
                         err = index2indexes(j, var_rank(i), count,  &
                                             index2)
                         if (err .ne. NF90_NOERR) &
@@ -922,7 +922,7 @@ define([TEST_NFMPI_GET_VARM],dnl
                                 err .ne. NF90_ERANGE) &
                                 call errore('OK or Range error: ', err)
                         end if
-                        do 12, j = 1, nels
+                        do 12, j = 1, INT(nels)
                             if (inRange3(expect(j),var_type(i), &
                                          NFT_ITYPE($1)) .and. &
                                 in_internal_range(NFT_ITYPE($1), &

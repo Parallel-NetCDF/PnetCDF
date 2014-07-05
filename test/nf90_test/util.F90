@@ -157,7 +157,7 @@
       IF (.NOT.((VALUE .GE. MIN) .AND. (VALUE .LE. MAX))) THEN
           INRANGE_FLOAT = .FALSE.
       ELSE
-          FVALUE = VALUE
+          FVALUE = REAL(VALUE)
           INRANGE_FLOAT = (FVALUE .GE. MIN) .AND. (FVALUE .LE. MAX)
       END IF
       END
@@ -243,7 +243,7 @@
       doubleprecision   ud_rand
       external          ud_rand
 
-1     roll = (ud_rand(0) * (n-1)) + 0.5
+1     roll = INT((ud_rand(0) * (n-1)) + 0.5)
       if (roll .ge. n) goto 1
       end
 
@@ -275,9 +275,9 @@
                     index2ncindexes = 1
                     return
                 end if
-                intbase = base(i)
+                intbase = INT(base(i))
                 indexes(i) = 1 + mod(offset, intbase)
-                offset = offset / base(i)
+                offset = offset / INT(base(i))
 1           continue
         end if
         index2ncindexes = 0
@@ -311,9 +311,9 @@
                     index2indexes = 1
                     return
                 end if
-                intbase = base(i)
+                intbase = INT(base(i))
                 indexes(i) = 1 + mod(offset, intbase)
-                offset = offset / base(i)
+                offset = offset / INT(base(i))
 1           continue
         end if
         index2indexes = 0
@@ -611,7 +611,7 @@
 
       prod = 1
       do 1, i = 1, nn
-          prod = prod * sp(i)
+          prod = prod * INT(sp(i))
 1     continue
       end
 
@@ -698,7 +698,7 @@
                     !/* Construct initial shape vector */
                     err = index2ncindexes(jj, rank, max_dim_len, tmp)
                     do 5, dn = 1, rank
-                        var_dimid(dn,vn) = tmp(1+rank-dn)
+                        var_dimid(dn,vn) = INT(tmp(1+rank-dn))
 5                   continue
 
                     var_nels(vn) = 1
@@ -716,7 +716,7 @@
                         else
                             var_shape(dn,vn) = NRECS
                         end if
-                        var_nels(vn) = var_nels(vn) * var_shape(dn,vn)
+                        var_nels(vn) = var_nels(vn) * INT(var_shape(dn,vn))
 6                   continue
 
                     vn = vn + 1
@@ -1281,7 +1281,7 @@
       INTEGER VID
 #include "tests.inc"
       IF (VID .LT. 1) THEN
-          ATT_LEN = GATT_LEN(J)
+          ATT_LEN = INT(GATT_LEN(J))
       ELSE
           ATT_LEN = ATTLEN(J,VID)
       ENDIF

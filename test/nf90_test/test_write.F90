@@ -247,7 +247,7 @@
         if (name .ne. "abc") &
             call errori('Unexpected dim name in netCDF ', ncid)
         if (length .ne. 8) then
-            intlen = length
+            intlen = INT(length)
             call errori('Unexpected dim length: ', intlen)
         end if
         err = nf90mpi_begin_indep_data(ncid)
@@ -1210,7 +1210,7 @@
                     err = nf90mpi_get_att(ncid, vid, name, text)
                     if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_get_att: ', err)
-                    do 5, k = 1, attlength
+                    do 5, k = 1, INT(attlength)
                         ndx(1) = k
                         expect = hash(datatype, -1, ndx)
                         if (ichar(text(k:k)) .ne. expect) then
@@ -1225,7 +1225,7 @@
                            value)
                     if (err .ne. NF90_NOERR) &
                         call errore('nf90mpi_get_att: ', err)
-                    do 6, k = 1, attlength
+                    do 6, k = 1, INT(attlength)
                         ndx(1) = k
                         expect = hash(datatype, -1, ndx)
                         if (inRange(expect, datatype)) then
