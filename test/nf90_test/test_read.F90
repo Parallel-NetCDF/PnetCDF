@@ -689,7 +689,7 @@
                 call errorc('name unexpected: ', name)
                 print *, ' expected ', dim_name(i),' for the ',i,'entry'
             else if (dim_len(i) .ne. length) then
-                intlen = length
+                intlen = INT(length)
                 call errori('size unexpected: ', intlen)
             else
                 nok = nok + 1
@@ -733,7 +733,7 @@
             if (err .NE. NF90_NOERR) then
                 call errore('nf90mpi_inquire_dimension: ', err)
             else if (dim_len(i) .ne. length) then
-                intlen = length
+                intlen = INT(length)
                 call errori('size unexpected: ', intlen)
                 print *, 'expected ', dim_len(i),' for the ',i,'entry'
             else

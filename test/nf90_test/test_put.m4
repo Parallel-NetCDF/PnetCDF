@@ -240,7 +240,7 @@ define([CHECK_VARS],dnl
                                                 var_name(i))
                                         call error('index:')
                                         do 4, d = 1, var_rank(i)
-                                            intindex = index(d)
+                                            intindex = INT(index(d))
                                             call errori(' ', intindex)
 4                                       continue
                                         call errord('expect: ', expect)
@@ -316,7 +316,7 @@ define([CHECK_ATTS],dnl
                         stop 'assert(length .le. MAX_NELS)'
                     nInIntRange = 0
                     nInExtRange = 0
-                    do 4, k = 1, length
+                    do 4, k = 1, INT(length)
                         ndx(1) = k
                         expect(k) = hash4( datatype, -1, ndx,  &
                                           NFT_ITYPE($1))
@@ -337,7 +337,7 @@ define([CHECK_ATTS],dnl
                         if (err .ne. NF90_NOERR .and. err .ne. NF90_ERANGE) &
                             call errore('OK or Range error: ', err)
                     end if
-                    do 3, k = 1, length
+                    do 3, k = 1, INT(length)
                         if (inRange3(expect(k),datatype,NFT_ITYPE($1)) &
                                 .and.  &
                                 in_internal_range(NFT_ITYPE($1),  &
@@ -488,7 +488,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         integer i
         integer j
         integer err, flags
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* All values within external range?*/
@@ -583,7 +583,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     nels = nels * var_shape(j,i)
 6               continue
                 allInExtRange = .true.
-                do 7, j = 1, nels
+                do 7, j = 1, INT(nels)
                     err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
                     if (err .ne. NF90_NOERR)  &
@@ -644,7 +644,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         integer d
         integer err, flags
         integer nslabs
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
@@ -774,7 +774,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
                     nels = nels * edge(j)
 6               continue
                 allInExtRange = .true.
-                do 7, j = 1, nels
+                do 7, j = 1, INT(nels)
                     err = index2indexes(j, var_rank(i), edge, index)
                     if (err .ne. NF90_NOERR)  &
                         call error('error in index2indexes 1')
@@ -837,9 +837,9 @@ define([TEST_NFMPI_PUT_VARS],dnl
         integer k
         integer m
         integer err, flags
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer nstarts        !/* number of different starts */
+        integer(kind=MPI_OFFSET_KIND) nstarts        !/* number of different starts */
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -949,7 +949,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
                     sstride(j) = stride(j)
                     nstarts = nstarts * stride(j)
 6               continue
-                do 7, m = 1, nstarts
+                do 7, m = 1, INT(nstarts)
                     err = index2indexes(m, var_rank(i), sstride, index)
                     if (err .ne. NF90_NOERR) &
                         call error('error in index2indexes')
@@ -969,7 +969,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
 !                   }
 !
                     allInExtRange = .true.
-                    do 9, j = 1, nels
+                    do 9, j = 1, INT(nels)
                         err = index2indexes(j, var_rank(i), count,  &
                                             index2)
                         if (err .ne. NF90_NOERR) &
@@ -1039,9 +1039,9 @@ define([TEST_NFMPI_PUT_VARM],dnl
         integer k
         integer m
         integer err, flags
-        integer nels
+        integer(kind=MPI_OFFSET_KIND) nels
         integer nslabs
-        integer nstarts        !/* number of different starts */
+        integer(kind=MPI_OFFSET_KIND) nstarts        !/* number of different starts */
         integer(kind=MPI_OFFSET_KIND) start(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -1155,7 +1155,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
                     sstride(j) = stride(j)
                     nstarts = nstarts * stride(j)
 6               continue
-                do 7, m = 1, nstarts
+                do 7, m = 1, INT(nstarts)
                     err = index2indexes(m, var_rank(i), sstride, index)
                     if (err .ne. NF90_NOERR) &
                         call error('error in index2indexes')
@@ -1182,7 +1182,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
 10                      continue
                     end if
                     allInExtRange = .true.
-                    do 11 j = 1, nels
+                    do 11 j = 1, INT(nels)
                         err = index2indexes(j, var_rank(i), count,  &
                                             index2)
                         if (err .ne. NF90_NOERR) &
@@ -1278,7 +1278,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
                     if (err .ne. NF90_ENOTVAR) &
                         call errore('bad var id: ', err)
                     allInExtRange = .true.
-                    do 3, k = 1, ATT_LEN_LL
+                    do 3, k = 1, INT(ATT_LEN_LL)
                         ndx(1) = k
                         VAR_ELEM($1, value, k) = hash_$1(ATT_TYPE(j,i), &
                                             -1, ndx, NFT_ITYPE($1))
