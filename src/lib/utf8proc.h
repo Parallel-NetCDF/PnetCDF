@@ -39,6 +39,10 @@
 #ifndef UTF8PROC_H
 #define UTF8PROC_H
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include <stdlib.h>
 #ifdef HAVE_STDBOOL_H
 #include <stdbool.h>
@@ -50,14 +54,26 @@ typedef bool _Bool;
 typedef unsigned char _Bool;
 #  endif
 # endif
+#ifndef _Bool
 # define bool _Bool
+#endif
 # define false 0
 # define true 1
 # define __bool_true_false_are_defined 1
 #endif
 #include <sys/types.h>
+#ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
+#elif defined(_MSC_VER) && defined(HAVE_STDINT_H)
+#include <stdint.h>
+#else /* HAVE_INTTYPES_H */
+#include <pstdint.h>
+#endif /* HAVE_INTTYPES_H */ 
 #include <limits.h>
+
+#ifndef HAVE_SSIZE_T
+#define ssize_t int
+#endif
 
 #ifndef SSIZE_MAX
 #define SSIZE_MAX (SIZE_MAX/2)
