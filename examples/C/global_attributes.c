@@ -64,6 +64,7 @@ int main(int argc, char** argv)
     char str_att[128], att_name[NC_MAX_NAME];
     int i, rank, err, verbose=0, ncid, cmode, omode, ngatts;
     short short_att[10], digit[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    time_t ltime;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -88,7 +89,7 @@ int main(int argc, char** argv)
     ERR
 
     /* add a global attribute named "history": a time stamp at rank 0 */
-    time_t ltime = time(NULL); /* get the current calendar time */
+    ltime = time(NULL); /* get the current calendar time */
     asctime_r(localtime(&ltime), str_att);
 
     /* make sure the time string are consistent among all processes */
