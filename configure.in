@@ -590,22 +590,8 @@ if test "x${debug}" = xyes; then
    if (test "x${ac_cv_func_tsearch}" = xyes) &&
       (test "x${ac_cv_func_tdelete}" = xyes) ; then
       AC_DEFINE(PNC_DEBUG)
-   fi
-
-   if ! echo "${CFLAGS}" | ${EGREP} -q -- "-g" ; then
-      CFLAGS="${CFLAGS} -g"
-   fi
-   if ! echo "${CXXFLAGS}" | ${EGREP} -q -- "-g" ; then
-      CXXFLAGS="${CXXFLAGS} -g"
-   fi
-   if ! echo "${FFLAGS}" | ${EGREP} -q -- "-g" ; then
-      FFLAGS="${FFLAGS} -g"
-   fi
-   if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-g" ; then
-      FCFLAGS="${FCFLAGS} -g"
-   fi
-   if ! echo "${F90FLAGS}" | ${EGREP} -q -- "-g" ; then
-      F90FLAGS="${F90FLAGS} -g"
+   else
+      debug=no
    fi
 fi
 AC_MSG_RESULT($debug)
@@ -823,6 +809,7 @@ if test "$enable_fortran" = yes ; then
    if test "x${F90FLAGS}" = x ; then
       F90FLAGS=${FCFLAGS}
    fi
+   AC_SUBST(F90FLAGS)
 
    UD_FC_MODULE_EXTENSION
    dnl UD_FC_MODULE_EXTENSION defines FC_MODEXT
@@ -903,6 +890,32 @@ if test "x${enable_coverage}" = xyes; then
    else
       AC_MSG_WARN([--enable-coverage is for GNU compiler only])
    fi
+fi
+
+if test "x${debug}" = xyes; then
+   dnl add -g flag if not presented
+   if ! echo "${CFLAGS}" | ${EGREP} -q -- "-g" ; then
+      CFLAGS="${CFLAGS} -g"
+   fi
+   if ! echo "${CXXFLAGS}" | ${EGREP} -q -- "-g" ; then
+      CXXFLAGS="${CXXFLAGS} -g"
+   fi
+   if ! echo "${FFLAGS}" | ${EGREP} -q -- "-g" ; then
+      FFLAGS="${FFLAGS} -g"
+   fi
+   if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-g" ; then
+      FCFLAGS="${FCFLAGS} -g"
+   fi
+   if ! echo "${F90FLAGS}" | ${EGREP} -q -- "-g" ; then
+      F90FLAGS="${F90FLAGS} -g"
+   fi
+
+   dnl remove all -O flags
+     CFLAGS=`echo   $CFLAGS | sed 's/-O. *//g'`
+   CXXFLAGS=`echo $CXXFLAGS | sed 's/-O. *//g'`
+     FFLAGS=`echo   $FFLAGS | sed 's/-O. *//g'`
+    FCFLAGS=`echo  $FCFLAGS | sed 's/-O. *//g'`
+   F90FLAGS=`echo $F90FLAGS | sed 's/-O. *//g'`
 fi
 
 chmod u+x ${srcdir}/scripts/install-sh
