@@ -91,8 +91,7 @@ int main(int argc, char **argv)
     extern int optind;
     int i, j, verbose=1, err;
     int nprocs, len, *buf[NUM_VARS], bufsize, rank;
-    int gsizes[NDIMS], array_of_distribs[NDIMS];
-    int array_of_dargs[NDIMS], psizes[NDIMS];
+    int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     char *filename="testfile.nc", str[512];
     int ncid, dimids[NDIMS], varids[NUM_VARS], req[NUM_VARS], st[NUM_VARS];
@@ -120,11 +119,7 @@ int main(int argc, char **argv)
     len = 10; 
     if (argc >= 2) len = atoi(argv[1]); /* optional argument */
 
-    for (i=0; i<NDIMS; i++) {
-        array_of_distribs[i] = MPI_DISTRIBUTE_BLOCK;
-        array_of_dargs[i]    = MPI_DISTRIBUTE_DFLT_DARG;
-        psizes[i] = 0;
-    }
+    for (i=0; i<NDIMS; i++) psizes[i] = 0;
 
     MPI_Dims_create(nprocs, NDIMS, psizes);
     starts[0] = rank % psizes[0];
