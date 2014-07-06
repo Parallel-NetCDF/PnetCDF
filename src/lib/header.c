@@ -9,7 +9,7 @@
 #endif
 
 #include <assert.h>
-#include <string.h>  /* memcpy() */
+#include <string.h>  /* memcpy(), memcmp() */
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -1708,7 +1708,7 @@ ncmpii_comp_dims(int          safe_mode,
                        WARN_STR, local_name->nchars, root_name->nchars);
             err = NC_EMULTIDEFINE_DIM_NAME;
         }
-        else if (strncmp(root_name->cp, local_name->cp, root_name->nchars) != 0) {
+        else if (memcmp(root_name->cp, local_name->cp, root_name->nchars) != 0) {
             if (safe_mode)
                 printf("%s dimension name (local=%s, root=%s)\n",
                        WARN_STR, local_name->cp, root_name->cp);
@@ -1782,7 +1782,7 @@ ncmpii_comp_attrs(int           safe_mode,
 
         err = NC_NOERR;
         if (v1->name->nchars != v2->name->nchars ||
-            strncmp(name, v2->name->cp, v1->name->nchars) != 0) {
+            memcmp(name, v2->name->cp, v1->name->nchars) != 0) {
             msg ="%s attribute %s (root=%s, local=%s)\n";
             ATTR_WARN(msg, "name", name, v2->name->cp)
             err = NC_EMULTIDEFINE_ATTR_NAME;
@@ -1804,15 +1804,15 @@ ncmpii_comp_attrs(int           safe_mode,
         }
         /* hereandafter, we have v1->nelems == v2->nelems */
         else if (v1->type == NC_CHAR) {
-            if (strncmp(v1->xvalue, v2->xvalue, v1->nelems)) {
+            if (memcmp(v1->xvalue, v2->xvalue, v1->nelems)) {
                 msg = "%s attribute \"%s\" CHAR (root=%s, local=%s)\n";
                 ATTR_WARN(msg, name, (char*)v1->xvalue, (char*)v2->xvalue);
                 err = NC_EMULTIDEFINE_ATTR_VAL;
             }
         }
         else if (v1->type == NC_BYTE) {
-            schar *sba = v1->xvalue;
-            schar *sbb = v2->xvalue;
+            schar *sba = (schar*) v1->xvalue;
+            schar *sbb = (schar*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (sba[j] != sbb[j]) {
                     msg = "%s attribute \"%s\"[%d] BYTE (root=%hhdb, local=%hhdb)\n";
@@ -1823,8 +1823,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_UBYTE) {
-            uchar *uba = v1->xvalue;
-            uchar *ubb = v2->xvalue;
+            uchar *uba = (uchar*) v1->xvalue;
+            uchar *ubb = (uchar*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (uba[j] != ubb[j]) {
                     msg = "%s attribute \"%s\"[%d] UBYTE (root=%hhuub, local=%hhuub)\n";
@@ -1835,8 +1835,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_SHORT) {
-            short *ssa = v1->xvalue;
-            short *ssb = v2->xvalue;
+            short *ssa = (short*) v1->xvalue;
+            short *ssb = (short*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (ssa[j] != ssb[j]) {
                     msg = "%s attribute \"%s\"[%d] SHORT (root=%hds, local=%hds)\n";
@@ -1847,8 +1847,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_USHORT) {
-            ushort *usa = v1->xvalue;
-            ushort *usb = v2->xvalue;
+            ushort *usa = (ushort*) v1->xvalue;
+            ushort *usb = (ushort*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (usa[j] != usb[j]) {
                     msg = "%s attribute \"%s\"[%d] USHORT (root=%huus, local=%huus)\n";
@@ -1859,8 +1859,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_INT) {
-            int *sia = v1->xvalue;
-            int *sib = v2->xvalue;
+            int *sia = (int*) v1->xvalue;
+            int *sib = (int*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (sia[j] != sib[j]) {
                     msg = "%s attribute \"%s\"[%d] INT (root=%d, local=%d)\n";
@@ -1871,8 +1871,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_UINT) {
-            uint *uia = v1->xvalue;
-            uint *uib = v2->xvalue;
+            uint *uia = (uint*) v1->xvalue;
+            uint *uib = (uint*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (uia[j] != uib[j]) {
                     msg = "%s attribute \"%s\"[%d] UINT (root=%uu, local=%uu)\n";
@@ -1883,8 +1883,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_FLOAT) {
-            float *fa = v1->xvalue;
-            float *fb = v2->xvalue;
+            float *fa = (float*) v1->xvalue;
+            float *fb = (float*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 /* floating-point inequality here but we genuinely do
                  * expect all processors to set bit-for-bit identical
@@ -1898,8 +1898,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_DOUBLE) {
-            double *da = v1->xvalue;
-            double *db = v2->xvalue;
+            double *da = (double*) v1->xvalue;
+            double *db = (double*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 /* floating-point inequality here but we genuinely do
                  * expect all processors to set bit-for-bit identical
@@ -1913,8 +1913,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_INT64) {
-            int64 *slla = v1->xvalue;
-            int64 *sllb = v2->xvalue;
+            int64 *slla = (int64*) v1->xvalue;
+            int64 *sllb = (int64*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (slla[j] != sllb[j]) {
                     msg = "%s attribute \"%s\"[%d] INT64 (root=%lldll, local=%lldll)\n";
@@ -1925,8 +1925,8 @@ ncmpii_comp_attrs(int           safe_mode,
             }
         }
         else if (v1->type == NC_UINT64) {
-            uint64 *ulla = v1->xvalue;
-            uint64 *ullb = v2->xvalue;
+            uint64 *ulla = (uint64*) v1->xvalue;
+            uint64 *ullb = (uint64*) v2->xvalue;
             for (j=0; j<v1->nelems; j++) {
                 if (ulla[j] != ullb[j]) {
                     msg = "%s attribute \"%s\"[%d] UINT64 (root=%llull, local=%llull)\n";
