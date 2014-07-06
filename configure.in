@@ -591,11 +591,22 @@ if test "x${debug}" = xyes; then
       (test "x${ac_cv_func_tdelete}" = xyes) ; then
       AC_DEFINE(PNC_DEBUG)
    fi
-   CFLAGS="${CFLAGS} -g"
-   CXXFLAGS="${CXXFLAGS} -g"
-   FFLAGS="${FFLAGS} -g"
-   FCFLAGS="${FCFLAGS} -g"
-   F90FLAGS="${F90FLAGS} -g"
+
+   if ! echo "${CFLAGS}" | ${EGREP} -q -- "-g" ; then
+      CFLAGS="${CFLAGS} -g"
+   fi
+   if ! echo "${CXXFLAGS}" | ${EGREP} -q -- "-g" ; then
+      CXXFLAGS="${CXXFLAGS} -g"
+   fi
+   if ! echo "${FFLAGS}" | ${EGREP} -q -- "-g" ; then
+      FFLAGS="${FFLAGS} -g"
+   fi
+   if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-g" ; then
+      FCFLAGS="${FCFLAGS} -g"
+   fi
+   if ! echo "${F90FLAGS}" | ${EGREP} -q -- "-g" ; then
+      F90FLAGS="${F90FLAGS} -g"
+   fi
 fi
 AC_MSG_RESULT($debug)
 
