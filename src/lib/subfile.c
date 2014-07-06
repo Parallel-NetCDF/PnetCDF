@@ -315,7 +315,7 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
             
             for (jj=0; jj < ncp->nc_num_subfiles; jj++) 
                 for (k=0; k<var_ndims; k++)
-                    key[jj][k] = NCI_Calloc(100, sizeof(char));
+                    key[jj][k] = (char*) NCI_Calloc(100, sizeof(char));
             
             /* save original value ndims to attribute before making to 0 */
             status = ncmpi_put_att_int (ncp->nciop->fd, i, "ndims_org", NC_INT, 1, &vpp[i]->ndims);
@@ -389,7 +389,7 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
             } /* for each dim */
             
             /* master file: replace the original var with scalar var */
-            vpp[i]->dimids_org = NCI_Malloc(vpp[i]->ndims * sizeof(int));
+            vpp[i]->dimids_org = (int*) NCI_Malloc(vpp[i]->ndims * sizeof(int));
             memcpy(vpp[i]->dimids_org, vpp[i]->dimids, vpp[i]->ndims*sizeof(int));
             vpp[i]->ndims_org = vpp[i]->ndims;
             vpp[i]->ndims = 0;

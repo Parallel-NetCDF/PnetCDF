@@ -27,8 +27,8 @@
 void
 ncmpii_swapn2b(void *dst, const void *src, MPI_Offset nn)
 {
-	char *op = dst;
-	const char *ip = src;
+	char *op = (char*) dst;
+	const char *ip = (char*) src;
 
 	while(nn > 3)
 	{
@@ -53,8 +53,8 @@ ncmpii_swapn2b(void *dst, const void *src, MPI_Offset nn)
 void
 ncmpii_swap4b(void *dst, const void *src)
 {
-	char *op = dst;
-	const char *ip = src;
+	char *op = (char*) dst;
+	const char *ip = (char*) src;
 	op[0] = ip[3];
 	op[1] = ip[2];
 	op[2] = ip[1];
@@ -65,8 +65,8 @@ ncmpii_swap4b(void *dst, const void *src)
 void
 ncmpii_swapn4b(void *dst, const void *src, MPI_Offset nn)
 {
-	char *op = dst;
-	const char *ip = src;
+	char *op = (char*) dst;
+	const char *ip = (char*) src;
 
 	while(nn > 3)
 	{
@@ -105,8 +105,8 @@ ncmpii_swapn4b(void *dst, const void *src, MPI_Offset nn)
 void
 ncmpii_swap8b(void *dst, const void *src)
 {
-	char *op = dst;
-	const char *ip = src;
+	char *op = (char*) dst;
+	const char *ip = (char*) src;
 	op[0] = ip[7];
 	op[1] = ip[6];
 	op[2] = ip[5];
@@ -122,8 +122,8 @@ ncmpii_swap8b(void *dst, const void *src)
 void
 ncmpii_swapn8b(void *dst, const void *src, MPI_Offset nn)
 {
-	char *op = dst;
-	const char *ip = src;
+	char *op = (char*) dst;
+	const char *ip = (char*) src;
 
 	while(nn > 1)
 	{
