@@ -677,7 +677,7 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 	slen = strlen(name);
 
 	attrpp = (NC_attr **) ncap->value;
-	for(attrid = 0; (size_t) attrid < ncap->ndefined; attrid++, attrpp++)
+	for (attrid = 0; attrid < ncap->ndefined; attrid++, attrpp++)
 	{
 		if( slen == (*attrpp)->name->nchars &&
 			strncmp(name, (*attrpp)->name->cp, slen) == 0)
@@ -686,12 +686,12 @@ ncmpi_del_att(int ncid, int varid, const char *name)
 			break;
 		}
 	}
-	if( (size_t) attrid == ncap->ndefined )
+	if ( attrid == ncap->ndefined )
 		return NC_ENOTATT;
 			/* end inline NC_findattr() */
 
 	/* shuffle down */
-	for(attrid++; (size_t) attrid < ncap->ndefined; attrid++)
+	for (attrid++; attrid < ncap->ndefined; attrid++)
 	{
 		*attrpp = *(attrpp + 1);
 		attrpp++;
