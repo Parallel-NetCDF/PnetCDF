@@ -31,7 +31,8 @@ M4_SRCS   = getput.m4 \
             getputn_int64.m4 \
             getputn_uint64.m4 \
             m_getput_varx.m4 \
-            varn.m4
+            varn.m4 \
+            attr.m4 \
 
 HEADER_SRCS = fbits.h \
               nc.h \
@@ -47,7 +48,6 @@ HEADER_SRCS = fbits.h \
 LIB_CSRCS = mpinetcdf.c \
             header.c \
             mpincio.c \
-            attr.c \
             dim.c \
             error.c \
             nc.c \
