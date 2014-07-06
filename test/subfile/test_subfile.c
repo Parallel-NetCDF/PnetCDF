@@ -43,12 +43,12 @@ int main(int argc, char **argv)
     int opt, verbose=0;
     extern char *optarg;
     extern int optind;
-    int i, j, array_of_gsizes[3],array_of_distribs[3];
-    int order, nprocs, len, **buf, mynod;
+    int i, j, array_of_gsizes[3];
+    int nprocs, len, **buf, mynod;
     MPI_Offset bufcount;
-    int array_of_dargs[3], array_of_psizes[3];
+    int array_of_psizes[3];
     int status;
-    MPI_Offset sizes[3], array_of_starts[3];
+    MPI_Offset array_of_starts[3];
     char *basename = NULL, *basename1 = NULL, filename[100];
     char dimname[20], varname[20];
     int ncid, dimids0[3], rank_dim[3], *varid;
@@ -122,7 +122,6 @@ int main(int argc, char **argv)
 
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
 
-    order = MPI_ORDER_C;
     buf = (int **)malloc(nvars*sizeof(int*));
     if (buf == NULL){
         printf("buf malloc error\n");
@@ -162,18 +161,9 @@ int main(int argc, char **argv)
 	}
     }
   
-    array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
-    array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
-    array_of_distribs[2] = MPI_DISTRIBUTE_BLOCK;
-
-    array_of_dargs[0] = MPI_DISTRIBUTE_DFLT_DARG;
-    array_of_dargs[1] = MPI_DISTRIBUTE_DFLT_DARG;
-    array_of_dargs[2] = MPI_DISTRIBUTE_DFLT_DARG;
-    
     bufcount = 1;
     for (i=0; i<ndims; i++) {
         array_of_psizes[i] = 0;
-        sizes[i] = length;
         bufcount *= length;
     }
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
