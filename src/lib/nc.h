@@ -161,7 +161,7 @@ extern int
 ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref);
 
 extern NC_dim *
-ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, size_t elem);
+ncmpii_elem_NC_dimarray(const NC_dimarray *ncap, int elem);
 
 extern int
 ncmpi_def_dim(int ncid, const char *name, MPI_Offset size, int *dimidp);
