@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
          * take the name of a variable on the command line and read just
          * that one */
 
-        dim_sizes = calloc(ndims, sizeof(MPI_Offset));
+        dim_sizes = (MPI_Offset*) calloc(ndims, sizeof(MPI_Offset));
         /* netcdf dimension identifiers are allocated sequentially starting
          * at zero; same for variable identifiers */
         for(i=0; i<ndims; i++)  {
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
         /* oddity: there's no predefined MPI_Offset type */
         MPI_Bcast(&var_size, 1, MPI_OFFSET, 0, MPI_COMM_WORLD);
 
-        data = calloc(var_size, sizeof(int));
+        data = (int*) calloc(var_size, sizeof(int));
 
         if (rank == 0) {
             switch(type) {
