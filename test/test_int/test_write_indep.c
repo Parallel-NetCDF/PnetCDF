@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_put_vara_int(ncid, time_id,
                               time_start, time_count,
-                              (void *)buffer);
+                              buffer);
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_put_vara_int(ncid, xytime_id,
                               xytime_start, xytime_count,

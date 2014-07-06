@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
     switch (type) {
       case NC_CHAR: 
 	valuep = (void *)malloc(attlen * sizeof(char));
-	status = ncmpi_get_att_text(ncid1, NC_GLOBAL, name, valuep);
+	status = ncmpi_get_att_text(ncid1, NC_GLOBAL, name, (char*)valuep);
 	if (status != NC_NOERR) handle_error(status);
 	status = ncmpi_put_att_text (ncid2, NC_GLOBAL, name, attlen, (char *)valuep);
 	if (status != NC_NOERR) handle_error(status);
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         break;
       case NC_SHORT:
         valuep = (void *)malloc(attlen * sizeof(short));
-        status = ncmpi_get_att_short(ncid1, NC_GLOBAL, name, valuep);
+        status = ncmpi_get_att_short(ncid1, NC_GLOBAL, name, (short*)valuep);
         if (status != NC_NOERR) handle_error(status);
         status = ncmpi_put_att_short (ncid2, NC_GLOBAL, name, type, attlen, (short *)valuep);
         if (status != NC_NOERR) handle_error(status);
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
         break;
       case NC_INT:
         valuep = (void *)malloc(attlen * sizeof(int));
-        status = ncmpi_get_att_int(ncid1, NC_GLOBAL, name, valuep);
+        status = ncmpi_get_att_int(ncid1, NC_GLOBAL, name, (int*)valuep);
         if (status != NC_NOERR) handle_error(status);
         status = ncmpi_put_att_int (ncid2, NC_GLOBAL, name, type, attlen, (int *)valuep);
         if (status != NC_NOERR) handle_error(status);
@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
         break;
       case NC_FLOAT:
         valuep = (void *)malloc(attlen * sizeof(float));
-        status = ncmpi_get_att_float(ncid1, NC_GLOBAL, name, valuep);
+        status = ncmpi_get_att_float(ncid1, NC_GLOBAL, name, (float*)valuep);
         if (status != NC_NOERR) handle_error(status);
         status = ncmpi_put_att_float (ncid2, NC_GLOBAL, name, type, attlen, (float *)valuep);
         if (status != NC_NOERR) handle_error(status);
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
         break;
       case NC_DOUBLE:
         valuep = (void *)malloc(attlen * sizeof(double));
-        status = ncmpi_get_att_double(ncid1, NC_GLOBAL, name, valuep);
+        status = ncmpi_get_att_double(ncid1, NC_GLOBAL, name, (double*)valuep);
         if (status != NC_NOERR) handle_error(status);
         status = ncmpi_put_att_double (ncid2, NC_GLOBAL, name, type, attlen, (double *)valuep);
         if (status != NC_NOERR) handle_error(status);
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
       switch (type) {
         case NC_CHAR: 
 	  valuep = (void *)malloc(attlen * sizeof(char));
-	  status = ncmpi_get_att_text(ncid1, i, name, valuep);
+	  status = ncmpi_get_att_text(ncid1, i, name, (char*)valuep);
 	  if (status != NC_NOERR) handle_error(status);
 	  status = ncmpi_put_att_text (ncid2, varids[i], name, attlen, (char *)valuep);
 	  if (status != NC_NOERR) handle_error(status);
@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
           break;
         case NC_SHORT:
           valuep = (void *)malloc(attlen * sizeof(short));
-          status = ncmpi_get_att_short(ncid1, i, name, valuep);
+          status = ncmpi_get_att_short(ncid1, i, name, (short*)valuep);
           if (status != NC_NOERR) handle_error(status);
           status = ncmpi_put_att_short (ncid2, varids[i], name, type, attlen, (short *)valuep);
           if (status != NC_NOERR) handle_error(status);
@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
           break;
         case NC_INT:
           valuep = (void *)malloc(attlen * sizeof(int));
-          status = ncmpi_get_att_int(ncid1, i, name, valuep);
+          status = ncmpi_get_att_int(ncid1, i, name, (int*)valuep);
           if (status != NC_NOERR) handle_error(status);
           status = ncmpi_put_att_int (ncid2, varids[i], name, type, attlen, (int *)valuep);
           if (status != NC_NOERR) handle_error(status);
@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
           break;
         case NC_FLOAT:
           valuep = (void *)malloc(attlen * sizeof(float));
-          status = ncmpi_get_att_float(ncid1, i, name, valuep);
+          status = ncmpi_get_att_float(ncid1, i, name, (float*)valuep);
           if (status != NC_NOERR) handle_error(status);
           status = ncmpi_put_att_float (ncid2, varids[i], name, type, attlen, (float *)valuep);
           if (status != NC_NOERR) handle_error(status);
@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
           break;
         case NC_DOUBLE:
           valuep = (void *)malloc(attlen * sizeof(double));
-          status = ncmpi_get_att_double(ncid1, i, name, valuep);
+          status = ncmpi_get_att_double(ncid1, i, name, (double*)valuep);
           if (status != NC_NOERR) handle_error(status);
           status = ncmpi_put_att_double (ncid2, varids[i], name, type, attlen, (double *)valuep);
           if (status != NC_NOERR) handle_error(status);
