@@ -157,18 +157,19 @@ void ncmpii_del_mem_entry(void *buf)
     if (ncmpii_mem_root != NULL) {
         ncmpii_mem_entry node;
         node.buf  = buf;
-        ncmpii_mem_entry **ret = tfind(&node, &ncmpii_mem_root, ncmpii_cmp);
+        void *ret = tfind(&node, &ncmpii_mem_root, ncmpii_cmp);
+        ncmpii_mem_entry **found = (ncmpii_mem_entry**) ret;
         if (ret == NULL) {
             printf("Error: tdelete() buf=%p\n", buf);
             return;
         }
         /* free space for func and filename */
-        free((*ret)->func);
-        free((*ret)->filename);
+        free((*found)->func);
+        free((*found)->filename);
 
         /* substract the space amount to be freed */
-        ncmpii_mem_alloc -= (*ret)->size;
-        void *tmp = (*ret)->self;
+        ncmpii_mem_alloc -= (*found)->size;
+        void *tmp = (*found)->self;
         ret = tdelete(&node, &ncmpii_mem_root, ncmpii_cmp);
         if (ret == NULL) {
             printf("Error: tdelete() buf=%p\n", buf);
@@ -190,15 +191,15 @@ void *NCI_Malloc_fn(size_t      size,
         fprintf(stderr, "Attempt to malloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
     if (size == 0) return NULL;
-    void *new = malloc(size);
-    if (!new) {
+    void *buf = malloc(size);
+    if (!buf) {
 	fprintf(stderr, "malloc(%zd) failed in file %s, line %d\n", size, filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 #ifdef PNC_DEBUG
-    ncmpii_add_mem_entry(new, size, lineno, func, filename);
+    ncmpii_add_mem_entry(buf, size, lineno, func, filename);
 #endif
-    return new;
+    return buf;
 }
 
 
@@ -214,15 +215,15 @@ void *NCI_Calloc_fn(size_t      nelem,
         fprintf(stderr, "Attempt to calloc zero-size in file %s, line %d\n", filename, lineno);
 #endif
     if (nelem == 0 || elsize == 0) return NULL;
-    void *new =calloc(nelem, elsize);
-    if (!new) {
+    void *buf =calloc(nelem, elsize);
+    if (!buf) {
 	fprintf(stderr, "calloc(%zd, %zd) failed in file %s, line %d\n", nelem, elsize, filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 #ifdef PNC_DEBUG
-    ncmpii_add_mem_entry(new, nelem * elsize, lineno, func, filename);
+    ncmpii_add_mem_entry(buf, nelem * elsize, lineno, func, filename);
 #endif
-    return new;
+    return buf;
 }
 
 
@@ -241,15 +242,15 @@ void *NCI_Realloc_fn(void       *ptr,
     if (ptr != NULL) ncmpii_del_mem_entry(ptr);
 #endif
     if (size == 0) return NULL;
-    void *new = (void *) realloc(ptr, size);
-    if (!new) {
+    void *buf = (void *) realloc(ptr, size);
+    if (!buf) {
 	fprintf(stderr, "realloc failed in file %s, line %d\n", filename, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 #ifdef PNC_DEBUG
-    ncmpii_add_mem_entry(new, size, lineno, func, filename);
+    ncmpii_add_mem_entry(buf, size, lineno, func, filename);
 #endif
-    return new;
+    return buf;
 }
 
 
