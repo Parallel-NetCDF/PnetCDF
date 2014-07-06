@@ -1051,7 +1051,7 @@ ncmpi_inq_striping(int  ncid,
 /* report the current aggregate size allocated by malloc, yet to be freed */
 int ncmpi_inq_malloc_size(MPI_Offset *size)
 {
-#ifdef PNC_DEBUG
+#ifdef PNC_MALLOC_TRACE
     ncmpii_inq_malloc_size(size);
     return NC_NOERR;
 #else
@@ -1063,7 +1063,7 @@ int ncmpi_inq_malloc_size(MPI_Offset *size)
 /* get the max watermark ever researched by malloc (aggregated amount) */
 int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 {
-#ifdef PNC_DEBUG
+#ifdef PNC_MALLOC_TRACE
     ncmpii_inq_malloc_max_size(size);
     return NC_NOERR;
 #else
@@ -1075,7 +1075,7 @@ int ncmpi_inq_malloc_max_size(MPI_Offset *size)
 /* walk the malloc tree and print yet-to-be-freed malloc residues */
 int ncmpi_inq_malloc_list(void)
 {
-#ifdef PNC_DEBUG
+#ifdef PNC_MALLOC_TRACE
     ncmpii_inq_malloc_list();
     return NC_NOERR;
 #else
