@@ -88,8 +88,8 @@ int main(int argc, char **argv) {
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
     nitems = dim_sizes[0]*dim_sizes[1]*dim_sizes[2];
-    data = calloc(nitems, sizeof(double));
-    transposed_data = calloc(nitems, sizeof(double));
+    data = (double*) calloc(nitems, sizeof(double));
+    transposed_data = (double*) calloc(nitems, sizeof(double));
 
     for (i=0; i<dim_sizes[0]; i++) {
 	for (j=0; j<dim_sizes[1]; j++) {

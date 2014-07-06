@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
      * reading in this example.  we could, in a different example, take the
      * name of a variable on the command line and read just that one */
 
-    dim_sizes = calloc(ndims, sizeof(MPI_Offset));
+    dim_sizes = (MPI_Offset*) calloc(ndims, sizeof(MPI_Offset));
     /* netcdf dimension identifiers are allocated sequentially starting
      * at zero; same for variable identifiers */
     for (i=0; i<ndims; i++)  {
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
                             &var_natts);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-        count = calloc(var_ndims, sizeof(MPI_Offset));
+        count = (MPI_Offset*) calloc(var_ndims, sizeof(MPI_Offset));
 
         /* as long as the number of readers is identical to the number of
          * writers, we can simply read entire variables back */
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
         switch(type) {
             case NC_INT:
-                data = calloc(var_size, sizeof(int));
+                data = (int*) calloc(var_size, sizeof(int));
                 ret = ncmpi_get_var_int_all(ncfile, i, data);
                 if (ret != NC_NOERR) handle_error(ret, __LINE__);
                 break;

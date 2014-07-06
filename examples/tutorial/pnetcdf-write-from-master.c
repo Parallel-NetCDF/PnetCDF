@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
 
         /* first reason this approach is not scalable:  need to allocate
         * enough memory to hold data from all processors */
-        data = calloc(nprocs, sizeof(int));
+        data = (int*)calloc(nprocs, sizeof(int));
     }
 
     /* second reason this approch is not scalable: sending to rank 0
