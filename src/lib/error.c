@@ -192,8 +192,6 @@ ncmpi_strerror(int err)
             /* check netCDF-3 and netCDF-4 errors */
             return nc_strerror(err);
     }
-    /* default */
-    return nc_unknown_err_msg;
 }
 
 /*----< ncmpii_handle_error() ------------------------------------------------*/
