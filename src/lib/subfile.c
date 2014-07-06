@@ -3,7 +3,7 @@
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
-#define _GNU_SOURCE
+
 #if HAVE_CONFIG_H
 # include <ncconfig.h>
 #endif 
