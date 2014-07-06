@@ -102,16 +102,16 @@ const char *utf8proc_errmsg(ssize_t errcode) {
 }
 
 ssize_t utf8proc_iterate(
-  const uint8_t *str, ssize_t strlen, int32_t *dst
+  const uint8_t *str, ssize_t slen, int32_t *dst
 ) {
   int length;
   int i;
   int32_t uc = -1;
   *dst = -1;
-  if (!strlen) return 0;
+  if (!slen) return 0;
   length = utf8proc_utf8class[str[0]];
   if (!length) return UTF8PROC_ERROR_INVALIDUTF8;
-  if (strlen >= 0 && length > strlen) return UTF8PROC_ERROR_INVALIDUTF8;
+  if (slen >= 0 && length > slen) return UTF8PROC_ERROR_INVALIDUTF8;
   for (i=1; i<length; i++) {
     if ((str[i] & 0xC0) != 0x80) return UTF8PROC_ERROR_INVALIDUTF8;
   }
@@ -152,11 +152,11 @@ ssize_t utf8proc_encode_char(int32_t uc, uint8_t *dst) {
   if (uc < 0x00) {
     return 0;
   } else if (uc < 0x80) {
-    dst[0] = uc;
+    dst[0] = (uint8_t)uc;
     return 1;
   } else if (uc < 0x800) {
-    dst[0] = 0xC0 + (uc >> 6);
-    dst[1] = 0x80 + (uc & 0x3F);
+    dst[0] = (uint8_t)(0xC0 + (uc >> 6));
+    dst[1] = (uint8_t)(0x80 + (uc & 0x3F));
     return 2;
   } else if (uc == 0xFFFF) {
     dst[0] = 0xFF;
@@ -165,15 +165,15 @@ ssize_t utf8proc_encode_char(int32_t uc, uint8_t *dst) {
     dst[0] = 0xFE;
     return 1;
   } else if (uc < 0x10000) {
-    dst[0] = 0xE0 + (uc >> 12);
-    dst[1] = 0x80 + ((uc >> 6) & 0x3F);
-    dst[2] = 0x80 + (uc & 0x3F);
+    dst[0] = (uint8_t)(0xE0 + (uc >> 12));
+    dst[1] = (uint8_t)(0x80 + ((uc >> 6) & 0x3F));
+    dst[2] = (uint8_t)(0x80 + (uc & 0x3F));
     return 3;
   } else if (uc < 0x110000) {
-    dst[0] = 0xF0 + (uc >> 18);
-    dst[1] = 0x80 + ((uc >> 12) & 0x3F);
-    dst[2] = 0x80 + ((uc >> 6) & 0x3F);
-    dst[3] = 0x80 + (uc & 0x3F);
+    dst[0] = (uint8_t)(0xF0 + (uc >> 18));
+    dst[1] = (uint8_t)(0x80 + ((uc >> 12) & 0x3F));
+    dst[2] = (uint8_t)(0x80 + ((uc >> 6) & 0x3F));
+    dst[3] = (uint8_t)(0x80 + (uc & 0x3F));
     return 4;
   } else return 0;
 }
@@ -337,10 +337,10 @@ ssize_t utf8proc_decompose_char(int32_t uc, int32_t *dst, ssize_t bufsize,
 }
 
 ssize_t utf8proc_decompose(
-  const uint8_t *str, ssize_t strlen,
+  const uint8_t *str, ssize_t slen,
   int32_t *buffer, ssize_t bufsize, int options
 ) {
-  /*// strlen will be ignored, if UTF8PROC_NULLTERM is set in options*/
+  /*// slen will be ignored, if UTF8PROC_NULLTERM is set in options*/
   ssize_t wpos = 0;
   if ((options & UTF8PROC_COMPOSE) && (options & UTF8PROC_DECOMPOSE))
     return UTF8PROC_ERROR_INVALIDOPTS;
@@ -361,8 +361,8 @@ ssize_t utf8proc_decompose(
         if (rpos < 0) return UTF8PROC_ERROR_OVERFLOW;
         if (uc == 0) break;
       } else {
-        if (rpos >= strlen) break;
-        rpos += utf8proc_iterate(str + rpos, strlen - rpos, &uc);
+        if (rpos >= slen) break;
+        rpos += utf8proc_iterate(str + rpos, slen - rpos, &uc);
         if (uc < 0) return UTF8PROC_ERROR_INVALIDUTF8;
       }
       decomp_result = utf8proc_decompose_char(
@@ -514,16 +514,16 @@ ssize_t utf8proc_reencode(int32_t *buffer, ssize_t length, int options) {
 }
 
 ssize_t utf8proc_map(
-  const uint8_t *str, ssize_t strlen, uint8_t **dstptr, int options
+  const uint8_t *str, ssize_t slen, uint8_t **dstptr, int options
 ) {
   int32_t *buffer;
   ssize_t result;
   *dstptr = NULL;
-  result = utf8proc_decompose(str, strlen, NULL, 0, options);
+  result = utf8proc_decompose(str, slen, NULL, 0, options);
   if (result < 0) return result;
-  buffer = malloc(result * sizeof(int32_t) + 1);
+  buffer = (int32_t*)malloc(((size_t)result) * sizeof(int32_t) + 1);
   if (!buffer) return UTF8PROC_ERROR_NOMEM;
-  result = utf8proc_decompose(str, strlen, buffer, result, options);
+  result = utf8proc_decompose(str, slen, buffer, result, options);
   if (result < 0) {
     free(buffer);
     return result;
@@ -535,7 +535,7 @@ ssize_t utf8proc_map(
   }
   {
     int32_t *newptr;
-    newptr = realloc(buffer, result+1);
+    newptr = (int32_t*) realloc(buffer, result+1);
     if (newptr) buffer = newptr;
   }
   *dstptr = (uint8_t *)buffer;
