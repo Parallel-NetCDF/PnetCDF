@@ -164,19 +164,19 @@ int benchmark_write(char       *filename,
 
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, (int*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 1) {
-            err = ncmpi_put_vara_float_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_put_vara_float_all(ncid, varid[i], start, count, (float*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 2) {
-            err = ncmpi_put_vara_short_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_put_vara_short_all(ncid, varid[i], start, count, (short*)buf[i]);
             ERR(err)
         }
         else {
-            err = ncmpi_put_vara_double_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_put_vara_double_all(ncid, varid[i], start, count, (double*)buf[i]);
             ERR(err)
         }
     }
@@ -275,19 +275,19 @@ int benchmark_read(char       *filename,
 
     for (i=0; i<nvars; i++) {
         if (i % 4 == 0) {
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, (int*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 1) {
-            err = ncmpi_get_vara_float_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_get_vara_float_all(ncid, varid[i], start, count, (float*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 2) {
-            err = ncmpi_get_vara_short_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_get_vara_short_all(ncid, varid[i], start, count, (short*)buf[i]);
             ERR(err)
         }
         else {
-            err = ncmpi_get_vara_double_all(ncid, varid[i], start, count, buf[i]);
+            err = ncmpi_get_vara_double_all(ncid, varid[i], start, count, (double*)buf[i]);
             ERR(err)
         }
     }
