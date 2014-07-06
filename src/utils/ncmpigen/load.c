@@ -400,7 +400,7 @@ f_var_init(
     /* For record variables, store data statement for later use;
       otherwise, just print it. */
     if (vars[varnum].ndims > 0 && vars[varnum].dims[0] == rec_dim) {
-	char *dup_stmnt = emalloc(strlen(stmnt)+1);
+	char *dup_stmnt = (char*) emalloc(strlen(stmnt)+1);
 	strcpy(dup_stmnt, stmnt); /* ULTRIX missing strdup */
 	vars[varnum].data_stmnt = dup_stmnt;
     } else {
@@ -428,9 +428,9 @@ gen_load_fortran(
 
     /* generate code to initialize variable with values found in CDL input */
     if (v->type != NC_CHAR) {
-	f_var_init(varnum, rec_start);
+	f_var_init(varnum, (char*)rec_start);
     } else {
-	v->data_stmnt = fstrstr(rec_start, valnum);
+	v->data_stmnt = (char*) fstrstr((char*)rec_start, valnum);
     }
     
     if (v->ndims >0 && v->dims[0] == rec_dim) {
@@ -440,7 +440,7 @@ gen_load_fortran(
 	sprintf(stmnt, "iret = nf_put_var_%s(ncid, %s_id, %s)",
 		nfftype(v->type), v->lname, v->lname);
     } else {
-	char *char_expr = fstrstr(rec_start, valnum);
+	char *char_expr = (char*) fstrstr((char*)rec_start, valnum);
 	sprintf(stmnt, "iret = nf_put_var_%s(ncid, %s_id, %s)",
 		nfftype(v->type), v->lname, char_expr);
 	free(char_expr);
