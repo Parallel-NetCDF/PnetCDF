@@ -246,7 +246,7 @@ int benchmark_write(char       *filename,
     k = 0;
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
-            int *int_b = buf[i];
+            int *int_b = (int*) buf[i];
             start[0] = len * (rank % psizes[0]);
             start[1] = len * ((rank / psizes[1]) % psizes[1]);
             count[0] = len;
@@ -257,7 +257,7 @@ int benchmark_write(char       *filename,
             if (verbose) printf("block-block %d: start=%lld %lld count=%lld %lld\n",i,start[0],start[1],count[0],count[1]);
         }
         else if (i % 4 == 1) {
-            float *flt_b = buf[i];
+            float *flt_b = (float*) buf[i];
             start[0] = 0;
             count[0] = len;
             count[1] = 1;
@@ -271,7 +271,7 @@ int benchmark_write(char       *filename,
             }
         }
         else if (i % 4 == 2) {
-            short *shr_b = buf[i];
+            short *shr_b = (short*) buf[i];
             start[0] = len * rank;
             start[1] = 0;
             count[0] = len;
@@ -290,7 +290,7 @@ int benchmark_write(char       *filename,
             if (verbose) printf("block-* i=1 start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
         }
         else {
-            double *dbl_b = buf[i];
+            double *dbl_b = (double*) buf[i];
             start[0] = 0;
             start[1] = len * rank;
             count[0] = len;
@@ -410,7 +410,7 @@ int benchmark_read(char       *filename,
     k = 0;
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
-            int *int_b = buf[i];
+            int *int_b = (int*) buf[i];
             start[0] = len * (s_rank % psizes[0]);
             start[1] = len * ((s_rank / psizes[1]) % psizes[1]);
             count[0] = len;
@@ -420,7 +420,7 @@ int benchmark_read(char       *filename,
             ERR(err)
         }
         else if (i % 4 == 1) {
-            float *flt_b = buf[i];
+            float *flt_b = (float*) buf[i];
             start[0] = 0;
             count[0] = len;
             count[1] = 1;
@@ -433,7 +433,7 @@ int benchmark_read(char       *filename,
             }
         }
         else if (i % 4 == 2) {
-            short *shr_b = buf[i];
+            short *shr_b = (short*) buf[i];
             start[0] = len * s_rank;
             start[1] = 0;
             count[0] = len;
@@ -450,7 +450,7 @@ int benchmark_read(char       *filename,
             ERR(err)
         }
         else {
-            double *dbl_b = buf[i];
+            double *dbl_b = (double*) buf[i];
             start[0] = 0;
             start[1] = len * s_rank;
             count[0] = len;
