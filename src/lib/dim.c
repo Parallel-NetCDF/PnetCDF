@@ -266,7 +266,7 @@ ncmpii_elem_NC_dimarray(const NC_dimarray *ncap,
     /* returns the dimension ID defined earlier */
     assert(ncap != NULL);
 
-    if (ncap->ndefined == 0 || dimid >= ncap->ndefined)
+    if (dimid < 0 || ncap->ndefined == 0 || dimid >= ncap->ndefined)
         return NULL;
 
     assert(ncap->value != NULL);
