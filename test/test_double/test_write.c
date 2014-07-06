@@ -217,7 +217,7 @@ int main(int argc, char **argv) {
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_put_vara_double_all(ncid, time_id,
                     time_start, time_count,
-                    (void *)buffer);
+                    (double *)buffer);
   if (status != NC_NOERR) handle_error(status);
   status = ncmpi_put_vara_double_all(ncid, xytime_id,
                     xytime_start, xytime_count,
