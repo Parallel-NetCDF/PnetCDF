@@ -133,8 +133,8 @@ ncmpii_swapn(void       *dest_p,  /* destination array */
             dest[i] = htons(src[i]);
     }
     else {
-              uchar *op = dest_p;
-        const uchar *ip = src_p;
+              uchar *op = (uchar*) dest_p;
+        const uchar *ip = (uchar*) src_p;
         /* for esize is not 1, 2, or 4 */
         while (nelems-- > 0) {
             for (i=0; i<esize; i++)
@@ -152,7 +152,7 @@ ncmpii_in_swapn(void       *buf,
                 int         esize)   /* byte size of each element */
 {
     int  i;
-    uchar tmp, *op = buf;
+    uchar tmp, *op = (uchar*)buf;
 
     if (esize <= 1 || nelems <= 0) return;  /* no need */
 
