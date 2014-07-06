@@ -146,11 +146,11 @@
  *  * global variables (defined by command line processing in main())
  *   * related use of CDF-1 vs CDF-2 file formats
  *    */
-int cdf_format;  /* 1: CDF-1, 2: CDF-2 5: CDF-5 */
-int extra_flags; /* if using CDF-2 format, will be set to NC_64BIT_OFFSET */
-int numGatts;  /* number of global attributes */
-int numVars;   /* number of variables */
-int numTypes;  /* number of netCDF data types to test */
+extern int cdf_format;  /* 1: CDF-1, 2: CDF-2 5: CDF-5 */
+extern int extra_flags; /* if using CDF-3 format, will be set to NC_64BIT_OFFSET */
+extern int numGatts;  /* number of global attributes */
+extern int numVars;   /* number of variables */
+extern int numTypes;  /* number of netCDF data types to test */
 
 
 /* Here is how NVARS is acalculated in init_gvars().
