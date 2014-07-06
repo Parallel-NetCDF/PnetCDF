@@ -8,7 +8,8 @@
 #include <unistd.h>
 
 int cdf_format;  /* 1: CDF-1, 2: CDF-2 5: CDF-5 */
-int extra_flags; /* if using CDF-2 format, will be set to NC_64BIT_OFFSET */
+int extra_flags; /* if using CDF-2 format, will be set to NC_64BIT_OFFSET
+                    if using CDF-5 format, will be set to NC_64BIT_DATA */
 int numGatts;  /* number of global attributes */
 int numVars;   /* number of variables */
 int numTypes;  /* number of netCDF data types to test */
