@@ -66,8 +66,8 @@ int main(int argc, char ** argv)
 
     MPI_Type_get_extent(usertype, &lb, &extent);
     userbufsz = extent;
-    userbuf = malloc(userbufsz);
-    cmpbuf = calloc(userbufsz, 1);
+    userbuf = (int*) malloc(userbufsz);
+    cmpbuf = (int*) calloc(userbufsz, 1);
     for (i=0; i< userbufsz/sizeof(int); i++)
         userbuf[i] = pi*i;
 
