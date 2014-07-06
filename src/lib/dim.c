@@ -261,7 +261,7 @@ incr_NC_dimarray(NC_dimarray *ncap,
 /*----< ncmpii_elem_NC_dimarray() >------------------------------------------*/
 NC_dim *
 ncmpii_elem_NC_dimarray(const NC_dimarray *ncap,
-                        size_t             dimid)
+                        int                dimid)
 {
     /* returns the dimension ID defined earlier */
     assert(ncap != NULL);
@@ -391,7 +391,7 @@ ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep)
 	if(status != NC_NOERR)
 		return status;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
+	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
 	if(dimp == NULL)
 		return NC_EBADDIM;
 
@@ -423,7 +423,7 @@ ncmpi_inq_dimname(int ncid, int dimid, char *name)
 	if(status != NC_NOERR)
 		return status;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
+	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
 	if(dimp == NULL)
 		return NC_EBADDIM;
 
@@ -449,7 +449,7 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
 	if(status != NC_NOERR)
 		return status;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
+	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
 	if(dimp == NULL)
 		return NC_EBADDIM;
 
@@ -495,7 +495,7 @@ ncmpi_rename_dim(int         ncid,
     if (existid != -1)
         return NC_ENAMEINUSE;
 
-    dimp = ncmpii_elem_NC_dimarray(&ncp->dims, (size_t) dimid);
+    dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
     if (dimp == NULL)
         return NC_EBADDIM;
 
