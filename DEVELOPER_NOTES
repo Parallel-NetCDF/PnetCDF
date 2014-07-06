@@ -109,6 +109,11 @@ Conform with netCDF
 
  - PnetCDF error codes start in -250
 
+ - PnetCDF developers are reminded to periodically sync the followings with
+   netCDF release.
+   1. Error codes (pnetcdf.h v.s. netcdf.h)
+   2. trunk/src/lib/utf8proc.h v.s. netcdf-c/include/utf8proc.h
+   3. trunk/src/lib/utf8proc.c v.s. netcdf-c/libdispatch/dutf8proc.c
 
 ===============================================================
 config.guess, config.sub, install-sh in directory scripts
@@ -178,7 +183,7 @@ Note on debugging
    development should call NCI_Malloc, NCI_Calloc, NCI_Realloc, and NCI_Free,
    instead of malloc, calloc, realloc, and free. When adding a new test or
    example program, please add a check for any malloc residue at the end. This
-   is to make sure PnetCDF proporly free up all malloc used internally. The
+   is to make sure PnetCDF properly free up all malloc used internally. The
    code fragment is something like below.
 
     /* check if there is any PnetCDF internal malloc residue */
