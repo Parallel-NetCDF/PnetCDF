@@ -913,11 +913,11 @@ if test "x${debug}" = xyes; then
    fi
 
    dnl remove all -O flags
-     CFLAGS=`echo   $CFLAGS | sed 's/-O. *//g'`
-   CXXFLAGS=`echo $CXXFLAGS | sed 's/-O. *//g'`
-     FFLAGS=`echo   $FFLAGS | sed 's/-O. *//g'`
-    FCFLAGS=`echo  $FCFLAGS | sed 's/-O. *//g'`
-   F90FLAGS=`echo $F90FLAGS | sed 's/-O. *//g'`
+     CFLAGS=`echo   $CFLAGS | sed 's/-O. *//g' | sed 's/-fast//g'`
+   CXXFLAGS=`echo $CXXFLAGS | sed 's/-O. *//g' | sed 's/-fast//g'`
+     FFLAGS=`echo   $FFLAGS | sed 's/-O. *//g' | sed 's/-fast//g'`
+    FCFLAGS=`echo  $FCFLAGS | sed 's/-O. *//g' | sed 's/-fast//g'`
+   F90FLAGS=`echo $F90FLAGS | sed 's/-O. *//g' | sed 's/-fast//g'`
 fi
 
 chmod u+x ${srcdir}/scripts/install-sh
