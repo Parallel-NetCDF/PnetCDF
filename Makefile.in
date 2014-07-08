@@ -51,7 +51,9 @@ PACKING_LIST	= Makefile.in \
 		  README.SGI \
 		  README.SX \
 		  README.large_files \
-		  RELEASE_NOTES
+		  RELEASE_NOTES \
+		  pbs.script \
+		  cobalt.script
 
 PACKING_SUBDIRS	= $(SUBDIRS)
 
