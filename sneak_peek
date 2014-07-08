@@ -3,201 +3,41 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
   o New features
-    * A new configure option "--disable-in-place-swap" is added. It disables
-      the byte-swap operations running in-place on the user's write buffers.
-      The purpose of providing this option is to deal with the problem when a
-      Fortran program uses a immutable buffer for put APIs, e.g. the buffer is
-      declared as a PARAMETER, and in-place byte swap on this buffer causes
-      segmentation fault. See discussion threads of
-      http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2013-July/001498.html
-
-      Impacts:
-      1. It takes effect only on Little Endian machines.
-      2. It only affects put/iput data APIs, but not attribute APIs.
-      3. The INTENT of buffer arguments in all Fortran 90 put/iput APIs will be
-         declared as "IN". Without this setting, the default is "INOUT".
-      4. It has an impact on performance, as an extra internal temporary buffer
-         will be allocated to copy data over from user's put buffer, so byte
-         swap can be run on the temporary buffer.
-
-      The default setting is to enable in-place byte swap. PnetCDF tries not to
-      allocate additional memory space, due to performance concern. Users are
-      discouraged to use Fortran PARAMETER buffers in put APIs.
-
-    * A new configure option "--enable-debug" is added. It enables a memory
-      allocation tracing mechanism internal in PnetCDF. In addition, it enables
-      the PnetCDF safe mode. (Note that setting the environment variable
-      PNETCDF_SAFE_MODE at the run time can still overwrite the safe mode.)
-      Default debug mode is disabled. When enabled, a user program can call
-      three new APIs below: ncmpi_inq_malloc_size, ncmpi_inq_malloc_max_size,
-      and ncmpi_inq_malloc_list to obtain the size in bytes of current memory
-      allocated internally. This feature uses a binary tree to manage all
-      malloc buffers, e.g. tsearch() and tdelete().
-
-    * Add three Fortran parameters for PnetCDF library version numbers:
-      PNETCDF_VERSION_MAJOR, PNETCDF_VERSION_MINOR, and PNETCDF_VERSION_SUB.
-      Similarly in C programs, these are defined in pnetcdf.h as constants.
+    * none
 
   o New APIs
-    * C++ APIs are now available. They are developed based on netCDF-4 C++
-      library. However, users are encouraged to use C APIs, instead C++.
-
-    * ncmpi_put_att, ncmpi_get_att, nfmpi_put_att, and nfmpi_get_att - these
-      APIs correspond to nc_put_att, nc_get_att, nf_put_att, and nf_get_att.
-      Note they are not the "flexible" APIs. Flexible APIs have an MPI derived
-      datatype argument.
-
-    * ncmpi__enddef, nfmpi__enddef, and nf90mpi_enddef - these APIs correspond
-      to netCDF nc__enddef, nf__enddef, and nf90_enddef (with additional
-      optional arguments).
-
-    * ncmpi_inq_file_info - the naming for ncmpi_get_file_info may cause
-      confusion, as "get" has a different meaning on PnetCDF. The correct
-      name should use "inq". However, ncmpi_get_file_info is kept for backward
-      compatibility.
-
-    * ncmpi_inq_striping, nfmpi_inq_striping, nf90mpi_inq_striping report the
-      file system striping settings of the opened file: striping size and
-      striping count, if the underneath MPI-IO can find their values from the
-      file system in use.
-
-    * ncmpi_inq_malloc_size, ncmpi_inq_malloc_max_size, ncmpi_inq_malloc_list
-      report the size in bytes of current memory allocated internally by
-      PnetCDF. Similar APIs for Fortran 77 and 90 are also available. These
-      APIs are enabled only when PnetCDF is configured with option
-      --enable-debug. When this option is not enabled, calling these APIs will
-      return the error code NC_ENOTENABLED. These APIs are usefully for
-      debugging.
-
-    * ncmpi_inq_files_opened reports the number of files that are currently
-      opened. Similar API for Fortran 77 and 90 are also available. The API
-      takes 2 arguments: number of files and array of file IDs. If the second
-      argument, array of IDs, is not NULL, then it will filled with the netCDF
-      dataset IDs. This API is useful for debugging.
+    * none
 
   o Syntax changes
-    * For all Fortran put/iput APIs, the INTENT of write buffer arguments is
-      changed to "INOUT" on Little Endian machines, if option
-      "--disable-in-place-swap" is not used at configuration. Otherwise, i.e.
-      on Big Endian machines or PnetCDF is configured with
-      "--disable-in-place-swap" on Little Endian machines, the INTENT is "IN".
+    * none
 
   o New PnetCDF hint
-    * nc_record_align_size - aligns the starting file offset of the record
-      variable section. Note this is for the entire section, not individual
-      records.
+    * none
 
   o New error code
-    * NC_ENOTENABLED indicates the API is available only when the corresponding
-      feature is enabled. For example, nfmpi_inq_malloc_size() returns this
-      error code when "--enable-debug" is not used at configure.
-
-    * NC_EBAD_FILE corresponds to MPI error code MPI_ERR_BAD_FILE, meaning
-      "Invalid file name (e.g., path name too long)."
-
-    * NC_ENO_SPACE corresponds to MPI error code MPI_ERR_NO_SPACE, meaning
-      "Not enough space."
-
-    * NC_EQUOTA corresponds to MPI error code MPI_ERR_QUOTA, meaning
-      "Quota exceeded."
-
-    * NC_EMULTIDEFINE_FNC_ARGS corresponds to MPI error code MPI_ERR_NOT_SAME,
-      meaning "inconsistent function arguments used in collective API."
+    * none
 
   o New run-time environment variables
-    * 
+    * none
 
   o New example programs
-    * Example programs now report if there is any PnetCDF internal malloc
-      residues yet to be freed, if --enable-debug option is used at
-      configure.
-
-    * Under examples/C, three examples are added: create_open.c, get_vara.c,
-      and global_attributes.c. File examples/README contains their
-      descriptions.
-
-    * Under examples/CXX, several example programs corresponding to those in
-      examples/C are added.
+    * none
 
   o New programs for I/O benchmarks
-    * 
+    * none
 
   o New test program
-    * Many test programs now report if there is any PnetCDF internal malloc
-      residues yet to be freed, if --enable-debug option is used at configure.
-
-    * add tests for flexible APIs. The tests borrow from nc_test/test_write.c
-      that tests nc_put_var1, nc_put_vara, nc_put_vars, and nc_put_varm.
-      Similarly for get APIs.
-
-    * testcases/record.c checks if the number of records is updated correctly.
-      It writes to a variable's 2nd record followed by the 1st record. A call
-      to ncmpi_inq_dim() or ncmpi_inq_dimlen() should report 2 records after
-      the writes complete.
-
-    * testcases/noclobber.c checks if error code NC_EEXIST can be returned
-      correctly when NC_NOCLOBBER modes is used in ncmpi_create and in the
-      meantime the file exists.
-
-    * Some test programs are developed to run in parallel. The test mechanism
-      for parallel runs is command "make ptest". Two environment variables
-      can be used to set the MPI run command and output file directory:
-      TEST_MPIRUN and TEST_OUTDIR. Their defaults are mpiexec and "." (current
-      directory), respectively. For example,
-          make ptest TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=/scratch
-      Note the keyword "NP" will be replaced by the different numbers of
-      processes used to run the tests. The testing uses up to 8 MPI processes.
-
-    * A sample PBS script file is provided to test "make ptest" on machines
-      with a batch queue system: pbs.script. This example script can be
-      submitted from the build root directory (where you run "make" command to
-      build PnetCDF library).
-
-    * For cross compile environment (and batch queue system), the environment
-      variable TEST_SEQRUN can be used to set the MPI run command. For example,
-      the command for testing sequential programs:
-          make check TEST_SEQRUN="aprun -n 1" TEST_OUTDIR=/scratch
-
-      For non-cross compile environment, there is no need to set the environment
-      variables, as long as one can run the MPI executable without mpirun or
-      mpiexec.
+    * none
 
   o New optimization
+    * none
 
   o New utility program
-    * pnetcdf_version prints the version information of the PnetCDF library and
-      command-line arguments used at configure
+    * none
 
   o Other updates:
-    * Revise FLASH-IO benchmark to use nonblocking APIs for both checkpoint and
-      plot writes. The control variable to switch between nonblocking and
-      blocking API is "use_nonblocking_io". Set it to .FALSE. in
-      flash_benchmark_io.F90 to switch to blocking APIs. Using nonblocking APIs
-      is now the default.
-
-    * To match ncdump, ncmpidump now only supports one input file.
-
-    * Makefiles are revised for better recursive make and fixed some build
-      target dependency for parallel make.
-
-    * File creation was revised for handling NC_CLOBBER and NC_NOCLOBBER modes.
-      On systems where Unix calls access() and unlink() are available, they
-      are used to check if a file exits and to delete an existing file.
-
-    * subfiling is now enabled by default. Users can use --disable-subfiling to
-      disable it
-
-    * man page of ncmpigen is updated to add the description for option "-v"
-      which lets users to specify the desired output file formats, e.g.
-      CDF-1, CDF-2, or CDF-5.
-
-    * flex, lex, bison, or yacc are no longer needed for building ncmpigen.
+    * none
 
   o Bug fixes
-    * fix ncmpigen.y on parsing CDL file to get the number of records. The bug
-      failed the command "make b-test", due to getting a wrong number of
-      records (current value for the unlimited dimension).
-
-    * fix the update for number of records when writing to a record that is
-      not the last record.
+    * none
 
