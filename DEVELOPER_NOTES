@@ -120,8 +120,9 @@ Conform with netCDF
  - PnetCDF developers are reminded to periodically sync the followings with
    netCDF release.
    1. Error codes (pnetcdf.h v.s. netcdf.h)
-   2. trunk/src/lib/utf8proc.h v.s. netcdf-c/include/utf8proc.h
-   3. trunk/src/lib/utf8proc.c v.s. netcdf-c/libdispatch/dutf8proc.c
+   2. Error strings (error.c v.s. netcdf-c/libdispatch/derror.c)
+   3. trunk/src/lib/utf8proc.h v.s. netcdf-c/include/utf8proc.h
+   4. trunk/src/lib/utf8proc.c v.s. netcdf-c/libdispatch/dutf8proc.c
 
 ===============================================================
 config.guess, config.sub, install-sh in directory scripts
