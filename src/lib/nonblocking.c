@@ -347,10 +347,10 @@ ncmpii_concatenate_datatypes(NC           *ncp,
     }
 #endif
 
-#if (MPI_VERSION < 2)
-    mpireturn = MPI_Type_struct(num, blocklens, addrs, dtypes, datatype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
     mpireturn = MPI_Type_create_struct(num, blocklens, addrs, dtypes, datatype);
+#else
+    mpireturn = MPI_Type_struct(num, blocklens, addrs, dtypes, datatype);
 #endif
     if (mpireturn != MPI_SUCCESS) {
         ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
@@ -480,12 +480,12 @@ ncmpii_construct_buffertypes(NC           *ncp,
         disps[i] = ai - a0;
     }
     /* concatenate buffer addresses into a single buffer type */
-#if (MPI_VERSION < 2)
-    mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
-                                  buffer_type);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
     mpireturn = MPI_Type_create_hindexed(num_reqs, blocklengths, disps,
                                          MPI_BYTE, buffer_type);
+#else
+    mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
+                                  buffer_type);
 #endif
     if (mpireturn != MPI_SUCCESS) {
         ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
@@ -1097,12 +1097,12 @@ ncmpii_construct_off_len_type(NC           *ncp,
     }
     /* j+1 is the coalesced length */
 
-#if (MPI_VERSION < 2)
-    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                            filetype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
     err = MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
                                    filetype);
+#else
+    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                            filetype);
 #endif
     if (err != MPI_SUCCESS) {
         *filetype = MPI_BYTE;
@@ -1149,18 +1149,12 @@ ncmpii_construct_off_len_type(NC           *ncp,
         }
     }
     /* j+1 is the coalesced length */
-#if (MPI_VERSION < 2)
-    /* TODO: It is illogical to check MPI version, as PnetCDF relies on MPI-IO
-             which is only defined in MPI-2. This checking should be done
-             at configure time. I.e. check the availability of
-             MPI_Type_create_hindexed() and if it is not, we use C macro to
-             replace MPI_Type_create_hindexed() with MPI_Type_hindexed().
-     */
-    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                            buf_type);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
     err = MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
                                    buf_type);
+#else
+    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                            buf_type);
 #endif
     if (err != MPI_SUCCESS) {
         if (*filetype != MPI_BYTE) MPI_Type_free(filetype);
@@ -1406,12 +1400,12 @@ ncmpii_req_aggregation(NC     *ncp,
     }
     else {
         /* concatenate all ftypes[] to filetype */
-#if (MPI_VERSION < 2)
-        mpireturn = MPI_Type_struct(ngroups, f_blocklengths, f_disps, ftypes,
-                                    &filetype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
         mpireturn = MPI_Type_create_struct(ngroups, f_blocklengths, f_disps,
                                            ftypes, &filetype);
+#else
+        mpireturn = MPI_Type_struct(ngroups, f_blocklengths, f_disps, ftypes,
+                                    &filetype);
 #endif
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
@@ -1429,12 +1423,12 @@ ncmpii_req_aggregation(NC     *ncp,
         }
 
         /* concatenate all btypes[] to buf_type */
-#if (MPI_VERSION < 2)
-        mpireturn = MPI_Type_struct(ngroups, b_blocklengths, b_disps, btypes,
-                                    &buf_type);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
         mpireturn = MPI_Type_create_struct(ngroups, b_blocklengths, b_disps,
                                            btypes, &buf_type);
+#else
+        mpireturn = MPI_Type_struct(ngroups, b_blocklengths, b_disps, btypes,
+                                    &buf_type);
 #endif
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
@@ -1748,12 +1742,12 @@ ncmpii_mgetput(NC           *ncp,
         }
 
         /* concatenate buffer addresses into a single buffer type */
-#if (MPI_VERSION < 2)
-        mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
-                                      &buf_type);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
         mpireturn = MPI_Type_create_hindexed(num_reqs, blocklengths, disps,
                                              MPI_BYTE, &buf_type);
+#else
+        mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
+                                      &buf_type);
 #endif
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");

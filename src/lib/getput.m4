@@ -1369,11 +1369,11 @@ ncmpii_getput_varm(NC               *ncp,
             err = ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
             goto err_check;
         }
-#if (MPI_VERSION < 2)
-        MPI_Type_hvector(count[dim], 1, imap[dim]*el_size, imaptype, &tmptype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
         MPI_Type_create_hvector(count[dim], 1, (MPI_Aint)imap[dim]*el_size,
                                 imaptype, &tmptype);
+#else
+        MPI_Type_hvector(count[dim], 1, imap[dim]*el_size, imaptype, &tmptype);
 #endif
         MPI_Type_free(&imaptype);
         MPI_Type_commit(&tmptype);
