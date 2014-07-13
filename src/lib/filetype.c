@@ -398,12 +398,12 @@ ncmpii_vara_create_filetype(NC               *ncp,
 
             offset += start[0] * ncp->recsize;
             if (varp->ndims == 1) {
-#if (MPI_VERSION < 2)
-                MPI_Type_hvector(subcount[0], varp->xsz, ncp->recsize,
-                                 MPI_BYTE, &filetype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
                 MPI_Type_create_hvector(subcount[0], varp->xsz, ncp->recsize,
                                         MPI_BYTE, &filetype);
+#else
+                MPI_Type_hvector(subcount[0], varp->xsz, ncp->recsize,
+                                 MPI_BYTE, &filetype);
 #endif
                 MPI_Type_commit(&filetype);
             }
@@ -420,12 +420,12 @@ ncmpii_vara_create_filetype(NC               *ncp,
                 MPI_Type_create_subarray(ndims-1, shape+1, subcount+1, substart+1,
                                          MPI_ORDER_C, MPI_BYTE, &rectype);
                 MPI_Type_commit(&rectype);
-#if (MPI_VERSION < 2)
-                MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype,
-                                 &filetype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
                 MPI_Type_create_hvector(subcount[0], 1, ncp->recsize, rectype,
                                         &filetype);
+#else
+                MPI_Type_hvector(subcount[0], 1, ncp->recsize, rectype,
+                                 &filetype);
 #endif
                 MPI_Type_commit(&filetype);
                 MPI_Type_free(&rectype);
@@ -469,18 +469,17 @@ ncmpii_vara_create_filetype(NC               *ncp,
 
                 offset += start[0]*varp->xsz;
 
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
                 MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
                 MPI_Type_commit(&type1);
-#if (MPI_VERSION < 2)
-                /* Why use the arguments differently between MPI-1 and 2 ? */
-                MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
-                                 MPI_BYTE, &filetype);
-#else
                 MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
                                         type1, &filetype);
+                MPI_Type_free(&type1);
+#else
+                MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
+                                 MPI_BYTE, &filetype);
 #endif
                 MPI_Type_commit(&filetype);
-                MPI_Type_free(&type1);
             }
             else {
                 for (dim = 0; dim < ndims-1; dim++ ) {
@@ -492,21 +491,27 @@ ncmpii_vara_create_filetype(NC               *ncp,
                 subcount64[dim] = varp->xsz * count[dim];
                 substart64[dim] = varp->xsz * start[dim];
 
-                MPI_Type_hvector(subcount64[dim-1],
-                                 subcount64[dim],
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
+                MPI_Type_create_hvector(subcount64[dim-1], subcount64[dim],
                                  varp->xsz * varp->shape[dim],
-                                 MPI_BYTE,
-                                 &type1);
+                                 MPI_BYTE, &type1);
+#else
+                MPI_Type_hvector(subcount64[dim-1], subcount64[dim],
+                                 varp->xsz * varp->shape[dim],
+                                 MPI_BYTE, &type1);
+#endif
                 MPI_Type_commit(&type1);
 
                 size = shape[dim];
                 for (i=dim-2; i>=0; i--) {
                     size *= shape[i+1];
-                    MPI_Type_hvector(subcount64[i],
-                                     1,
-                                     size,
-                                     type1,
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
+                    MPI_Type_create_hvector(subcount64[i], 1, size, type1,
                                      &filetype);
+#else
+                    MPI_Type_hvector(subcount64[i], 1, size, type1,
+                                     &filetype);
+#endif
                     MPI_Type_commit(&filetype);
 
                     MPI_Type_free(&type1);
@@ -527,12 +532,13 @@ ncmpii_vara_create_filetype(NC               *ncp,
                 types[1] = type1;
                 types[2] = MPI_UB;
 
-                MPI_Type_struct(3,
-                                blklens,
-                                (MPI_Aint*) disps,
-                                types,
+#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
+                MPI_Type_create_struct(3, blklens, (MPI_Aint*) disps, types,
                                 &filetype);
-
+#else
+                MPI_Type_struct(3, blklens, (MPI_Aint*) disps, types,
+                                &filetype);
+#endif
                 MPI_Type_free(&type1);
             }
             NCI_Free(shape64);
@@ -647,12 +653,12 @@ ncmpii_vars_create_filetype(NC               *ncp,
 #endif
 
         for (dim=ndims-1; dim>=0; dim--) {
-#if (MPI_VERSION < 2)
-            MPI_Type_hvector(blockcounts[dim], blocklens[dim], blockstride[dim],
-                             tmptype, &filetype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
             MPI_Type_create_hvector(blockcounts[dim], blocklens[dim],
                                     blockstride[dim], tmptype, &filetype);
+#else
+            MPI_Type_hvector(blockcounts[dim], blocklens[dim], blockstride[dim],
+                             tmptype, &filetype);
 #endif
             MPI_Type_commit(&filetype);
             if (tmptype != MPI_BYTE)

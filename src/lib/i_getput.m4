@@ -1021,11 +1021,11 @@ err_check:
             MPI_Datatype tmptype;
             if (count[i] < 0)
                 return ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);
-#if (MPI_VERSION < 2)
-            MPI_Type_hvector(count[i], 1, imap[i]*el_size, imaptype, &tmptype);
-#else
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
             MPI_Type_create_hvector(count[i], 1, imap[i]*el_size, imaptype,
                                     &tmptype);
+#else
+            MPI_Type_hvector(count[i], 1, imap[i]*el_size, imaptype, &tmptype);
 #endif
             MPI_Type_free(&imaptype);
             MPI_Type_commit(&tmptype);
