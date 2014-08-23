@@ -1672,9 +1672,9 @@ ncmpii_mgetput(NC           *ncp,
     else
         fh = ncp->nciop->independent_fh;
 
-    /* set the MPI file view */
+    /* construct a MPI file type by concatenating all requests */
     status = ncmpii_construct_filetypes(ncp, num_reqs, reqs, rw_flag, &filetype);
-    if (status != NC_NOERR) { /* skip this request */
+    if (status != NC_NOERR) { /* if failed, skip this request */
         if (io_method == INDEP_IO) return status;
 
         /* For collective I/O, we still need to participate the successive
