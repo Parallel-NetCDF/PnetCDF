@@ -25,7 +25,8 @@ C_SRCS  = collective_write.cpp \
           put_varn_float.cpp \
           put_varn_int.cpp \
           put_vara.cpp \
-          get_vara.cpp
+          get_vara.cpp \
+          transpose.cpp
 
 PROGS        = $(C_SRCS:.cpp=)
 OBJS         = $(C_SRCS:.cpp=.o)
@@ -75,6 +76,9 @@ put_varn_float: put_varn_float.o $(LIBRARY)
 get_vara: get_vara.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
+transpose: transpose.o $(LIBRARY)
+	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
+
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
 TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
@@ -86,7 +90,7 @@ ptest: $(PAR_PROGS)
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in put_varn_int put_varn_float ; do ( \
+	@for i in put_varn_int put_varn_float transpose ; do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \

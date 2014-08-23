@@ -28,7 +28,8 @@ C_SRCS  = collective_write.c \
           create_open.c \
           global_attributes.c \
           put_vara.c \
-          get_vara.c
+          get_vara.c \
+          transpose.c
 
 # Note: put_vara must be run immediately before get_vara
 
@@ -87,6 +88,9 @@ global_attributes: global_attributes.o $(LIBRARY)
 get_vara: get_vara.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+transpose: transpose.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
 TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
@@ -98,7 +102,7 @@ ptest: $(PROGS)
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in mput put_varn_int put_varn_float ; do ( \
+	@for i in mput put_varn_int put_varn_float transpose ; do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \

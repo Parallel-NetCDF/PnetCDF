@@ -9,3 +9,4 @@ put_vara.o: put_vara.cpp
 get_vara.o: get_vara.cpp
 put_varn_float.o: put_varn_float.cpp
 put_varn_int.o: put_varn_int.cpp
+transpose.o: transpose.cpp

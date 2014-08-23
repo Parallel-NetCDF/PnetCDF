@@ -195,3 +195,9 @@ command and the number of MPI processes.
     The data partitioning pattern is a column-wise partitioning across all
     proceses.
 
+  ./C/transpose.c
+./CXX/transpose.cpp
+./F77/transpose.f
+./F90/transpose.f90
+    This example writes dimensional-transposed 3D arrays using varm APIs.
+
