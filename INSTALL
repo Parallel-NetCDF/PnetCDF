@@ -148,6 +148,10 @@ Some influential environment variables:
     Setting these variables would result in the PnetCDF library being
     built with these compilers.
 
+    Note the compile flags, such as -O2 or -g, should be given in CFLAGS and
+    other flag environment variables. Please do not set them in compiler
+    variable. For instance, setting MPICC="mpcc -O2" may result in the error
+    of compiler not found.
 
  - For platform-specific build instructions, see one of the README.<ARCH>
    files.  
