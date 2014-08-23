@@ -7,4 +7,5 @@ nonblocking_write.o: nonblocking_write.f
 put_vara.o: put_vara.f
 put_varn_real.o: put_varn_real.f
 put_varn_int.o: put_varn_int.f
+transpose.o: transpose.f
 

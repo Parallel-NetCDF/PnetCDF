@@ -23,7 +23,8 @@ F77_SRCS  = nonblocking_write.f \
             hints.f \
             put_vara.f \
             put_varn_real.f \
-            put_varn_int.f
+            put_varn_int.f \
+            transpose.f
 
 PROGS     = $(F77_SRCS:.f=)
 OBJS      = $(F77_SRCS:.f=.o)
@@ -63,6 +64,9 @@ put_varn_int: put_varn_int.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 put_varn_real: put_varn_real.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+transpose: transpose.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))

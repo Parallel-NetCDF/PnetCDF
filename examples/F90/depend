@@ -7,4 +7,5 @@ nonblocking_write.o: nonblocking_write.f90
 put_var.o: put_var.f90
 put_varn_real.o: put_varn_real.f90
 put_varn_int.o: put_varn_int.f90
+transpose.o: transpose.f90
 

@@ -12,3 +12,4 @@ mput.o: mput.c
 create_open.o: create_open.c
 global_attributes.o: global_attributes.c
 get_vara.o: get_vara.c
+transpose.o: transpose.c
