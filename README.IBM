@@ -37,6 +37,17 @@ It's possible to build PnetCDF with the IBM xl compilers:
 Fortran flag "-qsuppress=cmpmsg" can suppresses XLF compile informational
 messages that report compilation progress and a successful completion.
 
+
+Another possibility that uses thread-safe XL compilers is:
+
+./configure --host powerpc64-bgq-linux --build ppc64-redhat-linux \
+            --with-mpi=/bgsys/drivers/ppcfloor/comm/xl \
+            MPICC=mpixlc_r    MPICXX=mpixlcxx_r \
+            MPIF77=mpixlf77_r MPIF90=mpixlf90_r \
+            CFLAGS=-O2 CXXFLAGS=-O2 FFLAGS=-O2 FCFLAGS=-O2 \
+            --prefix=/path/to/install
+
+
 As far as we know, there are no issues with PnetCDF on BGQ, but should you
 find any, email parallel-netcdf@mcs.anl.gov
 
@@ -164,7 +175,7 @@ usual compile-and-run tests (running tests on the bgl login node won't work as
 the compute nodes are totally different).
 
 configure --build powerpc32-unknown-gnu --host powerpc-suse-linux  \
-	--with-mpi=/bgl/BlueLight/ppcfloor/bglsys/
+          --with-mpi=/bgl/BlueLight/ppcfloor/bglsys/
 
 It's possible to build PnetCDF with the IBM xl compilers, but you have to set
 quite a few environment variables
@@ -219,9 +230,9 @@ On BlueFire, the commands I used look like this:
 $ module add m4-1.4.14
 
 $ configure --prefix=/path/to/install \
-	CFLAGS=-qlanglvl=stdc99 \
-	CC=xlc FC=xlf F77=xlf F90=xlf90 \
-	MPICC=mpcc_r MPIF77=mpxlf_r MPIF90=mpxlf90_r CXX=xlC MPICXX=mpCC_r
+        CFLAGS=-qlanglvl=stdc99 \
+        CC=xlc FC=xlf F77=xlf F90=xlf90 \
+        MPICC=mpcc_r MPIF77=mpxlf_r MPIF90=mpxlf90_r CXX=xlC MPICXX=mpCC_r
 
 
 -------------------------------------------------------------------------------
