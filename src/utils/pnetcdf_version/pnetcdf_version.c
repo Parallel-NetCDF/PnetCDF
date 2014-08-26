@@ -45,8 +45,6 @@ static void usage(char *argv0) {
 int main( int argc, char *argv[] )
 {
            int     opt;
-    extern char   *optarg;
-    extern int     optind;
 
     int i, flags[10];
 
