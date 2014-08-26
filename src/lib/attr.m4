@@ -297,7 +297,7 @@ NC_attrarray0(NC  *ncp,
 /*----< ncmpii_NC_findattr() >------------------------------------------------*/
 /*
  * Step thru NC_ATTRIBUTE array, seeking match on name.
- *  return match or NULL if Not Found.
+ *  return match or -1 if Not Found.
  */
 static int
 ncmpii_NC_findattr(const NC_attrarray *ncap,
@@ -309,7 +309,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
 
     nchars = strlen(name);
 
-    // if (ncap->ndefined == 0) return NULL; /* none created yet */
+    if (ncap->ndefined == 0) return -1; /* none created yet */
 
     for (i=0; i<ncap->ndefined; i++) {
         if (ncap->value[i]->name->nchars == nchars &&
@@ -1115,7 +1115,7 @@ ncmpii_put_att(int         ncid,
       return NC_EBADNAME;
 
     /* Should CDF-5 allow very large file header? */
-    // if (len > X_INT_MAX) return NC_EINVAL;
+    /* if (len > X_INT_MAX) return NC_EINVAL; */
 
     /* get the file ID */
     status = ncmpii_NC_check_id(ncid, &ncp);
@@ -1318,8 +1318,10 @@ ncmpi_put_att_string(int ncid, int varid, const char  *name,
 {
     printf("Error: string type is not yet supported\n");
     return NC_ENOTSUPPORT;
-    // return ncmpii_put_att(ncid, varid, name, NC_STRING,
-    //                       nelems, value, NC_STRING);
+    /*
+    return ncmpii_put_att(ncid, varid, name, NC_STRING,
+                          nelems, value, NC_STRING);
+    */
 }
 
 /* For netCDF, the type mapping between file types and buffer types
