@@ -26,6 +26,13 @@ dnl
 
 /*---- x_uint ---------------------------------------------------------------*/
 
+#ifndef SIZEOF_UINT
+#error "SIZEOF_UINT undefine"
+#endif
+#ifndef SIZEOF_USHORT
+#error "SIZEOF_USHORT undefine"
+#endif
+
 #if USHORT_MAX == X_UINT_MAX
     typedef unsigned short ix_uint;
     #define SIZEOF_IX_UINT SIZEOF_USHORT

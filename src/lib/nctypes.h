@@ -21,10 +21,12 @@ typedef unsigned char uchar;
 
 #ifndef HAVE_USHORT
 typedef unsigned short int  ushort;
+#define SIZEOF_USHORT SIZEOF_UNSIGNED_SHORT_INT
 #endif
 
 #ifndef HAVE_UINT
 typedef unsigned       int  uint;
+#define SIZEOF_UINT SIZEOF_UNSIGNED_INT
 #endif
 
 #ifndef HAVE_INT64
