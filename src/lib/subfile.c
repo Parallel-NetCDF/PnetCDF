@@ -752,16 +752,15 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     int el_size;
     int isderived, buftype_is_contig;
     MPI_Offset bnelems;
-    MPI_Aint lb, extent;
 
     status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
                                  &isderived, &buftype_is_contig);
     /* bnelems now is the number of ptype in a buftype */
     TEST_HANDLE_ERR("ncmpii_dtype_decode", status);
 
-    MPI_Type_get_extent(buftype, &lb, &extent);
-
 #ifdef SUBFILE_DEBUG
+    MPI_Aint lb, extent;
+    MPI_Type_get_extent(buftype, &lb, &extent);
     printf("rank(%d): var(%s): ptype=0x%x, el_size=%d, bnelems=%d, isderived=%d, buftype_is_contig=%d, lb=%d, extent=%d\n",
            myrank, varp->name->cp, ptype, el_size, bnelems, isderived, buftype_is_contig, lb, extent);
 #endif
