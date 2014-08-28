@@ -20,7 +20,7 @@ AC_DEFUN(UD_PROG_M4,
     AC_MSG_CHECKING(m4 flags)
     case "${M4FLAGS-unset}" in
 	unset) dnl test if M4 runs fine without option -B10000
-               `${M4} < /dev/null >& conftest.err`
+               `${M4} /dev/null >& conftest.err`
                ac_cv_m4_stdout=`cat conftest.err`
                if test "x$ac_cv_m4_stdout" != x; then
                   M4FLAGS=-B10000
