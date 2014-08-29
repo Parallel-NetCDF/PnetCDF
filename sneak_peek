@@ -21,7 +21,11 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New example programs
-    * none
+    * transpose.c shows how to use ncmpi_put_vara_int_all to write a 3D array
+      that is dimensional-transposed from the one stored in memory. Six
+      transposed 3D arrays are saved whose dimensions are organized as ZYX,
+      ZXY, YZX, YXZ, XZY, and XYZ. The C++, Fortran 77, and Fortran 90
+      versions are also provided.
 
   o New programs for I/O benchmarks
     * none
@@ -39,5 +43,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Bug fixes
-    * none
+    * fix the setting for PNETCDF_RELEASE_DATE in configure.in. Using read
+      command together with IFS does not work as expected in bash 4.3.11.
+      See http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2014-July/001586.html
+      for further detailed discussion.
 
