@@ -27,10 +27,10 @@ dnl
 /*---- x_uint ---------------------------------------------------------------*/
 
 #ifndef SIZEOF_UINT
-#error "SIZEOF_UINT undefine"
+#error "SIZEOF_UINT undefined"
 #endif
 #ifndef SIZEOF_USHORT
-#error "SIZEOF_USHORT undefine"
+#error "SIZEOF_USHORT undefined"
 #endif
 
 #if USHORT_MAX == X_UINT_MAX

@@ -75,7 +75,6 @@ int main(int argc, char **argv) {
   void *valuep;
   int dimids[NC_MAX_DIMS], varids[NC_MAX_VARS];
   int vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS/16]; /* divided by 16 due to my memory limitation */
-//  MPI_Offset vardims[NC_MAX_VARS][NC_MAX_VAR_DIMS]; /* divided by 16 due to my memory limitation */
   int varndims[NC_MAX_VARS], varnatts[NC_MAX_VARS];
   int isRecvar;
   params opts;
@@ -114,7 +113,6 @@ int main(int argc, char **argv) {
   status = ncmpi_inq_version(ncid1, &NC_mode);
 
   status = ncmpi_create(comm, opts.outfname, NC_CLOBBER|NC_mode, MPI_INFO_NULL, &ncid2);
-//  status = ncmpi_create(comm, opts.outfname, NC_CLOBBER, MPI_INFO_NULL, &ncid2);
   if (status != NC_NOERR) handle_error(status);
 
 

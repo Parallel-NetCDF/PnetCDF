@@ -42,7 +42,6 @@ static void handle_error(int status, int lineno)
 int main(int argc, char **argv) {
 
     int ret, ncfile, nprocs, rank, dimid, varid1, varid2, ndims=1;
-    // MPI_Offset count=1;
     char buf[13] = "Hello World\n";
     int data;
     char filename[DSET_NAME_LEN];

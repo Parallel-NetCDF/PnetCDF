@@ -698,7 +698,7 @@ val_get_NC(NC *ncp) {
         return NC_ENOTNC;
     }
 
-    // status = val_check_buffer(&getbuf, X_SIZEOF_SIZE_T);
+    /* status = val_check_buffer(&getbuf, X_SIZEOF_SIZE_T); */
     status = val_check_buffer(&getbuf, (getbuf.version == 1) ? 4 : 8);
     if (status != NC_NOERR) {
         printf("number of records is expected!\n");

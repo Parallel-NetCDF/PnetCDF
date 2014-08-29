@@ -193,7 +193,6 @@ int main(int argc, char **argv) {
   for ( i = 0; i < 100; i++ )
     for ( j = square_start[0]; j < square_start[0]+square_count[0]; j++ )
       for ( k = square_start[1]; k < square_start[1]+square_count[1]; k++ )
-//        data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
         data[i][j-square_start[0]][k-square_start[1]] = i*100*100 + j*100 + k;
 
   /**

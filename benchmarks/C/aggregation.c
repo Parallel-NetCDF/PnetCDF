@@ -152,31 +152,33 @@ int benchmark_write(char       *filename,
 
     /* set PnetCDF I/O hints */
     MPI_Info_create(&info);
-    // MPI_Info_set(info, "nc_header_align_size", "1"); /* size in bytes */
-    // MPI_Info_set(info, "nc_var_align_size",    "1"); /* size in bytes */
-    /* note that set the above values to 1 to disable the alignment */
+    /* To disable the header and fixed-size variable alignments, set the
+       following hints.
+    MPI_Info_set(info, "nc_header_align_size", "1");    size in bytes
+    MPI_Info_set(info, "nc_var_align_size",    "1");    size in bytes
+    */
 
     /* initialize I/O buffer with random numbers */
     srand(rank);
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
             int *int_b = (int*) malloc(len * len * sizeof(int));
-            for (j=0; j<len*len; j++) int_b[j] = rank; // rand();
+            for (j=0; j<len*len; j++) int_b[j] = rank; /* rand(); */
             buf[i] = (void*)int_b;
         }
         else if (i % 4 == 1) {
             float *flt_b = (float*) malloc(len * len * sizeof(float));
-            for (j=0; j<len*len; j++) flt_b[j] = rank; // rand();
+            for (j=0; j<len*len; j++) flt_b[j] = rank; /* rand(); */
             buf[i] = (void*)flt_b;
         }
         else if (i % 4 == 2) {
             short *shr_b = (short*) malloc(len * len * sizeof(short));
-            for (j=0; j<len*len; j++) shr_b[j] = rank; // rand();
+            for (j=0; j<len*len; j++) shr_b[j] = rank; /* rand(); */
             buf[i] = (void*)shr_b;
         }
         else {
             double *dbl_b = (double*) malloc(len * len * sizeof(double));
-            for (j=0; j<len*len; j++) dbl_b[j] = rank; // rand();
+            for (j=0; j<len*len; j++) dbl_b[j] = rank; /* rand(); */
             buf[i] = (void*)dbl_b;
         }
     }

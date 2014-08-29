@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     err = ncmpi_enddef(ncid);
     PNCDF_Error(err, "enddef")
 
-    //put data
+    /* put data */
     start[0] = 0;
     start[1] = 0;
     count[0] = len0;
