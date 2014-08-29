@@ -42,9 +42,9 @@ static int ncmpii_itoa(int val, char* buf)
     const unsigned int radix = 10;
 
     char* p;
-    unsigned int a;        //every digit
+    unsigned int a;        /* every digit */
     int len;
-    char* b;            //start of the digit char
+    char* b;            /* start of the digit char */
     char temp;
     unsigned int u;
 
@@ -70,7 +70,7 @@ static int ncmpii_itoa(int val, char* buf)
 
     *p-- = 0;
 
-    //swap
+    /* swap */
     do {
         temp = *p;
         *p = *b;
@@ -111,7 +111,7 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
 #ifdef SUBFILE_DEBUG
     printf("rank(%d): color=%d\n", myrank, color);
 #endif
-    //key = myrank/comm_size;
+    /* key = myrank/comm_size; */
     
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
@@ -119,8 +119,9 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
 
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->nciop->path, color, "nc");
 
-    //MPI_Info_set(info, "romio_lustre_start_iodevice", offset);
-    //MPI_Info_set(info, "striping_factor", "1");
+    /* MPI_Info_set(info, "romio_lustre_start_iodevice", offset);
+       MPI_Info_set(info, "striping_factor", "1");
+     */
 
     /* TODO: Should cmode be ncp->flags ? */
     status = ncmpi_create(comm_sf, path_sf, NC_CLOBBER|NC_64BIT_DATA, info, ncidp);  
@@ -163,16 +164,16 @@ ncmpii_subfile_open(NC *ncp, int *ncidp)
     if (myrank == 0)
       printf("%s: rank(%d): color=%d\n", __func__, myrank, color);
 #endif
-    //key = myrank/comm_size;
+    /* key = myrank/comm_size; */
     
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
     MPI_Comm_split(ncp->nciop->comm, color, myrank, &comm_sf);
 
-    //char path[1024], file[1024];
-    //find_path_and_fname (ncp->nciop->path, path, file);
+    /* char path[1024], file[1024]; */
+    /* find_path_and_fname (ncp->nciop->path, path, file); */
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->nciop->path, color, "nc");
-    //sprintf(path_sf, "%s%d/%s", path, color, file);
+    /* sprintf(path_sf, "%s%d/%s", path, color, file); */
     
     status = ncmpi_open(comm_sf, path_sf, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, ncidp);
     if (status != NC_NOERR) {
@@ -361,7 +362,7 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
                                        dim_sz, &dimids[j]);
                 TEST_HANDLE_ERR ("ncmpi_def_dim", status);
                 
-                //dpp_sf[color][j] = ncp_sf->dims.value[j];
+                /* dpp_sf[color][j] = ncp_sf->dims.value[j]; */
                 
                 for (jj=0; jj < ncp->nc_num_subfiles; jj++) {
                     char ss[80];
@@ -550,7 +551,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             yy = (ratio)*(double)(i+1);
             max = yy-(yy-(int)yy==0.0?1:0);
             if (max >= nprocs) max = nprocs-1;
-            //scaled = (double)rand()/RAND_MAX;
+            /* scaled = (double)rand()/RAND_MAX; */
             scaled = (double)myrank/ratio-(double)color;
             aproc = (i==color)?myrank:(min+(max-min+1)*scaled);
         }
@@ -596,7 +597,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             TEST_HANDLE_ERR("ncmpi_get_att_int", status);
 
 #ifdef SUBFILE_DEBUG
-            //if (myrank == 0) 
+            /* if (myrank == 0) */
                 printf("rank(%d): ndims_org=%d, rstart=%d, rend=%d, start[%d]=%d, count[%d]=%d\n", 
                        myrank, ndims_org, sf_range[0], sf_range[1], jx, start[jx], jx, count[jx]);
 #endif
@@ -605,7 +606,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                kk: count belong to my subfile range */
             ii=start[jx], jj=sf_range[0], kk=0;
             stride_count = (stride == NULL?1:stride[jx]);
-            //printf("stride_count[%d]=%d\n", jx, stride_count);
+            /* printf("stride_count[%d]=%d\n", jx, stride_count); */
             
             /* TODO: if sf_range is 1, count[] value is incorrect 
                e.g., size of par_dim is 4 and the nproc is also 4 */
@@ -646,7 +647,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                 my_req[aproc].start[jx] -= sf_range[0];
             }
 #ifdef SUBFILE_DEBUG
-            //if (myrank == 0) {
+            /* if (myrank == 0) { */
             {
                 printf("rank(%d): my_req[%d].start[%d]=%d\n", myrank, aproc, 
                        jx, my_req[aproc].start[jx]);
@@ -847,8 +848,8 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     printf("rank(%d): var(%s): pushed local I/O to async calls...\n", myrank, varp->name->cp);
 #endif
 
-    ////////// doing other proc's request to my subfile
-    /* TODO: each proc can't get more than nprocs?? */
+    /* doing other proc's request to my subfile
+       TODO: each proc can't get more than nprocs?? */
     requests = (MPI_Request *)NCI_Malloc(2*nprocs*sizeof(MPI_Request));
     
     j = 0;
@@ -956,7 +957,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #endif
 
     for (i=0; i<nprocs; i++) {
-        //xbuf[i] = NULL;
+        /* xbuf[i] = NULL; */
         buf_count_others[i] = 1;
         if (count_others_req_per_proc[i] != 0 && i != myrank) {
             for (k=0; k<ndims_org; k++) {
@@ -967,8 +968,8 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #endif
             xbuf[i] = (void*)NCI_Calloc(buf_count_others[i], el_size);
             if (xbuf[i]==NULL) {
-                printf("Error allocating memory!\n"); //print an error message
-                return 1; //return with failure
+                printf("Error allocating memory!\n"); /* print an error message */
+                return 1; /* return with failure */
             }
             MPI_Irecv(xbuf[i], buf_count_others[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
         }
@@ -1050,19 +1051,23 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     TAU_PHASE_CREATE_STATIC(t56, "SSON --- getput_vars ncmpi_wait_all", "", TAU_USER);
     TAU_PHASE_START(t56);
 #endif
-    //double stime, wait_time;
-    //stime = MPI_Wtime();
+    /*
+    double stime, wait_time;
+    stime = MPI_Wtime();
+    */
     array_of_statuses = (int *)NCI_Malloc(nasyncios * sizeof(int));
     status = ncmpii_wait(ncp_sf, COLL_IO, nasyncios, array_of_requests, array_of_statuses);
     TEST_HANDLE_ERR("ncmpii_wait", status);
     NCI_Free(array_of_statuses);
     NCI_Free(array_of_requests);
 
-    //int pending_nreqs;
-    //status = ncmpi_inq_nreqs(ncp->nciop->fd, &pending_nreqs);
-    //printf("myrank(%d): pending_nreqs=%d\n", myrank, pending_nreqs);
-    //wait_time = MPI_Wtime() - stime;
-    //printf("myrank(%d): ncmpii_wait time = %f\n", myrank, wait_time);
+    /*
+    int pending_nreqs;
+    status = ncmpi_inq_nreqs(ncp->nciop->fd, &pending_nreqs);
+    printf("myrank(%d): pending_nreqs=%d\n", myrank, pending_nreqs);
+    wait_time = MPI_Wtime() - stime;
+    printf("myrank(%d): ncmpii_wait time = %f\n", myrank, wait_time);
+    */
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t56);
 #endif
@@ -1071,7 +1076,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     printf("rank(%d): var(%s): after ncmpi_wait_all()\n", myrank, varp->name->cp);
 #endif
 
-    //MPI_Barrier(ncp->nciop->comm);
+    /* MPI_Barrier(ncp->nciop->comm); */
 
     /* free all allocated memories */
 

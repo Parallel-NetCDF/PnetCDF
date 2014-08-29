@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
      * This is due to  a possible bug in ADIOI_PVFS2_OldWriteStrided() when
      * filetype is contiguous and buftype is non-contiguous.
      * Fix: Add ROMIO hint to force ADIO driever to use POSIX I/O */
-    // MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
+    /* MPI_Info_set(info, "romio_pvfs2_posix_write", "enable"); */
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); ERR
     MPI_Info_free(&info);

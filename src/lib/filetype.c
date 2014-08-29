@@ -40,9 +40,9 @@ check_recsize_too_big(NC *ncp)
         fprintf(stderr, "Type overflow: unable to read/write multiple records in this dataset\non this platform. Please either access records of this record variable\none-at-a-time or run on a 64 bit platform\n");
         ret = NC_ESMALL;
     }
-    /* the assert here might harsh, but without it, users will get corrupt
+    /* the assert here might be harsh, but without it, users will get corrupt
      * data. Now, we just skip this request to avoid this assertion. */
-    // assert (ncp->recsize == (MPI_Aint)ncp->recsize);
+    /* assert (ncp->recsize == (MPI_Aint)ncp->recsize); */
     return ret;
 }
 
@@ -462,7 +462,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
             subcount64 = shape64    + ndims;
             substart64 = subcount64 + ndims;
 
-            if (ndims == 1) {  // for 64-bit support,  added July 23, 2008
+            if (ndims == 1) {  /* for 64-bit support,  added July 23, 2008 */
                 shape64[0]    = varp->shape[0];
                 subcount64[0] = count[0];
                 substart64[0] = start[0];

@@ -2221,8 +2221,10 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     if (ncp->safe_mode) {
         root_ncp->xsz = ncmpii_hdr_len_NC(root_ncp);
         assert(root_ncp->xsz == ncp->xsz);
-        // ncmpii_NC_computeshapes(root_ncp);
-        // if (status == NC_NOERR) status = err;
+        /*
+        ncmpii_NC_computeshapes(root_ncp);
+        if (status == NC_NOERR) status = err;
+        */
     } 
     ncmpii_free_NC(root_ncp);
     return status;

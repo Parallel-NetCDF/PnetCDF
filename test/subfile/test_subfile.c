@@ -205,7 +205,7 @@ int main(int argc, char **argv)
     }
 
     MPI_Info_create(&info);
-    //set all non-record variable to be subfiled
+    /* set all non-record variable to be subfiled */
     char tmp[10];
     sprintf(tmp, "%d", num_sf);
     MPI_Info_set(info, "nc_num_subfiles", tmp);
@@ -249,10 +249,12 @@ int main(int argc, char **argv)
         }
     }
 
-    //set all non-record variable to be subfiled
-    //MPI_Info_set(info, "nc_num_subfiles", "2");
-    //status = ncmpi_set_var_info(ncid, varid, info);
-    //TEST_HANDLE_ERR(status);
+    /* set all non-record variable to be subfiled */
+    /*
+    MPI_Info_set(info, "nc_num_subfiles", "2");
+    status = ncmpi_set_var_info(ncid, varid, info);
+    TEST_HANDLE_ERR(status);
+    */
     
     status = ncmpi_enddef(ncid);
     TEST_HANDLE_ERR(status);
