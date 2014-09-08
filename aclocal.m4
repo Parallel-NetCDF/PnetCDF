@@ -980,8 +980,8 @@ AC_DEFUN(UD_CHECK_LIB_MATH,
     dnl AC_CHECKING(for math library)
     case "${MATHLIB}" in
 	'')
-	    AC_CHECK_LIB(c, tanh, MATHLIB=,
-		    AC_CHECK_LIB(m, tanh, MATHLIB=-lm, MATHLIB=))
+	    AC_CHECK_LIB(c, floor, MATHLIB=,
+		    AC_CHECK_LIB(m, floor, MATHLIB=-lm, MATHLIB=))
 	    ;;
 	*)
 	    AC_MSG_RESULT($MATHLIB (user defined))
