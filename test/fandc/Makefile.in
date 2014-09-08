@@ -14,7 +14,7 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-LIBS     := $(LIBRARY) $(LIBS) $(MATHLIB) @LCOV_LIB@
+LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 C_SRCS   = pnctest.c \
            csnap.c
@@ -41,7 +41,7 @@ pnctest: pnctest.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 csnap:  csnap.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS) -lm
 
 pnctestf: pnctestf.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
