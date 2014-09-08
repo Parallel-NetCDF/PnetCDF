@@ -501,28 +501,33 @@ fi
 
 AC_PROG_INSTALL
 
+have_yacc_lex=no
 dnl Starting from 1.5.0, yacc and lex is no longer needed
-AC_PROG_YACC
-dnl if neither bison nor byacc is found, YACC will be set to yacc
-have_yacc_lex=yes
-if test "x$YACC" = xyacc; then
-   AC_CHECK_PROGS(YACC_PATH, yacc)
-   if test "x$YACC_PATH" = x; then
-      dnl cannot find bison or yacc required to build ncmpigentab.c
-      have_yacc_lex=no
-   fi
-fi
-
-AC_PROG_LEX
-if (test "x$LEX" != xflex) && (test "x$LEX" != xlex) ; then
-   dnl cannot find flex or lex required to build ncmpigenyy.c
-   have_yacc_lex=no
-fi
+dnl see comments in src/utils/ncmpigen/Makefile.in for build rules for
+dnl ncmpigenyy.c and ncmpigentab.c. If rebuild is desired, un-comment
+dnl below checking to check availability of yacc/lex/bison
+dnl AC_PROG_YACC
+dnl dnl if neither bison nor byacc is found, YACC will be set to yacc
+dnl have_yacc_lex=yes
+dnl if test "x$YACC" = xyacc; then
+dnl    AC_CHECK_PROGS(YACC_PATH, yacc)
+dnl    if test "x$YACC_PATH" = x; then
+dnl       dnl cannot find bison or yacc required to build ncmpigentab.c
+dnl       have_yacc_lex=no
+dnl    fi
+dnl fi
+dnl 
+dnl AC_PROG_LEX
+dnl if (test "x$LEX" != xflex) && (test "x$LEX" != xlex) ; then
+dnl    dnl cannot find flex or lex required to build ncmpigenyy.c
+dnl    have_yacc_lex=no
+dnl fi
 AC_SUBST(have_yacc_lex)
 
 AC_PROG_AWK
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_SUBST(SET_MAKE)
 AC_PROG_EGREP
 
 dnl AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
@@ -560,20 +565,25 @@ AC_HEADER_STDBOOL
 AC_C_CONST
 AC_C_INLINE
 
-AC_STRUCT_ST_BLKSIZE
+dnl we do not use struct stat yet
+dnl AC_STRUCT_ST_BLKSIZE
+
 UD_CHECK_IEEE
 
 dnl cross compile fails with undefined reference to rpl_realloc and rpl_malloc
 dnl AC_FUNC_MALLOC
 dnl AC_FUNC_REALLOC
 
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_MEMCMP
-AC_FUNC_STRTOD
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([memset setlocale sqrt strchr strerror strrchr strtol access unlink])
+dnl below checks availability of a bunch C functions, but we have not yet
+dnl implemented alternative calls
+dnl AC_FUNC_ERROR_AT_LINE
+dnl AC_FUNC_MEMCMP
+dnl AC_FUNC_STRTOD
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS([memset setlocale sqrt strchr strrchr strtol])
 dnl AC_CHECK_LIB([m], [tanh])
-UD_CHECK_LIB_MATH
+dnl UD_CHECK_LIB_MATH
+AC_CHECK_FUNCS([strerror access unlink])
 
 dnl malloc memory allocation tracing relies on tdelete and tsearch
 AC_CHECK_HEADERS([search.h])
