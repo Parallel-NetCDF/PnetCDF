@@ -12,7 +12,6 @@
 #include "TAU.h"
 #endif
 #include <stdlib.h>
-#include <math.h>
 #include "ncmpidtype.h"
 
 static int DEBUG = 1;
