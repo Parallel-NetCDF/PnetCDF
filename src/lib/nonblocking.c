@@ -1243,10 +1243,10 @@ ncmpii_req_aggregation(NC     *ncp,
     group_type  = (int*) NCI_Malloc((ngroups+1) * sizeof(int));
 
     /* calculate the starting index of each group and determine group type */
-    group_index[0] = 0;
-    group_type[0]  = type;
     ngroups        = 1;
     type           = (reqs[0].offset_end > reqs[1].offset_start) ? 1 : 0;
+    group_index[0] = 0;
+    group_type[0]  = type;
     for (i=1; i<num_reqs-1; i++) {
         if (type == 0 &&
             reqs[i].offset_end > reqs[i+1].offset_start) {
