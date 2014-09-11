@@ -16,7 +16,8 @@ FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 C_SRCS   = mcoll_perf.c \
-           test_bput.c
+           test_bput.c \
+           interleaved.c
 
 F77_SRCS = mcoll_testf77.f \
            test_bputf77.f
@@ -42,6 +43,9 @@ mcoll_perf: mcoll_perf.o $(LIBRARY)
 test_bput: test_bput.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+interleaved: interleaved.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 mcoll_testf77: mcoll_testf77.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
@@ -57,6 +61,7 @@ test_bputf77: test_bputf77.o $(LIBRARY)
 check testing: $(PROGS)
 	$(TEST_SEQRUN) ./mcoll_perf -f $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./test_bput     $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./interleaved   $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
 	$(TEST_SEQRUN) ./mcoll_testf   $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./mcoll_testf77 $(TEST_OUTDIR)/testfile.nc
@@ -67,6 +72,7 @@ endif
 verbose_check verbose_testing: $(PROGS)
 	$(TEST_SEQRUN) ./mcoll_perf -v -f $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./test_bput        $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./interleaved      $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
 	$(TEST_SEQRUN) ./mcoll_testf      $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./mcoll_testf77    $(TEST_OUTDIR)/testfile.nc
