@@ -1304,7 +1304,9 @@ ncmpii_req_aggregation(NC     *ncp,
         f_disps[i] = 0;  /* file displacements always to the file offset 0 */
 
         if (group_type[i] == 0) {
-            /* concatenate filetypes of this group into a single one */
+            /* This group contains no interleaved filetypes, so we can
+             * simply concatenate filetypes of this group into a single one
+             */
             err = ncmpii_construct_filetypes(ncp, g_num_reqs, g_reqs, rw_flag,
                                              &ftypes[i]);
             if (status == NC_NOERR) status = err;
