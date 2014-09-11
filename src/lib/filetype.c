@@ -297,7 +297,7 @@ ncmpii_is_request_contiguous(NC_var           *varp,
 }
 
 /*----< ncmpii_vara_create_filetype() >--------------------------------------*/
-int
+static int
 ncmpii_vara_create_filetype(NC               *ncp,
                             NC_var           *varp,
                             const MPI_Offset *start,
@@ -353,11 +353,10 @@ ncmpii_vara_create_filetype(NC               *ncp,
     }
 
     /* hereinafter varp->ndims > 0 && nelems > 0 */
-    int i, ndims, blklens[3], tag=0;
+    int i, ndims;
     int *shape=NULL, *subcount=NULL, *substart=NULL; /* all in bytes */
     MPI_Offset *shape64=NULL, *subcount64=NULL, *substart64=NULL;
-    MPI_Offset size, disps[3];
-    MPI_Datatype rectype, types[3], type1;
+    MPI_Datatype rectype;
 
     ndims    = varp->ndims;
     shape    = (int*) NCI_Malloc(3 * ndims * sizeof(int));
@@ -394,7 +393,10 @@ ncmpii_vara_create_filetype(NC               *ncp,
         }
         else { /* more than one record variables */
             status = check_recsize_too_big(ncp);
-            if (status != NC_NOERR) return status;
+            if (status != NC_NOERR) {
+                NCI_Free(shape);
+                return status;
+            }
 
             offset += start[0] * ncp->recsize;
             if (varp->ndims == 1) {
@@ -433,7 +435,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
         }
     }
     else { /* non record variable */
-        tag = 0;
+        int tag = 0;
         for (dim=0; dim< ndims-1; dim++) {
             if (varp->shape[dim] > 2147483647) { /* if shape > 2^31-1 */
                 tag = 1;
@@ -457,90 +459,100 @@ ncmpii_vara_create_filetype(NC               *ncp,
                                      MPI_ORDER_C, MPI_BYTE, &filetype);
             MPI_Type_commit(&filetype);
         }
-        else {
+        else { /* at least one dimension is of size > 2^31-1 */
+            int blklens[3] = {1, 1, 1};
+            MPI_Aint size, disps[3];
+            MPI_Datatype type1, type2;
+
+            /* We cannot use MPI_Type_create_subarray() to create the filetype,
+             * as its arguments array_of_sizes[] and array_of_starts[] are of
+             * type int. One solution is to use a combination of
+             * MPI_Type_create_hvector(), MPI_Type_create_hindexed(),
+             * MPI_Type_create_resized(), and MPI_Type_struct(), as one
+             * of their arguments, stride and indices[], are of type MPI_Aint
+             * (a possible 8-byte integer) that can be used to store the value
+             * of the dimension whose size is > 2^31-1. However, on a machine
+             * where MPI_Aint is 4-byte integer, those MPI_Aint arguments will
+             * cause overflow.
+             */
+            if (sizeof(MPI_Aint) != sizeof(MPI_Offset)) {
+                NCI_Free(shape);
+                return NC_EINTOVERFLOW;
+            }
+
+            /* If the program flow reaches here, ndims must be > 1. This is
+             * because when ndims == 1, the fileview can only be contiguous.
+             * Checking whether fileview is contiguous or not is done earlier
+             * in this subroutine and when it is contiguous, no filetype is
+             * created.
+             */
+            assert(ndims > 1);
+
             shape64 = (MPI_Offset*) NCI_Malloc(3 * ndims * sizeof(MPI_Offset));
             subcount64 = shape64    + ndims;
             substart64 = subcount64 + ndims;
 
-            if (ndims == 1) {  /* for 64-bit support,  added July 23, 2008 */
-                shape64[0]    = varp->shape[0];
-                subcount64[0] = count[0];
-                substart64[0] = start[0];
+            for (dim=0; dim<ndims; dim++) {
+                shape64[dim]    = varp->shape[dim];
+                subcount64[dim] = count[dim];
+                substart64[dim] = start[dim];
+            }
 
-                offset += start[0]*varp->xsz;
+            /* first create type1 for the least significant dimension */
+            dim = ndims-1;
+            shape64[dim]    *= varp->xsz;
+            subcount64[dim] *= varp->xsz;
+            substart64[dim] *= varp->xsz;
 
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-                MPI_Type_contiguous(subcount64[0]*varp->xsz, MPI_BYTE, &type1);
-                MPI_Type_commit(&type1);
-                MPI_Type_create_hvector(1, 1, shape64[0]*varp->xsz,
-                                        type1, &filetype);
-                MPI_Type_free(&type1);
+            MPI_Type_create_hvector(subcount64[dim-1], subcount64[dim],
+                             shape64[dim], MPI_BYTE, &type1);
 #else
-                MPI_Type_hvector(subcount64[0], varp->xsz, shape64[0]*varp->xsz,
-                                 MPI_BYTE, &filetype);
+            MPI_Type_hvector(subcount64[dim-1], subcount64[dim],
+                             shape64[dim], MPI_BYTE, &type1);
+#endif
+            MPI_Type_commit(&type1);
+
+            size = shape[dim];
+            for (i=dim-2; i>=0; i--) {
+                size *= shape[i+1];
+#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
+                MPI_Type_create_hvector(subcount64[i], 1, size, type1,
+                                        &filetype);
+#else
+                MPI_Type_hvector(subcount64[i], 1, size, type1, &filetype);
 #endif
                 MPI_Type_commit(&filetype);
-            }
-            else {
-                for (dim = 0; dim < ndims-1; dim++ ) {
-                    shape64[dim]    = varp->shape[dim];
-                    subcount64[dim] = count[dim];
-                    substart64[dim] = start[dim];
-                }
-                shape64[dim]    = varp->xsz * varp->shape[dim];
-                subcount64[dim] = varp->xsz * count[dim];
-                substart64[dim] = varp->xsz * start[dim];
 
-#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-                MPI_Type_create_hvector(subcount64[dim-1], subcount64[dim],
-                                 varp->xsz * varp->shape[dim],
-                                 MPI_BYTE, &type1);
-#else
-                MPI_Type_hvector(subcount64[dim-1], subcount64[dim],
-                                 varp->xsz * varp->shape[dim],
-                                 MPI_BYTE, &type1);
-#endif
-                MPI_Type_commit(&type1);
-
-                size = shape[dim];
-                for (i=dim-2; i>=0; i--) {
-                    size *= shape[i+1];
-#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-                    MPI_Type_create_hvector(subcount64[i], 1, size, type1,
-                                     &filetype);
-#else
-                    MPI_Type_hvector(subcount64[i], 1, size, type1,
-                                     &filetype);
-#endif
-                    MPI_Type_commit(&filetype);
-
-                    MPI_Type_free(&type1);
-                    type1 = filetype;
-                }
-                disps[1] = substart64[dim];
-                size = 1;
-                for (i=dim-1; i>=0; i--) {
-                    size *= shape64[i+1];
-                    disps[1] += size*substart64[i];
-                }
-                disps[2] = 1;
-                for (i=0; i<ndims; i++) disps[2] *= shape64[i];
-
-                disps[0] = 0;
-                blklens[0] = blklens[1] = blklens[2] = 1;
-                types[0] = MPI_LB;
-                types[1] = type1;
-                types[2] = MPI_UB;
-
-#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
-                MPI_Type_create_struct(3, blklens, (MPI_Aint*) disps, types,
-                                &filetype);
-#else
-                MPI_Type_struct(3, blklens, (MPI_Aint*) disps, types,
-                                &filetype);
-#endif
                 MPI_Type_free(&type1);
+                type1 = filetype;
             }
+            disps[1] = substart64[dim];
+            size = 1;
+            for (i=dim-1; i>=0; i--) {
+                size *= shape64[i+1];
+                disps[1] += size*substart64[i];
+            }
+            disps[2] = 1;
+            for (i=0; i<ndims; i++) disps[2] *= shape64[i];
+
+            disps[0] = 0;
+
+            /* make filetype the same as calling MPI_Type_create_subarray() */
+#if defined (HAVE_MPI_TYPE_CREATE_HINDEXED) && defined(HAVE_MPI_TYPE_CREATE_RESIZED)
+            /* adjust LB and UB without using MPI_LB or MPI_UB */
+            MPI_Type_create_hindexed(1, blklens, &disps[1], type1, &type2);
+            MPI_Type_commit(&type2);
+            MPI_Type_create_resized(type2, disps[0], disps[2], &filetype);
+            MPI_Type_free(&type2);
+#else
+            MPI_Datatype types[3];
+            types[0] = MPI_LB;
+            types[1] = type1;
+            types[2] = MPI_UB;
+            MPI_Type_struct(3, blklens, disps, types, &filetype);
+#endif
+            MPI_Type_free(&type1);
             NCI_Free(shape64);
         }
     }

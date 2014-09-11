@@ -637,7 +637,7 @@ else
 fi
 
 # check for MPI-2 only functions
-AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address MPI_Type_create_hvector MPI_Type_create_hindexed MPI_Type_create_struct,,)
+AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address MPI_Type_create_hvector MPI_Type_create_hindexed MPI_Type_create_struct MPI_Type_create_resized,,)
 
 dnl Check for presence of an MPI constant.
 dnl These could be enums, so we have to do compile checks.
