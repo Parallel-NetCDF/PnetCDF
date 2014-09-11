@@ -177,7 +177,7 @@ int main(int argc, char** argv)
         printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n", malloc_size);
 
     char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING C   %s for writing to a large variable ", argv[0]);
+    sprintf(cmd_str, "*** TESTING C   %s for writing interleaved fileviews ", argv[0]);
     if (rank == 0) {
         if (pass) printf("%-66s ------ pass\n", cmd_str);
         else      printf("%-66s ------ failed\n", cmd_str);
