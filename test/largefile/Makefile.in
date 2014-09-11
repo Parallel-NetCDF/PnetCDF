@@ -14,17 +14,21 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib
 LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
-SRCS    = large_files.c
+SRCS    = large_files.c \
+          large_var.c
 
 OBJS    = $(SRCS:.c=.o)
 PROGS   = $(SRCS:.c=)
 
-GARBAGE      = $(PROGS)
+GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
 
 large_files: large_files.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+large_var: large_var.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 testing check verbose_testing:
