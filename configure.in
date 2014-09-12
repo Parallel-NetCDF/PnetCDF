@@ -1109,10 +1109,11 @@ echo "\
               LDFLAGS     = ${LDFLAGS}
               LIBS        = ${LIBS}
 
-   Now type 'make @<:@<target>@:>@'
+   Now type 'make' to build the library and utility tools.
+   Type 'make @<:@<target>@:>@'
        where the optional <target> is:
-           all              - build all binaries
-           testing          - test PnetCDF build
+           testing          - test PnetCDF build for sequential run
+           ptest            - test PnetCDF build for parallel run
            install          - install PnetCDF
 ---------------------------------------------------------------------"
 
