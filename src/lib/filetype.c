@@ -552,6 +552,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
             types[2] = MPI_UB;
             MPI_Type_struct(3, blklens, disps, types, &filetype);
 #endif
+            MPI_Type_commit(&filetype);
             MPI_Type_free(&type1);
             NCI_Free(shape64);
         }
