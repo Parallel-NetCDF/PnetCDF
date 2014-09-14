@@ -880,7 +880,7 @@ ncmpii_getput_vars(NC               *ncp,
      */
 
     /* check if the request is contiguous in file */
-    if (stride == NULL && ncmpii_is_request_contiguous(varp, start, count)) {
+    if (stride == NULL && ncmpii_is_request_contiguous(ncp, varp, start, count)) {
         err = NCedgeck(ncp, varp, start, count);
 
         if (err != NC_NOERR ||
