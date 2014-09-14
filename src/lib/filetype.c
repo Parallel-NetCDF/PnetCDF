@@ -251,7 +251,8 @@ ncmpii_get_offset(NC               *ncp,
 
 /*----< ncmpii_is_request_contiguous() >-------------------------------------*/
 int
-ncmpii_is_request_contiguous(NC_var           *varp,
+ncmpii_is_request_contiguous(NC               *ncp,
+                             NC_var           *varp,
                              const MPI_Offset  starts[],
                              const MPI_Offset  counts[])
 {
@@ -335,7 +336,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
 
     /* check if the request is contiguous in file
        if yes, there is no need to create a filetype */
-    if (ncmpii_is_request_contiguous(varp, start, count)) {
+    if (ncmpii_is_request_contiguous(ncp, varp, start, count)) {
         status = ncmpii_get_offset(ncp, varp, start, NULL, NULL, rw_flag, &offset);
         *offset_ptr   = offset;
         *filetype_ptr = filetype;
