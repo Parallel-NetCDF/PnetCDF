@@ -271,9 +271,11 @@ ncmpii_is_request_contiguous(NC_var           *varp,
         /* if there are more than one record variabl, then the record
            dimensions, counts[0] must == 1. For now, we assume there
            are more than one record variable.
-           TODO: we need the API ncmpi_inq_rec() as in netcdf 3.6.3
-                 to know how many record variables are defined */
-        if (counts[0] > 1) return 0;
+           TODO: we may need an API to inquire how many record variables
+           are defined */
+        if (ncp->recsize > varp->len && /* more than one record variable */
+            counts[0] > 1) return 0;
+
         most_sig_dim = 1;
     }
 
