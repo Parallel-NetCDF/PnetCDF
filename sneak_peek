@@ -31,7 +31,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * none
+    * test/nonblocking/interleaved.c tests a combination of interleaved
+      file types. This is to test the bug fix in r1758.
 
   o New optimization
     * none
@@ -40,11 +41,16 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
-    * none
+    * A new configure option, --enable-large-file-test, to enable testing
+      I/O on large files and large variables. Note the testing prgrams will
+      run very slowly.
 
   o Bug fixes
+    * fix the bug when the first group of file types are interleaved, it
+      was mistakenly identified as non-interleaved. See r1758.
+
     * fix the setting for PNETCDF_RELEASE_DATE in configure.in. Using read
-      command together with IFS does not work as expected in bash 4.3.11.
-      See http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2014-July/001586.html
+      command together with IFS does not work as expected in bash 4.3.11. See
+      http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2014-July/001586.html
       for further detailed discussion.
 
