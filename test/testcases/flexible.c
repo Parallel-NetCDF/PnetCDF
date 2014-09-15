@@ -44,7 +44,7 @@
 int main(int argc, char **argv) {
 
     char         filename[128];
-    int          i, j, err, ncid, varid, dimids[2], pass;
+    int          i, j, err, ncid, varid, dimids[2], pass, debug=0;
     int          rank, nprocs, blocklengths[2], buf[NY][NX], *bufptr;
     MPI_Offset   start[2], count[2];
     MPI_Aint     a0, a1, disps[2];
@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
 
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
+    if (debug) printf("put start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
 
     /* call flexible API */
     err = ncmpi_put_vara_all(ncid, varid, start, count, bufptr, 1, buftype); ERR
@@ -113,6 +114,8 @@ int main(int argc, char **argv) {
     /* read back variable */
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
+    if (debug) printf("get start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
+
     err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); ERR
 
     err = ncmpi_close(ncid); ERR
