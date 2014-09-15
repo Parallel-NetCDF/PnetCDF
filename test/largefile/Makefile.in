@@ -14,6 +14,10 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib
 LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
+ifeq (@is_bigendian@, yes)
+DEFS := $(DEFS) -DWORDS_BIGENDIAN
+endif
+
 SRCS    = large_files.c \
           large_var.c
 
@@ -31,9 +35,20 @@ large_files: large_files.o $(LIBRARY)
 large_var: large_var.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
-testing check verbose_testing:
+testing check verbose_testing: $(PROGS)
+	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
+	for i in $< ; do ( \
+	$(TEST_SEQRUN) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
 
-ptest:
+# Some of these tests are designed to run on one processes,
+# Run them on 4 processes to see if they can handle well
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+ptest: $(PROGS)
+	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/testfile.nc
+	for i in $< ; do ( \
+	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
 
 include $(srcdir)/../../rules.make
 
