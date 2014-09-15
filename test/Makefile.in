@@ -20,7 +20,6 @@ SUBDIRS = common \
           test_dtype \
           C \
           fandc \
-          largefile \
           nonblocking \
           cdf_format \
           header \
