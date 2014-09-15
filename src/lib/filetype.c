@@ -274,10 +274,14 @@ ncmpii_is_request_contiguous(NC               *ncp,
            are more than one record variable.
            TODO: we may need an API to inquire how many record variables
            are defined */
-        if (ncp->recsize > varp->len && /* more than one record variable */
-            counts[0] > 1) return 0;
+        if (ncp->recsize > varp->len) { /* more than one record variable */
+            if (counts[0] > 1) return 0;
 
-        most_sig_dim = 1;
+            /* we need to check from dimension ndims-1 up to dimension 1 */
+            most_sig_dim = 1;
+        }
+        /* if there is only one record variable, then we need to check from
+         * dimension ndims-1 up to dimension 0 */
     }
 
     for (i=ndims-1; i>most_sig_dim; i--) {
@@ -293,7 +297,7 @@ ncmpii_is_request_contiguous(NC               *ncp,
         }
         else { /* counts[i] == varp->shape[i] */
             /* when accessing the entire dimension, starts[i] must be 0 */
-            if (starts[i] != 0) return 0;
+            if (starts[i] != 0) return 0; /* actually this should be error */
         }
     }
     return 1;
