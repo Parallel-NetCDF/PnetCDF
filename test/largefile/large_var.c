@@ -16,7 +16,7 @@
  * 4th write: subarray of 1 x 1 x 5  at the start 3 x 9 x (2G + rank * 10 + 5)
  *
  * The written contents are read back by a different process to check
- * correctness.
+ * correctness. Two reads are performed: PnetCDF and MPI-IO.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -35,12 +35,31 @@
 
 #define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
 
+#ifndef WORDS_BIGENDIAN
+/* Endianness byte swap: done in-place */
+#define SWAP(x,y) {tmp = (x); (x) = (y); (y) = tmp;}
+void swapn(void       *buf,
+           MPI_Offset  nelems)
+{
+    int  i;
+    unsigned char tmp, *op = (unsigned char*)buf;
+
+    while (nelems-- > 0) {
+        for (i=0; i<2; i++)
+            SWAP(op[i], op[3-i])
+        op += 4;
+    }
+}
+#endif
+
 int main(int argc, char** argv)
 {
     char filename[128];
-    int i, rank, nprocs, err, pass, bufsize;
-    int ncid, cmode, varid, dimid[3], req[3], st[3], *buf;
-    MPI_Offset start[3], count[3];
+    int i, j, rank, nprocs, err, pass, bufsize;
+    int ncid, cmode, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
+    MPI_Offset offset, var_offset, start[3], count[3];
+    MPI_File fh;
+    MPI_Status status;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -75,6 +94,10 @@ int main(int argc, char** argv)
 
     /* do not forget to exit define mode */
     err = ncmpi_enddef(ncid);
+    ERR
+
+    /* get the beginning of file offset for the varaiable */
+    err = ncmpi_inq_varoffset(ncid, varid, &var_offset);
     ERR
 
     /* now we are in data mode */
@@ -117,7 +140,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     ERR
 
-    /* open the same file and read back for validate */
+    /* open the same file and read back for validation */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                      &ncid); ERR
 
@@ -141,8 +164,8 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
         if (buf[i] != expected) {
-            printf("%d: Unexpected read buf[%d]=%d, should be %d\n",
-                   rank, i, buf[i], expected);
+            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
+                   rank, __LINE__, i, buf[i], expected);
             pass = 0;
         }
     }
@@ -156,13 +179,84 @@ int main(int argc, char** argv)
     for (i=0; i<bufsize; i++) {
         int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
         if (buf[i] != expected) {
-            printf("%d: 2 Unexpected read buf[%d]=%d, should be %d\n",
-                   rank, i, buf[i], expected);
+            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
+                   rank, __LINE__, i, buf[i], expected);
             pass = 0;
         }
     }
 
     err = ncmpi_close(ncid); ERR
+
+    /* MPI file open the same file and read back for validation */
+    err = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+    if (err != MPI_SUCCESS) {
+        int errorStringLen;
+        char errorString[MPI_MAX_ERROR_STRING];
+        MPI_Error_string(err, errorString, &errorStringLen);
+        printf("MPI error MPI_File_open : %s\n", errorString);
+    }
+
+    /* initialize the contents of the array to a different value */
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    /* read back subarray written by the process (rank+1)%nprocs */
+    start[0] = 1;
+    start[1] = NY - 2;
+    start[2] = TWO_G + ((rank == nprocs - 1) ? 0 : 10 * (rank + 1));
+    count[0] = 1;
+    count[1] = 2;
+    count[2] = 10;
+
+    buf_ptr = buf;
+    for (i=0; i<count[0]; i++) {
+        for (j=0; j<count[1]; j++) {
+            offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
+            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+#ifndef WORDS_BIGENDIAN
+            swapn(buf_ptr, count[2]);
+#endif
+            buf_ptr += count[2];
+        }
+    }
+
+    /* check if the contents of buf are expected */
+    pass = 1;
+    for (i=0; i<bufsize; i++) {
+        int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
+        if (buf[i] != expected) {
+            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
+                   rank, __LINE__, i, buf[i], expected);
+            pass = 0;
+        }
+    }
+
+    for (i=0; i<bufsize; i++) buf[i] = -1;
+
+    start[0] = NZ-1;
+
+    buf_ptr = buf;
+    for (i=0; i<count[0]; i++) {
+        for (j=0; j<count[1]; j++) {
+            offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
+            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+#ifndef WORDS_BIGENDIAN
+            swapn(buf_ptr, count[2]);
+#endif
+            buf_ptr += count[2];
+        }
+    }
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<bufsize; i++) {
+        int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
+        if (buf[i] != expected) {
+            printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
+                   rank, __LINE__, i, buf[i], expected);
+            pass = 0;
+        }
+    }
+
+    MPI_File_close(&fh);
 
     MPI_Allreduce(MPI_IN_PLACE, &pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
