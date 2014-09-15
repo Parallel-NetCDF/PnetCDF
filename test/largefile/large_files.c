@@ -34,7 +34,7 @@ main(int argc, char **argv) {
 
    int  stat;			/* return status */
    int  ncid;			/* netCDF id */
-   int rec, i, j, k;
+   int rec, i, j, k, rank, nprocs;
    signed char x[] = {42, 21};
 
    /* dimension ids */
@@ -69,14 +69,16 @@ main(int argc, char **argv) {
    int var1_dims[RANK_var1];
    int x_dims[RANK_x];
 
-    printf("\n*** Testing large files, slowly.\n");
+   MPI_Init(&argc, &argv);
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+   if (rank > 0) goto fn_exit;
 
-    printf("*** Creating large file %s...", FILE_NAME);
-
-    MPI_Init(&argc, &argv);
+   printf("\n*** Testing large files, slowly.\n");
+   printf("*** Creating large file %s...", FILE_NAME);
 
    /* enter define mode */
-   stat = ncmpi_create(MPI_COMM_WORLD, FILE_NAME, NC_CLOBBER|NC_64BIT_OFFSET, 
+   stat = ncmpi_create(MPI_COMM_SELF, FILE_NAME, NC_CLOBBER|NC_64BIT_OFFSET, 
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
  
@@ -144,7 +146,7 @@ main(int argc, char **argv) {
    printf("ok\n");
    printf("*** Reading large file %s...", FILE_NAME);
 
-   stat = ncmpi_open(MPI_COMM_WORLD, FILE_NAME, NC_NOWRITE, 
+   stat = ncmpi_open(MPI_COMM_SELF, FILE_NAME, NC_NOWRITE, 
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
 
@@ -188,6 +190,8 @@ main(int argc, char **argv) {
 
    /* Delete the file. */
    (void) remove(FILE_NAME);
+
+fn_exit:
    MPI_Finalize();
    return 0;
 }
