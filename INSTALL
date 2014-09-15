@@ -130,6 +130,9 @@ Here lists a few important options:
   --disable-file-sync     Disable MPI file sync if you know your file system
                           can provide data consistency. [default:
                           enabled]
+  --enable-large-file-test
+                          Enable testing for large (>4GB) file/variable I/O.
+                          This can run very slow. [default: disabled]
 
 Optional Packages:
   --with-mpi=/path/to/implementation
