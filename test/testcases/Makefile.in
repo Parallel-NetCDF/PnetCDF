@@ -27,8 +27,8 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            nonblocking.c \
            noclobber.c \
            record.c \
-           redef1.c \
-           inq_num_vars.c
+           inq_num_vars.c \
+           redef1.c
 
 F77_SRCS = bigrecords.f
 
@@ -92,22 +92,12 @@ inq_num_varsf: inq_num_varsf.o $(LIBRARY)
 
 testing check verbose_testing : $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-	$(TEST_SEQRUN) ./ncmpi_vars_null_stride $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./vectors                $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./test_varm              $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./alignment_test         $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./nonblocking            $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./flexible               $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./noclobber              $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./record                 $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./inq_num_vars           $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./inq_num_varsf          $(TEST_OUTDIR)/testfile.nc
-	$(TEST_SEQRUN) ./redef1                 $(TEST_OUTDIR)/testfile.nc
+	for i in $(PROGS); do ( \
+	$(TEST_SEQRUN) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+	$(TEST_SEQRUN) ./redef1 $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) $(NCMPIGEN) -v 2 -o $(TEST_OUTDIR)/redef1.nc $(srcdir)/redef-good.ncdump
 	$(TEST_SEQRUN) $(NCMPIDIFF) $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
-ifeq (@has_fortran@, yes)
-	$(TEST_SEQRUN) ./bigrecords             $(TEST_OUTDIR)/testfile.nc
-endif
 
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well
