@@ -27,20 +27,23 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            nonblocking.c \
            noclobber.c \
            record.c \
-           redef1.c
+           redef1.c \
+           inq_num_vars.c
 
-F77_SRCS   = bigrecords.f
+F77_SRCS = bigrecords.f
+
+F90_SRCS = inq_num_varsf.f90
 
 PROGS    = $(C_SRCS:.c=)
 OBJS     = $(C_SRCS:.c=.o)
 
 ifeq (@has_fortran@, yes)
-PROGS   += $(F77_SRCS:.f=)
-OBJS    += $(F77_SRCS:.f=.o)
+PROGS   += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
+OBJS    += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F77_SRCS) Makefile.in depend \
+PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in depend \
                geopotential.ncdump \
                redef-good.ncdump \
                interop1.sh \
@@ -81,6 +84,12 @@ noclobber: noclobber.o $(LIBRARY)
 record: record.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+inq_num_vars: inq_num_vars.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+inq_num_varsf: inq_num_varsf.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
 testing check verbose_testing : $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	$(TEST_SEQRUN) ./ncmpi_vars_null_stride $(TEST_OUTDIR)/testfile.nc
@@ -91,6 +100,8 @@ testing check verbose_testing : $(PROGS)
 	$(TEST_SEQRUN) ./flexible               $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./noclobber              $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./record                 $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./inq_num_vars           $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./inq_num_varsf          $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./redef1                 $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) $(NCMPIGEN) -v 2 -o $(TEST_OUTDIR)/redef1.nc $(srcdir)/redef-good.ncdump
 	$(TEST_SEQRUN) $(NCMPIDIFF) $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc

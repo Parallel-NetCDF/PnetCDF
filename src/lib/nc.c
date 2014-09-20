@@ -1055,7 +1055,7 @@ ncmpii_NC_enddef(NC         *ncp,
                  MPI_Offset  v_minfree,
                  MPI_Offset  r_align)
 {
-    int status=NC_NOERR;
+    int i, status=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
 #ifdef ENABLE_SUBFILING
     NC *ncp_sf=NULL;
@@ -1190,6 +1190,11 @@ ncmpii_NC_enddef(NC         *ncp,
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE))
         /* calling MPI_File_sync() */
         ncmpiio_sync(ncp->nciop);
+
+    /* update the total number of record variables */
+    ncp->vars.num_rec_vars = 0;
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
     return status;
 }
@@ -1505,5 +1510,59 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp)
 
         return NC_NOERR;
 }
-/*ARGSUSED*/
+
+/*----< ncmpi_inq_num_rec_vars() >-------------------------------------------*/
+int 
+ncmpi_inq_num_rec_vars(int ncid, int *nvarsp)
+{
+    int i, status;
+    NC *ncp;
+
+    /* get ncp object */
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR)
+        return status;
+
+    if (nvarsp != NULL) {
+        if (NC_indef(ncp)) {
+            /* if in define mode, recalculate the number of record variables */
+            *nvarsp = 0;
+            for (i=0; i<ncp->vars.ndefined; i++)
+                *nvarsp += IS_RECVAR(ncp->vars.value[i]);
+        }
+        else
+            *nvarsp = ncp->vars.num_rec_vars;
+    }
+
+    return NC_NOERR;
+}
+
+/*----< ncmpi_inq_num_fix_vars() >-------------------------------------------*/
+int 
+ncmpi_inq_num_fix_vars(int ncid, int *nvarsp)
+{
+    int i, status;
+    NC *ncp;
+
+    /* get ncp object */
+    status = ncmpii_NC_check_id(ncid, &ncp); 
+    if (status != NC_NOERR)
+        return status;
+
+    if (nvarsp != NULL) {
+        if (NC_indef(ncp)) {
+            /* if in define mode, recalculate the number of record variables */
+            *nvarsp = 0;
+            for (i=0; i<ncp->vars.ndefined; i++)
+                *nvarsp += IS_RECVAR(ncp->vars.value[i]);
+        }
+        else
+            *nvarsp = ncp->vars.num_rec_vars;
+
+        /* no. fixed-sized == ndefined - no. record variables */
+        *nvarsp = ncp->vars.ndefined- *nvarsp;
+    }
+
+    return NC_NOERR;
+}
 

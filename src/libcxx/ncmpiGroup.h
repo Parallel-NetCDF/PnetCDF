@@ -168,6 +168,20 @@ namespace PnetCDF
     */
     int getVarCount(NcmpiGroup::Location location=Current) const;
 
+    /*! 
+      Gets the number of record variable NcmpiVar objects in this group.
+      \param location Enumeration type controlling the groups to search.
+      \return         Number of record variables.
+    */
+    int getRecVarCount(NcmpiGroup::Location location=Current) const;
+
+    /*! 
+      Gets the number of fixed-sized variable NcmpiVar objects in this group.
+      \param location Enumeration type controlling the groups to search.
+      \return         Number of fixed-sized variables.
+    */
+    int getFixVarCount(NcmpiGroup::Location location=Current) const;
+
     /*!
       Get the collection of NcmpiVar objects.
       \param location Enumeration type controlling the groups to search.

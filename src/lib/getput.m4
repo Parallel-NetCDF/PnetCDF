@@ -798,12 +798,15 @@ ncmpii_getput_vars(NC               *ncp,
     /* bnelems now is the number of ptype in a buftype */
     if (err != NC_NOERR) goto err_check;
 
+    /* type conversion is prohibited between types char and non-char */
     err = NCMPII_ECHAR(varp->type, ptype);
     if (err != NC_NOERR) goto err_check;   
 
     CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes, err)
 
     if (nbytes != (int)nbytes) {
+        /* because nbytes will be used for the argument of "cout" in MPI
+         * read/write calls and "count" is of type int */
         err = NC_EINTOVERFLOW;
         if (io_method == INDEP_IO) return err;
         goto err_check;

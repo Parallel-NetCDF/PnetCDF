@@ -1,9 +1,14 @@
-bigrecords.o: bigrecords.f
 alignment_test.o: alignment_test.c
+bigrecords.o: bigrecords.f
 collective_error.o: collective_error.c
+flexible.o: flexible.c
+inq_num_vars.o: inq_num_vars.c
+inq_num_varsf.o: inq_num_varsf.f90
 ncmpi_vars_null_stride.o: ncmpi_vars_null_stride.c
+noclobber.o: noclobber.c
+nonblocking.o: nonblocking.c
+record.o: record.c
 redef1.o: redef1.c
 test_varm.o: test_varm.c
 vectors.o: vectors.c
-flexible.o: flexible.c
-nonblocking.o: nonblocking.c
+

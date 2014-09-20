@@ -7,7 +7,11 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program tests using ncmpi_put_vara_int_all() and ncmpi_iput_vara_int()
+ *
+ * This program is to test if MPI filetypes are defined correctly for accessing
+ * arrays with more than 2G elements.
+ *
+ * This program calls ncmpi_put_vara_int_all() and ncmpi_iput_vara_int()
  * to write multiple subarray of a large 3D 4-byte integer array. It first
  * defines a netCDF variable of size 4 x 10 x 4294967296.
  * 1st write: subarray of 1 x 2 x 10 at the start 1 x 8 x (2G + rank * 10)

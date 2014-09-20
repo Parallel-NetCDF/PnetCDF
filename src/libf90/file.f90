@@ -285,3 +285,21 @@ function nf90mpi_inq_files_opened(nfiles, ncids)
   nf90mpi_inq_files_opened = nfmpi_inq_files_opened(nfiles, ncids)
 end function nf90mpi_inq_files_opened
 
+! -------
+function nf90mpi_inq_num_rec_vars(ncid, nvars)
+  integer, intent( in) :: ncid
+  integer, intent(out) :: nvars
+  integer              :: nf90mpi_inq_num_rec_vars
+
+  nf90mpi_inq_num_rec_vars = nfmpi_inq_num_rec_vars(ncid, nvars)
+end function nf90mpi_inq_num_rec_vars
+
+! -------
+function nf90mpi_inq_num_fix_vars(ncid, nvars)
+  integer, intent( in) :: ncid
+  integer, intent(out) :: nvars
+  integer              :: nf90mpi_inq_num_fix_vars
+
+  nf90mpi_inq_num_fix_vars = nfmpi_inq_num_fix_vars(ncid, nvars)
+end function nf90mpi_inq_num_fix_vars
+

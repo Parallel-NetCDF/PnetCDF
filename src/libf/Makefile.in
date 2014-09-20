@@ -50,6 +50,8 @@ C2F_SRCS = createf.c \
 	inq_stripingf.c \
 	inq_ndimsf.c \
 	inq_nvarsf.c \
+        inq_num_rec_varsf.c \
+        inq_num_fix_varsf.c \
 	inq_nattsf.c \
 	inq_unlimdimf.c \
 	inq_dimidf.c \

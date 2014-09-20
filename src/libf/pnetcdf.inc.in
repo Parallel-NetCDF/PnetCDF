@@ -708,6 +708,8 @@
       integer  nfmpi_inq
       integer  nfmpi_inq_ndims
       integer  nfmpi_inq_nvars
+      integer  nfmpi_inq_num_rec_vars
+      integer  nfmpi_inq_num_fix_vars
       integer  nfmpi_inq_natts
       integer  nfmpi_inq_unlimdim
       integer  nfmpi_inq_striping
@@ -719,6 +721,8 @@
       external nfmpi_inq
       external nfmpi_inq_ndims
       external nfmpi_inq_nvars
+      external nfmpi_inq_num_rec_vars
+      external nfmpi_inq_num_fix_vars
       external nfmpi_inq_natts
       external nfmpi_inq_unlimdim
       external nfmpi_inq_striping

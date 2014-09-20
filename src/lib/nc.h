@@ -36,6 +36,8 @@
  * in an entire climate header in one go */
 #define NC_DEFAULT_CHUNKSIZE 256*1024
 
+/* when variabe's nctype is NC_CHAR, I/O buffer's MPI type must be MPI_CHAR
+ * and vice versa */
 #define NCMPII_ECHAR(nctype, mpitype) ((((nctype) == NC_CHAR) == ((mpitype) != MPI_CHAR)) ? NC_ECHAR : NC_NOERR)
 
 /*
@@ -335,6 +337,7 @@ typedef struct {
 typedef struct NC_vararray {
     int      nalloc;      /* number allocated >= ndefined */
     int      ndefined;    /* number of defined variables */
+    int      num_rec_vars;/* number of defined record variables */
     NC_var **value;
 } NC_vararray;
 
@@ -604,6 +607,12 @@ ncmpi_inq_unlimdim(int ncid, int *xtendimp);
 
 extern int
 ncmpi_get_default_format(void);
+
+extern int 
+ncmpi_inq_num_rec_vars(int ncid, int *nump);
+
+extern int 
+ncmpi_inq_num_fix_vars(int ncid, int *nump);
 
 /* End defined in nc.c */
 

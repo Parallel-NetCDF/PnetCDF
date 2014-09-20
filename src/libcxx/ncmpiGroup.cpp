@@ -309,6 +309,74 @@ int NcmpiGroup::getVarCount(NcmpiGroup::Location location) const {
   return nvars;
 }
 
+// Get the number of record variable NcmpiVar objects in this group.
+int NcmpiGroup::getRecVarCount(NcmpiGroup::Location location) const {
+
+  // search in current group.
+  NcmpiGroup tmpGroup(*this); 
+  int nvars=0;
+  // search in current group
+  if((location == ParentsAndCurrent || location == ChildrenAndCurrent || location == Current || location ==All) && !tmpGroup.isNull()) {
+    ncmpiCheck(ncmpi_inq_num_rec_vars(tmpGroup.getId(), &nvars),__FILE__,__LINE__);
+  }
+
+  // search recursively in all parent groups.
+  if(location == Parents || location == ParentsAndCurrent || location ==All) {
+    tmpGroup=getParentGroup();
+    while(!tmpGroup.isNull()) {
+      int nvarsp;
+      ncmpiCheck(ncmpi_inq_num_rec_vars(tmpGroup.getId(), &nvarsp),__FILE__,__LINE__);
+      nvars += nvarsp;
+      // continue loop with the parent.
+      tmpGroup=tmpGroup.getParentGroup();
+    }
+  }
+
+  // search recursively in all child groups
+  if(location == ChildrenAndCurrent || location == Children || location == All) {
+    multimap<string,NcmpiGroup>::iterator it;
+    multimap<string,NcmpiGroup> groups(getGroups());
+    for (it=groups.begin();it!=groups.end();it++) {
+      nvars += it->second.getRecVarCount(ChildrenAndCurrent);
+    }
+  }
+  return nvars;
+}
+
+// Get the number of fixed-sized variable NcmpiVar objects in this group.
+int NcmpiGroup::getFixVarCount(NcmpiGroup::Location location) const {
+
+  // search in current group.
+  NcmpiGroup tmpGroup(*this); 
+  int nvars=0;
+  // search in current group
+  if((location == ParentsAndCurrent || location == ChildrenAndCurrent || location == Current || location ==All) && !tmpGroup.isNull()) {
+    ncmpiCheck(ncmpi_inq_num_fix_vars(tmpGroup.getId(), &nvars),__FILE__,__LINE__);
+  }
+
+  // search recursively in all parent groups.
+  if(location == Parents || location == ParentsAndCurrent || location ==All) {
+    tmpGroup=getParentGroup();
+    while(!tmpGroup.isNull()) {
+      int nvarsp;
+      ncmpiCheck(ncmpi_inq_num_fix_vars(tmpGroup.getId(), &nvarsp),__FILE__,__LINE__);
+      nvars += nvarsp;
+      // continue loop with the parent.
+      tmpGroup=tmpGroup.getParentGroup();
+    }
+  }
+
+  // search recursively in all child groups
+  if(location == ChildrenAndCurrent || location == Children || location == All) {
+    multimap<string,NcmpiGroup>::iterator it;
+    multimap<string,NcmpiGroup> groups(getGroups());
+    for (it=groups.begin();it!=groups.end();it++) {
+      nvars += it->second.getFixVarCount(ChildrenAndCurrent);
+    }
+  }
+  return nvars;
+}
+
 // Get the collection of NcmpiVar objects.
 multimap<std::string,NcmpiVar> NcmpiGroup::getVars(NcmpiGroup::Location location) const {
 
