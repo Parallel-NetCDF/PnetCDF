@@ -982,8 +982,8 @@ fi
 
 AC_ARG_ENABLE([large-file-test],
     [AS_HELP_STRING([--enable-large-file-test],
-                    [Enable testing for large (>4GB) file/variable I/O.
-                     This can run very slow. @<:@default: disabled@:>@])],
+                    [Enable testing for large (>4GB) file/variable I/O. Note
+                     "make testing" can run very slow. @<:@default: disabled@:>@])],
     [large_file_test=${enableval}], [large_file_test=no]
 )
 AC_SUBST(large_file_test)

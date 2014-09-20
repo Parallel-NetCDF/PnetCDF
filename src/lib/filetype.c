@@ -277,7 +277,8 @@ ncmpii_is_request_contiguous(NC               *ncp,
            are more than one record variable.
            TODO: we may need an API to inquire how many record variables
            are defined */
-        if (ncp->recsize > varp->len) { /* more than one record variable */
+        if (ncp->vars.num_rec_vars > 1) {
+            /* or if (ncp->recsize > varp->len) more than one record variable */
             if (counts[0] > 1) return 0;
 
             /* we need to check from dimension ndims-1 up to dimension 1 */

@@ -607,6 +607,10 @@ int ncmpi_inq_ndims(int ncid, int *ndimsp);
 
 int ncmpi_inq_nvars(int ncid, int *nvarsp);
 
+int ncmpi_inq_num_rec_vars(int ncid, int *nvarsp);
+
+int ncmpi_inq_num_fix_vars(int ncid, int *nvarsp);
+
 int ncmpi_inq_natts(int ncid, int *ngattsp);
 
 int ncmpi_inq_unlimdim(int ncid, int *unlimdimidp);

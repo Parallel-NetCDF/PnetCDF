@@ -487,6 +487,11 @@ ncmpi_open(MPI_Comm    comm,
 
     if (env_info != info) MPI_Info_free(&env_info);
 
+    /* update the total number of record variables */
+    ncp->vars.num_rec_vars = 0;
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
+
     return status;
 }
 

@@ -162,27 +162,33 @@ Note on adding new PnetCDF APIs
 =====================================================
 If a new PnetCDF API is created, please make sure we do the followings.
 1. In src/lib
-   the new APIs is declared in pnetcdf.h.in
+   * add the declaration of new APIs in pnetcdf.h.in
+     For example,
+     int ncmpi_inq_num_rec_vars(int ncid, int *nump);
 
-2. If the new APIs have Fortran counterparts, their C declarations should
-   be placed outside of the comment block marked with:
-   /* Begin Skip Prototypes for Fortran binding */
-   and
-   /* End Skip Prototypes for Fortran binding */
-   Otherwise, their declarations should be inside of the block.
+   * If the new APIs have Fortran counterparts, their C declarations should
+     be placed outside of the comment block marked with:
+     /* Begin Skip Prototypes for Fortran binding */
+     and
+     /* End Skip Prototypes for Fortran binding */
+     Otherwise, their declarations should be inside of the block.
 
-3. In src/libf
-   The new APIs should be declared in pnetcdf.inc.in
-   and add their C-to-Fortran  file name in Makefile.in
-   For example, API nfmpi_put_att() corresponds to file put_attf.c
+2. In src/libf
+   * The new APIs should be declared in pnetcdf.inc.in
+   * add their C-to-Fortran file name in Makefile.in
+     For example, API nfmpi_put_att() corresponds to file put_attf.c
 
-4. In src/libf90
-   The new APIs should be declared in visibility.f90 and/or api.f90.in
-   their definition should be added in the right files. For example,
-   nfmpi_inq_striping() is declared in api.f90.in
-   nf90mpi_inq_striping() is declared in visibility.f90
-   The definition of nf90mpi_inq_striping() is defined in file.f90 by
-   calling nfmpi_inq_striping().
+3. In src/libf90
+   * The new APIs should be declared in visibility.f90 and/or api.f90.in
+   * their definition should be added in the right files. For example,
+     nfmpi_inq_striping() is declared in api.f90.in
+     nf90mpi_inq_striping() is declared in visibility.f90
+     The definition of nf90mpi_inq_striping() is defined in file.f90 by
+     calling nfmpi_inq_striping().
+
+4. In src/libcxx
+   * The new APIs should be declared and added to the right files. For example,
+     getRecVarCount() is declared in ncmpiGroup.h and defined in ncmpiGroup.cpp.
 
 =====================================================
 Note on debugging

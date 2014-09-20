@@ -132,6 +132,16 @@ INTERFACE
                             INTEGER,                       INTENT(OUT) :: nvars
     END FUNCTION   nfmpi_inq_nvars
 
+    INTEGER        FUNCTION nfmpi_inq_num_rec_vars(ncid, nvars)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(OUT) :: nvars
+    END FUNCTION   nfmpi_inq_num_rec_vars
+
+    INTEGER        FUNCTION nfmpi_inq_num_fix_vars(ncid, nvars)
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(OUT) :: nvars
+    END FUNCTION   nfmpi_inq_num_fix_vars
+
     INTEGER        FUNCTION nfmpi_inq_natts(ncid, ngatts)
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(OUT) :: ngatts

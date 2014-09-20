@@ -6,7 +6,11 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New APIs
-    * none
+    * ncmpi_inq_num_rec_vars() and ncmpi_inq_num_fix_vars() report the number
+      of record and fixed-sized variables, respectively.
+      For F77, nfmpi_inq_num_rec_vars()     and nfmpi_inq_num_fix_vars()
+      For F90, nf90mpi_inq_num_rec_vars()   and nf90mpi_inq_num_fix_vars()
+      For C++, NcmpiGroup::getRecVarCount() and NcmpiGroup::getFixVarCount()
 
   o Syntax changes
     * none
@@ -31,6 +35,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/inq_num_vars.c tests if one can correctly inquire the
+      numbers of record and fixed-sized variables defined in a netCDF file.
+      A similar program in F90, named inq_num_varsf.f90, is also added.
+
     * test/nonblocking/interleaved.c tests a combination of interleaved
       file types. This is to test the bug fix in r1758.
 
