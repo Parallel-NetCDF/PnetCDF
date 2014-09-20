@@ -26,12 +26,12 @@ SUBDIRS = common \
           testcases \
           data
 
+# Packing subdirs must include all directories
+PACKING_SUBDIRS := $(SUBDIRS) largefile nf_test nf90_test F90 subfile CXX
+
 ifeq (@large_file_test@, yes)
 SUBDIRS += largefile
 endif
-
-# Packing subdirs must include all directories
-PACKING_SUBDIRS := $(SUBDIRS) nf_test nf90_test F90 subfile CXX
 
 ifeq (@has_mpicxx@, yes)
 SUBDIRS += CXX
