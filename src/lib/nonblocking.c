@@ -1107,6 +1107,7 @@ ncmpii_construct_off_len_type(NC           *ncp,
     if (err != MPI_SUCCESS) {
         *filetype = MPI_BYTE;
         *buf_type = MPI_BYTE;
+        ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
         return NC_EFILE;
     }
     MPI_Type_commit(filetype);
@@ -1158,6 +1159,7 @@ ncmpii_construct_off_len_type(NC           *ncp,
 #endif
     if (err != MPI_SUCCESS) {
         if (*filetype != MPI_BYTE) MPI_Type_free(filetype);
+        ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
         *filetype = MPI_BYTE;
         *buf_type = MPI_BYTE;
         return NC_EFILE;

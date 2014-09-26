@@ -102,56 +102,126 @@ ncmpi_strerror(int err)
         /* PnetCDF errors */
         case NC_ESMALL:
             return "Size of MPI_Offset or MPI_Aint too small for requested format ";
+            /* this usually happens on 32-bit machines where MPI_Offset and
+             * MPI_Aint may be 4-byte integers and when the I/O request amount
+             * or accessing file offset is > 2GB.
+             */
         case NC_ENOTINDEP:
             return "Operation not allowed in collective data mode";
+            /* this means your program is now in independent data mode, but
+             * making a call to a collective API
+             */
         case NC_EINDEP:
             return "Operation not allowed in independent data mode";
+            /* this means your program is now in collective data mode, but
+             * making a call to an independent API
+             */
         case NC_EFILE:
             return "Unknown error in file operation";
+            /* this error is caused by an unsuccessful MPI-IO call and usually
+             * accompany with additional MPI error messages
+             */
         case NC_EREAD:
             return "Unknow error occurs in reading file";
+            /* this error is caused by an unsuccessful call to MPI_File_read or
+             * MPI_File_read_all and usually accompany with additional MPI
+             * error messages
+             */
         case NC_EWRITE:
             return "Unknow error occurs in writting file";
+            /* this error is caused by an unsuccessful call to MPI_File_write or
+             * MPI_File_write_all and usually accompany with additional MPI
+             * error messages
+             */
         case NC_EOFILE:
             return "Can not open/create file";
         case NC_EMULTITYPES:
             return "Multiple types used in memory data";
+            /* when using flexible APIs, the argument MPI derived datatype is
+             * not allowed to contain more than one basic data type
+             */
         case NC_EIOMISMATCH:
             return "Input/Output data amount mismatch";
+            /* this error indicates the request amount is mismatched between
+             * bufcount and the value calculated from argument count[]
+             */
         case NC_ENEGATIVECNT:
             return "Negative count is prohibited";
         case NC_EUNSPTETYPE:
             return "Unsupported etype is used in MPI datatype for memory data";
+            /* when using flexible APIs, the argument MPI derived datatype is
+             * only allowed to be constructed from the MPI basic data types
+             * known to PnetCDF
+             */
         case NC_EINVAL_REQUEST:
             return "Invalid nonblocking request ID.";
         case NC_EAINT_TOO_SMALL:
             return "MPI_Aint not large enough to hold requested value.";
+            /* this usually happens on 32-bit machines where MPI_Aint is a
+             * 4-byte integer and when the I/O request amount or accessing
+             * file offset is > 2GB.
+             */
         case NC_ENOTSUPPORT:
             return "Feature is not yet supported.";
         case NC_ENULLBUF:
             return "Trying to attach a NULL buffer or the buffer size is <= 0.";
+            /* an error returned from ncmpi_buffer_attach()
+             */
         case NC_EPREVATTACHBUF:
             return "Previous attached buffer is found.";
+            /* an error returned from ncmpi_buffer_attach() indicating a
+             * buffer has been attached previously
+             */
         case NC_ENULLABUF:
             return "No attached buffer is found.";
+            /* an error when calling bput APIs and no buffer has been attached
+             */
         case NC_EPENDINGBPUT:
             return "Cannot detach buffer as a pending bput request is found.";
+            /* an error returned from ncmpi_buffer_detach()
+             */
         case NC_EINSUFFBUF:
             return "Attached buffer is too small.";
+            /* an error when calling bput APIs
+             */
         case NC_ENOENT:
             return "The specified netCDF file does not exist when calling ncmpi_open().";
+            /* this error code corresponds to MPI error class
+             * MPI_ERR_NO_SUCH_FILE, an error generated from MPI_File_open()
+             */
         case NC_EINTOVERFLOW:
             return "Overflow when type cast to 4-byte integer.";
+            /* this usually happens on 32-bit machines where MPI_Offset is a
+             * 4-byte integer and when the I/O request amount or accessing
+             * file offset is > 2GB.
+             */
         case NC_ENOTENABLED:
             return "feature is not enabled at configure time.";
+            /* Some APIs require a specific feature enabled at the configure
+             * time, for example, ncmpi_inq_malloc_size() works only
+             * --enable-debug is used when configuring PnetCDF
+             */
         case NC_EBAD_FILE:
             return "Invalid file name (e.g., path name too long).";
+            /* this error code corresponds to MPI error class
+             * MPI_ERR_BAD_FILE, an error generated from MPI_File_open()
+             */
         case NC_ENO_SPACE:
             return "Not enough space.";
+            /* this error code corresponds to MPI error class
+             * MPI_ERR_NO_SPACE, an error generated from MPI_File_open()
+             */
         case NC_EQUOTA:
             return "Quota exceeded.";
+            /* this error code corresponds to MPI error class
+             * MPI_ERR_QUOTA, an error generated from MPI_File_open()
+             */
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
+            /* this error means the metadata (dimension names, variable names,
+             * variable's dimensions, attributes, and whatever will be stored
+             * in the file header) is inconsistent among all MPI processes.
+             */
         case NC_EMULTIDEFINE_OMODE:
             return "Bad file create/open mode or modes are inconsistent across processes.";
         case NC_EMULTIDEFINE_DIM_NUM:
