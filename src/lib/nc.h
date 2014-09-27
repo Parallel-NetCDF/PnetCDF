@@ -129,7 +129,7 @@ typedef struct {
 
 /* the dimension ID returned from ncmpi_def_dim() is an integer pointer
  * which means the total number of defined dimension allowed in a file
- * is up to 2^31. Thus, the member ndefined below should be of type int.
+ * is up to 2^31-1. Thus, the member ndefined below should be of type int.
  */
 typedef struct NC_dimarray {
     int      nalloc;    /* number allocated >= ndefined */
@@ -333,7 +333,7 @@ typedef struct {
 #endif
 } NC_var;
 
-/* note: we only allow less than 2^31 variables defined in a file */
+/* note: we only allow less than 2^31-1 variables defined in a file */
 typedef struct NC_vararray {
     int      nalloc;      /* number allocated >= ndefined */
     int      ndefined;    /* number of defined variables */

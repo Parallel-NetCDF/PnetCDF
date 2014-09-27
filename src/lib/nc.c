@@ -245,6 +245,7 @@ ncmpii_inq_files_opened(int *num, int *ncids)
         (*num)++;
 
     if (*num > 0 && ncids != NULL) {
+        /* when ncids is NULL, we skip getting the values */
         int i=0;
         for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
             ncids[i] = ncp->nciop->fd;

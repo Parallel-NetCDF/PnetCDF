@@ -518,7 +518,7 @@ ncmpi_def_var(int         ncid,
     status = ncmpii_cktype(file_ver, type);
     if (status != NC_NOERR) return status;
 
-    /* TODO: can ndims > 2^32 in CDF-5 ? */
+    /* TODO: can ndims > 2^31-1 in CDF-5 ? */
     if ((ndims < 0) || ndims > X_INT_MAX) return NC_EINVAL;
 
     /* there is an upperbound for the number of variables defeined in a file */
