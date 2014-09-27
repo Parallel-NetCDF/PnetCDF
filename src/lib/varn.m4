@@ -241,32 +241,51 @@ ncmpii_getput_varn(int               ncid,
     req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
     statuses = req_ids + num;
 
+    /* in case some requests can be skipped */
+    for (i=0; i<num; i++) req_ids[i] = NC_REQ_NULL;
+
     bufp = (char*)cbuf;
     for (i=0; i<num; i++) {
         MPI_Offset buflen;
-        for (buflen=1, j=0; j<varp->ndims; j++) buflen *= _counts[i][j];
+        for (buflen=1, j=0; j<varp->ndims; j++) {
+            if (_counts[i][j] < 0) { /* any negative counts[][] is illegal */
+                status = NC_ENEGATIVECNT;
+                goto err_check;
+            }
+            buflen *= _counts[i][j];
+        }
+        if (buflen == 0) continue;
         status = ncmpii_igetput_varm(ncp, varp, starts[i], _counts[i], NULL,
                                      NULL, bufp, buflen,
                                      ptype, &req_ids[i], rw_flag, 0);
         if (status != NC_NOERR) goto err_check;
         bufp += buflen * el_size;
     }
-    if (counts == NULL) {
+
+err_check:
+    if (_counts != NULL && _counts != counts) {
         NCI_Free(_counts[0]);
         NCI_Free(_counts);
     }
 
-err_check:
     if (ncp->safe_mode == 1 && io_method == COLL_IO) {
         MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
         if (min_st != NC_NOERR) {
-            if (req_ids != NULL) NCI_Free(req_ids);
+            if (req_ids != NULL) {
+                /* cancel all pending nonblocking requests */
+                ncmpii_cancel(ncp, num, req_ids, statuses);
+                NCI_Free(req_ids);
+            }
             return status;
         }
     }
 
     if (io_method == INDEP_IO && status != NC_NOERR) {
-        if (req_ids != NULL) NCI_Free(req_ids);
+        if (req_ids != NULL) {
+            /* cancel all pending nonblocking requests */
+            ncmpii_cancel(ncp, num, req_ids, statuses);
+            NCI_Free(req_ids);
+        }
         return status;
     }
 
