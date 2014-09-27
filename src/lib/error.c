@@ -216,6 +216,14 @@ ncmpi_strerror(int err)
             /* this error code corresponds to MPI error class
              * MPI_ERR_QUOTA, an error generated from MPI_File_open()
              */
+        case NC_ENULLSTART:
+            return "argument start is a NULL pointer";
+            /* Some APIs require argument start connot be a NULL pointer
+             */
+        case NC_ENULLCOUNT:
+            return "argument count is a NULL pointer";
+            /* Some APIs require argument count cannot be a NULL pointer
+             */
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
             /* this error means the metadata (dimension names, variable names,

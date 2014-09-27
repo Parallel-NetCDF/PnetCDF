@@ -19,7 +19,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New error code
-    * none
+    * NC_ENULLSTART when argument start is a NULL pointer
+    * NC_ENULLCOUNT when argument count is a NULL pointer
 
   o New run-time environment variables
     * none
