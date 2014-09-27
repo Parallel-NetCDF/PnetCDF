@@ -202,6 +202,13 @@ int main(int argc, char** argv)
     buffer   = (int*) malloc(w_len * sizeof(int));
     for (i=0; i<w_len; i++) buffer[i] = rank;
 
+    /* check error code: NC_ENULLSTART */
+    err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, NULL, NULL, buffer);
+    if (err != NC_ENULLSTART) {
+        printf("expecting error code NC_ENULLSTART=%d but got %d\n",NC_ENULLSTART,err);
+        nfails++;
+    }
+
     /* write usning varn API */
     err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
     ERR
