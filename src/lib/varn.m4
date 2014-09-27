@@ -177,7 +177,7 @@ ncmpii_getput_varn(int               ncid,
                    int               rw_flag,   /* WRITE_REQ or READ_REQ */
                    int               io_method) /* COLL_IO or INDEP_IO */
 {
-    int i, j, el_size, status=NC_NOERR, min_st, err;
+    int i, j, el_size, status=NC_NOERR, min_st, err, free_cbuf=0;
     int *req_ids=NULL, *statuses=NULL;
     void *cbuf=NULL;
     char *bufp;
@@ -214,6 +214,7 @@ ncmpii_getput_varn(int               ncid,
         if (! iscontig_of_ptypes && bnelems > 0) {
             int position=0, outsize=bnelems*el_size;
             cbuf = NCI_Malloc(outsize);
+            free_cbuf = 1;
             MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
                      MPI_COMM_SELF);
         }
@@ -276,6 +277,7 @@ err_check:
                 ncmpii_cancel(ncp, num, req_ids, statuses);
                 NCI_Free(req_ids);
             }
+            if (free_cbuf) NCI_Free(cbuf);
             return status;
         }
     }
@@ -286,6 +288,7 @@ err_check:
             ncmpii_cancel(ncp, num, req_ids, statuses);
             NCI_Free(req_ids);
         }
+        if (free_cbuf) NCI_Free(cbuf);
         return status;
     }
 
@@ -303,7 +306,7 @@ err_check:
     /* return the first error, if there is one */
     if (status == NC_NOERR) status = err;
 
-    if (cbuf != buf && cbuf != NULL) NCI_Free(cbuf);
+    if (free_cbuf) NCI_Free(cbuf);
 
     if (status == NC_NOERR) {
         /* return the first error, if there is one */
