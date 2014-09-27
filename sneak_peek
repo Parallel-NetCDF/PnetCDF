@@ -36,6 +36,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/varn_int.c tests varn APIs
+
     * test/testcases/inq_num_vars.c tests if one can correctly inquire the
       numbers of record and fixed-sized variables defined in a netCDF file.
       A similar program in F90, named inq_num_varsf.f90, is also added.
