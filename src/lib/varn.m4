@@ -189,12 +189,12 @@ ncmpii_getput_varn(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, rw_flag, io_method, status)
     if (status != NC_NOERR) goto err_check;
 
+    if (num == 0 || bufcount == 0) goto err_check;
+
     if (starts == NULL) {
         status = NC_ENULLSTART;
         goto err_check;
     }
-
-    if (num == 0 || bufcount == 0) goto err_check;
 
     cbuf = buf;
     if (bufcount > 0) { /* flexible API is used */
