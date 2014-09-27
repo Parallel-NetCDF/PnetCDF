@@ -766,18 +766,22 @@ ncmpii_getput_vars(NC               *ncp,
     /* call a separate routine if variable is stored in subfiles */
     if (varp->num_subfiles > 1) {
 #ifdef SUBFILE_DEBUG
-	printf("var(%s) is stored in subfiles\n", varp->name->cp);
+        printf("var(%s) is stored in subfiles\n", varp->name->cp);
 #endif
-	status = ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
-					    buf, bufcount, buftype,
-					    rw_flag, io_method);
-	return status;
+        status = ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
+                                            buf, bufcount, buftype,
+                                            rw_flag, io_method);
+        return status;
     }
 #endif
 
-    if (varp->ndims > 0) {
-        assert(start != NULL);
-        assert(count != NULL);
+    if (varp->ndims > 0 && start == NULL) {
+        err = NC_ENULLSTART;
+        goto err_check;
+    }
+    if (varp->ndims > 0 && count == NULL) {
+        err = NC_ENULLCOUNT;
+        goto err_check;
     }
 
     if (io_method == COLL_IO)

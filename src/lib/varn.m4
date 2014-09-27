@@ -177,7 +177,8 @@ ncmpii_getput_varn(int               ncid,
                    int               rw_flag,   /* WRITE_REQ or READ_REQ */
                    int               io_method) /* COLL_IO or INDEP_IO */
 {
-    int i, j, el_size, status=NC_NOERR, min_st, *req_ids=NULL, *statuses=NULL;
+    int i, j, el_size, status=NC_NOERR, min_st, err;
+    int *req_ids=NULL, *statuses=NULL;
     void *cbuf=NULL;
     char *bufp;
     MPI_Offset **_counts=NULL;
@@ -187,6 +188,11 @@ ncmpii_getput_varn(int               ncid,
 
     SANITY_CHECK(ncid, ncp, varp, rw_flag, io_method, status)
     if (status != NC_NOERR) goto err_check;
+
+    if (starts == NULL) {
+        status = NC_ENULLSTART;
+        goto err_check;
+    }
 
     if (num == 0 || bufcount == 0) goto err_check;
 
@@ -253,11 +259,16 @@ ncmpii_getput_varn(int               ncid,
 err_check:
     if (ncp->safe_mode == 1 && io_method == COLL_IO) {
         MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
-        if (min_st != NC_NOERR) return status;
+        if (min_st != NC_NOERR) {
+            if (req_ids != NULL) NCI_Free(req_ids);
+            return status;
+        }
     }
 
-    if (io_method == INDEP_IO && status != NC_NOERR)
+    if (io_method == INDEP_IO && status != NC_NOERR) {
+        if (req_ids != NULL) NCI_Free(req_ids);
         return status;
+    }
 
     if (status != NC_NOERR)
         /* this can only be reached for COLL_IO and safe_mode == 0, set num=0
@@ -266,20 +277,24 @@ err_check:
         num = 0;
 
     if (io_method == COLL_IO)
-        status = ncmpi_wait_all(ncid, num, req_ids, statuses);
+        err = ncmpi_wait_all(ncid, num, req_ids, statuses);
     else
-        status = ncmpi_wait(ncid, num, req_ids, statuses);
+        err = ncmpi_wait(ncid, num, req_ids, statuses);
+
+    /* return the first error, if there is one */
+    if (status == NC_NOERR) status = err;
 
     if (cbuf != buf && cbuf != NULL) NCI_Free(cbuf);
 
-    if (status != NC_NOERR) return status;
+    if (status == NC_NOERR) {
+        /* return the first error, if there is one */
+        for (i=0; i<num; i++)
+            if (statuses[i] != NC_NOERR) {
+                status = statuses[i];
+                break;
+            }
+    }
+    if (req_ids != NULL) NCI_Free(req_ids);
 
-    /* return the first error, if there is one */
-    for (i=0; i<num; i++)
-        if (statuses[i] != NC_NOERR)
-            return statuses[i];
-
-    if (num > 0) NCI_Free(req_ids);
-
-    return NC_NOERR;
+    return status;
 }

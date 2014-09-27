@@ -909,9 +909,13 @@ ncmpii_igetput_varm(NC               *ncp,
     /* "API error" will abort this API call, but not the entire program */
     err = status = warning = NC_NOERR;
 
-    if (varp->ndims > 0) {
-        assert(start != NULL);
-        assert(count != NULL);
+    if (varp->ndims > 0 && start == NULL) {
+        err = NC_ENULLSTART;
+        goto err_check;
+    }
+    if (varp->ndims > 0 && count == NULL) {
+        err = NC_ENULLCOUNT;
+        goto err_check;
     }
 
     do_vars = 0;

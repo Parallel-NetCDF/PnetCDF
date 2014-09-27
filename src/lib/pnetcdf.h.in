@@ -487,6 +487,8 @@ by the desired type. */
 #define NC_EBAD_FILE			(-223) /**< Invalid file name (e.g., path name too long) */
 #define NC_ENO_SPACE			(-224) /**< Not enough space */
 #define NC_EQUOTA			(-225) /**< Quota exceeded */
+#define NC_ENULLSTART			(-226) /**< argument start is a NULL pointer */
+#define NC_ENULLCOUNT			(-227) /**< argument count is a NULL pointer */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */

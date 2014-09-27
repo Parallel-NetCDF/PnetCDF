@@ -238,6 +238,8 @@
       NF90_EBAD_FILE                = NF_EBAD_FILE                , & ! Invalid file name (e.g., path name too long)
       NF90_ENO_SPACE                = NF_ENO_SPACE                , & ! Not enough space
       NF90_EQUOTA                   = NF_EQUOTA                   , & ! Quota exceeded
+      NF90_ENULLSTART               = NF_ENULLSTART               , & ! argument start is a NULL pointer
+      NF90_ENULLCOUNT               = NF_ENULLCOUNT               , & ! argument count is a NULL pointer
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
