@@ -71,6 +71,8 @@ int main(int argc, char** argv) {
     }
     if (argc == 2) filename = argv[1];
 
+    /* printf("PnetCDF version string: \"%s\"\n", ncmpi_inq_libvers()); */
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); ERR

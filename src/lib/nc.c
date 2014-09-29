@@ -120,10 +120,12 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     compare = 0;
     if (hsz != hsz_0)  /* hsz may be different from hsz_0 */
         compare = 1;
-    else if (rank > 0)
+    else if (rank > 0) {
         compare = memcmp(buf, cmpbuf, hsz);
+        compare = (compare == 0) ? 0 : 1;
+    }
 
-    /* Use LOR because memcmp() may return negative value */
+    /* compare is either 0 (header same as root) or 1 (different) */
     MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
     if (errcheck == 0) {
         if (rank > 0)
