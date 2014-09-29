@@ -264,8 +264,9 @@ static
 int test_var(char *filename)
 {
     int err, rank, ncid, cmode, nerr=0;
-    int ndims, dimid[3], nvars, varid1, varid2;
-    char name[128];
+    int ndims, dimid[3], nvars, varid1, varid2, int_attr;
+    float flt_attr;
+    char name[128], var_attr[128];
     nc_type xtype;
     MPI_Offset dimlen;
     MPI_Info info=MPI_INFO_NULL;
@@ -273,6 +274,71 @@ int test_var(char *filename)
 
     MPI_Comm_rank(comm, &rank);
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
+
+    /* Test inconsistent variable attribute numbers ----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); ERR
+    int_attr = 1;
+    flt_attr = 1.0;
+    err = ncmpi_put_att_int(ncid, varid1, "var_attr_1", NC_INT, 1, &int_attr);
+    ERR
+    if (rank == 0) {
+        err = ncmpi_put_att_float(ncid, varid1, "var_attr_2", NC_FLOAT, 1,
+                                  &flt_attr); ERR
+    }
+    err = ncmpi_enddef(ncid);
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_NUM)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute name -------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); ERR
+    int_attr = 1;
+    sprintf(var_attr, "var_attr_name.%d",rank);
+    err = ncmpi_put_att_int(ncid, varid1, var_attr, NC_INT, 1, &int_attr); ERR
+    err = ncmpi_enddef(ncid);
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_NAME)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute type -------------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); ERR
+    if (rank == 0)
+        err = ncmpi_put_att_int(ncid, varid1, "var_att", NC_INT, 1, &int_attr);
+    else
+        err = ncmpi_put_att_float(ncid, varid1, "var_att", NC_FLOAT, 1, &flt_attr);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_TYPE)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute length -----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); ERR
+    int intv[2]={1,2};
+    if (rank == 0)
+        err = ncmpi_put_att_int(ncid, varid1, "var_att", NC_INT, 2, intv);
+    else
+        err = ncmpi_put_att_int(ncid, varid1, "var_att", NC_INT, 1, intv);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_LEN)
+    err = ncmpi_close(ncid); ERR
+
+    /* Test inconsistent global attribute length -----------------------------*/
+    err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
+    err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); ERR
+    if (rank == 0) intv[1]=3;
+    err = ncmpi_put_att_int(ncid, varid1, "var_att", NC_INT, 2, intv);
+    ERR
+    err = ncmpi_enddef(ncid);
+    ERR_EXP2(err, NC_EMULTIDEFINE, NC_EMULTIDEFINE_ATTR_VAL)
+    err = ncmpi_close(ncid); ERR
 
     /* Test inconsistent number of variables ---------------------------------*/
     err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
