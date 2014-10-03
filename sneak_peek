@@ -23,8 +23,8 @@ This is essentially a placeholder for the next release note ...
     * NC_ENULLCOUNT when argument count is a NULL pointer
     * NC_EINVAL_CMODE when invalid file create mode is set, (e.g. cannot have
       both NC_64BIT_OFFSET & NC_64BIT_DATA. In PnetCDF 1.5.0 and earlier
-      versions, if both flags were set, then NC_64BIT_OFFSET triumphs
-      NC_64BIT_DATA.)
+      versions, if both flags were set, then NC_64BIT_DATA triumphs
+      NC_64BIT_OFFSET.)
 
   o New run-time environment variables
     * none
