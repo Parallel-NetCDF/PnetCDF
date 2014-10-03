@@ -341,6 +341,7 @@
       integer NF_EQUOTA
       integer NF_ENULLSTART
       integer NF_ENULLCOUNT
+      integer NF_EINVAL_CMODE
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -393,6 +394,7 @@
       PARAMETER (NF_EQUOTA                  = -225)   ! Quota exceeded
       PARAMETER (NF_ENULLSTART              = -226)   ! argument start is a NULL pointer
       PARAMETER (NF_ENULLCOUNT              = -227)   ! argument count is a NULL pointer
+      PARAMETER (NF_EINVAL_CMODE            = -228)   ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
 
 !
 ! PnetCDF header inconsistency errors start from -250

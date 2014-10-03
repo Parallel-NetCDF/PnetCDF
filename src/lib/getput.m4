@@ -757,7 +757,7 @@ ncmpii_getput_vars(NC               *ncp,
     MPI_Offset fnelems=1, bnelems, nbytes=0, offset=0;
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE;
-    MPI_File fh;
+    MPI_File fh=MPI_FILE_NULL;
 
     /* "API error" will abort this API call, but not the entire program */
     err = status = warning = NC_NOERR;
@@ -768,10 +768,9 @@ ncmpii_getput_vars(NC               *ncp,
 #ifdef SUBFILE_DEBUG
         printf("var(%s) is stored in subfiles\n", varp->name->cp);
 #endif
-        status = ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
-                                            buf, bufcount, buftype,
-                                            rw_flag, io_method);
-        return status;
+        return ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
+                                          buf, bufcount, buftype,
+                                          rw_flag, io_method);
     }
 #endif
 
@@ -1300,7 +1299,7 @@ ncmpii_getput_varm(NC               *ncp,
     void *lbuf=NULL, *cbuf=NULL;
     int err, status, warning; /* err is for API abort and status is not */
     int dim, imap_contig_blocklen, el_size, buftype_is_contig, isderived;
-    MPI_Offset lnelems, cnelems;
+    MPI_Offset lnelems, cnelems=0;
     MPI_Datatype ptype, tmptype, imaptype;
 
     /* "API error" will abort this API call, but not the entire program */
@@ -1370,7 +1369,7 @@ ncmpii_getput_varm(NC               *ncp,
     MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim],
                     ptype, &imaptype);
     MPI_Type_commit(&imaptype);
-    cnelems = imap_contig_blocklen*count[dim];
+    cnelems = imap_contig_blocklen * count[dim];
     for (dim--; dim>=0; dim--) {
         if (count[dim] < 0) { /* API error */
             err = ((warning != NC_NOERR) ? warning : NC_ENEGATIVECNT);

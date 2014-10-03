@@ -21,6 +21,10 @@ This is essentially a placeholder for the next release note ...
   o New error code
     * NC_ENULLSTART when argument start is a NULL pointer
     * NC_ENULLCOUNT when argument count is a NULL pointer
+    * NC_EINVAL_CMODE when invalid file create mode is set, (e.g. cannot have
+      both NC_64BIT_OFFSET & NC_64BIT_DATA. In PnetCDF 1.5.0 and earlier
+      versions, if both flags were set, then NC_64BIT_OFFSET triumphs
+      NC_64BIT_DATA.)
 
   o New run-time environment variables
     * none
@@ -36,12 +40,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/modes.c tests if correct error codes are returned when
+      various file create/open modes are used.
     * test/testcases/varn_int.c tests varn APIs
-
     * test/testcases/inq_num_vars.c tests if one can correctly inquire the
       numbers of record and fixed-sized variables defined in a netCDF file.
       A similar program in F90, named inq_num_varsf.f90, is also added.
-
     * test/nonblocking/interleaved.c tests a combination of interleaved
       file types. This is to test the bug fix in r1758.
 
@@ -59,7 +63,6 @@ This is essentially a placeholder for the next release note ...
   o Bug fixes
     * fix the bug when the first group of file types are interleaved, it
       was mistakenly identified as non-interleaved. See r1758.
-
     * fix the setting for PNETCDF_RELEASE_DATE in configure.in. Using read
       command together with IFS does not work as expected in bash 4.3.11. See
       http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2014-July/001586.html

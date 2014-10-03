@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     MPI_Offset array_of_starts[3];
     char *basename = NULL, *basename1 = NULL, filename[100];
     char dimname[20], varname[20];
-    int ncid, dimids0[3], rank_dim[3], *varid;
+    int ncid, dimids0[3], rank_dim[3], *varid=NULL;
     MPI_Info info;
     MPI_Offset **starts_list, **count_list;
     MPI_Offset *bufcount_list;

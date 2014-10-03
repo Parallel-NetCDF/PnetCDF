@@ -29,6 +29,7 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            record.c \
            inq_num_vars.c \
            varn_int.c \
+           modes.c \
            redef1.c
 
 F77_SRCS = bigrecords.f
@@ -89,6 +90,9 @@ inq_num_vars: inq_num_vars.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 varn_int: varn_int.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+modes: modes.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)

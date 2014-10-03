@@ -62,7 +62,7 @@ NcmpiFile::NcmpiFile(const MPI_Comm   &comm,
                      const FileFormat  fFormat,
                      const MPI_Info   &info /* = MPI_INFO_NULL */)
 {
-  int format;
+  int format=0;
   switch (fFormat)
     {
     case NcmpiFile::classic:

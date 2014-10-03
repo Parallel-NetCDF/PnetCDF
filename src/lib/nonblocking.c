@@ -1664,8 +1664,8 @@ ncmpii_mgetput(NC           *ncp,
                int           rw_flag,     /* WRITE_REQ or READ_REQ */
                int           io_method)   /* COLL_IO or INDEP_IO */
 {
-    int i, len, status=NC_NOERR, mpireturn;
-    void *buf;
+    int i, len=0, status=NC_NOERR, mpireturn;
+    void *buf=NULL;
     MPI_Status mpistatus;
     MPI_Datatype filetype, buf_type;
     MPI_File fh;
