@@ -76,11 +76,11 @@ int main(int argc, char** argv)
         nfails++;
         printf("Error: expect error code %d, but got %d\n",NC_EINVAL_CMODE,err);
     }
-    /* file should be created and is in CDF-2 format */
+    /* file should be created and is in CDF-5 format */
     err = ncmpi_inq_format(ncid, &format);
     ERR
-    if (format != 2) {
-        printf("Error (line=%d): expecting CDF-2 format for file %s but got %d\n",__LINE__,filename,format);
+    if (format != 5) {
+        printf("Error (line=%d): expecting CDF-5 format for file %s but got CDF-%d\n",__LINE__,filename,format);
         nfails++;
     }
     err = ncmpi_close(ncid);

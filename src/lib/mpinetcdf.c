@@ -226,7 +226,7 @@ ncmpi_create(MPI_Comm    comm,
         status = NC_EINVAL_CMODE;
         if (safe_mode) /* cmodes are sync-ed */
             return status;
-        /* when not in safe mode, we let NC_64BIT_OFFSET triumph NC_64BIT_DATA
+        /* when not in safe mode, we let NC_64BIT_DATA triumph NC_64BIT_OFFSET
          * and return an error */
     }
 
@@ -279,7 +279,11 @@ ncmpi_create(MPI_Comm    comm,
     assert(ncp->flags == 0);
 
     /* set the file format version beased on the create mode, cmode */
-    if (fIsSet(cmode, NC_64BIT_OFFSET)) {
+    if (fIsSet(cmode, NC_64BIT_DATA)) {
+        if (sizeof(MPI_Offset) <  8)
+            return NC_ESMALL;
+        fSet(ncp->flags, NC_64BIT_DATA);
+    } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
         /* unlike serial netcdf, we will not bother to support
          * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
          * serial netcdf has proven it's possible if datasets are small, but
@@ -287,10 +291,6 @@ ncmpi_create(MPI_Comm    comm,
         if (sizeof(off_t) != 8)
             return NC_ESMALL;
         fSet(ncp->flags, NC_64BIT_OFFSET);
-    } else if (fIsSet(cmode, NC_64BIT_DATA)) {
-        if (sizeof(MPI_Offset) <  8)
-            return NC_ESMALL;
-        fSet(ncp->flags, NC_64BIT_DATA);
     } else {
         fSet(ncp->flags, NC_32BIT);
     }
