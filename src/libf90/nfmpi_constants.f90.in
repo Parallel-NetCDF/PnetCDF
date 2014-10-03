@@ -227,7 +227,8 @@
       NF_ENO_SPACE                = -224, & ! Not enough space
       NF_EQUOTA                   = -225, & ! Quota exceeded
       NF_ENULLSTART               = -226, & ! argument start is a NULL pointer
-      NF_ENULLCOUNT               = -227    ! argument count is a NULL pointer
+      NF_ENULLCOUNT               = -227, & ! argument count is a NULL pointer
+      NF_EINVAL_CMODE             = -228    ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &

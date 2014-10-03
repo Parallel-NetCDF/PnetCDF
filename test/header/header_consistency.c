@@ -553,7 +553,11 @@ int main(int argc, char **argv)
 
     verbose = 0;
     for (i=verbose; i>=0; i--) {
-        /* test with safe mode off and on */
+        /* test with safe mode off and on :
+         * Note even if --enable-debug is set at configure time, safe mode
+         * can still be disabled by setting the environment variable
+         * PNETCDF_SAFE_MODE to 0.
+         */
         setenv("PNETCDF_SAFE_MODE", mode[i], 1);
         nerr += test_open_mode(filename, i);
 

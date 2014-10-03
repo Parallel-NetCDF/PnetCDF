@@ -224,6 +224,8 @@ ncmpi_strerror(int err)
             return "argument count is a NULL pointer";
             /* Some APIs require argument count cannot be a NULL pointer
              */
+        case NC_EINVAL_CMODE:
+            return "Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
             /* this error means the metadata (dimension names, variable names,

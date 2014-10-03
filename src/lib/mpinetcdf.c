@@ -199,6 +199,8 @@ ncmpi_create(MPI_Comm    comm,
     if (env_str != NULL) {
         if (*env_str == '0') safe_mode = 0;
         else                 safe_mode = 1;
+        /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
+         * be '\0' (null character). In this case, safe_mode is enabled */
     }
 
     if (safe_mode) {
@@ -217,6 +219,15 @@ ncmpi_create(MPI_Comm    comm,
         }
         /* when safe_mode is disabled, NC_EMULTIDEFINE_OMODE will be reported at
          * the time ncmpi_enddef() returns */
+    }
+
+    /* Cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA */
+    if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) == (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
+        status = NC_EINVAL_CMODE;
+        if (safe_mode) /* cmodes are sync-ed */
+            return status;
+        /* when not in safe mode, we let NC_64BIT_OFFSET triumph NC_64BIT_DATA
+         * and return an error */
     }
 
     /* take hints from the environment variable PNETCDF_HINTS
@@ -348,6 +359,8 @@ ncmpi_open(MPI_Comm    comm,
     if (env_str != NULL) {
         if (*env_str == '0') safe_mode = 0;
         else                 safe_mode = 1;
+        /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
+         * be '\0' (null character). In this case, safe_mode is enabled */
     }
 
     if (safe_mode) {

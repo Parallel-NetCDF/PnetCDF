@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (nprocs != 4 && rank == 0)
-        printf("Warning: this program is intended to run on 4 processes\n");
+        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;

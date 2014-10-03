@@ -240,6 +240,7 @@
       NF90_EQUOTA                   = NF_EQUOTA                   , & ! Quota exceeded
       NF90_ENULLSTART               = NF_ENULLSTART               , & ! argument start is a NULL pointer
       NF90_ENULLCOUNT               = NF_ENULLCOUNT               , & ! argument count is a NULL pointer
+      NF90_EINVAL_CMODE             = NF_EINVAL_CMODE             , & ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions

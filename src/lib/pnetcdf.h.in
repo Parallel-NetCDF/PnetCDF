@@ -489,6 +489,7 @@ by the desired type. */
 #define NC_EQUOTA			(-225) /**< Quota exceeded */
 #define NC_ENULLSTART			(-226) /**< argument start is a NULL pointer */
 #define NC_ENULLCOUNT			(-227) /**< argument count is a NULL pointer */
+#define NC_EINVAL_CMODE			(-228) /**< Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
