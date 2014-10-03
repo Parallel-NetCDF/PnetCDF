@@ -66,11 +66,14 @@ int ncmpii_inq_malloc_max_size(MPI_Offset *size)
 #endif
 }
 
+#ifdef PNC_MALLOC_TRACE
+
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 #ifndef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 
 typedef struct {
     void       *self;
