@@ -27,7 +27,7 @@ dnl
 #include "fbits.h"
 #include "rnd.h"
 #include "macro.h"
-
+#include "utf8proc.h"
 
 /*----< ncmpii_free_NC_attr() >-----------------------------------------------*/
 /*
@@ -112,20 +112,22 @@ ncmpii_new_x_NC_attr(
 NC_new_attr(name,type,count,value)
  */
 static NC_attr *
-ncmpii_new_NC_attr(const char *name,    /* attribute name (note: the name string
-                                           may not be NULL terminated */
-                   MPI_Offset  nchars,  /* length of name */
-	           nc_type     type,
-	           MPI_Offset  nelems)
+ncmpii_new_NC_attr(const char *uname,  /* attribute name (NULL terminated) */
+                   nc_type     type,
+                   MPI_Offset  nelems)
 {
     NC_string *strp;
     NC_attr *attrp;
 
+    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    if (name == NULL) return NULL;
+
     assert(name != NULL && *name != 0);
-    
-    strp = ncmpii_new_NC_string(nchars, name);
+
+    strp = ncmpii_new_NC_string(strlen(name), name);
+    free(name);
     if (strp == NULL) return NULL;
-	
+
     attrp = ncmpii_new_x_NC_attr(strp, type, nelems);
     if (attrp == NULL) {
         ncmpii_free_NC_string(strp);
@@ -141,7 +143,6 @@ NC_attr *
 dup_NC_attr(const NC_attr *rattrp)
 {
     NC_attr *attrp = ncmpii_new_NC_attr(rattrp->name->cp,
-                                        rattrp->name->nchars,
     	                                rattrp->type,
     	                                rattrp->nelems);
     if (attrp == NULL) return NULL;
@@ -301,22 +302,26 @@ NC_attrarray0(NC  *ncp,
  */
 static int
 ncmpii_NC_findattr(const NC_attrarray *ncap,
-                   const char         *name)
+                   const char         *uname)
 {
     int i, nchars;
 
     assert(ncap != NULL);
 
+    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
     nchars = strlen(name);
 
     if (ncap->ndefined == 0) return -1; /* none created yet */
 
     for (i=0; i<ncap->ndefined; i++) {
         if (ncap->value[i]->name->nchars == nchars &&
-            strncmp(ncap->value[i]->name->cp, name, nchars) == 0)
-            /* name->cp may not be NULL terminated */
+            strncmp(ncap->value[i]->name->cp, name, nchars) == 0) {
+            free(name);
             return i;
+        }
     }
+    free(name);
+
     return -1;
 }
 
@@ -629,7 +634,7 @@ ncmpi_copy_att(int         ncid_in,
             return NC_EMAXATTS;
     }
 
-    attrp = ncmpii_new_NC_attr(name, strlen(name), iattrp->type, iattrp->nelems);
+    attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
     if (attrp == NULL)
         return NC_ENOMEM;
 
@@ -1223,7 +1228,7 @@ ncmpii_put_att(int         ncid,
     }
 
     /* create a new attribute object */
-    attrp = ncmpii_new_NC_attr(name, strlen(name), filetype, nelems);
+    attrp = ncmpii_new_NC_attr(name, filetype, nelems);
     if (attrp == NULL) return NC_ENOMEM;
 
     if (nelems != 0) { /* non-zero length attribute */

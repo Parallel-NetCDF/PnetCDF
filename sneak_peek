@@ -60,6 +60,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
+    * Conform with the CDF-2 and CDF-5 formats that names are normalized
+      according to Unicode NFC normalization rules during encoding as UTF-8
+      for storing in the file header.
     * A new configure option, --enable-large-file-test, to enable testing
       I/O on large files and large variables. Note the testing prgrams will
       run very slowly.
