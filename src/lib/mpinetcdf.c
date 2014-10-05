@@ -941,10 +941,8 @@ ncmpi_delete(char     *filename,
     int mpireturn;
 
     mpireturn = MPI_File_delete(filename, info);
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_File_delete");
-        return NC_EFILE;
-    }
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_File_delete");
     return NC_NOERR;
 }
 
