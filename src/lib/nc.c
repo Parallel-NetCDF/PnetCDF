@@ -572,6 +572,24 @@ NC_begins(NC         *ncp,
         last = ncp->vars.value[i];
     }
 
+    /*
+     * for special case (Check CDF-1 and CDF-2 file format specifications.)
+     * "A special case: Where there is exactly one record variable, we drop the
+     * requirement that each record be four-byte aligned, so in this case there
+     * is no record padding."
+     */
+    if (last != NULL) {
+        if (ncp->recsize == last->len) {
+            /* exactly one record variable, pack value */
+            ncp->recsize = *last->dsizes * last->xsz;
+        }
+#if 0
+        else if (last->len == UINT32_MAX) { /* huge last record variable */
+            ncp->recsize += *last->dsizes * last->xsz;
+        }
+#endif
+    }
+
 /* below is only needed if alignment is performed on record variables */
 #if 0
     /*

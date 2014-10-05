@@ -8,6 +8,7 @@ modes.o: modes.c
 ncmpi_vars_null_stride.o: ncmpi_vars_null_stride.c
 noclobber.o: noclobber.c
 nonblocking.o: nonblocking.c
+one_record.o: one_record.c
 varn_int.o: varn_int.c
 record.o: record.c
 redef1.o: redef1.c

@@ -40,6 +40,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/one_record.c tests the special case defined in CDF-1 and
+      CDF-2 specification that "A special case: Where there is exactly one
+      record variable, we drop the requirement that each record be four-byte
+      aligned, so in this case there is no record padding."
     * test/testcases/modes.c tests if correct error codes are returned when
       various file create/open modes are used.
     * test/testcases/varn_int.c tests varn APIs
@@ -61,6 +65,9 @@ This is essentially a placeholder for the next release note ...
       run very slowly.
 
   o Bug fixes
+    * fix the bug for the special case when there is only one record variable
+      and the record size is not four-byte aligned. In this case, the alignment
+      is dropped (no padding).
     * fix the bug when the first group of file types are interleaved, it
       was mistakenly identified as non-interleaved. See r1758.
     * fix the setting for PNETCDF_RELEASE_DATE in configure.in. Using read
