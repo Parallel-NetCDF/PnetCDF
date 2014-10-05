@@ -40,6 +40,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * In test/nc_test, t_nc.c tst_misc.c tst_norm.c tst_small.c are borrowed
+      from netCDF test programs.
     * test/testcases/one_record.c tests the special case defined in CDF-1 and
       CDF-2 specification that "A special case: Where there is exactly one
       record variable, we drop the requirement that each record be four-byte
