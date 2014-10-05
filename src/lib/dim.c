@@ -20,6 +20,7 @@
 #include "ncx.h"
 #include "fbits.h"
 #include "macro.h"
+#include "utf8proc.h"
 
 /*
  * Free dim
@@ -56,15 +57,17 @@ ncmpii_new_x_NC_dim(NC_string *name)
  * Formerly, NC_new_dim(const char *name, long size)
  */
 static NC_dim *
-ncmpii_new_NC_dim(const char *name,   /* dimension name */
-                  MPI_Offset  nchars, /* length of name. Note the name string
-                                         may not be NULL terminated */
+ncmpii_new_NC_dim(const char *uname,  /* dimension name */
                   MPI_Offset  size)
 {
     NC_string *strp;
     NC_dim *dimp;
 
-    strp = ncmpii_new_NC_string(nchars, name);
+    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    if (name == NULL) return NULL;
+
+    strp = ncmpii_new_NC_string(strlen(name), name);
+    free(name);
     if (strp == NULL) return NULL;
 
     dimp = ncmpii_new_x_NC_dim(strp);
@@ -82,7 +85,7 @@ ncmpii_new_NC_dim(const char *name,   /* dimension name */
 NC_dim *
 dup_NC_dim(const NC_dim *dimp)
 {
-    return ncmpii_new_NC_dim(dimp->name->cp, dimp->name->nchars, dimp->size);
+    return ncmpii_new_NC_dim(dimp->name->cp, dimp->size);
 }
 
 /*----< ncmpii_find_NC_Udim() >----------------------------------------------*/
@@ -122,26 +125,31 @@ ncmpii_find_NC_Udim(const NC_dimarray  *ncap,
  */
 static int
 NC_finddim(const NC_dimarray  *ncap,
-           const char         *name,
+           const char         *uname,
            NC_dim            **dimpp)
 {
     int dimid;
-    MPI_Offset nchars = strlen(name);
+    MPI_Offset nchars;
 
     assert(ncap != NULL);
 
     if (ncap->ndefined == 0) return -1;
 
+    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    nchars = strlen(name);
+
     /* note that the number of dimensions allowed is < 2^32 */
-    for (dimid=0; dimid<ncap->ndefined; dimid++)
-        /* use strncmp() as name->nchars may not be NULL terminated */
+    for (dimid=0; dimid<ncap->ndefined; dimid++) {
         if (ncap->value[dimid]->name->nchars == nchars &&
             strncmp(ncap->value[dimid]->name->cp, name, nchars) == 0) {
             /* found the mateched name */
             if (dimpp != NULL)
                 *dimpp = ncap->value[dimid];
+            free(name);
             return dimid;
         }
+    }
+    free(name);
 
     /* the name is not found */
     return -1;
@@ -341,7 +349,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     if (dimid != -1) return NC_ENAMEINUSE;
     
     /* create a new dimension object */
-    dimp = ncmpii_new_NC_dim(name, strlen(name), size);
+    dimp = ncmpii_new_NC_dim(name, size);
     if (dimp == NULL) return NC_ENOMEM;
 
     /* Add a new handle to the end of an array of handles */

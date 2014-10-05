@@ -20,6 +20,7 @@
 #include "ncx.h"
 #include "rnd.h"
 #include "macro.h"
+#include "utf8proc.h"
 
 /* Prototypes for functions used only in this file */
 static MPI_Offset ncx_szof(nc_type type);
@@ -101,9 +102,7 @@ ncmpii_new_x_NC_var(NC_string *strp,
  * Formerly, NC_new_var()
  */
 static NC_var *
-ncmpii_new_NC_var(const char *name,   /* variable name */
-                  MPI_Offset  nchars, /* length of name. Note the name string
-                                         may not be NULL terminated */
+ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
                   nc_type     type,
                   int         ndims,
                   const int  *dimids)
@@ -111,8 +110,11 @@ ncmpii_new_NC_var(const char *name,   /* variable name */
     NC_string *strp;
     NC_var *varp;
 
-    /* name may not be NULL terminated */
-    strp = ncmpii_new_NC_string(nchars, name);
+    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    if (name == NULL) return NULL;
+
+    strp = ncmpii_new_NC_string(strlen(name), name);
+    free(name);
     if (strp == NULL) return NULL;
 
     varp = ncmpii_new_x_NC_var(strp, ndims);
@@ -134,7 +136,6 @@ NC_var *
 dup_NC_var(const NC_var *rvarp)
 {
     NC_var *varp = ncmpii_new_NC_var(rvarp->name->cp,
-                                     rvarp->name->nchars,
                                      rvarp->type,
                                      rvarp->ndims,
                                      rvarp->dimids);
@@ -296,10 +297,11 @@ NC_hvarid
  */
 static int
 ncmpii_NC_findvar(const NC_vararray  *ncap,
-                  const char         *name,
+                  const char         *uname,
                   NC_var            **varpp)
 {
-    int varid, slen;
+    int varid, nchars;
+    char *name;
     NC_var **loc;
 
     assert (ncap != NULL);
@@ -308,17 +310,19 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 
     loc = (NC_var **) ncap->value;
 
-    slen = strlen(name);
+    name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    nchars = strlen(name);
 
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
-        /* use strncmp() because  name->cp may not be NULL terminated */
-        if ((*loc)->name->nchars == slen &&
-            strncmp((*loc)->name->cp, name, slen) == 0) {
+        if ((*loc)->name->nchars == nchars &&
+            strncmp((*loc)->name->cp, name, nchars) == 0) {
             if (varpp != NULL)
                 *varpp = *loc;
+            free(name);
             return (varid); /* Normal return */
         }
     }
+    free(name);
     return (-1); /* not found */
 }
 
@@ -529,7 +533,7 @@ ncmpi_def_var(int         ncid,
     if (varid != -1) return NC_ENAMEINUSE;
 
     /* create a new variable */
-    varp = ncmpii_new_NC_var(name, strlen(name), type, ndims, dimids);
+    varp = ncmpii_new_NC_var(name, type, ndims, dimids);
     if (varp == NULL) return NC_ENOMEM;
 
     /* set up array dimensional structures */
