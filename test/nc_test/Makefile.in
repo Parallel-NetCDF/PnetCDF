@@ -23,7 +23,7 @@ PROG_SRCS = nc_test.c \
             t_nc.c \
             tst_misc.c \
             tst_norm.c \
-            tst_small.c \
+            tst_small.c
 
 M4_SRCS   = test_get.m4 \
             test_put.m4 \
@@ -45,8 +45,8 @@ PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) $(PROG_SRCS) \
 
 all: $(PROGS)
 
-nc_test: $(OBJS) $(LIBRARY)
-	$(LINK.c) $(OBJS) $(LDFLAGS) $(LIBS)
+nc_test: nc_test.o $(OBJS) $(LIBRARY)
+	$(LINK.c) $< $(OBJS) $(LDFLAGS) $(LIBS)
 
 t_nc: t_nc.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
