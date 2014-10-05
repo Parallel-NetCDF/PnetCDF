@@ -369,7 +369,7 @@ test_ncmpi_abort(void)
     IF (err != NC_EBADID)
         error("bad ncid: status = %d", err);
     err = ncmpi_delete(scratch, info);	/* should already be deleted */
-    IF (!err)
+    IF (!err) /* err is expected to be NC_ENOENT */
         error("file %s should not exist", scratch);
 
         /* 

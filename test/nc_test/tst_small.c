@@ -117,7 +117,7 @@ test_small_unlim(const char *testfile, int cmode)
    if (ndims != 2 && nvars != 1 && natts != 0 && unlimdimid != 0) {printf("Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_get_var_text_all(ncid, varid, (char *)data_in); ERR
    for (i = 0; i < NUM_VALS; i++)
-      // if (strncmp(data[i], data_in[i], STR_LEN)) {printf("Error at line %d\n",__LINE__);return 1;}
+      /* if (strncmp(data[i], data_in[i], STR_LEN)) {printf("Error at line %d\n",__LINE__);return 1;} */
       if (strncmp(data[i], data_in[i], STR_LEN)) {
 printf("i=%d data=%s data_in=%s\n",i,data[i],data_in[i]);
       }

@@ -185,9 +185,10 @@ ncmpi_strerror(int err)
             /* an error when calling bput APIs
              */
         case NC_ENOENT:
-            return "The specified netCDF file does not exist when calling ncmpi_open().";
+            return "The specified netCDF file does not exist.";
             /* this error code corresponds to MPI error class
-             * MPI_ERR_NO_SUCH_FILE, an error generated from MPI_File_open()
+             * MPI_ERR_NO_SUCH_FILE, an error generated from MPI_File_open(),
+             * MPI_File_delete() or others
              */
         case NC_EINTOVERFLOW:
             return "Overflow when type cast to 4-byte integer.";
