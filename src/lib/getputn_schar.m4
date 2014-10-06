@@ -35,6 +35,32 @@ ncmpix_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
     return NC_NOERR;
 }
 
+/*----< ncmpix_getn_schar_uchar() >------------------------------------------*/
+int
+ncmpix_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
+{
+    /* copy/convert data in xpp of type schar to data in tp of type uchar */
+
+    /* there is no ENDIANness issue, as schar is 1 byte */
+
+    /* do not check for range error, as netCDF specification make a special
+     * case for type conversion between uchar and scahr:
+     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+     * The _uchar and _schar functions were introduced in netCDF-3 to eliminate
+     * an ambiguity, and support both signed and unsigned byte data. In
+     * netCDF-2, whether the external NC_BYTE type represented signed or
+     * unsigned values was left up to the user. In netcdf-3, we treat NC_BYTE
+     * as signed for the purposes of conversion to short, int, long, float, or
+     * double. (Of course, no conversion takes place when the internal type is
+     * signed char.) In the _uchar functions, we treat NC_BYTE as if it were
+     * unsigned. Thus, no NC_ERANGE error can occur converting between NC_BYTE
+     * and unsigned char.
+     */
+    (void) memcpy(tp, *xpp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems);
+    return ENOERR;
+}
+
 dnl
 dnl GETN_SCHAR(xpp, nelems, tp)
 dnl
@@ -59,7 +85,6 @@ ncmpix_getn_schar_$1(const void **xpp, MPI_Offset nelems, $1 *tp)
 }
 ')dnl
 
-GETN_SCHAR(uchar,  if (*xp < 0) status = NC_ERANGE;)
 GETN_SCHAR(ushort, if (*xp < 0) status = NC_ERANGE;)
 GETN_SCHAR(uint,   if (*xp < 0) status = NC_ERANGE;)
 GETN_SCHAR(uint64, if (*xp < 0) status = NC_ERANGE;)
@@ -81,7 +106,22 @@ ncmpix_pad_getn_schar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
     MPI_Offset rndup = nelems % X_ALIGN;
     if (rndup) rndup = X_ALIGN - rndup;
 
-    memcpy(tp, *xpp, nelems);
+    (void) memcpy(tp, *xpp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems + rndup);
+
+    return NC_NOERR;
+}
+
+/*----< ncmpix_pad_getn_schar_uchar() >--------------------------------------*/
+int
+ncmpix_pad_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
+{
+    /* get n elements of uchar from the variable defined as schar (NC_BYTE,
+     * or NC_CHAR) in the file */
+    MPI_Offset rndup = nelems % X_ALIGN;
+    if (rndup) rndup = X_ALIGN - rndup;
+
+    (void) memcpy(tp, *xpp, nelems);
     *xpp = (void *)((char *)(*xpp) + nelems + rndup);
 
     return NC_NOERR;
@@ -115,7 +155,6 @@ ncmpix_pad_getn_schar_$1(const void **xpp, MPI_Offset nelems, $1 *tp)
 }
 ')dnl
 
-PAD_GETN_SCHAR(uchar,  if (*xp < 0) status = NC_ERANGE;)
 PAD_GETN_SCHAR(ushort, if (*xp < 0) status = NC_ERANGE;)
 PAD_GETN_SCHAR(uint,   if (*xp < 0) status = NC_ERANGE;)
 PAD_GETN_SCHAR(uint64, if (*xp < 0) status = NC_ERANGE;)
@@ -127,8 +166,8 @@ PAD_GETN_SCHAR(float)
 PAD_GETN_SCHAR(double)
 PAD_GETN_SCHAR(int64)
 
-int
 /*----< ncmpix_putn_schar_schar() >------------------------------------------*/
+int
 ncmpix_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
     memcpy(*xpp, tp, nelems);
@@ -136,6 +175,68 @@ ncmpix_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 
     return NC_NOERR;
 }
+
+/*----< ncmpix_putn_schar_uchar() >------------------------------------------*/
+int
+ncmpix_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
+{
+    /* copy/convert data in tp of type uchar to data in xpp of type schar */
+
+    /* there is no ENDIANness issue, as schar/uchar is 1 byte */
+
+    /* do not check for range error, as netCDF specification make a special
+     * case for type conversion between uchar and scahr:
+     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+     * The _uchar and _schar functions were introduced in netCDF-3 to eliminate
+     * an ambiguity, and support both signed and unsigned byte data. In
+     * netCDF-2, whether the external NC_BYTE type represented signed or
+     * unsigned values was left up to the user. In netcdf-3, we treat NC_BYTE
+     * as signed for the purposes of conversion to short, int, long, float, or
+     * double. (Of course, no conversion takes place when the internal type is
+     * signed char.) In the _uchar functions, we treat NC_BYTE as if it were
+     * unsigned. Thus, no NC_ERANGE error can occur converting between NC_BYTE
+     * and unsigned char.
+     */
+    (void) memcpy(*xpp, tp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems);
+    return ENOERR;
+}
+
+
+dnl
+dnl PUTN_SCHAR(xpp, nelems, tp)
+dnl
+define(`PUTN_SCHAR',dnl
+`dnl
+/*----< ncmpix_putn_schar_$1() >----------------------------------------------*/
+int
+ncmpix_putn_schar_$1(void **xpp, MPI_Offset nelems, const $1 *tp)
+{
+    /* put n elements of data of type $1 to type schar */
+    int status=NC_NOERR;
+    schar *xp = (schar *) *xpp;
+
+    while (nelems-- != 0) {
+        $2         /* check if can fit into schar */
+        *xp++ = (schar) *tp++;
+    }
+    *xpp = (void *)xp;
+
+    return status;
+}
+')dnl
+
+PUTN_SCHAR(ushort, if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
+PUTN_SCHAR(uint,   if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
+PUTN_SCHAR(uint64, if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
+
+PUTN_SCHAR(short,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
+PUTN_SCHAR(int,    if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
+PUTN_SCHAR(long,   if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
+PUTN_SCHAR(float,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
+PUTN_SCHAR(double, if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
+PUTN_SCHAR(int64,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
+
 
 /*----< ncmpix_pad_putn_schar_schar() >--------------------------------------*/
 int
@@ -155,42 +256,25 @@ ncmpix_pad_putn_schar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
     return NC_NOERR;
 }
 
-
-dnl
-dnl PUTN_SCHAR(xpp, nelems, tp)
-dnl
-define(`PUTN_SCHAR',dnl
-`dnl
-/*----< ncmpix_putn_schar_$1() >----------------------------------------------*/
+/*----< ncmpix_pad_putn_schar_uchar() >--------------------------------------*/
 int
-ncmpix_putn_schar_$1(void **xpp, MPI_Offset nelems, const $1 *tp)
+ncmpix_pad_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
 {
-    /* put n elements of data in $1 to file type schar */
-    int status=NC_NOERR;
-    schar *xp = (schar *) *xpp;
+    /* put n elements of uchar data type to the variable defined as schar
+       in the file */
+    MPI_Offset rndup = nelems % X_ALIGN;
+    if (rndup) rndup = X_ALIGN - rndup;
 
-    while (nelems-- != 0) {
-        $2         /* check if can fit into schar */
-        *xp++ = (schar) *tp++;
+    (void) memcpy(*xpp, tp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems);
+
+    if (rndup) {
+        (void) memcpy(*xpp, nada, rndup);
+        *xpp = (void *)((char *)(*xpp) + rndup);
     }
-    *xpp = (void *)xp;
 
-    return status;
+    return ENOERR;
 }
-')dnl
-
-PUTN_SCHAR(uchar,  if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
-PUTN_SCHAR(ushort, if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
-PUTN_SCHAR(uint,   if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
-PUTN_SCHAR(uint64, if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
-
-PUTN_SCHAR(short,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
-PUTN_SCHAR(int,    if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
-PUTN_SCHAR(long,   if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
-PUTN_SCHAR(float,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
-PUTN_SCHAR(double, if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
-PUTN_SCHAR(int64,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
-
 
 dnl
 dnl PAD_PUTN_SCHAR(xpp, nelems, tp)
@@ -224,7 +308,6 @@ ncmpix_pad_putn_schar_$1(void **xpp, MPI_Offset nelems, const $1 *tp)
 }
 ')dnl
 
-PAD_PUTN_SCHAR(uchar,  if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
 PAD_PUTN_SCHAR(ushort, if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
 PAD_PUTN_SCHAR(uint,   if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
 PAD_PUTN_SCHAR(uint64, if (*tp > X_SCHAR_MAX) status = NC_ERANGE;)
@@ -236,12 +319,3 @@ PAD_PUTN_SCHAR(float,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_E
 PAD_PUTN_SCHAR(double, if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
 PAD_PUTN_SCHAR(int64,  if (*tp > X_SCHAR_MAX || *tp < X_SCHAR_MIN) status = NC_ERANGE;)
 
-dnl PAD_PUTN_SCHAR(uchar,  NO_CHECK_SCHAR_RANGE)
-/* wkliao: In netcdf3, there is no no range check for schar_uchar case. This
- * does not seem right ...
- */
-
-dnl PUTN_SCHAR(uchar,  (0))
-/* wkliao: In netcdf3, there is no no range check for schar_uchar case. That
- * does not seem right ...
- */
