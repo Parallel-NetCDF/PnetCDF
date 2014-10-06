@@ -9,7 +9,6 @@
 #include "tests.h"
 
 /* Prototypes */
-static int inRange_float(const double value, const nc_type datatype);
 
 void
 print_nok(int nok)
@@ -53,6 +52,22 @@ inRange_uchar(const double value, const nc_type datatype)
          * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
          */
         return(value >= 0 && value <= 255);
+    }
+    /* else */
+    return inRange(value, datatype);
+}
+
+static int
+inRange_schar(const double value, const nc_type datatype)
+{
+    /* check value of type datatype if within schar range */
+
+    if (datatype == NC_UBYTE) {
+        /* netCDF specification make a special case for type conversion between
+         * uchar and scahr: do not check for range error. See
+         * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+         */
+        return(value >= X_CHAR_MIN && value <= X_CHAR_MAX);
     }
     /* else */
     return inRange(value, datatype);
@@ -141,6 +156,9 @@ inRange3(const double    value,
      * and unsigned char.
      */
     switch (itype) {
+        case NCT_SCHAR:
+        case NCT_CHAR:
+            return inRange_schar(value, datatype);
         case NCT_UCHAR:
             return inRange_uchar(value, datatype);
         case NCT_FLOAT:
