@@ -35,4 +35,4 @@ t_nc.o: t_nc.c
 tst_misc.o: tst_misc.c
 tst_norm.o: tst_norm.c
 tst_small.o: tst_small.c
-
+tst_names.o: tst_names.c
