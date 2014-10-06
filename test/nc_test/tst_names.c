@@ -1,3 +1,9 @@
+/*
+ *  Copyright (C) 2014, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+/* $Id$ */
+
 /* This is part of the netCDF package.
    Copyright 2006 University Corporation for Atmospheric Research/Unidata.
    See COPYRIGHT file for conditions of use.
