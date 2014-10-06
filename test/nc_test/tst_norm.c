@@ -180,9 +180,11 @@ main(int argc, char **argv)
 
     if (verbose) printf("\n*** testing UTF-8 normalization...");
 
+    /* test CDF-2 format */
     cmode = NC_CLOBBER | NC_64BIT_OFFSET;
     nerrs += tst_norm(filename, cmode);
 
+    /* test CDF-5 format */
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     nerrs += tst_norm(filename, cmode);
 
