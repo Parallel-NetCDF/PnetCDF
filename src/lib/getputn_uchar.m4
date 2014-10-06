@@ -26,41 +26,29 @@ dnl
 
 /*---- uchar ----------------------------------------------------------------*/
 
+/* do not check for range error, as netCDF specification make a special
+ * case for type conversion between uchar and scahr:
+ * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+ * The _uchar and _schar functions were introduced in netCDF-3 to eliminate
+ * an ambiguity, and support both signed and unsigned byte data. In
+ * netCDF-2, whether the external NC_BYTE type represented signed or
+ * unsigned values was left up to the user. In netcdf-3, we treat NC_BYTE
+ * as signed for the purposes of conversion to short, int, long, float, or
+ * double. (Of course, no conversion takes place when the internal type is
+ * signed char.) In the _uchar functions, we treat NC_BYTE as if it were
+ * unsigned. Thus, no NC_ERANGE error can occur converting between NC_BYTE
+ * and unsigned char.
+ */
+
 /*----< ncmpix_getn_uchar_schar() >------------------------------------------*/
 int
 ncmpix_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
 {
     /* file type is uchar, buffer type is schar */
-    int status = NC_NOERR;
-    uchar *xp = (uchar *) *xpp;
+    memcpy(tp, *xpp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems);
 
-    while (nelems-- > 0) {
-        if (*xp > X_SCHAR_MAX) /* uchar might be too big for schar */
-            status = NC_ERANGE;
-        *tp++ = *xp++;
-    }
-
-    return status;
-}
-
-/*----< ncmpix_pad_getn_uchar_schar() >--------------------------------------*/
-int
-ncmpix_pad_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
-{
-    int status = NC_NOERR;
-    uchar *xp = (uchar *) *xpp;
-
-    MPI_Offset rndup = nelems % X_ALIGN;
-    if (rndup) rndup = X_ALIGN - rndup;
-
-    while (nelems-- > 0) {
-        if (*xp > X_SCHAR_MAX) /* uchar might be too big for schar */
-            status = NC_ERANGE;
-        *tp++ = *xp++;
-    }
-    *xpp = (void *)(xp + rndup);
-
-    return status;
+    return NC_NOERR;
 }
 
 /*----< ncmpix_getn_uchar_uchar() >------------------------------------------*/
@@ -116,6 +104,19 @@ ncmpix_pad_getn_uchar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
     return NC_NOERR;
 }
 
+/*----< ncmpix_pad_getn_uchar_schar() >--------------------------------------*/
+int
+ncmpix_pad_getn_uchar_schar(const void **xpp, MPI_Offset nelems, schar *tp)
+{
+    MPI_Offset rndup = nelems % X_ALIGN;
+    if (rndup) rndup = X_ALIGN - rndup;
+
+    memcpy(tp, *xpp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems + rndup);
+
+    return NC_NOERR;
+}
+
 dnl
 dnl PAD_GETN_UCHAR(xpp, nelems, tp)
 dnl
@@ -159,20 +160,12 @@ ncmpix_putn_uchar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
     return NC_NOERR;
 }
 
-/*----< ncmpix_pad_putn_uchar_uchar() >--------------------------------------*/
+/*----< ncmpix_putn_uchar_schar() >------------------------------------------*/
 int
-ncmpix_pad_putn_uchar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
+ncmpix_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
 {
-    MPI_Offset rndup = nelems % X_ALIGN;
-    if (rndup) rndup = X_ALIGN - rndup;
-
     memcpy(*xpp, tp, nelems);
     *xpp = (void *)((char *)(*xpp) + nelems);
-
-    if (rndup) {
-        memcpy(*xpp, nada, rndup);
-        *xpp = (void *)((char *)(*xpp) + rndup);
-    }
 
     return NC_NOERR;
 }
@@ -199,7 +192,6 @@ ncmpix_putn_uchar_$1(void **xpp, MPI_Offset nelems, const $1 *tp)
 }
 ')dnl
 
-PUTN_UCHAR(schar,  if (*tp < 0) status = NC_ERANGE;)
 PUTN_UCHAR(short,  if (*tp > X_UCHAR_MAX || *tp < 0) status = NC_ERANGE;)
 PUTN_UCHAR(int,    if (*tp > X_UCHAR_MAX || *tp < 0) status = NC_ERANGE;)
 PUTN_UCHAR(long,   if (*tp > X_UCHAR_MAX || *tp < 0) status = NC_ERANGE;)
@@ -209,6 +201,42 @@ PUTN_UCHAR(int64,  if (*tp > X_UCHAR_MAX || *tp < 0) status = NC_ERANGE;)
 PUTN_UCHAR(ushort, if (*tp > X_UCHAR_MAX) status = NC_ERANGE;)
 PUTN_UCHAR(uint,   if (*tp > X_UCHAR_MAX) status = NC_ERANGE;)
 PUTN_UCHAR(uint64, if (*tp > X_UCHAR_MAX) status = NC_ERANGE;)
+
+/*----< ncmpix_pad_putn_uchar_uchar() >--------------------------------------*/
+int
+ncmpix_pad_putn_uchar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
+{
+    MPI_Offset rndup = nelems % X_ALIGN;
+    if (rndup) rndup = X_ALIGN - rndup;
+
+    memcpy(*xpp, tp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems);
+
+    if (rndup) {
+        memcpy(*xpp, nada, rndup);
+        *xpp = (void *)((char *)(*xpp) + rndup);
+    }
+
+    return NC_NOERR;
+}
+
+/*----< ncmpix_pad_putn_uchar_schar() >--------------------------------------*/
+int
+ncmpix_pad_putn_uchar_schar(void **xpp, MPI_Offset nelems, const schar *tp)
+{
+    MPI_Offset rndup = nelems % X_ALIGN;
+    if (rndup) rndup = X_ALIGN - rndup;
+
+    memcpy(*xpp, tp, nelems);
+    *xpp = (void *)((char *)(*xpp) + nelems);
+
+    if (rndup) {
+        memcpy(*xpp, nada, rndup);
+        *xpp = (void *)((char *)(*xpp) + rndup);
+    }
+
+    return NC_NOERR;
+}
 
 dnl
 dnl PAD_PUTN_UCHAR(xpp, nelems, tp)
@@ -240,7 +268,6 @@ ncmpix_pad_putn_uchar_$1(void **xpp, MPI_Offset nelems, const $1 *tp)
 }
 ')dnl
 
-PAD_PUTN_UCHAR(schar,  if (*tp < 0) status = NC_ERANGE;)
 PAD_PUTN_UCHAR(short,  if (*tp > X_UCHAR_MAX || *tp < 0) status = NC_ERANGE;)
 PAD_PUTN_UCHAR(int,    if (*tp > X_UCHAR_MAX || *tp < 0) status = NC_ERANGE;)
 PAD_PUTN_UCHAR(long,   if (*tp > X_UCHAR_MAX || *tp < 0) status = NC_ERANGE;)

@@ -62,6 +62,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
+    * Type conversion between NC_BYTE and unsigned char no longer checks for
+      out of range error (NC_ERANGE). NetCDF specification make a special case
+      for this kind of data type conversion. See:
+      http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
     * Conform with the CDF-2 and CDF-5 formats that names are normalized
       according to Unicode NFC normalization rules during encoding as UTF-8
       for storing in the file header.
