@@ -619,12 +619,15 @@ int main(int argc, char *argv[])
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
+    /* test CDF-1 format */
     cmode = NC_CLOBBER;
     nerrs += t_nc(filename, cmode);
 
+    /* test CDF-2 format */
     cmode = NC_CLOBBER | NC_64BIT_OFFSET;
     nerrs += t_nc(filename, cmode);
 
+    /* test CDF-5 format */
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     nerrs += t_nc(filename, cmode);
 
