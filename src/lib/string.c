@@ -240,11 +240,12 @@ ncmpii_NC_check_name_CDF2(const char *name)
 	if (utf8_stat < 0)
 	    return NC_EBADNAME;
 
-	/* First char must be [a-z][A-Z]_ | UTF8 */
+	/* First char must be [a-z][A-Z][0-9]_ | UTF8 */
 	ch = (uchar)*cp;
 	if(ch <= 0x7f) { 
 	    if(!('A' <= ch && ch <= 'Z') 
 	       && !('a' <= ch && ch <= 'z') 
+               && !('0' <= ch && ch <= '9')
 	       && ch != '_' )
 		return NC_EBADNAME;
 	    cp++;
