@@ -42,26 +42,21 @@ inRange(const double value, const nc_type datatype)
     }
 }
 
-#ifdef OLD_CODES
 static int
 inRange_uchar(const double value, const nc_type datatype)
 {
     /* check value of type datatype if within uchar range */
 
     if (datatype == NC_BYTE) {
-        /* wkliao: why single this out ???
-         * "value" is of uchar type and uchar has range of [0, 255]
-         * NC_BYTE is signed 1-byte integer with range [-128, 127].
-         * So, to check if "value" is within the range of "datatype==NC_BYTE",
-         * we only have to check if value is <= 127.
+        /* netCDF specification make a special case for type conversion between
+         * uchar and scahr: do not check for range error. See
+         * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
          */
-        // return(value >= 0 && value <= 255);
-        return(value >= 0 && value <= 127);
+        return(value >= 0 && value <= 255);
     }
     /* else */
     return inRange(value, datatype);
 }
-#endif
 
 static int
 inRange_float(const double value, const nc_type datatype)
@@ -132,15 +127,22 @@ inRange3(const double    value,
          const nc_type   datatype,
          const nct_itype itype)
 {
-    /* wkliao: why single out NCT_UCHAR (NC_UBYTE) ???
-     * NC_UBYTE is treated as unsigned 1-byte integer with range [0, 255].
-     * Shouldn't we have X_UCHAR_MAX already?
+    /* netCDF specification make a special case for type conversion between
+     * uchar and scahr: do not check for range error. See
+     * http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+     * The _uchar and _schar functions were introduced in netCDF-3 to eliminate
+     * an ambiguity, and support both signed and unsigned byte data. In
+     * netCDF-2, whether the external NC_BYTE type represented signed or
+     * unsigned values was left up to the user. In netcdf-3, we treat NC_BYTE
+     * as signed for the purposes of conversion to short, int, long, float, or
+     * double. (Of course, no conversion takes place when the internal type is
+     * signed char.) In the _uchar functions, we treat NC_BYTE as if it were
+     * unsigned. Thus, no NC_ERANGE error can occur converting between NC_BYTE
+     * and unsigned char.
      */
     switch (itype) {
-/* wkliao: my fix
         case NCT_UCHAR:
             return inRange_uchar(value, datatype);
-*/
         case NCT_FLOAT:
             return inRange_float(value, datatype);
         default:

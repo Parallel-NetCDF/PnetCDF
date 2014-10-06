@@ -58,7 +58,7 @@ ncmpix_getn_schar_uchar(const void **xpp, MPI_Offset nelems, uchar *tp)
      */
     (void) memcpy(tp, *xpp, nelems);
     *xpp = (void *)((char *)(*xpp) + nelems);
-    return ENOERR;
+    return NC_NOERR;
 }
 
 dnl
@@ -199,7 +199,7 @@ ncmpix_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
      */
     (void) memcpy(*xpp, tp, nelems);
     *xpp = (void *)((char *)(*xpp) + nelems);
-    return ENOERR;
+    return NC_NOERR;
 }
 
 
@@ -273,7 +273,7 @@ ncmpix_pad_putn_schar_uchar(void **xpp, MPI_Offset nelems, const uchar *tp)
         *xpp = (void *)((char *)(*xpp) + rndup);
     }
 
-    return ENOERR;
+    return NC_NOERR;
 }
 
 dnl
