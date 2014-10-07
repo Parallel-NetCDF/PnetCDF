@@ -63,6 +63,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
+    * The flexible APIs now allow argument buftype to be MPI_DATATYPE_NULL.
+      In this case, argument bufcount is ignored and argument buf's data type
+      must match the data type of variable defined in the file - no data
+      conversion will be done. This extension makes the flexible APIs be
+      able to correspond to the netCDF APIs whose names do not contain a data
+      type, e.g. nc_put_vara().
     * Type conversion between NC_BYTE and unsigned char no longer checks for
       out of range error (NC_ERANGE). NetCDF specification make a special case
       for this kind of data type conversion. See:

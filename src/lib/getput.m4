@@ -788,6 +788,24 @@ ncmpii_getput_vars(NC               *ncp,
     else
         fh = ncp->nciop->independent_fh;
 
+    if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and will be recalculated to match
+         * count[]. Note buf's data type must match the data type of
+         * variable defined in the file - no data conversion will be done.
+         */
+        int i;
+        bufcount = 1;
+        for (i=0; i<varp->ndims; i++) {
+            if (count[i] < 0) { /* no negative count[] */
+                err = NC_ENEGATIVECNT;
+                goto err_check;
+            }
+            bufcount *= count[i];
+        }
+        /* assign buftype match with the variable's data type */
+        buftype = ncmpii_nc2mpitype(varp->type);
+    }
+
     /* Check if buftype is contiguous (for flexible APIs). If no, we must pack
      * it into a contiguous buffer, named cbuf
      * find the ptype (primitive MPI data type) from buftype
@@ -1334,9 +1352,28 @@ ncmpii_getput_varm(NC               *ncp,
 
     /* else case indicates we have a true varm call, as
      * imap gives non-contiguous layout, we will do pack/unpack I/O
-     * buffer based on imap[], but first must check if buftype is contiguous
-     * in case for flexible APIs
+     * buffer based on imap[], but first must check if buftype is NULL
+     * (a match data type case). Otherwise check if buftype is contiguous
+     * in case for flexible APIs.
      */
+
+    if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and will be recalculated to match
+         * count[]. Note buf's data type must match the data type of
+         * variable defined in the file - no data conversion will be done.
+         */
+        int i;
+        bufcount = 1;
+        for (i=0; i<varp->ndims; i++) {
+            if (count[i] < 0) { /* no negative count[] */
+                err = NC_ENEGATIVECNT;
+                goto err_check;
+            }
+            bufcount *= count[i];
+        }
+        /* assign buftype match with the variable's data type */
+        buftype = ncmpii_nc2mpitype(varp->type);
+    }
 
     /* find the ptype (primitive MPI data type) from buftype
      * el_size is the element size of ptype
