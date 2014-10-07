@@ -36,7 +36,10 @@ ncmpii_free_NC_string(NC_string *ncstrp)
     NCI_Free(ncstrp);
 }
 
+#ifdef _CONFORM_NETCDF_3_5_1
 static int ncmpii_NC_check_name_CDF1(const char *name);
+#endif
+
 static int ncmpii_NC_check_name_CDF2(const char *name);
 
 /*----< ncmpii_NC_check_name() >---------------------------------------------*/
@@ -44,8 +47,14 @@ int
 ncmpii_NC_check_name(const char *name,
                      int         file_ver) /* CDF version: 1, 2, or 5 */
 {
+    /* NetCDF4 has made CDF-1 no different from CDF-2 except the size of
+     * OFFSET (i.e. 32-bit vs. 64-bit integer. Both formats support extended
+     * names now.
+     */
+#ifdef _CONFORM_NETCDF_3_5_1
     if (file_ver == 1)
         return ncmpii_NC_check_name_CDF1(name);
+#endif
 
     return ncmpii_NC_check_name_CDF2(name);
 }
