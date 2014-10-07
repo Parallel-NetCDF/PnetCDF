@@ -1133,6 +1133,21 @@ ncmpii_put_att(int         ncid,
     if (nelems > 0 && buf == NULL)
         return NC_EINVAL; /* Null arg */
 
+   /* If this is the _FillValue attribute, then let PnetCDF return the
+    * same error codes as netCDF
+    */
+   if (!strcmp(name, "_FillValue") && varid != NC_GLOBAL) {
+
+      NC_var *varp = ncmpii_NC_lookupvar(ncp, varid);
+
+      /* Fill value must be same type and have exactly one value */
+      if (filetype != varp->type)
+         return NC_EBADTYPE;
+
+      if (nelems != 1)
+         return NC_EINVAL;
+    }
+
     /* get the file format version */
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
