@@ -119,17 +119,22 @@
 
 
 !/*
-! * Internal data types:
+! * Internal data types: (in memory)
 ! */
 #define NFT_UNSPECIFIED 0
+! #define NFT_UCHAR 1
 #define NFT_TEXT 16
 #define NFT_CHAR NFT_TEXT
 #define NFT_INT1 17
+! #define NFT_SCHAR NFT_INT1
 #define NFT_INT2 18
 #define NFT_INT 20
 #define NFT_REAL 36
 #define NFT_DOUBLE 40
+! #define NFT_USHORT 41
+! #define NFT_UINT   42
 #define NFT_INT8 43
+! #define NFT_UINT8 44
 
 
 !/*
