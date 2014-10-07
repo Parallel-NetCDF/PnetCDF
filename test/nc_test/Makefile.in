@@ -24,7 +24,8 @@ PROG_SRCS = nc_test.c \
             tst_misc.c \
             tst_norm.c \
             tst_small.c \
-            tst_names.c
+            tst_names.c \
+            tst_atts3.c
 
 M4_SRCS   = test_get.m4 \
             test_put.m4 \
@@ -39,7 +40,7 @@ OBJS      = $(SRCS:.c=.o) $(M4_SRCS:.m4=.o)
 PROGS     = $(PROG_SRCS:.c=)
 
 GARBAGE      = $(PROGS) $(M4_SRCS:.m4=.c) \
-               testfile.nc scratch.nc
+               testfile.nc scratch.nc testfile.nc.2
 
 PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) $(PROG_SRCS) \
                Makefile.in depend README
@@ -64,6 +65,9 @@ tst_small: tst_small.o $(LIBRARY)
 tst_names: tst_names.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+tst_atts3: tst_atts3.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 # This simple testing target ensures that the test files are present
 check testing: all
 	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/testfile.nc
@@ -78,6 +82,7 @@ check testing: all
 	$(TEST_SEQRUN) ./tst_norm         $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./tst_small        $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./tst_names        $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./tst_atts3        $(TEST_OUTDIR)/testfile.nc
 
 verbose_testing: all
 	$(RM) -f $(TEST_OUTDIR)/scratch.nc $(TEST_OUTDIR)/testfile.nc
@@ -92,6 +97,7 @@ verbose_testing: all
 	$(TEST_SEQRUN) ./tst_norm            $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./tst_small           $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./tst_names           $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./tst_atts3           $(TEST_OUTDIR)/testfile.nc
 
 ptest:
 
