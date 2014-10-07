@@ -50,6 +50,25 @@ static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
  *  In OpenMPI, this assumption will fail
  */
 
+MPI_Datatype
+ncmpii_nc2mpitype(nc_type type)
+{
+    switch(type){
+        case NC_BYTE :   return MPI_BYTE;
+        case NC_CHAR :   return MPI_CHAR;
+        case NC_SHORT :  return MPI_SHORT;
+        case NC_INT :    return MPI_INT;
+        case NC_FLOAT :  return MPI_FLOAT;
+        case NC_DOUBLE : return MPI_DOUBLE;
+        case NC_UBYTE :  return MPI_UNSIGNED_CHAR;
+        case NC_USHORT : return MPI_UNSIGNED_SHORT;
+        case NC_UINT :   return MPI_UNSIGNED;
+        case NC_INT64 :  return MPI_LONG_LONG_INT;
+        case NC_UINT64 : return MPI_UNSIGNED_LONG_LONG;
+        default:         return MPI_DATATYPE_NULL;
+    }
+}
+
 /*----< ncmpii_need_convert() >----------------------------------------------*/
 inline int
 ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype) {

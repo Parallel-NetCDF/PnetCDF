@@ -40,7 +40,9 @@ dnl
  *            the number of array elements to be accessed. This argument
  *            can be NULL, equivalent to counts with all 1s.
  *    bufcount and buftype: these 2 arguments are only available for flexible
- *            APIs, indicating the I/O buffer memory layout
+ *            APIs, indicating the I/O buffer memory layout. When buftype is
+ *            MPI_DATATYPE_NULL, bufcount is ignored and the data type of buf
+ *            is considered matched the variable data type defined in the file.
  */
 
 static int
@@ -194,6 +196,27 @@ ncmpii_getput_varn(int               ncid,
     if (starts == NULL) {
         status = NC_ENULLSTART;
         goto err_check;
+    }
+
+    if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and will be recalculated to match
+         * counts[]. Note buf's data type must match the data type of
+         * variable defined in the file - no data conversion will be done.
+         */
+        bufcount = 0;
+        for (j=0; j<num; j++) {
+            MPI_Offset bufcount_j = 1;
+            for (i=0; i<varp->ndims; i++) {
+                if (counts[j][i] < 0) { /* no negative counts[][] */
+                    err = NC_ENEGATIVECNT;
+                    goto err_check;
+                }
+                bufcount_j *= counts[j][i];
+            }
+            bufcount += bufcount_j;
+        }
+        /* assign buftype match with the variable's data type */
+        buftype = ncmpii_nc2mpitype(varp->type);
     }
 
     cbuf = buf;

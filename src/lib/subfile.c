@@ -753,6 +753,21 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     int isderived, buftype_is_contig;
     MPI_Offset bnelems;
 
+    if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and will be recalculated to match
+         * count[]. Note buf's data type must match the data type of
+         * variable defined in the file - no data conversion will be done.
+         */
+        bufcount = 1;
+        for (i=0; i<varp->ndims; i++) {
+            if (count[i] < 0)  /* no negative count[] */
+                return NC_ENEGATIVECNT;
+            bufcount *= count[i];
+        }
+        /* assign buftype match with the variable's data type */
+        buftype = ncmpii_nc2mpitype(varp->type);
+    }
+
     status = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
                                  &isderived, &buftype_is_contig);
     /* bnelems now is the number of ptype in a buftype */

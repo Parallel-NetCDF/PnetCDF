@@ -918,6 +918,23 @@ ncmpii_igetput_varm(NC               *ncp,
         goto err_check;
     }
 
+    if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, bufcount is ignored and will be recalculated to match
+         * count[]. Note buf's data type must match the data type of
+         * variable defined in the file - no data conversion will be done.
+         */
+        bufcount = 1;
+        for (i=0; i<varp->ndims; i++) {
+            if (count[i] < 0) { /* no negative count[] */
+                err = NC_ENEGATIVECNT;
+                goto err_check;
+            }
+            bufcount *= count[i];
+        }
+        /* assign buftype match with the variable's data type */
+        buftype = ncmpii_nc2mpitype(varp->type);
+    }
+
     do_vars = 0;
 
     if (varp->ndims == 0)

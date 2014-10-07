@@ -843,4 +843,7 @@ ncmpii_inq_malloc_list(void);
 extern int
 ncmpii_inq_files_opened(int *num, int *ncids);
 
+extern MPI_Datatype
+ncmpii_nc2mpitype(nc_type type);
+
 #endif /* _NC_H_ */
