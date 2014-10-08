@@ -4,6 +4,8 @@
  */
 /* $Id$ */
 
+/* This program is based on the test program tst_misc.c of the netCDF package */
+
 /*
   Copyright 2007, UCAR/Unidata
   See COPYRIGHT file for copying and redistribution conditions.

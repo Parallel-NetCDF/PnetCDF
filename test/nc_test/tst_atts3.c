@@ -4,6 +4,8 @@
  */
 /* $Id$ */
 
+/* This program is based on the test program tst_atts3.c of the netCDF package */
+
 /* This is part of the netCDF package. Copyright 2005-2007 University
    Corporation for Atmospheric Research/Unidata. See COPYRIGHT file
    for conditions of use.
