@@ -4,6 +4,8 @@
  */
 /* $Id$ */
 
+/* This program is based on the test program tst_names.c of the netCDF package */
+
 /* This is part of the netCDF package.
    Copyright 2006 University Corporation for Atmospheric Research/Unidata.
    See COPYRIGHT file for conditions of use.
@@ -211,7 +213,7 @@ main(int argc, char **argv)
    int attnums[NUM_GOOD];
 #endif
    char *format_names[] = { "CDF-2", "CDF-5" };
-   int cmode[2] = {NC_PNETCDF|NC_64BIT_OFFSET, NC_PNETCDF|NC_64BIT_DATA};
+   int cmode[2] = {NC_64BIT_OFFSET, NC_64BIT_DATA};
 
     char filename[128];
     int rank, nprocs, err, nerrs=0, verbose=0;
@@ -246,16 +248,13 @@ main(int argc, char **argv)
 
 	   dimids[i] = dimid;
 	   /* Define variable with same name */
-	   if ((res = ncmpi_def_var(ncid, valid[i], NC_FLOAT, NDIMS, &dimids[i], 
-				 &varid)))
+	   if ((res = ncmpi_def_var(ncid, valid[i], NC_FLOAT, NDIMS, &dimids[i], &varid)))
 	       ERRORI
 	   varids[i] = varid;
 	   /* Define variable and global attributes with same name and value */
-	   if ((res = ncmpi_put_att_text(ncid, varid, valid[i], 
-				      strlen(valid[i]), valid[i])))
+	   if ((res = ncmpi_put_att_text(ncid, varid, valid[i], strlen(valid[i]), valid[i])))
 	       ERRORI
-	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, valid[i], NC_DOUBLE, 
-					NATTVALS, attvals)))
+	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, valid[i], NC_DOUBLE, NATTVALS, attvals)))
 	       ERRORI
 #if 0
 	   attnums[i] = i;
@@ -265,17 +264,14 @@ main(int argc, char **argv)
        /* Try defining dimensions, variables, and attributes with various
 	* bad names and make sure these are rejected */
        for (i = 0; i < NUM_BAD; i++) {
-	   if ((res = ncmpi_def_dim(ncid, notvalid[i], DIMLEN, &dimid)) 
-	       != NC_EBADNAME) ERRORI
-	   if ((res = ncmpi_def_var(ncid, notvalid[i], NC_FLOAT, NDIMS, dimids, 
-				 &varid))
-	       != NC_EBADNAME) ERRORI
-	   if ((res = ncmpi_put_att_text(ncid, varid, notvalid[i], 
-				      strlen(attstring), attstring))
-	       != NC_EBADNAME) ERRORI
-	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, notvalid[i], NC_DOUBLE, 
-					NATTVALS, attvals))
-	       != NC_EBADNAME) ERRORI
+	   if ((res = ncmpi_def_dim(ncid, notvalid[i], DIMLEN, &dimid)) != NC_EBADNAME)
+               ERRORI
+	   if ((res = ncmpi_def_var(ncid, notvalid[i], NC_FLOAT, NDIMS, dimids, &varid)) != NC_EBADNAME)
+               ERRORI
+	   if ((res = ncmpi_put_att_text(ncid, varid, notvalid[i], strlen(attstring), attstring)) != NC_EBADNAME)
+               ERRORI
+	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, notvalid[i], NC_DOUBLE, NATTVALS, attvals)) != NC_EBADNAME)
+               ERRORI
        }
        if ((res = ncmpi_enddef(ncid)))
 	   ERROR
@@ -287,11 +283,9 @@ main(int argc, char **argv)
 	   ERROR
        for (i = 0; i < NUM_GOOD; i++) {
 	   MPI_Offset attlen;
-	   if ((res = ncmpi_inq_dimid(ncid, valid[i], &dimid)) || 
-	       dimid != dimids[i])
+	   if ((res = ncmpi_inq_dimid(ncid, valid[i], &dimid)) || dimid != dimids[i])
 	       ERRORI
-	   if ((res = ncmpi_inq_varid(ncid, valid[i], &varid)) || 
-	       varid != varids[i])
+	   if ((res = ncmpi_inq_varid(ncid, valid[i], &varid)) || varid != varids[i])
 	       ERRORI
 	   res = ncmpi_inq_attlen(ncid, varid, valid[i], &attlen);
 	   if ((res = ncmpi_get_att_text(ncid, varid, valid[i], attstr_in))) 
@@ -299,9 +293,7 @@ main(int argc, char **argv)
 	   attstr_in[attlen] = '\0';
 	   if (strcmp(valid[i], attstr_in) != 0) 
 	       ERRORI
-	   if ((res = ncmpi_get_att_double(ncid, NC_GLOBAL, valid[i], 
-					attvals_in)) 
-	       || attvals[0] != attvals_in[0]) 
+	   if ((res = ncmpi_get_att_double(ncid, NC_GLOBAL, valid[i], attvals_in)) || attvals[0] != attvals_in[0]) 
 	       ERRORI
        }
        if ((res = ncmpi_close(ncid)))

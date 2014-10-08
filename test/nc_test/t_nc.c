@@ -4,6 +4,8 @@
  */
 /* $Id$ */
 
+/* This program is based on the test program t_nc.c of the netCDF package */
+
 /* Copyright 1988-2010 University Corporation for Atmospheric Research
    See netcdf/COPYRIGHT file for copying and redistribution
    conditions.
