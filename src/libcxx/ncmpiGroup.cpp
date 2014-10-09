@@ -377,6 +377,19 @@ int NcmpiGroup::getFixVarCount(NcmpiGroup::Location location) const {
   return nvars;
 }
 
+// Get the size of record block, sum of single record of all record variables
+MPI_Offset NcmpiGroup::getRecSize(NcmpiGroup::Location location) const {
+
+  // search in current group.
+  NcmpiGroup tmpGroup(*this); 
+  MPI_Offset recsize=0;
+  // search in current group
+  if((location == ParentsAndCurrent || location == ChildrenAndCurrent || location == Current || location ==All) && !tmpGroup.isNull()) {
+    ncmpiCheck(ncmpi_inq_recsize(tmpGroup.getId(), &recsize),__FILE__,__LINE__);
+  }
+  return recsize;
+}
+
 // Get the collection of NcmpiVar objects.
 multimap<std::string,NcmpiVar> NcmpiGroup::getVars(NcmpiGroup::Location location) const {
 

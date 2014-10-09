@@ -1109,3 +1109,19 @@ ncmpi_inq_files_opened(int *num, int *ncids)
     return ncmpii_inq_files_opened(num, ncids);
 }
 
+/*----< ncmpi_inq_recsize() >------------------------------------------------*/
+int
+ncmpi_inq_recsize(int         ncid,
+                  MPI_Offset *recsize)
+{
+    int status;
+    NC *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR)
+        return status;
+
+    *recsize = ncp->recsize;
+    return NC_NOERR;
+}
+
