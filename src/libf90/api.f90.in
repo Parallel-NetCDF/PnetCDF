@@ -3148,6 +3148,12 @@ INTERFACE
                             INTEGER,                       INTENT(OUT) :: ncids(*)
     END FUNCTION   nfmpi_inq_files_opened
 
+    INTEGER        FUNCTION nfmpi_inq_recsize(ncid, recsize)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: recsize
+    END FUNCTION   nfmpi_inq_recsize
+
 !
 ! Begin of varn subroutines:
 !

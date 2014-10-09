@@ -303,3 +303,12 @@ function nf90mpi_inq_num_fix_vars(ncid, nvars)
   nf90mpi_inq_num_fix_vars = nfmpi_inq_num_fix_vars(ncid, nvars)
 end function nf90mpi_inq_num_fix_vars
 
+! -------
+function nf90mpi_inq_recsize(ncid, recsize)
+  integer,                          intent( in) :: ncid
+  integer (kind = MPI_OFFSET_KIND), intent(out) :: recsize
+  integer                                       :: nf90mpi_inq_recsize
+
+  nf90mpi_inq_recsize = nfmpi_inq_recsize(ncid, recsize)
+end function nf90mpi_inq_recsize
+

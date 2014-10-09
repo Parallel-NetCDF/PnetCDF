@@ -53,7 +53,7 @@
             nf90mpi_inq_varoffset, nf90mpi_inq_file_info, &
             nf90mpi_get_file_info, nf90mpi_inq_malloc_size, &
             nf90mpi_inq_malloc_max_size, nf90mpi_inq_malloc_list, &
-            nf90mpi_inq_files_opened
+            nf90mpi_inq_files_opened, nf90mpi_inq_recsize
 
 !
 ! F77 APIs
@@ -457,7 +457,8 @@
         nfmpi_inq_malloc_size, &
         nfmpi_inq_malloc_max_size, &
         nfmpi_inq_malloc_list, &
-        nfmpi_inq_files_opened
+        nfmpi_inq_files_opened, &
+        nfmpi_inq_recsize
 
 !
 ! Begin of varn subroutines:

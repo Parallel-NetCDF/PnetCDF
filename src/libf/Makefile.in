@@ -303,6 +303,7 @@ C2F_SRCS = createf.c \
 	inq_malloc_sizef.c inq_malloc_max_sizef.c inq_malloc_listf.c \
 	inq_files_openedf.c \
 	inq_nreqsf.c \
+	inq_recsizef.c \
 	get_varnf.c            get_varn_allf.c \
 	get_varn_textf.c       get_varn_text_allf.c \
 	get_varn_int1f.c       get_varn_int1_allf.c \

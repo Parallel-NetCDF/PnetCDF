@@ -6,6 +6,11 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New APIs
+    * ncmpi_inq_recsize() returns the size of record block, i.e. the sum of
+      single records of all record variables.
+      For F77, nfmpi_inq_recsize()
+      For F90, nf90mpi_inq_recsize()
+      For C++, NcmpiGroup::getRecSize()
     * ncmpi_inq_num_rec_vars() and ncmpi_inq_num_fix_vars() report the number
       of record and fixed-sized variables, respectively.
       For F77, nfmpi_inq_num_rec_vars()     and nfmpi_inq_num_fix_vars()
@@ -40,6 +45,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/inq_recsize.c tests if one can correctly inquire the
+      size of record block from in a netCDF file. A similar program in F90,
+      named inq_recsizef.f90, is also added.
     * In test/nc_test, the test programs below are borrowed from netCDF test
       programs: t_nc.c tst_misc.c tst_norm.c tst_small.c tst_names.c
       tst_atts3.c tst_atts.c

@@ -176,6 +176,14 @@ namespace PnetCDF
     int getRecVarCount(NcmpiGroup::Location location=Current) const;
 
     /*! 
+      Gets the size of record block, i.e. the sume of single records of all
+      the record variables.
+      \param location Enumeration type controlling the groups to search.
+      \return         size of record bock.
+    */
+    MPI_Offset getRecSize(NcmpiGroup::Location location=Current) const;
+
+    /*! 
       Gets the number of fixed-sized variable NcmpiVar objects in this group.
       \param location Enumeration type controlling the groups to search.
       \return         Number of fixed-sized variables.

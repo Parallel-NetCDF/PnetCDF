@@ -31,11 +31,13 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            varn_int.c \
            modes.c \
            one_record.c \
+           inq_recsize.c \
            redef1.c
 
 F77_SRCS = bigrecords.f
 
-F90_SRCS = inq_num_varsf.f90
+F90_SRCS = inq_num_varsf.f90 \
+           inq_recsizef.f90
 
 PROGS    = $(C_SRCS:.c=)
 OBJS     = $(C_SRCS:.c=.o)
@@ -99,7 +101,13 @@ modes: modes.o $(LIBRARY)
 one_record: one_record.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+inq_recsize: inq_recsize.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+inq_recsizef: inq_recsizef.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 testing check verbose_testing : $(PROGS)

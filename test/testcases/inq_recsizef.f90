@@ -5,35 +5,18 @@
 ! $Id$
 
 !
-! This program tests if one can get the number of record variables and
-! fixed-sized variables correctly. It first defines some number of
-! fixed-sized and record variables and then calls the APIs
-!     ncmpi_inq_num_rec_vars() and ncmpi_inq_num_fix_vars()
-! to varify if the numbers are correct.
+! This program tests if one can get the size of record block correctly.
+! The record block size is the sum of individual record of all record
+! variables. It first defines some number of record and fixed-size
+! variables and then calls the API ncmpi_inq_recsize() and varify if
+! the numbers are ! correct.
 !
 ! The compile and run commands are given below. This program is to be
 ! run on one MPI process.
 !
-!    % mpif90 -g -o inq_num_varsf inq_num_varsf.f90 -lpnetcdf
+!    % mpif90 -g -o inq_recsizef inq_recsizef.f90 -lpnetcdf
 !
-!    % mpiexec -l -n 1 inq_num_varsf testfile.nc
-!
-!    % ncmpidump -h testfile.nc
-!    netcdf testfile {
-!    // file format: CDF-2 (large file)
-!    dimensions:
-!            X = 10 ;
-!            Y = 2 ;
-!            REC_DIM = UNLIMITED ; // (0 currently)
-!    variables:
-!            int REC_VAR_1(REC_DIM) ;
-!            int REC_VAR_2(REC_DIM, Y, X) ;
-!            int REC_VAR_3(REC_DIM, Y) ;
-!            int REC_VAR_4(REC_DIM) ;
-!            int FIX_VAR_1(Y, X) ;
-!            int FIX_VAR_2(X) ;
-!            int FIX_VAR_3(X) ;
-!    }
+!    % mpiexec -l -n 1 inq_recsizef testfile.nc
 !
       subroutine check(err, message)
           use mpi
@@ -55,9 +38,9 @@
           implicit none
 
           character(LEN=128) filename, cmd, msg
-          integer argc, IARGC, err, nprocs, rank, cmode, ncid
+          integer argc, IARGC, err, nprocs, rank, cmode, ncid, pass
           integer varid(7), dimid(3), dimid_1D(1), dimid_2D(2)
-          integer pass, nvars, num_rec_vars, num_fix_vars
+          integer(kind=MPI_OFFSET_KIND) expected_recsize, recsize
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
           character(len = 4) :: quiet_mode
           logical verbose
@@ -102,14 +85,20 @@
           dimid_2D(1) = dimid(2)
           dimid_2D(2) = dimid(3)
 
+          expected_recsize = 0;
+
           err = nf90mpi_def_var(ncid, "REC_VAR_1", NF90_INT, dimid_1D, varid(1))
           call check(err, 'In nf90mpi_def_var: REC_VAR_1')
+          expected_recsize = expected_recsize + 4
           err = nf90mpi_def_var(ncid, "REC_VAR_2", NF90_INT, dimid,    varid(2))
           call check(err, 'In nf90mpi_def_var: REC_VAR_2')
+          expected_recsize = expected_recsize + 10 * 2 * 4
           err = nf90mpi_def_var(ncid, "REC_VAR_3", NF90_INT, dimid_2D, varid(3))
           call check(err, 'In nf90mpi_def_var: REC_VAR_3')
+          expected_recsize = expected_recsize + 2 * 4
           err = nf90mpi_def_var(ncid, "REC_VAR_4", NF90_INT, dimid_1D, varid(4))
           call check(err, 'In nf90mpi_def_var: REC_VAR_4')
+          expected_recsize = expected_recsize + 4
 
           ! define some fixed-sized variables
           dimid_1D(1) = dimid(1)
@@ -128,25 +117,12 @@
           call check(err, 'In nf90mpi_enddef: ')
 
           ! inquire the numbers of variables (record and fixed-sized)
-          err = nf90mpi_inquire(ncid, nVariables=nvars)
+          err = nf90mpi_inq_recsize(ncid, recsize)
           call check(err, 'In nf90mpi_inquire: ')
-          err = nf90mpi_inq_num_rec_vars(ncid, num_rec_vars)
-          call check(err, 'In nf90mpi_inq_num_rec_vars: ')
-          err = nf90mpi_inq_num_fix_vars(ncid, num_fix_vars)
-          call check(err, 'In nf90mpi_inq_num_fix_vars: ')
 
-          ! check if the numbers of variables are expected
           pass = 1
-          if (nvars .NE. 7) then
-              write(6,*) "Error: expecting 7 number of variables defined, but got ", nvars
-              pass = pass - 1
-          endif
-          if (num_rec_vars .NE. 4) then
-              write(6,*) "Error: expecting 4 number of recond variables defined, but got ", nvars
-              pass = pass - 1
-          endif
-          if (num_fix_vars .NE. 3) then
-              write(6,*) "Error: expecting 3 number of fixed-sized variables defined, but got ", nvars
+          if (expected_recsize .NE. recsize) then
+              write(6,*) "Error: expecting resize ", expected_recsize,", but got ", recsize
               pass = pass - 1
           endif
 
@@ -164,7 +140,7 @@
                   sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F90 '//trim(cmd)//' for no. record/fixed variables'
+          msg = '*** TESTING F90 '//trim(cmd)//' for inquiring record size'
           if (rank .eq. 0) then
               if (pass .EQ. 1) then
                   write(*,"(A67,A)") msg,'------ pass'
