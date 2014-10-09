@@ -6,8 +6,8 @@
 
 !
 ! This program tests if one can get the number of record variables and
-! fixed-sized variables correctly. It first defines some number of
-! fixed-sized and record variables and then calls the APIs
+! fixed-size variables correctly. It first defines some number of
+! fixed-size and record variables and then calls the APIs
 !     ncmpi_inq_num_rec_vars() and ncmpi_inq_num_fix_vars()
 ! to varify if the numbers are correct.
 !
@@ -111,7 +111,7 @@
           err = nf90mpi_def_var(ncid, "REC_VAR_4", NF90_INT, dimid_1D, varid(4))
           call check(err, 'In nf90mpi_def_var: REC_VAR_4')
 
-          ! define some fixed-sized variables
+          ! define some fixed-size variables
           dimid_1D(1) = dimid(1)
           dimid_2D(1) = dimid(1)
           dimid_2D(2) = dimid(2)
@@ -127,7 +127,7 @@
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 
-          ! inquire the numbers of variables (record and fixed-sized)
+          ! inquire the numbers of variables (record and fixed-size
           err = nf90mpi_inquire(ncid, nVariables=nvars)
           call check(err, 'In nf90mpi_inquire: ')
           err = nf90mpi_inq_num_rec_vars(ncid, num_rec_vars)
@@ -146,7 +146,7 @@
               pass = pass - 1
           endif
           if (num_fix_vars .NE. 3) then
-              write(6,*) "Error: expecting 3 number of fixed-sized variables defined, but got ", nvars
+              write(6,*) "Error: expecting 3 number of fixed-size variables defined, but got ", nvars
               pass = pass - 1
           endif
 

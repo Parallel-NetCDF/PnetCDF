@@ -453,7 +453,7 @@ version  1.4.0 (November 17 2013)
       if errors are detected on a subset of processes.
     * set the nonblocking request ID to NULL when the request length is zero
     * report error when bogus request IDs are passed in ncmpi_wait
-    * when entering redef with different alignment hints, fixed-sized
+    * when entering redef with different alignment hints, fixed-size
       variables' file starting offsets will only be changed when it is bigger
       than the old ones
     * Fix some Fortran API intent in/out argument declarations

@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     err = ncmpi_def_var(ncid, "REC_VAR_4", NC_INT, 1, dimid, &varid[3]); ERR
     expected_recsize += sizeof(int);
 
-    /* define some fix-sized variables */
+    /* define some fixed-size variables */
     err = ncmpi_def_var(ncid, "FIX_VAR_1", NC_INT, 2, dimid+1, &varid[4]); ERR
     err = ncmpi_def_var(ncid, "FIX_VAR_2", NC_INT, 1, dimid+1, &varid[5]); ERR
     err = ncmpi_def_var(ncid, "FIX_VAR_3", NC_INT, 1, dimid+2, &varid[6]); ERR

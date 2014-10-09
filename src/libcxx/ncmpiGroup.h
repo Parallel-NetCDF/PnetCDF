@@ -184,9 +184,9 @@ namespace PnetCDF
     MPI_Offset getRecSize(NcmpiGroup::Location location=Current) const;
 
     /*! 
-      Gets the number of fixed-sized variable NcmpiVar objects in this group.
+      Gets the number of fixed-size variable NcmpiVar objects in this group.
       \param location Enumeration type controlling the groups to search.
-      \return         Number of fixed-sized variables.
+      \return         Number of fixed-size variables.
     */
     int getFixVarCount(NcmpiGroup::Location location=Current) const;
 
