@@ -13,7 +13,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * This program tests if one can get the number of record variables and fixed-
- * sized variables correctly. It first defines some number of fixed-sized and
+ * sized variables correctly. It first defines some number of fixed-size and
  * record variables and then calls the APIs
  *     ncmpi_inq_num_rec_vars() and ncmpi_inq_num_fix_vars()
  * to varify if the numbers are correct.
@@ -50,7 +50,7 @@ void check_num_vars(int  ncid,
         (*nfailed)++;
     }
     if (num_fix_vars != expected_num_fix_vars) {
-        printf("Error: expecting %d number of fixed-sized variables defined, but got %d\n", expected_num_fix_vars, num_fix_vars);
+        printf("Error: expecting %d number of fixed-size variables defined, but got %d\n", expected_num_fix_vars, num_fix_vars);
         (*nfailed)++;
     }
 }

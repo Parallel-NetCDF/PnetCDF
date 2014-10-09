@@ -343,7 +343,7 @@ int NcmpiGroup::getRecVarCount(NcmpiGroup::Location location) const {
   return nvars;
 }
 
-// Get the number of fixed-sized variable NcmpiVar objects in this group.
+// Get the number of fixed-size variable NcmpiVar objects in this group.
 int NcmpiGroup::getFixVarCount(NcmpiGroup::Location location) const {
 
   // search in current group.

@@ -100,7 +100,7 @@
           call check(err, 'In nf90mpi_def_var: REC_VAR_4')
           expected_recsize = expected_recsize + 4
 
-          ! define some fixed-sized variables
+          ! define some fixed-size variables
           dimid_1D(1) = dimid(1)
           dimid_2D(1) = dimid(1)
           dimid_2D(2) = dimid(2)
@@ -116,7 +116,7 @@
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 
-          ! inquire the numbers of variables (record and fixed-sized)
+          ! inquire the numbers of variables (record and fixed-size
           err = nf90mpi_inq_recsize(ncid, recsize)
           call check(err, 'In nf90mpi_inquire: ')
 

@@ -1580,7 +1580,7 @@ ncmpi_inq_num_fix_vars(int ncid, int *nvarsp)
         else
             *nvarsp = ncp->vars.num_rec_vars;
 
-        /* no. fixed-sized == ndefined - no. record variables */
+        /* no. fixed-size == ndefined - no. record variables */
         *nvarsp = ncp->vars.ndefined- *nvarsp;
     }
 
