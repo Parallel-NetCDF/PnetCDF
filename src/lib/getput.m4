@@ -846,13 +846,14 @@ ncmpii_getput_vars(NC               *ncp,
 #endif
     }
 
-    if (!buftype_is_contig) { /* buf is noncontiguous in memory */
-        if (rw_flag == WRITE_REQ && bufcount > 0 && bnelems > 0) {
+    if (!buftype_is_contig && bufcount > 0 && bnelems > 0) {
+        /* buf is noncontiguous in memory */
+        int outsize = bnelems * el_size;
+        cbuf = NCI_Malloc(outsize);
+
+        if (rw_flag == WRITE_REQ) {
             /* pack buf into cbuf, a contiguous buffer */
             int position = 0;
-            int outsize = bnelems * el_size;
-            cbuf = NCI_Malloc(outsize);
-
             MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
                      MPI_COMM_SELF);
         }
@@ -1011,13 +1012,6 @@ err_check:
     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
     if (rw_flag == READ_REQ) {
-        if (!buftype_is_contig) /* buf is noncontiguous in memory */
-            /* allocate cbuf, so xbuf can type-convert/byte-swap to cbuf
-               and later cbuf can be unpacked to buf using buftype */
-            cbuf = (void*) NCI_Malloc(bnelems * el_size);
-        else
-            cbuf = (void*) buf;
-
         if (need_convert) {
             /* type conversion + swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)

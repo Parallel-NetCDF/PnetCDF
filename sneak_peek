@@ -93,9 +93,12 @@ This is essentially a placeholder for the next release note ...
       run very slowly.
 
   o Bug fixes
+    * fix the bug for blocking flexible get APIs when buftype is noncontiguous,
+      swap is needed, type conversion is not. The bug sets a NULL pointer to the
+      read buffer and passes it to MPI_File_read functions. See r1815.
     * fix the bug for the special case when there is only one record variable
       and the record size is not four-byte aligned. In this case, the alignment
-      is dropped (no padding).
+      is dropped (no padding). See r1791.
     * fix the bug when the first group of file types are interleaved, it
       was mistakenly identified as non-interleaved. See r1758.
     * fix the setting for PNETCDF_RELEASE_DATE in configure.in. Using read

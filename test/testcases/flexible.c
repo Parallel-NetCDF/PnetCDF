@@ -9,7 +9,9 @@
  * This program tests the use of flexible API.
  * The write buffer is a 2D array of size NY x NX
  * The MPI data type for the buffer is defined by swapping the 1st and 2nd
- * rows of the array. It uses MPI_Type_create_hindex()
+ * rows of the array. It uses MPI_Type_create_hindex(). After the write, this
+ * test reads back the array using regular and flexible get APIs (blocking and
+ * nonblokcing) and check the contents.
  *
  * The expected reults from the output file contents are:
  * (when running on 1 MPI process)
@@ -46,6 +48,8 @@ int main(int argc, char **argv) {
     char         filename[128];
     int          i, j, err, ncid, varid, dimids[2], pass, debug=0;
     int          rank, nprocs, blocklengths[2], buf[NY][NX], *bufptr;
+    int         *ncbuf, req, st;
+    int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     MPI_Offset   start[2], count[2];
     MPI_Aint     a0, a1, disps[2];
     MPI_Datatype buftype;
@@ -118,8 +122,6 @@ int main(int argc, char **argv) {
 
     err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); ERR
 
-    err = ncmpi_close(ncid); ERR
-
     /* check if the contents of buf are expected */
     pass = 1;
     for (j=0; j<2; j++) {
@@ -130,6 +132,47 @@ int main(int argc, char **argv) {
                 pass = 0;
             }
     }
+
+    /* create a buftype with ghost cells on each side */
+    ncbuf = (int *) malloc((count[0]+4)*(count[1]+4)*sizeof(int));
+    array_of_sizes[0] = count[0]+4;
+    array_of_sizes[1] = count[1]+4;
+    array_of_subsizes[0] = count[0];
+    array_of_subsizes[1] = count[1];
+    array_of_starts[0] = 2;
+    array_of_starts[1] = 2;
+    MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
+                             array_of_starts, MPI_ORDER_C,
+                             MPI_INT, &buftype);
+    MPI_Type_commit(&buftype);
+    err = ncmpi_get_vara_all(ncid, varid, start, count, ncbuf, 1, buftype); ERR
+
+    for (j=0; j<count[0]; j++) {
+        for (i=0; i<count[1]; i++)
+            if (buf[j][i] != ncbuf[(j+2)*(count[1]+4)+(i+2)]) {
+                printf("Error: expecting ncbuf[%d][%d]=%d but got %d\n",
+                       j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
+                pass = 0;
+            }
+    }
+    for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
+
+    err = ncmpi_iget_vara(ncid, varid, start, count, ncbuf, 1, buftype, &req); ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &st); ERR
+
+    for (j=0; j<count[0]; j++) {
+        for (i=0; i<count[1]; i++)
+            if (buf[j][i] != ncbuf[(j+2)*(count[1]+4)+(i+2)]) {
+                printf("Error: expecting ncbuf[%d][%d]=%d but got %d\n",
+                       j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
+                pass = 0;
+            }
+    }
+
+    MPI_Type_free(&buftype);
+    free(ncbuf);
+
+    err = ncmpi_close(ncid); ERR
 
     MPI_Allreduce(MPI_IN_PLACE, &pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
@@ -144,7 +187,7 @@ int main(int argc, char **argv) {
     }
 
     char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING C   %s for using ncmpi_put_vara_all() ", argv[0]);
+    sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", argv[0]);
     if (rank == 0) {
         if (pass) printf("%-66s ------ pass\n", cmd_str);
         else      printf("%-66s ------ failed\n", cmd_str);
