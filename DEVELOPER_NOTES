@@ -178,6 +178,11 @@ If a new PnetCDF API is created, please make sure we do the followings.
    * The new APIs should be declared in pnetcdf.inc.in
    * add their C-to-Fortran file name in Makefile.in
      For example, API nfmpi_put_att() corresponds to file put_attf.c
+   * Some APIs have arguments that need special treatment in file defs
+     for example, put_vard API's second argument varid, its Fortran value
+     is C value + 1
+        'put_vard' => '2',
+                'put_vard-2'            => 'in:OffsetIndexIn',
 
 3. In src/libf90
    * The new APIs should be declared in visibility.f90 and/or api.f90.in
@@ -228,4 +233,12 @@ inconsistency of any kind start at -250.
        src/libf/pnetcdf.inc.in
        src/libf90/nf90_constants.f90
        src/libf90/nfmpi_constants.f90.in
+
+
+=====================================================
+Some tricks for wiki trac format
+=====================================================
+Escape character is !
+  for example ncmpi__enddef will show underscore "enddef", so add ! before the
+  double underscores to disable the formating. eg. ncmpi!__enddef
 
