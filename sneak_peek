@@ -45,6 +45,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New example programs
+    * C/vard_int.c F77/vard_int.f F90/vard_int.f90 CXX/vard_int.cpp show
+      how to use vard API to write/read record and fixed-size variables.
     * transpose.c shows how to use ncmpi_put_vara_int_all to write a 3D array
       that is dimensional-transposed from the one stored in memory. Six
       transposed 3D arrays are saved whose dimensions are organized as ZYX,

@@ -24,7 +24,8 @@ F90_SRCS  = nonblocking_write.f90 \
             put_var.f90 \
             put_varn_real.f90 \
             put_varn_int.f90 \
-            transpose.f90
+            transpose.f90 \
+            vard_int.f90
 
 PROGS     = $(F90_SRCS:.f90=)
 OBJS      = $(F90_SRCS:.f90=.o)
@@ -67,6 +68,9 @@ put_varn_real: put_varn_real.o $(LIBRARY)
 	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
 
 transpose: transpose.o $(LIBRARY)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+
+vard_int: vard_int.o $(LIBRARY)
 	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))

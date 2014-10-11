@@ -29,7 +29,8 @@ C_SRCS  = collective_write.c \
           global_attributes.c \
           put_vara.c \
           get_vara.c \
-          transpose.c
+          transpose.c \
+          vard_int.c
 
 # Note: put_vara must be run immediately before get_vara
 
@@ -89,6 +90,9 @@ get_vara: get_vara.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 transpose: transpose.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+vard_int: vard_int.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
