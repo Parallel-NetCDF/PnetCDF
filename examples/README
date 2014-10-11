@@ -288,4 +288,10 @@ command and the number of MPI processes.
                  46, 94, 142, 190,                   47, 95, 143, 191 ;
 
 
+  ./C/vard_int.c
+./CXX/vard_int.cpp
+./F77/vard_int.f
+./F90/vard_int.f90
+  This example shows how to use vard APIs to write/read record and fixed-size
+  variables.
 
