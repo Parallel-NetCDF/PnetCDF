@@ -1507,6 +1507,17 @@ void NcmpiVar::putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset
     ncmpiCheck(ncmpi_put_varn_all(groupId, myId, num, starts, counts, dataValues, bufcount, buftype),__FILE__,__LINE__);
 }
 
+// Writes an array of values into the netCDF variable with filetype and buftype.
+void NcmpiVar::putVard(MPI_Datatype filetype, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
+    ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_vard(groupId, myId, filetype, dataValues, bufcount, buftype),__FILE__,__LINE__);
+}
+
+void NcmpiVar::putVard_all(MPI_Datatype filetype, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
+    ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_vard_all(groupId, myId, filetype, dataValues, bufcount, buftype),__FILE__,__LINE__);
+}
+
 ////////////////////
 
 //  Nonblocking data writing
@@ -2930,6 +2941,16 @@ void NcmpiVar::getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset
     ncmpiCheck(ncmpi_get_varn_all(groupId, myId, num, starts, counts, dataValues, bufcount, buftype),__FILE__,__LINE__);
 }
 
+
+// Reads an array of values from a netCDF variable with filetype and buftype.
+void NcmpiVar::getVard(MPI_Datatype filetype, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
+    ncmpiCheck(ncmpi_get_vard(groupId, myId, filetype, dataValues, bufcount, buftype),__FILE__,__LINE__);
+}
+
+// Reads an array of values from a netCDF variable with filetype and buftype.
+void NcmpiVar::getVard_all(MPI_Datatype filetype, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
+    ncmpiCheck(ncmpi_get_vard_all(groupId, myId, filetype, dataValues, bufcount, buftype),__FILE__,__LINE__);
+}
 
 // Nonblocking data reading
 

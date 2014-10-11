@@ -490,6 +490,9 @@ by the desired type. */
 #define NC_ENULLSTART			(-226) /**< argument start is a NULL pointer */
 #define NC_ENULLCOUNT			(-227) /**< argument count is a NULL pointer */
 #define NC_EINVAL_CMODE			(-228) /**< Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA */
+#define NC_ETYPESIZE			(-229) /**< MPI derived data type size error (bigger than the variable size) */
+#define NC_ETYPE_MISMATCH		(-230) /**< element type of the MPI derived data type mismatches the variable type */
+#define NC_ETYPESIZE_MISMATCH		(-231) /**< file type size mismatches buffer type size */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
@@ -2530,6 +2533,17 @@ int ncmpi_get_varn_ulonglong_all(int ncid, int varid, int num,
 /* End Skip Prototypes for Fortran binding */
 
 /* End of {put,get}_varn{kind} */
+
+/* Begin {put,get}_vard */
+int ncmpi_get_vard(int ncid, int varid, MPI_Datatype filetype, void *buf,
+              MPI_Offset bufcount, MPI_Datatype buftype);
+int ncmpi_get_vard_all(int ncid, int varid, MPI_Datatype filetype, void *buf,
+              MPI_Offset bufcount, MPI_Datatype buftype);
+int ncmpi_put_vard(int ncid, int varid, MPI_Datatype filetype, const void *buf,
+              MPI_Offset bufcount, MPI_Datatype buftype);
+int ncmpi_put_vard_all(int ncid, int varid, MPI_Datatype filetype, const void *buf,
+              MPI_Offset bufcount, MPI_Datatype buftype);
+/* End of {put,get}_vard */
 
 /* Begin {mput,mget}_var */
 

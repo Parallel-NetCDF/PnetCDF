@@ -36,4 +36,5 @@ contains
   include "getput_text.f90"
   include "getput_var.f90"
   include "getput_varn.f90"
+  include "getput_vard.f90"
 end module pnetcdf

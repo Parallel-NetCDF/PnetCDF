@@ -32,7 +32,7 @@ M4_SRCS   = getput.m4 \
             getputn_uint64.m4 \
             m_getput_varx.m4 \
             varn.m4 \
-            attr.m4 \
+            attr.m4
 
 HEADER_SRCS = fbits.h \
               nc.h \
@@ -60,7 +60,8 @@ LIB_CSRCS = mpinetcdf.c \
             nonblocking.c   \
             malloc.c \
             utf8proc.c \
-            swap.c
+            swap.c \
+            vard.c
 
 ifeq (@enable_subfiling@, yes)
 LIB_CSRCS   += subfile.c

@@ -175,6 +175,77 @@
                      nf90mpi_get_varn_7D_FourByteReal, nf90mpi_get_varn_7D_EightByteReal
   end interface ! nf90mpi_get_varn
 
+  ! Overloaded variable functions vard
+  interface nf90mpi_put_vard
+    module procedure nf90mpi_put_vard_text,                                   &
+                     nf90mpi_put_vard_OneByteInt, nf90mpi_put_vard_TwoByteInt,    &
+                     nf90mpi_put_vard_FourByteInt, nf90mpi_put_vard_EightByteInt, &
+                     nf90mpi_put_vard_FourByteReal, nf90mpi_put_vard_EightByteReal
+    module procedure nf90mpi_put_vard_1D_text,                                      &
+                     nf90mpi_put_vard_1D_OneByteInt, nf90mpi_put_vard_1D_TwoByteInt,    &
+                     nf90mpi_put_vard_1D_FourByteInt, nf90mpi_put_vard_1D_EightByteInt, &
+                     nf90mpi_put_vard_1D_FourByteReal, nf90mpi_put_vard_1D_EightByteReal
+    module procedure nf90mpi_put_vard_2D_text,                                       &
+                     nf90mpi_put_vard_2D_OneByteInt, nf90mpi_put_vard_2D_TwoByteInt,     &
+                     nf90mpi_put_vard_2D_FourByteInt, nf90mpi_put_vard_2D_EightByteInt,  &
+                     nf90mpi_put_vard_2D_FourByteReal, nf90mpi_put_vard_2D_EightByteReal
+    module procedure nf90mpi_put_vard_3D_text,                                       &
+                     nf90mpi_put_vard_3D_OneByteInt, nf90mpi_put_vard_3D_TwoByteInt,     &
+                     nf90mpi_put_vard_3D_FourByteInt, nf90mpi_put_vard_3D_EightByteInt,  &
+                     nf90mpi_put_vard_3D_FourByteReal, nf90mpi_put_vard_3D_EightByteReal
+    module procedure nf90mpi_put_vard_4D_text,                                       &
+                     nf90mpi_put_vard_4D_OneByteInt, nf90mpi_put_vard_4D_TwoByteInt,     &
+                     nf90mpi_put_vard_4D_FourByteInt, nf90mpi_put_vard_4D_EightByteInt,  &
+                     nf90mpi_put_vard_4D_FourByteReal, nf90mpi_put_vard_4D_EightByteReal
+    module procedure nf90mpi_put_vard_5D_text,                                       &
+                     nf90mpi_put_vard_5D_OneByteInt, nf90mpi_put_vard_5D_TwoByteInt,     &
+                     nf90mpi_put_vard_5D_FourByteInt, nf90mpi_put_vard_5D_EightByteInt,  &
+                     nf90mpi_put_vard_5D_FourByteReal, nf90mpi_put_vard_5D_EightByteReal
+    module procedure nf90mpi_put_vard_6D_text,                                       &
+                     nf90mpi_put_vard_6D_OneByteInt, nf90mpi_put_vard_6D_TwoByteInt,     &
+                     nf90mpi_put_vard_6D_FourByteInt, nf90mpi_put_vard_6D_EightByteInt,  &
+                     nf90mpi_put_vard_6D_FourByteReal, nf90mpi_put_vard_6D_EightByteReal
+    module procedure nf90mpi_put_vard_7D_text,                                       &
+                     nf90mpi_put_vard_7D_OneByteInt, nf90mpi_put_vard_7D_TwoByteInt,     &
+                     nf90mpi_put_vard_7D_FourByteInt, nf90mpi_put_vard_7D_EightByteInt,  &
+                     nf90mpi_put_vard_7D_FourByteReal, nf90mpi_put_vard_7D_EightByteReal
+  end interface ! nf90mpi_put_vard
+
+  interface nf90mpi_get_vard
+    module procedure nf90mpi_get_vard_text,                                   &
+                     nf90mpi_get_vard_OneByteInt, nf90mpi_get_vard_TwoByteInt,    &
+                     nf90mpi_get_vard_FourByteInt, nf90mpi_get_vard_EightByteInt, &
+                     nf90mpi_get_vard_FourByteReal, nf90mpi_get_vard_EightByteReal
+    module procedure nf90mpi_get_vard_1D_text,                                      &
+                     nf90mpi_get_vard_1D_OneByteInt, nf90mpi_get_vard_1D_TwoByteInt,    &
+                     nf90mpi_get_vard_1D_FourByteInt, nf90mpi_get_vard_1D_EightByteInt, &
+                     nf90mpi_get_vard_1D_FourByteReal, nf90mpi_get_vard_1D_EightByteReal
+    module procedure nf90mpi_get_vard_2D_text,                                      &
+                     nf90mpi_get_vard_2D_OneByteInt, nf90mpi_get_vard_2D_TwoByteInt,    &
+                     nf90mpi_get_vard_2D_FourByteInt, nf90mpi_get_vard_2D_EightByteInt, &
+                     nf90mpi_get_vard_2D_FourByteReal, nf90mpi_get_vard_2D_EightByteReal
+    module procedure nf90mpi_get_vard_3D_text,                                      &
+                     nf90mpi_get_vard_3D_OneByteInt, nf90mpi_get_vard_3D_TwoByteInt,    &
+                     nf90mpi_get_vard_3D_FourByteInt, nf90mpi_get_vard_3D_EightByteInt, &
+                     nf90mpi_get_vard_3D_FourByteReal, nf90mpi_get_vard_3D_EightByteReal
+    module procedure nf90mpi_get_vard_4D_text,                                      &
+                     nf90mpi_get_vard_4D_OneByteInt, nf90mpi_get_vard_4D_TwoByteInt,    &
+                     nf90mpi_get_vard_4D_FourByteInt, nf90mpi_get_vard_4D_EightByteInt, &
+                     nf90mpi_get_vard_4D_FourByteReal, nf90mpi_get_vard_4D_EightByteReal
+    module procedure nf90mpi_get_vard_5D_text,                                      &
+                     nf90mpi_get_vard_5D_OneByteInt, nf90mpi_get_vard_5D_TwoByteInt,    &
+                     nf90mpi_get_vard_5D_FourByteInt, nf90mpi_get_vard_5D_EightByteInt, &
+                     nf90mpi_get_vard_5D_FourByteReal, nf90mpi_get_vard_5D_EightByteReal
+    module procedure nf90mpi_get_vard_6D_text,                                      &
+                     nf90mpi_get_vard_6D_OneByteInt, nf90mpi_get_vard_6D_TwoByteInt,    &
+                     nf90mpi_get_vard_6D_FourByteInt, nf90mpi_get_vard_6D_EightByteInt, &
+                     nf90mpi_get_vard_6D_FourByteReal, nf90mpi_get_vard_6D_EightByteReal
+    module procedure nf90mpi_get_vard_7D_text,                                      &
+                     nf90mpi_get_vard_7D_OneByteInt, nf90mpi_get_vard_7D_TwoByteInt,    &
+                     nf90mpi_get_vard_7D_FourByteInt, nf90mpi_get_vard_7D_EightByteInt, &
+                     nf90mpi_get_vard_7D_FourByteReal, nf90mpi_get_vard_7D_EightByteReal
+  end interface ! nf90mpi_get_vard
+
   !
   ! Collective APIs
   !
@@ -308,6 +379,72 @@
                      nf90mpi_get_varn_7D_FourByteInt_all, nf90mpi_get_varn_7D_EightByteInt_all, &
                      nf90mpi_get_varn_7D_FourByteReal_all, nf90mpi_get_varn_7D_EightByteReal_all
   end interface ! nf90mpi_get_varn_all
+
+  ! Overloaded variable functions vard
+  ! Overloaded variable functions vard
+  interface nf90mpi_put_vard_all
+    module procedure nf90mpi_put_vard_text_all
+    module procedure nf90mpi_put_vard_1D_text_all,                                      &
+                     nf90mpi_put_vard_1D_OneByteInt_all, nf90mpi_put_vard_1D_TwoByteInt_all,    &
+                     nf90mpi_put_vard_1D_FourByteInt_all, nf90mpi_put_vard_1D_EightByteInt_all, &
+                     nf90mpi_put_vard_1D_FourByteReal_all, nf90mpi_put_vard_1D_EightByteReal_all
+    module procedure nf90mpi_put_vard_2D_text_all,                                       &
+                     nf90mpi_put_vard_2D_OneByteInt_all, nf90mpi_put_vard_2D_TwoByteInt_all,     &
+                     nf90mpi_put_vard_2D_FourByteInt_all, nf90mpi_put_vard_2D_EightByteInt_all,  &
+                     nf90mpi_put_vard_2D_FourByteReal_all, nf90mpi_put_vard_2D_EightByteReal_all
+    module procedure nf90mpi_put_vard_3D_text_all,                                       &
+                     nf90mpi_put_vard_3D_OneByteInt_all, nf90mpi_put_vard_3D_TwoByteInt_all,     &
+                     nf90mpi_put_vard_3D_FourByteInt_all, nf90mpi_put_vard_3D_EightByteInt_all,  &
+                     nf90mpi_put_vard_3D_FourByteReal_all, nf90mpi_put_vard_3D_EightByteReal_all
+    module procedure nf90mpi_put_vard_4D_text_all,                                       &
+                     nf90mpi_put_vard_4D_OneByteInt_all, nf90mpi_put_vard_4D_TwoByteInt_all,     &
+                     nf90mpi_put_vard_4D_FourByteInt_all, nf90mpi_put_vard_4D_EightByteInt_all,  &
+                     nf90mpi_put_vard_4D_FourByteReal_all, nf90mpi_put_vard_4D_EightByteReal_all
+    module procedure nf90mpi_put_vard_5D_text_all,                                       &
+                     nf90mpi_put_vard_5D_OneByteInt_all, nf90mpi_put_vard_5D_TwoByteInt_all,     &
+                     nf90mpi_put_vard_5D_FourByteInt_all, nf90mpi_put_vard_5D_EightByteInt_all,  &
+                     nf90mpi_put_vard_5D_FourByteReal_all, nf90mpi_put_vard_5D_EightByteReal_all
+    module procedure nf90mpi_put_vard_6D_text_all,                                       &
+                     nf90mpi_put_vard_6D_OneByteInt_all, nf90mpi_put_vard_6D_TwoByteInt_all,     &
+                     nf90mpi_put_vard_6D_FourByteInt_all, nf90mpi_put_vard_6D_EightByteInt_all,  &
+                     nf90mpi_put_vard_6D_FourByteReal_all, nf90mpi_put_vard_6D_EightByteReal_all
+    module procedure nf90mpi_put_vard_7D_text_all,                                       &
+                     nf90mpi_put_vard_7D_OneByteInt_all, nf90mpi_put_vard_7D_TwoByteInt_all,     &
+                     nf90mpi_put_vard_7D_FourByteInt_all, nf90mpi_put_vard_7D_EightByteInt_all,  &
+                     nf90mpi_put_vard_7D_FourByteReal_all, nf90mpi_put_vard_7D_EightByteReal_all
+  end interface ! nf90mpi_put_vard_all
+
+  interface nf90mpi_get_vard_all
+    module procedure nf90mpi_get_vard_text_all
+    module procedure nf90mpi_get_vard_1D_text_all,                                      &
+                     nf90mpi_get_vard_1D_OneByteInt_all, nf90mpi_get_vard_1D_TwoByteInt_all,    &
+                     nf90mpi_get_vard_1D_FourByteInt_all, nf90mpi_get_vard_1D_EightByteInt_all, &
+                     nf90mpi_get_vard_1D_FourByteReal_all, nf90mpi_get_vard_1D_EightByteReal_all
+    module procedure nf90mpi_get_vard_2D_text_all,                                      &
+                     nf90mpi_get_vard_2D_OneByteInt_all, nf90mpi_get_vard_2D_TwoByteInt_all,    &
+                     nf90mpi_get_vard_2D_FourByteInt_all, nf90mpi_get_vard_2D_EightByteInt_all, &
+                     nf90mpi_get_vard_2D_FourByteReal_all, nf90mpi_get_vard_2D_EightByteReal_all
+    module procedure nf90mpi_get_vard_3D_text_all,                                      &
+                     nf90mpi_get_vard_3D_OneByteInt_all, nf90mpi_get_vard_3D_TwoByteInt_all,    &
+                     nf90mpi_get_vard_3D_FourByteInt_all, nf90mpi_get_vard_3D_EightByteInt_all, &
+                     nf90mpi_get_vard_3D_FourByteReal_all, nf90mpi_get_vard_3D_EightByteReal_all
+    module procedure nf90mpi_get_vard_4D_text_all,                                      &
+                     nf90mpi_get_vard_4D_OneByteInt_all, nf90mpi_get_vard_4D_TwoByteInt_all,    &
+                     nf90mpi_get_vard_4D_FourByteInt_all, nf90mpi_get_vard_4D_EightByteInt_all, &
+                     nf90mpi_get_vard_4D_FourByteReal_all, nf90mpi_get_vard_4D_EightByteReal_all
+    module procedure nf90mpi_get_vard_5D_text_all,                                      &
+                     nf90mpi_get_vard_5D_OneByteInt_all, nf90mpi_get_vard_5D_TwoByteInt_all,    &
+                     nf90mpi_get_vard_5D_FourByteInt_all, nf90mpi_get_vard_5D_EightByteInt_all, &
+                     nf90mpi_get_vard_5D_FourByteReal_all, nf90mpi_get_vard_5D_EightByteReal_all
+    module procedure nf90mpi_get_vard_6D_text_all,                                      &
+                     nf90mpi_get_vard_6D_OneByteInt_all, nf90mpi_get_vard_6D_TwoByteInt_all,    &
+                     nf90mpi_get_vard_6D_FourByteInt_all, nf90mpi_get_vard_6D_EightByteInt_all, &
+                     nf90mpi_get_vard_6D_FourByteReal_all, nf90mpi_get_vard_6D_EightByteReal_all
+    module procedure nf90mpi_get_vard_7D_text_all,                                      &
+                     nf90mpi_get_vard_7D_OneByteInt_all, nf90mpi_get_vard_7D_TwoByteInt_all,    &
+                     nf90mpi_get_vard_7D_FourByteInt_all, nf90mpi_get_vard_7D_EightByteInt_all, &
+                     nf90mpi_get_vard_7D_FourByteReal_all, nf90mpi_get_vard_7D_EightByteReal_all
+  end interface ! nf90mpi_get_vard_all
 
   !
   ! Nonblocking APIs

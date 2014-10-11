@@ -35,11 +35,13 @@
   ! overloaded functions
   ! independent APIs
   public :: nf90mpi_put_var, nf90mpi_get_var, &
-            nf90mpi_put_varn, nf90mpi_get_varn
+            nf90mpi_put_varn, nf90mpi_get_varn, &
+            nf90mpi_put_vard, nf90mpi_get_vard
 
   ! collective APIs
   public :: nf90mpi_put_var_all, nf90mpi_get_var_all, &
-            nf90mpi_put_varn_all, nf90mpi_get_varn_all
+            nf90mpi_put_varn_all, nf90mpi_get_varn_all, &
+            nf90mpi_put_vard_all, nf90mpi_get_vard_all
 
   ! nonblocking APIs
   public :: nf90mpi_iput_var, nf90mpi_iget_var, &
@@ -541,3 +543,17 @@
           nfmpi_put_varn, &
           nfmpi_get_varn_all, &
           nfmpi_put_varn_all
+
+!
+! Begin of vard subroutines:
+!
+    public :: &
+        nfmpi_get_vard, &
+        nfmpi_get_vard_all, &
+        nfmpi_put_vard, &
+        nfmpi_put_vard_all
+
+!
+! End of vard subroutines:
+!
+
