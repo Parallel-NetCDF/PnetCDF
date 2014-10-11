@@ -342,6 +342,9 @@
       integer NF_ENULLSTART
       integer NF_ENULLCOUNT
       integer NF_EINVAL_CMODE
+      integer NF_ETYPESIZE
+      integer NF_ETYPE_MISMATCH
+      integer NF_ETYPESIZE_MISMATCH
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -395,6 +398,9 @@
       PARAMETER (NF_ENULLSTART              = -226)   ! argument start is a NULL pointer
       PARAMETER (NF_ENULLCOUNT              = -227)   ! argument count is a NULL pointer
       PARAMETER (NF_EINVAL_CMODE            = -228)   ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
+      PARAMETER (NF_ETYPESIZE               = -229)   ! MPI derived data type size error (bigger than the variable size)
+      PARAMETER (NF_ETYPE_MISMATCH          = -230)   ! element type of the MPI derived data type mismatches the variable type
+      PARAMETER (NF_ETYPESIZE_MISMATCH      = -231)   ! file type size mismatches buffer type size
 
 !
 ! PnetCDF header inconsistency errors start from -250
@@ -1394,4 +1400,13 @@
       external nfmpi_get_varn_real,   nfmpi_get_varn_real_all
       external nfmpi_get_varn_double, nfmpi_get_varn_double_all
       external nfmpi_get_varn_int8,   nfmpi_get_varn_int8_all
+
+!
+! vard routines:
+!
+      integer  nfmpi_put_vard, nfmpi_put_vard_all
+      integer  nfmpi_get_vard, nfmpi_get_vard_all
+
+      external nfmpi_put_vard, nfmpi_put_vard_all
+      external nfmpi_get_vard, nfmpi_get_vard_all
 

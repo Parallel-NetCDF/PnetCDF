@@ -227,6 +227,12 @@ ncmpi_strerror(int err)
              */
         case NC_EINVAL_CMODE:
             return "Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA";
+        case NC_ETYPESIZE:
+            return "MPI derived data type size error (bigger than the variable size)";
+        case NC_ETYPE_MISMATCH:
+            return "element type of the MPI derived data type mismatches the variable type";
+        case NC_ETYPESIZE_MISMATCH:
+            return "file type size mismatches buffer type size";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
             /* this error means the metadata (dimension names, variable names,

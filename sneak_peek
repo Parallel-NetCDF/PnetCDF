@@ -6,6 +6,12 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New APIs
+    * ncmpi_put_vard() and ncmpi_get_vard() takes an argument of MPI derived
+      data type that describes the file access layout, as opposed to vara
+      and vars APIs that use start[] and count[].
+      For F77, nfmpi_put_vard()    nfmpi_get_vard()
+      For F90, nf90mpi_put_vard()  nf90mpi_get_vard()
+      For C++, NcmpiVar::putVard() NcmpiVar::getVard()
     * ncmpi_inq_recsize() returns the size of record block, i.e. the sum of
       single records of all record variables.
       For F77, nfmpi_inq_recsize()
@@ -24,6 +30,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New error code
+    * NC_ETYPESIZE when filetype size is bigger than the variable size
+    * NC_ETYPE_MISMATCH when the element type of filetype mismatches the
+      variable type
+    * NC_ETYPESIZE_MISMATCH when filetype size mismatches buffer type size
     * NC_ENULLSTART when argument start is a NULL pointer
     * NC_ENULLCOUNT when argument count is a NULL pointer
     * NC_EINVAL_CMODE when invalid file create mode is set, (e.g. cannot have
@@ -45,6 +55,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/testcases/test_vard.c test/testcases/test_vardf.f
+      test/testcases/test_vardf90.f90 tests the new vard APIs.
     * test/testcases/inq_recsize.c tests if one can correctly inquire the
       size of record block from in a netCDF file. A similar program in F90,
       named inq_recsizef.f90, is also added.

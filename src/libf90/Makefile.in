@@ -28,7 +28,8 @@ M4FLAGS  += -Dinout=@INOUT@
 
 M4_SRCS = getput_text.m4 \
           getput_var.m4 \
-          getput_varn.m4
+          getput_varn.m4 \
+          getput_vard.m4
 
 F90_SRCS = nf90_constants.f90 \
            overloads.f90 \

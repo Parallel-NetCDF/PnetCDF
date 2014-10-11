@@ -228,7 +228,10 @@
       NF_EQUOTA                   = -225, & ! Quota exceeded
       NF_ENULLSTART               = -226, & ! argument start is a NULL pointer
       NF_ENULLCOUNT               = -227, & ! argument count is a NULL pointer
-      NF_EINVAL_CMODE             = -228    ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
+      NF_EINVAL_CMODE             = -228, & ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
+      NF_ETYPESIZE                = -229, & ! MPI derived data type size error (bigger than the variable size)
+      NF_ETYPE_MISMATCH           = -230, & ! element type of the MPI derived data type mismatches the variable type
+      NF_ETYPESIZE_MISMATCH       = -231    ! file type size mismatches buffer type size
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &

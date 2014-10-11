@@ -3504,7 +3504,9 @@ END INTERFACE
           nfmpi_get_var1, &
           nfmpi_get_vara, &
           nfmpi_get_vars, &
-          nfmpi_get_varm
+          nfmpi_get_varm, &
+          nfmpi_put_vard, &
+          nfmpi_get_vard
 
 !         nfmpi_put_var_all
 ! collective put an entire variable does not make sense
@@ -3536,5 +3538,7 @@ END INTERFACE
           nfmpi_get_varn, &
           nfmpi_put_varn, &
           nfmpi_get_varn_all, &
-          nfmpi_put_varn_all
+          nfmpi_put_varn_all, &
+          nfmpi_put_vard_all, &
+          nfmpi_get_vard_all
 

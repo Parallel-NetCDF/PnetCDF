@@ -319,7 +319,9 @@ C2F_SRCS = createf.c \
 	put_varn_intf.c        put_varn_int_allf.c \
 	put_varn_realf.c       put_varn_real_allf.c \
 	put_varn_doublef.c     put_varn_double_allf.c \
-	put_varn_int8f.c       put_varn_int8_allf.c
+	put_varn_int8f.c       put_varn_int8_allf.c \
+        get_vardf.c            get_vard_allf.c \
+        put_vardf.c            put_vard_allf.c
 
 LIB_CSRCS = $(C2F_SRCS) $(UTIL_SRCS)
 

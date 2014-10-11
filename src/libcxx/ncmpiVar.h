@@ -1545,6 +1545,10 @@ namespace PnetCDF
 
     void getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
 
+    /* vard APIs take filetype and buftype */
+    void getVard    (MPI_Datatype filetype, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
+    void getVard_all(MPI_Datatype filetype, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
+
     //////////////////////
 
     // Reads the entire data into the netCDF variable. (collective data mode)
@@ -2418,6 +2422,10 @@ namespace PnetCDF
     */
     void putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const long long* dataValues) const;
     void putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
+
+    /* vard APIs take filetype and buftype */
+    void putVard    (MPI_Datatype filetype, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
+    void putVard_all(MPI_Datatype filetype, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
 
     ////////////////
 

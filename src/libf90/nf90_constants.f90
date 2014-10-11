@@ -241,6 +241,9 @@
       NF90_ENULLSTART               = NF_ENULLSTART               , & ! argument start is a NULL pointer
       NF90_ENULLCOUNT               = NF_ENULLCOUNT               , & ! argument count is a NULL pointer
       NF90_EINVAL_CMODE             = NF_EINVAL_CMODE             , & ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
+      NF90_ETYPESIZE                = NF_ETYPESIZE                , & ! MPI derived data type size error (bigger than the variable size)
+      NF90_ETYPE_MISMATCH           = NF_ETYPE_MISMATCH           , & ! element type of the MPI derived data type mismatches the variable type
+      NF90_ETYPESIZE_MISMATCH       = NF_ETYPESIZE_MISMATCH       , & ! file type size mismatches buffer type size
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
