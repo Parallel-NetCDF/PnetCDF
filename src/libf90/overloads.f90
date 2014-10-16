@@ -317,7 +317,10 @@
 
   ! Overloaded variable functions varn
   interface nf90mpi_put_varn_all
-    module procedure nf90mpi_put_varn_text_all
+    module procedure nf90mpi_put_varn_text_all,                                   &
+                     nf90mpi_put_varn_OneByteInt_all, nf90mpi_put_varn_TwoByteInt_all,    &
+                     nf90mpi_put_varn_FourByteInt_all, nf90mpi_put_varn_EightByteInt_all, &
+                     nf90mpi_put_varn_FourByteReal_all, nf90mpi_put_varn_EightByteReal_all
     module procedure nf90mpi_put_varn_1D_text_all,                                      &
                      nf90mpi_put_varn_1D_OneByteInt_all, nf90mpi_put_varn_1D_TwoByteInt_all,    &
                      nf90mpi_put_varn_1D_FourByteInt_all, nf90mpi_put_varn_1D_EightByteInt_all, &
@@ -349,7 +352,10 @@
   end interface ! nf90mpi_put_varn_all
 
   interface nf90mpi_get_varn_all
-    module procedure nf90mpi_get_varn_text_all
+    module procedure nf90mpi_get_varn_text_all,                                   &
+                     nf90mpi_get_varn_OneByteInt_all, nf90mpi_get_varn_TwoByteInt_all,    &
+                     nf90mpi_get_varn_FourByteInt_all, nf90mpi_get_varn_EightByteInt_all, &
+                     nf90mpi_get_varn_FourByteReal_all, nf90mpi_get_varn_EightByteReal_all
     module procedure nf90mpi_get_varn_1D_text_all,                                      &
                      nf90mpi_get_varn_1D_OneByteInt_all, nf90mpi_get_varn_1D_TwoByteInt_all,    &
                      nf90mpi_get_varn_1D_FourByteInt_all, nf90mpi_get_varn_1D_EightByteInt_all, &
