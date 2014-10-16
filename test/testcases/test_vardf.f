@@ -361,7 +361,7 @@
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
-          msg = '*** TESTING F90 '//trim(cmd)//' for vard API '
+          msg = '*** TESTING F77 '//trim(cmd)//' for vard API '
           if (rank .eq. 0) then
               if (nerrs .EQ. 0) then
                   write(*,"(A67,A)") msg,'------ pass'

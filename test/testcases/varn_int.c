@@ -227,11 +227,23 @@ int main(int argc, char** argv)
     err = ncmpi_put_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
     ERR
 
-    /* read back and check contents */
+    /* read back using get_var API and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
     ERR
     if (nprocs >= 4) nfails += check_contents_for_fail(r_buffer);
+
+    /* read back using get_varn API and check contents */
+    for (i=0; i<w_len; i++) buffer[i] = -1;
+    err = ncmpi_get_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
+    ERR
+
+    for (i=0; i<w_len; i++) {
+        if (buffer[i] != rank) {
+            printf("Error: expecting buffer[%d]=%d but got %d\n",i,rank,buffer[i]);
+            nfails++;
+        }
+    }
 
     err = ncmpi_close(ncid);
     ERR

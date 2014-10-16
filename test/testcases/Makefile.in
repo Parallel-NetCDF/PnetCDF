@@ -36,11 +36,13 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            redef1.c
 
 F77_SRCS = bigrecords.f \
-           test_vardf.f
+           test_vardf.f \
+           varn_intf.f
 
 F90_SRCS = inq_num_varsf.f90 \
            inq_recsizef.f90 \
-           test_vardf90.f90
+           test_vardf90.f90 \
+           varn_real.f90
 
 PROGS    = $(C_SRCS:.c=)
 OBJS     = $(C_SRCS:.c=.o)
@@ -119,7 +121,13 @@ inq_recsizef: inq_recsizef.o $(LIBRARY)
 test_vardf: test_vardf.o $(LIBRARY)
 	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
+varn_intf: varn_intf.o $(LIBRARY)
+	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+
 test_vardf90: test_vardf90.o $(LIBRARY)
+	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+
+varn_real: varn_real.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 testing check verbose_testing : $(PROGS)
