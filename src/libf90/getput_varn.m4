@@ -11,64 +11,80 @@ dnl
 !
 
 dnl
-dnl VARN1(ncid, varid, values, num, start, count)
+dnl PUTVARN1(ncid, varid, values, num, start, count)
 dnl
-define(`VARN1',dnl
+define(`PUTVARN1',dnl
 `dnl
-   function nf90mpi_$1_varn_$3$6(ncid, varid, values, num, start, count)
+   function nf90mpi_put_varn_$2$5(ncid, varid, values, num, start, count)
      integer,                                        intent( in) :: ncid, varid, num
-     $4 (kind=$3),                                   intent( $2) :: values
+     $3 (kind=$2),                                   intent( $1) :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent( in) :: start, count
-     integer                                                     :: nf90mpi_$1_varn_$3$6
-     $4 (kind=$3),                   dimension(1)                :: tempValue
+     integer                                                     :: nf90mpi_put_varn_$2$5
+     $3 (kind=$2),                   dimension(1)                :: tempValue
      tempValue(1) = values
-     nf90mpi_$1_varn_$3$6 = nfmpi_$1_varn_$5$6(ncid, varid, num, start, count, tempValue)
-   end function nf90mpi_$1_varn_$3$6
+     nf90mpi_put_varn_$2$5 = nfmpi_put_varn_$4$5(ncid, varid, num, start, count, tempValue)
+   end function nf90mpi_put_varn_$2$5
+')dnl
+
+dnl
+dnl GETVARN1(ncid, varid, values, num, start, count)
+dnl
+define(`GETVARN1',dnl
+`dnl
+   function nf90mpi_get_varn_$2$5(ncid, varid, values, num, start, count)
+     integer,                                        intent( in) :: ncid, varid, num
+     $3 (kind=$2),                                   intent( $1) :: values
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent( in) :: start, count
+     integer                                                     :: nf90mpi_get_varn_$2$5
+     $3 (kind=$2),                   dimension(1)                :: tempValue
+     nf90mpi_get_varn_$2$5 = nfmpi_get_varn_$4$5(ncid, varid, num, start, count, tempValue)
+     values = tempValue(1)
+   end function nf90mpi_get_varn_$2$5
 ')dnl
 
 !
 ! Independent put APIs
 !
 
-VARN1(put, inout, OneByteInt,    integer, int1)
-VARN1(put, inout, TwoByteInt,    integer, int2)
-VARN1(put, inout, FourByteInt,   integer, int)
-VARN1(put, inout, FourByteReal,  real,    real)
-VARN1(put, inout, EightByteReal, real,    double)
-VARN1(put, inout, EightByteInt,  integer, int8)
+PUTVARN1(in,    OneByteInt,    integer, int1)
+PUTVARN1(inout, TwoByteInt,    integer, int2)
+PUTVARN1(inout, FourByteInt,   integer, int)
+PUTVARN1(inout, FourByteReal,  real,    real)
+PUTVARN1(inout, EightByteReal, real,    double)
+PUTVARN1(inout, EightByteInt,  integer, int8)
 
 !
 ! Independent get APIs
 !
 
-VARN1(get, out, OneByteInt,    integer, int1)
-VARN1(get, out, TwoByteInt,    integer, int2)
-VARN1(get, out, FourByteInt,   integer, int)
-VARN1(get, out, FourByteReal,  real,    real)
-VARN1(get, out, EightByteReal, real,    double)
-VARN1(get, out, EightByteInt,  integer, int8)
+GETVARN1(out, OneByteInt,    integer, int1)
+GETVARN1(out, TwoByteInt,    integer, int2)
+GETVARN1(out, FourByteInt,   integer, int)
+GETVARN1(out, FourByteReal,  real,    real)
+GETVARN1(out, EightByteReal, real,    double)
+GETVARN1(out, EightByteInt,  integer, int8)
 
 !
 ! Collective put APIs
 !
 
-VARN1(put, inout, OneByteInt,    integer, int1,   _all)
-VARN1(put, inout, TwoByteInt,    integer, int2,   _all)
-VARN1(put, inout, FourByteInt,   integer, int,    _all)
-VARN1(put, inout, FourByteReal,  real,    real,   _all)
-VARN1(put, inout, EightByteReal, real,    double, _all)
-VARN1(put, inout, EightByteInt,  integer, int8,   _all)
+PUTVARN1(in,    OneByteInt,    integer, int1,   _all)
+PUTVARN1(inout, TwoByteInt,    integer, int2,   _all)
+PUTVARN1(inout, FourByteInt,   integer, int,    _all)
+PUTVARN1(inout, FourByteReal,  real,    real,   _all)
+PUTVARN1(inout, EightByteReal, real,    double, _all)
+PUTVARN1(inout, EightByteInt,  integer, int8,   _all)
 
 !
 ! Collective get APIs
 !
 
-VARN1(get, out, OneByteInt,    integer, int1,   _all)
-VARN1(get, out, TwoByteInt,    integer, int2,   _all)
-VARN1(get, out, FourByteInt,   integer, int,    _all)
-VARN1(get, out, FourByteReal,  real,    real,   _all)
-VARN1(get, out, EightByteReal, real,    double, _all)
-VARN1(get, out, EightByteInt,  integer, int8,   _all)
+GETVARN1(out, OneByteInt,    integer, int1,   _all)
+GETVARN1(out, TwoByteInt,    integer, int2,   _all)
+GETVARN1(out, FourByteInt,   integer, int,    _all)
+GETVARN1(out, FourByteReal,  real,    real,   _all)
+GETVARN1(out, EightByteReal, real,    double, _all)
+GETVARN1(out, EightByteInt,  integer, int8,   _all)
 
 
 dnl
