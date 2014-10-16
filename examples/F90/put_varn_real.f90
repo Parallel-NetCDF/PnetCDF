@@ -236,15 +236,15 @@
           ! set the buffer pointers to different offsets to the I/O buffer
           err = nf90mpi_put_varn_all(ncid, varid, buffer, num_reqs, &
                                      starts, counts)
-          call check(err, 'In nf90mpi_put_varn_real_all: ')
+          call check(err, 'In nf90mpi_put_varn_all: ')
 
           err = nf90mpi_close(ncid);
           call check(err, 'In nf90mpi_close: ')
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
-          err = nfmpi_inq_malloc_size(malloc_size)
-          if (err == NF_NOERR) then
+          err = nf90mpi_inq_malloc_size(malloc_size)
+          if (err == NF90_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, &
                               MPI_SUM, 0, MPI_COMM_WORLD, err)
               if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998, &
