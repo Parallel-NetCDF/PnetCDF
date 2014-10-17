@@ -24,10 +24,13 @@
           implicit none
           integer err
           character(len=*) message
+          character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
+              msg = '*** TESTING F90 inq_recsizef.f90 for inquiring record size'
+              write(*,"(A67,A)") msg,'------ failed'
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check

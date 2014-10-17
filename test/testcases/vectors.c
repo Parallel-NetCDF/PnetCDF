@@ -16,8 +16,8 @@
 
 static void handle_error_nc(int ncerr, char *str)
 {
-            fprintf(stderr, "%s: %s\n", str, ncmpi_strerror(ncerr));
-                MPI_Abort(MPI_COMM_WORLD, 1);
+    fprintf(stderr, "%s: %s (%s)\n",__FILE__,str, ncmpi_strerror(ncerr));
+    MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
 #define VECCOUNT 4
