@@ -261,7 +261,7 @@
                                      starts, counts)
           call check(err, 'In nf90mpi_get_varn_all: ')
 
- 996      format(A,I2,A,F3.1)
+ 996      format(A,I2,A,F4.1)
           if (oneReal .NE. rank) then
               print 996, "Error: expecting OneReal=",rank, &
                          " but got", oneReal
@@ -274,7 +274,7 @@
                                      starts, counts)
           call check(err, 'In nf90mpi_get_varn_all: ')
 
- 997      format(A,I2,A,I2,A,F3.1)
+ 997      format(A,I2,A,I2,A,F4.1)
           do i=1, w_len
              if (buffer(i) .NE. rank) then
                  print 997, "Error: expecting buffer(",i,")=",rank, &
