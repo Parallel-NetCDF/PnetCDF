@@ -6,7 +6,7 @@
 
 !
 ! This program tests the vard API.
-! The write buffer is a 2D array of size NY x NX
+! The write buffer is a 2D array of size NX x NY
 ! The MPI data type for the buffer is defined by swapping the 1st and 2nd
 ! rows of the array using a butype constructed by MPI_Type_create_hindex().
 ! It also writes a fixed-size variable using a buftype constructed by
@@ -48,10 +48,13 @@
           include "pnetcdf.inc"
           integer err
           character(len=*) message
+          character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) trim(message), trim(nfmpi_strerror(err))
+              msg = '*** TESTING F77 test_vardf.f for vard API '
+              write(*,"(A67,A)") msg,'------ failed'
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
@@ -59,15 +62,15 @@
       subroutine check_value(rank, nx, ny, buf, nerrs)
           implicit none
           include "mpif.h"
-          integer(kind=MPI_OFFSET_KIND) NX, NY
+          integer NX, NY
           integer rank, buf(nx, ny), nerrs
           integer i, j
  543      format(A,I2,A,I2,A,I3,A,I3)
           do j=1, ny
              do i=1, nx
                 if (buf(i,j) .NE. rank*100+j*10+i) then
-                    print 543,'expecting buf(',j,',',i,')=',
-     +              rank*100+j*10+i,' but got ',buf(j,i)
+                    print 543,'expecting buf(',i,',',j,')=',
+     +              rank*100+j*10+i,' but got ',buf(i,j)
                     nerrs = nerrs + 1
                 endif
              enddo
@@ -77,7 +80,7 @@
       subroutine check_value_permuted(rank, nx, ny, buf, nerrs)
           implicit none
           include "mpif.h"
-          integer(kind=MPI_OFFSET_KIND) NX, NY
+          integer NX, NY
           integer rank, buf(nx, ny), nerrs, val
           integer i, j
  543      format(A,I2,A,I2,A,I3,A,I3)
@@ -88,7 +91,7 @@
              do i=1, nx
                 if (buf(i,j) .NE. val+i) then
                     print 543,'expecting buf(',i,',',j,')=',
-     +              val+i,' but got ',buf(j,i)
+     +              val+i,' but got ',buf(i,j)
                     nerrs = nerrs + 1
                 endif
              enddo
@@ -98,12 +101,12 @@
       subroutine clear_buf(nx, ny, buf)
           implicit none
           include "mpif.h"
-          integer(kind=MPI_OFFSET_KIND) NX, NY
+          integer NX, NY
           integer buf(nx, ny)
           integer i, j
           do j=1, NY
              do i=1, NX
-                buf(j,i) = -1
+                buf(i,j) = -1
              enddo
           enddo
       end subroutine clear_buf
@@ -113,7 +116,8 @@
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          integer(kind=MPI_OFFSET_KIND) NX, NY, start(2), count(2)
+          integer NX, NY
+          integer(kind=MPI_OFFSET_KIND) start(2), count(2)
           integer i, j, rank, err, ncid, varid, nerrs, buf(NX, NY)
           integer buftype, ghost_buftype, filetype
           integer ncbuf(NX+4, NY+4)
@@ -180,13 +184,13 @@
           character(LEN=128) filename, cmd, msg
           integer argc, IARGC, err, nprocs, rank, i, j
           integer cmode, ncid, varid0, varid1, varid2, dimid(2), nerrs
-          integer(kind=MPI_OFFSET_KIND) NX, NY, len
-          integer(kind=MPI_OFFSET_KIND) start(2), count(2)
+          integer NX, NY
           PARAMETER(NX=5, NY=2)
           integer buf(NX, NY)
           integer buftype, ghost_buftype, rec_filetype, fix_filetype
           integer array_of_sizes(2), array_of_subsizes(2)
           integer array_of_starts(2), blocklengths(2)
+          integer(kind=MPI_OFFSET_KIND) start(2), count(2), len
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size, recsize
           integer(kind=MPI_ADDRESS_KIND) a0, a1, disps(2)
           character(len = 4) :: quiet_mode
