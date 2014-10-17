@@ -51,10 +51,13 @@
           include "pnetcdf.inc"
           integer err
           character(len=*) message
+          character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) trim(message), trim(nfmpi_strerror(err))
+              msg = '*** TESTING F77 varn_intf.f for varn API '
+              write(*,"(A67,A)") msg,'------ failed'
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check

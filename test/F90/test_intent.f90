@@ -5,7 +5,8 @@
 ! $Id$
 
 !
-! This program tests put_att on Little Endian when using parameter
+! This program tests Fortran 90 INTENT modifier used in PnetCDF.
+! It also tests put_att on Little Endian when using parameter
 ! buffer (read-only memory)
 !
       subroutine check(err, message)
@@ -14,10 +15,13 @@
           implicit none
           integer err
           character(len=*) message
+          character(len=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
+              msg = '*** TESTING F90 test_intent.f90 '
+              write(*,"(A67,A)") msg,'------ failed'
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
