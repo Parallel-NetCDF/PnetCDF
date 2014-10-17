@@ -71,7 +71,7 @@ This is essentially a placeholder for the next release note ...
       aligned, so in this case there is no record padding."
     * test/testcases/modes.c tests if correct error codes are returned when
       various file create/open modes are used.
-    * test/testcases/varn_int.c tests varn APIs
+    * Under test/testcases, varn_int.c varn_intf.f varn_real.f90 test varn APIs
     * test/testcases/inq_num_vars.c tests if one can correctly inquire the
       numbers of record and fixed-size variables defined in a netCDF file.
       A similar program in F90, named inq_num_varsf.f90, is also added.
