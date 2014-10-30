@@ -29,10 +29,10 @@ namespace PnetCDF
       enum FileFormat
          {
 	    classic,    //!< Classic format, classic data model
-	    classic64,  //!< 64-bit offset format, classic data model
+	    classic2,   //!< 64-bit offset format, classic data model
 	    nc4,        //!< (default) netCDF-4/HDF5 format, enhanced data model
 	    nc4classic, //!< netCDF-4/HDF5 format, classic data model
-	    data64bits, //!< CDF-5 format, classic data model
+	    classic5,   //!< CDF-5 format, classic data model
             BadFormat
          };
     
