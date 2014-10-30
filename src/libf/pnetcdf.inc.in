@@ -90,6 +90,8 @@
       integer nf_format_classic
       integer nf_format_64bit
       integer nf_format_64bit_data
+      integer nf_format_cdf2
+      integer nf_format_cdf5
 
       parameter (nf_nowrite = 0)
       parameter (nf_write = 1)
@@ -105,8 +107,10 @@
       parameter (nf_sizehint_default = 0)
       parameter (nf_align_chunk = -1)
       parameter (nf_format_classic = 1)
-      parameter (nf_format_64bit = 2)
-      parameter (nf_format_64bit_data = 5)
+      parameter (nf_format_cdf2 = 2)
+      parameter (nf_format_cdf5 = 5)
+      parameter (nf_format_64bit = nf_format_cdf2)
+      parameter (nf_format_64bit_data = nf_format_cdf5)
 
 !
 ! size argument for defining an unlimited dimension:
