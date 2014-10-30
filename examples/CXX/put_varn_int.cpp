@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     try {
         /* create a new file for writing ------------------------------------*/
         NcmpiFile nc(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                     NcmpiFile::data64bits);
+                     NcmpiFile::classic5);
 
         /* define dimensions Y and X */
         vector<NcmpiDim> dimid(2);

@@ -108,7 +108,7 @@ int main(int argc, char** argv)
         NcmpiFile ncFile(MPI_COMM_WORLD, filename, NcmpiFile::read);
 
         // Check the format.
-        if (ncFile.getFormat() != NcmpiFile::data64bits) {
+        if (ncFile.getFormat() != NcmpiFile::classic5) {
             cout << "unexpected file format"<<endl;
             throw NcmpiException("read Error ",__FILE__,__LINE__);
         }

@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     try {
         /* create the file */
         NcmpiFile ncFile(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                         NcmpiFile::data64bits);
+                         NcmpiFile::classic5);
 
         /* get all the default hints used */
         ncFile.Inq_file_info(&info_used);

@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     try {
         /* create a new file for writing ------------------------------------*/
         NcmpiFile nc(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                     NcmpiFile::data64bits);
+                     NcmpiFile::classic5);
 
         /* define 3 dimensions */
         vector<NcmpiDim> dimid(3);
@@ -169,6 +169,10 @@ int main(int argc, char** argv)
         vector <MPI_Offset> start(2), count(2);
         start[0] = NZ * rank; start[1] = 0;
         count[0] = NZ;        count[1] = NY;
+        if (verbose)
+            printf("%d: start=%lld %lld count=%lld %lld\n",rank,
+                   start[0],start[1],count[0],count[1]);
+
         /* calling a blocking flexible API */
         var0.putVar_all(start, count, &buf_zy[0], 1, subarray);
         free(buf_zy);
@@ -193,6 +197,9 @@ int main(int argc, char** argv)
 
         start[0] = 0;  start[1] = NX * rank;
         count[0] = NY; count[1] = NX;
+        if (verbose)
+            printf("%d: start=%lld %lld count=%lld %lld\n",rank,
+                   start[0],start[1],count[0],count[1]);
 
         /* calling a non-blocking flexible API */
         var1.putVar_all(start, count, buf_yx, 1, subarray);

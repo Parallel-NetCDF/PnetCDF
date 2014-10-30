@@ -148,7 +148,7 @@ int main(int argc, char **argv)
     try {
         /* create the file */
         NcmpiFile nc(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                     NcmpiFile::data64bits);
+                     NcmpiFile::classic5);
 
         /* define dimensions */
         vector<NcmpiDim> dimids(NDIMS);

@@ -102,6 +102,9 @@ int main(int argc, char** argv)
     vector <MPI_Offset> start(2), count(2);
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
+    if (verbose)
+        printf("%d: start=%lld %lld count=%lld %lld\n",rank,
+               start[0],start[1],count[0],count[1]);
 
     /* create a file type for the fixed-size variable */
     array_of_sizes[0]    = 2;
