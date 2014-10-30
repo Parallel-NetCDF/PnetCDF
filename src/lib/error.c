@@ -78,7 +78,7 @@ static char nc_unknown_err_msg[128];
 const char *
 ncmpi_strerror(int err)
 {
-    sprintf(nc_unknown_err_msg,"Unknown Error: Unrecognized PnetCDF error code %5d\n",err);
+    sprintf(nc_unknown_err_msg,"Unknown Error: Unrecognized error code %5d\n",err);
 
 #ifdef vms 
     if(err == EVMSERR)
