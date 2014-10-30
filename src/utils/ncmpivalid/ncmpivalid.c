@@ -715,7 +715,7 @@ val_get_NC(NC *ncp) {
     }
 
     if (getbuf.version == 5)
-        getbuf.index += X_SIZEOF_LONG;
+        getbuf.index += X_SIZEOF_INT64;
     else
         getbuf.index += X_SIZEOF_SIZE_T;
 
