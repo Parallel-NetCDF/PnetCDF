@@ -81,7 +81,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc";
+    char filename[128];
     int i, j, rank, nprocs, verbose=1, err;
     int ncid, cmode, varid, dimid[2], buf[NY][NX];
     char str_att[128];
@@ -105,7 +105,10 @@ int main(int argc, char** argv)
         }
     argc -= optind;
     argv += optind;
-    if (argc == 1) filename = argv[0]; /* optional argument */
+    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    else strcpy(filename, "testfile.nc");
+
+    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;

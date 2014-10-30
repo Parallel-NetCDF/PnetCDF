@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -52,11 +53,23 @@
 #define NX 3
 #define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err));}
 
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [-h] | [-q] [file_name]\n"
+    "       [-h] Print help\n"
+    "       [-q] Quiet mode (reports when fail)\n"
+    "       [filename] output netCDF file name\n";
+    fprintf(stderr, help, argv0);
+}
+
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
+    extern int optind;
     char         filename[128];
-    int          i, j, err, ncid, varid0, varid1, dimids[2];
+    int          i, j, err, ncid, verbose=1, varid0, varid1, dimids[2];
     int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     MPI_Offset   start[2], count[2], recsize, bufcount;
@@ -67,13 +80,21 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 0;
-    }
-    strcpy(filename, "testfile.nc");
-    if (argc == 2) strcpy(filename, argv[1]);
+    /* get command-line arguments */
+    while ((i = getopt(argc, argv, "hq")) != EOF)
+        switch(i) {
+            case 'q': verbose = 0;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 0;
+        }
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
+    else strcpy(filename, "testfile.nc");
+
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     start[0] = 0; start[1] = NX*rank;
