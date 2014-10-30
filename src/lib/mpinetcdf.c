@@ -521,9 +521,9 @@ ncmpi_inq_format(int  ncid,
         return status;
 
     if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-        *formatp = NC_FORMAT_64BIT_DATA;
+        *formatp = NC_FORMAT_CDF5;
     } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
-        *formatp = NC_FORMAT_64BIT;
+        *formatp = NC_FORMAT_CDF2;
     } else if (fIsSet(ncp->flags, NC_32BIT)){
         *formatp = NC_FORMAT_CLASSIC;
     } else {
@@ -553,9 +553,9 @@ ncmpi_inq_file_format(char *filename,
          return status;
 
     if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-        *formatp = NC_FORMAT_64BIT_DATA;
+        *formatp = NC_FORMAT_CDF5;
     } else if (fIsSet(ncp->flags, NC_64BIT_OFFSET)) {
-        *formatp = NC_FORMAT_64BIT;
+        *formatp = NC_FORMAT_CDF2;
     } else if (fIsSet(ncp->flags, NC_32BIT)){
         *formatp = NC_FORMAT_CLASSIC;
     } else {
