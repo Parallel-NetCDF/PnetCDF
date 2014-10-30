@@ -209,7 +209,7 @@ ncmpix_put_ushort_ushort(void *xp, const ushort *ip)
     ix_ushort xx = (ix_ushort)*ip;
     put_ix_ushort(xp, &xx);
 # if X_USHORT_MAX < USHORT_MAX
-    if (*ip > X_USHORT_MAX || *ip < 0)
+    if (*ip > X_USHORT_MAX)
         return NC_ERANGE;
 # endif
     return NC_NOERR;
