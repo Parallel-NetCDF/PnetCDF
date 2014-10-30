@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 
         /* create a new file for writing -------------------------------------*/
         NcmpiFile ncFile(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                         NcmpiFile::data64bits, info);
+                         NcmpiFile::classic5, info);
         MPI_Info_free(&info);
 
         /* define 3 dimensions */

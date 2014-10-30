@@ -115,7 +115,7 @@ int main(int argc, char** argv)
 
     try {
         NcmpiFile nc(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                     NcmpiFile::data64bits);
+                     NcmpiFile::classic5);
 
         /* the global array is NY * (NX * nprocs) */
         G_NX  = NX * nprocs;

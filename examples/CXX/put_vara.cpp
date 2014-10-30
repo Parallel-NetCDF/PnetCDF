@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     try {
         /* create a new file for writing ------------------------------------*/
         NcmpiFile ncFile(MPI_COMM_WORLD, filename, NcmpiFile::replace,
-                         NcmpiFile::data64bits);
+                         NcmpiFile::classic5);
 
         /* the global array is NY * (NX * nprocs) */
         global_ny = NY;
@@ -152,6 +152,9 @@ int main(int argc, char** argv)
         start[1] = NX * rank;
         count[0] = NY;
         count[1] = NX;
+        if (verbose)
+            printf("%d: start=%lld %lld count=%lld %lld\n",rank,
+                   start[0],start[1],count[0],count[1]);
 
         var.putVar_all(start, count, &buf[0][0]);
 
