@@ -457,9 +457,15 @@ by the desired type. */
 /* CDF-5 format, (64-bit) supported */
 #define NC_64BIT_DATA	0x0010
 
+/* CDF-2 format, with NC_64BIT_OFFSET. */
+#ifndef NC_FORMAT_CDF2
+#define NC_FORMAT_CDF2  2
+#endif
 /* CDF-5 format, with NC_64BIT_DATA. */
+#ifndef NC_FORMAT_CDF5
 #define NC_FORMAT_CDF5  5
 #define NC_FORMAT_64BIT_DATA	NC_FORMAT_CDF5
+#endif
 
 /* PnetCDF Error Codes: */
 #define NC_ESMALL			(-201) /**< size of MPI_Offset too small for format */

@@ -295,8 +295,8 @@ ncmpi_set_default_format(int format, int *old_formatp)
 
     /* Make sure only valid format is set. */
     if (format != NC_FORMAT_CLASSIC &&
-        format != NC_FORMAT_64BIT &&
-        format != NC_FORMAT_64BIT_DATA) {
+        format != NC_FORMAT_CDF2 &&
+        format != NC_FORMAT_CDF5) {
       return NC_EINVAL;
     }
     default_create_format = format;
@@ -624,7 +624,7 @@ ncmpii_read_numrecs(NC *ncp) {
     assert(!NC_indef(ncp));
 
     if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        sizeof_t = X_SIZEOF_LONG;
+        sizeof_t = X_SIZEOF_INT64;
     else
         sizeof_t = X_SIZEOF_SIZE_T;
  
