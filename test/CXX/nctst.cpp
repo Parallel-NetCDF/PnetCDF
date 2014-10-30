@@ -516,10 +516,10 @@ main(int argc, char* argv[])	// test new netCDF interface
 
    // Set up the format constants.
    NcmpiFile::FileFormat format[NUM_FORMATS] =
-              {NcmpiFile::classic, NcmpiFile::classic64, NcmpiFile::data64bits};
+              {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::classic5};
 
    char format_name[NUM_FORMATS][NC_MAX_NAME] = 
-        {"classic", "classic64", "data64bit"};
+        {"classic", "classic2", "classic5"};
 
    int errs = 0;
    for (int i = 0; i < NUM_FORMATS; i++)

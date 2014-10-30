@@ -140,7 +140,7 @@ program f90tst_parallel3
   ! Check some stuff out.
   call check(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
   if (ndims /= 2 .or. nvars /= NUM_VARS .or. ngatts /= 0 .or. unlimdimid /= -1 .or. &
-       file_format /= nf90_format_64bit_data) stop 2
+       file_format /= nf90_format_cdf5) stop 2
 
   ! Read this processor's data.
   if (my_rank .EQ. 0) count = (/ HALF_NX, HALF_NY /)

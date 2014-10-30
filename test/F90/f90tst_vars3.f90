@@ -113,7 +113,7 @@ program f90tst_vars3
   ! Check some stuff out.
   call check(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
   if (ndims /= 2 .or. nvars /= 5 .or. ngatts /= 0 .or. unlimdimid /= -1 .or. &
-       file_format /= nf90_format_64bit_data) stop 2
+       file_format /= nf90_format_cdf5) stop 2
 
   ! Get varids.
   call check(nf90mpi_inq_varid(ncid, VAR1_NAME, varid1_in))

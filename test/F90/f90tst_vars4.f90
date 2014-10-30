@@ -90,7 +90,7 @@ program f90tst_vars4
   ! Check some stuff out.
   call handle_err(nf90mpi_inquire(ncid, ndims, nvars, ngatts, unlimdimid, file_format))
   if (ndims /= 2 .or. nvars /= 1 .or. ngatts /= 0 .or. unlimdimid /= -1 .or. &
-       file_format /= nf90_format_64bit_data) stop 3
+       file_format /= nf90_format_cdf5) stop 3
 
   call handle_err(nf90mpi_inquire_variable(ncid, varid, name_in, xtype_in, ndims, dimids_in, &
        natts_in))
