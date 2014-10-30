@@ -215,6 +215,9 @@ AC_SUBST(MPICC)
 dnl Now MPICC is configured, let's do some basic compiler tests
 AC_PROG_CC
 
+dnl this call needs at least autoconf version 2.60
+dnl AC_USE_SYSTEM_EXTENSIONS
+
 dnl enable large file support
 AC_SYS_LARGEFILE
 

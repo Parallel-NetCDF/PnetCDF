@@ -5,6 +5,10 @@
  *********************************************************************/
 /* $Id$ */
 
+#if HAVE_CONFIG_H
+# include <ncconfig.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>  /* strtol() */
 #include <string.h>  /* strrchr() */
