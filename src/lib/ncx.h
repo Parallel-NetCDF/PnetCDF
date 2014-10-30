@@ -44,9 +44,9 @@
 #define X_SIZEOF_CHAR		1
 #define X_SIZEOF_SHORT		2
 #define X_SIZEOF_INT		4	/* xdr_int */
-/*#if 0*/
+#if 0
 #define X_SIZEOF_LONG		8	/* xdr_long_long */
-/*#endif*/
+#endif
 #define X_SIZEOF_FLOAT		4
 #define X_SIZEOF_DOUBLE		8
 
@@ -68,6 +68,115 @@
 #define X_SIZEOF_OFF_T		(sizeof(off_t))
 #define X_SIZEOF_SIZE_T		X_SIZEOF_INT
 
+#ifndef OLD_SIZES
+/* copied from netCDF libsrc/ncx.h */
+/*
+ * limits of the external representation
+ */
+#define X_SCHAR_MIN     (-128)
+#define X_SCHAR_MAX     127
+#define X_UCHAR_MAX     255U
+#define X_SHORT_MIN     (-32768)
+#define X_SHRT_MIN      X_SHORT_MIN     /* alias compatible with limits.h */
+#define X_SHORT_MAX     32767
+#define X_SHRT_MAX      X_SHORT_MAX     /* alias compatible with limits.h */
+#define X_USHORT_MAX    65535U
+#define X_USHRT_MAX     X_USHORT_MAX    /* alias compatible with limits.h */
+#define X_INT_MIN       (-2147483647-1)
+#define X_INT_MAX       2147483647
+#define X_UINT_MAX      4294967295U
+#define X_LONGLONG_MIN  (-9223372036854775807LL-1LL)
+#define X_LONGLONG_MAX  9223372036854775807LL
+#define X_ULONGLONG_MAX 18446744073709551615ULL
+#define X_FLOAT_MAX     3.402823466e+38f
+#define X_FLOAT_MIN     (-X_FLOAT_MAX)
+#define X_FLT_MAX       X_FLOAT_MAX     /* alias compatible with limits.h */
+#if CRAYFLOAT
+/* ldexp(1. - ldexp(.5 , -46), 1024) */
+#define X_DOUBLE_MAX    1.79769313486230e+308
+#else
+/* scalb(1. - scalb(.5 , -52), 1024) */
+#define X_DOUBLE_MAX    1.7976931348623157e+308 
+#endif
+#define X_DOUBLE_MIN    (-X_DOUBLE_MAX)
+#define X_DBL_MAX       X_DOUBLE_MAX    /* alias compatible with limits.h */
+
+#define X_SIZE_MAX      X_UINT_MAX
+#define X_OFF_MAX       X_INT_MAX
+
+/* copied from netCDF libsrc/ncx.c */
+/* alias poorly named limits.h macros */
+#define  SHORT_MAX  SHRT_MAX
+#define  SHORT_MIN  SHRT_MIN
+#define USHORT_MAX USHRT_MAX
+#ifndef LLONG_MAX
+#   define LLONG_MAX    9223372036854775807LL
+#   define LLONG_MIN    (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX   18446744073709551615ULL
+#endif
+#ifndef LONG_LONG_MAX
+#define LONG_LONG_MAX LLONG_MAX
+#endif
+#ifndef LONG_LONG_MIN
+#define LONG_LONG_MIN LLONG_MIN
+#endif
+#ifndef ULONG_LONG_MAX
+#define ULONG_LONG_MAX ULLONG_MAX
+#endif
+#include <float.h>
+#ifndef FLT_MAX /* This POSIX macro missing on some systems */
+# ifndef NO_IEEE_FLOAT
+# define FLT_MAX 3.40282347e+38f
+# else
+# error "You will need to define FLT_MAX"
+# endif
+#endif
+/* alias poorly named float.h macros */
+#define FLOAT_MAX FLT_MAX
+#define FLOAT_MIN (-FLT_MAX)
+#define DOUBLE_MAX DBL_MAX
+#define DOUBLE_MIN (-DBL_MAX)
+#define FLOAT_MAX_EXP FLT_MAX_EXP
+#define DOUBLE_MAX_EXP DBL_MAX_EXP
+#include <assert.h>
+#define UCHAR_MIN 0
+#define Min(a,b) ((a) < (b) ? (a) : (b))
+#define Max(a,b) ((a) > (b) ? (a) : (b))
+
+/*
+ *  * If the machine's float domain is "smaller" than the external one
+ *   * use the machine domain
+ *    */
+#if defined(FLT_MAX_EXP) && FLT_MAX_EXP < 128 /* 128 is X_FLT_MAX_EXP */
+#undef X_FLOAT_MAX
+# define X_FLOAT_MAX FLT_MAX
+#undef X_FLOAT_MIN
+# define X_FLOAT_MIN (-X_FLOAT_MAX)
+#endif
+
+#if _SX /* NEC SUPER UX */
+#define LOOPCNT 256    /* must be no longer than hardware vector length */
+#if _INT64
+#undef  INT_MAX /* workaround cpp bug */
+#define INT_MAX  X_INT_MAX
+#undef  INT_MIN /* workaround cpp bug */
+#define INT_MIN  X_INT_MIN
+#undef  LONG_MAX /* workaround cpp bug */
+#define LONG_MAX  X_INT_MAX
+#undef  LONG_MIN /* workaround cpp bug */
+#define LONG_MIN  X_INT_MIN
+#elif _LONG64
+#undef  LONG_MAX /* workaround cpp bug */
+#define LONG_MAX  4294967295L
+#undef  LONG_MIN /* workaround cpp bug */
+#define LONG_MIN -4294967295L
+#endif
+#if !_FLOAT0
+#error "FLOAT1 and FLOAT2 not supported"
+#endif
+#endif /* _SX */
+
+#else
 /*
  * limits of the external representation
  * we rely on ANSI-C defined constants in limits.h. Do any modern environments
@@ -168,6 +277,7 @@
 #endif
 #endif /* _SX */
 
+#endif
 
 /* Begin ncx_len */
 
@@ -189,8 +299,10 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
 #define ncmpix_len_int(nelems) \
 	((nelems) * X_SIZEOF_INT)
 
+#if 0
 #define ncmpix_len_long(nelems) \
 	((nelems) * X_SIZEOF_LONG)
+#endif
 
 #define ncmpix_len_float(nelems) \
 	((nelems) * X_SIZEOF_FLOAT)
