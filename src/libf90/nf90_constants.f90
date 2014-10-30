@@ -106,10 +106,12 @@
   !
   integer, parameter, public :: &
     nf90_format_classic = 1,    &
-    nf90_format_64bit = 2,      &
+    nf90_format_cdf2 = 2,      &
     nf90_format_netcdf4 = 3,    &
     nf90_format_netcdf4_classic = 4, &
-    nf90_format_64bit_data = 5
+    nf90_format_cdf5 = 5, &
+    nf_format_64bit = nf90_format_cdf2, &
+    nf90_format_64bit = nf90_format_cdf5
 
   !
   ! error codes:
