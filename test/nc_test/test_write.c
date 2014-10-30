@@ -2077,7 +2077,8 @@ int ncmpi_get_file_version(char *path, int *version)
    if (strncmp(magic, "CDF", MAGIC_NUM_LEN-1)==0)
    {
       if (magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CLASSIC || 
-         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_64BIT)
+         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CDF2 ||
+         magic[MAGIC_NUM_LEN-1] == NC_FORMAT_CDF2)
         *version = magic[MAGIC_NUM_LEN-1];
       else
         return NC_ENOTNC;
@@ -2114,14 +2115,16 @@ test_ncmpi_set_default_format(void)
     ELSE_NOK
 
     /* NULL old_formatp */
-    err = ncmpi_set_default_format(NC_FORMAT_64BIT, NULL);
+    err = ncmpi_set_default_format(NC_FORMAT_CDF2, NULL);
     IF (err != NC_NOERR)
        error("null old_fortmatp: status = %d", err);
     ELSE_NOK
 
     /* Cycle through available formats. */
-    for(i=1; i<3; i++)
+    for(i=1; i<5; i++)
     {
+       if (i == 3 || i == 4) continue; /* test classic formats only */
+
        if ((err = ncmpi_set_default_format(i, NULL)))
          error("setting classic format: status = %d", err);
        ELSE_NOK
@@ -2134,8 +2137,15 @@ test_ncmpi_set_default_format(void)
          error("bad close: status = %d", err);
        if ( (err = ncmpi_get_file_version(scratch, &version)) )
          error("bad file version = %d", err);
-       if (version != i)
-         error("bad file version = %d", err);
+       if (version != i) {
+          if (i == 4) {
+              if (version == 3) continue;
+              printf("expect version 3 but got %d (file=%s)",version,scratch);
+              continue;
+          }
+          printf("expect version %d but got %d (file=%s)",i,version,scratch);
+          error("bad file version = %d", version);
+        }
     }
 
     /* Remove the left-over file. */
