@@ -16,7 +16,7 @@ int
 test_ncmpi_strerror(void)
 {
     int i;
-    const char *message;
+    const char *message, *expected_msg;
     int nok=0;
 
     static const struct {
@@ -59,7 +59,8 @@ test_ncmpi_strerror(void)
 
     /* Try on a bad error status */
     message = ncmpi_strerror(-666);/* should fail */
-    IF (strncmp(message, "Unknown Error: Unrecognized PnetCDF error code", 46) != 0)
+    expected_msg = "Unknown Error";
+    IF (strncmp(message, expected_msg, strlen(expected_msg)) != 0)
 	error("ncmpi_strerror on bad error status returned: %s", message);
     ELSE_NOK
 

@@ -16,9 +16,9 @@ C
         integer         number_of_messages
         parameter       (number_of_messages = 27)
 
-        integer         i
+        integer         i, msg_len
         integer         status(number_of_messages)
-        character*80    message
+        character*80    message, unknown_err_msg
         character*80    msg(number_of_messages)
         integer         nok
 
@@ -87,8 +87,10 @@ C       /* Try on a bad error status */
         message = nfmpi_strerror(-666)!/* should fail */
 C       pnetcdf differs from serial netcdf in that we report the error
 C       code along with the message.
-        if (message(1:46) .ne.
-     +      'Unknown Error: Unrecognized PnetCDF error code') then
+
+        unknown_err_msg = "Unknown Error"
+        msg_len = LEN(TRIM(unknown_err_msg))
+        if (message(1:msg_len) .ne. unknown_err_msg(1:msg_len)) then
             call errorc('nfmpi_strerror on bad error status returned: ',
      +          message)
         else
