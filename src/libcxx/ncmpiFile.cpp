@@ -68,7 +68,7 @@ NcmpiFile::NcmpiFile(const MPI_Comm   &comm,
     case NcmpiFile::classic:
 	format = 0;
 	break;
-    case NcmpiFile::classic64:
+    case NcmpiFile::classic2:
 	format = NC_64BIT_OFFSET;
 	break;
     case NcmpiFile::nc4:
@@ -77,7 +77,7 @@ NcmpiFile::NcmpiFile(const MPI_Comm   &comm,
     case NcmpiFile::nc4classic:
 	format = NC_NETCDF4 | NC_CLASSIC_MODEL;
 	break;
-    case NcmpiFile::data64bits:
+    case NcmpiFile::classic5:
 	format = NC_64BIT_DATA;
 	break;
     case NcmpiFile::BadFormat:
@@ -119,14 +119,14 @@ NcmpiFile::FileFormat NcmpiFile::getFormat( void ) const
     switch (the_format) {
         case NC_FORMAT_CLASSIC:
             return classic;
-        case NC_FORMAT_64BIT:
-            return classic64;
+        case NC_FORMAT_CDF2:
+            return classic2;
         case NC_FORMAT_NETCDF4:
             return nc4;
         case NC_FORMAT_NETCDF4_CLASSIC:
             return nc4classic;
-        case NC_FORMAT_64BIT_DATA:
-            return data64bits;
+        case NC_FORMAT_CDF5:
+            return classic5;
         default:
             return BadFormat;
     }
