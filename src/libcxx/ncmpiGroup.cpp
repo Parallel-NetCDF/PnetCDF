@@ -961,14 +961,6 @@ NcmpiGroupAtt NcmpiGroup::putAtt(const string& name, const NcmpiType& type, MPI_
 
 
 //  Creates a new NetCDF group attribute or if already exisiting replaces it.
-NcmpiGroupAtt NcmpiGroup::putAtt(const string& name, MPI_Offset len, const char** dataValues) const {
-  ncmpiCheckDefineMode(myId);
-  ncmpiCheck(ncmpi_put_att_string(myId,NC_GLOBAL,name.c_str(),len,dataValues),__FILE__,__LINE__);
-  // finally instantiate this attribute and return
-  return getAtt(name);
-}
-
-//  Creates a new NetCDF group attribute or if already exisiting replaces it.
  NcmpiGroupAtt NcmpiGroup::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const void* dataValues) const {
   ncmpiCheckDefineMode(myId);
   ncmpiCheck(ncmpi_put_att(myId,NC_GLOBAL,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -1321,7 +1313,6 @@ NcmpiType NcmpiGroup::getType(const string& name, NcmpiGroup::Location location)
   if(name ==  "uint64"  ) return ncmpiUint64;
   if(name ==  "float"   ) return ncmpiFloat;
   if(name ==  "double"  ) return ncmpiDouble;
-  if(name ==  "string"  ) return ncmpiString;
 
   // this is a user defined type
   // iterator for the multimap container.

@@ -35,7 +35,6 @@ LIBS_HEADERS = ncmpi_notyet.h \
                ncmpiInt64.h \
                ncmpiOpaqueType.h \
                ncmpiShort.h \
-               ncmpiString.h \
                ncmpiUbyte.h \
                ncmpiUint.h \
                ncmpiUint64.h \

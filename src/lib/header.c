@@ -983,7 +983,6 @@ ncmpix_len_nctype(nc_type type) {
         case NC_DOUBLE: return X_SIZEOF_DOUBLE;
         case NC_INT64:
         case NC_UINT64: return X_SIZEOF_INT64;
-        case NC_STRING: return X_SIZEOF_STRING;
         default: assert("ncmpix_len_nctype bad type" == 0);
     }
     return 0;                

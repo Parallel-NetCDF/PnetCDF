@@ -67,7 +67,6 @@ ncmpix_len_NC_attrV(nc_type    type,
         case NC_DOUBLE: return ncmpix_len_double(nelems);
         case NC_INT64:
         case NC_UINT64: return ncmpix_len_int64(nelems);
-        case NC_STRING: return ncmpix_len_string(nelems);
         default: assert("ncmpix_len_NC_attr bad type" == 0);
     }
     return 0;
@@ -875,8 +874,7 @@ ncmpii_get_att(int         ncid,
 
     /* No character conversions are allowed. */
     if (attrp->type != buftype &&
-        (attrp->type == NC_CHAR   || buftype == NC_CHAR ||
-         attrp->type == NC_STRING || buftype == NC_STRING))
+        (attrp->type == NC_CHAR || buftype == NC_CHAR))
         return NC_ECHAR;
 
     const void *xp = attrp->xvalue;
@@ -943,7 +941,6 @@ GET_ATT_TYPE(longlong,  long long,          NC_INT64)
 /*----< ncmpi_get_att_ulonglong() >------------------------------------------*/
 GET_ATT_TYPE(ulonglong, unsigned long long, NC_UINT64)
 /*----< ncmpi_get_att_string() >---------------------------------------------*/
-dnl GET_ATT_TYPE(string, char*,              NC_STRING)
 
 int
 ncmpi_get_att_string(int ncid, int varid, const char  *name, char **value)
@@ -1166,8 +1163,7 @@ ncmpii_put_att(int         ncid,
 
     /* No character conversions are allowed. */
     if (filetype != buftype &&
-        (filetype == NC_CHAR   || buftype == NC_CHAR ||
-         filetype == NC_STRING || buftype == NC_STRING))
+        (filetype == NC_CHAR || buftype == NC_CHAR))
         return NC_ECHAR;
 
     /* check if the attribute name is legal */
@@ -1329,20 +1325,6 @@ PUT_ATT_TYPE(double,    double,             NC_DOUBLE)
 PUT_ATT_TYPE(longlong,  long long,          NC_INT64)
 /*----< ncmpi_put_att_ulonglong() >------------------------------------------*/
 PUT_ATT_TYPE(ulonglong, unsigned long long, NC_UINT64)
-/*----< ncmpi_put_att_string() >---------------------------------------------*/
-dnl PUT_ATT_TYPE(string, char*,              NC_STRING)
-
-int
-ncmpi_put_att_string(int ncid, int varid, const char  *name,
-                     MPI_Offset nelems, const char **value)
-{
-    printf("Error: string type is not yet supported\n");
-    return NC_ENOTSUPPORT;
-    /*
-    return ncmpii_put_att(ncid, varid, name, NC_STRING,
-                          nelems, value, NC_STRING);
-    */
-}
 
 /* For netCDF, the type mapping between file types and buffer types
  * are based on netcdf4. Check APIs of nc_put_att_xxx from source files

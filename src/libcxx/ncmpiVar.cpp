@@ -110,7 +110,6 @@ NcmpiType NcmpiVar::getType() const {
   if(xtypep ==  ncmpiUint64.getId()  ) return ncmpiUint64;
   if(xtypep ==  ncmpiFloat.getId()   ) return ncmpiFloat;
   if(xtypep ==  ncmpiDouble.getId()  ) return ncmpiDouble;
-  if(xtypep ==  ncmpiString.getId()  ) return ncmpiString;
 
   multimap<string,NcmpiType>::const_iterator it;
   multimap<string,NcmpiType> types(NcmpiGroup(groupId).getTypes(NcmpiGroup::ParentsAndCurrent));

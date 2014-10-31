@@ -36,8 +36,7 @@
       nf_ushort = 8, &
       nf_uint = 9, &
       nf_int64 = 10, &
-      nf_uint64 = 11, &
-      nf_string = 12
+      nf_uint64 = 11
 
 !
 ! default fill values:

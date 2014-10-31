@@ -313,9 +313,6 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
 #define ncmpix_len_int64(nelems) \
 	((nelems) * X_SIZEOF_INT64)
 
-#define ncmpix_len_string(nelems) \
-	((nelems) * X_SIZEOF_STRING)
-
 /* End ncx_len */
 
 #ifdef __CHAR_UNSIGNED__
