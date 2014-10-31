@@ -86,7 +86,6 @@ NcmpiType NcmpiEnumType::getBaseType() const
   case NC_UINT64  : return ncmpiUint64;
   case NC_FLOAT   : return ncmpiFloat;
   case NC_DOUBLE  : return ncmpiDouble;
-  case NC_STRING  : return ncmpiString;
   default:  
     // this is a user defined type
     return NcmpiType(getParentGroup(),base_nc_typep);

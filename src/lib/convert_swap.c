@@ -41,7 +41,6 @@ static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
  *   NC_UINT       MPI_UNSIGNED           unsigned 4-byte int
  *   NC_INT64      MPI_LONG_LONG_INT      signed 8-byte int
  *   NC_UINT64     MPI_UNSIGNED_LONG_LONG unsigned 8-byte int
- *   NC_STRING      ?
  *
  *  Assume: MPI_Datatype and nc_type are both enumerable types
  *          (this migh not conform wth MPI, as MPI_Datatype is intened to be

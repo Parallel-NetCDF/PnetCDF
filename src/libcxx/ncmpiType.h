@@ -34,6 +34,8 @@ namespace PnetCDF
       ncmpi_UINT     = NC_UINT,	//!< unsigned 4-byte int
       ncmpi_INT64    = NC_INT64,	//!< signed 8-byte int
       ncmpi_UINT64   = NC_UINT64,	//!< unsigned 8-byte int
+
+      // PnetCDF does not support types below
       ncmpi_STRING   = NC_STRING, 	//!< string
       ncmpi_VLEN     = NC_VLEN,   	//!< "NcVlen type"
       ncmpi_OPAQUE   = NC_OPAQUE, 	//!< "NcOpaque type"
@@ -102,7 +104,6 @@ namespace PnetCDF
         - NcmpiUint64 String returned is "uint64". 
         - NcmpiFloat  String returned is "float".  
         - NcmpiDouble String returned is "double". 
-        - NcmpiString String returned is "string".
      */
     std::string getName() const;                        
 

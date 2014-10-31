@@ -114,7 +114,6 @@ type_name(nc_type type)
         case NC_UINT:    return "uint";
         case NC_INT64:   return "int64";
         case NC_UINT64:  return "uint64";
-        case NC_STRING:  return "string";
         default:
             error("type_name: bad type %d", type);
             return "bogus";
@@ -231,9 +230,6 @@ pr_att_vals(nc_type       type,
     double             dd;
     long long          sll;
     unsigned long long ull;
-/* unused until we support NC_STRING
-    char               *stringp;
-*/
 
     if (len == 0) return;
 
@@ -283,13 +279,6 @@ pr_att_vals(nc_type       type,
                 ull = vals[iel];
                 Printf ("%lluULL", ull);
                 break;
-/* not yet supported
-            case NC_STRING:
-                stringp = ((char **) vals)[iel];
-                pr_att_string(kind, strlen(stringp), stringp);
-                printf("%s", delim);
-                break;
-*/
             default:
                 error("pr_att_vals: bad type");
         }

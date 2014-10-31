@@ -140,7 +140,6 @@ NcmpiType::ncmpiType NcmpiType::getTypeClass() const{
   case NC_UINT64  : return ncmpi_UINT64;
   case NC_FLOAT   : return ncmpi_FLOAT;
   case NC_DOUBLE  : return ncmpi_DOUBLE;
-  case NC_STRING  : return ncmpi_STRING;
   default:  
     // this is a user defined type
     // establish its type class, ie whether it is: NC_VLEN, NC_OPAQUE, NC_ENUM, or NC_COMPOUND. 
