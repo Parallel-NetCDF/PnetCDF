@@ -123,7 +123,7 @@ val_get_NCtype(bufferinfo *gbp, NCtype *typep) {
     return status;
   }
 
-  status = ncmpix_get_int32(&gbp->pos, &type);
+  status = ncmpix_get_int32((const void**)(&gbp->pos), &type);
   if (status != NC_NOERR)
     return status;
   *typep = (NCtype) type;
@@ -138,7 +138,14 @@ val_get_size_t(bufferinfo *gbp, MPI_Offset *sp) {
     printf("size is expected for ");
     return status; 
   }
-  return ncmpix_get_size_t((const void **)(&gbp->pos), sp, sizeof_t);
+  if (gbp->version == 5)
+      status = ncmpix_get_int64((const void **)(&gbp->pos), sp);
+  else {
+      int tmp=0;
+      status = ncmpix_get_int32((const void **)(&gbp->pos), &tmp);
+      *sp = (MPI_Offset)tmp;
+  }
+  return status;
 }
 
 static int
@@ -305,7 +312,7 @@ val_get_nc_type(bufferinfo *gbp, nc_type *typep) {
     if (status != NC_NOERR) return status;
 
     /* get a 4-byte integer */
-    status = ncmpix_get_int32(&gbp->pos, &type);
+    status = ncmpix_get_int32((const void**)(&gbp->pos), &type);
     gbp->index += X_SIZEOF_INT;
     if (status != NC_NOERR) return status;
 
@@ -520,11 +527,12 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     }
     tmp_dim = (MPI_Offset*) (varp->dimids + dim);
     if (gbp->version == 5)
-        status = ncmpix_getn_int64_int64((const void **)(&gbp->pos), 
-                                           1, tmp_dim);
-    else
-        status = ncmpix_getn_int_int64((const void **)(&gbp->pos), 
-                                         1, tmp_dim);
+        status = ncmpix_get_int64((const void **)(&gbp->pos), tmp_dim);
+    else {
+        int tmp=0;
+        status = ncmpix_get_int32((const void **)(&gbp->pos), &tmp);
+        *tmp_dim = (MPI_Offset)tmp;
+    }
     if(status != NC_NOERR) {
       ncmpii_free_NC_var(varp);
       return status;
@@ -558,8 +566,13 @@ val_get_NC_var(bufferinfo *gbp, NC_var **varpp) {
     ncmpii_free_NC_var(varp);
     return status;
   }
-  status = ncmpix_get_size_t((const void **)&gbp->pos,
-                         &varp->begin, (gbp->version == 1 ? 4 : 8));
+  if (gbp->version == 5)
+      status = ncmpix_get_int64((const void **)(&gbp->pos), &varp->begin);
+  else {
+      int tmp=0;
+      status = ncmpix_get_int32((const void **)(&gbp->pos), &tmp);
+      varp->begin = (MPI_Offset)tmp;
+  }
   if(status != NC_NOERR) {
     ncmpii_free_NC_var(varp);
     return status;
@@ -707,8 +720,13 @@ val_get_NC(NC *ncp) {
     }
 
     /* get numrecs from getbuf into ncp */
-    status = ncmpix_get_size_t((const void **)(&getbuf.pos), &nrecs,
-                               (getbuf.version == 5) ? 8 : 4);
+    if (getbuf.version == 5)
+        status = ncmpix_get_int64((const void **)(&getbuf.pos), &nrecs);
+    else {
+        int tmp=0;
+        status = ncmpix_get_int32((const void **)(&getbuf.pos), &tmp);
+        nrecs = (MPI_Offset)tmp;
+    }
     if (status != NC_NOERR) {
         NCI_Free(getbuf.base);
         return status;

@@ -773,8 +773,6 @@ int ncmpi_get_att_long(int ncid, int varid, const char *name,
 int ncmpi_get_att_ulonglong(int ncid, int varid, const char *name,
                   unsigned long long *ip);
 
-int ncmpi_get_att_string(int ncid, int varid, const char  *name,
-                  char **value);
 /* End Skip Prototypes for Fortran binding */
 
 /* End _att */
