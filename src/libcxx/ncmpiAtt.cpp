@@ -216,15 +216,6 @@ void NcmpiAtt::getValues(unsigned long long* dataValues) const {
 }
 
 // Gets a netCDF variable attribute.
-void NcmpiAtt::getValues(char** dataValues) const {
-  NcmpiType::ncmpiType typeClass(getType().getTypeClass());
-  if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
-    ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
-  else
-    ncmpiCheck(ncmpi_get_att_string(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
-}
-
-// Gets a netCDF variable attribute.
 void NcmpiAtt::getValues(void* dataValues) const {
   ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),dataValues),__FILE__,__LINE__);
 }

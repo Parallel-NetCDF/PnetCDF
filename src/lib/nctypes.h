@@ -20,21 +20,19 @@ typedef unsigned char uchar;
 #endif
 
 #ifndef HAVE_USHORT
-typedef unsigned short int  ushort;
-#define SIZEOF_USHORT SIZEOF_UNSIGNED_SHORT_INT
+typedef unsigned short int ushort;
 #endif
 
 #ifndef HAVE_UINT
-typedef unsigned       int  uint;
-#define SIZEOF_UINT SIZEOF_UNSIGNED_INT
+typedef unsigned int uint;
 #endif
 
-#ifndef HAVE_INT64
-typedef          long long  int64;
+#ifndef HAVE_LONGLONG
+typedef long long longlong;
 #endif
 
-#ifndef HAVE_UINT64
-typedef unsigned long long  uint64;
+#ifndef HAVE_ULONGLONG
+typedef unsigned long long ulonglong;
 #endif
 
 #endif

@@ -20,6 +20,7 @@ dnl
 #endif
 #include <assert.h>
 
+#include <string.h> /* memcpy() */
 #include <mpi.h>
 
 #include "nc.h"

@@ -653,8 +653,14 @@ ncmpii_read_numrecs(NC *ncp) {
         MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
     if (status == NC_NOERR) {
-        status = ncmpix_get_size_t((const void**)&pos, &nrecs, sizeof_t);
-        /* ncmpix_get_size_t advances the 1st argument with size sizeof_t */
+        if (fIsSet(ncp->flags, NC_64BIT_DATA))
+            status = ncmpix_get_int64((const void**)&pos, &nrecs);
+        else {
+            int tmp=0;
+            status = ncmpix_get_int32((const void**)&pos, &tmp);
+            nrecs = (MPI_Offset)tmp;
+        }
+        /* ncmpix_get_xxx advances the 1st argument with size 64 */
         ncp->numrecs = nrecs;
     }
  
@@ -703,20 +709,22 @@ ncmpii_write_numrecs(NC         *ncp,
     if (rank == 0 && (forceWrite || new_numrecs > ncp->numrecs)) {
         /* root process writes to the file header */
         int len, mpireturn;
-        void *buf, *pos;
+        char pos[8], *buf=pos;
         MPI_Status mpistatus;
 
-        if (ncp->flags & NC_64BIT_DATA)
+        if (ncp->flags & NC_64BIT_DATA) {
             len = X_SIZEOF_INT64;
-        else
+            status = ncmpix_put_int64((void**)&buf, new_numrecs);
+        }
+        else {
             len = X_SIZEOF_SIZE_T;
-        pos = buf = (void *)NCI_Malloc(len);
-        status = ncmpix_put_size_t(&pos, new_numrecs, len);
-        /* ncmpix_put_size_t advances the 1st argument with size len */
+            status = ncmpix_put_int32((void**)&buf, new_numrecs);
+        }
+        /* ncmpix_put_xxx advances the 1st argument with size len */
 
         /* file view is already reset to entire file visible */
         mpireturn = MPI_File_write_at(ncp->nciop->collective_fh,
-                                      NC_NUMRECS_OFFSET, buf, len,
+                                      NC_NUMRECS_OFFSET, (void*)pos, len,
                                       MPI_BYTE, &mpistatus); 
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_File_write_at");
@@ -727,7 +735,6 @@ ncmpii_write_numrecs(NC         *ncp,
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             ncp->nciop->put_size += put_size;
         }
-        NCI_Free(buf);
     }
     if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
 

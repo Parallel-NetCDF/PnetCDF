@@ -19,16 +19,7 @@ varn.o: varn.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h nc
 nonblocking.o: nonblocking.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 malloc.o: malloc.c ncconfig.h
 utf8proc.o: utf8proc.c ncconfig.h utf8proc.h utf8proc_data.h
-getputn_schar.o: getputn_schar.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h
-getputn_uchar.o: getputn_uchar.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_short.o: getputn_short.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_ushort.o: getputn_ushort.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_int.o: getputn_int.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_uint.o: getputn_uint.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_float.o: getputn_float.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_double.o: getputn_double.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_int64.o: getputn_int64.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
-getputn_uint64.o: getputn_uint64.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
+ncx.o: ncx.c ncconfig.h nc.h pnetcdf.h ncx.h
 swap.o: swap.c ncconfig.h ncx.h rnd.h nctypes.h pnetcdf.h
 bput.o: bput.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h
 getput.o: getput.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h nctypes.h ncmpidtype.h macro.h

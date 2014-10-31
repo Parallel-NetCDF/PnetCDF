@@ -20,19 +20,11 @@ HEADER   = pnetcdf.h
 M4_SRCS   = getput.m4 \
             i_getput.m4 \
             bput.m4 \
-            getputn_schar.m4 \
-            getputn_uchar.m4 \
-            getputn_short.m4 \
-            getputn_ushort.m4 \
-            getputn_int.m4 \
-            getputn_uint.m4 \
-            getputn_float.m4 \
-            getputn_double.m4 \
-            getputn_int64.m4 \
-            getputn_uint64.m4 \
+            ncx.m4 \
             m_getput_varx.m4 \
             varn.m4 \
-            attr.m4
+            attr.m4 \
+            convert_swap.m4
 
 HEADER_SRCS = fbits.h \
               nc.h \
@@ -51,11 +43,9 @@ LIB_CSRCS = mpinetcdf.c \
             dim.c \
             error.c \
             nc.c \
-            ncx.c \
             string.c \
             var.c \
             ncmpidtype.c \
-            convert_swap.c \
             filetype.c \
             nonblocking.c   \
             malloc.c \

@@ -11,6 +11,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <stdio.h>
 #include <string.h> /* memset() */
 #include <assert.h>
 
@@ -930,7 +931,6 @@ int ncmpi_inq_header_size(int         ncid,
 
 #ifdef __DEBUG
 
-#include <stdio.h>
 /*----< ncmpi_print_all_var_offsets() >---------------------------------------*/
 int ncmpi_print_all_var_offsets(int ncid) {
     int i;
