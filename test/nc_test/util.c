@@ -298,18 +298,16 @@ int nc2dbl ( const nc_type datatype, const void *p, double *result)
         case NC_USHORT: *result = *((unsigned short *) p); break;
         case NC_INT:
 #if INT_MAX >= X_INT_MAX
-            *result = *((int *) p);
+            *result = *((int *) p); break;
 #else
-            *result = *((long *) p);
+            *result = *((long *) p); break;
 #endif
-            break;
         case NC_UINT:
 #if UINT_MAX >= X_UINT_MAX
-            *result = *((unsigned int *) p);
+            *result = *((unsigned int *) p); break;
 #else
-            *result = *((unsigned long *) p);
+            *result = *((unsigned long *) p); break;
 #endif
-            break;
         case NC_FLOAT:  *result = *((float *)              p); break;
         case NC_DOUBLE: *result = *((double *)             p); break;
         case NC_INT64:  *result = *((long long *)          p); break;

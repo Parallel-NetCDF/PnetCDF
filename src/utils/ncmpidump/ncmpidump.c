@@ -261,23 +261,23 @@ pr_att_vals(nc_type       type,
                 break;
             case NC_UBYTE:
                 uc = (unsigned char) vals[iel] & 0377;
-                Printf ("%hhuub", uc);
+                Printf ("%hhuUB", uc);
                 break;
             case NC_USHORT:
                 us = vals[iel];
-                Printf ("%huus", us);
+                Printf ("%huUS", us);
                 break;
             case NC_UINT:
                 ui = vals[iel];
-                Printf ("%uu", ui);
+                Printf ("%uU", ui);
                 break;
             case NC_INT64:
                 sll = vals[iel];
-                Printf ("%lldLL", sll);
+                Printf ("%lldL", sll);
                 break;
             case NC_UINT64:
                 ull = vals[iel];
-                Printf ("%lluULL", ull);
+                Printf ("%lluUL", ull);
                 break;
             default:
                 error("pr_att_vals: bad type");
