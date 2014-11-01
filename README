@@ -1,8 +1,14 @@
 
 Parallel netCDF (PnetCDF) is a library providing high-performance parallel I/O
 while still maintaining file-format compatibility with Unidata's NetCDF,
-specifically the file formats CDF and CDF-2. Note starting from version 4,
-NetCDF supports parallel I/O, but the file format is in HDF5.
+specifically the CDF and CDF-2 formats.  Although starting from version 4,
+NetCDF supports parallel I/O, the file format must be in HDF5.  PnetCDF is
+currently the only choice for parallel I/O on files that are in classical
+formats (CDF-1 and 2).
+
+In addition, PnetCDF supports CDF-5 file format, an extension of CDF-2, that
+allows users to define large dimensions, attributes, and variables (>2B
+elements).
 
 NetCDF gives scientific programmers a space-efficient and portable means for
 storing data. However, it does so in a serial manner, making it difficult to
