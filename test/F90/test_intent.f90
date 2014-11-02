@@ -88,26 +88,26 @@
           err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_int8', i8buf)
           call check(err, 'In nf90mpi_put_att: ')
 
-          err = nfmpi_put_att_text(ncid, NF_GLOBAL, 'nf_attr_text', 3_8, cbuf)
+          err = nfmpi_put_att_text(ncid, NF90_GLOBAL, 'nf_attr_text', 3_8, cbuf)
           call check(err, 'In nfmpi_put_att_text: ')
-          err = nfmpi_put_att_int1(ncid, NF_GLOBAL, 'nf_attr_int1', NF_INT1, 3_8, i1buf)
+          err = nfmpi_put_att_int1(ncid, NF90_GLOBAL, 'nf_attr_int1', NF90_INT1, 3_8, i1buf)
           call check(err, 'In nfmpi_put_att_int1: ')
-          err = nfmpi_put_att_int2(ncid, NF_GLOBAL, 'nf_attr_int2', NF_INT2, 3_8, sbuf)
+          err = nfmpi_put_att_int2(ncid, NF90_GLOBAL, 'nf_attr_int2', NF90_INT2, 3_8, sbuf)
           call check(err, 'In nfmpi_put_att_int2: ')
-          err = nfmpi_put_att_int(ncid, NF_GLOBAL, 'nf_attr_int', NF_INT, 3_8, ibuf)
+          err = nfmpi_put_att_int(ncid, NF90_GLOBAL, 'nf_attr_int', NF90_INT, 3_8, ibuf)
           call check(err, 'In nfmpi_put_att_int: ')
-          err = nfmpi_put_att_real(ncid, NF_GLOBAL, 'nf_attr_real', NF_FLOAT, 3_8, rbuf)
+          err = nfmpi_put_att_real(ncid, NF90_GLOBAL, 'nf_attr_real', NF90_FLOAT, 3_8, rbuf)
           call check(err, 'In nfmpi_put_att_real: ')
-          err = nfmpi_put_att_double(ncid, NF_GLOBAL, 'nf_attr_double', NF_DOUBLE, 3_8, dbuf)
+          err = nfmpi_put_att_double(ncid, NF90_GLOBAL, 'nf_attr_double', NF90_DOUBLE, 3_8, dbuf)
           call check(err, 'In nfmpi_put_att_double: ')
-          err = nfmpi_put_att_int8(ncid, NF_GLOBAL, 'nf_attr_int8', NF_INT64, 3_8, i8buf)
+          err = nfmpi_put_att_int8(ncid, NF90_GLOBAL, 'nf_attr_int8', NF90_INT64, 3_8, i8buf)
           call check(err, 'In nfmpi_put_att_int8: ')
 
           ! define a variable of an integer array of size 3 in the nc file
           err = nfmpi_def_dim(ncid, 'X', 3_MPI_OFFSET_KIND, dimid(1))
           call check(err, 'In nfmpi_def_dim: ')
 
-          err = nfmpi_def_var(ncid, 'var', NF_INT, 1, dimid, varid)
+          err = nfmpi_def_var(ncid, 'var', NF90_INT, 1, dimid, varid)
           call check(err, 'In nfmpi_def_var: ')
 
           err = nfmpi_enddef(ncid)
@@ -126,7 +126,7 @@
           err = nfmpi_wait_all(ncid, 1, req, status)
           call check(err, 'In nfmpi_wait_all: ')
 
-          if (status(1) .ne. NF_NOERR) then
+          if (status(1) .ne. NF90_NOERR) then
               print*,'Error at bput status ', nfmpi_strerror(status(1))
           endif
 

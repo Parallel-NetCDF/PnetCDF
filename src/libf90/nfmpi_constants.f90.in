@@ -85,8 +85,9 @@
 !
 ! size argument for defining an unlimited dimension:
 !
-      integer, parameter, public :: &
-      nf_unlimited = 0
+      integer(KIND=MPI_OFFSET_KIND), parameter, public :: &
+      nf_unlimited = 0, &
+      nfmpi_unlimited = 0
 
 !
 ! global attribute id:
@@ -274,10 +275,6 @@
       integer, parameter, public :: &
       nf_fatal = 1, &
       nf_verbose = 2
-
-! now we can define nfmpi_unlimited properly
-      integer(KIND=MPI_OFFSET_KIND), parameter, public :: &
-      nfmpi_unlimited = 0
 
 ! NULL request for non-blocking I/O APIs
       integer, parameter, public :: &

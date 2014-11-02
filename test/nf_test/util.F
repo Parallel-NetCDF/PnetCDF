@@ -763,12 +763,10 @@
         integer         err             !/* status */
         integer         i
         integer         dimid           !/* dimension id */
-        integer(kind=MPI_OFFSET_KIND) length
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
-                length = NFMPI_UNLIMITED
-                err = nfmpi_def_dim(ncid, dim_name(i), length,
+                err = nfmpi_def_dim(ncid, dim_name(i), NF_UNLIMITED,
      +                           dimid)
             else
                 err = nfmpi_def_dim(ncid, dim_name(i), dim_len(i),
