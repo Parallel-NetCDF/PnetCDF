@@ -115,8 +115,9 @@
 !
 ! size argument for defining an unlimited dimension:
 !
-      integer nf_unlimited
+      integer*@SIZEOF_MPI_OFFSET@ nf_unlimited, nfmpi_unlimited
       parameter (nf_unlimited = 0)
+      parameter (nfmpi_unlimited = 0)
 
 !
 ! global attribute id:
@@ -658,10 +659,6 @@
       parameter (fillong = -2147483647)
       parameter (filfloat = 9.9692099683868690e+36)
       parameter (fildoub = 9.9692099683868690e+36)
-
-! now we can define nfmpi_unlimited properly
-      integer*@SIZEOF_MPI_OFFSET@ nfmpi_unlimited
-      parameter (nfmpi_unlimited = 0)
 
 ! NULL request for non-blocking I/O APIs
       integer NF_REQ_NULL

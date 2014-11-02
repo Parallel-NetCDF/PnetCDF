@@ -261,18 +261,18 @@
 
         Write_File = nf90mpi_create(comm_cart, filename, NF90_CLOBBER, &
                                     info, ncid)
-        if (Write_File .NE. NF_NOERR) return
+        if (Write_File .NE. NF90_NOERR) return
 
         call MPI_Info_free(info, ierr)
 
 !       ==================
         Write_File = nf90mpi_def_dim(ncid, "level",     totsiz_3d(1)*nwrites, &
                              lon_id)
-        if (Write_File .NE. NF_NOERR) return
+        if (Write_File .NE. NF90_NOERR) return
         Write_File = nf90mpi_def_dim(ncid, "latitude",  totsiz_3d(2), lat_id)
-        if (Write_File .NE. NF_NOERR) return
+        if (Write_File .NE. NF90_NOERR) return
         Write_File = nf90mpi_def_dim(ncid, "longitude", totsiz_3d(3), lev_id)
-        if (Write_File .NE. NF_NOERR) return
+        if (Write_File .NE. NF90_NOERR) return
 !       ==================
 
         dim_id(1) = lon_id
@@ -281,11 +281,11 @@
 
 !       ==================
         Write_File = nf90mpi_def_var(ncid, "tt1", NF90_REAL, dim_id, tt1_id)
-        if (Write_File .NE. NF_NOERR) return
+        if (Write_File .NE. NF90_NOERR) return
 
 !       =================
         Write_File = nf90mpi_enddef (ncid)
-        if (Write_File .NE. NF_NOERR) return
+        if (Write_File .NE. NF90_NOERR) return
 !       =================
 
         t2 = MPI_Wtime ( )
@@ -293,17 +293,17 @@
       do nw = 1, nwrites
          Write_File = nf90mpi_iput_var(ncid, tt1_id, tt1, req(nw), &
                                  start_3d, count_3d)
-        if (Write_File .NE. NF_NOERR) return
+        if (Write_File .NE. NF90_NOERR) return
 
          start_3d(1) = start_3d(1) + count_3d(1)
       end do
 
       Write_File = nf90mpi_wait_all(ncid, nwrites, req, stat)
-      if (Write_File .NE. NF_NOERR) return
+      if (Write_File .NE. NF90_NOERR) return
 
 !       ================
       Write_File = nf90mpi_close (ncid)
-      if (Write_File .NE. NF_NOERR) return
+      if (Write_File .NE. NF90_NOERR) return
 !       ================
 
 ! 900  format ("mynod:", i1, " reqid : ", i1)

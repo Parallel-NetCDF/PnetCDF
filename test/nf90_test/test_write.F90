@@ -548,8 +548,7 @@
         err = nf90mpi_redef(ncid)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_redef: ', err)
-        length = NFMPI_UNLIMITED
-        err = nf90mpi_def_dim(ncid, dim_name(1), length, dimid)
+        err = nf90mpi_def_dim(ncid, dim_name(1), NF90_UNLIMITED, dimid)
         if (err .ne. NF90_NOERR)  then
             call errore('nf90mpi_def_dim: ', err)
         else
@@ -565,8 +564,7 @@
         err = nf90mpi_inquire_dimension(ncid, dimid, len=length)
         if (length .ne. 0)  &
             call errori('Unexpected length: ', 0)
-        length = NFMPI_UNLIMITED
-        err = nf90mpi_def_dim(ncid, 'abc', length, dimid)
+        err = nf90mpi_def_dim(ncid, 'abc', NF90_UNLIMITED, dimid)
         if (err .ne. NF90_EUNLIMIT) then
             call errore('2nd unlimited dimension: ', err)
         else
@@ -588,7 +586,7 @@
             else
                 nok = nok + 1
             endif
-            length = NFMPI_UNLIMITED - 1
+            length = NF90_UNLIMITED - 1
             err = nf90mpi_def_dim(ncid, dim_name(i), length, &
                              dimid)
             if (err .ne. NF90_EDIMSIZE) then

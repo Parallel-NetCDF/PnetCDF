@@ -475,10 +475,10 @@
                             cdf_format = 1
                         else if (opt .eq. '2') then
                             cdf_format = 2
-                            extra_flags = NF_64BIT_OFFSET
+                            extra_flags = NF90_64BIT_OFFSET
                         else if (opt .eq. '5') then
                             cdf_format = 5
-                            extra_flags = NF_64BIT_DATA
+                            extra_flags = NF90_64BIT_DATA
                         else if (opt .eq. 'd') then
                             call getarg(iarg+1, arg)
                             testfile = trim(arg) // "/test.nc"

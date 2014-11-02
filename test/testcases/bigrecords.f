@@ -107,7 +107,7 @@
   
 ! define dimensions
 
-        iret = nfmpi_def_dim(ncid, 'time', NFMPI_UNLIMITED, time_dim)
+        iret = nfmpi_def_dim(ncid, 'time', NF_UNLIMITED, time_dim)
         call check_err("nfmpi_def_dim(): time ", iret)
 
         i8_size = 41943042

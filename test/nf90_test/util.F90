@@ -98,7 +98,7 @@
 #include "tests.inc"
       LOGICAL INRANGE
 
-      IF (DATATYPE .EQ. NF_UBYTE) THEN
+      IF (DATATYPE .EQ. NF90_UBYTE) THEN
           INRANGE_SCHAR = (VALUE .GE. X_BYTE_MIN) .AND. &
                           (VALUE .LE. X_BYTE_MAX)
       ELSE
@@ -567,15 +567,15 @@
       else if (letter .eq. 'd') then
           char2type = NF90_DOUBLE
       else if (letter .eq. 'y') then
-          char2type = NF_UBYTE
+          char2type = NF90_UBYTE
       else if (letter .eq. 't') then
-          char2type = NF_USHORT
+          char2type = NF90_USHORT
       else if (letter .eq. 'u') then
-          char2type = NF_UINT
+          char2type = NF90_UINT
       else if (letter .eq. 'x') then
-          char2type = NF_INT64
+          char2type = NF90_INT64
       else if (letter .eq. 'z') then
-          char2type = NF_UINT64
+          char2type = NF90_UINT64
       else
         stop 'char2type(): invalid type-letter'
       end if
@@ -756,16 +756,14 @@
         integer         err             !/* status */
         integer         i
         integer         dimid           !/* dimension id */
-        integer(kind=MPI_OFFSET_KIND) length
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
-                length = NFMPI_UNLIMITED
-                err = nf90mpi_def_dim(ncid, dim_name(i), length, &
-                                 dimid)
+                err = nf90mpi_def_dim(ncid, dim_name(i), &
+                                      NF90_UNLIMITED,  dimid)
             else
                 err = nf90mpi_def_dim(ncid, dim_name(i), dim_len(i), &
-                                 dimid)
+                                      dimid)
             end if
             if (err .ne. NF90_NOERR) then
                 call errore('nf90mpi_def_dim: ', err)
