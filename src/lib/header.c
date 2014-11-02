@@ -2195,7 +2195,8 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
              if (root_ver  == 0x5) fSet(ncp->flags, NC_64BIT_DATA);
         else if (root_ver  == 0x2) fSet(ncp->flags, NC_64BIT_OFFSET);
 
-        if (status == NC_NOERR) status = NC_EMULTIDEFINE_OMODE;
+        if (status == NC_NOERR) /* this inconsistency is not fatal */
+            status = NC_EMULTIDEFINE_OMODE;
     }
     getbuf->version = root_ver;
 
@@ -2213,10 +2214,10 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     }
 
     if (getbuf->version == 5)
-        status = ncmpix_get_int64((const void **)(&getbuf->pos), &nrecs);
+        err = ncmpix_get_int64((const void **)(&getbuf->pos), &nrecs);
     else {
         int tmp=0;
-        status = ncmpix_get_int32((const void **)(&getbuf->pos), &tmp);
+        err = ncmpix_get_int32((const void **)(&getbuf->pos), &tmp);
         nrecs = (MPI_Offset)tmp;
     }
     if (err != NC_NOERR) {
