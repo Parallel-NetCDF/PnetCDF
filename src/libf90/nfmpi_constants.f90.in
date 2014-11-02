@@ -84,6 +84,7 @@
 
 !
 ! size argument for defining an unlimited dimension:
+! Note nfmpi_unlimited is now deprecated. Use nf_unlimited instead.
 !
       integer(KIND=MPI_OFFSET_KIND), parameter, public :: &
       nf_unlimited = 0, &
