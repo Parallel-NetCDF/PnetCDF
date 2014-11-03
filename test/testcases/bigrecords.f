@@ -30,11 +30,9 @@
       integer  interfaces_dim
 
 ! dimension lengths
-      integer  time_len
       integer*8  cells_len
       integer  interfaces_len
 
-      parameter (time_len = NF_UNLIMITED)
       parameter (cells_len = 41943042)
       parameter (interfaces_len = 26)
 
@@ -107,7 +105,7 @@
   
 ! define dimensions
 
-        iret = nfmpi_def_dim(ncid, 'time', NF_UNLIMITED, time_dim)
+        iret = nfmpi_def_dim(ncid, 'time', NFMPI_UNLIMITED, time_dim)
         call check_err("nfmpi_def_dim(): time ", iret)
 
         i8_size = 41943042

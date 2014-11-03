@@ -74,7 +74,11 @@
   !
   ! size argument for defining an unlimited dimension:
   !
-  integer (kind = EightByteInt), parameter, public :: nf90_unlimited = 0
+  integer, parameter, public :: &
+    nf90_unlimited = 0
+
+  integer(KIND=MPI_OFFSET_KIND), parameter, public :: &
+    nf90mpi_unlimited = 0
 
   ! NULL request for non-blocking I/O APIs
   integer, parameter, public :: nf90_req_null = -1
@@ -132,14 +136,14 @@
     NF90_EMAXATTS       = NF_EMAXATTS      , & ! NF_MAX_ATTRS exceeded
     NF90_EBADTYPE       = NF_EBADTYPE      , & ! Not a netcdf data type
     NF90_EBADDIM        = NF_EBADDIM       , & ! Invalid dimension id or name
-    NF90_EUNLIMPOS      = NF_EUNLIMPOS     , & ! NF_UNLIMITED in the wrong index
+    NF90_EUNLIMPOS      = NF_EUNLIMPOS     , & ! NFMPI_UNLIMITED in the wrong index
     NF90_EMAXVARS       = NF_EMAXVARS      , & ! NF_MAX_VARS exceeded
     NF90_ENOTVAR        = NF_ENOTVAR       , & ! Variable not found
     NF90_EGLOBAL        = NF_EGLOBAL       , & ! Action prohibited on NF_GLOBAL varid
     NF90_ENOTNC         = NF_ENOTNC        , & ! Not a netcdf file
     NF90_ESTS           = NF_ESTS          , & ! In Fortran, string too short
     NF90_EMAXNAME       = NF_EMAXNAME      , & ! NF_MAX_NAME exceeded
-    NF90_EUNLIMIT       = NF_EUNLIMIT      , & ! NF_UNLIMITED size already in use
+    NF90_EUNLIMIT       = NF_EUNLIMIT      , & ! NFMPI_UNLIMITED size already in use
     NF90_ENORECVARS     = NF_ENORECVARS    , & ! nc_rec op when there are no record vars
     NF90_ECHAR          = NF_ECHAR         , & ! Attempt to convert between text & numbers
     NF90_EEDGE          = NF_EEDGE         , & ! Edge+start exceeds dimension bound

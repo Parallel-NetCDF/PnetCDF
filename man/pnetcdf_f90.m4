@@ -247,7 +247,7 @@ integer :: nf90mpi_def_dim
 Adds a new dimension to an open netCDF dataset, which must be 
 in define mode.
 \fIname\fP is the dimension name.
-\fIlen\fP is the size of the new dimension or \fBnf90_unlimited\fP to define
+\fIlen\fP is the size of the new dimension or \fBnf90mpi_unlimited\fP to define
 the unlimited dimension.
 On return, \fIdimid\fP will contain the dimension ID of the newly created 
 dimension.

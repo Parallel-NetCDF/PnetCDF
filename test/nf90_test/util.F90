@@ -760,7 +760,7 @@
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
                 err = nf90mpi_def_dim(ncid, dim_name(i), &
-                                      NF90_UNLIMITED,  dimid)
+                                      NF90MPI_UNLIMITED,  dimid)
             else
                 err = nf90mpi_def_dim(ncid, dim_name(i), dim_len(i), &
                                       dimid)
