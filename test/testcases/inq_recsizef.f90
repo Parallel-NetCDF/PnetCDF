@@ -80,7 +80,7 @@
           call check(err, 'In nf90mpi_def_dim X: ')
           err = nf90mpi_def_dim(ncid, "Y", 2_8,  dimid(2))
           call check(err, 'In nf90mpi_def_dim Y: ')
-          err = nf90mpi_def_dim(ncid, "REC_DIM", NF90_UNLIMITED, dimid(3))
+          err = nf90mpi_def_dim(ncid, "REC_DIM", NF90MPI_UNLIMITED, dimid(3))
           call check(err, 'In nf90mpi_def_dim REC_DIM: ')
 
           ! define some record variables

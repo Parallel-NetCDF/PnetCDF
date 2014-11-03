@@ -114,7 +114,7 @@
           call check(err, 'In nfmpi_create: ')
 
           ! define 2 dimensions
-          err = nfmpi_def_dim(ncid, "REC_DIM", NF_UNLIMITED,dimid(2))
+          err = nfmpi_def_dim(ncid, "REC_DIM", NFMPI_UNLIMITED,dimid(2))
           call check(err, 'In nfmpi_def_dim REC_DIM: ')
           len = NX * nprocs
           err = nfmpi_def_dim(ncid, "X", len, dimid(1))

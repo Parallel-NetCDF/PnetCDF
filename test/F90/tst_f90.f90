@@ -106,10 +106,10 @@ program netcdfTest
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, info, ncFileID))
   
   ! Define the dimensions
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "lat",     len = numLats,        dimid = latDimID))
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "lon",     len = numLons,        dimid = lonDimID))
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "frtime",  len = nf90_unlimited, dimid = frTimeDimID))
-  call check(nf90mpi_def_dim(ncid = ncFileID, name = "timelen", len = timeStringLen,  dimid = timeDimID))
+  call check(nf90mpi_def_dim(ncid = ncFileID, name = "lat",     len = numLats,           dimid = latDimID))
+  call check(nf90mpi_def_dim(ncid = ncFileID, name = "lon",     len = numLons,           dimid = lonDimID))
+  call check(nf90mpi_def_dim(ncid = ncFileID, name = "frtime",  len = nf90mpi_unlimited, dimid = frTimeDimID))
+  call check(nf90mpi_def_dim(ncid = ncFileID, name = "timelen", len = timeStringLen,     dimid = timeDimID))
 
   ! Create variables and attributes
   call check(nf90mpi_def_var(ncid = ncFileID, name = "P", xtype = nf90_float,     &

@@ -100,9 +100,10 @@
 !       /* Try on each legitimate error status */
         do 1, i=1, number_of_messages
             message = nf90mpi_strerror(status(i))
-            if (message .ne. msg(i)) then
+            if (trim(message) .ne. trim(msg(i))) then
                 call error('nf90mpi_strerror() should return "'  &
-                           // msg(i) // '"')
+                           // trim(msg(i)) // '"' // ' but got '// &
+                           '"' // trim(message) // '"')
             else
                 nok = nok + 1
             endif

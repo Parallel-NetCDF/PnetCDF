@@ -46,6 +46,10 @@ Note on supporting large files and large variables.
       corresponding to MPI_Offset type in the C routines).  Declare those
       parameters as 'integer(kind=MPI_OFFSET_KIND)'
 
-    - NF_UNLIMITED and NF90_UNLIMITED are 64-bit integers in PnetCDF.
+    - In places where you might use NF_UNLIMITED to define an unlimited 
+      dimension in one of the nfmpi_ routines, use NFMPI_UNLIMITED. 
+      NFMPI_UNLIMITED will be defined as the proper type for nfmpi_def_dim, 
+      whereas nf_unlimited might be too small. Similarly, for Fortran 90,
+      use NF90MPI_UNLIMITED instead of NF90_UNLIMITED.
 
 Please send an email to parallel-netcdf@mcs.anl.gov

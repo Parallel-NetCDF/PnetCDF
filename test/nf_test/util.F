@@ -766,7 +766,7 @@
 
         do 1, i = 1, NDIMS
             if (i .eq. RECDIM) then
-                err = nfmpi_def_dim(ncid, dim_name(i), NF_UNLIMITED,
+                err = nfmpi_def_dim(ncid, dim_name(i), NFMPI_UNLIMITED,
      +                           dimid)
             else
                 err = nfmpi_def_dim(ncid, dim_name(i), dim_len(i),

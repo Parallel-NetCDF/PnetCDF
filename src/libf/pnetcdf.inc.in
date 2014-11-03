@@ -114,10 +114,11 @@
 
 !
 ! size argument for defining an unlimited dimension:
-! Note nfmpi_unlimited is now deprecated. Use nf_unlimited instead.
 !
-      integer*@SIZEOF_MPI_OFFSET@ nf_unlimited, nfmpi_unlimited
+      integer nf_unlimited
       parameter (nf_unlimited = 0)
+
+      integer*@SIZEOF_MPI_OFFSET@ nfmpi_unlimited
       parameter (nfmpi_unlimited = 0)
 
 !
@@ -211,14 +212,14 @@
       PARAMETER (NF_EMAXATTS     = -44)   ! NF_MAX_ATTRS exceeded
       PARAMETER (NF_EBADTYPE     = -45)   ! Not a netcdf data type
       PARAMETER (NF_EBADDIM      = -46)   ! Invalid dimension id or name
-      PARAMETER (NF_EUNLIMPOS    = -47)   ! NF_UNLIMITED in the wrong index
+      PARAMETER (NF_EUNLIMPOS    = -47)   ! NFMPI_UNLIMITED in the wrong index
       PARAMETER (NF_EMAXVARS     = -48)   ! NF_MAX_VARS exceeded
       PARAMETER (NF_ENOTVAR      = -49)   ! Variable not found
       PARAMETER (NF_EGLOBAL      = -50)   ! Action prohibited on NF_GLOBAL varid
       PARAMETER (NF_ENOTNC       = -51)   ! Not a netcdf file
       PARAMETER (NF_ESTS         = -52)   ! In Fortran, string too short
       PARAMETER (NF_EMAXNAME     = -53)   ! NF_MAX_NAME exceeded
-      PARAMETER (NF_EUNLIMIT     = -54)   ! NF_UNLIMITED size already in use
+      PARAMETER (NF_EUNLIMIT     = -54)   ! NFMPI_UNLIMITED size already in use
       PARAMETER (NF_ENORECVARS   = -55)   ! nc_rec op when there are no record vars
       PARAMETER (NF_ECHAR        = -56)   ! Attempt to convert between text & numbers
       PARAMETER (NF_EEDGE        = -57)   ! Edge+start exceeds dimension bound
