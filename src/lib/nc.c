@@ -1227,6 +1227,49 @@ ncmpii_NC_enddef(NC         *ncp,
     return status;
 }
 
+/*----< ncmpii_inq_env_align_hints() >---------------------------------------*/
+/* check if environment variable PNETCDF_HINTS sets any of the following hints.
+ * nc_header_align_size      if yes, set its value to h_align
+ * nc_var_align_size         if yes, set its value to v_align
+ * nc_header_read_chunk_size if yes, set its value to h_chunk
+ * nc_record_align_size      if yes, set its value to r_align
+ */
+static int 
+ncmpii_inq_env_align_hints(MPI_Offset *h_align,
+                           MPI_Offset *v_align,
+                           MPI_Offset *h_chunk,
+                           MPI_Offset *r_align)
+{
+    char *env_str=NULL, *hint_str;
+
+    *h_align = 0;
+    *v_align = 0;
+    *h_chunk = 0;
+    *r_align = 0;
+
+    env_str = getenv("PNETCDF_HINTS");
+    if (env_str != NULL) {
+        hint_str = strtok(env_str, ";");
+        while (hint_str != NULL) {
+            char key[128], *val;
+            strcpy(key, hint_str);
+            val = strchr(key, '=');
+            *val = '\0';
+            val++;
+            if (strcasecmp(key, "nc_header_align_size") == 0)
+                *h_align = atoll(val);
+            else if (strcasecmp(key, "nc_var_align_size") == 0)
+                *v_align = atoll(val);
+            else if (strcasecmp(key, "nc_header_read_chunk_size") == 0)
+                *h_chunk = atoll(val);
+            else if (strcasecmp(key, "nc_record_align_size") == 0)
+                *r_align = atoll(val);
+            hint_str = strtok(NULL, ";");
+        }
+    }
+    return 1;
+}
+
 /*----< ncmpii_enddef() >----------------------------------------------------*/
 int 
 ncmpii_enddef(NC *ncp)
@@ -1234,6 +1277,7 @@ ncmpii_enddef(NC *ncp)
     int i, flag, striping_unit;
     char value[MPI_MAX_INFO_VAL];
     MPI_Offset h_align, v_align, r_align, all_var_size;
+    MPI_Offset env_h_align, env_v_align, env_h_chunk, env_r_align;
 
     assert(!NC_readonly(ncp));
 
@@ -1250,12 +1294,21 @@ ncmpii_enddef(NC *ncp)
     for (i=0; i<ncp->vars.ndefined; i++)
         all_var_size += ncp->vars.value[i]->len;
 
-    /* align file offsets for file header space and fixed variables */
-    h_align = ncp->nciop->hints.h_align;
-    v_align = ncp->nciop->hints.v_align;
-    r_align = ncp->nciop->hints.r_align;
+    /* check if any hints have been set in the environment variable
+     * PNETCDF_HINTS, as they will overwrite the ones set in the MPI_info
+     * provided in ncmpi_creat() or ncmpi_open() */
+    ncmpii_inq_env_align_hints(&env_h_align, &env_v_align, &env_h_chunk,
+                               &env_r_align);
 
-    if (h_align == 0) { /* user does not set hint nc_header_align_size */
+    /* align file offsets for file header space and fixed variables.
+       These alignment hints have been extracted from the MPI_Info object when
+       ncmpi_create() is called.
+     */
+    h_align = (env_h_align == 0) ? ncp->nciop->hints.h_align : env_h_align;
+    v_align = (env_v_align == 0) ? ncp->nciop->hints.v_align : env_v_align;
+    r_align = (env_r_align == 0) ? ncp->nciop->hints.r_align : env_r_align;
+
+    if (h_align == 0) { /* user info does not set hint nc_header_align_size */
         if (striping_unit &&
             all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
             /* if striping_unit is available and file size sufficiently large */
@@ -1265,7 +1318,7 @@ ncmpii_enddef(NC *ncp)
     }
     /* else respect user hint */
 
-    if (v_align == 0) { /* user does not set hint nc_var_align_size */
+    if (v_align == 0) { /* user info does not set hint nc_var_align_size */
         if (striping_unit &&
             all_var_size > HEADER_ALIGNMENT_LB * striping_unit)
             /* if striping_unit is available and file size sufficiently large */
@@ -1275,7 +1328,7 @@ ncmpii_enddef(NC *ncp)
     }
     /* else respect user hint */
 
-    if (r_align == 0) { /* user does not set hint nc_record_align_size */
+    if (r_align == 0) { /* user info does not set hint nc_record_align_size */
         if (striping_unit)
             r_align = striping_unit;
         else
@@ -1297,6 +1350,7 @@ ncmpii__enddef(NC         *ncp,
     int i, flag, striping_unit;
     char value[MPI_MAX_INFO_VAL];
     MPI_Offset h_align, all_var_size;
+    MPI_Offset env_h_align, env_v_align, env_h_chunk, env_r_align;
 
     assert(!NC_readonly(ncp));
 
@@ -1313,8 +1367,17 @@ ncmpii__enddef(NC         *ncp,
     for (i=0; i<ncp->vars.ndefined; i++)
         all_var_size += ncp->vars.value[i]->len;
 
+    /* check if any hints have been set in the environment variable
+     * PNETCDF_HINTS, as they will overwrite the ones passed in this function
+     * and those passed-in alignment values will overwite the ones set in the
+     * MPI_info provided in ncmpi_creat() or ncmpi_open() */
+    ncmpii_inq_env_align_hints(&env_h_align, &env_v_align, &env_h_chunk,
+                               &env_r_align);
+
     /* align file offsets for file header space and fixed variables */
-    h_align = ncp->nciop->hints.h_align;
+    h_align = (env_h_align == 0) ? ncp->nciop->hints.h_align : env_h_align;
+    v_align = (env_v_align == 0) ? v_align                   : env_v_align;
+    r_align = (env_r_align == 0) ? r_align                   : env_r_align;
 
     if (v_align == 0) /* 0 means let PnetCDF decide, 1 means no align */
         v_align = ncp->nciop->hints.v_align;
