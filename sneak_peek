@@ -29,6 +29,12 @@ This is essentially a placeholder for the next release note ...
   o New PnetCDF hint
     * none
 
+  o PnetCDF hint priority
+    * The alignment hints set in the environment variable "PNETCDF_HINTS" have
+      the highest priority, which overwrite the alignment hints set in
+      ncmpi__enddef(), which overwrite the alignment hints set in the MPI_Info
+      object used in the call of ncmpi_create() and ncmpi_open().
+
   o New error code
     * NC_ETYPESIZE when filetype size is bigger than the variable size
     * NC_ETYPE_MISMATCH when the element type of filetype mismatches the
