@@ -459,7 +459,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nfloats, const float *ip)
         }
 
         isp->sign = vsp->sign;
-    
+
         ip++;
         *xpp = (char *)(*xpp) + X_SIZEOF_FLOAT;
     }

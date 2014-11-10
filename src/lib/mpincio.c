@@ -71,11 +71,11 @@ ncio *
 ncmpiio_new(const char *path, int ioflags)
 {
     size_t sz_ncio = M_RNDUP(sizeof(ncio));
-    size_t sz_path = M_RNDUP(strlen(path) +1); 
-    ncio *nciop; 
+    size_t sz_path = M_RNDUP(strlen(path) +1);
+    ncio *nciop;
 
     nciop = (ncio *) NCI_Malloc(sz_ncio + sz_path);
-    if (nciop == NULL) 
+    if (nciop == NULL)
         return NULL;
 
     nciop->ioflags  = ioflags;
@@ -85,7 +85,7 @@ ncmpiio_new(const char *path, int ioflags)
     nciop->get_size = 0;
 
     nciop->path = (char *) ((char *)nciop + sz_ncio);
-    (void) strcpy((char *)nciop->path, path); 
+    (void) strcpy((char *)nciop->path, path);
 
     return nciop;
 }
@@ -95,7 +95,7 @@ ncmpiio_new(const char *path, int ioflags)
 static
 void ncmpiio_extract_hints(ncio     *nciop,
                            MPI_Info  info)
-{ 
+{
     /* value 0 indicates the hint is not set */
     nciop->hints.h_align                = 0;
     nciop->hints.v_align                = 0;
@@ -161,7 +161,7 @@ int
 ncmpiio_create(MPI_Comm     comm,
                const char  *path,
                int          ioflags,
-               MPI_Info     info, 
+               MPI_Info     info,
                NC          *ncp)
 {
     ncio *nciop;
@@ -178,7 +178,7 @@ ncmpiio_create(MPI_Comm     comm,
 
     MPI_Comm_rank(comm, &rank);
 
-    /* NC_CLOBBER is the default mode, even if it is not used in cmode */ 
+    /* NC_CLOBBER is the default mode, even if it is not used in cmode */
     if (fIsSet(ioflags, NC_NOCLOBBER)) {
         /* check if file exists: NetCDF requires NC_EEXIST returned if the file
          * already exists and NC_NOCLOBBER mode is used in create
@@ -246,6 +246,7 @@ ncmpiio_create(MPI_Comm     comm,
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
 
+    /* extract MPI-IO hints */
     ncmpiio_extract_hints(nciop, info);
 
     mpireturn = MPI_File_open(comm, (char *)path, mpiomode,
@@ -253,16 +254,16 @@ ncmpiio_create(MPI_Comm     comm,
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
 #ifndef HAVE_ACCESS
-        /* if MPI_MODE_EXCL is used and the file already exists, MPI-IO does
-         * not properly return error class MPI_ERR_FILE_EXISTS for some file
-         * systems. Here is a not-so-perfect solution: check errno to see if
-         * it set to EEXIST. Note usually rank 0 makes the file open call and
-         * can be the only one having errno set.
-         *
-         * Once MPI-IO can returns MPI_ERR_FILE_EXISTS correctly, the if
-         * condition code block below should be removed.
-         */
-        if (fIsSet(ioflags, NC_NOCLOBBER)) { /* MPI_MODE_EXCL is used in open */
+        if (fIsSet(ioflags, NC_NOCLOBBER)) {
+            /* This is the case when NC_NOCLOBBER is used in file creation and
+             * function access() is not available. MPI_MODE_EXCL is set in open
+             * mode. When MPI_MODE_EXCL is used and the file already exists,
+             * MPI-IO should return error class MPI_ERR_FILE_EXISTS. But, some
+             * MPI-IO implementations (older ROMIO) do not correctly return
+             * this error class. In this case, we can do the followings: check
+             * errno to see if it set to EEXIST. Note usually rank 0 makes the
+             * file open call and can be the only one having errno set.
+             */
             MPI_Bcast(&errno, 1, MPI_INT, 0, comm);
             if (errno == EEXIST) return NC_EEXIST;
         }
@@ -271,7 +272,7 @@ ncmpiio_create(MPI_Comm     comm,
         /* for NC_NOCLOBBER, MPI_MODE_EXCL was added to mpiomode. If the file
          * already exists, MPI-IO should return error class MPI_ERR_FILE_EXISTS
          * which PnetCDF will return error code NC_EEXIST. This is checked
-         * inside of * ncmpii_handle_error()
+         * inside of ncmpii_handle_error()
          */
     }
 
@@ -299,7 +300,7 @@ ncmpiio_create(MPI_Comm     comm,
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
 
     ncp->nciop = nciop;
-    return NC_NOERR;  
+    return NC_NOERR;
 }
 
 /*----< ncmpiio_open() >-----------------------------------------------------*/
@@ -321,7 +322,7 @@ ncmpiio_open(MPI_Comm     comm,
         MPI_Allreduce(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
         if (err == 0) return NC_EINVAL;
     }
- 
+
     nciop = ncmpiio_new(path, ioflags);
     if (nciop == NULL)
         return NC_ENOMEM;
@@ -329,6 +330,7 @@ ncmpiio_open(MPI_Comm     comm,
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
 
+    /* extract MPI-IO hints */
     ncmpiio_extract_hints(nciop, info);
 
     mpireturn = MPI_File_open(comm, (char *)path, mpiomode,
@@ -345,21 +347,22 @@ ncmpiio_open(MPI_Comm     comm,
     }
     *((int *)&nciop->fd) = i;
     IDalloc[i] = 1;
- 
+
     set_NC_collectiveFh(nciop);
- 
+
     /* duplicate communicator as user may free it later */
     mpireturn = MPI_Comm_dup(comm, &(nciop->comm));
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
- 
+
     /* get the file info used by MPI-IO */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
- 
+
     ncp->nciop = nciop;
-    return NC_NOERR; 
+    return NC_NOERR;
 }
 
+/*----< ncmpiio_sync() >-----------------------------------------------------*/
 int
 ncmpiio_sync(ncio *nciop) {
 #ifndef DISABLE_FILE_SYNC
@@ -380,6 +383,7 @@ ncmpiio_sync(ncio *nciop) {
     return NC_NOERR;
 }
 
+/*----< ncmpiio_close() >----------------------------------------------------*/
 int
 ncmpiio_close(ncio *nciop, int doUnlink) {
     int mpireturn;
@@ -392,9 +396,9 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_close");
     }
- 
+
     if (NC_collectiveFhOpened(nciop)) {
-        mpireturn = MPI_File_close(&(nciop->collective_fh));  
+        mpireturn = MPI_File_close(&(nciop->collective_fh));
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_close");
     }
@@ -438,11 +442,11 @@ ncmpiio_move(ncio *const nciop,
         if (grpsize > 1) {
             bufcount = bufsize;
             movesize -= bufsize*grpsize;
-        } 
+        }
         else if (movesize < bufsize) {
             bufcount = movesize;
             movesize = 0;
-        } 
+        }
         else {
             bufcount = bufsize;
             movesize -= bufsize;
@@ -524,7 +528,7 @@ int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
      * merge the two, but some implementaitons not only ignore hints
      * they don't understand, but also fail to incorporate those hints
      * into the info struct (this is unfortunate for us, but entirely
-     * standards compilant). 
+     * standards compilant).
      *
      * Our policy will be to use the implementation's info first
      * (perhaps the implementaiton knows something about the underlying
@@ -534,17 +538,17 @@ int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
 
     /* first check the hint from the MPI library ... */
     MPI_File_get_info(ncp->nciop->collective_fh, &info);
-    if (info != MPI_INFO_NULL) 
+    if (info != MPI_INFO_NULL)
         MPI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, flag);
     if (*flag == 0)  {
         /* ... then check the hint passed in through ncmpi_create */
         if (ncp->nciop->mpiinfo != MPI_INFO_NULL) {
-            MPI_Info_get(ncp->nciop->mpiinfo, key, 
+            MPI_Info_get(ncp->nciop->mpiinfo, key,
                     MPI_MAX_INFO_VAL-1, value, flag);
         }
     }
 #ifdef HAVE_MPI_INFO_FREE
-    if (info != MPI_INFO_NULL) 
+    if (info != MPI_INFO_NULL)
         MPI_Info_free(&info);
 #endif
 

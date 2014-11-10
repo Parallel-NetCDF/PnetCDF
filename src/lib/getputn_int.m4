@@ -55,7 +55,7 @@ get_ix_int(const void *xp, ix_int *ip)
 #endif
     *ip |= (*cp++ << 16);
     *ip |= (*cp++ << 8);
-    *ip |= *cp; 
+    *ip |= *cp;
 }
 
 static void
@@ -494,8 +494,7 @@ PUTN_INT(long)
 /* wkliao: long type is not supported anymore. NC_LONG == NC_INT now
            so, ncmpix_get_long_long is actually ncmpix_get_int_long()
 	   and ncmpix_put_long_long is actually ncmpix_put_int_long().  We
-	   removed the now-unused functions 
-	   - 
+	   removed the now-unused functions
  */
 
 

@@ -52,7 +52,7 @@ check_recsize_too_big(NC *ncp)
 /*
  * Check whether 'coord' values (indices) are valid for the variable.
  * Note that even if the request size is zero, this check is enforced in both
- * netCDF and PnetCDF. Otherwise, many test cases under test directoy can fail. 
+ * netCDF and PnetCDF. Otherwise, many test cases under test directoy can fail.
  */
 int
 NCcoordck(NC               *ncp,
@@ -444,7 +444,7 @@ ncmpii_type_create_subarray(int           ndims,
 /* This subroutine is to achieve the same result as MPI_Type_create_subarray()
  * but it takes arguments in type of MPI_Offset, instead of int. It also
  * checked for any possible 4-byte integer overflow.
- */ 
+ */
 static int
 ncmpii_type_create_subarray64(int           ndims,
                               MPI_Offset   *array_of_sizes,    /* [ndims] */
@@ -850,7 +850,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
     }
 
     /* now, varp->ndims > 0 && nelems > 0 */
-    int ndims, *blockcounts, *blocklens; 
+    int ndims, *blockcounts, *blocklens;
     MPI_Aint *blockstride;
     MPI_Datatype tmptype;
 

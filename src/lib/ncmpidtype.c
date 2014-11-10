@@ -34,7 +34,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 {
     /* char types */
 #ifdef HAVE_MPI_CHARACTER
-    if (type == MPI_CHARACTER) 
+    if (type == MPI_CHARACTER)
         return MPI_CHAR;
 #endif
     if (type == MPI_CHAR)
@@ -192,9 +192,9 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
 #endif
 #ifdef HAVE_MPI_UB
     if (type == MPI_UB) {
-#if SIZEOF_SIZE_T == 8 
+#if SIZEOF_SIZE_T == 8
         return MPI_DOUBLE;
-#elif SIZEOF_SIZE_T == 4 
+#elif SIZEOF_SIZE_T == 4
         return MPI_DOUBLE;
 #endif
     }
@@ -235,7 +235,7 @@ static int ncmpii_darray_get_totalblks(int rank,
   int i;
   int pcoord;
 
-  /* Process Grid ranking is always in C ORDER, 
+  /* Process Grid ranking is always in C ORDER,
      so compute proc coordinates from last dim */
 
   for (i=ndims-1; i>=0; i--) {
@@ -258,7 +258,7 @@ static int ncmpii_darray_get_totalblks(int rank,
 	  subblocks = array_of_dargs[i];
 	else if (subblocks < 0)
 	  subblocks = 0;
-	
+
 	subblocks += array_of_gsizes[i]/cycle * array_of_dargs[i];
       }
 
@@ -286,10 +286,10 @@ static int ncmpii_darray_get_totalblks(int rank,
 . nelems - Number of elements/entries of such ptype in one buftype object
 . iscontig_of_ptypes - Whether dtype is a contiguous number of ptype
 @*/
-int ncmpii_dtype_decode(MPI_Datatype dtype, 
-			MPI_Datatype *ptype, 
+int ncmpii_dtype_decode(MPI_Datatype dtype,
+			MPI_Datatype *ptype,
 			int *el_size,
-			MPI_Offset *nelems, 
+			MPI_Offset *nelems,
 			int *isderived,
 			int *iscontig_of_ptypes)
 {
@@ -308,7 +308,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   int status = NC_NOERR;
 
   *isderived = 0;
-  
+
   if (dtype == MPI_DATATYPE_NULL) {
     *nelems = 0;
     *ptype = dtype;
@@ -335,7 +335,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 	    "FIXME: F90_INTEGER, F90_REAL or F90_COMPLEX are not supported.\n");
   }
 
-  if ( combiner == MPI_COMBINER_NAMED ) {	
+  if ( combiner == MPI_COMBINER_NAMED ) {
     /* Predefined datatype */
     *nelems = 1;
     if ( (*ptype = ncmpii_type_filter(dtype)) == MPI_DATATYPE_NULL )
@@ -353,7 +353,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   array_of_adds = (MPI_Aint *)(array_of_ints + num_ints);
   array_of_dtypes = (MPI_Datatype *)(array_of_adds + num_adds);
 
-  MPI_Type_get_contents(dtype, num_ints, num_adds, num_dtypes, 
+  MPI_Type_get_contents(dtype, num_ints, num_adds, num_dtypes,
 			array_of_ints, array_of_adds, array_of_dtypes);
 
   switch (combiner) {
@@ -387,7 +387,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     case MPI_COMBINER_RESIZED:
 #endif
 
-	status = ncmpii_dtype_decode(array_of_dtypes[0], ptype, el_size, 
+	status = ncmpii_dtype_decode(array_of_dtypes[0], ptype, el_size,
 				     nelems, isderived, iscontig_of_ptypes);
 	if (*isderived)
 	  MPI_Type_free(array_of_dtypes);
@@ -404,10 +404,10 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 	*el_size = 0;
 	for (i=0; i<count && *el_size==0; i++) {
 	  /* need to skip null/marker types */
-	  status = ncmpii_dtype_decode(array_of_dtypes[i], 
+	  status = ncmpii_dtype_decode(array_of_dtypes[i],
 				       ptype,
-				       el_size, 
-				       nelems, 
+				       el_size,
+				       nelems,
 				       isderived,
 				       iscontig_of_ptypes);
 	  if (status != NC_NOERR)
@@ -418,10 +418,10 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 	    *nelems *= array_of_ints[1+i];
 	}
 	for ( ; i<count; i++) {
-	  status = ncmpii_dtype_decode(array_of_dtypes[i], 
+	  status = ncmpii_dtype_decode(array_of_dtypes[i],
 				       &tmpptype,
-				       &tmpel_size, 
-				       &tmpnelems, 
+				       &tmpel_size,
+				       &tmpnelems,
 				       isderived,
 				       iscontig_of_ptypes);
 	  if (status != NC_NOERR)
@@ -436,7 +436,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 	}
 
 	*iscontig_of_ptypes = 0;
-	  
+
 	break;
 
     default:
@@ -521,22 +521,22 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 
 /*@
   ncmpii_data_repack - copy data between two buffers with different datatypes.
-  
+
   Input:
 . inbuf - input buffer where data is copied from
 . incount - number of input elements
 . intype - datatype of each element in input buffer
 . outbuf - output buffer where data is copied to
 . outcount - number of output elements
-. outtype - datatype of each element in output buffer  
-@*/  
+. outtype - datatype of each element in output buffer
+@*/
 
-int ncmpii_data_repack(void *inbuf, 
+int ncmpii_data_repack(void *inbuf,
 		       MPI_Offset incount,
-		       MPI_Datatype intype, 
+		       MPI_Datatype intype,
 		       void *outbuf,
 		       MPI_Offset outcount,
-		       MPI_Datatype outtype) 
+		       MPI_Datatype outtype)
 {
   int intypesz, outtypesz;
   int packsz;
@@ -557,7 +557,7 @@ int ncmpii_data_repack(void *inbuf,
 
   if (incount == 0)
     return NC_NOERR;
-  
+
   /* local pack-n-unpack, using MPI_COMM_SELF */
   MPI_Pack_size(incount, intype, MPI_COMM_SELF, &packsz);
   packbuf = (void *)NCI_Malloc(packsz);

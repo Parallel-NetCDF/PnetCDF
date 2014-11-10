@@ -176,7 +176,7 @@ put_ix_double(void *xp, const double *ip)
         idp->exp_hi  = exp >> 4;
         idp->exp_lo  = exp;
     }
-        
+
     shipit:
         idp->sign = vdp->sign;
 
@@ -454,7 +454,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset ndoubles, const double *ip)
             idp->exp_hi  = exp >> 4;
             idp->exp_lo  = exp;
         }
-        
+
     shipit:
         idp->sign = vdp->sign;
 

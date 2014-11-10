@@ -91,7 +91,7 @@ ncmpii_abuf_free(NC *ncp, void *buf)
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(buf, &buf_addr);
     MPI_Get_address(ncp->abuf->buf, &abuf_addr);
-#else 
+#else
     MPI_Address(buf, &buf_addr);
     MPI_Address(ncp->abuf->buf, &abuf_addr);
 #endif
@@ -309,8 +309,8 @@ ncmpi_wait_all(int  ncid,
 
 /*----< ncmpii_concatenate_datatypes() >--------------------------------------*/
 int
-ncmpii_concatenate_datatypes(NC           *ncp, 
-                             int           num, 
+ncmpii_concatenate_datatypes(NC           *ncp,
+                             int           num,
                              int          *blocklens,     /* IN: [num] */
                              MPI_Offset   *displacements, /* IN: [num] */
                              MPI_Datatype *dtypes,        /* IN: [num] */
@@ -369,8 +369,8 @@ ncmpii_concatenate_datatypes(NC           *ncp,
 /*----< ncmpii_construct_filetypes() >----------------------------------------*/
 /* concatenate the filetypes of all requests */
 static int
-ncmpii_construct_filetypes(NC           *ncp, 
-                           int           num_reqs, 
+ncmpii_construct_filetypes(NC           *ncp,
+                           int           num_reqs,
                            NC_req       *reqs,      /* [num_reqs] */
                            int           rw_flag,
                            MPI_Datatype *filetype)  /* OUT */
@@ -412,7 +412,7 @@ ncmpii_construct_filetypes(NC           *ncp,
     }
     else {
         /* all ftypes[] created fine, now concatenate all ftypes[] */
-        err = ncmpii_concatenate_datatypes(ncp, 
+        err = ncmpii_concatenate_datatypes(ncp,
                                            num_reqs,
                                            blocklens,
                                            displacements,
@@ -455,7 +455,7 @@ ncmpii_construct_buffertypes(NC           *ncp,
     disps[0] = 0;
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(reqs[0].xbuf, &a0);
-#else 
+#else
     MPI_Address(reqs[0].xbuf, &a0);
 #endif
     /* check int overflow */
@@ -539,7 +539,7 @@ ncmpii_wait(NC  *ncp,
 
     /* check if it is in define mode */
     if (NC_indef(ncp)) fatal_err = NC_EINDEFINE;
- 
+
     /* check whether collective or independent mode */
     if (fatal_err == NC_NOERR) {
         if (io_method == INDEP_IO)
@@ -1294,7 +1294,7 @@ ncmpii_req_aggregation(NC     *ncp,
     b_disps[0] = 0;     /* relative to address of 1st buf */
 #ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(buf, &b_begin);
-#else 
+#else
     MPI_Address(buf, &b_begin);
 #endif
 
@@ -1385,7 +1385,7 @@ ncmpii_req_aggregation(NC     *ncp,
             /* get the buffer address of the first request in this group */
 #ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(g_reqs[0].xbuf, &b_addr);
-#else 
+#else
             MPI_Address(g_reqs[0].xbuf, &b_addr);
 #endif
             b_disps[i] = b_addr - b_begin; /* to 1st buffer of 1st group*/
@@ -1628,7 +1628,7 @@ ncmpii_wait_getput(NC     *ncp,
         MPI_Offset newnumrecs = ncp->numrecs;
         for (i=0; i<num_reqs; i++) {
             if (*reqs[i].status == NC_NOERR && IS_RECVAR(reqs[i].varp)) {
-                newnumrecs = MAX(newnumrecs, 
+                newnumrecs = MAX(newnumrecs,
                                  reqs[i].start[0] + reqs[i].count[0]);
             }
         }
@@ -1720,7 +1720,7 @@ ncmpii_mgetput(NC           *ncp,
         disps[0] = 0;
 #ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(reqs[0].xbuf, &a0);
-#else 
+#else
         MPI_Address(reqs[0].xbuf, &a0);
 #endif
         /* check int overflow */

@@ -667,8 +667,8 @@ dnl IGET_VARS_TYPE(string, char*,             MPI_CHAR)
 dnl string is not yet supported
 
 
-/* buffer layers:       
-        
+/* buffer layers:
+
         User Level              buf     (user defined buffer of MPI_Datatype)
         MPI Datatype Level      cbuf    (contiguous buffer of ptype)
         NetCDF XDR Level        xbuf    (XDR I/O buffer)

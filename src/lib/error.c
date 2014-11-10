@@ -61,7 +61,7 @@ vms_strerror( int status )
 
     msgbuf[0] = 0;
     ret = SYS$GETMSG(status, &msglen, &message, 15, 0);
-    
+
     if(ret != SS$_BUFFEROVF && ret != SS$_NORMAL) {
         (void) strcpy(msgbuf, "EVMSERR");
     }
@@ -80,11 +80,11 @@ ncmpi_strerror(int err)
 {
     sprintf(nc_unknown_err_msg,"Unknown Error: Unrecognized error code %5d\n",err);
 
-#ifdef vms 
+#ifdef vms
     if(err == EVMSERR)
     {
         return vms_strerror(err);
-    }    
+    }
     /* else */
 #endif /* vms */
 
@@ -382,7 +382,7 @@ status value.
 
 /**
 \ingroup error
- Given an error number, return an error message. 
+ Given an error number, return an error message.
 
 This function returns a static reference to an error message string
 corresponding to an integer netCDF error status or to a system error
@@ -533,7 +533,7 @@ nc_strerror(int ncerr1)
          return "NetCDF: Can't create file";
       case NC_EFILEMETA:
          return "NetCDF: Can't add HDF5 file metadata";
-      case NC_EDIMMETA:      
+      case NC_EDIMMETA:
          return "NetCDF: Can't define dimensional metadata";
       case NC_EATTMETA:
          return "NetCDF: Can't open HDF5 attribute";

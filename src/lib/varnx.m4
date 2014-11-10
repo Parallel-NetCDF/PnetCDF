@@ -28,17 +28,17 @@ dnl
 #include "macro.h"
 
 
-/* buffer layers:       
-        
+/* buffer layers:
+
         User Level              buf     (user defined buffer of MPI_Datatype)
         MPI Datatype Level      cbuf    (contiguous buffer of ptype)
         NetCDF XDR Level        xbuf    (XDR I/O buffer)
 */
 
 static int
-ncmpii_getput_varnm(int                ncid, 
+ncmpii_getput_varnm(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],   /* [num] */
                     MPI_Offset* const  counts[],   /* [num] */
                     MPI_Offset* const  strides[],  /* [num] */
@@ -51,9 +51,9 @@ ncmpii_getput_varnm(int                ncid,
 
 /*----< ncmpi_put_varn() >---------------------------------------------------*/
 int
-ncmpi_put_varn(int           ncid, 
+ncmpi_put_varn(int           ncid,
                int           varid,
-               int           num, 
+               int           num,
                const void   *buf,
                MPI_Offset    bufcount,
                MPI_Datatype  buftype)
@@ -65,9 +65,9 @@ ncmpi_put_varn(int           ncid,
 
 /*----< ncmpi_put_varn_all() >-----------------------------------------------*/
 int
-ncmpi_put_varn_all(int           ncid, 
+ncmpi_put_varn_all(int           ncid,
                    int           varid,
-                   int           num, 
+                   int           num,
                    const void   *buf,
                    MPI_Offset    bufcount,
                    MPI_Datatype  buftype)
@@ -122,9 +122,9 @@ PUT_VARN(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_put_varn1() >--------------------------------------------------*/
 int
-ncmpi_put_varn1(int                ncid, 
+ncmpi_put_varn1(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],    /* [num] */
                 const void        *buf,
                 MPI_Offset         bufcount,
@@ -137,9 +137,9 @@ ncmpi_put_varn1(int                ncid,
 
 /*----< ncmpi_put_varn1_all() >----------------------------------------------*/
 int
-ncmpi_put_varn1_all(int                ncid, 
+ncmpi_put_varn1_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],    /* [num] */
                     const void        *buf,
                     MPI_Offset         bufcount,
@@ -196,9 +196,9 @@ PUT_VARN1(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_put_varna() >--------------------------------------------------*/
 int
-ncmpi_put_varna(int                ncid, 
+ncmpi_put_varna(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],    /* [num] */
                 MPI_Offset* const  counts[],    /* [num] */
                 const void        *buf,
@@ -212,9 +212,9 @@ ncmpi_put_varna(int                ncid,
 
 /*----< ncmpi_put_varna_all() >----------------------------------------------*/
 int
-ncmpi_put_varna_all(int                ncid, 
+ncmpi_put_varna_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],    /* [num] */
                     MPI_Offset* const  counts[],    /* [num] */
                     const void        *buf,
@@ -273,9 +273,9 @@ PUT_VARNA(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_put_varns() >--------------------------------------------------*/
 int
-ncmpi_put_varns(int                ncid, 
+ncmpi_put_varns(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],    /* [num] */
                 MPI_Offset* const  counts[],    /* [num] */
                 MPI_Offset* const  strides[],   /* [num] */
@@ -290,9 +290,9 @@ ncmpi_put_varns(int                ncid,
 
 /*----< ncmpi_put_varns_all() >----------------------------------------------*/
 int
-ncmpi_put_varns_all(int                ncid, 
+ncmpi_put_varns_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],    /* [num] */
                     MPI_Offset* const  counts[],    /* [num] */
                     MPI_Offset* const  strides[],   /* [num] */
@@ -353,9 +353,9 @@ PUT_VARNS(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_put_varnm() >--------------------------------------------------*/
 int
-ncmpi_put_varnm(int                ncid, 
+ncmpi_put_varnm(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],    /* [num] */
                 MPI_Offset* const  counts[],    /* [num] */
                 MPI_Offset* const  strides[],   /* [num] */
@@ -371,9 +371,9 @@ ncmpi_put_varnm(int                ncid,
 
 /*----< ncmpi_put_varnm_all() >----------------------------------------------*/
 int
-ncmpi_put_varnm_all(int                ncid, 
+ncmpi_put_varnm_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],    /* [num] */
                     MPI_Offset* const  counts[],    /* [num] */
                     MPI_Offset* const  strides[],   /* [num] */
@@ -436,9 +436,9 @@ PUT_VARNM(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_get_varn() >---------------------------------------------------*/
 int
-ncmpi_get_varn(int           ncid, 
+ncmpi_get_varn(int           ncid,
                int           varid,
-               int           num, 
+               int           num,
                void         *buf,
                MPI_Offset    bufcount,
                MPI_Datatype  buftype)
@@ -450,9 +450,9 @@ ncmpi_get_varn(int           ncid,
 
 /*----< ncmpi_get_varn_all() >-----------------------------------------------*/
 int
-ncmpi_get_varn_all(int           ncid, 
+ncmpi_get_varn_all(int           ncid,
                    int           varid,
-                   int           num, 
+                   int           num,
                    void         *buf,
                    MPI_Offset    bufcount,
                    MPI_Datatype  buftype)
@@ -507,9 +507,9 @@ GET_VARN(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_get_varn1() >--------------------------------------------------*/
 int
-ncmpi_get_varn1(int                ncid, 
+ncmpi_get_varn1(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],     /* [num] */
                 void              *buf,
                 MPI_Offset         bufcount,
@@ -522,9 +522,9 @@ ncmpi_get_varn1(int                ncid,
 
 /*----< ncmpi_get_varn1_all() >----------------------------------------------*/
 int
-ncmpi_get_varn1_all(int                ncid, 
+ncmpi_get_varn1_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],     /* [num] */
                     void              *buf,
                     MPI_Offset         bufcount,
@@ -581,9 +581,9 @@ GET_VARN1(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_get_varna() >--------------------------------------------------*/
 int
-ncmpi_get_varna(int                ncid, 
+ncmpi_get_varna(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],     /* [num] */
                 MPI_Offset* const  counts[],     /* [num] */
                 void              *buf,
@@ -597,9 +597,9 @@ ncmpi_get_varna(int                ncid,
 
 /*----< ncmpi_get_varna_all() >----------------------------------------------*/
 int
-ncmpi_get_varna_all(int                ncid, 
+ncmpi_get_varna_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],     /* [num] */
                     MPI_Offset* const  counts[],     /* [num] */
                     void              *buf,
@@ -658,9 +658,9 @@ GET_VARNA(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_get_varns() >--------------------------------------------------*/
 int
-ncmpi_get_varns(int                ncid, 
+ncmpi_get_varns(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],     /* [num] */
                 MPI_Offset* const  counts[],     /* [num] */
                 MPI_Offset* const  strides[],    /* [num] */
@@ -675,9 +675,9 @@ ncmpi_get_varns(int                ncid,
 
 /*----< ncmpi_get_varns_all() >----------------------------------------------*/
 int
-ncmpi_get_varns_all(int                ncid, 
+ncmpi_get_varns_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],     /* [num] */
                     MPI_Offset* const  counts[],     /* [num] */
                     MPI_Offset* const  strides[],    /* [num] */
@@ -738,9 +738,9 @@ GET_VARNS(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpi_get_varnm() >--------------------------------------------------*/
 int
-ncmpi_get_varnm(int                ncid, 
+ncmpi_get_varnm(int                ncid,
                 int                varid,
-                int                num, 
+                int                num,
                 MPI_Offset* const  starts[],     /* [num] */
                 MPI_Offset* const  counts[],     /* [num] */
                 MPI_Offset* const  strides[],    /* [num] */
@@ -756,9 +756,9 @@ ncmpi_get_varnm(int                ncid,
 
 /*----< ncmpi_get_varnm_all() >----------------------------------------------*/
 int
-ncmpi_get_varnm_all(int                ncid, 
+ncmpi_get_varnm_all(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],     /* [num] */
                     MPI_Offset* const  counts[],     /* [num] */
                     MPI_Offset* const  strides[],    /* [num] */
@@ -821,9 +821,9 @@ GET_VARNM(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG, COLL_IO, _all)
 
 /*----< ncmpii_getput_varnm() >-----------------------------------------------*/
 static int
-ncmpii_getput_varnm(int                ncid, 
+ncmpii_getput_varnm(int                ncid,
                     int                varid,
-                    int                num, 
+                    int                num,
                     MPI_Offset* const  starts[],  /* [num] */
                     MPI_Offset* const  counts[],  /* [num] */
                     MPI_Offset* const  strides[], /* [num] */
@@ -896,7 +896,7 @@ ncmpii_getput_varnm(int                ncid,
 
     if (min_st != NC_NOERR)
         return status;
-  
+
     if (num > 0) {
         req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
         statuses = req_ids + num;

@@ -58,7 +58,7 @@ get_ix_uint(const void *xp, ix_uint *ip)
     *ip  =  *cp++ << 24;
     *ip |= (*cp++ << 16);
     *ip |= (*cp++ << 8);
-    *ip |= *cp; 
+    *ip |= *cp;
 }
 
 static void

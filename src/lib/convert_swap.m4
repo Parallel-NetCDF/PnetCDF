@@ -93,7 +93,7 @@ ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype) {
 }
 
 /*----< ncmpii_need_swap() >-------------------------------------------------*/
-inline int 
+inline int
 ncmpii_need_swap(nc_type      nctype,
                  MPI_Datatype mpitype)
 {
