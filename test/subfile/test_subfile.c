@@ -250,6 +250,44 @@ int main(int argc, char **argv)
     status = ncmpi_enddef(ncid);
     TEST_HANDLE_ERR(status)
 
+    /* test ncmpi_inq_var() */
+    for (i=0; i<nvars; i++) {
+        char name[128];
+        nc_type typep;
+        int ndimsp, dimids[3], nattsp;
+
+        status = ncmpi_inq_var(ncid, varid[i], name, &typep, &ndimsp, dimids,
+                               &nattsp);
+        TEST_HANDLE_ERR(status)
+
+	sprintf(varname, "var0_%d", i);
+        if (strcmp(name, varname)) {
+            printf("Error: unexpected var[%d] name %s, should be %s\n",i,name,varname);
+            nerr++;
+            continue;
+        }
+        if (typep != NC_INT) {
+            printf("Error: unexpected var[%d] type %d, should be %d\n",i,typep,NC_INT);
+            nerr++;
+            continue;
+        }
+        if (ndimsp != ndims) {
+            printf("Error: unexpected var[%d] ndims %d, should be %d\n",i,ndimsp,ndims);
+            nerr++;
+            continue;
+        }
+        for (j=0; j<ndims; j++) {
+            if (dimids[j] != dimids0[j]) {
+                printf("Error: unexpected var[%d] dimids[%d] %d, should be %d\n",i,j,dimids0[j],dimids[j]);
+                nerr++;
+                continue;
+            }
+        }
+        /*
+        printf("var[%d] %s has %d attributes\n",i,name,nattsp);
+        */
+    }
+
 #if 0
     if (mynod == 0)
         printf("*** Testing to write 1 non-record variable by using ncmpi_put_vara_all() ...");

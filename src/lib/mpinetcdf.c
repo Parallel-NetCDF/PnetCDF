@@ -463,7 +463,8 @@ ncmpi_open(MPI_Comm    comm,
     /* check attr for subfiles */
     err = ncmpi_get_att_int(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
                             &ncp->nc_num_subfiles);
-    if (err == NC_NOERR) {
+    if (err == NC_NOERR && ncp->nc_num_subfiles > 1) {
+        /* ignore error NC_ENOTATT if this attribute is not defined */
         int nvars;
 
         err = ncmpi_inq_nvars(ncp->nciop->fd, &nvars);
