@@ -18,8 +18,8 @@
 #include "ncx.h"
 #include "macro.h"
 
-/* structure for storing access info of this process's request 
-   to the subfiles on all other processes, and vice-versa. used 
+/* structure for storing access info of this process's request
+   to the subfiles on all other processes, and vice-versa. used
    as array of structures indexed by subfile index. */
 typedef struct {
     MPI_Offset *start;
@@ -32,12 +32,12 @@ typedef struct {
 #define ROUND(x) ( x >= 0 ? (int)(x+0.5) : (int)(x-0.5) )
 #define ABS(a) (((a) < 0) ? -(a) : (a))
 
-#define TEST_HANDLE_ERR(func, status)				       \
-{                                                                      \
-    if ((status) != NC_NOERR)						\
-        printf( "%s: in %s, %s\n", __func__, #func,			\
-		ncmpi_strerror((status)) );				\
-}
+#define TEST_HANDLE_ERR(status)                                        \
+    if ((status) != NC_NOERR) {                                        \
+        printf("Error at file %s line %d (%s)\n", __FILE__, __LINE__,  \
+               ncmpi_strerror((status)) );                             \
+        return status;                                                 \
+    }
 
 extern int ncmpii_subfile_create(NC *ncp, int *ncidp);
 
