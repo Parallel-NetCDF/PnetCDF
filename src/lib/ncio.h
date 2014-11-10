@@ -57,8 +57,8 @@ typedef struct {
      */
     int fd;
 
-    /* 
-     * The MPI File handle and the communicator 
+    /*
+     * The MPI File handle and the communicator
      */
     MPI_File collective_fh;
     MPI_File independent_fh;
@@ -81,13 +81,13 @@ typedef struct {
     MPI_Offset get_size;  /* amount of reads  committed so far in bytes */
 } ncio;
 
-extern ncio * 
+extern ncio *
 ncmpiio_new(const char *path, int ioflags);
 
 extern void
 ncmpiio_free(ncio *nciop);
 
-extern int 
+extern int
 ncmpiio_close(ncio *nciop, int doUnlink);
 
 #endif /* _NCIO_H_ */

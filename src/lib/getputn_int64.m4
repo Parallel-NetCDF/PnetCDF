@@ -112,9 +112,9 @@ GET_INT64(short,  if (xx > SHRT_MAX  || xx < SHRT_MIN)  return NC_ERANGE;)
 GET_INT64(int,    if (xx > INT_MAX   || xx < INT_MIN)   return NC_ERANGE;)
 
 #if SIZEOF_LONG == X_SIZEOF_INT
-static int 
-ncmpix_get_int64_long(const void *xp, long *ip) 
-{                                              
+static int
+ncmpix_get_int64_long(const void *xp, long *ip)
+{
     return ncmpix_get_int64_int(xp, (int*)ip);
 }
 #else

@@ -247,7 +247,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr *));
 		if(vp == NULL)
 			return NC_ENOMEM;
-	
+
 		ncap->value = vp;
 		ncap->nalloc += NC_ARRAY_GROWBY;
 	}
@@ -328,7 +328,7 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
 /*
  * Look up by ncid, varid and name, return NULL if not found
  */
-static int 
+static int
 NC_lookupattr(int ncid,
 	int varid,
 	const char *name, /* attribute name */
@@ -380,13 +380,13 @@ ncmpi_inq_attname(int ncid, int varid, int attnum, char *name)
 		return NC_ENOTATT;
 
 	(void) strncpy(name, attrp->name->cp, attrp->name->nchars);
-	name[attrp->name->nchars] = 0;
+	name[attrp->name->nchars] = '\0';
 
 	return NC_NOERR;
 }
 
 
-int 
+int
 ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
 {
 	int indx, status;
@@ -400,7 +400,7 @@ ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
 	ncap = NC_attrarray0(ncp, varid);
 	if(ncap == NULL)
 		return NC_ENOTVAR;
-	
+
 
 	indx = ncmpii_NC_findattr(ncap, name);
 	if(indx == -1)
@@ -412,7 +412,7 @@ ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
 	return NC_NOERR;
 }
 
-int 
+int
 ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
 {
 	int status;
@@ -428,7 +428,7 @@ ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
 	return NC_NOERR;
 }
 
-int 
+int
 ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp)
 {
 	int status;
@@ -587,11 +587,11 @@ ncmpi_copy_att(int         ncid_in,
             /* if called in data mode, this API must be collective */
 
             attrp = ncap->value[indx]; /* convenience */
-    
+
             if (iattrp->xsz > attrp->xsz)
                 return NC_ENOTINDEFINE;
             /* else, we can reuse existing without redef */
-            
+
             attrp->xsz = iattrp->xsz;
             attrp->type = iattrp->type;
             attrp->nelems = iattrp->nelems;
@@ -605,7 +605,7 @@ ncmpi_copy_att(int         ncid_in,
              */
 
             memcpy(attrp->xvalue, iattrp->xvalue, iattrp->xsz);
-            
+
             if (NC_doHsync(ncp)) { /* NC_SHARE is set */
                 /* Write the entire header to the file. Noet that we cannot
                  * just change the variable name in the file header, as if the
@@ -624,7 +624,7 @@ ncmpi_copy_att(int         ncid_in,
         }
         /* else, redefine using existing array slot */
         old = ncap->value[indx];
-    } 
+    }
     else {
         if (!NC_indef(ncp)) /* add new attribute is not allowed in data mode */
             return NC_ENOTINDEFINE;
@@ -842,7 +842,7 @@ ncmpix_pad_getn(const void **xpp,
             return ncmpix_getn_int64     (xpp, nelems, tp, buftype);
         case NC_UINT64:
             return ncmpix_getn_uint64    (xpp, nelems, tp, buftype);
-        default: 
+        default:
             assert("ncmpix_pad_getn invalid filetype" == 0);
             return NC_EBADTYPE;
     }
@@ -1050,7 +1050,7 @@ ncmpix_pad_putn(void       **xpp,
             return ncmpix_putn_int64     (xpp, nelems, tp, buftype);
         case NC_UINT64:
             return ncmpix_putn_uint64    (xpp, nelems, tp, buftype);
-        default: 
+        default:
             assert("ncmpix_pad_putn invalid filetype" == 0);
             return NC_EBADTYPE;
     }

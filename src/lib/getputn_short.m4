@@ -53,7 +53,7 @@ get_ix_short(const void *xp, ix_short *ip)
         *ip |= (~(0xffff)); /* N.B. Assumes "twos complement" */
     }
 #endif
-    *ip |= *cp; 
+    *ip |= *cp;
 }
 
 static void
@@ -154,7 +154,7 @@ static int
 ncmpix_put_short_schar(void *xp, const schar *ip)
 {
     uchar *cp = (uchar *) xp;
-    
+
     /* copy the signed bit from schar to short */
     if (*ip & 0x80)    /* 0x80 = 10000000(bin) = -127(dec) */
         /* ip is negative */

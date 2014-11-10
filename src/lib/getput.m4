@@ -712,8 +712,8 @@ dnl string is not yet supported
     if (cbuf != NULL && cbuf !=  buf) NCI_Free(cbuf);                          \
 }
 
-/* buffer layers:       
-        
+/* buffer layers:
+
    User Level              buf     (user defined buffer of MPI_Datatype)
    MPI Datatype Level      cbuf    (contiguous buffer of ptype)
    NetCDF XDR Level        xbuf    (XDR I/O buffer)
@@ -821,7 +821,7 @@ ncmpii_getput_vars(NC               *ncp,
 
     /* type conversion is prohibited between types char and non-char */
     err = NCMPII_ECHAR(varp->type, ptype);
-    if (err != NC_NOERR) goto err_check;   
+    if (err != NC_NOERR) goto err_check;
 
     CHECK_NELEMS(varp, fnelems, count, bnelems, bufcount, nbytes, err)
 
@@ -901,7 +901,7 @@ ncmpii_getput_vars(NC               *ncp,
 
     /* if record variables are too big (so big that we cannot store the
      * stride between records in an MPI_Aint, for example) then we will
-     * have to process this one record at a time.  
+     * have to process this one record at a time.
      */
 
     /* check if the request is contiguous in file */
@@ -1065,8 +1065,8 @@ err_check:
     return ((warning != NC_NOERR) ? warning : status);
 }
 
-/* buffer layers:       
-        
+/* buffer layers:
+
    User Level              buf     (user defined buffer of MPI_Datatype)
    MPI Datatype Level      cbuf    (contiguous buffer of ptype)
    NetCDF XDR Level        xbuf    (XDR I/O buffer)
@@ -1081,15 +1081,15 @@ err_check:
    user buffer:                         |--------------------------|
 
    mpi derived datatype view:           |------|  |------|  |------|
-                
+
    logic (contig) memory datastream:       |------|------|------|
 
    imap view:                              |--| |--|    |--| |--|
 
    contig I/O datastream (internal represent): |--|--|--|--|
 
-   These two layers of memory layout will both be represented in MPI 
-   derived datatype, and if double layers of memory layout is used, 
+   These two layers of memory layout will both be represented in MPI
+   derived datatype, and if double layers of memory layout is used,
    we need to elimilate the upper one passed in MPI_Datatype parameter
    from the user, by packing it to logic contig memory datastream view.
 

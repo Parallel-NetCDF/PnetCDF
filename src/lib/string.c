@@ -41,8 +41,8 @@ ncmpii_free_NC_string(NC_string *ncstrp)
  * For CDF-1, Verify that a name string is valid
  * CDL syntax, eg, all the characters are
  * alphanumeric, '-', '_', or '.'.
- * Also permit ':', '@', '(', or ')' in names for chemists currently making 
- * use of these characters, but don't document until ncgen and ncdump can 
+ * Also permit ':', '@', '(', or ')' in names for chemists currently making
+ * use of these characters, but don't document until ncgen and ncdump can
  * also handle these characters in names.
  */
 static int
@@ -96,7 +96,7 @@ ncmpii_NC_check_name(const char *name,
 /* Use semi-relaxed check */
 #define UTF8_CHECK 2
 
-static int 
+static int
 nextUTF8(const char* cp)
 {
     /*  The goal here is to recognize the length of each
@@ -115,15 +115,15 @@ nextUTF8(const char* cp)
                  | (\xF0[\x90-\xBF][\x80-\xBF][\x80-\xBF])        \
                  | ([\xF1-\xF3][\x80-\xBF][\x80-\xBF][\x80-\xBF]) \
                  | (\xF4[\x80-\x8F][\x80-\xBF][\x80-\xBF])        \
-        
+
         2. partially relaxed:
             UTF8 ([\xC0-\xDF][\x80-\xBF])
                  |([\xE0-\xEF][\x80-\xBF][\x80-\xBF])
                  |([\xF0-\xF7][\x80-\xBF][\x80-\xBF][\x80-\xBF])
-        
+
         3. The most relaxed version of UTF8:
             UTF8 ([\xC0-\xD6].)|([\xE0-\xEF]..)|([\xF0-\xF7]...)
-        
+
         We use #2 here.
 
 	The tests are derived from the table at
@@ -133,7 +133,7 @@ nextUTF8(const char* cp)
 /* Define a test macro to test against a range */
 #define RANGE(c,lo,hi) (((uchar)c) >= lo && ((uchar)c) <= hi)
 /* Define a common RANGE */
-#define RANGE0(c) RANGE(c,0x80,0xBF) 
+#define RANGE0(c) RANGE(c,0x80,0xBF)
 
     int ch0;
 
@@ -187,7 +187,7 @@ nextUTF8(const char* cp)
 	        int ch3 = (uchar)cp[3];
 	        if(ch3 != 0 && RANGE0(ch3)) skip = 4;
 	    }
-	}    
+	}
     } else if((ch0 == 0xF4)) {/* plane 16 */
 	int ch1 = (uchar)cp[1];
 	if(ch1 != 0 && RANGE0(ch1)) {
@@ -196,7 +196,7 @@ nextUTF8(const char* cp)
 	        int ch3 = (uchar)cp[3];
 	        if(ch3 != 0 && RANGE0(ch3)) skip = 4;
 	    }
-	}    
+	}
     } else if(RANGE(ch0,0xF1,0xF3)) { /* planes 4-15 */
 	int ch1 = (uchar)cp[1];
 	if(ch1 != 0 && RANGE0(ch1)) {
@@ -241,7 +241,7 @@ ncmpii_NC_check_name_CDF2(const char *name)
 	if(*name == 0		/* empty names disallowed */
 	   || strchr(cp, '/'))	/* '/' can't be in a name */
 		return NC_EBADNAME;
-	
+
 	/* check validity of any UTF-8 */
 	utf8_stat = utf8proc_check((const unsigned char *)name);
 	if (utf8_stat < 0)
@@ -249,15 +249,15 @@ ncmpii_NC_check_name_CDF2(const char *name)
 
 	/* First char must be [a-z][A-Z][0-9]_ | UTF8 */
 	ch = (uchar)*cp;
-	if(ch <= 0x7f) { 
-	    if(!('A' <= ch && ch <= 'Z') 
-	       && !('a' <= ch && ch <= 'z') 
+	if(ch <= 0x7f) {
+	    if(!('A' <= ch && ch <= 'Z')
+	       && !('a' <= ch && ch <= 'z')
                && !('0' <= ch && ch <= '9')
 	       && ch != '_' )
 		return NC_EBADNAME;
 	    cp++;
 	} else {
-	    if((skip = nextUTF8(cp)) < 0) 
+	    if((skip = nextUTF8(cp)) < 0)
 		return NC_EBADNAME;
 	    cp += skip;
 	}
@@ -265,7 +265,7 @@ ncmpii_NC_check_name_CDF2(const char *name)
 	while(*cp != 0) {
 	    ch = (uchar)*cp;
 	    /* handle simple 0x00-0x7f characters here */
-	    if(ch <= 0x7f) { 
+	    if(ch <= 0x7f) {
                 if( ch < ' ' || ch > 0x7E) /* control char or DEL */
 		  return NC_EBADNAME;
 		cp++;

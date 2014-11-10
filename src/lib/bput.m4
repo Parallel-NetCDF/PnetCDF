@@ -434,7 +434,7 @@ dnl string is not yet supported
 
 /*----< ncmpi_buffer_attach() >-----------------------------------------------*/
 int
-ncmpi_buffer_attach(int        ncid, 
+ncmpi_buffer_attach(int        ncid,
                     MPI_Offset bufsize)
 {
     int status;
@@ -501,7 +501,7 @@ ncmpi_buffer_detach(int ncid)
  * 'void *', it is really the address of a void pointer.
  */
 int
-ncmpi_buffer_detach(int         ncid, 
+ncmpi_buffer_detach(int         ncid,
                     void       *bufptr,
                     MPI_Offset *bufsize)
 {

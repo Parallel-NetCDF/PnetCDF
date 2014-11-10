@@ -110,7 +110,7 @@ typedef int nc_type;
 #define NC_MIN_INT (-NC_MAX_INT - 1)
 #define NC_MAX_FLOAT 3.402823466e+38f
 #define NC_MIN_FLOAT (-NC_MAX_FLOAT)
-#define NC_MAX_DOUBLE 1.7976931348623157e+308 
+#define NC_MAX_DOUBLE 1.7976931348623157e+308
 #define NC_MIN_DOUBLE (-NC_MAX_DOUBLE)
 #define NC_MAX_UBYTE NC_MAX_CHAR
 #define NC_MAX_USHORT 65535U
@@ -153,17 +153,17 @@ typedef int nc_type;
  * nc_open() or nc_create() may someday support use of advisory
  * locking to prevent multiple writers from clobbering a file
  */
-#define NC_LOCK          0x0400	
+#define NC_LOCK          0x0400
 
 /** Share updates, limit cacheing.
 Use this in mode flags for both nc_create() and nc_open(). */
-#define NC_SHARE         0x0800	
+#define NC_SHARE         0x0800
 
 #define NC_NETCDF4       0x1000  /**< Use netCDF-4/HDF5 format. Mode flag for nc_create(). */
 
 /** Turn on MPI I/O.
 Use this in mode flags for both nc_create() and nc_open(). */
-#define NC_MPIIO         0x2000 
+#define NC_MPIIO         0x2000
 /** Turn on MPI POSIX I/O.
 Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_MPIPOSIX      0x4000
@@ -183,7 +183,7 @@ Use this in mode flags for both nc_create() and nc_open(). */
 
 /**@}*/
 
-/** Extended format specifier returned by  nc_inq_format_extended() 
+/** Extended format specifier returned by  nc_inq_format_extended()
  *  Added in version 4.3.1. This returns the true format of the
  *  underlying data.
  * The function returns two values
@@ -220,7 +220,7 @@ Use this in mode flags for both nc_create() and nc_open(). */
 /** Attribute id to put/get a global attribute. */
 #define NC_GLOBAL -1
 
-/** 
+/**
 Maximum for classic library.
 
 In the classic netCDF model there are maximum values for the number of
@@ -239,18 +239,18 @@ created with the ::NC_CLASSIC_MODEL flag.
 As a rule, NC_MAX_VAR_DIMS <= NC_MAX_DIMS.
 */
 /**@{*/
-#define NC_MAX_DIMS	1024	
-#define NC_MAX_ATTRS	8192	
-#define NC_MAX_VARS	8192	
-#define NC_MAX_NAME	256	
+#define NC_MAX_DIMS	1024
+#define NC_MAX_ATTRS	8192
+#define NC_MAX_VARS	8192
+#define NC_MAX_NAME	256
 #define NC_MAX_VAR_DIMS	1024 /**< max per variable dimensions */
 /**@}*/
 
 /** This is the max size of an SD dataset name in HDF4 (from HDF4 documentation).*/
-#define NC_MAX_HDF4_NAME 64 
+#define NC_MAX_HDF4_NAME 64
 
 /** In HDF5 files you can set the endianness of variables with
-    nc_def_var_endian(). This define is used there. */   
+    nc_def_var_endian(). This define is used there. */
 /**@{*/
 #define NC_ENDIAN_NATIVE 0
 #define NC_ENDIAN_LITTLE 1
@@ -296,7 +296,7 @@ there. */
 
 The specified netCDF ID does not refer to an
 open netCDF dataset. */
-#define	NC_EBADID	(-33)	   
+#define	NC_EBADID	(-33)
 #define	NC_ENFILE	(-34)	   /**< Too many netcdfs open */
 #define	NC_EEXIST	(-35)	   /**< netcdf file exists && NC_NOCLOBBER */
 #define	NC_EINVAL	(-36)	   /**< Invalid Argument */
@@ -305,23 +305,23 @@ open netCDF dataset. */
 /** Operation not allowed in data mode. This is returned for netCDF
 classic or 64-bit offset files, or for netCDF-4 files, when they were
 been created with ::NC_CLASSIC_MODEL flag in nc_create(). */
-#define NC_ENOTINDEFINE	(-38)	   
+#define NC_ENOTINDEFINE	(-38)
 
 /** Operation not allowed in define mode.
 
-The specified netCDF is in define mode rather than data mode. 
+The specified netCDF is in define mode rather than data mode.
 
 With netCDF-4/HDF5 files, this error will not occur, unless
 ::NC_CLASSIC_MODEL was used in nc_create().
  */
-#define	NC_EINDEFINE	(-39)	   
+#define	NC_EINDEFINE	(-39)
 
 /** Index exceeds dimension bound.
 
 The specified corner indices were out of range for the rank of the
 specified variable. For example, a negative index or an index that is
 larger than the corresponding dimension length will cause an error. */
-#define	NC_EINVALCOORDS	(-40)	   
+#define	NC_EINVALCOORDS	(-40)
 #define	NC_EMAXDIMS	(-41)	   /**< NC_MAX_DIMS exceeded */
 #define	NC_ENAMEINUSE	(-42)	   /**< String match to name in use */
 #define NC_ENOTATT	(-43)	   /**< Attribute not found */
@@ -333,12 +333,12 @@ larger than the corresponding dimension length will cause an error. */
 /** NC_MAX_VARS exceeded. Max number of variables exceeded in a
 classic or 64-bit offset file, or an netCDF-4 file with
 ::NC_CLASSIC_MODEL on. */
-#define	NC_EMAXVARS	(-48)	   
+#define	NC_EMAXVARS	(-48)
 
 /** Variable not found.
 
 The variable ID is invalid for the specified netCDF dataset. */
-#define NC_ENOTVAR	(-49)	   
+#define NC_ENOTVAR	(-49)
 #define NC_EGLOBAL	(-50)	   /**< Action prohibited on NC_GLOBAL varid */
 #define NC_ENOTNC	(-51)	   /**< Not a netcdf file */
 #define NC_ESTS        	(-52)	   /**< In Fortran, string too short */
@@ -354,7 +354,7 @@ referenced data out of range for the rank of the specified
 variable. For example, an edge length that is larger than the
 corresponding dimension length minus the corner index will cause an
 error. */
-#define NC_EEDGE	(-57)	   
+#define NC_EEDGE	(-57)
 #define NC_ESTRIDE	(-58)	   /**< Illegal stride */
 #define NC_EBADNAME	(-59)	   /**< Attribute or variable name contains illegal characters */
 /* N.B. following must match value in ncx.h */
@@ -363,9 +363,9 @@ error. */
 
 One or more of the values are out of the range of values representable
 by the desired type. */
-#define NC_ERANGE	(-60)	   
+#define NC_ERANGE	(-60)
 #define NC_ENOMEM	(-61)	   /**< Memory allocation (malloc) failure */
-#define NC_EVARSIZE     (-62)      /**< One or more variable sizes violate format constraints */ 
+#define NC_EVARSIZE     (-62)      /**< One or more variable sizes violate format constraints */
 #define NC_EDIMSIZE     (-63)      /**< Invalid dimension size */
 #define NC_ETRUNC       (-64)      /**< File likely truncated or possibly corrupted */
 #define NC_EAXISTYPE    (-65)      /**< Unknown axis type. */
@@ -395,7 +395,7 @@ by the desired type. */
 #define NC4_FIRST_ERROR  (-100)
 
 /** Error at HDF5 layer. */
-#define NC_EHDFERR       (-101)    
+#define NC_EHDFERR       (-101)
 #define NC_ECANTREAD     (-102)    /**< Can't read. */
 #define NC_ECANTWRITE    (-103)    /**< Can't write. */
 #define NC_ECANTCREATE   (-104)    /**< Can't create. */
@@ -405,19 +405,19 @@ by the desired type. */
 #define NC_EVARMETA      (-108)    /**< Problem with variable metadata. */
 #define NC_ENOCOMPOUND   (-109)    /**< Not a compound type. */
 #define NC_EATTEXISTS    (-110)    /**< Attribute already exists. */
-#define NC_ENOTNC4       (-111)    /**< Attempting netcdf-4 operation on netcdf-3 file. */  
+#define NC_ENOTNC4       (-111)    /**< Attempting netcdf-4 operation on netcdf-3 file. */
 
-/** Attempting netcdf-4 operation on strict nc3 netcdf-4 file. */  
-#define NC_ESTRICTNC3    (-112)    
-#define NC_ENOTNC3       (-113)    /**< Attempting netcdf-3 operation on netcdf-4 file. */  
-#define NC_ENOPAR        (-114)    /**< Parallel operation on file opened for non-parallel access. */  
-#define NC_EPARINIT      (-115)    /**< Error initializing for parallel access. */  
-#define NC_EBADGRPID     (-116)    /**< Bad group ID. */  
-#define NC_EBADTYPID     (-117)    /**< Bad type ID. */  
+/** Attempting netcdf-4 operation on strict nc3 netcdf-4 file. */
+#define NC_ESTRICTNC3    (-112)
+#define NC_ENOTNC3       (-113)    /**< Attempting netcdf-3 operation on netcdf-4 file. */
+#define NC_ENOPAR        (-114)    /**< Parallel operation on file opened for non-parallel access. */
+#define NC_EPARINIT      (-115)    /**< Error initializing for parallel access. */
+#define NC_EBADGRPID     (-116)    /**< Bad group ID. */
+#define NC_EBADTYPID     (-117)    /**< Bad type ID. */
 #define NC_ETYPDEFINED   (-118)    /**< Type has already been defined and may not be edited. */
-#define NC_EBADFIELD     (-119)    /**< Bad field ID. */  
-#define NC_EBADCLASS     (-120)    /**< Bad class. */  
-#define NC_EMAPTYPE      (-121)    /**< Mapped access for atomic types only. */  
+#define NC_EBADFIELD     (-119)    /**< Bad field ID. */
+#define NC_EBADCLASS     (-120)    /**< Bad class. */
+#define NC_EMAPTYPE      (-121)    /**< Mapped access for atomic types only. */
 #define NC_ELATEFILL     (-122)    /**< Attempt to define fill value when data already exists. */
 #define NC_ELATEDEF      (-123)    /**< Attempt to define var properties, like deflate, after enddef. */
 #define NC_EDIMSCALE     (-124)    /**< Probem with HDF5 dimscales. */
@@ -425,11 +425,11 @@ by the desired type. */
 #define NC_ESTORAGE      (-126)    /**< Can't specify both contiguous and chunking. */
 #define NC_EBADCHUNK     (-127)    /**< Bad chunksize. */
 #define NC_ENOTBUILT     (-128)    /**< Attempt to use feature that was not turned on when netCDF was built. */
-#define NC_EDISKLESS     (-129)    /**< Error in using diskless  access. */ 
-#define NC_ECANTEXTEND   (-130)    /**< Attempt to extend dataset during ind. I/O operation. */ 
-#define NC_EMPI          (-131)    /**< MPI operation failed. */ 
+#define NC_EDISKLESS     (-129)    /**< Error in using diskless  access. */
+#define NC_ECANTEXTEND   (-130)    /**< Attempt to extend dataset during ind. I/O operation. */
+#define NC_EMPI          (-131)    /**< MPI operation failed. */
 
-#define NC4_LAST_ERROR   (-131) 
+#define NC4_LAST_ERROR   (-131)
 
 /* This is used in netCDF-4 files for dimensions without coordinate
  * vars. */
@@ -553,7 +553,7 @@ const char* ncmpi_strerror(int err);
 
 /* Begin Dataset Functions */
 
-int ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp); 
+int ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info, int *ncidp);
 
 int ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info, int *ncidp);
 
@@ -591,7 +591,7 @@ int ncmpi_set_fill(int ncid, int fillmode, int *old_modep);
 
 int ncmpi_def_dim(int ncid, const char *name, MPI_Offset len, int *idp);
 
-int ncmpi_def_var(int ncid, const char *name, nc_type xtype, 
+int ncmpi_def_var(int ncid, const char *name, nc_type xtype,
                   int ndims, const int *dimidsp, int *varidp);
 
 int ncmpi_rename_dim(int ncid, int dimid, const char *name);
@@ -605,7 +605,7 @@ int ncmpi_rename_var(int ncid, int varid, const char *name);
 const char* ncmpi_inq_libvers(void);
 
 int ncmpi_inq(int ncid, int *ndimsp, int *nvarsp,
-              int *ngattsp, int *unlimdimidp); 
+              int *ngattsp, int *unlimdimidp);
 
 int ncmpi_inq_format(int ncid, int *formatp);
 
@@ -863,7 +863,7 @@ int ncmpi_get_var1_ulonglong(int ncid, int varid, const MPI_Offset index[],
 
 /* End {put,get}_var1 */
 
-/* Begin {put,get}_var */  
+/* Begin {put,get}_var */
 
 int ncmpi_put_var(int ncid, int varid, const void *buf, MPI_Offset bufcount,
                   MPI_Datatype buftype);
@@ -990,22 +990,22 @@ int ncmpi_put_vara_int_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const int *op);
 
 int ncmpi_put_vara_float(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], const float *op); 
+                   const MPI_Offset count[], const float *op);
 
 int ncmpi_put_vara_float_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], const float *op); 
+                   const MPI_Offset count[], const float *op);
 
 int ncmpi_put_vara_double(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], const double *op); 
+                   const MPI_Offset count[], const double *op);
 
 int ncmpi_put_vara_double_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], const double *op); 
+                   const MPI_Offset count[], const double *op);
 
 int ncmpi_put_vara_longlong(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], const long long *op); 
+                   const MPI_Offset count[], const long long *op);
 
 int ncmpi_put_vara_longlong_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], const long long *op); 
+                   const MPI_Offset count[], const long long *op);
 
 int ncmpi_get_vara(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], void *buf, MPI_Offset bufcount,
@@ -1016,10 +1016,10 @@ int ncmpi_get_vara_all(int ncid, int varid, const MPI_Offset start[],
                    MPI_Datatype buftype);
 
 int ncmpi_get_vara_text(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], char *ip); 
+                   const MPI_Offset count[], char *ip);
 
 int ncmpi_get_vara_text_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], char *ip); 
+                   const MPI_Offset count[], char *ip);
 
 int ncmpi_get_vara_schar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], signed char *ip);
@@ -1028,19 +1028,19 @@ int ncmpi_get_vara_schar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], signed char *ip);
 
 int ncmpi_get_vara_short(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], short *ip); 
+                   const MPI_Offset count[], short *ip);
 
 int ncmpi_get_vara_short_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], short *ip); 
+                   const MPI_Offset count[], short *ip);
 
 int ncmpi_get_vara_int(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], int *ip); 
+                   const MPI_Offset count[], int *ip);
 
 int ncmpi_get_vara_int_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], int *ip); 
+                   const MPI_Offset count[], int *ip);
 
 int ncmpi_get_vara_float(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], float *ip); 
+                   const MPI_Offset count[], float *ip);
 
 int ncmpi_get_vara_float_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], float *ip);
@@ -1049,13 +1049,13 @@ int ncmpi_get_vara_double(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], double *ip);
 
 int ncmpi_get_vara_double_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], double *ip); 
+                   const MPI_Offset count[], double *ip);
 
 int ncmpi_get_vara_longlong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], long long *ip);
 
 int ncmpi_get_vara_longlong_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], long long *ip); 
+                   const MPI_Offset count[], long long *ip);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
@@ -1094,31 +1094,31 @@ int ncmpi_get_vara_uchar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], unsigned char *ip);
 
 int ncmpi_get_vara_uchar_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], unsigned char *ip); 
+                   const MPI_Offset count[], unsigned char *ip);
 
 int ncmpi_get_vara_ushort(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], unsigned short *ip);
 
 int ncmpi_get_vara_ushort_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], unsigned short *ip); 
+                   const MPI_Offset count[], unsigned short *ip);
 
 int ncmpi_get_vara_uint(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], unsigned int *ip);
 
 int ncmpi_get_vara_uint_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], unsigned int *ip); 
+                   const MPI_Offset count[], unsigned int *ip);
 
 int ncmpi_get_vara_long(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], long *ip);
 
 int ncmpi_get_vara_long_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], long *ip); 
+                   const MPI_Offset count[], long *ip);
 
 int ncmpi_get_vara_ulonglong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], unsigned long long *ip);
 
 int ncmpi_get_vara_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
-                   const MPI_Offset count[], unsigned long long *ip); 
+                   const MPI_Offset count[], unsigned long long *ip);
 
 /* End Skip Prototypes for Fortran binding */
 
@@ -1129,48 +1129,48 @@ int ncmpi_get_vara_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
 int ncmpi_put_vars(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const void *buf, MPI_Offset bufcount,
-                   MPI_Datatype buftype); 
+                   MPI_Datatype buftype);
 
 int ncmpi_put_vars_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const void *buf, MPI_Offset bufcount,
-                   MPI_Datatype buftype); 
+                   MPI_Datatype buftype);
 
 int ncmpi_put_vars_text(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const char *op); 
+                   const char *op);
 
 int ncmpi_put_vars_text_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const char *op); 
+                   const char *op);
 
 int ncmpi_put_vars_schar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const signed char *op); 
+                   const signed char *op);
 
 int ncmpi_put_vars_schar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const signed char *op); 
+                   const signed char *op);
 
 int ncmpi_put_vars_short(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const short *op); 
+                   const short *op);
 
 int ncmpi_put_vars_short_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const short *op); 
+                   const short *op);
 
 int ncmpi_put_vars_int(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const int *op); 
+                   const int *op);
 
 int ncmpi_put_vars_int_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const int *op); 
+                   const int *op);
 
 int ncmpi_put_vars_float(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const float *op); 
+                   const float *op);
 
 int ncmpi_put_vars_float_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1178,67 +1178,67 @@ int ncmpi_put_vars_float_all(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_vars_double(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const double *op); 
+                   const double *op);
 
 int ncmpi_put_vars_double_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const double *op); 
+                   const double *op);
 
 int ncmpi_put_vars_longlong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const long long *op); 
+                   const long long *op);
 
 int ncmpi_put_vars_longlong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const long long *op); 
+                   const long long *op);
 
 int ncmpi_get_vars(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   void *buf, MPI_Offset bufcount, MPI_Datatype buftype); 
+                   void *buf, MPI_Offset bufcount, MPI_Datatype buftype);
 
 int ncmpi_get_vars_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   void *buf, MPI_Offset bufcount, MPI_Datatype buftype); 
+                   void *buf, MPI_Offset bufcount, MPI_Datatype buftype);
 
 int ncmpi_get_vars_schar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   signed char *ip); 
+                   signed char *ip);
 
 int ncmpi_get_vars_schar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   signed char *ip); 
+                   signed char *ip);
 
 int ncmpi_get_vars_text(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   char *ip); 
+                   char *ip);
 
 int ncmpi_get_vars_text_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   char *ip); 
+                   char *ip);
 
 int ncmpi_get_vars_short(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   short *ip); 
+                   short *ip);
 
 int ncmpi_get_vars_short_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   short *ip); 
+                   short *ip);
 
 int ncmpi_get_vars_int(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   int *ip); 
+                   int *ip);
 
 int ncmpi_get_vars_int_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   int *ip); 
+                   int *ip);
 
 int ncmpi_get_vars_float(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   float *ip); 
+                   float *ip);
 
 int ncmpi_get_vars_float_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   float *ip); 
+                   float *ip);
 
 int ncmpi_get_vars_double(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1246,7 +1246,7 @@ int ncmpi_get_vars_double(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_vars_double_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   double *ip); 
+                   double *ip);
 
 int ncmpi_get_vars_longlong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1254,7 +1254,7 @@ int ncmpi_get_vars_longlong(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_vars_longlong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   long long *ip); 
+                   long long *ip);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
@@ -1265,7 +1265,7 @@ int ncmpi_put_vars_uchar(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_vars_uchar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const unsigned char *op); 
+                   const unsigned char *op);
 
 int ncmpi_put_vars_ushort(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1273,7 +1273,7 @@ int ncmpi_put_vars_ushort(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_vars_ushort_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const unsigned short *op); 
+                   const unsigned short *op);
 
 int ncmpi_put_vars_uint(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1281,7 +1281,7 @@ int ncmpi_put_vars_uint(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_vars_uint_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const unsigned int *op); 
+                   const unsigned int *op);
 
 int ncmpi_put_vars_long(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1289,7 +1289,7 @@ int ncmpi_put_vars_long(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_vars_long_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const long *op); 
+                   const long *op);
 
 int ncmpi_put_vars_ulonglong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1297,7 +1297,7 @@ int ncmpi_put_vars_ulonglong(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_vars_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const unsigned long long *op); 
+                   const unsigned long long *op);
 
 int ncmpi_get_vars_uchar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1305,7 +1305,7 @@ int ncmpi_get_vars_uchar(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_vars_uchar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   unsigned char *ip); 
+                   unsigned char *ip);
 
 int ncmpi_get_vars_ushort(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1313,7 +1313,7 @@ int ncmpi_get_vars_ushort(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_vars_ushort_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   unsigned short *ip); 
+                   unsigned short *ip);
 
 int ncmpi_get_vars_uint(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1321,7 +1321,7 @@ int ncmpi_get_vars_uint(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_vars_uint_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   unsigned int *ip); 
+                   unsigned int *ip);
 
 int ncmpi_get_vars_long(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1329,7 +1329,7 @@ int ncmpi_get_vars_long(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_vars_long_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   long *ip); 
+                   long *ip);
 
 int ncmpi_get_vars_ulonglong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1337,7 +1337,7 @@ int ncmpi_get_vars_ulonglong(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_vars_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   unsigned long long *ip); 
+                   unsigned long long *ip);
 
 /* End Skip Prototypes for Fortran binding */
 
@@ -1348,36 +1348,36 @@ int ncmpi_get_vars_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
 int ncmpi_put_varm(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], const void *buf,
-                   MPI_Offset bufcount, MPI_Datatype buftype); 
+                   MPI_Offset bufcount, MPI_Datatype buftype);
 
 int ncmpi_put_varm_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], const void *buf,
-                   MPI_Offset bufcount, MPI_Datatype buftype); 
+                   MPI_Offset bufcount, MPI_Datatype buftype);
 
 int ncmpi_put_varm_text(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const char *op); 
+                   const MPI_Offset imap[], const char *op);
 
 int ncmpi_put_varm_text_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const char *op); 
+                   const MPI_Offset imap[], const char *op);
 
 int ncmpi_put_varm_schar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const signed char *op); 
+                   const MPI_Offset imap[], const signed char *op);
 
 int ncmpi_put_varm_schar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const signed char *op); 
+                   const MPI_Offset imap[], const signed char *op);
 
 int ncmpi_put_varm_short(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const short *op); 
+                   const MPI_Offset imap[], const short *op);
 
 int ncmpi_put_varm_short_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const short *op); 
+                   const MPI_Offset imap[], const short *op);
 
 int ncmpi_put_varm_int(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1385,81 +1385,81 @@ int ncmpi_put_varm_int(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_varm_int_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const int *op); 
+                   const MPI_Offset imap[], const int *op);
 
 int ncmpi_put_varm_float(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const float *op); 
+                   const MPI_Offset imap[], const float *op);
 
 int ncmpi_put_varm_float_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const float *op); 
+                   const MPI_Offset imap[], const float *op);
 
 int ncmpi_put_varm_double(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const double *op); 
+                   const MPI_Offset imap[], const double *op);
 
 int ncmpi_put_varm_double_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const double *op); 
+                   const MPI_Offset imap[], const double *op);
 
 int ncmpi_put_varm_longlong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const long long *op); 
+                   const MPI_Offset imap[], const long long *op);
 
 int ncmpi_put_varm_longlong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const long long *op); 
+                   const MPI_Offset imap[], const long long *op);
 
 int ncmpi_get_varm(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], void *buf, MPI_Offset bufcount,
-                   MPI_Datatype buftype); 
+                   MPI_Datatype buftype);
 
 int ncmpi_get_varm_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
                    const MPI_Offset imap[], void *buf, MPI_Offset bufcount,
-                   MPI_Datatype buftype); 
+                   MPI_Datatype buftype);
 
 int ncmpi_get_varm_schar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], signed char *ip); 
+                   const MPI_Offset imap[], signed char *ip);
 
 int ncmpi_get_varm_schar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], signed char *ip); 
+                   const MPI_Offset imap[], signed char *ip);
 
 int ncmpi_get_varm_text(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], char *ip); 
+                   const MPI_Offset imap[], char *ip);
 
 int ncmpi_get_varm_text_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], char *ip); 
+                   const MPI_Offset imap[], char *ip);
 
 int ncmpi_get_varm_short(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], short *ip); 
+                   const MPI_Offset imap[], short *ip);
 
 int ncmpi_get_varm_short_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], short *ip); 
+                   const MPI_Offset imap[], short *ip);
 
 int ncmpi_get_varm_int(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], int *ip); 
+                   const MPI_Offset imap[], int *ip);
 
 int ncmpi_get_varm_int_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], int *ip); 
+                   const MPI_Offset imap[], int *ip);
 
 int ncmpi_get_varm_float(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], float *ip); 
+                   const MPI_Offset imap[], float *ip);
 
 int ncmpi_get_varm_float_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], float *ip); 
+                   const MPI_Offset imap[], float *ip);
 
 int ncmpi_get_varm_double(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1467,7 +1467,7 @@ int ncmpi_get_varm_double(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_varm_double_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], double *ip); 
+                   const MPI_Offset imap[], double *ip);
 
 int ncmpi_get_varm_longlong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1475,9 +1475,9 @@ int ncmpi_get_varm_longlong(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_varm_longlong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], long long *ip); 
+                   const MPI_Offset imap[], long long *ip);
 
-/* Begin Skip Prototypes for Fortran binding */ 
+/* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
 int ncmpi_put_varm_uchar(int ncid, int varid, const MPI_Offset start[],
@@ -1486,7 +1486,7 @@ int ncmpi_put_varm_uchar(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_varm_uchar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const unsigned char *op); 
+                   const MPI_Offset imap[], const unsigned char *op);
 
 int ncmpi_put_varm_ushort(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1494,7 +1494,7 @@ int ncmpi_put_varm_ushort(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_varm_ushort_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const unsigned short *op); 
+                   const MPI_Offset imap[], const unsigned short *op);
 
 int ncmpi_put_varm_uint(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1502,7 +1502,7 @@ int ncmpi_put_varm_uint(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_varm_uint_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const unsigned int *op); 
+                   const MPI_Offset imap[], const unsigned int *op);
 
 int ncmpi_put_varm_long(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1510,7 +1510,7 @@ int ncmpi_put_varm_long(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_varm_long_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const long *op); 
+                   const MPI_Offset imap[], const long *op);
 
 int ncmpi_put_varm_ulonglong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1518,31 +1518,31 @@ int ncmpi_put_varm_ulonglong(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_put_varm_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], const unsigned long long *op); 
+                   const MPI_Offset imap[], const unsigned long long *op);
 
 int ncmpi_get_varm_uchar(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned char *ip); 
+                   const MPI_Offset imap[], unsigned char *ip);
 
 int ncmpi_get_varm_uchar_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned char *ip); 
+                   const MPI_Offset imap[], unsigned char *ip);
 
 int ncmpi_get_varm_ushort(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned short *ip); 
+                   const MPI_Offset imap[], unsigned short *ip);
 
 int ncmpi_get_varm_ushort_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned short *ip); 
+                   const MPI_Offset imap[], unsigned short *ip);
 
 int ncmpi_get_varm_uint(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned int *ip); 
+                   const MPI_Offset imap[], unsigned int *ip);
 
 int ncmpi_get_varm_uint_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned int *ip); 
+                   const MPI_Offset imap[], unsigned int *ip);
 
 int ncmpi_get_varm_long(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
@@ -1550,17 +1550,17 @@ int ncmpi_get_varm_long(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_get_varm_long_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], long *ip); 
+                   const MPI_Offset imap[], long *ip);
 
 int ncmpi_get_varm_ulonglong(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned long long *ip); 
+                   const MPI_Offset imap[], unsigned long long *ip);
 
 int ncmpi_get_varm_ulonglong_all(int ncid, int varid, const MPI_Offset start[],
                    const MPI_Offset count[], const MPI_Offset stride[],
-                   const MPI_Offset imap[], unsigned long long *ip); 
+                   const MPI_Offset imap[], unsigned long long *ip);
 
-/* End Skip Prototypes for Fortran binding */ 
+/* End Skip Prototypes for Fortran binding */
 
 /* End {put,get}_varm */
 
@@ -1586,46 +1586,46 @@ int ncmpi_inq_nreqs(int ncid, int *nreqs);
 
 int ncmpi_iput_var1(int ncid, int varid, const MPI_Offset index[],
                     const void *buf, MPI_Offset bufcount,
-                    MPI_Datatype buftype, int *request); 
+                    MPI_Datatype buftype, int *request);
 
 int ncmpi_iput_var1_text(int ncid, int varid, const MPI_Offset index[],
-                    const char *op, int *request); 
+                    const char *op, int *request);
 
 int ncmpi_iput_var1_schar(int ncid, int varid, const MPI_Offset index[],
-                    const signed char *op, int *request); 
+                    const signed char *op, int *request);
 
 int ncmpi_iput_var1_short(int ncid, int varid, const MPI_Offset index[],
-                    const short *op, int *request); 
+                    const short *op, int *request);
 
 int ncmpi_iput_var1_int(int ncid, int varid, const MPI_Offset index[],
-                    const int *op, int *request); 
+                    const int *op, int *request);
 
 int ncmpi_iput_var1_float(int ncid, int varid, const MPI_Offset index[],
-                    const float *op, int *request); 
+                    const float *op, int *request);
 
 int ncmpi_iput_var1_double(int ncid, int varid, const MPI_Offset index[],
-                    const double *op, int *request); 
+                    const double *op, int *request);
 
 int ncmpi_iput_var1_longlong(int ncid, int varid, const MPI_Offset index[],
-                    const long long *op, int *request); 
+                    const long long *op, int *request);
 
 int ncmpi_iget_var1(int ncid, int varid, const MPI_Offset index[], void *buf,
-                    MPI_Offset bufcount, MPI_Datatype buftype, int *request); 
+                    MPI_Offset bufcount, MPI_Datatype buftype, int *request);
 
 int ncmpi_iget_var1_schar(int ncid, int varid, const MPI_Offset index[],
-                    signed char *ip, int *request); 
+                    signed char *ip, int *request);
 
 int ncmpi_iget_var1_text(int ncid, int varid, const MPI_Offset index[],
-                    char *ip, int *request); 
+                    char *ip, int *request);
 
 int ncmpi_iget_var1_short(int ncid, int varid, const MPI_Offset index[],
-                    short *ip, int *request); 
+                    short *ip, int *request);
 
 int ncmpi_iget_var1_int(int ncid, int varid, const MPI_Offset index[],
-                    int *ip, int *request); 
+                    int *ip, int *request);
 
 int ncmpi_iget_var1_float(int ncid, int varid, const MPI_Offset index[],
-                    float *ip, int *request); 
+                    float *ip, int *request);
 
 int ncmpi_iget_var1_double(int ncid, int varid, const MPI_Offset index[],
                     double *ip, int *request);
@@ -1635,28 +1635,28 @@ int ncmpi_iget_var1_longlong(int ncid, int varid, const MPI_Offset index[],
 
 int ncmpi_bput_var1(int ncid, int varid, const MPI_Offset index[],
                     const void *buf, MPI_Offset bufcount,
-                    MPI_Datatype buftype, int *request); 
+                    MPI_Datatype buftype, int *request);
 
 int ncmpi_bput_var1_text(int ncid, int varid, const MPI_Offset index[],
-                    const char *op, int *request); 
+                    const char *op, int *request);
 
 int ncmpi_bput_var1_schar(int ncid, int varid, const MPI_Offset index[],
-                    const signed char *op, int *request); 
+                    const signed char *op, int *request);
 
 int ncmpi_bput_var1_short(int ncid, int varid, const MPI_Offset index[],
-                    const short *op, int *request); 
+                    const short *op, int *request);
 
 int ncmpi_bput_var1_int(int ncid, int varid, const MPI_Offset index[],
-                    const int *op, int *request); 
+                    const int *op, int *request);
 
 int ncmpi_bput_var1_float(int ncid, int varid, const MPI_Offset index[],
-                    const float *op, int *request); 
+                    const float *op, int *request);
 
 int ncmpi_bput_var1_double(int ncid, int varid, const MPI_Offset index[],
-                    const double *op, int *request); 
+                    const double *op, int *request);
 
 int ncmpi_bput_var1_longlong(int ncid, int varid, const MPI_Offset index[],
-                    const long long *op, int *request); 
+                    const long long *op, int *request);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
@@ -1710,7 +1710,7 @@ int ncmpi_bput_var1_ulonglong(int ncid, int varid, const MPI_Offset index[],
 
 /* End {iput,iget,bput}_var1 */
 
-/* Begin {iput,iget,bput}_var */  
+/* Begin {iput,iget,bput}_var */
 
 int ncmpi_iput_var(int ncid, int varid, const void *buf, MPI_Offset bufcount,
                     MPI_Datatype buftype, int *request);
@@ -1814,48 +1814,48 @@ int ncmpi_bput_var_ulonglong(int ncid, int varid, const unsigned long long *op,
 
 int ncmpi_iput_vara(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const void *buf,
-                    MPI_Offset bufcount, MPI_Datatype buftype, int *request); 
+                    MPI_Offset bufcount, MPI_Datatype buftype, int *request);
 
 int ncmpi_iput_vara_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const signed char *op,
-                    int *request); 
+                    int *request);
 
 int ncmpi_iput_vara_text(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const char *op, int *request); 
+                    const MPI_Offset count[], const char *op, int *request);
 
 int ncmpi_iput_vara_short(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const short *op, int *request); 
+                    const MPI_Offset count[], const short *op, int *request);
 
 int ncmpi_iput_vara_int(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const int *op, int *request); 
+                    const MPI_Offset count[], const int *op, int *request);
 
 int ncmpi_iput_vara_float(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const float *op, int *request); 
+                    const MPI_Offset count[], const float *op, int *request);
 
 int ncmpi_iput_vara_double(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const double *op, int *request); 
+                    const MPI_Offset count[], const double *op, int *request);
 
 int ncmpi_iput_vara_longlong(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const long long *op, int *request); 
+                    const MPI_Offset count[], const long long *op, int *request);
 
 int ncmpi_iget_vara(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], void *buf, MPI_Offset bufcount,
-                    MPI_Datatype buftype, int *request); 
+                    MPI_Datatype buftype, int *request);
 
 int ncmpi_iget_vara_schar(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], signed char *ip, int *request); 
+                    const MPI_Offset count[], signed char *ip, int *request);
 
 int ncmpi_iget_vara_text(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], char *ip, int *request); 
+                    const MPI_Offset count[], char *ip, int *request);
 
 int ncmpi_iget_vara_short(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], short *ip, int *request); 
+                    const MPI_Offset count[], short *ip, int *request);
 
 int ncmpi_iget_vara_int(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], int *ip, int *request); 
+                    const MPI_Offset count[], int *ip, int *request);
 
 int ncmpi_iget_vara_float(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], float *ip, int *request); 
+                    const MPI_Offset count[], float *ip, int *request);
 
 int ncmpi_iget_vara_double(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], double *ip, int *request);
@@ -1865,29 +1865,29 @@ int ncmpi_iget_vara_longlong(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_bput_vara(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const void *buf,
-                    MPI_Offset bufcount, MPI_Datatype buftype, int *request); 
+                    MPI_Offset bufcount, MPI_Datatype buftype, int *request);
 
 int ncmpi_bput_vara_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const signed char *op,
-                    int *request); 
+                    int *request);
 
 int ncmpi_bput_vara_text(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const char *op, int *request); 
+                    const MPI_Offset count[], const char *op, int *request);
 
 int ncmpi_bput_vara_short(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const short *op, int *request); 
+                    const MPI_Offset count[], const short *op, int *request);
 
 int ncmpi_bput_vara_int(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const int *op, int *request); 
+                    const MPI_Offset count[], const int *op, int *request);
 
 int ncmpi_bput_vara_float(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const float *op, int *request); 
+                    const MPI_Offset count[], const float *op, int *request);
 
 int ncmpi_bput_vara_double(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const double *op, int *request); 
+                    const MPI_Offset count[], const double *op, int *request);
 
 int ncmpi_bput_vara_longlong(int ncid, int varid, const MPI_Offset start[],
-                    const MPI_Offset count[], const long long *op, int *request); 
+                    const MPI_Offset count[], const long long *op, int *request);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
@@ -1954,101 +1954,101 @@ int ncmpi_bput_vara_ulonglong(int ncid, int varid, const MPI_Offset start[],
 int ncmpi_iput_vars(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     const void *buf, MPI_Offset bufcount,
-                    MPI_Datatype buftype, int *request); 
+                    MPI_Datatype buftype, int *request);
 
 int ncmpi_iput_vars_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const signed char *op, int *request); 
+                    const signed char *op, int *request);
 
 int ncmpi_iput_vars_text(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const char *op, int *request); 
+                    const char *op, int *request);
 
 int ncmpi_iput_vars_short(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const short *op, int *request); 
+                    const short *op, int *request);
 
 int ncmpi_iput_vars_int(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const int *op, int *request); 
+                    const int *op, int *request);
 
 int ncmpi_iput_vars_float(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const float *op, int *request); 
+                    const float *op, int *request);
 
 int ncmpi_iput_vars_double(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const double *op, int *request); 
+                    const double *op, int *request);
 
 int ncmpi_iput_vars_longlong(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const long long *op, int *request); 
+                    const long long *op, int *request);
 
 int ncmpi_iget_vars(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     void *buf, MPI_Offset bufcount, MPI_Datatype buftype,
-                    int *request); 
+                    int *request);
 
 int ncmpi_iget_vars_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    signed char *ip, int *request); 
+                    signed char *ip, int *request);
 
 int ncmpi_iget_vars_text(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    char *ip, int *request); 
+                    char *ip, int *request);
 
 int ncmpi_iget_vars_short(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    short *ip, int *request); 
+                    short *ip, int *request);
 
 int ncmpi_iget_vars_int(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    int *ip, int *request); 
+                    int *ip, int *request);
 
 int ncmpi_iget_vars_float(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    float *ip, int *request); 
+                    float *ip, int *request);
 
 int ncmpi_iget_vars_double(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    double *ip, int *request); 
+                    double *ip, int *request);
 
 int ncmpi_iget_vars_longlong(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    long long *ip, int *request); 
+                    long long *ip, int *request);
 
 int ncmpi_bput_vars(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     const void *buf, MPI_Offset bufcount,
-                    MPI_Datatype buftype, int *request); 
+                    MPI_Datatype buftype, int *request);
 
 int ncmpi_bput_vars_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const signed char *op, int *request); 
+                    const signed char *op, int *request);
 
 int ncmpi_bput_vars_text(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const char *op, int *request); 
+                    const char *op, int *request);
 
 int ncmpi_bput_vars_short(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const short *op, int *request); 
+                    const short *op, int *request);
 
 int ncmpi_bput_vars_int(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const int *op, int *request); 
+                    const int *op, int *request);
 
 int ncmpi_bput_vars_float(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const float *op, int *request); 
+                    const float *op, int *request);
 
 int ncmpi_bput_vars_double(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const double *op, int *request); 
+                    const double *op, int *request);
 
 int ncmpi_bput_vars_longlong(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const long long *op, int *request); 
+                    const long long *op, int *request);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
@@ -2087,7 +2087,7 @@ int ncmpi_iget_vars_uint(int ncid, int varid, const MPI_Offset start[],
 
 int ncmpi_iget_vars_long(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    long *ip, int *request); 
+                    long *ip, int *request);
 
 int ncmpi_iget_vars_ulonglong(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
@@ -2122,61 +2122,61 @@ int ncmpi_bput_vars_ulonglong(int ncid, int varid, const MPI_Offset start[],
 int ncmpi_iput_varm(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     const MPI_Offset imap[], const void *buf,
-                    MPI_Offset bufcount, MPI_Datatype buftype, int *request); 
+                    MPI_Offset bufcount, MPI_Datatype buftype, int *request);
 
 int ncmpi_iput_varm_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     const MPI_Offset imap[], const signed char *op,
-                    int *request); 
+                    int *request);
 
 int ncmpi_iput_varm_text(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const char *op, int *request); 
+                    const MPI_Offset imap[], const char *op, int *request);
 
 int ncmpi_iput_varm_short(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const short *op, int *request); 
+                    const MPI_Offset imap[], const short *op, int *request);
 
 int ncmpi_iput_varm_int(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const int *op, int *request); 
+                    const MPI_Offset imap[], const int *op, int *request);
 
 int ncmpi_iput_varm_float(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const float *op, int *request); 
+                    const MPI_Offset imap[], const float *op, int *request);
 
 int ncmpi_iput_varm_double(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const double *op, int *request); 
+                    const MPI_Offset imap[], const double *op, int *request);
 
 int ncmpi_iput_varm_longlong(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const long long *op, int *request); 
+                    const MPI_Offset imap[], const long long *op, int *request);
 
 int ncmpi_iget_varm(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     const MPI_Offset imap[], void *buf, MPI_Offset bufcount,
-                    MPI_Datatype buftype, int *request); 
+                    MPI_Datatype buftype, int *request);
 
 int ncmpi_iget_varm_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], signed char *ip, int *request); 
+                    const MPI_Offset imap[], signed char *ip, int *request);
 
 int ncmpi_iget_varm_text(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], char *ip, int *request); 
+                    const MPI_Offset imap[], char *ip, int *request);
 
 int ncmpi_iget_varm_short(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], short *ip, int *request); 
+                    const MPI_Offset imap[], short *ip, int *request);
 
 int ncmpi_iget_varm_int(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], int *ip, int *request); 
+                    const MPI_Offset imap[], int *ip, int *request);
 
 int ncmpi_iget_varm_float(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], float *ip, int *request); 
+                    const MPI_Offset imap[], float *ip, int *request);
 
 int ncmpi_iget_varm_double(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
@@ -2189,36 +2189,36 @@ int ncmpi_iget_varm_longlong(int ncid, int varid, const MPI_Offset start[],
 int ncmpi_bput_varm(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     const MPI_Offset imap[], const void *buf,
-                    MPI_Offset bufcount, MPI_Datatype buftype, int *request); 
+                    MPI_Offset bufcount, MPI_Datatype buftype, int *request);
 
 int ncmpi_bput_varm_schar(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
                     const MPI_Offset imap[], const signed char *op,
-                    int *request); 
+                    int *request);
 
 int ncmpi_bput_varm_text(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const char *op, int *request); 
+                    const MPI_Offset imap[], const char *op, int *request);
 
 int ncmpi_bput_varm_short(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const short *op, int *request); 
+                    const MPI_Offset imap[], const short *op, int *request);
 
 int ncmpi_bput_varm_int(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const int *op, int *request); 
+                    const MPI_Offset imap[], const int *op, int *request);
 
 int ncmpi_bput_varm_float(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const float *op, int *request); 
+                    const MPI_Offset imap[], const float *op, int *request);
 
 int ncmpi_bput_varm_double(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const double *op, int *request); 
+                    const MPI_Offset imap[], const double *op, int *request);
 
 int ncmpi_bput_varm_longlong(int ncid, int varid, const MPI_Offset start[],
                     const MPI_Offset count[], const MPI_Offset stride[],
-                    const MPI_Offset imap[], const long long *op, int *request); 
+                    const MPI_Offset imap[], const long long *op, int *request);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
@@ -3586,7 +3586,7 @@ int ncmpi_mget_varm_ulonglong_all(int ncid, int num, int varids[],
 /* These macros are defined in serial netcdf (3.5.0) for backwards
  * compatibility with older netcdf code.   We aren't concerned with backwards
  * compatibility, so if your code doesn't compile with parallel-netcdf, maybe
- * this is why: 
+ * this is why:
  *
  *
  *  OLD NAME                 NEW NAME

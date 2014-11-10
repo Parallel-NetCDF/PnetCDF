@@ -89,7 +89,7 @@ typedef enum {
 typedef struct {
     /* all xdr'd */
     MPI_Offset  nchars;
-    char       *cp;
+    char       *cp;     /* [nchars+1] one additional char for '\0' */
 } NC_string;
 
 extern NC *
@@ -177,10 +177,10 @@ ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr);
 extern int
 ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep);
 
-extern int 
+extern int
 ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
-extern int 
+extern int
 ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 /* End defined in dim.c */
 
@@ -279,21 +279,21 @@ ncmpi_put_att_double(int ncid, int varid, const char *name,
 extern int
 ncmpi_get_att_double(int ncid, int varid, const char *name, double *tp);
 
-extern int 
+extern int
 ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump);
 
-extern int 
+extern int
 ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep);
 
-extern int 
+extern int
 ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp);
 
 extern int
-ncmpi_inq_att(int ncid, int varid, const char *name, 
+ncmpi_inq_att(int ncid, int varid, const char *name,
         nc_type *datatypep, MPI_Offset *lenp);
 
 extern int
-ncmpi_copy_att(int ncid_in, int varid_in, const char *name, 
+ncmpi_copy_att(int ncid_in, int varid_in, const char *name,
         int ncid_out, int ovarid);
 
 extern int
@@ -380,25 +380,25 @@ extern int
 ncmpi_rename_var(int ncid, int varid, const char *newname);
 
 extern int
-ncmpi_inq_var(int ncid, int varid, char *name, nc_type *typep, 
+ncmpi_inq_var(int ncid, int varid, char *name, nc_type *typep,
         int *ndimsp, int *dimids, int *nattsp);
 
 extern int
 ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr);
 
-extern int 
+extern int
 ncmpi_inq_varname(int ncid, int varid, char *name);
 
-extern int 
+extern int
 ncmpi_inq_vartype(int ncid, int varid, nc_type *typep);
 
-extern int 
+extern int
 ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
 
-extern int 
+extern int
 ncmpi_inq_vardimid(int ncid, int varid, int *dimids);
 
-extern int 
+extern int
 ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
 extern int
@@ -462,7 +462,7 @@ struct NC {
     struct NC *next;
     struct NC *prev;
 #ifdef ENABLE_SUBFILING
-    int nc_num_subfiles; /* # of subfiles */ 
+    int nc_num_subfiles; /* # of subfiles */
     int ncid_sf; /* ncid of subfile */
 #endif
     /* contains the previous NC during redef. */
@@ -506,7 +506,7 @@ struct NC {
         fIsSet((ncp)->flags, NC_INDEP)
 
 #define NC_indef(ncp) \
-        (NC_IsNew(ncp) || fIsSet((ncp)->flags, NC_INDEF)) 
+        (NC_IsNew(ncp) || fIsSet((ncp)->flags, NC_INDEF))
 
 #define set_NC_ndirty(ncp) \
         fSet((ncp)->flags, NC_NDIRTY)
@@ -580,38 +580,38 @@ ncmpii_del_from_NCList(NC *ncp);
 extern int
 ncmpii_read_NC(NC *ncp);
 
-extern int 
+extern int
 ncmpii_enddef(NC *ncp);
 
 extern int
 ncmpii__enddef(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
                MPI_Offset v_minfree, MPI_Offset r_align);
 
-extern int 
+extern int
 ncmpii_NC_close(NC *ncp);
 
 extern int
 ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
 
-extern int 
+extern int
 ncmpi_inq_ndims(int ncid, int *ndimsp);
 
-extern int 
+extern int
 ncmpi_inq_nvars(int ncid, int *nvarsp);
 
-extern int 
+extern int
 ncmpi_inq_natts(int ncid, int *nattsp);
 
-extern int 
+extern int
 ncmpi_inq_unlimdim(int ncid, int *xtendimp);
 
 extern int
 ncmpi_get_default_format(void);
 
-extern int 
+extern int
 ncmpi_inq_num_rec_vars(int ncid, int *nump);
 
-extern int 
+extern int
 ncmpi_inq_num_fix_vars(int ncid, int *nump);
 
 /* End defined in nc.c */
@@ -661,7 +661,7 @@ typedef struct bufferinfo {
     MPI_Offset  get_size; /* amount of reads  so far in bytes */
 } bufferinfo;
 
-extern MPI_Offset 
+extern MPI_Offset
 ncmpix_len_nctype(nc_type type);
 
 #if 0
@@ -675,7 +675,7 @@ ncmpii_hdr_len_NC(const NC *ncp);
 extern int
 ncmpii_hdr_get_NC(NC *ncp);
 
-extern int 
+extern int
 ncmpii_hdr_put_NC(NC *ncp, void *buf);
 
 extern int

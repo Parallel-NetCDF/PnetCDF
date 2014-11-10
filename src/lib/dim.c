@@ -297,7 +297,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     NC_dim *dimp;
 
     /* check if ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp); 
+    status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
     /* check if called in define mode */
@@ -313,18 +313,18 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     status = ncmpii_NC_check_name(name, file_ver);
     if (status != NC_NOERR) return status;
 
-    /* MPI_Offset is usually a signed value, but serial netcdf uses 
+    /* MPI_Offset is usually a signed value, but serial netcdf uses
      * size_t -- normally unsigned
      * In 1999 ISO C standard, size_t is a unsigned integer type of at least
      * 16 bit. */
     if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
         /* CDF2 format and LFS */
-        if (size > X_UINT_MAX - 3 || (size < 0)) 
+        if (size > X_UINT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
             return NC_EDIMSIZE;
     } else if ((ncp->flags & NC_64BIT_DATA)) {
         /* CDF5 format*/
-        if (size < 0) 
+        if (size < 0)
             return NC_EDIMSIZE;
     } else {
         /* CDF1 format */
@@ -347,7 +347,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     /* check if the name string is previously used */
     dimid = NC_finddim(&ncp->dims, name, &dimp);
     if (dimid != -1) return NC_ENAMEINUSE;
-    
+
     /* create a new dimension object */
     dimp = ncmpii_new_NC_dim(name, size);
     if (dimp == NULL) return NC_ENOMEM;
@@ -374,7 +374,7 @@ ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr)
 	NC *ncp;
 	int dimid;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -395,7 +395,7 @@ ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep)
 	NC *ncp;
 	NC_dim *dimp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -405,29 +405,29 @@ ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep)
 
 	if(name != NULL)
 	{
-		(void)strncpy(name, dimp->name->cp, 
+		(void)strncpy(name, dimp->name->cp,
 			dimp->name->nchars);
-		name[dimp->name->nchars] = 0;
+		name[dimp->name->nchars] = '\0';
 	}
 	if(sizep != 0)
 	{
 		if(dimp->size == NC_UNLIMITED)
 			*sizep = NC_get_numrecs(ncp);
 		else
-			*sizep = dimp->size;	
+			*sizep = dimp->size;
 	}
 	return NC_NOERR;
 }
 
 
-int 
+int
 ncmpi_inq_dimname(int ncid, int dimid, char *name)
 {
 	int status;
 	NC *ncp;
 	NC_dim *dimp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -437,23 +437,23 @@ ncmpi_inq_dimname(int ncid, int dimid, char *name)
 
 	if(name != NULL)
 	{
-		(void)strncpy(name, dimp->name->cp, 
+		(void)strncpy(name, dimp->name->cp,
 			dimp->name->nchars);
-		name[dimp->name->nchars] = 0;
+		name[dimp->name->nchars] = '\0';
 	}
 
 	return NC_NOERR;
 }
 
 
-int 
+int
 ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
 {
 	int status;
 	NC *ncp;
 	NC_dim *dimp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp); 
+	status = ncmpii_NC_check_id(ncid, &ncp);
 	if(status != NC_NOERR)
 		return status;
 
@@ -466,7 +466,7 @@ ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
 		if(dimp->size == NC_UNLIMITED)
 			*lenp = NC_get_numrecs(ncp);
 		else
-			*lenp = dimp->size;	
+			*lenp = dimp->size;
 	}
 	return NC_NOERR;
 }
@@ -483,7 +483,7 @@ ncmpi_rename_dim(int         ncid,
     NC *ncp;
     NC_dim *dimp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp); 
+    status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
         return status;
 

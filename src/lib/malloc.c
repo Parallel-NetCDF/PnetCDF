@@ -6,8 +6,8 @@
 
 /* These are routines for allocating and deallocating memory.
    They should be called as NCI_Malloc(size) and
-   NCI_Free(ptr). In macro.h, they are macro-replaced to 
-   NCI_Malloc_fn(size,__LINE__,__FILE__) and 
+   NCI_Free(ptr). In macro.h, they are macro-replaced to
+   NCI_Malloc_fn(size,__LINE__,__FILE__) and
    NCI_Free_fn(ptr,__LINE__,__FILE__).
  */
 

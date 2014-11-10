@@ -20,14 +20,14 @@
  *
  * This started out as a general replacement for ONC XDR,
  * specifically, the xdrmem family of functions.
- * 
+ *
  * We eventually realized that we could write more portable
  * code if we decoupled any association between the 'C' types
  * and the external types. (XDR has this association between the 'C'
  * types and the external representations, like xdr_int() takes
- * an int argument and goes to an external int representation.) 
+ * an int argument and goes to an external int representation.)
  * So, now there is a matrix of functions.
- * 
+ *
  */
 
 #include "rnd.h"
@@ -86,7 +86,7 @@
  * For now, netcdf is limited to 32 bit sizes,
  * If compiled with support for "large files", then
  * netcdf will use a 64 bit off_t and it can then write a file
- * using 64 bit offsets. 
+ * using 64 bit offsets.
  *  see also X_SIZE_MAX, X_OFF_MAX below
  */
 #define X_SIZEOF_OFF_T		(sizeof(off_t))
@@ -118,7 +118,7 @@
 #define X_DOUBLE_MAX    1.79769313486230e+308
 #else
 /* scalb(1. - scalb(.5 , -52), 1024) */
-#define X_DOUBLE_MAX	1.7976931348623157e+308 
+#define X_DOUBLE_MAX	1.7976931348623157e+308
 #endif
 #define X_DOUBLE_MIN	(-X_DOUBLE_MAX)
 #define X_DBL_MAX	X_DOUBLE_MAX	/* alias compatible with limits.h */
@@ -130,7 +130,7 @@
 /* Begin ncmpix_len */
 
 /*
- * ncmpix_len_xxx() interfaces are defined as macros below, 
+ * ncmpix_len_xxx() interfaces are defined as macros below,
  * These give the length of an array of nelems of the type.
  * N.B. The 'char' and 'short' interfaces give the X_ALIGNED length.
  */
@@ -292,7 +292,7 @@ ncmpix_put_int64(void **xpp, const long long ip);
  * The `ip' argument should point to an array of `nelems' of
  * internal_type.
  *
- * Range errors (NC_ERANGE) for a individual values in the array 
+ * Range errors (NC_ERANGE) for a individual values in the array
  * DO NOT terminate the array conversion. All elements are converted,
  * with some having undefined values.
  * If any range error occurs, the function returns NC_ERANGE.
@@ -368,7 +368,7 @@ extern int
 ncmpix_putn_schar_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_schar_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 extern int
 ncmpix_pad_putn_schar_schar (void **xpp, MPI_Offset nelems, const schar  *ip);
 extern int
@@ -461,7 +461,7 @@ extern int
 ncmpix_putn_uchar_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_uchar_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 extern int
 ncmpix_pad_putn_uchar_schar (void **xpp, MPI_Offset nelems, const schar  *ip);
 extern int
@@ -554,7 +554,7 @@ extern int
 ncmpix_putn_short_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_short_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 extern int
 ncmpix_pad_putn_short_schar (void **xpp, MPI_Offset nelems, const schar  *ip);
 extern int
@@ -647,7 +647,7 @@ extern int
 ncmpix_putn_ushort_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_ushort_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 extern int
 ncmpix_pad_putn_ushort_schar (void **xpp, MPI_Offset nelems, const schar  *ip);
 extern int
@@ -721,7 +721,7 @@ extern int
 ncmpix_putn_int_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_int_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 /*---- uint -----------------------------------------------------------------*/
 extern int
 ncmpix_getn_uint_schar (const void **xpp, MPI_Offset nelems, schar  *ip);
@@ -772,7 +772,7 @@ extern int
 ncmpix_putn_uint_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_uint_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 /*---- float ----------------------------------------------------------------*/
 extern int
 ncmpix_getn_float_schar (const void **xpp, MPI_Offset nelems, schar  *ip);
@@ -819,7 +819,7 @@ extern int
 ncmpix_putn_float_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_float_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 /*---- double ---------------------------------------------------------------*/
 extern int
 ncmpix_getn_double_schar (const void **xpp, MPI_Offset nelems, schar  *ip);
@@ -960,7 +960,7 @@ extern int
 ncmpix_putn_uint64_longlong (void **xpp, MPI_Offset nelems, const longlong  *ip);
 extern int
 ncmpix_putn_uint64_ulonglong(void **xpp, MPI_Offset nelems, const ulonglong *ip);
- 
+
 
 /*
  * Other aggregate conversion functions.
