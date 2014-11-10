@@ -1,4 +1,4 @@
-/*  
+/*
  *  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
@@ -12,13 +12,6 @@
 #include <fcntl.h>
 #include <dirent.h>
 
-/* Prototype for functions used only in this file */
-static void handle_error(int status);
-
-static void handle_error(int status) {
-  fprintf(stderr, "%s\n", ncmpi_strerror(status));
-}
-
 #define MAXLINE 128
 
 /* The file name is taken as a command-line argument. */
@@ -27,16 +20,14 @@ static void handle_error(int status) {
    block-distributed array to a file corresponding to the global array
    in row-major (C) order.
    Note that the file access pattern is noncontiguous.
-  
+
    Array size 128^3. For other array sizes, change array_of_gsizes below.*/
 #define TEST_HANDLE_ERR(status)                         \
-    {                                                   \
         if ((status) != NC_NOERR) {                     \
             printf("Error at line %d (%s)\n", __LINE__, \
                    ncmpi_strerror((status)) );          \
             nerr++;                                     \
         }                                               \
-    }
 
 int main(int argc, char **argv)
 {
@@ -97,7 +88,7 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "\n*#  Usage: test_subfile -f pathname -s num_sf -p par_dim_id \n\n");
 	    MPI_Abort(MPI_COMM_WORLD, 1);
 	}
-	
+
 	basename1 = (char *) malloc (MAXLINE);
 	sprintf(basename1, "%s", basename);
 	len = strlen(basename1);
@@ -125,42 +116,42 @@ int main(int argc, char **argv)
     buf = (int **)malloc(nvars*sizeof(int*));
     if (buf == NULL){
         printf("buf malloc error\n");
-        return 0;               
-    }   
+        return 0;
+    }
     bufcount_list = (MPI_Offset *)malloc(nvars*sizeof(MPI_Offset));
     if (bufcount_list == NULL){
         printf("bufcount_list malloc error\n");
-        return 0;               
-    }   
+        return 0;
+    }
     starts_list = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
     if (starts_list== NULL){
         printf("starts_list malloc error\n");
-        return 0;               
-    }   
+        return 0;
+    }
     count_list = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
     if (count_list == NULL){
         printf("count_list malloc error\n");
-        return 0;               
-    }   
+        return 0;
+    }
     datatype_list = (MPI_Datatype*)malloc(nvars*sizeof(MPI_Datatype));
     if (datatype_list == NULL){
         printf("count_list malloc error\n");
-        return 0;               
-    } 
+        return 0;
+    }
 
     for (i=0; i<nvars; i++) {
 	starts_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
 	if (starts_list[i] == NULL){
 	    printf("starts_list[%d] malloc error\n", i);
-	    return 0;		
-	}	
+	    return 0;
+	}
 	count_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
 	if (count_list[i] == NULL){
 	    printf("count_list[%d] malloc error\n", i);
-	    return 0;		
+	    return 0;
 	}
     }
-  
+
     bufcount = 1;
     for (i=0; i<ndims; i++) {
         array_of_psizes[i] = 0;
@@ -197,8 +188,8 @@ int main(int argc, char **argv)
 	buf[i] = (int *) malloc(bufcount * sizeof(int));
 	if (buf[i] == NULL){
 	    printf("buf[i]malloc error\n");
-	    return 0;		
-	}	
+	    return 0;
+	}
 
 	for (j=0; j<bufcount; j++)
 	    buf[i][j]=mynod+1;
@@ -217,10 +208,10 @@ int main(int argc, char **argv)
     stim = MPI_Wtime();
     status = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
                           info, &ncid);
-    TEST_HANDLE_ERR(status);
+    TEST_HANDLE_ERR(status)
 
     open_tim = MPI_Wtime() - stim;
-    
+
     MPI_Allreduce(&open_tim, &new_open_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
     if (verbose && mynod == 0)
@@ -230,7 +221,7 @@ int main(int argc, char **argv)
     for (i=0; i<ndims; i++){
         sprintf(dimname, "dim0_%d", i);
         status = ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids0[i]);
-        TEST_HANDLE_ERR(status);
+        TEST_HANDLE_ERR(status)
     }
 
     /* define variables */
@@ -238,14 +229,14 @@ int main(int argc, char **argv)
     for (i=0; i<nvars; i++) {
 	sprintf(varname, "var0_%d", i);
 	status = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
-	TEST_HANDLE_ERR(status);
+	TEST_HANDLE_ERR(status)
     }
-     
+
     if (par_dim_id != 0) {
         for (i=0; i<nvars; i++) {
             status = ncmpi_put_att_int(ncid, varid[i], "par_dim_id",
                                        NC_INT, 1, &dimids0[par_dim_id]);
-            if (status != NC_NOERR) handle_error(status);
+	    TEST_HANDLE_ERR(status)
         }
     }
 
@@ -255,24 +246,24 @@ int main(int argc, char **argv)
     status = ncmpi_set_var_info(ncid, varid, info);
     TEST_HANDLE_ERR(status);
     */
-    
-    status = ncmpi_enddef(ncid);
-    TEST_HANDLE_ERR(status);
 
-#if 0    
+    status = ncmpi_enddef(ncid);
+    TEST_HANDLE_ERR(status)
+
+#if 0
     if (mynod == 0)
         printf("*** Testing to write 1 non-record variable by using ncmpi_put_vara_all() ...");
-#endif    
+#endif
     stim = MPI_Wtime();
     for (i=0; i<nvars; i++) {
         status = ncmpi_put_vara_all(ncid, varid[i],
                                     starts_list[i], count_list[i],
                                     buf[i],
                                     bufcount_list[i], MPI_INT);
-        TEST_HANDLE_ERR(status);
+        TEST_HANDLE_ERR(status)
     }
     write_tim = MPI_Wtime() - stim;
-            
+
     MPI_Allreduce(&write_tim, &new_write_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
 
@@ -283,13 +274,13 @@ int main(int argc, char **argv)
     }
 
     status = ncmpi_inq_file_info(ncid, &info_used);
-    TEST_HANDLE_ERR(status);
+    TEST_HANDLE_ERR(status)
 
     stim = MPI_Wtime();
     status = ncmpi_close(ncid);
-    TEST_HANDLE_ERR(status);
+    TEST_HANDLE_ERR(status)
     close_tim = MPI_Wtime() - stim;
-    
+
     MPI_Allreduce(&close_tim, &new_close_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
 
@@ -301,8 +292,8 @@ int main(int argc, char **argv)
 
 read:
     status = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    TEST_HANDLE_ERR(status);
-    
+    TEST_HANDLE_ERR(status)
+
     stim = MPI_Wtime();
 
     /**
@@ -311,31 +302,31 @@ read:
      */
 
     status = ncmpi_inq(ncid, &ndims, &nvars, &ngatts, &unlimdimid);
-    if (status != NC_NOERR) handle_error(status);
+    TEST_HANDLE_ERR(status)
 
     for (i=0; i<nvars; i++) {
         status = ncmpi_get_vara_all(ncid, i,
                                     starts_list[i], count_list[i],
                                     buf[i], bufcount_list[i], MPI_INT);
-        TEST_HANDLE_ERR(status);
+        TEST_HANDLE_ERR(status)
     }
     read_tim = MPI_Wtime() - stim;
-    
+
     MPI_Allreduce(&read_tim, &new_read_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
-    
+
     if (verbose && mynod == 0) {
         read_bw = ((double)array_of_gsizes[0]*(double)array_of_gsizes[1]*(double)array_of_gsizes[2]*sizeof(int)*(double)nvars)/(new_read_tim*1024.0*1024.0);
         printf("Collective read time = %f sec, Collective read bandwidth = %f Mbytes/sec\n", new_read_tim, read_bw);
     }
 
     status = ncmpi_inq_file_info(ncid, &info_used);
-    TEST_HANDLE_ERR(status);
+    TEST_HANDLE_ERR(status)
 
     status = ncmpi_close(ncid);
-    TEST_HANDLE_ERR(status);
+    TEST_HANDLE_ERR(status)
 
-end:    
+end:
     MPI_Info_free(&info);
 
     for (i=0; i<nvars; i++){
@@ -356,8 +347,9 @@ end:
 
     /* check if there are files still left opened */
     err = ncmpi_inq_files_opened(&nfiles, ncids);
+    TEST_HANDLE_ERR(err)
     if (nfiles > 0) printf("nfiles %d still opened\n",nfiles);
-    
+
     /* check for any PnetCDF internal malloc residues */
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
