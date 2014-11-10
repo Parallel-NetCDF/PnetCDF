@@ -58,7 +58,7 @@ mode, ready for you to add dimensions, variables, and attributes.
 \param comm The MPI communicator. This API is a collective routine: all
 processes must provide the same value for cmode, and all processes must provide
 filenames that reference the same file. (Values for info may vary.) comm must
-be an MPI intracommunicator. 
+be an MPI intracommunicator.
 
 \param path The file name of the new netCDF dataset.
 
@@ -74,7 +74,7 @@ to MPI user guide for further information. For PnetCDF hints see below.
 <h2>The cmode Flag</h2>
 
 The cmode flag is used to control the type of file created, and some aspects of
-how it may be used. 
+how it may be used.
 
 Setting NC_NOCLOBBER means you do not want to clobber (overwrite) an existing
 dataset; an error (NC_EEXIST) is returned if the specified dataset already
@@ -174,7 +174,7 @@ be in the CDF-5 format.
      if (status != NC_NOERR) handle_error(status);
 @endcode
 */
-int 
+int
 ncmpi_create(MPI_Comm    comm,
              const char *path,
              int         cmode,
@@ -267,29 +267,27 @@ ncmpi_create(MPI_Comm    comm,
     }
 
     /* allocate buffer for header object NC */
-    if ((ncp = ncmpii_new_NC(&chunksize)) == NULL) 
+    if ((ncp = ncmpii_new_NC(&chunksize)) == NULL)
         return NC_ENOMEM;
 
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
 #ifdef ENABLE_SUBFILING
-    ncp->ncid_sf = -1; /* subfile ncid; init to -1 */ 
+    ncp->ncid_sf = -1; /* subfile ncid; init to -1 */
     ncp->nc_num_subfiles = 0; /* num_subfiles; init to 0 */
 #endif
     assert(ncp->flags == 0);
 
-    /* set the file format version beased on the create mode, cmode */
+    /* set the file format version based on the create mode, cmode */
     if (fIsSet(cmode, NC_64BIT_DATA)) {
-        if (sizeof(MPI_Offset) <  8)
-            return NC_ESMALL;
+        if (SIZEOF_MPI_OFFSET <  8) return NC_ESMALL;
         fSet(ncp->flags, NC_64BIT_DATA);
     } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
         /* unlike serial netcdf, we will not bother to support
          * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
          * serial netcdf has proven it's possible if datasets are small, but
          * that's a hassle we don't want to worry about */
-        if (sizeof(off_t) != 8)
-            return NC_ESMALL;
+        if (SIZEOF_OFF_T < 8) return NC_ESMALL;
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
         fSet(ncp->flags, NC_32BIT);
@@ -300,7 +298,7 @@ ncmpi_create(MPI_Comm    comm,
 
     fSet(ncp->flags, NC_NOFILL);
 
-    err = ncmpiio_create(comm, path, cmode, env_info, ncp);  
+    err = ncmpiio_create(comm, path, cmode, env_info, ncp);
     if (err != NC_NOERR) {
         ncmpii_free_NC(ncp);
         return err;
@@ -315,7 +313,7 @@ ncmpi_create(MPI_Comm    comm,
          * Note that other header changes are not shared
          * automatically.  Some sort of IPC (external to this package)
          * would be used to trigger a call to ncmpi_sync().
-         */ 
+         */
         fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
         fSet(ncp->flags, NC_HSYNC);  /* sync header */
     }
@@ -341,12 +339,12 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)
 {
-    int err, status=NC_NOERR, safe_mode=0;
+    int i, err, status=NC_NOERR, safe_mode=0;
     char *env_str=NULL, *hint_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
-  
+
 #ifdef PNC_DEBUG
     safe_mode = 1;
     /* this configure time setting will be overwritten by the run-time
@@ -434,9 +432,9 @@ ncmpi_open(MPI_Comm    comm,
     if (err != NC_NOERR) {
         ncmpii_free_NC(ncp);
         return err;
-    } 
+    }
 
-    assert(ncp->flags == 0); 
+    assert(ncp->flags == 0);
 
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
         /*
@@ -444,7 +442,7 @@ ncmpi_open(MPI_Comm    comm,
          * Note that other header changes are not shared
          * automatically.  Some sort of IPC (external to this package)
          * would be used to trigger a call to ncmpi_sync().
-         */ 
+         */
         fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
         fSet(ncp->flags, NC_HSYNC);  /* sync header */
     }
@@ -463,26 +461,22 @@ ncmpi_open(MPI_Comm    comm,
 
 #ifdef ENABLE_SUBFILING
     /* check attr for subfiles */
-    nc_type type;
-    MPI_Offset attlen;
-    int ndims1, nvars1, natts1, unlimdimid1;
-    int i;
-    /* we report the first encountered status if there is an error */
-    err = ncmpi_inq_att(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
-                        &type, &attlen);
+    err = ncmpi_get_att_int(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
+                            &ncp->nc_num_subfiles);
     if (err == NC_NOERR) {
-        err = ncmpi_get_att_int(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
-                                &ncp->nc_num_subfiles); 
-        if (status == NC_NOERR) status = err;
-        /* TODO: check err */
+        int nvars;
 
-        err = ncmpi_inq(ncp->nciop->fd, &ndims1, &nvars1, &natts1, &unlimdimid1);
+        err = ncmpi_inq_nvars(ncp->nciop->fd, &nvars);
         if (status == NC_NOERR) status = err;
 
-        for (i=0; i<nvars1; i++) {
+        for (i=0; i<nvars; i++) {
             err = ncmpi_get_att_int(ncp->nciop->fd, i, "num_subfiles",
-                                    &ncp->vars.value[i]->num_subfiles); 
-            if (status == NC_NOERR) status = err;
+                                    &ncp->vars.value[i]->num_subfiles);
+            if (err == NC_ENOTATT) continue;
+            if (err != NC_NOERR && status == NC_NOERR) { /* other error */
+                status = err;
+                continue;
+            }
 
             if (ncp->vars.value[i]->num_subfiles > 1) {
                 err = ncmpi_get_att_int(ncp->nciop->fd, i, "ndims_org",
@@ -490,11 +484,11 @@ ncmpi_open(MPI_Comm    comm,
                 if (status == NC_NOERR) status = err;
             }
         }
-    }
 
-    if (ncp->nc_num_subfiles > 1) {
-        err = ncmpii_subfile_open(ncp, &ncp->ncid_sf);
-        if (status == NC_NOERR) status = err;
+        if (ncp->nc_num_subfiles > 1) {
+            err = ncmpii_subfile_open(ncp, &ncp->ncid_sf);
+            if (status == NC_NOERR) status = err;
+        }
     }
 #endif
 
@@ -539,7 +533,7 @@ ncmpi_inq_file_format(char *filename,
 {
     int ncid, status;
     NC *ncp;
-        
+
     /* open file for reading its header */
     status = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL,
                         &ncid);
@@ -562,7 +556,7 @@ ncmpi_inq_file_format(char *filename,
         *formatp = NC_FORMAT_UNKNOWN;
     }
     status = ncmpi_close(ncid);
-       
+
     return 0;
 }
 
@@ -629,8 +623,8 @@ ncmpi_redef(int ncid) {
     MPI_Offset mynumrecs, numrecs;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) 
-        return status; 
+    if (status != NC_NOERR)
+        return status;
 
     if (NC_readonly(ncp))
         return NC_EPERM;
@@ -639,7 +633,7 @@ ncmpi_redef(int ncid) {
 
     if (NC_indef(ncp))
         return NC_EINDEFINE;
- 
+
     /* ensure exiting define mode always entering collective data mode */
     if (NC_indep(ncp))
         ncmpii_end_indep_data(ncp);
@@ -652,7 +646,7 @@ ncmpi_redef(int ncid) {
     } else {
         /* before enter define mode, the number of records may increase by
            independent APIs, i.e. ncp->numrecs may be incoherent and need
-           to sync across all processes 
+           to sync across all processes
            Note that only ncp->numrecs in the header can be incoherent.
          */
         mynumrecs = ncp->numrecs;
@@ -699,7 +693,7 @@ ncmpii_sync_numrecs(NC         *ncp,
      */
     return ncmpii_write_numrecs(ncp, max_numrecs, NC_ndirty(ncp));
 }
- 
+
 /*----< ncmpi_begin_indep_data() >-------------------------------------------*/
 int
 ncmpi_begin_indep_data(int ncid)
@@ -737,11 +731,11 @@ ncmpi_begin_indep_data(int ncid)
 }
 
 /*----< ncmpi_end_indep_data() >---------------------------------------------*/
-int 
+int
 ncmpi_end_indep_data(int ncid) {
     int status;
     NC *ncp;
- 
+
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
@@ -752,7 +746,7 @@ ncmpi_end_indep_data(int ncid) {
 }
 
 /*----< ncmpii_end_indep_data() >--------------------------------------------*/
-static int 
+static int
 ncmpii_end_indep_data(NC *ncp) {
 #ifndef DISABLE_FILE_SYNC
     int mpireturn;
@@ -789,7 +783,7 @@ ncmpi_enddef(int ncid) {
     NC *ncp;
 
     /* check if file ID ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp); 
+    status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
@@ -810,7 +804,7 @@ ncmpi__enddef(int        ncid,
     NC *ncp;
 
     /* check if file ID ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp); 
+    status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
@@ -832,7 +826,7 @@ ncmpi_sync_numrecs(int ncid) {
     if (status != NC_NOERR)
         return status;
 
-    if (NC_indef(ncp)) 
+    if (NC_indef(ncp))
         return NC_EINDEFINE;
 
     /* syn numrecs in memory (and file if NC_SHARE is set) */
@@ -849,7 +843,7 @@ ncmpi_sync(int ncid) {
     if (status != NC_NOERR)
         return status;
 
-    if (NC_indef(ncp)) 
+    if (NC_indef(ncp))
         return NC_EINDEFINE;
 
     if (NC_readonly(ncp))
@@ -889,7 +883,7 @@ ncmpi_abort(int ncid) {
         ncmpii_free_NC(ncp->old);
         ncp->old = NULL;
         fClr(ncp->flags, NC_INDEF);
-    } 
+    }
     else if (!NC_readonly(ncp) && !NC_indef(ncp)) {
         /* data mode, write */
         status = ncmpii_NC_sync(ncp, 0);
@@ -951,7 +945,7 @@ ncmpi_delete(char     *filename,
  * not actually implemented.  Anything other than NC_NOFILL is not supported.
  * Many codes use NC_NOFILL anyway, so this just gets us more source-portable
  * with existings serial netcdf codes.   Also provides a placeholder if someday
- * someone wants to implement all of set_fill 
+ * someone wants to implement all of set_fill
  */
 int
 ncmpi_set_fill(int  ncid,
@@ -963,7 +957,7 @@ ncmpi_set_fill(int  ncid,
         status = NC_EINVAL;
     return status;
 }
-                
+
 /* End Of Dataset Functions */
 
 /*----< ncmpii_check_mpifh() >-----------------------------------------------*/
@@ -981,7 +975,7 @@ ncmpii_check_mpifh(NC       *ncp,
 
     if ( (collective && !NC_collectiveFhOpened(ncp->nciop))  ||
          (!collective && !NC_independentFhOpened(ncp->nciop)) ) {
-  
+
         int mpireturn;
         mpireturn = MPI_File_open(comm, (char *)ncp->nciop->path,
                                   ncp->nciop->mpiomode, ncp->nciop->mpiinfo,
@@ -1001,7 +995,7 @@ ncmpii_check_mpifh(NC       *ncp,
 
 /*----< ncmpi_inq_put_size() >------------------------------------------------*/
 /* returns the amount of writes, in bytes, committed to file system so far */
-int 
+int
 ncmpi_inq_put_size(int         ncid,
                    MPI_Offset *size)
 {
@@ -1018,7 +1012,7 @@ ncmpi_inq_put_size(int         ncid,
 
 /*----< ncmpi_inq_get_size() >------------------------------------------------*/
 /* returns the amount of reads, in bytes, obtained from file system so far */
-int 
+int
 ncmpi_inq_get_size(int         ncid,
                    MPI_Offset *size)
 {
