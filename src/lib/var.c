@@ -39,16 +39,16 @@ ncmpii_free_NC_var(NC_var *varp)
     ncmpii_free_NC_attrarray(&varp->attrs);
     ncmpii_free_NC_string(varp->name);
 #ifdef ENABLE_SUBFILING
-    if(varp->num_subfiles > 1) /* deallocate it */ 
-	NCI_Free(varp->dimids_org); 
+    if(varp->num_subfiles > 1) /* deallocate it */
+	NCI_Free(varp->dimids_org);
 #endif
     NCI_Free(varp);
 }
 
 
 /*----< ncmpii_new_x_NC_var() >-----------------------------------------------*/
-/* 
- * Common code for ncmpii_new_NC_var() 
+/*
+ * Common code for ncmpii_new_NC_var()
  * and ncx_get_NC_var()
  */
 NC_var *
@@ -123,7 +123,7 @@ ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
         ncmpii_free_NC_string(strp);
         return NULL;
     }
-        
+
     varp->type = type;
 
     if (ndims != 0 && dimids != NULL)
@@ -141,7 +141,7 @@ dup_NC_var(const NC_var *rvarp)
                                      rvarp->ndims,
                                      rvarp->dimids);
     if (varp == NULL) return NULL;
-        
+
     if (ncmpii_dup_NC_attrarray(&varp->attrs, &rvarp->attrs) != NC_NOERR) {
         ncmpii_free_NC_var(varp);
         return NULL;
@@ -173,7 +173,7 @@ ncmpii_free_NC_vararray(NC_vararray *ncap)
     int i;
 
     assert(ncap != NULL);
-        
+
     if (ncap->nalloc == 0) return;
 
     assert(ncap->value != NULL);
@@ -311,7 +311,9 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 
     loc = (NC_var **) ncap->value;
 
+    /* normalized version of uname */
     name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    if (name == NULL) return NC_ENOMEM;
     nchars = strlen(name);
 
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
@@ -327,7 +329,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
     return (-1); /* not found */
 }
 
-/* 
+/*
  * For a netcdf type
  *  return the size of one element in the external representation.
  * Note that arrays get rounded up to X_ALIGN boundaries.
@@ -396,7 +398,7 @@ ncmpii_NC_var_shape64(NC                *ncp,
             return NC_EUNLIMPOS;
     }
 
-    /* 
+    /*
      * compute the dsizes, the right to left product of shape
      */
     product = 1;
@@ -504,7 +506,7 @@ ncmpi_def_var(int         ncid,
     NC_var *varp;
 
     /* check if ncid is valid */
-    status = ncmpii_NC_check_id(ncid, &ncp); 
+    status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
     /* check if called in define mode */
@@ -567,7 +569,7 @@ ncmpi_inq_varid(int ncid, const char *name, int *varid_ptr)
         NC_var *varp;
         int varid;
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
+        status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
 
@@ -596,7 +598,7 @@ ncmpi_inq_var(int ncid,
         NC_var *varp;
         MPI_Offset ii;
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
+        status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
 
@@ -607,45 +609,40 @@ ncmpi_inq_var(int ncid,
         if(name != NULL)
         {
                 (void) strncpy(name, varp->name->cp, varp->name->nchars);
-                name[varp->name->nchars] = 0;
+                name[varp->name->nchars] = '\0';
         }
 
         if(typep != 0)
                 *typep = varp->type;
 #ifdef ENABLE_SUBFILING
-	/* check attr for subfiles */ 
-	nc_type type; 
-	MPI_Offset attlen; 
-	int status1; 
-	status1 = ncmpi_inq_att(ncp->nciop->fd, varid, "num_subfiles", 
-				&type, &attlen); 
-	if (status1 == NC_NOERR) { 
-	    status1 = ncmpi_get_att_int(ncp->nciop->fd, varid, "num_subfiles", 
-					&varp->num_subfiles);  
-	    /* TODO: should check status??? */ 
-	    ncp->nc_num_subfiles = varp->num_subfiles; 
-	}
+	/* check attr for subfiles */
+        varp->num_subfiles = 0;
+	status = ncmpi_get_att_int(ncp->nciop->fd, varid, "num_subfiles",
+				   &varp->num_subfiles);
+        /* ignore error NC_ENOTATT if there is any */
+
+	/* TODO: these two numbers should be different */
+	ncp->nc_num_subfiles = varp->num_subfiles;
 #endif
         if(ndimsp != 0)
         {
-	    *ndimsp = varp->ndims;
 #ifdef ENABLE_SUBFILING
-	    if (varp->num_subfiles > 1) { 
-	        int ndims_org; 
-		status1 = ncmpi_get_att_int (ncp->nciop->fd, varid,  
-					     "ndims_org", &ndims_org); 
-		printf("%s: ncp->nc_num_subfiles=%d, ndims_org=%d\n",  
-		       __func__, ncp->nc_num_subfiles, ndims_org); 
-		*ndimsp = ndims_org; 
-	    } 
+	    if (varp->num_subfiles > 1)
+		*ndimsp = varp->ndims_org;
+	    else
 #endif
+	        *ndimsp = varp->ndims;
         }
         if(dimids != 0)
         {
-                for(ii = 0; ii < varp->ndims; ii++)
-                {
-                        dimids[ii] = varp->dimids[ii];
-                }
+#ifdef ENABLE_SUBFILING
+	    	if (varp->num_subfiles > 1)
+			status = ncmpi_get_att_int(ncp->nciop->fd, varid,
+					   	   "dimids_org", dimids);
+		else
+#endif
+                	for(ii = 0; ii < varp->ndims; ii++)
+                        	dimids[ii] = varp->dimids[ii];
         }
         if(nattsp != 0)
         {
@@ -656,14 +653,14 @@ ncmpi_inq_var(int ncid,
 }
 
 
-int 
+int
 ncmpi_inq_varname(int ncid,  int varid, char *name)
 {
         int status;
         NC *ncp;
         NC_var *varp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
+        status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
 
@@ -674,20 +671,20 @@ ncmpi_inq_varname(int ncid,  int varid, char *name)
         if(name != NULL)
         {
                 (void) strncpy(name, varp->name->cp, varp->name->nchars);
-                name[varp->name->nchars] = 0;
+                name[varp->name->nchars] = '\0';
         }
 
         return NC_NOERR;
 }
 
-int 
+int
 ncmpi_inq_vartype(int ncid,  int varid, nc_type *typep)
 {
         int status;
         NC *ncp;
         NC_var *varp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
+        status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
 
@@ -701,14 +698,14 @@ ncmpi_inq_vartype(int ncid,  int varid, nc_type *typep)
         return NC_NOERR;
 }
 
-int 
+int
 ncmpi_inq_varndims(int ncid,  int varid, int *ndimsp)
 {
         int status;
         NC *ncp;
         NC_var *varp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
+        status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
 
@@ -718,24 +715,19 @@ ncmpi_inq_varndims(int ncid,  int varid, int *ndimsp)
 
         if(ndimsp != 0)
         {
-#ifndef ENABLE_SUBFILNIG
-	    *ndimsp = (int) varp->ndims;
-#else
-	    if (varp->num_subfiles > 1) 
-		{ 
-		    status = ncmpi_get_att_int (ncp->nciop->fd, varid, 
-						"ndims_org", ndimsp); 
-		} 
+#ifdef ENABLE_SUBFILNIG
+	    if (varp->num_subfiles > 1)
+		*ndimsp = varp->ndims_org;
 	    else
-                *ndimsp = (int) varp->ndims;
 #endif
+                *ndimsp = varp->ndims;
         }
 
         return NC_NOERR;
 }
 
 
-int 
+int
 ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
 {
         int status;
@@ -743,7 +735,7 @@ ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
         NC_var *varp;
         MPI_Offset ii;
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
+        status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
 
@@ -753,25 +745,22 @@ ncmpi_inq_vardimid(int ncid,  int varid, int *dimids)
 
         if(dimids != 0)
         {
-#ifndef ENABLE_SUBFILING
-                for(ii = 0; ii < varp->ndims; ii++)
-                {
-                        dimids[ii] = varp->dimids[ii];
-                }
-#else
-		int _ndims = (varp->num_subfiles>1?varp->ndims_org:varp->ndims);
-                for(ii = 0; ii < _ndims; ii++)
-                {
-                        dimids[ii] = varp->dimids[ii];
-                }
+#ifdef ENABLE_SUBFILING
+		if (varp->num_subfiles > 1) {
+                	for (ii=0; ii<varp->ndims_org; ii++)
+                        	dimids[ii] = varp->dimids_org[ii];
+		}
+		else
 #endif
+                	for(ii = 0; ii < varp->ndims; ii++)
+                        	dimids[ii] = varp->dimids[ii];
         }
 
         return NC_NOERR;
 }
 
 
-int 
+int
 ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
 {
         int status;
@@ -781,7 +770,7 @@ ncmpi_inq_varnatts(int ncid,  int varid, int *nattsp)
         if(varid == NC_GLOBAL)
                 return ncmpi_inq_natts(ncid, nattsp);
 
-        status = ncmpii_NC_check_id(ncid, &ncp); 
+        status = ncmpii_NC_check_id(ncid, &ncp);
         if(status != NC_NOERR)
                 return status;
 
@@ -808,7 +797,7 @@ ncmpi_rename_var(int         ncid,
     NC *ncp;
     NC_var *varp;
 
-    status = ncmpii_NC_check_id(ncid, &ncp); 
+    status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
         return status;
 
@@ -828,7 +817,7 @@ ncmpi_rename_var(int         ncid,
     other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
     if (other != -1)
         return NC_ENAMEINUSE;
-        
+
     varp = ncmpii_NC_lookupvar(ncp, varid);
     if (varp == NULL)
         /* invalid varid */
@@ -878,7 +867,7 @@ ncmpi_rename_var(int         ncid,
 /*----< ncmpi_inq_varoffset() >-----------------------------------------------*/
 int
 ncmpi_inq_varoffset(int         ncid,
-                    int         varid, 
+                    int         varid,
                     MPI_Offset *offset)
 {
     int     status;
