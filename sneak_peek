@@ -113,6 +113,9 @@ This is essentially a placeholder for the next release note ...
       run very slowly.
 
   o Bug fixes
+    * fix the bug for flexible get_varn API. When buftype is noncontiguous, the
+      bug forgot to "unpacks" the temporary buffer that reads data from file to
+      the user buffer using buftype.
     * fix the bug in blocking flexible get APIs when buftype is noncontiguous,
       swap is needed, type conversion is not. The bug sets a NULL pointer to the
       read buffer and passes it to MPI_File_read functions. See r1815.
