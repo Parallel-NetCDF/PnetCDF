@@ -57,7 +57,7 @@
           PARAMETER(NDIMS=2)
 
           character(LEN=128) filename, cmd, msg
-          integer rank, nprocs, err, num_reqs, argc, iargc
+          integer rank, nprocs, err, num_reqs, oneReq, argc, iargc
           integer ncid, cmode, varid, dimid(2), y, x, i, j, nerrs
           real, allocatable :: buffer(:)
           real oneReal
@@ -260,12 +260,14 @@
 
           ! read one element back and check the content
           oneReal = -1.0
-          err = nf90mpi_get_varn_all(ncid, varid, oneReal, 1, &
+          oneReq  = 1
+          if (num_reqs .EQ. 0) oneReq = 0
+          err = nf90mpi_get_varn_all(ncid, varid, oneReal, oneReq, &
                                      starts, counts)
           call check(err, 'In nf90mpi_get_varn_all: ')
 
  996      format(A,I2,A,F4.1)
-          if (oneReal .NE. rank) then
+          if (oneReq .GT. 0 .AND. oneReal .NE. rank) then
               print 996, "Error: expecting OneReal=",rank, &
                          " but got", oneReal
               nerrs = nerrs + 1
