@@ -181,6 +181,7 @@ ncmpii_getput_varn(int               ncid,
 {
     int i, j, el_size, status=NC_NOERR, min_st, err, free_cbuf=0;
     int *req_ids=NULL, *statuses=NULL;
+    int position, packsize;
     void *cbuf=NULL;
     char *bufp;
     MPI_Offset **_counts=NULL;
@@ -235,11 +236,13 @@ ncmpii_getput_varn(int               ncid,
 
         /* check if buftype is contiguous, if not, pack to one, cbuf */
         if (! iscontig_of_ptypes && bnelems > 0) {
-            int position=0, outsize=bnelems*el_size;
-            cbuf = NCI_Malloc(outsize);
+            position = 0;
+            packsize = bnelems*el_size;
+            cbuf = NCI_Malloc(packsize);
             free_cbuf = 1;
-            MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
-                     MPI_COMM_SELF);
+            if (rw_flag == WRITE_REQ)
+                MPI_Pack(buf, bufcount, buftype, cbuf, packsize, &position,
+                         MPI_COMM_SELF);
         }
     }
     else {
@@ -325,6 +328,13 @@ err_check:
         err = ncmpi_wait_all(ncid, num, req_ids, statuses);
     else
         err = ncmpi_wait(ncid, num, req_ids, statuses);
+
+    /* unpack to user buf, if buftype is contiguous */
+    if (rw_flag == READ_REQ && free_cbuf) {
+        position = 0;
+        MPI_Unpack(cbuf, packsize, &position, buf, bufcount, buftype,
+                   MPI_COMM_SELF);
+    }
 
     /* return the first error, if there is one */
     if (status == NC_NOERR) status = err;
