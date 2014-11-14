@@ -203,7 +203,7 @@ int main(int argc, char** argv)
     for (i=0; i<w_len; i++) buffer[i] = rank;
 
     /* check error code: NC_ENULLSTART */
-    err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, NULL, NULL, buffer);
+    err = ncmpi_put_varn_int_all(ncid, varid[0], 1, NULL, NULL, NULL);
     if (err != NC_ENULLSTART) {
         printf("expecting error code NC_ENULLSTART=%d but got %d\n",NC_ENULLSTART,err);
         nfails++;
@@ -220,8 +220,10 @@ int main(int argc, char** argv)
     if (nprocs >= 4) nfails += check_contents_for_fail(r_buffer);
 
     /* permute write order */
-    permute(starts[1], starts[2]); permute(counts[1], counts[2]);
-    permute(starts[2], starts[3]); permute(counts[2], counts[3]);
+    if (num_reqs > 0) {
+        permute(starts[1], starts[2]); permute(counts[1], counts[2]);
+        permute(starts[2], starts[3]); permute(counts[2], counts[3]);
+    }
 
     /* write usning varn API */
     err = ncmpi_put_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
