@@ -240,7 +240,32 @@ int main(int argc, char** argv)
 
     for (i=0; i<w_len; i++) {
         if (buffer[i] != rank) {
-            printf("Error: expecting buffer[%d]=%d but got %d\n",i,rank,buffer[i]);
+            printf("Error at line %d: expecting buffer[%d]=%d but got %d\n",
+                   __LINE__,i,rank,buffer[i]);
+            nfails++;
+        }
+    }
+
+    /* test flexible API, using a noncontiguous buftype */
+    MPI_Datatype buftype;
+    MPI_Type_vector(w_len, 1, 2, MPI_INT, &buftype);
+    MPI_Type_commit(&buftype);
+    free(buffer);
+    buffer = (int*) malloc(w_len * 2 * sizeof(int));
+    for (i=0; i<2*w_len; i++) buffer[i] = -1;
+    err = ncmpi_get_varn_all(ncid, varid[0], num_reqs, starts, counts, buffer, 1, buftype);
+    ERR
+    MPI_Type_free(&buftype);
+
+    for (i=0; i<w_len*2; i++) {
+        if (i%2 && buffer[i] != -1) {
+            printf("Error at line %d: expecting buffer[%d]=-1 but got %d\n",
+                   __LINE__,i,buffer[i]);
+            nfails++;
+        }
+        if (i%2 == 0 && buffer[i] != rank) {
+            printf("Error at line %d: expecting buffer[%d]=%d but got %d\n",
+                   __LINE__,i,rank,buffer[i]);
             nfails++;
         }
     }
