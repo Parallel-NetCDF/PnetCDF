@@ -108,7 +108,7 @@
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
           err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
-                              MPI_INFO_NULL, ncid)
+                               MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
 
           ! define dimensions x and y
@@ -132,11 +132,11 @@
           if (rank .EQ. 0) then
               num_reqs = 3
           elseif (rank .EQ. 1) then
-              num_reqs = 3;
+              num_reqs = 3
           elseif (rank .EQ. 2) then
-              num_reqs = 3;
+              num_reqs = 3
           elseif (rank .EQ. 3) then
-              num_reqs = 3;
+              num_reqs = 3
           endif
 
           ! Note that in Fortran, array indices start with 1
