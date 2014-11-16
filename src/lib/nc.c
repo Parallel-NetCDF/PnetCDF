@@ -95,6 +95,7 @@ ncmpii_del_from_NCList(NC *ncp)
 /*
  * Check the data set definitions across all processes by
  * comparing the header buffer streams of all processes.
+ * This function is collective.
  */
 static int
 NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
@@ -649,9 +650,11 @@ ncmpii_read_numrecs(NC *ncp) {
         MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
         ncp->nciop->get_size += get_size;
     }
+
+/* TODO: Checking data consistency in safe_mode must be done in a collective API.
     if (ncp->safe_mode == 1)
         MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
-
+*/
     if (status == NC_NOERR) {
         if (fIsSet(ncp->flags, NC_64BIT_DATA))
             status = ncmpix_get_int64((const void**)&pos, &nrecs);
@@ -679,6 +682,9 @@ ncmpii_read_numrecs(NC *ncp) {
  */
 
 /*----< ncmpii_write_numrecs() >----------------------------------------------*/
+/* This function is only called by ncmpii_NC_sync() and ncmpii_sync_numrecs()
+ * both are collective.
+ */
 int
 ncmpii_write_numrecs(NC         *ncp,
                      MPI_Offset  new_numrecs,
@@ -738,6 +744,7 @@ ncmpii_write_numrecs(NC         *ncp,
     }
     if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
 
+    /* this function is only called by collective functions */
     if (ncp->safe_mode == 1)
         MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
@@ -770,6 +777,7 @@ ncmpii_read_NC(NC *ncp) {
 /*----< write_NC() >---------------------------------------------------------*/
 /*
  * Write out the header
+ * This is a collective call.
  */
 static int
 write_NC(NC *ncp)
