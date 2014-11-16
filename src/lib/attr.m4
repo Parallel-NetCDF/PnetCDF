@@ -525,8 +525,9 @@ ncmpi_rename_att(int         ncid,
     /* PnetCDF expects all processes use the same name, However, when names
      * are not the same, only root's value is significant. Under the safe
      * mode, we sync the NC object (header) in memory across all processes
+     * (This API is collective if called in data mode)
      */
-    if (ncp->safe_mode == 1)
+    if (!NC_indef(ncp) && ncp->safe_mode == 1)
         MPI_Bcast(&newname, attrp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
 
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
@@ -599,6 +600,7 @@ ncmpi_copy_att(int         ncid_in,
             /* In PnetCDF, attributes in memory are kept consistent across all
              * processes. Therefore, there is no need to check the consistency
              * here.
+             * (if called in data mode, this API must be collective)
             if (ncp->safe_mode == 1)
                 MPI_Bcast(iattrp->xvalue, iattrp->xsz, MPI_BYTE, 0,
                           ncp->nciop->comm);
@@ -1169,6 +1171,7 @@ ncmpii_put_att(int         ncid,
                  * However, when argument values are not the same, only root's
                  * value is significant. Under the safe mode, we sync the NC
                  * object (header) in memory across all processes
+                 * (This API is collective if called in data mode.)
                  */
                 if (ncp->safe_mode == 1)
                     MPI_Bcast(attrp->xvalue, attrp->xsz, MPI_BYTE, 0,
