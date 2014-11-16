@@ -29,7 +29,6 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            record.c \
            inq_num_vars.c \
            varn_int.c \
-           i_varn_int64.c \
            modes.c \
            one_record.c \
            inq_recsize.c \
@@ -99,9 +98,6 @@ inq_num_vars: inq_num_vars.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 varn_int: varn_int.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
-
-i_varn_int64: i_varn_int64.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 modes: modes.o $(LIBRARY)

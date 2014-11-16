@@ -17,7 +17,8 @@ LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c \
-           interleaved.c
+           interleaved.c \
+           i_varn_int64.c
 
 F77_SRCS = mcoll_testf77.f \
            test_bputf77.f
@@ -43,6 +44,9 @@ mcoll_perf: mcoll_perf.o $(LIBRARY)
 test_bput: test_bput.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+i_varn_int64: i_varn_int64.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 interleaved: interleaved.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
@@ -62,6 +66,7 @@ check testing: $(PROGS)
 	$(TEST_SEQRUN) ./mcoll_perf -f $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./test_bput     $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./interleaved   $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./i_varn_int64  $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
 	$(TEST_SEQRUN) ./mcoll_testf   $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./mcoll_testf77 $(TEST_OUTDIR)/testfile.nc
@@ -73,6 +78,7 @@ verbose_check verbose_testing: $(PROGS)
 	$(TEST_SEQRUN) ./mcoll_perf -v -f $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./test_bput        $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./interleaved      $(TEST_OUTDIR)/testfile.nc
+	$(TEST_SEQRUN) ./i_varn_int64     $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
 	$(TEST_SEQRUN) ./mcoll_testf      $(TEST_OUTDIR)/testfile.nc
 	$(TEST_SEQRUN) ./mcoll_testf77    $(TEST_OUTDIR)/testfile.nc
@@ -85,6 +91,7 @@ TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 ptest : $(PROGS)
 	$(TEST_MPIRUN_4) ./mcoll_perf -f $(TEST_OUTDIR)/testfile.nc
 	$(TEST_MPIRUN_4) ./test_bput     $(TEST_OUTDIR)/testfile.nc
+	$(TEST_MPIRUN_4) ./i_varn_int64  $(TEST_OUTDIR)/testfile.nc
 ifeq (@has_fortran@, yes)
 	$(TEST_MPIRUN_4) ./mcoll_testf   $(TEST_OUTDIR)/testfile.nc
 	$(TEST_MPIRUN_4) ./mcoll_testf77 $(TEST_OUTDIR)/testfile.nc
