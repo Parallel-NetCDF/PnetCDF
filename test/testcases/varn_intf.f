@@ -137,11 +137,11 @@
           if (rank .EQ. 0) then
               num_reqs = 3
           elseif (rank .EQ. 1) then
-              num_reqs = 3;
+              num_reqs = 3
           elseif (rank .EQ. 2) then
-              num_reqs = 3;
+              num_reqs = 3
           elseif (rank .EQ. 3) then
-              num_reqs = 3;
+              num_reqs = 3
           endif
 
           ! assign arbitrary starts and counts
