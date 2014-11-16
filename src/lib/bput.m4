@@ -51,7 +51,7 @@ ncmpi_bput_var(int           ncid,
     /* bput_var is a special case of bput_vara */
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, buftype, reqid,
-                                 WRITE_REQ, 1);
+                                 WRITE_REQ, 1, 0);
     if (varp->ndims > 0) NCI_Free(start);
 
     return status;
@@ -85,7 +85,7 @@ ncmpi_bput_var_$1(int       ncid,
     /* bput_var is a special case of bput_varm */
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)op, nelems, $3, reqid,
-                                 WRITE_REQ, 1);
+                                 WRITE_REQ, 1, 0);
     if (varp->ndims > 0) NCI_Free(start);
 
     return status;
@@ -133,7 +133,7 @@ ncmpi_bput_var1(int               ncid,
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)buf, bufcount, buftype, reqid,
-                                 WRITE_REQ, 1);
+                                 WRITE_REQ, 1, 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -166,7 +166,7 @@ ncmpi_bput_var1_$1(int               ncid,
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                  (void*)op, 1, $3, reqid,
-                                 WRITE_REQ, 1);
+                                 WRITE_REQ, 1, 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -214,7 +214,7 @@ ncmpi_bput_vara(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ, 1);
+                               WRITE_REQ, 1, 0);
 }
 
 dnl
@@ -248,7 +248,7 @@ ncmpi_bput_vara_$1(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)op, nelems, $3, reqid,
-                               WRITE_REQ, 1);
+                               WRITE_REQ, 1, 0);
 }
 ')dnl
 
@@ -295,7 +295,7 @@ ncmpi_bput_vars(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ, 1);
+                               WRITE_REQ, 1, 0);
 }
 
 dnl
@@ -330,7 +330,7 @@ ncmpi_bput_vars_$1(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)op, nelems, $3, reqid,
-                               WRITE_REQ, 1);
+                               WRITE_REQ, 1, 0);
 }
 ')dnl
 
@@ -377,7 +377,7 @@ ncmpi_bput_varm(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, bufcount, buftype, reqid,
-                               WRITE_REQ, 1);
+                               WRITE_REQ, 1, 0);
 }
 
 dnl
@@ -413,7 +413,7 @@ ncmpi_bput_varm_$1(int               ncid,
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)op, nelems, $3, reqid,
-                               WRITE_REQ, 1);
+                               WRITE_REQ, 1, 0);
 }
 ')dnl
 

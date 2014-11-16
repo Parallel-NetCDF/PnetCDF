@@ -25,7 +25,9 @@ define(`TEXTVAR1',dnl
      integer                                                            :: numDims, counter
  
      ! Set local arguments to default values
-     numDims         = size(shape(values))
+     nf90mpi_$1_var_text$3 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_text$3 .NE. NF90_NOERR) return
+
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
      localStride(:)  = 1
@@ -78,7 +80,9 @@ define(`TEXTVAR',dnl
      integer                                                            :: numDims, counter
  
      ! Set local arguments to default values
-     numDims                 = size(shape(values))
+     nf90mpi_$1_var_$2_text$6 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2_text$6 .NE. NF90_NOERR) return
+
      localStart (:         ) = 1
      localCount (:numDims+1) = (/ LEN(values($4)), shape(values) /)
      localCount (numDims+2:) = 0
@@ -159,7 +163,9 @@ define(`NBTEXTVAR1',dnl
      integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
-     numDims         = size(shape(values))
+     nf90mpi_$1_var_text = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_text .NE. NF90_NOERR) return
+
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
      localStride(:)  = 1
@@ -212,7 +218,9 @@ define(`NBTEXTVAR',dnl
      integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
-     numDims                 = size(shape(values))
+     nf90mpi_$1_var_$2_text = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2_text .NE. NF90_NOERR) return
+
      localStart (:         ) = 1
      localCount ( :numDims+1) = (/ LEN(values($4)), shape(values) /)
      localCount (numDims+2:) = 0

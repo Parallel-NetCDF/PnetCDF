@@ -422,6 +422,11 @@ typedef struct NC_req {
     int            need_swap_back_buf;
     int            use_abuf; /* whether use the attached buffer */
     int            is_imap;
+    void          *tmpBuf;       /* callback tmp buffer to be freed */
+    int            tmpBufSize;   /* size of tmp buffer */
+    void          *userBuf;      /* callback user buffer to be unpacked from tmpBuf */
+    int            userBufCount; /* user buffer count */
+    MPI_Datatype   userBufType;  /* user buffer type */
     int            ndims;
     MPI_Offset    *start;  /* [ndims] */
     MPI_Offset    *count;  /* [ndims] */
@@ -819,7 +824,8 @@ extern int
 ncmpii_igetput_varm(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *stride, const MPI_Offset *imap,
                 const MPI_Offset *count, void *buf, MPI_Offset bufcount,
-                MPI_Datatype datatype, int *reqid, int rw_flag, int use_abuf);
+                MPI_Datatype datatype, int *reqid, int rw_flag, int use_abuf,
+                int isSameGroup);
 
 extern int
 ncmpii_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
@@ -845,5 +851,16 @@ ncmpii_inq_files_opened(int *num, int *ncids);
 
 extern MPI_Datatype
 ncmpii_nc2mpitype(nc_type type);
+
+extern int
+ncmpii_set_iget_callback(NC *ncp, int reqid, void *tmpBuf, int tmpBufSize,
+                         void *userBuf, int userBufCount,
+                         MPI_Datatype userBufType);
+
+extern int
+ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpBuf);
+
+extern int
+ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf);
 
 #endif /* _NC_H_ */

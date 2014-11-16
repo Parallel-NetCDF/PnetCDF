@@ -66,8 +66,8 @@ define(`NBVAR1',dnl
 `dnl
    function nf90mpi_$1_var_$2(ncid, varid, values, req, start, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
-     integer,                                                intent(out) :: req
      $3 (kind=$2),                                           intent($5)  :: values
+     integer,                                                intent(out) :: req
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
@@ -137,7 +137,9 @@ define(`VAR',dnl
      integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
-     numDims                 = size(shape(values))
+     nf90mpi_$1_var_$2_$3$8 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2_$3$8 .NE. NF90_NOERR) return
+
      localStart (:         ) = 1
      localCount (:numDims  ) = shape(values)
      localCount (numDims+1:) = 1
@@ -398,8 +400,8 @@ define(`NBVAR',dnl
 `dnl
    function nf90mpi_$1_var_$2_$3(ncid, varid, values, req, start, count, stride, map, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
-     integer,                                                intent(out) :: req
      $4 (kind=$3), dimension($6),                            intent( $7) :: values
+     integer,                                                intent(out) :: req
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
@@ -409,7 +411,9 @@ define(`NBVAR',dnl
      integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
-     numDims                 = size(shape(values))
+     nf90mpi_$1_var_$2_$3 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_var_$2_$3 .NE. NF90_NOERR) return
+
      localStart (:         ) = 1
      localCount (:numDims  ) = shape(values)
      localCount (numDims+1:) = 1

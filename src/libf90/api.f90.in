@@ -3488,6 +3488,187 @@ INTERFACE
     END FUNCTION nfmpi_put_varn_int8_all
 
 !
+! flexible APIs, not ready yet for Fortran 77
+!
+!   INTEGER FUNCTION nfmpi_iget_varn(ncid, varid, num, starts, counts, buf, bufcount, buftype, req)
+!                    INTEGER,                       INTENT(IN)  :: ncid
+!                    INTEGER,                       INTENT(IN)  :: varid
+!                    INTEGER,                       INTENT(IN)  :: num
+!                    INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                    INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                    <type>,                        INTENT(OUT) :: buf(*)
+!                    INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                    INTEGER,                       INTENT(IN)  :: buftype
+!                    INTEGER,                       INTENT(OUT) :: req
+!   END FUNCTION nfmpi_iget_varn
+
+!   INTEGER FUNCTION nfmpi_iput_varn(ncid, varid, num, starts, counts, buf, bufcount, buftype, req)
+!                    INTEGER,                       INTENT(IN)  :: ncid
+!                    INTEGER,                       INTENT(IN)  :: varid
+!                    INTEGER,                       INTENT(IN)  :: num
+!                    INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+!                    INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+!                    <type>,                        INTENT(IN)  :: buf(*)
+!                    INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                    INTEGER,                       INTENT(IN)  :: buftype
+!                    INTEGER,                       INTENT(OUT) :: req
+!   END FUNCTION nfmpi_iput_varn
+
+    INTEGER FUNCTION nfmpi_iget_varn_text(ncid, varid, num, starts, counts, text, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     CHARACTER(len=*),              INTENT(OUT) :: text
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iget_varn_text
+
+    INTEGER FUNCTION nfmpi_iget_varn_int1(ncid, varid, num, starts, counts, i1vals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iget_varn_int1
+
+    INTEGER FUNCTION nfmpi_iget_varn_int2(ncid, varid, num, starts, counts, i2vals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iget_varn_int2
+
+    INTEGER FUNCTION nfmpi_iget_varn_int(ncid, varid, num, starts, counts, ivals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER,                       INTENT(OUT) :: ivals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iget_varn_int
+
+    INTEGER FUNCTION nfmpi_iget_varn_real(ncid, varid, num, starts, counts, rvals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     REAL,                          INTENT(OUT) :: rvals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iget_varn_real
+
+    INTEGER FUNCTION nfmpi_iget_varn_double(ncid, varid, num, starts, counts, dvals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     DOUBLE PRECISION,              INTENT(OUT) :: dvals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iget_varn_double
+
+    INTEGER FUNCTION nfmpi_iget_varn_int8(ncid, varid, num, starts, counts, i8vals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iget_varn_int8
+
+    INTEGER FUNCTION nfmpi_iput_varn_text(ncid, varid, num, starts, counts, text, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     CHARACTER(len=*),              INTENT(IN)  :: text
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iput_varn_text
+
+    INTEGER FUNCTION nfmpi_iput_varn_int1(ncid, varid, num, starts, counts, i1vals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iput_varn_int1
+
+    INTEGER FUNCTION nfmpi_iput_varn_int2(ncid, varid, num, starts, counts, i2vals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iput_varn_int2
+
+    INTEGER FUNCTION nfmpi_iput_varn_int(ncid, varid, num, starts, counts, ivals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER,                       INTENT(@INOUT@) :: ivals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iput_varn_int
+
+    INTEGER FUNCTION nfmpi_iput_varn_real(ncid, varid, num, starts, counts, rvals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     REAL,                          INTENT(@INOUT@) :: rvals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iput_varn_real
+
+    INTEGER FUNCTION nfmpi_iput_varn_double(ncid, varid, num, starts, counts, dvals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     DOUBLE PRECISION,              INTENT(@INOUT@) :: dvals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iput_varn_double
+
+    INTEGER FUNCTION nfmpi_iput_varn_int8(ncid, varid, num, starts, counts, i8vals, req)
+            use mpi, only: MPI_OFFSET_KIND
+                     INTEGER,                       INTENT(IN)  :: ncid
+                     INTEGER,                       INTENT(IN)  :: varid
+                     INTEGER,                       INTENT(IN)  :: num
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
+                     INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
+                     INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER,                       INTENT(OUT) :: req
+    END FUNCTION nfmpi_iput_varn_int8
+
+!
 ! End of varn subroutines:
 !
 
@@ -3539,6 +3720,8 @@ END INTERFACE
           nfmpi_put_varn, &
           nfmpi_get_varn_all, &
           nfmpi_put_varn_all, &
+          nfmpi_iget_varn, &
+          nfmpi_iput_varn, &
           nfmpi_put_vard_all, &
           nfmpi_get_vard_all
 

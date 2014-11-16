@@ -45,6 +45,7 @@
 
   ! nonblocking APIs
   public :: nf90mpi_iput_var, nf90mpi_iget_var, &
+            nf90mpi_iput_varn, nf90mpi_iget_varn, &
             nf90mpi_bput_var, nf90mpi_inq_nreqs, &
             nf90mpi_buffer_attach, nf90mpi_inq_buffer_usage, nf90mpi_buffer_detach, &
             nf90mpi_wait, nf90mpi_wait_all, nf90mpi_cancel
@@ -493,7 +494,21 @@
         nfmpi_put_varn_int_all, &
         nfmpi_put_varn_real_all, &
         nfmpi_put_varn_double_all, &
-        nfmpi_put_varn_int8_all
+        nfmpi_put_varn_int8_all, &
+        nfmpi_iget_varn_text, &
+        nfmpi_iget_varn_int1, &
+        nfmpi_iget_varn_int2, &
+        nfmpi_iget_varn_int, &
+        nfmpi_iget_varn_real, &
+        nfmpi_iget_varn_double, &
+        nfmpi_iget_varn_int8, &
+        nfmpi_iput_varn_text, &
+        nfmpi_iput_varn_int1, &
+        nfmpi_iput_varn_int2, &
+        nfmpi_iput_varn_int, &
+        nfmpi_iput_varn_real, &
+        nfmpi_iput_varn_double, &
+        nfmpi_iput_varn_int8
 
 !
 ! End of varn subroutines:
@@ -542,7 +557,9 @@
           nfmpi_get_varn, &
           nfmpi_put_varn, &
           nfmpi_get_varn_all, &
-          nfmpi_put_varn_all
+          nfmpi_put_varn_all, &
+          nfmpi_iget_varn, &
+          nfmpi_iput_varn
 
 !
 ! Begin of vard subroutines:

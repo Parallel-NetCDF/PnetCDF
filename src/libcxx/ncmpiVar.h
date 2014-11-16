@@ -155,10 +155,6 @@ namespace PnetCDF
 
     /*! \overload
      */ 
-    NcmpiVarAtt putAtt(const std::string& name, MPI_Offset len, const char** dataValues) const ;
-
-    /*! \overload
-     */ 
     NcmpiVarAtt putAtt(const std::string& name, const std::string& dataValues) const ;
 
     /*! \overload
@@ -399,9 +395,6 @@ namespace PnetCDF
     // void getVar(void* dataValues) const;
     /*! \overload
      */ 
-    void getVar(char** dataValues) const;
-    /*! \overload
-     */ 
     void getVar(char* dataValues) const;
     /*! \overload
      */ 
@@ -466,9 +459,6 @@ namespace PnetCDF
     // void getVar(const std::vector<MPI_Offset>& index, void* dataumValue) const;
     /*! \overload
      */ 
-    void getVar(const std::vector<MPI_Offset>& index, char** dataumValue) const;
-    /*! \overload
-     */ 
     void getVar(const std::vector<MPI_Offset>& index, char* dataumValue) const;
     /*! \overload
      */ 
@@ -527,9 +517,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, void* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, char** dataValues) const;
     /*! \overload
      */ 
     void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, char* dataValues) const;
@@ -601,9 +588,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, void* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, char** dataValues) const;
     /*! \overload
      */ 
     void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, char* dataValues) const;
@@ -682,9 +666,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, void* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, char** dataValues) const;
     /*! \overload
      */ 
     void getVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, char* dataValues) const;
@@ -775,9 +756,6 @@ namespace PnetCDF
     // void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, void* dataValues) const;
     /*! \overload
      */ 
-    void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, char** dataValues) const;
-    /*! \overload
-     */ 
     void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, char* dataValues) const;
     /*! \overload
      */ 
@@ -847,9 +825,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, void* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, char** dataValues) const;
     /*! \overload
      */ 
     void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, char* dataValues) const;
@@ -928,9 +903,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, void* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, char** dataValues) const;
     /*! \overload
      */ 
     void getVar_all(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, char* dataValues) const;
@@ -1027,9 +999,6 @@ namespace PnetCDF
     // void igetVar(void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void igetVar(char** dataValues, int *req) const;
-    /*! \overload
-     */ 
     void igetVar(char* dataValues, int *req) const;
     /*! \overload
      */ 
@@ -1094,9 +1063,6 @@ namespace PnetCDF
     // void igetVar(const std::vector<MPI_Offset>& index, void* dataumValue, int *req) const;
     /*! \overload
      */ 
-    void igetVar(const std::vector<MPI_Offset>& index, char** dataumValue, int *req) const;
-    /*! \overload
-     */ 
     void igetVar(const std::vector<MPI_Offset>& index, char* dataumValue, int *req) const;
     /*! \overload
      */ 
@@ -1155,9 +1121,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, void* dataValues, int *req) const;
-    /*! \overload
-     */ 
-    void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, char** dataValues, int *req) const;
     /*! \overload
      */ 
     void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count, char* dataValues, int *req) const;
@@ -1229,9 +1192,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, void* dataValues, int *req) const;
-    /*! \overload
-     */ 
-    void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, char** dataValues, int *req) const;
     /*! \overload
      */ 
     void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, char* dataValues, int *req) const;
@@ -1310,9 +1270,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, void* dataValues, int *req) const;
-    /*! \overload
-     */ 
-    void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, char** dataValues, int *req) const;
     /*! \overload
      */ 
     void igetVar(const std::vector<MPI_Offset>& start, const std::vector<MPI_Offset>& count,  const std::vector<MPI_Offset>& stride, const std::vector<MPI_Offset>& imap, char* dataValues, int *req) const;
@@ -1403,9 +1360,6 @@ namespace PnetCDF
     // void getVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues) const;
     /*! \overload
      */ 
-    void getVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char** dataValues) const;
-    /*! \overload
-     */ 
     void getVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char* dataValues) const;
     /*! \overload
      */ 
@@ -1479,9 +1433,6 @@ namespace PnetCDF
     // void getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues) const;
     /*! \overload
      */ 
-    void getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char** dataValues) const;
-    /*! \overload
-     */ 
     void getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char* dataValues) const;
     /*! \overload
      */ 
@@ -1551,6 +1502,81 @@ namespace PnetCDF
 
     //////////////////////
 
+    // Nonblocking reads a list of subarrays of values from a netCDF variable of an open netCDF dataset.
+    /*!
+      This is an overloaded member function, provided for convenience. 
+      It differs from the above function in what argument(s) it accepts. 
+      In addition, no data conversion is carried out. This means that 
+      the type of the data in memory must match the type of the variable.
+    */
+    // void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned char* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], signed char* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], short* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], int* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], long* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], float* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], double* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned short* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned int* dataValues, int *req) const;
+    /*! \overload
+     */ 
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned long long* dataValues, int *req) const;
+    /*! 
+      Reads a list of subarrays from a netCDF variable of an open netCDF dataset. 
+      Each subarray i is specified by giving a corner (starts[i][*]) and a vector of edge lengths (counts[i][*]). 
+      The values are read into consecutive locations with the last dimension varying fastest.
+
+      \param num
+      Number of subarrays.
+
+      \param starts
+      2D array of size [num][ndims] where num is the number of subarrays to get and ndims if the number of dimensions of the specified variable.
+      Each subarray i is specified by starts[i][*], the first of the data values will be read, and counts[i][*], edge lengths of the subarray.
+      The indices are relative to 0, so for example, the first data value of a variable would have index (0, 0, ... , 0). 
+      The length of the second dimension of starts and counts must be the same as the number of dimensions of the specified variable. 
+      The elements of starts's second dimension correspond, in order, to the variable's dimensions. Hence, if the variable is a record variable, 
+      the first element starts[*][0] would correspond to the starting record number for reading the data values.
+
+      \param counts
+      2D array of size [num][ndims] where num is the number of subarrays to get and ndims if the number of dimensions of the specified variable.
+      To read a single value, for example, specify count as (1, 1, ... , 1). The length of each count[i] is the number of 
+      dimensions of the specified variable. The elements of each count[i] correspond, in order, to the variable's dimensions. 
+      Hence, if the variable is a record variable, the first element of count[i] corresponds to a count of the number of records to read.
+      Note: setting any element of the count array to zero causes the function to exit without error, and without doing anything. 
+
+      \param dataValues Pointer to the location into which the data value is read. If the type of 
+      data value differs from the netCDF variable type, type conversion will occur.
+      (However, no type conversion is carried out for variables using the user-defined data types:
+      ncmpi_Vlen, ncmpi_Opaque, ncmpi_Compound and ncmpi_Enum.)
+    */
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], long long* dataValues, int *req) const;
+
+    void igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const;
+
+    //////////////////////
+
     // Reads the entire data into the netCDF variable. (collective data mode)
     /*!
       This is an overloaded member function, provided for convenience. 
@@ -1559,9 +1585,6 @@ namespace PnetCDF
       the type of the data in memory must match the type of the variable.
     */
     // void getVar_all(void* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(char** dataValues) const;
     /*! \overload
      */ 
     void getVar_all(char* dataValues) const;
@@ -1632,9 +1655,6 @@ namespace PnetCDF
     // void putVar(const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar(const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar(const char* dataValues) const;
     /*!  \overload
     */
@@ -1704,9 +1724,6 @@ namespace PnetCDF
     // void putVar(const std::vector<MPI_Offset>& index, const void* dataumValue) const;
     /*! \overload
      */ 
-    void putVar(const std::vector<MPI_Offset>& index, const char** dataumValue) const;
-    /*!  \overload
-    */
     void putVar(const std::vector<MPI_Offset>& index, const std::string& dataumValue) const;
     /*!  \overload
     */
@@ -1765,9 +1782,6 @@ namespace PnetCDF
     // void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char* dataValues) const;
     /*!  \overload
     */
@@ -1836,9 +1850,6 @@ namespace PnetCDF
     // void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char* dataValues) const;
     /*!  \overload
     */
@@ -1910,9 +1921,6 @@ namespace PnetCDF
     // void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char* dataValues) const;
     /*!  \overload
     */
@@ -1993,9 +2001,6 @@ namespace PnetCDF
     // void putVar_all(const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar_all(const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar_all(const char* dataValues) const;
     /*!  \overload
     */
@@ -2065,9 +2070,6 @@ namespace PnetCDF
     // void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char* dataValues) const;
     /*!  \overload
     */
@@ -2136,9 +2138,6 @@ namespace PnetCDF
     // void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char* dataValues) const;
     /*!  \overload
     */
@@ -2210,9 +2209,6 @@ namespace PnetCDF
     // void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const void* dataValues) const;
     /*! \overload
      */ 
-    void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char** dataValues) const;
-    /*!  \overload
-    */
     void putVar_all(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char* dataValues) const;
     /*!  \overload
     */
@@ -2289,9 +2285,6 @@ namespace PnetCDF
     // void putVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues) const;
     /*! \overload
      */ 
-    void putVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char** dataValues) const;
-    /*!  \overload
-    */
     void putVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char* dataValues) const;
     /*!  \overload
     */
@@ -2364,9 +2357,6 @@ namespace PnetCDF
     // void putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues) const;
     /*! \overload
      */ 
-    void putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char** dataValues) const;
-    /*!  \overload
-    */
     void putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char* dataValues) const;
     /*!  \overload
     */
@@ -2444,9 +2434,6 @@ namespace PnetCDF
     // void iputVar(const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void iputVar(const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void iputVar(const char* dataValues, int *req) const;
     /*!  \overload
     */
@@ -2516,9 +2503,6 @@ namespace PnetCDF
     // void iputVar(const std::vector<MPI_Offset>& index, const void* dataumValue, int *req) const;
     /*! \overload
      */ 
-    void iputVar(const std::vector<MPI_Offset>& index, const char** dataumValue, int *req) const;
-    /*!  \overload
-    */
     void iputVar(const std::vector<MPI_Offset>& index, const std::string& dataumValue, int *req) const;
     /*!  \overload
     */
@@ -2577,9 +2561,6 @@ namespace PnetCDF
     // void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char* dataValues, int *req) const;
     /*!  \overload
     */
@@ -2648,9 +2629,6 @@ namespace PnetCDF
     // void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char* dataValues, int *req) const;
     /*!  \overload
     */
@@ -2722,9 +2700,6 @@ namespace PnetCDF
     // void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void iputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char* dataValues, int *req) const;
     /*!  \overload
     */
@@ -2791,6 +2766,78 @@ namespace PnetCDF
 
     ////////////////////
 
+    // Writes a list of subarrays into the netCDF variable. (independent I/O APIs)
+    /*!
+      This is an overloaded member function, provided for convenience. 
+      It differs from the above function in what argument(s) it accepts. 
+      In addition, no data conversion is carried out. This means that 
+      the type of the data in memory must match the type of the variable.
+    */
+    // void putVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues) const;
+    /*! \overload
+     */ 
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned char* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const signed char* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const short* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const int* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const long* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const float* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const double* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned short* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned int* dataValues, int *req) const;
+    /*!  \overload
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned long long* dataValues, int *req) const;
+    /*! 
+      Writes a list of subarrays into the netCDF variable.
+      Each subarray i is specified by giving a corner (starts[i][*]) and a vector of edge lengths (counts[i][*]). 
+      The values to be written are associated with the netCDF variable by assuming that the last dimension of the netCDF variable varies fastest. 
+
+      \param num
+      Number of subarrays.
+
+      \param starts
+      2D array of size [num][ndims] where num is the number of subarrays to get and ndims if the number of dimensions of the specified variable.
+      Each subarray i is specified by starts[i][*], the first of the data values will be written, and counts[i][*], edge lengths of the subarray.
+      The indices are relative to 0, so for example, the first data value of a variable would have index (0, 0, ... , 0). 
+      The length of the second dimension of starts and counts must be the same as the number of dimensions of the specified variable. 
+      The elements of starts's second dimension correspond, in order, to the variable's dimensions. Hence, if the variable is a record variable, 
+      the first element starts[*][0] would correspond to the starting record number for writing the data values.
+
+      \param counts
+      2D array of size [num][ndims] where num is the number of subarrays to get and ndims if the number of dimensions of the specified variable.
+      To write a single value, for example, specify count as (1, 1, ... , 1). The length of each count[i] is the number of 
+      dimensions of the specified variable. The elements of each count[i] correspond, in order, to the variable's dimensions. 
+      Hence, if the variable is a record variable, the first element of count[i] corresponds to a count of the number of records to write.
+      Note: setting any element of the count array to zero causes the function to exit without error, and without doing anything. 
+
+      \param dataValues Pointer to the location into which the data value is written. If the type of 
+      data value differs from the netCDF variable type, type conversion will occur.
+    */
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const long long* dataValues, int *req) const;
+    void iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const;
+
+    ////////////////////
+
     //  Buffered nonblocking data writing
 
     ////////////////////
@@ -2805,9 +2852,6 @@ namespace PnetCDF
     // void bputVar(const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void bputVar(const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void bputVar(const char* dataValues, int *req) const;
     /*!  \overload
     */
@@ -2877,9 +2921,6 @@ namespace PnetCDF
     // void bputVar(const std::vector<MPI_Offset>& index, const void* dataumValue, int *req) const;
     /*! \overload
      */ 
-    void bputVar(const std::vector<MPI_Offset>& index, const char** dataumValue, int *req) const;
-    /*!  \overload
-    */
     void bputVar(const std::vector<MPI_Offset>& index, const std::string& dataumValue, int *req) const;
     /*!  \overload
     */
@@ -2938,9 +2979,6 @@ namespace PnetCDF
     // void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const char* dataValues, int *req) const;
     /*!  \overload
     */
@@ -3009,9 +3047,6 @@ namespace PnetCDF
     // void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const char* dataValues, int *req) const;
     /*!  \overload
     */
@@ -3083,9 +3118,6 @@ namespace PnetCDF
     // void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const void* dataValues, int *req) const;
     /*! \overload
      */ 
-    void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char** dataValues, int *req) const;
-    /*!  \overload
-    */
     void bputVar(const std::vector<MPI_Offset>& startp, const std::vector<MPI_Offset>& countp, const std::vector<MPI_Offset>& stridep, const std::vector<MPI_Offset>& imapp, const char* dataValues, int *req) const;
     /*!  \overload
     */
