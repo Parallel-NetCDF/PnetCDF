@@ -12,6 +12,7 @@ noclobber.o: noclobber.c
 nonblocking.o: nonblocking.c
 one_record.o: one_record.c
 varn_int.o: varn_int.c
+i_varn_int64.o: i_varn_int64.c
 varn_intf.o: varn_intf.f
 varn_real.o: varn_real.f90
 record.o: record.c

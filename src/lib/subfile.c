@@ -849,7 +849,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                                      (!buftype_is_contig?ptype:buftype),
                                      &array_of_requests[nasyncios++],
                                      rw_flag,
-                                     0);
+                                     0, 0);
         TEST_HANDLE_ERR(status)
     }
 #ifdef SUBFILE_DEBUG
@@ -1036,7 +1036,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                                          (!buftype_is_contig?ptype:buftype),
                                          &array_of_requests[nasyncios++],
                                          rw_flag,
-                                         0);
+                                         0, 0);
             TEST_HANDLE_ERR(status)
         }
     }

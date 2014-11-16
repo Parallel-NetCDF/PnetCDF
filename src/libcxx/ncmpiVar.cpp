@@ -496,15 +496,6 @@ NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offs
 
 
 // Creates a new NetCDF variable attribute or if already exisiting replaces it.
-NcmpiVarAtt NcmpiVar::putAtt(const string& name, MPI_Offset len, const char** dataValues) const {
-  ncmpiCheckDefineMode(groupId);
-    cout << "putAtt for string type is not implemented yet\n";
-  // ncmpiCheck(ncmpi_put_att_string(groupId,myId,name.c_str(),len,dataValues),__FILE__,__LINE__);
-  // finally instantiate this attribute and return
-  return getAtt(name);
-}
-
-// Creates a new NetCDF variable attribute or if already exisiting replaces it.
 NcmpiVarAtt NcmpiVar::putAtt(const string& name, const NcmpiType& type, MPI_Offset len, const void* dataValues) const {
   ncmpiCheckDefineMode(groupId);
   ncmpiCheck(ncmpi_put_att(groupId,myId ,name.c_str(),type.getId(),len,dataValues),__FILE__,__LINE__);
@@ -751,12 +742,6 @@ void NcmpiVar::putVar(const unsigned long long* dataValues) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_var_ulonglong(groupId, myId,dataValues),__FILE__,__LINE__);
 }
-// Writes the entire data into the netCDF variable.
-void NcmpiVar::putVar(const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    cout << "putVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_put_var_string(groupId, myId,dataValues),__FILE__,__LINE__);
-}
 // Writes the entire data into the netCDF variable with no data conversion.
 void NcmpiVar::putVar(const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheckDataMode(groupId);
@@ -766,14 +751,6 @@ void NcmpiVar::putVar(const void* dataValues, MPI_Offset bufcount, MPI_Datatype 
 
 ///////////////////
 
-// Writes a single datum value into the netCDF variable.
-void NcmpiVar::putVar(const vector<MPI_Offset>& index, const string& datumValue) const {
-  ncmpiCheckDataMode(groupId);
-    {
-      const char* tmpPtr = datumValue.c_str();
-      ncmpiCheck(ncmpi_put_var1_string(groupId, myId,&index[0],&tmpPtr),__FILE__,__LINE__);
-    }
-}
 // Writes a single datum value into the netCDF variable.
 void NcmpiVar::putVar(const vector<MPI_Offset>& index, const unsigned char* datumValue) const {
   ncmpiCheckDataMode(groupId);
@@ -828,11 +805,6 @@ void NcmpiVar::putVar(const vector<MPI_Offset>& index, const long long datumValu
 void NcmpiVar::putVar(const vector<MPI_Offset>& index, const unsigned long long datumValue) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_var1_ulonglong(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
-}
-// Writes a single datum value into the netCDF variable.
-void NcmpiVar::putVar(const vector<MPI_Offset>& index, const char** datumValue) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_put_var1_string(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
 }
 // Writes a single datum value into the netCDF variable with no data conversion.
 void NcmpiVar::putVar(const vector<MPI_Offset>& index, const void* datumValue, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -903,11 +875,6 @@ void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_vara_ulonglong(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
 }
-// Writes an array of values into the netCDF variable.
-void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_put_vara_string(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
-}
 // Writes an array of values into the netCDF variable with no data conversion.
 void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheckDataMode(groupId);
@@ -976,11 +943,6 @@ void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_vars_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
 }
-// Writes a set of subsampled array values into the netCDF variable.
-void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_put_vars_string(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
-}
 // Writes a set of subsampled array values into the netCDF variable with no data conversion.
 void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheckDataMode(groupId);
@@ -1048,11 +1010,6 @@ void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>
 void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const unsigned long long* dataValues) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_varm_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
-}
-// Writes a mapped array section of values into the netCDF variable.
-void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_put_varm_string(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
 }
 // Writes a mapped array section of values into the netCDF variable with no data conversion.
 void NcmpiVar::putVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -1126,12 +1083,6 @@ void NcmpiVar::putVar_all(const unsigned long long* dataValues) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_var_ulonglong_all(groupId, myId,dataValues),__FILE__,__LINE__);
 }
-// Writes the entire data into the netCDF variable.
-void NcmpiVar::putVar_all(const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    cout << "putVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_put_var_string_all(groupId, myId,dataValues),__FILE__,__LINE__);
-}
 // Writes the entire data into the netCDF variable with no data conversion.
 void NcmpiVar::putVar_all(const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheckDataMode(groupId);
@@ -1199,12 +1150,6 @@ void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Off
 void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const unsigned long long* dataValues) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_vara_ulonglong_all(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
-}
-// Writes an array of values into the netCDF variable.
-void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    cout << "putVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_put_vara_string_all(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
 }
 // Writes an array of values into the netCDF variable with no data conversion.
 void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -1274,12 +1219,6 @@ void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Off
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_vars_ulonglong_all(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
 }
-// Writes a set of subsampled array values into the netCDF variable.
-void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    cout << "putVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_put_vars_string_all(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
-}
 // Writes a set of subsampled array values into the netCDF variable with no data conversion.
 void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheckDataMode(groupId);
@@ -1347,12 +1286,6 @@ void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Off
 void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const unsigned long long* dataValues) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_varm_ulonglong_all(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
-}
-// Writes a mapped array section of values into the netCDF variable.
-void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    cout << "putVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_put_varm_string_all(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
 }
 // Writes a mapped array section of values into the netCDF variable with no data conversion.
 void NcmpiVar::putVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -1422,11 +1355,6 @@ void NcmpiVar::putVarn(const int num, MPI_Offset* const starts[], MPI_Offset* co
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_varn_ulonglong(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
 }
-// Writes an array of values into the netCDF variable.
-void NcmpiVar::putVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_put_varn_string(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
-}
 // Writes an array of values into the netCDF variable with no data conversion.
 void NcmpiVar::putVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheckDataMode(groupId);
@@ -1495,16 +1423,13 @@ void NcmpiVar::putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_varn_ulonglong_all(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
 }
-// Writes an array of values into the netCDF variable.
-void NcmpiVar::putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char** dataValues) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_put_varn_string_all(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
-}
 // Writes an array of values into the netCDF variable with no data conversion.
 void NcmpiVar::putVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_put_varn_all(groupId, myId, num, starts, counts, dataValues, bufcount, buftype),__FILE__,__LINE__);
 }
+
+////////////////////
 
 // Writes an array of values into the netCDF variable with filetype and buftype.
 void NcmpiVar::putVard(MPI_Datatype filetype, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -1583,12 +1508,6 @@ void NcmpiVar::iputVar(const unsigned long long* dataValues, int *req) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_iput_var_ulonglong(groupId, myId,dataValues, req),__FILE__,__LINE__);
 }
-// Writes the entire data into the netCDF variable.
-void NcmpiVar::iputVar(const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    cout << "iputVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_iput_var_string(groupId, myId,dataValues, req),__FILE__,__LINE__);
-}
 // Writes the entire data into the netCDF variable with no data conversion.
 void NcmpiVar::iputVar(const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheckDataMode(groupId);
@@ -1597,14 +1516,6 @@ void NcmpiVar::iputVar(const void* dataValues, MPI_Offset bufcount, MPI_Datatype
 
 
 ///////////////////
-// Writes a single datum value into the netCDF variable.
-void NcmpiVar::iputVar(const vector<MPI_Offset>& index, const string& datumValue, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    {
-      const char* tmpPtr = datumValue.c_str();
-      ncmpiCheck(ncmpi_iput_var1_string(groupId, myId,&index[0],&tmpPtr, req),__FILE__,__LINE__);
-    }
-}
 // Writes a single datum value into the netCDF variable.
 void NcmpiVar::iputVar(const vector<MPI_Offset>& index, const unsigned char* datumValue, int *req) const {
   ncmpiCheckDataMode(groupId);
@@ -1659,11 +1570,6 @@ void NcmpiVar::iputVar(const vector<MPI_Offset>& index, const long long datumVal
 void NcmpiVar::iputVar(const vector<MPI_Offset>& index, const unsigned long long datumValue, int *req) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_iput_var1_ulonglong(groupId, myId,&index[0],&datumValue, req),__FILE__,__LINE__);
-}
-// Writes a single datum value into the netCDF variable.
-void NcmpiVar::iputVar(const vector<MPI_Offset>& index, const char** datumValue, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_iput_var1_string(groupId, myId,&index[0],datumValue, req),__FILE__,__LINE__);
 }
 // Writes a single datum value into the netCDF variable with no data conversion.
 void NcmpiVar::iputVar(const vector<MPI_Offset>& index, const void* datumValue, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
@@ -1733,11 +1639,6 @@ void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
 void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const unsigned long long* dataValues, int *req) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_iput_vara_ulonglong(groupId, myId,&startp[0],&countp[0],dataValues, req),__FILE__,__LINE__);
-}
-// Writes an array of values into the netCDF variable.
-void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_iput_vara_string(groupId, myId,&startp[0],&countp[0],dataValues, req),__FILE__,__LINE__);
 }
 // Writes an array of values into the netCDF variable with no data conversion.
 void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
@@ -1809,11 +1710,6 @@ void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_iput_vars_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues, req),__FILE__,__LINE__);
 }
-// Writes a set of subsampled array values into the netCDF variable.
-void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_iput_vars_string(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues, req),__FILE__,__LINE__);
-}
 // Writes a set of subsampled array values into the netCDF variable with no data conversion.
 void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheckDataMode(groupId);
@@ -1882,18 +1778,79 @@ void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_iput_varm_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, req),__FILE__,__LINE__);
 }
-// Writes a mapped array section of values into the netCDF variable.
-void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_iput_varm_string(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, req),__FILE__,__LINE__);
-}
 // Writes a mapped array section of values into the netCDF variable with no data conversion.
 void NcmpiVar::iputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_iput_varm(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, bufcount, buftype, req),__FILE__,__LINE__);
 }
 
+////////////////////
 
+// Nonblocking writes a list of subarrays into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const char* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_text(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned char* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_uchar(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const signed char* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_schar(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const short* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_short(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const int* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_int(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const long* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_long(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const float* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_float(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const double* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_double(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned short* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_ushort(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned int* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_uint(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const long long* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_longlong(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const unsigned long long* dataValues, int *req) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn_ulonglong(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Writes an array of values into the netCDF variable with no data conversion.
+void NcmpiVar::iputVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
+    ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_iput_varn(groupId, myId, num, starts, counts, dataValues, bufcount, buftype, req),__FILE__,__LINE__);
+}
 
 ////////////////////
 
@@ -1961,12 +1918,6 @@ void NcmpiVar::bputVar(const unsigned long long* dataValues, int *req) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_bput_var_ulonglong(groupId, myId,dataValues, req),__FILE__,__LINE__);
 }
-// Writes the entire data into the netCDF variable.
-void NcmpiVar::bputVar(const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    cout << "bputVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_bput_var_string(groupId, myId,dataValues, req),__FILE__,__LINE__);
-}
 // Writes the entire data into the netCDF variable with no data conversion.
 void NcmpiVar::bputVar(const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheckDataMode(groupId);
@@ -1975,14 +1926,6 @@ void NcmpiVar::bputVar(const void* dataValues, MPI_Offset bufcount, MPI_Datatype
 
 
 ///////////////////
-// Writes a single datum value into the netCDF variable.
-void NcmpiVar::bputVar(const vector<MPI_Offset>& index, const string& datumValue, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    {
-      const char* tmpPtr = datumValue.c_str();
-      ncmpiCheck(ncmpi_bput_var1_string(groupId, myId,&index[0],&tmpPtr, req),__FILE__,__LINE__);
-    }
-}
 // Writes a single datum value into the netCDF variable.
 void NcmpiVar::bputVar(const vector<MPI_Offset>& index, const unsigned char* datumValue, int *req) const {
   ncmpiCheckDataMode(groupId);
@@ -2037,11 +1980,6 @@ void NcmpiVar::bputVar(const vector<MPI_Offset>& index, const long long datumVal
 void NcmpiVar::bputVar(const vector<MPI_Offset>& index, const unsigned long long datumValue, int *req) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_bput_var1_ulonglong(groupId, myId,&index[0],&datumValue, req),__FILE__,__LINE__);
-}
-// Writes a single datum value into the netCDF variable.
-void NcmpiVar::bputVar(const vector<MPI_Offset>& index, const char** datumValue, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_bput_var1_string(groupId, myId,&index[0],datumValue, req),__FILE__,__LINE__);
 }
 // Writes a single datum value into the netCDF variable with no data conversion.
 void NcmpiVar::bputVar(const vector<MPI_Offset>& index, const void* datumValue, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
@@ -2111,11 +2049,6 @@ void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
 void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const unsigned long long* dataValues, int *req) const {
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_bput_vara_ulonglong(groupId, myId,&startp[0],&countp[0],dataValues, req),__FILE__,__LINE__);
-}
-// Writes an array of values into the netCDF variable.
-void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_bput_vara_string(groupId, myId,&startp[0],&countp[0],dataValues, req),__FILE__,__LINE__);
 }
 // Writes an array of values into the netCDF variable with no data conversion.
 void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
@@ -2187,11 +2120,6 @@ void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_bput_vars_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues, req),__FILE__,__LINE__);
 }
-// Writes a set of subsampled array values into the netCDF variable.
-void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_bput_vars_string(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues, req),__FILE__,__LINE__);
-}
 // Writes a set of subsampled array values into the netCDF variable with no data conversion.
 void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep,  const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheckDataMode(groupId);
@@ -2260,11 +2188,6 @@ void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
   ncmpiCheckDataMode(groupId);
     ncmpiCheck(ncmpi_bput_varm_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, req),__FILE__,__LINE__);
 }
-// Writes a mapped array section of values into the netCDF variable.
-void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const char** dataValues, int *req) const {
-  ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_bput_varm_string(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, req),__FILE__,__LINE__);
-}
 // Writes a mapped array section of values into the netCDF variable with no data conversion.
 void NcmpiVar::bputVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>&countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheckDataMode(groupId);
@@ -2322,11 +2245,6 @@ void NcmpiVar::getVar(long long* dataValues) const {
 void NcmpiVar::getVar(unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_var_ulonglong(groupId, myId,dataValues),__FILE__,__LINE__);
 }
-// Reads the entire data of the netCDF variable.
-void NcmpiVar::getVar(char** dataValues) const {
-    cout << "getVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_var_string(groupId, myId,dataValues),__FILE__,__LINE__);
-}
 // Reads the entire data of the netCDF variable with no data conversion.
 void NcmpiVar::getVar(void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheck(ncmpi_get_var(groupId, myId,dataValues, bufcount, buftype),__FILE__,__LINE__);
@@ -2382,11 +2300,6 @@ void NcmpiVar::getVar(const vector<MPI_Offset>& index, long long* datumValue) co
 void NcmpiVar::getVar(const vector<MPI_Offset>& index, unsigned long long* datumValue) const {
     ncmpiCheck(ncmpi_get_var1_ulonglong(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
 }
-// Reads a single datum value of a netCDF variable.
-void NcmpiVar::getVar(const vector<MPI_Offset>& index, char** datumValue) const {
-    cout << "getVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_var1_string(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
-}
 // Reads a single datum value of a netCDF variable with no data conversion.
 void NcmpiVar::getVar(const vector<MPI_Offset>& index, void* datumValue, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheck(ncmpi_get_var1(groupId, myId,&index[0],datumValue, bufcount, buftype),__FILE__,__LINE__);
@@ -2441,11 +2354,6 @@ void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>
 // Reads an array of values from  a netCDF variable
 void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_vara_ulonglong(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
-}
-// Reads an array of values from  a netCDF variable.
-void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, char** dataValues) const {
-    cout << "getVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_vara_string(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
 }
 // Reads an array of values from  a netCDF variable with no data conversion.
 void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -2503,11 +2411,6 @@ void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>
 void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_vars_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
 }
-// Reads a subsampled (strided) array section of values from a netCDF variable.
-void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, char** dataValues) const {
-    cout << "getVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_vars_string(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
-}
 // Reads a subsampled (strided) array section of values from a netCDF variable with no data conversion.
 void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheck(ncmpi_get_vars(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues, bufcount, buftype),__FILE__,__LINE__);
@@ -2563,11 +2466,6 @@ void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>
 // Reads a mapped array section of values from a netCDF variable
 void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_varm_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
-}
-// Reads a mapped array section of values from a netCDF variable.
-void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, char** dataValues) const {
-    cout << "getVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_varm_string(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
 }
 // Reads a mapped array section of values from a netCDF variable with no data conversion.
 void NcmpiVar::getVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -2626,11 +2524,6 @@ void NcmpiVar::getVar_all(long long* dataValues) const {
 void NcmpiVar::getVar_all(unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_var_ulonglong_all(groupId, myId,dataValues),__FILE__,__LINE__);
 }
-// Reads the entire data of the netCDF variable.
-void NcmpiVar::getVar_all(char** dataValues) const {
-    cout << "getVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_var_string_all(groupId, myId,dataValues),__FILE__,__LINE__);
-}
 // Reads the entire data of the netCDF variable with no data conversion.
 void NcmpiVar::getVar_all(void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheck(ncmpi_get_var_all(groupId, myId,dataValues, bufcount, buftype),__FILE__,__LINE__);
@@ -2688,11 +2581,6 @@ void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Off
 void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_vara_ulonglong_all(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
 }
-// Reads an array of values from  a netCDF variable.
-void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, char** dataValues) const {
-    cout << "getVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_vara_string_all(groupId, myId,&startp[0],&countp[0],dataValues),__FILE__,__LINE__);
-}
 // Reads an array of values from  a netCDF variable with no data conversion.
 void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheck(ncmpi_get_vara_all(groupId, myId,&startp[0],&countp[0],dataValues, bufcount, buftype),__FILE__,__LINE__);
@@ -2748,11 +2636,6 @@ void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Off
 // Reads a subsampled (strided) array section of values from a netCDF variable
 void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_vars_ulonglong_all(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
-}
-// Reads a subsampled (strided) array section of values from a netCDF variable.
-void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, char** dataValues) const {
-    cout << "getVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_vars_string_all(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues),__FILE__,__LINE__);
 }
 // Reads a subsampled (strided) array section of values from a netCDF variable with no data conversion.
 void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -2810,11 +2693,6 @@ void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Off
 void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_varm_ulonglong_all(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
 }
-// Reads a mapped array section of values from a netCDF variable.
-void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, char** dataValues) const {
-    cout << "getVar_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_varm_string_all(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues),__FILE__,__LINE__);
-}
 // Reads a mapped array section of values from a netCDF variable with no data conversion.
 void NcmpiVar::getVar_all(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheck(ncmpi_get_varm_all(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, bufcount, buftype),__FILE__,__LINE__);
@@ -2870,11 +2748,6 @@ void NcmpiVar::getVarn(const int num, MPI_Offset* const starts[], MPI_Offset* co
 void NcmpiVar::getVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_varn_ulonglong(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
 }
-// Reads an array of values from  a netCDF variable.
-void NcmpiVar::getVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char** dataValues) const {
-    cout << "getVarn for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_varn_string(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
-}
 // Reads an array of values from  a netCDF variable with no data conversion.
 void NcmpiVar::getVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
     ncmpiCheck(ncmpi_get_varn(groupId, myId, num, starts, counts, dataValues, bufcount, buftype),__FILE__,__LINE__);
@@ -2929,11 +2802,6 @@ void NcmpiVar::getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset
 // Reads an array of values from  a netCDF variable
 void NcmpiVar::getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned long long* dataValues) const {
     ncmpiCheck(ncmpi_get_varn_ulonglong_all(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
-}
-// Reads an array of values from  a netCDF variable.
-void NcmpiVar::getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char** dataValues) const {
-    cout << "getVarn_all for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_get_varn_string_all(groupId, myId, num, starts, counts, dataValues),__FILE__,__LINE__);
 }
 // Reads an array of values from  a netCDF variable with no data conversion.
 void NcmpiVar::getVarn_all(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const {
@@ -3001,11 +2869,6 @@ void NcmpiVar::igetVar(long long* dataValues, int *req) const {
 void NcmpiVar::igetVar(unsigned long long* dataValues, int *req) const {
     ncmpiCheck(ncmpi_iget_var_ulonglong(groupId, myId,dataValues, req),__FILE__,__LINE__);
 }
-// Reads the entire data of the netCDF variable.
-void NcmpiVar::igetVar(char** dataValues, int *req) const {
-    cout << "igetVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_iget_var_string(groupId, myId,dataValues, req),__FILE__,__LINE__);
-}
 // Reads the entire data of the netCDF variable with no data conversion.
 void NcmpiVar::igetVar(void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheck(ncmpi_iget_var(groupId, myId,dataValues, bufcount, buftype, req),__FILE__,__LINE__);
@@ -3062,11 +2925,6 @@ void NcmpiVar::igetVar(const vector<MPI_Offset>& index, long long* datumValue, i
 // Reads a single datum value of a netCDF variable
 void NcmpiVar::igetVar(const vector<MPI_Offset>& index, unsigned long long* datumValue, int *req) const {
     ncmpiCheck(ncmpi_iget_var1_ulonglong(groupId, myId,&index[0],datumValue, req),__FILE__,__LINE__);
-}
-// Reads a single datum value of a netCDF variable.
-void NcmpiVar::igetVar(const vector<MPI_Offset>& index, char** datumValue, int *req) const {
-    cout << "igetVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_iget_var1_string(groupId, myId,&index[0],datumValue, req),__FILE__,__LINE__);
 }
 // Reads a single datum value of a netCDF variable with no data conversion.
 void NcmpiVar::igetVar(const vector<MPI_Offset>& index, void* datumValue, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
@@ -3125,11 +2983,6 @@ void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
 void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, unsigned long long* dataValues, int *req) const {
     ncmpiCheck(ncmpi_iget_vara_ulonglong(groupId, myId,&startp[0],&countp[0],dataValues, req),__FILE__,__LINE__);
 }
-// Reads an array of values from  a netCDF variable.
-void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, char** dataValues, int *req) const {
-    cout << "igetVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_iget_vara_string(groupId, myId,&startp[0],&countp[0],dataValues, req),__FILE__,__LINE__);
-}
 // Reads an array of values from  a netCDF variable with no data conversion.
 void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheck(ncmpi_iget_vara(groupId, myId,&startp[0],&countp[0],dataValues, bufcount, buftype, req),__FILE__,__LINE__);
@@ -3185,11 +3038,6 @@ void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
 // Reads a subsampled (strided) array section of values from a netCDF variable
 void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, unsigned long long* dataValues, int *req) const {
     ncmpiCheck(ncmpi_iget_vars_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues, req),__FILE__,__LINE__);
-}
-// Reads a subsampled (strided) array section of values from a netCDF variable.
-void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, char** dataValues, int *req) const {
-    cout << "igetVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_iget_vars_string(groupId, myId,&startp[0],&countp[0],&stridep[0],dataValues, req),__FILE__,__LINE__);
 }
 // Reads a subsampled (strided) array section of values from a netCDF variable with no data conversion.
 void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
@@ -3247,16 +3095,67 @@ void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset
 void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, unsigned long long* dataValues, int *req) const {
     ncmpiCheck(ncmpi_iget_varm_ulonglong(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, req),__FILE__,__LINE__);
 }
-// Reads a mapped array section of values from a netCDF variable.
-void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, char** dataValues, int *req) const {
-    cout << "igetVar for string type is not implemented yet\n";
-    // ncmpiCheck(ncmpi_iget_varm_string(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, req),__FILE__,__LINE__);
-}
 // Reads a mapped array section of values from a netCDF variable with no data conversion.
 void NcmpiVar::igetVar(const vector<MPI_Offset>& startp, const vector<MPI_Offset>& countp, const vector<MPI_Offset>& stridep, const vector<MPI_Offset>& imapp, void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int *req) const {
     ncmpiCheck(ncmpi_iget_varm(groupId, myId,&startp[0],&countp[0],&stridep[0],&imapp[0],dataValues, bufcount, buftype, req),__FILE__,__LINE__);
 }
 
+//////////////////////
+
+// Reads a list of subarrays from  a netCDF variable. (independent I/O APIs)
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], char* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_text(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned char* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_uchar(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], signed char* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_schar(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], short* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_short(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], int* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_int(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], long* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_long(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], float* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_float(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], double* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_double(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned short* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_ushort(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned int* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_uint(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], long long* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_longlong(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], unsigned long long* dataValues, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn_ulonglong(groupId, myId, num, starts, counts, dataValues, req),__FILE__,__LINE__);
+}
+// Reads an array of values from  a netCDF variable with no data conversion.
+void NcmpiVar::igetVarn(const int num, MPI_Offset* const starts[], MPI_Offset* const counts[], void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype, int*req) const {
+    ncmpiCheck(ncmpi_iget_varn(groupId, myId, num, starts, counts, dataValues, bufcount, buftype, req),__FILE__,__LINE__);
+}
+
+//////////////////////
 
 void NcmpiVar::Inq_file_offset(MPI_Offset *offset)
 {

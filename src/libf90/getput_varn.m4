@@ -16,13 +16,24 @@ dnl
 define(`PUTVARN1',dnl
 `dnl
    function nf90mpi_put_varn_$2$5(ncid, varid, values, num, start, count)
-     integer,                                        intent( in) :: ncid, varid, num
-     $3 (kind=$2),                                   intent( $1) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent( in) :: start, count
-     integer                                                     :: nf90mpi_put_varn_$2$5
-     $3 (kind=$2),                   dimension(1)                :: tempValue
+     integer,                                                  intent(in) :: ncid, varid, num
+     $3 (kind=$2),                                             intent($1) :: values
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_put_varn_$2$5
+     $3 (kind=$2),                   dimension(1)                         :: tempValue
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_put_varn_$2$5 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_put_varn_$2$5 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
      tempValue(1) = values
-     nf90mpi_put_varn_$2$5 = nfmpi_put_varn_$4$5(ncid, varid, num, start, count, tempValue)
+     nf90mpi_put_varn_$2$5 = nfmpi_put_varn_$4$5(ncid, varid, num, start, &
+                                                 localCount(1:numDims,1:num), tempValue)
    end function nf90mpi_put_varn_$2$5
 ')dnl
 
@@ -32,12 +43,23 @@ dnl
 define(`GETVARN1',dnl
 `dnl
    function nf90mpi_get_varn_$2$5(ncid, varid, values, num, start, count)
-     integer,                                        intent( in) :: ncid, varid, num
-     $3 (kind=$2),                                   intent( $1) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent( in) :: start, count
-     integer                                                     :: nf90mpi_get_varn_$2$5
-     $3 (kind=$2),                   dimension(1)                :: tempValue
-     nf90mpi_get_varn_$2$5 = nfmpi_get_varn_$4$5(ncid, varid, num, start, count, tempValue)
+     integer,                                                  intent(in) :: ncid, varid, num
+     $3 (kind=$2),                                             intent($1) :: values
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_get_varn_$2$5
+     $3 (kind=$2),                   dimension(1)                         :: tempValue
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_get_varn_$2$5 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_get_varn_$2$5 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_get_varn_$2$5 = nfmpi_get_varn_$4$5(ncid, varid, num, start, &
+                                                 localCount(1:numDims,1:num), tempValue)
      values = tempValue(1)
    end function nf90mpi_get_varn_$2$5
 ')dnl
@@ -93,11 +115,22 @@ dnl
 define(`VARN',dnl
 `dnl
    function nf90mpi_$1_varn_$2_$3$8(ncid, varid, values, num, start, count)
-     integer,                                        intent(in) :: ncid, varid, num
-     $4 (kind=$3),   dimension($6),                  intent($7) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent(in) :: start, count
-     integer                                                    :: nf90mpi_$1_varn_$2_$3$8
-     nf90mpi_$1_varn_$2_$3$8 = nfmpi_$1_varn_$5$8(ncid, varid, num, start, count, values)
+     integer,                                                  intent(in) :: ncid, varid, num
+     $4 (kind=$3),   dimension($6),                            intent($7) :: values
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_$1_varn_$2_$3$8
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_$1_varn_$2_$3$8 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_varn_$2_$3$8 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_$1_varn_$2_$3$8 = nfmpi_$1_varn_$5$8(ncid, varid, num, start, &
+                                                  localCount(1:numDims,1:num), values)
    end function nf90mpi_$1_varn_$2_$3$8
 ')dnl
 
@@ -319,11 +352,22 @@ dnl
 define(`TEXTVARN1',dnl
 `dnl
    function nf90mpi_$1_varn_text$3(ncid, varid, values, num, start, count)
-     integer,                                        intent( in) :: ncid, varid, num
-     character (len = *),                             intent($2) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent( in) :: start, count
-     integer                                                     :: nf90mpi_$1_varn_text$3
-     nf90mpi_$1_varn_text$3 = nfmpi_$1_varn_text$3(ncid, varid, num, start, count, values)
+     integer,                                                 intent( in) :: ncid, varid, num
+     character (len = *),                                      intent($2) :: values
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_$1_varn_text$3
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_$1_varn_text$3 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_varn_text$3 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_$1_varn_text$3 = nfmpi_$1_varn_text$3(ncid, varid, num, start, &
+                                                   localCount(1:numDims,1:num), values)
    end function nf90mpi_$1_varn_text$3
 ')dnl
 
@@ -339,12 +383,22 @@ dnl
 define(`TEXTVARN',dnl
 `dnl
    function nf90mpi_$1_varn_$2_text$6(ncid, varid, values, num, start, count)
-     integer,                                        intent( in) :: ncid, varid, num
-     character (len = *), dimension($3),             intent( $5) :: values
-     integer (kind=MPI_OFFSET_KIND), dimension(:,:), intent( in) :: start, count
-     integer                                                     :: nf90mpi_$1_varn_$2_text$6
+     integer,                                                  intent(in) :: ncid, varid, num
+     character (len = *), dimension($3),                       intent($5) :: values
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_$1_varn_$2_text$6
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
  
-     nf90mpi_$1_varn_$2_text$6 = nfmpi_$1_varn_text$6(ncid, varid, num, start, count, values($4))
+     ! Set local arguments to default values
+     nf90mpi_$1_varn_$2_text$6 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_varn_$2_text$6 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_$1_varn_$2_text$6 = nfmpi_$1_varn_text$6(ncid, varid, num, start, &
+                                                      localCount(1:numDims,1:num), values($4))
    end function nf90mpi_$1_varn_$2_text$6
 ')dnl
 
@@ -383,4 +437,283 @@ TEXTVARN(get, 4D, `:,:,:,:',       `1,1,1,1',       out, _all)
 TEXTVARN(get, 5D, `:,:,:,:,:',     `1,1,1,1,1',     out, _all)
 TEXTVARN(get, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out, _all)
 TEXTVARN(get, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out, _all)
+
+!
+! Nonblocking APIs
+!
+
+dnl
+dnl IPUTVARN1(ncid, varid, values, num, start, count)
+dnl
+define(`IPUTVARN1',dnl
+`dnl
+   function nf90mpi_iput_varn_$2(ncid, varid, values, req, num, start, count)
+     integer,                                                  intent(in) :: ncid, varid, num
+     $3 (kind=$2),                                             intent($1) :: values
+     integer,                                                  intent(out):: req
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_iput_varn_$2
+     $3 (kind=$2),                   dimension(1)                         :: tempValue
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_iput_varn_$2 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_iput_varn_$2 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     tempValue(1) = values
+     nf90mpi_iput_varn_$2 = nfmpi_iput_varn_$4(ncid, varid, num, start, &
+                                               localCount(1:numDims,1:num), tempValue, req)
+   end function nf90mpi_iput_varn_$2
+')dnl
+
+dnl
+dnl IGETVARN1(ncid, varid, values, num, start, count)
+dnl
+define(`IGETVARN1',dnl
+`dnl
+   function nf90mpi_iget_varn_$2(ncid, varid, values, req, num, start, count)
+     integer,                                                  intent(in) :: ncid, varid, num
+     $3 (kind=$2),                                             intent($1) :: values
+     integer,                                                  intent(out):: req
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_iget_varn_$2
+     $3 (kind=$2),                   dimension(1)                         :: tempValue
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_iget_varn_$2 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_iget_varn_$2 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_iget_varn_$2 = nfmpi_iget_varn_$4(ncid, varid, num, start, &
+                                               localCount(1:numDims,1:num), tempValue, req)
+     values = tempValue(1)
+   end function nf90mpi_iget_varn_$2
+')dnl
+
+IPUTVARN1(in,    OneByteInt,    integer, int1)
+IPUTVARN1(inout, TwoByteInt,    integer, int2)
+IPUTVARN1(inout, FourByteInt,   integer, int)
+IPUTVARN1(inout, FourByteReal,  real,    real)
+IPUTVARN1(inout, EightByteReal, real,    double)
+IPUTVARN1(inout, EightByteInt,  integer, int8)
+
+IGETVARN1(out,   OneByteInt,    integer, int1)
+IGETVARN1(out,   TwoByteInt,    integer, int2)
+IGETVARN1(out,   FourByteInt,   integer, int)
+IGETVARN1(out,   FourByteReal,  real,    real)
+IGETVARN1(out,   EightByteReal, real,    double)
+IGETVARN1(out,   EightByteInt,  integer, int8)
+
+dnl
+dnl IVARN(ncid, varid, values, num, start, count)
+dnl
+define(`IVARN',dnl
+`dnl
+   function nf90mpi_$1_varn_$2_$3(ncid, varid, values, req, num, start, count)
+     integer,                                                  intent(in) :: ncid, varid, num
+     $4 (kind=$3),   dimension($6),                            intent($7) :: values
+     integer,                                                  intent(out):: req
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_$1_varn_$2_$3
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_$1_varn_$2_$3 = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_varn_$2_$3 .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_$1_varn_$2_$3 = nfmpi_$1_varn_$5(ncid, varid, num, start, &
+                                              localCount(1:numDims,1:num), values, req)
+   end function nf90mpi_$1_varn_$2_$3
+')dnl
+
+!
+! put APIs
+!
+
+IVARN(iput, 1D, OneByteInt, integer, int1,  :,              in)
+IVARN(iput, 2D, OneByteInt, integer, int1, `:,:',           in)
+IVARN(iput, 3D, OneByteInt, integer, int1, `:,:,:',         in)
+IVARN(iput, 4D, OneByteInt, integer, int1, `:,:,:,:',       in)
+IVARN(iput, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     in)
+IVARN(iput, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
+IVARN(iput, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
+
+IVARN(iput, 1D, TwoByteInt, integer, int2,  :,              inout)
+IVARN(iput, 2D, TwoByteInt, integer, int2, `:,:',           inout)
+IVARN(iput, 3D, TwoByteInt, integer, int2, `:,:,:',         inout)
+IVARN(iput, 4D, TwoByteInt, integer, int2, `:,:,:,:',       inout)
+IVARN(iput, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     inout)
+IVARN(iput, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   inout)
+IVARN(iput, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', inout)
+
+IVARN(iput, 1D, FourByteInt, integer, int,  :,              inout)
+IVARN(iput, 2D, FourByteInt, integer, int, `:,:',           inout)
+IVARN(iput, 3D, FourByteInt, integer, int, `:,:,:',         inout)
+IVARN(iput, 4D, FourByteInt, integer, int, `:,:,:,:',       inout)
+IVARN(iput, 5D, FourByteInt, integer, int, `:,:,:,:,:',     inout)
+IVARN(iput, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   inout)
+IVARN(iput, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', inout)
+
+IVARN(iput, 1D, FourByteReal, real,   real,  :,              inout)
+IVARN(iput, 2D, FourByteReal, real,   real, `:,:',           inout)
+IVARN(iput, 3D, FourByteReal, real,   real, `:,:,:',         inout)
+IVARN(iput, 4D, FourByteReal, real,   real, `:,:,:,:',       inout)
+IVARN(iput, 5D, FourByteReal, real,   real, `:,:,:,:,:',     inout)
+IVARN(iput, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   inout)
+IVARN(iput, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', inout)
+
+IVARN(iput, 1D, EightByteReal, real, double,  :,              inout)
+IVARN(iput, 2D, EightByteReal, real, double, `:,:',           inout)
+IVARN(iput, 3D, EightByteReal, real, double, `:,:,:',         inout)
+IVARN(iput, 4D, EightByteReal, real, double, `:,:,:,:',       inout)
+IVARN(iput, 5D, EightByteReal, real, double, `:,:,:,:,:',     inout)
+IVARN(iput, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   inout)
+IVARN(iput, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', inout)
+
+IVARN(iput, 1D, EightByteInt, integer, int8,  :,              inout)
+IVARN(iput, 2D, EightByteInt, integer, int8, `:,:',           inout)
+IVARN(iput, 3D, EightByteInt, integer, int8, `:,:,:',         inout)
+IVARN(iput, 4D, EightByteInt, integer, int8, `:,:,:,:',       inout)
+IVARN(iput, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     inout)
+IVARN(iput, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   inout)
+IVARN(iput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', inout)
+
+!
+! get APIs
+!
+
+IVARN(iget, 1D, OneByteInt, integer, int1,  :,              out)
+IVARN(iget, 2D, OneByteInt, integer, int1, `:,:',           out)
+IVARN(iget, 3D, OneByteInt, integer, int1, `:,:,:',         out)
+IVARN(iget, 4D, OneByteInt, integer, int1, `:,:,:,:',       out)
+IVARN(iget, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     out)
+IVARN(iget, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   out)
+IVARN(iget, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', out)
+
+IVARN(iget, 1D, TwoByteInt, integer, int2,  :,              out)
+IVARN(iget, 2D, TwoByteInt, integer, int2, `:,:',           out)
+IVARN(iget, 3D, TwoByteInt, integer, int2, `:,:,:',         out)
+IVARN(iget, 4D, TwoByteInt, integer, int2, `:,:,:,:',       out)
+IVARN(iget, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     out)
+IVARN(iget, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   out)
+IVARN(iget, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', out)
+
+IVARN(iget, 1D, FourByteInt, integer, int,  :,              out)
+IVARN(iget, 2D, FourByteInt, integer, int, `:,:',           out)
+IVARN(iget, 3D, FourByteInt, integer, int, `:,:,:',         out)
+IVARN(iget, 4D, FourByteInt, integer, int, `:,:,:,:',       out)
+IVARN(iget, 5D, FourByteInt, integer, int, `:,:,:,:,:',     out)
+IVARN(iget, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   out)
+IVARN(iget, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', out)
+
+IVARN(iget, 1D, FourByteReal, real,   real,  :,              out)
+IVARN(iget, 2D, FourByteReal, real,   real, `:,:',           out)
+IVARN(iget, 3D, FourByteReal, real,   real, `:,:,:',         out)
+IVARN(iget, 4D, FourByteReal, real,   real, `:,:,:,:',       out)
+IVARN(iget, 5D, FourByteReal, real,   real, `:,:,:,:,:',     out)
+IVARN(iget, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   out)
+IVARN(iget, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', out)
+
+IVARN(iget, 1D, EightByteReal, real, double,  :,              out)
+IVARN(iget, 2D, EightByteReal, real, double, `:,:',           out)
+IVARN(iget, 3D, EightByteReal, real, double, `:,:,:',         out)
+IVARN(iget, 4D, EightByteReal, real, double, `:,:,:,:',       out)
+IVARN(iget, 5D, EightByteReal, real, double, `:,:,:,:,:',     out)
+IVARN(iget, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   out)
+IVARN(iget, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', out)
+
+IVARN(iget, 1D, EightByteInt, integer, int8,  :,              out)
+IVARN(iget, 2D, EightByteInt, integer, int8, `:,:',           out)
+IVARN(iget, 3D, EightByteInt, integer, int8, `:,:,:',         out)
+IVARN(iget, 4D, EightByteInt, integer, int8, `:,:,:,:',       out)
+IVARN(iget, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     out)
+IVARN(iget, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   out)
+IVARN(iget, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out)
+
+!
+! text variable
+!
+
+dnl
+dnl ITEXTVARN1(ncid, varid, values, num, start, count)
+dnl
+define(`ITEXTVARN1',dnl
+`dnl
+   function nf90mpi_$1_varn_text(ncid, varid, values, req, num, start, count)
+     integer,                                                  intent(in) :: ncid, varid, num
+     character (len = *),                                      intent($2) :: values
+     integer,                                                  intent(out):: req
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_$1_varn_text
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_$1_varn_text = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_varn_text .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_$1_varn_text = nfmpi_$1_varn_text(ncid, varid, num, start, &
+                                               localCount(1:numDims,1:num), values, req)
+   end function nf90mpi_$1_varn_text
+')dnl
+
+ITEXTVARN1(iput, in)
+ITEXTVARN1(iget, out)
+
+dnl
+dnl ITEXTVARN(ncid, varid, values, num, start, count)
+dnl
+define(`ITEXTVARN',dnl
+`dnl
+   function nf90mpi_$1_varn_$2_text(ncid, varid, values, req, num, start, count)
+     integer,                                                  intent(in) :: ncid, varid, num
+     character (len = *), dimension($3),                       intent($5) :: values
+     integer,                                                  intent(out):: req
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:),           intent(in) :: start
+     integer (kind=MPI_OFFSET_KIND), dimension(:,:), optional, intent(in) :: count
+     integer                                                              :: nf90mpi_$1_varn_$2_text
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims,num)     :: localCount
+     integer                                                              :: numDims
+ 
+     ! Set local arguments to default values
+     nf90mpi_$1_varn_$2_text = nfmpi_inq_varndims(ncid, varid, numDims)
+     if (nf90mpi_$1_varn_$2_text .NE. NF90_NOERR) return
+
+     localCount(1:numDims,1:num) = 1
+     if (present(count)) localCount(1:numDims,1:num) = count(1:numDims,1:num)
+     nf90mpi_$1_varn_$2_text = nfmpi_$1_varn_text(ncid, varid, num, start, &
+                                                  localCount(1:numDims,1:num), values($4), req)
+   end function nf90mpi_$1_varn_$2_text
+')dnl
+
+ITEXTVARN(iput, 1D,  :,               1,              in)
+ITEXTVARN(iput, 2D, `:,:',           `1,1',           in)
+ITEXTVARN(iput, 3D, `:,:,:',         `1,1,1',         in)
+ITEXTVARN(iput, 4D, `:,:,:,:',       `1,1,1,1',       in)
+ITEXTVARN(iput, 5D, `:,:,:,:,:',     `1,1,1,1,1',     in)
+ITEXTVARN(iput, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
+ITEXTVARN(iput, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
+
+ITEXTVARN(iget, 1D,  :,               1,              out)
+ITEXTVARN(iget, 2D, `:,:',           `1,1',           out)
+ITEXTVARN(iget, 3D, `:,:,:',         `1,1,1',         out)
+ITEXTVARN(iget, 4D, `:,:,:,:',       `1,1,1,1',       out)
+ITEXTVARN(iget, 5D, `:,:,:,:,:',     `1,1,1,1,1',     out)
+ITEXTVARN(iget, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out)
+ITEXTVARN(iget, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out)
 

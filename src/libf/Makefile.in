@@ -320,6 +320,22 @@ C2F_SRCS = createf.c \
 	put_varn_realf.c       put_varn_real_allf.c \
 	put_varn_doublef.c     put_varn_double_allf.c \
 	put_varn_int8f.c       put_varn_int8_allf.c \
+	iget_varnf.c        \
+	iget_varn_textf.c   \
+	iget_varn_int1f.c   \
+	iget_varn_int2f.c   \
+	iget_varn_intf.c    \
+	iget_varn_realf.c   \
+	iget_varn_doublef.c \
+	iget_varn_int8f.c   \
+	iput_varnf.c        \
+	iput_varn_textf.c   \
+	iput_varn_int1f.c   \
+	iput_varn_int2f.c   \
+	iput_varn_intf.c    \
+	iput_varn_realf.c   \
+	iput_varn_doublef.c \
+	iput_varn_int8f.c   \
         get_vardf.c            get_vard_allf.c \
         put_vardf.c            put_vard_allf.c
 

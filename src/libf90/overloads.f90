@@ -525,6 +525,76 @@
                      nf90mpi_iget_var_7D_FourByteReal, nf90mpi_iget_var_7D_EightByteReal
   end interface ! nf90mpi_iget_var
 
+  interface nf90mpi_iput_varn
+    module procedure nf90mpi_iput_varn_text,                                   &
+                     nf90mpi_iput_varn_OneByteInt, nf90mpi_iput_varn_TwoByteInt,    &
+                     nf90mpi_iput_varn_FourByteInt, nf90mpi_iput_varn_EightByteInt, &
+                     nf90mpi_iput_varn_FourByteReal, nf90mpi_iput_varn_EightByteReal
+    module procedure nf90mpi_iput_varn_1D_text,                                      &
+                     nf90mpi_iput_varn_1D_OneByteInt, nf90mpi_iput_varn_1D_TwoByteInt,    &
+                     nf90mpi_iput_varn_1D_FourByteInt, nf90mpi_iput_varn_1D_EightByteInt, &
+                     nf90mpi_iput_varn_1D_FourByteReal, nf90mpi_iput_varn_1D_EightByteReal
+    module procedure nf90mpi_iput_varn_2D_text,                                       &
+                     nf90mpi_iput_varn_2D_OneByteInt, nf90mpi_iput_varn_2D_TwoByteInt,     &
+                     nf90mpi_iput_varn_2D_FourByteInt, nf90mpi_iput_varn_2D_EightByteInt,  &
+                     nf90mpi_iput_varn_2D_FourByteReal, nf90mpi_iput_varn_2D_EightByteReal
+    module procedure nf90mpi_iput_varn_3D_text,                                       &
+                     nf90mpi_iput_varn_3D_OneByteInt, nf90mpi_iput_varn_3D_TwoByteInt,     &
+                     nf90mpi_iput_varn_3D_FourByteInt, nf90mpi_iput_varn_3D_EightByteInt,  &
+                     nf90mpi_iput_varn_3D_FourByteReal, nf90mpi_iput_varn_3D_EightByteReal
+    module procedure nf90mpi_iput_varn_4D_text,                                       &
+                     nf90mpi_iput_varn_4D_OneByteInt, nf90mpi_iput_varn_4D_TwoByteInt,     &
+                     nf90mpi_iput_varn_4D_FourByteInt, nf90mpi_iput_varn_4D_EightByteInt,  &
+                     nf90mpi_iput_varn_4D_FourByteReal, nf90mpi_iput_varn_4D_EightByteReal
+    module procedure nf90mpi_iput_varn_5D_text,                                       &
+                     nf90mpi_iput_varn_5D_OneByteInt, nf90mpi_iput_varn_5D_TwoByteInt,     &
+                     nf90mpi_iput_varn_5D_FourByteInt, nf90mpi_iput_varn_5D_EightByteInt,  &
+                     nf90mpi_iput_varn_5D_FourByteReal, nf90mpi_iput_varn_5D_EightByteReal
+    module procedure nf90mpi_iput_varn_6D_text,                                       &
+                     nf90mpi_iput_varn_6D_OneByteInt, nf90mpi_iput_varn_6D_TwoByteInt,     &
+                     nf90mpi_iput_varn_6D_FourByteInt, nf90mpi_iput_varn_6D_EightByteInt,  &
+                     nf90mpi_iput_varn_6D_FourByteReal, nf90mpi_iput_varn_6D_EightByteReal
+    module procedure nf90mpi_iput_varn_7D_text,                                       &
+                     nf90mpi_iput_varn_7D_OneByteInt, nf90mpi_iput_varn_7D_TwoByteInt,     &
+                     nf90mpi_iput_varn_7D_FourByteInt, nf90mpi_iput_varn_7D_EightByteInt,  &
+                     nf90mpi_iput_varn_7D_FourByteReal, nf90mpi_iput_varn_7D_EightByteReal
+  end interface ! nf90mpi_iput_varn
+
+  interface nf90mpi_iget_varn
+    module procedure nf90mpi_iget_varn_text,                                   &
+                     nf90mpi_iget_varn_OneByteInt, nf90mpi_iget_varn_TwoByteInt,    &
+                     nf90mpi_iget_varn_FourByteInt, nf90mpi_iget_varn_EightByteInt, &
+                     nf90mpi_iget_varn_FourByteReal, nf90mpi_iget_varn_EightByteReal
+    module procedure nf90mpi_iget_varn_1D_text,                                      &
+                     nf90mpi_iget_varn_1D_OneByteInt, nf90mpi_iget_varn_1D_TwoByteInt,    &
+                     nf90mpi_iget_varn_1D_FourByteInt, nf90mpi_iget_varn_1D_EightByteInt, &
+                     nf90mpi_iget_varn_1D_FourByteReal, nf90mpi_iget_varn_1D_EightByteReal
+    module procedure nf90mpi_iget_varn_2D_text,                                      &
+                     nf90mpi_iget_varn_2D_OneByteInt, nf90mpi_iget_varn_2D_TwoByteInt,    &
+                     nf90mpi_iget_varn_2D_FourByteInt, nf90mpi_iget_varn_2D_EightByteInt, &
+                     nf90mpi_iget_varn_2D_FourByteReal, nf90mpi_iget_varn_2D_EightByteReal
+    module procedure nf90mpi_iget_varn_3D_text,                                      &
+                     nf90mpi_iget_varn_3D_OneByteInt, nf90mpi_iget_varn_3D_TwoByteInt,    &
+                     nf90mpi_iget_varn_3D_FourByteInt, nf90mpi_iget_varn_3D_EightByteInt, &
+                     nf90mpi_iget_varn_3D_FourByteReal, nf90mpi_iget_varn_3D_EightByteReal
+    module procedure nf90mpi_iget_varn_4D_text,                                      &
+                     nf90mpi_iget_varn_4D_OneByteInt, nf90mpi_iget_varn_4D_TwoByteInt,    &
+                     nf90mpi_iget_varn_4D_FourByteInt, nf90mpi_iget_varn_4D_EightByteInt, &
+                     nf90mpi_iget_varn_4D_FourByteReal, nf90mpi_iget_varn_4D_EightByteReal
+    module procedure nf90mpi_iget_varn_5D_text,                                      &
+                     nf90mpi_iget_varn_5D_OneByteInt, nf90mpi_iget_varn_5D_TwoByteInt,    &
+                     nf90mpi_iget_varn_5D_FourByteInt, nf90mpi_iget_varn_5D_EightByteInt, &
+                     nf90mpi_iget_varn_5D_FourByteReal, nf90mpi_iget_varn_5D_EightByteReal
+    module procedure nf90mpi_iget_varn_6D_text,                                      &
+                     nf90mpi_iget_varn_6D_OneByteInt, nf90mpi_iget_varn_6D_TwoByteInt,    &
+                     nf90mpi_iget_varn_6D_FourByteInt, nf90mpi_iget_varn_6D_EightByteInt, &
+                     nf90mpi_iget_varn_6D_FourByteReal, nf90mpi_iget_varn_6D_EightByteReal
+    module procedure nf90mpi_iget_varn_7D_text,                                      &
+                     nf90mpi_iget_varn_7D_OneByteInt, nf90mpi_iget_varn_7D_TwoByteInt,    &
+                     nf90mpi_iget_varn_7D_FourByteInt, nf90mpi_iget_varn_7D_EightByteInt, &
+                     nf90mpi_iget_varn_7D_FourByteReal, nf90mpi_iget_varn_7D_EightByteReal
+  end interface ! nf90mpi_iget_varn
+
   interface nf90mpi_bput_var
     module procedure nf90mpi_bput_var_text,                                   &
                      nf90mpi_bput_var_OneByteInt, nf90mpi_bput_var_TwoByteInt,    &

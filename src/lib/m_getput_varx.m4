@@ -989,7 +989,7 @@ ncmpii_mgetput_varm(int                ncid,
 
             status = ncmpii_igetput_varm(ncp, varp, start, count, NULL,
                                          NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0);
+                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
             if (varp->ndims > 0) NCI_Free(start);
         } else if (counts == NULL) {  /* var1 */
             GET_FULL_DIMENSIONS(start, count)
@@ -1002,7 +1002,7 @@ ncmpii_mgetput_varm(int                ncid,
 
             status = ncmpii_igetput_varm(ncp, varp, starts[i], count, NULL,
                                          NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0);
+                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
             if (varp->ndims > 0) NCI_Free(count);
         } else if (strides == NULL) { /* vara */
             /* when bufcounts == NULL, it means the same as counts[] */
@@ -1015,7 +1015,7 @@ ncmpii_mgetput_varm(int                ncid,
 
             status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i], NULL,
                                          NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0);
+                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
         } else if (imaps == NULL) {   /* vars */
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
@@ -1027,7 +1027,7 @@ ncmpii_mgetput_varm(int                ncid,
 
             status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
                                          strides[i], NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0);
+                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
         } else {                      /* varm */
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
@@ -1040,7 +1040,7 @@ ncmpii_mgetput_varm(int                ncid,
             status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
                                          strides[i], imaps[i], bufs[i],
                                          buflen, datatypes[i],
-                                         &req_ids[i], rw_flag, 0);
+                                         &req_ids[i], rw_flag, 0, 0);
         }
     }
 

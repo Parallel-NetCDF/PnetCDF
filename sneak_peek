@@ -6,9 +6,15 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New APIs
-    * ncmpi_put_vard() and ncmpi_get_vard() takes an argument of MPI derived
-      data type that describes the file access layout, as opposed to vara
-      and vars APIs that use start[] and count[].
+    * Nonblocking varn API family.
+      For C,   ncmpi_iput_varn_int() ncmpi_iget_varn_int()
+      For F77, nfmpi_iput_varn_int() nfmpi_iget_varn_int()
+      For F90, nf90mpi_iput_varn()   nf90mpi_iget_varn()
+      For C++, NcmpiVar::iputVarn()  NcmpiVar::igetVarn()
+    * Blocking vard API family takes an argument of MPI derived data type that
+      describes the file access layout, as opposed to vara and vars APIs that
+      use start[] and count[].
+      For C,   ncmpi_put_vard()    ncmpi_get_vard()
       For F77, nfmpi_put_vard()    nfmpi_get_vard()
       For F90, nf90mpi_put_vard()  nf90mpi_get_vard()
       For C++, NcmpiVar::putVard() NcmpiVar::getVard()

@@ -1405,6 +1405,45 @@
       external nfmpi_get_varn_int8,   nfmpi_get_varn_int8_all
 
 !
+! Nonblocking varn routines:
+!
+      integer  nfmpi_iput_varn
+      integer  nfmpi_iput_varn_text
+      integer  nfmpi_iput_varn_int1
+      integer  nfmpi_iput_varn_int2
+      integer  nfmpi_iput_varn_int
+      integer  nfmpi_iput_varn_real
+      integer  nfmpi_iput_varn_double
+      integer  nfmpi_iput_varn_int8
+
+      external nfmpi_iput_varn
+      external nfmpi_iput_varn_text
+      external nfmpi_iput_varn_int1
+      external nfmpi_iput_varn_int2
+      external nfmpi_iput_varn_int
+      external nfmpi_iput_varn_real
+      external nfmpi_iput_varn_double
+      external nfmpi_iput_varn_int8
+
+      integer  nfmpi_iget_varn
+      integer  nfmpi_iget_varn_text
+      integer  nfmpi_iget_varn_int1
+      integer  nfmpi_iget_varn_int2
+      integer  nfmpi_iget_varn_int
+      integer  nfmpi_iget_varn_real
+      integer  nfmpi_iget_varn_double
+      integer  nfmpi_iget_varn_int8
+
+      external nfmpi_iget_varn
+      external nfmpi_iget_varn_text
+      external nfmpi_iget_varn_int1
+      external nfmpi_iget_varn_int2
+      external nfmpi_iget_varn_int
+      external nfmpi_iget_varn_real
+      external nfmpi_iget_varn_double
+      external nfmpi_iget_varn_int8
+
+!
 ! vard routines:
 !
       integer  nfmpi_put_vard, nfmpi_put_vard_all
