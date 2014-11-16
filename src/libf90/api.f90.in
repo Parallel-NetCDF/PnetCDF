@@ -631,6 +631,15 @@ INTERFACE
 !                           INTEGER,                       INTENT(IN)  :: datatype
 !   END FUNCTION   nfmpi_put_var1
 
+!   INTEGER        FUNCTION nfmpi_put_var1_all(ncid, varid, index, buf, bufcount, datatype)
+!                           INTEGER,                       INTENT(IN)  :: ncid
+!                           INTEGER,                       INTENT(IN)  :: varid
+!                           INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+!                           <type>,                        INTENT(IN)  :: buf(*)
+!                           INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                           INTEGER,                       INTENT(IN)  :: datatype
+!   END FUNCTION   nfmpi_put_var1_all
+
 !   INTEGER        FUNCTION nfmpi_get_var1(ncid, varid, index, buf, bufcount, datatype)
 !                           INTEGER,                       INTENT(IN)  :: ncid
 !                           INTEGER,                       INTENT(IN)  :: varid
@@ -640,6 +649,15 @@ INTERFACE
 !                           INTEGER,                       INTENT(IN)  :: datatype
 !   END FUNCTION   nfmpi_get_var1
 
+!   INTEGER        FUNCTION nfmpi_get_var1_all(ncid, varid, index, buf, bufcount, datatype)
+!                           INTEGER,                       INTENT(IN)  :: ncid
+!                           INTEGER,                       INTENT(IN)  :: varid
+!                           INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+!                           <type>,                        INTENT(OUT) :: buf(*)
+!                           INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: bufcount
+!                           INTEGER,                       INTENT(IN)  :: datatype
+!   END FUNCTION   nfmpi_get_var1_all
+
     INTEGER        FUNCTION nfmpi_put_var1_text(ncid, varid, index, text)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -647,6 +665,14 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             CHARACTER,                     INTENT(IN)  :: text
     END FUNCTION   nfmpi_put_var1_text
+
+    INTEGER        FUNCTION nfmpi_put_var1_text_all(ncid, varid, index, text)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            CHARACTER,                     INTENT(IN)  :: text
+    END FUNCTION   nfmpi_put_var1_text_all
 
     INTEGER        FUNCTION nfmpi_get_var1_text(ncid, varid, index, text)
                    use mpi, only: MPI_OFFSET_KIND
@@ -656,6 +682,14 @@ INTERFACE
                             CHARACTER,                     INTENT(OUT) :: text
     END FUNCTION   nfmpi_get_var1_text
 
+    INTEGER        FUNCTION nfmpi_get_var1_text_all(ncid, varid, index, text)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            CHARACTER,                     INTENT(OUT) :: text
+    END FUNCTION   nfmpi_get_var1_text_all
+
     INTEGER        FUNCTION nfmpi_put_var1_int1(ncid, varid, index, i1val)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -663,6 +697,14 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             INTEGER*1,                     INTENT(IN)  :: i1val
     END FUNCTION   nfmpi_put_var1_int1
+
+    INTEGER        FUNCTION nfmpi_put_var1_int1_all(ncid, varid, index, i1val)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*1,                     INTENT(IN)  :: i1val
+    END FUNCTION   nfmpi_put_var1_int1_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int1(ncid, varid, index, i1val)
                    use mpi, only: MPI_OFFSET_KIND
@@ -672,6 +714,14 @@ INTERFACE
                             INTEGER*1,                     INTENT(OUT) :: i1val
     END FUNCTION   nfmpi_get_var1_int1
 
+    INTEGER        FUNCTION nfmpi_get_var1_int1_all(ncid, varid, index, i1val)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*1,                     INTENT(OUT) :: i1val
+    END FUNCTION   nfmpi_get_var1_int1_all
+
     INTEGER        FUNCTION nfmpi_put_var1_int2(ncid, varid, index, i2val)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -679,6 +729,14 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             INTEGER*2,                     INTENT(@INOUT@) :: i2val
     END FUNCTION   nfmpi_put_var1_int2
+
+    INTEGER        FUNCTION nfmpi_put_var1_int2_all(ncid, varid, index, i2val)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*2,                     INTENT(@INOUT@) :: i2val
+    END FUNCTION   nfmpi_put_var1_int2_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int2(ncid, varid, index, i2val)
                    use mpi, only: MPI_OFFSET_KIND
@@ -688,6 +746,14 @@ INTERFACE
                             INTEGER*2,                     INTENT(OUT) :: i2val
     END FUNCTION   nfmpi_get_var1_int2
 
+    INTEGER        FUNCTION nfmpi_get_var1_int2_all(ncid, varid, index, i2val)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*2,                     INTENT(OUT) :: i2val
+    END FUNCTION   nfmpi_get_var1_int2_all
+
     INTEGER        FUNCTION nfmpi_put_var1_int(ncid, varid, index, ival)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -695,6 +761,14 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             INTEGER,                       INTENT(@INOUT@) :: ival
     END FUNCTION   nfmpi_put_var1_int
+
+    INTEGER        FUNCTION nfmpi_put_var1_int_all(ncid, varid, index, ival)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER,                       INTENT(@INOUT@) :: ival
+    END FUNCTION   nfmpi_put_var1_int_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int(ncid, varid, index, ival)
                    use mpi, only: MPI_OFFSET_KIND
@@ -704,6 +778,14 @@ INTERFACE
                             INTEGER,                       INTENT(OUT) :: ival
     END FUNCTION   nfmpi_get_var1_int
 
+    INTEGER        FUNCTION nfmpi_get_var1_int_all(ncid, varid, index, ival)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER,                       INTENT(OUT) :: ival
+    END FUNCTION   nfmpi_get_var1_int_all
+
     INTEGER        FUNCTION nfmpi_put_var1_real(ncid, varid, index, rval)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -711,6 +793,14 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             REAL,                          INTENT(@INOUT@) :: rval
     END FUNCTION   nfmpi_put_var1_real
+
+    INTEGER        FUNCTION nfmpi_put_var1_real_all(ncid, varid, index, rval)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            REAL,                          INTENT(@INOUT@) :: rval
+    END FUNCTION   nfmpi_put_var1_real_all
 
     INTEGER        FUNCTION nfmpi_get_var1_real(ncid, varid, index, rval)
                    use mpi, only: MPI_OFFSET_KIND
@@ -720,6 +810,14 @@ INTERFACE
                             REAL,                          INTENT(OUT) :: rval
     END FUNCTION   nfmpi_get_var1_real
 
+    INTEGER        FUNCTION nfmpi_get_var1_real_all(ncid, varid, index, rval)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            REAL,                          INTENT(OUT) :: rval
+    END FUNCTION   nfmpi_get_var1_real_all
+
     INTEGER        FUNCTION nfmpi_put_var1_double(ncid, varid, index, dval)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -727,6 +825,14 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             DOUBLE PRECISION,              INTENT(@INOUT@) :: dval
     END FUNCTION   nfmpi_put_var1_double
+
+    INTEGER        FUNCTION nfmpi_put_var1_double_all(ncid, varid, index, dval)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            DOUBLE PRECISION,              INTENT(@INOUT@) :: dval
+    END FUNCTION   nfmpi_put_var1_double_all
 
     INTEGER        FUNCTION nfmpi_get_var1_double(ncid, varid, index, dval)
                    use mpi, only: MPI_OFFSET_KIND
@@ -736,6 +842,14 @@ INTERFACE
                             DOUBLE PRECISION,              INTENT(OUT) :: dval
     END FUNCTION   nfmpi_get_var1_double
 
+    INTEGER        FUNCTION nfmpi_get_var1_double_all(ncid, varid, index, dval)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            DOUBLE PRECISION,              INTENT(OUT) :: dval
+    END FUNCTION   nfmpi_get_var1_double_all
+
     INTEGER        FUNCTION nfmpi_put_var1_int8(ncid, varid, index, i8val)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -744,6 +858,14 @@ INTERFACE
                             INTEGER*8,                     INTENT(@INOUT@) :: i8val
     END FUNCTION   nfmpi_put_var1_int8
 
+    INTEGER        FUNCTION nfmpi_put_var1_int8_all(ncid, varid, index, i8val)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*8,                     INTENT(@INOUT@) :: i8val
+    END FUNCTION   nfmpi_put_var1_int8_all
+
     INTEGER        FUNCTION nfmpi_get_var1_int8(ncid, varid, index, i8val)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
@@ -751,6 +873,14 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
                             INTEGER*8,                     INTENT(OUT) :: i8val
     END FUNCTION   nfmpi_get_var1_int8
+
+    INTEGER        FUNCTION nfmpi_get_var1_int8_all(ncid, varid, index, i8val)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER,                       INTENT(IN)  :: varid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
+                            INTEGER*8,                     INTENT(OUT) :: i8val
+    END FUNCTION   nfmpi_get_var1_int8_all
 
 !
 ! variable array put/get subroutines:
@@ -3694,10 +3824,12 @@ END INTERFACE
 !
 
       integer, external :: &
+          nfmpi_put_var1_all, &
           nfmpi_put_vara_all, &
           nfmpi_put_vars_all, &
           nfmpi_put_varm_all, &
           nfmpi_get_var_all, &
+          nfmpi_get_var1_all, &
           nfmpi_get_vara_all, &
           nfmpi_get_vars_all, &
           nfmpi_get_varm_all, &

@@ -189,19 +189,33 @@
 !
     public :: &
         nfmpi_put_var1_text, &
+        nfmpi_put_var1_text_all, &
         nfmpi_get_var1_text, &
+        nfmpi_get_var1_text_all, &
         nfmpi_put_var1_int1, &
+        nfmpi_put_var1_int1_all, &
         nfmpi_get_var1_int1, &
+        nfmpi_get_var1_int1_all, &
         nfmpi_put_var1_int2, &
+        nfmpi_put_var1_int2_all, &
         nfmpi_get_var1_int2, &
+        nfmpi_get_var1_int2_all, &
         nfmpi_put_var1_int, &
+        nfmpi_put_var1_int_all, &
         nfmpi_get_var1_int, &
+        nfmpi_get_var1_int_all, &
         nfmpi_put_var1_real, &
+        nfmpi_put_var1_real_all, &
         nfmpi_get_var1_real, &
+        nfmpi_get_var1_real_all, &
         nfmpi_put_var1_double, &
+        nfmpi_put_var1_double_all, &
         nfmpi_get_var1_double, &
+        nfmpi_get_var1_double_all, &
         nfmpi_put_var1_int8, &
-        nfmpi_get_var1_int8
+        nfmpi_put_var1_int8_all, &
+        nfmpi_get_var1_int8, &
+        nfmpi_get_var1_int8_all
 
 !
 ! variable array put/get subroutines:
@@ -532,10 +546,12 @@
 !
 
       public :: &
+          nfmpi_put_var1_all, &
           nfmpi_put_vara_all, &
           nfmpi_put_vars_all, &
           nfmpi_put_varm_all, &
           nfmpi_get_var_all, &
+          nfmpi_get_var1_all, &
           nfmpi_get_vara_all, &
           nfmpi_get_vars_all, &
           nfmpi_get_varm_all, &

@@ -18,6 +18,11 @@ This is essentially a placeholder for the next release note ...
       For F77, nfmpi_put_vard()    nfmpi_get_vard()
       For F90, nf90mpi_put_vard()  nf90mpi_get_vard()
       For C++, NcmpiVar::putVard() NcmpiVar::getVard()
+    * Collective var1 API family
+      For C,   ncmpi_put_var1_all() ncmpi_get_var1_all()
+      For F77, nfmpi_put_var1_all() nfmpi_get_var1_all()
+      For F90, API overloading
+      For C++, API overloading
     * ncmpi_inq_recsize() returns the size of record block, i.e. the sum of
       single records of all record variables.
       For F77, nfmpi_inq_recsize()

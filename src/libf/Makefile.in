@@ -90,22 +90,22 @@ C2F_SRCS = createf.c \
 	get_att_realf.c \
 	get_att_doublef.c \
 	get_att_int8f.c \
-	put_var1f.c \
-	put_var1_textf.c \
-	put_var1_int1f.c \
-	put_var1_int2f.c \
-	put_var1_intf.c \
-	put_var1_realf.c \
-	put_var1_doublef.c \
-	put_var1_int8f.c \
-	get_var1f.c \
-	get_var1_textf.c \
-	get_var1_int1f.c \
-	get_var1_int2f.c \
-	get_var1_intf.c \
-	get_var1_realf.c \
-	get_var1_doublef.c \
-	get_var1_int8f.c \
+	put_var1f.c        put_var1_allf.c \
+	put_var1_textf.c   put_var1_text_allf.c \
+	put_var1_int1f.c   put_var1_int1_allf.c \
+	put_var1_int2f.c   put_var1_int2_allf.c \
+	put_var1_intf.c    put_var1_int_allf.c \
+	put_var1_realf.c   put_var1_real_allf.c \
+	put_var1_doublef.c put_var1_double_allf.c \
+	put_var1_int8f.c   put_var1_int8_allf.c \
+	get_var1f.c        get_var1_allf.c \
+	get_var1_textf.c   get_var1_text_allf.c \
+	get_var1_int1f.c   get_var1_int1_allf.c \
+	get_var1_int2f.c   get_var1_int2_allf.c \
+	get_var1_intf.c    get_var1_int_allf.c \
+	get_var1_realf.c   get_var1_real_allf.c \
+	get_var1_doublef.c get_var1_double_allf.c \
+	get_var1_int8f.c   get_var1_int8_allf.c \
 	put_varf.c         put_var_allf.c \
 	put_var_textf.c    put_var_text_allf.c \
 	put_var_int1f.c    put_var_int1_allf.c \
