@@ -789,7 +789,8 @@ hdr_put_NC_vararray(bufferinfo        *pbp,
 }
 
 /*----< ncmpii_hdr_put_NC() >------------------------------------------------*/
-/* fill the file header into the I/O buffer, buf */
+/* fill the file header into the I/O buffer, buf
+ * this function is collective */
 int
 ncmpii_hdr_put_NC(NC   *ncp,
                   void *buf) {
@@ -1732,6 +1733,7 @@ ncmpii_hdr_get_NC(NC *ncp)
 /*----< ncmpii_comp_dims() >--------------------------------------------------*/
 /* compare the local copy of dim_list against root's
  * If inconsistency is detected, overwrite local's with root's
+ * this function is collective.
  */
 static int
 ncmpii_comp_dims(int          safe_mode,
@@ -2122,7 +2124,8 @@ ncmpii_comp_vars(int          safe_mode,
 }
 
 /*----< ncmpii_hdr_check_NC() >-----------------------------------------------*/
-/* check the header of local copy against root's */
+/* check the header of local copy against root's
+ * This function is collective */
 int
 ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                     NC         *ncp)
