@@ -315,7 +315,7 @@ define(`TEXTVARN1',dnl
 
 TEXTVARN1(put, in)
 TEXTVARN1(get, out)
-TEXTVARN1(put, in, _all)
+TEXTVARN1(put, in,  _all)
 TEXTVARN1(get, out, _all)
 
 dnl
@@ -416,6 +416,13 @@ IVARN1(iget, out,   FourByteInt,   integer, int)
 IVARN1(iget, out,   FourByteReal,  real,    real)
 IVARN1(iget, out,   EightByteReal, real,    double)
 IVARN1(iget, out,   EightByteInt,  integer, int8)
+
+IVARN1(bput, in,    OneByteInt,    integer, int1)
+IVARN1(bput, inout, TwoByteInt,    integer, int2)
+IVARN1(bput, inout, FourByteInt,   integer, int)
+IVARN1(bput, inout, FourByteReal,  real,    real)
+IVARN1(bput, inout, EightByteReal, real,    double)
+IVARN1(bput, inout, EightByteInt,  integer, int8)
 
 dnl
 dnl IVARN(ncid, varid, values, num, start, count)
@@ -548,6 +555,58 @@ IVARN(iget, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   out)
 IVARN(iget, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', out)
 
 !
+! bput APIs
+!
+
+IVARN(bput, 1D, OneByteInt, integer, int1,  :,              in)
+IVARN(bput, 2D, OneByteInt, integer, int1, `:,:',           in)
+IVARN(bput, 3D, OneByteInt, integer, int1, `:,:,:',         in)
+IVARN(bput, 4D, OneByteInt, integer, int1, `:,:,:,:',       in)
+IVARN(bput, 5D, OneByteInt, integer, int1, `:,:,:,:,:',     in)
+IVARN(bput, 6D, OneByteInt, integer, int1, `:,:,:,:,:,:',   in)
+IVARN(bput, 7D, OneByteInt, integer, int1, `:,:,:,:,:,:,:', in)
+
+IVARN(bput, 1D, TwoByteInt, integer, int2,  :,              inout)
+IVARN(bput, 2D, TwoByteInt, integer, int2, `:,:',           inout)
+IVARN(bput, 3D, TwoByteInt, integer, int2, `:,:,:',         inout)
+IVARN(bput, 4D, TwoByteInt, integer, int2, `:,:,:,:',       inout)
+IVARN(bput, 5D, TwoByteInt, integer, int2, `:,:,:,:,:',     inout)
+IVARN(bput, 6D, TwoByteInt, integer, int2, `:,:,:,:,:,:',   inout)
+IVARN(bput, 7D, TwoByteInt, integer, int2, `:,:,:,:,:,:,:', inout)
+
+IVARN(bput, 1D, FourByteInt, integer, int,  :,              inout)
+IVARN(bput, 2D, FourByteInt, integer, int, `:,:',           inout)
+IVARN(bput, 3D, FourByteInt, integer, int, `:,:,:',         inout)
+IVARN(bput, 4D, FourByteInt, integer, int, `:,:,:,:',       inout)
+IVARN(bput, 5D, FourByteInt, integer, int, `:,:,:,:,:',     inout)
+IVARN(bput, 6D, FourByteInt, integer, int, `:,:,:,:,:,:',   inout)
+IVARN(bput, 7D, FourByteInt, integer, int, `:,:,:,:,:,:,:', inout)
+
+IVARN(bput, 1D, FourByteReal, real,   real,  :,              inout)
+IVARN(bput, 2D, FourByteReal, real,   real, `:,:',           inout)
+IVARN(bput, 3D, FourByteReal, real,   real, `:,:,:',         inout)
+IVARN(bput, 4D, FourByteReal, real,   real, `:,:,:,:',       inout)
+IVARN(bput, 5D, FourByteReal, real,   real, `:,:,:,:,:',     inout)
+IVARN(bput, 6D, FourByteReal, real,   real, `:,:,:,:,:,:',   inout)
+IVARN(bput, 7D, FourByteReal, real,   real, `:,:,:,:,:,:,:', inout)
+
+IVARN(bput, 1D, EightByteReal, real, double,  :,              inout)
+IVARN(bput, 2D, EightByteReal, real, double, `:,:',           inout)
+IVARN(bput, 3D, EightByteReal, real, double, `:,:,:',         inout)
+IVARN(bput, 4D, EightByteReal, real, double, `:,:,:,:',       inout)
+IVARN(bput, 5D, EightByteReal, real, double, `:,:,:,:,:',     inout)
+IVARN(bput, 6D, EightByteReal, real, double, `:,:,:,:,:,:',   inout)
+IVARN(bput, 7D, EightByteReal, real, double, `:,:,:,:,:,:,:', inout)
+
+IVARN(bput, 1D, EightByteInt, integer, int8,  :,              inout)
+IVARN(bput, 2D, EightByteInt, integer, int8, `:,:',           inout)
+IVARN(bput, 3D, EightByteInt, integer, int8, `:,:,:',         inout)
+IVARN(bput, 4D, EightByteInt, integer, int8, `:,:,:,:',       inout)
+IVARN(bput, 5D, EightByteInt, integer, int8, `:,:,:,:,:',     inout)
+IVARN(bput, 6D, EightByteInt, integer, int8, `:,:,:,:,:,:',   inout)
+IVARN(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', inout)
+
+!
 ! text variable
 !
 
@@ -573,6 +632,7 @@ define(`ITEXTVARN1',dnl
 
 ITEXTVARN1(iput, in)
 ITEXTVARN1(iget, out)
+ITEXTVARN1(bput, in)
 
 dnl
 dnl ITEXTVARN(ncid, varid, values, num, start, count)
@@ -615,4 +675,12 @@ ITEXTVARN(iget, 4D, `:,:,:,:',       `1,1,1,1',       out)
 ITEXTVARN(iget, 5D, `:,:,:,:,:',     `1,1,1,1,1',     out)
 ITEXTVARN(iget, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   out)
 ITEXTVARN(iget, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', out)
+
+ITEXTVARN(bput, 1D,  :,               1,              in)
+ITEXTVARN(bput, 2D, `:,:',           `1,1',           in)
+ITEXTVARN(bput, 3D, `:,:,:',         `1,1,1',         in)
+ITEXTVARN(bput, 4D, `:,:,:,:',       `1,1,1,1',       in)
+ITEXTVARN(bput, 5D, `:,:,:,:,:',     `1,1,1,1,1',     in)
+ITEXTVARN(bput, 6D, `:,:,:,:,:,:',   `1,1,1,1,1,1',   in)
+ITEXTVARN(bput, 7D, `:,:,:,:,:,:,:', `1,1,1,1,1,1,1', in)
 

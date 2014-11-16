@@ -60,9 +60,9 @@ ncmpii_igetput_varn(int               ncid,
                     int               use_abuf);
 
 dnl
-define(`IsBput',    `ifelse(index(`$1',`b'), 0, `1', `0')')dnl
-define(`ReadWrite', `ifelse(index(`$1',`g'), 1, `READ_REQ', `WRITE_REQ')')dnl
-define(`BufConst',  `ifelse(index(`$1',`p'), 1, `const')')dnl
+define(`IsBput',    `ifelse(`$1',`bput', `1', `0')')dnl
+define(`ReadWrite', `ifelse(`$1',`iget', `READ_REQ', `WRITE_REQ')')dnl
+define(`BufConst',  `ifelse(`$1',`iget', , `const')')dnl
 dnl
 dnl VARN_FLEXIBLE()
 dnl
@@ -228,21 +228,13 @@ ncmpii_igetput_varn(int               ncid,
             position = 0;
             packsize = bnelems*el_size;
 
-            if (use_abuf) {
-                if (ncp->abuf->size_allocated - ncp->abuf->size_used < packsize)
-                    return NC_EINSUFFBUF; /* run out of space in attached buffer */
-
-                status = ncmpii_abuf_malloc(ncp, packsize, &cbuf);
-                if (status != NC_NOERR) return status;
-            }
-            else
-                cbuf = NCI_Malloc(packsize);
+            cbuf = NCI_Malloc(packsize);
             free_cbuf = 1;
+            /* if not use_abuf, need a callback to free cbuf */
 
             if (rw_flag == WRITE_REQ)
                 MPI_Pack(buf, bufcount, buftype, cbuf, packsize, &position,
                          MPI_COMM_SELF);
-            /* need a callback to free cbuf */
         }
     }
     else {
@@ -290,7 +282,7 @@ ncmpii_igetput_varn(int               ncid,
     }
 
     /* add callback if buf is noncontiguous */
-    if (free_cbuf) {
+    if (free_cbuf) { /* cbuf != buf */
         if (rw_flag == READ_REQ) {
             MPI_Datatype dup_buftype;
             MPI_Type_dup(buftype, &dup_buftype);
@@ -298,8 +290,15 @@ ncmpii_igetput_varn(int               ncid,
             status = ncmpii_set_iget_callback(ncp, *reqid, cbuf, packsize, buf,
                                               bufcount, dup_buftype);
         }
-        else /* need to free cbuf at wait() */
-            status = ncmpii_set_iput_callback(ncp, *reqid, cbuf);
+        else { /* WRITE_REQ */
+            if (use_abuf)
+                /* cbuf has been copied to the attached buffer, so it is safe
+                 * to free cbuf */
+                NCI_Free(cbuf);
+            else
+                /* need to free cbuf at wait() */
+                status = ncmpii_set_iput_callback(ncp, *reqid, cbuf);
+        }
     }
 
 err_check:

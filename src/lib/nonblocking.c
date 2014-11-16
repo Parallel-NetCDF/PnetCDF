@@ -731,7 +731,10 @@ ncmpii_wait(NC  *ncp,
             if (cur_req->need_swap_back_buf)
                 ncmpii_in_swapn(cur_req->buf, cur_req->fnelems,
                                 ncmpix_len_nctype(cur_req->varp->type));
-
+            cur_req = cur_req->next;
+        }
+        cur_req = w_req_head;
+        while (cur_req != NULL) {
             /* free temp space allocated for iput/bput varn requests */
             if (cur_req->tmpBuf != NULL) {
                 if (cur_req->use_abuf)

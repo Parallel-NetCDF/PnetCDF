@@ -909,6 +909,8 @@ err_check:
         ncp->tail->next = req;
         ncp->tail = req;
     }
+    for (i=0; i<req->num_subreqs; i++)
+        req->subreqs[i].id = req->id;
 
     /* return the request ID */
     *reqid = req->id;
