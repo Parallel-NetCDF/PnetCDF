@@ -746,6 +746,129 @@ namespace PnetCDF
 
     //////////////////////
 
+    // Reads the entire data into the netCDF variable. (collective data mode)
+    /*!
+      This is an overloaded member function, provided for convenience. 
+      It differs from the above function in what argument(s) it accepts. 
+      In addition, no data conversion is carried out. This means that 
+      the type of the data in memory must match the type of the variable.
+    */
+    // void getVar_all(void* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(char* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(unsigned char* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(signed char* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(short* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(int* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(long* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(float* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(double* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(unsigned short* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(unsigned int* dataValues) const;
+    /*! \overload
+     */ 
+    void getVar_all(unsigned long long* dataValues) const;
+    /*! 
+      Reads the entire data from an netCDF variable.
+      This is the simplest interface to use for reading the value of a scalar variable 
+      or when all the values of a multidimensional variable can be read at once. The values 
+      are read into consecutive locations with the last dimension varying fastest. 
+      
+      Take care when using the simplest forms of this interface with record variables when you 
+      don't specify how many records are to be read. If you try to read all the values of a 
+      record variable into an array but there are more records in the file than you assume, 
+      more data will be read than you expect, which may cause a segmentation violation.
+
+      \param dataValues Pointer to the location into which the data value is read. If the type of 
+      data value differs from the netCDF variable type, type conversion will occur.
+      (However, no type conversion is carried out for variables using the user-defined data types:
+      ncmpi_Vlen, ncmpi_Opaque, ncmpi_Compound and ncmpi_Enum.)
+    */
+    void getVar_all(long long* dataValues) const;
+
+    void getVar_all(void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
+
+    ////////////////////
+    
+    // Reads a single datum value from a variable of an open netCDF dataset.
+    /*!
+      This is an overloaded member function, provided for convenience. 
+      It differs from the above function in what argument(s) it accepts. 
+      In addition, no data conversion is carried out. This means that 
+      the type of the data in memory must match the type of the variable.
+    */
+    // void getVar_all(const std::vector<MPI_Offset>& index, void* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, char* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, unsigned char* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, signed char* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, short* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, int* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, long* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, float* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, double* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, unsigned short* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, unsigned int* dataumValue) const;
+    /*! \overload
+     */ 
+    void getVar_all(const std::vector<MPI_Offset>& index, unsigned long long* dataumValue) const;
+    /*! Reads a single datum value from a variable of an open netCDF dataset.
+      The value is converted from the external data type of the variable, if necessary.
+
+      \param index       Vector specifying the index of the data value to be read. 
+      The indices are relative to 0, so for example, the first data value of a two-dimensional 
+      variable would have index (0,0). The elements of index must correspond to the variable's dimensions. 
+      Hence, if the variable is a record variable, the first index is the record number.
+
+      \param datumValue Pointer to the location into which the data value is read. If the type of 
+      data value differs from the netCDF variable type, type conversion will occur.
+      (However, no type conversion is carried out for variables using the user-defined data types:
+      ncmpi_Vlen, ncmpi_Opaque, ncmpi_Compound and ncmpi_Enum.)
+    */
+    void getVar_all(const std::vector<MPI_Offset>& index, long long* dataumValue) const;
+
+    void getVar_all(const std::vector<MPI_Offset>& index, void* dataumValue, MPI_Offset bufcount, MPI_Datatype buftype) const;
+
+    //////////////////////
+
     // Reads an array of values from a netCDF variable of an open netCDF dataset. 
     /*!
       This is an overloaded member function, provided for convenience. 
@@ -1577,69 +1700,6 @@ namespace PnetCDF
 
     //////////////////////
 
-    // Reads the entire data into the netCDF variable. (collective data mode)
-    /*!
-      This is an overloaded member function, provided for convenience. 
-      It differs from the above function in what argument(s) it accepts. 
-      In addition, no data conversion is carried out. This means that 
-      the type of the data in memory must match the type of the variable.
-    */
-    // void getVar_all(void* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(char* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(unsigned char* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(signed char* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(short* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(int* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(long* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(float* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(double* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(unsigned short* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(unsigned int* dataValues) const;
-    /*! \overload
-     */ 
-    void getVar_all(unsigned long long* dataValues) const;
-    /*! 
-      Reads the entire data from an netCDF variable.
-      This is the simplest interface to use for reading the value of a scalar variable 
-      or when all the values of a multidimensional variable can be read at once. The values 
-      are read into consecutive locations with the last dimension varying fastest. 
-      
-      Take care when using the simplest forms of this interface with record variables when you 
-      don't specify how many records are to be read. If you try to read all the values of a 
-      record variable into an array but there are more records in the file than you assume, 
-      more data will be read than you expect, which may cause a segmentation violation.
-
-      \param dataValues Pointer to the location into which the data value is read. If the type of 
-      data value differs from the netCDF variable type, type conversion will occur.
-      (However, no type conversion is carried out for variables using the user-defined data types:
-      ncmpi_Vlen, ncmpi_Opaque, ncmpi_Compound and ncmpi_Enum.)
-    */
-    void getVar_all(long long* dataValues) const;
-
-    void getVar_all(void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
-
-   
-    ////////////////////
 
     //  data writing (independent data mode)
 
@@ -2057,6 +2117,64 @@ namespace PnetCDF
     void putVar_all(const long long* dataValues) const;
 
     void putVar_all(const void* dataValues, MPI_Offset bufcount, MPI_Datatype buftype) const;
+
+    /////////////////////////
+
+    // Writes a single datum into the netCDF variable.
+    /*!
+      This is an overloaded member function, provided for convenience. 
+      It differs from the above function in what argument(s) it accepts. 
+      In addition, no data conversion is carried out. This means that 
+      the type of the data in memory must match the type of the variable.
+    */
+    // void putVar_all(const std::vector<MPI_Offset>& index, const void* dataumValue) const;
+    /*! \overload
+     */ 
+    void putVar_all(const std::vector<MPI_Offset>& index, const std::string& dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const unsigned char* dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const signed char* dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const short dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const int dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const long dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const float dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const double dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const unsigned short dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const unsigned int dataumValue) const;
+    /*!  \overload
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const unsigned long long dataumValue) const;
+    /*! 
+      Writes a single datum into the netCDF variable.
+
+      \param index      Vector specifying the index where the data values will be written. The indices are relative to 0, so for example, 
+      the first data value of a two-dimensional variable would have index (0,0). The elements of index must correspond to the variable's dimensions. 
+      Hence, if the variable uses the unlimited dimension, the first index would correspond to the unlimited dimension.
+
+      \param datumValue The data value. If the type of data values differs from the netCDF variable type, type conversion will occur.
+      (However, no type conversion is carried out for variables using the user-defined data types:
+      ncmpi_Vlen, ncmpi_Opaque, ncmpi_Compound and ncmpi_Enum.)
+    */
+    void putVar_all(const std::vector<MPI_Offset>& index, const long long dataumValue) const;
+
+    void putVar_all(const std::vector<MPI_Offset>& index, const void* dataumValue, MPI_Offset bufcount, MPI_Datatype buftype) const;
 
     /////////////////////////
 

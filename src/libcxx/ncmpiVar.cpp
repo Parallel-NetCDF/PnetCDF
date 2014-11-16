@@ -1089,6 +1089,70 @@ void NcmpiVar::putVar_all(const void* dataValues, MPI_Offset bufcount, MPI_Datat
     ncmpiCheck(ncmpi_put_var_all(groupId, myId,dataValues, bufcount, buftype),__FILE__,__LINE__);
 }
 
+///////////////////
+
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const unsigned char* datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_uchar_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const signed char* datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_schar_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const short datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_short_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const int datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_int_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const long datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_long_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const float datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_float_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const double datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_double_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const unsigned short datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_ushort_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const unsigned int datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_uint_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const long long datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_longlong_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const unsigned long long datumValue) const {
+  ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_ulonglong_all(groupId, myId,&index[0],&datumValue),__FILE__,__LINE__);
+}
+// Writes a single datum value into the netCDF variable with no data conversion.
+void NcmpiVar::putVar_all(const vector<MPI_Offset>& index, const void* datumValue, MPI_Offset bufcount, MPI_Datatype buftype) const {
+    ncmpiCheckDataMode(groupId);
+    ncmpiCheck(ncmpi_put_var1_all(groupId, myId,&index[0],datumValue, bufcount, buftype),__FILE__,__LINE__);
+}
+
+
 ////////////////////
 
 // Writes an array of values into the netCDF variable.
@@ -2530,6 +2594,60 @@ void NcmpiVar::getVar_all(void* dataValues, MPI_Offset bufcount, MPI_Datatype bu
 }
 
 
+///////////
+
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, char* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_text_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, unsigned char* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_uchar_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, signed char* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_schar_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, short* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_short_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, int* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_int_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, long* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_long_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, float* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_float_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, double* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_double_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, unsigned short* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_ushort_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, unsigned int* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_uint_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, long long* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_longlong_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, unsigned long long* datumValue) const {
+    ncmpiCheck(ncmpi_get_var1_ulonglong_all(groupId, myId,&index[0],datumValue),__FILE__,__LINE__);
+}
+// Reads a single datum value of a netCDF variable with no data conversion.
+void NcmpiVar::getVar_all(const vector<MPI_Offset>& index, void* datumValue, MPI_Offset bufcount, MPI_Datatype buftype) const {
+    ncmpiCheck(ncmpi_get_var1_all(groupId, myId,&index[0],datumValue, bufcount, buftype),__FILE__,__LINE__);
+}
 
 ///////////
 

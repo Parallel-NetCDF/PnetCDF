@@ -155,25 +155,25 @@ dnl VAR1_FLEXIBLE
 dnl
 define(`VAR1_FLEXIBLE',dnl
 `dnl
-/*----< ncmpi_$1_var1() >----------------------------------------------------*/
+/*----< ncmpi_$1_var1$2() >--------------------------------------------------*/
 int
-ncmpi_$1_var1(int                ncid,
-              int                varid,
-              const MPI_Offset   start[],
-              BufConst($1) void *buf,
-              MPI_Offset         bufcount,
-              MPI_Datatype       buftype)
+ncmpi_$1_var1$2(int                ncid,
+                int                varid,
+                const MPI_Offset   start[],
+                BufConst($1) void *buf,
+                MPI_Offset         bufcount,
+                MPI_Datatype       buftype)
 {
     int         status;
     NC         *ncp;
     NC_var     *varp=NULL;
     MPI_Offset *count;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), INDEP_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
     GET_ONE_COUNT(count)
 
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)buf,
-                                bufcount, buftype, ReadWrite($1), INDEP_IO, 0);
+                                bufcount, buftype, ReadWrite($1), CollIndep($2), 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -181,60 +181,88 @@ ncmpi_$1_var1(int                ncid,
 
 VAR1_FLEXIBLE(put)
 VAR1_FLEXIBLE(get)
+VAR1_FLEXIBLE(put, _all)
+VAR1_FLEXIBLE(get, _all)
 
 dnl
 dnl VAR1
 dnl
 define(`VAR1',dnl
 `dnl
-/*----< ncmpi_$1_var1_$2() >-------------------------------------------------*/
+/*----< ncmpi_$1_var1_$3$2() >-----------------------------------------------*/
 int
-ncmpi_$1_var1_$2(int               ncid,
-                 int               varid,
-                 const MPI_Offset  start[],
-                 BufConst($1) $3  *op)
+ncmpi_$1_var1_$3$2(int               ncid,
+                   int               varid,
+                   const MPI_Offset  start[],
+                   BufConst($1) $4  *op)
 {
     int         status;
     NC         *ncp;
     NC_var     *varp=NULL;
     MPI_Offset *count;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), INDEP_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
     GET_ONE_COUNT(count)
 
     /* $1_var1 is a special case of $1_vars */
     status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)op,
-                                1, $4, ReadWrite($1), INDEP_IO, 0);
+                                1, $5, ReadWrite($1), CollIndep($2), 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
 ')dnl
 
-VAR1(put, text,      char,               MPI_CHAR)
-VAR1(put, schar,     schar,              MPI_BYTE)
-VAR1(put, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(put, short,     short,              MPI_SHORT)
-VAR1(put, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(put, int,       int,                MPI_INT)
-VAR1(put, uint,      uint,               MPI_UNSIGNED)
-VAR1(put, long,      long,               MPI_LONG)
-VAR1(put, float,     float,              MPI_FLOAT)
-VAR1(put, double,    double,             MPI_DOUBLE)
-VAR1(put, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(put, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+VAR1(put,     , text,      char,               MPI_CHAR)
+VAR1(put,     , schar,     schar,              MPI_BYTE)
+VAR1(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(put,     , short,     short,              MPI_SHORT)
+VAR1(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(put,     , int,       int,                MPI_INT)
+VAR1(put,     , uint,      uint,               MPI_UNSIGNED)
+VAR1(put,     , long,      long,               MPI_LONG)
+VAR1(put,     , float,     float,              MPI_FLOAT)
+VAR1(put,     , double,    double,             MPI_DOUBLE)
+VAR1(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
-VAR1(get, text,      char,               MPI_CHAR)
-VAR1(get, schar,     schar,              MPI_BYTE)
-VAR1(get, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(get, short,     short,              MPI_SHORT)
-VAR1(get, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(get, int,       int,                MPI_INT)
-VAR1(get, uint,      uint,               MPI_UNSIGNED)
-VAR1(get, long,      long,               MPI_LONG)
-VAR1(get, float,     float,              MPI_FLOAT)
-VAR1(get, double,    double,             MPI_DOUBLE)
-VAR1(get, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+VAR1(put, _all, text,      char,               MPI_CHAR)
+VAR1(put, _all, schar,     schar,              MPI_BYTE)
+VAR1(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(put, _all, short,     short,              MPI_SHORT)
+VAR1(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(put, _all, int,       int,                MPI_INT)
+VAR1(put, _all, uint,      uint,               MPI_UNSIGNED)
+VAR1(put, _all, long,      long,               MPI_LONG)
+VAR1(put, _all, float,     float,              MPI_FLOAT)
+VAR1(put, _all, double,    double,             MPI_DOUBLE)
+VAR1(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR1(get,     , text,      char,               MPI_CHAR)
+VAR1(get,     , schar,     schar,              MPI_BYTE)
+VAR1(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(get,     , short,     short,              MPI_SHORT)
+VAR1(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(get,     , int,       int,                MPI_INT)
+VAR1(get,     , uint,      uint,               MPI_UNSIGNED)
+VAR1(get,     , long,      long,               MPI_LONG)
+VAR1(get,     , float,     float,              MPI_FLOAT)
+VAR1(get,     , double,    double,             MPI_DOUBLE)
+VAR1(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR1(get, _all, text,      char,               MPI_CHAR)
+VAR1(get, _all, schar,     schar,              MPI_BYTE)
+VAR1(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(get, _all, short,     short,              MPI_SHORT)
+VAR1(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(get, _all, int,       int,                MPI_INT)
+VAR1(get, _all, uint,      uint,               MPI_UNSIGNED)
+VAR1(get, _all, long,      long,               MPI_LONG)
+VAR1(get, _all, float,     float,              MPI_FLOAT)
+VAR1(get, _all, double,    double,             MPI_DOUBLE)
+VAR1(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 dnl
 dnl VARA_FLEXIBLE

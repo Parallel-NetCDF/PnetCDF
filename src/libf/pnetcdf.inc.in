@@ -879,41 +879,41 @@
 !
 ! single element variable put/get routines:
 !
-      integer  nfmpi_put_var1
-      integer  nfmpi_put_var1_text
-      integer  nfmpi_put_var1_int1
-      integer  nfmpi_put_var1_int2
-      integer  nfmpi_put_var1_int
-      integer  nfmpi_put_var1_real
-      integer  nfmpi_put_var1_double
-      integer  nfmpi_put_var1_int8
+      integer  nfmpi_put_var1,        nfmpi_put_var1_all
+      integer  nfmpi_put_var1_text,   nfmpi_put_var1_text_all
+      integer  nfmpi_put_var1_int1,   nfmpi_put_var1_int1_all
+      integer  nfmpi_put_var1_int2,   nfmpi_put_var1_int2_all
+      integer  nfmpi_put_var1_int,    nfmpi_put_var1_int_all
+      integer  nfmpi_put_var1_real,   nfmpi_put_var1_real_all
+      integer  nfmpi_put_var1_double, nfmpi_put_var1_double_all
+      integer  nfmpi_put_var1_int8,   nfmpi_put_var1_int8_all
 
-      external nfmpi_put_var1
-      external nfmpi_put_var1_text
-      external nfmpi_put_var1_int1
-      external nfmpi_put_var1_int2
-      external nfmpi_put_var1_int
-      external nfmpi_put_var1_real
-      external nfmpi_put_var1_double
-      external nfmpi_put_var1_int8
+      external nfmpi_put_var1,        nfmpi_put_var1_all
+      external nfmpi_put_var1_text,   nfmpi_put_var1_text_all
+      external nfmpi_put_var1_int1,   nfmpi_put_var1_int1_all
+      external nfmpi_put_var1_int2,   nfmpi_put_var1_int2_all
+      external nfmpi_put_var1_int,    nfmpi_put_var1_int_all
+      external nfmpi_put_var1_real,   nfmpi_put_var1_real_all
+      external nfmpi_put_var1_double, nfmpi_put_var1_double_all
+      external nfmpi_put_var1_int8,   nfmpi_put_var1_int8_all
 
-      integer  nfmpi_get_var1
-      integer  nfmpi_get_var1_text
-      integer  nfmpi_get_var1_int1
-      integer  nfmpi_get_var1_int2
-      integer  nfmpi_get_var1_int
-      integer  nfmpi_get_var1_real
-      integer  nfmpi_get_var1_double
-      integer  nfmpi_get_var1_int8
+      integer  nfmpi_get_var1,        nfmpi_get_var1_all
+      integer  nfmpi_get_var1_text,   nfmpi_get_var1_text_all
+      integer  nfmpi_get_var1_int1,   nfmpi_get_var1_int1_all
+      integer  nfmpi_get_var1_int2,   nfmpi_get_var1_int2_all
+      integer  nfmpi_get_var1_int,    nfmpi_get_var1_int_all
+      integer  nfmpi_get_var1_real,   nfmpi_get_var1_real_all
+      integer  nfmpi_get_var1_double, nfmpi_get_var1_double_all
+      integer  nfmpi_get_var1_int8,   nfmpi_get_var1_int8_all
 
-      external nfmpi_get_var1
-      external nfmpi_get_var1_text
-      external nfmpi_get_var1_int1
-      external nfmpi_get_var1_int2
-      external nfmpi_get_var1_int
-      external nfmpi_get_var1_real
-      external nfmpi_get_var1_double
-      external nfmpi_get_var1_int8
+      external nfmpi_get_var1,        nfmpi_get_var1_all
+      external nfmpi_get_var1_text,   nfmpi_get_var1_text_all
+      external nfmpi_get_var1_int1,   nfmpi_get_var1_int1_all
+      external nfmpi_get_var1_int2,   nfmpi_get_var1_int2_all
+      external nfmpi_get_var1_int,    nfmpi_get_var1_int_all
+      external nfmpi_get_var1_real,   nfmpi_get_var1_real_all
+      external nfmpi_get_var1_double, nfmpi_get_var1_double_all
+      external nfmpi_get_var1_int8,   nfmpi_get_var1_int8_all
 
 !
 ! variable sub-array put/get routines:

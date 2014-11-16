@@ -11,18 +11,18 @@ dnl
 !
 
 dnl
-dnl VAR1(ncid, varid, values, start, count)
+dnl VAR_SCALAR
 dnl
-define(`VAR1',dnl
+define(`VAR_SCALAR',dnl
 `dnl
-   function nf90mpi_$1_var_$2(ncid, varid, values, start, bufcount, buftype)
+   function nf90mpi_$1_var_$3$2(ncid, varid, values, start, bufcount, buftype)
      integer,                                                intent( in) :: ncid, varid
-     $3 (kind=$2),                                           intent($5)  :: values
+     $4 (kind=$3),                                           intent($6)  :: values
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start
      integer (kind=MPI_OFFSET_KIND),               optional, intent( in) :: bufcount
      integer,                                      optional, intent( in) :: buftype
 
-     integer                                                             :: nf90mpi_$1_var_$2
+     integer                                                             :: nf90mpi_$1_var_$3$2
      integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localIndex
  
      ! Set local arguments to default values
@@ -30,34 +30,40 @@ define(`VAR1',dnl
      if (present(start)) localIndex(:size(start)) = start(:)
  
      if (present(buftype)) then
-         nf90mpi_$1_var_$2 = nfmpi_$1_var1(ncid, varid, localIndex, values, bufcount, buftype)
+         nf90mpi_$1_var_$3$2 = nfmpi_$1_var1$2(ncid, varid, localIndex, values, bufcount, buftype)
      else
-         nf90mpi_$1_var_$2 = nfmpi_$1_var1_$4(ncid, varid, localIndex, values)
+         nf90mpi_$1_var_$3$2 = nfmpi_$1_var1_$5$2(ncid, varid, localIndex, values)
      endif
-   end function nf90mpi_$1_var_$2
+   end function nf90mpi_$1_var_$3$2
 ')dnl
 
-!
-! Independent put APIs
-!
+VAR_SCALAR(put,     , OneByteInt,    integer, int1,   in)
+VAR_SCALAR(put,     , TwoByteInt,    integer, int2,   inout)
+VAR_SCALAR(put,     , FourByteInt,   integer, int,    inout)
+VAR_SCALAR(put,     , FourByteReal,  real,    real,   inout)
+VAR_SCALAR(put,     , EightByteReal, real,    double, inout)
+VAR_SCALAR(put,     , EightByteInt,  integer, int8,   inout)
 
-VAR1(put, OneByteInt,    integer, int1,   in)
-VAR1(put, TwoByteInt,    integer, int2,   inout)
-VAR1(put, FourByteInt,   integer, int,    inout)
-VAR1(put, FourByteReal,  real,    real,   inout)
-VAR1(put, EightByteReal, real,    double, inout)
-VAR1(put, EightByteInt,  integer, int8,   inout)
+VAR_SCALAR(put, _all, OneByteInt,    integer, int1,   in)
+VAR_SCALAR(put, _all, TwoByteInt,    integer, int2,   inout)
+VAR_SCALAR(put, _all, FourByteInt,   integer, int,    inout)
+VAR_SCALAR(put, _all, FourByteReal,  real,    real,   inout)
+VAR_SCALAR(put, _all, EightByteReal, real,    double, inout)
+VAR_SCALAR(put, _all, EightByteInt,  integer, int8,   inout)
 
-!
-! Independent get APIs
-!
+VAR_SCALAR(get,     , OneByteInt,    integer, int1,   out)
+VAR_SCALAR(get,     , TwoByteInt,    integer, int2,   out)
+VAR_SCALAR(get,     , FourByteInt,   integer, int,    out)
+VAR_SCALAR(get,     , FourByteReal,  real,    real,   out)
+VAR_SCALAR(get,     , EightByteReal, real,    double, out)
+VAR_SCALAR(get,     , EightByteInt,  integer, int8,   out)
 
-VAR1(get, OneByteInt,    integer, int1,   out)
-VAR1(get, TwoByteInt,    integer, int2,   out)
-VAR1(get, FourByteInt,   integer, int,    out)
-VAR1(get, FourByteReal,  real,    real,   out)
-VAR1(get, EightByteReal, real,    double, out)
-VAR1(get, EightByteInt,  integer, int8,   out)
+VAR_SCALAR(get, _all, OneByteInt,    integer, int1,   out)
+VAR_SCALAR(get, _all, TwoByteInt,    integer, int2,   out)
+VAR_SCALAR(get, _all, FourByteInt,   integer, int,    out)
+VAR_SCALAR(get, _all, FourByteReal,  real,    real,   out)
+VAR_SCALAR(get, _all, EightByteReal, real,    double, out)
+VAR_SCALAR(get, _all, EightByteInt,  integer, int8,   out)
 
 dnl
 dnl NBVAR1(ncid, varid, values, start, count, req)
