@@ -2715,6 +2715,69 @@ int ncmpi_iget_varn_ulonglong(int ncid, int varid, int num,
 /* End Skip Prototypes for Fortran binding */
 
 /* End of {iput,iget}_varn{kind} */
+
+/* Begin of nonblocking bput_varn{kind} */
+
+int ncmpi_bput_varn(int ncid, int varid, int num, MPI_Offset* const starts[],
+               MPI_Offset* const counts[], const void *buf, MPI_Offset bufcount,
+               MPI_Datatype buftype, int *request);
+
+int ncmpi_bput_varn_text(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const char *buf, int *request);
+
+int ncmpi_bput_varn_schar(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const signed char *buf, int *request);
+
+int ncmpi_bput_varn_short(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const short *buf, int *request);
+
+int ncmpi_bput_varn_int(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const int *buf, int *request);
+
+int ncmpi_bput_varn_float(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const float *buf, int *request);
+
+int ncmpi_bput_varn_double(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const double *buf, int *request);
+
+int ncmpi_bput_varn_longlong(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const long long *buf, int *request);
+
+
+/* Begin Skip Prototypes for Fortran binding */
+/* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
+
+int ncmpi_bput_varn_uchar(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const unsigned char *buf, int *request);
+
+int ncmpi_bput_varn_ushort(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const unsigned short *buf, int *request);
+
+int ncmpi_bput_varn_uint(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const unsigned int *buf, int *request);
+
+int ncmpi_bput_varn_long(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const long *buf, int *request);
+
+int ncmpi_bput_varn_ulonglong(int ncid, int varid, int num,
+               MPI_Offset* const starts[], MPI_Offset* const counts[],
+               const unsigned long long *buf, int *request);
+
+/* End Skip Prototypes for Fortran binding */
+
+/* End of bput_varn{kind} */
+
 /* End non-blocking data access functions */
 
 /* Begin Skip Prototypes for Fortran binding */

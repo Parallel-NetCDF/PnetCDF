@@ -1443,6 +1443,24 @@
       external nfmpi_iget_varn_double
       external nfmpi_iget_varn_int8
 
+      integer  nfmpi_bput_varn
+      integer  nfmpi_bput_varn_text
+      integer  nfmpi_bput_varn_int1
+      integer  nfmpi_bput_varn_int2
+      integer  nfmpi_bput_varn_int
+      integer  nfmpi_bput_varn_real
+      integer  nfmpi_bput_varn_double
+      integer  nfmpi_bput_varn_int8
+
+      external nfmpi_bput_varn
+      external nfmpi_bput_varn_text
+      external nfmpi_bput_varn_int1
+      external nfmpi_bput_varn_int2
+      external nfmpi_bput_varn_int
+      external nfmpi_bput_varn_real
+      external nfmpi_bput_varn_double
+      external nfmpi_bput_varn_int8
+
 !
 ! vard routines:
 !

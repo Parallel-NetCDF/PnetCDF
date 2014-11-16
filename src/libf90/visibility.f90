@@ -12,51 +12,59 @@
   public :: nf90mpi_inq_libvers, nf90mpi_strerror
   
   ! Control routines 
-  public :: nf90mpi_create, nf90mpi_open, &
-            nf90mpi_set_fill, nf90mpi_redef, nf90mpi_enddef,                     &
-            nf90mpi_sync, nf90mpi_abort, nf90mpi_close, nf90mpi_delete
+  public :: nf90mpi_create,   nf90mpi_open, &
+            nf90mpi_set_fill, nf90mpi_redef, &
+            nf90mpi_enddef,   nf90mpi_sync, &
+            nf90mpi_abort,    nf90mpi_close, &
+            nf90mpi_delete
             
   ! File level inquiry
-  public :: nf90mpi_inquire, nf90mpi_inq_striping, &
+  public :: nf90mpi_inquire,          nf90mpi_inq_striping, &
             nf90mpi_inq_num_rec_vars, nf90mpi_inq_num_fix_vars
   
   ! Dimension routines
-  public :: nf90mpi_def_dim, nf90mpi_inq_dimid, nf90mpi_rename_dim, nf90mpi_inquire_dimension
+  public :: nf90mpi_def_dim,    nf90mpi_inq_dimid, &
+            nf90mpi_rename_dim, nf90mpi_inquire_dimension
   
   ! attribute routines
-  public :: nf90mpi_copy_att, nf90mpi_rename_att, nf90mpi_del_att, nf90mpi_inq_attname, &
+  public :: nf90mpi_copy_att,          nf90mpi_rename_att, &
+            nf90mpi_del_att,           nf90mpi_inq_attname, &
             nf90mpi_inquire_attribute
+
   ! overloaded functions
   public :: nf90mpi_put_att, nf90mpi_get_att
   
   ! Variable routines
-  public :: nf90mpi_def_var, nf90mpi_inq_varid, nf90mpi_rename_var, nf90mpi_inquire_variable 
+  public :: nf90mpi_def_var,    nf90mpi_inq_varid, &
+            nf90mpi_rename_var, nf90mpi_inquire_variable 
 
   ! overloaded functions
   ! independent APIs
-  public :: nf90mpi_put_var, nf90mpi_get_var, &
+  public :: nf90mpi_put_var,  nf90mpi_get_var, &
             nf90mpi_put_varn, nf90mpi_get_varn, &
             nf90mpi_put_vard, nf90mpi_get_vard
 
   ! collective APIs
-  public :: nf90mpi_put_var_all, nf90mpi_get_var_all, &
+  public :: nf90mpi_put_var_all,  nf90mpi_get_var_all, &
             nf90mpi_put_varn_all, nf90mpi_get_varn_all, &
             nf90mpi_put_vard_all, nf90mpi_get_vard_all
 
   ! nonblocking APIs
-  public :: nf90mpi_iput_var, nf90mpi_iget_var, &
-            nf90mpi_iput_varn, nf90mpi_iget_varn, &
-            nf90mpi_bput_var, nf90mpi_inq_nreqs, &
-            nf90mpi_buffer_attach, nf90mpi_inq_buffer_usage, nf90mpi_buffer_detach, &
-            nf90mpi_wait, nf90mpi_wait_all, nf90mpi_cancel
+  public :: nf90mpi_iput_var,         nf90mpi_iget_var, &
+            nf90mpi_iput_varn,        nf90mpi_iget_varn, &
+            nf90mpi_bput_varn,        nf90mpi_bput_var, &
+            nf90mpi_inq_nreqs,        nf90mpi_buffer_attach, &
+            nf90mpi_inq_buffer_usage, nf90mpi_buffer_detach, &
+            nf90mpi_wait,             nf90mpi_wait_all, &
+            nf90mpi_cancel
 
-  public :: nf90mpi_begin_indep_data, nf90mpi_end_indep_data, &
-            nf90mpi_inq_put_size, nf90mpi_inq_get_size, &
-            nf90mpi_inq_header_size, nf90mpi_inq_header_extent, &
-            nf90mpi_inq_varoffset, nf90mpi_inq_file_info, &
-            nf90mpi_get_file_info, nf90mpi_inq_malloc_size, &
+  public :: nf90mpi_begin_indep_data,    nf90mpi_end_indep_data, &
+            nf90mpi_inq_put_size,        nf90mpi_inq_get_size, &
+            nf90mpi_inq_header_size,     nf90mpi_inq_header_extent, &
+            nf90mpi_inq_varoffset,       nf90mpi_inq_file_info, &
+            nf90mpi_get_file_info,       nf90mpi_inq_malloc_size, &
             nf90mpi_inq_malloc_max_size, nf90mpi_inq_malloc_list, &
-            nf90mpi_inq_files_opened, nf90mpi_inq_recsize
+            nf90mpi_inq_files_opened,    nf90mpi_inq_recsize
 
 !
 ! F77 APIs
@@ -522,7 +530,14 @@
         nfmpi_iput_varn_int, &
         nfmpi_iput_varn_real, &
         nfmpi_iput_varn_double, &
-        nfmpi_iput_varn_int8
+        nfmpi_iput_varn_int8, &
+        nfmpi_bput_varn_text, &
+        nfmpi_bput_varn_int1, &
+        nfmpi_bput_varn_int2, &
+        nfmpi_bput_varn_int, &
+        nfmpi_bput_varn_real, &
+        nfmpi_bput_varn_double, &
+        nfmpi_bput_varn_int8
 
 !
 ! End of varn subroutines:
@@ -575,7 +590,8 @@
           nfmpi_get_varn_all, &
           nfmpi_put_varn_all, &
           nfmpi_iget_varn, &
-          nfmpi_iput_varn
+          nfmpi_iput_varn, &
+          nfmpi_bput_varn
 
 !
 ! Begin of vard subroutines:
