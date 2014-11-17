@@ -46,22 +46,6 @@
 #endif
 
 /*
- * The integer return code for the conversion routines
- * is 0 (ENOERR) when no error occured, or NC_ERANGE as appropriate
- * for an overflow conversion.
- */
-#ifndef ENOERR
-#define ENOERR 0
-#endif
-#ifndef NC_ERANGE
-#define NC_ERANGE (-60) /* N.B. must match value in netcdf.h */
-#endif
-#ifndef NC_ENOMEM
-#define NC_ENOMEM (-61) /* N.B. must match value in netcdf.h */
-#endif
-
-
-/*
  * External sizes of the primitive elements.
  */
 #define X_SIZEOF_CHAR		1
@@ -220,7 +204,7 @@ typedef signed char schar;
  *
  * Storage for a single element of internal type is at `ip' argument.
  *
- * These functions return 0 (ENOERR) when no error occured,
+ * These functions return NC_NOERR when no error occured,
  * or NC_ERANGE when the value being converted is too large.
  * When NC_ERANGE occurs, an undefined (implementation dependent)
  * conversion may have occured.
