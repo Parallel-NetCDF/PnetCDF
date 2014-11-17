@@ -165,6 +165,9 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    if (nprocs != 4 && rank == 0)
+        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
+
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
         switch(i) {
@@ -178,9 +181,6 @@ int main(int argc, char** argv)
     argc -= optind;
     argv += optind;
     if (argc == 1) filename = argv[0]; /* optional argument */
-
-    if (nprocs != 4 && rank == 0)
-        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
