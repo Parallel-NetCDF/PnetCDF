@@ -7,15 +7,16 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example tests ncmpi_bput_varn_uint()
- * It writes a sequence of requests with arbitrary array indices and lengths,
- * and reads back.
+ * This example tests nonblocking buffered write varn APIs, including
+ * ncmpi_bput_varn_uint() and ncmpi_bput_varn(),
+ * It first writes a sequence of requests with arbitrary array indices and
+ * lengths to four variables of type NC_UINT, and reads back.
  *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
  *
- *    % mpicc -O2 -o bput_varn bput_varn.c -lpnetcdf
- *    % mpiexec -n 4 ./bput_varn /pvfs2/wkliao/testfile.nc
+ *    % mpicc -O2 -o bput_varn_uint bput_varn_uint.c -lpnetcdf
+ *    % mpiexec -n 4 ./bput_varn_uint /pvfs2/wkliao/testfile.nc
  *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
@@ -23,10 +24,10 @@
  *             Y = 4 ;
  *             X = 10 ;
  *    variables:
- *            int64 var0(Y, X) ;
- *            int64 var1(Y, X) ;
- *            int64 var2(Y, X) ;
- *            int64 var3(Y, X) ;
+ *            uint var0(Y, X) ;
+ *            uint var1(Y, X) ;
+ *            uint var2(Y, X) ;
+ *            uint var3(Y, X) ;
  *    data:
  *
  *     var0 =
@@ -65,8 +66,22 @@
 #define NX 10
 #define NDIMS 2
 
-#define ERR {if(err!=NC_NOERR) {printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); nfails++;}}
-#define ERRS(n,a) {int _i; for(_i=0;_i<(n);_i++)if(a[_i]!=NC_NOERR) {printf("Error at line=%d: err[%d] %s\n", __LINE__, _i, ncmpi_strerror(a[_i])); nfails++;}}
+#define ERR \
+    if (err != NC_NOERR) { \
+        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
+        nfails++; \
+    }
+
+#define ERRS(n,a) { \
+    int _i; \
+    for (_i=0; _i<(n); _i++) { \
+        if ((a)[_i] != NC_NOERR) { \
+            printf("Error at line=%d: err[%d] %s\n", __LINE__, _i, \
+                   ncmpi_strerror((a)[_i])); \
+            nfails++; \
+        } \
+    } \
+}
 
 int check_contents_for_fail(int n, unsigned int *buffer)
 {
@@ -99,6 +114,7 @@ int check_contents_for_fail(int n, unsigned int *buffer)
     return 0;
 }
 
+/* swap two rows, a and b, of a 2D array */
 void permute(MPI_Offset a[NDIMS], MPI_Offset b[NDIMS])
 {
     int i;
@@ -205,7 +221,7 @@ int main(int argc, char** argv)
         }
     }
 
-    /* check error code: NC_ENULLABUF */
+    /* test error code: NC_ENULLABUF */
     err = ncmpi_bput_varn_uint(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
     if (err != NC_ENULLABUF) {
         printf("expecting error code NC_ENULLABUF=%d but got %d\n",
@@ -213,13 +229,16 @@ int main(int argc, char** argv)
         nfails++;
     }
 
+    /* only rank 0, 1, 2, and 3 do I/O:
+     * each of ranks 0 to 3 write 4 nonblocking requests */
     nreqs = 4;
     if (rank >= 4) nreqs = 0;
 
     /* bufsize must be max of data type converted before and after */
     MPI_Offset bufsize = 0;
 
-    /* each of ranks 0 to 3 write 4 nonblocking requests */
+    /* calculate length of each varn request, number of segments in each
+     * varn request, and allocate write buffer */
     for (i=0; i<nreqs; i++) {
         int n = (i + rank) % 4;
         if (rank >= 4) { my_nsegs[i] = req_lens[i] = 0; continue; }
@@ -239,12 +258,13 @@ int main(int argc, char** argv)
 
         bufsize += req_lens[i];
     }
-
     bufsize *= sizeof(unsigned int);
+
+    /* give PnetCDF a space to buffer the nonblocking requests */
     err = ncmpi_buffer_attach(ncid, bufsize); ERR
     if (verbose) printf("%d: Attach buffer size %lld\n", rank, bufsize);
 
-    /* check error code: NC_ENULLSTART */
+    /* test error code: NC_ENULLSTART */
     err = ncmpi_bput_varn_uint(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
     if (err != NC_ENULLSTART) {
         printf("expecting error code NC_ENULLSTART=%d but got %d\n",
@@ -262,7 +282,7 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    /* read entire variables back and check contents */
+    /* all processes read entire variables back and check contents */
     r_buffer = (unsigned int*) malloc(NY*NX * sizeof(unsigned int));
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
@@ -289,7 +309,7 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    /* read entire variables back and check contents */
+    /* all processes read entire variables back and check contents */
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
         err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
@@ -314,7 +334,7 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    /* read entire variables back and check contents */
+    /* all processes read entire variables back and check contents */
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
         err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
@@ -322,6 +342,7 @@ int main(int argc, char** argv)
         if (nprocs >= 4) nfails += check_contents_for_fail(i, r_buffer);
     }
 
+    /* free the buffer space for bput */
     err = ncmpi_buffer_detach(ncid); ERR
 
     err = ncmpi_close(ncid); ERR
@@ -351,7 +372,6 @@ int main(int argc, char** argv)
         if (nfails) printf("%-66s ------ failed\n", cmd_str);
         else        printf("%-66s ------ pass\n", cmd_str);
     }
-
 
     MPI_Finalize();
     return 0;

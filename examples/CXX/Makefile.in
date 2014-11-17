@@ -94,13 +94,21 @@ ptest: $(PAR_PROGS)
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in put_varn_int put_varn_float transpose ; do ( \
+
+ptests: $(PAR_PROGS)
+	@for i in $(PAR_PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+	@for i in $(PAR_PROGS) ; do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in put_varn_int put_varn_float ; do ( \
+	@for i in $(PAR_PROGS) ; do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \

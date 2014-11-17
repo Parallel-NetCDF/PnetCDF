@@ -84,13 +84,21 @@ ptest: $(PROGS)
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in put_varn_int put_varn_real; do ( \
+
+ptests: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in put_varn_int put_varn_real; do ( \
+	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \

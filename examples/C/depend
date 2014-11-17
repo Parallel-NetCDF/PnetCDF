@@ -14,3 +14,5 @@ global_attributes.o: global_attributes.c
 get_vara.o: get_vara.c
 transpose.o: transpose.c
 vard_int.o: vard_int.c
+i_varn_int64.o: i_varn_int64.c
+bput_varn_uint.o: bput_varn_uint.c

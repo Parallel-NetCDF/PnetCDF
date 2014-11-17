@@ -67,9 +67,13 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New example programs
+    * C/bput_varn_uint.c and F77/bput_varn_int8.f
+      test nonblocking bput_varn APIs
+    * C/i_varn_int64.c and F77/i_varn_real.f
+      test nonblocking iput_varn and iget_varn APIs
     * C/vard_int.c F77/vard_int.f F90/vard_int.f90 CXX/vard_int.cpp show
       how to use vard API to write/read record and fixed-size variables.
-    * transpose.c shows how to use ncmpi_put_vara_int_all to write a 3D array
+    * C/transpose.c shows how to use ncmpi_put_vara_int_all to write a 3D array
       that is dimensional-transposed from the one stored in memory. Six
       transposed 3D arrays are saved whose dimensions are organized as ZYX,
       ZXY, YZX, YXZ, XZY, and XYZ. The C++, Fortran 77, and Fortran 90
@@ -79,7 +83,7 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * nonblocking/bput_varn_uint.c test nonblocking bput_varn and bget_varn APIs
+    * nonblocking/bput_varn_uint.c test nonblocking bput_varn APIs
     * nonblocking/i_varn_int64.c test nonblocking iput_varn and iget_varn APIs
     * test/testcases/test_vard.c test/testcases/test_vardf.f
       test/testcases/test_vardf90.f90 tests the new vard APIs.
@@ -120,9 +124,9 @@ This is essentially a placeholder for the next release note ...
       able to correspond to the netCDF APIs whose names do not contain a data
       type, e.g. nc_put_vara().
     * Type conversion between NC_BYTE and unsigned char no longer checks for
-      out of range error (NC_ERANGE). NetCDF specification make a special case
-      for this kind of data type conversion. See:
-      http://www.unidata.ucar.edu/software/netcdf/docs_rc/data_type.html#type_conversion
+      out of range error (NC_ERANGE). CDF file format specification make a
+      special case for this kind of data type conversion. See: "Note on byte data"
+      in the format specification.
     * Conform with the CDF-2 and CDF-5 formats that names are normalized
       according to Unicode NFC normalization rules during encoding as UTF-8
       for storing in the file header.
