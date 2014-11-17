@@ -7,10 +7,11 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example tests ncmpi_iput_varn_longlong(), ncmpi_iget_varn_longlong(),
+ * This example tests nonblocking varn APIs, including
+ * ncmpi_iput_varn_longlong(), ncmpi_iget_varn_longlong(), ncmpi_iput_varn(),
  * and ncmpi_iget_varn().
- * It writes a sequence of requests with arbitrary array indices and lengths,
- * and reads back.
+ * It first writes a sequence of requests with arbitrary array indices and
+ * lengths to four variables of type NC_INT64, and reads back.
  *
  * The compile and run commands are given below, together with an ncmpidump of
  * the output file.
@@ -66,8 +67,22 @@
 #define NX 10
 #define NDIMS 2
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
-#define ERRS(n,a) {int _i; for(_i=0;_i<(n);_i++)if(a[_i]!=NC_NOERR)printf("Error at line=%d: err[%d] %s\n", __LINE__, _i, ncmpi_strerror(a[_i]));}
+#define ERR \
+    if (err != NC_NOERR) { \
+        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
+        nfails++; \
+    }
+
+#define ERRS(n,a) { \
+    int _i; \
+    for (_i=0; _i<(n); _i++) { \
+        if ((a)[_i] != NC_NOERR) { \
+            printf("Error at line=%d: err[%d] %s\n", __LINE__, _i, \
+                   ncmpi_strerror((a)[_i])); \
+            nfails++; \
+        } \
+    } \
+}
 
 int check_contents_for_fail(int n, long long *buffer)
 {
@@ -100,6 +115,7 @@ int check_contents_for_fail(int n, long long *buffer)
     return 0;
 }
 
+/* swap two rows, a and b, of a 2D array */
 void permute(MPI_Offset a[NDIMS], MPI_Offset b[NDIMS])
 {
     int i;
@@ -206,7 +222,7 @@ int main(int argc, char** argv)
         }
     }
 
-    /* check error code: NC_ENULLSTART */
+    /* test error code: NC_ENULLSTART */
     err = ncmpi_iput_varn_longlong(ncid, varid[0], 1, NULL, NULL,
                                    NULL, &reqs[0]);
     if (err != NC_ENULLSTART) {
@@ -215,10 +231,13 @@ int main(int argc, char** argv)
         nfails++;
     }
 
+    /* only rank 0, 1, 2, and 3 do I/O:
+     * each of ranks 0 to 3 write 4 nonblocking requests */
     nreqs = 4;
     if (rank >= 4) nreqs = 0;
 
-    /* each of ranks 0 to 3 write 4 nonblocking requests */
+    /* calculate length of each varn request, number of segments in each
+     * varn request, and allocate write buffer */
     for (i=0; i<nreqs; i++) {
         int n = (i + rank) % 4;
         if (rank >= 4) { my_nsegs[i] = req_lens[i] = 0; continue; }
@@ -235,8 +254,11 @@ int main(int argc, char** argv)
         /* allocate I/O buffer and initialize its contents */
         buffer[i] = (long long*) malloc(req_lens[i] * sizeof(long long));
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank;
+    }
 
-        /* write usning varn API */
+    /* write usning varn API */
+    for (i=0; i<nreqs; i++) {
+        int n = (i + rank) % 4;
         err = ncmpi_iput_varn_longlong(ncid, varid[i], my_nsegs[i], starts[n],
                                        counts[n], buffer[i], &reqs[i]);
         ERR
@@ -244,7 +266,7 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    /* read entire variables back and check contents */
+    /* all processes read entire variables back and check contents */
     r_buffer = (long long*) malloc(NY*NX * sizeof(long long));
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
@@ -271,7 +293,7 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    /* read entire variables back and check contents */
+    /* all processes read entire variables back and check contents */
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
         err = ncmpi_get_var_longlong_all(ncid, varid[i], r_buffer);
@@ -299,6 +321,7 @@ int main(int argc, char** argv)
             }
         }
     }
+    for (i=0; i<nreqs; i++) free(buffer[i]);
 
     /* test flexible put API, using a noncontiguous buftype */
     for (i=0; i<nreqs; i++) {
@@ -306,9 +329,9 @@ int main(int argc, char** argv)
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, MPI_LONG_LONG, &buftype);
         MPI_Type_commit(&buftype);
-        free(buffer[i]);
         buffer[i] = (long long*) malloc(req_lens[i] * 2 * sizeof(long long));
         for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank;
+
         err = ncmpi_iput_varn(ncid, varid[i], my_nsegs[i], starts[n],
                               counts[n], buffer[i], 1, buftype, &reqs[i]);
         ERR
@@ -317,7 +340,7 @@ int main(int argc, char** argv)
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    /* read entire variables back and check contents */
+    /* all processes read entire variables back and check contents */
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
         err = ncmpi_get_var_longlong_all(ncid, varid[i], r_buffer);
@@ -383,7 +406,6 @@ int main(int argc, char** argv)
         if (nfails) printf("%-66s ------ failed\n", cmd_str);
         else        printf("%-66s ------ pass\n", cmd_str);
     }
-
 
     MPI_Finalize();
     return 0;

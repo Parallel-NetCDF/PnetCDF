@@ -25,7 +25,9 @@ F77_SRCS  = nonblocking_write.f \
             put_varn_real.f \
             put_varn_int.f \
             transpose.f \
-            vard_int.f
+            vard_int.f \
+            i_varn_real.f \
+            bput_varn_int8.f
 
 PROGS     = $(F77_SRCS:.f=)
 OBJS      = $(F77_SRCS:.f=.o)
@@ -73,6 +75,12 @@ transpose: transpose.o $(LIBRARY)
 vard_int: vard_int.o $(LIBRARY)
 	$(LINK.f) $< $(LDFLAGS) $(LIBS)
 
+i_varn_real: i_varn_real.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
+bput_varn_int8: bput_varn_int8.o $(LIBRARY)
+	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
 TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
@@ -84,13 +92,21 @@ ptest: $(PROGS)
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in put_varn_int put_varn_real; do ( \
+
+ptests: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in put_varn_int put_varn_real; do ( \
+	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \

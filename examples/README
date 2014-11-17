@@ -292,6 +292,14 @@ command and the number of MPI processes.
 ./CXX/vard_int.cpp
 ./F77/vard_int.f
 ./F90/vard_int.f90
-  This example shows how to use vard APIs to write/read record and fixed-size
+  These examples show how to use vard APIs to write/read record and fixed-size
   variables.
+
+  ./C/bput_varn_uint.c
+./F77/bput_varn_int8.f
+  These examples show how to use nonblocking bput_varn APIs
+
+  ./C/i_varn_int64.c
+./F77/i_varn_real.f
+  These examples show how to use nonblocking iput_varn and iget_varn APIs
 

@@ -30,7 +30,9 @@ C_SRCS  = collective_write.c \
           put_vara.c \
           get_vara.c \
           transpose.c \
-          vard_int.c
+          vard_int.c \
+          i_varn_int64.c \
+          bput_varn_uint.c
 
 # Note: put_vara must be run immediately before get_vara
 
@@ -95,6 +97,12 @@ transpose: transpose.o $(LIBRARY)
 vard_int: vard_int.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+i_varn_int64: i_varn_int64.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+bput_varn_uint: bput_varn_uint.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
 TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
@@ -106,13 +114,21 @@ ptest: $(PROGS)
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in mput put_varn_int put_varn_float transpose ; do ( \
+
+ptests: $(PROGS)
+	@for i in $(PROGS); do ( \
+	echo "-----------------------------------------------------" ; \
+	echo "$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
+	echo "-----------------------------------------------------" ; \
+	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+	@for i in $(PROGS); do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \
 	$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
-	@for i in mput put_varn_int put_varn_float ; do ( \
+	@for i in $(PROGS) ; do ( \
 	echo "-----------------------------------------------------" ; \
 	echo "$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
 	echo "-----------------------------------------------------" ; \

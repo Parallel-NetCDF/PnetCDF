@@ -9,4 +9,5 @@ put_varn_real.o: put_varn_real.f
 put_varn_int.o: put_varn_int.f
 transpose.o: transpose.f
 vard_int.o: vard_int.f
-
+i_varn_real.o: i_varn_real.f
+bput_varn_int8.o: bput_varn_int8.f
