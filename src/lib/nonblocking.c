@@ -1767,6 +1767,7 @@ ncmpii_mgetput(NC           *ncp,
         MPI_Aint a0, ai;
         MPI_Offset int8;
 
+        buf = NULL;
         disps[0] = 0;
 #ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(reqs[0].xbuf, &a0);
@@ -1780,6 +1781,10 @@ ncmpii_mgetput(NC           *ncp,
             if (status == NC_NOERR) status = NC_EINTOVERFLOW;
             blocklengths[0] = 0;/* skip this request */
         }
+        else /* this is a valid request */
+            buf = reqs[0].xbuf;
+
+        int last_contig_req = 0;
         for (i=1; i<num_reqs; i++) {/*loop for multi-variables*/
             int8 = reqs[i].fnelems * reqs[i].varp->xsz;
             blocklengths[i] = int8;
@@ -1787,36 +1792,59 @@ ncmpii_mgetput(NC           *ncp,
                 if (status == NC_NOERR) status = NC_EINTOVERFLOW;
                 blocklengths[i] = 0; /* skip this request */
             }
+            else /* this request is valid. Set buf in case it is still NULL */
+                buf = (buf == NULL) ? reqs[i].xbuf : buf;
+
 #ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(reqs[i].xbuf, &ai);
 #else
             MPI_Address(reqs[i].xbuf, &ai);
 #endif
-            disps[i] = ai - a0;
+            if (ai - a0 == blocklengths[last_contig_req])
+                /* user buffer of request i is contiguous from i-1
+                 * we concatenate i to i-1 */
+                blocklengths[last_contig_req] += blocklengths[i];
+            else {
+                /* not contiguous from i-1 */
+                last_contig_req++;
+                disps[last_contig_req] = ai - a0;
+                blocklengths[last_contig_req] = blocklengths[i];
+            }
         }
 
-        /* concatenate buffer addresses into a single buffer type */
+        /* last_contig_req is the index of last contiguous request */
+        if (last_contig_req == 0) {
+            /* user buffers in all requests are acutally contiguous */
+            buf_type = MPI_BYTE;
+            len = blocklengths[0];
+        }
+        else {
+            /* after possible concatenating the user buffers, the true number
+             * of non-contiguous buffers is last_contig_req+1 */
+            num_reqs = last_contig_req+1;
+
+            /* concatenate buffer addresses into a single buffer type */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-        mpireturn = MPI_Type_create_hindexed(num_reqs, blocklengths, disps,
-                                             MPI_BYTE, &buf_type);
+            mpireturn = MPI_Type_create_hindexed(num_reqs, blocklengths, disps,
+                                                 MPI_BYTE, &buf_type);
 #else
-        mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps, MPI_BYTE,
-                                      &buf_type);
+            mpireturn = MPI_Type_hindexed(num_reqs, blocklengths, disps,
+                                          MPI_BYTE, &buf_type);
 #endif
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = NC_EFILE;
-        }
-        else
-            mpireturn = MPI_Type_commit(&buf_type);
+            if (mpireturn != MPI_SUCCESS) {
+                ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
+                /* return the first encountered error if there is any */
+                if (status == NC_NOERR) status = NC_EFILE;
+            }
+            else
+                mpireturn = MPI_Type_commit(&buf_type);
 
+            len = 1;
+        }
         NCI_Free(disps);
         NCI_Free(blocklengths);
-
-        len = 1;
-        buf = reqs[0].xbuf;
     }
+    /* if (buf_type == MPI_BYTE) then the whole buf is contiguous */
 
     if (rw_flag == READ_REQ) {
         if (io_method == COLL_IO) {
