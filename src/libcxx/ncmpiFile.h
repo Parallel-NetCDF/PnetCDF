@@ -94,6 +94,10 @@ namespace PnetCDF
 
       void Inq_nreqs(int *nreqs);
 
+      void Inq_buffer_usage(MPI_Offset *usage);
+
+      void Inq_buffer_size(MPI_Offset *buf_size);
+
       void Inq_file_info(MPI_Info *info);
 
       void Inq_put_size(MPI_Offset *put_size);

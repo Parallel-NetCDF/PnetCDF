@@ -163,6 +163,16 @@ void NcmpiFile::Buffer_detach(void)
     ncmpiCheck(ncmpi_buffer_detach(myId),__FILE__,__LINE__);
 }
 
+void NcmpiFile::Inq_buffer_usage(MPI_Offset *usage)
+{
+    ncmpiCheck(ncmpi_inq_buffer_usage(myId, usage),__FILE__,__LINE__);
+}
+
+void NcmpiFile::Inq_buffer_size(MPI_Offset *buf_size)
+{
+    ncmpiCheck(ncmpi_inq_buffer_size(myId, buf_size),__FILE__,__LINE__);
+}
+
 void NcmpiFile::Inq_nreqs(int *nreqs)
 {
     ncmpiCheck(ncmpi_inq_nreqs(myId, nreqs),__FILE__,__LINE__);

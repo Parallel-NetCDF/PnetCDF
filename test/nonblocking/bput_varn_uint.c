@@ -83,9 +83,27 @@
     } \
 }
 
-int check_contents_for_fail(int n, unsigned int *buffer)
+void clear_file_contents(int ncid, int *varid)
 {
-    int i;
+    int i, err, rank;
+    MPI_Offset len=0;
+    unsigned int *w_buffer = (unsigned int*) malloc(NY*NX * sizeof(unsigned int));
+    for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank == 0) len = NY*NX;
+
+    for (i=0; i<4; i++) {
+        err = ncmpi_put_var_uint_all(ncid, varid[i], w_buffer);
+        if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+    }
+    free(w_buffer);
+}
+
+int check_contents_for_fail(int ncid, int *varid)
+{
+    /* all processes read entire variables back and check contents */
+    int i, j, err, nprocs;
     unsigned int expected[4][NY*NX] = {{3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
                                         0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
                                         1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
@@ -103,19 +121,71 @@ int check_contents_for_fail(int n, unsigned int *buffer)
                                         2, 2, 3, 0, 0, 0, 1, 1, 2, 2,
                                         1, 1, 1, 3, 2, 2, 2, 0, 0, 0}};
 
-    /* check if the contents of buf are expected */
-    for (i=0; i<NY*NX; i++) {
-        if (buffer[i] != expected[n][i]) {
-            printf("n=%d Expected read buf[%d]=%ud, but got %ud\n",
-                   n, i,expected[n][i],buffer[i]);
-            return 1;
+    unsigned int *r_buffer = (unsigned int*) malloc(NY*NX * sizeof(unsigned int));
+
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    for (i=0; i<4; i++) {
+        for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
+        err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
+        if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+
+        /* check if the contents of buf are expected */
+        for (j=0; j<NY*NX; j++) {
+            if (expected[i][j] >= nprocs) continue;
+            if (r_buffer[j] != expected[i][j]) {
+                printf("Expected read buf[%d][%d]=%u, but got %u\n",
+                       i,j,expected[i][j],r_buffer[j]);
+                free(r_buffer);
+                return 1;
+            }
         }
+    }
+    free(r_buffer);
+    return 0;
+}
+
+static int
+check_num_pending_reqs(int ncid, int expected, int lineno)
+/* check if PnetCDF can reports expected number of pending requests */
+{
+    int err, n_pendings;
+    err = ncmpi_inq_nreqs(ncid, &n_pendings);
+    if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+    if (n_pendings != expected) {
+        printf("Error at line %d: expect %d pending requests but got %d\n",
+               lineno, expected, n_pendings);
+        return 1;
     }
     return 0;
 }
 
+void check_attached_buffer_usage(int ncid,
+                                 MPI_Offset expected_size,
+                                 MPI_Offset expected_usage,
+                                 int lineno)
+/* check attached buf usage */
+{
+    int err, rank;
+    MPI_Offset usage, buf_size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank >= 4) return;
+
+    err = ncmpi_inq_buffer_size(ncid, &buf_size);
+    if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+    if (expected_size != buf_size)
+        printf("Error at line %d: expect buffer size %lld but got %lld\n",
+               lineno, expected_size, buf_size);
+
+    err = ncmpi_inq_buffer_usage(ncid, &usage);
+    if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
+    if (expected_usage != usage)
+        printf("Error at line %d: expect buffer usage %lld but got %lld\n",
+               lineno, expected_usage, usage);
+}
+
 /* swap two rows, a and b, of a 2D array */
-void permute(MPI_Offset a[NDIMS], MPI_Offset b[NDIMS])
+void permute(MPI_Offset *a, MPI_Offset *b)
 {
     int i;
     MPI_Offset tmp;
@@ -129,7 +199,7 @@ int main(int argc, char** argv)
     char filename[128];
     int i, j, k, rank, nprocs, verbose=0, err, nfails=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
-    unsigned int *buffer[4], *r_buffer;
+    unsigned int *buffer[4];
     int num_segs[4] = {4, 6, 5, 4};
     int req_lens[4], my_nsegs[4];
     MPI_Offset **starts[4], **counts[4];
@@ -213,10 +283,12 @@ int main(int argc, char** argv)
 
     /* set values for starts and counts */
     for (i=0; i<4; i++) {
+        int n = (i + rank) % 4;
+        my_nsegs[i] = num_segs[n]; /* number of segments for this request */
         for (j=0; j<6; j++) {
             for (k=0; k<NDIMS; k++) {
-                starts[i][j][k] = n_starts[i][j][k];
-                counts[i][j][k] = n_counts[i][j][k];
+                starts[i][j][k] = n_starts[n][j][k];
+                counts[i][j][k] = n_counts[n][j][k];
             }
         }
     }
@@ -224,8 +296,8 @@ int main(int argc, char** argv)
     /* test error code: NC_ENULLABUF */
     err = ncmpi_bput_varn_uint(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
     if (err != NC_ENULLABUF) {
-        printf("expecting error code NC_ENULLABUF=%d but got %d\n",
-               NC_ENULLABUF,err);
+        printf("Error at line %d: expecting error code NC_ENULLABUF=%d but got %d\n",
+               __LINE__, NC_ENULLABUF,err);
         nfails++;
     }
 
@@ -237,17 +309,13 @@ int main(int argc, char** argv)
     /* bufsize must be max of data type converted before and after */
     MPI_Offset bufsize = 0;
 
-    /* calculate length of each varn request, number of segments in each
-     * varn request, and allocate write buffer */
+    /* calculate length of each varn request and allocate write buffer */
     for (i=0; i<nreqs; i++) {
-        int n = (i + rank) % 4;
-        if (rank >= 4) { my_nsegs[i] = req_lens[i] = 0; continue; }
         req_lens[i] = 0; /* total length this request */
-        my_nsegs[i] = num_segs[n]; /* number of segments for this request */
         for (j=0; j<my_nsegs[i]; j++) {
             MPI_Offset req_len=1;
             for (k=0; k<NDIMS; k++)
-                req_len *= counts[n][j][k];
+                req_len *= counts[i][j][k];
             req_lens[i] += req_len;
         }
         if (verbose) printf("req_lens[%d]=%d\n",i,req_lens[i]);
@@ -255,100 +323,137 @@ int main(int argc, char** argv)
         /* allocate I/O buffer and initialize its contents */
         buffer[i] = (unsigned int*) malloc(req_lens[i] * sizeof(unsigned int));
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank;
-
         bufsize += req_lens[i];
     }
     bufsize *= sizeof(unsigned int);
 
     /* give PnetCDF a space to buffer the nonblocking requests */
-    err = ncmpi_buffer_attach(ncid, bufsize); ERR
+    if (bufsize > 0) {
+        err = ncmpi_buffer_attach(ncid, bufsize); ERR
+    }
     if (verbose) printf("%d: Attach buffer size %lld\n", rank, bufsize);
 
     /* test error code: NC_ENULLSTART */
     err = ncmpi_bput_varn_uint(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
-    if (err != NC_ENULLSTART) {
-        printf("expecting error code NC_ENULLSTART=%d but got %d\n",
-               NC_ENULLSTART,err);
+    if (rank < 4 && err != NC_ENULLSTART) {
+        printf("Error at line %d: expecting error code NC_ENULLSTART=%d but got %d\n",
+               __LINE__, NC_ENULLSTART,err);
         nfails++;
     }
 
     /* write usning varn API */
+    clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
-        int n = (i + rank) % 4;
-        err = ncmpi_bput_varn_uint(ncid, varid[i], my_nsegs[i], starts[n],
-                                   counts[n], buffer[i], &reqs[i]);
+        err = ncmpi_bput_varn_uint(ncid, varid[i], my_nsegs[i], starts[i],
+                                   counts[i], buffer[i], &reqs[i]);
         ERR
     }
+    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
+    check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+
     /* all processes read entire variables back and check contents */
-    r_buffer = (unsigned int*) malloc(NY*NX * sizeof(unsigned int));
-    for (i=0; i<4; i++) {
-        for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
-        err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
-        ERR
-        if (nprocs >= 4) nfails += check_contents_for_fail(i, r_buffer);
-    }
+    nfails += check_contents_for_fail(ncid, varid);
 
-    /* permute write order: so starts[*] are not in an increasing order */
-    for (i=0; i<4; i++) {
-        permute(starts[i][1], starts[i][2]);
-        permute(counts[i][1], counts[i][2]);
-        permute(starts[i][2], starts[i][3]);
-        permute(counts[i][2], counts[i][3]);
-    }
-
-    /* write usning varn API */
+    /* permute write order: so starts[*] are not in an increasing order:
+     * swap segment 0 with segment 2 and swap segment 1 with segment 3
+     */
     for (i=0; i<nreqs; i++) {
-        int n = (i + rank) % 4;
-        err = ncmpi_bput_varn_uint(ncid, varid[i], my_nsegs[i], starts[n],
-                                   counts[n], buffer[i], &reqs[i]);
+        permute(starts[i][0],starts[i][2]); permute(counts[i][0],counts[i][2]);
+        permute(starts[i][1],starts[i][3]); permute(counts[i][1],counts[i][3]);
+    }
+
+    /* write using varn API */
+    clear_file_contents(ncid, varid);
+    for (i=0; i<nreqs; i++) {
+        err = ncmpi_bput_varn_uint(ncid, varid[i], my_nsegs[i], starts[i],
+                                   counts[i], buffer[i], &reqs[i]);
         ERR
     }
+    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
+    check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+
     /* all processes read entire variables back and check contents */
-    for (i=0; i<4; i++) {
-        for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
-        err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
-        ERR
-        if (nprocs >= 4) nfails += check_contents_for_fail(i, r_buffer);
-    }
+    nfails += check_contents_for_fail(ncid, varid);
+
+    for (i=0; i<nreqs; i++) free(buffer[i]);
 
     /* test flexible API, using a noncontiguous buftype */
+    clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
-        int n = (i + rank) % 4;
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, MPI_UNSIGNED, &buftype);
         MPI_Type_commit(&buftype);
-        free(buffer[i]);
         buffer[i] = (unsigned int*)malloc(req_lens[i]*2*sizeof(unsigned int));
         for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank;
-        err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[n],
-                              counts[n], buffer[i], 1, buftype, &reqs[i]);
+
+        err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[i],
+                              counts[i], buffer[i], 1, buftype, &reqs[i]);
         ERR
         MPI_Type_free(&buftype);
     }
+    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
+    check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+
     /* all processes read entire variables back and check contents */
-    for (i=0; i<4; i++) {
-        for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
-        err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
-        ERR
-        if (nprocs >= 4) nfails += check_contents_for_fail(i, r_buffer);
+    nfails += check_contents_for_fail(ncid, varid);
+
+    /* permute back to original order */
+    for (i=0; i<nreqs; i++) {
+        permute(starts[i][0],starts[i][2]); permute(counts[i][0],counts[i][2]);
+        permute(starts[i][1],starts[i][3]); permute(counts[i][1],counts[i][3]);
     }
 
+    /* test flexible API, using a noncontiguous buftype */
+    clear_file_contents(ncid, varid);
+    for (i=0; i<nreqs; i++) {
+        MPI_Datatype buftype;
+        MPI_Type_vector(req_lens[i], 1, 2, MPI_UNSIGNED, &buftype);
+        MPI_Type_commit(&buftype);
+        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank;
+
+        err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[i],
+                              counts[i], buffer[i], 1, buftype, &reqs[i]);
+        ERR
+        MPI_Type_free(&buftype);
+    }
+    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
+    err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    ERRS(nreqs, sts)
+
+    check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+
+    /* all processes read entire variables back and check contents */
+    nfails += check_contents_for_fail(ncid, varid);
+
     /* free the buffer space for bput */
-    err = ncmpi_buffer_detach(ncid); ERR
+    if (bufsize > 0) {
+        err = ncmpi_buffer_detach(ncid); ERR
+    }
+
+    /* test error code: NC_ENULLABUF */
+    err = ncmpi_inq_buffer_usage(ncid, NULL);
+    if (err != NC_ENULLABUF) {
+        printf("expecting error code NC_ENULLABUF=%d but got %d\n",
+               NC_ENULLABUF,err);
+        nfails++;
+    }
 
     err = ncmpi_close(ncid); ERR
 
     for (i=0; i<nreqs; i++) free(buffer[i]);
-    free(r_buffer);
     free(starts[0][0]);
     free(counts[0][0]);
     free(starts[0]);
