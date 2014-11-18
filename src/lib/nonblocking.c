@@ -224,7 +224,7 @@ int
 ncmpi_inq_nreqs(int  ncid,
                 int *nreqs) /* OUT: number of pending requests */
 {
-    int     status;
+    int     status, prev_id;
     NC     *ncp;
     NC_req *req_ptr;
 
@@ -233,8 +233,15 @@ ncmpi_inq_nreqs(int  ncid,
 
     req_ptr = ncp->head;
     *nreqs = 0;
+    prev_id = NC_REQ_NULL;
     while (req_ptr != NULL) {
-        (*nreqs)++;
+        /* some requests in the linked list may share the same ID, they were
+         * corresponding to the subrequests made from iput/iget/bput varn APIs.
+         */
+        if (req_ptr->id != prev_id) {
+            prev_id = req_ptr->id;
+            (*nreqs)++;
+        }
         req_ptr = req_ptr->next;
     }
 
@@ -1764,49 +1771,58 @@ ncmpii_mgetput(NC           *ncp,
     else if (num_reqs > 1) { /* create the I/O buffer derived data type */
         int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
         MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
-        MPI_Aint a0, ai;
+        MPI_Aint a0, ai, a_last_contig;
         MPI_Offset int8;
 
         buf = NULL;
-        disps[0] = 0;
+        for (i=0; i<num_reqs; i++) {
+            /* find the first request that is not integer overflow */
+            int8  = reqs[i].fnelems * reqs[i].varp->xsz;
+            blocklengths[i] = int8;
+            if (int8 != blocklengths[i]) {
+                if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+            }
+            else { /* found it */
+                disps[0] = 0;
+                blocklengths[0] = int8;
+                buf = reqs[i].xbuf;
 #ifdef HAVE_MPI_GET_ADDRESS
-        MPI_Get_address(reqs[0].xbuf, &a0);
+                MPI_Get_address(buf, &a0);
 #else
-        MPI_Address(reqs[0].xbuf, &a0);
+                MPI_Address(buf, &a0);
 #endif
-        /* check int overflow */
-        int8  = reqs[0].fnelems * reqs[0].varp->xsz;
-        blocklengths[0] = int8;
-        if (int8 != blocklengths[0]) {
-            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
-            blocklengths[0] = 0;/* skip this request */
+                break;
+            }
         }
-        else /* this is a valid request */
-            buf = reqs[0].xbuf;
+        if (i == num_reqs) { /* no valid requests */
+            num_reqs = 0;
+            blocklengths[0] = 0;
+        }
+        else i++; /* continue with next request */
 
         int last_contig_req = 0;
-        for (i=1; i<num_reqs; i++) {/*loop for multi-variables*/
+        a_last_contig = a0;
+        for (; i<num_reqs; i++) {
             int8 = reqs[i].fnelems * reqs[i].varp->xsz;
             blocklengths[i] = int8;
             if (int8 != blocklengths[i]) {
                 if (status == NC_NOERR) status = NC_EINTOVERFLOW;
-                blocklengths[i] = 0; /* skip this request */
+                continue;
             }
-            else /* this request is valid. Set buf in case it is still NULL */
-                buf = (buf == NULL) ? reqs[i].xbuf : buf;
 
 #ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(reqs[i].xbuf, &ai);
 #else
             MPI_Address(reqs[i].xbuf, &ai);
 #endif
-            if (ai - a0 == blocklengths[last_contig_req])
+            if (ai - a_last_contig == blocklengths[last_contig_req])
                 /* user buffer of request i is contiguous from i-1
                  * we concatenate i to i-1 */
                 blocklengths[last_contig_req] += blocklengths[i];
             else {
                 /* not contiguous from i-1 */
                 last_contig_req++;
+                a_last_contig = ai;
                 disps[last_contig_req] = ai - a0;
                 blocklengths[last_contig_req] = blocklengths[i];
             }

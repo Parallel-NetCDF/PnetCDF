@@ -3199,6 +3199,12 @@ INTERFACE
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: usage
     END FUNCTION   nfmpi_inq_buffer_usage
 
+    INTEGER        FUNCTION nfmpi_inq_buffer_size(ncid, buf_size)
+                   use mpi, only: MPI_OFFSET_KIND
+                            INTEGER,                       INTENT(IN)  :: ncid
+                            INTEGER(KIND=MPI_OFFSET_KIND), INTENT(OUT) :: buf_size
+    END FUNCTION   nfmpi_inq_buffer_size
+
 !
 ! End buffered put non-blocking subroutines:
 !

@@ -56,7 +56,7 @@
             nf90mpi_inq_nreqs,        nf90mpi_buffer_attach, &
             nf90mpi_inq_buffer_usage, nf90mpi_buffer_detach, &
             nf90mpi_wait,             nf90mpi_wait_all, &
-            nf90mpi_cancel
+            nf90mpi_cancel,           nf90mpi_inq_buffer_size
 
   public :: nf90mpi_begin_indep_data,    nf90mpi_end_indep_data, &
             nf90mpi_inq_put_size,        nf90mpi_inq_get_size, &
@@ -464,7 +464,8 @@
         nfmpi_bput_varm_int8, &
         nfmpi_buffer_attach, &
         nfmpi_buffer_detach, &
-        nfmpi_inq_buffer_usage
+        nfmpi_inq_buffer_usage, &
+        nfmpi_inq_buffer_size
 
 !
 ! End buffered put non-blocking subroutines:

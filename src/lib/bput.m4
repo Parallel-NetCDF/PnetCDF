@@ -556,3 +556,23 @@ ncmpi_inq_buffer_usage(int         ncid,
     return NC_NOERR;
 }
 
+/*----< ncmpi_inq_buffer_size() >---------------------------------------------*/
+int
+ncmpi_inq_buffer_size(int         ncid,
+                      MPI_Offset *buf_size) /* OUT: in bytes */
+{
+    int  status;
+    NC  *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    /* check if the buffer has been prviously attached */
+    if (ncp->abuf == NULL) return NC_ENULLABUF;
+
+    /* return the current usage in bytes */
+    *buf_size = ncp->abuf->size_allocated;
+
+    return NC_NOERR;
+}
+

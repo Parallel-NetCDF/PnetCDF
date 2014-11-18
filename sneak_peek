@@ -28,6 +28,9 @@ This is essentially a placeholder for the next release note ...
       For F77, nfmpi_put_var1_all() nfmpi_get_var1_all()
       For F90, API overloading
       For C++, API overloading
+    * ncmpi_inq_buffer_size() returns the size of buffer previously attached
+      for use of bput APIs. With ncmpi_inq_buffer_usage() one can calculate
+      the space remaining for additional bput requests.
     * ncmpi_inq_recsize() returns the size of record block, i.e. the sum of
       single records of all record variables.
       For F77, nfmpi_inq_recsize()
