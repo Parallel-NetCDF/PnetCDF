@@ -1123,6 +1123,7 @@ ncmpii_NC_enddef(NC         *ncp,
 
 #ifdef ENABLE_SUBFILING
     /* num of subfiles has been determined already */
+    ncp->subfile_mode    = ncp->nciop->hints.subfile_mode;
     ncp->nc_num_subfiles = ncp->nciop->hints.num_subfiles;
 
     if (ncp->nc_num_subfiles > 1) {

@@ -355,11 +355,18 @@ do_ncdump(const char *path, struct fspec* specp)
     vnode* vlist = 0;     /* list for vars specified with -v option */
     int ncmpi_status;     /* return from netcdf calls */
     int NC_mode;
+    MPI_Info info;
+
+    /* Nov. 18, 2014 -- disable subfiling as it does not correctly handle the
+     * cases when  nprocs < num_subfiles */
+    MPI_Info_create (&info);
+    MPI_Info_set (info, "pnetcdf_subfiling", "disable");
 
     ncmpi_status = ncmpi_open(MPI_COMM_WORLD, path, NC_NOWRITE,
-                              MPI_INFO_NULL, &ncid);
+                              info, &ncid);
     if (ncmpi_status != NC_NOERR)
         error("%s: %s", path, ncmpi_strerror(ncmpi_status));
+    MPI_Info_free(&info);
 
     /*
      * If any vars were specified with -v option, get list of associated
