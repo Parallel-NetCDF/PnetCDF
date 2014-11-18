@@ -215,7 +215,8 @@ int main(int argc, char **argv)
     struct vspec var_list;
     extern char *optarg;
     extern int optind;
-
+    MPI_Info info;
+ 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
@@ -267,11 +268,18 @@ int main(int argc, char **argv)
     shape   = (MPI_Offset*) malloc(NC_MAX_VAR_DIMS * sizeof(MPI_Offset));
     start   = (MPI_Offset*) malloc(NC_MAX_VAR_DIMS * sizeof(MPI_Offset));
 
+    /* Nov. 18, 2014 -- disable subfiling as it does not correctly handle the
+     * cases when  nprocs < num_subfiles */
+    MPI_Info_create (&info);
+    MPI_Info_set (info, "pnetcdf_subfiling", "disable");
+
     /* open files */
-    err = ncmpi_open(comm, argv[optind], NC_NOWRITE, MPI_INFO_NULL, &ncid1);
+    err = ncmpi_open(comm, argv[optind], NC_NOWRITE, info, &ncid1);
     HANDLE_ERROR
-    err = ncmpi_open(comm, argv[optind+1], NC_NOWRITE, MPI_INFO_NULL, &ncid2);
+    err = ncmpi_open(comm, argv[optind+1], NC_NOWRITE, info, &ncid2);
     HANDLE_ERROR
+
+    MPI_Info_free(&info);
 
     /* check header */
     if (check_header && rank == 0) { /* only root checks header */

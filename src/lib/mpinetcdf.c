@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #endif
 #include <assert.h>
+#include <string.h>  /* strtok(), strcpy(), strchr() */
+#include <strings.h> /* strcasecmp() */
 
 #include <mpi.h>
 
@@ -273,6 +275,15 @@ ncmpi_create(MPI_Comm    comm,
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
 #ifdef ENABLE_SUBFILING
+    ncp->subfile_mode = 1;
+    if (env_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int  flag;
+        MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "disable") == 0)
+            ncp->subfile_mode = 0;
+    }
     ncp->ncid_sf = -1; /* subfile ncid; init to -1 */
     ncp->nc_num_subfiles = 0; /* num_subfiles; init to 0 */
 #endif
@@ -424,6 +435,15 @@ ncmpi_open(MPI_Comm    comm,
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
 #ifdef ENABLE_SUBFILING
+    ncp->subfile_mode = 1;
+    if (env_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int  flag;
+        MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "disable") == 0)
+            ncp->subfile_mode = 0;
+    }
     ncp->ncid_sf   = -1;
     ncp->nc_num_subfiles = 0;
 #endif
@@ -460,37 +480,41 @@ ncmpi_open(MPI_Comm    comm,
     *ncidp = ncp->nciop->fd;
 
 #ifdef ENABLE_SUBFILING
-    /* check attr for subfiles */
-    err = ncmpi_get_att_int(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
-                            &ncp->nc_num_subfiles);
-    if (err == NC_NOERR && ncp->nc_num_subfiles > 1) {
-        /* ignore error NC_ENOTATT if this attribute is not defined */
-        int nvars;
+    if (ncp->subfile_mode) {
+        /* check attr for subfiles */
+        err = ncmpi_get_att_int(ncp->nciop->fd, NC_GLOBAL, "num_subfiles",
+                                &ncp->nc_num_subfiles);
+        if (err == NC_NOERR && ncp->nc_num_subfiles > 1) {
+            /* ignore error NC_ENOTATT if this attribute is not defined */
+            int nvars;
 
-        err = ncmpi_inq_nvars(ncp->nciop->fd, &nvars);
-        if (status == NC_NOERR) status = err;
+            err = ncmpi_inq_nvars(ncp->nciop->fd, &nvars);
+            if (status == NC_NOERR) status = err;
 
-        for (i=0; i<nvars; i++) {
-            err = ncmpi_get_att_int(ncp->nciop->fd, i, "num_subfiles",
-                                    &ncp->vars.value[i]->num_subfiles);
-            if (err == NC_ENOTATT) continue;
-            if (err != NC_NOERR && status == NC_NOERR) { /* other error */
-                status = err;
-                continue;
+            for (i=0; i<nvars; i++) {
+                err = ncmpi_get_att_int(ncp->nciop->fd, i, "num_subfiles",
+                                        &ncp->vars.value[i]->num_subfiles);
+                if (err == NC_ENOTATT) continue;
+                if (err != NC_NOERR && status == NC_NOERR) { /* other error */
+                    status = err;
+                    continue;
+                }
+
+                if (ncp->vars.value[i]->num_subfiles > 1) {
+                    err = ncmpi_get_att_int(ncp->nciop->fd, i, "ndims_org",
+                                            &ncp->vars.value[i]->ndims_org);
+                    if (status == NC_NOERR) status = err;
+                }
             }
 
-            if (ncp->vars.value[i]->num_subfiles > 1) {
-                err = ncmpi_get_att_int(ncp->nciop->fd, i, "ndims_org",
-                                        &ncp->vars.value[i]->ndims_org);
+            if (ncp->nc_num_subfiles > 1) {
+                err = ncmpii_subfile_open(ncp, &ncp->ncid_sf);
                 if (status == NC_NOERR) status = err;
             }
         }
-
-        if (ncp->nc_num_subfiles > 1) {
-            err = ncmpii_subfile_open(ncp, &ncp->ncid_sf);
-            if (status == NC_NOERR) status = err;
-        }
     }
+    else
+        ncp->nc_num_subfiles = 0;
 #endif
 
     if (env_info != info) MPI_Info_free(&env_info);
@@ -601,6 +625,8 @@ ncmpi_inq_file_info(int       ncid,
     MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
 
 #ifdef ENABLE_SUBFILING
+    sprintf(value, "%d", ncp->nciop->hints.subfile_mode);
+    MPI_Info_set(*info_used, "pnetcdf_subfiling", value);
     sprintf(value, "%d", ncp->nciop->hints.num_subfiles);
     MPI_Info_set(*info_used, "nc_num_subfiles", value);
 #endif

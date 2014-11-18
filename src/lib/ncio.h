@@ -37,6 +37,7 @@ typedef struct {
     MPI_Offset r_align; /* file alignment size for record variable section */
     MPI_Offset header_read_chunk_size;
 #ifdef ENABLE_SUBFILING
+    int subfile_mode;
     int num_subfiles;
 #endif
 } nc_hints;

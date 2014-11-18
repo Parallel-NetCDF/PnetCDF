@@ -102,6 +102,7 @@ void ncmpiio_extract_hints(ncio     *nciop,
     nciop->hints.r_align                = 0;
     nciop->hints.header_read_chunk_size = 0;
 #ifdef ENABLE_SUBFILING
+    nciop->hints.subfile_mode           = 1;
     nciop->hints.num_subfiles           = 0;
 #endif
 
@@ -127,6 +128,11 @@ void ncmpiio_extract_hints(ncio     *nciop,
         if (flag) nciop->hints.header_read_chunk_size = atoll(value);
 
 #ifdef ENABLE_SUBFILING
+	MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+		     value, &flag);
+	if (flag && strcasecmp(value, "disable") == 0)
+            nciop->hints.subfile_mode = 0;
+
 	MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
 		     value, &flag);
 	if (flag) nciop->hints.num_subfiles = atoll(value);
@@ -152,6 +158,8 @@ void ncmpiio_extract_hints(ncio     *nciop,
 	num_sf_env = getenv("NC_NUM_SUBFILES");
 	if (num_sf_env != NULL)
 	    nciop->hints.num_subfiles = atoi(num_sf_env);
+        if (nciop->hints.subfile_mode == 0)
+	    nciop->hints.num_subfiles = 0;
 #endif
     }
 }
