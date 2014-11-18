@@ -891,13 +891,6 @@ ncmpi_get_att(int         ncid,
     return ncmpii_get_att(ncid, varid, name, value, atttype);
 }
 
-/*----< ncmpi_get_att_text() >-----------------------------------------------*/
-int
-ncmpi_get_att_text(int ncid, int varid, const char *name, char *value)
-{
-    return ncmpii_get_att(ncid, varid, name, value, NC_CHAR);
-}
-
 dnl
 dnl GET_ATT_TYPE(fntype, ext_buftype, nc_buftype)
 dnl
@@ -911,6 +904,7 @@ ncmpi_get_att_$1(int ncid, int varid, const char  *name, $2 *value)
 }
 ')dnl
 
+GET_ATT_TYPE(text,      char,               NC_CHAR)
 GET_ATT_TYPE(schar,     signed char,        NC_BYTE)
 GET_ATT_TYPE(uchar,     unsigned char,      NC_UBYTE)
 GET_ATT_TYPE(ubyte,     unsigned char,      NC_UBYTE)
@@ -1248,7 +1242,7 @@ ncmpi_put_att(int         ncid,
 
 /*----< ncmpi_put_att_text() >-----------------------------------------------*/
 int
-ncmpi_put_att_text(int ncid, int varid, const char  *name,
+ncmpi_put_att_text(int ncid, int varid, const char *name,
                    MPI_Offset nelems, const char *value)
 {
     return ncmpii_put_att(ncid, varid, name, NC_CHAR,
@@ -1262,7 +1256,7 @@ define(`PUT_ATT_TYPE',dnl
 `dnl
 /*----< ncmpi_put_att_$1() >-------------------------------------------------*/
 int
-ncmpi_put_att_$1(int ncid, int varid, const char  *name, nc_type xtype,
+ncmpi_put_att_$1(int ncid, int varid, const char *name, nc_type xtype,
                  MPI_Offset nelems, const $2 *value)
 {
     return ncmpii_put_att(ncid, varid, name, xtype, nelems, value, $3);

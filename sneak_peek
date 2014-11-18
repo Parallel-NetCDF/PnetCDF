@@ -7,15 +7,15 @@ This is essentially a placeholder for the next release note ...
 
   o New APIs
     * Nonblocking buffered varn API family.
-      For C,   ncmpi_bput_varn_int()
-      For F77, nfmpi_bput_varn_int()
-      For F90, nf90mpi_bput_varn()
-      For C++, NcmpiVar::bputVarn()
+      For C,   ncmpi_bput_varn_int() etc.
+      For F77, nfmpi_bput_varn_int() etc.
+      For F90, nf90mpi_bput_varn() overloading
+      For C++, NcmpiVar::bputVarn() overloading
     * Nonblocking varn API family.
-      For C,   ncmpi_iput_varn_int() ncmpi_iget_varn_int()
-      For F77, nfmpi_iput_varn_int() nfmpi_iget_varn_int()
-      For F90, nf90mpi_iput_varn()   nf90mpi_iget_varn()
-      For C++, NcmpiVar::iputVarn()  NcmpiVar::igetVarn()
+      For C,   ncmpi_iput_varn_int() ncmpi_iget_varn_int() etc.
+      For F77, nfmpi_iput_varn_int() nfmpi_iget_varn_int() etc.
+      For F90, nf90mpi_iput_varn()   nf90mpi_iget_varn() overloading
+      For C++, NcmpiVar::iputVarn()  NcmpiVar::igetVarn() overloading
     * Blocking vard API family takes an argument of MPI derived data type that
       describes the file access layout, as opposed to vara and vars APIs that
       use start[] and count[].
@@ -26,8 +26,8 @@ This is essentially a placeholder for the next release note ...
     * Collective var1 API family
       For C,   ncmpi_put_var1_all() ncmpi_get_var1_all()
       For F77, nfmpi_put_var1_all() nfmpi_get_var1_all()
-      For F90, API overloading
-      For C++, API overloading
+      For F90, nf90mpi_put_var() overloading
+      For C++, NcmpiVar::putVar_all() overloading
     * ncmpi_inq_buffer_size() returns the size of buffer previously attached
       for use of bput APIs. With ncmpi_inq_buffer_usage() one can calculate
       the space remaining for additional bput requests.

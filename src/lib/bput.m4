@@ -104,8 +104,6 @@ BPUT_VAR_TYPE(float,     float,              MPI_FLOAT)
 BPUT_VAR_TYPE(double,    double,             MPI_DOUBLE)
 BPUT_VAR_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
 BPUT_VAR_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-dnl BPUT_VAR_TYPE(string, char*,             MPI_CHAR)
-dnl string is not yet supported
 
 
 /*----< ncmpi_bput_var1() >---------------------------------------------------*/
@@ -184,8 +182,6 @@ BPUT_VAR1_TYPE(float,     float,              MPI_FLOAT)
 BPUT_VAR1_TYPE(double,    double,             MPI_DOUBLE)
 BPUT_VAR1_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
 BPUT_VAR1_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-dnl BPUT_VAR1_TYPE(string, char*,             MPI_CHAR)
-dnl string is not yet supported
 
 
 /*----< ncmpi_bput_vara() >---------------------------------------------------*/
@@ -264,8 +260,6 @@ BPUT_VARA_TYPE(float,     float,              MPI_FLOAT)
 BPUT_VARA_TYPE(double,    double,             MPI_DOUBLE)
 BPUT_VARA_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
 BPUT_VARA_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-dnl BPUT_VARA_TYPE(string, char*,             MPI_CHAR)
-dnl string is not yet supported
 
 
 /*----< ncmpi_bput_vars() >---------------------------------------------------*/
@@ -346,8 +340,6 @@ BPUT_VARS_TYPE(float,     float,              MPI_FLOAT)
 BPUT_VARS_TYPE(double,    double,             MPI_DOUBLE)
 BPUT_VARS_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
 BPUT_VARS_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-dnl BPUT_VARS_TYPE(string, char*,             MPI_CHAR)
-dnl string is not yet supported
 
 /*----< ncmpi_bput_varm() >---------------------------------------------------*/
 int
@@ -429,8 +421,7 @@ BPUT_VARM_TYPE(float,     float,              MPI_FLOAT)
 BPUT_VARM_TYPE(double,    double,             MPI_DOUBLE)
 BPUT_VARM_TYPE(longlong,  long long,          MPI_LONG_LONG_INT)
 BPUT_VARM_TYPE(ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-dnl BPUT_VARM_TYPE(string, char*,             MPI_CHAR)
-dnl string is not yet supported
+
 
 /*----< ncmpi_buffer_attach() >-----------------------------------------------*/
 int
