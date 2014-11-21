@@ -595,7 +595,7 @@ ncmpii_igetput_varm(NC               *ncp,
                     const MPI_Offset  count[],
                     const MPI_Offset  stride[],
                     const MPI_Offset  imap[],
-                    void             *buf,
+                    void             *buf,      /* user buffer */
                     MPI_Offset        bufcount,
                     MPI_Datatype      buftype,
                     int              *reqid,

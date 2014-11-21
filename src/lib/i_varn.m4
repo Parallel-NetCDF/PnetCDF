@@ -297,7 +297,7 @@ ncmpii_igetput_varn(int               ncid,
                 NCI_Free(cbuf);
             else
                 /* need to free cbuf at wait() */
-                status = ncmpii_set_iput_callback(ncp, *reqid, cbuf);
+                status = ncmpii_set_iput_callback(ncp, *reqid, cbuf, 0);
         }
     }
 
