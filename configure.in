@@ -640,8 +640,8 @@ else
 fi
 
 # check for MPI-2 only functions
-AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address,,)
-AC_CHECK_FUNCS(MPI_Type_create_subarray MPI_Type_create_hvector MPI_Type_create_hindexed MPI_Type_create_struct MPI_Type_create_resized MPI_Type_get_extent,,)
+AC_CHECK_FUNCS(MPI_Info_dup MPI_Info_free MPI_Get_address)
+AC_CHECK_FUNCS(MPI_Type_create_subarray MPI_Type_create_hvector MPI_Type_create_hindexed MPI_Type_create_struct MPI_Type_create_resized MPI_Type_get_extent)
 
 dnl Check for presence of an MPI constant.
 dnl These could be enums, so we have to do compile checks.
@@ -777,7 +777,7 @@ AC_SUBST(INOUT)
 AC_TYPE_SIGNAL
 AC_TYPE_SIZE_T
 AC_TYPE_OFF_T
-AC_CHECK_TYPES([ssize_t, ptrdiff_t])
+AC_CHECK_TYPES([ssize_t, ptrdiff_t, uchar, ushort, uint, longlong, ulonglong])
 
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
@@ -792,6 +792,19 @@ AC_CHECK_SIZEOF(float)
 AC_CHECK_SIZEOF(double)
 AC_CHECK_SIZEOF(long long)
 AC_CHECK_SIZEOF(unsigned long long)
+
+if test "$ac_cv_type_ushort" = yes ; then 
+    AC_CHECK_SIZEOF(ushort) 
+fi 
+if test "$ac_cv_type_uint" = yes ; then 
+    AC_CHECK_SIZEOF(uint) 
+fi 
+if test "$ac_cv_type_longlong" = yes ; then 
+    AC_CHECK_SIZEOF(longlong) 
+fi 
+if test "$ac_cv_type_ulonglong" = yes ; then 
+    AC_CHECK_SIZEOF(ulonglong) 
+fi 
 
 if test "$enable_fortran" = yes ; then
     if test "$cross_compiling" = yes; then
@@ -933,7 +946,7 @@ if test "x${debug}" = xyes; then
       F90FLAGS="${F90FLAGS} -g"
    fi
 
-   dnl remove all -O flags
+   dnl remove all -O and -fast flags
      CFLAGS=`echo   $CFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
    CXXFLAGS=`echo $CXXFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
      FFLAGS=`echo   $FFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
