@@ -21,31 +21,20 @@ define(`TEXTVAR1',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent(in) :: start, count, stride, map
 
      integer                                                            :: nf90mpi_$1_var_text$3
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride, localMap
-     integer                                                            :: numDims, counter
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)       :: localStart, localCount, localStride
  
      ! Set local arguments to default values
-     nf90mpi_$1_var_text$3 = nfmpi_inq_varndims(ncid, varid, numDims)
-     if (nf90mpi_$1_var_text$3 .NE. NF90_NOERR) return
-
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
      localStride(:)  = 1
-     localMap(1)     = 1
-     do counter = 1, numDims - 1
-        localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
 
      if(present(start))  localStart (:size(start) ) = start(:)
      if(present(count))  localCount (:size(count) ) = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
-     if(present(map))  then
-       localMap   (:size(map))    = map(:)
-       nf90mpi_$1_var_text$3 = &
-          nfmpi_$1_varm_text$3(ncid, varid, localStart, localCount, localStride, localMap, values)
+     if(present(map)) then
+       nf90mpi_$1_var_text$3 = nfmpi_$1_varm_text$3(ncid, varid, localStart, localCount, localStride, map, values)
      else
-       nf90mpi_$1_var_text$3 = &
-          nfmpi_$1_vars_text$3(ncid, varid, localStart, localCount, localStride, values)
+       nf90mpi_$1_var_text$3 = nfmpi_$1_vars_text$3(ncid, varid, localStart, localCount, localStride, values)
      end if
    end function nf90mpi_$1_var_text$3
 ')dnl
@@ -80,8 +69,7 @@ define(`TEXTVAR',dnl
      integer                                                            :: numDims, counter
  
      ! Set local arguments to default values
-     nf90mpi_$1_var_$2_text$6 = nfmpi_inq_varndims(ncid, varid, numDims)
-     if (nf90mpi_$1_var_$2_text$6 .NE. NF90_NOERR) return
+     numDims = substr(`$2', `0', `1')
 
      localStart (:         ) = 1
      localCount (:numDims+1) = (/ LEN(values($4)), shape(values) /)
@@ -159,31 +147,20 @@ define(`NBTEXTVAR1',dnl
      integer (kind=MPI_OFFSET_KIND), dimension(:), optional, intent( in) :: start, count, stride, map
 
      integer                                                             :: nf90mpi_$1_var_text
-     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride, localMap
-     integer                                                             :: numDims, counter
+     integer (kind=MPI_OFFSET_KIND), dimension(nf90_max_var_dims)        :: localStart, localCount, localStride
  
      ! Set local arguments to default values
-     nf90mpi_$1_var_text = nfmpi_inq_varndims(ncid, varid, numDims)
-     if (nf90mpi_$1_var_text .NE. NF90_NOERR) return
-
      localStart (:)  = 1
      localCount (1)  = LEN(values); localCount (2:) = 1
      localStride(:)  = 1
-     localMap(1)     = 1
-     do counter = 1, numDims - 1
-        localMap(counter+1) = localMap(counter) * localCount(counter)
-     enddo
           
      if(present(start))  localStart (:size(start) ) = start(:)
      if(present(count))  localCount (:size(count) ) = count(:)
      if(present(stride)) localStride(:size(stride)) = stride(:)
-     if(present(map))  then
-       localMap   (:size(map))    = map(:)
-       nf90mpi_$1_var_text = &
-          nfmpi_$1_varm_text(ncid, varid, localStart, localCount, localStride, localMap, values, req)
+     if(present(map)) then
+       nf90mpi_$1_var_text = nfmpi_$1_varm_text(ncid, varid, localStart, localCount, localStride, map, values, req)
      else
-       nf90mpi_$1_var_text = &
-          nfmpi_$1_vars_text(ncid, varid, localStart, localCount, localStride, values, req)
+       nf90mpi_$1_var_text = nfmpi_$1_vars_text(ncid, varid, localStart, localCount, localStride, values, req)
      end if
    end function nf90mpi_$1_var_text
 ')dnl
@@ -218,8 +195,7 @@ define(`NBTEXTVAR',dnl
      integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
-     nf90mpi_$1_var_$2_text = nfmpi_inq_varndims(ncid, varid, numDims)
-     if (nf90mpi_$1_var_$2_text .NE. NF90_NOERR) return
+     numDims = substr(`$2', `0', `1')
 
      localStart (:         ) = 1
      localCount ( :numDims+1) = (/ LEN(values($4)), shape(values) /)

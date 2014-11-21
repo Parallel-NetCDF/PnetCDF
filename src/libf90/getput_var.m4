@@ -143,9 +143,7 @@ define(`VAR',dnl
      integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
-     nf90mpi_$1_var_$2_$3$8 = nfmpi_inq_varndims(ncid, varid, numDims)
-     if (nf90mpi_$1_var_$2_$3$8 .NE. NF90_NOERR) return
-
+     numDims = substr(`$2', `0', `1')
      localStart (:         ) = 1
      localCount (:numDims  ) = shape(values)
      localCount (numDims+1:) = 1
@@ -417,9 +415,7 @@ define(`NBVAR',dnl
      integer                                                             :: numDims, counter
  
      ! Set local arguments to default values
-     nf90mpi_$1_var_$2_$3 = nfmpi_inq_varndims(ncid, varid, numDims)
-     if (nf90mpi_$1_var_$2_$3 .NE. NF90_NOERR) return
-
+     numDims = substr(`$2', `0', `1')
      localStart (:         ) = 1
      localCount (:numDims  ) = shape(values)
      localCount (numDims+1:) = 1
