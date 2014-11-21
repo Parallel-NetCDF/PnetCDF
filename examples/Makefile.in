@@ -43,6 +43,8 @@ ptest-CXX:      ptest-tutorial
 ptest-F77:      ptest-CXX
 ptest-F90:      ptest-F77
 
+ptests: ptest
+
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)
 $(INSTALLDIRS): 
