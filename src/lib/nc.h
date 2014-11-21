@@ -859,7 +859,8 @@ ncmpii_set_iget_callback(NC *ncp, int reqid, void *tmpBuf, int tmpBufSize,
                          MPI_Datatype userBufType);
 
 extern int
-ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpBuf);
+ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpPutBuf,
+                         int need_swap_back_buf);
 
 extern int
 ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf);
