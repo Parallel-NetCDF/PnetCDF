@@ -35,7 +35,7 @@ testing check verbose_testing: all
 	$(TEST_SEQRUN) ./test_inq_format
 	$(TEST_SEQRUN) ./cdf_type $(TEST_OUTDIR)/testfile.nc
 
-ptest:
+ptest ptests:
 
 include $(srcdir)/../../rules.make
 

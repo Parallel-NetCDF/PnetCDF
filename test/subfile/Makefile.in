@@ -45,9 +45,19 @@ test_subfile: test_subfile.o $(LIBRARY)
 testing check verbose_testing:
 
 TEST_MPIRUN_2 = $(subst NP,2,$(TEST_MPIRUN))
-
 ptest : $(PROGS)
-	$(TEST_MPIRUN_2) ./test_subfile -f $(TEST_OUTDIR)/test_subfile.nc -s 2
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_2) ./$$i -f $(TEST_OUTDIR)/testfile.nc -s 2 \
+	; ) ; done
+
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+ptests: $(PROGS)
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_2) ./$$i -f $(TEST_OUTDIR)/testfile.nc -s 2 \
+	; ) ; done
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_4) ./$$i -f $(TEST_OUTDIR)/testfile.nc -s 2 \
+	; ) ; done
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend

@@ -39,7 +39,7 @@ test_nonblocking: test_nonblocking.o $(LIBRARY)
 
 testing check verbose_testing:
 
-ptest:
+ptest ptests:
 
 include $(srcdir)/../../rules.make
 

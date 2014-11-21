@@ -284,19 +284,8 @@ int ncmpi_diff(char *filename1, char *filename2) {
 }
 
 
-    
-static void
-usage(char *progname)
-{
-    fprintf(stderr, "%s [-v] [-f <file base name>]\n", progname);
-    fprintf(stderr, "   [-f <file base name>] file base name\n" );
-    fprintf(stderr, "   [-v] Verbose mode\n" );
-}
-
 int main(int argc, char **argv)
 {
-    extern char *optarg;
-    int c;
     int i, j, array_of_gsizes[3];
     int nprocs, **buf, mynod;
     MPI_Offset bufcount;
@@ -323,25 +312,20 @@ int main(int argc, char **argv)
                       3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4};
 */
 
-    MPI_Init(&argc,&argv);
+    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     n_fails = 0;
     verbose = 0;
-    strcpy(basename, "testfile");
-    while ((c = getopt(argc, argv, "vf:")) != EOF)
-        switch(c) {
-            case 'v':               /* verbose mode */
-                verbose = 1;
-                break;
-            case 'f':               /* file base name */
-                strcpy(basename, optarg);
-                break;
-            case '?':
-                usage(argv[0]);
-                return 1;
-        }
+    if (argc > 2) {
+        if (!mynod) printf("Usage: %s [file base name]\n",argv[0]);
+        MPI_Finalize();
+        return 0;
+    }
+    strcpy(basename, "testfile.nc");
+    if (argc == 2) strcpy(basename, argv[1]);
+    MPI_Bcast(basename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     length = 2;
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;

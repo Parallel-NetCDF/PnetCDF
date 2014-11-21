@@ -50,6 +50,18 @@ ptest: $(PROGS)
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
+TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
+TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
+ptests: $(PROGS)
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+	@for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
 include $(srcdir)/../../rules.make
 
 $(LIBRARY): ;

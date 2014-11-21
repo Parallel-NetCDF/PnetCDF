@@ -78,6 +78,14 @@ $(PTEST_DIRS):
 ptest-examples: ptest-test
 ptest-benchmarks: ptest-examples
 
+PTESTS_DIRS = $(PTEST_SUBDIRS:%=ptests-%)
+ptests: tests $(PTESTS_DIRS)
+$(PTESTS_DIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:ptests-%=%) ptests
+# make sure ptests runs one directory after another
+ptests-examples: ptests-test
+ptests-benchmarks: ptests-examples
+
 INSTALLDIRS = $(INSTALL_SUBDIRS:%=install-%)
 install: $(INSTALLDIRS)
 $(INSTALLDIRS): 

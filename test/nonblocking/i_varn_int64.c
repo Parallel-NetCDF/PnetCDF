@@ -222,7 +222,7 @@ int main(int argc, char** argv)
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-    if (nprocs != 4 && rank == 0)
+    if (verbose && nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
 
     /* create a new file for writing ----------------------------------------*/

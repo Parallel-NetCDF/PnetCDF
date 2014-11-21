@@ -34,6 +34,8 @@ $(PTEST_DIRS):
 # make sure ptest runs one directory after another
 ptest-FLASH-IO: ptest-C
 
+ptests: ptest
+
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)
 $(INSTALLDIRS): 

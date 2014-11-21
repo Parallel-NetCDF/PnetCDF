@@ -65,7 +65,7 @@ fixedform: fixedform.o
 
 testing check verbose_testing:
 
-ptest:
+ptest ptests:
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend

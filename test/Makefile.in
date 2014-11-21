@@ -73,6 +73,11 @@ ptest: $(PTEST_DIRS)
 $(PTEST_DIRS):
 	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
 
+PTESTS_DIRS = $(SUBDIRS:%=ptests-%)
+ptests: $(PTESTS_DIRS)
+$(PTESTS_DIRS):
+	$(MAKE) $(MFLAGS) -C $(@:ptests-%=%) ptests
+
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)
 $(INSTALLDIRS): 

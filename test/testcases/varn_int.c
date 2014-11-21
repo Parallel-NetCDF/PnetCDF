@@ -55,13 +55,17 @@
 
 int check_contents_for_fail(int *buffer)
 {
-    int i;
+    int i, nprocs;
     int expected[NY*NX] = {3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
                            0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
                            1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
                            0, 0, 0, 2, 1, 1, 1, 3, 3, 3};
+
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
     /* check if the contents of buf are expected */
     for (i=0; i<NY*NX; i++) {
+        if (expected[i] >= nprocs) continue;
         if (buffer[i] != expected[i]) {
             printf("Expected read buf[%d]=%d, but got %d\n",
                    i,expected[i],buffer[i]);
@@ -83,7 +87,7 @@ void permute(MPI_Offset a[NDIMS], MPI_Offset b[NDIMS])
 int main(int argc, char** argv)
 {
     char filename[128];
-    int i, j, rank, nprocs, err, nfails=0;
+    int i, j, rank, nprocs, err, verbose=0, nfails=0;
     int ncid, cmode, varid[3], dimid[2], num_reqs, *buffer, *r_buffer;
     MPI_Offset w_len, **starts, **counts;
 
@@ -100,7 +104,7 @@ int main(int argc, char** argv)
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-    if (nprocs != 4 && rank == 0)
+    if (verbose && nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
 
     /* create a new file for writing ----------------------------------------*/
@@ -217,7 +221,7 @@ int main(int argc, char** argv)
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);
     ERR
-    if (nprocs >= 4) nfails += check_contents_for_fail(r_buffer);
+    nfails += check_contents_for_fail(r_buffer);
 
     /* permute write order */
     if (num_reqs > 0) {
@@ -233,7 +237,7 @@ int main(int argc, char** argv)
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
     ERR
-    if (nprocs >= 4) nfails += check_contents_for_fail(r_buffer);
+    nfails += check_contents_for_fail(r_buffer);
 
     /* read back using get_varn API and check contents */
     for (i=0; i<w_len; i++) buffer[i] = -1;

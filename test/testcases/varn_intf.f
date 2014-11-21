@@ -92,21 +92,21 @@
           argc = IARGC()
           if (argc .GT. 2) then
               if (rank .EQ. 0) print*,'Usage: ',trim(cmd),
-     +                         ' [-q] [filename]'
+     +                         ' [-v] [filename]'
               goto 999
           endif
-          verbose  = .TRUE.
+          verbose  = .FALSE.
           filename = "testfile.nc"
           nerrs    = 0
           call getarg(1, quiet_mode)
-          if (quiet_mode(1:2) .EQ. '-q') then
-              verbose = .FALSE.
+          if (quiet_mode(1:2) .EQ. '-v') then
+              verbose = .TRUE.
               if (argc .EQ. 2) call getarg(2, filename)
           else
               if (argc .EQ. 1) call getarg(1, filename)
           endif
 
-          if (nprocs .NE. 4 .AND. rank .EQ. 0 .AND. verbose)
+          if (verbose .AND. nprocs .NE. 4 .AND. rank .EQ. 0)
      +        print*,'Warning: ',trim(cmd),' is intended to run on ',
      +               '4 processes'
 

@@ -33,7 +33,7 @@ testutils.o: testutils.c testutils.h
 
 testing check verbose_testing:
 
-ptest:
+ptest ptests:
 
 include $(srcdir)/../../rules.make
 
