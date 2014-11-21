@@ -1063,8 +1063,14 @@ ncmpii_merge_requests(NC          *ncp,
         seg_ptr += nseg; /* append the list to the end of segs array */
     }
 
-    /* sort the off-len array, segs[], in an increasing order */
-    qsort(*segs, *nsegs, sizeof(off_len), off_compare);
+    /* check if (*segs)[].off are in an increasing order */
+    for (i=1; i<*nsegs; i++) {
+        if ((*segs)[i-1].off > (*segs)[i].off)
+            break;
+    }
+    if (i < *nsegs) /* not in an increasing order */
+        /* sort the off-len array, segs[], in an increasing order */
+        qsort(*segs, *nsegs, sizeof(off_len), off_compare);
 
     /* merge the overlapped requests, skip the overlapped regions for those
        requests with higher j indices (i.e. requests with lower j indices
@@ -1660,9 +1666,17 @@ ncmpii_wait_getput(NC     *ncp,
         return status;
     }
 
-    /* sort reqs[] based on reqs[].offset_start */
-    fcnt = (int (*)(const void *, const void *))req_compare;
-    qsort(reqs, num_reqs, sizeof(NC_req), fcnt);
+    /* check if reqs[].offset_start are in an increasing order */
+    for (i=1; i<num_reqs; i++) {
+        if (reqs[i-1].offset_start > reqs[i].offset_start) {
+            break;
+        }
+    }
+    if (i < num_reqs) { /* not in an increasing order */
+        /* sort reqs[] based on reqs[].offset_start */
+        fcnt = (int (*)(const void *, const void *))req_compare;
+        qsort(reqs, num_reqs, sizeof(NC_req), fcnt);
+    }
 
     /* check for any interleaved rquests */
     for (i=1; i<num_reqs; i++) {
@@ -1949,8 +1963,11 @@ int ncmpii_set_iget_callback(NC           *ncp,
 /*----< ncmpii_set_iput_callback() >-----------------------------------------*/
 int ncmpii_set_iput_callback(NC   *ncp,
                              int   reqid,
-                             void *tmpBuf)
+                             void *tmpPutBuf,
+                             int   need_swap_back_buf)
+
 {
+    int found_req_id=NC_REQ_NULL;
     NC_req *cur_req;
 
     if (reqid == NC_REQ_NULL) return NC_NOERR;
@@ -1959,15 +1976,20 @@ int ncmpii_set_iput_callback(NC   *ncp,
 
     cur_req = ncp->head;
     while (cur_req != NULL) {
-        /* find the first node with reqid, there may be more than one node
-         * with the same ID */
+        /* there may be more than one node with the same ID */
         if (cur_req->id == reqid) {
-            cur_req->tmpBuf = tmpBuf;
-            break;
+            /* set tmpBuf for the first node (as it needs to be freed once) */
+            if (found_req_id == NC_REQ_NULL) cur_req->tmpBuf = tmpPutBuf;
+            found_req_id = reqid;
+
+            /* if tmpBuf is allocated internally, it needs not swap back */
+            cur_req->need_swap_back_buf = need_swap_back_buf;
         }
+        if (found_req_id != NC_REQ_NULL && cur_req->id != found_req_id)
+            break; /* requests with same ID are in consecutive linked nodes */
         cur_req = cur_req->next;
     }
-    if (cur_req == NULL) return NC_EINVAL_REQUEST;
+    if (found_req_id == NC_REQ_NULL) return NC_EINVAL_REQUEST;
 
     return NC_NOERR;
 }
