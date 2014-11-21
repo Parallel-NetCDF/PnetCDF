@@ -41,10 +41,10 @@
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF90_NOERR) then
-              write(6,*) trim(message), trim(nf90mpi_strerror(err))
+              write(6,*) message, trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 varn_real.f90 for varn API '
               write(*,"(A67,A)") msg,'------ failed'
-              call MPI_Abort(MPI_COMM_WORLD, -1, err)
+              ! call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
 
@@ -57,9 +57,10 @@
           PARAMETER(NDIMS=2)
 
           character(LEN=128) filename, cmd, msg
-          integer rank, nprocs, err, num_reqs, oneReq, argc, iargc
+          integer rank, nprocs, err, num_reqs, argc, iargc
           integer ncid, cmode, varid, dimid(2), y, x, i, j, nerrs
-          real, allocatable :: buffer(:)
+          integer, allocatable :: req_lens(:)
+          real, allocatable :: buffer(:), buffer2D(:,:)
           real oneReal
           integer(kind=MPI_OFFSET_KIND) NY, NX
           integer(kind=MPI_OFFSET_KIND) w_len, w_req_len
@@ -80,21 +81,21 @@
           call getarg(0, cmd)
           argc = IARGC()
           if (argc .GT. 2) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [-q] [filename]'
+              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [-v] [filename]'
               goto 999
           endif
-          verbose  = .TRUE.
+          verbose  = .FALSE.
           filename = "testfile.nc"
           nerrs    = 0
           call getarg(1, quiet_mode)
-          if (quiet_mode(1:2) .EQ. '-q') then
-              verbose = .FALSE.
+          if (quiet_mode(1:2) .EQ. '-v') then
+              verbose = .TRUE.
               if (argc .EQ. 2) call getarg(2, filename)
           else
               if (argc .EQ. 1) call getarg(1, filename)
           endif
 
-          if (nprocs .NE. 4 .AND. rank .EQ. 0 .AND. verbose) &
+          if (verbose .AND. nprocs .NE. 4 .AND. rank .EQ. 0) &
               print*,'Warning: ',trim(cmd),' is intended to run on ', &
                      '4 processes'
 
@@ -127,111 +128,71 @@
           endif
 
           ! Note that in Fortran, array indices start with 1
-          ALLOCATE(starts(NDIMS, num_reqs))
+          ALLOCATE(starts(NDIMS, num_reqs+1))
           ALLOCATE(counts(NDIMS, num_reqs))
 
           ! assign arbitrary starts
           y=2
           x=1
           if (rank .EQ. 0) then
-              starts(y, 1) = 1
-              starts(x, 1) = 6
-              starts(y, 2) = 2
-              starts(x, 2) = 1
-              starts(y, 3) = 3
-              starts(x, 3) = 7
-              starts(y, 4) = 4
-              starts(x, 4) = 1
-              starts(y, 5) = 1
-              starts(x, 5) = 7
-              starts(y, 6) = 3
-              starts(x, 6) = 8
-              starts(y, 7) = 4
-              starts(x, 7) = 2
-              starts(y, 8) = 4
-              starts(x, 8) = 3
+              starts(y, 1) = 1; starts(x, 1) = 6
+              starts(y, 2) = 2; starts(x, 2) = 1
+              starts(y, 3) = 3; starts(x, 3) = 7
+              starts(y, 4) = 4; starts(x, 4) = 1
+              starts(y, 5) = 1; starts(x, 5) = 7
+              starts(y, 6) = 3; starts(x, 6) = 8
+              starts(y, 7) = 4; starts(x, 7) = 2
+              starts(y, 8) = 4; starts(x, 8) = 3
               ! rank 0 is writing the following locations: ("-" means skip)
               !   -  -  -  -  -  0  0  -  -  - 
               !   0  -  -  -  -  -  -  -  -  - 
               !   -  -  -  -  -  -  0  0  -  - 
               !   0  0  0  -  -  -  -  -  -  - 
           elseif (rank .EQ. 1) then
-              starts(y,  1) = 1
-              starts(x,  1) = 4
-              starts(y,  2) = 1
-              starts(x,  2) = 9
-              starts(y,  3) = 2
-              starts(x,  3) = 6
-              starts(y,  4) = 3
-              starts(x,  4) = 1
-              starts(y,  5) = 3
-              starts(x,  5) = 9
-              starts(y,  6) = 4
-              starts(x,  6) = 5
-              starts(y,  7) = 1
-              starts(x,  7) = 5
-              starts(y,  8) = 1
-              starts(x,  8) = 10
-              starts(y,  9) = 2
-              starts(x,  9) = 7
-              starts(y, 10) = 3
-              starts(x, 10) = 2
-              starts(y, 11) = 3
-              starts(x, 11) = 10
-              starts(y, 12) = 4
-              starts(x, 12) = 6
-              starts(y, 13) = 4
-              starts(x, 13) = 7
+              starts(y,  1) = 1; starts(x,  1) = 4
+              starts(y,  2) = 1; starts(x,  2) = 9
+              starts(y,  3) = 2; starts(x,  3) = 6
+              starts(y,  4) = 3; starts(x,  4) = 1
+              starts(y,  5) = 3; starts(x,  5) = 9
+              starts(y,  6) = 4; starts(x,  6) = 5
+              starts(y,  7) = 1; starts(x,  7) = 5
+              starts(y,  8) = 1; starts(x,  8) = 10
+              starts(y,  9) = 2; starts(x,  9) = 7
+              starts(y, 10) = 3; starts(x, 10) = 2
+              starts(y, 11) = 3; starts(x, 11) = 10
+              starts(y, 12) = 4; starts(x, 12) = 6
+              starts(y, 13) = 4; starts(x, 13) = 7
               ! rank 1 is writing the following locations: ("-" means skip)
               !   -  -  -  1  1  -  -  -  1  1 
               !   -  -  -  -  -  1  1  -  -  - 
               !   1  1  -  -  -  -  -  -  1  1 
               !   -  -  -  -  1  1  1  -  -  - 
           elseif (rank .EQ. 2) then
-              starts(y, 1) = 1
-              starts(x, 1) = 8
-              starts(y, 2) = 2
-              starts(x, 2) = 2
-              starts(y, 3) = 2
-              starts(x, 3) = 8
-              starts(y, 4) = 3
-              starts(x, 4) = 3
-              starts(y, 5) = 4
-              starts(x, 5) = 4
-              starts(y, 6) = 2
-              starts(x, 6) = 3
-              starts(y, 7) = 2
-              starts(x, 7) = 9
-              starts(y, 8) = 2
-              starts(x, 8) = 4
-              starts(y, 9) = 2
-              starts(x, 9) = 10
+              starts(y, 1) = 1; starts(x, 1) = 8
+              starts(y, 2) = 2; starts(x, 2) = 2
+              starts(y, 3) = 2; starts(x, 3) = 8
+              starts(y, 4) = 3; starts(x, 4) = 3
+              starts(y, 5) = 4; starts(x, 5) = 4
+              starts(y, 6) = 2; starts(x, 6) = 3
+              starts(y, 7) = 2; starts(x, 7) = 9
+              starts(y, 8) = 2; starts(x, 8) = 4
+              starts(y, 9) = 2; starts(x, 9) = 10
               ! rank 2 is writing the following locations: ("-" means skip)
               !   -  -  -  -  -  -  -  2  -  - 
               !   -  2  2  2  -  -  -  2  2  2 
               !   -  -  2  -  -  -  -  -  -  - 
               !   -  -  -  2  -  -  -  -  -  - 
           elseif (rank .EQ. 3) then
-              starts(y,  1) = 1
-              starts(x,  1) = 1
-              starts(y,  2) = 2
-              starts(x,  2) = 5
-              starts(y,  3) = 3
-              starts(x,  3) = 4
-              starts(y,  4) = 4
-              starts(x,  4) = 8
-              starts(y,  5) = 1
-              starts(x,  5) = 2
-              starts(y,  6) = 3
-              starts(x,  6) = 5
-              starts(y,  7) = 4
-              starts(x,  7) = 9
-              starts(y,  8) = 1
-              starts(x,  8) = 3
-              starts(y,  9) = 3
-              starts(x,  9) = 6
-              starts(y, 10) = 4
-              starts(x, 10) = 10
+              starts(y,  1) = 1; starts(x,  1) = 1
+              starts(y,  2) = 2; starts(x,  2) = 5
+              starts(y,  3) = 3; starts(x,  3) = 4
+              starts(y,  4) = 4; starts(x,  4) = 8
+              starts(y,  5) = 1; starts(x,  5) = 2
+              starts(y,  6) = 3; starts(x,  6) = 5
+              starts(y,  7) = 4; starts(x,  7) = 9
+              starts(y,  8) = 1; starts(x,  8) = 3
+              starts(y,  9) = 3; starts(x,  9) = 6
+              starts(y, 10) = 4; starts(x, 10) = 10
               ! rank 3 is writing the following locations: ("-" means skip)
               !   3  3  3  -  -  -  -  -  -  - 
               !   -  -  -  -  3  -  -  -  -  - 
@@ -240,6 +201,8 @@
           endif
           counts = 1
 
+          ALLOCATE(req_lens(num_reqs))
+
           ! allocate I/O buffer and initialize its contents
           w_len = 0
           do i=1, num_reqs
@@ -247,33 +210,58 @@
              do j=1, NDIMS
                 w_req_len = w_req_len * counts(j, i)
              enddo
-             w_len = w_len + w_req_len;
+             req_lens(i) = w_req_len
+             w_len = w_len + w_req_len
           enddo
           ALLOCATE(buffer(w_len))
+          ALLOCATE(buffer2D(3, w_len/3+1))
+          ! Note on 2D buffer, put_varn will fill in the first w_len
+          ! elements in buffer2D, no matter the shape of buffer2D is
 
-          buffer = rank
+          buffer   = rank
+          buffer2D = rank
 
-          ! set the buffer pointers to different offsets to the I/O buffer
+          ! varn write a 2D buffer in memory to a 2D array in file
+          err = nf90mpi_put_varn_all(ncid, varid, buffer2D, num_reqs, &
+                                     starts, counts)
+          call check(err, 'In nf90mpi_put_varn_all: ')
+
+          ! varn write a 1D buffer in memory to a 2D array in file
           err = nf90mpi_put_varn_all(ncid, varid, buffer, num_reqs, &
                                      starts, counts)
           call check(err, 'In nf90mpi_put_varn_all: ')
 
-          ! read one element back and check the content
-          oneReal = -1.0
-          oneReq  = 1
-          if (num_reqs .EQ. 0) oneReq = 0
-          err = nf90mpi_get_varn_all(ncid, varid, oneReal, oneReq, &
-                                     starts, counts)
-          call check(err, 'In nf90mpi_get_varn_all: ')
+          ! read a scalar back and check the content
+          oneReal = -1.0  ! a scalar
+          if (rank .GE. 4) starts = 1_8
+          err = nf90mpi_get_varn_all(ncid, varid, oneReal, starts)
+          call check(err, ' 22 In nf90mpi_get_varn_all: ')
 
- 996      format(A,I2,A,F4.1)
-          if (oneReq .GT. 0 .AND. oneReal .NE. rank) then
-              print 996, "Error: expecting OneReal=",rank, &
+ 995      format(A,I2,A,F4.1)
+          if (rank .LT. 4 .AND. oneReal .NE. rank) then
+              print 995, "Error: expecting OneReal=",rank, &
                          " but got", oneReal
               nerrs = nerrs + 1
           endif
 
-          ! read multiple elements back and check the contents
+          ! varn read a 2D array in file to a 2D buffer in memory
+          buffer2D = -1.0;
+          err = nf90mpi_get_varn_all(ncid, varid, buffer2D, num_reqs, &
+                                     starts, counts)
+          call check(err, 'In nf90mpi_get_varn_all: ')
+
+ 996      format(A,I2,A,I2,A,I2,A,F4.1)
+          do i=1, w_len/3
+             do j=1, 3
+                if (buffer2D(j,i) .NE. rank) then
+                    print 996, "Error: expecting buffer2D(",j,",",i,")=", &
+                               rank, " but got", buffer2D(j,i)
+                    nerrs = nerrs + 1
+                endif
+             enddo
+          enddo
+
+          ! varn read a 2D array in file to a 1D buffer in memory
           buffer = -1.0;
           err = nf90mpi_get_varn_all(ncid, varid, buffer, num_reqs, &
                                      starts, counts)
@@ -291,7 +279,9 @@
           err = nf90mpi_close(ncid);
           call check(err, 'In nf90mpi_close: ')
 
+          DEALLOCATE(req_lens);
           DEALLOCATE(buffer);
+          DEALLOCATE(buffer2D);
           DEALLOCATE(starts);
           DEALLOCATE(counts);
 
