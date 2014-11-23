@@ -33,6 +33,7 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            one_record.c \
            inq_recsize.c \
            test_vard.c \
+           varn_contig.c \
            redef1.c
 
 F77_SRCS = bigrecords.f \
@@ -98,6 +99,9 @@ inq_num_vars: inq_num_vars.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 varn_int: varn_int.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+varn_contig: varn_contig.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 modes: modes.o $(LIBRARY)

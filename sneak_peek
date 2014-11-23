@@ -94,6 +94,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * testcases/varn_contig.c test the case when the fileview is actually a
+      contiguous chunk. PnetCDF should be able to merge all.
     * nonblocking/bput_varn_uint.c test nonblocking bput_varn APIs
     * nonblocking/i_varn_int64.c test nonblocking iput_varn and iget_varn APIs
     * test/testcases/test_vard.c test/testcases/test_vardf.f

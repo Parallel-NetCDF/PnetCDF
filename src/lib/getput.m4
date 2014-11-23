@@ -711,10 +711,10 @@ ncmpii_getput_vars(NC               *ncp,
     }
     else {
         /* this request is non-contiguous in file, create the mpi file type */
-        int blocklen;
+        int blocklen, is_filetype_contig;
         err = ncmpii_vars_create_filetype(ncp, varp, start, count, stride,
                                           rw_flag, &blocklen, &offset,
-                                          &filetype);
+                                          &filetype, &is_filetype_contig);
         if (err != NC_NOERR) /* API error */
             goto err_check;
     }

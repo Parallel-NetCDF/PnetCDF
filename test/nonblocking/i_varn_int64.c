@@ -173,7 +173,7 @@ void permute(MPI_Offset *a, MPI_Offset *b)
 int main(int argc, char** argv)
 {
     char filename[128];
-    int i, j, k, rank, nprocs, verbose=0, err, nfails=0;
+    int i, j, k, rank, nprocs, verbose=0, err, nfails=0, bufsize=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     long long *buffer[4], *cbuffer[4];
     int num_segs[4] = {4, 6, 5, 4};
@@ -314,7 +314,6 @@ int main(int argc, char** argv)
     nfails += check_contents_for_fail(ncid, varid);
 
     /* try with buffer being a single contiguous space */
-    int bufsize=0;
     for (i=0; i<nreqs; i++) bufsize += req_lens[i];
     if (bufsize>0) cbuffer[0] = (long long*) malloc(bufsize * sizeof(long long));
     for (i=1; i<nreqs; i++) cbuffer[i] = cbuffer[i-1] + req_lens[i-1];
