@@ -180,7 +180,7 @@ ncmpiio_create(MPI_Comm     comm,
     if (ncp->safe_mode) {
         int isPathValid=1;
         if (path == NULL || *path == 0) isPathValid = 0;
-        MPI_Allreduce(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
+        TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
         if (err == 0) return NC_EINVAL;
     }
 
@@ -209,7 +209,7 @@ ncmpiio_create(MPI_Comm     comm,
             if (access(filename, F_OK) == 0) file_exist = 1;
             else                             file_exist = 0;
         }
-        MPI_Bcast(&file_exist, 1, MPI_INT, 0, comm);
+        TRACE_COMM(MPI_Bcast)(&file_exist, 1, MPI_INT, 0, comm);
         if (file_exist) return NC_EEXIST;
 #else
         /* use MPI_MODE_EXCL mode in MPI_File_open and check returned error */
@@ -229,7 +229,7 @@ ncmpiio_create(MPI_Comm     comm,
                 err = NC_NOERR;
 #else
             err = NC_NOERR;
-            mpireturn = MPI_File_delete((char*)path, MPI_INFO_NULL);
+            TRACE_IO(MPI_File_delete)((char*)path, MPI_INFO_NULL);
             if (mpireturn != MPI_SUCCESS) {
                 int errorclass;
                 MPI_Error_class(mpireturn, &errorclass);
@@ -240,7 +240,8 @@ ncmpiio_create(MPI_Comm     comm,
             }
 #endif
         }
-        MPI_Bcast(&err, 1, MPI_INT, 0, comm);
+        /* all processes must wait here util file deletion is completed */
+        TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, comm);
         if (err != NC_NOERR) return err;
     }
 
@@ -257,8 +258,8 @@ ncmpiio_create(MPI_Comm     comm,
     /* extract MPI-IO hints */
     ncmpiio_extract_hints(nciop, info);
 
-    mpireturn = MPI_File_open(comm, (char *)path, mpiomode,
-                              info, &nciop->collective_fh);
+    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode,
+                            info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
 #ifndef HAVE_ACCESS
@@ -272,7 +273,7 @@ ncmpiio_create(MPI_Comm     comm,
              * errno to see if it set to EEXIST. Note usually rank 0 makes the
              * file open call and can be the only one having errno set.
              */
-            MPI_Bcast(&errno, 1, MPI_INT, 0, comm);
+            TRACE_COMM(MPI_Bcast)(&errno, 1, MPI_INT, 0, comm);
             if (errno == EEXIST) return NC_EEXIST;
         }
 #endif
@@ -327,7 +328,7 @@ ncmpiio_open(MPI_Comm     comm,
     if (ncp->safe_mode) {
         int isPathValid=1, err;
         if (path == NULL || *path == 0) isPathValid = 0;
-        MPI_Allreduce(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
+        TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
         if (err == 0) return NC_EINVAL;
     }
 
@@ -341,8 +342,8 @@ ncmpiio_open(MPI_Comm     comm,
     /* extract MPI-IO hints */
     ncmpiio_extract_hints(nciop, info);
 
-    mpireturn = MPI_File_open(comm, (char *)path, mpiomode,
-                              info, &nciop->collective_fh);
+    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode,
+                            info, &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
         return ncmpii_handle_error(mpireturn, "MPI_File_open");
@@ -377,16 +378,16 @@ ncmpiio_sync(ncio *nciop) {
     int mpireturn;
 
     if (NC_independentFhOpened(nciop)) {
-        mpireturn = MPI_File_sync(nciop->independent_fh);
+        TRACE_IO(MPI_File_sync)(nciop->independent_fh);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_sync");
     }
     if (NC_collectiveFhOpened(nciop)) {
-        mpireturn = MPI_File_sync(nciop->collective_fh);
+        TRACE_IO(MPI_File_sync)(nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_sync");
     }
-    MPI_Barrier(nciop->comm);
+    TRACE_COMM(MPI_Barrier)(nciop->comm);
 #endif
     return NC_NOERR;
 }
@@ -400,20 +401,20 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
         return NC_EINVAL;
 
     if (NC_independentFhOpened(nciop)) {
-        mpireturn = MPI_File_close(&(nciop->independent_fh));
+        TRACE_IO(MPI_File_close)(&(nciop->independent_fh));
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_close");
     }
 
     if (NC_collectiveFhOpened(nciop)) {
-        mpireturn = MPI_File_close(&(nciop->collective_fh));
+        TRACE_IO(MPI_File_close)(&(nciop->collective_fh));
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_close");
     }
     IDalloc[*((int *)&nciop->fd)] = 0;
 
     if (doUnlink) {
-        mpireturn = MPI_File_delete((char *)nciop->path, nciop->mpiinfo);
+        TRACE_IO(MPI_File_delete)((char *)nciop->path, nciop->mpiinfo);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_delete");
     }
@@ -464,7 +465,7 @@ ncmpiio_move(ncio *const nciop,
 
         if (rank >= grpsize) bufcount = 0;
         /* read the original data @ from+movesize+rank*bufsize */
-        mpireturn = MPI_File_read_at_all(nciop->collective_fh,
+        TRACE_IO(MPI_File_read_at_all)(nciop->collective_fh,
                                          from+movesize+rank*bufsize,
                                          buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
@@ -479,15 +480,15 @@ ncmpiio_move(ncio *const nciop,
 
         /* MPI_Barrier(nciop->comm); */
         /* important, in case new region overlaps old region */
-        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, nciop->comm);
+        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, nciop->comm);
         status = min_st;
         if (status != NC_NOERR) break;
 
         if (rank >= grpsize) bufcount = 0;
         /* write to new location @ to+movesize+rank*bufsize */
-        mpireturn = MPI_File_write_at_all(nciop->collective_fh,
-                                          to+movesize+rank*bufsize,
-                                          buf, bufcount, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_write_at_all)(nciop->collective_fh,
+                                        to+movesize+rank*bufsize,
+                                        buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
 	    ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             status = NC_EWRITE;
@@ -497,7 +498,7 @@ ncmpiio_move(ncio *const nciop,
             MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             nciop->put_size += put_size;
         }
-        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, nciop->comm);
+        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, nciop->comm);
         status = min_st;
         if (status != NC_NOERR) break;
     }

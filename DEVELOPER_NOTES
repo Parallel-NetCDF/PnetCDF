@@ -242,3 +242,20 @@ Escape character is !
   for example ncmpi__enddef will show underscore "enddef", so add ! before the
   double underscores to disable the formating. eg. ncmpi!__enddef
 
+=====================================================
+Trace MPI communication calls and I/O calls
+=====================================================
+Add the following C define macros to the end of DEFS variable in macros.make
+to enable tracing.
+    -DPNETCDF_TRACE_MPI_COMM
+    -DPNETCDF_TRACE_MPI_IO
+
+Example outputs from stdout:
+TRACE-MPI-COMM: FILE mpincio.c FUNC ncmpiio_create() LINE 244 calling MPI_Bcast()
+TRACE-MPI-IO:   FILE mpincio.c FUNC ncmpiio_create() LINE 261 calling MPI_File_open()
+TRACE-MPI-COMM: FILE nc.c FUNC NC_begins() LINE 429 calling MPI_Allreduce()
+TRACE-MPI-COMM: FILE nc.c FUNC NC_check_header() LINE 111 calling MPI_Bcast()
+TRACE-MPI-COMM: FILE nc.c FUNC NC_check_header() LINE 119 calling MPI_Bcast()
+TRACE-MPI-COMM: FILE nc.c FUNC NC_check_header() LINE 130 calling MPI_Allreduce()
+TRACE-MPI-IO:   FILE nc.c FUNC write_NC() LINE 834 calling MPI_File_write_at()
+

@@ -898,9 +898,9 @@ hdr_fetch(bufferinfo *gbp) {
         MPI_Status mpistatus;
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
-        mpireturn = MPI_File_read_at(gbp->nciop->collective_fh,
-                                     (gbp->offset)-slack, gbp->base,
-                                     gbp->size, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_read_at)(gbp->nciop->collective_fh,
+                                   (gbp->offset)-slack, gbp->base,
+                                   gbp->size, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_File_read_at");
             err = NC_EREAD;
@@ -915,12 +915,11 @@ hdr_fetch(bufferinfo *gbp) {
     gbp->offset += (gbp->size - slack);
 
     if (gbp->safe_mode == 1) {
-        MPI_Bcast(&err, 1, MPI_INT, 0, gbp->nciop->comm);
-        if (err != NC_NOERR)
-            return err;
+        TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, gbp->nciop->comm);
+        if (err != NC_NOERR) return err;
     }
 
-    MPI_Bcast(gbp->base, gbp->size, MPI_BYTE, 0, gbp->nciop->comm);
+    TRACE_COMM(MPI_Bcast)(gbp->base, gbp->size, MPI_BYTE, 0, gbp->nciop->comm);
 
     return err;
 }
@@ -2304,7 +2303,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 /* this function is collective */
 int ncmpii_write_header(NC *ncp)
 {
-    int rank, status=NC_NOERR;
+    int rank, status=NC_NOERR, mpireturn;
 
     /* Write the entire header to the file. Note that we cannot just
      * change the variable name in the file header, as if the file space
@@ -2313,22 +2312,21 @@ int ncmpii_write_header(NC *ncp)
      */
     if (ncmpii_dset_has_recvars(ncp)) { /* sync numrecs */
         MPI_Offset numrecs;
-        MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET,
-                      MPI_MAX, ncp->nciop->comm);
+        TRACE_COMM(MPI_Allreduce)(&ncp->numrecs, &numrecs, 1, MPI_OFFSET,
+                                  MPI_MAX, ncp->nciop->comm);
         ncp->numrecs = numrecs;
     }
 
     MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0) {
-        int mpireturn;
         MPI_Status mpistatus;
         void *buf = NCI_Malloc(ncp->xsz); /* header's write buffer */
 
         /* copy header to buffer */
         status = ncmpii_hdr_put_NC(ncp, buf);
 
-        mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf,
-                                      ncp->xsz, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
+                                    ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             status = NC_EWRITE;
