@@ -22,19 +22,17 @@ int min_ndims = 1;
 int delegate_scheme = BALANCED; /* default: any proc can be delegate proc */
 static int is_partitioned = 0;
 
-#define check_err(fn_name_)                                                   \
-    do {                                                                      \
-        if (err != MPI_SUCCESS) {                                             \
-            errs++;                                                           \
-            if (DEBUG) {                                                      \
-                int len_;                                                     \
-                char err_str_[MPI_MAX_ERROR_STRING];                          \
-                MPI_Error_string(err, err_str_, &len_);                       \
-                fprintf(stderr, #fn_name_ " failed at line %d, err=%d: %s\n", \
-                        __LINE__, err, err_str_);                             \
-            }                                                                 \
-        }                                                                     \
-    } while (0)
+#define check_err(fn_name_)                                                     \
+    if (mpireturn != MPI_SUCCESS) {                                             \
+        errs++;                                                                 \
+        if (DEBUG) {                                                            \
+            int _len;                                                           \
+            char err_str_[MPI_MAX_ERROR_STRING];                                \
+            MPI_Error_string(mpireturn, err_str_, &_len);                       \
+            fprintf(stderr, #fn_name_ " failed at line %d, mpireturn=%d: %s\n", \
+                    __LINE__, mpireturn, err_str_);                             \
+        }                                                                       \
+    }                                                                           \
 
 #if 0
 static int ncmpii_itoa(int val, char* buf)
@@ -85,7 +83,7 @@ static int ncmpii_itoa(int val, char* buf)
 
 int ncmpii_subfile_create(NC *ncp, int *ncidp)
 {
-    int myrank, nprocs, color, status=NC_NOERR;
+    int myrank, nprocs, color, status=NC_NOERR, mpireturn;
     char path_sf[1024];
     double ratio;
     MPI_Comm comm_sf;
@@ -116,7 +114,7 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
 
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
-    MPI_Comm_split(ncp->nciop->comm, color, myrank, &comm_sf);
+    TRACE_COMM(MPI_Comm_split)(ncp->nciop->comm, color, myrank, &comm_sf);
 
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->nciop->path, color, "nc");
 
@@ -125,11 +123,10 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
      */
 
     status = ncmpi_create(comm_sf, path_sf, ncp->nciop->ioflags, info, ncidp);
-    if (status != NC_NOERR) {
-      if (myrank == 0) fprintf(stderr, "%s: error in creating file(%s): %s\n",
+    if (status != NC_NOERR && myrank == 0)
+        fprintf(stderr, "%s: error in creating file(%s): %s\n",
                 __func__, path_sf, ncmpi_strerror(status));
-        return status;
-    }
+
     MPI_Info_free(&info);
 
     return status;
@@ -138,8 +135,7 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
 int
 ncmpii_subfile_open(NC *ncp, int *ncidp)
 {
-    int status=NC_NOERR;
-    int myrank, nprocs, color;
+    int myrank, nprocs, color, status=NC_NOERR, mpireturn;
     char path_sf[1024];
     MPI_Comm comm_sf;
     double ratio;
@@ -168,7 +164,7 @@ ncmpii_subfile_open(NC *ncp, int *ncidp)
 
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
-    MPI_Comm_split(ncp->nciop->comm, color, myrank, &comm_sf);
+    TRACE_COMM(MPI_Comm_split)(ncp->nciop->comm, color, myrank, &comm_sf);
 
     /* char path[1024], file[1024]; */
     /* find_path_and_fname(ncp->nciop->path, path, file); */
@@ -176,10 +172,8 @@ ncmpii_subfile_open(NC *ncp, int *ncidp)
     /* sprintf(path_sf, "%s%d/%s", path, color, file); */
 
     status = ncmpi_open(comm_sf, path_sf, ncp->nciop->ioflags, MPI_INFO_NULL, ncidp);
-    if (status != NC_NOERR) {
+    if (status != NC_NOERR)
         fprintf(stderr, "Error in file %s line %d: %s\n", __FILE__,__LINE__, ncmpi_strerror(status));
-        return status;
-    }
 
     return status;
 }
@@ -455,7 +449,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                            int               rw_flag,
                            int               io_method)
 {
-    int err, errs=0, status;
+    int mpireturn, errs=0, status;
     NC_subfile_access *my_req, *others_req;
     int i, j, k, myrank, nprocs;
     NC *ncp_sf;
@@ -470,7 +464,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     int nasyncios=0;
 
     /* "API error" will abort this API call, but not the entire program */
-    err = status = NC_NOERR;
+    status = NC_NOERR;
 
     MPI_Comm_rank(ncp->nciop->comm, &myrank);
     MPI_Comm_size(ncp->nciop->comm, &nprocs);
@@ -716,7 +710,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     TAU_PHASE_START(t51);
 #endif
 
-    MPI_Alltoall(count_my_req_per_proc, 1, MPI_INT, count_others_req_per_proc, 1, MPI_INT, ncp->nciop->comm);
+    TRACE_COMM(MPI_Alltoall)(count_my_req_per_proc, 1, MPI_INT, count_others_req_per_proc, 1, MPI_INT, ncp->nciop->comm);
 
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t51);
@@ -870,14 +864,14 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 
     for (i=0; i<nprocs; i++)
         if (count_my_req_per_proc[i] != 0 && i != myrank)
-            MPI_Irecv(&count_others_req_per_proc[i], 1, MPI_INT, i, i+myrank, ncp->nciop->comm, &requests[j++]);
+            TRACE_COMM(MPI_Irecv)(&count_others_req_per_proc[i], 1, MPI_INT, i, i+myrank, ncp->nciop->comm, &requests[j++]);
 
     for (i=0; i<nprocs; i++)
         if (count_others_req_per_proc[i] != 0 && i != myrank)
-            MPI_Isend(&count_my_req_per_proc[i], 1, MPI_INT, i, i+myrank, ncp->nciop->comm, &requests[j++]);
+            TRACE_COMM(MPI_Isend)(&count_my_req_per_proc[i], 1, MPI_INT, i, i+myrank, ncp->nciop->comm, &requests[j++]);
 
     statuses = (MPI_Status *)NCI_Malloc(j*sizeof(MPI_Status));
-    err = MPI_Waitall(j, requests, statuses);
+    TRACE_COMM(MPI_Waitall)(j, requests, statuses);
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t52);
 #endif
@@ -901,17 +895,17 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     for (i=0; i<nprocs; i++) {
         if (count_others_req_per_proc[i] != 0 && i != myrank)
             /* MPI_Offset == MPI_LONG_LONG_INT */
-            MPI_Irecv(others_req[i].start, 3*ndims_org, MPI_LONG_LONG_INT, i,
+            TRACE_COMM(MPI_Irecv)(others_req[i].start, 3*ndims_org, MPI_LONG_LONG_INT, i,
                       i+myrank, ncp->nciop->comm, &requests[j++]);
     }
     for (i=0; i<nprocs; i++) {
         if (count_my_req_per_proc[i] != 0 && i != myrank)
-            MPI_Isend(my_req[i].start, 3 * ndims_org, MPI_LONG_LONG_INT, i,
+            TRACE_COMM(MPI_Isend)(my_req[i].start, 3 * ndims_org, MPI_LONG_LONG_INT, i,
                       i+myrank, ncp->nciop->comm, &requests[j++]);
     }
 
     statuses = (MPI_Status *)NCI_Malloc(j*sizeof(MPI_Status));
-    err = MPI_Waitall(j, requests, statuses);
+    TRACE_COMM(MPI_Waitall)(j, requests, statuses);
     NCI_Free(statuses);
     NCI_Free(requests);
 
@@ -972,7 +966,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             printf("rank(%d): recv from rank %d: buf_count_others[%d]=%d\n", myrank, i, i, buf_count_others[i]);
 #endif
             xbuf[i] = (void*)NCI_Calloc(buf_count_others[i], el_size);
-            MPI_Irecv(xbuf[i], buf_count_others[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
+            TRACE_COMM(MPI_Irecv)(xbuf[i], buf_count_others[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
         }
     }
 
@@ -1004,12 +998,12 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             printf("rank(%d): send to rank %d: buf_offset[%d]=%d, buf_count_my[%d]=%d\n", myrank, i, i, buf_offset[i], i, buf_count_my[i]);
 #endif
 
-            MPI_Isend((char*)cbuf+buf_offset[i], buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
+            TRACE_COMM(MPI_Isend)((char*)cbuf+buf_offset[i], buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
         } /* end if() */
     } /* end for() */
 
     statuses = (MPI_Status *)NCI_Malloc(j * sizeof(MPI_Status));
-    err = MPI_Waitall(j, requests, statuses);
+    TRACE_COMM(MPI_Waitall)(j, requests, statuses);
     NCI_Free(statuses);
     NCI_Free(requests);
 

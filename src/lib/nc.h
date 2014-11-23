@@ -16,6 +16,20 @@
 #include "ncio.h"       /* ncio */
 #include "fbits.h"
 
+/* C macros for TRACE MPI calls */
+#ifdef PNETCDF_TRACE_MPI_COMM
+#define TRACE_COMM(x) printf("TRACE-MPI-COMM: FILE %s FUNC %s() LINE %d calling %s()\n",__FILE__,__func__,__LINE__,#x),mpireturn=x
+#else
+#define TRACE_COMM(x) mpireturn=x
+#endif
+
+#ifdef PNETCDF_TRACE_MPI_IO
+#define TRACE_IO(x) printf("TRACE-MPI-IO:   FILE %s FUNC %s() LINE %d calling %s()\n",__FILE__,__func__,__LINE__,#x),mpireturn=x
+#else
+#define TRACE_IO(x) mpireturn=x
+#endif
+
+
 /* define MPI_OFFSET if not defined */
 #ifndef HAVE_MPI_OFFSET_DATATYPE
     #ifdef HAVE_MPI_LONG_LONG_INT

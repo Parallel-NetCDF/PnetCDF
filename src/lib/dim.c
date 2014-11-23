@@ -11,6 +11,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -522,8 +523,10 @@ ncmpi_rename_dim(int         ncid,
      * mode, we sync the NC object (header) in memory across all processes
      * (This API is collective if called in data mode)
      */
-    if (!NC_indef(ncp) && ncp->safe_mode == 1)
-        MPI_Bcast(&newname, dimp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
+    if (!NC_indef(ncp) && ncp->safe_mode == 1) {
+        int mpireturn;
+        TRACE_COMM(MPI_Bcast)(&newname, dimp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
+    }
 
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
     status = ncmpii_set_NC_string(dimp->name, newname);

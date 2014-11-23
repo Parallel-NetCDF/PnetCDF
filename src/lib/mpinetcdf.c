@@ -183,7 +183,7 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int err, status=NC_NOERR, safe_mode=0;
+    int err, status=NC_NOERR, safe_mode=0, mpireturn;
     char *env_str=NULL, *hint_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
@@ -209,7 +209,9 @@ ncmpi_create(MPI_Comm    comm,
         /* check if cmode is consistent with root's */
         int root_cmode=cmode;
 
-        MPI_Bcast(&root_cmode, 1, MPI_INT, 0, comm);
+        TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
 
         if (root_cmode != cmode) {
             int rank;
@@ -241,11 +243,9 @@ ncmpi_create(MPI_Comm    comm,
     env_str = getenv("PNETCDF_HINTS");
     env_info = info;
     if (env_str != NULL) {
-        if (info == MPI_INFO_NULL) {
-            err = MPI_Info_create(&env_info);
-            if (err != MPI_SUCCESS) /* ignore this error */
-                env_info = MPI_INFO_NULL;
-        }
+        if (info == MPI_INFO_NULL)
+            MPI_Info_create(&env_info); /* ignore error */
+
         hint_str = strtok(env_str, ";");
         while (hint_str != NULL && env_info != MPI_INFO_NULL) {
             char key[128], *val;
@@ -310,7 +310,7 @@ ncmpi_create(MPI_Comm    comm,
     fSet(ncp->flags, NC_NOFILL);
 
     err = ncmpiio_create(comm, path, cmode, env_info, ncp);
-    if (err != NC_NOERR) {
+    if (err != NC_NOERR) { /* fatal error */
         ncmpii_free_NC(ncp);
         return err;
     }
@@ -350,7 +350,7 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)
 {
-    int i, err, status=NC_NOERR, safe_mode=0;
+    int i, err, status=NC_NOERR, safe_mode=0, mpireturn;
     char *env_str=NULL, *hint_str;
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
@@ -380,7 +380,9 @@ ncmpi_open(MPI_Comm    comm,
            In pnetcdf.h, they both are defined the same value, 0.
          */
 
-        MPI_Bcast(&root_omode, 1, MPI_INT, 0, comm);
+        TRACE_COMM(MPI_Bcast)(&root_omode, 1, MPI_INT, 0, comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
 
         if (root_omode != omode) {
             int rank;
@@ -401,11 +403,9 @@ ncmpi_open(MPI_Comm    comm,
     env_str = getenv("PNETCDF_HINTS");
     env_info = info;
     if (env_str != NULL) {
-        if (info == MPI_INFO_NULL) {
-            err = MPI_Info_create(&env_info);
-            if (err != MPI_SUCCESS) /* ignore this error */
-                env_info = MPI_INFO_NULL;
-        }
+        if (info == MPI_INFO_NULL)
+            MPI_Info_create(&env_info); /* ignore error */
+
         hint_str = strtok(env_str, ";");
         while (hint_str != NULL && env_info != MPI_INFO_NULL) {
             char key[128], *val;
@@ -449,7 +449,7 @@ ncmpi_open(MPI_Comm    comm,
 #endif
 
     err = ncmpiio_open(comm, path, omode, env_info, ncp);
-    if (err != NC_NOERR) {
+    if (err != NC_NOERR) { /* fatal error */
         ncmpii_free_NC(ncp);
         return err;
     }
@@ -468,7 +468,7 @@ ncmpi_open(MPI_Comm    comm,
     }
 
     err = ncmpii_hdr_get_NC(ncp); /* read header from file */
-    if (err != NC_NOERR) {
+    if (err != NC_NOERR) { /* fatal error */
         ncmpiio_close(ncp->nciop, 0);
         ncmpii_free_NC(ncp);
         return err;
@@ -645,7 +645,7 @@ ncmpi_get_file_info(int       ncid,
 /*----< ncmpi_redef() >------------------------------------------------------*/
 int
 ncmpi_redef(int ncid) {
-    int status;
+    int status, mpireturn;
     NC *ncp;
     MPI_Offset mynumrecs, numrecs;
 
@@ -677,8 +677,10 @@ ncmpi_redef(int ncid) {
            Note that only ncp->numrecs in the header can be incoherent.
          */
         mynumrecs = ncp->numrecs;
-        MPI_Allreduce(&mynumrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
-                      ncp->nciop->comm);
+        TRACE_COMM(MPI_Allreduce)(&mynumrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
+                                  ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
         if (numrecs > ncp->numrecs) {
             ncp->numrecs = numrecs;
             set_NC_ndirty(ncp);
@@ -704,11 +706,14 @@ ncmpii_sync_numrecs(NC         *ncp,
                     MPI_Offset  new_numrecs)
 {
     /* Only put APIs and record variables reach this function */
+    int mpireturn;
     MPI_Offset max_numrecs;
 
     /* sync numrecs in memory across all processes */
-    MPI_Allreduce(&new_numrecs, &max_numrecs, 1, MPI_OFFSET, MPI_MAX,
-                  ncp->nciop->comm);
+    TRACE_COMM(MPI_Allreduce)(&new_numrecs, &max_numrecs, 1, MPI_OFFSET,
+                              MPI_MAX, ncp->nciop->comm);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
 
     /* let root process write numrecs to file header
      * Note that we must update numrecs in file header whenever a
@@ -726,7 +731,7 @@ int
 ncmpi_begin_indep_data(int ncid)
 {
 #ifndef DISABLE_FILE_SYNC
-    int mpireturn;
+    int err, mpireturn;
 #endif
     int status=NC_NOERR;
     NC *ncp;
@@ -743,11 +748,11 @@ ncmpi_begin_indep_data(int ncid)
 #ifndef DISABLE_FILE_SYNC
     if (!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
         /* MPI_File_sync() is collective */
-        mpireturn = MPI_File_sync(ncp->nciop->collective_fh);
+        TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_sync");
+            err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
             /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = NC_EFILE;
+            if (status == NC_NOERR) status = err;
         }
     }
 #endif
@@ -776,7 +781,7 @@ ncmpi_end_indep_data(int ncid) {
 static int
 ncmpii_end_indep_data(NC *ncp) {
 #ifndef DISABLE_FILE_SYNC
-    int mpireturn;
+    int err, mpireturn;
 #endif
     int status=NC_NOERR;
 
@@ -788,11 +793,11 @@ ncmpii_end_indep_data(NC *ncp) {
         /* calling file sync for those already open the file */
         if (NC_independentFhOpened(ncp->nciop)) {
             /* MPI_File_sync() is collective */
-            mpireturn = MPI_File_sync(ncp->nciop->independent_fh);
+            TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_sync");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EFILE;
+                if (status == NC_NOERR) status = err;
             }
         }
 #endif
@@ -959,12 +964,12 @@ int
 ncmpi_delete(char     *filename,
              MPI_Info  info)
 {
-    int mpireturn;
+    int err=NC_NOERR, mpireturn;
 
-    mpireturn = MPI_File_delete(filename, info);
+    TRACE_IO(MPI_File_delete)(filename, info);
     if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_File_delete");
-    return NC_NOERR;
+        err = ncmpii_handle_error(mpireturn, "MPI_File_delete");
+    return err;
 }
 
 /*----< ncmpi_set_fill() >---------------------------------------------------*/

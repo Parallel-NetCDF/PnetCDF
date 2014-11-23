@@ -740,8 +740,8 @@ err_check:
     }
 
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
-    mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
-                                  "native", MPI_INFO_NULL);
+    TRACE_IO(MPI_File_set_view)(fh, offset, MPI_BYTE, filetype,
+                                "native", MPI_INFO_NULL);
     if (mpireturn != MPI_SUCCESS) {
         ncmpii_handle_error(mpireturn, "MPI_File_set_view");
         /* return the first encountered error if there is any */
@@ -753,7 +753,7 @@ err_check:
 
     if (rw_flag == WRITE_REQ) {
         if (io_method == COLL_IO) {
-            mpireturn = MPI_File_write_all(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_write_all)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 ncmpii_handle_error(mpireturn, "MPI_File_write_all");
                 /* return the first encountered error if there is any */
@@ -761,7 +761,7 @@ err_check:
             }
         }
         else { /* io_method == INDEP_IO */
-            mpireturn = MPI_File_write(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_write)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 ncmpii_handle_error(mpireturn, "MPI_File_write");
                 /* return the first encountered error if there is any */
@@ -774,7 +774,7 @@ err_check:
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
-            mpireturn = MPI_File_read_all(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_read_all)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 ncmpii_handle_error(mpireturn, "MPI_File_read_all");
                 /* return the first encountered error if there is any */
@@ -782,7 +782,7 @@ err_check:
             }
         }
         else { /* io_method == INDEP_IO */
-            mpireturn = MPI_File_read(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_read)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 ncmpii_handle_error(mpireturn, "MPI_File_read");
                 /* return the first encountered error if there is any */
@@ -795,7 +795,7 @@ err_check:
     }
 
     /* reset the file view so the entire file is visible again */
-    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
     if (rw_flag == READ_REQ) {
         if (need_convert) {

@@ -213,7 +213,7 @@ int main(int argc, char** argv)
         nfails++;
     }
 
-    /* write usning varn API */
+    /* write using varn API */
     err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
     ERR
 
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
         permute(starts[2], starts[3]); permute(counts[2], counts[3]);
     }
 
-    /* write usning varn API */
+    /* write using varn API */
     err = ncmpi_put_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
     ERR
 

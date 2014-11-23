@@ -71,7 +71,7 @@ int check_contents_for_fail(int *buffer)
 int main(int argc, char** argv)
 {
     char filename[128];
-    int i, j, rank, nprocs, err, verbose=0, nfails=0;
+    int i, rank, nprocs, err, verbose=0, nfails=0;
     int ncid, cmode, varid[3], dimid[2], num_reqs, *buffer, *r_buffer;
     MPI_Offset w_len, **starts, **counts;
 
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
         nfails++;
     }
 
-    /* write usning varn API */
+    /* write using varn API */
     err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
     ERR
 

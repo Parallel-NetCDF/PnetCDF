@@ -99,7 +99,7 @@ ncmpii_del_from_NCList(NC *ncp)
  */
 static int
 NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
-    int rank, errcheck, status=NC_NOERR, errflag, compare;
+    int rank, errcheck, status=NC_NOERR, errflag, compare, mpireturn;
     MPI_Offset hsz_0;
     void *cmpbuf;
     bufferinfo gbp;
@@ -108,7 +108,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
 
     /* process 0 broadcasts header size */
     if (rank == 0) hsz_0 = hsz;
-    MPI_Bcast(&hsz_0, 1, MPI_OFFSET, 0, comm);
+    TRACE_COMM(MPI_Bcast)(&hsz_0, 1, MPI_OFFSET, 0, comm);
 
     if (rank == 0)
         cmpbuf = buf;
@@ -116,7 +116,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
         cmpbuf = (void*) NCI_Malloc(hsz_0);
 
     /* process 0 broadcasts its header */
-    MPI_Bcast(cmpbuf, hsz_0, MPI_BYTE, 0, comm);
+    TRACE_COMM(MPI_Bcast)(cmpbuf, hsz_0, MPI_BYTE, 0, comm);
 
     compare = 0;
     if (hsz != hsz_0)  /* hsz may be different from hsz_0 */
@@ -127,7 +127,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     }
 
     /* compare is either 0 (header same as root) or 1 (different) */
-    MPI_Allreduce(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
+    TRACE_COMM(MPI_Allreduce)(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
     if (errcheck == 0) {
         if (rank > 0)
             NCI_Free(cmpbuf);
@@ -144,7 +144,7 @@ NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
     status = ncmpii_hdr_check_NC(&gbp, ncp);
 
     errflag = (status == NC_NOERR) ? 0 : 1;
-    MPI_Allreduce(&errflag, &errcheck, 1, MPI_INT, MPI_MAX, comm);
+    TRACE_COMM(MPI_Allreduce)(&errflag, &errcheck, 1, MPI_INT, MPI_MAX, comm);
     if (errcheck > 0) {
         status = (status != NC_NOERR) ? status : NC_EMULTIDEFINE;
         /* note status may be inconsistent among processes
@@ -407,7 +407,7 @@ NC_begins(NC         *ncp,
           MPI_Offset  v_minfree,/* free space for fixed variable section */
           MPI_Offset  r_align)  /* alignment for record variable section */
 {
-    int i, j, sizeof_off_t;
+    int i, j, sizeof_off_t, mpireturn;
     MPI_Offset max_xsz, end_var=0;
     NC_var *last = NULL;
     NC_var *first_var = NULL;       /* first "non-record" var */
@@ -422,12 +422,12 @@ NC_begins(NC         *ncp,
     /* get the true header size (un-aligned one) */
     ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
-    /* Since it is allowable to have incocnsistent header's metadata,
+    /* Since PnetCDF allows incocnsistent meta data defined in define mode,
        header sizes, ncp->xsz, may be different among processes.
        Hence, we need to use the max size among all processes to make
        sure everyboday has the same size of reserved space for header */
-    MPI_Allreduce(&ncp->xsz, &max_xsz, 1, MPI_OFFSET, MPI_MAX,
-                  ncp->nciop->comm);
+    TRACE_COMM(MPI_Allreduce)(&ncp->xsz, &max_xsz, 1, MPI_OFFSET, MPI_MAX,
+                              ncp->nciop->comm);
 
     /* NC_begins is called at ncmpi_enddef(), which can be in either
      * creating a new file or opening an existing file with metadata modified.
@@ -633,13 +633,13 @@ ncmpii_read_numrecs(NC *ncp) {
 
     /* fileview is already entire file visible and pointer to zero */
     if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        mpireturn = MPI_File_read_at(ncp->nciop->collective_fh,
-                                     NC_NUMRECS_OFFSET+4,
-                                     buf, sizeof_t, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_read_at)(ncp->nciop->collective_fh,
+                                   NC_NUMRECS_OFFSET+4,
+                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
     else
-        mpireturn = MPI_File_read_at(ncp->nciop->collective_fh,
-                                     NC_NUMRECS_OFFSET,
-                                     buf, sizeof_t, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_read_at)(ncp->nciop->collective_fh,
+                                   NC_NUMRECS_OFFSET,
+                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
 
     if (mpireturn != MPI_SUCCESS) {
         ncmpii_handle_error(mpireturn, "MPI_File_read_at");
@@ -700,7 +700,7 @@ ncmpii_write_numrecs(NC         *ncp,
        dirty and used as new_numrecs. In this case, we must write the max
        value across all processes to file.
      */
-    int rank, status=NC_NOERR;
+    int rank, status=NC_NOERR, mpireturn;
 
     assert(!NC_readonly(ncp));
     assert(!NC_indef(ncp));
@@ -714,7 +714,7 @@ ncmpii_write_numrecs(NC         *ncp,
     MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0 && (forceWrite || new_numrecs > ncp->numrecs)) {
         /* root process writes to the file header */
-        int len, mpireturn;
+        int len;
         char pos[8], *buf=pos;
         MPI_Status mpistatus;
 
@@ -729,9 +729,9 @@ ncmpii_write_numrecs(NC         *ncp,
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
         /* file view is already reset to entire file visible */
-        mpireturn = MPI_File_write_at(ncp->nciop->collective_fh,
-                                      NC_NUMRECS_OFFSET, (void*)pos, len,
-                                      MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh,
+                                    NC_NUMRECS_OFFSET, (void*)pos, len,
+                                    MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             status = NC_EWRITE;
@@ -746,7 +746,7 @@ ncmpii_write_numrecs(NC         *ncp,
 
     /* this function is only called by collective functions */
     if (ncp->safe_mode == 1)
-        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
     fClr(ncp->flags, NC_NDIRTY);
 
@@ -804,7 +804,7 @@ write_NC(NC *ncp)
     /* copy header to buffer */
     status = ncmpii_hdr_put_NC(ncp, buf);
     if (ncp->safe_mode == 1)
-        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
     if (status != NC_NOERR) {
         NCI_Free(buf);
@@ -814,7 +814,7 @@ write_NC(NC *ncp)
     /* check the header consistency across all processes */
     status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
     if (ncp->safe_mode == 1)
-        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
     if (status != NC_NOERR && !ErrIsHeaderDiff(status)) {
         NCI_Free(buf);
@@ -831,8 +831,8 @@ write_NC(NC *ncp)
     /* only rank 0's header gets written to the file */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0) {
-        mpireturn = MPI_File_write_at(ncp->nciop->collective_fh, 0, buf,
-                                      hsz, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
+                                    hsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             if (status == NC_NOERR) status = NC_EWRITE;
@@ -844,7 +844,7 @@ write_NC(NC *ncp)
         }
     }
     if (ncp->safe_mode == 1)
-        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
     fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
     NCI_Free(buf);
@@ -887,7 +887,7 @@ ncmpii_NC_sync(NC  *ncp,
        4) ncmpii_NC_close()
        only 1) needs to call MPI_File_sync() here
      */
-    int status=NC_NOERR, didWrite=0, has_recvars=0;
+    int status=NC_NOERR, didWrite=0, has_recvars=0, mpireturn;
     MPI_Offset numrecs;
 
     assert(!NC_readonly(ncp));
@@ -901,8 +901,8 @@ ncmpii_NC_sync(NC  *ncp,
     /* if independent data mode is used to write data, ncp->numrecs might be
      * inconsistent among processes. */
     if (has_recvars)
-        MPI_Allreduce(&ncp->numrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
-                      ncp->nciop->comm);
+        TRACE_COMM(MPI_Allreduce)(&ncp->numrecs, &numrecs, 1, MPI_OFFSET,
+                                  MPI_MAX, ncp->nciop->comm);
 
     if (NC_hdirty(ncp)) {  /* header is dirty */
         /* write_NC() will also write numrecs and clear NC_NDIRTY */

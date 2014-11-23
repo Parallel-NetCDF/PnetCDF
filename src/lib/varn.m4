@@ -294,7 +294,9 @@ err_check:
     }
 
     if (ncp->safe_mode == 1 && io_method == COLL_IO) {
-        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);
+        int mpireturn;
+        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
+                                  ncp->nciop->comm);
         if (min_st != NC_NOERR) {
             if (req_id != NC_REQ_NULL) /* cancel pending nonblocking request */
                 ncmpii_cancel(ncp, 1, &req_id, &st);

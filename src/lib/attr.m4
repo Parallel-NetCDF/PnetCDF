@@ -527,8 +527,10 @@ ncmpi_rename_att(int         ncid,
      * mode, we sync the NC object (header) in memory across all processes
      * (This API is collective if called in data mode)
      */
-    if (!NC_indef(ncp) && ncp->safe_mode == 1)
-        MPI_Bcast(&newname, attrp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
+    if (!NC_indef(ncp) && ncp->safe_mode == 1) {
+        int mpireturn;
+        TRACE_COMM(MPI_Bcast)(&newname, attrp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
+    }
 
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
     status = ncmpii_set_NC_string(attrp->name, newname);
@@ -1167,9 +1169,11 @@ ncmpii_put_att(int         ncid,
                  * object (header) in memory across all processes
                  * (This API is collective if called in data mode.)
                  */
-                if (ncp->safe_mode == 1)
-                    MPI_Bcast(attrp->xvalue, attrp->xsz, MPI_BYTE, 0,
-                              ncp->nciop->comm);
+                if (ncp->safe_mode == 1) {
+                    int mpireturn;
+                    TRACE_COMM(MPI_Bcast)(attrp->xvalue, attrp->xsz, MPI_BYTE, 0,
+                                          ncp->nciop->comm);
+                }
             }
 
             if (NC_doHsync(ncp)) { /* NC_SHARE is set */

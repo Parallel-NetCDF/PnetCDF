@@ -193,19 +193,19 @@ err_check:
         fh = ncp->nciop->independent_fh;
 
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
-    mpireturn = MPI_File_set_view(fh, offset, MPI_BYTE, filetype,
+    TRACE_IO(MPI_File_set_view)(fh, offset, MPI_BYTE, filetype,
                                   "native", MPI_INFO_NULL);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_handle_error(mpireturn, "MPI_File_set_view");
 
     if (rw_flag == WRITE_REQ) {
         if (io_method == COLL_IO) {
-            mpireturn = MPI_File_write_all(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_write_all)(fh, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_write_all");
         }
         else { /* io_method == INDEP_IO */
-            mpireturn = MPI_File_write(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_write)(fh, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_write");
         }
@@ -215,12 +215,12 @@ err_check:
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
-            mpireturn = MPI_File_read_all(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_read_all)(fh, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_read_all");
         }
         else { /* io_method == INDEP_IO */
-            mpireturn = MPI_File_read(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_read)(fh, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_read");
         }
@@ -230,7 +230,7 @@ err_check:
     }
 
     /* reset the file view so the entire file is visible again */
-    MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
     if (rw_flag == READ_REQ) {
         if (need_swap)
