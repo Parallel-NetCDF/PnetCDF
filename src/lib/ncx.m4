@@ -1676,7 +1676,7 @@ ncmpix_put_double_float(void *xp, const float *ip)
 {
 	double xx = (double) *ip;
 	put_ix_double(xp, &xx);
-#if 1	/* TODO: figure this out */
+#if 0	/* TODO: figure this out (if condition below will never be true)*/
 	if((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
