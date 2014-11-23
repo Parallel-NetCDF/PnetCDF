@@ -10,6 +10,7 @@
 #include <string.h>
 #include <pnetcdf.h>
 
+#define PRINT_ERR_ON_SCREEN
 
 #define ERRCODE 2
 #define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); exit(ERRCODE);}
@@ -95,7 +96,7 @@ int main(int argc, char **argv)
         for (j=0; j<4; j++) {
             if (rh[j][i] != k) {
 #ifdef PRINT_ERR_ON_SCREEN
-                printf("get_varm unexpected value at j=%d i=%d\n",j,i);
+                printf("Error: expecting rh[%d][%d]=%f but got %f\n",j,i,k,rh[j][i]);
 #endif
                 errs++;
                 break;
@@ -171,7 +172,7 @@ int main(int argc, char **argv)
             if (varT[j][i] != j*6+i + 50) {
 #ifdef PRINT_ERR_ON_SCREEN
                 /* this error is a pntecdf internal error, if occurs */
-                printf("Error: get_varm write buffer has been altered at j=%d i=%d\n",j,i);
+                printf("Error: expecting varT[%d][%d]=%d but got %d\n",j,i,j*6+i + 50,varT[j][i]);
 #endif
                 errs++;
                 break;

@@ -275,7 +275,7 @@ int test_var(char *filename)
     MPI_Comm_rank(comm, &rank);
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
 
-    /* Test inconsistent variable attribute numbers ----------------------------*/
+    /* Test inconsistent variable attribute numbers --------------------------*/
     err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR
     err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); ERR
     err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); ERR

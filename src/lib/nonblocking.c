@@ -384,7 +384,7 @@ ncmpii_concatenate_datatypes(NC           *ncp,
 }
 
 /*----< ncmpii_construct_filetypes() >----------------------------------------*/
-/* concatenate the filetypes of all requests */
+/* concatenate the requests into a single MPI derived filetype */
 static int
 ncmpii_construct_filetypes(NC           *ncp,
                            int           num_reqs,
@@ -392,7 +392,7 @@ ncmpii_construct_filetypes(NC           *ncp,
                            int           rw_flag,
                            MPI_Datatype *filetype)  /* OUT */
 {
-    int i, err, status=NC_NOERR, *blocklens;
+    int i, j, err, status=NC_NOERR, *blocklens;
     MPI_Datatype *ftypes;
     MPI_Offset *displacements;
 
@@ -407,20 +407,37 @@ ncmpii_construct_filetypes(NC           *ncp,
     ftypes        = (MPI_Datatype*) NCI_Malloc(num_reqs * sizeof(MPI_Datatype));
 
     /* create a filetype for each request */
-    for (i=0; i<num_reqs; i++) {
-        ftypes[i] = MPI_BYTE; /* in case the call below failed */
+    int last_contig_req = -1; /* index of the last contiguous request */
+    j = 0;                    /* index of last valid ftypes */
+    for (i=0; i<num_reqs; i++, j++) {
+        int is_filetype_contig;
+        ftypes[j] = MPI_BYTE; /* in case the call below failed */
         err = ncmpii_vars_create_filetype(ncp,
                                           reqs[i].varp,
                                           reqs[i].start,
                                           reqs[i].count,
                                           reqs[i].stride,
                                           rw_flag,
-                                          &blocklens[i],
-                                          &displacements[i], /* to offset 0 */
-                                          &ftypes[i]);
+                                          &blocklens[j],
+                                          &displacements[j], /* to offset 0 */
+                                          &ftypes[j],
+                                          &is_filetype_contig);
         if (*reqs[i].status == NC_NOERR) *reqs[i].status = err;
         if (status == NC_NOERR) status = err; /* report the first error */
+
+        if (is_filetype_contig) {
+            if (last_contig_req >= 0 &&
+                displacements[j] - displacements[last_contig_req] ==
+                blocklens[last_contig_req]) {
+                blocklens[last_contig_req] += blocklens[j];
+                j--;
+            }
+            else last_contig_req = j;
+        }
+        else last_contig_req = -1;
     }
+    /* j is the new num_reqs */
+    num_reqs = j;
 
     if (status != NC_NOERR) {
         /* even if error occurs, we still must participate the collective
@@ -1738,10 +1755,9 @@ ncmpii_mgetput(NC           *ncp,
     int i, len=0, status=NC_NOERR, mpireturn;
     void *buf=NULL;
     MPI_Status mpistatus;
-    MPI_Datatype filetype, buf_type;
+    MPI_Datatype filetype, buf_type=MPI_BYTE;
     MPI_File fh;
 
-    buf_type = MPI_BYTE;
     if (io_method == COLL_IO)
         fh = ncp->nciop->collective_fh;
     else
@@ -1795,33 +1811,33 @@ ncmpii_mgetput(NC           *ncp,
             blocklengths[i] = int8;
             if (int8 != blocklengths[i]) {
                 if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+                continue; /* skip this request */
             }
-            else { /* found it */
-                disps[0] = 0;
-                blocklengths[0] = int8;
-                buf = reqs[i].xbuf;
+            /* found it */
+            disps[0]        = 0;
+            blocklengths[0] = int8;
+            buf             = reqs[i].xbuf;
 #ifdef HAVE_MPI_GET_ADDRESS
-                MPI_Get_address(buf, &a0);
+            MPI_Get_address(buf, &a0);
 #else
-                MPI_Address(buf, &a0);
+            MPI_Address(buf, &a0);
 #endif
-                break;
-            }
+            break;
         }
-        if (i == num_reqs) { /* no valid requests */
+        if (i == num_reqs) { /* there is no valid requests */
             num_reqs = 0;
             blocklengths[0] = 0;
         }
         else i++; /* continue with next request */
 
-        int last_contig_req = 0;
-        a_last_contig = a0;
+        int last_contig_req = 0; /* index of the last contiguous request */
+        a_last_contig = a0;      /* buffer address of last_contig_req */
         for (; i<num_reqs; i++) {
             int8 = reqs[i].fnelems * reqs[i].varp->xsz;
             blocklengths[i] = int8;
             if (int8 != blocklengths[i]) {
                 if (status == NC_NOERR) status = NC_EINTOVERFLOW;
-                continue;
+                continue; /* skip this request */
             }
 
 #ifdef HAVE_MPI_GET_ADDRESS

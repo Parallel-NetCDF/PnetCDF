@@ -804,7 +804,8 @@ int ncmpii_sync_numrecs(NC *ncp, MPI_Offset newnumrecs);
 int ncmpii_vars_create_filetype(NC* ncp, NC_var* varp,
                 const MPI_Offset start[], const MPI_Offset count[],
                 const MPI_Offset stride[], int rw_flag, int *blocklen,
-                MPI_Offset *offset, MPI_Datatype *filetype);
+                MPI_Offset *offset, MPI_Datatype *filetype,
+                int *is_filetype_contig);
 
 int ncmpii_concatenate_datatypes(NC *ncp, int num, int *blocklens,
                 MPI_Offset *displacements, MPI_Datatype *dtypes,
