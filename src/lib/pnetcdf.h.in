@@ -455,7 +455,7 @@ by the desired type. */
 #define NC_32BIT	0x1000000
 
 /* CDF-5 format, (64-bit) supported */
-#define NC_64BIT_DATA	0x0010
+#define NC_64BIT_DATA	0x0020
 
 /* CDF-2 format, with NC_64BIT_OFFSET. */
 #ifndef NC_FORMAT_CDF2
