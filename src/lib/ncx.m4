@@ -422,7 +422,7 @@ dnl NCX_GET1F(xtype, itype) for floating-point types
 dnl
 define(`NCX_GET1F',dnl
 `dnl
-int
+static int
 ncmpix_get_$1_$2(const void *xp, $2 *ip)
 {
 	ix_$1 xx;
@@ -439,7 +439,7 @@ dnl NCX_GET1I(xtype, itype, isComptable) for integral types
 dnl
 define(`NCX_GET1I',dnl
 `dnl
-int
+static int
 ncmpix_get_$1_$2(const void *xp, $2 *ip)
 {
 ifelse(`$3', `1',
@@ -465,7 +465,7 @@ dnl NCX_PUT1F(xtype, itype) for floating-point types
 dnl
 define(`NCX_PUT1F',dnl
 `dnl
-int
+static int
 ncmpix_put_$1_$2(void *xp, const $2 *ip)
 {
 	ix_$1 xx = (ix_$1)*ip;
@@ -481,7 +481,7 @@ dnl NCX_PUT1I(xtype, itype, isComptable) for integral types
 dnl
 define(`NCX_PUT1I',dnl
 `dnl
-int
+static int
 ncmpix_put_$1_$2(void *xp, const $2 *ip)
 {
 ifelse(`$3', `1',
@@ -551,17 +551,17 @@ put_ix_short(void *xp, const ix_short *ip)
 	*cp = (*ip) & 0xff;
 }
 
-static NCX_GET1I(short, schar,     0)
-static NCX_GET1I(short, short,     1)
-static NCX_GET1I(short, int,       1)
-static NCX_GET1I(short, long,      1)
-static NCX_GET1I(short, longlong,  1)
-static NCX_GET1I(short, ushort,    0)
-static NCX_GET1I(short, uchar,     0)
-static NCX_GET1I(short, uint,      0)
-static NCX_GET1I(short, ulonglong, 0)
-static NCX_GET1F(short, float)
-static NCX_GET1F(short, double)
+NCX_GET1I(short, schar,     0)
+NCX_GET1I(short, short,     1)
+NCX_GET1I(short, int,       1)
+NCX_GET1I(short, long,      1)
+NCX_GET1I(short, longlong,  1)
+NCX_GET1I(short, ushort,    0)
+NCX_GET1I(short, uchar,     0)
+NCX_GET1I(short, uint,      0)
+NCX_GET1I(short, ulonglong, 0)
+NCX_GET1F(short, float)
+NCX_GET1F(short, double)
 
 static int
 ncmpix_put_short_schar(void *xp, const schar *ip)
@@ -584,15 +584,15 @@ ncmpix_put_short_uchar(void *xp, const uchar *ip)
 	return NC_NOERR;
 }
 
-static NCX_PUT1I(short, short,     1)
-static NCX_PUT1I(short, int,       1)
-static NCX_PUT1I(short, long,      1)
-static NCX_PUT1I(short, longlong,  1)
-static NCX_PUT1I(short, ushort,    0)
-static NCX_PUT1I(short, uint,      0)
-static NCX_PUT1I(short, ulonglong, 0)
-static NCX_PUT1F(short, float)
-static NCX_PUT1F(short, double)
+NCX_PUT1I(short, short,     1)
+NCX_PUT1I(short, int,       1)
+NCX_PUT1I(short, long,      1)
+NCX_PUT1I(short, longlong,  1)
+NCX_PUT1I(short, ushort,    0)
+NCX_PUT1I(short, uint,      0)
+NCX_PUT1I(short, ulonglong, 0)
+NCX_PUT1F(short, float)
+NCX_PUT1F(short, double)
 
 /* x_ushort ------------------------------------------------------------------*/
 
@@ -639,17 +639,17 @@ put_ix_ushort(void *xp, const ix_ushort *ip)
 	*cp = (*ip) & 0xff;
 }
 
-static NCX_GET1I(ushort, schar,     0)
-static NCX_GET1I(ushort, short,     0)
-static NCX_GET1I(ushort, int,       0)
-static NCX_GET1I(ushort, long,      0)
-static NCX_GET1I(ushort, longlong,  0)
-static NCX_GET1I(ushort, ushort,    1)
-static NCX_GET1I(ushort, uchar,     1)
-static NCX_GET1I(ushort, uint,      1)
-static NCX_GET1I(ushort, ulonglong, 1)
-static NCX_GET1F(ushort, float)
-static NCX_GET1F(ushort, double)
+NCX_GET1I(ushort, schar,     0)
+NCX_GET1I(ushort, short,     0)
+NCX_GET1I(ushort, int,       0)
+NCX_GET1I(ushort, long,      0)
+NCX_GET1I(ushort, longlong,  0)
+NCX_GET1I(ushort, ushort,    1)
+NCX_GET1I(ushort, uchar,     1)
+NCX_GET1I(ushort, uint,      1)
+NCX_GET1I(ushort, ulonglong, 1)
+NCX_GET1F(ushort, float)
+NCX_GET1F(ushort, double)
 
 static int
 ncmpix_put_ushort_schar(void *xp, const schar *ip)
@@ -674,15 +674,15 @@ ncmpix_put_ushort_uchar(void *xp, const uchar *ip)
 	return NC_NOERR;
 }
 
-static NCX_PUT1I(ushort, short,     0)
-static NCX_PUT1I(ushort, int,       0)
-static NCX_PUT1I(ushort, long,      0)
-static NCX_PUT1I(ushort, longlong,  0)
-static NCX_PUT1I(ushort, ushort,    1)
-static NCX_PUT1I(ushort, uint,      1)
-static NCX_PUT1I(ushort, ulonglong, 1)
-static NCX_PUT1F(ushort, float)
-static NCX_PUT1F(ushort, double)
+NCX_PUT1I(ushort, short,     0)
+NCX_PUT1I(ushort, int,       0)
+NCX_PUT1I(ushort, long,      0)
+NCX_PUT1I(ushort, longlong,  0)
+NCX_PUT1I(ushort, ushort,    1)
+NCX_PUT1I(ushort, uint,      1)
+NCX_PUT1I(ushort, ulonglong, 1)
+NCX_PUT1F(ushort, float)
+NCX_PUT1F(ushort, double)
 
 /* x_int ---------------------------------------------------------------------*/
 
@@ -733,18 +733,18 @@ put_ix_int(void *xp, const ix_int *ip)
 }
 
 #if X_SIZEOF_INT != SIZEOF_INT
-static NCX_GET1I(int, int,       1)
+NCX_GET1I(int, int,       1)
 #endif
-static NCX_GET1I(int, schar,     0)
-static NCX_GET1I(int, short,     1)
-static NCX_GET1I(int, long,      1)
-static NCX_GET1I(int, longlong,  1)
-static NCX_GET1I(int, ushort,    0)
-static NCX_GET1I(int, uchar,     0)
-static NCX_GET1I(int, uint,      0)
-static NCX_GET1I(int, ulonglong, 0)
-static NCX_GET1F(int, float)
-static NCX_GET1F(int, double)
+NCX_GET1I(int, schar,     0)
+NCX_GET1I(int, short,     1)
+NCX_GET1I(int, long,      1)
+NCX_GET1I(int, longlong,  1)
+NCX_GET1I(int, ushort,    0)
+NCX_GET1I(int, uchar,     0)
+NCX_GET1I(int, uint,      0)
+NCX_GET1I(int, ulonglong, 0)
+NCX_GET1F(int, float)
+NCX_GET1F(int, double)
 
 static int
 ncmpix_put_int_schar(void *xp, const schar *ip)
@@ -778,16 +778,16 @@ ncmpix_put_int_uchar(void *xp, const uchar *ip)
 }
 
 #if X_SIZEOF_INT != SIZEOF_INT
-static NCX_PUT1I(int, int,       1)
+NCX_PUT1I(int, int,       1)
 #endif
-static NCX_PUT1I(int, short,     1)
-static NCX_PUT1I(int, long,      1)
-static NCX_PUT1I(int, longlong,  1)
-static NCX_PUT1I(int, ushort,    0)
-static NCX_PUT1I(int, uint,      0)
-static NCX_PUT1I(int, ulonglong, 0)
-static NCX_PUT1F(int, float)
-static NCX_PUT1F(int, double)
+NCX_PUT1I(int, short,     1)
+NCX_PUT1I(int, long,      1)
+NCX_PUT1I(int, longlong,  1)
+NCX_PUT1I(int, ushort,    0)
+NCX_PUT1I(int, uint,      0)
+NCX_PUT1I(int, ulonglong, 0)
+NCX_PUT1F(int, float)
+NCX_PUT1F(int, double)
 
 
 /* x_uint --------------------------------------------------------------------*/
@@ -832,19 +832,19 @@ put_ix_uint(void *xp, const ix_uint *ip)
 }
 
 #if X_SIZEOF_UINT != SIZEOF_UINT
-static NCX_GET1I(uint, uint,      1)
+NCX_GET1I(uint, uint,      1)
 #endif
 
-static NCX_GET1I(uint, schar,     0)
-static NCX_GET1I(uint, short,     0)
-static NCX_GET1I(uint, int,       0)
-static NCX_GET1I(uint, long,      0)
-static NCX_GET1I(uint, longlong,  0)
-static NCX_GET1I(uint, ushort,    1)
-static NCX_GET1I(uint, uchar,     1)
-static NCX_GET1I(uint, ulonglong, 1)
-static NCX_GET1F(uint, float)
-static NCX_GET1F(uint, double)
+NCX_GET1I(uint, schar,     0)
+NCX_GET1I(uint, short,     0)
+NCX_GET1I(uint, int,       0)
+NCX_GET1I(uint, long,      0)
+NCX_GET1I(uint, longlong,  0)
+NCX_GET1I(uint, ushort,    1)
+NCX_GET1I(uint, uchar,     1)
+NCX_GET1I(uint, ulonglong, 1)
+NCX_GET1F(uint, float)
+NCX_GET1F(uint, double)
 
 static int
 ncmpix_put_uint_schar(void *xp, const schar *ip)
@@ -872,17 +872,17 @@ ncmpix_put_uint_uchar(void *xp, const uchar *ip)
 }
 
 #if X_SIZEOF_UINT != SIZEOF_UINT
-static NCX_PUT1I(uint, uint,      1)
+NCX_PUT1I(uint, uint,      1)
 #endif
 
-static NCX_PUT1I(uint, short,     0)
-static NCX_PUT1I(uint, int,       0)
-static NCX_PUT1I(uint, long,      0)
-static NCX_PUT1I(uint, longlong,  0)
-static NCX_PUT1I(uint, ushort,    1)
-static NCX_PUT1I(uint, ulonglong, 1)
-static NCX_PUT1F(uint, float)
-static NCX_PUT1F(uint, double)
+NCX_PUT1I(uint, short,     0)
+NCX_PUT1I(uint, int,       0)
+NCX_PUT1I(uint, long,      0)
+NCX_PUT1I(uint, longlong,  0)
+NCX_PUT1I(uint, ushort,    1)
+NCX_PUT1I(uint, ulonglong, 1)
+NCX_PUT1F(uint, float)
+NCX_PUT1F(uint, double)
 
 
 /* x_float -------------------------------------------------------------------*/
@@ -1307,16 +1307,16 @@ ncmpix_get_float_float(const void *xp, float *ip)
 
 #define ix_float float
 
-static NCX_GET1F(float, schar)
-static NCX_GET1F(float, short)
-static NCX_GET1F(float, int)
-static NCX_GET1F(float, long)
-static NCX_GET1F(float, double)
-static NCX_GET1F(float, longlong)
-static NCX_GET1F(float, uchar)
-static NCX_GET1F(float, ushort)
-static NCX_GET1F(float, uint)
-static NCX_GET1F(float, ulonglong)
+NCX_GET1F(float, schar)
+NCX_GET1F(float, short)
+NCX_GET1F(float, int)
+NCX_GET1F(float, long)
+NCX_GET1F(float, double)
+NCX_GET1F(float, longlong)
+NCX_GET1F(float, uchar)
+NCX_GET1F(float, ushort)
+NCX_GET1F(float, uint)
+NCX_GET1F(float, ulonglong)
 
 #if X_SIZEOF_FLOAT != SIZEOF_FLOAT || defined(NO_IEEE_FLOAT)
 static int
@@ -1331,16 +1331,16 @@ ncmpix_put_float_float(void *xp, const float *ip)
 }
 #endif
 
-static NCX_PUT1F(float, schar)
-static NCX_PUT1F(float, short)
-static NCX_PUT1F(float, int)
-static NCX_PUT1F(float, long)
-static NCX_PUT1F(float, double)
-static NCX_PUT1F(float, longlong)
-static NCX_PUT1F(float, uchar)
-static NCX_PUT1F(float, ushort)
-static NCX_PUT1F(float, uint)
-static NCX_PUT1F(float, ulonglong)
+NCX_PUT1F(float, schar)
+NCX_PUT1F(float, short)
+NCX_PUT1F(float, int)
+NCX_PUT1F(float, long)
+NCX_PUT1F(float, double)
+NCX_PUT1F(float, longlong)
+NCX_PUT1F(float, uchar)
+NCX_PUT1F(float, ushort)
+NCX_PUT1F(float, uint)
+NCX_PUT1F(float, ulonglong)
 
 
 /* x_double ------------------------------------------------------------------*/
@@ -1622,15 +1622,15 @@ put_ix_double(void *xp, const double *ip)
 
 #define ix_double double
 
-static NCX_GET1F(double, schar)
-static NCX_GET1F(double, short)
-static NCX_GET1F(double, int)
-static NCX_GET1F(double, long)
-static NCX_GET1F(double, longlong)
-static NCX_GET1F(double, uchar)
-static NCX_GET1F(double, ushort)
-static NCX_GET1F(double, uint)
-static NCX_GET1F(double, ulonglong)
+NCX_GET1F(double, schar)
+NCX_GET1F(double, short)
+NCX_GET1F(double, int)
+NCX_GET1F(double, long)
+NCX_GET1F(double, longlong)
+NCX_GET1F(double, uchar)
+NCX_GET1F(double, ushort)
+NCX_GET1F(double, uint)
+NCX_GET1F(double, ulonglong)
 
 static int
 ncmpix_get_double_float(const void *xp, float *ip)
@@ -1661,15 +1661,15 @@ ncmpix_get_double_double(const void *xp, double *ip)
 }
 #endif
 
-static NCX_PUT1F(double, schar)
-static NCX_PUT1F(double, uchar)
-static NCX_PUT1F(double, short)
-static NCX_PUT1F(double, ushort)
-static NCX_PUT1F(double, int)
-static NCX_PUT1F(double, long)
-static NCX_PUT1F(double, uint)
-static NCX_PUT1F(double, longlong)
-static NCX_PUT1F(double, ulonglong)
+NCX_PUT1F(double, schar)
+NCX_PUT1F(double, uchar)
+NCX_PUT1F(double, short)
+NCX_PUT1F(double, ushort)
+NCX_PUT1F(double, int)
+NCX_PUT1F(double, long)
+NCX_PUT1F(double, uint)
+NCX_PUT1F(double, longlong)
+NCX_PUT1F(double, ulonglong)
 
 static int
 ncmpix_put_double_float(void *xp, const float *ip)
@@ -1747,32 +1747,32 @@ put_ix_int64(void *xp, const ix_int64 *ip)
 }
 
 #if X_SIZEOF_INT64 != SIZEOF_LONGLONG
-static NCX_GET1I(int64, longlong,  1)
+NCX_GET1I(int64, longlong,  1)
 #endif
-static NCX_GET1I(int64, schar,     0)
-static NCX_GET1I(int64, short,     1)
-static NCX_GET1I(int64, int,       1)
-static NCX_GET1I(int64, long,      1)
-static NCX_GET1I(int64, ushort,    0)
-static NCX_GET1I(int64, uchar,     0)
-static NCX_GET1I(int64, uint,      0)
-static NCX_GET1I(int64, ulonglong, 0)
-static NCX_GET1F(int64, float)
-static NCX_GET1F(int64, double)
+NCX_GET1I(int64, schar,     0)
+NCX_GET1I(int64, short,     1)
+NCX_GET1I(int64, int,       1)
+NCX_GET1I(int64, long,      1)
+NCX_GET1I(int64, ushort,    0)
+NCX_GET1I(int64, uchar,     0)
+NCX_GET1I(int64, uint,      0)
+NCX_GET1I(int64, ulonglong, 0)
+NCX_GET1F(int64, float)
+NCX_GET1F(int64, double)
 
 #if X_SIZEOF_INT64 != SIZEOF_LONGLONG
-static NCX_PUT1I(int64, longlong,  1)
+NCX_PUT1I(int64, longlong,  1)
 #endif
-static NCX_PUT1I(int64, schar,     0)
-static NCX_PUT1I(int64, short,     1)
-static NCX_PUT1I(int64, int,       1)
-static NCX_PUT1I(int64, long,      1)
-static NCX_PUT1I(int64, ushort,    0)
-static NCX_PUT1I(int64, uchar,     0)
-static NCX_PUT1I(int64, uint,      0)
-static NCX_PUT1I(int64, ulonglong, 0)
-static NCX_PUT1F(int64, float)
-static NCX_PUT1F(int64, double)
+NCX_PUT1I(int64, schar,     0)
+NCX_PUT1I(int64, short,     1)
+NCX_PUT1I(int64, int,       1)
+NCX_PUT1I(int64, long,      1)
+NCX_PUT1I(int64, ushort,    0)
+NCX_PUT1I(int64, uchar,     0)
+NCX_PUT1I(int64, uint,      0)
+NCX_PUT1I(int64, ulonglong, 0)
+NCX_PUT1F(int64, float)
+NCX_PUT1F(int64, double)
 
 
 /* x_uint64 -----------------------------------------------------------------*/
@@ -1825,32 +1825,32 @@ put_ix_uint64(void *xp, const ix_uint64 *ip)
 }
 
 #if X_SIZEOF_UINT64 != SIZEOF_ULONGLONG
-static NCX_GET1I(uint64, ulonglong, 1)
+NCX_GET1I(uint64, ulonglong, 1)
 #endif
-static NCX_GET1I(uint64, schar,     0)
-static NCX_GET1I(uint64, short,     0)
-static NCX_GET1I(uint64, int,       0)
-static NCX_GET1I(uint64, long,      0)
-static NCX_GET1I(uint64, longlong,  0)
-static NCX_GET1I(uint64, ushort,    1)
-static NCX_GET1I(uint64, uchar,     1)
-static NCX_GET1I(uint64, uint,      1)
-static NCX_GET1F(uint64, float)
-static NCX_GET1F(uint64, double)
+NCX_GET1I(uint64, schar,     0)
+NCX_GET1I(uint64, short,     0)
+NCX_GET1I(uint64, int,       0)
+NCX_GET1I(uint64, long,      0)
+NCX_GET1I(uint64, longlong,  0)
+NCX_GET1I(uint64, ushort,    1)
+NCX_GET1I(uint64, uchar,     1)
+NCX_GET1I(uint64, uint,      1)
+NCX_GET1F(uint64, float)
+NCX_GET1F(uint64, double)
 
 #if X_SIZEOF_UINT64 != SIZEOF_ULONGLONG
-static NCX_PUT1I(uint64, ulonglong, 1)
+NCX_PUT1I(uint64, ulonglong, 1)
 #endif
-static NCX_PUT1I(uint64, schar,     0)
-static NCX_PUT1I(uint64, short,     0)
-static NCX_PUT1I(uint64, int,       0)
-static NCX_PUT1I(uint64, long,      0)
-static NCX_PUT1I(uint64, longlong,  0)
-static NCX_PUT1I(uint64, uchar,     1)
-static NCX_PUT1I(uint64, ushort,    1)
-static NCX_PUT1I(uint64, uint,      1)
-static NCX_PUT1F(uint64, float)
-static NCX_PUT1F(uint64, double)
+NCX_PUT1I(uint64, schar,     0)
+NCX_PUT1I(uint64, short,     0)
+NCX_PUT1I(uint64, int,       0)
+NCX_PUT1I(uint64, long,      0)
+NCX_PUT1I(uint64, longlong,  0)
+NCX_PUT1I(uint64, uchar,     1)
+NCX_PUT1I(uint64, ushort,    1)
+NCX_PUT1I(uint64, uint,      1)
+NCX_PUT1F(uint64, float)
+NCX_PUT1F(uint64, double)
 
 
 /* x_size_t */
