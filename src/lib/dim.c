@@ -28,18 +28,17 @@
  * Formerly
 NC_free_dim(dim)
  */
-void
+inline void
 ncmpii_free_NC_dim(NC_dim *dimp)
 {
-	if(dimp == NULL)
-		return;
-	ncmpii_free_NC_string(dimp->name);
-	NCI_Free(dimp);
+    if (dimp == NULL) return;
+    ncmpii_free_NC_string(dimp->name);
+    NCI_Free(dimp);
 }
 
 
 /* allocate and return a new NC_dim object */
-NC_dim *
+inline NC_dim *
 ncmpii_new_x_NC_dim(NC_string *name)
 {
     NC_dim *dimp;
@@ -53,7 +52,7 @@ ncmpii_new_x_NC_dim(NC_string *name)
     return(dimp);
 }
 
-/*----< ncmpii_new_NC_dim() >-----------------------------------------------*/
+/*----< ncmpii_new_NC_dim() >------------------------------------------------*/
 /*
  * Formerly, NC_new_dim(const char *name, long size)
  */
@@ -160,21 +159,21 @@ NC_finddim(const NC_dimarray  *ncap,
 /* dimarray */
 
 
-/*----< ncmpii_free_NC_dimarray() >-------------------------------------------*/
+/*----< ncmpii_free_NC_dimarray() >------------------------------------------*/
 /*
  * Free NC_dimarray values.
  * formerly
 NC_free_array()
  */
-void
+inline void
 ncmpii_free_NC_dimarray(NC_dimarray *ncap)
 {
     int i;
 
     assert(ncap != NULL);
     if (ncap->nalloc == 0) return;
-    assert(ncap->value != NULL);
 
+    assert(ncap->value != NULL);
     for (i=0; i<ncap->ndefined; i++)
         ncmpii_free_NC_dim(ncap->value[i]);
 
@@ -185,7 +184,7 @@ ncmpii_free_NC_dimarray(NC_dimarray *ncap)
 }
 
 
-/*----< ncmpii_dup_NC_dimarray() >--------------------------------------------*/
+/*----< ncmpii_dup_NC_dimarray() >-------------------------------------------*/
 int
 ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
 {
@@ -227,7 +226,7 @@ ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
 }
 
 
-/*----< incr_NC_dimarray() >------------------------------------------------*/
+/*----< incr_NC_dimarray() >---------------------------------------------- --*/
 /*
  * Add a new handle to the end of an array of handles
  * Formerly, NC_incr_array(array, tail)
@@ -268,7 +267,7 @@ incr_NC_dimarray(NC_dimarray *ncap,
 
 
 /*----< ncmpii_elem_NC_dimarray() >------------------------------------------*/
-NC_dim *
+inline NC_dim *
 ncmpii_elem_NC_dimarray(const NC_dimarray *ncap,
                         int                dimid)
 {
@@ -286,7 +285,7 @@ ncmpii_elem_NC_dimarray(const NC_dimarray *ncap,
 
 /* Public */
 
-/*----< ncmpi_def_dim() >---------------------------------------------------*/
+/*----< ncmpi_def_dim() >----------------------------------------------------*/
 int
 ncmpi_def_dim(int         ncid,    /* IN:  file ID */
               const char *name,    /* IN:  name of dimension */
@@ -368,108 +367,75 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
 }
 
 
+/*----< ncmpi_inq_dimid() >--------------------------------------------------*/
 int
-ncmpi_inq_dimid(int ncid, const char *name, int *dimid_ptr)
+ncmpi_inq_dimid(int         ncid,
+                const char *name,
+                int        *dimid_ptr)
 {
-	int status;
-	NC *ncp;
-	int dimid;
+    int status;
+    NC *ncp;
+    int dimid;
 
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-	dimid = NC_finddim(&ncp->dims, name, NULL);
+    dimid = NC_finddim(&ncp->dims, name, NULL);
+    if (dimid == -1) return NC_EBADDIM;
 
-	if(dimid == -1)
-		return NC_EBADDIM;
-
-	*dimid_ptr = dimid;
-	return NC_NOERR;
+    *dimid_ptr = dimid;
+    return NC_NOERR;
 }
 
 
+/*----< ncmpi_inq_dim() >----------------------------------------------------*/
 int
-ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *sizep)
+ncmpi_inq_dim(int         ncid,
+              int         dimid,
+              char       *name,
+              MPI_Offset *sizep)
 {
-	int status;
-	NC *ncp;
-	NC_dim *dimp;
+    int status;
+    NC *ncp;
+    NC_dim *dimp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
-	if(dimp == NULL)
-		return NC_EBADDIM;
+    dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
+    if (dimp == NULL) return NC_EBADDIM;
 
-	if(name != NULL)
-	{
-		(void)strncpy(name, dimp->name->cp,
-			dimp->name->nchars);
-		name[dimp->name->nchars] = '\0';
-	}
-	if(sizep != 0)
-	{
-		if(dimp->size == NC_UNLIMITED)
-			*sizep = NC_get_numrecs(ncp);
-		else
-			*sizep = dimp->size;
-	}
-	return NC_NOERR;
+    if (name != NULL)
+        /* in PnetCDF, name->cp is always NULL character terminated */
+        strcpy(name, dimp->name->cp);
+
+    if (sizep != NULL) {
+        if (dimp->size == NC_UNLIMITED)
+            *sizep = NC_get_numrecs(ncp);
+        else
+            *sizep = dimp->size;
+    }
+    return NC_NOERR;
 }
 
 
+/*----< ncmpi_inq_dimname() >------------------------------------------------*/
 int
-ncmpi_inq_dimname(int ncid, int dimid, char *name)
+ncmpi_inq_dimname(int   ncid,
+                  int   dimid,
+                  char *name)
 {
-	int status;
-	NC *ncp;
-	NC_dim *dimp;
-
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
-
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
-	if(dimp == NULL)
-		return NC_EBADDIM;
-
-	if(name != NULL)
-	{
-		(void)strncpy(name, dimp->name->cp,
-			dimp->name->nchars);
-		name[dimp->name->nchars] = '\0';
-	}
-
-	return NC_NOERR;
+    return ncmpi_inq_dim(ncid, dimid, name, NULL);
 }
 
 
+/*----< ncmpi_inq_dimlen() >-------------------------------------------------*/
 int
-ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp)
+ncmpi_inq_dimlen(int         ncid,
+                 int         dimid,
+                 MPI_Offset *lenp)
 {
-	int status;
-	NC *ncp;
-	NC_dim *dimp;
-
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
-
-	dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
-	if(dimp == NULL)
-		return NC_EBADDIM;
-
-	if(lenp != 0)
-	{
-		if(dimp->size == NC_UNLIMITED)
-			*lenp = NC_get_numrecs(ncp);
-		else
-			*lenp = dimp->size;
-	}
-	return NC_NOERR;
+    return ncmpi_inq_dim(ncid, dimid, NULL, lenp);
 }
 
 
@@ -485,11 +451,9 @@ ncmpi_rename_dim(int         ncid,
     NC_dim *dimp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp))
-        return NC_EPERM;
+    if (NC_readonly(ncp)) return NC_EPERM;
 
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
@@ -501,12 +465,10 @@ ncmpi_rename_dim(int         ncid,
     if (status != NC_NOERR) return status;
 
     existid = NC_finddim(&ncp->dims, newname, &dimp);
-    if (existid != -1)
-        return NC_ENAMEINUSE;
+    if (existid != -1) return NC_ENAMEINUSE;
 
     dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
-    if (dimp == NULL)
-        return NC_EBADDIM;
+    if (dimp == NULL) return NC_EBADDIM;
 
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
@@ -530,8 +492,7 @@ ncmpi_rename_dim(int         ncid,
 
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
     status = ncmpii_set_NC_string(dimp->name, newname);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
     if (NC_doHsync(ncp)) { /* NC_SHARE is set */
         /* Write the entire header to the file. Noet that we cannot just

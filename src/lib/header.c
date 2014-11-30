@@ -145,7 +145,7 @@ ncmpii_NC_computeshapes(NC *ncp)
 #define X_SIZEOF_NCTYPE X_SIZEOF_INT
 
 /*----< hdr_len_NC_name() >--------------------------------------------------*/
-static MPI_Offset
+inline static MPI_Offset
 hdr_len_NC_name(const NC_string *ncstrp,
                 int              sizeof_t)     /* NON_NEG */
 {
@@ -170,7 +170,7 @@ hdr_len_NC_name(const NC_string *ncstrp,
 }
 
 /*----< hdr_len_NC_dim() >---------------------------------------------------*/
-static MPI_Offset
+inline static MPI_Offset
 hdr_len_NC_dim(const NC_dim *dimp,
                int           sizeof_t)     /* NON_NEG */
 {
@@ -192,7 +192,7 @@ hdr_len_NC_dim(const NC_dim *dimp,
 }
 
 /*----< hdr_len_NC_dimarray() >----------------------------------------------*/
-static MPI_Offset
+inline static MPI_Offset
 hdr_len_NC_dimarray(const NC_dimarray *ncap,
                     int                sizeof_t)     /* NON_NEG */
 {
@@ -225,7 +225,7 @@ hdr_len_NC_dimarray(const NC_dimarray *ncap,
 }
 
 /*----< hdr_len_NC_attr() >--------------------------------------------------*/
-static MPI_Offset
+inline static MPI_Offset
 hdr_len_NC_attr(const NC_attr *attrp,
                 int            sizeof_t)     /* NON_NEG */
 {
@@ -258,7 +258,7 @@ hdr_len_NC_attr(const NC_attr *attrp,
 }
 
 /*----< hdr_len_NC_attrarray() >---------------------------------------------*/
-static MPI_Offset
+inline static MPI_Offset
 hdr_len_NC_attrarray(const NC_attrarray *ncap,
                      int                 sizeof_t)     /* NON_NEG */
 {
@@ -290,7 +290,7 @@ hdr_len_NC_attrarray(const NC_attrarray *ncap,
 }
 
 /*----< hdr_len_NC_var() >---------------------------------------------------*/
-static MPI_Offset
+inline static MPI_Offset
 hdr_len_NC_var(const NC_var *varp,
                int           sizeof_off_t, /* OFFSET */
                int           sizeof_t)     /* NON_NEG */
@@ -331,7 +331,7 @@ hdr_len_NC_var(const NC_var *varp,
 }
 
 /*----< hdr_len_NC_vararray() >----------------------------------------------*/
-static MPI_Offset
+inline static MPI_Offset
 hdr_len_NC_vararray(const NC_vararray *ncap,
                     int                sizeof_t,     /* NON_NEG */
                     int                sizeof_off_t) /* OFFSET */
@@ -370,7 +370,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 }
 
 /*----< ncmpii_hdr_len_NC() >------------------------------------------------*/
-MPI_Offset
+inline MPI_Offset
 ncmpii_hdr_len_NC(const NC *ncp)
 {
     /* netCDF file format:
@@ -412,7 +412,7 @@ ncmpii_hdr_len_NC(const NC *ncp)
 /* Begin Of put NC */
 
 /*----< hdr_put_NC_name() >--------------------------------------------------*/
-static int
+inline static int
 hdr_put_NC_name(bufferinfo      *pbp,
                 const NC_string *ncstrp)
 {
@@ -447,7 +447,7 @@ hdr_put_NC_name(bufferinfo      *pbp,
 /*
  * Put the values of an attribute
  */
-static int
+inline static int
 hdr_put_NC_attrV(bufferinfo    *pbp,
                  const NC_attr *attrp)
 {
@@ -483,7 +483,7 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
 }
 
 /*----< hdr_put_NC_dim() >---------------------------------------------------*/
-static int
+inline static int
 hdr_put_NC_dim(bufferinfo   *pbp,
                const NC_dim *dimp)
 {
@@ -511,7 +511,7 @@ hdr_put_NC_dim(bufferinfo   *pbp,
 }
 
 /*----< hdr_put_NC_dimarray() >----------------------------------------------*/
-static int
+inline static int
 hdr_put_NC_dimarray(bufferinfo        *pbp,
                     const NC_dimarray *ncap)
 {
@@ -565,7 +565,7 @@ hdr_put_NC_dimarray(bufferinfo        *pbp,
 }
 
 /*----< hdr_put_NC_attr() >--------------------------------------------------*/
-static int
+inline static int
 hdr_put_NC_attr(bufferinfo    *pbp,
                 const NC_attr *attrp)
 {
@@ -602,7 +602,7 @@ hdr_put_NC_attr(bufferinfo    *pbp,
 }
 
 /*----< hdr_put_NC_attrarray() >---------------------------------------------*/
-static int
+inline static int
 hdr_put_NC_attrarray(bufferinfo         *pbp,
                      const NC_attrarray *ncap)
 {
@@ -926,7 +926,7 @@ hdr_fetch(bufferinfo *gbp) {
 
 /*----< hdr_check_buffer() >--------------------------------------------------*/
 /* Ensure that 'nextread' bytes are available.  */
-static int
+inline static int
 hdr_check_buffer(bufferinfo *gbp,
                  MPI_Offset  nextread)
 {
@@ -946,7 +946,7 @@ hdr_check_buffer(bufferinfo *gbp,
 }
 
 /*----< hdr_get_NCtype() >----------------------------------------------------*/
-static int
+inline static int
 hdr_get_NCtype(bufferinfo *gbp,
                NCtype     *typep)
 {
@@ -965,7 +965,7 @@ hdr_get_NCtype(bufferinfo *gbp,
 }
 
 /*----< hdr_get_size_t() >----------------------------------------------------*/
-static int
+inline static int
 hdr_get_size_t(bufferinfo *gbp,
                MPI_Offset *sp)
 {
@@ -988,7 +988,7 @@ hdr_get_size_t(bufferinfo *gbp,
 }
 
 /*----< hdr_get_nc_type() >---------------------------------------------------*/
-static int
+inline static int
 hdr_get_nc_type(bufferinfo *gbp,
                 nc_type    *typep)
 {
@@ -1021,7 +1021,7 @@ hdr_get_nc_type(bufferinfo *gbp,
 }
 
 /*----< ncmpix_len_nctype() >------------------------------------------------*/
-MPI_Offset
+inline MPI_Offset
 ncmpix_len_nctype(nc_type type) {
     switch(type) {
         case NC_BYTE:
@@ -1120,7 +1120,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
 }
 
 /*----< hdr_get_NC_dim() >----------------------------------------------------*/
-static int
+inline static int
 hdr_get_NC_dim(bufferinfo  *gbp,
                NC_dim     **dimpp)
 {
@@ -2050,8 +2050,8 @@ ncmpii_comp_vars(int          safe_mode,
         NC_var *v1 = root_var->value[i];
         NC_var *v2 = local_var->value[i];
         char name[128];
-        strncpy(name, v1->name->cp, v1->name->nchars);
-        name[v1->name->nchars] = '\0';
+        /* in PnetCDF, name->cp is always NULL character terminated */
+        strcpy(name, v1->name->cp);
 
 #define VAR_WARN(msg, var, root, local) \
     if (safe_mode) printf(msg, WARN_STR, var, root, local);

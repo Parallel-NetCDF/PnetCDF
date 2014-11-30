@@ -53,7 +53,7 @@
 
 static unsigned char IDalloc[MAX_NC_ID];
 
-void
+inline void
 ncmpiio_free(ncio *nciop) {
     if (nciop != NULL) {
 #ifdef HAVE_MPI_INFO_FREE
@@ -67,7 +67,7 @@ ncmpiio_free(ncio *nciop) {
     }
 }
 
-ncio *
+inline ncio *
 ncmpiio_new(const char *path, int ioflags)
 {
     size_t sz_ncio = M_RNDUP(sizeof(ncio));
@@ -75,8 +75,7 @@ ncmpiio_new(const char *path, int ioflags)
     ncio *nciop;
 
     nciop = (ncio *) NCI_Malloc(sz_ncio + sz_path);
-    if (nciop == NULL)
-        return NULL;
+    if (nciop == NULL) return NULL;
 
     nciop->ioflags  = ioflags;
     nciop->comm     = MPI_COMM_NULL;
@@ -372,7 +371,7 @@ ncmpiio_open(MPI_Comm     comm,
 }
 
 /*----< ncmpiio_sync() >-----------------------------------------------------*/
-int
+inline int
 ncmpiio_sync(ncio *nciop) {
 #ifndef DISABLE_FILE_SYNC
     int mpireturn;

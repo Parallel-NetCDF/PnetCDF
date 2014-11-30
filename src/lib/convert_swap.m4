@@ -54,7 +54,7 @@ static void swapn(void *dst, const void *src, MPI_Offset nn, int xsize);
  *  In OpenMPI, this assumption will fail
  */
 
-MPI_Datatype
+inline MPI_Datatype
 ncmpii_nc2mpitype(nc_type type)
 {
     switch(type){
@@ -111,7 +111,7 @@ ncmpii_need_swap(nc_type      nctype,
 
 #if 0
 /*----< swapn() >------------------------------------------------------------*/
-static void
+inline static void
 swapn(void       *dst,
       const void *src,
       MPI_Offset  nn,
@@ -206,7 +206,7 @@ dnl
 define(`X_PUTN_FILETYPE',dnl
 `dnl
 /*----< ncmpii_x_putn_$1() >--------------------------------------------------*/
-int
+inline int
 ncmpii_x_putn_$1(void         *xp,      /* file buffer of type schar */
                  const void   *putbuf,  /* put buffer of type puttype */
                  MPI_Offset    nelems,
@@ -256,7 +256,7 @@ dnl
 define(`X_GETN_FILETYPE',dnl
 `dnl
 /*----< ncmpii_x_getn_$1() >-------------------------------------------------*/
-int
+inline int
 ncmpii_x_getn_$1(const void   *xp,      /* file buffer of type schar */
                  void         *getbuf,  /* get buffer of type gettype */
                  MPI_Offset    nelems,

@@ -35,7 +35,7 @@ dnl
  * Formerly
 NC_free_attr()
  */
-void
+inline void
 ncmpii_free_NC_attr(NC_attr *attrp)
 {
     if (attrp == NULL) return;
@@ -51,7 +51,7 @@ ncmpii_free_NC_attr(NC_attr *attrp)
  * How much space will 'nelems' of 'type' take in
  * external representation (as the values of an attribute)?
  */
-static MPI_Offset
+inline static MPI_Offset
 ncmpix_len_NC_attrV(nc_type    type,
                     MPI_Offset nelems)
 {
@@ -74,34 +74,32 @@ ncmpix_len_NC_attrV(nc_type    type,
 
 
 NC_attr *
-ncmpii_new_x_NC_attr(
-	NC_string *strp,
-	nc_type type,
-	MPI_Offset nelems)
+ncmpii_new_x_NC_attr(NC_string  *strp,
+                     nc_type     type,
+                     MPI_Offset  nelems)
 {
-	NC_attr *attrp;
-	const MPI_Offset xsz = ncmpix_len_NC_attrV(type, nelems);
-	MPI_Offset  sz = M_RNDUP(sizeof(NC_attr));
+    NC_attr *attrp;
+    const MPI_Offset xsz = ncmpix_len_NC_attrV(type, nelems);
+    MPI_Offset sz = M_RNDUP(sizeof(NC_attr));
 
-	assert(!(xsz == 0 && nelems != 0));
+    assert(!(xsz == 0 && nelems != 0));
 
-	sz += xsz;
+    sz += xsz;
 
-	attrp = (NC_attr *) NCI_Malloc(sz);
-	if(attrp == NULL )
-		return NULL;
+    attrp = (NC_attr *) NCI_Malloc(sz);
+    if (attrp == NULL ) return NULL;
 
-	attrp->xsz = xsz;
+    attrp->xsz    = xsz;
+    attrp->name   = strp;
+    attrp->type   = type;
+    attrp->nelems = nelems;
 
-	attrp->name = strp;
-	attrp->type = type;
-	attrp->nelems = nelems;
-	if(xsz != 0)
-		attrp->xvalue = (char *)attrp + M_RNDUP(sizeof(NC_attr));
-	else
-		attrp->xvalue = NULL;
+    if (xsz != 0)
+        attrp->xvalue = (char *)attrp + M_RNDUP(sizeof(NC_attr));
+    else
+        attrp->xvalue = NULL;
 
-	return(attrp);
+    return(attrp);
 }
 
 
@@ -142,8 +140,8 @@ NC_attr *
 dup_NC_attr(const NC_attr *rattrp)
 {
     NC_attr *attrp = ncmpii_new_NC_attr(rattrp->name->cp,
-    	                                rattrp->type,
-    	                                rattrp->nelems);
+                                        rattrp->type,
+                                        rattrp->nelems);
     if (attrp == NULL) return NULL;
     memcpy(attrp->xvalue, rattrp->xvalue, rattrp->xsz);
     return attrp;
@@ -330,140 +328,131 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
  */
 static int
 NC_lookupattr(int ncid,
-	int varid,
-	const char *name, /* attribute name */
-	NC_attr **attrpp) /* modified on return */
+    int varid,
+    const char *name, /* attribute name */
+    NC_attr **attrpp) /* modified on return */
 {
-	int indx, status;
-	NC *ncp;
-	NC_attrarray *ncap;
+    int indx, status;
+    NC *ncp;
+    NC_attrarray *ncap;
 
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if(status != NC_NOERR)
+        return status;
 
-	ncap = NC_attrarray0(ncp, varid);
-	if(ncap == NULL)
-		return NC_ENOTVAR;
+    ncap = NC_attrarray0(ncp, varid);
+    if(ncap == NULL)
+        return NC_ENOTVAR;
 
-	indx = ncmpii_NC_findattr(ncap, name);
-	if(indx == -1)
-		return NC_ENOTATT;
+    indx = ncmpii_NC_findattr(ncap, name);
+    if(indx == -1)
+        return NC_ENOTATT;
 
-	if(attrpp != NULL)
-		*attrpp = ncap->value[indx];
+    if(attrpp != NULL)
+        *attrpp = ncap->value[indx];
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 /* Public */
 
+/*----< ncmpi_inq_attname() >------------------------------------------------*/
 int
-ncmpi_inq_attname(int ncid, int varid, int attnum, char *name)
+ncmpi_inq_attname(int   ncid,
+                  int   varid,
+                  int   attid,
+                  char *name)
 
 {
-	int status;
-	NC *ncp;
-	NC_attrarray *ncap;
-	NC_attr *attrp;
+    int status;
+    NC *ncp;
+    NC_attrarray *ncap;
+    NC_attr *attrp;
 
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-	ncap = NC_attrarray0(ncp, varid);
-	if(ncap == NULL)
-		return NC_ENOTVAR;
+    ncap = NC_attrarray0(ncp, varid);
+    if (ncap == NULL) return NC_ENOTVAR;
 
-	attrp = elem_NC_attrarray(ncap, attnum);
-	if(attrp == NULL)
-		return NC_ENOTATT;
+    attrp = elem_NC_attrarray(ncap, attid);
+    if (attrp == NULL) return NC_ENOTATT;
 
-	(void) strncpy(name, attrp->name->cp, attrp->name->nchars);
-	name[attrp->name->nchars] = '\0';
+    /* in PnetCDF, name->cp is always NULL character terminated */
+    assert(name != NULL);
+    strcpy(name, attrp->name->cp);
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 
+/*----< ncmpi_inq_attid() >--------------------------------------------------*/
 int
-ncmpi_inq_attid(int ncid, int varid, const char *name, int *attnump)
+ncmpi_inq_attid(int         ncid,
+                int         varid,
+                const char *name,
+                int        *attidp)
 {
-	int indx, status;
-	NC *ncp;
-	NC_attrarray *ncap;
+    int indx, status;
+    NC *ncp;
+    NC_attrarray *ncap;
 
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-	ncap = NC_attrarray0(ncp, varid);
-	if(ncap == NULL)
-		return NC_ENOTVAR;
+    ncap = NC_attrarray0(ncp, varid);
+    if (ncap == NULL) return NC_ENOTVAR;
 
+    indx = ncmpii_NC_findattr(ncap, name);
+    if (indx == -1) return NC_ENOTATT;
 
-	indx = ncmpii_NC_findattr(ncap, name);
-	if(indx == -1)
-		return NC_ENOTATT;
+    if (attidp != NULL)
+        *attidp = indx;
 
-	if(attnump != NULL)
-		*attnump = indx;
-
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
+/*----< ncmpi_inq_att() >----------------------------------------------------*/
 int
-ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *datatypep)
+ncmpi_inq_att(int         ncid,
+              int         varid,
+              const char *name, /* input, attribute name */
+              nc_type    *datatypep,
+              MPI_Offset *lenp)
 {
-	int status;
-	NC_attr *attrp;
+    int status;
+    NC_attr *attrp;
 
-	status = NC_lookupattr(ncid, varid, name, &attrp);
-	if(status != NC_NOERR)
-		return status;
+    status = NC_lookupattr(ncid, varid, name, &attrp);
+    if (status != NC_NOERR) return status;
 
-	if(datatypep != NULL)
-		*datatypep = attrp->type;
+    if (datatypep != NULL)
+        *datatypep = attrp->type;
 
-	return NC_NOERR;
+    if (lenp != NULL)
+        *lenp = attrp->nelems;
+
+    return NC_NOERR;
 }
 
+/*----< ncmpi_inq_atttype() >------------------------------------------------*/
 int
-ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp)
+ncmpi_inq_atttype(int         ncid,
+                  int         varid,
+                  const char *name,
+                  nc_type    *datatypep)
 {
-	int status;
-	NC_attr *attrp;
-
-	status = NC_lookupattr(ncid, varid, name, &attrp);
-	if(status != NC_NOERR)
-		return status;
-
-	if(lenp != NULL)
-		*lenp = attrp->nelems;
-
-	return NC_NOERR;
+    return ncmpi_inq_att(ncid, varid, name, datatypep, NULL);
 }
 
+/*----< ncmpi_inq_attlen() >-------------------------------------------------*/
 int
-ncmpi_inq_att(int ncid,
-	int varid,
-	const char *name, /* input, attribute name */
-	nc_type *datatypep,
-	MPI_Offset *lenp)
+ncmpi_inq_attlen(int         ncid,
+                 int         varid,
+                 const char *name,
+                 MPI_Offset *lenp)
 {
-	int status;
-	NC_attr *attrp;
-
-	status = NC_lookupattr(ncid, varid, name, &attrp);
-	if(status != NC_NOERR)
-		return status;
-
-	if(datatypep != NULL)
-		*datatypep = attrp->type;
-	if(lenp != NULL)
-		*lenp = attrp->nelems;
-
-	return NC_NOERR;
+    return ncmpi_inq_att(ncid, varid, name, NULL, lenp);
 }
 
 
@@ -482,15 +471,12 @@ ncmpi_rename_att(int         ncid,
 
     /* sortof inline clone of NC_lookupattr() */
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp))
-        return NC_EPERM;
+    if (NC_readonly(ncp)) return NC_EPERM;
 
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL)
-        return NC_ENOTVAR;
+    if (ncap == NULL) return NC_ENOTVAR;
 
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
@@ -499,12 +485,11 @@ ncmpi_rename_att(int         ncid,
         file_ver = 5;
 
     status = ncmpii_NC_check_name(newname, file_ver);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if (indx < 0)
-        return NC_ENOTATT;
+    if (indx < 0) return NC_ENOTATT;
+
     attrp = ncap->value[indx];
     /* end inline clone NC_lookupattr() */
 
@@ -534,8 +519,7 @@ ncmpi_rename_att(int         ncid,
 
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
     status = ncmpii_set_NC_string(attrp->name, newname);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
     if (NC_doHsync(ncp)) { /* NC_SHARE is set */
         /* Write the entire header to the file. Noet that we cannot just
@@ -570,19 +554,15 @@ ncmpi_copy_att(int         ncid_in,
     NC_attr *iattrp, *attrp, *old=NULL;
 
     status = NC_lookupattr(ncid_in, varid_in, name, &iattrp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
     status = ncmpii_NC_check_id(ncid_out, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp))
-        return NC_EPERM;
+    if (NC_readonly(ncp)) return NC_EPERM;
 
     ncap = NC_attrarray0(ncp, varid_out);
-    if (ncap == NULL)
-        return NC_ENOTVAR;
+    if (ncap == NULL) return NC_ENOTVAR;
 
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx >= 0) { /* name in use */
@@ -591,8 +571,7 @@ ncmpi_copy_att(int         ncid_in,
 
             attrp = ncap->value[indx]; /* convenience */
 
-            if (iattrp->xsz > attrp->xsz)
-                return NC_ENOTINDEFINE;
+            if (iattrp->xsz > attrp->xsz) return NC_ENOTINDEFINE;
             /* else, we can reuse existing without redef */
 
             attrp->xsz = iattrp->xsz;
@@ -638,8 +617,7 @@ ncmpi_copy_att(int         ncid_in,
     }
 
     attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
-    if (attrp == NULL)
-        return NC_ENOMEM;
+    if (attrp == NULL) return NC_ENOMEM;
 
     memcpy(attrp->xvalue, iattrp->xvalue, iattrp->xsz);
 
@@ -658,59 +636,37 @@ ncmpi_copy_att(int         ncid_in,
     return NC_NOERR;
 }
 
-
+/*----< ncmpi_del_att() >---------------------------------------------------*/
 int
-ncmpi_del_att(int ncid, int varid, const char *name)
+ncmpi_del_att(int         ncid,
+              int         varid,
+              const char *name)
 {
-	int status;
-	NC *ncp;
-	NC_attrarray *ncap;
-	NC_attr **attrpp;
-	NC_attr *old = NULL;
-	int attrid;
-	MPI_Offset slen;
+    int status, attrid;
+    NC *ncp;
+    NC_attrarray *ncap;
 
-	status = ncmpii_NC_check_id(ncid, &ncp);
-	if(status != NC_NOERR)
-		return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-	if(!NC_indef(ncp))
-		return NC_ENOTINDEFINE;
+    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
 
-	ncap = NC_attrarray0(ncp, varid);
-	if(ncap == NULL)
-		return NC_ENOTVAR;
+    ncap = NC_attrarray0(ncp, varid);
+    if (ncap == NULL) return NC_ENOTVAR;
 
-			/* sortof inline ncmpii_NC_findattr() */
-	slen = strlen(name);
+    attrid = ncmpii_NC_findattr(ncap, name);
+    if (attrid == -1) return NC_ENOTATT;
 
-	attrpp = (NC_attr **) ncap->value;
-	for (attrid = 0; attrid < ncap->ndefined; attrid++, attrpp++)
-	{
-		if( slen == (*attrpp)->name->nchars &&
-			strncmp(name, (*attrpp)->name->cp, slen) == 0)
-		{
-			old = *attrpp;
-			break;
-		}
-	}
-	if ( attrid == ncap->ndefined )
-		return NC_ENOTATT;
-			/* end inline NC_findattr() */
+    ncmpii_free_NC_attr(ncap->value[attrid]);
 
-	/* shuffle down */
-	for (attrid++; attrid < ncap->ndefined; attrid++)
-	{
-		*attrpp = *(attrpp + 1);
-		attrpp++;
-	}
-	*attrpp = NULL;
-	/* decrement count */
-	ncap->ndefined--;
+    /* shuffle down */
+    for (; attrid < ncap->ndefined; attrid++)
+        ncap->value[attrid] = ncap->value[attrid+1];
 
-	ncmpii_free_NC_attr(old);
+    /* decrement count */
+    ncap->ndefined--;
 
-	return NC_NOERR;
+    return NC_NOERR;
 }
 
 static nc_type longtype = (sizeof(long) == sizeof(int) ? NC_INT : NC_INT64);
@@ -724,7 +680,7 @@ dnl
 define(`PAD_GETN_FILETYPE',dnl
 `dnl
 /*----< ncmpix_pad_getn_$1() >-----------------------------------------------*/
-static int
+inline static int
 ncmpix_pad_getn_$1(const void **xpp,
                    MPI_Offset   nelems,
                    void        *tp,
@@ -770,7 +726,7 @@ dnl
 define(`GETN_FILETYPE',dnl
 `dnl
 /*----< ncmpix_getn_$1() >---------------------------------------------------*/
-static int
+inline static int
 ncmpix_getn_$1(const void **xpp,
                MPI_Offset   nelems,
                void        *tp,
@@ -814,7 +770,7 @@ GETN_FILETYPE(uint64)
 
 /*----< ncmpix_pad_getn() >--------------------------------------------------*/
 /* padding only applicable to file types of size smaller than 4 bytes */
-static int
+inline static int
 ncmpix_pad_getn(const void **xpp,
                 MPI_Offset   nelems,
                 void        *tp,
@@ -926,7 +882,7 @@ dnl
 define(`PAD_PUTN_FILETYPE',dnl
 `dnl
 /*----< ncmpix_pad_putn_$1() >-----------------------------------------------*/
-static int
+inline static int
 ncmpix_pad_putn_$1(void       **xpp,
                    MPI_Offset   nelems,
                    const void  *tp,
@@ -972,7 +928,7 @@ dnl
 define(`PUTN_FILETYPE',dnl
 `dnl
 /*----< ncmpix_putn_$1() >---------------------------------------------------*/
-static int
+inline static int
 ncmpix_putn_$1(void       **xpp,
                MPI_Offset   nelems,
                const void  *tp,
@@ -1016,7 +972,7 @@ PUTN_FILETYPE(uint64)
 
 /*----< ncmpix_pad_putn() >--------------------------------------------------*/
 /* padding only applicable to file types of size smaller than 4 bytes */
-static int
+inline static int
 ncmpix_pad_putn(void       **xpp,
                 MPI_Offset   nelems,
                 const void  *tp,
@@ -1098,6 +1054,7 @@ ncmpii_put_att(int         ncid,
    if (!strcmp(name, "_FillValue") && varid != NC_GLOBAL) {
 
       NC_var *varp = ncmpii_NC_lookupvar(ncp, varid);
+      if (varp == NULL) return NC_ENOTVAR;
 
       /* Fill value must be same type and have exactly one value */
       if (filetype != varp->type)

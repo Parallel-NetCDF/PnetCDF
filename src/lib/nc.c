@@ -55,8 +55,8 @@ static int nc_sync(int ncid);
 static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
 #endif
 
-/*----< ncmpii_add_to_NCList() >--------------------------------------------*/
-void
+/*----< ncmpii_add_to_NCList() >---------------------------------------------*/
+inline void
 ncmpii_add_to_NCList(NC *ncp)
 {
     assert(ncp != NULL);
@@ -69,27 +69,26 @@ ncmpii_add_to_NCList(NC *ncp)
     NClist = ncp;
 }
 
-void
+/*----< ncmpii_del_from_NCList() >-------------------------------------------*/
+inline void
 ncmpii_del_from_NCList(NC *ncp)
 {
-        assert(ncp != NULL);
+    assert(ncp != NULL);
 
-        if(NClist == ncp)
-        {
-                assert(ncp->prev == NULL);
-                NClist = ncp->next;
-        }
-        else
-        {
-                assert(ncp->prev != NULL);
-                ncp->prev->next = ncp->next;
-        }
+    if (NClist == ncp) {
+        assert(ncp->prev == NULL);
+        NClist = ncp->next;
+    }
+    else {
+        assert(ncp->prev != NULL);
+        ncp->prev->next = ncp->next;
+    }
 
-        if(ncp->next != NULL)
-                ncp->next->prev = ncp->prev;
+    if (ncp->next != NULL)
+        ncp->next->prev = ncp->prev;
 
-        ncp->next = NULL;
-        ncp->prev = NULL;
+    ncp->next = NULL;
+    ncp->prev = NULL;
 }
 
 /*
@@ -211,9 +210,9 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
 #endif
 
 /*----< ncmpii_NC_check_id() >-----------------------------------------------*/
-int
-ncmpii_NC_check_id(int  ncid,
-                   NC **ncpp)
+inline int
+ncmpii_NC_check_id(int   ncid,
+                   NC  **ncpp)
 {
     NC *ncp;
 
@@ -258,7 +257,7 @@ ncmpii_inq_files_opened(int *num, int *ncids)
 
 
 /*----< ncmpii_free_NC() >----------------------------------------------------*/
-void
+inline void
 ncmpii_free_NC(NC *ncp)
 {
     if (ncp == NULL) return;
@@ -270,7 +269,7 @@ ncmpii_free_NC(NC *ncp)
 
 
 /*----< ncmpii_new_NC() >----------------------------------------------------*/
-NC *
+inline NC *
 ncmpii_new_NC(const MPI_Offset *chunkp)
 {
     NC *ncp = (NC *) NCI_Calloc(1, sizeof(NC));
@@ -319,29 +318,27 @@ ncmpii_get_default_format(void)
 NC *
 ncmpii_dup_NC(const NC *ref)
 {
-        NC *ncp;
+    NC *ncp;
 
-        ncp = (NC *) NCI_Malloc(sizeof(NC));
-        if(ncp == NULL)
-                return NULL;
-        memset(ncp, 0, sizeof(NC));
+    ncp = (NC *) NCI_Malloc(sizeof(NC));
+    if (ncp == NULL) return NULL;
 
-        if(ncmpii_dup_NC_dimarray(&ncp->dims, &ref->dims) != NC_NOERR)
-                goto err;
-        if(ncmpii_dup_NC_attrarray(&ncp->attrs, &ref->attrs) != NC_NOERR)
-                goto err;
-        if(ncmpii_dup_NC_vararray(&ncp->vars, &ref->vars) != NC_NOERR)
-                goto err;
+    memset(ncp, 0, sizeof(NC));
 
-        ncp->xsz = ref->xsz;
-        ncp->begin_var = ref->begin_var;
-        ncp->begin_rec = ref->begin_rec;
-        ncp->recsize = ref->recsize;
-        NC_set_numrecs(ncp, NC_get_numrecs(ref));
-        return ncp;
-err:
+    if (ncmpii_dup_NC_dimarray(&ncp->dims,   &ref->dims)  != NC_NOERR ||
+        ncmpii_dup_NC_attrarray(&ncp->attrs, &ref->attrs) != NC_NOERR ||
+        ncmpii_dup_NC_vararray(&ncp->vars,   &ref->vars)  != NC_NOERR) {
         ncmpii_free_NC(ncp);
         return NULL;
+    }
+
+    ncp->xsz       = ref->xsz;
+    ncp->begin_var = ref->begin_var;
+    ncp->begin_rec = ref->begin_rec;
+    ncp->recsize   = ref->recsize;
+
+    NC_set_numrecs(ncp, NC_get_numrecs(ref));
+    return ncp;
 }
 
 
@@ -351,14 +348,16 @@ err:
 NCcktype()
  * Sense of the return is changed.
  */
-int
+inline int
 ncmpii_cktype(int     cdf_ver,
               nc_type type)
 {
-    if (type <= 0   || type > NC_MAX_ATOMIC_TYPE) return NC_EBADTYPE;
+    if (type <= 0 || type > NC_MAX_ATOMIC_TYPE)
+        return NC_EBADTYPE;
 
     /* For CDF-1 and CDF-2 files, only classic types are allowed. */
-    if (cdf_ver < 5 && type > NC_DOUBLE) return NC_ESTRICTNC3;
+    if (cdf_ver < 5 && type > NC_DOUBLE)
+        return NC_ESTRICTCDF2;
 
     return NC_NOERR;
 }
@@ -368,7 +367,7 @@ ncmpii_cktype(int     cdf_ver,
  * How many objects of 'type'
  * will fit into xbufsize?
  */
-MPI_Offset
+inline MPI_Offset
 ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
 {
     switch(type){
@@ -758,7 +757,7 @@ ncmpii_write_numrecs(NC         *ncp,
  * It is expensive.
  */
 
-int
+inline int
 ncmpii_read_NC(NC *ncp) {
   int status = NC_NOERR;
 
@@ -852,7 +851,7 @@ write_NC(NC *ncp)
     return status;
 }
 
-int
+inline int
 ncmpii_dset_has_recvars(NC *ncp)
 {
     /* possible further optimzation: set a flag on the header data
@@ -1535,7 +1534,7 @@ ncmpi_inq_version(int ncid, int *nc_mode)
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if(status != NC_NOERR)
+    if (status != NC_NOERR)
         return status;
 
     if (fIsSet(ncp->flags, NC_64BIT_DATA))
@@ -1552,65 +1551,61 @@ ncmpi_inq_version(int ncid, int *nc_mode)
 int
 ncmpi_inq_ndims(int ncid, int *ndimsp)
 {
-        int status;
-        NC *ncp;
+    int status;
+    NC *ncp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp);
-        if(status != NC_NOERR)
-                return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-        if(ndimsp != NULL)
-                *ndimsp = (int) ncp->dims.ndefined;
+    if (ndimsp != NULL)
+        *ndimsp = (int) ncp->dims.ndefined;
 
-        return NC_NOERR;
+    return NC_NOERR;
 }
 
 int
 ncmpi_inq_nvars(int ncid, int *nvarsp)
 {
-        int status;
-        NC *ncp;
+    int status;
+    NC *ncp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp);
-        if(status != NC_NOERR)
-                return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-        if(nvarsp != NULL)
-                *nvarsp = (int) ncp->vars.ndefined;
+    if (nvarsp != NULL)
+        *nvarsp = (int) ncp->vars.ndefined;
 
-        return NC_NOERR;
+    return NC_NOERR;
 }
 
 int
 ncmpi_inq_natts(int ncid, int *nattsp)
 {
-        int status;
-        NC *ncp;
+    int status;
+    NC *ncp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp);
-        if(status != NC_NOERR)
-                return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-        if(nattsp != NULL)
-                *nattsp = (int) ncp->attrs.ndefined;
+    if (nattsp != NULL)
+        *nattsp = (int) ncp->attrs.ndefined;
 
-        return NC_NOERR;
+    return NC_NOERR;
 }
 
 int
 ncmpi_inq_unlimdim(int ncid, int *xtendimp)
 {
-        int status;
-        NC *ncp;
+    int status;
+    NC *ncp;
 
-        status = ncmpii_NC_check_id(ncid, &ncp);
-        if(status != NC_NOERR)
-                return status;
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
 
-        if(xtendimp != NULL)
-                *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
+    if (xtendimp != NULL)
+        *xtendimp = ncmpii_find_NC_Udim(&ncp->dims, NULL);
 
-        return NC_NOERR;
+    return NC_NOERR;
 }
 
 /*----< ncmpi_inq_num_rec_vars() >-------------------------------------------*/

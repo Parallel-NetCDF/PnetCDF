@@ -35,8 +35,8 @@ int test_attr_types(char *filename,
         char name[32];
         sprintf(name, "gattr_%d", i);
         err = ncmpi_put_att_int(ncid, NC_GLOBAL, name, xtype[i], 1, &attr);
-        if (err != NC_ESTRICTNC3) {
-            printf("Error (line=%d): expecting NC_ESTRICTNC3 but got %d\n", __LINE__,err);
+        if (err != NC_ESTRICTCDF2) {
+            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %d\n", __LINE__,err);
             nerr++;
         }
     }
@@ -67,8 +67,8 @@ int test_var_types(char *filename,
         char name[32];
         sprintf(name, "var_%d", i);
         err = ncmpi_def_var(ncid, name, xtype[i], 1, &dimid, &varid[i]);
-        if (err != NC_ESTRICTNC3) {
-            printf("Error (line=%d): expecting NC_ESTRICTNC3 but got %d\n", __LINE__,err);
+        if (err != NC_ESTRICTCDF2) {
+            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %d\n", __LINE__,err);
             nerr++;
         }
     }
