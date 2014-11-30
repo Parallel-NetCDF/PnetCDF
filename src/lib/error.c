@@ -233,6 +233,8 @@ ncmpi_strerror(int err)
             return "element type of the MPI derived data type mismatches the variable type";
         case NC_ETYPESIZE_MISMATCH:
             return "file type size mismatches buffer type size";
+        case NC_ESTRICTCDF2:
+            return "Attempting CDF-5 operation on CDF-2 file";
         case NC_EMULTIDEFINE:
             return "File header is inconsistent among processes";
             /* this error means the metadata (dimension names, variable names,

@@ -499,6 +499,7 @@ by the desired type. */
 #define NC_ETYPESIZE			(-229) /**< MPI derived data type size error (bigger than the variable size) */
 #define NC_ETYPE_MISMATCH		(-230) /**< element type of the MPI derived data type mismatches the variable type */
 #define NC_ETYPESIZE_MISMATCH		(-231) /**< file type size mismatches buffer type size */
+#define NC_ESTRICTCDF2			(-232) /**< Attempting CDF-5 operation on CDF-2 file */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */

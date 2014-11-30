@@ -72,7 +72,7 @@
       nf_lock = 1024, &
       nf_share = 2048, &
       nf_64bit_offset = 512, &
-      nf_64bit_data = 16, &
+      nf_64bit_data = 32, &
       nf_32bit = 16777216, &
       nf_sizehint_default = 0, &
       nf_align_chunk = -1, &
@@ -235,7 +235,8 @@
       NF_EINVAL_CMODE             = -228, & ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
       NF_ETYPESIZE                = -229, & ! MPI derived data type size error (bigger than the variable size)
       NF_ETYPE_MISMATCH           = -230, & ! element type of the MPI derived data type mismatches the variable type
-      NF_ETYPESIZE_MISMATCH       = -231    ! file type size mismatches buffer type size
+      NF_ETYPESIZE_MISMATCH       = -231, & ! file type size mismatches buffer type size
+      NF_ESTRICTCDF2              = -232    ! Attempting CDF-5 operation on CDF-2 file
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &
