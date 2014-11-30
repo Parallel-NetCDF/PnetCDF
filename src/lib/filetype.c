@@ -26,7 +26,7 @@
 static int check_recsize_too_big(NC *ncp);
 
 /*----< check_recsize_too_big() >--------------------------------------------*/
-static int
+inline static int
 check_recsize_too_big(NC *ncp)
 {
     int ret = NC_NOERR;
@@ -187,6 +187,7 @@ NCstrideedgeck(const NC         *ncp,
 }
 
 /*----< ncmpii_get_offset() >------------------------------------------------*/
+/* returns the file offset of the last byte accessed of this request */
 int
 ncmpii_get_offset(NC               *ncp,
                   NC_var           *varp,
@@ -196,7 +197,6 @@ ncmpii_get_offset(NC               *ncp,
                   const int         rw_flag,
                   MPI_Offset       *offset_ptr) /* return file offset */
 {
-    /* returns the file offset of the last element of this request */
     MPI_Offset offset, *end_off=NULL;
     int status, i, ndims;
 

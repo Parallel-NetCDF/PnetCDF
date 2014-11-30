@@ -84,7 +84,7 @@ typedef struct {
     char       *filename;
 } ncmpii_mem_entry;
 
-static
+inline static
 int ncmpii_cmp(const void *a, const void *b) {
     ncmpii_mem_entry *fa = (ncmpii_mem_entry*)a;
     ncmpii_mem_entry *fb = (ncmpii_mem_entry*)b;
@@ -94,7 +94,7 @@ int ncmpii_cmp(const void *a, const void *b) {
     return 0;
 }
 
-static
+inline static
 void walker(const void *node, const VISIT which, const int depth) {
     ncmpii_mem_entry *f;
     f = *(ncmpii_mem_entry **)node;

@@ -600,16 +600,12 @@ ncmpi_inq_file_info(int       ncid,
 
 #ifdef HAVE_MPI_INFO_DUP
     mpireturn = MPI_Info_dup(ncp->nciop->mpiinfo, info_used);
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_Info_dup");
-        return NC_EFILE;
-    }
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Info_dup");
 #else
     mpireturn = MPI_File_get_info(ncp->nciop->collective_fh, info_used);
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_File_get_info");
-        return NC_EFILE;
-    }
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_File_get_info");
 #endif
 
     sprintf(value, "%lld", ncp->nciop->hints.h_align);
@@ -1009,13 +1005,10 @@ ncmpii_check_mpifh(NC       *ncp,
          (!collective && !NC_independentFhOpened(ncp->nciop)) ) {
 
         int mpireturn;
-        mpireturn = MPI_File_open(comm, (char *)ncp->nciop->path,
-                                  ncp->nciop->mpiomode, ncp->nciop->mpiinfo,
-                                  mpifh);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpiio_free(ncp->nciop);
+        TRACE_IO(MPI_File_open)(comm, (char*)ncp->nciop->path, ncp->nciop->mpiomode,
+                                ncp->nciop->mpiinfo, mpifh);
+        if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_open");
-        }
 
         if (collective)
             set_NC_collectiveFh(ncp->nciop);

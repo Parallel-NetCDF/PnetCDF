@@ -28,7 +28,7 @@
  * Formerly
 NC_free_string()
  */
-void
+inline void
 ncmpii_free_NC_string(NC_string *ncstrp)
 {
     if (ncstrp==NULL) return;
@@ -72,7 +72,7 @@ ncmpii_NC_check_name_CDF1(const char *name)
 static int ncmpii_NC_check_name_CDF2(const char *name);
 
 /*----< ncmpii_NC_check_name() >---------------------------------------------*/
-int
+inline int
 ncmpii_NC_check_name(const char *name,
                      int         file_ver) /* CDF version: 1, 2, or 5 */
 {
@@ -281,6 +281,7 @@ ncmpii_NC_check_name_CDF2(const char *name)
 	return NC_NOERR;
 }
 
+/*----< ncmpii_new_NC_string() >---------------------------------------------*/
 /*
  * Allocate a NC_string structure large enough
  * to hold slen characters.
@@ -288,7 +289,8 @@ ncmpii_NC_check_name_CDF2(const char *name)
 NC_new_string(count, str)
  */
 NC_string *
-ncmpii_new_NC_string(MPI_Offset slen, const char *str)
+ncmpii_new_NC_string(MPI_Offset  slen,
+                     const char *str)
 {
     /* str may not be NULL terminated */
     NC_string *ncstrp;
@@ -307,6 +309,7 @@ ncmpii_new_NC_string(MPI_Offset slen, const char *str)
     ncstrp->nchars = slen;
     ncstrp->cp = (char *)ncstrp + sizeof_NC_string;
 
+    /* in PnetCDF, we want to make name->cp always NULL character terminated */
     if (str != NULL && *str != '\0') {
         strncpy(ncstrp->cp, str, slen);
         ncstrp->cp[slen] = '\0';  /* NULL terminated */
@@ -316,6 +319,7 @@ ncmpii_new_NC_string(MPI_Offset slen, const char *str)
 }
 
 
+/*----< ncmpii_set_NC_string() >---------------------------------------------*/
 /*
  * If possible, change the value of an NC_string to 'str'.
  *
@@ -323,24 +327,23 @@ ncmpii_new_NC_string(MPI_Offset slen, const char *str)
 NC_re_string()
  */
 int
-ncmpii_set_NC_string(NC_string *ncstrp, const char *str)
+ncmpii_set_NC_string(NC_string  *ncstrp,
+                     const char *str)
 {
-	MPI_Offset slen;
-	MPI_Offset diff;
+    size_t slen;
 
-	assert(str != NULL && *str != 0);
+    assert(str != NULL && *str != 0);
 
-	slen = strlen(str);
+    slen = strlen(str);
 
-	if(ncstrp->nchars < slen)
-		return NC_ENOTINDEFINE;
+    if (ncstrp->nchars < slen) return NC_ENOTINDEFINE;
 
-	(void) memcpy(ncstrp->cp, str, slen);
-	diff = ncstrp->nchars - slen;
-	if(diff != 0)
-		(void) memset(ncstrp->cp + slen, 0, diff);
+    memcpy(ncstrp->cp, str, slen);
 
-        ncstrp->nchars = slen;
+    /* in PnetCDF, we want to make name->cp always NULL character terminated */
+    memset(ncstrp->cp + slen, 0, ncstrp->nchars - slen);
 
-	return NC_NOERR;
+    ncstrp->nchars = slen;
+
+    return NC_NOERR;
 }
