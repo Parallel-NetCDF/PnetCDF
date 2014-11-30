@@ -127,6 +127,7 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
         fprintf(stderr, "%s: error in creating file(%s): %s\n",
                 __func__, path_sf, ncmpi_strerror(status));
 
+    MPI_Comm_free(&comm_sf);
     MPI_Info_free(&info);
 
     return status;
@@ -175,6 +176,7 @@ ncmpii_subfile_open(NC *ncp, int *ncidp)
     if (status != NC_NOERR)
         fprintf(stderr, "Error in file %s line %d: %s\n", __FILE__,__LINE__, ncmpi_strerror(status));
 
+    MPI_Comm_free(&comm_sf);
     return status;
 }
 

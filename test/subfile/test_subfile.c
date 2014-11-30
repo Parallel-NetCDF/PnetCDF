@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     char *basename = NULL, *basename1 = NULL, filename[100];
     char dimname[20], varname[20];
     int ncid, dimids0[3], rank_dim[3], *varid=NULL;
-    MPI_Info info;
+    MPI_Info info=MPI_INFO_NULL, info_used=MPI_INFO_NULL;
     MPI_Offset **starts_list, **count_list;
     MPI_Offset *bufcount_list;
     int ndims=3, nvars=1, ngatts, unlimdimid;
@@ -57,7 +57,6 @@ int main(int argc, char **argv)
     int par_dim_id = 0; /* default is 0 */
     int do_read = 0;
     int nerr=0, sum_nerr;
-    MPI_Info info_used;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
@@ -365,7 +364,8 @@ read:
     TEST_HANDLE_ERR(status)
 
 end:
-    MPI_Info_free(&info);
+    if (info      != MPI_INFO_NULL) MPI_Info_free(&info);
+    if (info_used != MPI_INFO_NULL) MPI_Info_free(&info_used);
 
     for (i=0; i<nvars; i++){
         free(buf[i]);
