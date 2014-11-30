@@ -56,16 +56,16 @@
   ! mode flags for opening and creating a netcdf dataset:
   !
   integer, parameter, public :: &
-    nf90_nowrite   = 0,         &
-    nf90_write     = 1,         &
-    nf90_clobber   = 0,         &
-    nf90_noclobber = 4,         &
-    nf90_fill      = 0,         &
-    nf90_nofill    = 256,       &
-    nf90_64bit_offset    = 512,       &
-    nf90_64bit_data    = 16,       &
-    nf90_lock      = 1024,      &
-    nf90_share     = 2048 
+    nf90_nowrite      = 0,      &
+    nf90_write        = 1,      &
+    nf90_clobber      = 0,      &
+    nf90_noclobber    = 4,      &
+    nf90_fill         = 0,      &
+    nf90_nofill       = 256,    &
+    nf90_64bit_offset = 512,    &
+    nf90_64bit_data   = 32,     &
+    nf90_lock         = 1024,   &
+    nf90_share        = 2048 
   
   integer, parameter, public ::  &
     nf90_sizehint_default = 0,   & 
@@ -250,6 +250,7 @@
       NF90_ETYPESIZE                = NF_ETYPESIZE                , & ! MPI derived data type size error (bigger than the variable size)
       NF90_ETYPE_MISMATCH           = NF_ETYPE_MISMATCH           , & ! element type of the MPI derived data type mismatches the variable type
       NF90_ETYPESIZE_MISMATCH       = NF_ETYPESIZE_MISMATCH       , & ! file type size mismatches buffer type size
+      NF90_ESTRICTCDF2              = NF_ESTRICTCDF2              , & ! Attempting CDF-5 operation on CDF-2 file
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
