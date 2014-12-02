@@ -1802,7 +1802,7 @@ ncmpii_mgetput(NC           *ncp,
     else if (num_reqs > 1) { /* create the I/O buffer derived data type */
         int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
         MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
-        MPI_Aint a0, ai, a_last_contig;
+        MPI_Aint a0=0, ai, a_last_contig;
         MPI_Offset int8;
 
         buf = NULL;
