@@ -616,7 +616,7 @@ NC_begins(NC         *ncp,
  */
 int
 ncmpii_read_numrecs(NC *ncp) {
-    int status=NC_NOERR, mpireturn, sizeof_t;
+    int status=NC_NOERR, mpireturn, err, sizeof_t;
     void *buf, *pos;
     MPI_Offset nrecs;
     MPI_Status mpistatus;
@@ -641,8 +641,8 @@ ncmpii_read_numrecs(NC *ncp) {
                                    buf, sizeof_t, MPI_BYTE, &mpistatus);
 
     if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_File_read_at");
-        status = NC_EREAD;
+        err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
+        if (err == NC_EFILE) status = NC_EREAD;
     }
     else {
         int get_size;
@@ -699,7 +699,7 @@ ncmpii_write_numrecs(NC         *ncp,
        dirty and used as new_numrecs. In this case, we must write the max
        value across all processes to file.
      */
-    int rank, status=NC_NOERR, mpireturn;
+    int rank, status=NC_NOERR, mpireturn, err;
 
     assert(!NC_readonly(ncp));
     assert(!NC_indef(ncp));
@@ -732,8 +732,8 @@ ncmpii_write_numrecs(NC         *ncp,
                                     NC_NUMRECS_OFFSET, (void*)pos, len,
                                     MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            status = NC_EWRITE;
+            err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            if (err == NC_EFILE) status = NC_EWRITE;
         }
         else {
             int put_size;
@@ -781,7 +781,7 @@ ncmpii_read_NC(NC *ncp) {
 static int
 write_NC(NC *ncp)
 {
-    int status, mpireturn, rank;
+    int status, mpireturn, err, rank;
     void *buf;
     MPI_Offset hsz; /* header size with 0-padding if needed */
     MPI_Status mpistatus;
@@ -833,8 +833,8 @@ write_NC(NC *ncp)
         TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
                                     hsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (status == NC_NOERR) status = NC_EWRITE;
+            err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
         }
         else {
             int put_size;

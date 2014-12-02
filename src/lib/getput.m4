@@ -743,9 +743,9 @@ err_check:
     TRACE_IO(MPI_File_set_view)(fh, offset, MPI_BYTE, filetype,
                                 "native", MPI_INFO_NULL);
     if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_File_set_view");
+        err = ncmpii_handle_error(mpireturn, "MPI_File_set_view");
         /* return the first encountered error if there is any */
-        if (status == NC_NOERR) status = NC_EFILE;
+        if (status == NC_NOERR) status = err;
     }
 
     if (filetype != MPI_BYTE)
@@ -755,17 +755,17 @@ err_check:
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_write_all)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_write_all");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_write_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EWRITE;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
             }
         }
         else { /* io_method == INDEP_IO */
             TRACE_IO(MPI_File_write)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_write");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_write");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EWRITE;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
             }
         }
         int put_size;
@@ -776,17 +776,17 @@ err_check:
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_read_all)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_read_all");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_read_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EREAD;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
             }
         }
         else { /* io_method == INDEP_IO */
             TRACE_IO(MPI_File_read)(fh, xbuf, nbytes, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_read");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_read");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EREAD;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
             }
         }
         int get_size;

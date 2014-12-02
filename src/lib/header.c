@@ -902,8 +902,8 @@ hdr_fetch(bufferinfo *gbp) {
                                    (gbp->offset)-slack, gbp->base,
                                    gbp->size, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_read_at");
-            err = NC_EREAD;
+            err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
+            if (err == NC_EFILE) err = NC_EREAD;
         }
         else {
             int get_size;
@@ -2303,7 +2303,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 /* this function is collective */
 int ncmpii_write_header(NC *ncp)
 {
-    int rank, status=NC_NOERR, mpireturn;
+    int rank, status=NC_NOERR, mpireturn, err;
 
     /* Write the entire header to the file. Note that we cannot just
      * change the variable name in the file header, as if the file space
@@ -2328,8 +2328,8 @@ int ncmpii_write_header(NC *ncp)
         TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
                                     ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            status = NC_EWRITE;
+            err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            if (err == NC_EFILE) status = NC_EWRITE;
         }
         else {
             int put_size;

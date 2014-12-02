@@ -232,10 +232,8 @@ ncmpiio_create(MPI_Comm     comm,
             if (mpireturn != MPI_SUCCESS) {
                 int errorclass;
                 MPI_Error_class(mpireturn, &errorclass);
-                if (errorclass != MPI_ERR_NO_SUCH_FILE) {/* ignore this error */
-                    ncmpii_handle_error(mpireturn, "MPI_File_delete");
-                    err = NC_EFILE;
-                }
+                if (errorclass != MPI_ERR_NO_SUCH_FILE) /* ignore this error */
+                    err = ncmpii_handle_error(mpireturn, "MPI_File_delete");
             }
 #endif
         }
@@ -429,7 +427,7 @@ ncmpiio_move(ncio *const nciop,
              MPI_Offset  from,
              MPI_Offset  nbytes)
 {
-    int rank, grpsize, mpireturn, status=NC_NOERR, min_st;
+    int rank, grpsize, mpireturn, err, status=NC_NOERR, min_st;
     void *buf;
     const MPI_Offset bufsize = 4096; /* move chunk size one at a time */
     MPI_Offset movesize, bufcount;
@@ -468,8 +466,8 @@ ncmpiio_move(ncio *const nciop,
                                          from+movesize+rank*bufsize,
                                          buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    ncmpii_handle_error(mpireturn, "MPI_File_read_at");
-            status = NC_EREAD;
+	    err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
+            if (err == NC_EFILE) status = NC_EREAD;
         }
         else {
             int get_size;
@@ -489,8 +487,8 @@ ncmpiio_move(ncio *const nciop,
                                         to+movesize+rank*bufsize,
                                         buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            status = NC_EWRITE;
+	    err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+            if (err == NC_EFILE) status = NC_EWRITE;
         }
         else {
             int put_size;

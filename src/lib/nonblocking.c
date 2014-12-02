@@ -49,7 +49,7 @@ ncmpii_getput_zero_req(NC  *ncp,
                        int  rw_flag,      /* WRITE_REQ or READ_REQ */
                        int  sync_numrecs) /* 0 or 1 */
 {
-    int mpireturn, status=NC_NOERR;
+    int err, mpireturn, status=NC_NOERR;
     MPI_Status mpistatus;
     MPI_File fh;
 
@@ -61,14 +61,14 @@ ncmpii_getput_zero_req(NC  *ncp,
     if (rw_flag == READ_REQ) {
         TRACE_IO(MPI_File_read_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_read_all");
-            status = NC_EREAD;
+            err = ncmpii_handle_error(mpireturn, "MPI_File_read_all");
+            if (err == NC_EFILE) status = NC_EREAD;
         }
     } else { /* WRITE_REQ */
         TRACE_IO(MPI_File_write_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_File_write_all");
-            status = NC_EWRITE;
+            err = ncmpii_handle_error(mpireturn, "MPI_File_write_all");
+            if (err == NC_EFILE) status = NC_EWRITE;
         }
     }
 
@@ -371,10 +371,8 @@ ncmpii_concatenate_datatypes(NC           *ncp,
 #else
     mpireturn = MPI_Type_struct(num, blocklens, addrs, dtypes, datatype);
 #endif
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
-        status = NC_EFILE;
-    }
+    if (mpireturn != MPI_SUCCESS)
+        status = ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
 
     MPI_Type_commit(datatype);
 
@@ -524,9 +522,9 @@ ncmpii_construct_buffertypes(NC           *ncp,
                                   buffer_type);
 #endif
     if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
+        int err = ncmpii_handle_error(mpireturn, "MPI_Type_hindexed");
         /* return the first encountered error if there is any */
-        if (status == NC_NOERR) status = NC_EFILE;
+        if (status == NC_NOERR) status = err;
     }
 
     MPI_Type_commit(buffer_type);
@@ -1136,7 +1134,7 @@ ncmpii_construct_off_len_type(NC           *ncp,
                               MPI_Datatype *filetype,
                               MPI_Datatype *buf_type)
 {
-    int i, j, err, *blocklengths;
+    int i, j, mpireturn, *blocklengths;
     MPI_Aint   *displacements;
     MPI_Offset  next_off, next_len;
 
@@ -1182,17 +1180,16 @@ ncmpii_construct_off_len_type(NC           *ncp,
     /* j+1 is the coalesced length */
 
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-    err = MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                                   filetype);
+    mpireturn = MPI_Type_create_hindexed(j+1, blocklengths, displacements,
+                                         MPI_BYTE, filetype);
 #else
-    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                            filetype);
+    mpireturn = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                                  filetype);
 #endif
-    if (err != MPI_SUCCESS) {
+    if (mpireturn != MPI_SUCCESS) {
         *filetype = MPI_BYTE;
         *buf_type = MPI_BYTE;
-        ncmpii_handle_error(err, "MPI_Type_create_hindexed");
-        return NC_EFILE;
+        return ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
     }
     MPI_Type_commit(filetype);
     NCI_Free(displacements);
@@ -1235,18 +1232,17 @@ ncmpii_construct_off_len_type(NC           *ncp,
     }
     /* j+1 is the coalesced length */
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
-    err = MPI_Type_create_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                                   buf_type);
+    mpireturn = MPI_Type_create_hindexed(j+1, blocklengths, displacements,
+                                         MPI_BYTE, buf_type);
 #else
-    err = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
-                            buf_type);
+    mpireturn = MPI_Type_hindexed(j+1, blocklengths, displacements, MPI_BYTE,
+                                  buf_type);
 #endif
-    if (err != MPI_SUCCESS) {
+    if (mpireturn != MPI_SUCCESS) {
         if (*filetype != MPI_BYTE) MPI_Type_free(filetype);
-        ncmpii_handle_error(err, "MPI_Type_create_hindexed");
         *filetype = MPI_BYTE;
         *buf_type = MPI_BYTE;
-        return NC_EFILE;
+        return ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
     }
     MPI_Type_commit(buf_type);
     NCI_Free(displacements);
@@ -1496,9 +1492,9 @@ ncmpii_req_aggregation(NC     *ncp,
                                     &filetype);
 #endif
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
+            err = ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
             /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = NC_EFILE;
+            if (status == NC_NOERR) status = err;
 
             buf_len  = 0; /* skip this request */
             filetype = MPI_BYTE;
@@ -1519,9 +1515,9 @@ ncmpii_req_aggregation(NC     *ncp,
                                     &buf_type);
 #endif
         if (mpireturn != MPI_SUCCESS) {
-            ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
+            err = ncmpii_handle_error(mpireturn, "MPI_Type_create_struct");
             /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = NC_EFILE;
+            if (status == NC_NOERR) status = err;
 
             buf_len  = 0; /* skip this request */
             buf_type = MPI_BYTE;
@@ -1546,25 +1542,25 @@ ncmpii_req_aggregation(NC     *ncp,
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, filetype, "native",
                                 MPI_INFO_NULL);
     if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_File_set_view");
+        err = ncmpii_handle_error(mpireturn, "MPI_File_set_view");
         /* return the first encountered error if there is any */
-        if (status == NC_NOERR) status = NC_EFILE;
+        if (status == NC_NOERR) status = err;
     }
 
     if (rw_flag == READ_REQ) {
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_read_all)(fh, buf, buf_len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_read_all");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_read_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EREAD;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
             }
         } else {
             TRACE_IO(MPI_File_read)(fh, buf, buf_len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_read");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_read");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EREAD;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
             }
         }
         if (mpireturn == MPI_SUCCESS) {
@@ -1576,16 +1572,16 @@ ncmpii_req_aggregation(NC     *ncp,
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_write_all)(fh, buf, buf_len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_write_all");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_write_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EWRITE;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
             }
         } else {
             TRACE_IO(MPI_File_write)(fh, buf, buf_len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_write");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_write");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EWRITE;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
             }
         }
         if (mpireturn == MPI_SUCCESS) {
@@ -1757,7 +1753,7 @@ ncmpii_mgetput(NC           *ncp,
                int           rw_flag,     /* WRITE_REQ or READ_REQ */
                int           io_method)   /* COLL_IO or INDEP_IO */
 {
-    int i, len=0, status=NC_NOERR, mpireturn;
+    int i, len=0, status=NC_NOERR, mpireturn, err;
     void *buf=NULL;
     MPI_Status mpistatus;
     MPI_Datatype filetype, buf_type=MPI_BYTE;
@@ -1783,9 +1779,9 @@ ncmpii_mgetput(NC           *ncp,
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, filetype, "native",
                                 MPI_INFO_NULL);
     if (mpireturn != MPI_SUCCESS) {
-        ncmpii_handle_error(mpireturn, "MPI_File_set_view");
+        err = ncmpii_handle_error(mpireturn, "MPI_File_set_view");
         /* return the first encountered error if there is any */
-        if (status == NC_NOERR) status = NC_EFILE;
+        if (status == NC_NOERR) status = err;
     }
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
 
@@ -1883,9 +1879,9 @@ ncmpii_mgetput(NC           *ncp,
                                           MPI_BYTE, &buf_type);
 #endif
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
+                err = ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EFILE;
+                if (status == NC_NOERR) status = err;
             }
             else
                 mpireturn = MPI_Type_commit(&buf_type);
@@ -1901,16 +1897,16 @@ ncmpii_mgetput(NC           *ncp,
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_read_all)(fh, buf, len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_read_all");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_read_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EREAD;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
             }
         } else {
             TRACE_IO(MPI_File_read)(fh, buf, len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_read");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_read");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EREAD;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
             }
         }
         int get_size;
@@ -1921,16 +1917,16 @@ ncmpii_mgetput(NC           *ncp,
         if (io_method == COLL_IO) {
             TRACE_IO(MPI_File_write_all)(fh, buf, len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_write_all");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_write_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EWRITE;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
             }
         } else {
             TRACE_IO(MPI_File_write)(fh, buf, len, buf_type, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
-                ncmpii_handle_error(mpireturn, "MPI_File_write");
+                err = ncmpii_handle_error(mpireturn, "MPI_File_write");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = NC_EWRITE;
+                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
             }
         }
         int put_size;
