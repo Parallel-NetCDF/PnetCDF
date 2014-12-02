@@ -715,7 +715,7 @@ ncmpii_wait(NC  *ncp,
         io_req[0] = num_r_reqs;
         io_req[1] = num_w_reqs;
         io_req[2] = -fatal_err;   /* all NC errors are negative */
-        TRACE_COMM(MPI_Allreduce)(&io_req, &do_io, 3, MPI_INT, MPI_MAX,
+        TRACE_COMM(MPI_Allreduce)(io_req, do_io, 3, MPI_INT, MPI_MAX,
                                   ncp->nciop->comm);
 
         /* if fatal_err occurs, return the API collectively */
