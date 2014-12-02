@@ -43,7 +43,7 @@ ncmpi_inq_libvers(void) {
 
     /* match the style used by netCDF API nc_inq_libvers()
      * for example, "4.3.0 of Jun 16 2013 12:11:30 $" */
-    return PNETCDF_VERSION " of " PNETCDF_RELEASE_DATE;
+    return pnetcdf_libvers;
 }
 
 /* Begin Of Dataset Functions */
