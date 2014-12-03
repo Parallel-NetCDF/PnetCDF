@@ -83,42 +83,46 @@ ncmpii_getput_zero_req(NC  *ncp,
 }
 
 /*----< ncmpii_abuf_free() >--------------------------------------------------*/
+inline static int
+ncmpii_abuf_free(NC *ncp, int abuf_index)
+{
+    ncp->abuf->occupy_table[abuf_index].is_used = 0; /* set to free */
+    return NC_NOERR;
+}
+
+/*----< ncmpii_abuf_coalesce() >---------------------------------------------*/
+/* this function should be called after all bput requests have been served */
 static int
-ncmpii_abuf_free(NC *ncp, void *buf)
+ncmpii_abuf_coalesce(NC *ncp)
 {
     int i;
-    /* find the index in the occupy table for this buffer
-     * note that abuf->tail points to the first free entry */
-    MPI_Aint buf_addr, abuf_addr, dist, buf_offset = 0;
-#ifdef HAVE_MPI_GET_ADDRESS
-    MPI_Get_address(buf, &buf_addr);
-    MPI_Get_address(ncp->abuf->buf, &abuf_addr);
-#else
-    MPI_Address(buf, &buf_addr);
-    MPI_Address(ncp->abuf->buf, &abuf_addr);
-#endif
-    dist = buf_addr - abuf_addr;
-    for (i=0; i<ncp->abuf->tail; i++) {
-        if (dist <= buf_offset)
-            break;
-        buf_offset += ncp->abuf->occupy_table[i].req_size;
-    }
-    assert(i < ncp->abuf->tail);
-    ncp->abuf->occupy_table[i].is_used = 0; /* set to free */
+
+    if (ncp->abuf == NULL) return NC_NOERR;
+
+    i = ncp->abuf->tail - 1;
+    /* tail is always pointing to the last (empty) entry of occupy_table[] */
 
     /* coalesce the freed entries backwardly from the tail */
-    while (i >= 0 && i+1 == ncp->abuf->tail) {
-        ncp->abuf->size_used -= ncp->abuf->occupy_table[i].req_size;
-        ncp->abuf->tail--;
-        if (i > 0 && ncp->abuf->occupy_table[i-1].is_used == 0)
+    while (i >= 0) {
+        if (ncp->abuf->occupy_table[i].is_used == 0) {
+            ncp->abuf->size_used -= ncp->abuf->occupy_table[i].req_size;
             i--;
+        }
+        else break;
     }
+    ncp->abuf->tail = i + 1;
+    /* This may not be ideal, as we stop at the last one that is yet to be
+     * freed. There may be some freed entries before this yet-to-be-freed
+     * one, but we would like to keep the available space as contiguous as
+     * possible. Maybe some smart approach can be considered here.
+     */
+
     return NC_NOERR;
 }
 
 #define FREE_REQUEST(req) {                                                   \
     if (req->use_abuf)                                                        \
-        ncmpii_abuf_free(ncp, req->xbuf);                                     \
+        ncmpii_abuf_free(ncp, req->abuf_index);                               \
     else if (req->xbuf != NULL && req->xbuf != req->buf)                      \
         NCI_Free(req->xbuf);                                                  \
     req->xbuf = NULL;                                                         \
@@ -764,7 +768,7 @@ ncmpii_wait(NC  *ncp,
             /* free temp space allocated for iput/bput varn requests */
             if (cur_req->tmpBuf != NULL) {
                 if (cur_req->use_abuf)
-                    ncmpii_abuf_free(ncp, cur_req->tmpBuf);
+                    ncmpii_abuf_free(ncp, cur_req->abuf_index);
                 else
                     NCI_Free(cur_req->tmpBuf);
             }
@@ -774,6 +778,7 @@ ncmpii_wait(NC  *ncp,
             cur_req = cur_req->next;
             NCI_Free(pre_req);
         }
+        ncmpii_abuf_coalesce(ncp);
     }
 
     if (r_req_head != NULL) {
