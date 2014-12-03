@@ -766,18 +766,16 @@ ncmpii_wait(NC  *ncp,
         cur_req = w_req_head;
         while (cur_req != NULL) {
             /* free temp space allocated for iput/bput varn requests */
-            if (cur_req->tmpBuf != NULL) {
-                if (cur_req->use_abuf)
-                    ncmpii_abuf_free(ncp, cur_req->abuf_index);
-                else
+            if (cur_req->tmpBuf != NULL && !cur_req->use_abuf)
                     NCI_Free(cur_req->tmpBuf);
-            }
 
             FREE_REQUEST(cur_req)
             pre_req = cur_req;
             cur_req = cur_req->next;
             NCI_Free(pre_req);
         }
+        /* once the bput requests are served, we reclaim the space and try
+         * coalesce the freed space */
         ncmpii_abuf_coalesce(ncp);
     }
 
