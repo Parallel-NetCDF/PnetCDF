@@ -890,11 +890,14 @@ ncmpi_sync(int ncid) {
     if (NC_readonly(ncp))
         return ncmpii_read_NC(ncp);
 
-    /* write header to file in ncmpii_NC_sync((), but don't call fsync now,
+    /* sync numrecs in memory among processes and in file */
+    status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+    if (status != NC_NOERR) return status;
+
+    /* write header to file in ncmpii_NC_sync(), but don't call fsync now,
        fsync will be called below in ncmpiio_sync() */
     status = ncmpii_NC_sync(ncp, 0);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
     /* calling MPI_File_sync() */
     return ncmpiio_sync(ncp->nciop);

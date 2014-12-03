@@ -681,19 +681,22 @@ ncmpii_read_numrecs(NC *ncp) {
  */
 
 /*----< ncmpii_write_numrecs() >----------------------------------------------*/
-/* This function is only called by ncmpii_NC_sync() and ncmpii_sync_numrecs()
- * both are collective.
+/* This function is only called by ncmpii_sync_numrecs(). Both are collective.
  */
 int
 ncmpii_write_numrecs(NC         *ncp,
                      MPI_Offset  new_numrecs,
                      int         forceWrite)
 {
-    /* this function is only called in 3 places
+    /* this function is called from the following places:
        1) collective put APIs that write record variables and numrecs has
-          changed
-       2) ncmpi_end_indep_data()
-       3) ncmpii_NC_sync() below
+          changed. These put APIs calls ncmpii_sync_numrecs().
+       2) ncmpii_sync_numrecs() always calls this function
+       3) ncmpii_sync_numrecs() is also called by
+          2.1) ncmpi_sync_numrecs()
+          2.2) ncmpi_sync()
+          2.3) ncmpii_end_indep_data()
+       4) ncmpii_NC_close() below
 
        Argument forceWrite is for independent I/O where ncp->numrecs is
        dirty and used as new_numrecs. In this case, we must write the max
@@ -870,47 +873,32 @@ ncmpii_dset_has_recvars(NC *ncp)
 /*----< ncmpii_NC_sync() >----------------------------------------------------*/
 /*
  * Sync across all processes the NC object, the file header cached in local
- * memory. Also, write the NC object to file header or the numrecs if
- * necessary.
+ * memory. Also, write the NC object (the entire header) to file if NC is
+ * dirty in memory.
  * This function is collective.
  */
 int
 ncmpii_NC_sync(NC  *ncp,
                int  doFsync)
 {
-    /* this function is called from four places:
-       1) changing header by put APIs in data mode and NC_doHsync(ncp) is true
-          and these put APIs are called in data mode
-       2) ncmpi_sync()
-       3) ncmpi_abort()
-       4) ncmpii_NC_close()
-       only 1) needs to call MPI_File_sync() here
+    /* this function is called from 3 places:
+       1) ncmpi_sync()
+       2) ncmpi_abort()
+       3) ncmpii_NC_close()
      */
-    int status=NC_NOERR, didWrite=0, has_recvars=0, mpireturn;
-    MPI_Offset numrecs;
+    int status=NC_NOERR, didWrite=0;
 
     assert(!NC_readonly(ncp));
 
-    /* collect and set the max numrecs due to difference by independent write */
-    /* optimization: if this dataset contains no record variables, skip this
-     * check */
+    /* number of records has been sync-ed in memory and file before this
+     * function is reached.
+     */
 
-    numrecs = ncp->numrecs;
-    has_recvars = ncmpii_dset_has_recvars(ncp);
-    /* if independent data mode is used to write data, ncp->numrecs might be
-     * inconsistent among processes. */
-    if (has_recvars)
-        TRACE_COMM(MPI_Allreduce)(&ncp->numrecs, &numrecs, 1, MPI_OFFSET,
-                                  MPI_MAX, ncp->nciop->comm);
-
-    if (NC_hdirty(ncp)) {  /* header is dirty */
-        /* write_NC() will also write numrecs and clear NC_NDIRTY */
-        ncp->numrecs = numrecs;
+    if (NC_hdirty(ncp)) {
+        /* header is dirty due to, for example, a rename in data mode.
+         * write_NC() will write the entire header to file and clear
+         * NC_NDIRTY */
         status = write_NC(ncp);
-        didWrite = 1;
-    }
-    else if (has_recvars) {  /* only numrecs in the header is dirty */
-        status = ncmpii_write_numrecs(ncp, numrecs, NC_ndirty(ncp));
         didWrite = 1;
     }
 
@@ -1445,6 +1433,9 @@ ncmpii_NC_close(NC *ncp)
             }
         }
     }
+    else if (!NC_readonly(ncp) && NC_indep(ncp) && ncmpii_dset_has_recvars(ncp))
+        /* sync numrecs in memory among processes and in file */
+        status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
 
 #ifdef ENABLE_SUBFILING
     /* ncmpii_enddef() will update nc_num_subfiles */
