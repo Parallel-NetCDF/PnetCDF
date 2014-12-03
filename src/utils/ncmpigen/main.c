@@ -70,7 +70,7 @@ static void usage(void)
 {
     derror("Usage: %s [ -b ] [ -c ] [ -f ] [ -v version ] [ -x ] [ -o outfile]  [ file ... ]",
 	   progname);
-    derror("netcdf library version %s", ncmpi_inq_libvers());
+    derror("PnetCDF library version %s", ncmpi_inq_libvers());
 }
 
 

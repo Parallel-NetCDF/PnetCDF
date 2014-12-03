@@ -59,7 +59,7 @@ usage(void)
            "%s [-c|-h] [-v ...] [[-b|-f] [c|f]] [-l len] [-n name] [-p n[,n]] [-k] [-V] file\n%s",
            progname, USAGE);
     
-    fprintf(stderr, "netcdf library version %s\n", ncmpi_inq_libvers());
+    fprintf(stderr, "PnetCDF library version %s\n", ncmpi_inq_libvers());
 }
 
 
