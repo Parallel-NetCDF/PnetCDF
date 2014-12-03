@@ -2203,8 +2203,7 @@ define(`NCX_GETN',dnl
 int
 ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 {
-#if _SX && \
-           Xsizeof($1) == Isizeof($1)
+`#'if _SX && Xsizeof($1) == Isizeof($1)
 
  /* basic algorithm is:
   *   - ensure sane alignment of input data
@@ -2420,8 +2419,7 @@ define(`NCX_PUTN',dnl
 int
 ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 {
-#if _SX && \
-           Xsizeof($1) == Isizeof($1)
+`#'if _SX && Xsizeof($1) == Isizeof($1)
 
  /* basic algorithm is:
   *   - ensure sane alignment of output data
