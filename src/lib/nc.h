@@ -434,7 +434,8 @@ typedef struct NC_req {
                               the same address as buf */
     int            iscontig_of_ptypes;
     int            need_swap_back_buf;
-    int            use_abuf; /* whether use the attached buffer */
+    int            use_abuf;   /* whether use the attached buffer */
+    int            abuf_index; /* index in the abuf occupy_table */
     int            is_imap;
     void          *tmpBuf;       /* callback tmp buffer to be freed */
     int            tmpBufSize;   /* size of tmp buffer */
@@ -464,6 +465,7 @@ typedef struct NC_req {
 
 typedef struct NC_buf_status {
     int        is_used;
+    MPI_Aint   buf_addr;
     MPI_Offset req_size;
 } NC_buf_status;
 
@@ -876,8 +878,5 @@ ncmpii_set_iget_callback(NC *ncp, int reqid, void *tmpBuf, int tmpBufSize,
 extern int
 ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpPutBuf,
                          int need_swap_back_buf);
-
-extern int
-ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf);
 
 #endif /* _NC_H_ */

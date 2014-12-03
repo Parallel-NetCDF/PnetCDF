@@ -273,6 +273,7 @@ ncmpi_create(MPI_Comm    comm,
         return NC_ENOMEM;
 
     ncp->safe_mode = safe_mode;
+    ncp->abuf      = NULL;
     ncp->old       = NULL;
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode = 1;

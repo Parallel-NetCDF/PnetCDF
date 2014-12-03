@@ -566,8 +566,8 @@ VARM(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 /*----< ncmpii_abuf_malloc() >------------------------------------------------*/
 /* allocate memory space from the attached buffer pool */
-int
-ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf)
+static int
+ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf, int *abuf_index)
 {
     /* extend the table size if more entries are needed */
     if (ncp->abuf->tail + 1 == ncp->abuf->table_size) {
@@ -579,6 +579,7 @@ ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf)
     /* mark the new entry is used and store the requested buffer size */
     ncp->abuf->occupy_table[ncp->abuf->tail].is_used  = 1;
     ncp->abuf->occupy_table[ncp->abuf->tail].req_size = nbytes;
+    *abuf_index = ncp->abuf->tail;
 
     *buf = (char*)ncp->abuf->buf + ncp->abuf->size_used;
     ncp->abuf->size_used += nbytes;
@@ -607,7 +608,7 @@ ncmpii_igetput_varm(NC               *ncp,
     int err, status, warning; /* err is for API abort and status is not */
     int el_size, iscontig_of_ptypes, do_vars, isderived;
     int need_convert, need_swap, need_swap_back_buf;
-    int i, dim=0, imap_contig_blocklen=1;
+    int i, dim=0, imap_contig_blocklen=1, abuf_index;
     MPI_Offset fnelems, bnelems, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
@@ -811,7 +812,7 @@ err_check:
         /* Step 3: pack cbuf to xbuf and xbuf will be used to write to file */
         if (need_convert) { /* user buf type != nc var type defined in file */
             if (use_abuf) { /* use attached buffer */
-                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf);
+                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (cbuf != NULL && cbuf != buf) NCI_Free(cbuf);
                     return ((warning != NC_NOERR) ? warning : status);
@@ -827,7 +828,7 @@ err_check:
         }
         else {  /* cbuf == xbuf */
             if (use_abuf) { /* use attached buffer */
-                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf);
+                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (cbuf != NULL && cbuf != buf) NCI_Free(cbuf);
                     return ((warning != NC_NOERR) ? warning : status);
@@ -881,6 +882,7 @@ err_check:
     req->is_imap        = 0;
     req->imaptype       = imaptype;
     req->rw_flag        = rw_flag;
+    req->abuf_index     = abuf_index;
 
     req->tmpBuf         = NULL;
     req->tmpBufSize     = 0;
