@@ -72,7 +72,7 @@ ncmpii_NC_check_name_CDF1(const char *name)
 static int ncmpii_NC_check_name_CDF2(const char *name);
 
 /*----< ncmpii_NC_check_name() >---------------------------------------------*/
-inline int
+int
 ncmpii_NC_check_name(const char *name,
                      int         file_ver) /* CDF version: 1, 2, or 5 */
 {

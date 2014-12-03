@@ -469,7 +469,7 @@ ncmpii_NC_check_vlen(NC_var     *varp,
  * Formerly
 NC_hlookupvar()
  */
-inline NC_var *
+NC_var *
 ncmpii_NC_lookupvar(NC  *ncp,
                     int  varid)
 {

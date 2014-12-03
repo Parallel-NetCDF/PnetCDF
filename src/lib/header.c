@@ -370,7 +370,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 }
 
 /*----< ncmpii_hdr_len_NC() >------------------------------------------------*/
-inline MPI_Offset
+MPI_Offset
 ncmpii_hdr_len_NC(const NC *ncp)
 {
     /* netCDF file format:

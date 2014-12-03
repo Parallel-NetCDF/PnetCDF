@@ -56,7 +56,7 @@ static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
 #endif
 
 /*----< ncmpii_add_to_NCList() >---------------------------------------------*/
-inline void
+void
 ncmpii_add_to_NCList(NC *ncp)
 {
     assert(ncp != NULL);
@@ -70,7 +70,7 @@ ncmpii_add_to_NCList(NC *ncp)
 }
 
 /*----< ncmpii_del_from_NCList() >-------------------------------------------*/
-inline void
+void
 ncmpii_del_from_NCList(NC *ncp)
 {
     assert(ncp != NULL);
@@ -210,7 +210,7 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
 #endif
 
 /*----< ncmpii_NC_check_id() >-----------------------------------------------*/
-inline int
+int
 ncmpii_NC_check_id(int   ncid,
                    NC  **ncpp)
 {
