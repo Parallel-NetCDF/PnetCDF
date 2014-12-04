@@ -322,11 +322,12 @@ ncmpii_type_create_subarray(int           ndims,
 {
     int i, err, blklens[3] = {1, 1, 1};
     MPI_Datatype type1, type2;
-    MPI_Aint lb, extent, size, array_size, stride, disps[3];
+    MPI_Aint extent, size, array_size, stride, disps[3];
 
     if (ndims == 0) return NC_EDIMMETA;
 
 #ifdef HAVE_MPI_TYPE_GET_EXTENT
+    MPI_Aint lb;
     MPI_Type_get_extent(oldtype, &lb, &extent);
 #else
     MPI_Type_extent(oldtype, &extent);
@@ -456,7 +457,10 @@ ncmpii_type_create_subarray64(int           ndims,
 {
     int i, err, tag, blklens[3] = {1, 1, 1};
     MPI_Datatype type1, type2;
-    MPI_Aint lb, extent, size, array_size, stride, disps[3];
+    MPI_Aint extent, size, array_size, stride, disps[3];
+#ifdef HAVE_MPI_TYPE_GET_EXTENT
+    MPI_Aint lb;
+#endif
 
     if (ndims == 0) return NC_EDIMMETA;
 
