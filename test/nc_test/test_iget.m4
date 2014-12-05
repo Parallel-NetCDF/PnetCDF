@@ -648,8 +648,7 @@ test_ncmpi_iget_vars_$1(void)
                     for (j = 0; j < nels; j++) {
                         if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))
                                 && expect[j] >= $1_min && expect[j] <= $1_max) {
-                            IF (!equal(value[j],expect[j],var_type[i],
-                                    NCT_ITYPE($1))){
+                            IF (!equal(value[j],expect[j],var_type[i], NCT_ITYPE($1))){
                                 error("value read not that expected");
                                 if (verbose) {
                                     error("\n");
@@ -872,8 +871,7 @@ test_ncmpi_iget_varm_$1(void)
                         if (inRange3(expect[j],var_type[i],NCT_ITYPE($1))
                                 && expect[j] >= $1_min 
                                 && expect[j] <= $1_max) {
-                            IF (!equal(value[j],expect[j],var_type[i],
-                                    NCT_ITYPE($1))){
+                            IF (!equal(value[j],expect[j],var_type[i], NCT_ITYPE($1))){
                                 error("value read not that expected");
                                 if (verbose) {
                                     error("\n");
