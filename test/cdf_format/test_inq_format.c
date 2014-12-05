@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
     char cmd_str[80];
     sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file format ", argv[0]);
-    MPI_Reduce(&nerr, &err, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&nerr, &err, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         if (err == 0) printf("%-66s ------ pass\n", cmd_str);
         else          printf("%-66s ------ failed\n", cmd_str);
