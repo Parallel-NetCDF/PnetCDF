@@ -802,7 +802,7 @@ ncmpi_rename_var(int         ncid,
      * mode, we sync the NC object (header) in memory across all processes
      * (This API is collective if called in data mode)
      */
-    if (!NC_indef(ncp) && ncp->safe_mode == 1) {
+    if (ncp->safe_mode == 1) {
         int mpireturn;
         TRACE_COMM(MPI_Bcast)((void*)newname, varp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
     }
