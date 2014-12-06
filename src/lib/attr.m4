@@ -512,7 +512,7 @@ ncmpi_rename_att(int         ncid,
      * mode, we sync the NC object (header) in memory across all processes
      * (This API is collective if called in data mode)
      */
-    if (!NC_indef(ncp) && ncp->safe_mode == 1) {
+    if (ncp->safe_mode == 1) {
         int mpireturn;
         TRACE_COMM(MPI_Bcast)((void*)newname, attrp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
     }
@@ -522,7 +522,7 @@ ncmpi_rename_att(int         ncid,
     if (status != NC_NOERR) return status;
 
     if (NC_doHsync(ncp)) { /* NC_SHARE is set */
-        /* Write the entire header to the file. Noet that we cannot just
+        /* Write the entire header to the file. Note that we cannot just
          * change the variable name in the file header, as if the file space
          * occupied by the name shrink, all following metadata must be moved
          * ahead.
