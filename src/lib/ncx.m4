@@ -2340,7 +2340,7 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 
 	while(nelems-- != 0)
 	{
-		if(*tp > Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
+		if(*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
 			status = NC_ERANGE;
 		*xp++ = ($1) *tp++;
 	}
@@ -2367,7 +2367,7 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 
 	while(nelems-- != 0)
 	{
-		if(*tp > Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
+		if(*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
 			status = NC_ERANGE;
 		*xp++ = ($1) *tp++;
 	}
