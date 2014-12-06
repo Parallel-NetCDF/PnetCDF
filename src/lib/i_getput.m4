@@ -447,7 +447,7 @@ VARS(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 */
 
 static int
-pack_request(NC *ncp, NC_var *varp, NC_req *req, int do_vars, void *buf,
+pack_request(NC *ncp, NC_var *varp, NC_req *req, void *buf,
              void *xbuf, const MPI_Offset start[], const MPI_Offset count[],
              const MPI_Offset stride[], MPI_Offset fnelems, MPI_Offset bnelems,
              MPI_Offset lnelems, MPI_Offset bufcount, MPI_Datatype buftype,
@@ -893,7 +893,7 @@ err_check:
     if (!do_vars)
         req->is_imap = 1;
 
-    pack_request(ncp, varp, req, do_vars, buf, xbuf, start, count, stride,
+    pack_request(ncp, varp, req, buf, xbuf, start, count, stride,
                  fnelems, bnelems, lnelems, bufcount, buftype, ptype,
                  iscontig_of_ptypes, need_swap_back_buf, use_abuf);
 
@@ -925,7 +925,6 @@ static int
 pack_request(NC               *ncp,
              NC_var           *varp,
              NC_req           *req,
-             int               do_vars,  /* if it is a true vars request */
              void             *buf,      /* user buffer, may need to be swapped back for put */
              void             *xbuf,     /* buffer that is type coverted, byte swapped from buf */
              const MPI_Offset  start[],
