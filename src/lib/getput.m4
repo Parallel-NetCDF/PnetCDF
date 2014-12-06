@@ -757,7 +757,8 @@ err_check:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
+                if (status == NC_NOERR)
+                    status = (err == NC_EFILE) ? NC_EWRITE : err;
             }
         }
         else { /* io_method == INDEP_IO */
@@ -765,7 +766,8 @@ err_check:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
+                if (status == NC_NOERR)
+                    status = (err == NC_EFILE) ? NC_EWRITE : err;
             }
         }
         int put_size;
@@ -778,7 +780,8 @@ err_check:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
+                if (status == NC_NOERR)
+                    status = (err == NC_EFILE) ? NC_EREAD : err;
             }
         }
         else { /* io_method == INDEP_IO */
@@ -786,7 +789,8 @@ err_check:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR && err == NC_EFILE) status = NC_EREAD;
+                if (status == NC_NOERR)
+                    status = (err == NC_EFILE) ? NC_EREAD : err;
             }
         }
         int get_size;
