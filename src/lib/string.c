@@ -336,7 +336,7 @@ ncmpii_set_NC_string(NC_string  *ncstrp,
 
     slen = strlen(str);
 
-    if (ncstrp->nchars < slen) return NC_ENOTINDEFINE;
+    if (ncstrp->nchars < (MPI_Offset)slen) return NC_ENOTINDEFINE;
 
     memcpy(ncstrp->cp, str, slen);
 
