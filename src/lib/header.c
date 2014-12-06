@@ -2329,7 +2329,8 @@ int ncmpii_write_header(NC *ncp)
                                     ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (err == NC_EFILE) status = NC_EWRITE;
+            if (status == NC_NOERR)
+                status = (err == NC_EFILE) ? NC_EWRITE : err;
         }
         else {
             int put_size;
