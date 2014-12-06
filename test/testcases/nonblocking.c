@@ -91,6 +91,7 @@ int main(int argc, char **argv) {
     start[0] += 1;
     err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[0], &req[1]); ERR
 
+    st[0] = st[1] = NC_NOERR;
     err = ncmpi_wait_all(ncid, 2, req, st); ERR
     err = st[0]; ERR
     err = st[1]; ERR

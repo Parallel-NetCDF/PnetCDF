@@ -34,9 +34,9 @@ static int n_fails;
     int doStop, isDiff = (str[0] == '\0') ? 0 : 1;               \
     MPI_Allreduce(&isDiff, &doStop, 1, MPI_INT, MPI_MAX, comm);  \
     if (doStop) {                                                \
-        printf("P%d: diff at %s",rank,str);                      \
+        printf("P%d: diff at line %d (%s)\n",rank,__LINE__,str); \
         MPI_Finalize();                                          \
-        return 1;                                                \
+        exit(1);                                                 \
     }                                                            \
 }
 
@@ -49,7 +49,7 @@ static int n_fails;
     status = func(ncid2, NC_GLOBAL, name2, b2);                              \
     HANDLE_ERROR                                                             \
     if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"attribute[%d] %s: %s buf1 != buf2 at position %d\n",    \
+        sprintf(str,"attribute[%d] %s: %s buf1 != buf2 at position %d",      \
                 i,name1,#nctype,pos);                                        \
     HANDLE_DIFF(str)                                                         \
     free(b1);                                                                \
@@ -66,7 +66,7 @@ static int n_fails;
     status = func(ncid2, i, name2, b2);                                      \
     HANDLE_ERROR                                                             \
     if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"variable[%d] %s: attribute[%d] %s: %s buf1 != buf2 at position %d\n", \
+        sprintf(str,"variable[%d] %s: attribute[%d] %s: %s buf1 != buf2 at position %d", \
                 i,name,j,name1,#nctype,pos);                                 \
     HANDLE_DIFF(str)                                                         \
     free(b1);                                                                \
@@ -84,8 +84,8 @@ static int n_fails;
     status = func(ncid2, i, start, shape, b2);                               \
     HANDLE_ERROR                                                             \
     if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"variable[%d] %s: %s buf1 != buf2 at position %d\n",     \
-                i,name,#nctype,pos);                                        \
+        sprintf(str,"variable[%d] %s: %s buf1 != buf2 at position %d",       \
+                i,name,#nctype,pos);                                         \
     HANDLE_DIFF(str)                                                         \
     free(b1);                                                                \
     free(b2);                                                                \
@@ -123,13 +123,13 @@ int ncmpi_diff(char *filename1, char *filename2) {
     status = ncmpi_inq(ncid2, &ndims2, &nvars2, &natts2, &unlimdimid2);
     HANDLE_ERROR
     if (ndims1 != ndims2)
-        sprintf(str,"ndims1(%d) != ndims2(%d)\n",ndims1, ndims2);
+        sprintf(str,"ndims1(%d) != ndims2(%d)",ndims1, ndims2);
     HANDLE_DIFF(str)
     if (nvars1 != nvars2)
-        sprintf(str,"nvars1(%d) != nvars2(%d)\n",nvars1, nvars2);
+        sprintf(str,"nvars1(%d) != nvars2(%d)",nvars1, nvars2);
     HANDLE_DIFF(str)
     if (natts1 != natts2)
-        sprintf(str,"natts1(%d) != natts2(%d)\n",natts1, natts2);
+        sprintf(str,"natts1(%d) != natts2(%d)",natts1, natts2);
     HANDLE_DIFF(str)
 
     /* Inquire global attributes, assume CHAR attributes. */
@@ -139,7 +139,7 @@ int ncmpi_diff(char *filename1, char *filename2) {
         status = ncmpi_inq_attname(ncid1, NC_GLOBAL, i, name2);
         HANDLE_ERROR
         if (strcmp(name1, name2) != 0)
-            sprintf(str,"attribute[%d] name1(%s) != name2(%s)\n",i,name1,name2);
+            sprintf(str,"attribute[%d] name1(%s) != name2(%s)",i,name1,name2);
         HANDLE_DIFF(str)
 
         status = ncmpi_inq_att(ncid1, NC_GLOBAL, name1, &type1, &attlen1);
@@ -147,10 +147,10 @@ int ncmpi_diff(char *filename1, char *filename2) {
         status = ncmpi_inq_att(ncid2, NC_GLOBAL, name2, &type2, &attlen2);
         HANDLE_ERROR
         if (type1 != type2)
-            sprintf(str,"attribute[%d] %s: type1(%d) != type2(%d)\n",i,name1,type1,type2);
+            sprintf(str,"attribute[%d] %s: type1(%d) != type2(%d)",i,name1,type1,type2);
         HANDLE_DIFF(str)
         if (attlen1 != attlen2)
-            sprintf(str,"attribute[%d] %s: attlen1(%lld) != attlen2(%lld)\n",i,name1, attlen1, attlen2);
+            sprintf(str,"attribute[%d] %s: attlen1(%lld) != attlen2(%lld)",i,name1, attlen1, attlen2);
         HANDLE_DIFF(str)
         switch (type1) {
             case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text,   NC_CHAR)
@@ -169,7 +169,7 @@ int ncmpi_diff(char *filename1, char *filename2) {
         status = ncmpi_inq_dim(ncid2, i, name2, &dimlen2);
         HANDLE_ERROR
         if (dimlen1 != dimlen2)
-            sprintf(str,"dimension[%d] %s: dimlen1(%lld) != dimlen2(%lld)\n",i,name1,(long long int)dimlen1,(long long int)dimlen2);
+            sprintf(str,"dimension[%d] %s: dimlen1(%lld) != dimlen2(%lld)",i,name1,dimlen1,dimlen2);
         HANDLE_DIFF(str)
     }
 
@@ -180,21 +180,21 @@ int ncmpi_diff(char *filename1, char *filename2) {
         status = ncmpi_inq_var(ncid2, i, name2, &type2, &ndims2, dimids2, &natts2);
         HANDLE_ERROR
         if (strcmp(name1, name2) != 0)
-            sprintf(str,"variable[%d]: name1(%s) != name2(%s)\n",i,name1,name2);
+            sprintf(str,"variable[%d]: name1(%s) != name2(%s)",i,name1,name2);
         HANDLE_DIFF(str)
         if (type1 != type2)
-            sprintf(str,"variable[%d] %s: type1(%d) != type2(%d)\n",i,name1,type1,type2);
+            sprintf(str,"variable[%d] %s: type1(%d) != type2(%d)",i,name1,type1,type2);
         HANDLE_DIFF(str)
         if (ndims1 != ndims2)
-            sprintf(str,"variable[%d] %s: ndims1(%d) != ndims2(%d)\n",i,name1,ndims1,ndims2);
+            sprintf(str,"variable[%d] %s: ndims1(%d) != ndims2(%d)",i,name1,ndims1,ndims2);
         HANDLE_DIFF(str)
         for (j=0; j<ndims1; j++) {
             if (dimids1[j] != dimids2[j])
-                sprintf(str,"variable[%d] %s: dimids1[%d]=%d != dimids2[%d]=%d\n",i,name1,j,dimids1[j],j,dimids2[j]);
+                sprintf(str,"variable[%d] %s: dimids1[%d]=%d != dimids2[%d]=%d",i,name1,j,dimids1[j],j,dimids2[j]);
             HANDLE_DIFF(str)
         }
         if (natts1 != natts2)
-            sprintf(str,"variable[%d] %s: natts1(%d) != natts2(%d)\n",i,name1,natts1,natts2);
+            sprintf(str,"variable[%d] %s: natts1(%d) != natts2(%d)",i,name1,natts1,natts2);
         HANDLE_DIFF(str)
 
         strcpy(name,name1);
@@ -206,7 +206,7 @@ int ncmpi_diff(char *filename1, char *filename2) {
             status = ncmpi_inq_attname(ncid2, i, j, name2);
             HANDLE_ERROR
             if (strcmp(name1, name2) != 0)
-                sprintf(str,"variable[%d] %s: attr name[%d] (%s) != (%s)\n",i,name,j,name1,name2);
+                sprintf(str,"variable[%d] %s: attr name[%d] (%s) != (%s)",i,name,j,name1,name2);
             HANDLE_DIFF(str)
 
             status = ncmpi_inq_att(ncid1, i, name1, &type1, &attlen1);
@@ -214,10 +214,10 @@ int ncmpi_diff(char *filename1, char *filename2) {
             status = ncmpi_inq_att(ncid2, i, name2, &type2, &attlen2);
             HANDLE_ERROR
             if (type1 != type2)
-                sprintf(str,"variable[%d] %s: attr type[%d] (%d) != (%d)\n",i,name,j,type1,type2);
+                sprintf(str,"variable[%d] %s: attr type[%d] (%d) != (%d)",i,name,j,type1,type2);
             HANDLE_DIFF(str)
             if (attlen1 != attlen2)
-                sprintf(str,"variable[%d] %s: attr attlen[%d] (%lld) != (%lld)\n",i,name,j, attlen1, attlen2);
+                sprintf(str,"variable[%d] %s: attr attlen[%d] (%lld) != (%lld)",i,name,j, attlen1, attlen2);
             HANDLE_DIFF(str)
 
             switch (type1) {
@@ -584,7 +584,8 @@ int main(int argc, char **argv)
             HANDLE_ERROR
         }
 
-        ncmpi_close(ncid);
+        status = ncmpi_close(ncid);
+        HANDLE_ERROR
 
         if (status == NC_NOERR){
             if ((k>0)&&(k<7)){
@@ -592,9 +593,12 @@ int main(int argc, char **argv)
             if (mynod == 0 && status == NC_NOERR && verbose)
                 printf("\t OK\n");                                       
             } else if (k>7){
+/*
+printf("filename2=%s filename3=%s\n",filename2, filename3);
                 status = ncmpi_diff(filename2, filename3);
                 if (mynod == 0 && status == NC_NOERR && verbose)
                     printf("\t OK\n");                                       
+*/
             } else {
              if (mynod == 0 && verbose)
                  printf("\t OK\n");                                       
