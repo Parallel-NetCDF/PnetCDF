@@ -464,7 +464,7 @@ ncmpi_rename_att(int         ncid,
                  const char *name,
                  const char *newname)
 {
-    int indx, file_ver, status;
+    int indx, file_ver, status, err, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp;
@@ -499,41 +499,36 @@ ncmpi_rename_att(int         ncid,
 
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-        if (newStr == NULL)
-            return NC_ENOMEM;
+        if (newStr == NULL) return NC_ENOMEM;
+
         ncmpii_free_NC_string(attrp->name);
         attrp->name = newStr;
         return NC_NOERR;
     }
-    /* else, not in define mode */
+    /* else, not in define mode.
+     * If called in data mode (collective or independent), this function must
+     * be called collectively, i.e. all processes must participate
+     */
 
     /* PnetCDF expects all processes use the same name, However, when names
-     * are not the same, only root's value is significant. Under the safe
-     * mode, we sync the NC object (header) in memory across all processes
+     * are not the same, only root's value is significant. Broadcast the
+     * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    if (ncp->safe_mode == 1) {
-        int mpireturn;
-        TRACE_COMM(MPI_Bcast)((void*)newname, attrp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
-    }
+    TRACE_COMM(MPI_Bcast)((void*)newname, attrp->name->nchars, MPI_CHAR, 0,
+                          ncp->nciop->comm);
 
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
-    status = ncmpii_set_NC_string(attrp->name, newname);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_set_NC_string(attrp->name, newname);
+    if (status == NC_NOERR) status = err;
 
-    if (NC_doHsync(ncp)) { /* NC_SHARE is set */
-        /* Write the entire header to the file. Note that we cannot just
-         * change the variable name in the file header, as if the file space
-         * occupied by the name shrink, all following metadata must be moved
-         * ahead.
-         */
-        status = ncmpii_write_header(ncp);
-    }
-    else {
-        /* mark header dirty, to be synchronized and commit to file later.
-         * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
-        set_NC_hdirty(ncp);
-    }
+    /* Let root write the entire header to the file. Note that we cannot just
+     * update the variable name in its space occupied in the file header,
+     * because if the file space occupied by the name shrinks, all the metadata
+     * following it must be moved ahead.
+     */
+    err = ncmpii_write_header(ncp);
+    if (status == NC_NOERR) status = err;
 
     return status;
 }
@@ -548,7 +543,7 @@ ncmpi_copy_att(int         ncid_in,
                int         ncid_out,
                int         varid_out)
 {
-    int indx, status;
+    int indx, status, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *iattrp, *attrp, *old=NULL;
@@ -566,8 +561,11 @@ ncmpi_copy_att(int         ncid_in,
 
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx >= 0) { /* name in use */
-        if (!NC_indef(ncp) ) {
-            /* if called in data mode, this API must be collective */
+        if (!NC_indef(ncp)) {
+            /* if called in data mode (collective or independent), this
+             * function must be called collectively, i.e. all processes must
+             * participate
+             */
 
             attrp = ncap->value[indx]; /* convenience */
 
@@ -578,32 +576,22 @@ ncmpi_copy_att(int         ncid_in,
             attrp->type = iattrp->type;
             attrp->nelems = iattrp->nelems;
 
-            /* In PnetCDF, attributes in memory are kept consistent across all
-             * processes. Therefore, there is no need to check the consistency
-             * here.
-             * (if called in data mode, this API must be collective)
-            if (ncp->safe_mode == 1)
-                MPI_Bcast(iattrp->xvalue, iattrp->xsz, MPI_BYTE, 0,
-                          ncp->nciop->comm);
-             */
-
             memcpy(attrp->xvalue, iattrp->xvalue, iattrp->xsz);
 
-            if (NC_doHsync(ncp)) { /* NC_SHARE is set */
-                /* Write the entire header to the file. Noet that we cannot
-                 * just change the variable name in the file header, as if the
-                 * file space occupied by the name shrink, all following
-                 * metadata must be moved ahead.
-                 */
-                status = ncmpii_write_header(ncp);
-            }
-            else {
-                /* mark header dirty, to be synchronized and commit to file
-                 * later. this can happen in ncmpii_NC_sync(), ncmpi_close(),
-                 * etc. */
-                set_NC_hdirty(ncp);
-            }
-            return status;
+            /* PnetCDF expects all processes use the same name, However, when
+             * new attributes are not the same, only root's value is
+             * significant. Broadcast the new attribute at root to overwrite
+             * new names at other processes.
+             */
+            TRACE_COMM(MPI_Bcast)((void*)attrp->xvalue, attrp->xsz, MPI_CHAR, 0,
+                                  ncp->nciop->comm);
+
+            /* Let root write the entire header to the file. Note that we
+             * cannot just update the variable name in its space occupied in
+             * the file header, because if the file space occupied by the name
+             * shrinks, all the metadata following it must be moved ahead.
+             */
+            return ncmpii_write_header(ncp);
         }
         /* else, redefine using existing array slot */
         old = ncap->value[indx];
@@ -1026,7 +1014,7 @@ ncmpii_put_att(int         ncid,
                const void *buf,      /* I/O buffer */
                nc_type     buftype)  /* I/O buffer type */
 {
-    int indx, file_ver, status;
+    int indx, file_ver, status, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp, *old=NULL;
@@ -1096,7 +1084,11 @@ ncmpii_put_att(int         ncid,
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx >= 0) { /* name in use */
         if (!NC_indef(ncp)) {
-            /* in data mode, meaning to over-write an existing attribute */
+            /* in data mode, meaning to over-write an existing attribute
+             * if called in data mode (collective or independent), this
+             * function must be called collectively, i.e. all processes must
+             * participate
+             */
 
             const MPI_Offset xsz = ncmpix_len_NC_attrV(filetype, nelems);
             /* xsz is the total size of this attribute */
@@ -1122,32 +1114,19 @@ ncmpii_put_att(int         ncid,
 
                 /* PnetCDF expects all processes use the same argument values.
                  * However, when argument values are not the same, only root's
-                 * value is significant. Under the safe mode, we sync the NC
-                 * object (header) in memory across all processes
-                 * (This API is collective if called in data mode.)
+                 * value is significant. Broadcast the new attribute at root to
+                 * overwrite new attribute at other processes.
                  */
-                if (ncp->safe_mode == 1) {
-                    int mpireturn;
-                    TRACE_COMM(MPI_Bcast)(attrp->xvalue, attrp->xsz, MPI_BYTE, 0,
-                                          ncp->nciop->comm);
-                }
+                TRACE_COMM(MPI_Bcast)(attrp->xvalue, attrp->xsz, MPI_BYTE, 0,
+                                      ncp->nciop->comm);
             }
 
-            if (NC_doHsync(ncp)) { /* NC_SHARE is set */
-                /* Write the entire header to the file. Noet that we cannot
-                 * just change the variable name in the file header, as if the
-                 * file space occupied by the name shrink, all following
-                 * metadata must be moved ahead.
-                 */
-                status = ncmpii_write_header(ncp);
-            }
-            else {
-                /* mark header dirty, to be synchronized and commit to file
-                 * later. this can happen in ncmpii_NC_sync(), ncmpi_close(),
-                 * etc. */
-                set_NC_hdirty(ncp);
-            }
-            return status;
+            /* Let root write the entire header to the file. Note that we
+             * cannot just update the attribute in its space occupied in the
+             * file header, because if the file space occupied by the attribute
+             * shrinks, all the metadata following it must be moved ahead.
+             */
+            return ncmpii_write_header(ncp);
         }
         /* else, redefine using existing array slot */
         old = ncap->value[indx];

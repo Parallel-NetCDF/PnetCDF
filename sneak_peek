@@ -127,6 +127,11 @@ This is essentially a placeholder for the next release note ...
   o New utility program
     * none
 
+  o Semantics updates
+    * Header consistency mechanism has been updated. See README.consistency for
+      details.
+    * The use of NC_SHARE is also revised. See README.consistency for details.
+
   o Other updates:
     * The subfiling feature is now disabled in ncmpidump and ncmpidiff until
       a bug fix to allow reading the master file with the number of processes

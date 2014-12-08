@@ -314,7 +314,7 @@ ncmpii_get_default_format(void)
 }
 #endif
 
-/* static */
+/*----< ncmpii_dup_NC() >----------------------------------------------------*/
 NC *
 ncmpii_dup_NC(const NC *ref)
 {
@@ -631,14 +631,16 @@ ncmpii_read_numrecs(NC *ncp) {
     pos = buf = (void *)NCI_Malloc(sizeof_t);
 
     /* fileview is already entire file visible and pointer to zero */
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))
+    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
         TRACE_IO(MPI_File_read_at)(ncp->nciop->collective_fh,
                                    NC_NUMRECS_OFFSET+4,
                                    buf, sizeof_t, MPI_BYTE, &mpistatus);
-    else
+    }
+    else {
         TRACE_IO(MPI_File_read_at)(ncp->nciop->collective_fh,
                                    NC_NUMRECS_OFFSET,
                                    buf, sizeof_t, MPI_BYTE, &mpistatus);
+    }
 
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
@@ -671,72 +673,70 @@ ncmpii_read_numrecs(NC *ncp) {
     return status;
 }
 
-/*
- * Write out just the numrecs member.
- * (A relatively expensive way to do things.)
- */
-
-/*
- * Collective operation implicit
- */
-
-/*----< ncmpii_write_numrecs() >----------------------------------------------*/
-/* This function is only called by ncmpii_sync_numrecs(). Both are collective.
+/*----< ncmpii_sync_numrecs() >-----------------------------------------------*/
+/* Synchronize the number of records in memory and write numrecs to file.
+ * This function is called by:
+ * 1. ncmpi_sync_numrecs(): by the user
+ * 2. ncmpi_sync(): by the user
+ * 3. ncmpii_end_indep_data(): exit from independent data mode
+ * 4. all blocking collective put APIs (getput.m4) when writing record variable
+ * 5. collective nonblocking wait API (ncmpii_wait_getput)
+ * 6. ncmpii_close(): file close and currently in independent data mode
+ *
+ * This function is collective.
  */
 int
-ncmpii_write_numrecs(NC         *ncp,
-                     MPI_Offset  new_numrecs,
-                     int         forceWrite)
+ncmpii_sync_numrecs(NC         *ncp,
+                    MPI_Offset  new_numrecs)
 {
-    /* this function is called from the following places:
-       1) collective put APIs that write record variables and numrecs has
-          changed. These put APIs calls ncmpii_sync_numrecs().
-       2) ncmpii_sync_numrecs() always calls this function
-       3) ncmpii_sync_numrecs() is also called by
-          2.1) ncmpi_sync_numrecs()
-          2.2) ncmpi_sync()
-          2.3) ncmpii_end_indep_data()
-       4) ncmpii_NC_close() below
-
-       Argument forceWrite is for independent I/O where ncp->numrecs is
-       dirty and used as new_numrecs. In this case, we must write the max
-       value across all processes to file.
-     */
     int rank, status=NC_NOERR, mpireturn, err;
+    MPI_File fh;
+    MPI_Offset max_numrecs;
 
     assert(!NC_readonly(ncp));
-    assert(!NC_indef(ncp));
-    /* this function is only called by APIs in data mode */
+    assert(!NC_indef(ncp)); /* can only be called by APIs in data mode */
 
-    /* prior to this call, an MPI_Allreduce() has been called to ensure
-     * new_numrecs are the same across all processes and new_nnurecs is max
-     * of all ncp->numrecs
-     * Note that number of records can be larger than 2^32
+    /* find the max new_numrecs among all processes
+     * Note new_numrecs may be smaller than ncp->numrecs
      */
+    TRACE_COMM(MPI_Allreduce)(&new_numrecs, &max_numrecs, 1, MPI_OFFSET,
+                              MPI_MAX, ncp->nciop->comm);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
+
+    fh = ncp->nciop->collective_fh;
+    if (NC_indep(ncp))
+        fh = ncp->nciop->independent_fh;
+
+    /* root process writes numrecs in file */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
-    if (rank == 0 && (forceWrite || new_numrecs > ncp->numrecs)) {
-        /* root process writes to the file header */
+    if (rank == 0 && /* Only root process writes to file header */
+        (max_numrecs > ncp->numrecs || NC_ndirty(ncp))) {
+         /* For collective data mode, we check max_numrecs against root's
+          * ncp->numrecs because root's numrecs has not been updated.
+          * For independent data mode, we check NC_ndirty bit, because root's
+          * numrecs may have been updated and in this case NC_ndirty bit has
+          * been set to dirty. */
         int len;
         char pos[8], *buf=pos;
         MPI_Status mpistatus;
 
         if (ncp->flags & NC_64BIT_DATA) {
             len = X_SIZEOF_INT64;
-            status = ncmpix_put_int64((void**)&buf, new_numrecs);
+            status = ncmpix_put_int64((void**)&buf, max_numrecs);
         }
         else {
             len = X_SIZEOF_SIZE_T;
-            status = ncmpix_put_int32((void**)&buf, new_numrecs);
+            status = ncmpix_put_int32((void**)&buf, max_numrecs);
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
         /* file view is already reset to entire file visible */
-        TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh,
-                                    NC_NUMRECS_OFFSET, (void*)pos, len,
+        TRACE_IO(MPI_File_write_at)(fh, NC_NUMRECS_OFFSET, (void*)pos, len,
                                     MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (err == NC_EFILE) status = NC_EWRITE;
+            if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
         }
         else {
             int put_size;
@@ -744,12 +744,16 @@ ncmpii_write_numrecs(NC         *ncp,
             ncp->nciop->put_size += put_size;
         }
     }
-    if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
+    /* update numrecs in all processes's memory only if the new one is larger.
+     * Note new_numrecs may be smaller than ncp->numrecs
+     */
+    if (max_numrecs > ncp->numrecs) ncp->numrecs = max_numrecs;
 
     /* this function is only called by collective functions */
     if (ncp->safe_mode == 1)
         TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
+    /* clear numrecs dirty bit */
     fClr(ncp->flags, NC_NDIRTY);
 
     return status;
@@ -771,7 +775,7 @@ ncmpii_read_NC(NC *ncp) {
   status = ncmpii_hdr_get_NC(ncp);
 
   if (status == NC_NOERR)
-      fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
+      fClr(ncp->flags, NC_NDIRTY);
 
   return status;
 }
@@ -848,7 +852,7 @@ write_NC(NC *ncp)
     if (ncp->safe_mode == 1)
         TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
 
-    fClr(ncp->flags, NC_NDIRTY | NC_HDIRTY);
+    fClr(ncp->flags, NC_NDIRTY);
     NCI_Free(buf);
 
     return status;
@@ -870,49 +874,47 @@ ncmpii_dset_has_recvars(NC *ncp)
 }
 
 
+#if 0
 /*----< ncmpii_NC_sync() >----------------------------------------------------*/
 /*
- * Sync across all processes the NC object, the file header cached in local
- * memory. Also, write the NC object (the entire header) to file if NC is
- * dirty in memory.
- * This function is collective.
+ * This function is of no use now, as file header in memory and file will never
+ * be dirty, except numrecs which will be sync-ed in ncmpii_sync_numrecs().
  */
 int
-ncmpii_NC_sync(NC  *ncp,
-               int  doFsync)
+ncmpii_NC_sync(NC *ncp, int allowFsync)
 {
-    /* this function is called from 3 places:
-       1) ncmpi_sync()
-       2) ncmpi_abort()
-       3) ncmpii_NC_close()
-     */
-    int status=NC_NOERR, didWrite=0;
+    int status=NC_NOERR;
 
     assert(!NC_readonly(ncp));
 
-    /* number of records has been sync-ed in memory and file before this
-     * function is reached.
-     */
-
     if (NC_hdirty(ncp)) {
-        /* header is dirty due to, for example, a rename in data mode.
-         * write_NC() will write the entire header to file and clear
-         * NC_NDIRTY */
+        /* header dirty bit can only be set at the independent data mode by
+         * calls to var_rename, dim_rename, attr_rename, or put_attr
+         * collectively. In collective data mode, the header in file is always
+         * up-to-date, so will not reach this here.
+         * In independent data mode, file header is not updated, but just set
+         * the header dirty bit to 1, and collectively.
+         */
         status = write_NC(ncp);
-        didWrite = 1;
     }
 
-    if (doFsync && didWrite)
-        /* calling fsync only in data mode and header was just updataed above.
-           If this API is called from ncmpi_sync() or ncmpi_abort(), fsync
-           is no needed because a later fsync call is laready in those APIs */
-        ncmpiio_sync(ncp->nciop);
+    /* When allowFsync == 0, the caller must have a call to ncmpiio_sync()
+     * after return from this function. So we want to delay fsync to there.
+     */
+    if (allowFsync && NC_doFsync(ncp)) {
+        /* if NC_SHARE is set, meaning share with a different MPI app */
+        int mpireturn;
+        MPI_File fh = ncp->nciop->collective_fh;
+        if (NC_indep(ncp))
+            fh = ncp->nciop->independent_fh;
 
+        TRACE_IO(MPI_File_sync)(fh);
+        TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
+    }
     return status;
 }
 
 
-#if 0
 /*
  * header size increases, shift all record and non-record variables down
  */
@@ -1213,9 +1215,9 @@ ncmpii_NC_enddef(NC         *ncp,
         fClr(ncp_sf->flags, NC_CREAT | NC_INDEF);
 #endif
 
-    if (fIsSet(ncp->nciop->ioflags, NC_SHARE))
-        /* calling MPI_File_sync() */
-        ncmpiio_sync(ncp->nciop);
+    /* If the user sets NC_SHARE, we enforce a stronger data consistency */
+    if (NC_doFsync(ncp))
+        ncmpiio_sync(ncp->nciop); /* calling MPI_File_sync() */
 
     /* update the total number of record variables */
     ncp->vars.num_rec_vars = 0;
@@ -1415,9 +1417,10 @@ ncmpii__enddef(NC         *ncp,
                             r_align);
 }
 
-/*----< ncmpii_NC_close() >---------------------------------------------------*/
+/*----< ncmpii_close() >------------------------------------------------------*/
+/* This function is collective */
 int
-ncmpii_NC_close(NC *ncp)
+ncmpii_close(NC *ncp)
 {
     int num_reqs, err, status=NC_NOERR, *req_ids=NULL, *statuses=NULL;
     NC_req *cur_req;
@@ -1433,9 +1436,15 @@ ncmpii_NC_close(NC *ncp)
             }
         }
     }
-    else if (!NC_readonly(ncp) && NC_indep(ncp) && ncmpii_dset_has_recvars(ncp))
-        /* sync numrecs in memory among processes and in file */
-        status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+
+    if (!NC_readonly(ncp) &&  /* file is open for write */
+         NC_indep(ncp)) {     /* exit independent data mode will sync header */
+        err = ncmpii_end_indep_data(ncp);
+        if (status == NC_NOERR ) status = err;
+    }
+
+    /* if entering this function in  collective data mode, we do not have to
+     * update header in file, as file header is always up-to-date */
 
 #ifdef ENABLE_SUBFILING
     /* ncmpii_enddef() will update nc_num_subfiles */
@@ -1469,21 +1478,18 @@ ncmpii_NC_close(NC *ncp)
         NCI_Free(req_ids);
     }
 
-    if (!NC_readonly(ncp)) { /* file is open for write */
-        /* check if header is dirty, if yes, flush it to file */
-        err = ncmpii_NC_sync(ncp, 0);
-        if (status == NC_NOERR) status = err;
-    }
-
+    /* If the user wants a stronger data consistency by setting NC_SHARE */
     if (fIsSet(ncp->nciop->ioflags, NC_SHARE))
-        /* calling MPI_File_sync() */
-        ncmpiio_sync(ncp->nciop);
+        ncmpiio_sync(ncp->nciop); /* calling MPI_File_sync() */
 
+    /* calling MPI_File_close() */
     ncmpiio_close(ncp->nciop, 0);
     ncp->nciop = NULL;
 
+    /* remove this file from the list of opened files */
     ncmpii_del_from_NCList(ncp);
 
+    /* free up space occupied by the header metadata */
     ncmpii_free_NC(ncp);
 
     return status;

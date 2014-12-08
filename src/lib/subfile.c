@@ -189,7 +189,7 @@ int ncmpii_subfile_close(NC *ncp)
     if (status != NC_NOERR)
         return status;
 
-    status = ncmpii_NC_close(ncp_sf);
+    status = ncmpii_close(ncp_sf);
     if (status != NC_NOERR)
         return status;
 

@@ -369,6 +369,9 @@ ncmpiio_open(MPI_Comm     comm,
 }
 
 /*----< ncmpiio_sync() >-----------------------------------------------------*/
+/* This function must be called collectively, no matter if it is in collective
+ * or independent data mode.
+ */
 inline int
 ncmpiio_sync(ncio *nciop) {
 #ifndef DISABLE_FILE_SYNC

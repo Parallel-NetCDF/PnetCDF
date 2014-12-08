@@ -2300,33 +2300,38 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 }
 
 /*----< ncmpii_write_header() >-----------------------------------------------*/
-/* this function is collective */
+/* This function is called only in data mode (collective or independent) and by
+ * 1. ncmpi_rename_att()
+ * 2. ncmpi_copy_att()
+ * 3. ncmpii_put_att()
+ * 4. ncmpi_rename_dim()
+ * 5. ncmpi_rename_var()
+ *
+ * This function is collective (even in independent data mode) */
 int ncmpii_write_header(NC *ncp)
 {
     int rank, status=NC_NOERR, mpireturn, err;
+    MPI_File fh;
 
-    /* Write the entire header to the file. Note that we cannot just
-     * change the variable name in the file header, as if the file space
-     * occupied by the name shrink, all following metadata must be moved
-     * ahead.
+    /* Write the entire header to the file. It funcation may be called from
+     * a rename API. In that case, we cannot just change the variable name in
+     * the file header, because if the file space occupied by the name shrinks,
+     * all metadata following the new name must be moved ahead.
      */
-    if (ncmpii_dset_has_recvars(ncp)) { /* sync numrecs */
-        MPI_Offset numrecs;
-        TRACE_COMM(MPI_Allreduce)(&ncp->numrecs, &numrecs, 1, MPI_OFFSET,
-                                  MPI_MAX, ncp->nciop->comm);
-        ncp->numrecs = numrecs;
-    }
+
+    fh = ncp->nciop->collective_fh;
+    if (NC_indep(ncp))
+        fh = ncp->nciop->independent_fh;
 
     MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0) {
         MPI_Status mpistatus;
         void *buf = NCI_Malloc(ncp->xsz); /* header's write buffer */
 
-        /* copy header to buffer */
+        /* copy header object to write buffer */
         status = ncmpii_hdr_put_NC(ncp, buf);
 
-        TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
-                                    ncp->xsz, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_write_at)(fh, 0, buf, ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             if (status == NC_NOERR)
@@ -2341,6 +2346,11 @@ int ncmpii_write_header(NC *ncp)
     }
     /* update file header size */
     ncp->xsz = ncmpii_hdr_len_NC(ncp);
+
+    if (NC_doFsync(ncp)) { /* NC_SHARE is set */
+        TRACE_IO(MPI_File_sync)(fh);
+        TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
+    }
 
     return status;
 }
