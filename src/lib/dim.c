@@ -446,7 +446,7 @@ ncmpi_rename_dim(int         ncid,
                  int         dimid,
                  const char *newname)
 {
-    int file_ver, status, existid;
+    int file_ver, status, existid, err, mpireturn;
     NC *ncp;
     NC_dim *dimp;
 
@@ -472,41 +472,36 @@ ncmpi_rename_dim(int         ncid,
 
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-        if (newStr == NULL)
-            return NC_ENOMEM;
+        if (newStr == NULL) return NC_ENOMEM;
+
         ncmpii_free_NC_string(dimp->name);
         dimp->name = newStr;
         return NC_NOERR;
     }
-    /* else, not in define mode */
+    /* else, not in define mode.
+     * if called in data mode (collective or independent), this function must
+     * be called collectively, i.e. all processes must participate.
+     */
 
     /* PnetCDF expects all processes use the same name, However, when names
-     * are not the same, only root's value is significant. Under the safe
-     * mode, we sync the NC object (header) in memory across all processes
+     * are not the same, only root's value is significant. Broadcast the
+     * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    if (ncp->safe_mode == 1) {
-        int mpireturn;
-        TRACE_COMM(MPI_Bcast)((void*)newname, dimp->name->nchars, MPI_CHAR, 0, ncp->nciop->comm);
-    }
+    TRACE_COMM(MPI_Bcast)((void*)newname, dimp->name->nchars, MPI_CHAR, 0,
+                          ncp->nciop->comm);
 
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
-    status = ncmpii_set_NC_string(dimp->name, newname);
-    if (status != NC_NOERR) return status;
+    err = ncmpii_set_NC_string(dimp->name, newname);
+    if (status == NC_NOERR) status = err;
 
-    if (NC_doHsync(ncp)) { /* NC_SHARE is set */
-        /* Write the entire header to the file. Noet that we cannot just
-         * change the variable name in the file header, as if the file space
-         * occupied by the name shrink, all following metadata must be moved
-         * ahead.
-         */
-        status = ncmpii_write_header(ncp);
-    }
-    else {
-        /* mark header dirty, to be synchronized and commit to file later.
-         * this can happen in ncmpii_NC_sync(), ncmpi_close(), etc. */
-        set_NC_hdirty(ncp);
-    }
+    /* Let root write the entire header to the file. Note that we cannot just
+     * update the variable name in its space occupied in the file header,
+     * because if the file space occupied by the name shrinks, all the metadata
+     * following it must be moved ahead.
+     */
+    err = ncmpii_write_header(ncp);
+    if (status == NC_NOERR) status = err;
 
     return status;
 }

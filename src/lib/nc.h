@@ -545,6 +545,9 @@ struct NC {
 #define NC_dofill(ncp) \
         (!fIsSet((ncp)->flags, NC_NOFILL))
 
+#define NC_doFsync(ncp) \
+        fIsSet((ncp)->nciop->ioflags, NC_SHARE)
+
 #define NC_doHsync(ncp) \
         fIsSet((ncp)->flags, NC_HSYNC)
 
@@ -582,13 +585,7 @@ extern int
 ncmpii_read_numrecs(NC *ncp);
 
 extern int
-ncmpii_write_numrecs(NC *ncp, MPI_Offset new_numrecs, int forceWrite);
-
-extern int
 ncmpii_write_header(NC *ncp);
-
-extern int
-ncmpii_NC_sync(NC *ncp, int doFsync);
 
 extern void
 ncmpii_free_NC(NC *ncp);
@@ -610,7 +607,7 @@ ncmpii__enddef(NC *ncp, MPI_Offset h_minfree, MPI_Offset v_align,
                MPI_Offset v_minfree, MPI_Offset r_align);
 
 extern int
-ncmpii_NC_close(NC *ncp);
+ncmpii_close(NC *ncp);
 
 extern int
 ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp);
@@ -823,10 +820,6 @@ int ncmpii_vars_create_filetype(NC* ncp, NC_var* varp,
                 MPI_Offset *offset, MPI_Datatype *filetype,
                 int *is_filetype_contig);
 
-int ncmpii_concatenate_datatypes(NC *ncp, int num, int *blocklens,
-                MPI_Offset *displacements, MPI_Datatype *dtypes,
-                MPI_Datatype *datatype);
-
 extern int
 ncmpii_getput_vars(NC *ncp, NC_var *varp, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
@@ -852,9 +845,6 @@ ncmpii_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
 extern int
 ncmpii_cancel(NC *ncp, int num_req, int *req_ids, int *statuses);
 
-extern int
-ncmpii_getput_zero_req(NC *ncp, int rw_flag, int sync_numrecs);
-
 extern void
 ncmpii_inq_malloc_size(MPI_Offset *size);
 
@@ -878,5 +868,8 @@ ncmpii_set_iget_callback(NC *ncp, int reqid, void *tmpBuf, int tmpBufSize,
 extern int
 ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpPutBuf,
                          int need_swap_back_buf);
+
+extern int
+ncmpii_end_indep_data(NC *ncp); 
 
 #endif /* _NC_H_ */

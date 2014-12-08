@@ -180,11 +180,11 @@ err_check:
      * zero-byte operation (everyone has to participate in the
      * collective I/O call) but return error */
     if (err != NC_NOERR || bufcount == 0 || filetype_size == 0) {
-        FINAL_CLEAN_UP  /* swap back put buffer and free temp buffers */
-        if (io_method == COLL_IO)
-            ncmpii_getput_zero_req(ncp, rw_flag, IS_RECVAR(varp));
-
-        return err;
+        if (io_method == INDEP_IO) {
+            FINAL_CLEAN_UP  /* swap back put buffer and free temp buffers */
+            return err;
+        }
+        /* else for COLL_IO, must participate successive collective calls */
     }
 
     if (io_method == COLL_IO)
@@ -241,33 +241,40 @@ err_check:
             /* unpack cbuf, a contiguous buffer, to buf using buftype */
             int position = 0;
             int insize = bnelems * el_size;
-            MPI_Unpack(cbuf, insize, &position, buf, orig_bufcount, orig_buftype,
-                       MPI_COMM_SELF);
+            MPI_Unpack(cbuf, insize, &position, buf, orig_bufcount,
+                       orig_buftype, MPI_COMM_SELF);
         }
     }
     else { /* WRITE_REQ */
         if (IS_RECVAR(varp)) {
-            MPI_Offset new_numrecs = ncp->numrecs;
-
             /* update header's number of records in memory */
+            MPI_Offset new_numrecs;
+
             /* since filetype's LB is required to be == varp->begin for vard
              * API, we can simply use extent to calculate new_numrecs */
             new_numrecs = extent / ncp->recsize;
             if (extent % ncp->recsize) new_numrecs++;
 
             if (io_method == INDEP_IO) {
-                /* FIXME: if we update numrecs to file now, race condition
-                   can happen. Hence, we delay the update till file close or
-                   exit independent data mode. Note numrecs in memory may be
-                   inconsistent and obsolete till then.
+                /* For independent put, we delay the sync for numrecs until
+                 * the next collective call, such as end_indep(), sync(),
+                 * enddef(), or close(). This is because if we update numrecs
+                 * to file now, race condition can happen. Note numrecs in
+                 * memory may be inconsistent and obsolete till then.
                  */
                 if (ncp->numrecs < new_numrecs) {
                     ncp->numrecs = new_numrecs;
                     set_NC_ndirty(ncp);
                 }
             }
-            else /* COLL_IO */
-                ncmpii_sync_numrecs(ncp, new_numrecs);
+            else /* COLL_IO: sync numrecs in memory and file */
+                err = ncmpii_sync_numrecs(ncp, new_numrecs);
+        }
+
+        if (NC_doFsync(ncp)) { /* NC_SHARE is set */
+            TRACE_IO(MPI_File_sync)(fh);
+            if (io_method == COLL_IO)
+                TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
         }
     }
 

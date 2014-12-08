@@ -26,15 +26,11 @@
 #include "subfile.h"
 #endif
 
-/* Prototypes for functions used only in this file */
-static int ncmpii_end_indep_data(NC *ncp);
-
-
 /* The const string below is for the RCS ident(1) command to find a string like
  * "\044Id: \100(#) PnetCDF library version 1.4.0 of 16 Nov 2013 $"
  * in the library file (libpnetcdf.a).
  */
-static const char pnetcdf_libvers[] =
+static char const pnetcdf_libvers[] =
         "\044Id: \100(#) PnetCDF library version "PNETCDF_VERSION" of "PNETCDF_RELEASE_DATE" $";
 
 /* pnetcdf_libvers is slightly different from the one returned from
@@ -99,11 +95,11 @@ Setting NC_NOCLOBBER means you do not want to clobber (overwrite) an existing
 dataset; an error (NC_EEXIST) is returned if the specified dataset already
 exists.
 
-The NC_SHARE flag is appropriate to synchronize the metadata across all
-processes.  The metadata is store in the file header. For example, the number
-of records may be increased by requests from only a subset of processes. Using
-this flag will ensure the number of records (and other metadata) synchronized
-across all the processes opening the same shared file.
+The NC_SHARE flag in PnetCDF does not mean sharing the file with the processes
+in this MPI program. Instead, it means the file will be concurrently shared
+by a different MPI program. Hence, PnetCDF calls MPI_File_sync() right after
+every time an MPI_File_write() call is made. This includes writing to metadata
+(file header) as well as array data.
 
 Setting NC_64BIT_OFFSET causes PnetCDF to create a 64-bit offset format file
 (CDF-2), instead of a netCDF classic format file.  The 64-bit offset format
@@ -335,18 +331,6 @@ ncmpi_create(MPI_Comm    comm,
 
     fSet(ncp->flags, NC_CREAT);
 
-    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
-        /*
-         * NC_SHARE implies sync up the number of records as well.
-         * (File format version one.)
-         * Note that other header changes are not shared
-         * automatically.  Some sort of IPC (external to this package)
-         * would be used to trigger a call to ncmpi_sync().
-         */
-        fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
-        fSet(ncp->flags, NC_HSYNC);  /* sync header */
-    }
-
     /* the linked list storing the outstanding non-blocking requests */
     ncp->head = NULL;
     ncp->tail = NULL;
@@ -473,17 +457,6 @@ ncmpi_open(MPI_Comm    comm,
     }
 
     assert(ncp->flags == 0);
-
-    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
-        /*
-         * NC_SHARE implies sync up the number of records as well.
-         * Note that other header changes are not shared
-         * automatically.  Some sort of IPC (external to this package)
-         * would be used to trigger a call to ncmpi_sync().
-         */
-        fSet(ncp->flags, NC_NSYNC);  /* sync numrecs */
-        fSet(ncp->flags, NC_HSYNC);  /* sync header */
-    }
 
     err = ncmpii_hdr_get_NC(ncp); /* read header from file */
     if (err != NC_NOERR) { /* fatal error */
@@ -659,94 +632,45 @@ ncmpi_get_file_info(int       ncid,
 /*----< ncmpi_redef() >------------------------------------------------------*/
 int
 ncmpi_redef(int ncid) {
-    int status, mpireturn;
+    int status;
     NC *ncp;
-    MPI_Offset mynumrecs, numrecs;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR)
         return status;
 
-    if (NC_readonly(ncp))
-        return NC_EPERM;
-        /* if open mode is inconsistent, then this return might cause parallel
-         * program to hang */
+    if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
+    /* if open mode is inconsistent, then this return might cause parallel
+     * program to hang */
 
-    if (NC_indef(ncp))
-        return NC_EINDEFINE;
+    /* cannot be in define mode */
+    if (NC_indef(ncp)) return NC_EINDEFINE;
 
-    /* ensure exiting define mode always entering collective data mode */
+    /* sync all metadata, including numrecs, if changed in independent mode.
+     * also ensure exiting define mode always entering collective data mode
+     */
     if (NC_indep(ncp))
         ncmpii_end_indep_data(ncp);
 
-    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
-        /* re-read the header from file */
+    if (NC_doFsync(ncp)) { /* re-read the header from file */
         status = ncmpii_read_NC(ncp);
-        if (status != NC_NOERR)
-            return status;
-    } else {
-        /* before enter define mode, the number of records may increase by
-           independent APIs, i.e. ncp->numrecs may be incoherent and need
-           to sync across all processes
-           Note that only ncp->numrecs in the header can be incoherent.
-         */
-        mynumrecs = ncp->numrecs;
-        TRACE_COMM(MPI_Allreduce)(&mynumrecs, &numrecs, 1, MPI_OFFSET, MPI_MAX,
-                                  ncp->nciop->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
-        if (numrecs > ncp->numrecs) {
-            ncp->numrecs = numrecs;
-            set_NC_ndirty(ncp);
-        }
+        if (status != NC_NOERR) return status;
     }
 
+    /* duplicate a header to be uses in enddef() for checking if header grows */
     ncp->old = ncmpii_dup_NC(ncp);
-    if (ncp->old == NULL)
-        return NC_ENOMEM;
+    if (ncp->old == NULL) return NC_ENOMEM;
 
+    /* we are now entering define mode */
     fSet(ncp->flags, NC_INDEF);
 
     return NC_NOERR;
-}
-
-/*----< ncmpii_sync_numrecs() >-----------------------------------------------*/
-/* synchronize the number of records in memory and file header, if the number
- * is increased
- * This function is called by collective APIs only
- */
-int
-ncmpii_sync_numrecs(NC         *ncp,
-                    MPI_Offset  new_numrecs)
-{
-    /* Only put APIs and record variables reach this function */
-    int mpireturn;
-    MPI_Offset max_numrecs;
-
-    /* sync numrecs in memory across all processes */
-    TRACE_COMM(MPI_Allreduce)(&new_numrecs, &max_numrecs, 1, MPI_OFFSET,
-                              MPI_MAX, ncp->nciop->comm);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_Allreduce");
-
-    /* let root process write numrecs to file header
-     * Note that we must update numrecs in file header whenever a
-     * collective write call to a record variable is completed, instead
-     * of waiting until file close. This is in case when the program
-     * aborts before reaching ncmpi_close(), the numrecs value in the
-     * file header can be up-to-date.
-     * ncmpii_write_numrecs() also updates ncp->numrecs
-     */
-    return ncmpii_write_numrecs(ncp, max_numrecs, NC_ndirty(ncp));
 }
 
 /*----< ncmpi_begin_indep_data() >-------------------------------------------*/
 int
 ncmpi_begin_indep_data(int ncid)
 {
-#ifndef DISABLE_FILE_SYNC
-    int err, mpireturn;
-#endif
     int status=NC_NOERR;
     NC *ncp;
 
@@ -759,15 +683,20 @@ ncmpi_begin_indep_data(int ncid)
     if (NC_indep(ncp))  /* already in indep data mode */
         return NC_NOERR;
 
-#ifndef DISABLE_FILE_SYNC
+    /* we need no MPI_File_sync() here. If users want a stronger data
+     * consistency, they can either use NC_SHARE or call ncmpi_sync()
+     */
+#if 0 && !defined(DISABLE_FILE_SYNC)
     if (!NC_readonly(ncp) && NC_collectiveFhOpened(ncp->nciop)) {
+        /* calling file sync for those already open the file */
+        int err, mpireturn;
         /* MPI_File_sync() is collective */
         TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
-            /* return the first encountered error if there is any */
             if (status == NC_NOERR) status = err;
         }
+        TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
     }
 #endif
 
@@ -792,27 +721,38 @@ ncmpi_end_indep_data(int ncid) {
 }
 
 /*----< ncmpii_end_indep_data() >--------------------------------------------*/
-static int
-ncmpii_end_indep_data(NC *ncp) {
-#ifndef DISABLE_FILE_SYNC
-    int err, mpireturn;
-#endif
+/* this function is called when:
+ * 1. ncmpi_end_indep_data()
+ * 2. ncmpi_redef() from independent data mode entering to define more
+ * 3. ncmpii_close() when closing the file
+ * This function is collective.
+ */
+int
+ncmpii_end_indep_data(NC *ncp)
+{
     int status=NC_NOERR;
 
     if (!NC_readonly(ncp)) {
-        /* do memory and file sync for numrecs, number or records */
-        status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+        if (ncp->vars.num_rec_vars > 0) {
+            /* numrecs dirty bit may not be the same across all processes.
+             * force sync in memory no matter if dirty or not.
+             */
+            set_NC_ndirty(ncp);
+            status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+            /* the only possible dirty part of the header is numrecs */
+        }
 
 #ifndef DISABLE_FILE_SYNC
         /* calling file sync for those already open the file */
-        if (NC_independentFhOpened(ncp->nciop)) {
+        if (NC_doFsync(ncp) && NC_independentFhOpened(ncp->nciop)) {
+            int mpireturn;
             /* MPI_File_sync() is collective */
             TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
             if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
-                /* return the first encountered error if there is any */
+                int err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
                 if (status == NC_NOERR) status = err;
             }
+            TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
         }
 #endif
     }
@@ -861,7 +801,8 @@ ncmpi__enddef(int        ncid,
 
 /*----< ncmpi_sync_numrecs() >------------------------------------------------*/
 /* this API is collective, but can be called in independent data mode.
- * Note that numrecs is always sync-ed in collective mode
+ * Note numrecs is always sync-ed in memory and update in file in collective
+ * data mode.
  */
 int
 ncmpi_sync_numrecs(int ncid) {
@@ -869,42 +810,65 @@ ncmpi_sync_numrecs(int ncid) {
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
-    if (NC_indef(ncp))
-        return NC_EINDEFINE;
+    /* cannot be in define mode */
+    if (NC_indef(ncp)) return NC_EINDEFINE;
 
-    /* syn numrecs in memory (and file if NC_SHARE is set) */
-    return ncmpii_sync_numrecs(ncp, ncp->numrecs);
+    /* check if we have defined record variables */
+    if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
+
+    if (!NC_indep(ncp)) /* in collective data mode, numrecs is always sync-ed */
+        return NC_NOERR;
+    else /* if called in independent mode, we force sync in memory */
+        set_NC_ndirty(ncp);
+
+    /* sync numrecs in memory and file */
+    status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+
+#ifndef DISABLE_FILE_SYNC
+    if (NC_doFsync(ncp)) { /* NC_SHARE is set */
+        int mpireturn;
+        if (NC_indep(ncp)) {
+            TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
+        }
+        else {
+            TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
+        }
+        TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
+    }
+#endif
+    return status;
 }
 
 /*----< ncmpi_sync() >--------------------------------------------------------*/
+/* This API must be called collectively, no matter if it is in collective
+ * or independent data mode.
+ */
 int
 ncmpi_sync(int ncid) {
     int status = NC_NOERR;
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
-    if (NC_indef(ncp))
-        return NC_EINDEFINE;
+    if (NC_indef(ncp)) return NC_EINDEFINE;
 
     if (NC_readonly(ncp))
+        /* calling sync for file opened for read only means re-read header */
         return ncmpii_read_NC(ncp);
 
-    /* sync numrecs in memory among processes and in file */
-    status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
-    if (status != NC_NOERR) return status;
+    /* the only part of header that can be dirty is numrecs (caused only by
+     * independent APIs) */
+    if (ncp->vars.num_rec_vars > 0 && NC_indep(ncp)) {
+        /* sync numrecs in memory among processes and in file */
+        set_NC_ndirty(ncp);
+        status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
+        if (status != NC_NOERR) return status;
+    }
 
-    /* write header to file in ncmpii_NC_sync(), but don't call fsync now,
-       fsync will be called below in ncmpiio_sync() */
-    status = ncmpii_NC_sync(ncp, 0);
-    if (status != NC_NOERR) return status;
-
-    /* calling MPI_File_sync() */
+    /* calling MPI_File_sync() on both collective and independent handlers */
     return ncmpiio_sync(ncp->nciop);
 }
 
@@ -916,13 +880,13 @@ ncmpi_abort(int ncid) {
     * In define mode, descard new definition.
     * In create, remove the file.
     */
-    int status, doUnlink = 0;
+    int status, err, doUnlink = 0;
     NC *ncp;
 
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
+    /* delete the file if it is newly created by ncmpi_create() */
     doUnlink = NC_IsNew(ncp);
 
     if (ncp->old != NULL) {
@@ -933,25 +897,32 @@ ncmpi_abort(int ncid) {
         ncp->old = NULL;
         fClr(ncp->flags, NC_INDEF);
     }
-    else if (!NC_readonly(ncp) && !NC_indef(ncp)) {
-        /* data mode, write */
-        status = ncmpii_NC_sync(ncp, 0);
-        if (status != NC_NOERR)
-            return status;
+
+    if (!doUnlink) {
+        if (!NC_readonly(ncp) &&  /* file is open for write */
+             NC_indep(ncp)) {     /* in independent data mode */
+            status = ncmpii_end_indep_data(ncp); /* sync header */
+        }
+
+        if (NC_doFsync(ncp)) {
+            err = ncmpiio_sync(ncp->nciop); /* calling MPI_File_sync() */
+            if (status == NC_NOERR ) status = err;
+        }
     }
 
-    if (fIsSet(ncp->nciop->ioflags, NC_SHARE)) {
-        /* calling MPI_File_sync() */
-        ncmpiio_sync(ncp->nciop);
-    }
-    ncmpiio_close(ncp->nciop, doUnlink);
+    /* close the file */
+    err = ncmpiio_close(ncp->nciop, doUnlink);
+    if (status == NC_NOERR ) status = err;
+
     ncp->nciop = NULL;
 
+    /* remove this file from the list of opened files */
     ncmpii_del_from_NCList(ncp);
 
+    /* free up space occupied by the header metadata */
     ncmpii_free_NC(ncp);
 
-    return NC_NOERR;
+    return status;
 }
 
 /*----< ncmpi_close() >------------------------------------------------------*/
@@ -964,8 +935,8 @@ ncmpi_close(int ncid) {
     if (status != NC_NOERR)
         return status;
 
-    /* release NC object, close the file and write dirty numrecs if necessary */
-    return ncmpii_NC_close(ncp);
+    /* calling the implementation of ncmpi_close() */
+    return ncmpii_close(ncp);
 }
 
 /*----< ncmpi_delete() >-----------------------------------------------------*/
@@ -1002,8 +973,16 @@ ncmpi_set_fill(int  ncid,
                int *old_mode_ptr)
 {
     int status = NC_NOERR;
-    if (fillmode != NC_NOFILL)
-        status = NC_EINVAL;
+    NC *ncp;
+
+    status = ncmpii_NC_check_id(ncid, &ncp);
+    if (status != NC_NOERR) return status;
+
+    if (fillmode != NC_NOFILL) status = NC_EINVAL;
+
+    if (old_mode_ptr != NULL)
+        *old_mode_ptr = NC_NOFILL;
+
     return status;
 }
 
