@@ -608,7 +608,6 @@ NC_begins(NC         *ncp,
 }
 
 #define NC_NUMRECS_OFFSET 4
-#define NC_NUMRECS_EXTENT 4
 
 /*
  * Read just the numrecs member.
