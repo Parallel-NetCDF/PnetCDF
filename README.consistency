@@ -10,12 +10,14 @@ Rajeev Thakur, William Gropp, and Ewing Lusk, On Implementing MPI-IO Portably
 and with High Performance, in the Proceedings of the 6th Workshop on I/O in
 Parallel and Distributed Systems, pp. 23-32, May 1999.
 
-If users would like PnetCDF to enforce stronger consistency, they should add
+If users would like PnetCDF to enforce a stronger consistency, they should add
 NC_SHARE flag when open/create the file. By doing so, PentCDF adds
 MPI_File_sync() after each MPI I/O calls.
   * For PnetCDF collective APIs, an MPI_Barrier() will also be called right
     after MPI_File_sync().
   * For independent APIs, there is no need for calling MPI_Barrier().
+Users are warned that the I/O performance when using NC_SHARE flag could become
+significantly slower than not using it.
 
 If NC_SHARE is not set, then users are responsible for their desired data
 consistency. To enforce a stronger consistency, users can explicitly call
