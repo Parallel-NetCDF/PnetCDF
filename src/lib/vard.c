@@ -48,18 +48,22 @@ ncmpii_getput_vard(NC               *ncp,
     void *cbuf=NULL;
     int i, isderived, el_size, mpireturn, err=NC_NOERR;
     int buftype_is_contig, filetype_is_contig, need_swap=0, is_buf_swapped=0;
-    int filetype_size, buftype_size;
+    int filetype_size=0, buftype_size;
     MPI_Offset btnelems, bnelems=0, offset=0, orig_bufcount=bufcount;
     MPI_Status mpistatus;
     MPI_Datatype ptype, orig_buftype=buftype;
     MPI_File fh=MPI_FILE_NULL;
 
+    if (filetype == MPI_DATATYPE_NULL) { /* this process does zero-length I/O */
+        if (io_method == INDEP_IO) return NC_NOERR;
+        bufcount = 0;
+        goto err_check;
+    }
+
     if (bufcount == 0 && buftype != MPI_DATATYPE_NULL) {
         /* if this process has nothing to read/write */
-        if (io_method == INDEP_IO)
-            return NC_NOERR;
-        else
-            goto err_check;
+        if (io_method == INDEP_IO) return NC_NOERR;
+        goto err_check;
     }
 
 #ifdef ENABLE_SUBFILING
@@ -77,7 +81,11 @@ ncmpii_getput_vard(NC               *ncp,
         goto err_check;
     }
 
-    if (filetype_size == 0) goto err_check;
+    if (filetype_size == 0) { /* zero-length request */
+        if (io_method == INDEP_IO) return NC_NOERR;
+        bufcount = 0;
+        goto err_check;
+    }
 
     MPI_Aint true_lb, true_extent;
     MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
