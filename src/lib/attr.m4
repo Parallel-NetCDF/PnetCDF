@@ -510,17 +510,17 @@ ncmpi_rename_att(int         ncid,
      * be called collectively, i.e. all processes must participate
      */
 
+    /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
+    err = ncmpii_set_NC_string(attrp->name, newname);
+    if (status == NC_NOERR) status = err;
+
     /* PnetCDF expects all processes use the same name, However, when names
      * are not the same, only root's value is significant. Broadcast the
      * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    TRACE_COMM(MPI_Bcast)((void*)newname, attrp->name->nchars, MPI_CHAR, 0,
+    TRACE_COMM(MPI_Bcast)(attrp->name->cp, attrp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
-
-    /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
-    err = ncmpii_set_NC_string(attrp->name, newname);
-    if (status == NC_NOERR) status = err;
 
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,
