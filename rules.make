@@ -51,7 +51,7 @@
 #	$(FPP) $(FPPFLAGS) $*.F | grep -v '^#' >$*.f || ($(RM) -f $*.f; exit 1)
 
 .m4.c:
-	$(M4) $(M4FLAGS) $< >$@
+	$(M4) $(M4FLAGS) -s $< >$@
 
 .m4.F:
 	$(M4) $(M4FLAGS) $< >$@
