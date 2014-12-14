@@ -64,12 +64,12 @@ Some facts in PnetCDF implementation:
    memory and updated in file before the collective API returns.
 
 3. Renaming is allowed in data mode. When called in data mode, they must be
-   called by all processes. The entire header will be overwritten in the file
-   before the API returns.
+   called by all processes. The file header will be updated before the API
+   returns.
 
 4. ncmpi_put_att() and its family are allowed in data mode. When called in data
-   mode, they must be called by all processes. The entire header will be
-   overwritten in the file before the API returns.
+   mode, they must be called by all processes. The file header will be updated
+   before the API returns.
 
 5. rename() and put_att() are not allowed to be called independently in data
    mode.

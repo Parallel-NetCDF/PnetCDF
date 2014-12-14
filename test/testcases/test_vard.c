@@ -262,6 +262,16 @@ int main(int argc, char **argv) {
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid0, "rec_var"); ERR
 
+    /* test the same routines in independent data mode */
+    err = ncmpi_begin_indep_data(ncid); ERR
+    err = ncmpi_put_vard(ncid, varid0, rec_filetype, bufptr, 1, buftype); ERR
+    CHECK_VALUE
+    err = ncmpi_rename_var(ncid, varid0, "rec_VAR"); ERR
+    err = ncmpi_put_vard(ncid, varid1, fix_filetype, bufptr, 1, buftype); ERR
+    CHECK_VALUE
+    err = ncmpi_rename_var(ncid, varid0, "rec_var"); ERR
+    err = ncmpi_end_indep_data(ncid); ERR
+
     err = ncmpi_close(ncid); ERR
 
     /* open the same file and read back for validate */

@@ -1535,7 +1535,7 @@ ncmpii_req_aggregation(NC     *ncp,
 
     /* set the file view */
     MPI_Offset offset=0;
-    err = ncmpii_file_set_view(ncp, fh, io_method, &offset, filetype);
+    err = ncmpii_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         buf_len = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
@@ -1793,7 +1793,7 @@ ncmpii_mgetput(NC           *ncp,
 
     /* set the MPI-IO fileview */
     MPI_Offset offset=0;
-    err = ncmpii_file_set_view(ncp, fh, io_method, &offset, filetype);
+    err = ncmpii_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         num_reqs = 0; /* skip this request */
         if (status == NC_NOERR) status = err;

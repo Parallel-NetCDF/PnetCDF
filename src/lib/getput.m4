@@ -741,7 +741,7 @@ err_check:
     }
 
     /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
-    err = ncmpii_file_set_view(ncp, fh, io_method, &offset, filetype);
+    err = ncmpii_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         nbytes = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
