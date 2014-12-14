@@ -23,7 +23,7 @@
  * 	   Y = UNLIMITED ; // (2 currently)
  * 	   X = 5 ;
  *    variables:
- * 	   int var(Y, X) ;
+ * 	   int VAR(Y, X) ;
  *    data:
  * 
  *    var =
@@ -104,13 +104,16 @@ int main(int argc, char **argv) {
             if (buf[j][i] != j)
                 printf("buf[%d][%d] != %d\n",j,i,buf[j][i]);
  
+    /* check if root process can write to file header in data mode */
+    err = ncmpi_rename_var(ncid, varid, "VAR"); ERR
+
     err = ncmpi_close(ncid); ERR
 
     /* open the same file and read back for validate */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                      &ncid); ERR
 
-    err = ncmpi_inq_varid(ncid, "var", &varid); ERR
+    err = ncmpi_inq_varid(ncid, "VAR", &varid); ERR
 
     /* initialize the contents of the array to a different value */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;

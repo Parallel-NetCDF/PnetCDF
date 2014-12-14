@@ -250,12 +250,18 @@ int main(int argc, char **argv) {
     /* check if the contents of buf are altered */
     CHECK_VALUE
 
+    /* check if root process can write to file header in data mode */
+    err = ncmpi_rename_var(ncid, varid0, "rec_VAR"); ERR
+
     /* write the fixed-size variable */
     err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, bufptr, 1, buftype); ERR
 
     /* check if the contents of buf are altered */
     CHECK_VALUE
  
+    /* check if root process can write to file header in data mode */
+    err = ncmpi_rename_var(ncid, varid0, "rec_var"); ERR
+
     err = ncmpi_close(ncid); ERR
 
     /* open the same file and read back for validate */
@@ -269,6 +275,7 @@ int main(int argc, char **argv) {
     nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
 
     err = ncmpi_close(ncid); ERR
+
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
     MPI_Type_free(&buftype);

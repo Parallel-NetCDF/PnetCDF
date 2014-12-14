@@ -316,12 +316,20 @@
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
 
+          ! check if root process can write to file header in data mode
+          err = nf90mpi_rename_var(ncid, varid0, 'rec_VAR')
+          call check(err, 'In nf90mpi_rename_var: ')
+
           ! write the fixed-size variable
           err = nf90mpi_put_vard_all(ncid, varid1, fix_filetype, buf(:,2), &
                                      1_8, buftype)
           call check(err, 'In nf90mpi_put_vard_all: ')
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
+
+          ! check if root process can write to file header in data mode
+          err = nf90mpi_rename_var(ncid, varid0, 'rec_var')
+          call check(err, 'In nf90mpi_rename_var: ')
 
           ! close the file
           err = nf90mpi_close(ncid)
