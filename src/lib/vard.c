@@ -36,8 +36,8 @@
 
 /*----< ncmpii_file_set_view() >---------------------------------------------*/
 /* This function handles the special case for root process for setting its
- * file view. PnetCDF keeps the file header visible to root process.
- * This function is collective and must be called at collective data mode
+ * file view: to keeps the whole file header visible to the root process.
+ * This function is collective if called in collective data mode
  */
 int
 ncmpii_file_set_view(NC           *ncp,
@@ -57,6 +57,7 @@ ncmpii_file_set_view(NC           *ncp,
 
     MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (io_method == COLL_IO && rank == 0) {
+        /* prepend the whole file header to filetype */
         int blocklens[2];
         MPI_Aint disps[2];
         MPI_Datatype root_filetype, ftypes[2];
@@ -66,7 +67,7 @@ ncmpii_file_set_view(NC           *ncp,
             disps[0] = 0;
            ftypes[0] = MPI_BYTE;
 
-        /* second block is the suarray request to the variable */
+        /* second block is filetype, the suarray request(s) to the variable */
         blocklens[1] = 1;
             disps[1] = *offset;
            ftypes[1] = filetype;
@@ -89,12 +90,13 @@ ncmpii_file_set_view(NC           *ncp,
                                         "native", MPI_INFO_NULL);
         MPI_Type_free(&root_filetype);
 
-        /* now update the explicit offset to be used in MPI-IO calls */
+        /* now update the explicit offset to be used in MPI-IO call later */
         *offset = ncp->begin_var;
     }
     else {
         TRACE_IO(MPI_File_set_view)(fh, *offset, MPI_BYTE, filetype,
                                     "native", MPI_INFO_NULL);
+        /* the explicit offset is already set in fileview */
         *offset = 0;
     }
     if (mpireturn != MPI_SUCCESS) {
