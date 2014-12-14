@@ -483,6 +483,17 @@ ncmpi_rename_dim(int         ncid,
      * be called collectively, i.e. all processes must participate.
      */
 
+    if (ncp->safe_mode) {
+        MPI_Offset nchars=strlen(newname);
+        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (nchars != strlen(newname)) {
+            /* newname's length is inconsistent with root's */
+            printf("Warning: dimension name(%s) used in %s() is inconsistent\n",
+                   newname, __func__);
+            if (status == NC_NOERR) status = NC_EMULTIDEFINE_DIM_NAME;
+        }
+    }
+
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
     err = ncmpii_set_NC_string(dimp->name, newname);
     if (status == NC_NOERR) status = err;
@@ -494,17 +505,6 @@ ncmpi_rename_dim(int         ncid,
      */
     TRACE_COMM(MPI_Bcast)(dimp->name->cp, dimp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
-
-    if (ncp->safe_mode) {
-        MPI_Offset nchars=dimp->name->nchars;
-        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (nchars != strlen(newname) || !strcmp(dimp->name->cp, newname)) {
-            /* inconsistent with root's */
-            printf("Warning: dimension name(%s) used in %s() is inconsistent\n",
-                   newname, __func__);
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE_DIM_NAME;
-        }
-    }
 
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,
