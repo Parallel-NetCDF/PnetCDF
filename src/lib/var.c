@@ -812,6 +812,17 @@ ncmpi_rename_var(int         ncid,
     TRACE_COMM(MPI_Bcast)(varp->name->cp, varp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
 
+    if (ncp->safe_mode) {
+        MPI_Offset nchars=varp->name->nchars;
+        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (nchars != strlen(newname) || !strcmp(varp->name->cp, newname)) {
+            /* inconsistent with root's */
+            printf("Warning: variable name(%s) used in %s() is inconsistent\n",
+                   newname, __func__);
+            if (status == NC_NOERR) status = NC_EMULTIDEFINE_VAR_NAME;
+        }
+    }
+
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,
      * because if the file space occupied by the name shrinks, all the metadata
