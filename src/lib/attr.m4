@@ -510,6 +510,17 @@ ncmpi_rename_att(int         ncid,
      * be called collectively, i.e. all processes must participate
      */
 
+    if (ncp->safe_mode) {
+        MPI_Offset nchars=strlen(newname);
+        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (nchars != strlen(newname)) {
+            /* newname's length is inconsistent with root's */
+            printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
+                   newname, __func__);
+            if (status == NC_NOERR) status = NC_EMULTIDEFINE_ATTR_NAME;
+        }
+    }
+
     /* ncmpii_set_NC_string() will check for strlen(newname) > nchars error */
     err = ncmpii_set_NC_string(attrp->name, newname);
     if (status == NC_NOERR) status = err;
@@ -521,17 +532,6 @@ ncmpi_rename_att(int         ncid,
      */
     TRACE_COMM(MPI_Bcast)(attrp->name->cp, attrp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
-
-    if (ncp->safe_mode) {
-        MPI_Offset nchars=attrp->name->nchars;
-        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (nchars != strlen(newname) || !strcmp(attrp->name->cp, newname)) {
-            /* inconsistent with root's */
-            printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
-                   newname, __func__);
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE_ATTR_NAME;
-        }
-    }
 
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,
@@ -1025,7 +1025,7 @@ ncmpii_put_att(int         ncid,
                const void *buf,      /* I/O buffer */
                nc_type     buftype)  /* I/O buffer type */
 {
-    int indx, file_ver, status=NC_NOERR, mpireturn;
+    int indx, file_ver, err, status=NC_NOERR, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp, *old=NULL;
@@ -1121,7 +1121,7 @@ ncmpii_put_att(int         ncid,
                  * with nelems elements
                  */
                 status = ncmpix_pad_putn(&xp, nelems, buf, filetype, buftype);
-                if (status != NC_NOERR) return status;
+                /* wkliao: why not return here if status != NC_NOERR? */
 
                 /* PnetCDF expects all processes use the same argument values.
                  * However, when argument values are not the same, only root's
@@ -1137,7 +1137,8 @@ ncmpii_put_att(int         ncid,
              * file header, because if the file space occupied by the attribute
              * shrinks, all the metadata following it must be moved ahead.
              */
-            return ncmpii_write_header(ncp);
+            err = ncmpii_write_header(ncp);
+            return (status == NC_NOERR) ? err : status;
         }
         /* else, redefine using existing array slot */
         old = ncap->value[indx];
@@ -1157,10 +1158,21 @@ ncmpii_put_att(int         ncid,
     if (nelems != 0) { /* non-zero length attribute */
         void *xp = attrp->xvalue;
         status = ncmpix_pad_putn(&xp, nelems, buf, filetype, buftype);
+        /* wkliao: no immediately return error code here? Strange ... 
+         *         instead, continue calling incr_NC_attrarray(), adding this
+         *         attribute as it is legal. But if we return error and reject
+         *         this attribute, then nc_test will fail with this error
+         *         message:
+         *         FAILURE at line 252 of test_read.c: ncmpi_inq: wrong number
+         *         of global atts returned, 3
+         *         Check netCDF-4, it is doing the same thing!
+         */ 
+/*
         if (status != NC_NOERR) {
             ncmpii_free_NC_attr(attrp);
             return status;
         }
+*/
     }
 
     if (indx >= 0) { /* modify the existing attribute */
@@ -1169,10 +1181,10 @@ ncmpii_put_att(int         ncid,
         ncmpii_free_NC_attr(old);
     }
     else { /* creating a new attribute */
-        status = incr_NC_attrarray(ncap, attrp);
-        if (status != NC_NOERR) {
+        err = incr_NC_attrarray(ncap, attrp);
+        if (err != NC_NOERR) {
             ncmpii_free_NC_attr(attrp);
-            return status;
+            return err;
         }
     }
 
