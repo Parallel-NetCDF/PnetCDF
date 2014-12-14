@@ -522,6 +522,17 @@ ncmpi_rename_att(int         ncid,
     TRACE_COMM(MPI_Bcast)(attrp->name->cp, attrp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
 
+    if (ncp->safe_mode) {
+        MPI_Offset nchars=attrp->name->nchars;
+        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+        if (nchars != strlen(newname) || !strcmp(attrp->name->cp, newname)) {
+            /* inconsistent with root's */
+            printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
+                   newname, __func__);
+            if (status == NC_NOERR) status = NC_EMULTIDEFINE_ATTR_NAME;
+        }
+    }
+
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,
      * because if the file space occupied by the name shrinks, all the metadata
@@ -1014,7 +1025,7 @@ ncmpii_put_att(int         ncid,
                const void *buf,      /* I/O buffer */
                nc_type     buftype)  /* I/O buffer type */
 {
-    int indx, file_ver, status, mpireturn;
+    int indx, file_ver, status=NC_NOERR, mpireturn;
     NC *ncp;
     NC_attrarray *ncap;
     NC_attr *attrp, *old=NULL;
@@ -1146,10 +1157,10 @@ ncmpii_put_att(int         ncid,
     if (nelems != 0) { /* non-zero length attribute */
         void *xp = attrp->xvalue;
         status = ncmpix_pad_putn(&xp, nelems, buf, filetype, buftype);
-        /* wkliao: no immediately return error code here? Strange ...
-         *         instead, continue calling incr_NC_attrarray() then
-         *         return the error code at the end
-         */
+        if (status != NC_NOERR) {
+            ncmpii_free_NC_attr(attrp);
+            return status;
+        }
     }
 
     if (indx >= 0) { /* modify the existing attribute */
@@ -1158,10 +1169,10 @@ ncmpii_put_att(int         ncid,
         ncmpii_free_NC_attr(old);
     }
     else { /* creating a new attribute */
-        int lstatus = incr_NC_attrarray(ncap, attrp);
-        if (lstatus != NC_NOERR) {
+        status = incr_NC_attrarray(ncap, attrp);
+        if (status != NC_NOERR) {
             ncmpii_free_NC_attr(attrp);
-            return lstatus;
+            return status;
         }
     }
 
