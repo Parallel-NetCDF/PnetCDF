@@ -461,7 +461,9 @@ ncmpiio_move(ncio *const nciop,
             movesize -= bufsize;
         }
 
-        /* fileview is always entire file visible */
+        /* make fileview entire file visible */
+        TRACE_IO(MPI_File_set_view)(nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
+                                    "native", MPI_INFO_NULL);
 
         if (rank >= grpsize) bufcount = 0;
         /* read the original data @ from+movesize+rank*bufsize */

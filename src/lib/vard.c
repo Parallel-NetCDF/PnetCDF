@@ -34,6 +34,77 @@
 }
 
 
+/*----< ncmpii_file_set_view() >---------------------------------------------*/
+/* This function handles the special case for root process for setting its
+ * file view. PnetCDF keeps the file header visible to root process.
+ * This function is collective and must be called at collective data mode
+ */
+int
+ncmpii_file_set_view(NC           *ncp,
+                     MPI_File      fh,
+                     int           io_method,
+                     MPI_Offset   *offset,
+                     MPI_Datatype  filetype)
+{
+    int rank, err, mpireturn, status=NC_NOERR;
+
+    if (filetype == MPI_BYTE) {
+        /* filetype is a contiguous space, make the whole file visible */
+        TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE,
+                                    "native", MPI_INFO_NULL);
+        return NC_NOERR;
+    }
+
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
+    if (io_method == COLL_IO && rank == 0) {
+        int blocklens[2];
+        MPI_Aint disps[2];
+        MPI_Datatype root_filetype, ftypes[2];
+
+        /* first block is the header extent */
+        blocklens[0] = ncp->begin_var;
+            disps[0] = 0;
+           ftypes[0] = MPI_BYTE;
+
+        /* second block is the suarray request to the variable */
+        blocklens[1] = 1;
+            disps[1] = *offset;
+           ftypes[1] = filetype;
+
+#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
+        if (*offset != disps[1]) {
+            blocklens[1] = 0;
+            status = NC_EAINT_TOO_SMALL;
+        }
+#endif
+
+#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
+        MPI_Type_create_struct(2, blocklens, disps, ftypes, &root_filetype);
+#else
+        MPI_Type_struct(2, blocklens, disps, ftypes, &root_filetype);
+#endif
+        MPI_Type_commit(&root_filetype);
+
+        TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype,
+                                        "native", MPI_INFO_NULL);
+        MPI_Type_free(&root_filetype);
+
+        /* now update the explicit offset to be used in MPI-IO calls */
+        *offset = ncp->begin_var;
+    }
+    else {
+        TRACE_IO(MPI_File_set_view)(fh, *offset, MPI_BYTE, filetype,
+                                    "native", MPI_INFO_NULL);
+        *offset = 0;
+    }
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_handle_error(mpireturn, "MPI_File_set_view");
+        if (status == NC_NOERR) status = err;
+    }
+
+    return status;
+}
+
 /*----< ncmpii_getput_vard() >------------------------------------------------*/
 static int
 ncmpii_getput_vard(NC               *ncp,
@@ -46,8 +117,8 @@ ncmpii_getput_vard(NC               *ncp,
                    int               io_method)
 {
     void *cbuf=NULL;
-    int i, isderived, el_size, mpireturn, err=NC_NOERR;
-    int buftype_is_contig, filetype_is_contig, need_swap=0, is_buf_swapped=0;
+    int i, isderived, el_size, mpireturn, status=NC_NOERR, err=NC_NOERR;
+    int buftype_is_contig, filetype_is_contig=1, need_swap=0, is_buf_swapped=0;
     int filetype_size=0, buftype_size;
     MPI_Offset btnelems, bnelems=0, offset=0, orig_bufcount=bufcount;
     MPI_Status mpistatus;
@@ -177,7 +248,7 @@ ncmpii_getput_vard(NC               *ncp,
     }
     /* no type conversion */
 
-    /* set offset to the file offset of the variable */
+    /* set fileview's displacement to the variable's starting file offset */
     offset = varp->begin;
 
 err_check:
@@ -194,28 +265,30 @@ err_check:
         }
         /* else for COLL_IO, must participate successive collective calls */
     }
+    status = err;
 
     if (io_method == COLL_IO)
         fh = ncp->nciop->collective_fh;
     else
         fh = ncp->nciop->independent_fh;
 
-    /* MPI_File_set_view is a collective if (io_method == COLL_IO) */
-    TRACE_IO(MPI_File_set_view)(fh, offset, MPI_BYTE, filetype,
-                                  "native", MPI_INFO_NULL);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_handle_error(mpireturn, "MPI_File_set_view");
+    /* set the file view */
+    err = ncmpii_file_set_view(ncp, fh, io_method, &offset, filetype);
+    if (err != NC_NOERR) {
+        bufcount = 0; /* skip this request */
+        if (status == NC_NOERR) status = err;
+    }
 
     if (rw_flag == WRITE_REQ) {
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_write_all)(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
-                return ncmpii_handle_error(mpireturn, "MPI_File_write_all");
+                return ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_write)(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_write_at)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
-                return ncmpii_handle_error(mpireturn, "MPI_File_write");
+                return ncmpii_handle_error(mpireturn, "MPI_File_write_at");
         }
         int put_size;
         MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
@@ -223,22 +296,24 @@ err_check:
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_read_all)(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
-                return ncmpii_handle_error(mpireturn, "MPI_File_read_all");
+                return ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_read)(fh, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_read_at)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
-                return ncmpii_handle_error(mpireturn, "MPI_File_read");
+                return ncmpii_handle_error(mpireturn, "MPI_File_read_at");
         }
         int get_size;
         MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
         ncp->nciop->get_size += get_size;
     }
 
-    /* reset the file view so the entire file is visible again */
-    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+    /* No longer need to reset the file view, as the root's fileview includes
+     * the whole file header.
+     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+     */
 
     if (rw_flag == READ_REQ) {
         if (need_swap)

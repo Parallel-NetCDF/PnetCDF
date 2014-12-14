@@ -122,7 +122,18 @@ This is essentially a placeholder for the next release note ...
       file types. This is to test the bug fix in r1758.
 
   o New optimization
-    * none
+    * Prior to this release, PnetCDF wraps each MPI read/write call in put/get
+      APIs with two MPI_File_set_view(). One is before the MPI read/write call
+      to take advantage of MPI's fileview feature for accessing non-contiguous
+      file locations. The other is after the MPI read/write call to make the
+      whole file visible, as the root process may write to file header later
+      in the data mode and it alone cannot make a call to MPI_File_set_view()
+      because the function is collective.
+
+      In this release, the second MPI_File_set_view() has been removed. The
+      root process's fileview is changed to always keep the whole file header
+      visible. Saving a collective call to MPI_File_set_view() is expected to
+      improve some performance.
 
   o New utility program
     * none

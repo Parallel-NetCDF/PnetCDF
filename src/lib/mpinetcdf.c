@@ -730,13 +730,15 @@ ncmpi_end_indep_data(int ncid) {
 int
 ncmpii_end_indep_data(NC *ncp)
 {
-    int status=NC_NOERR;
+    int status=NC_NOERR, mpireturn;
 
     if (!NC_readonly(ncp)) {
         if (ncp->vars.num_rec_vars > 0) {
             /* numrecs dirty bit may not be the same across all processes.
              * force sync in memory no matter if dirty or not.
              */
+            TRACE_IO(MPI_File_set_view)(ncp->nciop->independent_fh, 0, MPI_BYTE,
+                                        MPI_BYTE, "native", MPI_INFO_NULL);
             set_NC_ndirty(ncp);
             status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
             /* the only possible dirty part of the header is numrecs */
@@ -745,7 +747,6 @@ ncmpii_end_indep_data(NC *ncp)
 #ifndef DISABLE_FILE_SYNC
         /* calling file sync for those already open the file */
         if (NC_doFsync(ncp) && NC_independentFhOpened(ncp->nciop)) {
-            int mpireturn;
             /* MPI_File_sync() is collective */
             TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
             if (mpireturn != MPI_SUCCESS) {
