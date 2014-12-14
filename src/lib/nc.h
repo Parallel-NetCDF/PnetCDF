@@ -873,6 +873,6 @@ extern int
 ncmpii_end_indep_data(NC *ncp); 
 
 extern int                
-ncmpii_file_set_view(NC *ncp, MPI_File fh, int io_method, MPI_Offset *offset, MPI_Datatype filetype);
+ncmpii_file_set_view(NC *ncp, MPI_File fh, MPI_Offset *offset, MPI_Datatype filetype);
 
 #endif /* _NC_H_ */

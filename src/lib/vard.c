@@ -42,7 +42,6 @@
 int
 ncmpii_file_set_view(NC           *ncp,
                      MPI_File      fh,
-                     int           io_method,
                      MPI_Offset   *offset,
                      MPI_Datatype  filetype)
 {
@@ -56,7 +55,7 @@ ncmpii_file_set_view(NC           *ncp,
     }
 
     MPI_Comm_rank(ncp->nciop->comm, &rank);
-    if (io_method == COLL_IO && rank == 0) {
+    if (rank == 0) {
         /* prepend the whole file header to filetype */
         int blocklens[2];
         MPI_Aint disps[2];
@@ -275,7 +274,7 @@ err_check:
         fh = ncp->nciop->independent_fh;
 
     /* set the file view */
-    err = ncmpii_file_set_view(ncp, fh, io_method, &offset, filetype);
+    err = ncmpii_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         bufcount = 0; /* skip this request */
         if (status == NC_NOERR) status = err;
