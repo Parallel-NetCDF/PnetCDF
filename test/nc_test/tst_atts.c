@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h> /* INT_MIN */
 #include <pnetcdf.h>
 
 static int verbose;
@@ -1070,7 +1071,7 @@ create_file(char *filename, int cmode)
     err=ncmpi_put_att_short(ncid, NC_GLOBAL, "Gs", NC_SHORT, 3, Gs_att); ERR
     }
     { /* Gi */
-    static const int Gi_att[4] = {-2147483648, 2147483647, -2147483648, -2147483648} ;
+    static const int Gi_att[4] = {INT_MIN, INT_MAX, INT_MIN, INT_MIN} ;
     err=ncmpi_put_att_int(ncid, NC_GLOBAL, "Gi", NC_INT, 4, Gi_att); ERR
     }
     { /* Gf */
@@ -1096,7 +1097,7 @@ create_file(char *filename, int cmode)
     err=ncmpi_put_att_short(ncid, s_id, "s", NC_SHORT, 2, s_s_att); ERR
     }
     { /* i */
-    static const int i_i_att[3] = {-2147483648, 2147483647, -2147483648} ;
+    static const int i_i_att[3] = {INT_MIN, 2147483647, INT_MIN} ;
     err=ncmpi_put_att_int(ncid, i_id, "i", NC_INT, 3, i_i_att); ERR
     }
     { /* f */
@@ -1169,7 +1170,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    int ir_data[2] = {-2147483648, 2147483647} ;
+    int ir_data[2] = {INT_MIN, 2147483647} ;
     MPI_Offset ir_startset[1] = {0} ;
     MPI_Offset ir_countset[1] = {2} ;
     err=ncmpi_put_vara(ncid, ir_id, ir_startset, ir_countset, ir_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1211,7 +1212,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    int i1_data[1] = {-2147483648} ;
+    int i1_data[1] = {INT_MIN} ;
     MPI_Offset i1_startset[1] = {0} ;
     MPI_Offset i1_countset[1] = {1} ;
     err=ncmpi_put_vara(ncid, i1_id, i1_startset, i1_countset, i1_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1253,7 +1254,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    int i2_data[2] = {-2147483648, 2147483647} ;
+    int i2_data[2] = {INT_MIN, 2147483647} ;
     MPI_Offset i2_startset[1] = {0} ;
     MPI_Offset i2_countset[1] = {2} ;
     err=ncmpi_put_vara(ncid, i2_id, i2_startset, i2_countset, i2_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1295,7 +1296,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    int i3_data[3] = {-2147483648, 2147483647, -2147483648} ;
+    int i3_data[3] = {INT_MIN, 2147483647, INT_MIN} ;
     MPI_Offset i3_startset[1] = {0} ;
     MPI_Offset i3_countset[1] = {3} ;
     err=ncmpi_put_vara(ncid, i3_id, i3_startset, i3_countset, i3_data, 0,MPI_DATATYPE_NULL); ERR
@@ -1337,7 +1338,7 @@ create_file(char *filename, int cmode)
     }
 
     {
-    int i4_data[4] = {-2147483648, 2147483647, -2147483648, -2147483648} ;
+    int i4_data[4] = {INT_MIN, 2147483647, INT_MIN, INT_MIN} ;
     MPI_Offset i4_startset[1] = {0} ;
     MPI_Offset i4_countset[1] = {4} ;
     err=ncmpi_put_vara(ncid, i4_id, i4_startset, i4_countset, i4_data, 0,MPI_DATATYPE_NULL); ERR
