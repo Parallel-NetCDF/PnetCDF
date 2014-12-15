@@ -16,6 +16,7 @@
  * produces an error (using an illegal start argument), while the other does not.
  */
 
+#define ERR { if (err!=NC_NOERR){printf("PE %d: error at line %d (%s)\n",rank,__LINE__,ncmpi_strerror(err)); nerrs++;}}
 #define CHECK_ERROR(fn) { \
    if (rank == 0 && err != NC_NOERR) \
        printf("PE %d: %s error is %s\n",rank,fn,ncmpi_strerror(err)); \
@@ -26,7 +27,7 @@
 int main(int argc, char *argv[])
 {
    char *filename="testfile.nc";
-   int rank, nproc, ncid, err, varid, dimids[1];
+   int rank, nproc, ncid, err, nerrs=0, sum_nerrs, varid, dimids[1];
    int req, status, verbose;
    MPI_Offset start[1], count[1];
    double buf[2];
@@ -48,16 +49,16 @@ int main(int argc, char *argv[])
 
    /* Create a 2 element vector of doubles */
    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
-   assert(err == NC_NOERR);
+   ERR
 
    err = ncmpi_def_dim(ncid, "dim", 2, &dimids[0]);
-   assert(err == NC_NOERR);
+   ERR
 
    err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 1, dimids, &varid);
-   assert(err == NC_NOERR);
+   ERR
 
    err = ncmpi_enddef(ncid);
-   assert(err == NC_NOERR);
+   ERR
 
    if (rank == 0) {
        start[0] = 0;
@@ -80,8 +81,7 @@ int main(int argc, char *argv[])
    CHECK_ERROR("ncmpi_iput_vara_double")
 
    err = ncmpi_wait_all(ncid, 1, &req, &status);
-   if (err != NC_NOERR)
-       printf("PE %d: ncmpi_wait_all error is %s\n",rank,ncmpi_strerror(err));
+   ERR
 
    err = ncmpi_get_vara_all(ncid, varid, start, count,
 			    buf, count[0], MPI_DOUBLE);
@@ -94,11 +94,10 @@ int main(int argc, char *argv[])
    CHECK_ERROR("ncmpi_iget_vara_double")
 
    err = ncmpi_wait_all(ncid, 1, &req, &status);
-   if (err != NC_NOERR)
-       printf("PE %d: ncmpi_wait_all error is %s\n",rank,ncmpi_strerror(err));
+   ERR
 
    err = ncmpi_close(ncid);
-   assert(err == NC_NOERR);
+   ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -109,13 +108,15 @@ int main(int argc, char *argv[])
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
     }
+    MPI_Allreduce(&nerrs, &sum_nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char cmd_str[80];
         sprintf(cmd_str, "*** TESTING C   %s for collective abort ", argv[0]);
-        printf("%-66s ------ pass\n", cmd_str);
+        if (sum_nerrs == 0) printf("%-66s ------ pass\n", cmd_str);
+        else                printf("%-66s ------ failed\n", cmd_str);
     }
 
    MPI_Finalize();
-   return 0;
+   return (sum_nerrs == 0) ? 0 : 1;
 }

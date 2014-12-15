@@ -13,18 +13,15 @@
 #define PRINT_ERR_ON_SCREEN
 
 #define ERRCODE 2
-#define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); exit(ERRCODE);}
+#define ERR {if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j, retval, errs=0, rank, nprocs, verbose;
+    int i, j, err, nerrs=0, max_nerrs, rank, nprocs, verbose;
     int ncid, dimid[2], varid, req, status;
 
-    MPI_Offset start[2];
-    MPI_Offset count[2];
-    MPI_Offset stride[2];
-    MPI_Offset imap[2];
+    MPI_Offset start[2], count[2], stride[2], imap[2];
     int   var[6][4];
     float rh[4][6];
     signed char  varT[4][6];
@@ -45,16 +42,14 @@ int main(int argc, char **argv)
     if (nprocs > 1 && rank == 0 && verbose)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
 
-    if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, filename,
-        NC_CLOBBER | NC_64BIT_DATA, MPI_INFO_NULL, &ncid)))
-       ERR(retval);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA, MPI_INFO_NULL, &ncid);
+       ERR
 
     /* define a variable of a 6 x 4 integer array in the nc file */
-    if (NC_NOERR != (retval = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]))) ERR(retval);
-    if (NC_NOERR != (retval = ncmpi_def_dim(ncid, "X", 4, &dimid[1]))) ERR(retval);
-    if (NC_NOERR != (retval = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid)))
-        ERR(retval);
-    if (NC_NOERR != (retval = ncmpi_enddef(ncid))) ERR(retval);
+    err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 4, &dimid[1]); ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid); ERR
+    err = ncmpi_enddef(ncid); ERR
 
     /* create a 6 x 4 integer variable in the file with contents:
            0,  1,  2,  3,
@@ -69,25 +64,21 @@ int main(int argc, char **argv)
     start[0] = 0; start[1] = 0;
     count[0] = 6; count[1] = 4;
     if (rank > 0) count[0] = count[1] = 0;
-    if (NC_NOERR != (retval = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0])))
-        ERR(retval);
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); ERR
 
     /* read the variable back in the matrix transposed way, rh is 4 x 6 */
-    count[0] = 6; count[1] = 4;
+     count[0] = 6;  count[1] = 4;
     stride[0] = 1; stride[1] = 1;
-    imap[0]   = 1; imap[1] = 6;   /* would be {4, 1} if not transposing */
+      imap[0] = 1;   imap[1] = 6;   /* would be {4, 1} if not transposing */
 #define TEST_NON_BLOCKING_API
 #ifdef TEST_NON_BLOCKING_API
-    if (NC_NOERR != (retval = ncmpi_iget_varm_float(ncid, varid, start, count, stride, imap, &rh[0][0], &req)))
-        ERR(retval);
+    err = ncmpi_iget_varm_float(ncid, varid, start, count, stride, imap, &rh[0][0], &req); ERR
 
-    if (NC_NOERR != (retval = ncmpi_wait_all(ncid, 1, &req, &status)))
-        ERR(retval);
+    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
 
-    if (status != NC_NOERR) ERR(status);
+    if (status != NC_NOERR) ERR
 #else
-    if (NC_NOERR != (retval = ncmpi_get_varm_float_all(ncid, varid, start, count, stride, imap, &rh[0][0])))
-        ERR(retval);
+    err = ncmpi_get_varm_float_all(ncid, varid, start, count, stride, imap, &rh[0][0]); ERR
 #endif
 
     /* check the contents of read */
@@ -98,7 +89,7 @@ int main(int argc, char **argv)
 #ifdef PRINT_ERR_ON_SCREEN
                 printf("Error: expecting rh[%d][%d]=%f but got %f\n",j,i,k,rh[j][i]);
 #endif
-                errs++;
+                nerrs++;
                 break;
             }
             k += 1.0;
@@ -126,8 +117,7 @@ int main(int argc, char **argv)
     start[0] = 0; start[1] = 0;
     count[0] = 6; count[1] = 4;
     if (rank > 0) count[0] = count[1] = 0;
-    if (NC_NOERR != (retval = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0])))
-        ERR(retval);
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); ERR
 
     /* set the contents of the write buffer varT, a 4 x 6 char array
           50, 51, 52, 53, 54, 55,
@@ -144,16 +134,13 @@ int main(int argc, char **argv)
     imap[0]   = 1; imap[1]   = 6;   /* would be {4, 1} if not transposing */
     if (rank > 0) count[0] = count[1] = 0;
 #ifdef TEST_NON_BLOCKING_API
-    if (NC_NOERR != (retval = ncmpi_iput_varm_schar(ncid, varid, start, count, stride, imap, &varT[0][0], &req)))
-        ERR(retval);
+    err = ncmpi_iput_varm_schar(ncid, varid, start, count, stride, imap, &varT[0][0], &req); ERR
 
-    if (NC_NOERR != (retval = ncmpi_wait_all(ncid, 1, &req, &status)))
-        ERR(retval);
+    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
 
-    if (status != NC_NOERR) ERR(status);
+    if (status != NC_NOERR) ERR
 #else
-    if (NC_NOERR != (retval = ncmpi_put_varm_schar_all(ncid, varid, start, count, stride, imap, &varT[0][0])))
-        ERR(retval);
+    err = ncmpi_put_varm_schar_all(ncid, varid, start, count, stride, imap, &varT[0][0]); ERR
 #endif
 
     /* the output from command "ncmpidump -v var test.nc" should be:
@@ -174,16 +161,16 @@ int main(int argc, char **argv)
                 /* this error is a pntecdf internal error, if occurs */
                 printf("Error: expecting varT[%d][%d]=%d but got %d\n",j,i,j*6+i + 50,varT[j][i]);
 #endif
-                errs++;
+                nerrs++;
                 break;
             }
         }
     }
-    if (NC_NOERR != (retval = ncmpi_close(ncid))) ERR(retval);
+    err = ncmpi_close(ncid); ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
-    int err = ncmpi_inq_malloc_size(&malloc_size);
+    err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
@@ -191,18 +178,16 @@ int main(int argc, char **argv)
                    sum_size);
     }
 
+    MPI_Allreduce(&nerrs, &max_nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
     if (rank == 0) {
         char cmd_str[80];
         sprintf(cmd_str, "*** TESTING C   %s for get/put varm ", argv[0]);
-
-        if (errs)
-            printf("%-66s ------ failed\n", cmd_str);
-        else
-            printf("%-66s ------ pass\n", cmd_str);
+        if (max_nerrs) printf("%-66s ------ failed\n", cmd_str);
+        else           printf("%-66s ------ pass\n", cmd_str);
     }
 
     MPI_Finalize();
 
-    return errs;
+    return (max_nerrs == 0) ? 0 : 1;
 }
 
