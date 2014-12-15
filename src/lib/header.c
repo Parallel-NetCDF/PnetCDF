@@ -1021,7 +1021,7 @@ hdr_get_nc_type(bufferinfo *gbp,
 }
 
 /*----< ncmpix_len_nctype() >------------------------------------------------*/
-inline MPI_Offset
+MPI_Offset
 ncmpix_len_nctype(nc_type type) {
     switch(type) {
         case NC_BYTE:
