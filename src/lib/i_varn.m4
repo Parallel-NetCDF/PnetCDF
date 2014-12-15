@@ -166,8 +166,7 @@ ncmpii_igetput_varn(int               ncid,
                     int               use_abuf)  /* if use attached buffer */
 {
     int i, j, el_size, status=NC_NOERR, free_cbuf=0;
-    int isSameGroup;
-    int position, packsize;
+    int isSameGroup, position, packsize=0;
     void *cbuf=NULL;
     char *bufp;
     MPI_Offset **_counts=NULL;

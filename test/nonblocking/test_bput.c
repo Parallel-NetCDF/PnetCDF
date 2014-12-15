@@ -13,7 +13,7 @@
 #define FILE_NAME "testfile.nc"
 
 #define ERRCODE 2
-#define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); exit(ERRCODE);}
+#define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); errs++;}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
