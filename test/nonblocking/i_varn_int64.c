@@ -125,6 +125,8 @@ int check_contents_for_fail(int ncid, int *varid)
     long long *r_buffer = (long long*) malloc(NY*NX * sizeof(long long));
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
+
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
         err = ncmpi_get_var_longlong_all(ncid, varid[i], r_buffer);

@@ -240,6 +240,8 @@
      +                                 counts, buffer)
           call check(err, 'In nfmpi_put_varn_int_all: ')
 
+          if (nprocs .GT. 4) call MPI_Barrier(MPI_COMM_WORLD, err)
+
           ! read back and check the contents
           buffer = -1;
           err = nfmpi_get_varn_int_all(ncid, varid, num_reqs, starts,

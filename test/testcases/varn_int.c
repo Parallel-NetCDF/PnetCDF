@@ -217,6 +217,8 @@ int main(int argc, char** argv)
     err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
     ERR
 
+    if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
+
     /* read back and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);

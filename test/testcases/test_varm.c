@@ -42,8 +42,8 @@ int main(int argc, char **argv)
     if (nprocs > 1 && rank == 0 && verbose)
         printf("Warning: %s is designed to run on 1 process\n", argv[0]);
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA, MPI_INFO_NULL, &ncid);
-       ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA,
+                       MPI_INFO_NULL, &ncid); ERR
 
     /* define a variable of a 6 x 4 integer array in the nc file */
     err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); ERR
@@ -65,6 +65,8 @@ int main(int argc, char **argv)
     count[0] = 6; count[1] = 4;
     if (rank > 0) count[0] = count[1] = 0;
     err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); ERR
+
+    if (nprocs > 1) MPI_Barrier(MPI_COMM_WORLD);
 
     /* read the variable back in the matrix transposed way, rh is 4 x 6 */
      count[0] = 6;  count[1] = 4;
