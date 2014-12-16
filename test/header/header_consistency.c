@@ -539,10 +539,17 @@ int test_dim_var(char *filename)
 int main(int argc, char **argv)
 {
     char *filename="testfile.nc", *mode[2] = {"0", "1"};
-    int i, rank, verbose, nerr=0, sum_nerr;
+    int i, rank, nprocs, verbose, nerr=0, sum_nerr;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    if (nprocs < 2) {
+        if (!rank) printf("This program is for running 2 or more processes. Exiting ...\n");
+        MPI_Finalize();
+        return 0;
+    }
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
