@@ -231,6 +231,8 @@
                                      starts, counts)
           call check(err, 'In nf90mpi_put_varn_all: ')
 
+          if (nprocs .GT. 4) call MPI_Barrier(MPI_COMM_WORLD, err)
+
           ! read a scalar back and check the content
           oneReal = -1.0  ! a scalar
           if (rank .GE. 4) starts = 1_8
