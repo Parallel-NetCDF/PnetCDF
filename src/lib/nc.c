@@ -981,6 +981,7 @@ move_vars_r(NC *ncp, NC *old) {
   return ncmpiio_move(ncp->nciop, ncp->begin_var, old->begin_var,
                    old->begin_rec - old->begin_var);
 }
+#endif
 
 /*
  * Given a valid ncp, return NC_EVARSIZE if any variable has a bad len
@@ -1065,7 +1066,6 @@ ncmpii_NC_check_vlens(NC *ncp)
     }
     return NC_NOERR;
 }
-#endif
 
 #define DEFAULT_ALIGNMENT 512
 #define HEADER_ALIGNMENT_LB 4
@@ -1125,9 +1125,9 @@ ncmpii_NC_enddef(NC         *ncp,
     }
 #endif
 
-    /* serial netcdf calls a check on dimension lenghths here, i.e.
-     *         status = NC_check_vlens(ncp);
-     * To be updated */
+    /* check on dimension lenghths */
+    status = ncmpii_NC_check_vlens(ncp);
+    if (status != NC_NOERR) return status;
 
     /* When ncp->old == NULL, compute each variable's 'begin' file offset
      * and offset for record variables as well. Otherwise, re-used all
