@@ -1483,6 +1483,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
        header.
      */
 
+    /* next element is 'begin' */
     status = hdr_check_buffer(gbp, (gbp->version == 1 ? 4 : 8));
     if (status != NC_NOERR) {
         ncmpii_free_NC_var(varp);
@@ -1652,8 +1653,8 @@ ncmpii_hdr_get_NC(NC *ncp)
         return NC_ENOTNC; /* not an netCDF file */
     }
 
-    /** Ensure that 'nextread' bytes are available. */
-    status = hdr_check_buffer(&getbuf, (getbuf.version == 1) ? 4 : 8);
+    /** Ensure that 'nextread' bytes (numrecs) are available. */
+    status = hdr_check_buffer(&getbuf, (getbuf.version == 5) ? 8 : 4);
     if(status != NC_NOERR) {
         NCI_Free(getbuf.base);
         return status;
