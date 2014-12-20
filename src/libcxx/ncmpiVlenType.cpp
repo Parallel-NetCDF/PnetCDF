@@ -13,7 +13,6 @@
 #include "ncmpiUint64.h"
 #include "ncmpiFloat.h"
 #include "ncmpiDouble.h"
-#include "ncmpiString.h"
 #include <pnetcdf.h>
 using namespace std;
 using namespace PnetCDF;
