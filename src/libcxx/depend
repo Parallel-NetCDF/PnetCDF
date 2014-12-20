@@ -10,8 +10,7 @@ ncmpiEnumType.o: ncmpiEnumType.cpp ncmpiEnumType.h ncmpiType.h \
   ../lib/pnetcdf.h ncmpiCheck.h ncmpi_notyet.h \
   ncmpiGroup.h ncmpiGroupAtt.h ncmpiAtt.h ncmpiException.h ncmpiByte.h \
   ncmpiUbyte.h ncmpiChar.h ncmpiShort.h ncmpiUshort.h ncmpiInt.h \
-  ncmpiUint.h ncmpiInt64.h ncmpiUint64.h ncmpiFloat.h ncmpiDouble.h \
-  ncmpiString.h
+  ncmpiUint.h ncmpiInt64.h ncmpiUint64.h ncmpiFloat.h ncmpiDouble.h
 ncmpiGroupAtt.o: ncmpiGroupAtt.cpp ncmpiGroupAtt.h ncmpiAtt.h ncmpiType.h \
   ../lib/pnetcdf.h ncmpiException.h ncmpiGroup.h \
   ncmpiEnumType.h ncmpiCheck.h ncmpi_notyet.h
@@ -19,7 +18,7 @@ ncmpiGroup.o: ncmpiGroup.cpp ncmpiGroup.h ncmpiType.h ../lib/pnetcdf.h \
   ncmpiEnumType.h ncmpiCheck.h ncmpi_notyet.h ncmpiGroupAtt.h ncmpiAtt.h \
   ncmpiException.h ncmpiVar.h ncmpiVarAtt.h ncmpiByte.h ncmpiUbyte.h \
   ncmpiChar.h ncmpiShort.h ncmpiUshort.h ncmpiInt.h ncmpiUint.h \
-  ncmpiInt64.h ncmpiUint64.h ncmpiFloat.h ncmpiDouble.h ncmpiString.h \
+  ncmpiInt64.h ncmpiUint64.h ncmpiFloat.h ncmpiDouble.h \
   ncmpiDim.h ncmpiVlenType.h ncmpiCompoundType.h ncmpiOpaqueType.h \
   ncmpiException.h
 ncmpiByte.o: ncmpiByte.cpp ncmpiByte.h ncmpiType.h ../lib/pnetcdf.h
@@ -29,7 +28,7 @@ ncmpiCompoundType.o: ncmpiCompoundType.cpp ncmpiGroup.h ncmpiType.h \
   ncmpi_notyet.h ncmpiGroupAtt.h ncmpiAtt.h ncmpiException.h \
   ncmpiCompoundType.h ncmpiByte.h ncmpiUbyte.h ncmpiChar.h ncmpiShort.h \
   ncmpiUshort.h ncmpiInt.h ncmpiUint.h ncmpiInt64.h ncmpiUint64.h \
-  ncmpiFloat.h ncmpiDouble.h ncmpiString.h
+  ncmpiFloat.h ncmpiDouble.h
 ncmpiDouble.o: ncmpiDouble.cpp ncmpiDouble.h ncmpiType.h ../lib/pnetcdf.h
 ncmpiFloat.o: ncmpiFloat.cpp ncmpiFloat.h ncmpiType.h ../lib/pnetcdf.h
 ncmpiInt.o: ncmpiInt.cpp ncmpiInt.h ncmpiType.h ../lib/pnetcdf.h
@@ -38,7 +37,6 @@ ncmpiOpaqueType.o: ncmpiOpaqueType.cpp ncmpiOpaqueType.h ncmpiType.h \
   ../lib/pnetcdf.h ncmpiGroup.h ncmpiEnumType.h \
   ncmpiCheck.h ncmpi_notyet.h ncmpiGroupAtt.h ncmpiAtt.h ncmpiException.h
 ncmpiShort.o: ncmpiShort.cpp ncmpiShort.h ncmpiType.h ../lib/pnetcdf.h
-ncmpiString.o: ncmpiString.cpp ncmpiString.h ncmpiType.h ../lib/pnetcdf.h
 ncmpiUbyte.o: ncmpiUbyte.cpp ncmpiUbyte.h ncmpiType.h ../lib/pnetcdf.h
 ncmpiUint.o: ncmpiUint.cpp ncmpiUint.h ncmpiType.h ../lib/pnetcdf.h
 ncmpiUint64.o: ncmpiUint64.cpp ncmpiUint64.h ncmpiType.h ../lib/pnetcdf.h
@@ -54,17 +52,16 @@ ncmpiVarAtt.o: ncmpiVarAtt.cpp ncmpiVar.h ../lib/pnetcdf.h \
   ncmpiVarAtt.h ncmpiAtt.h ncmpiType.h ncmpiException.h ncmpiGroup.h \
   ncmpiEnumType.h ncmpiCheck.h ncmpi_notyet.h ncmpiGroupAtt.h ncmpiByte.h \
   ncmpiUbyte.h ncmpiChar.h ncmpiShort.h ncmpiUshort.h ncmpiInt.h \
-  ncmpiUint.h ncmpiInt64.h ncmpiUint64.h ncmpiFloat.h ncmpiDouble.h \
-  ncmpiString.h
+  ncmpiUint.h ncmpiInt64.h ncmpiUint64.h ncmpiFloat.h ncmpiDouble.h
 ncmpiVar.o: ncmpiVar.cpp ncmpiVarAtt.h ncmpiAtt.h ncmpiType.h \
   ../lib/pnetcdf.h ncmpiException.h ncmpiDim.h \
   ncmpiVar.h ncmpiGroup.h ncmpiEnumType.h ncmpiCheck.h ncmpi_notyet.h \
   ncmpiGroupAtt.h ncmpiByte.h ncmpiUbyte.h ncmpiChar.h ncmpiShort.h \
   ncmpiUshort.h ncmpiInt.h ncmpiUint.h ncmpiInt64.h ncmpiUint64.h \
-  ncmpiFloat.h ncmpiDouble.h ncmpiString.h
+  ncmpiFloat.h ncmpiDouble.h
 ncmpiVlenType.o: ncmpiVlenType.cpp ncmpiVlenType.h ncmpiType.h \
   ../lib/pnetcdf.h ncmpiGroup.h ncmpiEnumType.h \
   ncmpiCheck.h ncmpi_notyet.h ncmpiGroupAtt.h ncmpiAtt.h ncmpiException.h \
   ncmpiByte.h ncmpiUbyte.h ncmpiChar.h ncmpiShort.h ncmpiUshort.h \
   ncmpiInt.h ncmpiUint.h ncmpiInt64.h ncmpiUint64.h ncmpiFloat.h \
-  ncmpiDouble.h ncmpiString.h
+  ncmpiDouble.h

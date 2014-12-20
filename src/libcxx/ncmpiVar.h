@@ -17,7 +17,6 @@
 #include "ncmpiUint64.h"
 #include "ncmpiFloat.h"
 #include "ncmpiDouble.h"
-#include "ncmpiString.h"
 
 #ifndef NcmpiVarClass
 #define NcmpiVarClass
