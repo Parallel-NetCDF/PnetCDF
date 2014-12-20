@@ -116,6 +116,9 @@ inq_recsize: inq_recsize.o $(LIBRARY)
 test_vard: test_vard.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+profile: profile.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 

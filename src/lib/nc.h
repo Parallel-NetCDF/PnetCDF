@@ -582,9 +582,6 @@ extern int
 ncmpii_dset_has_recvars(NC *ncp);
 
 extern int
-ncmpii_read_numrecs(NC *ncp);
-
-extern int
 ncmpii_write_header(NC *ncp);
 
 extern void

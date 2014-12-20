@@ -468,10 +468,10 @@ ncmpiio_move(ncio *const nciop,
         if (rank >= grpsize) bufcount = 0;
         /* read the original data @ from+movesize+rank*bufsize */
         TRACE_IO(MPI_File_read_at_all)(nciop->collective_fh,
-                                         from+movesize+rank*bufsize,
-                                         buf, bufcount, MPI_BYTE, &mpistatus);
+                                       from+movesize+rank*bufsize,
+                                       buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
+	    err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
             if (err == NC_EFILE) status = NC_EREAD;
         }
         else {
@@ -492,7 +492,7 @@ ncmpiio_move(ncio *const nciop,
                                         to+movesize+rank*bufsize,
                                         buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
+	    err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
             if (err == NC_EFILE) status = NC_EWRITE;
         }
         else {
