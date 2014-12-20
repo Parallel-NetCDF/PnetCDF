@@ -919,6 +919,7 @@ hdr_fetch(bufferinfo *gbp) {
         if (err != NC_NOERR) return err;
     }
 
+    /* broadcast root's read to other processes */
     TRACE_COMM(MPI_Bcast)(gbp->base, gbp->size, MPI_BYTE, 0, gbp->nciop->comm);
 
     return err;
@@ -1754,13 +1755,13 @@ ncmpii_comp_dims(int          safe_mode,
             /* copy root's dim to local */
             NC_dim *new_dim = dup_NC_dim(root_dim->value[i]);
             err = incr_NC_dimarray(local_dim, new_dim);
-            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) return err; /* this is a fatal error */
             continue;
         }
 
         /* check dimension name */
         NC_string *root_name, *local_name;
-        root_name  = root_dim->value[i]->name;
+         root_name =  root_dim->value[i]->name;
         local_name = local_dim->value[i]->name;
 
         err = NC_NOERR;
@@ -1828,7 +1829,7 @@ ncmpii_comp_attrs(int           safe_mode,
             /* copy root's attr to local */
             NC_attr *new_attr = dup_NC_attr(root_attr->value[i]);
             err = incr_NC_attrarray(local_attr, new_attr);
-            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) return err; /* a fatal error */
             continue;
         }
 
@@ -2042,7 +2043,7 @@ ncmpii_comp_vars(int          safe_mode,
             /* copy root's variable to local */
             NC_var *new_var = dup_NC_var(root_var->value[i]);
             err = incr_NC_vararray(local_var, new_var);
-            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) return err; /* a fatal error */
             /* local_var->ndefined is increased by 1 in incr_NC_vararray() */
             continue;
         }
@@ -2082,8 +2083,6 @@ ncmpii_comp_vars(int          safe_mode,
             err = NC_EMULTIDEFINE_VAR_LEN;
         }
         else if (v1->begin != v2->begin) {
-            /* this is redundant, as any variable's inconsistency should be
-               caught by now */
             msg = "%s variable %s's begin (root=%lld, local=%lld)\n";
             VAR_WARN(msg, name, v1->begin, v2->begin)
             err = NC_EMULTIDEFINE_VAR_BEGIN;
@@ -2098,13 +2097,16 @@ ncmpii_comp_vars(int          safe_mode,
                 }
             }
         }
-        /* compare variable's attributes if by far no inconsistecy is found */
-        if (err == NC_NOERR)
+        /* compare variable's attributes if by far no inconsistency is found */
+        if (err == NC_NOERR) {
             err = ncmpii_comp_attrs(safe_mode, &(v1->attrs), &(v2->attrs));
+            if (err != NC_NOERR && !ErrIsHeaderDiff(err))
+                return err; /* a fatal error */
+        }
 
         if (status == NC_NOERR) status = err;
 
-        /* overwrite local's var with root's */
+        /* if there is any inconsistency, overwrite local's var with root's */
         if (ErrIsHeaderDiff(err)) {
             ncmpii_free_NC_var(local_var->value[i]);
             local_var->value[i] = dup_NC_var(root_var->value[i]);
@@ -2123,8 +2125,12 @@ ncmpii_comp_vars(int          safe_mode,
 }
 
 /*----< ncmpii_hdr_check_NC() >-----------------------------------------------*/
-/* check the header of local copy against root's
- * This function is collective */
+/* This function is only called by NC_check_header()
+ * It checks the header of local copy against root's and overwrites local's
+ * header object, ncp, with root's header if any inconsistency is detected.
+ * This function is called independently and should not contain any MPI
+ * communication calls.
+ */
 int
 ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                     NC         *ncp)
@@ -2143,23 +2149,24 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 
     /* check header's magic */
     memset(magic, 0, sizeof(magic));
-    err = ncmpix_getn_schar_schar(
-            (const void **)(&getbuf->pos), sizeof(magic), magic);
+    err = ncmpix_getn_schar_schar((const void **)(&getbuf->pos),
+                                  sizeof(magic), magic);
     if (err != NC_NOERR) {
         /* Fatal error, as root's header is significant */
-        fprintf(stderr,"Error: reading file magic from root's header\n");
+        if (ncp->safe_mode) fprintf(stderr,"Error: CDF magic number from root's header\n");
         return err;
     }
-
     getbuf->index += sizeof(magic);
-    /* don't need to worry about CDF-1 or CDF-2
-     * if the first bits are not 'CDF-'  */
+
+    /* check if the first 3 letters are "CDF" */
     if (memcmp(magic, ncmagic1, sizeof(ncmagic1)-1) != 0) {
         /* Fatal error, as root's header is significant */
-        fprintf(stderr,"Error: root's header indicates not a CDF file\n");
+        if (ncp->safe_mode)
+            fprintf(stderr,"Error: root's header indicates not a CDF file\n");
         return NC_ENOTNC; /* should not continue */
     }
 
+    /* allocate a header object and fill it with root's header */
     root_ncp = ncmpii_new_NC(&chunksize);
 
     /* consistency of magic numbers should have already been checked during
@@ -2177,13 +2184,14 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         root_magic = "CDF-1";
     else {
         /* Fatal error, as root's header is significant */
-        fprintf(stderr,"Error: root's header indicates not CDF 1/2/5 format\n");
+        if (ncp->safe_mode)
+            fprintf(stderr,"Error: root's header indicates not CDF 1/2/5 format\n");
         return NC_ENOTNC; /* should not continue */
     }
 
     /* check version number in last byte of magic */
     int local_ver, root_ver;
-    if (ncp->flags & NC_64BIT_DATA)        local_ver = 0x5;
+         if (ncp->flags & NC_64BIT_DATA)   local_ver = 0x5;
     else if (ncp->flags & NC_64BIT_OFFSET) local_ver = 0x2;
     else                                   local_ver = 0x1;
 
@@ -2193,30 +2201,38 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
             printf("%s CDF file format (local=CDF-%d, root=CDF-%d)\n",
                    WARN_STR, local_ver, root_ver);
 
-        /* overwrite the local header */
+        /* overwrite the local header object with root's */
              if (local_ver == 0x5) fClr(ncp->flags, NC_64BIT_DATA);
         else if (local_ver == 0x2) fClr(ncp->flags, NC_64BIT_OFFSET);
 
              if (root_ver  == 0x5) fSet(ncp->flags, NC_64BIT_DATA);
         else if (root_ver  == 0x2) fSet(ncp->flags, NC_64BIT_OFFSET);
 
-        if (status == NC_NOERR) /* this inconsistency is not fatal */
-            status = NC_EMULTIDEFINE_OMODE;
+        /* this inconsistency is not fatal */
+        status = NC_EMULTIDEFINE_OMODE;
     }
-    getbuf->version = root_ver;
+    getbuf->version = root_ver; /* getbuf's version has not been set before */
 
-    if (root_ver > 1 && sizeof(MPI_Offset) != 8) {
+#if SIZEOF_MPI_OFFSET < 8
+    if (root_ver > 1) {
         /* for NC_64BIT_DATA or NC_64BIT_OFFSET, MPI_Offset must be 8 bytes */
-        fprintf(stderr,"Error: cannot support CDF-2 and CDF-5 on this machine\n");
+        if (ncp->safe_mode) fprintf(stderr,"Error: cannot support CDF-2 and CDF-5 on this machine\n");
         return NC_ESMALL; /* should not continue */
     }
+#endif
 
-    /* move on to the next element in header: number of records */
-    err = hdr_check_buffer(getbuf, (getbuf->version == 1) ? 4 : 8);
-    if (err != NC_NOERR) {
-        fprintf(stderr,"Error: cannott read root's header for numrecs\n");
-        return err; /* should not continue */
-    }
+    /* since getbuf contains the entire root's header, we do not need to check
+     * for any next element in the buffer. Similarly, for all possible calls
+     * to hdr_check_buffer() from this subroutine, hdr_fetch() will never be
+     * called.
+     * (move on to the next element in header: number of records)
+     err = hdr_check_buffer(getbuf, (getbuf->version == 5) ? 8 : 4);
+     if (err != NC_NOERR) {
+         if (ncp->safe_mode)
+             fprintf(stderr,"Error: root's header is too short\n");
+         return err;
+     }
+     */
 
     if (getbuf->version == 5)
         err = ncmpix_get_int64((const void **)(&getbuf->pos), &nrecs);
@@ -2226,23 +2242,23 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         nrecs = (MPI_Offset)tmp;
     }
     if (err != NC_NOERR) {
-        fprintf(stderr,"Error: cannott read root's header for numrecs\n");
+        if (ncp->safe_mode)
+            fprintf(stderr,"Error: failed to read numrecs from root's header\n");
         return err; /* should not continue */
     }
 
+    /* move the buffer point forward */
     if (getbuf->version == 5)
         getbuf->index += X_SIZEOF_INT64;
     else
         getbuf->index += X_SIZEOF_SIZE_T;
 
     root_ncp->numrecs = nrecs;
-
     if (root_ncp->numrecs != ncp->numrecs) {
-        /* TODO: not sure how this can happen ... */
         if (ncp->safe_mode)
             printf("%s number of records (local=%lld, root=%lld)\n",
                    WARN_STR, ncp->numrecs, root_ncp->numrecs);
-        /* overwrite the local vopy */
+        /* overwrite the local header's numrecs */
         ncp->numrecs = root_ncp->numrecs;
         if (status == NC_NOERR) err = NC_EMULTIDEFINE_NUMRECS;
     }
@@ -2260,7 +2276,10 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     err = hdr_get_NC_dimarray(getbuf, &root_ncp->dims);
     if (err != NC_NOERR) return err; /* fatal error */
 
+    /* compare local's and root's dim_list */
     err = ncmpii_comp_dims(ncp->safe_mode, &root_ncp->dims, &ncp->dims);
+    if (err != NC_NOERR && !ErrIsHeaderDiff(err))
+        return err; /* a fatal error */
     if (status == NC_NOERR) status = err;
 
     /* get the next header element gatt_list from getbuf to root_ncp */
@@ -2269,31 +2288,36 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
 
     /* get the next header element att_list from getbuf to root_ncp */
     err = ncmpii_comp_attrs(ncp->safe_mode, &root_ncp->attrs, &ncp->attrs);
+    if (err != NC_NOERR && !ErrIsHeaderDiff(err))
+        return err; /* a fatal error */
     if (status == NC_NOERR) status = err;
 
     /* get the next header element var_list from getbuf to root_ncp */
     err = hdr_get_NC_vararray(getbuf, &root_ncp->vars);
     if (err != NC_NOERR) return err; /* fatal error */
 
+    /* compare local's and root's var_list */
     err = ncmpii_comp_vars(ncp->safe_mode, &root_ncp->vars, &ncp->vars);
+    if (err != NC_NOERR && !ErrIsHeaderDiff(err))
+        return err; /* a fatal error */
     if (status == NC_NOERR) status = err;
+
     if (err != NC_NOERR) { /* header has been sync-ed with root */
         /* recompute shape is required for every new variable created */
         err = ncmpii_NC_computeshapes(ncp);
-        if (status == NC_NOERR) status = err;
+        if (err != NC_NOERR) return err; /* a fatal error */
     }
+    /* now, the local header object has been sync-ed with root */
 
-    if (ErrIsHeaderDiff(status)) /* header has been sync-ed with root */
+    if (ncp->safe_mode && ErrIsHeaderDiff(status)) {
         /* recompute header size */
-        ncp->xsz = ncmpii_hdr_len_NC(ncp);
-
-    if (ncp->safe_mode) {
-        root_ncp->xsz = ncmpii_hdr_len_NC(root_ncp);
-        assert(root_ncp->xsz == ncp->xsz);
-        /*
-        ncmpii_NC_computeshapes(root_ncp);
-        if (status == NC_NOERR) status = err;
-        */
+        MPI_Offset root_xsz, local_xsz;
+         root_xsz = ncmpii_hdr_len_NC(root_ncp);
+        local_xsz = ncmpii_hdr_len_NC(ncp);
+        /* root's header size is getbuf->size */
+        assert( ncp->xsz == getbuf->size &&
+                root_xsz == local_xsz    &&
+               local_xsz == getbuf->size);
     }
     ncmpii_free_NC(root_ncp);
     return status;
@@ -2344,6 +2368,15 @@ int ncmpii_write_header(NC *ncp)
         }
         NCI_Free(buf);
     }
+
+    if (ncp->safe_mode == 1) {
+        /* broadcast root's status, because only root writes to the file */
+        int root_status = status;
+        TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
+        /* root's write has failed, which is serious */
+        if (root_status == NC_EWRITE) status = NC_EWRITE;
+    }
+
     /* update file header size */
     ncp->xsz = ncmpii_hdr_len_NC(ncp);
 

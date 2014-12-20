@@ -38,20 +38,11 @@ static int default_create_format = NC_FORMAT_CLASSIC;
 #define VER_HDF5 3
 #define VER_64BIT_DATA 5
 
-
-
-
 /* Prototypes for functions used only in this file */
-static int move_recs_r(NC *ncp, NC *old);
-static int write_NC(NC *ncp);
-static int NC_check_header(MPI_Comm comm, void *buf, MPI_Offset nn, NC *ncp);
-
 #if 0
 static int move_data_r(NC *ncp, NC *old);
 static int move_vars_r(NC *ncp, NC *old);
 static int NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn);
-static int enddef(NC *ncp);
-static int nc_sync(int ncid);
 static int nc_set_fill(int ncid, int fillmode, int *old_mode_ptr);
 #endif
 
@@ -91,71 +82,65 @@ ncmpii_del_from_NCList(NC *ncp)
     ncp->prev = NULL;
 }
 
+/*----< NC_check_header() >--------------------------------------------------*/
 /*
- * Check the data set definitions across all processes by
- * comparing the header buffer streams of all processes.
+ * Check the consistency of defined header metadata across all processes and
+ * overwrite the local header objects with root's if inconsistency is found.
  * This function is collective.
  */
 static int
-NC_check_header(MPI_Comm comm, void *buf, MPI_Offset hsz, NC *ncp) {
-    int rank, errcheck, status=NC_NOERR, errflag, compare, mpireturn;
-    MPI_Offset hsz_0;
+NC_check_header(NC         *ncp,
+                void       *buf,
+                MPI_Offset  local_xsz) /* size of buf */
+{
     void *cmpbuf;
+    int rank, g_status, status=NC_NOERR, mpireturn;
     bufferinfo gbp;
 
-    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
 
-    /* process 0 broadcasts header size */
-    if (rank == 0) hsz_0 = hsz;
-    TRACE_COMM(MPI_Bcast)(&hsz_0, 1, MPI_OFFSET, 0, comm);
-
+    /* root's header xsz has been broadcasted in NC_begin() and saved in
+     * ncp->xsz.
+     */
     if (rank == 0)
         cmpbuf = buf;
     else
-        cmpbuf = (void*) NCI_Malloc(hsz_0);
+        cmpbuf = (void*) NCI_Malloc(ncp->xsz);
 
     /* process 0 broadcasts its header */
-    TRACE_COMM(MPI_Bcast)(cmpbuf, hsz_0, MPI_BYTE, 0, comm);
+    TRACE_COMM(MPI_Bcast)(cmpbuf, ncp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
 
-    compare = 0;
-    if (hsz != hsz_0)  /* hsz may be different from hsz_0 */
-        compare = 1;
-    else if (rank > 0) {
-        compare = memcmp(buf, cmpbuf, hsz);
-        compare = (compare == 0) ? 0 : 1;
+    if (rank > 0 && (ncp->xsz != local_xsz || memcmp(buf, cmpbuf, ncp->xsz))) {
+        /* now part of this process's header is not consistent with root's
+         * check and report the inconsistent part
+         */
+
+        gbp.nciop  = ncp->nciop; /* will not be used in ncmpii_hdr_check_NC() */
+        gbp.offset = 0;          /* will not be used in ncmpii_hdr_check_NC() */
+        gbp.size   = ncp->xsz;   /* entire header is in the buffer, cmpbuf */
+        gbp.index  = 0;
+        gbp.pos    = gbp.base = cmpbuf;
+
+        /* find the insonsistent part of the header, report the difference, and
+         * overwrite the local header object with root's. ncmpii_hdr_check_NC()
+         * should not have any MPI communication calls.
+         */
+        status = ncmpii_hdr_check_NC(&gbp, ncp);
+
+        /* header consistency is only checked on non-root processes. The
+         * returned status can be a fatal error or header inconsistency error,
+         * (fatal errors are due to object allocation), but never NC_NOERR.
+         */
     }
 
-    /* compare is either 0 (header same as root) or 1 (different) */
-    TRACE_COMM(MPI_Allreduce)(&compare, &errcheck, 1, MPI_INT, MPI_LOR, comm);
-    if (errcheck == 0) {
-        if (rank > 0)
-            NCI_Free(cmpbuf);
-        return NC_NOERR;
+    if (ncp->safe_mode) {
+        TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,
+                                  ncp->nciop->comm);
+        if (g_status != NC_NOERR) { /* some headers are inconsistent */
+            if (status == NC_NOERR) status = NC_EMULTIDEFINE;
+        }
     }
-    /* now part of the header is not consistent across all processes */
 
-    gbp.nciop  = ncp->nciop;
-    gbp.offset = 0;    /* read from start of the file */
-    gbp.size   = hsz_0;
-    gbp.index  = 0;
-    gbp.pos    = gbp.base = cmpbuf;
-
-    status = ncmpii_hdr_check_NC(&gbp, ncp);
-
-    errflag = (status == NC_NOERR) ? 0 : 1;
-    TRACE_COMM(MPI_Allreduce)(&errflag, &errcheck, 1, MPI_INT, MPI_MAX, comm);
-    if (errcheck > 0) {
-        status = (status != NC_NOERR) ? status : NC_EMULTIDEFINE;
-        /* note status may be inconsistent among processes
-         * but at least no one returns NC_NOERR */
-    }
-    else if (hsz != hsz_0) {
-        /* TODO !!!! need to replace the local NC object with root's.
-           The local header size is different from the root's and the
-           header consistency check returns only a warning. We must
-           overwrite local header, NC object pointed by ncp, with
-           the root's header, current in cmpbuf */
-    }
     if (rank > 0) NCI_Free(cmpbuf);
 
     return status;
@@ -392,11 +377,14 @@ ncmpix_howmany(nc_type type, MPI_Offset xbufsize)
 
 /*----< NC_begins() >--------------------------------------------------------*/
 /*
- * Compute each variable's 'begin' offset, and set/update the followings:
+ * This function is only called at enddef().
+ * It computes each variable's 'begin' offset, and sets/updates the followings:
+ *    ncp->xsz                   ---- header size
  *    ncp->vars.value[*]->begin  ---- each variable's 'begin' offset
  *    ncp->begin_var             ---- offset of first non-record variable
  *    ncp->begin_rec             ---- offset of first     record variable
- *    ncp->recsize               ---- size of 1 record of all record variables
+ *    ncp->recsize               ---- sum of single records
+ *    ncp->numrecs               ---- number of records (set only if new file)
  */
 static int
 NC_begins(NC         *ncp,
@@ -406,8 +394,8 @@ NC_begins(NC         *ncp,
           MPI_Offset  v_minfree,/* free space for fixed variable section */
           MPI_Offset  r_align)  /* alignment for record variable section */
 {
-    int i, j, sizeof_off_t, mpireturn;
-    MPI_Offset max_xsz, end_var=0;
+    int i, j, rank, sizeof_off_t, mpireturn;
+    MPI_Offset end_var=0;
     NC_var *last = NULL;
     NC_var *first_var = NULL;       /* first "non-record" var */
 
@@ -419,46 +407,40 @@ NC_begins(NC         *ncp,
         sizeof_off_t = 4;  /* CDF-1 */
 
     /* get the true header size (un-aligned one) */
-    ncp->xsz = ncmpii_hdr_len_NC(ncp);
+    MPI_Comm_rank(ncp->nciop->comm, &rank);
+    if (rank ==0) ncp->xsz = ncmpii_hdr_len_NC(ncp);
 
-    /* Since PnetCDF allows incocnsistent meta data defined in define mode,
-       header sizes, ncp->xsz, may be different among processes.
-       Hence, we need to use the max size among all processes to make
-       sure everyboday has the same size of reserved space for header */
-    TRACE_COMM(MPI_Allreduce)(&ncp->xsz, &max_xsz, 1, MPI_OFFSET, MPI_MAX,
-                              ncp->nciop->comm);
+    /* only root's header size matters */
+    TRACE_COMM(MPI_Bcast)(&ncp->xsz, 1, MPI_OFFSET, 0, ncp->nciop->comm);
 
-    /* NC_begins is called at ncmpi_enddef(), which can be in either
+    /* This function is called in ncmpi_enddef(), which can happen either when
      * creating a new file or opening an existing file with metadata modified.
      * For the former case, ncp->begin_var == 0 here.
-     * For the latter case, we only (re)calculate begin_var if there is not
-     * sufficient space in header or the start of non-record variables is not
-     * aligned as requested by valign
+     * For the latter case, we set begin_var a new value only if the new header
+     * grows out of its extent or the start of non-record variables is not
+     * aligned as requested by h_align.
+     * Note ncp->xsz is header size and ncp->begin_var is header extent.
+     * Add the minimum header free space requested by user.
      */
-    if (ncp->begin_var < max_xsz ||
-        ncp->begin_var != D_RNDUP(ncp->begin_var, h_align))
-        ncp->begin_var = D_RNDUP(max_xsz, h_align);
-    /* if the existing begin_var is already >= max_xsz, then leave the
-       begin_var as is (in case some header data is deleted) */
-
-    /* expand header free space to at least of size h_minfree */
-    if (h_minfree > 0 && ncp->begin_var < max_xsz + h_minfree)
-        ncp->begin_var = D_RNDUP(max_xsz + h_minfree, h_align);
+    if (h_minfree < 0) h_minfree = 0;
+    ncp->begin_var = D_RNDUP(ncp->xsz + h_minfree, h_align);
 
     if (ncp->old != NULL) {
-        /* check whether the new begin_var is smaller */
+        /* If this define mode was entered from a redef(), we check whether
+         * the new begin_var against the old begin_var. We do not shrink
+         * the header extent.
+         */
         if (ncp->begin_var < ncp->old->begin_var)
             ncp->begin_var = ncp->old->begin_var;
     }
 
-    /* ncp->begin_var is the aligned starting file offset for the first
-       variable, also the reserved size for header */
+    /* ncp->begin_var is the aligned starting file offset of the first
+       variable, also the extent of file header */
 
     /* Now calculate the starting file offsets for all variables.
        loop thru vars, first pass is for the 'non-record' vars */
-    j       = 0;
     end_var = ncp->begin_var;
-    for (i=0; i<ncp->vars.ndefined; i++) {
+    for (j=0, i=0; i<ncp->vars.ndefined; i++) {
         if (IS_RECVAR(ncp->vars.value[i]))
             /* skip record variables on this pass */
             continue;
@@ -533,8 +515,7 @@ NC_begins(NC         *ncp,
 
     /* loop thru vars, second pass is for the 'record' vars,
      * re-calculate the straing offset for each record variable */
-    j = 0;
-    for (i=0; i<ncp->vars.ndefined; i++) {
+    for (j=0, i=0; i<ncp->vars.ndefined; i++) {
         if (!IS_RECVAR(ncp->vars.value[i]))
             /* skip non-record variables on this pass */
             continue;
@@ -608,69 +589,6 @@ NC_begins(NC         *ncp,
 }
 
 #define NC_NUMRECS_OFFSET 4
-
-/*
- * Read just the numrecs member.
- * (A relatively expensive way to do things.)
- */
-int
-ncmpii_read_numrecs(NC *ncp) {
-    int status=NC_NOERR, mpireturn, err, sizeof_t;
-    void *buf, *pos;
-    MPI_Offset nrecs;
-    MPI_Status mpistatus;
-
-    assert(!NC_indef(ncp));
-
-    if (fIsSet(ncp->flags, NC_64BIT_DATA))
-        sizeof_t = X_SIZEOF_INT64;
-    else
-        sizeof_t = X_SIZEOF_SIZE_T;
-
-    pos = buf = (void *)NCI_Malloc(sizeof_t);
-
-    /* fileview is already entire file visible and pointer to zero */
-    if (fIsSet(ncp->flags, NC_64BIT_DATA)) {
-        TRACE_IO(MPI_File_read_at)(ncp->nciop->collective_fh,
-                                   NC_NUMRECS_OFFSET+4,
-                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
-    }
-    else {
-        TRACE_IO(MPI_File_read_at)(ncp->nciop->collective_fh,
-                                   NC_NUMRECS_OFFSET,
-                                   buf, sizeof_t, MPI_BYTE, &mpistatus);
-    }
-
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
-        if (err == NC_EFILE) status = NC_EREAD;
-    }
-    else {
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        ncp->nciop->get_size += get_size;
-    }
-
-/* TODO: Checking data consistency in safe_mode must be done in a collective API.
-    if (ncp->safe_mode == 1)
-        MPI_Bcast(&status, 1, MPI_INT, 0, ncp->nciop->comm);
-*/
-    if (status == NC_NOERR) {
-        if (fIsSet(ncp->flags, NC_64BIT_DATA))
-            status = ncmpix_get_int64((const void**)&pos, &nrecs);
-        else {
-            int tmp=0;
-            status = ncmpix_get_int32((const void**)&pos, &tmp);
-            nrecs = (MPI_Offset)tmp;
-        }
-        /* ncmpix_get_xxx advances the 1st argument with size 64 */
-        ncp->numrecs = nrecs;
-    }
-
-    NCI_Free(buf);
-
-    return status;
-}
 
 /*----< ncmpii_sync_numrecs() >-----------------------------------------------*/
 /* Synchronize the number of records in memory and write numrecs to file.
@@ -748,9 +666,13 @@ ncmpii_sync_numrecs(NC         *ncp,
      */
     if (max_numrecs > ncp->numrecs) ncp->numrecs = max_numrecs;
 
-    /* this function is only called by collective functions */
-    if (ncp->safe_mode == 1)
-        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+    if (ncp->safe_mode == 1) {
+        /* broadcast root's status, because only root writes to the file */
+        int root_status = status;
+        TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
+        /* root's write has failed, which is serious */
+        if (root_status == NC_EWRITE) status = NC_EWRITE;
+    }
 
     /* clear numrecs dirty bit */
     fClr(ncp->flags, NC_NDIRTY);
@@ -781,66 +703,75 @@ ncmpii_read_NC(NC *ncp) {
 
 /*----< write_NC() >---------------------------------------------------------*/
 /*
+ * This function is collective and only called by enddef().
  * Write out the header
+ * 1. Call ncmpii_hdr_put_NC() to copy the header object, ncp, to a buffer.
+ * 2. Call NC_check_header() to check if header is consistent across all
+ *    processes.
+ * 3. Process rank 0 writes the header to file.
  * This is a collective call.
  */
 static int
 write_NC(NC *ncp)
 {
-    int status, mpireturn, err, rank;
     void *buf;
-    MPI_Offset hsz; /* header size with 0-padding if needed */
-    MPI_Status mpistatus;
+    int status, mpireturn, err, max_err, rank;
+    MPI_Offset local_xsz;
 
     assert(!NC_readonly(ncp));
 
-    if (NC_dofill(ncp)) { /* hsz is the header size with zero padding */
-        /* we don't need this, as these paddings will never be accessed */
-        hsz = MIN(ncp->begin_var, ncp->begin_rec);
-        hsz = MAX(hsz, ncp->xsz);
-    }
-    else
-        hsz = ncp->xsz;
+    /* ncp->xsz is root's header size, we need to calculate local's */
+    local_xsz = ncmpii_hdr_len_NC(ncp);
 
-    buf = NCI_Malloc(hsz); /* header buffer for I/O */
-    if (hsz > ncp->xsz)
-        memset((char*)buf+ncp->xsz, 0, hsz - ncp->xsz);
+    buf = NCI_Malloc(local_xsz); /* buffer for local header object */
 
-    /* copy header to buffer */
+    /* copy the entire local header object to buffer */
     status = ncmpii_hdr_put_NC(ncp, buf);
-    if (ncp->safe_mode == 1)
-        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
-
-    if (status != NC_NOERR) {
+    if (status != NC_NOERR) { /* a fatal error */
         NCI_Free(buf);
         return status;
     }
 
-    /* check the header consistency across all processes */
-    status = NC_check_header(ncp->nciop->comm, buf, ncp->xsz, ncp);
-    if (ncp->safe_mode == 1)
-        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+    /* check the header consistency across all processes and sync header.
+     * When safe_mode is on:
+     *   The returned status on root can be either NC_NOERR (all headers are
+     *   consistent) or NC_EMULTIDEFINE (some headers are inconsistent).
+     *   The returned status on non-root processes can be NC_NOERR, fatal
+     *   error (>-250), or inconsistency error (-250 to -269).
+     * When safe_mode is off:
+     *   The returned status on root is always NC_NOERR
+     *   The returned status on non-root processes can be NC_NOERR, fatal
+     *   error (>-250), or inconsistency error (-250 to -269).
+     * For fatal error, we should stop. For others, we can continue.
+     */
+    status = NC_check_header(ncp, buf, local_xsz);
 
-    if (status != NC_NOERR && !ErrIsHeaderDiff(status)) {
+    /* check for fatal error */
+    err =  (status != NC_NOERR && !ErrIsHeaderDiff(status)) ? 1 : 0;
+    max_err = err;
+
+    if (ncp->safe_mode == 1)
+        TRACE_COMM(MPI_Allreduce)(&err, &max_err, 1, MPI_INT, MPI_MAX,
+                                  ncp->nciop->comm);
+
+    if (max_err == 1) { /* some processes encounter a fatal error */
         NCI_Free(buf);
         return status;
     }
-    /* we should continue to write header to the file, even if header is
-     * inconsistent among processes, as root's header wins the write.
-     * However, if ErrIsHeaderDiff(status) is true, this error should
-     * be considered fatal, as inconsistency is about the data structure,
-     * rather then contents (such as attribute values) */
-
-    /* the fileview is already entire file visible */
+    /* For non-fatal error, we continue to write header to the file, as now the
+     * header object in memory has been sync-ed across all processes. */
 
     /* only rank 0's header gets written to the file */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
     if (rank == 0) {
+        /* rank 0's fileview already includes the file header */
+        MPI_Status mpistatus;
         TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
-                                    hsz, MPI_BYTE, &mpistatus);
+                                    ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
+            /* write has failed, which is more serious than inconsistency */
+            if (err == NC_EFILE) status = NC_EWRITE;
         }
         else {
             int put_size;
@@ -848,8 +779,14 @@ write_NC(NC *ncp)
             ncp->nciop->put_size += put_size;
         }
     }
-    if (ncp->safe_mode == 1)
-        TRACE_COMM(MPI_Bcast)(&status, 1, MPI_INT, 0, ncp->nciop->comm);
+
+    if (ncp->safe_mode == 1) {
+        /* broadcast root's status, because only root writes to the file */
+        int root_status = status;
+        TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
+        /* root's write has failed, which is more serious than inconsistency */
+        if (root_status == NC_EWRITE) status = NC_EWRITE;
+    }
 
     fClr(ncp->flags, NC_NDIRTY);
     NCI_Free(buf);
@@ -874,46 +811,6 @@ ncmpii_dset_has_recvars(NC *ncp)
 
 
 #if 0
-/*----< ncmpii_NC_sync() >----------------------------------------------------*/
-/*
- * This function is of no use now, as file header in memory and file will never
- * be dirty, except numrecs which will be sync-ed in ncmpii_sync_numrecs().
- */
-int
-ncmpii_NC_sync(NC *ncp, int allowFsync)
-{
-    int status=NC_NOERR;
-
-    assert(!NC_readonly(ncp));
-
-    if (NC_hdirty(ncp)) {
-        /* header dirty bit can only be set at the independent data mode by
-         * calls to var_rename, dim_rename, attr_rename, or put_attr
-         * collectively. In collective data mode, the header in file is always
-         * up-to-date, so will not reach this here.
-         * In independent data mode, file header is not updated, but just set
-         * the header dirty bit to 1, and collectively.
-         */
-        status = write_NC(ncp);
-    }
-
-    /* When allowFsync == 0, the caller must have a call to ncmpiio_sync()
-     * after return from this function. So we want to delay fsync to there.
-     */
-    if (allowFsync && NC_doFsync(ncp)) {
-        /* if NC_SHARE is set, meaning share with a different MPI app */
-        int mpireturn;
-        MPI_File fh = ncp->nciop->collective_fh;
-        if (NC_indep(ncp))
-            fh = ncp->nciop->independent_fh;
-
-        TRACE_IO(MPI_File_sync)(fh);
-        TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
-    }
-    return status;
-}
-
-
 /*
  * header size increases, shift all record and non-record variables down
  */
@@ -1070,6 +967,23 @@ ncmpii_NC_check_vlens(NC *ncp)
 #define DEFAULT_ALIGNMENT 512
 #define HEADER_ALIGNMENT_LB 4
 
+/* Many subroutines called in ncmpii_NC_enddef() are collective. We check the
+ * error codes of all processes only in safe mode, so the program can stop
+ * collectively, if any one process got an error. However, when safe mode is
+ * off, we simply return the error amd program may hang if some processes
+ * do not get error and proceed to the next subroutine call.
+ */ 
+#define CHECK_ERROR(status) {                                                \
+    if (ncp->safe_mode == 1) {                                               \
+        int g_status;                                                        \
+        TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,   \
+                                  ncp->nciop->comm);                         \
+        if (g_status != NC_NOERR) return status;                             \
+    }                                                                        \
+    else if (status != NC_NOERR)                                             \
+        return status;                                                       \
+}
+
 /*----< ncmpii_NC_enddef() >-------------------------------------------------*/
 static int
 ncmpii_NC_enddef(NC         *ncp,
@@ -1079,13 +993,12 @@ ncmpii_NC_enddef(NC         *ncp,
                  MPI_Offset  v_minfree,
                  MPI_Offset  r_align)
 {
-    int i, status=NC_NOERR;
+    int i, status=NC_NOERR, mpireturn;
     char value[MPI_MAX_INFO_VAL];
 #ifdef ENABLE_SUBFILING
     NC *ncp_sf=NULL;
 #endif
 
-    assert(!NC_readonly(ncp));
     assert(h_align > 0);  /* alignment size cannot be zero */
     assert(v_align > 0);
     assert(r_align > 0);
@@ -1117,40 +1030,43 @@ ncmpii_NC_enddef(NC         *ncp,
     if (ncp->nc_num_subfiles > 1) {
         /* TODO: should return subfile-related msg when there's an error */
         status = ncmpii_subfile_partition(ncp, &ncp->ncid_sf);
-        if (status != NC_NOERR) {
+        if (status != NC_NOERR)
             printf("Error in file %s line %d (%s)\n",__FILE__,__LINE__,
                    ncmpi_strerror(status));
-            return status;
-        }
+
+        CHECK_ERROR(status)
     }
 #endif
 
     /* check on dimension lenghths */
     status = ncmpii_NC_check_vlens(ncp);
-    if (status != NC_NOERR) return status;
+    CHECK_ERROR(status)
 
-    /* When ncp->old == NULL, compute each variable's 'begin' file offset
-     * and offset for record variables as well. Otherwise, re-used all
-     * variable offsets as many as possible
+    /* When ncp->old == NULL, this enddef is called the first time after file
+     * create call. In this case, we compute each variable's 'begin', starting
+     * file offset as well as the offsets of record variables.
+     * When ncp->old != NULL, this enddef is called after a redef. In this
+     * case, we re-used all variable offsets as many as possible.
      */
-    NC_begins(ncp, h_align, h_minfree, v_align, v_minfree, r_align);
+    status = NC_begins(ncp, h_align, h_minfree, v_align, v_minfree, r_align);
+    CHECK_ERROR(status)
 
 #ifdef ENABLE_SUBFILING
     if (ncp->nc_num_subfiles > 1) {
         /* get ncp info for the subfile */
         status = ncmpii_NC_check_id(ncp->ncid_sf, &ncp_sf);
-        if (status != NC_NOERR) {
-            printf("Error in file %s line %d (%s)\n",__FILE__,__LINE__,
-                   ncmpi_strerror(status));
-            return status;
-        }
-        NC_begins(ncp_sf, h_align, h_minfree, v_align, v_minfree, r_align);
+        CHECK_ERROR(status)
+
+        status = NC_begins(ncp_sf, h_align, h_minfree, v_align, v_minfree,
+                           r_align);
+        CHECK_ERROR(status)
     }
 #endif
 
     if (ncp->old != NULL) {
-        /* the current define mode was entered from ncmpi_redef,
-           not from ncmpi_create */
+        /* The current define mode was entered from ncmpi_redef, not from
+         * ncmpi_create. We must check if header has been expanded.
+         */
 
         assert(!NC_IsNew(ncp));
         assert(fIsSet(ncp->flags, NC_INDEF));
@@ -1159,18 +1075,17 @@ ncmpii_NC_enddef(NC         *ncp,
         assert(ncp->vars.ndefined >= ncp->old->vars.ndefined);
         /* ncp->numrecs has already sync-ed in ncmpi_redef */
 
-        if (ncp->vars.ndefined > 0) { /* number of record and non-record variables */
+        if (ncp->vars.ndefined > 0) { /* no. record and non-record variables */
             if (ncp->begin_var > ncp->old->begin_var) {
                 /* header size increases, shift the entire data part down */
                 /* shift record variables first */
                 status = move_recs_r(ncp, ncp->old);
-                if (status != NC_NOERR)
-                    return status;
+                CHECK_ERROR(status)
+
                 /* shift non-record variables */
                 /* status = move_vars_r(ncp, ncp->old); */
                 status = ncmpiio_move_fixed_vars(ncp, ncp->old);
-                if (status != NC_NOERR)
-                    return status;
+                CHECK_ERROR(status)
             }
             else if (ncp->begin_rec > ncp->old->begin_rec ||
                      ncp->recsize   > ncp->old->recsize) {
@@ -1178,16 +1093,16 @@ ncmpii_NC_enddef(NC         *ncp,
                    number of records of record variables increases,
                    shift and move all record variables down */
                 status = move_recs_r(ncp, ncp->old);
-                if (status != NC_NOERR)
-                    return status;
+                CHECK_ERROR(status)
             }
         }
     } /* ... ncp->old != NULL */
 
-    /* write header to file, also sync header buffer across all processes */
+    /* first sync header objects in memory across all processes, and then root
+     * writes the header to file. Note safe_mode error check is already done
+     * in write_NC() */
     status = write_NC(ncp);
-    if (status != NC_NOERR && !ErrIsHeaderDiff(status))
-        return status;
+
     /* we should continue to exit define mode, even if header is inconsistent
      * among processes, so the program can proceed, say to close file properly.
      * However, if ErrIsHeaderDiff(status) is true, this error should
@@ -1197,9 +1112,8 @@ ncmpii_NC_enddef(NC         *ncp,
 #ifdef ENABLE_SUBFILING
     /* write header to subfile */
     if (ncp->nc_num_subfiles > 1) {
-        status = write_NC(ncp_sf);
-        if (status != NC_NOERR)
-            return status;
+        int err = write_NC(ncp_sf);
+        if (status == NC_NOERR) status = err;
     }
 #endif
 
@@ -1279,6 +1193,7 @@ ncmpii_enddef(NC *ncp)
     MPI_Offset env_h_align, env_v_align, env_h_chunk, env_r_align;
 
     assert(!NC_readonly(ncp));
+    assert(NC_indef(ncp));
 
     /* calculate a good align size for PnetCDF level hints:
      * header_align_size and var_align_size based on the MPI-IO hint
@@ -1352,6 +1267,7 @@ ncmpii__enddef(NC         *ncp,
     MPI_Offset env_h_align, env_v_align, env_h_chunk, env_r_align;
 
     assert(!NC_readonly(ncp));
+    assert(NC_indef(ncp));
 
     /* calculate a good align size for PnetCDF level hints:
      * header_align_size and var_align_size based on the MPI-IO hint
