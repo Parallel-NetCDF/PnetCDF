@@ -702,6 +702,8 @@ ncmpi_begin_indep_data(int ncid)
 
     fSet(ncp->flags, NC_INDEP);
 
+    status = ncmpii_check_mpifh(ncp, 0);
+
     return status;
 }
 
@@ -989,31 +991,37 @@ ncmpi_set_fill(int  ncid,
 
 /*----< ncmpii_check_mpifh() >-----------------------------------------------*/
 int
-ncmpii_check_mpifh(NC       *ncp,
-                   MPI_File *mpifh,
-                   MPI_Comm  comm,
-                   int       collective)
+ncmpii_check_mpifh(NC  *ncp,
+                   int  collective)
 {
+    int mpireturn;
+
     if (collective && NC_indep(ncp)) /* collective handle but in indep mode */
         return NC_EINDEP;
 
     if (!collective && !NC_indep(ncp)) /* indep handle but in collective mode */
         return NC_ENOTINDEP;
 
-    if ( (collective && !NC_collectiveFhOpened(ncp->nciop))  ||
-         (!collective && !NC_independentFhOpened(ncp->nciop)) ) {
-
-        int mpireturn;
-        TRACE_IO(MPI_File_open)(comm, (char*)ncp->nciop->path, ncp->nciop->mpiomode,
-                                ncp->nciop->mpiinfo, mpifh);
+    if (collective && !NC_collectiveFhOpened(ncp->nciop)) {
+        TRACE_IO(MPI_File_open)(ncp->nciop->comm, (char*)ncp->nciop->path,
+                                ncp->nciop->mpiomode, ncp->nciop->mpiinfo,
+                                &ncp->nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_open");
-
-        if (collective)
-            set_NC_collectiveFh(ncp->nciop);
-        else
-            set_NC_independentFh(ncp->nciop);
     }
+    else if (!collective && !NC_independentFhOpened(ncp->nciop)) {
+        TRACE_IO(MPI_File_open)(MPI_COMM_SELF, (char*)ncp->nciop->path,
+                                ncp->nciop->mpiomode, ncp->nciop->mpiinfo,
+                                &ncp->nciop->independent_fh);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_File_open");
+    }
+
+    if (collective)
+        set_NC_collectiveFh(ncp->nciop);
+    else
+        set_NC_independentFh(ncp->nciop);
+
     return NC_NOERR;
 }
 
