@@ -648,7 +648,8 @@ ncmpii_sync_numrecs(NC         *ncp,
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
-        /* file view is already reset to entire file visible */
+        /* root's file view always includes the entire file header */
+
         TRACE_IO(MPI_File_write_at)(fh, NC_NUMRECS_OFFSET, (void*)pos, len,
                                     MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
