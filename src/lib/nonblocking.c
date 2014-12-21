@@ -571,11 +571,9 @@ ncmpii_wait(NC  *ncp,
     /* check whether collective or independent mode */
     if (fatal_err == NC_NOERR) {
         if (io_method == INDEP_IO)
-            fatal_err = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
-                                           MPI_COMM_SELF, 0);
+            fatal_err = ncmpii_check_mpifh(ncp, 0);
         else if (io_method == COLL_IO)
-            fatal_err = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
-                                           ncp->nciop->comm, 1);
+            fatal_err = ncmpii_check_mpifh(ncp, 1);
     }
     if (fatal_err != NC_NOERR) {
         if (io_method == COLL_IO)

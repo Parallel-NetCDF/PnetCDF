@@ -806,8 +806,7 @@ int ncmpii_get_offset(NC *ncp, NC_var *varp, const MPI_Offset starts[],
                 const MPI_Offset counts[], const MPI_Offset strides[],
                 const int rw_flag, MPI_Offset *offset_ptr);
 
-int ncmpii_check_mpifh(NC* ncp, MPI_File *mpifh, MPI_Comm comm,
-                int collective);
+int ncmpii_check_mpifh(NC* ncp, int collective);
 
 int ncmpii_sync_numrecs(NC *ncp, MPI_Offset newnumrecs);
 

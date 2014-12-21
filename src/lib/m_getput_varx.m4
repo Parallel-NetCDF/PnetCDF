@@ -958,11 +958,9 @@ ncmpii_mgetput_varm(int                ncid,
     }
     /* check whether collective or independent mode */
     if (io_method == INDEP_IO)
-        status = ncmpii_check_mpifh(ncp, &(ncp->nciop->independent_fh),
-                                    MPI_COMM_SELF, 0);
+        status = ncmpii_check_mpifh(ncp, 0);
     else if (io_method == COLL_IO)
-        status = ncmpii_check_mpifh(ncp, &(ncp->nciop->collective_fh),
-                                    ncp->nciop->comm, 1);
+        status = ncmpii_check_mpifh(ncp, 1);
 
     if (num > 0) {
         req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
