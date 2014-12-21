@@ -737,8 +737,6 @@ ncmpii_end_indep_data(NC *ncp)
             /* numrecs dirty bit may not be the same across all processes.
              * force sync in memory no matter if dirty or not.
              */
-            TRACE_IO(MPI_File_set_view)(ncp->nciop->independent_fh, 0, MPI_BYTE,
-                                        MPI_BYTE, "native", MPI_INFO_NULL);
             set_NC_ndirty(ncp);
             status = ncmpii_sync_numrecs(ncp, ncp->numrecs);
             /* the only possible dirty part of the header is numrecs */
