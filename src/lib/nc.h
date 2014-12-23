@@ -566,6 +566,18 @@ struct NC {
 #define ErrIsHeaderDiff(err) \
         (NC_EMULTIDEFINE_FIRST >= err && err >= NC_EMULTIDEFINE_LAST)
 
+#define IsPrimityMPIType(buftype) (buftype == MPI_FLOAT          || \
+                                   buftype == MPI_DOUBLE         || \
+                                   buftype == MPI_INT            || \
+                                   buftype == MPI_CHAR           || \
+                                   buftype == MPI_BYTE           || \
+                                   buftype == MPI_UNSIGNED_CHAR  || \
+                                   buftype == MPI_SHORT          || \
+                                   buftype == MPI_UNSIGNED_SHORT || \
+                                   buftype == MPI_UNSIGNED       || \
+                                   buftype == MPI_LONG           || \
+                                   buftype == MPI_LONG_LONG_INT  || \
+                                   buftype == MPI_UNSIGNED_LONG_LONG)
 
 /* Begin defined in nc.c */
 

@@ -180,7 +180,7 @@ ncmpii_igetput_varn(int               ncid,
     if (num == 0 || bufcount == 0) return NC_NOERR;
 
     /* check if ncid is valid, if yes, get varp from varid */
-    SANITY_CHECK(ncid, ncp, varp, rw_flag, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, rw_flag, NONBLOCKING_IO, status)
     if (status != NC_NOERR) return status;
 
     if (use_abuf && ncp->abuf == NULL) return NC_ENULLABUF;

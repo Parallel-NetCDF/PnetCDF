@@ -43,7 +43,7 @@ ncmpi_bput_var(int           ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     GET_FULL_DIMENSIONS(start, count)
@@ -76,7 +76,7 @@ ncmpi_bput_var_$1(int       ncid,
     MPI_Offset  nelems, *start, *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     GET_TOTAL_NUM_ELEMENTS(nelems)
@@ -122,7 +122,7 @@ ncmpi_bput_var1(int               ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -155,7 +155,7 @@ ncmpi_bput_var1_$1(int               ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -200,7 +200,7 @@ ncmpi_bput_vara(int               ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -233,7 +233,7 @@ ncmpi_bput_vara_$1(int               ncid,
     MPI_Offset  nelems;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -279,7 +279,7 @@ ncmpi_bput_vars(int               ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -313,7 +313,7 @@ ncmpi_bput_vars_$1(int               ncid,
     MPI_Offset  nelems;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -359,7 +359,7 @@ ncmpi_bput_varm(int               ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -394,7 +394,7 @@ ncmpi_bput_varm_$1(int               ncid,
     MPI_Offset  nelems;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_COLL_IO, status)
+    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
