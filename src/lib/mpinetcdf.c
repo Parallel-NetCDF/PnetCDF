@@ -1008,6 +1008,8 @@ ncmpii_check_mpifh(NC  *ncp,
                                 &ncp->nciop->collective_fh);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_open");
+
+        set_NC_collectiveFh(ncp->nciop);
     }
     else if (!collective && !NC_independentFhOpened(ncp->nciop)) {
         TRACE_IO(MPI_File_open)(MPI_COMM_SELF, (char*)ncp->nciop->path,
@@ -1015,12 +1017,9 @@ ncmpii_check_mpifh(NC  *ncp,
                                 &ncp->nciop->independent_fh);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_handle_error(mpireturn, "MPI_File_open");
-    }
 
-    if (collective)
-        set_NC_collectiveFh(ncp->nciop);
-    else
         set_NC_independentFh(ncp->nciop);
+    }
 
     return NC_NOERR;
 }
