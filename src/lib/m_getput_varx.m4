@@ -934,18 +934,17 @@ ncmpii_mgetput_varm(int                ncid,
                     int                rw_flag,     /* WRITE_REQ or READ_REQ */
                     int                io_method)   /* COLL_IO or INDEP_IO */
 {
-    int i, j, status=NC_NOERR, *req_ids=NULL, *statuses=NULL, min_st;
+    int i, j, err, status=NC_NOERR, *req_ids=NULL, *statuses=NULL;
     NC *ncp=NULL;
 
     /* check if ncid is valid */
     status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR)
-        /* must return the error now, parallel program might hang because
-           ncp might not be valid and hence cannot call MPI_Allreduce for
-           collective abort */
-        return status;
+    if (status != NC_NOERR) return status;
+    /* if ncid is invalid, we must return the error now. However, the program
+     * might hang when only a subset or processes have this error.
+     */
 
-    /* check if it is in define mode */
+    /* check if it is in define mode. This must be called in data mode */
     if (NC_indef(ncp)) {
         status = NC_EINDEFINE;
         goto err_check;
@@ -956,11 +955,24 @@ ncmpii_mgetput_varm(int                ncid,
         status = NC_EPERM;
         goto err_check;
     }
-    /* check whether collective or independent mode */
-    if (io_method == INDEP_IO)
-        status = ncmpii_check_mpifh(ncp, 0);
-    else if (io_method == COLL_IO)
-        status = ncmpii_check_mpifh(ncp, 1);
+
+err_check:
+    /* at this point, if status is not NC_NOERR, it is a fatal error */
+    if (ncp->safe_mode == 1 && io_method == COLL_IO) {
+        int mpireturn, min_st;
+        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
+                                  ncp->nciop->comm);
+        if (min_st != NC_NOERR) return status;
+    }
+
+    if (io_method == INDEP_IO && status != NC_NOERR)
+        return status;
+
+    if (status != NC_NOERR)
+        /* this can only be reached for COLL_IO and safe_mode == 0, set num=0
+         * just so this process can participate the collective calls in
+         * wait_all */
+        num = 0;
 
     if (num > 0) {
         req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
@@ -972,8 +984,11 @@ ncmpii_mgetput_varm(int                ncid,
         NC_var *varp;
         MPI_Offset *start, *count, buflen;
 
+        req_ids[i] = NC_REQ_NULL;
         varp = ncmpii_NC_lookupvar(ncp, varids[i]);
         if (varp == NULL) continue; /* invalid varid, skip this request */
+
+        if (bufcounts != NULL) buflen = bufcounts[i];
 
         if (starts == NULL) {         /* var */
             GET_FULL_DIMENSIONS(start, count)
@@ -982,96 +997,113 @@ ncmpii_mgetput_varm(int                ncid,
                 for (buflen=1, j=0; j<varp->ndims; j++)
                     buflen *= count[j];
             }
-            else
-                buflen = bufcounts[i];
-
-            status = ncmpii_igetput_varm(ncp, varp, start, count, NULL,
-                                         NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
+            err = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
+                                      bufs[i], buflen, datatypes[i],
+                                      &req_ids[i], rw_flag, 0, 0);
+            if (status == NC_NOERR) status = err;
             if (varp->ndims > 0) NCI_Free(start);
         } else if (counts == NULL) {  /* var1 */
-            GET_FULL_DIMENSIONS(start, count)
+            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) continue; /* skip this request */
+            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
+                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
+                if (status == NC_NOERR) status = NC_EEDGE;
+                continue; /* skip this request */
+            }
             GET_ONE_COUNT(count)
             /* when bufcounts == NULL, it means the same as counts[] */
-            if (bufcounts == NULL)
-                buflen = 1;
-            else
-                buflen = bufcounts[i];
+            if (bufcounts == NULL) buflen = 1;
 
-            status = ncmpii_igetput_varm(ncp, varp, starts[i], count, NULL,
-                                         NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
+            err = ncmpii_igetput_varm(ncp, varp, starts[i], count, NULL, NULL,
+                                      bufs[i], buflen, datatypes[i],
+                                      &req_ids[i], rw_flag, 0, 0);
+            if (status == NC_NOERR) status = err;
             if (varp->ndims > 0) NCI_Free(count);
         } else if (strides == NULL) { /* vara */
+            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) continue; /* skip this request */
+            err = NCedgeck(ncp, varp, starts[i], counts[i]);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) continue; /* skip this request */
+            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
+                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
+                if (status == NC_NOERR) status = NC_EEDGE;
+                continue; /* skip this request */
+            }
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
                     buflen *= counts[i][j];
             }
-            else
-                buflen = bufcounts[i];
-
-            status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i], NULL,
-                                         NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
+            err = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i], NULL,
+                                      NULL, bufs[i], buflen, datatypes[i],
+                                      &req_ids[i], rw_flag, 0, 0);
+            if (status == NC_NOERR) status = err;
         } else if (imaps == NULL) {   /* vars */
+            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) continue; /* skip this request */
+            err = NCedgeck(ncp, varp, starts[i], counts[i]);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) continue; /* skip this request */
+            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
+                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
+                if (status == NC_NOERR) status = NC_EEDGE;
+                continue; /* skip this request */
+            }
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
                     buflen *= counts[i][j];
             }
-            else
-                buflen = bufcounts[i];
-
-            status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
-                                         strides[i], NULL, bufs[i], buflen,
-                                         datatypes[i], &req_ids[i], rw_flag, 0, 0);
+            err = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
+                                      strides[i], NULL, bufs[i], buflen,
+                                      datatypes[i], &req_ids[i],
+                                      rw_flag, 0, 0);
+            if (status == NC_NOERR) status = err;
         } else {                      /* varm */
+            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) continue; /* skip this request */
+            err = NCedgeck(ncp, varp, starts[i], counts[i]);
+            if (status == NC_NOERR) status = err;
+            if (err != NC_NOERR) continue; /* skip this request */
+            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
+                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
+                if (status == NC_NOERR) status = NC_EEDGE;
+                continue; /* skip this request */
+            }
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
                     buflen *= counts[i][j];
             }
-            else
-                buflen = bufcounts[i];
-
-            status = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
-                                         strides[i], imaps[i], bufs[i],
-                                         buflen, datatypes[i],
-                                         &req_ids[i], rw_flag, 0, 0);
+            err = ncmpii_igetput_varm(ncp, varp, starts[i], counts[i],
+                                      strides[i], imaps[i], bufs[i],
+                                      buflen, datatypes[i],
+                                      &req_ids[i], rw_flag, 0, 0);
+            if (status == NC_NOERR) status = err;
         }
     }
 
-err_check:
-    if (ncp->safe_mode == 1 && io_method == COLL_IO) {
-        int mpireturn;
-        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
-                                  ncp->nciop->comm);
-        if (min_st != NC_NOERR) return status;
-    }
-
-    if (io_method == INDEP_IO && status != NC_NOERR)
-        return status;
-
-    if (status != NC_NOERR)
-        /* this can only be reached for COLL_IO and safe_mode == 0, set num=0
-           just so this process can participate the collective calls in
-           wait_all */
-        num = 0;
-
     if (io_method == COLL_IO)
-        status = ncmpi_wait_all(ncid, num, req_ids, statuses);
+        err = ncmpi_wait_all(ncid, num, req_ids, statuses);
     else
-        status = ncmpi_wait(ncid, num, req_ids, statuses);
-
-    if (status != NC_NOERR) return status;
+        err = ncmpi_wait(ncid, num, req_ids, statuses);
 
     /* return the first error if there is one */
-    for (i=0; i<num; i++)
-        if (statuses[i] != NC_NOERR)
-            return statuses[i];
+    if (status == NC_NOERR) status = err;
+    if (status == NC_NOERR) {
+        for (i=0; i<num; i++)
+            if (statuses[i] != NC_NOERR) {
+                status = statuses[i];
+                break;
+            }
+    }
 
     if (num > 0) NCI_Free(req_ids);
 
-    return NC_NOERR;
+    return status;
 }
