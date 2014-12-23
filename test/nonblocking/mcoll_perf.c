@@ -108,7 +108,6 @@ int ncmpi_diff(char *filename1, char *filename2) {
     MPI_Comm_rank(comm, &rank);
 
     str[0] = '\0';
-
     status = ncmpi_open(comm, filename1, NC_NOWRITE, MPI_INFO_NULL, &ncid1);
     HANDLE_ERROR
     status = ncmpi_open(comm, filename2, NC_NOWRITE, MPI_INFO_NULL, &ncid2);
@@ -251,7 +250,8 @@ int ncmpi_diff(char *filename1, char *filename2) {
     for (i=0; i<nvars1; i++) {
         isRecvar = 0;
         varsize = 1;
-        ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
+        status = ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
+        HANDLE_ERROR
         strcpy(name,name1);
         for (j=0; j<ndims1; j++) {
             status = ncmpi_inq_dim(ncid1, dimids1[j], name2, shape + j);
@@ -448,33 +448,40 @@ int main(int argc, char **argv)
         /* define dimensions */
         for (i=0; i<ndims; i++){
             sprintf(dimname, "dim0_%d", i);
-            ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids0[i]);
+            status = ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids0[i]);
+            HANDLE_ERROR
         }
         sprintf(dimname, "dim1_%d", 0);
-        ncmpi_def_dim(ncid, dimname, NC_UNLIMITED, &dimids1[0]);
+        status = ncmpi_def_dim(ncid, dimname, NC_UNLIMITED, &dimids1[0]);
+        HANDLE_ERROR
         for (i=1; i<ndims; i++){
             sprintf(dimname, "dim1_%d", i);
-            ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids1[i]);
+            status = ncmpi_def_dim(ncid, dimname, array_of_gsizes[i], &dimids1[i]);
+            HANDLE_ERROR
         } 
 
         /* define variables */
         if (k<7){
             for (i=0; i<2; i++){
                 sprintf(varname, "var0_%d", i);
-                ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
+                status = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
+                HANDLE_ERROR
             }
             for (i=2; i<nvars; i++){
                 sprintf(varname, "var1_%d", i);
-                ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids1, &varid[i]);
+                status = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids1, &varid[i]);
+                HANDLE_ERROR
             }
         } else {
             for (i=0; i<nprocs; i++){
                 sprintf(varname, "var0_%d", i);
-                ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
+                status = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
+                HANDLE_ERROR
             }
         }
 
         status = ncmpi_enddef(ncid);
+        HANDLE_ERROR
 
         if (k == 0) {
             if (mynod == 0 && verbose)
@@ -488,12 +495,14 @@ int main(int argc, char **argv)
         if (k == 1) {
             if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_put_vara() ...");
-            ncmpi_begin_indep_data(ncid);
+            status = ncmpi_begin_indep_data(ncid);
+            HANDLE_ERROR
             for (i=0; i<nvars; i++){
                 status = ncmpi_put_vara(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT);
                 HANDLE_ERROR
             }
-            ncmpi_end_indep_data(ncid);
+            status = ncmpi_end_indep_data(ncid);
+            HANDLE_ERROR
         } 
 
         if (k == 2) {
@@ -506,15 +515,17 @@ int main(int argc, char **argv)
         if (k == 3) {
             if (mynod == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vara() and ncmpi_wait() ...");
-            ncmpi_begin_indep_data(ncid);
+            status = ncmpi_begin_indep_data(ncid);
+            HANDLE_ERROR
             for (i=0; i<nvars; i++){
                 status = ncmpi_iput_vara(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT, &reqs[i]);
                 HANDLE_ERROR
                 status = ncmpi_wait(ncid, 1, &reqs[i], &sts[i]);
                 HANDLE_ERROR
             }
-            ncmpi_end_indep_data(ncid);
-        } 
+            status = ncmpi_end_indep_data(ncid);
+            HANDLE_ERROR
+        }
 
         if (k == 4) {
             if (mynod == 0 && verbose)
@@ -533,14 +544,16 @@ int main(int argc, char **argv)
             stride[0] = 1;
             stride[1] = 1;
             stride[2] = 1;
-            ncmpi_begin_indep_data(ncid);
+            status = ncmpi_begin_indep_data(ncid);
+            HANDLE_ERROR
             for (i=0; i<nvars; i++){
                 status = ncmpi_iput_vars(ncid, varid[i], starts[i], counts[i], stride, buf[i], bufcounts[i], MPI_INT, &reqs[i]);
                 HANDLE_ERROR
                 status = ncmpi_wait(ncid, 1, &reqs[i], &sts[i]);
                 HANDLE_ERROR
             }
-            ncmpi_end_indep_data(ncid);
+            status = ncmpi_end_indep_data(ncid);
+            HANDLE_ERROR
         } 
 
         if (k == 6) {
@@ -559,10 +572,12 @@ int main(int argc, char **argv)
         if (k == 7) {
             if (mynod == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_put_var() ...", nprocs);
-            ncmpi_begin_indep_data(ncid);
+            status = ncmpi_begin_indep_data(ncid);
+            HANDLE_ERROR
             status = ncmpi_put_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT);
             HANDLE_ERROR
-            ncmpi_end_indep_data(ncid);
+            status = ncmpi_end_indep_data(ncid);
+            HANDLE_ERROR
         }
         if (k == 8) {
             if (mynod == 0 && verbose)
@@ -570,10 +585,12 @@ int main(int argc, char **argv)
             i = 0;
             status = ncmpi_iput_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT, &reqs[i]);
             HANDLE_ERROR
-            ncmpi_begin_indep_data(ncid);
+            status = ncmpi_begin_indep_data(ncid);
+            HANDLE_ERROR
             status = ncmpi_wait(ncid, 1, &reqs[i], &sts[i]);
             HANDLE_ERROR
-            ncmpi_end_indep_data(ncid);
+            status = ncmpi_end_indep_data(ncid);
+            HANDLE_ERROR
         }
         if (k == 9) {
             if (mynod == 0 && verbose)
