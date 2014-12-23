@@ -12,7 +12,7 @@
 
 #define INDEP_IO 0
 #define COLL_IO  1
-#define INDEP_COLL_IO  -1
+#define NONBLOCKING_IO  -1
 
 #ifndef MAX
 #define MAX(mm,nn) (((mm) > (nn)) ? (mm) : (nn))
@@ -46,17 +46,17 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 
 
 #define SANITY_CHECK(ncid, ncp, varp, rw_flag, io_method, status) {            \
+    /* all errors detected here are fatal, must return immediately */          \
     int min_st;                                                                \
                                                                                \
     /* check if ncid is valid */                                               \
     status = ncmpii_NC_check_id(ncid, &ncp);                                   \
-    if (status != NC_NOERR)                                                    \
-        /* must return error now, collective APIs might hang if error occurs   \
-           only on a subset of processes */                                    \
-        return status;                                                         \
+    /* For invalid ncid, we must return error now, as there is no way to       \
+     * continue with invalid ncp. However, collective APIs might hang if this  \
+     * error occurs only on a subset of processes */                           \
                                                                                \
-    /* check if it is in define mode */                                        \
-    if (NC_indef(ncp)) status = NC_EINDEFINE;                                  \
+    /* check if it is in define mode. This must be called in data mode */      \
+    if (status == NC_NOERR && NC_indef(ncp)) status = NC_EINDEFINE;            \
                                                                                \
     /* check if varid is valid */                                              \
     if (status == NC_NOERR) {                                                  \
@@ -64,16 +64,16 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
         if (varp == NULL) status = NC_ENOTVAR;                                 \
     }                                                                          \
     /* check file write permission if this is write request */                 \
-    if (status == NC_NOERR) {                                                  \
-        if (rw_flag == WRITE_REQ && NC_readonly(ncp)) status = NC_EPERM;       \
-    }                                                                          \
+    if (status == NC_NOERR && rw_flag == WRITE_REQ && NC_readonly(ncp))        \
+        status = NC_EPERM;                                                     \
+                                                                               \
     /* check whether collective or independent mode */                         \
     if (status == NC_NOERR) {                                                  \
         if (io_method == INDEP_IO)                                             \
             status = ncmpii_check_mpifh(ncp, 0);                               \
         else if (io_method == COLL_IO)                                         \
             status = ncmpii_check_mpifh(ncp, 1);                               \
-        /* else if (io_method == INDEP_COLL_IO) */                             \
+        /* else if (io_method == NONBLOCKING_IO) */                            \
     }                                                                          \
     if (ncp->safe_mode == 1 && io_method == COLL_IO)                           \
         MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);\
