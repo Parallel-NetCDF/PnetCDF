@@ -723,14 +723,14 @@ ncmpii_wait(NC  *ncp,
         do_write = num_w_reqs;
     }
 
-    /* carry out reads and writes separately */
-    if (do_read > 0)
-        err = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head,
-                                 READ_REQ, io_method);
-
+    /* carry out writes and reads separately (writes first) */
     if (do_write > 0)
         err = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head,
                                  WRITE_REQ, io_method);
+
+    if (do_read > 0)
+        err = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head,
+                                 READ_REQ, io_method);
 
     /* retain the first error status */
     if (status == NC_NOERR) status = err;
