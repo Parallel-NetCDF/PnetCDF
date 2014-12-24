@@ -657,6 +657,9 @@ ncmpii_igetput_varm(NC               *ncp,
      */
 
     if (IsPrimityMPIType(buftype)) {
+        err = NCMPII_ECHAR(varp->type, buftype);
+        if (err != NC_NOERR) return err;
+
         bnelems = bufcount = fnelems;
         ptype = buftype;
         el_size = varp->xsz; /* or MPI_Type_size(buftype, &el_size); */
