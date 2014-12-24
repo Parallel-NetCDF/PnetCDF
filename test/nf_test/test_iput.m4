@@ -87,7 +87,13 @@ ifelse($1, text, dble(ichar($2)), dble($2))[]dnl
 dnl  MAKE_TYPE(funf_suffix, var)
 dnl
 define([MAKE_TYPE], [dnl
-ifelse($1, text, char(int($2)), $2)[]dnl
+ifelse($1, text, char(int($2)),
+       ifelse($1, int, INT($2),
+       ifelse($1, int1, INT($2,KIND=1),
+       ifelse($1, int2, INT($2,KIND=2),
+       ifelse($1, int8, INT($2,KIND=8),
+       ifelse($1, real, REAL($2),
+       $2))))))[]dnl
 ])
 
 dnl TEST_NFMPI_IPUT_VAR1(TYPE)
