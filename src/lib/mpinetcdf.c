@@ -732,7 +732,7 @@ ncmpi_end_indep_data(int ncid) {
 int
 ncmpii_end_indep_data(NC *ncp)
 {
-    int status=NC_NOERR, mpireturn;
+    int status=NC_NOERR;
 
     if (!NC_readonly(ncp)) {
         if (ncp->vars.num_rec_vars > 0) {
@@ -747,6 +747,7 @@ ncmpii_end_indep_data(NC *ncp)
 #ifndef DISABLE_FILE_SYNC
         /* calling file sync for those already open the file */
         if (NC_doFsync(ncp) && NC_independentFhOpened(ncp->nciop)) {
+            int mpireturn;
             /* MPI_File_sync() is collective */
             TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
             if (mpireturn != MPI_SUCCESS) {

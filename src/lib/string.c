@@ -341,7 +341,7 @@ ncmpii_set_NC_string(NC_string  *ncstrp,
     memcpy(ncstrp->cp, str, slen);
 
     /* in PnetCDF, we want to make name->cp always NULL character terminated */
-    if (ncstrp->nchars > slen)
+    if (ncstrp->nchars > (MPI_Offset)slen)
         memset(ncstrp->cp + slen, 0, ncstrp->nchars - slen);
 
     ncstrp->nchars = slen;
