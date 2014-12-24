@@ -12,12 +12,11 @@
 
 #define FILE_NAME "testfile.nc"
 
-#define ERRCODE 2
-#define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); errs++;}
+#define ERR if (err!=NC_NOERR) {printf("Error at line %d: err=%d %s\n", __LINE__, err, ncmpi_strerror(err)); errs++;}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int i, j, ncid, dimid[2], varid, retval, errs=0, rank, nprocs, verbose;
+    int i, j, ncid, dimid[2], varid, err, errs=0, rank, nprocs, verbose;
     int req[2], status[2];
     float  var[4][6];
     char *filename="testfile.nc";
@@ -42,17 +41,14 @@ int main(int argc, char **argv) {
     MPI_Info_create(&info);
     /* MPI_Info_set(info, "romio_pvfs2_posix_write","enable"); */
 
-    if (NC_NOERR != (retval = ncmpi_create(MPI_COMM_WORLD, filename,
-        NC_CLOBBER | NC_64BIT_DATA, info, &ncid)))
-       ERR(retval);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA, info, &ncid); ERR
     MPI_Info_free(&info);
 
     /* define a variable of a 6 x 4 integer array in the nc file */
-    if (NC_NOERR != (retval = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]))) ERR(retval);
-    if (NC_NOERR != (retval = ncmpi_def_dim(ncid, "X", 4, &dimid[1]))) ERR(retval);
-    if (NC_NOERR != (retval = ncmpi_def_var(ncid, "var", NC_INT64, 2, dimid, &varid)))
-        ERR(retval);
-    if (NC_NOERR != (retval = ncmpi_enddef(ncid))) ERR(retval);
+    err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 4, &dimid[1]); ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT64, 2, dimid, &varid); ERR
+    err = ncmpi_enddef(ncid); ERR
 
     /* set the contents of the write buffer var, a 4 x 6 float array
           50, 51, 52, 53, 54, 55,
@@ -64,8 +60,7 @@ int main(int argc, char **argv) {
 
     /* bufsize must be max of data type converted before and after */
     bufsize = 4*6*sizeof(long long);
-    if (NC_NOERR != (retval = ncmpi_buffer_attach(ncid, bufsize)))
-        ERR(retval);
+    err = ncmpi_buffer_attach(ncid, bufsize); ERR
 
     /* write var to the NC variable in the matrix transposed way */
     count[0]  = 6; count[1]  = 2;
@@ -77,23 +72,22 @@ int main(int argc, char **argv) {
 
     /* write the first two columns of the NC variable in the matrix transposed way */
     start[0]  = 0; start[1]  = 0;
-    if (NC_NOERR != (retval = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[0][0], &req[0])))
-        ERR(retval);
+    err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[0][0], &req[0]); ERR
 
     /* write the second two columns of the NC variable in the matrix transposed way */
     start[0]  = 0; start[1]  = 2;
-    if (NC_NOERR != (retval = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[2][0], &req[1])))
-        ERR(retval);
+    err = ncmpi_bput_varm_float(ncid, varid, start, count, stride, imap, &var[2][0], &req[1]); ERR
 
-    if (NC_NOERR != (retval = ncmpi_wait_all(ncid, 2, req, status)))
-        ERR(retval);
+    err = ncmpi_wait_all(ncid, 2, req, status); ERR
 
     /* check each bput status */
     for (i=0; i<2; i++)
-        if (status[i] != NC_NOERR) ERR(status[i]);
+        if (status[i] != NC_NOERR) {
+            printf("Error at line %d: err=%d %s\n", __LINE__, status[i], ncmpi_strerror(err));
+            errs++;
+        }
 
-    if (NC_NOERR != (retval = ncmpi_buffer_detach(ncid)))
-        ERR(retval);
+    err = ncmpi_buffer_detach(ncid); ERR
 
     /* the output from command "ncmpidump -v var test.nc" should be:
            var =
@@ -118,11 +112,11 @@ int main(int argc, char **argv) {
             }
         }
     }
-    if (NC_NOERR != (retval = ncmpi_close(ncid))) ERR(retval);
+    err = ncmpi_close(ncid); ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
-    int err = ncmpi_inq_malloc_size(&malloc_size);
+    err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
