@@ -743,7 +743,7 @@ ncmpii_wait(NC  *ncp,
         while (cur_req != NULL) {
             /* must byte-swap the user buffer back to its original Endianess
                only when the buffer itself has been byte-swapped before,
-               i.e. NOT iscontig_of_ptypes && NOT ncmpii_need_convert() &&
+               i.e. NOT buftype_is_contig && NOT ncmpii_need_convert() &&
                ncmpii_need_swap()
              */
             if (cur_req->need_swap_back_buf)
@@ -782,7 +782,7 @@ ncmpii_wait(NC  *ncp,
             MPI_Type_size(cur_req->ptype, &el_size);
 
             if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
-                if (cur_req->is_imap || !cur_req->iscontig_of_ptypes)
+                if (cur_req->is_imap || !cur_req->buftype_is_contig)
                     cbuf = NCI_Malloc(cur_req->fnelems * varp->xsz);
                 else
                     cbuf = cur_req->buf;
@@ -801,7 +801,7 @@ ncmpii_wait(NC  *ncp,
             }
 
             if (cur_req->is_imap) { /* this request was made by get_varm() */
-                if (cur_req->iscontig_of_ptypes)
+                if (cur_req->buftype_is_contig)
                     lbuf = cur_req->buf;
                 else
                     lbuf = NCI_Malloc(cur_req->lnelems*el_size);
@@ -825,7 +825,7 @@ ncmpii_wait(NC  *ncp,
                 bnelems = cur_req->bnelems;
             }
 
-            if (!cur_req->iscontig_of_ptypes && bnelems > 0) {
+            if (!cur_req->buftype_is_contig && bnelems > 0) {
                 /* unpack lbuf to buf based on buftype */
                 position = 0;
                 insize = bnelems * el_size;

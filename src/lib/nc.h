@@ -432,7 +432,7 @@ typedef struct NC_req {
     void          *buf;    /* the original user buffer */
     void          *xbuf;   /* the buffer used to read/write, may point to
                               the same address as buf */
-    int            iscontig_of_ptypes;
+    int            buftype_is_contig;
     int            need_swap_back_buf;
     int            use_abuf;   /* whether use the attached buffer */
     int            abuf_index; /* index in the abuf occupy_table */
