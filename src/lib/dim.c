@@ -486,7 +486,7 @@ ncmpi_rename_dim(int         ncid,
     if (ncp->safe_mode) {
         MPI_Offset nchars=strlen(newname);
         TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (nchars != strlen(newname)) {
+        if (nchars != (MPI_Offset) strlen(newname)) {
             /* newname's length is inconsistent with root's */
             printf("Warning: dimension name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
