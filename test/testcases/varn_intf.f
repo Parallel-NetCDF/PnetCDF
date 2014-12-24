@@ -249,7 +249,7 @@
           call check(err, 'In nfmpi_get_varn_int_all: ')
 
  997      format(A,I2,A,I2,A,I2)
-          do i=1, w_len
+          do i=1, INT(w_len)
              if (buffer(i) .NE. rank) then
                  print 997, "Error: expecting buffer(",i,")=",rank,
      +                      " but got", buffer(i)

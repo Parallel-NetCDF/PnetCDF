@@ -210,7 +210,7 @@
              do j=1, NDIMS
                 w_req_len = w_req_len * counts(j, i)
              enddo
-             req_lens(i) = w_req_len
+             req_lens(i) = INT(w_req_len)
              w_len = w_len + w_req_len
           enddo
           ALLOCATE(buffer(w_len))
@@ -253,7 +253,7 @@
           call check(err, 'In nf90mpi_get_varn_all: ')
 
  996      format(A,I2,A,I2,A,I2,A,F4.1)
-          do i=1, w_len/3
+          do i=1, INT(w_len/3)
              do j=1, 3
                 if (buffer2D(j,i) .NE. rank) then
                     print 996, "Error: expecting buffer2D(",j,",",i,")=", &
@@ -270,7 +270,7 @@
           call check(err, 'In nf90mpi_get_varn_all: ')
 
  997      format(A,I2,A,I2,A,F4.1)
-          do i=1, w_len
+          do i=1, INT(w_len)
              if (buffer(i) .NE. rank) then
                  print 997, "Error: expecting buffer(",i,")=",rank, &
                             " but got", buffer(i)
