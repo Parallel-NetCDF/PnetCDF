@@ -451,7 +451,7 @@ pack_request(NC *ncp, NC_var *varp, NC_req *req, void *buf,
              void *xbuf, const MPI_Offset start[], const MPI_Offset count[],
              const MPI_Offset stride[], MPI_Offset fnelems, MPI_Offset bnelems,
              MPI_Offset lnelems, MPI_Offset bufcount, MPI_Datatype buftype,
-             MPI_Datatype ptype, int iscontig_of_ptypes,
+             MPI_Datatype ptype, int buftype_is_contig,
              int need_swap_back_buf, int use_abuf);
 
 dnl
@@ -605,16 +605,13 @@ ncmpii_igetput_varm(NC               *ncp,
                     int               isSameGroup) /* if part of a group */
 {
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
-    int err, status, warning; /* err is for API abort and status is not */
-    int el_size, iscontig_of_ptypes, do_vars, isderived;
+    int err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
+    int el_size, buftype_is_contig, do_vars, isderived;
     int need_convert, need_swap, need_swap_back_buf;
     int i, dim=0, imap_contig_blocklen=1, abuf_index=0;
-    MPI_Offset fnelems, bnelems, lnelems, nbytes;
+    MPI_Offset fnelems, bnelems=0, lnelems, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
-
-    /* "API error" will abort this API call, but not the entire program */
-    err = status = warning = NC_NOERR;
 
     if (varp->ndims > 0) { /* non-scalar variable */
         if (start == NULL) return NC_ENULLSTART;
@@ -632,38 +629,17 @@ ncmpii_igetput_varm(NC               *ncp,
         fnelems *= count[i];
     }
 
-    /* check if this is a vars call or a true varm call */
-    do_vars = 0;
-
-    if (varp->ndims == 0)
-        /* reduced to scalar var, only one value at one fixed place */
-        do_vars = 1;
-
-    if (imap == NULL) /* no mapping, same as vars */
-        do_vars = 1;
-    else {
-        imap_contig_blocklen = 1;
-        dim = varp->ndims;
-        /* test each dim's contiguity until the 1st non-contiguous dim is
-           reached */
-        while (--dim >= 0 && imap_contig_blocklen == imap[dim])
-            imap_contig_blocklen *= count[dim];
-
-        if (dim == -1) /* imap is a contiguous layout */
-            do_vars = 1;
-    }
-    /* dim is the first dimension (C order, eg. ZYX) that has non-contiguous
-     * imap and it will be used only when do_vars == 1
-     */
-
     if (IsPrimityMPIType(buftype)) {
+        err = NCMPII_ECHAR(varp->type, buftype);
+        if (err != NC_NOERR) return err;
+
         err = NCMPII_ECHAR(varp->type, buftype);
         if (err != NC_NOERR) return err;
 
         bnelems = bufcount = fnelems;
         ptype = buftype;
         el_size = varp->xsz; /* or MPI_Type_size(buftype, &el_size); */
-        iscontig_of_ptypes = 1;
+        buftype_is_contig = 1;
         /* nbytes is the amount of this request in bytes */
         nbytes = bnelems * varp->xsz;
     }
@@ -675,7 +651,7 @@ ncmpii_igetput_varm(NC               *ncp,
         bnelems = bufcount = fnelems;
         ptype = buftype = ncmpii_nc2mpitype(varp->type);
         el_size = varp->xsz;
-        iscontig_of_ptypes = 1;
+        buftype_is_contig = 1;
         /* nbytes is the amount of this request in bytes */
         nbytes = bnelems * varp->xsz;
     }
@@ -686,7 +662,7 @@ ncmpii_igetput_varm(NC               *ncp,
          * nbytes is the amount of read/write in bytes
          */
         err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
-                                  &isderived, &iscontig_of_ptypes);
+                                  &isderived, &buftype_is_contig);
         if (err != NC_NOERR) return err;
 
         err = NCMPII_ECHAR(varp->type, ptype);
@@ -727,7 +703,7 @@ ncmpii_igetput_varm(NC               *ncp,
     need_swap_back_buf = 0;
 
 /* Here is the pseudo code description on buffer packing
-    if (iscontig_of_ptypes)
+    if (buftype_is_contig)
         lbuf = buf
     else
         lbuf = malloc
@@ -761,6 +737,30 @@ ncmpii_igetput_varm(NC               *ncp,
     cbuf = NULL
 */
 
+    /* check if this is a vars call or a true varm call */
+    do_vars = 0;
+
+    if (varp->ndims == 0)
+        /* reduced to scalar var, only one value at one fixed place */
+        do_vars = 1;
+
+    if (imap == NULL) /* no mapping, same as vars */
+        do_vars = 1;
+    else {
+        imap_contig_blocklen = 1;
+        dim = varp->ndims;
+        /* test each dim's contiguity until the 1st non-contiguous dim is
+           reached */
+        while (--dim >= 0 && imap_contig_blocklen == imap[dim])
+            imap_contig_blocklen *= count[dim];
+
+        if (dim == -1) /* imap is a contiguous layout */
+            do_vars = 1;
+    }
+    /* dim is the first dimension (C order, eg. ZYX) that has non-contiguous
+     * imap and it will be used only when do_vars == 1
+     */
+
     if (!do_vars) {
         /* construct a derived data type, imaptype, based on imap[], and use it
          * to pack lbuf to cbuf (if write), or unpack cbuf to lbuf (if read).
@@ -791,7 +791,7 @@ ncmpii_igetput_varm(NC               *ncp,
 
         /* Step 1: pack buf into a contiguous buffer, lbuf */
         lnelems = bnelems; /* (number of ptype in buftype) * bofcount */
-        if (iscontig_of_ptypes) { /* buf is contiguous */
+        if (buftype_is_contig) { /* buftype is contiguous */
             lbuf = buf;
         }
         else if (lnelems > 0) {
@@ -882,7 +882,7 @@ ncmpii_igetput_varm(NC               *ncp,
     else { /* rw_flag == READ_REQ */
         /* Read is done at wait call, need lnelems and bnelems to reverse the
          * steps as done in write case */
-        if (iscontig_of_ptypes)
+        if (buftype_is_contig)
             lnelems = bnelems / bufcount;
         else
             lnelems = bnelems;
@@ -892,7 +892,7 @@ ncmpii_igetput_varm(NC               *ncp,
             for (dim--; dim>=0; dim--)
                 bnelems *= count[dim];
         }
-        if (iscontig_of_ptypes && do_vars && !need_convert)
+        if (buftype_is_contig && do_vars && !need_convert)
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
         else
             xbuf = NCI_Malloc(nbytes);
@@ -917,7 +917,7 @@ ncmpii_igetput_varm(NC               *ncp,
 
     pack_request(ncp, varp, req, buf, xbuf, start, count, stride,
                  fnelems, bnelems, lnelems, bufcount, buftype, ptype,
-                 iscontig_of_ptypes, need_swap_back_buf, use_abuf);
+                 buftype_is_contig, need_swap_back_buf, use_abuf);
 
     /* add the new request to the internal request array (or linked list) */
     if (ncp->head == NULL) {
@@ -958,7 +958,7 @@ pack_request(NC               *ncp,
              MPI_Offset        bufcount,
              MPI_Datatype      buftype,
              MPI_Datatype      ptype,    /* primitive MPI data type in buftype */
-             int               iscontig_of_ptypes,
+             int               buftype_is_contig,
              int               need_swap_back_buf,
              int               use_abuf) /* if this is called from a bput */
 {
@@ -980,7 +980,7 @@ pack_request(NC               *ncp,
     req->next     = NULL;
     req->subreqs     = NULL;
     req->num_subreqs = 0;
-    req->iscontig_of_ptypes = iscontig_of_ptypes;
+    req->buftype_is_contig = buftype_is_contig;
     req->need_swap_back_buf = need_swap_back_buf;
     req->use_abuf           = use_abuf;
 
