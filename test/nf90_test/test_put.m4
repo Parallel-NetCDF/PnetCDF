@@ -117,7 +117,13 @@ ifelse($1, text, dble(ichar($2)), dble($2))[]dnl
 dnl  MAKE_TYPE(funf_suffix, var)
 dnl
 define([MAKE_TYPE], [dnl
-ifelse($1, text, char(int($2)), $2)[]dnl
+ifelse($1, text, char(int($2)),
+       ifelse($1, int, INT($2),
+       ifelse($1, int1, INT($2,KIND=1),
+       ifelse($1, int2, INT($2,KIND=2),
+       ifelse($1, int8, INT($2,KIND=8),
+       ifelse($1, real, REAL($2),
+       $2))))))[]dnl
 ])
 
 dnl HASH(TYPE)
@@ -1280,8 +1286,9 @@ define([TEST_NFMPI_PUT_ATT],dnl
                     allInExtRange = .true.
                     do 3, k = 1, INT(ATT_LEN_LL)
                         ndx(1) = k
-                        VAR_ELEM($1, value, k) = hash_$1(ATT_TYPE(j,i), &
-                                            -1, ndx, NFT_ITYPE($1))
+                        VAR_ELEM($1, value, k) = &
+                            MAKE_TYPE($1, hash_$1(ATT_TYPE(j,i), &
+                                            -1, ndx, NFT_ITYPE($1)))
                         val = ARITH3($1, value, k)
                         allInExtRange = allInExtRange .and. &
                             inRange3(val, ATT_TYPE(j,i),  &
