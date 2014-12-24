@@ -51,18 +51,14 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
                                                                                \
     /* check if ncid is valid */                                               \
     status = ncmpii_NC_check_id(ncid, &ncp);                                   \
+    if (status != NC_NOERR) return status;                                     \
     /* For invalid ncid, we must return error now, as there is no way to       \
      * continue with invalid ncp. However, collective APIs might hang if this  \
      * error occurs only on a subset of processes */                           \
                                                                                \
     /* check if it is in define mode. This must be called in data mode */      \
-    if (status == NC_NOERR && NC_indef(ncp)) status = NC_EINDEFINE;            \
+    if (NC_indef(ncp)) status = NC_EINDEFINE;                                  \
                                                                                \
-    /* check if varid is valid */                                              \
-    if (status == NC_NOERR) {                                                  \
-        varp = ncmpii_NC_lookupvar(ncp, varid);                                \
-        if (varp == NULL) status = NC_ENOTVAR;                                 \
-    }                                                                          \
     /* check file write permission if this is write request */                 \
     if (status == NC_NOERR && rw_flag == WRITE_REQ && NC_readonly(ncp))        \
         status = NC_EPERM;                                                     \
@@ -75,6 +71,13 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
             status = ncmpii_check_mpifh(ncp, 1);                               \
         /* else if (io_method == NONBLOCKING_IO) */                            \
     }                                                                          \
+                                                                               \
+    /* check if varid is valid */                                              \
+    if (status == NC_NOERR) {                                                  \
+        varp = ncmpii_NC_lookupvar(ncp, varid);                                \
+        if (varp == NULL) status = NC_ENOTVAR;                                 \
+    }                                                                          \
+                                                                               \
     if (ncp->safe_mode == 1 && io_method == COLL_IO)                           \
         MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);\
     else                                                                       \
