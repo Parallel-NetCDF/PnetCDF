@@ -36,8 +36,7 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            varn_contig.c \
            redef1.c
 
-F77_SRCS = bigrecords.f \
-           test_vardf.f \
+F77_SRCS = test_vardf.f \
            varn_intf.f
 
 F90_SRCS = inq_num_varsf.f90 \
@@ -51,10 +50,16 @@ OBJS     = $(C_SRCS:.c=.o)
 ifeq (@has_fortran@, yes)
 PROGS   += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
 OBJS    += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
+ifeq (@large_file_test@, yes)
+PROGS   += bigrecords
+OBJS    += bigrecords.o
+endif
 endif
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in depend \
+PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
+               bigrecords.f \
+               Makefile.in depend \
                geopotential.ncdump \
                redef-good.ncdump \
                interop1.sh \
