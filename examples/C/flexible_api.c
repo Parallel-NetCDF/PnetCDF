@@ -100,10 +100,10 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char *filename="testfile.nc";
-    int i, rank, nprocs, verbose=1, err, req, status, ghost_len=3;
+    int i, j, rank, nprocs, verbose=1, err, req, status, ghost_len=3;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
-    float *buf_yx;
+    double *buf_yx;
     MPI_Offset start[2], count[2];
     MPI_Datatype  subarray;
 
@@ -161,6 +161,35 @@ int main(int argc, char** argv)
     /* calling a blocking flexible API */
     err = ncmpi_put_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
     ERR
+
+    /* check the contents of put buffer */
+    for (i=0; i<buffer_len; i++) {
+        if (buf_zy[i] != rank)
+            printf("Error put buffer[%d] is altered\n",i);
+    }
+
+    for (i=0; i<buffer_len; i++) buf_zy[i] = -1;
+    /* calling a blocking flexible API */
+    err = ncmpi_get_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
+    ERR
+
+    /* check the contents of get buffer */
+    for (i=0; i<array_of_sizes[0]; i++) {
+        for (j=0; j<array_of_sizes[1]; j++) {
+            int index = i*array_of_sizes[1] + j;
+            if (i < ghost_len || ghost_len+array_of_subsizes[0] <= i ||
+                j < ghost_len || ghost_len+array_of_subsizes[1] <= j) {
+                if (buf_zy[index] != -1)
+                    printf("Unexpected get buffer[%d][%d]=%d\n",
+                           i,j,buf_zy[index]);
+            }
+            else {
+                if (buf_zy[index] != rank)
+                    printf("Unexpected get buffer[%d][%d]=%d\n",
+                           i,j,buf_zy[index]);
+            }
+        }
+    }
     free(buf_zy);
     MPI_Type_free(&subarray);
 
@@ -172,11 +201,12 @@ int main(int argc, char** argv)
     array_of_starts[0]   = ghost_len;
     array_of_starts[1]   = ghost_len;
     MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
-                             array_of_starts, MPI_ORDER_C, MPI_FLOAT,&subarray);
+                             array_of_starts, MPI_ORDER_C, MPI_DOUBLE,
+                             &subarray);
     MPI_Type_commit(&subarray);
 
     buffer_len = (NY+2*ghost_len) * (NX+2*ghost_len);
-    buf_yx = (float*) malloc(buffer_len * sizeof(float));
+    buf_yx = (double*) malloc(buffer_len * sizeof(double));
     for (i=0; i<buffer_len; i++) buf_yx[i] = rank;
 
     start[0] = 0;  start[1] = NX * rank;
@@ -185,9 +215,40 @@ int main(int argc, char** argv)
     /* calling a non-blocking flexible API */
     err = ncmpi_iput_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
     ERR
-
     err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
     err = status; ERR
+
+    /* check the contents of put buffer */
+    for (i=0; i<buffer_len; i++) {
+        if (buf_yx[i] != rank)
+            printf("Error iput buffer[%d]=%f is altered\n",i,buf_yx[i]);
+    }
+
+    for (i=0; i<buffer_len; i++) buf_yx[i] = -1;
+
+    /* calling a non-blocking flexible API */
+    err = ncmpi_iget_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
+    ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
+    err = status; ERR
+
+    /* check the contents of iget buffer */
+    for (i=0; i<array_of_sizes[0]; i++) {
+        for (j=0; j<array_of_sizes[1]; j++) {
+            int index = i*array_of_sizes[1] + j;
+            if (i < ghost_len || ghost_len+array_of_subsizes[0] <= i ||
+                j < ghost_len || ghost_len+array_of_subsizes[1] <= j) {
+                if (buf_yx[index] != -1)
+                    printf("Unexpected get buffer[%d][%d]=%f\n",
+                           i,j,buf_yx[index]);
+            }
+            else {
+                if (buf_yx[index] != rank)
+                    printf("Unexpected get buffer[%d][%d]=%f\n",
+                           i,j,buf_yx[index]);
+            }
+        }
+    }
     free(buf_yx);
     MPI_Type_free(&subarray);
 
