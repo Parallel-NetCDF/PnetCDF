@@ -24,6 +24,8 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            test_varm.c \
            alignment_test.c \
            flexible.c \
+           flexible2.c \
+           flexible_varm.c \
            nonblocking.c \
            noclobber.c \
            record.c \
@@ -89,6 +91,12 @@ alignment_test: alignment_test.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 flexible: flexible.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+flexible2: flexible2.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+flexible_varm: flexible_varm.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 nonblocking: nonblocking.o $(LIBRARY)

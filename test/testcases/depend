@@ -2,6 +2,8 @@ alignment_test.o: alignment_test.c
 bigrecords.o: bigrecords.f
 collective_error.o: collective_error.c
 flexible.o: flexible.c
+flexible2.o: flexible2.c
+flexible_varm.o: flexible_varm.c
 inq_num_vars.o: inq_num_vars.c
 inq_num_varsf.o: inq_num_varsf.f90
 inq_recsize.o: inq_recsize.c

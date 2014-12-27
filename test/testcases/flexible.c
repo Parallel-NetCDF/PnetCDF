@@ -40,15 +40,15 @@
 
 #define NY 2
 #define NX 5
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
+#define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); nerrs++;}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
     char         filename[128];
-    int          i, j, err, ncid, varid, dimids[2], pass, debug=0;
+    int          i, j, err, ncid, varid, dimids[2], debug=0;
     int          rank, nprocs, blocklengths[2], buf[NY][NX], *bufptr;
-    int         *ncbuf, req, st;
+    int         *ncbuf, req, st, nerrs=0;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     MPI_Offset   start[2], count[2];
     MPI_Aint     a0, a1, disps[2];
@@ -126,13 +126,12 @@ int main(int argc, char **argv) {
     err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); ERR
 
     /* check if the contents of buf are expected */
-    pass = 1;
     for (j=0; j<2; j++) {
         int val = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
             if (buf[j][i] != val) {
                 printf("Unexpected buf[%d][%d]=%d != %d\n",j,i,buf[j][i],val);
-                pass = 0;
+                nerrs++;
             }
     }
 
@@ -155,7 +154,7 @@ int main(int argc, char **argv) {
             if (buf[j][i] != ncbuf[(j+2)*(count[1]+4)+(i+2)]) {
                 printf("Error: expecting ncbuf[%d][%d]=%d but got %d\n",
                        j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
-                pass = 0;
+                nerrs++;
             }
     }
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
@@ -168,7 +167,7 @@ int main(int argc, char **argv) {
             if (buf[j][i] != ncbuf[(j+2)*(count[1]+4)+(i+2)]) {
                 printf("Error: expecting ncbuf[%d][%d]=%d but got %d\n",
                        j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
-                pass = 0;
+                nerrs++;
             }
     }
 
@@ -177,7 +176,7 @@ int main(int argc, char **argv) {
 
     err = ncmpi_close(ncid); ERR
 
-    MPI_Allreduce(MPI_IN_PLACE, &pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -192,8 +191,8 @@ int main(int argc, char **argv) {
     char cmd_str[80];
     sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", argv[0]);
     if (rank == 0) {
-        if (pass) printf("%-66s ------ pass\n", cmd_str);
-        else      printf("%-66s ------ failed\n", cmd_str);
+        if (nerrs) printf("%-66s ------ failed\n", cmd_str);
+        else       printf("%-66s ------ pass\n", cmd_str);
     }
 
     MPI_Finalize();
