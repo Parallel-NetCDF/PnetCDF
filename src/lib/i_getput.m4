@@ -453,12 +453,9 @@ VARS(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 */
 
 static int
-pack_request(NC *ncp, NC_var *varp, NC_req *req, void *buf,
-             void *xbuf, const MPI_Offset start[], const MPI_Offset count[],
-             const MPI_Offset stride[], MPI_Offset bnelems,
-             MPI_Offset bufcount, MPI_Datatype buftype,
-             MPI_Datatype ptype, int buftype_is_contig,
-             int need_swap_back_buf, int use_abuf);
+pack_request(NC *ncp, NC_var *varp, NC_req *req,
+             const MPI_Offset start[], const MPI_Offset count[],
+             const MPI_Offset stride[]);
 
 dnl
 dnl VARM_FLEXIBLE
@@ -614,7 +611,7 @@ ncmpii_igetput_varm(NC               *ncp,
 {
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
     int err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
-    int i, abuf_index=0, el_size, buftype_is_contig, do_varm;
+    int i, abuf_index=-1, el_size, buftype_is_contig;
     int need_convert, need_swap, need_swap_back_buf=0;
     MPI_Offset bnelems=0, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
@@ -646,7 +643,7 @@ ncmpii_igetput_varm(NC               *ncp,
 
     /* check if this is a vars call or a true varm call */
     ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
-                           &do_varm, &imaptype);
+                           &imaptype);
 
     if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
         int position, outsize=bnelems*el_size;
@@ -664,7 +661,7 @@ ncmpii_igetput_varm(NC               *ncp,
             lbuf = buf;
 
         /* Step 2: pack lbuf to cbuf if imap is non-contiguous */
-        if (do_varm) { /* true varm */
+        if (imaptype != MPI_DATATYPE_NULL) { /* true varm */
             /* pack lbuf to cbuf, a contiguous buffer, using imaptype */
             cbuf = NCI_Malloc(outsize);
             position = 0;
@@ -721,7 +718,7 @@ ncmpii_igetput_varm(NC               *ncp,
         /* Type conversion and byte swap for read are done at wait call, we
          * need bnelems to reverse the steps as done in write case
          */
-        if (buftype_is_contig && !do_varm && !need_convert)
+        if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL && !need_convert)
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
         else
             xbuf = NCI_Malloc(nbytes);
@@ -730,20 +727,21 @@ ncmpii_igetput_varm(NC               *ncp,
     /* allocate a new request object to store the write info */
     req = (NC_req*) NCI_Malloc(sizeof(NC_req));
 
-    req->is_imap        = do_varm;
-    req->imaptype       = imaptype;
-    req->rw_flag        = rw_flag;
-    req->abuf_index     = abuf_index;
+    req->buf                = buf;
+    req->xbuf               = xbuf;
+    req->bnelems            = bnelems;
+    req->bufcount           = bufcount;
+    req->buftype            = buftype;
+    req->ptype              = ptype;
+    req->buftype_is_contig  = buftype_is_contig;
+    req->need_swap_back_buf = need_swap_back_buf;
+    req->imaptype           = imaptype;
+    req->rw_flag            = rw_flag;
+    req->abuf_index         = abuf_index;
+    req->tmpBuf             = NULL;
+    req->userBuf            = NULL;
 
-    req->tmpBuf         = NULL;
-    req->tmpBufSize     = 0;
-    req->userBuf        = NULL;
-    req->userBufCount   = 0;
-    req->userBufType    = MPI_DATATYPE_NULL;
-
-    pack_request(ncp, varp, req, buf, xbuf, start, count, stride,
-                 bnelems, bufcount, buftype, ptype,
-                 buftype_is_contig, need_swap_back_buf, use_abuf);
+    pack_request(ncp, varp, req, start, count, stride);
 
     /* add the new request to the internal request array (or linked list) */
     if (ncp->head == NULL) {
@@ -773,38 +771,19 @@ static int
 pack_request(NC               *ncp,
              NC_var           *varp,
              NC_req           *req,
-             void             *buf,  /* user buffer, may have been swapped */
-             void             *xbuf, /* buffer to be used in MPI-IO */
              const MPI_Offset  start[],
              const MPI_Offset  count[],
-             const MPI_Offset  stride[],
-             MPI_Offset        bnelems,  /* no. ptype elements in buftype */
-             MPI_Offset        bufcount,
-             MPI_Datatype      buftype,
-             MPI_Datatype      ptype,    /* element type in buftype */
-             int               buftype_is_contig,
-             int               need_swap_back_buf,
-             int               use_abuf) /* if this is called from a bput */
+             const MPI_Offset  stride[])
 {
     int     i, j;
     NC_req *subreqs;
 
     req->varp     = varp;
-    req->ndims    = varp->ndims;
     req->start    = (MPI_Offset*) NCI_Malloc(2*varp->ndims*sizeof(MPI_Offset));
     req->count    = req->start + varp->ndims;
-    req->buf      = buf;
-    req->xbuf     = xbuf;
-    req->bnelems  = bnelems;
-    req->buftype  = buftype;
-    req->bufcount = bufcount;
-    req->ptype    = ptype;   /* MPI element datatype for the I/O buffer */
     req->next     = NULL;
     req->subreqs     = NULL;
     req->num_subreqs = 0;
-    req->buftype_is_contig = buftype_is_contig;
-    req->need_swap_back_buf = need_swap_back_buf;
-    req->use_abuf           = use_abuf;
 
     if (stride != NULL)
         req->stride = (MPI_Offset*) NCI_Malloc(varp->ndims*sizeof(MPI_Offset));

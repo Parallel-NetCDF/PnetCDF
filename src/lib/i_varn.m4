@@ -165,8 +165,7 @@ ncmpii_igetput_varn(int               ncid,
                     int               rw_flag,   /* WRITE_REQ or READ_REQ */
                     int               use_abuf)  /* if use attached buffer */
 {
-    int i, j, el_size, status=NC_NOERR, free_cbuf=0;
-    int isSameGroup, position, packsize=0;
+    int i, j, el_size, status=NC_NOERR, free_cbuf=0, isSameGroup;
     void *cbuf=NULL;
     char *bufp;
     MPI_Offset **_counts=NULL;
@@ -188,6 +187,7 @@ ncmpii_igetput_varn(int               ncid,
     /* it is illegal for starts to be NULL */
     if (starts == NULL) return NC_ENULLSTART;
 
+    cbuf = buf;
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and will be recalculated to match
          * counts[]. Note buf's data type must match the data type of
@@ -204,11 +204,15 @@ ncmpii_igetput_varn(int               ncid,
             bufcount += bufcount_j;
         }
         /* assign buftype match with the variable's data type */
-        buftype = ncmpii_nc2mpitype(varp->type);
+        ptype = buftype = ncmpii_nc2mpitype(varp->type);
+        MPI_Type_size(ptype, &el_size); /* buffer element size */
     }
-
-    cbuf = buf;
-    if (bufcount > 0) { /* flexible API is used */
+    else if (bufcount == -1) { /* if (IsPrimityMPIType(buftype)) */
+        /* this subroutine is called from a high-level API */
+        ptype = buftype;
+        MPI_Type_size(ptype, &el_size); /* buffer element size */
+    }
+    else { /* (bufcount > 0) flexible API is used */
         /* pack buf into cbuf, a contiguous buffer */
         int isderived, iscontig_of_ptypes;
         MPI_Offset bnelems;
@@ -224,8 +228,8 @@ ncmpii_igetput_varn(int               ncid,
 
         /* check if buftype is contiguous, if not, pack to one, cbuf */
         if (! iscontig_of_ptypes && bnelems > 0) {
-            position = 0;
-            packsize = bnelems*el_size;
+            int position = 0;
+            int packsize = bnelems*el_size;
 
             cbuf = NCI_Malloc(packsize);
             free_cbuf = 1;
@@ -235,10 +239,6 @@ ncmpii_igetput_varn(int               ncid,
                 MPI_Pack(buf, bufcount, buftype, cbuf, packsize, &position,
                          MPI_COMM_SELF);
         }
-    }
-    else {
-        ptype = buftype;
-        el_size = ncmpix_len_nctype(varp->type);
     }
 
     /* We allow counts == NULL and treat this the same as all 1s */
@@ -280,14 +280,12 @@ ncmpii_igetput_varn(int               ncid,
         bufp += buflen * el_size;
     }
 
-    /* add callback if buf is noncontiguous */
+    /* add callback if buftype is noncontiguous */
     if (free_cbuf) { /* cbuf != buf, cbuf is temp allocated */
         if (rw_flag == READ_REQ) {
-            MPI_Datatype dup_buftype;
-            MPI_Type_dup(buftype, &dup_buftype);
             /* tell wait() to unpack cbuf to buf and free cbuf */
-            status = ncmpii_set_iget_callback(ncp, *reqid, cbuf, packsize, buf,
-                                              bufcount, dup_buftype);
+            status = ncmpii_set_iget_callback(ncp, *reqid, cbuf, buf,
+                                              bufcount, buftype);
         }
         else { /* WRITE_REQ */
             if (use_abuf)

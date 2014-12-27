@@ -471,7 +471,7 @@ ncmpi_buffer_detach(int ncid)
     /* this API assumes users are responsible for no pending bput */
     cur_req = ncp->head;
     while (cur_req != NULL) { /* check if there is a pending bput */
-        if (cur_req->use_abuf)
+        if (cur_req->abuf_index >= 0)
             return NC_EPENDINGBPUT;
             /* return now, so users can call wait and try detach again */
         cur_req = cur_req->next;
@@ -513,7 +513,7 @@ ncmpi_buffer_detach(int         ncid,
     /* this API assumes users are respobsible for no pending bput when called */
     cur_req = ncp->head;
     while (cur_req != NULL) { /* check if there is a pending bput */
-        if (cur_req->use_abuf)
+        if (cur_req->abuf_index >= 0)
             return NC_EPENDINGBPUT;
         cur_req = cur_req->next;
     }

@@ -628,13 +628,11 @@ ncmpii_create_imaptype(NC_var           *varp,
                        const MPI_Offset  bnelems, /* no. elements in user buf */
                        const int         el_size, /* user buf element size */
                        MPI_Datatype      ptype,   /* element type in buftype */
-                       int              *isVarm,  /* out */
                        MPI_Datatype     *imaptype)/* out */
 {
     int dim, imap_contig_blocklen;
 
     /* check if this is a vars call or a true varm call */
-    *isVarm    = 0;
     *imaptype = MPI_DATATYPE_NULL;
 
     if (varp->ndims == 0) /* scalar var, only one value at one fixed place */
@@ -656,7 +654,6 @@ ncmpii_create_imaptype(NC_var           *varp,
     if (dim == -1) /* imap is a contiguous layout */
         return;
 
-    *isVarm = 1;
     /* We have a true varm call, as imap gives non-contiguous layout.
      * User buffer will be packed (write case) or unpacked (read case)
      * to/from a contiguous buffer based on imap[], before MPI-IO.
@@ -1186,7 +1183,7 @@ ncmpii_getput_varm(NC               *ncp,
     void *lbuf=NULL, *cbuf=NULL, *xbuf=NULL;
     int mpireturn, err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
     int el_size, buftype_is_contig;
-    int do_varm, need_swap=0, need_convert=0, need_swap_back_buf=0;
+    int need_swap=0, need_convert=0, need_swap_back_buf=0;
     MPI_Offset bnelems=0, nbytes=0, offset=0;
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE, imaptype=MPI_DATATYPE_NULL;
@@ -1267,7 +1264,7 @@ err_check:
 
     /* check if this is a vars call or a true varm call */
     ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
-                           &do_varm, &imaptype);
+                           &imaptype);
 
     if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
         int position, outsize=bnelems*el_size;
@@ -1285,7 +1282,7 @@ err_check:
             lbuf = buf;
 
         /* Step 2: pack lbuf to cbuf if imap is non-contiguous */
-        if (do_varm) { /* true varm */
+        if (imaptype != MPI_DATATYPE_NULL) { /* true varm */
             /* pack lbuf to cbuf, a contiguous buffer, using imaptype */
             cbuf = NCI_Malloc(outsize);
             position = 0;
@@ -1328,7 +1325,7 @@ err_check:
     }
     else { /* rw_flag == READ_REQ */
         /* allocate xbuf for reading */
-        if (buftype_is_contig && !do_varm && !need_convert)
+        if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL && !need_convert)
             xbuf = buf;
         else
             xbuf = NCI_Malloc(nbytes);
@@ -1413,7 +1410,7 @@ mpi_io:
 
         if (need_convert) {
             /* xbuf cannot be buf, but cbuf can */
-            if (buftype_is_contig && !do_varm)
+            if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL)
                 cbuf = buf; /* vars call and buftype is contiguous */
             else
                 cbuf = NCI_Malloc(insize);
@@ -1435,19 +1432,19 @@ mpi_io:
            varm && contig:    cbuf -> lbuf == buf
            vars && contig:    cbuf == lbuf == buf
         */
-        if (do_varm && !buftype_is_contig)
+        if (imaptype != MPI_DATATYPE_NULL && !buftype_is_contig)
             /* a true varm and buftype is not contiguous: we need a separate
              * buffer, lbuf, to unpack cbuf to lbuf using imaptype, and later
              * unpack lbuf to buf using buftype.
              * In this case, cbuf cannot be buf and lbuf cannot be buf.
              */
             lbuf = NCI_Malloc(insize);
-        else if (!do_varm) /* not varm */
+        else if (imaptype == MPI_DATATYPE_NULL) /* not varm */
             lbuf = cbuf;
         else /* varm and buftype is contiguous */
             lbuf = buf;
 
-        if (do_varm) {
+        if (imaptype != MPI_DATATYPE_NULL) {
             /* unpack cbuf to lbuf based on imaptype */
             position = 0;
             MPI_Unpack(cbuf, insize, &position, lbuf, 1, imaptype,
