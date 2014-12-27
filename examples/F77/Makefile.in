@@ -87,31 +87,35 @@ TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
 
 ptest: $(PROGS)
 	@for i in $(PROGS); do ( \
-	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
-	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+        $(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+        if [ $$? = 0 ] ; then \
+           echo "PASS: parallel run on 4 processes ------------------- $$i"; \
+        else \
+           echo "FAILED: parallel run on 4 processes ----------------- $$i"; \
+        fi ; ) ; done
 
 ptests: $(PROGS)
 	@for i in $(PROGS); do ( \
-	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
-	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+        $(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+        if [ $$? = 0 ] ; then \
+           echo "PASS: parallel run on 4 processes ------------------- $$i"; \
+        else \
+           echo "FAILED: parallel run on 4 processes ----------------- $$i"; \
+        fi ; ) ; done
 	@for i in $(PROGS); do ( \
-	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
-	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+        $(TEST_MPIRUN_8) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+        if [ $$? = 0 ] ; then \
+           echo "PASS: parallel run on 8 processes ------------------- $$i"; \
+        else \
+           echo "FAILED: parallel run on 8 processes ----------------- $$i"; \
+        fi ; ) ; done
 	@for i in $(PROGS); do ( \
-	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc" ; \
-	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+        $(TEST_MPIRUN_3) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
+        if [ $$? = 0 ] ; then \
+           echo "PASS: parallel run on 3 processes ------------------- $$i"; \
+        else \
+           echo "FAILED: parallel run on 3 processes ----------------- $$i"; \
+        fi ; ) ; done
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make

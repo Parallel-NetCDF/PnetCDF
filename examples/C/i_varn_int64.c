@@ -154,7 +154,7 @@ static void check_contents(int ncid, int *varid)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char *filename="testfile.nc";
+    char *filename="testfile.nc", exec[128];
     int i, j, k, n, rank, nprocs, verbose=1, err;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     long long *buffer[4];
@@ -164,9 +164,7 @@ int main(int argc, char** argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (nprocs != 4 && rank == 0)
-        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
+    strcpy(exec, argv[0]);
 
     /* get command-line arguments */
     while ((i = getopt(argc, argv, "hq")) != EOF)
@@ -181,6 +179,9 @@ int main(int argc, char** argv)
     argc -= optind;
     argv += optind;
     if (argc == 1) filename = argv[0]; /* optional argument */
+
+    if (nprocs != 4 && rank == 0 && verbose)
+        printf("Warning: %s is intended to run on 4 processes\n",exec);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;

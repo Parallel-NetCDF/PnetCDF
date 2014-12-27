@@ -91,13 +91,14 @@ pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 
-ptest: $(PROGS)
+ptest ptests: $(PROGS)
 	@for i in $(PROGS); do ( \
-	echo "-----------------------------------------------------" ; \
-	echo "$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc" ; \
-	echo "-----------------------------------------------------" ; \
-	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
+        $(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc ; \
+        if [ $$? = 0 ] ; then \
+           echo "PASS: parallel run on 4 processes ------------------- $$i"; \
+        else \
+           echo "FAILED: parallel run on 4 processes ----------------- $$i"; \
+        fi ; ) ; done
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make

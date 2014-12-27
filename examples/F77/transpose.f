@@ -239,5 +239,6 @@
           endif
 
  999      call MPI_Finalize(err)
+          call EXIT(0)
       end program main
 
