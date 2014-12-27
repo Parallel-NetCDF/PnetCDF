@@ -81,14 +81,6 @@ ncmpii_getput_zero_req(NC  *ncp,
     return status;
 }
 
-/*----< ncmpii_abuf_free() >--------------------------------------------------*/
-inline static int
-ncmpii_abuf_free(NC *ncp, int abuf_index)
-{
-    ncp->abuf->occupy_table[abuf_index].is_used = 0; /* set to free */
-    return NC_NOERR;
-}
-
 /*----< ncmpii_abuf_coalesce() >---------------------------------------------*/
 /* this function should be called after all bput requests have been served */
 static int
@@ -120,8 +112,8 @@ ncmpii_abuf_coalesce(NC *ncp)
 }
 
 #define FREE_REQUEST(req) {                                                   \
-    if (req->use_abuf)                                                        \
-        ncmpii_abuf_free(ncp, req->abuf_index);                               \
+    if (req->abuf_index >= 0)                                                 \
+        ncp->abuf->occupy_table[req->abuf_index].is_used = 0; /* set to free */ \
     else if (req->xbuf != NULL && req->xbuf != req->buf)                      \
         NCI_Free(req->xbuf);                                                  \
     req->xbuf = NULL;                                                         \
@@ -756,7 +748,7 @@ ncmpii_wait(NC  *ncp,
         while (cur_req != NULL) {
             /* free temp space allocated for iput/bput varn requests
              * tmpBuf is used only by nonblocking varn APIs */
-            if (cur_req->tmpBuf != NULL && !cur_req->use_abuf)
+            if (cur_req->tmpBuf != NULL && cur_req->abuf_index == -1)
                 NCI_Free(cur_req->tmpBuf);
 
             FREE_REQUEST(cur_req)
@@ -784,7 +776,7 @@ ncmpii_wait(NC  *ncp,
             insize = cur_req->bnelems * el_size;
 
             if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
-                if (cur_req->is_imap || !cur_req->buftype_is_contig)
+                if (cur_req->imaptype != MPI_DATATYPE_NULL || !cur_req->buftype_is_contig)
                     cbuf = NCI_Malloc(insize);
                 else
                     cbuf = cur_req->buf;
@@ -802,7 +794,7 @@ ncmpii_wait(NC  *ncp,
                 cbuf = cur_req->xbuf;
             }
 
-            if (cur_req->is_imap) { /* this request was made by get_varm() */
+            if (cur_req->imaptype != MPI_DATATYPE_NULL) { /* a true varm */
                 if (cur_req->buftype_is_contig)
                     lbuf = cur_req->buf;
                 else
@@ -815,7 +807,7 @@ ncmpii_wait(NC  *ncp,
                 MPI_Type_free(&cur_req->imaptype);
 
                 /* cbuf is no longer needed
-                 * if (cur_req->is_imap) cbuf cannot be == cur_req->buf */
+                 * for a true varm call, cbuf cannot be == cur_req->buf */
                 if (cbuf != cur_req->xbuf) NCI_Free(cbuf);
                 cbuf = NULL;
             } else { /* get_vars */
@@ -840,16 +832,19 @@ ncmpii_wait(NC  *ncp,
             /* free space allocated for the request objects
              * tmpBuf is used only by nonblocking varn APIs */
             if (cur_req->tmpBuf != NULL) {
-                int position=0;
+                int position=0, insize;
+
                 /* unpack tmpBuf to userBuf and free tmpBuf
                  * Note this unpack must wait for all above unpacks are done
                  * because cur_req->buf may be part of cur_req->userBuf
                  */
-                MPI_Unpack(cur_req->tmpBuf, cur_req->tmpBufSize, &position,
-                           cur_req->userBuf, cur_req->userBufCount,
-                           cur_req->userBufType, MPI_COMM_SELF);
+                MPI_Type_size(cur_req->buftype, &insize);
+                insize *= cur_req->bufcount;
+                MPI_Unpack(cur_req->tmpBuf, insize, &position,
+                           cur_req->userBuf, cur_req->bufcount,
+                           cur_req->buftype, MPI_COMM_SELF);
                 NCI_Free(cur_req->tmpBuf);
-                MPI_Type_free(&cur_req->userBufType);
+                MPI_Type_free(&cur_req->buftype);
             }
             FREE_REQUEST(cur_req)
             pre_req = cur_req;
@@ -1014,8 +1009,8 @@ ncmpii_merge_requests(NC          *ncp,
         is_recvar = IS_RECVAR(reqs[i].varp);
 
         /* for record variable, each reqs[] is within a record */
-        ndims  = (is_recvar) ? reqs[i].ndims - 1 : reqs[i].ndims;
-        count  = (is_recvar) ? reqs[i].count + 1 : reqs[i].count;
+        ndims  = (is_recvar) ? reqs[i].varp->ndims - 1 : reqs[i].varp->ndims;
+        count  = (is_recvar) ? reqs[i].count + 1       : reqs[i].count;
         stride = NULL;
         if (reqs[i].stride != NULL)
             stride = (is_recvar) ? reqs[i].stride + 1 : reqs[i].stride;
@@ -1051,11 +1046,10 @@ ncmpii_merge_requests(NC          *ncp,
         is_recvar = IS_RECVAR(reqs[i].varp);
 
         /* for record variable, each reqs[] is within a record */
-        ndims  = (is_recvar) ? reqs[i].ndims  - 1 : reqs[i].ndims;
-        start  = (is_recvar) ? reqs[i].start  + 1 : reqs[i].start;
-        count  = (is_recvar) ? reqs[i].count  + 1 : reqs[i].count;
-        shape  = (is_recvar) ? reqs[i].varp->shape  + 1 :
-                               reqs[i].varp->shape;
+        ndims  = (is_recvar) ? reqs[i].varp->ndims  - 1 : reqs[i].varp->ndims;
+        start  = (is_recvar) ? reqs[i].start  + 1       : reqs[i].start;
+        count  = (is_recvar) ? reqs[i].count  + 1       : reqs[i].count;
+        shape  = (is_recvar) ? reqs[i].varp->shape  + 1 : reqs[i].varp->shape;
         stride = NULL;
         if (reqs[i].stride != NULL)
             stride = (is_recvar) ? reqs[i].stride + 1 : reqs[i].stride;
@@ -1959,13 +1953,18 @@ ncmpii_mgetput(NC           *ncp,
 }
 
 /*----< ncmpii_set_iget_callback() >-----------------------------------------*/
-/* this subroutine is only used by iget_varn API family
- * In this case, tmpBuf is never == userBuf
+/* this subroutine is only used by iget_varn API family and when its buftype
+ * argument indicated a noncontiguous data type. In this case, tmpBuf is never
+ * == userBuf
+ *
+ * iget_varn() divides userBuf into pieces, each is used in an iget_varm() and
+ * stored in a cur_req->buf. We cannot unpack each req->buf individually, as
+ * req->buf may need to type converted. So at the end of wait(), we unpack the
+ * entire tmpBuf into userBuf.
  */
 int ncmpii_set_iget_callback(NC           *ncp,
                              int           reqid,
                              void         *tmpBuf,
-                             int           tmpBufSize,
                              void         *userBuf,
                              int           userBufCount,
                              MPI_Datatype  userBufType)
@@ -1982,18 +1981,21 @@ int ncmpii_set_iget_callback(NC           *ncp,
          * one node with the same request ID
          */
         if (cur_req->id == reqid) {
-            cur_req->tmpBuf       = tmpBuf; /* indicate this is a temp buffer
-                                             * At the end of nonblocking wait,
-                                             * it will be unpacked to userBuf
-                                             * and freed.
-                                             */
-            cur_req->tmpBufSize   = tmpBufSize;
-            cur_req->userBuf      = userBuf; /* user's buffer. Nonblocking varn
-                                              * divides buf into several pieces
-                                              * and stores each in cur_req->buf
-                                              */
-            cur_req->userBufCount = userBufCount;
-            cur_req->userBufType  = userBufType;
+            MPI_Datatype dup_buftype;
+            MPI_Type_dup(userBufType, &dup_buftype);
+
+            cur_req->tmpBuf = tmpBuf;
+                     /* When not NULL, tmpBuf is an internal buffer allocated
+                      * in iget_varn(). At the end of nonblocking wait call,
+                      * tmpBuf will be unpacked to userBuf and freed.
+                      */
+            cur_req->userBuf = userBuf;
+                     /* User's buffer. iget_varn() divides userBuf into pieces,
+                      * each is used in an iget_varm() and stored in a
+                      * cur_req->buf.
+                      */
+            cur_req->bufcount = userBufCount;
+            cur_req->buftype  = dup_buftype;
             break;
         }
         cur_req = cur_req->next;
@@ -2004,7 +2006,9 @@ int ncmpii_set_iget_callback(NC           *ncp,
 }
 
 /*----< ncmpii_set_iput_callback() >-----------------------------------------*/
-/* this subroutine is only used by iput_varn API family */
+/* this subroutine is only used by iput_varn API family, to tell wait() to
+ * free the temporary buffer at the end.
+ */
 int ncmpii_set_iput_callback(NC   *ncp,
                              int   reqid,
                              void *tmpPutBuf)
