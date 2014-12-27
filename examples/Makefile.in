@@ -43,7 +43,16 @@ ptest-CXX:      ptest-tutorial
 ptest-F77:      ptest-CXX
 ptest-F90:      ptest-F77
 
-ptests: ptest
+PTESTS_DIRS = $(SUBDIRS:%=ptests-%)
+ptests: $(PTESTS_DIRS)
+$(PTESTS_DIRS):
+	$(MAKE) $(MFLAGS) -C $(@:ptests-%=%) ptests
+
+# make ptests cannot run in parallel. use dependency to ensure.
+ptests-tutorial: ptests-C
+ptests-CXX:      ptests-tutorial
+ptests-F77:      ptests-CXX
+ptests-F90:      ptests-F77
 
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)

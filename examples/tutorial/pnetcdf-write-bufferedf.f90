@@ -152,5 +152,6 @@
                                    nf90mpi_strerror(err)
 
  999  CALL MPI_Finalize(err)
+      CALL EXIT(0)
       end program
 
