@@ -982,7 +982,7 @@ err_check:
     /* for each request call ncmpi_igetput_varm() */
     for (i=0; i<num; i++) {
         NC_var *varp;
-        MPI_Offset *start, *count, buflen;
+        MPI_Offset *start, *count, buflen=0;
 
         req_ids[i] = NC_REQ_NULL;
         varp = ncmpii_NC_lookupvar(ncp, varids[i]);

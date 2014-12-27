@@ -56,6 +56,8 @@ ncmpi_i$1_var(int                ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (bufcount < 0) return NC_EINVAL;
+
     GET_FULL_DIMENSIONS(start, count)
 
     /* i$1_var is a special case of i$1_varm */
@@ -63,7 +65,6 @@ ncmpi_i$1_var(int                ncid,
                                  (void*)buf, bufcount, buftype, reqid,
                                  ReadWrite($1), 0, 0);
     if (varp->ndims > 0) NCI_Free(start);
-
     return status;
 }
 ')dnl
@@ -86,19 +87,17 @@ ncmpi_i$1_var_$2(int              ncid,
     int         status;
     NC         *ncp;
     NC_var     *varp=NULL;
-    MPI_Offset  nelems, *start, *count;
+    MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    GET_TOTAL_NUM_ELEMENTS(nelems)
     GET_FULL_DIMENSIONS(start, count)
 
     /* i$1_var is a special case of i$1_varm */
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, nelems, $4, reqid,
+                                 (void*)buf, -1, $4, reqid,
                                  ReadWrite($1), 0, 0);
     if (varp->ndims > 0) NCI_Free(start);
-
     return status;
 }
 ')dnl
@@ -152,6 +151,8 @@ ncmpi_i$1_var1(int                ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (bufcount < 0) return NC_EINVAL;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
@@ -189,6 +190,7 @@ ncmpi_i$1_var1_$2(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
@@ -196,8 +198,8 @@ ncmpi_i$1_var1_$2(int               ncid,
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                                 (void*)buf, 1, $4, reqid,
-                                 ReadWrite($1), 0, 0);
+                                 (void*)buf, -1, $4, reqid, ReadWrite($1), 0,
+                                 0);
     if (varp->ndims > 0) NCI_Free(count);
     return status;
 }
@@ -252,6 +254,9 @@ ncmpi_i$1_vara(int                ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
@@ -282,24 +287,23 @@ ncmpi_i$1_vara_$2(int               ncid,
                   BufConst($1) $3  *buf,
                   int              *reqid)
 {
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset  nelems;
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
     status = NCedgeck(ncp, varp, start, count);
     if (status != NC_NOERR) return status;
     CheckRecords($1)
-    GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
-                               (void*)buf, nelems, $4, reqid,
-                               ReadWrite($1), 0, 0);
+                               (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
 }
 ')dnl
 
@@ -357,6 +361,9 @@ ncmpi_i$1_vars(int                ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
@@ -388,27 +395,26 @@ ncmpi_i$1_vars_$2(int               ncid,
                   BufConst($1) $3  *buf,
                   int              *reqid)
 {
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset  nelems;
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
 
     if (stride == NULL)
         return ncmpi_i$1_vara_$2(ncid, varid, start, count, buf, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
     CheckRecords($1)
-    GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
-                               (void*)buf, nelems, $4, reqid,
-                               ReadWrite($1), 0, 0);
+                               (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
 }
 ')dnl
 
@@ -449,8 +455,8 @@ VARS(get, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 static int
 pack_request(NC *ncp, NC_var *varp, NC_req *req, void *buf,
              void *xbuf, const MPI_Offset start[], const MPI_Offset count[],
-             const MPI_Offset stride[], MPI_Offset fnelems, MPI_Offset bnelems,
-             MPI_Offset lnelems, MPI_Offset bufcount, MPI_Datatype buftype,
+             const MPI_Offset stride[], MPI_Offset bnelems,
+             MPI_Offset bufcount, MPI_Datatype buftype,
              MPI_Datatype ptype, int buftype_is_contig,
              int need_swap_back_buf, int use_abuf);
 
@@ -482,6 +488,9 @@ ncmpi_i$1_varm(int                ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
@@ -514,27 +523,26 @@ ncmpi_i$1_varm_$2(int               ncid,
                   BufConst($1) $3  *buf,
                   int              *reqid)
 {
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset  nelems;
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
 
     if (imap == NULL)
         return ncmpi_i$1_vars_$2(ncid, varid, start, count, stride, buf, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     status = NCcoordck(ncp, varp, start, ReadWrite($1));
     if (status != NC_NOERR) return status;
     status = NCstrideedgeck(ncp, varp, start, count, stride);
     if (status != NC_NOERR) return status;
     CheckRecords($1)
-    GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
-                               (void*)buf, nelems, $4, reqid,
-                               ReadWrite($1), 0, 0);
+                               (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
 }
 ')dnl
 
@@ -601,88 +609,23 @@ ncmpii_igetput_varm(NC               *ncp,
                     MPI_Datatype      buftype,
                     int              *reqid,
                     int               rw_flag,
-                    int               use_abuf, /* if use attached buffer */
-                    int               isSameGroup) /* if part of a group */
+                    int               use_abuf,    /* if use attached buffer */
+                    int               isSameGroup) /* if part of a varn group */
 {
     void *xbuf=NULL, *cbuf=NULL, *lbuf=NULL;
     int err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
-    int el_size, buftype_is_contig, do_vars, isderived;
-    int need_convert, need_swap, need_swap_back_buf;
-    int i, dim=0, imap_contig_blocklen=1, abuf_index=0;
-    MPI_Offset fnelems, bnelems=0, lnelems, nbytes;
+    int i, abuf_index=0, el_size, buftype_is_contig, do_varm;
+    int need_convert, need_swap, need_swap_back_buf=0;
+    MPI_Offset bnelems=0, nbytes;
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
-    if (varp->ndims > 0) { /* non-scalar variable */
-        if (start == NULL) return NC_ENULLSTART;
-        if (count == NULL) return NC_ENULLCOUNT;
-    }
+    err = ncmpii_calc_datatype_elems(varp, count, buftype, &ptype, &bufcount,
+                                     &bnelems, &nbytes, &el_size,
+                                     &buftype_is_contig);
+    if (err == NC_EIOMISMATCH) warning = err; 
+    else if (err != NC_NOERR) return err;
 
-    /* fnelems is the total number of nc_type elements calculated from
-     * count[]. count[] is the access count to the variable defined in
-     * the netCDF file.
-     */
-    fnelems = 1;
-    for (i=0; i<varp->ndims; i++) {
-        if (count[i] < 0) /* no negative count[] */
-            return NC_ENEGATIVECNT;
-        fnelems *= count[i];
-    }
-
-    if (IsPrimityMPIType(buftype)) {
-        err = NCMPII_ECHAR(varp->type, buftype);
-        if (err != NC_NOERR) return err;
-
-        err = NCMPII_ECHAR(varp->type, buftype);
-        if (err != NC_NOERR) return err;
-
-        bnelems = bufcount = fnelems;
-        ptype = buftype;
-        el_size = varp->xsz; /* or MPI_Type_size(buftype, &el_size); */
-        buftype_is_contig = 1;
-        /* nbytes is the amount of this request in bytes */
-        nbytes = bnelems * varp->xsz;
-    }
-    else if (buftype == MPI_DATATYPE_NULL) {
-        /* In this case, bufcount is set to match count[], and buf's data type
-         * to match the data type of variable defined in the file - no data
-         * conversion will be done.
-         */
-        bnelems = bufcount = fnelems;
-        ptype = buftype = ncmpii_nc2mpitype(varp->type);
-        el_size = varp->xsz;
-        buftype_is_contig = 1;
-        /* nbytes is the amount of this request in bytes */
-        nbytes = bnelems * varp->xsz;
-    }
-    else {
-        /* find the ptype (primitive MPI data type) from buftype
-         * el_size is the element size of ptype
-         * bnelems is the total number of ptype elements in buftype
-         * nbytes is the amount of read/write in bytes
-         */
-        err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &bnelems,
-                                  &isderived, &buftype_is_contig);
-        if (err != NC_NOERR) return err;
-
-        err = NCMPII_ECHAR(varp->type, ptype);
-        if (err != NC_NOERR) return err;
-
-        bnelems *= bufcount;
-
-        /* check mismatch between bnelems and fnelems */
-        if (fnelems != bnelems) {
-            if (warning == NC_NOERR) warning = NC_EIOMISMATCH;
-            (fnelems>bnelems) ? (fnelems=bnelems) : (bnelems=fnelems);
-            /* only handle partial of the request, smaller number of the two */
-        }
-        /* now fnelems == bnelems */
-
-        /* nbytes is the amount of this request in bytes */
-        nbytes = fnelems * varp->xsz;
-    }
-
-    /* bnelems now is the number of ptype in the whole buf */
     if (bnelems == 0) {
         /* zero-length request, mark this as a NULL request */
         if (!isSameGroup) /* only if this is not part of a group request */
@@ -700,199 +643,85 @@ ncmpii_igetput_varm(NC               *ncp,
     /* check if type conversion and Endianness byte swap is needed */
     need_convert  = ncmpii_need_convert(varp->type, ptype);
     need_swap     = ncmpii_need_swap(varp->type, ptype);
-    need_swap_back_buf = 0;
-
-/* Here is the pseudo code description on buffer packing
-    if (buftype_is_contig)
-        lbuf = buf
-    else
-        lbuf = malloc
-        pack buf -> lbuf
-
-    if do_vars
-        build imaptype
-        cbuf = malloc
-        pack lbuf -> cbuf
-        if lbuf != buf, free lbuf
-    else
-        cbuf = lbuf
-    lbuf = NULL
-
-    if need convert
-        if use_abuf
-            xbuf = attach_buf_malloc
-        else
-            xbuf = malloc
-        convert cbuf -> xbuf
-        if cbuf != buf, free cbuf
-    else
-        if use_abuf
-            xbuf = attach_buf_malloc
-            memcpy(xbuf, cbuf)
-            if cbuf != buf, free cbuf
-        else
-            xbuf = cbuf
-        if need swap
-            swap xbuf
-    cbuf = NULL
-*/
 
     /* check if this is a vars call or a true varm call */
-    do_vars = 0;
+    ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
+                           &do_varm, &imaptype);
 
-    if (varp->ndims == 0)
-        /* reduced to scalar var, only one value at one fixed place */
-        do_vars = 1;
-
-    if (imap == NULL) /* no mapping, same as vars */
-        do_vars = 1;
-    else {
-        imap_contig_blocklen = 1;
-        dim = varp->ndims;
-        /* test each dim's contiguity until the 1st non-contiguous dim is
-           reached */
-        while (--dim >= 0 && imap_contig_blocklen == imap[dim])
-            imap_contig_blocklen *= count[dim];
-
-        if (dim == -1) /* imap is a contiguous layout */
-            do_vars = 1;
-    }
-    /* dim is the first dimension (C order, eg. ZYX) that has non-contiguous
-     * imap and it will be used only when do_vars == 1
-     */
-
-    if (!do_vars) {
-        /* construct a derived data type, imaptype, based on imap[], and use it
-         * to pack lbuf to cbuf (if write), or unpack cbuf to lbuf (if read).
-         */
-        MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim], ptype,
-                        &imaptype);
-        MPI_Type_commit(&imaptype);
-        for (i=dim, i--; i>=0; i--) {
-            MPI_Datatype tmptype;
-#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-            MPI_Type_create_hvector(count[i], 1, imap[i]*el_size, imaptype,
-                                    &tmptype);
-#else
-            MPI_Type_hvector(count[i], 1, imap[i]*el_size, imaptype, &tmptype);
-#endif
-            MPI_Type_free(&imaptype);
-            MPI_Type_commit(&tmptype);
-            imaptype = tmptype;
-        }
-    }
-
-    lbuf = NULL;
-    cbuf = NULL;
-    xbuf = NULL;
-
-    if (rw_flag == WRITE_REQ) {
-        int position, outsize;
+    if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
+        int position, outsize=bnelems*el_size;
+        /* assert(bnelems > 0); */
 
         /* Step 1: pack buf into a contiguous buffer, lbuf */
-        lnelems = bnelems; /* (number of ptype in buftype) * bofcount */
-        if (buftype_is_contig) { /* buftype is contiguous */
-            lbuf = buf;
-        }
-        else if (lnelems > 0) {
-            /* pack buf into lbuf, a contiguous buffer, based on buftype */
-            outsize = lnelems*el_size;
+        if (!buftype_is_contig) { /* buftype is not contiguous */
+            /* pack buf into lbuf, a contiguous buffer, using buftype */
             lbuf = NCI_Malloc(outsize);
-
             position = 0;
             MPI_Pack(buf, bufcount, buftype, lbuf, outsize, &position,
                      MPI_COMM_SELF);
         }
+        else
+            lbuf = buf;
 
-        /* Step 2: pack lbuf to cbuf if imap is non-contiguos */
-        if (do_vars) { /* reuse lbuf */
-            cbuf = lbuf;
-        }
-        else { /* a true varm case, pack lbuf to cbuf based on imap */
-            bnelems = imap_contig_blocklen * count[dim];
-            for (dim--; dim>=0; dim--)
-                bnelems *= count[dim];
-
-            if (bnelems > 0) {
-                outsize = bnelems*el_size;
-                cbuf = NCI_Malloc(outsize);
-
-                /* pack lbuf to cbuf, a contiguous buffer, based on imaptype */
-                position = 0;
-                MPI_Pack(lbuf, 1, imaptype, cbuf, outsize, &position,
-                         MPI_COMM_SELF);
-            }
+        /* Step 2: pack lbuf to cbuf if imap is non-contiguous */
+        if (do_varm) { /* true varm */
+            /* pack lbuf to cbuf, a contiguous buffer, using imaptype */
+            cbuf = NCI_Malloc(outsize);
+            position = 0;
+            MPI_Pack(lbuf, 1, imaptype, cbuf, outsize, &position,
+                     MPI_COMM_SELF);
             MPI_Type_free(&imaptype);
-            imaptype = MPI_DATATYPE_NULL;
-
-            /* for write case, lbuf is no longer needed */
-            if (lbuf != buf) NCI_Free(lbuf);
-            lbuf = NULL;
         }
-        lbuf = NULL; /* no longer need lbuf */
+        else /* reuse lbuf */
+            cbuf = lbuf;
+
+        /* lbuf is no longer needed */
+        if (lbuf != buf && lbuf != cbuf) NCI_Free(lbuf);
 
         /* Step 3: pack cbuf to xbuf and xbuf will be used to write to file */
-        if (need_convert) { /* user buf type != nc var type defined in file */
-            if (use_abuf) { /* use attached buffer */
-                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
-                if (status != NC_NOERR) {
-                    if (cbuf != NULL && cbuf != buf) NCI_Free(cbuf);
-                    return ((warning != NC_NOERR) ? warning : status);
-                }
+        if (use_abuf) { /* use attached buffer to allocate xbuf */
+            status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
+            if (status != NC_NOERR) {
+                if (cbuf != buf) NCI_Free(cbuf);
+                return ((warning != NC_NOERR) ? warning : status);
             }
-            else
-                xbuf = NCI_Malloc(nbytes);
+        }
+
+        if (need_convert) { /* user buf type != nc var type defined in file */
+            if (!use_abuf) xbuf = NCI_Malloc(nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
             /* retain the first error status */
             if (status == NC_NOERR) status = err;
         }
-        else {  /* cbuf == xbuf */
-            if (use_abuf) { /* use attached buffer */
-                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
-                if (status != NC_NOERR) {
-                    if (cbuf != NULL && cbuf != buf) NCI_Free(cbuf);
-                    return ((warning != NC_NOERR) ? warning : status);
-                }
-                memcpy(xbuf, cbuf, nbytes);
-            } else {
-                xbuf = cbuf;
-            }
+        else {
+            if (use_abuf) memcpy(xbuf, cbuf, nbytes);
+            else          xbuf = cbuf;
+
             if (need_swap) {
 #ifdef DISABLE_IN_PLACE_SWAP
                 if (xbuf == buf) {
-                    /* allocate xbuf and copy buf to xbuf, xbuf is to be freed */
+                    /* allocate cbuf and copy buf to xbuf, before byte-swap */
                     xbuf = NCI_Malloc(nbytes);
                     memcpy(xbuf, buf, nbytes);
                 }
 #endif
                 /* perform array in-place byte swap on xbuf */
-                ncmpii_in_swapn(xbuf, fnelems, ncmpix_len_nctype(varp->type));
-                if (xbuf == buf)
-                    need_swap_back_buf = 1;
-                    /* user buf needs to be swapped back to its original
-                     * contents as now buf == cbuf == xbuf */
+                ncmpii_in_swapn(xbuf, bnelems, ncmpix_len_nctype(varp->type));
+
+                if (xbuf == buf) need_swap_back_buf = 1;
+                /* user buf needs to be swapped back to its original contents */
             }
         }
         /* cbuf is no longer needed */
         if (cbuf != buf && cbuf != xbuf) NCI_Free(cbuf);
-        cbuf = NULL;
     }
     else { /* rw_flag == READ_REQ */
-        /* Read is done at wait call, need lnelems and bnelems to reverse the
-         * steps as done in write case */
-        if (buftype_is_contig)
-            lnelems = bnelems / bufcount;
-        else
-            lnelems = bnelems;
-
-        if (!do_vars) {
-            bnelems = imap_contig_blocklen * count[dim];
-            for (dim--; dim>=0; dim--)
-                bnelems *= count[dim];
-        }
-        if (buftype_is_contig && do_vars && !need_convert)
+        /* Type conversion and byte swap for read are done at wait call, we
+         * need bnelems to reverse the steps as done in write case
+         */
+        if (buftype_is_contig && !do_varm && !need_convert)
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
         else
             xbuf = NCI_Malloc(nbytes);
@@ -901,7 +730,7 @@ ncmpii_igetput_varm(NC               *ncp,
     /* allocate a new request object to store the write info */
     req = (NC_req*) NCI_Malloc(sizeof(NC_req));
 
-    req->is_imap        = 0;
+    req->is_imap        = do_varm;
     req->imaptype       = imaptype;
     req->rw_flag        = rw_flag;
     req->abuf_index     = abuf_index;
@@ -912,11 +741,8 @@ ncmpii_igetput_varm(NC               *ncp,
     req->userBufCount   = 0;
     req->userBufType    = MPI_DATATYPE_NULL;
 
-    if (!do_vars)
-        req->is_imap = 1;
-
     pack_request(ncp, varp, req, buf, xbuf, start, count, stride,
-                 fnelems, bnelems, lnelems, bufcount, buftype, ptype,
+                 bnelems, bufcount, buftype, ptype,
                  buftype_is_contig, need_swap_back_buf, use_abuf);
 
     /* add the new request to the internal request array (or linked list) */
@@ -947,17 +773,15 @@ static int
 pack_request(NC               *ncp,
              NC_var           *varp,
              NC_req           *req,
-             void             *buf,      /* user buffer, may need to be swapped back for put */
-             void             *xbuf,     /* buffer that is type coverted, byte swapped from buf */
+             void             *buf,  /* user buffer, may have been swapped */
+             void             *xbuf, /* buffer to be used in MPI-IO */
              const MPI_Offset  start[],
              const MPI_Offset  count[],
              const MPI_Offset  stride[],
-             MPI_Offset        fnelems,  /* number of variable elements in nc_type */
-             MPI_Offset        bnelems,  /* total number of ptype elements in buftype */
-             MPI_Offset        lnelems,  /* (number of ptype in buftype) * bofcount */
+             MPI_Offset        bnelems,  /* no. ptype elements in buftype */
              MPI_Offset        bufcount,
              MPI_Datatype      buftype,
-             MPI_Datatype      ptype,    /* primitive MPI data type in buftype */
+             MPI_Datatype      ptype,    /* element type in buftype */
              int               buftype_is_contig,
              int               need_swap_back_buf,
              int               use_abuf) /* if this is called from a bput */
@@ -971,9 +795,7 @@ pack_request(NC               *ncp,
     req->count    = req->start + varp->ndims;
     req->buf      = buf;
     req->xbuf     = xbuf;
-    req->fnelems  = fnelems;
     req->bnelems  = bnelems;
-    req->lnelems  = lnelems; /* used only for iget_varm case */
     req->buftype  = buftype;
     req->bufcount = bufcount;
     req->ptype    = ptype;   /* MPI element datatype for the I/O buffer */
@@ -1031,11 +853,11 @@ pack_request(NC               *ncp,
             }
 
             subreqs[i].count[0] = 1;
-            subreqs[i].fnelems = 1;
+            subreqs[i].bnelems = 1;
             for (j=1; j<varp->ndims; j++) {
                 subreqs[i].start[j]  = req->start[j];
                 subreqs[i].count[j]  = req->count[j];
-                subreqs[i].fnelems  *= subreqs[i].count[j];
+                subreqs[i].bnelems  *= subreqs[i].count[j];
                 if (stride != NULL)
                     subreqs[i].stride[j] = req->stride[j];
             }
