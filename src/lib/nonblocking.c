@@ -74,7 +74,8 @@ ncmpii_getput_zero_req(NC  *ncp,
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
-     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                 MPI_INFO_NULL);
      */
 
     return status;
@@ -488,7 +489,7 @@ ncmpii_construct_buffertypes(int           num_reqs,
     /* process only valid requests */
     for (i=0, j=0; i<num_reqs; i++) {
         /* check int overflow */
-        int8  = reqs[i].fnelems * reqs[i].varp->xsz;
+        int8  = reqs[i].bnelems * reqs[i].varp->xsz;
         blocklengths[j] = int8;
         if (int8 != blocklengths[j]) { /* skip this request */
             status = NC_EINTOVERFLOW;
@@ -747,15 +748,16 @@ ncmpii_wait(NC  *ncp,
                ncmpii_need_swap()
              */
             if (cur_req->need_swap_back_buf)
-                ncmpii_in_swapn(cur_req->buf, cur_req->fnelems,
+                ncmpii_in_swapn(cur_req->buf, cur_req->bnelems,
                                 ncmpix_len_nctype(cur_req->varp->type));
             cur_req = cur_req->next;
         }
         cur_req = w_req_head;
         while (cur_req != NULL) {
-            /* free temp space allocated for iput/bput varn requests */
+            /* free temp space allocated for iput/bput varn requests
+             * tmpBuf is used only by nonblocking varn APIs */
             if (cur_req->tmpBuf != NULL && !cur_req->use_abuf)
-                    NCI_Free(cur_req->tmpBuf);
+                NCI_Free(cur_req->tmpBuf);
 
             FREE_REQUEST(cur_req)
             pre_req = cur_req;
@@ -770,7 +772,6 @@ ncmpii_wait(NC  *ncp,
     if (r_req_head != NULL) {
         cur_req = r_req_head;
         while (cur_req != NULL) {
-            MPI_Offset bnelems;
             NC_var *varp = cur_req->varp;
 
             /* now, xbuf contains the data read from the file.
@@ -780,10 +781,11 @@ ncmpii_wait(NC  *ncp,
             int el_size, position, insize;
 
             MPI_Type_size(cur_req->ptype, &el_size);
+            insize = cur_req->bnelems * el_size;
 
             if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
                 if (cur_req->is_imap || !cur_req->buftype_is_contig)
-                    cbuf = NCI_Malloc(cur_req->fnelems * varp->xsz);
+                    cbuf = NCI_Malloc(insize);
                 else
                     cbuf = cur_req->buf;
 
@@ -795,7 +797,7 @@ ncmpii_wait(NC  *ncp,
                 if (status == NC_NOERR) status = err;
             } else {
                 if (ncmpii_need_swap(varp->type, cur_req->ptype))
-                    ncmpii_in_swapn(cur_req->xbuf, cur_req->fnelems,
+                    ncmpii_in_swapn(cur_req->xbuf, cur_req->bnelems,
                                     ncmpix_len_nctype(varp->type));
                 cbuf = cur_req->xbuf;
             }
@@ -804,31 +806,25 @@ ncmpii_wait(NC  *ncp,
                 if (cur_req->buftype_is_contig)
                     lbuf = cur_req->buf;
                 else
-                    lbuf = NCI_Malloc(cur_req->lnelems*el_size);
+                    lbuf = NCI_Malloc(insize);
 
                 /* unpack cbuf to lbuf based on imaptype */
                 position = 0;
-                insize = cur_req->bnelems * el_size;
-                if (insize > 0)
-                    MPI_Unpack(cbuf, insize, &position, lbuf, 1,
-                               cur_req->imaptype, MPI_COMM_SELF);
+                MPI_Unpack(cbuf, insize, &position, lbuf, 1, cur_req->imaptype,
+                           MPI_COMM_SELF);
                 MPI_Type_free(&cur_req->imaptype);
 
                 /* cbuf is no longer needed
                  * if (cur_req->is_imap) cbuf cannot be == cur_req->buf */
                 if (cbuf != cur_req->xbuf) NCI_Free(cbuf);
                 cbuf = NULL;
-
-                bnelems = cur_req->lnelems;
             } else { /* get_vars */
                 lbuf = cbuf;
-                bnelems = cur_req->bnelems;
             }
 
-            if (!cur_req->buftype_is_contig && bnelems > 0) {
+            if (!cur_req->buftype_is_contig) {
                 /* unpack lbuf to buf based on buftype */
                 position = 0;
-                insize = bnelems * el_size;
                 MPI_Unpack(lbuf, insize, &position, cur_req->buf,
                            cur_req->bufcount, cur_req->buftype, MPI_COMM_SELF);
             }
@@ -841,11 +837,14 @@ ncmpii_wait(NC  *ncp,
 
         cur_req = r_req_head;
         while (cur_req != NULL) {
-            /* free space allocated for the request objects */
+            /* free space allocated for the request objects
+             * tmpBuf is used only by nonblocking varn APIs */
             if (cur_req->tmpBuf != NULL) {
                 int position=0;
                 /* unpack tmpBuf to userBuf and free tmpBuf
-                 * Note this unpack must wait for all above unpacks are done */
+                 * Note this unpack must wait for all above unpacks are done
+                 * because cur_req->buf may be part of cur_req->userBuf
+                 */
                 MPI_Unpack(cur_req->tmpBuf, cur_req->tmpBufSize, &position,
                            cur_req->userBuf, cur_req->userBufCount,
                            cur_req->userBufType, MPI_COMM_SELF);
@@ -999,7 +998,7 @@ ncmpii_merge_requests(NC          *ncp,
     *segs  = NULL; /* array of offset-length pairs */
 
     /* note invalid requests have been removed in ncmpii_wait_getput() */
-    *buf   = reqs[0].xbuf; /* I/O buffer of first request */
+    *buf = reqs[0].xbuf; /* I/O buffer of first request */
 
     /* buf_addr is the buffer address of the first request */
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -1008,8 +1007,8 @@ ncmpii_merge_requests(NC          *ncp,
     MPI_Address(reqs[0].xbuf, &buf_addr);
 #endif
 
-    /* Count the number off-len pairs from reqs[], so we
-       can malloc a contiguous memory space for storing off-len pairs
+    /* Count the number off-len pairs from reqs[], so we can malloc a
+     * contiguous memory space for storing off-len pairs
      */
     for (i=0; i<num_reqs; i++) {
         is_recvar = IS_RECVAR(reqs[i].varp);
@@ -1083,8 +1082,8 @@ ncmpii_merge_requests(NC          *ncp,
         qsort(*segs, *nsegs, sizeof(off_len), off_compare);
 
     /* merge the overlapped requests, skip the overlapped regions for those
-       requests with higher j indices (i.e. requests with lower j indices
-       win the writes to the overlapped regions)
+     * requests with higher j indices (i.e. requests with lower j indices
+     * win the writes to the overlapped regions)
      */
     for (i=0, j=1; j<*nsegs; j++) {
         if ((*segs)[i].off + (*segs)[i].len >= (*segs)[j].off + (*segs)[j].len)
@@ -1134,10 +1133,11 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
        offset-length pairs */
 
     /* For filetype, the segs[].off can be further coalesced. For example,
-       when writing a consecutive columns of a 2D array, even though the I/O
-       buffer addresses may not be able to coalesced, the file offsets on
-       the same row can be coalesced. Thus, first calculate the length of
-       coalesced off-len pairs (the memory space needed for malloc) */
+     * when writing a consecutive columns of a 2D array, even though the I/O
+     * buffer addresses may not be able to coalesced, the file offsets on
+     * the same row can be coalesced. Thus, first calculate the length of
+     * coalesced off-len pairs (the memory space needed for malloc)
+     */
     next_off = segs[0].off;
     next_len = segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
@@ -1346,10 +1346,10 @@ ncmpii_req_aggregation(NC     *ncp,
     group_index[ngroups] = num_reqs; /* to indicate end of groups */
 
     /* for each group, construct one filetype by concatenating if the group
-       is non-interleaved and by flatten/sort/merge if the group is
-       interleaved. At the end, all ngroups filetypes are concatenated into
-       a single filetype. Similar for constructing buffer types.
-       Then use one collective I/O to commit.
+     * is non-interleaved and by flatten/sort/merge if the group is
+     * interleaved. At the end, all ngroups filetypes are concatenated into
+     * a single filetype. Similar for constructing buffer types.
+     * Then use one collective I/O to commit.
      */
 
     void         *buf; /* point to starting buffer, used by MPI-IO call */
@@ -1405,22 +1405,22 @@ ncmpii_req_aggregation(NC     *ncp,
         }
         else { /* this group is interleaved */
             /* flatten the interleaved requests in this group, so interleaved
-               requests can be sorted and merged into a monotonically
-               non-decreasing filetype. For example, multiple nonblocking
-               requests each accessing a single column of a 2D array, that each
-               produces a filetype interleaving with others'.
-
-               The pitfall of this flattening is the additional memorys
-               requirement, as it will have to break down each request into a
-               list of offset-length pairs, and merge all lists into a sorted
-               list based on their offsets into an increasing order.
-
-               Be warned! The additional memory requirement for this merging can
-               be more than the I/O data itself. For example, each nonblocking
-               request access a single column of a 2D array of 4-byte integer
-               type. Each off-len pair represents only a 4-byte integer, but the
-               off-len pair itself takes 24 bytes. Additional memory is also
-               required for MPI arguments of displacements and blocklengths.
+             * requests can be sorted and merged into a monotonically
+             * non-decreasing filetype. For example, multiple nonblocking
+             * requests each accessing a single column of a 2D array, that each
+             * produces a filetype interleaving with others'.
+             *
+             * The pitfall of this flattening is the additional memorys
+             * requirement, as it will have to break down each request into a
+             * list of offset-length pairs, and merge all lists into a sorted
+             * list based on their offsets into an increasing order.
+             *
+             * Be warned! The additional memory requirement for this merging can
+             * be more than the I/O data itself. For example, each nonblocking
+             * request access a single column of a 2D array of 4-byte integer
+             * type. Each off-len pair represents only a 4-byte integer, but the
+             * off-len pair itself takes 24 bytes. Additional memory is also
+             * required for MPI arguments of displacements and blocklengths.
              */
             MPI_Offset  nsegs=0;   /* number of merged offset-length pairs */
             off_len    *segs=NULL; /* array of the offset-length pairs */
@@ -1541,7 +1541,8 @@ ncmpii_req_aggregation(NC     *ncp,
 
     if (rw_flag == READ_REQ) {
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, buf, buf_len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, buf, buf_len, buf_type,
+                                           &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
@@ -1550,7 +1551,8 @@ ncmpii_req_aggregation(NC     *ncp,
 
             }
         } else {
-            TRACE_IO(MPI_File_read_at)(fh, offset, buf, buf_len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_read_at)(fh, offset, buf, buf_len, buf_type,
+                                       &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
@@ -1565,7 +1567,8 @@ ncmpii_req_aggregation(NC     *ncp,
         }
     } else { /* WRITE_REQ */
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, buf_len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, buf_len, buf_type,
+                                            &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
@@ -1573,7 +1576,8 @@ ncmpii_req_aggregation(NC     *ncp,
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
             }
         } else {
-            TRACE_IO(MPI_File_write_at)(fh, offset, buf, buf_len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_write_at)(fh, offset, buf, buf_len, buf_type,
+                                        &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
@@ -1593,7 +1597,8 @@ ncmpii_req_aggregation(NC     *ncp,
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
-     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                 MPI_INFO_NULL);
      */
 
     NCI_Free(ftypes);
@@ -1779,7 +1784,7 @@ ncmpii_mgetput(NC           *ncp,
         fh = ncp->nciop->independent_fh;
 
     /* construct a MPI file type by concatenating all requests */
-    status = ncmpii_construct_filetypes(ncp, num_reqs, reqs, rw_flag, &filetype);
+    status = ncmpii_construct_filetypes(ncp,num_reqs, reqs, rw_flag, &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
         if (io_method == INDEP_IO) return status;
 
@@ -1800,12 +1805,13 @@ ncmpii_mgetput(NC           *ncp,
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
 
     /* now construct buffer datatype */
-    if (num_reqs == 0) { /* num_reqs == 0, simply participate the collective call */
+    if (num_reqs == 0) {
+        /* num_reqs == 0, simply participate the collective call */
         buf = NULL;
         len = 0;
     }
     else if (num_reqs == 1) {
-        MPI_Offset int8 = reqs[0].fnelems;
+        MPI_Offset int8 = reqs[0].bnelems;
         int8 *= reqs[0].varp->xsz;
         len = int8;
         if (len != int8) {
@@ -1825,7 +1831,7 @@ ncmpii_mgetput(NC           *ncp,
         /* process only valid requests */
         for (i=0, j=0; i<num_reqs; i++) {
             /* check int overflow */
-            int8  = reqs[i].fnelems * reqs[i].varp->xsz;
+            int8  = reqs[i].bnelems * reqs[i].varp->xsz;
             blocklengths[j] = int8;
             if (int8 != blocklengths[j]) { /* skip this request */
                 if (status == NC_NOERR) status = NC_EINTOVERFLOW;
@@ -1877,7 +1883,7 @@ ncmpii_mgetput(NC           *ncp,
                                           MPI_BYTE, &buf_type);
 #endif
             if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_handle_error(mpireturn, "MPI_Type_create_hindexed");
+                err = ncmpii_handle_error(mpireturn,"MPI_Type_create_hindexed");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) status = err;
             }
@@ -1893,7 +1899,8 @@ ncmpii_mgetput(NC           *ncp,
 
     if (rw_flag == READ_REQ) {
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, buf, len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, buf, len, buf_type,
+                                           &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
@@ -1901,7 +1908,8 @@ ncmpii_mgetput(NC           *ncp,
                     status = (err == NC_EFILE) ? NC_EREAD : err;
             }
         } else {
-            TRACE_IO(MPI_File_read_at)(fh, offset, buf, len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_read_at)(fh, offset, buf, len, buf_type,
+                                       &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
@@ -1915,7 +1923,8 @@ ncmpii_mgetput(NC           *ncp,
 
     } else { /* WRITE_REQ */
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, len, buf_type,
+                                            &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
@@ -1923,7 +1932,8 @@ ncmpii_mgetput(NC           *ncp,
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
             }
         } else {
-            TRACE_IO(MPI_File_write_at)(fh, offset, buf, len, buf_type, &mpistatus);
+            TRACE_IO(MPI_File_write_at)(fh, offset, buf, len, buf_type,
+                                        &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
@@ -1941,13 +1951,17 @@ ncmpii_mgetput(NC           *ncp,
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
-     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                 MPI_INFO_NULL);
      */
 
     return status;
 }
 
 /*----< ncmpii_set_iget_callback() >-----------------------------------------*/
+/* this subroutine is only used by iget_varn API family
+ * In this case, tmpBuf is never == userBuf
+ */
 int ncmpii_set_iget_callback(NC           *ncp,
                              int           reqid,
                              void         *tmpBuf,
@@ -1964,12 +1978,20 @@ int ncmpii_set_iget_callback(NC           *ncp,
 
     cur_req = ncp->head;
     while (cur_req != NULL) {
-        /* find the first node with reqid, there may be more than one node
-         * with the same ID */
+        /* find the first linked-list node with reqid, there may be more than
+         * one node with the same request ID
+         */
         if (cur_req->id == reqid) {
-            cur_req->tmpBuf       = tmpBuf;
+            cur_req->tmpBuf       = tmpBuf; /* indicate this is a temp buffer
+                                             * At the end of nonblocking wait,
+                                             * it will be unpacked to userBuf
+                                             * and freed.
+                                             */
             cur_req->tmpBufSize   = tmpBufSize;
-            cur_req->userBuf      = userBuf;
+            cur_req->userBuf      = userBuf; /* user's buffer. Nonblocking varn
+                                              * divides buf into several pieces
+                                              * and stores each in cur_req->buf
+                                              */
             cur_req->userBufCount = userBufCount;
             cur_req->userBufType  = userBufType;
             break;
@@ -1982,11 +2004,10 @@ int ncmpii_set_iget_callback(NC           *ncp,
 }
 
 /*----< ncmpii_set_iput_callback() >-----------------------------------------*/
+/* this subroutine is only used by iput_varn API family */
 int ncmpii_set_iput_callback(NC   *ncp,
                              int   reqid,
-                             void *tmpPutBuf,
-                             int   need_swap_back_buf)
-
+                             void *tmpPutBuf)
 {
     int found_req_id=NC_REQ_NULL;
     NC_req *cur_req;
@@ -1997,14 +2018,11 @@ int ncmpii_set_iput_callback(NC   *ncp,
 
     cur_req = ncp->head;
     while (cur_req != NULL) {
-        /* there may be more than one node with the same ID */
+        /* there may be more than one linked-list node with the same ID */
         if (cur_req->id == reqid) {
-            /* set tmpBuf for the first node (as it needs to be freed once) */
+            /* set tmpBuf only on the first node, so it is freed just once */
             if (found_req_id == NC_REQ_NULL) cur_req->tmpBuf = tmpPutBuf;
             found_req_id = reqid;
-
-            /* if tmpBuf is allocated internally, it needs not swap back */
-            cur_req->need_swap_back_buf = need_swap_back_buf;
         }
         if (found_req_id != NC_REQ_NULL && cur_req->id != found_req_id)
             break; /* requests with same ID are in consecutive linked nodes */

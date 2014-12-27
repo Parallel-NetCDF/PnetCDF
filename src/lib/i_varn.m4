@@ -281,22 +281,22 @@ ncmpii_igetput_varn(int               ncid,
     }
 
     /* add callback if buf is noncontiguous */
-    if (free_cbuf) { /* cbuf != buf */
+    if (free_cbuf) { /* cbuf != buf, cbuf is temp allocated */
         if (rw_flag == READ_REQ) {
             MPI_Datatype dup_buftype;
             MPI_Type_dup(buftype, &dup_buftype);
-            /* need to unpack cbuf to buf and free cbuf at wait() */
+            /* tell wait() to unpack cbuf to buf and free cbuf */
             status = ncmpii_set_iget_callback(ncp, *reqid, cbuf, packsize, buf,
                                               bufcount, dup_buftype);
         }
         else { /* WRITE_REQ */
             if (use_abuf)
                 /* cbuf has been copied to the attached buffer, so it is safe
-                 * to free cbuf */
+                 * to free cbuf now */
                 NCI_Free(cbuf);
             else
-                /* need to free cbuf at wait() */
-                status = ncmpii_set_iput_callback(ncp, *reqid, cbuf, 0);
+                /* tell wait() to free cbuf once done */
+                status = ncmpii_set_iput_callback(ncp, *reqid, cbuf);
         }
     }
 

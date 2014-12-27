@@ -423,8 +423,8 @@ ncmpi_rename_var(int ncid, int varid, const char *newname);
         ((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
 /*
- *  *  The PnetCDF non-blocking I/O request type
- *   */
+ *  The PnetCDF non-blocking I/O request type
+ */
 typedef struct NC_req {
     int            id;
     int            rw_flag;
@@ -434,30 +434,32 @@ typedef struct NC_req {
                               the same address as buf */
     int            buftype_is_contig;
     int            need_swap_back_buf;
-    int            use_abuf;   /* whether use the attached buffer */
-    int            abuf_index; /* index in the abuf occupy_table */
-    int            is_imap;
-    void          *tmpBuf;       /* callback tmp buffer to be freed */
-    int            tmpBufSize;   /* size of tmp buffer */
-    void          *userBuf;      /* callback user buffer to be unpacked from tmpBuf */
-    int            userBufCount; /* user buffer count */
-    MPI_Datatype   userBufType;  /* user buffer type */
+    int            use_abuf;    /* whether use the attached buffer */
+    int            abuf_index;  /* index in the abuf occupy_table */
+    int            is_imap;     /* this request is a true varm */
+
+    void          *tmpBuf;      /* callback tmp buffer to be freed. tmpBuf is
+                                   only used by nonblocking varn APIs */
+    int            tmpBufSize;  /* size of tmp buffer */
+    void          *userBuf;     /* callback user buffer to be unpacked from
+                                   tmpBuf. only used by nonblocking varn APIs */
+    int            userBufCount;/* userBuf's count */
+    MPI_Datatype   userBufType; /* userBuf's data type */
+
     int            ndims;
-    MPI_Offset    *start;  /* [ndims] */
-    MPI_Offset    *count;  /* [ndims] */
-    MPI_Offset    *stride; /* [ndims] */
-    MPI_Offset     bnelems;
-    MPI_Offset     fnelems; /* number of nc_type elements in file */
-    MPI_Offset     lnelems;
-    MPI_Offset     bufcount;
-    MPI_Offset     offset_start;  /* starting of aggregate access region */
-    MPI_Offset     offset_end;    /*   ending of aggregate access region */
-    MPI_Datatype   buftype;
-    MPI_Datatype   ptype;
-    MPI_Datatype   imaptype;
+    MPI_Offset    *start;        /* [ndims] */
+    MPI_Offset    *count;        /* [ndims] */
+    MPI_Offset    *stride;       /* [ndims] */
+    MPI_Offset     bnelems;      /* number of elements in user buffer */
+    MPI_Offset     offset_start; /* starting of aggregate access region */
+    MPI_Offset     offset_end;   /*   ending of aggregate access region */
+    MPI_Offset     bufcount; /* the number of buftype in this request */
+    MPI_Datatype   buftype;  /* user defined derived data type */
+    MPI_Datatype   ptype;    /* element data type in buftype */
+    MPI_Datatype   imaptype; /* derived data type constructed from imap */
     int           *status;
-    int            num_subreqs;
-    struct NC_req *subreqs;  /* [num_subreq] */
+    int            num_subreqs; /* each record is a subrequest */
+    struct NC_req *subreqs;     /* [num_subreq] */
     struct NC_req *next;
 } NC_req;
 
@@ -874,13 +876,25 @@ ncmpii_set_iget_callback(NC *ncp, int reqid, void *tmpBuf, int tmpBufSize,
                          MPI_Datatype userBufType);
 
 extern int
-ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpPutBuf,
-                         int need_swap_back_buf);
+ncmpii_set_iput_callback(NC *ncp, int reqid, void *tmpPutBuf);
 
 extern int
 ncmpii_end_indep_data(NC *ncp); 
 
 extern int                
 ncmpii_file_set_view(NC *ncp, MPI_File fh, MPI_Offset *offset, MPI_Datatype filetype);
+
+extern void
+ncmpii_create_imaptype(NC_var *varp, const MPI_Offset *count,
+                       const MPI_Offset *imap, const MPI_Offset  bnelems,
+                       const int el_size, MPI_Datatype ptype, int *isVarm,
+                       MPI_Datatype *imaptype);
+
+extern int
+ncmpii_calc_datatype_elems(NC_var *varp, const MPI_Offset *count,
+                           MPI_Datatype buftype, MPI_Datatype *ptype,
+                           MPI_Offset *bufcount, MPI_Offset *bnelems,
+                           MPI_Offset *nbytes, int *el_size,
+                           int *buftype_is_contig);
 
 #endif /* _NC_H_ */

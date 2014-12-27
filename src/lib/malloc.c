@@ -24,7 +24,7 @@
 #endif
 
 #ifdef HAVE_SEARCH_H
-#include <search.h> /* tsearch() and tdelete() */
+#include <search.h> /* tfind(), tsearch() and tdelete() */
 #endif
 
 #include <mpi.h>
@@ -161,7 +161,7 @@ void ncmpii_del_mem_entry(void *buf)
         void *ret = tfind(&node, &ncmpii_mem_root, ncmpii_cmp);
         ncmpii_mem_entry **found = (ncmpii_mem_entry**) ret;
         if (ret == NULL) {
-            printf("Error: tdelete() buf=%p\n", buf);
+            printf("Error: tfind() buf=%p\n", buf);
             return;
         }
         /* free space for func and filename */
