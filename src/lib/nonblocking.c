@@ -113,20 +113,17 @@ ncmpii_abuf_coalesce(NC *ncp)
 
 #define FREE_REQUEST(req) {                                                   \
     if (req->abuf_index >= 0)                                                 \
-        ncp->abuf->occupy_table[req->abuf_index].is_used = 0; /* set to free */ \
+        ncp->abuf->occupy_table[req->abuf_index].is_used = 0; /* mark free */ \
     else if (req->xbuf != NULL && req->xbuf != req->buf)                      \
         NCI_Free(req->xbuf);                                                  \
     req->xbuf = NULL;                                                         \
                                                                               \
-    for (j=0; j<req->num_subreqs; j++) {                                      \
+    for (j=0; j<req->num_subreqs; j++)                                        \
         NCI_Free(req->subreqs[j].start);                                      \
-        if (req->subreqs[j].stride != NULL) NCI_Free(req->subreqs[j].stride); \
-    }                                                                         \
+                                                                              \
     if (req->num_subreqs > 0)                                                 \
         NCI_Free(req->subreqs);                                               \
     NCI_Free(req->start);                                                     \
-    if (req->stride != NULL)                                                  \
-        NCI_Free(req->stride);                                                \
 }
 
 /*----< ncmpi_cancel() >------------------------------------------------------*/
