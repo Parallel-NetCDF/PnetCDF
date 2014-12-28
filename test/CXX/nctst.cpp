@@ -495,7 +495,7 @@ void dump(const MPI_Comm &comm, const char* path)
 int
 main(int argc, char* argv[])	// test new netCDF interface
 {
-   char filename[128];
+   char filename[256];
    int rank, nprocs, verbose=0;
 
    MPI_Init(&argc, &argv);
@@ -546,7 +546,7 @@ main(int argc, char* argv[])	// test new netCDF interface
                    sum_size);
     }
 
-   char cmd_str[80];
+   char cmd_str[256];
    sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", argv[0]);
    if (rank == 0) {
        if (errs == 0) printf("%-66s ------ pass\n", cmd_str);

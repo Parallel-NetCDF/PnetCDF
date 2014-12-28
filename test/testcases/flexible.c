@@ -45,7 +45,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char         filename[128];
+    char         filename[256];
     int          i, j, err, ncid, varid, dimids[2], debug=0;
     int          rank, nprocs, blocklengths[2], buf[NY][NX], *bufptr;
     int         *ncbuf, req, st, nerrs=0;
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
                        &ncid); ERR
@@ -188,7 +188,7 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", argv[0]);
     if (rank == 0) {
         if (nerrs) printf("%-66s ------ failed\n", cmd_str);

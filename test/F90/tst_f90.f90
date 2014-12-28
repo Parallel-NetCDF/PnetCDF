@@ -70,7 +70,7 @@ program netcdfTest
   character (len = 20) frTimeUnits
   real (kind = FourByteReal), dimension(numLats) :: latVarBuf
   real (kind = FourByteReal), dimension(numLons) :: lonVarBuf
-  character(LEN=128) filename, cmd, msg
+  character(LEN=256) filename, cmd, msg
   integer argc, iargc, my_rank, p, info
 
   call MPI_Init(err)

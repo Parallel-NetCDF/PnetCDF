@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     MPI_Allreduce(&nerrs, &sum_nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     if (rank == 0) {
-        char cmd_str[80];
+        char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for collective abort ", argv[0]);
         if (sum_nerrs == 0) printf("%-66s ------ pass\n", cmd_str);
         else                printf("%-66s ------ failed\n", cmd_str);

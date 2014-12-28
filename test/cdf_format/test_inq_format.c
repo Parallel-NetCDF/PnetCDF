@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file format ", argv[0]);
     MPI_Reduce(&nerr, &err, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {

@@ -14,7 +14,7 @@ program tst_f90_nc4
   integer :: fh, cmode, err, dimid, varid, ndim, nvar
   character (len = *), parameter :: FILE_NAME = "tst_f90_nc4.nc"
   integer(KIND=MPI_OFFSET_KIND) :: ten=10
-  character(LEN=128) filename, cmd, msg
+  character(LEN=256) filename, cmd, msg
   integer argc, iargc, my_rank, p
 
   call MPI_Init(err)

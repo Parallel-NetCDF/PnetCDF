@@ -558,7 +558,7 @@ main(int argc, char *argv[])
 fn_exit:
     MPI_Info_free(&info);
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
     if (nfailsTotal == 0)  {
         printf("%-66s ------ pass\n", cmd_str);

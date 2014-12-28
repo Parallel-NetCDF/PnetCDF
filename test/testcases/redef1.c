@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv)
 {
-    char filename[128]="redef1.nc";
+    char filename[256]="redef1.nc";
     int i, j, k, commsize, rank, ncid, verbose=0, err, pass=1;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
 
 fn_exit:
     if (rank == 0) {
-        char cmd_str[80];
+        char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for entering re-define mode ", argv[0]);
         if (pass) printf("%-66s ------ pass\n", cmd_str);
         else      printf("%-66s ------ failed\n", cmd_str);

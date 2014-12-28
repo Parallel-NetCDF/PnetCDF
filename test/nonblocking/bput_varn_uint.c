@@ -198,7 +198,7 @@ void permute(MPI_Offset *a, MPI_Offset *b)
 
 int main(int argc, char** argv)
 {
-    char filename[128];
+    char filename[256];
     int i, j, k, rank, nprocs, verbose=0, err, nfails=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     unsigned int *buffer[4];
@@ -246,7 +246,7 @@ int main(int argc, char** argv)
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (verbose && nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
@@ -473,7 +473,7 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for bput_varn_uint ", argv[0]);
     if (rank == 0) {
         if (nfails) printf("%-66s ------ failed\n", cmd_str);

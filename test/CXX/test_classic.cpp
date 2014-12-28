@@ -9,7 +9,7 @@ using namespace PnetCDF::exceptions;
 
 int main( int argc, char *argv[] )
 {
-   char filename[128];
+   char filename[256];
    int rank, pass=1, verbose=0;
 
    MPI_Init(&argc, &argv);
@@ -79,7 +79,7 @@ int main( int argc, char *argv[] )
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C++ %s for creation of classic format file", argv[0]);
     if (rank == 0) {
         if (pass) printf("%-66s ------ pass\n", cmd_str);

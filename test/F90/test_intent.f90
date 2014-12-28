@@ -15,7 +15,7 @@
           implicit none
           integer err
           character(len=*) message
-          character(len=128) msg
+          character(len=256) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF90_NOERR) then
@@ -31,7 +31,7 @@
           use pnetcdf
           implicit none
 
-          character(LEN=128) filename, cmd
+          character(LEN=256) filename, cmd
           integer argc, IARGC, err, rank
           integer cmode, ncid, varid, dimid(1), req(1), status(1)
           integer(kind=MPI_OFFSET_KIND) start(1)

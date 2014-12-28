@@ -58,7 +58,7 @@ void swapn(void       *buf,
 
 int main(int argc, char** argv)
 {
-    char filename[128];
+    char filename[256];
     int i, j, rank, nprocs, err, pass, bufsize;
     int ncid, cmode, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
     MPI_Offset offset, var_offset, start[3], count[3];
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -276,7 +276,7 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for writing to a large variable ", argv[0]);
     if (rank == 0) {
         if (pass) printf("%-66s ------ pass\n", cmd_str);

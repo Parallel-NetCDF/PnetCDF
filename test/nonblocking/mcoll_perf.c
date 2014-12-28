@@ -667,7 +667,7 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
     }
 
     if (n_fails == 0 && mynod == 0) {
-       char cmd_str[80];
+       char cmd_str[256];
        sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
        printf("%-66s ------ pass\n", cmd_str);
     }

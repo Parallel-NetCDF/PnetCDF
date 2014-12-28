@@ -33,7 +33,7 @@ program tst_types2
 
   integer :: cmode, err
   integer(KIND=MPI_OFFSET_KIND) :: dlen_ll
-  character(LEN=128) filename, cmd, msg
+  character(LEN=256) filename, cmd, msg
   integer my_rank, p, argc, iargc
   logical verbose
 
