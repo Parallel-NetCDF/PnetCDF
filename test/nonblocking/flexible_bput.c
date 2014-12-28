@@ -57,7 +57,7 @@
 
 #define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
 
-#define INIT_PUT_BUF \
+#define INIT_PUT_BUF(buf) \
     for (i=0; i<array_of_sizes[0]; i++) { \
         for (j=0; j<array_of_sizes[1]; j++) { \
             if (i < GHOST || GHOST+array_of_subsizes[0] <= i || \
@@ -68,47 +68,47 @@
         } \
     }
 
-#define CHECK_PUT_BUF \
+#define CHECK_PUT_BUF(buf) \
     for (i=0; i<array_of_sizes[0]; i++) { \
         for (j=0; j<array_of_sizes[1]; j++) { \
             if (i < GHOST || GHOST+array_of_subsizes[0] <= i || \
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
                 if (buf[i][j] != -1) { \
-                    printf("Error: put buffer altered buffer[%d][%d]=%d\n", \
-                           i,j,buf[i][j]); \
+                    printf("Error: put buffer altered buffer[%d][%d]=%f\n", \
+                           i,j,(double)buf[i][j]); \
                     nerrs++; \
                 } \
             } \
             else { \
                 if (buf[i][j] != (i-GHOST)*array_of_subsizes[1]+(j-GHOST)) { \
-                    printf("Error: put buffer altered buffer[%d][%d]=%d\n", \
-                           i,j,buf[i][j]); \
+                    printf("Error: put buffer altered buffer[%d][%d]=%f\n", \
+                           i,j,(double)buf[i][j]); \
                     nerrs++; \
                 } \
             } \
         } \
     }
 
-#define INIT_GET_BUF \
+#define INIT_GET_BUF(buf) \
     for (i=0; i<array_of_sizes[0]; i++) \
         for (j=0; j<array_of_sizes[1]; j++) \
             buf[i][j] = -2;
 
-#define CHECK_GET_BUF \
+#define CHECK_GET_BUF(buf) \
     for (i=0; i<array_of_sizes[0]; i++) { \
         for (j=0; j<array_of_sizes[1]; j++) { \
             if (i < GHOST || GHOST+array_of_subsizes[0] <= i || \
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
                 if (buf[i][j] != -2) { \
-                    printf("Unexpected get buffer[%d][%d]=%d\n", \
-                           i,j,buf[i][j]); \
+                    printf("Unexpected get buffer[%d][%d]=%f\n", \
+                           i,j,(double)buf[i][j]); \
                     nerrs++; \
                 } \
             } \
             else { \
                 if (buf[i][j] != (i-GHOST)*array_of_subsizes[1]+(j-GHOST)) { \
-                    printf("Unexpected get buffer[%d][%d]=%d\n", \
-                           i,j,buf[i][j]); \
+                    printf("Unexpected get buffer[%d][%d]=%f\n", \
+                           i,j,(double)buf[i][j]); \
                     nerrs++; \
                 } \
             } \
@@ -121,7 +121,8 @@ int main(int argc, char** argv)
     int i, j, rank, nprocs, err, nerrs=0, req, status;
     int ncid, cmode, varid, dimid[2];
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
-    int buf[NX+2*GHOST][NY+2*GHOST];
+    int    buf_int[NX+2*GHOST][NY+2*GHOST];
+    double buf_dbl[NX+2*GHOST][NY+2*GHOST];
     MPI_Offset start[2], count[2], stride[2], imap[2];
     MPI_Datatype  subarray;
 
@@ -136,7 +137,7 @@ int main(int argc, char** argv)
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -169,34 +170,71 @@ int main(int argc, char** argv)
 
     /* calling a nonblocking bput_varm flexible API -------------------------*/
     /* initiate put buffer contents */
-    INIT_PUT_BUF
+    INIT_PUT_BUF(buf_int)
 
     MPI_Offset bufsize = sizeof(double);
     for (i=0; i<2; i++) bufsize *= count[i];
     err = ncmpi_buffer_attach(ncid, bufsize); ERR
 
-    err = ncmpi_bput_varm(ncid, varid, start, count, stride, imap, buf,
+    err = ncmpi_bput_varm(ncid, varid, start, count, stride, imap, buf_int,
                           1, subarray, &req);
     ERR
     err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
     err = status; ERR
 
     /* check the contents of put buffer */
-    CHECK_PUT_BUF
+    CHECK_PUT_BUF(buf_int)
 
     err = ncmpi_buffer_detach(ncid); ERR
 
     /* read back using a blocking get_varm flexible API ---------------------*/
     /* initiate get buffer contents */
-    INIT_GET_BUF
+    INIT_GET_BUF(buf_int)
 
     /* calling a blocking flexible API */
-    err = ncmpi_get_varm_all(ncid, varid, start, count, stride, imap, buf,
+    err = ncmpi_get_varm_all(ncid, varid, start, count, stride, imap, buf_int,
                              1, subarray);
     ERR
 
     /* check the contents of get buffer */
-    CHECK_GET_BUF
+    CHECK_GET_BUF(buf_int)
+
+    MPI_Type_free(&subarray);
+
+    /* test case for no type conversion =====================================*/
+    MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
+                             array_of_starts, MPI_ORDER_C, MPI_DOUBLE,
+                             &subarray);
+    MPI_Type_commit(&subarray);
+
+    /* calling a nonblocking bput_varm flexible API -------------------------*/
+    /* initiate put buffer contents */
+    INIT_PUT_BUF(buf_dbl)
+
+    err = ncmpi_buffer_attach(ncid, bufsize); ERR
+
+    err = ncmpi_bput_varm(ncid, varid, start, count, stride, imap, buf_dbl,
+                          1, subarray, &req);
+    ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
+    err = status; ERR
+
+    /* check the contents of put buffer */
+    CHECK_PUT_BUF(buf_dbl)
+
+    err = ncmpi_buffer_detach(ncid); ERR
+
+    /* read back using a blocking get_varm flexible API ---------------------*/
+    /* initiate get buffer contents */
+    INIT_GET_BUF(buf_dbl)
+
+    /* calling a blocking flexible API */
+    err = ncmpi_get_varm_all(ncid, varid, start, count, stride, imap, buf_dbl,
+                             1, subarray);
+    ERR
+
+    /* check the contents of get buffer */
+    CHECK_GET_BUF(buf_dbl)
 
     MPI_Type_free(&subarray);
 
@@ -214,7 +252,7 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for flexible bput_varm ", argv[0]);
     if (rank == 0) {
         if (nerrs) printf("%-66s ------ failed with %d errors\n", cmd_str, nerrs);
