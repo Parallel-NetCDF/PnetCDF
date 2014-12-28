@@ -260,6 +260,18 @@ ncmpii_igetput_varn(int               ncid,
     bufp = (char*)cbuf;
     for (i=0; i<num; i++) {
         MPI_Offset buflen;
+
+        /* access boundaries check */
+        status = NCcoordck(ncp, varp, starts[i], rw_flag);
+        if (status != NC_NOERR) goto err_check;
+        status = NCedgeck(ncp, varp, starts[i], _counts[i]);
+        if (status != NC_NOERR) goto err_check;
+        if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
+            starts[i][0] + _counts[i][0] > NC_get_numrecs(ncp)) {
+            status = NC_EEDGE;
+            goto err_check;
+        }
+
         for (buflen=1, j=0; j<varp->ndims; j++) {
             if (_counts[i][j] < 0) { /* any negative counts[][] is illegal */
                 status = NC_ENEGATIVECNT;
