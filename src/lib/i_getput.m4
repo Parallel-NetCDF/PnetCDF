@@ -638,7 +638,7 @@ ncmpii_igetput_varm(NC               *ncp,
         /* zero-length request, mark this as a NULL request */
         if (!isSameGroup) /* only if this is not part of a group request */
             *reqid = NC_REQ_NULL;
-        return NCcoordck(ncp, varp, start, rw_flag);
+        return NC_NOERR; /* NCcoordck(ncp, varp, start, rw_flag); */
     }
 
     /* for bput call, check if the remaining buffer space is sufficient
@@ -659,7 +659,7 @@ ncmpii_igetput_varm(NC               *ncp,
                            &imaptype);
 
     if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
-        int position, outsize=bnelems*el_size;
+        int position, outsize=bnelems*el_size, abuf_allocated=0;
         /* assert(bnelems > 0); */
 
         /* attached buffer allocation logic
@@ -699,6 +699,7 @@ ncmpii_igetput_varm(NC               *ncp,
                 status = ncmpii_abuf_malloc(ncp, nbytes, &lbuf, &abuf_index);
                 if (status != NC_NOERR)
                     return ((warning != NC_NOERR) ? warning : status);
+                abuf_allocated = 1;
             }
             else lbuf = NCI_Malloc(outsize);
 
@@ -714,11 +715,13 @@ ncmpii_igetput_varm(NC               *ncp,
         if (imaptype != MPI_DATATYPE_NULL) { /* true varm */
             /* allocate cbuf */
             if (use_abuf && !need_convert) {
+                assert(abuf_allocated == 0);
                 status = ncmpii_abuf_malloc(ncp, nbytes, &cbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (lbuf != buf) NCI_Free(lbuf);
                     return ((warning != NC_NOERR) ? warning : status);
                 }
+                abuf_allocated = 1;
             }
             else cbuf = NCI_Malloc(outsize);
 
@@ -741,11 +744,13 @@ ncmpii_igetput_varm(NC               *ncp,
         /* when user buf type != nc var type defined in file */
         if (need_convert) {
             if (use_abuf) { /* use attached buffer to allocate xbuf */
+                assert(abuf_allocated == 0);
                 status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (cbuf != buf) NCI_Free(cbuf);
                     return ((warning != NC_NOERR) ? warning : status);
                 }
+                abuf_allocated = 1;
             }
             else xbuf = NCI_Malloc(nbytes);
 
@@ -756,6 +761,7 @@ ncmpii_igetput_varm(NC               *ncp,
         }
         else {
             if (use_abuf && buftype_is_contig && imaptype == MPI_DATATYPE_NULL){
+                assert(abuf_allocated == 0);
                 status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (cbuf != buf) NCI_Free(cbuf);
