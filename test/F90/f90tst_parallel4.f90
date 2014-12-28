@@ -17,7 +17,7 @@ program f90tst
   integer :: dimid(3)
   integer(KIND=MPI_OFFSET_KIND) :: start(3), count(3)
   real :: f(3)
-  character(LEN=128) filename, cmd, msg
+  character(LEN=256) filename, cmd, msg
   integer argc, iargc
 
   call MPI_INIT(ierr)

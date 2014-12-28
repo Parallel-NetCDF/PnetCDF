@@ -110,7 +110,7 @@ int main(int argc, char ** argv)
     }
 
     if (rank == 0) {
-        char cmd_str[80];
+        char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for put_vara/get_vara ", argv[0]);
         printf("%-66s ------ pass\n", cmd_str);
     }

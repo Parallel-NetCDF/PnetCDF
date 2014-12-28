@@ -29,7 +29,7 @@ program tst_io
   ! needed for netcdf
   integer :: ncid, x1id, x2id, x3id, x4id, vrid
   ! integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
-  character(LEN=128) dirpath, cmd, msg
+  character(LEN=256) dirpath, cmd, msg
   integer argc, iargc, my_rank, p
 
   call MPI_Init(err)

@@ -277,7 +277,7 @@ int main(int argc, char** argv) {
 
     MPI_Reduce(&nfailed, &nfailed_all, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[80];
+        char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for alignment ", argv[0]);
         if (nfailed_all > 0)
             printf("%s ------ failed with %d mismatches\n",cmd_str,nfailed_all);

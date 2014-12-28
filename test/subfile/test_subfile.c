@@ -399,7 +399,7 @@ end:
 
     MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (mynod == 0) {
-        char cmd_str[80];
+        char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for subfiling", argv[0]);
         if (sum_nerr == 0)
             printf("%-66s ------ pass\n", cmd_str);

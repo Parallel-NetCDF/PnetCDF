@@ -63,7 +63,7 @@ program f90tst_parallel
   integer :: p, my_rank, ierr
   integer(KIND=MPI_OFFSET_KIND) :: start(MAX_DIMS), count(MAX_DIMS), stride(MAX_DIMS)
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
-  character(LEN=128) filename, cmd, msg
+  character(LEN=256) filename, cmd, msg
   integer argc, iargc
 
   call MPI_Init(ierr)

@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -261,7 +261,7 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for flexible APIs ", argv[0]);
     if (rank == 0) {
         if (nerrs) printf("%-66s ------ failed with %d errors\n", cmd_str, nerrs);

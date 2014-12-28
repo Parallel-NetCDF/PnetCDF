@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     }
 
     if (rank == 0) {
-        char cmd_str[80];
+        char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for bput API ", argv[0]);
 
         if (errs)

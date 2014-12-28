@@ -26,7 +26,7 @@ program tst_flarge
   integer :: cmode, err
   double precision dbl_buf(1)
   integer(KIND=MPI_OFFSET_KIND) :: start(1), count(1)
-  character(LEN=128) filename, cmd, msg
+  character(LEN=256) filename, cmd, msg
   integer argc, iargc, my_rank, p
 
   call MPI_Init(err)

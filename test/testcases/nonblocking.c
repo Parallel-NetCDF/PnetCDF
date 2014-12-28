@@ -44,7 +44,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char       filename[128];
+    char       filename[256];
     int        i, j, err, ncid, varid, dimids[2], req[2], st[2], pass;
     int        rank, nprocs, buf[NY+1][NX];
     MPI_Offset start[2], count[2];
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     MPI_Info_create(&info);
     /* When using PVFS2, unexpected buffer value error message might occur.
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for using ncmpi_iput_vara_int() ", argv[0]);
     if (rank == 0) {
         if (pass) printf("%-66s ------ pass\n", cmd_str);

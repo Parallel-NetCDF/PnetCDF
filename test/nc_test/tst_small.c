@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_small ", argv[0]);
     if (rank == 0) {
         if (nerrs) printf("%-66s ------ failed\n", cmd_str);

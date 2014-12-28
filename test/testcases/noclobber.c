@@ -20,7 +20,7 @@
 #define ERR if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err)); exit(-1);}
 
 int main(int argc, char **argv) {
-    char filename[128];
+    char filename[256];
     int  err, pass, ncid, cmode, rank, nprocs;
 
     MPI_Init(&argc, &argv);
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* create a file if it does not exist */
     cmode = NC_CLOBBER;
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for NC_NOCLOBBER and NC_EEXIST ", argv[0]);
     if (rank == 0) {
         if (pass) printf("%-66s ------ pass\n", cmd_str);

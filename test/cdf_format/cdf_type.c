@@ -113,7 +113,7 @@ int main(int argc, char **argv)
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for CDF-5 type in CDF-1 and 2 ", argv[0]);
     if (nerr == 0)
         printf("%-66s ------ pass\n", cmd_str);

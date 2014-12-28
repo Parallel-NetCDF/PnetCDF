@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 
     MPI_Allreduce(&nerrs, &max_nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[80];
+        char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for get/put varm ", argv[0]);
         if (max_nerrs) printf("%-66s ------ failed\n", cmd_str);
         else           printf("%-66s ------ pass\n", cmd_str);

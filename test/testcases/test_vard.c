@@ -147,7 +147,7 @@ int get_var_and_verify(int ncid,
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char         filename[128];
+    char         filename[256];
     int          i, j, err, ncid, varid0, varid1, varid2, dimids[2], nerrs=0;
     int          rank, nprocs, debug=0, blocklengths[2], **buf, *bufptr;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     buf = (int**)malloc(NY * sizeof(int*));
     buf[0] = (int*)malloc(NY * NX * sizeof(int));
@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
-    char cmd_str[80];
+    char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", argv[0]);
     if (rank == 0) {
         if (nerrs) printf("%-66s ------ failed\n", cmd_str);

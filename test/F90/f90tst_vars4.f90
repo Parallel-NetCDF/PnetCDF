@@ -31,7 +31,7 @@ program f90tst_vars4
   character (len = NF90_MAX_NAME) :: name_in
   integer :: err
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
-  character(LEN=128) filename, cmd, msg
+  character(LEN=256) filename, cmd, msg
   integer argc, iargc, my_rank, p
 
   call MPI_Init(err)
