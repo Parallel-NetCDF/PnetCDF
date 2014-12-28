@@ -167,6 +167,8 @@
           err = nfmpi_enddef(ncid)
           call check(err, 'In nfmpi_enddef: ')
 
+          if (rank .GE. 4) goto 123
+
           ! now we are in data mode
           n = rank+1
           num_segs(n) = 4 ! number of segments for this request
@@ -222,7 +224,7 @@
 
           ! only rank 0, 1, 2, and 3 do I/O:
           ! each of ranks 0 to 3 write 4 nonblocking requests
-          nreqs = 4
+ 123      nreqs = 4
           if (rank .GE. 4) nreqs = 0
 
           ! initialize buffer contents
