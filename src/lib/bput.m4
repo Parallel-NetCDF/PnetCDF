@@ -44,6 +44,7 @@ ncmpi_bput_var(int           ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     GET_FULL_DIMENSIONS(start, count)
@@ -53,7 +54,6 @@ ncmpi_bput_var(int           ncid,
                                  (void*)buf, bufcount, buftype, reqid,
                                  WRITE_REQ, 1, 0);
     if (varp->ndims > 0) NCI_Free(start);
-
     return status;
 }
 
@@ -87,7 +87,6 @@ ncmpi_bput_var_$1(int       ncid,
                                  (void*)op, nelems, $3, reqid,
                                  WRITE_REQ, 1, 0);
     if (varp->ndims > 0) NCI_Free(start);
-
     return status;
 }
 ')dnl
@@ -123,6 +122,8 @@ ncmpi_bput_var1(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -156,6 +157,7 @@ ncmpi_bput_var1_$1(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -201,6 +203,9 @@ ncmpi_bput_vara(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -234,6 +239,8 @@ ncmpi_bput_vara_$1(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -280,6 +287,9 @@ ncmpi_bput_vars(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -314,6 +324,8 @@ ncmpi_bput_vars_$1(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -360,6 +372,9 @@ ncmpi_bput_varm(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
@@ -395,6 +410,8 @@ ncmpi_bput_varm_$1(int               ncid,
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, NONBLOCKING_IO, status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
     status = NCcoordck(ncp, varp, start, WRITE_REQ);
