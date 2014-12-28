@@ -539,6 +539,17 @@ VARS(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 */
 
 /*----< ncmpii_calc_datatype_elems() >---------------------------------------*/
+/* calculate the followings:
+ * ptype: element data type (MPI primitive type) in buftype
+ * bufcount: if it is -1, it means this is called from a high-level API,
+ *     i.e. buftype is an MPI primitive data type. We recalculate it to
+ *     match with count[].
+ * bnelems: number of ptypes in user buffer
+ * nbytes: number of bytes (in external data representation) to read/write
+ *     from/to the file
+ * el_size: size of ptype
+ * buftype_is_contig: whether buftype is contiguous
+ */
 int
 ncmpii_calc_datatype_elems(NC_var             *varp,
                            const MPI_Offset   *count,
@@ -716,6 +727,17 @@ ncmpii_getput_vars(NC               *ncp,
     }
 #endif
 
+    /* calculate the followings:
+     * ptype: element data type (MPI primitive type) in buftype
+     * bufcount: if it is -1, it means this is called from a high-level API,
+     *     i.e. buftype is an MPI primitive data type. We recalculate it to
+     *     match with count[].
+     * bnelems: number of ptypes in user buffer
+     * nbytes: number of bytes (in external data representation) to read/write
+     *     from/to the file
+     * el_size: size of ptype
+     * buftype_is_contig: whether buftype is contiguous
+     */
     err = ncmpii_calc_datatype_elems(varp, count, buftype, &ptype, &bufcount,
                                      &bnelems, &nbytes, &el_size,
                                      &buftype_is_contig);
@@ -1189,6 +1211,17 @@ ncmpii_getput_varm(NC               *ncp,
     MPI_Datatype ptype, filetype=MPI_BYTE, imaptype=MPI_DATATYPE_NULL;
     MPI_File fh;
 
+    /* calculate the followings:
+     * ptype: element data type (MPI primitive type) in buftype
+     * bufcount: if it is -1, it means this is called from a high-level API,
+     *     i.e. buftype is an MPI primitive data type. We recalculate it to
+     *     match with count[].
+     * bnelems: number of ptypes in user buffer
+     * nbytes: number of bytes (in external data representation) to read/write
+     *     from/to the file
+     * el_size: size of ptype
+     * buftype_is_contig: whether buftype is contiguous
+     */
     err = ncmpii_calc_datatype_elems(varp, count, buftype, &ptype, &bufcount,
                                      &bnelems, &nbytes, &el_size,
                                      &buftype_is_contig);

@@ -604,7 +604,7 @@ ncmpii_igetput_varm(NC               *ncp,
                     void             *buf,      /* user buffer */
                     MPI_Offset        bufcount,
                     MPI_Datatype      buftype,
-                    int              *reqid,
+                    int              *reqid,    /* out */
                     int               rw_flag,
                     int               use_abuf,    /* if use attached buffer */
                     int               isSameGroup) /* if part of a varn group */
@@ -617,6 +617,17 @@ ncmpii_igetput_varm(NC               *ncp,
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
+    /* calculate the followings:
+     * ptype: element data type (MPI primitive type) in buftype
+     * bufcount: if it is -1, it means this is called from a high-level API,
+     *     i.e. buftype is an MPI primitive data type. We recalculate it to
+     *     match with count[].
+     * bnelems: number of ptypes in user buffer
+     * nbytes: number of bytes (in external data representation) to read/write
+     *     from/to the file
+     * el_size: size of ptype
+     * buftype_is_contig: whether buftype is contiguous
+     */
     err = ncmpii_calc_datatype_elems(varp, count, buftype, &ptype, &bufcount,
                                      &bnelems, &nbytes, &el_size,
                                      &buftype_is_contig);
@@ -638,10 +649,12 @@ ncmpii_igetput_varm(NC               *ncp,
         return NC_EINSUFFBUF;
 
     /* check if type conversion and Endianness byte swap is needed */
-    need_convert  = ncmpii_need_convert(varp->type, ptype);
-    need_swap     = ncmpii_need_swap(varp->type, ptype);
+    need_convert = ncmpii_need_convert(varp->type, ptype);
+    need_swap    = ncmpii_need_swap(varp->type, ptype);
 
-    /* check if this is a vars call or a true varm call */
+    /* check whether this is a true varm call, if yes, imaptype will be a
+     * newly created MPI derived data type, otherwise MPI_DATATYPE_NULL
+     */
     ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
                            &imaptype);
 
@@ -649,43 +662,92 @@ ncmpii_igetput_varm(NC               *ncp,
         int position, outsize=bnelems*el_size;
         /* assert(bnelems > 0); */
 
-        /* Step 1: pack buf into a contiguous buffer, lbuf */
+        /* attached buffer allocation logic
+         * if (use_abuf)
+         *     if contig && no imap && no convert
+         *         buf   ==   lbuf   ==   cbuf    ==     xbuf memcpy-> abuf
+         *                                               abuf
+         *     if contig && no imap &&    convert
+         *         buf   ==   lbuf   ==   cbuf convert-> xbuf == abuf
+         *                                               abuf
+         *     if contig &&    imap && no convert
+         *         buf   ==   lbuf pack-> cbuf    ==     xbuf == abuf
+         *                                abuf
+         *     if contig &&    imap &&    convert
+         *         buf   ==   lbuf pack-> cbuf convert-> xbuf == abuf
+         *                                               abuf
+         *  if noncontig && no imap && no convert
+         *         buf pack-> lbuf   ==   cbuf    ==     xbuf == abuf
+         *                    abuf
+         *  if noncontig && no imap &&    convert
+         *         buf pack-> lbuf   ==   cbuf convert-> xbuf == abuf
+         *                                               abuf
+         *  if noncontig &&    imap && no convert
+         *         buf pack-> lbuf pack-> cbuf    ==     xbuf == abuf
+         *                                abuf
+         *  if noncontig &&    imap &&    convert
+         *         buf pack-> lbuf pack-> cbuf convert-> xbuf == abuf
+         *                                               abuf
+         */
+
+        /* Step 1: pack buf into a contiguous buffer, lbuf, if buftype is
+         * not contiguous
+         */
         if (!buftype_is_contig) { /* buftype is not contiguous */
-            /* pack buf into lbuf, a contiguous buffer, using buftype */
-            lbuf = NCI_Malloc(outsize);
+            /* allocate lbuf */
+            if (use_abuf && imaptype == MPI_DATATYPE_NULL && !need_convert) {
+                status = ncmpii_abuf_malloc(ncp, nbytes, &lbuf, &abuf_index);
+                if (status != NC_NOERR)
+                    return ((warning != NC_NOERR) ? warning : status);
+            }
+            else lbuf = NCI_Malloc(outsize);
+
+            /* pack buf into lbuf using buftype */
             position = 0;
             MPI_Pack(buf, bufcount, buftype, lbuf, outsize, &position,
                      MPI_COMM_SELF);
         }
-        else
+        else /* for contiguous case, we reuse buf */
             lbuf = buf;
 
         /* Step 2: pack lbuf to cbuf if imap is non-contiguous */
         if (imaptype != MPI_DATATYPE_NULL) { /* true varm */
-            /* pack lbuf to cbuf, a contiguous buffer, using imaptype */
-            cbuf = NCI_Malloc(outsize);
+            /* allocate cbuf */
+            if (use_abuf && !need_convert) {
+                status = ncmpii_abuf_malloc(ncp, nbytes, &cbuf, &abuf_index);
+                if (status != NC_NOERR) {
+                    if (lbuf != buf) NCI_Free(lbuf);
+                    return ((warning != NC_NOERR) ? warning : status);
+                }
+            }
+            else cbuf = NCI_Malloc(outsize);
+
+            /* pack lbuf to cbuf using imaptype */
             position = 0;
             MPI_Pack(lbuf, 1, imaptype, cbuf, outsize, &position,
                      MPI_COMM_SELF);
             MPI_Type_free(&imaptype);
         }
-        else /* reuse lbuf */
+        else /* not a true varm call: reuse lbuf */
             cbuf = lbuf;
 
         /* lbuf is no longer needed */
         if (lbuf != buf && lbuf != cbuf) NCI_Free(lbuf);
 
-        /* Step 3: pack cbuf to xbuf and xbuf will be used to write to file */
-        if (use_abuf) { /* use attached buffer to allocate xbuf */
-            status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
-            if (status != NC_NOERR) {
-                if (cbuf != buf) NCI_Free(cbuf);
-                return ((warning != NC_NOERR) ? warning : status);
-            }
-        }
+        /* Step 3: type-convert and byte-swap cbuf to xbuf, and xbuf will be
+         * used in MPI write function to write to file
+         */
 
-        if (need_convert) { /* user buf type != nc var type defined in file */
-            if (!use_abuf) xbuf = NCI_Malloc(nbytes);
+        /* when user buf type != nc var type defined in file */
+        if (need_convert) {
+            if (use_abuf) { /* use attached buffer to allocate xbuf */
+                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
+                if (status != NC_NOERR) {
+                    if (cbuf != buf) NCI_Free(cbuf);
+                    return ((warning != NC_NOERR) ? warning : status);
+                }
+            }
+            else xbuf = NCI_Malloc(nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
@@ -693,13 +755,20 @@ ncmpii_igetput_varm(NC               *ncp,
             if (status == NC_NOERR) status = err;
         }
         else {
-            if (use_abuf) memcpy(xbuf, cbuf, nbytes);
-            else          xbuf = cbuf;
+            if (use_abuf && buftype_is_contig && imaptype == MPI_DATATYPE_NULL){
+                status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
+                if (status != NC_NOERR) {
+                    if (cbuf != buf) NCI_Free(cbuf);
+                    return ((warning != NC_NOERR) ? warning : status);
+                }
+                memcpy(xbuf, cbuf, nbytes);
+            }
+            else xbuf = cbuf;
 
             if (need_swap) {
 #ifdef DISABLE_IN_PLACE_SWAP
                 if (xbuf == buf) {
-                    /* allocate cbuf and copy buf to xbuf, before byte-swap */
+                    /* allocate xbuf and copy buf to xbuf, before byte-swap */
                     xbuf = NCI_Malloc(nbytes);
                     memcpy(xbuf, buf, nbytes);
                 }
@@ -767,6 +836,9 @@ ncmpii_igetput_varm(NC               *ncp,
 }
 
 /*----< pack_request() >------------------------------------------------------*/
+/* if this request is for a record variable, then we break this request into
+ * sub-requests, each for a record
+ */
 static int
 pack_request(NC               *ncp,
              NC_var           *varp,
@@ -776,17 +848,25 @@ pack_request(NC               *ncp,
              const MPI_Offset  stride[])
 {
     int     i, j;
+    size_t  dims_chunk;
     NC_req *subreqs;
 
-    req->varp     = varp;
-    req->start    = (MPI_Offset*) NCI_Malloc(2*varp->ndims*sizeof(MPI_Offset));
-    req->count    = req->start + varp->ndims;
-    req->next     = NULL;
+    dims_chunk       = varp->ndims * sizeof(MPI_Offset);
+
+    req->varp        = varp;
+    req->next        = NULL;
     req->subreqs     = NULL;
     req->num_subreqs = 0;
 
     if (stride != NULL)
-        req->stride = (MPI_Offset*) NCI_Malloc(varp->ndims*sizeof(MPI_Offset));
+        req->start = (MPI_Offset*) NCI_Malloc(3*dims_chunk);
+    else
+        req->start = (MPI_Offset*) NCI_Malloc(2*dims_chunk);
+
+    req->count = req->start + varp->ndims;
+
+    if (stride != NULL)
+        req->stride = req->count + varp->ndims;
     else
         req->stride = NULL;
 
@@ -797,15 +877,18 @@ pack_request(NC               *ncp,
             req->stride[i] = stride[i];
     }
     /* get the starting file offset for this request */
-    ncmpii_get_offset(ncp, varp, start, NULL, NULL, req->rw_flag, &req->offset_start);
+    ncmpii_get_offset(ncp, varp, start, NULL, NULL, req->rw_flag,
+                      &req->offset_start);
 
     /* get the ending file offset for this request */
-    ncmpii_get_offset(ncp, varp, start, count, stride, req->rw_flag, &req->offset_end);
+    ncmpii_get_offset(ncp, varp, start, count, stride, req->rw_flag,
+                      &req->offset_end);
     req->offset_end += varp->xsz - 1;
 
     /* check if this is a record varaible. if yes, split the request into
-       subrequests, one iput request for a record access. Hereandafter,
-       treat each request as a non-record variable request */
+     * subrequests, one subrequest for a record access. Hereandafter,
+     * treat each request as a non-record variable request
+     */
 
     /* check if this access is within one record, if yes, no need to create
        subrequests */
@@ -820,10 +903,15 @@ pack_request(NC               *ncp,
             subreqs[i] = *req; /* inherit most attributes from req */
 
             /* each sub-request contains <= one record size */
-            subreqs[i].start = (MPI_Offset*) NCI_Malloc(2*varp->ndims*sizeof(MPI_Offset));
+            if (stride != NULL)
+                subreqs[i].start = (MPI_Offset*) NCI_Malloc(3*dims_chunk);
+            else
+                subreqs[i].start = (MPI_Offset*) NCI_Malloc(2*dims_chunk);
+
             subreqs[i].count = subreqs[i].start + varp->ndims;
+
             if (stride != NULL) {
-                subreqs[i].stride = (MPI_Offset*) NCI_Malloc(varp->ndims*sizeof(MPI_Offset));
+                subreqs[i].stride = subreqs[i].count + varp->ndims;
                 subreqs[i].start[0] = req->start[0] + stride[0] * i;
                 subreqs[i].stride[0] = req->stride[0];
             } else {
