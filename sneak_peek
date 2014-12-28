@@ -96,14 +96,16 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * testcases/flexible2.c test flexible APIs that perform type conversion
-    * testcases/flexible_varm.c test flexible varm APIs
-    * testcases/varn_contig.c test the case when the fileview is actually a
+    * nonblocking/flexible_bput.c tests flexible bput APIs that use
+      noncontiguous buffer type, noncontiguous imap and require type conversion
+    * testcases/flexible2.c tests flexible APIs that perform type conversion
+    * testcases/flexible_varm.c tests flexible varm APIs
+    * testcases/varn_contig.c tests the case when the fileview is actually a
       contiguous chunk. PnetCDF should be able to merge all.
-    * nonblocking/bput_varn_uint.c test nonblocking bput_varn APIs
-    * nonblocking/i_varn_int64.c test nonblocking iput_varn and iget_varn APIs
+    * nonblocking/bput_varn_uint.c tests nonblocking bput_varn APIs
+    * nonblocking/i_varn_int64.c tests nonblocking iput_varn and iget_varn APIs
     * test/testcases/test_vard.c test/testcases/test_vardf.f
-      test/testcases/test_vardf90.f90 tests the new vard APIs.
+      test/testcases/test_vardf90.f90 test the new vard APIs.
     * test/testcases/inq_recsize.c tests if one can correctly inquire the
       size of record block from in a netCDF file. A similar program in F90,
       named inq_recsizef.f90, is also added.
@@ -117,7 +119,7 @@ This is essentially a placeholder for the next release note ...
     * test/testcases/modes.c tests if correct error codes are returned when
       various file create/open modes are used.
     * Under test/testcases, varn_int.c varn_intf.f varn_real.f90 test varn APIs
-    * test/testcases/inq_num_vars.c tests if one can correctly inquire the
+    * test/testcases/inq_num_vars.c test if one can correctly inquire the
       numbers of record and fixed-size variables defined in a netCDF file.
       A similar program in F90, named inq_num_varsf.f90, is also added.
     * test/nonblocking/interleaved.c tests a combination of interleaved

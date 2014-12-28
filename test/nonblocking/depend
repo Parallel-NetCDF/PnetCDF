@@ -7,3 +7,4 @@ test_bputf77.o: test_bputf77.f
 interleaved.o:  interleaved.c
 i_varn_int64.o: i_varn_int64.c
 bput_varn_uint.o: bput_varn_uint.c
+flexible_bput.o: flexible_bput.c

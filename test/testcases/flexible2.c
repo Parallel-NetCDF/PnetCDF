@@ -8,10 +8,11 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This example shows how to use PnetCDF flexible APIs, ncmpi_put_vara_all()
- * and ncmpi_iput_vara() to write two 2D array variables (one is of 4-byte
- * integer byte and the other float type) in parallel. It first defines 2
- * netCDF variables of sizes
+ * This program tests PnetCDF flexible APIs, ncmpi_put_vara_all(),
+ * ncmpi_iput_vara() to write two 2D array variables (one is of 4-byte
+ * integer byte and the other float type) in parallel. It then uses flexible
+ * get/iget APIs to read data back and check the contents. The program first
+ * defines 2 netCDF variables of sizes
  *    var_zy: NZ*nprocs x NY
  *    var_yx: NY x NX*nprocs
  *

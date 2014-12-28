@@ -8,18 +8,20 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program tests PnetCDF flexible varm APIs, i.e. ncmpi_put_varm_all(),
- * ncmpi_get_varm_all(), and their nonblocking versions, to write a 2D array
- * double variable of size NY x NX*nproc in parallel.
+ * This example tests PnetCDF nonblocking buffered flexible varm API, i.e.
+ * ncmpi_bput_varm() to write a 2D array double variable of size NY x NX*nproc
+ * in parallel. In particular, we use a noncontiguous buffer type, a
+ * noncontiguous imap[], and integer type in memory and double in file that
+ * require a type conversion.
  *
  * The data partitioning patterns on the variable is column-wise.
  * The local buffer has ghost cells surrounded along both dimensions.
  *
  * The compile and run commands are given below.
  *
- *    % mpicc -O2 -o flexible_varm flexible_varm.c -lpnetcdf
+ *    % mpicc -O2 -o flexible_bput flexible_bput.c -lpnetcdf
  *
- *    % mpiexec -l -n 4 ./flexible_varm /pvfs2/wkliao/testfile.nc
+ *    % mpiexec -l -n 4 ./flexible_bput /pvfs2/wkliao/testfile.nc
  *
  *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
@@ -165,20 +167,15 @@ int main(int argc, char** argv)
                              array_of_starts, MPI_ORDER_C, MPI_INT, &subarray);
     MPI_Type_commit(&subarray);
 
-    /* calling a blocking put_varm flexible API -----------------------------*/
+    /* calling a nonblocking bput_varm flexible API -------------------------*/
     /* initiate put buffer contents */
     INIT_PUT_BUF
-    err = ncmpi_put_varm_all(ncid, varid, start, count, stride, imap, buf,
-                             1, subarray);
-    ERR
 
-    /* check the contents of put buffer */
-    CHECK_PUT_BUF
+    MPI_Offset bufsize = sizeof(double);
+    for (i=0; i<2; i++) bufsize *= count[i];
+    err = ncmpi_buffer_attach(ncid, bufsize); ERR
 
-    /* calling a nonblocking put_varm flexible API --------------------------*/
-    /* initiate put buffer contents */
-    INIT_PUT_BUF
-    err = ncmpi_iput_varm(ncid, varid, start, count, stride, imap, buf,
+    err = ncmpi_bput_varm(ncid, varid, start, count, stride, imap, buf,
                           1, subarray, &req);
     ERR
     err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
@@ -186,6 +183,8 @@ int main(int argc, char** argv)
 
     /* check the contents of put buffer */
     CHECK_PUT_BUF
+
+    err = ncmpi_buffer_detach(ncid); ERR
 
     /* read back using a blocking get_varm flexible API ---------------------*/
     /* initiate get buffer contents */
@@ -195,20 +194,6 @@ int main(int argc, char** argv)
     err = ncmpi_get_varm_all(ncid, varid, start, count, stride, imap, buf,
                              1, subarray);
     ERR
-
-    /* check the contents of get buffer */
-    CHECK_GET_BUF
-
-    /* read back using a non-blocking flexible API --------------------------*/
-    /* initiate get buffer contents */
-    INIT_GET_BUF
-
-    /* calling a blocking flexible API */
-    err = ncmpi_iget_varm(ncid, varid, start, count, stride, imap, buf,
-                          1, subarray, &req);
-    ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &status); ERR
-    err = status; ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF
@@ -230,7 +215,7 @@ int main(int argc, char** argv)
     }
 
     char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING C   %s for flexible varm APIs ", argv[0]);
+    sprintf(cmd_str, "*** TESTING C   %s for flexible bput_varm ", argv[0]);
     if (rank == 0) {
         if (nerrs) printf("%-66s ------ failed with %d errors\n", cmd_str, nerrs);
         else       printf("%-66s ------ pass\n", cmd_str);
