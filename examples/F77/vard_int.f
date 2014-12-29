@@ -101,8 +101,8 @@
           count(2) = 2
 
           ! initialized buffer contents
-          do j=1, count(2)
-             do i=1, count(1)
+          do j=1, INT(count(2))
+             do i=1, INT(count(1))
                  buf(i, j) = rank*100 + j*10 + i
              enddo
           enddo
@@ -137,8 +137,8 @@
           ! create a file type for the record variable */
           err = nfmpi_inq_recsize(ncid, recsize)
           call check(err, 'In nfmpi_inq_recsize: ')
-          blocklengths(1) = count(1)
-          blocklengths(2) = count(1)
+          blocklengths(1) = INT(count(1))
+          blocklengths(2) = INT(count(1))
           disps(1) = start(1)*4
           disps(2) = recsize + start(1)*4
           call MPI_Type_create_hindexed(2, blocklengths, disps,
@@ -146,12 +146,12 @@
           call MPI_Type_commit(rec_filetype, err)
 
           ! create a file type for the fixed-size variable
-          array_of_sizes(1) = NX*nprocs
+          array_of_sizes(1) = INT(NX*nprocs)
           array_of_sizes(2) = 2
-          array_of_subsizes(1) = count(1)
-          array_of_subsizes(2) = count(2)
-          array_of_starts(1) = start(1)
-          array_of_starts(2) = start(2)
+          array_of_subsizes(1) = INT(count(1))
+          array_of_subsizes(2) = INT(count(2))
+          array_of_starts(1) = INT(start(1))
+          array_of_starts(2) = INT(start(2))
           call MPI_Type_create_subarray(2, array_of_sizes,
      +         array_of_subsizes, array_of_starts, MPI_ORDER_FORTRAN,
      +         MPI_INTEGER, fix_filetype, err)
