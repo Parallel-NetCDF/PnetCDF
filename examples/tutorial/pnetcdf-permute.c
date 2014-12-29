@@ -10,7 +10,10 @@
  * knowing nothing about the file, read in the variables. 
  *
  * This example demonstrates the flexible interface, using the MPI derrived
- * datatype to transpose the matrix */
+ * datatype to transpose the matrix.
+ *
+ * Note this program demonstrates trasposistion for one process only
+ */
 
 #include <stdlib.h>
 #include <mpi.h>
@@ -47,9 +50,6 @@ int main(int argc, char **argv) {
         MPI_Finalize();
         exit(-1);
     }
-
-    if (nprocs > 2 && rank == 0)
-        printf("Warning: demonstrates trasposistion with one proc only\n");
 
     ret = ncmpi_create(MPI_COMM_WORLD, argv[1], 
 	    NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncfile);

@@ -114,9 +114,9 @@
           do k=1, nz
           do j=1, ny
           do i=1, nx
-              buf(i, j, k) = (starts(3)+k-2)*gsizes(2)*gsizes(1) +
-     +                       (starts(2)+j-2)*gsizes(1) +
-     +                       (starts(1)+i-2)
+              buf(i, j, k) = INT((starts(3)+k-2)*gsizes(2)*gsizes(1) +
+     +                           (starts(2)+j-2)*gsizes(1) +
+     +                           (starts(1)+i-2))
           enddo
           enddo
           enddo
