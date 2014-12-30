@@ -13,6 +13,7 @@ ncmpi_vars_null_stride.o: ncmpi_vars_null_stride.c
 noclobber.o: noclobber.c
 nonblocking.o: nonblocking.c
 one_record.o: one_record.c
+profile.o: profile.c
 varn_int.o: varn_int.c
 varn_contig.o: varn_contig.c
 varn_intf.o: varn_intf.f

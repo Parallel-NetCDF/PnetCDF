@@ -259,3 +259,40 @@ TRACE-MPI-COMM: FILE nc.c FUNC NC_check_header() LINE 119 calling MPI_Bcast()
 TRACE-MPI-COMM: FILE nc.c FUNC NC_check_header() LINE 130 calling MPI_Allreduce()
 TRACE-MPI-IO:   FILE nc.c FUNC write_NC() LINE 834 calling MPI_File_write_at()
 
+The program test/testcases/profile.c can be used to print the sequence of MPI
+calls for various PnetCDF calls. It can be helpful to find unnecessary MPI
+calls under safe or not-safe mode. For example, when safe mode is disable and
+running profile on one MPI process with option "-v", the stdout is shown below.
+
+0: ---- after ncmpi_create
+0: ---- before ncmpi_enddef() ----
+TRACE-MPI-COMM: FILE nc.c FUNC NC_begins() LINE 414 calling MPI_Bcast()
+TRACE-MPI-COMM: FILE nc.c FUNC NC_check_header() LINE 111 calling MPI_Bcast()
+TRACE-MPI-IO:   FILE nc.c FUNC write_NC() LINE 770 calling MPI_File_write_at()
+0: ---- before ncmpi_redef() ----
+0: ---- before ncmpi_enddef() ----
+TRACE-MPI-COMM: FILE nc.c FUNC NC_begins() LINE 414 calling MPI_Bcast()
+TRACE-MPI-COMM: FILE nc.c FUNC NC_check_header() LINE 111 calling MPI_Bcast()
+TRACE-MPI-IO:   FILE nc.c FUNC write_NC() LINE 770 calling MPI_File_write_at()
+0: ---- before ncmpi_iput_varn_int() ----
+0: ---- before ncmpi_iput_varn_int() ----
+0: ---- before ncmpi_iput_varn_int() ----
+0: ---- before ncmpi_wait_all() ----
+TRACE-MPI-COMM: FILE nonblocking.c FUNC ncmpii_wait() LINE 680 calling MPI_Allreduce()
+TRACE-MPI-IO:   FILE vard.c FUNC ncmpii_file_set_view() LINE 88 calling MPI_File_set_view()
+TRACE-MPI-IO:   FILE nonblocking.c FUNC ncmpii_mgetput() LINE 1899 calling MPI_File_write_at_all()
+TRACE-MPI-COMM: FILE nc.c FUNC ncmpii_sync_numrecs() LINE 619 calling MPI_Allreduce()
+0: ---- before ncmpi_iput_varn_int() ----
+0: ---- before ncmpi_iget_varn_int() ----
+0: ---- before ncmpi_iget_varn_int() ----
+0: ---- before ncmpi_iget_varn_int() ----
+0: ---- before ncmpi_wait_all() ----
+TRACE-MPI-COMM: FILE nonblocking.c FUNC ncmpii_wait() LINE 680 calling MPI_Allreduce()
+TRACE-MPI-IO:   FILE vard.c FUNC ncmpii_file_set_view() LINE 88 calling MPI_File_set_view()
+TRACE-MPI-IO:   FILE nonblocking.c FUNC ncmpii_mgetput() LINE 1899 calling MPI_File_write_at_all()
+TRACE-MPI-COMM: FILE nc.c FUNC ncmpii_sync_numrecs() LINE 619 calling MPI_Allreduce()
+TRACE-MPI-IO:   FILE vard.c FUNC ncmpii_file_set_view() LINE 88 calling MPI_File_set_view()
+TRACE-MPI-IO:   FILE nonblocking.c FUNC ncmpii_mgetput() LINE 1875 calling MPI_File_read_at_all()
+0: ---- before ncmpi_close() ----
+TRACE-MPI-IO:   FILE mpincio.c FUNC ncmpiio_close() LINE 410 calling MPI_File_close()
+
