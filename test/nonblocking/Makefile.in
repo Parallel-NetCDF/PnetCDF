@@ -20,7 +20,8 @@ C_SRCS   = mcoll_perf.c \
            interleaved.c \
            i_varn_int64.c \
            bput_varn_uint.c \
-           flexible_bput.c
+           flexible_bput.c \
+           wait_after_indep.c
 
 F77_SRCS = mcoll_testf77.f \
            test_bputf77.f
@@ -56,6 +57,9 @@ interleaved: interleaved.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 flexible_bput: flexible_bput.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+wait_after_indep: wait_after_indep.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 mcoll_testf77: mcoll_testf77.o $(LIBRARY)

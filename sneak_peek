@@ -80,13 +80,13 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New example programs
-    * C/bput_varn_uint.c and F77/bput_varn_int8.f
-      test nonblocking bput_varn APIs
-    * C/i_varn_int64.c and F77/i_varn_real.f
-      test nonblocking iput_varn and iget_varn APIs
-    * C/vard_int.c F77/vard_int.f F90/vard_int.f90 CXX/vard_int.cpp show
-      how to use vard API to write/read record and fixed-size variables.
-    * C/transpose.c shows how to use ncmpi_put_vara_int_all to write a 3D array
+    * C/bput_varn_uint.c and F77/bput_varn_int8.f show the use of
+      nonblocking bput_varn APIs
+    * C/i_varn_int64.c and F77/i_varn_real.f show the use of nonblocking
+      iput_varn and iget_varn APIs
+    * C/vard_int.c F77/vard_int.f F90/vard_int.f90 CXX/vard_int.cpp show the
+      use of vard API to write/read record and fixed-size variables.
+    * C/transpose.c shows the use of ncmpi_put_vara_int_all to write a 3D array
       that is dimensional-transposed from the one stored in memory. Six
       transposed 3D arrays are saved whose dimensions are organized as ZYX,
       ZXY, YZX, YXZ, XZY, and XYZ. The C++, Fortran 77, and Fortran 90
@@ -96,6 +96,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * nonblocking/wait_after_indep.c tests if ncmpi_end_indep_data() returns
+      properly when nonblocking APIs are called in independent data mode and
+      the wait call is made after exiting the independent mode.
     * nonblocking/flexible_bput.c tests flexible bput APIs that use
       noncontiguous buffer type, noncontiguous imap and require type conversion
     * testcases/flexible2.c tests flexible APIs that perform type conversion
