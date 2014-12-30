@@ -162,8 +162,8 @@ This is essentially a placeholder for the next release note ...
       type, e.g. nc_put_vara().
     * Type conversion between NC_BYTE and unsigned char no longer checks for
       out of range error (NC_ERANGE). CDF file format specification make a
-      special case for this kind of data type conversion. See: "Note on byte data"
-      in the format specification.
+      special case for this kind of data type conversion. See: "Note on byte
+      data" in the format specification.
     * Conform with the CDF-2 and CDF-5 formats that names are normalized
       according to Unicode NFC normalization rules during encoding as UTF-8
       for storing in the file header.
@@ -176,8 +176,8 @@ This is essentially a placeholder for the next release note ...
       bug forgot to "unpacks" the temporary buffer that reads data from file to
       the user buffer using buftype.
     * fix the bug in blocking flexible get APIs when buftype is noncontiguous,
-      swap is needed, type conversion is not. The bug sets a NULL pointer to the
-      read buffer and passes it to MPI_File_read functions. See r1815.
+      swap is needed, type conversion is not. The bug sets a NULL pointer to
+      the read buffer and passes it to MPI_File_read functions. See r1815.
     * fix the bug for the NetCDF special case when there is only one record
       variable and the record size is not four-byte aligned. In this case,
       NetCDF spec says the alignment must dropped (no padding). See r1791.

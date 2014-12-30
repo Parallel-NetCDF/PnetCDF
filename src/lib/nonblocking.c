@@ -550,68 +550,44 @@ ncmpii_wait(NC  *ncp,
             int *req_ids,   /* [num_reqs] */
             int *statuses)  /* [num_reqs] */
 {
-    int i, j, err=NC_NOERR, status=NC_NOERR, fatal_err=NC_NOERR;
-    int do_read, do_write, num_w_reqs, num_r_reqs;
+    int i, j, err=NC_NOERR, status=NC_NOERR;
+    int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
     NC_req *pre_req, *cur_req;
     NC_req *w_req_head, *w_req_tail, *r_req_head, *r_req_tail;
 
     /* check if it is in define mode */
-    if (NC_indef(ncp)) fatal_err = NC_EINDEFINE;
+    if (NC_indef(ncp)) {
+        err = NC_EINDEFINE;
+        goto err_check;
+    }
 
     /* check whether collective or independent mode */
-    if (fatal_err == NC_NOERR) {
-        if (io_method == INDEP_IO)
-            fatal_err = ncmpii_check_mpifh(ncp, 0);
-        else if (io_method == COLL_IO)
-            fatal_err = ncmpii_check_mpifh(ncp, 1);
-    }
-    if (fatal_err != NC_NOERR) {
-        if (io_method == COLL_IO)
-            num_reqs = 0; /* to skip the following 2 num_reqs loops and jump to
-                             MPI_Allreduce for collectively return */
-        else /* INDEP_IO */
-            return fatal_err;
-    }
-
-    /* Note: 1) it is illegal num_reqs is larger than the linked list size
-             2) request ids must be distinct
-     */
-    j = 0;
-    for (i=0; i<num_reqs; i++) {
-        statuses[i] = NC_NOERR;
-        if (req_ids[i] == NC_REQ_NULL) /* skip NULL request */
-            continue;
-        j++;
-    }
-    /* j now is the true number of non-NULL requests, but some requests
-       may still be invalid, i.e. no such request IDs */
-
-    if (io_method == INDEP_IO && j == 0)
-        return NC_NOERR;
-    /* For collective APIs, even though some processes may have zero-length
-       requests, they must still participate the collective call. Hence,
-       only independent APIs stop here if request is of zero length.
-     */
+    if (io_method == INDEP_IO)
+        err = ncmpii_check_mpifh(ncp, 0);
+    else if (io_method == COLL_IO)
+        err = ncmpii_check_mpifh(ncp, 1);
+    if (err != NC_NOERR) goto err_check;
 
     w_req_head = w_req_tail = NULL;
     r_req_head = r_req_tail = NULL;
-    num_w_reqs = num_r_reqs = 0;
 
     /* extract the requests from the linked list into a new linked list.
        In the meantime coalesce the linked list */
 
     for (i=0; i<num_reqs; i++) {
         int found_id=-1;
-        if (req_ids[i] == NC_REQ_NULL) /* skip zero-size request */
-            continue;
 
-        if (ncp->head == NULL) { /* this reqeust is invalid */
+        statuses[i] = NC_NOERR;
+
+        if (req_ids[i] == NC_REQ_NULL) continue; /* skip NULL request */
+
+        if (ncp->head == NULL) {
+            /* no more pending requests in the queue, this reqeust is invalid */
             statuses[i] = NC_EINVAL_REQUEST;
             /* retain the first error status */
-            if (status == NC_NOERR)
-                status = NC_EINVAL_REQUEST;
+            if (status == NC_NOERR) status = NC_EINVAL_REQUEST;
             continue;
-            /* cannot break loop i, must continue to set the error status */
+            /* don't break loop i, continue to set the error status */
         }
 
         /* find req_ids[i] from the request linked list */
@@ -632,7 +608,8 @@ ncmpii_wait(NC  *ncp,
                 else /* move pre_req and cur_req to next */
                     pre_req->next = cur_req->next;
 
-                if (cur_req->rw_flag == READ_REQ) { /* add cur_req to r_req_tail */
+                if (cur_req->rw_flag == READ_REQ) {
+                    /* add cur_req to r_req_tail */
                     if (r_req_head == NULL) {
                         r_req_head = cur_req;
                         r_req_tail = cur_req;
@@ -642,9 +619,10 @@ ncmpii_wait(NC  *ncp,
                         r_req_tail = r_req_tail->next;
                     }
                     r_req_tail->next = NULL;
-                    num_r_reqs += (cur_req->num_subreqs == 0) ? 1 : cur_req->num_subreqs;
+                    num_r_reqs += (cur_req->num_subreqs == 0) ?
+                                  1 : cur_req->num_subreqs;
                     /* if this request is for record variable, then count only
-                       its subrequests (one for each individual record) */
+                     * its subrequests (one for each individual record) */
                 }
                 else { /* add cur_req to w_req_tail */
                     if (w_req_head == NULL) {
@@ -656,9 +634,10 @@ ncmpii_wait(NC  *ncp,
                         w_req_tail = w_req_tail->next;
                     }
                     w_req_tail->next = NULL;
-                    num_w_reqs += (cur_req->num_subreqs == 0) ? 1 : cur_req->num_subreqs;
+                    num_w_reqs += (cur_req->num_subreqs == 0) ?
+                                  1 : cur_req->num_subreqs;
                     /* if this request is for record variable, then count only
-                       its subrequests (one for each individual record) */
+                     * its subrequests (one for each individual record) */
                 }
                 found_id = req_ids[i]; /* indicating previous found ID */
                 cur_req = (pre_req == ncp->head) ? pre_req : pre_req->next;
@@ -691,17 +670,18 @@ ncmpii_wait(NC  *ncp,
     while (ncp->tail != NULL && ncp->tail->next != NULL)
         ncp->tail = ncp->tail->next;
 
+err_check:
     if (io_method == COLL_IO) {
         int mpireturn;
         int io_req[3], do_io[3];  /* [0]: read [1]: write [2]: error */
         io_req[0] = num_r_reqs;
         io_req[1] = num_w_reqs;
-        io_req[2] = -fatal_err;   /* all NC errors are negative */
+        io_req[2] = -err;   /* all NC errors are negative */
         TRACE_COMM(MPI_Allreduce)(io_req, do_io, 3, MPI_INT, MPI_MAX,
                                   ncp->nciop->comm);
 
-        /* if fatal_err occurs, return the API collectively */
-        if (do_io[2] != -NC_NOERR) return fatal_err;
+        /* if error occurs, return the API collectively */
+        if (do_io[2] != -NC_NOERR) return err;
 
         /* make sure if at least one process has a non-zero request, all
            processes participate the collective read/write */
@@ -709,18 +689,19 @@ ncmpii_wait(NC  *ncp,
         do_write = do_io[1];
     }
     else {
+        if (err != NC_NOERR) return err;
         do_read  = num_r_reqs;
         do_write = num_w_reqs;
     }
 
     /* carry out writes and reads separately (writes first) */
     if (do_write > 0)
-        err = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head,
-                                 WRITE_REQ, io_method);
+        err = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head, WRITE_REQ,
+                                 io_method);
 
     if (do_read > 0)
-        err = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head,
-                                 READ_REQ, io_method);
+        err = ncmpii_wait_getput(ncp, num_r_reqs, r_req_head, READ_REQ,
+                                 io_method);
 
     /* retain the first error status */
     if (status == NC_NOERR) status = err;
@@ -773,7 +754,8 @@ ncmpii_wait(NC  *ncp,
             insize = cur_req->bnelems * el_size;
 
             if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
-                if (cur_req->imaptype != MPI_DATATYPE_NULL || !cur_req->buftype_is_contig)
+                if (cur_req->imaptype != MPI_DATATYPE_NULL ||
+                    !cur_req->buftype_is_contig)
                     cbuf = NCI_Malloc(insize);
                 else
                     cbuf = cur_req->buf;
