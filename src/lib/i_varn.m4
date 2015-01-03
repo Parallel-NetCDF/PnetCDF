@@ -80,8 +80,16 @@ ncmpi_$1_varn(int                 ncid,
               MPI_Datatype        buftype,
               int                *reqid)
 {
+    *reqid = NC_REQ_NULL;
+
+    /* check for zero-size request */
+    if (num == 0 || bufcount == 0) return NC_NOERR;
+
+    if (bufcount < 0) return NC_EINVAL;
+
     return ncmpii_igetput_varn(ncid, varid, num, starts, counts, (void*)buf,
-                               bufcount, buftype, reqid, ReadWrite($1), IsBput($1));
+                               bufcount, buftype, reqid, ReadWrite($1),
+                               IsBput($1));
 }
 ')dnl
 
@@ -105,6 +113,11 @@ ncmpi_$1_varn_$2(int                ncid,
                  BufConst($1) $3   *buf,
                  int               *reqid)
 {
+    *reqid = NC_REQ_NULL;
+
+    /* check for zero request */
+    if (num == 0) return NC_NOERR;
+
     /* set bufcount to -1 indicating non-flexible API */
     return ncmpii_igetput_varn(ncid, varid, num, starts, counts, (void*)buf,
                                -1, $4, reqid, ReadWrite($1), IsBput($1));
@@ -173,11 +186,6 @@ ncmpii_igetput_varn(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
-
-    /* check for zero-size request */
-    if (num == 0 || bufcount == 0) return NC_NOERR;
-
     /* check if ncid is valid, if yes, get varp from varid */
     SANITY_CHECK(ncid, ncp, varp, rw_flag, NONBLOCKING_IO, status)
     if (status != NC_NOERR) return status;
@@ -187,28 +195,29 @@ ncmpii_igetput_varn(int               ncid,
     /* it is illegal for starts to be NULL */
     if (starts == NULL) return NC_ENULLSTART;
 
-    cbuf = buf;
-    if (buftype == MPI_DATATYPE_NULL) {
-        /* In this case, bufcount is ignored and will be recalculated to match
-         * counts[]. Note buf's data type must match the data type of
-         * variable defined in the file - no data conversion will be done.
-         */
-        bufcount = 0;
+    if (counts != NULL) {
         for (j=0; j<num; j++) {
-            MPI_Offset bufcount_j = 1;
             for (i=0; i<varp->ndims; i++) {
                 if (counts[j][i] < 0) /* no negative counts[][] */
                     return NC_ENEGATIVECNT;
-                bufcount_j *= counts[j][i];
             }
-            bufcount += bufcount_j;
         }
-        /* assign buftype match with the variable's data type */
-        ptype = buftype = ncmpii_nc2mpitype(varp->type);
+    }
+
+    cbuf = buf;
+    if (buftype == MPI_DATATYPE_NULL) {
+        /* In this case, we make ptype match the variable data type defined
+         * in file - no data conversion will be done. Also, it means buf is
+         * contiguous. buftype will no longer be used.
+         */
+        ptype = ncmpii_nc2mpitype(varp->type);
         MPI_Type_size(ptype, &el_size); /* buffer element size */
     }
     else if (bufcount == -1) { /* if (IsPrimityMPIType(buftype)) */
-        /* this subroutine is called from a high-level API */
+        /* this subroutine is called from a high-level API
+         * Also, it means the user buf is contiguous.
+         * Assign ptype to buftype, and buftype will no longer be used.
+         */
         ptype = buftype;
         MPI_Type_size(ptype, &el_size); /* buffer element size */
     }
@@ -272,13 +281,9 @@ ncmpii_igetput_varn(int               ncid,
             goto err_check;
         }
 
-        for (buflen=1, j=0; j<varp->ndims; j++) {
-            if (_counts[i][j] < 0) { /* any negative counts[][] is illegal */
-                status = NC_ENEGATIVECNT;
-                goto err_check;
-            }
+        for (buflen=1, j=0; j<varp->ndims; j++)
             buflen *= _counts[i][j];
-        }
+
         if (buflen == 0) continue;
         status = ncmpii_igetput_varm(ncp, varp, starts[i], _counts[i], NULL,
                                      NULL, bufp, buflen, ptype, reqid,

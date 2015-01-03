@@ -88,8 +88,6 @@ ncmpii_abuf_coalesce(NC *ncp)
 {
     int i;
 
-    if (ncp->abuf == NULL) return NC_NOERR;
-
     i = ncp->abuf->tail - 1;
     /* tail is always pointing to the last (empty) entry of occupy_table[] */
 
@@ -571,8 +569,9 @@ ncmpii_wait(NC  *ncp,
     w_req_head = w_req_tail = NULL;
     r_req_head = r_req_tail = NULL;
 
-    /* extract the requests from the linked list into a new linked list.
-       In the meantime coalesce the linked list */
+    /* extract the requests from the linked list into two separate linked
+     * lists for read and write. In the meantime coalesce the linked list.
+     */
 
     for (i=0; i<num_reqs; i++) {
         int found_id=-1;
@@ -593,7 +592,10 @@ ncmpii_wait(NC  *ncp,
         /* find req_ids[i] from the request linked list */
         pre_req = cur_req = ncp->head;
         while (cur_req != NULL) {
-            /* there may be more than one linked node with the same ID */
+            /* there may be more than one linked node with the same ID.
+             * In this case these requests are from a single nonblocking
+             * varn API.
+             */
             if (cur_req->id == req_ids[i]) { /* found */
                 /* point all subrequests' statuses to status */
                 cur_req->status = statuses + i;
@@ -645,7 +647,7 @@ ncmpii_wait(NC  *ncp,
             else if (found_id >= 0) {
                 /* same request IDs are stored contiguously in the linked list
                  * so if it is already found and this next request has a
-                 * different ID, no need to contibue check the rest list */
+                 * different ID, no need to continue checking the rest list */
                 break; /* while loop */
             }
             else {
@@ -706,8 +708,10 @@ err_check:
     /* retain the first error status */
     if (status == NC_NOERR) status = err;
 
-    /* post-IO data processing: may need byte-swap user write buf, or
-                                byte-swap and type convert user read buf */
+    /* post-IO data processing: In write case, we may need to byte-swap user
+     * write buf if it is used as the write buffer in MPI write call. For read
+     * case, we may need to unpack/byte-swap/type-convert a temp buffer to
+     * user read buf */
 
     if (w_req_head != NULL) {
         cur_req = w_req_head;
@@ -736,7 +740,7 @@ err_check:
         }
         /* once the bput requests are served, we reclaim the space and try
          * coalesce the freed space */
-        ncmpii_abuf_coalesce(ncp);
+        if (ncp->abuf != NULL) ncmpii_abuf_coalesce(ncp);
     }
 
     if (r_req_head != NULL) {

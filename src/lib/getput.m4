@@ -1235,8 +1235,7 @@ ncmpii_getput_varm(NC               *ncp,
         goto err_check;
     }
 
-    if (nbytes == 0) {
-        /* this process has nothing to read/write */
+    if (nbytes == 0) { /* this process has nothing to read/write */
         err = NCcoordck(ncp, varp, start, rw_flag);
         goto err_check;
     }
@@ -1246,7 +1245,8 @@ ncmpii_getput_varm(NC               *ncp,
      * have to process this one record at a time.
      */
 
-    /* check if the request is contiguous in file */
+    /* construct an MPI filetype to be set as this process's fileview.
+     * First, check if the request is contiguous in file */
     if (stride == NULL &&
         ncmpii_is_request_contiguous(ncp, varp, start, count)) {
 
@@ -1370,7 +1370,7 @@ mpi_io:
     else
         fh = ncp->nciop->independent_fh;
 
-    /* MPI_File_set_view is collective if (io_method == COLL_IO) */
+    /* MPI_File_set_view is collective */
     err = ncmpii_file_set_view(ncp, fh, &offset, filetype);
     if (err != NC_NOERR) {
         nbytes = 0; /* skip this request */
