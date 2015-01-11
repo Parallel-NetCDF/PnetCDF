@@ -566,8 +566,10 @@ ncmpii_wait(NC  *ncp,
         err = ncmpii_check_mpifh(ncp, 1);
     if (err != NC_NOERR) goto err_check;
 
-    w_req_head = w_req_tail = NULL;
-    r_req_head = r_req_tail = NULL;
+    w_req_head = NULL;
+    w_req_tail = NULL;
+    r_req_head = NULL;
+    r_req_tail = NULL;
 
     /* extract the requests from the linked list into two separate linked
      * lists for read and write. In the meantime coalesce the linked list.
