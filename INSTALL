@@ -21,6 +21,8 @@ the default configuration of PnetCDF up and running.
 
     - REQUIRED: An MPI C compiler
 
+    - REQUIRED: GNU m4 (https://www.gnu.org/software/m4/m4.html)
+
     - OPTIONAL: An MPI C++ compiler, if C++ applications are to be used.
       If you do not require support for C++ applications,
       you can disable this support using the configure option
@@ -46,9 +48,9 @@ the default configuration of PnetCDF up and running.
 
 (b) Unpack the tar file and go to the top level directory:
 
-      gunzip parallel-netcdf-1.4.0.tar.gz
-      tar xf parallel-netcdf-1.4.0.tar
-      cd parallel-netcdf-1.4.0
+      gunzip parallel-netcdf-1.6.0.tar.gz
+      tar xf parallel-netcdf-1.6.0.tar
+      cd parallel-netcdf-1.6.0
 
 (c) Choose an installation directory, say $HOME/PnetCDF
 

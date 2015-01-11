@@ -27,7 +27,7 @@ Tasks immediately before a new release (in the following order)
     Run command below to duplicate the current trunk to the new tag:
 
     svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-5-0pre \
+             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-5-0pre1 \
              -m "Tagging pre-release version 1.5.0.pre1"
 
  5. Generate file "configure".
