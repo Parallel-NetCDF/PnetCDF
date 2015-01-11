@@ -19,7 +19,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FILE_NAME "./large_files.nc"
+#define FILE_NAME "./testfile.nc"
 
 static
 void check_err(const int stat, const int line, const char *file) {
@@ -187,9 +187,6 @@ main(int argc, char **argv) {
 
    printf("ok\n");
    printf("*** Tests successful!\n");
-
-   /* Delete the file. */
-   (void) remove(FILE_NAME);
 
 fn_exit:
    MPI_Finalize();
