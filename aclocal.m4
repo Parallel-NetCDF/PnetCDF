@@ -835,7 +835,7 @@ EOF
 	if AC_TRY_EVAL(doit); then
 	    doit='$FC ${FFLAGS} -c conftestf.f'
 	    if AC_TRY_EVAL(doit); then
-	        doit='$FC -o conftest ${FFLAGS} ${FLDFLAGS} conftestf.o conftest.o ${LIBS}'
+	        doit='$FC -o conftest ${FFLAGS} ${FLDFLAGS} conftestf.o conftest.o ${LDFLAGS} ${LIBS}'
 	        if AC_TRY_EVAL(doit); then
 		    doit=./conftest
 		    if AC_TRY_EVAL(doit); then
