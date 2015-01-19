@@ -863,12 +863,12 @@ off_compare(const void *a, const void *b)
 static int
 ncmpii_flatten(int          ndim,    /* number of dimensions */
                int          el_size, /* array element size */
-               MPI_Offset  *dimlen,  /* dimension lengths */
+               MPI_Offset  *dimlen,  /* [ndim] dimension lengths */
                MPI_Offset   offset,  /* starting file offset of variable */
                MPI_Aint     buf_addr,/* starting buffer address */
-               MPI_Offset  *start,   /* starts of subarray */
-               MPI_Offset  *count,   /* counts of subarray */
-               MPI_Offset  *stride,  /* strides of subarray */
+               MPI_Offset  *start,   /* [ndim] starts of subarray */
+               MPI_Offset  *count,   /* [ndim] counts of subarray */
+               MPI_Offset  *stride,  /* [ndim] strides of subarray */
                MPI_Offset  *nseg,    /* OUT: number of segments */
                off_len     *seg)     /* OUT: array of segments */
 {
