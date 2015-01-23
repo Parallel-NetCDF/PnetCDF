@@ -11,10 +11,12 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib
-FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-LDFLAGS  += -L../../src/lib
-LIBS     := -lpnetcdf $(LIBS)
+INCLUDES    = -I../../src/lib
+FPPFLAGS   += -I../../src/libf @FC_MODINC@../../src/libf90
+LDFLAGS    += -L../../src/lib
+FLDFLAGS   += $(LDFLAGS)
+F90LDFLAGS += $(LDFLAGS)
+LIBS       := -lpnetcdf $(LIBS)
 
 C_SRCS = pnetcdf-write-from-master.c \
          pnetcdf-read-from-master.c \
@@ -81,10 +83,10 @@ pnetcdf-write-buffered: pnetcdf-write-buffered.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
 
 pnetcdf-write-bufferedf77: pnetcdf-write-bufferedf77.o $(LIBRARY)
-	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+	$(LINK.f) $< $(FLDFLAGS) $(LIBS)
 
 pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
