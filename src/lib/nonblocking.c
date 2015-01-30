@@ -433,7 +433,10 @@ ncmpii_construct_filetypes(NC           *ncp,
            call to MPI_File_set_view() */
         *filetype = MPI_BYTE;
     }
-    else {
+    else if (num_reqs == 1 && displacements[0] == 0) {
+        MPI_Type_dup(ftypes[0], filetype);
+    }
+    else { /* if (num_reqs > 1 || (num_reqs == 1 && displacements[0] > 0)) */
         /* all ftypes[] created fine, now concatenate all ftypes[] */
         err = ncmpii_concatenate_datatypes(num_reqs,
                                            blocklens,
