@@ -48,10 +48,11 @@ static int n_fails;
     HANDLE_ERROR                                                             \
     status = func(ncid2, NC_GLOBAL, name2, b2);                              \
     HANDLE_ERROR                                                             \
-    if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"attribute[%d] %s: %s buf1 != buf2 at position %d",      \
-                i,name1,#nctype,pos);                                        \
-    HANDLE_DIFF(str)                                                         \
+    if ((pos = memcmp(b1, b2, len)) != 0) {                                  \
+        printf("P%d: diff at line %d (attribute[%d] %s: %s buf1 != buf2 at position %d)\n", \
+               rank,__LINE__,i,name1,#nctype,pos);                           \
+        n_fails++;                                                           \
+    }                                                                        \
     free(b1);                                                                \
     free(b2);                                                                \
     break;                                                                   \
@@ -65,10 +66,11 @@ static int n_fails;
     HANDLE_ERROR                                                             \
     status = func(ncid2, i, name2, b2);                                      \
     HANDLE_ERROR                                                             \
-    if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"variable[%d] %s: attribute[%d] %s: %s buf1 != buf2 at position %d", \
-                i,name,j,name1,#nctype,pos);                                 \
-    HANDLE_DIFF(str)                                                         \
+    if ((pos = memcmp(b1, b2, len)) != 0) {                                  \
+        printf("P%d: diff at line %d (variable[%d] %s: attribute[%d] %s: %s buf1 != buf2 at position %d)\n", \
+               rank,__LINE__,i,name,j,name1,#nctype,pos);                    \
+        n_fails++;                                                           \
+    }                                                                        \
     free(b1);                                                                \
     free(b2);                                                                \
     break;                                                                   \
@@ -83,10 +85,11 @@ static int n_fails;
     HANDLE_ERROR                                                             \
     status = func(ncid2, i, start, shape, b2);                               \
     HANDLE_ERROR                                                             \
-    if ((pos = memcmp(b1, b2, len)) != 0)                                    \
-        sprintf(str,"variable[%d] %s: %s buf1 != buf2 at position %d",       \
-                i,name,#nctype,pos);                                         \
-    HANDLE_DIFF(str)                                                         \
+    if ((pos = memcmp(b1, b2, len)) != 0) {                                  \
+        printf("P%d: diff at line %d variable[%d] %s: %s buf1 != buf2 at position %d)\n", \
+               rank,__LINE__,i,name,#nctype,pos);                            \
+        n_fails++;                                                           \
+    }                                                                        \
     free(b1);                                                                \
     free(b2);                                                                \
     break;                                                                   \
@@ -666,10 +669,13 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
                    sum_size);
     }
 
-    if (n_fails == 0 && mynod == 0) {
-       char cmd_str[256];
-       sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
-       printf("%-66s ------ pass\n", cmd_str);
+    MPI_Allreduce(MPI_IN_PLACE, &n_fails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+    char cmd_str[256];
+    sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
+    if (mynod == 0) {
+        if (n_fails) printf("%-66s ------ failed with %d errors\n", cmd_str, n_fails);
+        else         printf("%-66s ------ pass\n", cmd_str);
     }
 
     MPI_Finalize();
