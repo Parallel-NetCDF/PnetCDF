@@ -1350,6 +1350,7 @@
       integer  nfmpi_buffer_attach
       integer  nfmpi_buffer_detach
       integer  nfmpi_inq_buffer_usage
+      integer  nfmpi_inq_buffer_size
       integer  nfmpi_inq_put_size
       integer  nfmpi_inq_get_size
       integer  nfmpi_inq_header_size
@@ -1360,6 +1361,7 @@
       external nfmpi_buffer_attach
       external nfmpi_buffer_detach
       external nfmpi_inq_buffer_usage
+      external nfmpi_inq_buffer_size
       external nfmpi_inq_put_size
       external nfmpi_inq_get_size
       external nfmpi_inq_header_size
