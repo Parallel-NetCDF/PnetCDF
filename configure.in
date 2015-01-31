@@ -999,7 +999,7 @@ AC_SUBST(large_file_test)
 
 dnl PNETCDF_INC and PNETCDF_LIB are for benchmark programs use only
 PNETCDF_INC=${BUILDDIR}/src/libf90
-PNETCDF_LIB=${BUILDDIR}/src/lib
+PNETCDF_LIB="-L${BUILDDIR}/src/lib"
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
