@@ -11,8 +11,9 @@ VPATH   = @srcdir@
 
 include ../../macros.make
 
+# note the order of -L list matters
 INCLUDES  = -I../../src/lib -I../../src/libf
-FLDFLAGS += -L../../src/lib $(LDFLAGS)
+FLDFLAGS := -L../../src/lib $(FLDFLAGS) $(LDFLAGS)
 LIBS     := -lpnetcdf $(LIBS)
 
 F77_SRCS  = nonblocking_write.f \
