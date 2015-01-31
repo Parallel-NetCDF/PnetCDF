@@ -11,8 +11,9 @@ VPATH   = @srcdir@
 
 include ../../macros.make
 
+# note the order of -L list matters
 INCLUDES    = @FC_MODINC@../../src/libf90
-F90LDFLAGS += -L../../src/lib $(LDFLAGS)
+F90LDFLAGS := -L../../src/lib $(F90LDFLAGS) $(LDFLAGS)
 LIBS       := -lpnetcdf $(LIBS)
 
 F90_SRCS  = nonblocking_write.f90 \

@@ -11,9 +11,10 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
+# note the order of -L list matters
 INCLUDES    = -I../../src/lib
 FPPFLAGS   += -I../../src/libf @FC_MODINC@../../src/libf90
-LDFLAGS    += -L../../src/lib
+LDFLAGS    := -L../../src/lib $(LDFLAGS)
 FLDFLAGS   += $(LDFLAGS)
 F90LDFLAGS += $(LDFLAGS)
 LIBS       := -lpnetcdf $(LIBS)
