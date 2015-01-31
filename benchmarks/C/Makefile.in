@@ -11,8 +11,9 @@ VPATH   = @srcdir@
 
 include ../../macros.make
 
+# note the order of -L list matters
 INCLUDES  = -I../../src/lib
-LDFLAGS  += -L../../src/lib
+LDFLAGS  := -L../../src/lib $(LDFLAGS)
 LIBS     := -lpnetcdf $(LIBS)
 
 C_SRCS    = aggregation.c \
