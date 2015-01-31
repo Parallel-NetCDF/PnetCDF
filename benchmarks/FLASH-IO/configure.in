@@ -123,18 +123,20 @@ AC_ARG_WITH(pnetcdf,
 )
 
 AC_MSG_CHECKING(PnetCDF Fortran library)
-PNETCDF_INC=${PNETCDF_INSTALL}/include
-PNETCDF_LIB=${PNETCDF_INSTALL}/lib
-
-CPPFLAGS+=" -I${PNETCDF_INC}"
-LDFLAGS+=" -L${PNETCDF_LIB}"
-LIBS+=" -lpnetcdf"
+if test "x${PNETCDF_INSTALL}" != x; then
+   PNETCDF_INC=${PNETCDF_INSTALL}/include
+   PNETCDF_LIB="-L${PNETCDF_INSTALL}/lib"
+fi
 
 have_pnetcdf=no
 
 AC_LANG_PUSH([Fortran])
 FCFLAGS_save=${FCFLAGS}
-FCFLAGS="${FCFLAGS} ${FC_MODINC}${PNETCDF_INC}"
+LIBS_save=${LIBS}
+if test "x${PNETCDF_INC}" != x; then
+   FCFLAGS="${FCFLAGS} ${FPPFLAGS} ${FC_MODINC}${PNETCDF_INC}"
+fi
+LIBS="-lpnetcdf ${LIBS}"
 AC_LINK_IFELSE([AC_LANG_CALL([], [nfmpi_create])],
    [AC_MSG_RESULT(works)
     have_pnetcdf=yes],
@@ -143,6 +145,7 @@ AC_LINK_IFELSE([AC_LANG_CALL([], [nfmpi_create])],
    ]
 )
 FCFLAGS=${FCFLAGS_save}
+LIBS=${LIBS_save}
 AC_LANG_POP([Fortran])
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
