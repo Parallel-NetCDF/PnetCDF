@@ -554,7 +554,8 @@ ncmpii_wait(NC  *ncp,
     int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
     NC_req *pre_req, *cur_req;
-    NC_req *w_req_head, *w_req_tail, *r_req_head, *r_req_tail;
+    NC_req *w_req_head=NULL, *w_req_tail=NULL;
+    NC_req *r_req_head=NULL, *r_req_tail=NULL;
 
     /* check if it is in define mode */
     if (NC_indef(ncp)) {
@@ -568,11 +569,6 @@ ncmpii_wait(NC  *ncp,
     else if (io_method == COLL_IO)
         err = ncmpii_check_mpifh(ncp, 1);
     if (err != NC_NOERR) goto err_check;
-
-    w_req_head = NULL;
-    w_req_tail = NULL;
-    r_req_head = NULL;
-    r_req_tail = NULL;
 
     /* extract the requests from the linked list into two separate linked
      * lists for read and write. In the meantime coalesce the linked list.
