@@ -954,6 +954,13 @@ if test "x${debug}" = xyes; then
      FFLAGS=`echo   $FFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
     FCFLAGS=`echo  $FCFLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
    F90FLAGS=`echo $F90FLAGS | sed 's/-O. *//g' | sed 's/-fast *//g'`
+
+   dnl add -O0 to all flags
+     CFLAGS="${CFLAGS} -O0"
+   CXXFLAGS="${CXXFLAGS} -O0"
+     FFLAGS="${FFLAGS} -O0"
+    FCFLAGS="${FCFLAGS} -O0"
+   F90FLAGS="${F90FLAGS} -O0"
 fi
 
 chmod u+x ${srcdir}/scripts/install-sh
@@ -1122,10 +1129,12 @@ if test "$enable_fortran" = yes ; then
               MPIF90      = ${MPIF90}"
 fi
 echo "\
-              CFLAGS      = ${CFLAGS}"
+              CFLAGS      = ${CFLAGS}
+              CPPFLAGS    = ${CPPFLAGS}"
 if test "$has_mpicxx" = yes ; then
   echo "\
-              CXXFLAGS    = ${CXXFLAGS}"
+              CXXFLAGS    = ${CXXFLAGS}
+              CXXCPPFLAGS = ${CXXCPPFLAGS}"
 fi
 if test "$enable_fortran" = yes ; then
   echo "\
@@ -1135,7 +1144,6 @@ if test "$enable_fortran" = yes ; then
               FPPFLAGS    = ${FPPFLAGS}"
 fi
 echo "\
-              CPPFLAGS    = ${CPPFLAGS}
               LDFLAGS     = ${LDFLAGS}
               LIBS        = ${LIBS}
 
