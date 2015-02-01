@@ -31,7 +31,7 @@ PNETCDF_RELEASE_DATE2=`echo $SVN_DATE | cut -d' ' -f2`
 PNETCDF_RELEASE_DATE=`echo $SVN_DATE | cut -d' ' -f6,7,8 | cut -d')' -f1`
 
 dnl user defined macro for printing messages for debugging
-_DEBUG=no
+_DEBUG=yes
 AC_DEFUN([UD_MSG_DEBUG],
          [if test "x${_DEBUG}" = xyes ; then
              AC_MSG_NOTICE([DEBUG: $1])
@@ -126,11 +126,13 @@ AC_DEFUN([UD_CHECK_MPI_COMPILER], [
    if test "x$MPI_INSTALL"  != x ; then
       UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
       if test "x$$1" = x ; then
-         UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL)
-         AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL])
-         if test "x$$1" = x ; then
+         if test "x$$1" = x && (test -d "${MPI_INSTALL}/bin") ; then
             UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL/bin)
             AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL/bin])
+         fi
+         if test "x$$1" = x ; then
+             UD_MSG_DEBUG(search possible $1 under $MPI_INSTALL)
+             AC_PATH_PROGS([$1], [$2], [], [$MPI_INSTALL])
          fi
       else
          UD_MSG_DEBUG(check if file $$1 exists)
