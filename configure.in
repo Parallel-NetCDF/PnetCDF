@@ -34,7 +34,7 @@ dnl user defined macro for printing messages for debugging
 _DEBUG=no
 AC_DEFUN([UD_MSG_DEBUG],
          [if test "x${_DEBUG}" = xyes ; then
-             AC_MSG_NOTICE(DEBUG: $1)
+             AC_MSG_NOTICE([DEBUG: $1])
           fi
          ]
 )
@@ -119,7 +119,7 @@ AC_ARG_WITH(mpi,
    fi
 )
 if test "x${MPI_INSTALL}" != x && (! test -d "${MPI_INSTALL}") ; then
-   AC_MSG_WARN(Directory '${MPI_INSTALL}' specified in --with-mpi does not exist)
+   AC_MSG_ERROR(Directory '${MPI_INSTALL}' specified in --with-mpi does not exist)
 fi
 
 AC_DEFUN([UD_CHECK_MPI_COMPILER], [
@@ -151,7 +151,7 @@ AC_DEFUN([UD_CHECK_MPI_COMPILER], [
       fi
    else
        UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is NOT used)
-       UD_MSG_DEBUG(check if $1 is defined. If yes, check if file exists)
+       UD_MSG_DEBUG([check if $1 is defined. If yes, check if file exists])
        if test "x$$1" != x && (! test -f "$$1") ; then
           UD_MSG_DEBUG(check if file $$1 exists under user's PATH)
           AC_PATH_PROGS([$1], [$$1])
