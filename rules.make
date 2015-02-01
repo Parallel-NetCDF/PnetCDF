@@ -173,7 +173,7 @@ clean:		FORCE
 	@if [ -n "$(SUBDIRS)" ]; then \
 	    subdirs="$(SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
-		(cd $$subdir && $(MAKE) $(MFLAGS) clean) || exit 1; \
+		(cd $$subdir && $(MAKE) $(MFLAGS) clean) ; \
 	    done; \
 	fi
 	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
@@ -183,7 +183,7 @@ distclean:	FORCE
 	@if [ -n "$(PACKING_SUBDIRS)" ]; then \
 	    subdirs="$(PACKING_SUBDIRS)"; \
 	    for subdir in $$subdirs; do \
-		(cd $$subdir && $(MAKE) $(MFLAGS) distclean) || exit 1; \
+		(cd $$subdir && $(MAKE) $(MFLAGS) distclean) ; \
 	    done; \
 	fi
 	@if [ -n "$(PACKING_SUBDIRS)" ]; then \
@@ -192,10 +192,11 @@ distclean:	FORCE
 		if ! [ $(srcdir) -ef `pwd` ] ; then rmdir $$subdir ; fi \
 	    done; \
 	fi
+	@$(RM) -rf SunWS_cache
 	@$(RM) -f *.o *.a *.so *.sl *.i *.Z core core.* $(GARBAGE) \
 		  *.gcda *.gcno gmon.out \
-	          MANIFEST *.log $(DIST_GARBAGE) Makefile cscope.out cscope.files
-	@$(RM) -rf SunWS_cache
+	          MANIFEST *.log $(DIST_GARBAGE) cscope.out cscope.files
+	@$(RM) -f Makefile
 
 ################################################################################
 # Dependencies:
