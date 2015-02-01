@@ -31,7 +31,7 @@ PNETCDF_RELEASE_DATE2=`echo $SVN_DATE | cut -d' ' -f2`
 PNETCDF_RELEASE_DATE=`echo $SVN_DATE | cut -d' ' -f6,7,8 | cut -d')' -f1`
 
 dnl user defined macro for printing messages for debugging
-_DEBUG=yes
+_DEBUG=no
 AC_DEFUN([UD_MSG_DEBUG],
          [if test "x${_DEBUG}" = xyes ; then
              AC_MSG_NOTICE([DEBUG: $1])
