@@ -3,34 +3,46 @@ $Id$
 ==============================================================================
 Tasks immediately before a new release (must run in the following order)
 ==============================================================================
+ 0. Make sure build is successful
+    * build and test under the same directory as source
+      - autoreconf
+      - configure (and many command-line options)
+      - make check
+      - make ptests
+      - make install (and check if all files are installed in the right places)
+      - make uninstall (and make sure all installed files are deleted)
+      - make clean (and make sure all object files are deleted)
+      - make distclean (and make sure all non-source files are deleted)
+    * build and test under a different directory
+
  1. Set the release version.
     In file "configure.in", variable $PNETCDF_VERSION indicates the version.
     It is automatically generated from the 2nd argument of AC_INIT call.
     Revise that string to the right release version.  For example,
 
-    AC_INIT([parallel-netcdf], [1.5.0.pre1], [parallel-netcdf@mcs.anl.gov])
-                                ^^^^^^^^^^
+    AC_INIT([parallel-netcdf], [1.6.0], [parallel-netcdf@mcs.anl.gov])
+                                ^^^^^
 
  2. Update file "RELEASE_NOTES".
     Copy the contents of file "sneak_peek" into file "RELEASE_NOTES"
-    Clear up file "sneak_peek" (reset all items to none) and
-    add release version and date at the top of file "RELEASE_NOTES".
+    Add release version and date at the top of file "RELEASE_NOTES".
+    Clear up file "sneak_peek" (reset all items to none)
 
  3. Update the release date.
     Run command "svn commit" to get the svn property \$LastChangedDate\$
     updated in file "configure.in". That string will be used as the official
     release date.
 
-    svn commit -m "set release date of version 1.5.0.pre1 to today"
+    svn commit -m "set release date of version 1.6.0 to today"
 
  4. Create an SVN tag.
     Run command below to duplicate the current trunk to the new tag:
 
     svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-5-0pre1 \
-             -m "Tagging pre-release version 1.5.0.pre1"
+             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-6-0 \
+             -m "Tagging release version 1.6.0"
 
- 5. Generate file "configure".
+ 5. Generate a new file "configure" with a new release date.
     Run command "autoreconf" to generate file "configure"  which will be
     included in the release (but not to be saved in the SVN repo).
     Preferably, use autotools versnion 2.69 or higher to run "autoreconf".
@@ -46,11 +58,11 @@ Tasks immediately before a new release (must run in the following order)
 
  8. Generate SHA1 checksums
     Run command:
-    openssl sha1 parallel-netcdf-1.5.0.pre1.tar.gz
-    openssl sha1 parallel-netcdf-1.5.0.pre1.tar.bz2
+    openssl sha1 parallel-netcdf-1.6.0.tar.gz
+    openssl sha1 parallel-netcdf-1.6.0.tar.bz2
 
     Example command-line output:
-    SHA1(parallel-netcdf-1.5.0.pre1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+    SHA1(parallel-netcdf-1.6.0.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
 
 =====================================================
 Convention of setting version numbers.
