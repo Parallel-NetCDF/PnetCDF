@@ -1,7 +1,7 @@
 $Id$
 
 ==============================================================================
-Tasks immediately before a new release (in the following order)
+Tasks immediately before a new release (must run in the following order)
 ==============================================================================
  1. Set the release version.
     In file "configure.in", variable $PNETCDF_VERSION indicates the version.
@@ -36,7 +36,7 @@ Tasks immediately before a new release (in the following order)
     Preferably, use autotools versnion 2.69 or higher to run "autoreconf".
 
  6. Create all Makefiles.
-    Run command "configure" to create all Makefiles, so we can run command
+    Run command "./configure" to create all Makefiles, so we can run command
     "make dist" to create the tar balls.
 
  7. Create tar balls.
