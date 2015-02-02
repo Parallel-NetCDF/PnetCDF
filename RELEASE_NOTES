@@ -2,7 +2,7 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
-version  1.6.0 (January ??? 2015)
+version  1.6.0 (February 2, 2015)
 -------------------------------------
 
   o Format conformation updates:
@@ -186,7 +186,7 @@ version  1.6.0 (January ??? 2015)
       for further detailed discussion.
 
 -------------------------------------
-version  1.5.0 (July 8 2014)
+version  1.5.0 (July 8, 2014)
 -------------------------------------
 
   o New features
@@ -390,7 +390,7 @@ version  1.5.0 (July 8 2014)
       not the last record.
 
 -------------------------------------
-version  1.4.1 (December 23 2013)
+version  1.4.1 (December 23, 2013)
 -------------------------------------
 
   o Bug fix:
@@ -421,7 +421,7 @@ version  1.4.1 (December 23 2013)
 
 
 -------------------------------------
-version  1.4.0 (November 17 2013)
+version  1.4.0 (November 17, 2013)
 -------------------------------------
 
   o New APIs
