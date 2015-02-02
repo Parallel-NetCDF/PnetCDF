@@ -109,6 +109,7 @@ options can be found using:
 
 Here lists a few important options:
 
+  --prefix=PREFIX         install PnetCDF files in PREFIX [/usr/local]
   --enable-echo           Turn on strong echoing. [default: disabled]
   --disable-largefile     omit support for large files
   --disable-mpi-io-test   Disable check for MPI-IO support in MPI
@@ -169,19 +170,19 @@ Some influential environment variables:
 
 Two type of testings are implemented in PnetCDF: sequential and parallel.
 For testing sequential programs, the command is
-     make testing
+     make check
 For testing parallel programs, the command is
      make ptest
 The parallel test uses up to 8 MPI processes.
 
-There are three environment variables that can be used to run testing on
-a cross compile platform.
+There are three environment variables that can be used to run make check/ptest
+on a cross compile platform.
  - TEST_MPIRUN : command to launch MPI jobs. default: mpiexec
  - TEST_SEQRUN : command to run MPI executable sequentially. default: ./
  - TEST_OUTDIR : output directory. default: ./
 
 Examples:
-    make testing TEST_OUTDIR=/scratch
+    make check TEST_OUTDIR=/scratch
     make ptest TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=/scratch
 
 Note the keyword "NP" used in the environment variable string TEST_MPIRUN.
