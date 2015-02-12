@@ -363,6 +363,8 @@
       integer NF_ETYPE_MISMATCH
       integer NF_ETYPESIZE_MISMATCH
       integer NF_ESTRICTCDF2
+      integer NF_ENOTRECVAR
+      integer NF_ENOTFILL
 
       integer NF_EMULTIDEFINE
       integer NF_EMULTIDEFINE_OMODE,      NF_ECMODE
@@ -423,6 +425,8 @@
       PARAMETER (NF_ETYPE_MISMATCH          = -230)   ! element type of the MPI derived data type mismatches the variable type
       PARAMETER (NF_ETYPESIZE_MISMATCH      = -231)   ! file type size mismatches buffer type size
       PARAMETER (NF_ESTRICTCDF2             = -232)   ! Attempting CDF-5 operation on CDF-2 file
+      PARAMETER (NF_ENOTRECVAR              = -233)   ! Attempting operation only for record variables
+      PARAMETER (NF_ENOTFILL                = -234)   ! Attempting to fill a variable when its fill mode is off
 
 !
 ! PnetCDF header inconsistency errors start from -250

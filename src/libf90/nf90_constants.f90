@@ -256,6 +256,8 @@
       NF90_ETYPE_MISMATCH           = NF_ETYPE_MISMATCH           , & ! element type of the MPI derived data type mismatches the variable type
       NF90_ETYPESIZE_MISMATCH       = NF_ETYPESIZE_MISMATCH       , & ! file type size mismatches buffer type size
       NF90_ESTRICTCDF2              = NF_ESTRICTCDF2              , & ! Attempting CDF-5 operation on CDF-2 file
+      NF90_ENOTRECVAR               = NF_ENOTRECVAR               , & ! Attempting operation only for record variables
+      NF90_ENOTFILL                 = NF_ENOTFILL                 , & ! Attempting to fill a variable when its fill mode is off
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions on multiprocesses conflict
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! file create/open modes are inconsistent among processes
       NF90_EMULTIDEFINE_DIM_NUM     = NF_EMULTIDEFINE_DIM_NUM     , & ! inconsistent number of dimensions
