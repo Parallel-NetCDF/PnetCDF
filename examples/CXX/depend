@@ -11,3 +11,4 @@ put_varn_float.o: put_varn_float.cpp
 put_varn_int.o: put_varn_int.cpp
 transpose.o: transpose.cpp
 vard_int.o: vard_int.cpp
+fill_mode.o: fill_mode.cpp

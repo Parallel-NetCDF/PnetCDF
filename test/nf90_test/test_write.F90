@@ -1430,13 +1430,9 @@
         subroutine test_nf90mpi_set_fill()
         use pnetcdf
         implicit none
-
-        integer nok             !/* count of valid comparisons */
-        nok = 0
-#if 0   
 #include "tests.inc"
-        character*2 ATT_NAME
-        integer VARID, ATT_TYPE, NATTS
+        ! character*2 ATT_NAME
+        ! integer VARID, ATT_TYPE, NATTS
 
         integer ncid
         integer vid
@@ -1446,11 +1442,14 @@
         integer old_fillmode
         character*1 text
         doubleprecision value
-        doubleprecision fill
+        doubleprecision fill, fills(1)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) length
+        integer index2indexes
+        integer nok             !/* count of valid comparisons */
 
         value = 0
+        nok = 0
 
 !           /* bad ncid */
         err = nf90mpi_set_fill(BAD_ID, NF90_NOFILL, old_fillmode)
@@ -1484,6 +1483,11 @@
             call errore('bad fillmode: ', err)
 
 !           /* proper calls */
+        err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
+        if (err .ne. NF90_NOERR) &
+            call errore('nf90mpi_set_fill: ', err)
+        if (old_fillmode .ne. NF90_NOFILL) &
+            call errori('Unexpected old fill mode: ', old_fillmode)
         err = nf90mpi_set_fill(ncid, NF90_NOFILL, old_fillmode)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_set_fill: ', err)
@@ -1492,8 +1496,6 @@
         err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_set_fill: ', err)
-        if (old_fillmode .ne. NF90_NOFILL) &
-            call errori('Unexpected old fill mode: ', old_fillmode)
 
 !           /* define dims & vars */
         call def_dims(ncid)
@@ -1516,12 +1518,14 @@
             call errore('nf90mpi_inq_varid: ', err)
         index(1) = NRECS
         text = char(NF90_FILL_CHAR)
-        err = nf90mpi_put_var(ncid, vid, text, index)
+        err = nf90mpi_put_var_all(ncid, vid, text, index)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_put_var: ', err)
+            call errore('nf90mpi_put_var_all: ', err)
 
 !           /* get all variables & check all values equal default fill */
         do 1, i = 1, numVars
+            if (var_dimid(var_rank(i),i) .eq. RECDIM) cycle ! skip record variables
+
             if (var_type(i) .eq. NF90_CHAR) then
                 fill = NF90_FILL_CHAR
             else if (var_type(i) .eq. NF90_BYTE) then
@@ -1534,6 +1538,16 @@
                 fill = NF90_FILL_FLOAT
             else if (var_type(i) .eq. NF90_DOUBLE) then
                 fill = NF90_FILL_DOUBLE
+            else if (var_type(i) .eq. NF90_UBYTE) then
+                fill = NF90_FILL_UBYTE
+            else if (var_type(i) .eq. NF90_USHORT) then
+                fill = NF90_FILL_USHORT
+            else if (var_type(i) .eq. NF90_UINT) then
+                fill = NF90_FILL_UINT
+            else if (var_type(i) .eq. NF90_INT64) then
+                fill = NF90_FILL_INT64
+            else if (var_type(i) .eq. NF90_UINT64) then
+                fill = NF90_FILL_UINT64
             else
                 stop 'test_nf90mpi_set_fill(): impossible var_type(i)'
             end if
@@ -1544,15 +1558,15 @@
                 if (err .ne. NF90_NOERR) &
                     call error('error in index2indexes()')
                 if (var_type(i) .eq. NF90_CHAR) then
-                    err = nf90mpi_get_var(ncid, i, text, index)
+                    err = nf90mpi_get_var_all(ncid, i, text, index)
                     if (err .ne. NF90_NOERR) &
-                        call errore('nf90mpi_get_var failed: ',err)
+                        call errore('nf90mpi_get_var_all failed: ',err)
                     value = ichar(text)
                 else
-                    err = nf90mpi_get_var(ncid, i, value, index)
+                    err = nf90mpi_get_var_all(ncid, i, value, index)
                     if (err .ne. NF90_NOERR) &
                         call errore &
-                                 ('nf90mpi_get_var failed: ',err)
+                                 ('nf90mpi_get_var_all failed: ',err)
                 end if
                 if (value .ne. fill .and.  &
                     abs((fill - value)/fill) .gt. 1.0e-9) then
@@ -1582,13 +1596,19 @@
         text = char(int(fill))
         length = 1
         do 3, i = 1, numVars
+            if (var_dimid(var_rank(i),i) .eq. RECDIM) cycle ! skip record variables
+
             if (var_type(i) .eq. NF90_CHAR) then
                 err = nf90mpi_put_att(ncid, i, '_FillValue', &
                    text)
                 if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_put_att: ', err)
             else
-                err = nf90mpi_put_att(ncid, i, '_FillValue', fill)
+                ! cannot use overloading, as fill's type must match with variable's
+                ! err = nf90mpi_put_att(ncid, i, '_FillValue', fill)
+                fills(1) = fill
+                err = nfmpi_put_att_double(ncid, i, '_FillValue', &
+                                           var_type(i),length,fills(1))
                 if (err .ne. NF90_NOERR) &
                     call errore('nf90mpi_put_att: ', err)
             end if
@@ -1599,27 +1619,29 @@
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         index(1) = NRECS
-        err = nf90mpi_put_var(ncid, vid, text, index)
+        err = nf90mpi_put_var_all(ncid, vid, text, index)
         if (err .ne. NF90_NOERR) &
-            call errore('nf90mpi_put_var: ', err)
+            call errore('nf90mpi_put_var_all: ', err)
 
 !           /* get all variables & check all values equal 42 */
         do 4, i = 1, numVars
+            if (var_dimid(var_rank(i),i) .eq. RECDIM) cycle ! skip record variables
+
             do 5, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i),  &
                                     index)
                 if (err .ne. NF90_NOERR) &
                     call error('error in index2indexes')
                 if (var_type(i) .eq. NF90_CHAR) then
-                    err = nf90mpi_get_var(ncid, i, text, index)
+                    err = nf90mpi_get_var_all(ncid, i, text, index)
                     if (err .ne. NF90_NOERR) &
-                        call errore('nf90mpi_get_var failed: ',err)
+                        call errore('nf90mpi_get_var_all failed: ',err)
                     value = ichar(text)
                 else
-                    err = nf90mpi_get_var(ncid, i, value, index)
+                    err = nf90mpi_get_var_all(ncid, i, value, index)
                     if (err .ne. NF90_NOERR) &
                         call errore &
-                                ('nf90mpi_get_var failed: ', err)
+                                ('nf90mpi_get_var_all failed: ', err)
                 end if
                 if (value .ne. fill) then
                     call errord(' Value expected: ', fill)
@@ -1636,7 +1658,7 @@
         err = nf90mpi_delete(scratch, info)
         if (err .ne. NF90_NOERR) &
             call errori('delete of scratch file failed: ', err)
-#endif
+
         call print_nok(nok)
         end
 

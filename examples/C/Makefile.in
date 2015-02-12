@@ -33,7 +33,8 @@ C_SRCS  = collective_write.c \
           transpose.c \
           vard_int.c \
           i_varn_int64.c \
-          bput_varn_uint.c
+          bput_varn_uint.c \
+          fill_mode.c
 
 # Note: put_vara must be run immediately before get_vara
 
@@ -102,6 +103,9 @@ i_varn_int64: i_varn_int64.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 bput_varn_uint: bput_varn_uint.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+fill_mode: fill_mode.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))

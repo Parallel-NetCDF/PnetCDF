@@ -38,7 +38,7 @@ C2F_SRCS = createf.c \
 	begin_indep_dataf.c \
 	end_indep_dataf.c \
 	closef.c \
-	set_fillf.c \
+	set_fillf.c def_var_fillf.c inq_var_fillf.c fill_varf.c \
 	def_dimf.c \
 	def_varf.c \
 	rename_dimf.c \

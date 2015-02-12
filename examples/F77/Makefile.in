@@ -28,7 +28,8 @@ F77_SRCS  = nonblocking_write.f \
             transpose.f \
             vard_int.f \
             i_varn_real.f \
-            bput_varn_int8.f
+            bput_varn_int8.f \
+            fill_mode.f
 
 PROGS     = $(F77_SRCS:.f=)
 OBJS      = $(F77_SRCS:.f=.o)
@@ -80,6 +81,9 @@ i_varn_real: i_varn_real.o $(LIBRARY)
 	$(LINK.f) $< $(FLDFLAGS) $(LIBS)
 
 bput_varn_int8: bput_varn_int8.o $(LIBRARY)
+	$(LINK.f) $< $(FLDFLAGS) $(LIBS)
+
+fill_mode: fill_mode.o $(LIBRARY)
 	$(LINK.f) $< $(FLDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))

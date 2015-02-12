@@ -704,6 +704,13 @@ $returnType   = "int";
 		'open-2'		=> 'in:addnull',
 	'delete' => 1,
 		'delete-1'		=> 'in:addnull',
+	'def_var_fill' => '2',
+		'def_var_fill-2'	=> 'in:OffsetIndexIn',
+	'inq_var_fill' => '2',
+		'inq_var_fill-2'	=> 'in:OffsetIndexIn',
+	'fill_var' => '2:3',
+		'fill_var-2'	=> 'in:OffsetIndexIn',
+		'fill_var-3'	=> 'in:OffsetIndexIn',
 
 	'put_att_text' => '2:3:5',
 		'put_att_text-2'	=> 'in:OffsetIndexIn',

@@ -28,7 +28,8 @@ C_SRCS  = collective_write.cpp \
           put_vara.cpp \
           get_vara.cpp \
           transpose.cpp \
-          vard_int.cpp
+          vard_int.cpp \
+          fill_mode.cpp
 
 PROGS        = $(C_SRCS:.cpp=)
 OBJS         = $(C_SRCS:.cpp=.o)
@@ -82,6 +83,9 @@ transpose: transpose.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
 vard_int: vard_int.o $(LIBRARY)
+	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
+
+fill_mode: fill_mode.o $(LIBRARY)
 	$(LINK.cxx) $< $(LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))

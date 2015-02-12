@@ -229,6 +229,9 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp);
 extern NC_attr*
 dup_NC_attr(const NC_attr *rattrp);
 
+extern int
+ncmpii_NC_findattr(const NC_attrarray *ncap, const char *uname);
+
 /* attrarray */
 
 extern void
@@ -329,20 +332,17 @@ typedef struct {
     MPI_Offset   *dsizes; /* the right to left product of shape */
     NC_string    *name;   /* name of the variable */
     int           ndims;  /* number of dimensions */
-#ifdef ENABLE_SUBFILING
-    int           ndims_org; /* ndims before subfiling */
-#endif
     int          *dimids; /* array of dimension IDs */
-#ifdef ENABLE_SUBFILING
-    int          *dimids_org; /* dimids before subfiling */
-#endif
     NC_attrarray  attrs;  /* attribute array */
     nc_type       type;   /* variable's data type */
     MPI_Offset    len;    /* this is the "vsize" defined in header format, the
                              total size in bytes of the array variable.
                              For record variable, this is the record size */
     MPI_Offset    begin;  /* starting file offset of this variable */
+    int           no_fill;
 #ifdef ENABLE_SUBFILING
+    int           ndims_org;  /* ndims before subfiling */
+    int          *dimids_org; /* dimids before subfiling */
     int           num_subfiles;
 #endif
 } NC_var;
@@ -890,5 +890,8 @@ ncmpii_calc_datatype_elems(NC_var *varp, const MPI_Offset *count,
                            MPI_Offset *bufcount, MPI_Offset *bnelems,
                            MPI_Offset *nbytes, int *el_size,
                            int *buftype_is_contig);
+
+extern int
+ncmpii_fill_vars(NC *ncp);
 
 #endif /* _NC_H_ */

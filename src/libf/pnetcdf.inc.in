@@ -58,7 +58,12 @@
       real              nf_fill_float
       real              nf_fill_real
       doubleprecision   nf_fill_double
+      integer           nf_fill_ubyte
+      integer           nf_fill_ushort
+      integer*8         nf_fill_uint
       integer*8         nf_fill_int64
+      ! integer*8         nf_fill_uint64    ! no unsigned int*8 in Fortran
+      doubleprecision   nf_fill_uint64
 
       parameter (nf_fill_byte = -127)
       parameter (nf_fill_int1 = nf_fill_byte)
@@ -69,7 +74,12 @@
       parameter (nf_fill_float = 9.9692099683868690e+36)
       parameter (nf_fill_real = nf_fill_float)
       parameter (nf_fill_double = 9.9692099683868690e+36)
+      parameter (nf_fill_ubyte = 255)
+      parameter (nf_fill_ushort = 65535)
+      parameter (nf_fill_uint = 4294967295_8)
       parameter (nf_fill_int64 = -9223372036854775806_8)
+      ! parameter (nf_fill_uint64 = 18446744073709551614_8)  ! currently not supported
+      parameter (nf_fill_uint64 = 1.8446744073709551614e+19)
 
 !
 ! mode flags for opening and creating a netcdf dataset:
@@ -374,6 +384,9 @@
       integer NF_EMULTIDEFINE_ATTR_LEN
       integer NF_EMULTIDEFINE_ATTR_VAL
       integer NF_EMULTIDEFINE_FNC_ARGS
+      integer NF_EMULTIDEFINE_FILL_MODE
+      integer NF_EMULTIDEFINE_VAR_FILL_MODE
+      integer NF_EMULTIDEFINE_VAR_FILL_VALUE
 
 !
 ! PnetCDF error codes start from -201
@@ -434,6 +447,9 @@
       PARAMETER (NF_EMULTIDEFINE_ATTR_LEN   = -267)   ! inconsistent attribute length
       PARAMETER (NF_EMULTIDEFINE_ATTR_VAL   = -268)   ! inconsistent attribute value
       PARAMETER (NF_EMULTIDEFINE_FNC_ARGS   = -269)   ! inconsistent function arguments used in collective API
+      PARAMETER (NF_EMULTIDEFINE_FILL_MODE  = -270)   !  inconsistent dataset fill mode
+      PARAMETER (NF_EMULTIDEFINE_VAR_FILL_MODE  = -271) ! inconsistent variable fill mode
+      PARAMETER (NF_EMULTIDEFINE_VAR_FILL_VALUE = -272) ! inconsistent variable fill value
 
       PARAMETER(NF_ECMODE                  =NF_EMULTIDEFINE_OMODE)
       PARAMETER(NF_EDIMS_NELEMS_MULTIDEFINE=NF_EMULTIDEFINE_DIM_NUM)
@@ -702,6 +718,9 @@
       integer  nfmpi_abort
       integer  nfmpi_close
       integer  nfmpi_set_fill
+      integer  nfmpi_def_var_fill
+      integer  nfmpi_inq_var_fill
+      integer  nfmpi_fill_var
 
       external nfmpi_create
       external nfmpi_open
@@ -718,6 +737,9 @@
       external nfmpi_abort
       external nfmpi_close
       external nfmpi_set_fill
+      external nfmpi_def_var_fill
+      external nfmpi_inq_var_fill
+      external nfmpi_fill_var
 
 !
 ! general inquiry routines:

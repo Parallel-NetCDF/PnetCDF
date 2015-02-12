@@ -2027,7 +2027,7 @@ ncmpii_comp_vars(int          safe_mode,
                  NC_vararray *root_var,
                  NC_vararray *local_var)
 {
-    int i, j, err, status=NC_NOERR;
+    int i, j, err, status=NC_NOERR, no_fill;
     char *msg;
 
     /* check if the numbers of variables are the same */
@@ -2054,6 +2054,9 @@ ncmpii_comp_vars(int          safe_mode,
         char name[128];
         /* in PnetCDF, name->cp is always NULL character terminated */
         strcpy(name, v1->name->cp);
+
+        /* preserve original local variable's no_fill setting */
+        no_fill = v2->no_fill;
 
 #define VAR_WARN(msg, var, root, local) \
     if (safe_mode) printf(msg, WARN_STR, var, root, local);
@@ -2111,6 +2114,8 @@ ncmpii_comp_vars(int          safe_mode,
         if (ErrIsHeaderDiff(err)) {
             ncmpii_free_NC_var(local_var->value[i]);
             local_var->value[i] = dup_NC_var(root_var->value[i]);
+            /* restore original local variable's no_fill setting */
+            local_var->value[i]->no_fill = no_fill;
             /* note once a new var is created, one must call
              * ncmpii_NC_computeshapes() to recalculate the shape */
         }
