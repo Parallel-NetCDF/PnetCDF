@@ -42,7 +42,7 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * none
+    * nc_test/tst_nofill.c borrowed from netCDF
 
   o New optimization
     * none
