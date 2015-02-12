@@ -32,24 +32,29 @@
   !
   ! default fill values:
   !
-  character (len = 1),           parameter, public :: &
-    nf90_fill_char  = achar(0)
+  ! character (len = 1),           parameter, public :: &
+  !   nf90_fill_char  = achar(0)
   integer (kind =  OneByteInt),  parameter, public :: &
+    nf90_fill_char  = 0,                              &
     nf90_fill_byte  = -127,                           &
     nf90_fill_int1  = nf90_fill_byte
   integer (kind =  TwoByteInt),  parameter, public :: &
     nf90_fill_short = -32767,                         &
-    nf90_fill_int2  = nf90_fill_short
+    nf90_fill_int2  = nf90_fill_short,                &
+    nf90_fill_ubyte  = 255
   integer (kind = FourByteInt),  parameter, public :: &
-    nf90_fill_int   = -2147483647
+    nf90_fill_int    = -2147483647,                   &
+    nf90_fill_ushort = 65535
   real   (kind =  FourByteReal), parameter, public :: &
     nf90_fill_float = 9.9692099683868690e+36,         &
     nf90_fill_real  = nf90_fill_float,                &
     nf90_fill_real4 = nf90_fill_float
   real   (kind = EightByteReal), parameter, public :: &
     nf90_fill_double = 9.9692099683868690e+36,        &
-    nf90_fill_real8  = nf90_fill_double
+    nf90_fill_real8  = nf90_fill_double,              &
+    nf90_fill_uint64 = 1.8446744073709551614e+19
   integer (kind = EightByteInt), parameter, public :: &
+    nf90_fill_uint   = 4294967295_8,                  &
     nf90_fill_int64  = -9223372036854775806_8
 
   !
@@ -271,6 +276,9 @@
       NF90_EMULTIDEFINE_ATTR_LEN    = NF_EMULTIDEFINE_ATTR_LEN    , & ! inconsistent attribute length
       NF90_EMULTIDEFINE_ATTR_VAL    = NF_EMULTIDEFINE_ATTR_VAL    , & ! inconsistent attribute value
       NF90_EMULTIDEFINE_FNC_ARGS    = NF_EMULTIDEFINE_FNC_ARGS    , & ! inconsistent function arguments used in collective API
+      NF90_EMULTIDEFINE_FILL_MODE   = NF_EMULTIDEFINE_FILL_MODE   , & !  inconsistent dataset fill mode
+      NF90_EMULTIDEFINE_VAR_FILL_MODE = NF_EMULTIDEFINE_VAR_FILL_MODE, & ! inconsistent variable fill mode
+      NF90_EMULTIDEFINE_VAR_FILL_VALUE = NF_EMULTIDEFINE_VAR_FILL_VALUE, & ! inconsistent variable fill value
       NF90_ECMODE                   = NF_EMULTIDEFINE_OMODE       , &
       NF90_EDIMS_NELEMS_MULTIDEFINE = NF_EMULTIDEFINE_DIM_NUM     , &
       NF90_EDIMS_SIZE_MULTIDEFINE   = NF_EMULTIDEFINE_DIM_SIZE    , &

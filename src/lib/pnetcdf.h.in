@@ -525,6 +525,9 @@ by the desired type. */
 #define NC_EMULTIDEFINE_ATTR_LEN	(-267) /**< inconsistent attribute length */
 #define NC_EMULTIDEFINE_ATTR_VAL	(-268) /**< inconsistent attribute value */
 #define NC_EMULTIDEFINE_FNC_ARGS	(-269) /**< inconsistent function arguments used in collective API */
+#define NC_EMULTIDEFINE_FILL_MODE	(-270) /**< inconsistent dataset fill mode */
+#define NC_EMULTIDEFINE_VAR_FILL_MODE	(-271) /**< inconsistent variable fill mode */
+#define NC_EMULTIDEFINE_VAR_FILL_VALUE	(-272) /**< inconsistent variable fill value */
 
 #define NC_EMULTIDEFINE_FIRST		NC_EMULTIDEFINE
 #define NC_EMULTIDEFINE_LAST		NC_EMULTIDEFINE_FNC_ARGS
@@ -587,6 +590,12 @@ int ncmpi_end_indep_data(int ncid);
 int ncmpi_close(int ncid);
 
 int ncmpi_set_fill(int ncid, int fillmode, int *old_modep);
+
+int ncmpi_def_var_fill(int ncid, int varid, int no_fill, void *fill_value);
+
+int ncmpi_inq_var_fill(int ncid, int varid, int *no_fill, void *fill_value);
+
+int ncmpi_fill_var(int ncid, int varid, MPI_Offset recno);
 
 /* End Dataset Functions */
 

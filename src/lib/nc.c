@@ -994,7 +994,7 @@ ncmpii_NC_enddef(NC         *ncp,
                  MPI_Offset  v_minfree,
                  MPI_Offset  r_align)
 {
-    int i, status=NC_NOERR, mpireturn;
+    int i, err, status=NC_NOERR, mpireturn;
     char value[MPI_MAX_INFO_VAL];
 #ifdef ENABLE_SUBFILING
     NC *ncp_sf=NULL;
@@ -1113,10 +1113,19 @@ ncmpii_NC_enddef(NC         *ncp,
 #ifdef ENABLE_SUBFILING
     /* write header to subfile */
     if (ncp->nc_num_subfiles > 1) {
-        int err = write_NC(ncp_sf);
+        err = write_NC(ncp_sf);
         if (status == NC_NOERR) status = err;
     }
 #endif
+
+    /* update the total number of record variables */
+    ncp->vars.num_rec_vars = 0;
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
+
+    /* fill variables according to their fill mode settings */
+    err = ncmpii_fill_vars(ncp);
+    if (status == NC_NOERR) status = err;
 
     if (ncp->old != NULL) {
         ncmpii_free_NC(ncp->old);
@@ -1132,11 +1141,6 @@ ncmpii_NC_enddef(NC         *ncp,
     /* If the user sets NC_SHARE, we enforce a stronger data consistency */
     if (NC_doFsync(ncp))
         ncmpiio_sync(ncp->nciop); /* calling MPI_File_sync() */
-
-    /* update the total number of record variables */
-    ncp->vars.num_rec_vars = 0;
-    for (i=0; i<ncp->vars.ndefined; i++)
-        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
     return status;
 }

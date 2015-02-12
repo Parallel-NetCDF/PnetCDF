@@ -277,6 +277,13 @@ ncmpi_strerror(int err)
             return "Attribute value is inconsistent among processes.";
         case NC_EMULTIDEFINE_FNC_ARGS:
             return "inconsistent function arguments used in collective API.";
+        case NC_EMULTIDEFINE_FILL_MODE:
+            return "Dataset's file mode is inconsistent among processes.";
+        case NC_EMULTIDEFINE_VAR_FILL_MODE:
+            return "Variable's fill mode is inconsistent among processes.";
+        case NC_EMULTIDEFINE_VAR_FILL_VALUE:
+            return "Variable's fill value is inconsistent among processes.";
+
         default:
             /* check netCDF-3 and netCDF-4 errors */
             return nc_strerror(err);

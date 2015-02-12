@@ -96,3 +96,134 @@
     nf90mpi_rename_var = nfmpi_rename_var(ncid, varid, newname)
   end function nf90mpi_rename_var
   ! ----- 
+  ! nf90mpi_def_var_fill
+  ! ----- 
+  function nf90mpi_def_var_fill_text(ncid, varid, no_fill, fill_value)
+    integer,             intent( in) :: ncid, varid, no_fill
+    character,           intent( in) :: fill_value
+    integer                          :: nf90mpi_def_var_fill_text
+    
+    nf90mpi_def_var_fill_text = nfmpi_def_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_def_var_fill_text
+  ! ----- 
+  function nf90mpi_def_var_fill_OneByteInt(ncid, varid, no_fill, fill_value)
+    integer,                  intent( in) :: ncid, varid, no_fill
+    integer(kind=OneByteInt), intent( in) :: fill_value
+    integer                               :: nf90mpi_def_var_fill_OneByteInt
+    
+    nf90mpi_def_var_fill_OneByteInt = nfmpi_def_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_def_var_fill_OneByteInt
+  ! ----- 
+  function nf90mpi_def_var_fill_TwoByteInt(ncid, varid, no_fill, fill_value)
+    integer,                  intent( in) :: ncid, varid, no_fill
+    integer(kind=TwoByteInt), intent( in) :: fill_value
+    integer                               :: nf90mpi_def_var_fill_TwoByteInt
+    
+    nf90mpi_def_var_fill_TwoByteInt = nfmpi_def_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_def_var_fill_TwoByteInt
+  ! ----- 
+  function nf90mpi_def_var_fill_FourByteInt(ncid, varid, no_fill, fill_value)
+    integer,                   intent( in) :: ncid, varid, no_fill
+    integer(kind=FourByteInt), intent( in) :: fill_value
+    integer                                :: nf90mpi_def_var_fill_FourByteInt
+    
+    nf90mpi_def_var_fill_FourByteInt = nfmpi_def_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_def_var_fill_FourByteInt
+  ! ----- 
+  function nf90mpi_def_var_fill_EightByteInt(ncid, varid, no_fill, fill_value)
+    integer,                    intent( in) :: ncid, varid, no_fill
+    integer(kind=EightByteInt), intent( in) :: fill_value
+    integer                                 :: nf90mpi_def_var_fill_EightByteInt
+    
+    nf90mpi_def_var_fill_EightByteInt = nfmpi_def_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_def_var_fill_EightByteInt
+  ! ----- 
+  function nf90mpi_def_var_fill_FourByteReal(ncid, varid, no_fill, fill_value)
+    integer,                 intent( in) :: ncid, varid, no_fill
+    real(kind=FourByteReal), intent( in) :: fill_value
+    integer                              :: nf90mpi_def_var_fill_FourByteReal
+    
+    nf90mpi_def_var_fill_FourByteReal = nfmpi_def_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_def_var_fill_FourByteReal
+  ! ----- 
+  function nf90mpi_def_var_fill_EightByteReal(ncid, varid, no_fill, fill_value)
+    integer,                  intent( in) :: ncid, varid, no_fill
+    real(kind=EightByteReal), intent( in) :: fill_value
+    integer                               :: nf90mpi_def_var_fill_EightByteReal
+    
+    nf90mpi_def_var_fill_EightByteReal = nfmpi_def_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_def_var_fill_EightByteReal
+  ! ----- 
+  ! nf90mpi_inq_var_fill
+  ! ----- 
+  function nf90mpi_inq_var_fill_text(ncid, varid, no_fill, fill_value)
+    integer,             intent( in) :: ncid, varid
+    integer,             intent(out) :: no_fill
+    character,           intent(out) :: fill_value
+    integer                          :: nf90mpi_inq_var_fill_text
+    
+    nf90mpi_inq_var_fill_text = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_inq_var_fill_text
+  ! ----- 
+  function nf90mpi_inq_var_fill_OneByteInt(ncid, varid, no_fill, fill_value)
+    integer,                  intent( in) :: ncid, varid
+    integer,                  intent(out) :: no_fill
+    integer(kind=OneByteInt), intent(out) :: fill_value
+    integer                               :: nf90mpi_inq_var_fill_OneByteInt
+    
+    nf90mpi_inq_var_fill_OneByteInt = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_inq_var_fill_OneByteInt
+  ! ----- 
+  function nf90mpi_inq_var_fill_TwoByteInt(ncid, varid, no_fill, fill_value)
+    integer,                  intent( in) :: ncid, varid
+    integer,                  intent(out) :: no_fill
+    integer(kind=TwoByteInt), intent(out) :: fill_value
+    integer                               :: nf90mpi_inq_var_fill_TwoByteInt
+    
+    nf90mpi_inq_var_fill_TwoByteInt = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_inq_var_fill_TwoByteInt
+  ! ----- 
+  function nf90mpi_inq_var_fill_FourByteInt(ncid, varid, no_fill, fill_value)
+    integer,                   intent( in) :: ncid, varid
+    integer,                   intent(out) :: no_fill
+    integer(kind=FourByteInt), intent(out) :: fill_value
+    integer                                :: nf90mpi_inq_var_fill_FourByteInt
+    
+    nf90mpi_inq_var_fill_FourByteInt = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_inq_var_fill_FourByteInt
+  ! ----- 
+  function nf90mpi_inq_var_fill_EightByteInt(ncid, varid, no_fill, fill_value)
+    integer,                    intent( in) :: ncid, varid
+    integer,                    intent(out) :: no_fill
+    integer(kind=EightByteInt), intent(out) :: fill_value
+    integer                                 :: nf90mpi_inq_var_fill_EightByteInt
+    
+    nf90mpi_inq_var_fill_EightByteInt = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_inq_var_fill_EightByteInt
+  ! ----- 
+  function nf90mpi_inq_var_fill_FourByteReal(ncid, varid, no_fill, fill_value)
+    integer,                 intent( in) :: ncid, varid
+    integer,                 intent(out) :: no_fill
+    real(kind=FourByteReal), intent(out) :: fill_value
+    integer                              :: nf90mpi_inq_var_fill_FourByteReal
+    
+    nf90mpi_inq_var_fill_FourByteReal = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_inq_var_fill_FourByteReal
+  ! ----- 
+  function nf90mpi_inq_var_fill_EightByteReal(ncid, varid, no_fill, fill_value)
+    integer,                  intent( in) :: ncid, varid
+    integer,                  intent(out) :: no_fill
+    real(kind=EightByteReal), intent(out) :: fill_value
+    integer                               :: nf90mpi_inq_var_fill_EightByteReal
+    
+    nf90mpi_inq_var_fill_EightByteReal = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
+  end function nf90mpi_inq_var_fill_EightByteReal
+  ! ----- 
+  function nf90mpi_fill_var(ncid, varid, recno)
+    integer,                       intent(in) :: ncid, varid
+    integer(kind=MPI_OFFSET_KIND), intent(in) :: recno
+    integer                                   :: nf90mpi_fill_var
+    
+    nf90mpi_fill_var = nfmpi_fill_var(ncid, varid, recno)
+  end function nf90mpi_fill_var
+  ! ----- 

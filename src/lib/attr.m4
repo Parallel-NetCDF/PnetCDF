@@ -297,7 +297,7 @@ NC_attrarray0(NC  *ncp,
  * Step thru NC_ATTRIBUTE array, seeking match on name.
  *  return match or -1 if Not Found.
  */
-static int
+int
 ncmpii_NC_findattr(const NC_attrarray *ncap,
                    const char         *uname)
 {

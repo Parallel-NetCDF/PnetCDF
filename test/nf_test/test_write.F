@@ -1410,13 +1410,9 @@ C    close file & create again for test using attribute _FillValue
         subroutine test_nfmpi_set_fill()
         implicit none
         include "pnetcdf.inc"
-
-        integer nok             !/* count of valid comparisons */
-        nok = 0
-#if 0   
 #include "tests.inc"
-        character*2 ATT_NAME
-        integer VARID, ATT_TYPE, NATTS
+        ! character*2 ATT_NAME
+        ! integer VARID, ATT_TYPE, NATTS
 
         integer ncid
         integer vid
@@ -1429,8 +1425,11 @@ C    close file & create again for test using attribute _FillValue
         doubleprecision fill
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) length
+        integer index2indexes
+        integer nok             !/* count of valid comparisons */
 
         value = 0
+        nok = 0
 
 C           /* bad ncid */
         err = nfmpi_set_fill(BAD_ID, NF_NOFILL, old_fillmode)
@@ -1462,6 +1461,11 @@ C           /* BAD_FILLMODE */
      +      call errore('bad fillmode: ', err)
 
 C           /* proper calls */
+        err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
+        if (err .ne. NF_NOERR)
+     +      call errore('nfmpi_set_fill: ', err)
+        if (old_fillmode .ne. NF_NOFILL)
+     +      call errori('Unexpected old fill mode: ', old_fillmode)
         err = nfmpi_set_fill(ncid, NF_NOFILL, old_fillmode)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_set_fill: ', err)
@@ -1470,8 +1474,6 @@ C           /* proper calls */
         err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_set_fill: ', err)
-        if (old_fillmode .ne. NF_NOFILL)
-     +      call errori('Unexpected old fill mode: ', old_fillmode)
 
 C           /* define dims & vars */
         call def_dims(ncid)
@@ -1494,12 +1496,14 @@ C       /* Assumes variable cr is char vector with UNLIMITED dimension */
      +      call errore('nfmpi_inq_varid: ', err)
         index(1) = NRECS
         text = char(NF_FILL_CHAR)
-        err = nfmpi_put_var1_text(ncid, vid, index, text)
+        err = nfmpi_put_var1_text_all(ncid, vid, index, text)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_put_var1_text: ', err)
+     +      call errore('nfmpi_put_var1_text_all: ', err)
 
 C           /* get all variables & check all values equal default fill */
         do 1, i = 1, numVars
+            if (var_dimid(var_rank(i),i) .eq. RECDIM) cycle ! skip record variables
+
             if (var_type(i) .eq. NF_CHAR) then
                 fill = NF_FILL_CHAR
             else if (var_type(i) .eq. NF_BYTE) then
@@ -1512,7 +1516,19 @@ C           /* get all variables & check all values equal default fill */
                 fill = NF_FILL_FLOAT
             else if (var_type(i) .eq. NF_DOUBLE) then
                 fill = NF_FILL_DOUBLE
+            else if (var_type(i) .eq. NF_UBYTE) then
+                fill = NF_FILL_UBYTE
+            else if (var_type(i) .eq. NF_USHORT) then
+                fill = NF_FILL_USHORT
+            else if (var_type(i) .eq. NF_UINT) then
+                fill = NF_FILL_UINT
+            else if (var_type(i) .eq. NF_INT64) then
+                fill = NF_FILL_INT64
+            else if (var_type(i) .eq. NF_UINT64) then
+                ! cycle  ! skip uint64
+                fill = NF_FILL_UINT64
             else
+                print *, 'Unexpected type : ', var_type(i)
                 stop 'test_nfmpi_set_fill(): impossible var_type(i)'
             end if
 
@@ -1522,19 +1538,24 @@ C           /* get all variables & check all values equal default fill */
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes()')
                 if (var_type(i) .eq. NF_CHAR) then
-                    err = nfmpi_get_var1_text(ncid, i, index, text)
+                    err = nfmpi_get_var1_text_all(ncid, i, index, text)
                     if (err .ne. NF_NOERR)
-     +                  call errore('nfmpi_get_var1_text failed: ',err)
+     +                  call errore('nfmpi_get_var1_text_all failed: ',
+     +                              err)
                     value = ichar(text)
                 else
-                    err = nfmpi_get_var1_double(ncid, i, index, 
+                    err = nfmpi_get_var1_double_all(ncid, i, index, 
      +                 value)
                     if (err .ne. NF_NOERR)
      +                  call errore
-     +                           ('nfmpi_get_var1_double failed: ',err)
+     +                           ('nfmpi_get_var1_double_all failed: ',
+     +                            err)
                 end if
                 if (value .ne. fill .and. 
      +              abs((fill - value)/fill) .gt. 1.0e-9) then
+                    print *, 'var_name : ', trim(var_name(i))
+                    print *, 'var_type : ', var_type(i)
+                    print *, 'fill : ', fill
                     call errord('Unexpected fill value: ', value)
                 else
                     nok = nok + 1
@@ -1561,8 +1582,8 @@ C           /* set _FillValue = 42 for all vars */
         length = 1
         do 3, i = 1, numVars
             if (var_type(i) .eq. NF_CHAR) then
-                err = nfmpi_put_att_text(ncid, i, '_FillValue', length, 
-     +             text)
+                err = nfmpi_put_att_text(ncid, i, '_FillValue', length,
+     +              text)
                 if (err .ne. NF_NOERR)
      +              call errore('nfmpi_put_att_text: ', err)
             else
@@ -1578,28 +1599,31 @@ C           /* data mode. write records */
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         index(1) = NRECS
-        err = nfmpi_put_var1_text(ncid, vid, index, text)
+        err = nfmpi_put_var1_text_all(ncid, vid, index, text)
         if (err .ne. NF_NOERR)
-     +      call errore('nfmpi_put_var1_text: ', err)
+     +      call errore('nfmpi_put_var1_text_all: ', err)
 
 C           /* get all variables & check all values equal 42 */
         do 4, i = 1, numVars
+            if (var_dimid(var_rank(i),i) .eq. RECDIM) cycle ! skip record variables
             do 5, j = 1, var_nels(i)
                 err = index2indexes(j, var_rank(i), var_shape(1,i), 
      +                              index)
                 if (err .ne. NF_NOERR)
      +              call error('error in index2indexes')
                 if (var_type(i) .eq. NF_CHAR) then
-                    err = nfmpi_get_var1_text(ncid, i, index, text)
+                    err = nfmpi_get_var1_text_all(ncid, i, index, text)
                     if (err .ne. NF_NOERR)
-     +                  call errore('nfmpi_get_var1_text failed: ',err)
+     +                  call errore('nfmpi_get_var1_text_all failed: ',
+     +                              err)
                     value = ichar(text)
                 else
-                    err = nfmpi_get_var1_double(ncid, i, 
+                    err = nfmpi_get_var1_double_all(ncid, i, 
      +                     index, value)
                     if (err .ne. NF_NOERR)
      +                  call errore
-     +                          ('nfmpi_get_var1_double failed: ', err)
+     +                          ('nfmpi_get_var1_double_all failed: ',
+     +                           err)
                 end if
                 if (value .ne. fill) then
                     call errord(' Value expected: ', fill)
@@ -1616,7 +1640,6 @@ C           /* get all variables & check all values equal 42 */
         err = nfmpi_delete(scratch, info)
         if (err .ne. NF_NOERR)
      +      call errori('delete of scratch file failed: ', err)
-#endif
         call print_nok(nok)
         end
 

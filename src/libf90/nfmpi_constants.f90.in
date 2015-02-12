@@ -47,16 +47,20 @@
       nf_fill_char = 0, &
       nf_fill_short = -32767, &
       nf_fill_int2 = nf_fill_short, &
-      nf_fill_int = -2147483647
+      nf_fill_int = -2147483647, &
+      nf_fill_ubyte = 255, &
+      nf_fill_ushort = 65535
 
       real, parameter, public :: &
       nf_fill_float = 9.9692099683868690e+36, &
       nf_fill_real = nf_fill_float
 
       double precision, parameter, public :: &
-      nf_fill_double = 9.9692099683868690e+36
+      nf_fill_double = 9.9692099683868690e+36, &
+      nf_fill_uint64 = 1.8446744073709551614e+19
 
       integer*8, parameter, public :: &
+      nf_fill_uint  = 4294967295_8, &
       nf_fill_int64 = -9223372036854775806_8
 
 !
@@ -260,6 +264,9 @@
       NF_EMULTIDEFINE_ATTR_LEN    = -267, & ! inconsistent attribute length
       NF_EMULTIDEFINE_ATTR_VAL    = -268, & ! inconsistent attribute value
       NF_EMULTIDEFINE_FNC_ARGS    = -269, & ! inconsistent function arguments used in collective API
+      NF_EMULTIDEFINE_FILL_MODE      = -270, & !  inconsistent dataset fill mode
+      NF_EMULTIDEFINE_VAR_FILL_MODE  = -271, & ! inconsistent variable fill mode
+      NF_EMULTIDEFINE_VAR_FILL_VALUE = -272, & ! inconsistent variable fill value
       NF_ECMODE                   = NF_EMULTIDEFINE_OMODE,      &
       NF_EDIMS_NELEMS_MULTIDEFINE = NF_EMULTIDEFINE_DIM_NUM,    &
       NF_EDIMS_SIZE_MULTIDEFINE   = NF_EMULTIDEFINE_DIM_SIZE,   &

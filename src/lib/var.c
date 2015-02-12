@@ -553,6 +553,12 @@ ncmpi_def_var(int         ncid,
         *varidp = (int)ncp->vars.ndefined - 1; /* varid */
         /* ncp->vars.ndefined has been increased in incr_NC_vararray() */
 
+    /* default is NOFILL */
+    varp->no_fill = 1;
+
+    /* change to FILL only if the entire dataset fill mode is FILL */
+    if (NC_dofill(ncp)) varp->no_fill = 0;
+
     return NC_NOERR;
 }
 
@@ -854,38 +860,6 @@ ncmpi_inq_varoffset(int         ncid,
 
     if (offset != NULL)
         *offset = varp->begin;
-
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_header_extent() >-------------------------------------------*/
-int
-ncmpi_inq_header_extent(int         ncid,
-                        MPI_Offset *extent)
-{
-    int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) return err;
-
-    *extent = ncp->begin_var;
-
-    return NC_NOERR;
-}
-
-/*----< ncmpi_inq_header_size() >---------------------------------------------*/
-int
-ncmpi_inq_header_size(int         ncid,
-                      MPI_Offset *size)
-{
-    int err;
-    NC *ncp;
-
-    err = ncmpii_NC_check_id(ncid, &ncp);
-    if (err != NC_NOERR) return err;
-
-    *size = ncp->xsz;
 
     return NC_NOERR;
 }

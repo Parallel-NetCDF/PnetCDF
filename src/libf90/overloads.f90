@@ -13,6 +13,20 @@
     module procedure nf90mpi_def_var_Scalar, nf90mpi_def_var_oneDim, nf90mpi_def_var_ManyDims
   end interface ! nf90mpi_def_var
   
+  ! Overloaded variable fill functions
+  interface nf90mpi_def_var_fill
+    module procedure nf90mpi_def_var_fill_text,                                            &
+                     nf90mpi_def_var_fill_OneByteInt,   nf90mpi_def_var_fill_TwoByteInt,   &
+                     nf90mpi_def_var_fill_FourByteInt,  nf90mpi_def_var_fill_EightByteInt, &
+                     nf90mpi_def_var_fill_FourByteReal, nf90mpi_def_var_fill_EightByteReal
+  end interface !nf90mpi_def_var_fill
+  interface nf90mpi_inq_var_fill
+    module procedure nf90mpi_inq_var_fill_text,                                            &
+                     nf90mpi_inq_var_fill_OneByteInt,   nf90mpi_inq_var_fill_TwoByteInt,   &
+                     nf90mpi_inq_var_fill_FourByteInt,  nf90mpi_inq_var_fill_EightByteInt, &
+                     nf90mpi_inq_var_fill_FourByteReal, nf90mpi_inq_var_fill_EightByteReal
+  end interface !nf90mpi_inq_var_fill
+
   ! Overloaded attribute functions
   interface nf90mpi_put_att
     module procedure nf90mpi_put_att_text,                                               &

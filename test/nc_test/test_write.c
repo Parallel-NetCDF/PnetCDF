@@ -170,11 +170,9 @@ test_ncmpi_redef(void)
     IF (err != NC_NOERR)
         error("ncmpi_redef: %s", ncmpi_strerror(err));
     ELSE_NOK
-#if 0
     err = ncmpi_set_fill(ncid, NC_NOFILL, NULL);
     IF (err != NC_NOERR)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
-#endif
     err = ncmpi_def_dim(ncid, "abc", sizehint, &dimid);
     IF (err != NC_NOERR)
         error("ncmpi_def_dim: %s", ncmpi_strerror(err));
@@ -1876,9 +1874,6 @@ test_ncmpi_del_att(void)
 int
 test_ncmpi_set_fill(void)
 {
-    if (verbose) fprintf(stderr, " NC fill mode is not implemented. ");
-    return 0;
-#if 0
     int ncid;
     int varid;
     int err;
@@ -1923,7 +1918,7 @@ test_ncmpi_set_fill(void)
     err = ncmpi_set_fill(ncid, NC_NOFILL, &old_fillmode);
     IF (err != NC_NOERR)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
-    IF (old_fillmode != NC_FILL)
+    IF (old_fillmode != NC_NOFILL)
         error("Unexpected old fill mode: %d", old_fillmode);
     err = ncmpi_set_fill(ncid, NC_FILL, &old_fillmode);
     IF (err != NC_NOERR)
@@ -1951,12 +1946,15 @@ test_ncmpi_set_fill(void)
     IF (err != NC_NOERR)
         error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     index[0] = NRECS;
-    err = ncmpi_put_var1_text(ncid, varid, index, &text);
+    for (i=0; i<=index[0]; i++)
+        err = ncmpi_fill_var(ncid, varid, i);
+    err = ncmpi_put_var1_text_all(ncid, varid, index, &text);
     IF (err != NC_NOERR)
-        error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
+        error("ncmpi_put_var1_text_all: %s", ncmpi_strerror(err));
 
 	/* get all variables & check all values equal default fill */
     for (i = 0; i < numVars; i++) {
+        if (var_dimid[i][0] == RECDIM) continue; /* skip record variables */
 	switch (var_type[i]) {
 	    case NC_CHAR:   fill = NC_FILL_CHAR; break;
 	    case NC_BYTE:   fill = NC_FILL_BYTE; break;
@@ -1964,6 +1962,11 @@ test_ncmpi_set_fill(void)
 	    case NC_INT:   fill = NC_FILL_INT; break;
 	    case NC_FLOAT:  fill = NC_FILL_FLOAT; break;
 	    case NC_DOUBLE: fill = NC_FILL_DOUBLE; break;
+	    case NC_UBYTE: fill = NC_FILL_UBYTE; break;
+	    case NC_USHORT: fill = NC_FILL_USHORT; break;
+	    case NC_UINT: fill = NC_FILL_UINT; break;
+	    case NC_INT64: fill = NC_FILL_INT64; break;
+	    case NC_UINT64: fill = NC_FILL_UINT64; break;
 	    default: assert(0);
 	}
 	for (j = 0; j < var_nels[i]; j++) {
@@ -1971,18 +1974,18 @@ test_ncmpi_set_fill(void)
             IF (err != NC_NOERR)
                 error("error in toMixedBase");
 	    if (var_type[i] == NC_CHAR) {
-		err = ncmpi_get_var1_text(ncid, i, index, &text);
+		err = ncmpi_get_var1_text_all(ncid, i, index, &text);
 		IF (err != NC_NOERR)
-		    error("ncmpi_get_var1_text failed: %s", ncmpi_strerror(err));
+		    error("ncmpi_get_var1_text_all failed: %s", ncmpi_strerror(err));
 		value = text;
 	    } else {
-		err = ncmpi_get_var1_double(ncid, i, index, &value);
+		err = ncmpi_get_var1_double_all(ncid, i, index, &value);
 		IF (err != NC_NOERR)
-		    error("ncmpi_get_var1_double failed: %s", ncmpi_strerror(err));
+		    error("ncmpi_get_var1_double_all failed: %s", ncmpi_strerror(err));
 	    }
 	    IF (value != fill && fabs((fill - value)/fill) > DBL_EPSILON)
-		error("\n\t\tValue expected: %-23.17e,\n\t\t          read: %-23.17e\n",
-			fill, value);
+		error("\n\t\t%s Value expected: %-23.17e,\n\t\t          read: %-23.17e\n",
+			var_name[i],fill, value);
 	    ELSE_NOK
         }
     }
@@ -2018,28 +2021,31 @@ test_ncmpi_set_fill(void)
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     index[0] = NRECS;
-    err = ncmpi_put_var1_text(ncid, varid, index, &text);
+    for (i=0; i<=index[0]; i++)
+        err = ncmpi_fill_var(ncid, varid, i);
+    err = ncmpi_put_var1_text_all(ncid, varid, index, &text);
     IF (err != NC_NOERR)
-        error("ncmpi_put_var1_text: %s", ncmpi_strerror(err));
+        error("ncmpi_put_var1_text_all: %s", ncmpi_strerror(err));
 
 	/* get all variables & check all values equal 42 */
     for (i = 0; i < numVars; i++) {
+        if (var_dimid[i][0] == RECDIM) continue; /* skip record variables */
 	for (j = 0; j < var_nels[i]; j++) {
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != NC_NOERR)
                 error("error in toMixedBase");
 	    if (var_type[i] == NC_CHAR) {
-		err = ncmpi_get_var1_text(ncid, i, index, &text);
+		err = ncmpi_get_var1_text_all(ncid, i, index, &text);
 		IF (err != NC_NOERR)
-		    error("ncmpi_get_var1_text failed: %s", ncmpi_strerror(err));
+		    error("ncmpi_get_var1_text_all failed: %s", ncmpi_strerror(err));
 		value = text;
 	    } else {
-		err = ncmpi_get_var1_double(ncid, i, index, &value);
+		err = ncmpi_get_var1_double_all(ncid, i, index, &value);
 		IF (err != NC_NOERR)
-		    error("ncmpi_get_var1_double failed: %s", ncmpi_strerror(err));
+		    error("ncmpi_get_var1_double_all failed: %s", ncmpi_strerror(err));
 	    }
 	    IF (value != fill)
-		error(" Value expected: %g, read: %g\n", fill, value);
+		error(" %s Value expected: %g, read: %g\n", var_name[i],fill, value);
 	    ELSE_NOK
         }
     }
@@ -2051,7 +2057,6 @@ test_ncmpi_set_fill(void)
         error("remove of %s failed", scratch);
 
     return nok;
-#endif
 }
 
 

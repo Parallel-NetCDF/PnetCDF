@@ -457,6 +457,7 @@ ncmpi_open(MPI_Comm    comm,
     }
 
     assert(ncp->flags == 0);
+    fSet(ncp->flags, NC_NOFILL);
 
     err = ncmpii_hdr_get_NC(ncp); /* read header from file */
     if (err != NC_NOERR) { /* fatal error */
@@ -962,32 +963,6 @@ ncmpi_delete(char     *filename,
     return err;
 }
 
-/*----< ncmpi_set_fill() >---------------------------------------------------*/
-/* ncmpi_set_fill:
- * not actually implemented.  Anything other than NC_NOFILL is not supported.
- * Many codes use NC_NOFILL anyway, so this just gets us more source-portable
- * with existings serial netcdf codes.   Also provides a placeholder if someday
- * someone wants to implement all of set_fill
- */
-int
-ncmpi_set_fill(int  ncid,
-               int  fillmode,
-               int *old_mode_ptr)
-{
-    int status = NC_NOERR;
-    NC *ncp;
-
-    status = ncmpii_NC_check_id(ncid, &ncp);
-    if (status != NC_NOERR) return status;
-
-    if (fillmode != NC_NOFILL) status = NC_EINVAL;
-
-    if (old_mode_ptr != NULL)
-        *old_mode_ptr = NC_NOFILL;
-
-    return status;
-}
-
 /* End Of Dataset Functions */
 
 /*----< ncmpii_check_mpifh() >-----------------------------------------------*/
@@ -1148,6 +1123,38 @@ ncmpi_inq_recsize(int         ncid,
         return status;
 
     *recsize = ncp->recsize;
+    return NC_NOERR;
+}
+
+/*----< ncmpi_inq_header_extent() >-------------------------------------------*/
+int
+ncmpi_inq_header_extent(int         ncid,
+                        MPI_Offset *extent)
+{
+    int err;
+    NC *ncp;
+
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) return err;
+
+    *extent = ncp->begin_var;
+
+    return NC_NOERR;
+}
+
+/*----< ncmpi_inq_header_size() >---------------------------------------------*/
+int
+ncmpi_inq_header_size(int         ncid,
+                      MPI_Offset *size)
+{
+    int err;
+    NC *ncp;
+
+    err = ncmpii_NC_check_id(ncid, &ncp);
+    if (err != NC_NOERR) return err;
+
+    *size = ncp->xsz;
+
     return NC_NOERR;
 }
 

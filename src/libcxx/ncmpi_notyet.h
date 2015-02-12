@@ -184,14 +184,6 @@ ncmpi_def_var_chunking(int ncid, int varid, int storage, const MPI_Offset *chunk
 extern int
 ncmpi_inq_var_chunking(int ncid, int varid, int *storagep, MPI_Offset *chunksizesp);
 
-/* Define fill value behavior for a variable. This must be done after
- *    nc_def_var and before nc_enddef. */
-extern int
-ncmpi_def_var_fill(int ncid, int varid, int no_fill, const void *fill_value);
-
-/* Inq fill value setting for a var. */
-extern int
-ncmpi_inq_var_fill(int ncid, int varid, int *no_fill, void *fill_valuep);
 extern int
 ncmpi_def_var_endian(int ncid, int varid, int endian);
 
