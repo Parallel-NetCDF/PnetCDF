@@ -42,5 +42,7 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Bug fixes
-    * none
+    * Add missing F90 function overloading when user buffer is a scalar for
+      f90mpi_put_var_all f90mpi_get_var_all, f90mpi_put_vard_all, and
+      f90mpi_get_vard_all
 
