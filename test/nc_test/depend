@@ -38,3 +38,4 @@ tst_small.o: tst_small.c
 tst_names.o: tst_names.c
 tst_atts3.o: tst_atts3.c
 tst_atts.o: tst_atts.c
+tst_nofill.o: tst_nofill.c
