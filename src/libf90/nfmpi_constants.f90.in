@@ -240,7 +240,9 @@
       NF_ETYPESIZE                = -229, & ! MPI derived data type size error (bigger than the variable size)
       NF_ETYPE_MISMATCH           = -230, & ! element type of the MPI derived data type mismatches the variable type
       NF_ETYPESIZE_MISMATCH       = -231, & ! file type size mismatches buffer type size
-      NF_ESTRICTCDF2              = -232    ! Attempting CDF-5 operation on CDF-2 file
+      NF_ESTRICTCDF2              = -232, & ! Attempting CDF-5 operation on CDF-2 file
+      NF_ENOTRECVAR               = -233, & ! Attempting operation only for record variables */
+      NF_ENOTFILL                 = -234    ! Attempting to fill a variable when its fill mode is off */
 
 ! header inconsistency error starts in -250
       integer, parameter, public :: &

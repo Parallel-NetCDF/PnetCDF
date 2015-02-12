@@ -20,6 +20,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New error code
+    * NC_ENOTRECVAR when attempting operation only for record variables
+    * NC_ENOTFILL when attempting to fill a variable when its fill mode is off
     * NC_EMULTIDEFINE_FILL_MODE	when inconsistent dataset fill mode is detected
     * NC_EMULTIDEFINE_VAR_FILL_MODE when inconsistent variable fill mode is
       detected

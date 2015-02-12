@@ -196,13 +196,14 @@ ncmpii_fill_var(NC         *ncp,
 }
 
 /*----< ncmpi_fill_var() >---------------------------------------------------*/
-/* this API is collective, must be called in data mode */
+/* fill an entire record of a record variable
+ * this API is collective, must be called in data mode */
 int
 ncmpi_fill_var(int        ncid,
                int        varid,
                MPI_Offset recno) /* record number, ignored if non-record var */
 {
-    int     err;
+    int     indx, err;
     NC     *ncp;
     NC_var *varp;
 
@@ -215,6 +216,15 @@ ncmpi_fill_var(int        ncid,
 
     varp = ncmpii_NC_lookupvar(ncp, varid);
     if (varp == NULL) return NC_ENOTVAR;
+
+    /* error if this is not a record variable */
+    if (!IS_RECVAR(varp)) return NC_ENOTRECVAR;
+
+    /* check if _FillValue attribute is defined */
+    indx = ncmpii_NC_findattr(&varp->attrs, _FillValue);
+
+    /* error if the fill mode of this variable is not on */
+    if (varp->no_fill && indx == -1) return NC_ENOTFILL;
 
     return ncmpii_fill_var(ncp, varp, recno);
 }
