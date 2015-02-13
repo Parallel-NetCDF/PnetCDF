@@ -64,8 +64,8 @@ $(PROGRAM):	$(OBJS) $(LIBRARY)
 # ncmpigentab.c. In that case, configure.in at the root directory needs
 # to check the availability of commands yacc/lex/bison. Otherwise the
 # below is never invoked, but records how to do it.
-ncmpigentab.c \
-ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
+$(srcdir)/ncmpigentab.c \
+$(srcdir)/ncmpigentab.h:	ncmpigen.y ncmpigenyy.c ncmpigen.h
 ifeq (@have_yacc_lex@, yes)
 	$(yacc) -d $(srcdir)/ncmpigen.y; \
 	cp -f y.tab.c ncmpigentab.c; \
