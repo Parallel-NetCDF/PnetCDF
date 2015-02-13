@@ -656,6 +656,13 @@ ncmpi_del_att(int         ncid,
     attrid = ncmpii_NC_findattr(ncap, name);
     if (attrid == -1) return NC_ENOTATT;
 
+    /* deleting attribute _FillValue means disabling fill mode */
+    if (!strcmp(name, _FillValue)) {
+        NC_var *varp = ncmpii_NC_lookupvar(ncp, varid);
+        if (varp == NULL) return NC_ENOTVAR;
+        varp->no_fill = 1;
+    }
+
     ncmpii_free_NC_attr(ncap->value[attrid]);
 
     /* shuffle down */
