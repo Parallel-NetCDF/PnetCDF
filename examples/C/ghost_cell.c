@@ -74,10 +74,10 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define HANDLE_ERROR {                                \
-    if (err != NC_NOERR)                              \
-        printf("Error at line %d (%s)\n", __LINE__,   \
-               ncmpi_strerror(err));                  \
+#define HANDLE_ERROR {                                         \
+    if (err != NC_NOERR)                                       \
+        printf("Error at %s line %d (%s)\n",__FILE__,__LINE__, \
+               ncmpi_strerror(err));                           \
 }
 
 static void
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     char *filename="testfile.nc";
-    int i, j, rank, nprocs, len, ncid, bufsize, verbose=0, err;
+    int i, j, rank, nprocs, len, ncid, bufsize, verbose=1, err;
     int psizes[2], local_rank[2], dimids[2], varid, nghosts;
     int *buf, *buf_ptr;
     MPI_Offset gsizes[2], starts[2], counts[2], imap[2];
@@ -127,16 +127,18 @@ int main(int argc, char **argv)
     psizes[0] = psizes[1] = 0;
     MPI_Dims_create(nprocs, 2, psizes);
     if (verbose && rank == 0)
-        printf("psizes=%d %d", psizes[0], psizes[1]);
-
-    /* find its local rank IDs along each dimension */
-    local_rank[0] = rank / psizes[0] % psizes[1];
-    local_rank[1] = rank % psizes[0];
-    if (verbose)
-        printf("proc %d: dim rank=%lld %lld\n", rank,starts[0],starts[1]);
+        printf("psizes=%d %d\n", psizes[0], psizes[1]);
 
     gsizes[0] = len     * psizes[0]; /* global array size */
     gsizes[1] = (len+1) * psizes[1];
+    if (verbose && rank == 0)
+        printf("global variable shape: %lld %lld\n", gsizes[0],gsizes[1]);
+
+    /* find its local rank IDs along each dimension */
+    local_rank[0] = rank / psizes[1];
+    local_rank[1] = rank % psizes[1];
+    if (verbose)
+        printf("rank %d: dim rank=%d %d\n", rank,local_rank[0],local_rank[1]);
 
     counts[0] = len;
     counts[1] = len+1;
