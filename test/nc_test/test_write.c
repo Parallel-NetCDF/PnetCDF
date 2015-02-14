@@ -1935,10 +1935,8 @@ test_ncmpi_set_fill(void)
     IF (err != NC_NOERR)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     err = ncmpi_set_fill(ncid, NC_FILL, &old_fillmode);
-    IF (err != NC_NOERR)
+    IF (err != NC_ENOTINDEFINE)
         error("ncmpi_set_fill: %s", ncmpi_strerror(err));
-    IF (old_fillmode != NC_FILL)
-        error("Unexpected old fill mode: %d", old_fillmode);
 
 	/* Write record number NRECS to force writing of preceding records */
 	/* Assumes variable cr is char vector with UNLIMITED dimension */

@@ -1484,10 +1484,8 @@ C           /* Change to data mode. Set fillmode again */
         if (err .ne. NF_NOERR)
      +      call errore('nfmpi_enddef: ', err)
         err = nfmpi_set_fill(ncid, NF_FILL, old_fillmode)
-        if (err .ne. NF_NOERR)
+        if (err .ne. NF_ENOTINDEFINE)
      +      call errore('nfmpi_set_fill: ', err)
-        if (old_fillmode .ne. NF_FILL)
-     +      call errori('Unexpected old fill mode: ', old_fillmode)
 
 C       /* Write record number NRECS to force writing of preceding records */
 C       /* Assumes variable cr is char vector with UNLIMITED dimension */
