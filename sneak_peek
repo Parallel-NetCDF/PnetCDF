@@ -37,6 +37,8 @@ This is essentially a placeholder for the next release note ...
       F77/fill_mode.f is the Fortran version.
       F90/fill_mode.f90 is the Fortran 90 version.
       CXX/fill_mode.cpp is the C++ version.
+    * C/ghost_cell.c shows how to use varm API to write when using a user
+      buffer that contains ghost cells on both ends of each dimensions.
 
   o New programs for I/O benchmarks
     * none

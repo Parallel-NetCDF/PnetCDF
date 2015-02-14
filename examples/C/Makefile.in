@@ -34,7 +34,8 @@ C_SRCS  = collective_write.c \
           vard_int.c \
           i_varn_int64.c \
           bput_varn_uint.c \
-          fill_mode.c
+          fill_mode.c \
+          ghost_cell.c
 
 # Note: put_vara must be run immediately before get_vara
 
@@ -106,6 +107,9 @@ bput_varn_uint: bput_varn_uint.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 fill_mode: fill_mode.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+ghost_cell: ghost_cell.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))

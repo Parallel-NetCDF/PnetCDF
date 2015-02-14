@@ -303,3 +303,9 @@ command and the number of MPI processes.
 ./F77/i_varn_real.f
   These examples show how to use nonblocking iput_varn and iget_varn APIs
 
+  ./C/fille_mode.c
+./CXX/fille_mode.cpp
+./F77/fille_mode.f
+./F90/fille_mode.f90
+  These examples show how to enable file mode
+
