@@ -298,7 +298,7 @@ err_check:
 int
 ncmpi_get_vard(int           ncid,
                int           varid,
-               MPI_Datatype  filetype,  /* data type of the variable in file */
+               MPI_Datatype  filetype,  /* access layout to the variable in file */
                void         *buf,
                MPI_Offset    bufcount,
                MPI_Datatype  buftype)   /* data type of the bufer */
@@ -312,11 +312,12 @@ ncmpi_get_vard(int           ncid,
     return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
                               READ_REQ, INDEP_IO);
 }
+
 /*----< ncmpi_get_vard_all() >-----------------------------------------------*/
 int
 ncmpi_get_vard_all(int           ncid,
                    int           varid,
-                   MPI_Datatype  filetype,  /* data type of the variable in file */
+                   MPI_Datatype  filetype,  /* access layout to the variable in file */
                    void         *buf,
                    MPI_Offset    bufcount,
                    MPI_Datatype  buftype)   /* data type of the bufer */
@@ -335,7 +336,7 @@ ncmpi_get_vard_all(int           ncid,
 int
 ncmpi_put_vard(int           ncid,
                int           varid,
-               MPI_Datatype  filetype,  /* data type of the variable in file */
+               MPI_Datatype  filetype,  /* access layout to the variable in file */
                const void   *buf,
                MPI_Offset    bufcount,
                MPI_Datatype  buftype)   /* data type of the bufer */
@@ -349,11 +350,12 @@ ncmpi_put_vard(int           ncid,
     return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,
                               buftype, WRITE_REQ, INDEP_IO);
 }
+
 /*----< ncmpi_put_vard_all() >-----------------------------------------------*/
 int
 ncmpi_put_vard_all(int           ncid,
                    int           varid,
-                   MPI_Datatype  filetype,  /* data type of the variable in file */
+                   MPI_Datatype  filetype,  /* access layout to the variable in file */
                    const void   *buf,
                    MPI_Offset    bufcount,
                    MPI_Datatype  buftype)   /* data type of the bufer */
