@@ -230,9 +230,9 @@ ncmpi_strerror(int err)
         case NC_ETYPESIZE:
             return "MPI derived data type size error (bigger than the variable size)";
         case NC_ETYPE_MISMATCH:
-            return "element type of the MPI derived data type mismatches the variable type";
+            return "element type of the MPI derived data type mismatches the variable data type";
         case NC_ETYPESIZE_MISMATCH:
-            return "file type size mismatches buffer type size";
+            return "filetype's size mismatches buftype's size * bufcount";
         case NC_ESTRICTCDF2:
             return "Attempting CDF-5 operation on CDF-2 file";
         case NC_ENOTRECVAR:
