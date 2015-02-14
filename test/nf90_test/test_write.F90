@@ -1506,10 +1506,8 @@
         if (err .ne. NF90_NOERR) &
             call errore('nf90mpi_enddef: ', err)
         err = nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode)
-        if (err .ne. NF90_NOERR) &
+        if (err .ne. NF90_ENOTINDEFINE) &
             call errore('nf90mpi_set_fill: ', err)
-        if (old_fillmode .ne. NF90_FILL) &
-            call errori('Unexpected old fill mode: ', old_fillmode)
 
 !       /* Write record number NRECS to force writing of preceding records */
 !       /* Assumes variable cr is char vector with UNLIMITED dimension */

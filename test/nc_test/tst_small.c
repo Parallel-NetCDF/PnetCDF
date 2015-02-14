@@ -236,7 +236,7 @@ test_one_growing(const char *testfile, int cmode)
       {
 	 /* Write one record of var data, a single character. */
          err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_WRITE, MPI_INFO_NULL, &ncid); ERR
-	 if (f) { err=ncmpi_set_fill(ncid, NC_NOFILL, NULL); ERR}
+	 /* if (f) { err=ncmpi_set_fill(ncid, NC_NOFILL, NULL); ERR} */
 	 count[0] = 1;
 	 start[0] = r;
 	 err=ncmpi_put_vara_text_all(ncid, varid, start, count, &data[r]); ERR
