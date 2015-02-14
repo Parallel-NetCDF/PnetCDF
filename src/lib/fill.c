@@ -211,8 +211,13 @@ ncmpi_fill_var(int        ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) return err;
 
+    if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
+
     /* This must be called in data mode */
     if (NC_indef(ncp)) return NC_EINDEFINE;                                
+
+    /* must be called in collective data mode */
+    if (NC_indep(ncp)) return NC_EINDEP;
 
     varp = ncmpii_NC_lookupvar(ncp, varid);
     if (varp == NULL) return NC_ENOTVAR;
@@ -244,10 +249,8 @@ ncmpi_set_fill(int  ncid,
 
     if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
 
-#if 0
     /* check if called in define mode */
     if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
-#endif
 
     if (ncp->safe_mode) {
         int root_fill_mode=fill_mode;
@@ -274,6 +277,10 @@ ncmpi_set_fill(int  ncid,
     for (i=0; i<ncp->vars.ndefined; i++)
         ncp->vars.value[i]->no_fill = (fill_mode == NC_NOFILL) ? 1 : 0;
 
+    /* once the file's fill mode is set, any new variables defined after this
+     * call will check NC_dofill(ncp) and set their no_fill accordingly. See
+     * ncmpi_def_var() */
+
     return status;
 }
 
@@ -292,7 +299,9 @@ ncmpi_def_var_fill(int   ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) return err;
 
-    /* check if called in define mode */
+    if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
+
+    /* must be called in define mode */
     if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
 
     /* find the pointer to this variable's object */
