@@ -67,7 +67,7 @@
 #define NX 4
 
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR)printf("Error at %s line=%d: %s\n",__FILE__,__LINE__, ncmpi_strerror(err));}
 
 static void
 usage(char *argv0)
