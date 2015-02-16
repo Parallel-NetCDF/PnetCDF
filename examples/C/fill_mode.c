@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 
     /* fill the 1st record of the record variable */
     start[0] = 0;
-    err = ncmpi_fill_var(ncid, rec_varid, start[0]); ERR
+    err = ncmpi_fill_var_rec(ncid, rec_varid, start[0]); ERR
 
     /* write to the 1st record */
     count[0] = 1;
@@ -182,7 +182,7 @@ int main(int argc, char** argv)
 
     /* fill the 2nd record of the record variable */
     start[0] = 1;
-    err = ncmpi_fill_var(ncid, rec_varid, start[0]); ERR
+    err = ncmpi_fill_var_rec(ncid, rec_varid, start[0]); ERR
 
     /* write to the 2nd record */
     err = ncmpi_put_vara_int_all(ncid, rec_varid, start, count, &buf[0][0]); ERR

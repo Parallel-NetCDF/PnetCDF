@@ -724,7 +724,7 @@
       integer  nfmpi_set_fill
       integer  nfmpi_def_var_fill
       integer  nfmpi_inq_var_fill
-      integer  nfmpi_fill_var
+      integer  nfmpi_fill_var_rec
 
       external nfmpi_create
       external nfmpi_open
@@ -743,7 +743,7 @@
       external nfmpi_set_fill
       external nfmpi_def_var_fill
       external nfmpi_inq_var_fill
-      external nfmpi_fill_var
+      external nfmpi_fill_var_rec
 
 !
 ! general inquiry routines:

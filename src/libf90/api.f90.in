@@ -472,12 +472,12 @@ INTERFACE
 !                           <type>,                        INTENT(OUT) :: fill_value
 !   END FUNCTION   nfmpi_inq_var_fill
 
-    INTEGER        FUNCTION nfmpi_fill_var(ncid, varid, recno)
+    INTEGER        FUNCTION nfmpi_fill_var_rec(ncid, varid, recno)
                    use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: recno
-    END FUNCTION   nfmpi_fill_var
+    END FUNCTION   nfmpi_fill_var_rec
 
 !
 ! entire variable put/get subroutines:

@@ -10,7 +10,7 @@ This is essentially a placeholder for the next release note ...
   o New APIs
     * ncmpi_def_var_fill() sets fill mode for a variable
     * ncmpi_inq_var_fill() inquires fill mode of a variable
-    * ncmpi_fill_var() is a collective API that fills a record of a record
+    * ncmpi_fill_var_rec() is a collective API that fills a record of a record
       variable
 
   o Syntax changes
@@ -33,7 +33,7 @@ This is essentially a placeholder for the next release note ...
 
   o New example programs
     * C/fill_mode.c shows the use of ncmpi_set_fill(), ncmpi_def_var_fill(),
-      ncmpi_inq_var_fill() and ncmpi_fill_var()
+      ncmpi_inq_var_fill() and ncmpi_fill_var_rec()
       F77/fill_mode.f is the Fortran version.
       F90/fill_mode.f90 is the Fortran 90 version.
       CXX/fill_mode.cpp is the C++ version.

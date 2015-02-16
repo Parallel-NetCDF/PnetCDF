@@ -1945,7 +1945,7 @@ test_ncmpi_set_fill(void)
         error("ncmpi_inq_varid: %s", ncmpi_strerror(err));
     index[0] = NRECS;
     for (i=0; i<=index[0]; i++)
-        err = ncmpi_fill_var(ncid, varid, i);
+        err = ncmpi_fill_var_rec(ncid, varid, i);
     err = ncmpi_put_var1_text_all(ncid, varid, index, &text);
     IF (err != NC_NOERR)
         error("ncmpi_put_var1_text_all: %s", ncmpi_strerror(err));
@@ -2020,7 +2020,7 @@ test_ncmpi_set_fill(void)
         error("ncmpi_enddef: %s", ncmpi_strerror(err));
     index[0] = NRECS;
     for (i=0; i<=index[0]; i++)
-        err = ncmpi_fill_var(ncid, varid, i);
+        err = ncmpi_fill_var_rec(ncid, varid, i);
     err = ncmpi_put_var1_text_all(ncid, varid, index, &text);
     IF (err != NC_NOERR)
         error("ncmpi_put_var1_text_all: %s", ncmpi_strerror(err));

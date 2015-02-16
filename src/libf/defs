@@ -708,9 +708,9 @@ $returnType   = "int";
 		'def_var_fill-2'	=> 'in:OffsetIndexIn',
 	'inq_var_fill' => '2',
 		'inq_var_fill-2'	=> 'in:OffsetIndexIn',
-	'fill_var' => '2:3',
-		'fill_var-2'	=> 'in:OffsetIndexIn',
-		'fill_var-3'	=> 'in:OffsetIndexIn',
+	'fill_var_rec' => '2:3',
+		'fill_var_rec-2'	=> 'in:OffsetIndexIn',
+		'fill_var_rec-3'	=> 'in:OffsetIndexIn',
 
 	'put_att_text' => '2:3:5',
 		'put_att_text-2'	=> 'in:OffsetIndexIn',
