@@ -38,7 +38,7 @@
   public :: nf90mpi_def_var,      nf90mpi_inq_varid, &
             nf90mpi_rename_var,   nf90mpi_inquire_variable, & 
             nf90mpi_def_var_fill, nf90mpi_inq_var_fill, &
-            nf90mpi_fill_var
+            nf90mpi_fill_var_rec
 
   ! overloaded functions
   ! independent APIs
@@ -171,7 +171,7 @@
         nfmpi_rename_var, &
         nfmpi_def_var_fill, &
         nfmpi_inq_var_fill, &
-        nfmpi_fill_var
+        nfmpi_fill_var_rec
 
 !
 ! entire variable put/get subroutines:

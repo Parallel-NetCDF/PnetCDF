@@ -186,8 +186,8 @@
 
           ! fill the 1st record of the record variable
           starts(2) = 1
-          err = nf90mpi_fill_var(ncid, rec_varid, starts(2))
-          call check(err, 'In nf90mpi_fill_var: ')
+          err = nf90mpi_fill_var_rec(ncid, rec_varid, starts(2))
+          call check(err, 'In nf90mpi_fill_var_rec: ')
 
           ! write to the 1st record
           counts(2) = 1;
@@ -196,8 +196,8 @@
 
           ! fill the 2nd record of the record variable
           starts(2) = 2
-          err = nf90mpi_fill_var(ncid, rec_varid, starts(2))
-          call check(err, 'In nf90mpi_fill_var: ')
+          err = nf90mpi_fill_var_rec(ncid, rec_varid, starts(2))
+          call check(err, 'In nf90mpi_fill_var_rec: ')
 
           ! write to the 2nd record
           err = nf90mpi_put_var_all(ncid, rec_varid, buf, starts, counts)

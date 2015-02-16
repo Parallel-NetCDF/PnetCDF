@@ -219,11 +219,11 @@
     nf90mpi_inq_var_fill_EightByteReal = nfmpi_inq_var_fill(ncid, varid, no_fill, fill_value)
   end function nf90mpi_inq_var_fill_EightByteReal
   ! ----- 
-  function nf90mpi_fill_var(ncid, varid, recno)
+  function nf90mpi_fill_var_rec(ncid, varid, recno)
     integer,                       intent(in) :: ncid, varid
     integer(kind=MPI_OFFSET_KIND), intent(in) :: recno
-    integer                                   :: nf90mpi_fill_var
+    integer                                   :: nf90mpi_fill_var_rec
     
-    nf90mpi_fill_var = nfmpi_fill_var(ncid, varid, recno)
-  end function nf90mpi_fill_var
+    nf90mpi_fill_var_rec = nfmpi_fill_var_rec(ncid, varid, recno)
+  end function nf90mpi_fill_var_rec
   ! ----- 

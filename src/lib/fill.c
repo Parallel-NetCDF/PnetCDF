@@ -58,6 +58,7 @@ static unsigned char FILL_INT64[8]  = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 static unsigned char FILL_UINT64[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE};
 
 /*----< inq_default_fill_value() >-------------------------------------------*/
+/* copy the default fill value to the memory space pointed by fill_value */
 static int
 inq_default_fill_value(int type, void *fill_value)
 {
@@ -81,6 +82,8 @@ inq_default_fill_value(int type, void *fill_value)
 }
 
 /*----< ncmpii_fill_var_buf() >----------------------------------------------*/
+/* fill the buffer, buf, with either user-defined fill values or default
+ * values */
 static int
 ncmpii_fill_var_buf(const NC_var *varp,
                     MPI_Offset    bnelems, /* number of elements in buf */
@@ -129,10 +132,14 @@ ncmpii_fill_var_buf(const NC_var *varp,
 }
 
 /*----< ncmpii_fill_var() >--------------------------------------------------*/
+/* If the variable is fixed-size, then write the entire variable with fill
+ * values and recno is ignored. If it is a record variable, then write one
+ * record of that variable with fill values.
+ */
 static int
-ncmpii_fill_var(NC         *ncp,
-                NC_var     *varp,
-                MPI_Offset  recno) /* record number */
+ncmpii_fill_var_rec(NC         *ncp,
+                    NC_var     *varp,
+                    MPI_Offset  recno) /* record number */
 {
     int err, mpireturn, rank, nprocs;
     void *buf;
@@ -199,9 +206,9 @@ ncmpii_fill_var(NC         *ncp,
 /* fill an entire record of a record variable
  * this API is collective, must be called in data mode */
 int
-ncmpi_fill_var(int        ncid,
-               int        varid,
-               MPI_Offset recno) /* record number, ignored if non-record var */
+ncmpi_fill_var_rec(int        ncid,
+                   int        varid,
+                   MPI_Offset recno) /* record number, ignored if non-record var */
 {
     int     indx, err;
     NC     *ncp;
@@ -231,7 +238,7 @@ ncmpi_fill_var(int        ncid,
     /* error if the fill mode of this variable is not on */
     if (varp->no_fill && indx == -1) return NC_ENOTFILL;
 
-    return ncmpii_fill_var(ncp, varp, recno);
+    return ncmpii_fill_var_rec(ncp, varp, recno);
 }
 
 /*----< ncmpi_set_fill() >---------------------------------------------------*/
@@ -415,7 +422,7 @@ fillerup(NC *ncp)
         if (ncp->vars.value[i]->no_fill && indx == -1) continue;
 
         /* collectively fill the entire variable */
-        err = ncmpii_fill_var(ncp, ncp->vars.value[i], 0);
+        err = ncmpii_fill_var_rec(ncp, ncp->vars.value[i], 0);
         if (err != NC_NOERR) break;
     }
     return err;
@@ -442,7 +449,7 @@ fill_added(NC *ncp, NC *old_ncp)
         if (ncp->vars.value[varid]->no_fill && indx == -1) continue;
 
         /* collectively fill the entire variable */
-        err = ncmpii_fill_var(ncp, ncp->vars.value[varid], 0);
+        err = ncmpii_fill_var_rec(ncp, ncp->vars.value[varid], 0);
         if (err != NC_NOERR) break;
     }
     return err;
@@ -471,7 +478,7 @@ fill_added_recs(NC *ncp, NC *old_ncp)
             if (ncp->vars.value[varid]->no_fill && indx == -1) continue;
 
             /* collectively fill the record */
-            err = ncmpii_fill_var(ncp, ncp->vars.value[varid], recno);
+            err = ncmpii_fill_var_rec(ncp, ncp->vars.value[varid], recno);
             if (err != NC_NOERR) return err;
         }
     }

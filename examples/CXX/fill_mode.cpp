@@ -178,7 +178,7 @@ int main(int argc, char** argv)
 
         /* fill the 1st record of the record variable */
         start[0] = 0;
-        rec_var.fillVar(start[0]);
+        rec_var.fillRec(start[0]);
 
         /* write to the 1st record */
         count[0] = 1;
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
 
         /* fill the 2nd record of the record variable */
         start[0] = 1;
-        rec_var.fillVar(start[0]);
+        rec_var.fillRec(start[0]);
 
         /* write to the 2nd record */
         rec_var.putVar_all(start, count, &buf[0][0]);

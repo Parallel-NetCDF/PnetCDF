@@ -597,7 +597,7 @@ int ncmpi_def_var_fill(int ncid, int varid, int no_fill, void *fill_value);
 
 int ncmpi_inq_var_fill(int ncid, int varid, int *no_fill, void *fill_value);
 
-int ncmpi_fill_var(int ncid, int varid, MPI_Offset recno);
+int ncmpi_fill_var_rec(int ncid, int varid, MPI_Offset recno);
 
 /* End Dataset Functions */
 

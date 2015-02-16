@@ -579,9 +579,9 @@ void NcmpiVar::getFillModeParameters(bool& fillMode, void* fillValue)const{
 }
   
 /* fill variable */
-void NcmpiVar::fillVar(MPI_Offset recno) const {
+void NcmpiVar::fillRec(MPI_Offset recno) const {
   ncmpiCheckDataMode(groupId);
-    ncmpiCheck(ncmpi_fill_var(groupId, myId, recno),__FILE__,__LINE__);
+    ncmpiCheck(ncmpi_fill_var_rec(groupId, myId, recno),__FILE__,__LINE__);
 }
 
 

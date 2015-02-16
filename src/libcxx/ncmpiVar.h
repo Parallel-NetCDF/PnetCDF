@@ -315,7 +315,7 @@ namespace PnetCDF
   
 
     /* fill variable */
-    void fillVar(MPI_Offset recno) const;
+    void fillRec(MPI_Offset recno) const;
       
     ////////////////////
       
