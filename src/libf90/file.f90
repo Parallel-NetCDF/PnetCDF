@@ -312,3 +312,20 @@ function nf90mpi_inq_recsize(ncid, recsize)
   nf90mpi_inq_recsize = nfmpi_inq_recsize(ncid, recsize)
 end function nf90mpi_inq_recsize
 
+! -------
+function nf90mpi_set_default_format(new_format, old_format)
+  integer, intent( in) :: new_format
+  integer, intent(out) :: old_format
+  integer              :: nf90mpi_set_default_format
+
+  nf90mpi_set_default_format = nfmpi_set_default_format(new_format, old_format)
+end function nf90mpi_set_default_format
+
+! -------
+function nf90mpi_inq_default_format(default_format)
+  integer, intent(out) :: default_format
+  integer              :: nf90mpi_inq_default_format
+
+  nf90mpi_inq_default_format = nfmpi_inq_default_format(default_format)
+end function nf90mpi_inq_default_format
+

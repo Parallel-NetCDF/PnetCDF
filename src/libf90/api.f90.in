@@ -83,8 +83,12 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_set_default_format(new_format, old_format)
                             INTEGER,                       INTENT(IN)  :: new_format
-                            INTEGER,                       INTENT(IN)  :: old_format
+                            INTEGER,                       INTENT(OUT) :: old_format
     END FUNCTION   nfmpi_set_default_format
+
+    INTEGER        FUNCTION nfmpi_inq_default_format(default_format)
+                            INTEGER,                       INTENT(OUT) :: default_format
+    END FUNCTION   nfmpi_inq_default_format
 
     INTEGER        FUNCTION nfmpi_sync(ncid)
                             INTEGER,                       INTENT(IN)  :: ncid

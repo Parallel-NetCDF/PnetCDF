@@ -266,38 +266,68 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
     return ncp;
 }
 
-/* This function sets a default create flag that will be logically
-   or'd to whatever flags are passed into nc_create for all future
-   calls to nc_create.
-   Valid default create flags are NC_64BIT_OFFSET, NC_CLOBBER,
-   NC_LOCK, NC_SHARE. */
+/*----< ncmpi_set_default_format() >-----------------------------------------*/
+/* This function sets a default create file format.
+ * Valid formats are NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, and NC_FORMAT_CDF5
+ * This API is collective.
+ */
 int
 ncmpi_set_default_format(int format, int *old_formatp)
 {
+    int safe_mode, mpireturn, status=NC_NOERR;
+    char *env_str;
+
     /* Return existing format if desired. */
     if (old_formatp)
         *old_formatp = default_create_format;
+
+    env_str = getenv("PNETCDF_SAFE_MODE");
+    if (env_str != NULL) {
+        if (*env_str == '0') safe_mode = 0;
+        else                 safe_mode = 1;
+    }
+
+    if (safe_mode) {
+        /* check if format is consistent with root's */
+        int root_format=format;
+
+        TRACE_COMM(MPI_Bcast)(&root_format, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast");
+
+        if (root_format != format) {
+            int rank;
+            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+            /* formats are inconsistent, overwrite local format with root's */
+            printf("rank %d: Warning - inconsistent file format, overwrite with root's\n",rank);
+            format = root_format;
+            status = NC_EMULTIDEFINE_OMODE;
+        }
+    }
+
 
     /* Make sure only valid format is set. */
     if (format != NC_FORMAT_CLASSIC &&
         format != NC_FORMAT_CDF2 &&
         format != NC_FORMAT_CDF5) {
-      return NC_EINVAL;
+        return NC_EINVAL;
     }
     default_create_format = format;
-    return NC_NOERR;
+
+    return status;
 }
 
-#if 0
 /* returns a value suituable for a create flag.  Will return one or more of the
  * following values ORed together:
  * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
-static int
-ncmpii_get_default_format(void)
+int
+ncmpi_inq_default_format(int *formatp)
 {
-        return default_create_format;
+    if (formatp == NULL) return NC_EINVAL;
+
+    *formatp = default_create_format;
+    return NC_NOERR;
 }
-#endif
 
 /*----< ncmpii_dup_NC() >----------------------------------------------------*/
 NC *

@@ -315,7 +315,19 @@ ncmpi_create(MPI_Comm    comm,
         if (SIZEOF_OFF_T < 8) return NC_ESMALL;
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
-        fSet(ncp->flags, NC_32BIT);
+        /* check default foramt */
+        int default_format;
+        ncmpi_inq_default_format(&default_format);
+        if (default_format == NC_FORMAT_CDF5) {
+            if (SIZEOF_MPI_OFFSET <  8) return NC_ESMALL;
+            fSet(ncp->flags, NC_64BIT_DATA);
+        }
+        else if (default_format == NC_FORMAT_CDF2) {
+            if (SIZEOF_OFF_T < 8) return NC_ESMALL;
+            fSet(ncp->flags, NC_64BIT_OFFSET);
+        }
+        else
+            fSet(ncp->flags, NC_32BIT);
     }
 
     /* find the true header size (not-yet aligned) */
