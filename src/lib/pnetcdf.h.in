@@ -579,6 +579,8 @@ int ncmpi_redef(int ncid);
 
 int ncmpi_set_default_format(int format, int *old_formatp);
 
+int ncmpi_inq_default_format(int *formatp);
+
 int ncmpi_sync(int ncid);
 
 int ncmpi_sync_numrecs(int ncid);

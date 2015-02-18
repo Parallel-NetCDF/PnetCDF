@@ -718,6 +718,7 @@
       integer  nfmpi__enddef
       integer  nfmpi_redef
       integer  nfmpi_set_default_format
+      integer  nfmpi_inq_default_format
       integer  nfmpi_sync
       integer  nfmpi_abort
       integer  nfmpi_close
@@ -737,6 +738,7 @@
       external nfmpi__enddef
       external nfmpi_redef
       external nfmpi_set_default_format
+      external nfmpi_inq_default_format
       external nfmpi_sync
       external nfmpi_abort
       external nfmpi_close

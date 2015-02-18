@@ -8,10 +8,13 @@ This is essentially a placeholder for the next release note ...
       in PnetCDF is NC_NOFILL.
 
   o New APIs
-    * ncmpi_def_var_fill() sets fill mode for a variable
+    * ncmpi_def_var_fill() sets fill mode for an individual variable
     * ncmpi_inq_var_fill() inquires fill mode of a variable
     * ncmpi_fill_var_rec() is a collective API that fills a record of a record
       variable
+    * ncmpi_inq_default_format() for inquiring the default file format for
+      new file creation. Note the default format can be changed by
+      ncmpi_set_default_format().
 
   o Syntax changes
     * none
@@ -37,8 +40,8 @@ This is essentially a placeholder for the next release note ...
       F77/fill_mode.f is the Fortran version.
       F90/fill_mode.f90 is the Fortran 90 version.
       CXX/fill_mode.cpp is the C++ version.
-    * C/ghost_cell.c shows how to use varm API to write when using a user
-      buffer that contains ghost cells on both ends of each dimensions.
+    * C/ghost_cell.c shows how to use varm API for writing from a user buffer
+      as a 2D array with ghost cells on both ends of every dimension.
 
   o New programs for I/O benchmarks
     * none
@@ -59,7 +62,7 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Bug fixes
-    * Add missing F90 function overloading when user buffer is a scalar for
-      f90mpi_put_var_all f90mpi_get_var_all, f90mpi_put_vard_all, and
-      f90mpi_get_vard_all
+    * Add missing F90 function overloading for f90mpi_put_var_all,
+      f90mpi_get_var_all, f90mpi_put_vard_all, and f90mpi_get_vard_all,
+      when the user buffer is a scalar.
 

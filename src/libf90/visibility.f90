@@ -16,11 +16,12 @@
             nf90mpi_set_fill, nf90mpi_redef, &
             nf90mpi_enddef,   nf90mpi_sync, &
             nf90mpi_abort,    nf90mpi_close, &
-            nf90mpi_delete
+            nf90mpi_delete,   nf90mpi_set_default_format
             
   ! File level inquiry
   public :: nf90mpi_inquire,          nf90mpi_inq_striping, &
-            nf90mpi_inq_num_rec_vars, nf90mpi_inq_num_fix_vars
+            nf90mpi_inq_num_rec_vars, nf90mpi_inq_num_fix_vars, &
+            nf90mpi_inq_default_format
   
   ! Dimension routines
   public :: nf90mpi_def_dim,    nf90mpi_inq_dimid, &
@@ -91,6 +92,7 @@
         nfmpi__enddef, &
         nfmpi_redef, &
         nfmpi_set_default_format, &
+        nfmpi_inq_default_format, &
         nfmpi_sync, &
         nfmpi_abort, &
         nfmpi_close, &
