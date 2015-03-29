@@ -48,7 +48,7 @@
 /* ncmpi_create/ncmpi_open set up header to be 'chunksize' big and to grow
  * by 'chunksize' as new items adde. This used to be 4k. 256k lets us read
  * in an entire climate header in one go */
-#define NC_DEFAULT_CHUNKSIZE 256*1024
+#define NC_DEFAULT_CHUNKSIZE 262144
 
 /* when variabe's nctype is NC_CHAR, I/O buffer's MPI type must be MPI_CHAR
  * and vice versa */
