@@ -127,14 +127,14 @@ void ncmpiio_extract_hints(ncio     *nciop,
         if (flag) nciop->hints.header_read_chunk_size = atoll(value);
 
 #ifdef ENABLE_SUBFILING
-	MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
-		     value, &flag);
-	if (flag && strcasecmp(value, "disable") == 0)
+        MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "disable") == 0)
             nciop->hints.subfile_mode = 0;
 
-	MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
-		     value, &flag);
-	if (flag) nciop->hints.num_subfiles = atoll(value);
+        MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) nciop->hints.num_subfiles = atoi(value);
 #endif
 
         /* nc_header_align_size, nc_var_align_size, and nciop->hints.r_align
@@ -150,15 +150,15 @@ void ncmpiio_extract_hints(ncio     *nciop,
         if (nciop->hints.header_read_chunk_size < 0)
             nciop->hints.header_read_chunk_size = 0;
 #ifdef ENABLE_SUBFILING
-	if (nciop->hints.num_subfiles < 0)
-	    nciop->hints.num_subfiles = 0;
-	/* override subfile hints if env var is set */
-	char *num_sf_env;
-	num_sf_env = getenv("NC_NUM_SUBFILES");
-	if (num_sf_env != NULL)
-	    nciop->hints.num_subfiles = atoi(num_sf_env);
+        if (nciop->hints.num_subfiles < 0)
+            nciop->hints.num_subfiles = 0;
+        /* override subfile hints if env var is set */
+        char *num_sf_env;
+        num_sf_env = getenv("NC_NUM_SUBFILES");
+        if (num_sf_env != NULL)
+            nciop->hints.num_subfiles = atoi(num_sf_env);
         if (nciop->hints.subfile_mode == 0)
-	    nciop->hints.num_subfiles = 0;
+            nciop->hints.num_subfiles = 0;
 #endif
     }
 }
@@ -430,48 +430,44 @@ ncmpiio_move(ncio *const nciop,
              MPI_Offset  from,
              MPI_Offset  nbytes)
 {
-    int rank, grpsize, mpireturn, err, status=NC_NOERR, min_st;
+    int rank, nprocs, bufcount, mpireturn, err, status=NC_NOERR, min_st;
     void *buf;
-    const MPI_Offset bufsize = 4096; /* move chunk size one at a time */
-    MPI_Offset movesize, bufcount;
+    const int chunk_size = 1048576; /* move 1 MB per process at a time */
     MPI_Status mpistatus;
 
-    MPI_Comm_size(nciop->comm, &grpsize);
+    MPI_Comm_size(nciop->comm, &nprocs);
     MPI_Comm_rank(nciop->comm, &rank);
 
-    movesize = nbytes;
-    buf = NCI_Malloc((size_t)bufsize);
-    if (buf == NULL)
-        return NC_ENOMEM;
+    buf = NCI_Malloc((size_t)chunk_size);
+    if (buf == NULL) return NC_ENOMEM;
 
-    while (movesize > 0) {
-        /* find a proper number of processors to participate I/O */
-        while (grpsize > 1 && movesize/grpsize < bufsize)
-            grpsize--;
-        if (grpsize > 1) {
-            bufcount = bufsize;
-            movesize -= bufsize*grpsize;
-        }
-        else if (movesize < bufsize) {
-            bufcount = movesize;
-            movesize = 0;
+    /* make fileview entire file visible */
+    TRACE_IO(MPI_File_set_view)(nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
+                                "native", MPI_INFO_NULL);
+
+    /* move the variable starting from its tail toward its beginning */
+    while (nbytes > 0) {
+        /* calculate how much to move at each time */
+        bufcount = chunk_size;
+        if (nbytes < nprocs * chunk_size) {
+            /* handle the last group of chunks */
+            MPI_Offset rem_chunks = nbytes / chunk_size;
+            if (rank > rem_chunks) /* these processes do not read/write */
+                bufcount = 0;
+            else if (rank == rem_chunks) /* this process reads/writes less */
+                bufcount = (int)(nbytes % chunk_size);
+            nbytes = 0;
         }
         else {
-            bufcount = bufsize;
-            movesize -= bufsize;
+            nbytes -= chunk_size*nprocs;
         }
 
-        /* make fileview entire file visible */
-        TRACE_IO(MPI_File_set_view)(nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
-                                    "native", MPI_INFO_NULL);
-
-        if (rank >= grpsize) bufcount = 0;
-        /* read the original data @ from+movesize+rank*bufsize */
+        /* read the original data @ from+nbytes+rank*chunk_size */
         TRACE_IO(MPI_File_read_at_all)(nciop->collective_fh,
-                                       from+movesize+rank*bufsize,
+                                       from+nbytes+rank*chunk_size,
                                        buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
+            err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
             if (err == NC_EFILE) status = NC_EREAD;
         }
         else {
@@ -486,13 +482,12 @@ ncmpiio_move(ncio *const nciop,
         status = min_st;
         if (status != NC_NOERR) break;
 
-        if (rank >= grpsize) bufcount = 0;
-        /* write to new location @ to+movesize+rank*bufsize */
+        /* write to new location @ to+nbytes+rank*chunk_size */
         TRACE_IO(MPI_File_write_at_all)(nciop->collective_fh,
-                                        to+movesize+rank*bufsize,
+                                        to+nbytes+rank*chunk_size,
                                         buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-	    err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
+            err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
             if (err == NC_EFILE) status = NC_EWRITE;
         }
         else {
