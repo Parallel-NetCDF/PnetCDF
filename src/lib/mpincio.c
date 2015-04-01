@@ -432,11 +432,15 @@ ncmpiio_move(ncio *const nciop,
 {
     int rank, nprocs, bufcount, mpireturn, err, status=NC_NOERR, min_st;
     void *buf;
-    const int chunk_size = 1048576; /* move 1 MB per process at a time */
+    int chunk_size = 1048576; /* move 1 MB per process at a time */
     MPI_Status mpistatus;
 
     MPI_Comm_size(nciop->comm, &nprocs);
     MPI_Comm_rank(nciop->comm, &rank);
+
+    /* if the file striping unit size is known (obtained from MPI-IO), then
+     * we use that instead of 1 MB */
+    if (nciop->striping_unit > 0) chunk_size = nciop->striping_unit;
 
     buf = NCI_Malloc((size_t)chunk_size);
     if (buf == NULL) return NC_ENOMEM;
