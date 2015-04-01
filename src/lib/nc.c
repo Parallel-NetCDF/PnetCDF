@@ -1232,12 +1232,15 @@ ncmpii_enddef(NC *ncp)
 
     /* calculate a good align size for PnetCDF level hints:
      * header_align_size and var_align_size based on the MPI-IO hint
-     * striping_unit
+     * striping_unit. This hint can be either supplied by the user or obtained
+     * from MPI-IO (for example, ROMIO's Lustre driver makes a system call to
+     * get the striping parameters of a file).
      */
     MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
                  value, &flag);
     striping_unit = 0;
     if (flag) striping_unit = atoi(value);
+    ncp->nciop->striping_unit = striping_unit;
 
     all_var_size = 0;  /* sum of all defined variables */
     for (i=0; i<ncp->vars.ndefined; i++)
@@ -1306,12 +1309,15 @@ ncmpii__enddef(NC         *ncp,
 
     /* calculate a good align size for PnetCDF level hints:
      * header_align_size and var_align_size based on the MPI-IO hint
-     * striping_unit
+     * striping_unit. This hint can be either supplied by the user or obtained
+     * from MPI-IO (for example, ROMIO's Lustre driver makes a system call to
+     * get the striping parameters of a file).
      */
     MPI_Info_get(ncp->nciop->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
                  value, &flag);
     striping_unit = 0;
     if (flag) striping_unit = atoi(value);
+    ncp->nciop->striping_unit = striping_unit;
 
     all_var_size = 0;  /* sum of all defined variables */
     for (i=0; i<ncp->vars.ndefined; i++)

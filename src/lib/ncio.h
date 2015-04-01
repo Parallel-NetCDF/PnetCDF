@@ -68,6 +68,7 @@ typedef struct {
 
     int mpiomode;        /* mode used in MPI_File_open */
     int mpioflags;       /* MPI_COLLECTIVE_FH or MPI_INDEPENDENT_FH */
+    int striping_unit;   /* file stripe size of the file */
 
     nc_hints hints;      /* I/O hints used by PnetCDF only */
 
