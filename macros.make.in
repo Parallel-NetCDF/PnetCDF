@@ -13,10 +13,9 @@ LN_S		= @LN_S@
 # Installation Directories:
 # SRCDIR	= @SRCDIR@
 prefix		= @prefix@
-exec_prefix	= $(prefix)
-INCDIR		= $(exec_prefix)/include
-LIBDIR		= $(exec_prefix)/lib
-BINDIR		= $(exec_prefix)/bin
+INCDIR		= $(prefix)/include
+LIBDIR		= $(prefix)/lib
+BINDIR		= $(prefix)/bin
 MANDIR		= $(prefix)/man
 BUILDDIR	= @BUILDDIR@
 LIBRARY		= @BUILDDIR@/src/lib/libpnetcdf.a
