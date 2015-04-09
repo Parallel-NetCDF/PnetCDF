@@ -59,7 +59,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
-    * none
+    * Change the chunk size used for moving variable data when the file header
+      extent expands. The default is now 1MB. If the file's striping unit
+      size is known (from MPI-IO hint striping_unit) then the chunk size is
+      set to the striping unit size.
 
   o Bug fixes
     * Add missing F90 function overloading for f90mpi_put_var_all,
