@@ -99,18 +99,23 @@ NC_check_header(NC         *ncp,
 
     MPI_Comm_rank(ncp->nciop->comm, &rank);
 
-    /* root's header xsz has been broadcasted in NC_begin() and saved in
+    /* root's header size has been broadcasted in NC_begin() and saved in
      * ncp->xsz.
      */
     if (rank == 0)
         cmpbuf = buf;
     else
-        cmpbuf = (void*) NCI_Malloc(ncp->xsz);
+        cmpbuf = (void*) NCI_Malloc((size_t)ncp->xsz);
 
-    /* process 0 broadcasts its header */
-    TRACE_COMM(MPI_Bcast)(cmpbuf, ncp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
+    /* process 0 broadcasts its header
+     * TODO: currently the header size cannot be larger than 2^31 bytes,
+     * due to the 2nd argument, count, of MPI_Bcast being of type int.
+     * Possible solution is to broadcast in chunks of 2^31 bytes.
+     */
+    if (ncp->xsz != (int)ncp->xsz) return NC_EINTOVERFLOW;
+    TRACE_COMM(MPI_Bcast)(cmpbuf, (int)ncp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
 
-    if (rank > 0 && (ncp->xsz != local_xsz || memcmp(buf, cmpbuf, ncp->xsz))) {
+    if (rank > 0 && (ncp->xsz != local_xsz || memcmp(buf, cmpbuf, (size_t)ncp->xsz))) {
         /* now part of this process's header is not consistent with root's
          * check and report the inconsistent part
          */
@@ -673,8 +678,9 @@ ncmpii_sync_numrecs(NC         *ncp,
             status = ncmpix_put_int64((void**)&buf, max_numrecs);
         }
         else {
+            if (max_numrecs != (int)max_numrecs) status = NC_EINTOVERFLOW;
             len = X_SIZEOF_SIZE_T;
-            status = ncmpix_put_int32((void**)&buf, max_numrecs);
+            status = ncmpix_put_int32((void**)&buf, (int)max_numrecs);
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
@@ -754,7 +760,7 @@ write_NC(NC *ncp)
     /* ncp->xsz is root's header size, we need to calculate local's */
     local_xsz = ncmpii_hdr_len_NC(ncp);
 
-    buf = NCI_Malloc(local_xsz); /* buffer for local header object */
+    buf = NCI_Malloc((size_t)local_xsz); /* buffer for local header object */
 
     /* copy the entire local header object to buffer */
     status = ncmpii_hdr_put_NC(ncp, buf);
@@ -797,8 +803,9 @@ write_NC(NC *ncp)
     if (rank == 0) {
         /* rank 0's fileview already includes the file header */
         MPI_Status mpistatus;
+        if (ncp->xsz != (int)ncp->xsz) status = NC_EINTOVERFLOW;
         TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
-                                    ncp->xsz, MPI_BYTE, &mpistatus);
+                                    (int)ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             /* write has failed, which is more serious than inconsistency */
@@ -931,10 +938,10 @@ ncmpii_NC_check_vlens(NC *ncp)
     if(ncp->vars.ndefined == 0)
        return NC_NOERR;
 
-    if ((ncp->flags & NC_64BIT_DATA) && sizeof(off_t) > 4)
+    if ((ncp->flags & NC_64BIT_DATA) && SIZEOF_OFF_T > 4)
        return NC_NOERR;
 
-    if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
+    if ((ncp->flags & NC_64BIT_OFFSET) && SIZEOF_OFF_T > 4) {
        /* CDF2 format and LFS */
        vlen_max = X_UINT_MAX - 3; /* "- 3" handles rounded-up size */
     } else {
@@ -1418,7 +1425,7 @@ ncmpii_close(NC *ncp)
         cur_req = cur_req->next;
     }
     if (num_reqs > 0) { /* fill in req_ids[] */
-        req_ids = (int*) NCI_Malloc(2 * num_reqs * sizeof(int));
+        req_ids = (int*) NCI_Malloc((size_t)num_reqs * 2 * SIZEOF_INT);
         statuses = req_ids + num_reqs;
         num_reqs = 0;
         cur_req = ncp->head;

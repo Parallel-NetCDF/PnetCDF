@@ -632,7 +632,7 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
 
 /*----< ncmpii_create_imaptype() >-------------------------------------------*/
 /* check if a request is a true varm call */
-void
+int
 ncmpii_create_imaptype(NC_var           *varp,
                        const MPI_Offset *count,
                        const MPI_Offset *imap,
@@ -641,19 +641,20 @@ ncmpii_create_imaptype(NC_var           *varp,
                        MPI_Datatype      ptype,   /* element type in buftype */
                        MPI_Datatype     *imaptype)/* out */
 {
-    int dim, imap_contig_blocklen;
+    int dim;
+    MPI_Offset imap_contig_blocklen;
 
     /* check if this is a vars call or a true varm call */
     *imaptype = MPI_DATATYPE_NULL;
 
     if (varp->ndims == 0) /* scalar var, only one value at one fixed place */
-        return;
+        return NC_NOERR;
 
     if (bnelems == 1) /* one element, same as var1 */
-        return;
+        return NC_NOERR;
 
     if (imap == NULL) /* no mapping, same as vars */
-        return;
+        return NC_NOERR;
 
     /* test each dim's contiguity in imap[] until the 1st non-contiguous
      * dim is reached */
@@ -663,7 +664,7 @@ ncmpii_create_imaptype(NC_var           *varp,
         imap_contig_blocklen *= count[dim];
 
     if (dim == -1) /* imap is a contiguous layout */
-        return;
+        return NC_NOERR;
 
     /* We have a true varm call, as imap gives non-contiguous layout.
      * User buffer will be packed (write case) or unpacked (read case)
@@ -674,23 +675,33 @@ ncmpii_create_imaptype(NC_var           *varp,
      * dim is the first dimension (C order, eg. ZYX) that has
      * non-contiguous imap.
      */
-    MPI_Type_vector(count[dim], imap_contig_blocklen, imap[dim], ptype,
-                    imaptype);
+    if (imap_contig_blocklen != (int)imap_contig_blocklen) {
+        fprintf(stderr, "Error at line %d of file %s (%s)\n", __LINE__,
+                __FILE__, ncmpi_strerror(NC_EINTOVERFLOW));
+        return NC_EINTOVERFLOW;
+    }
+    if (count[dim] != (int)count[dim] || imap[dim] != (int)imap[dim])
+        return NC_EINTOVERFLOW;
+
+    MPI_Type_vector((int)count[dim], (int)imap_contig_blocklen, (int)imap[dim],
+                    ptype, imaptype);
     MPI_Type_commit(imaptype);
 
     for (dim--; dim>=0; dim--) {
         MPI_Datatype tmptype;
+        if (count[dim] != (int)count[dim]) return NC_EINTOVERFLOW;
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-        MPI_Type_create_hvector(count[dim], 1, imap[dim]*el_size, *imaptype,
+        MPI_Type_create_hvector((int)count[dim], 1, imap[dim]*el_size, *imaptype,
                                 &tmptype);
 #else
-        MPI_Type_hvector(count[dim], 1, imap[dim]*el_size, *imaptype,
+        MPI_Type_hvector((int)count[dim], 1, imap[dim]*el_size, *imaptype,
                          &tmptype);
 #endif
         MPI_Type_free(imaptype);
         MPI_Type_commit(&tmptype);
         *imaptype = tmptype;
     }
+    return NC_NOERR;
 }
 
 /*----< ncmpii_getput_vars() >-----------------------------------------------*/
@@ -791,6 +802,8 @@ ncmpii_getput_vars(NC               *ncp,
         if (err != NC_NOERR) goto err_check;
     }
 
+    if (bufcount != (int)bufcount) err = NC_EINTOVERFLOW;
+
 err_check:
     /* If io_method is COLL_IO and an error occurs, we'll still conduct a
      * zero-byte read/write (because every process must participate the
@@ -811,16 +824,19 @@ err_check:
     need_swap    = ncmpii_need_swap(varp->type, ptype);
 
     if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
-        int position, outsize=bnelems*el_size;
+        int position;
+        MPI_Offset outsize=bnelems*el_size;
         /* assert(bnelems > 0); */
+        if (outsize != (int)outsize && status == NC_NOERR)
+            status = NC_EINTOVERFLOW;
 
         /* Step 1: pack buf into a contiguous buffer, cbuf */
         if (!buftype_is_contig) { /* buftype is not contiguous */
             /* pack buf into cbuf, a contiguous buffer, using buftype */
-            cbuf = NCI_Malloc(outsize);
+            cbuf = NCI_Malloc((size_t)outsize);
             position = 0;
-            MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
-                     MPI_COMM_SELF);
+            MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
+                     &position, MPI_COMM_SELF);
         }
         else
             cbuf = buf;
@@ -828,7 +844,7 @@ err_check:
         /* Step 2: pack cbuf to xbuf and xbuf will be used to write to file */
         xbuf = cbuf;
         if (need_convert) { /* user buf type != nc var type defined in file */
-            xbuf = NCI_Malloc(nbytes);
+            xbuf = NCI_Malloc((size_t)nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
@@ -839,7 +855,7 @@ err_check:
 #ifdef DISABLE_IN_PLACE_SWAP
             if (isTempBuf == 0 && cbuf == buf) {
                 /* allocate cbuf and copy buf to cbuf, byte-swap in cbuf */
-                xbuf = NCI_Malloc(nbytes);
+                xbuf = NCI_Malloc((size_t)nbytes);
                 memcpy(xbuf, buf, nbytes);
             }
 #endif
@@ -857,7 +873,7 @@ err_check:
         if (buftype_is_contig && !need_convert)
             xbuf = buf;
         else
-            xbuf = NCI_Malloc(nbytes);
+            xbuf = NCI_Malloc((size_t)nbytes);
     }
     /* xbuf is the buffer whose data has been converted into the external
      * data type, ready to be written to the netCDF file. For read,
@@ -880,8 +896,8 @@ mpi_io:
 
     if (rw_flag == WRITE_REQ) {
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, nbytes, MPI_BYTE,
-                                            &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, (int)nbytes,
+                                            MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
@@ -890,8 +906,8 @@ mpi_io:
             }
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, nbytes, MPI_BYTE,
-                                        &mpistatus);
+            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, (int)nbytes,
+                                        MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
@@ -905,8 +921,8 @@ mpi_io:
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, nbytes, MPI_BYTE,
-                                           &mpistatus);
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, (int)nbytes,
+                                           MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
@@ -915,8 +931,8 @@ mpi_io:
             }
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, nbytes, MPI_BYTE,
-                                       &mpistatus);
+            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, (int)nbytes,
+                                       MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
@@ -939,14 +955,17 @@ mpi_io:
         /* xbuf contains the data read from file.
          * Check if it needs to be type-converted + byte-swapped
          */
-        int position, insize=bnelems*el_size;
+        int position;
+        MPI_Offset insize=bnelems*el_size;
+        if (insize != (int)insize && status == NC_NOERR)
+            status = NC_EINTOVERFLOW;
 
         if (need_convert) {
             /* xbuf cannot be buf, but cbuf can */
             if (buftype_is_contig)
                 cbuf = buf;
             else
-                cbuf = NCI_Malloc(insize);
+                cbuf = NCI_Malloc((size_t)insize);
 
             /* type conversion + swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
@@ -963,8 +982,8 @@ mpi_io:
         if (!buftype_is_contig) {
             /* unpack cbuf, a contiguous buffer, to buf using buftype */
             position = 0;
-            MPI_Unpack(cbuf, insize, &position, buf, bufcount, buftype,
-                       MPI_COMM_SELF);
+            MPI_Unpack(cbuf, (int)insize, &position, buf, (int)bufcount,
+                       buftype, MPI_COMM_SELF);
         }
         /* done with cbuf */
         if (cbuf != buf) NCI_Free(cbuf);
@@ -1276,6 +1295,8 @@ ncmpii_getput_varm(NC               *ncp,
         if (err != NC_NOERR) goto err_check;
     }
 
+    if (bufcount != (int)bufcount) err = NC_EINTOVERFLOW;
+
 err_check:
     /* If io_method is COLL_IO and an error occurs, we'll still conduct a
      * zero-byte read/write (because every process must participate the
@@ -1296,20 +1317,24 @@ err_check:
     need_swap    = ncmpii_need_swap(varp->type, ptype);
 
     /* check if this is a vars call or a true varm call */
-    ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
-                           &imaptype);
+    err = ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
+                                 &imaptype);
+    if (status == NC_NOERR) status = err;
 
     if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
-        int position, outsize=bnelems*el_size;
+        int position;
+        MPI_Offset outsize=bnelems*el_size;
         /* assert(bnelems > 0); */
+        if (outsize != (int)outsize && status == NC_NOERR)
+            status = NC_EINTOVERFLOW;
 
         /* Step 1: pack buf into a contiguous buffer, lbuf */
         if (!buftype_is_contig) { /* buftype is not contiguous */
             /* pack buf into lbuf, a contiguous buffer, using buftype */
-            lbuf = NCI_Malloc(outsize);
+            lbuf = NCI_Malloc((size_t)outsize);
             position = 0;
-            MPI_Pack(buf, bufcount, buftype, lbuf, outsize, &position,
-                     MPI_COMM_SELF);
+            MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)outsize,
+                     &position, MPI_COMM_SELF);
         }
         else
             lbuf = buf;
@@ -1317,9 +1342,9 @@ err_check:
         /* Step 2: pack lbuf to cbuf if imap is non-contiguous */
         if (imaptype != MPI_DATATYPE_NULL) { /* true varm */
             /* pack lbuf to cbuf, a contiguous buffer, using imaptype */
-            cbuf = NCI_Malloc(outsize);
+            cbuf = NCI_Malloc((size_t)outsize);
             position = 0;
-            MPI_Pack(lbuf, 1, imaptype, cbuf, outsize, &position,
+            MPI_Pack(lbuf, 1, imaptype, cbuf, (int)outsize, &position,
                      MPI_COMM_SELF);
             MPI_Type_free(&imaptype);
         }
@@ -1332,7 +1357,7 @@ err_check:
         /* Step 3: pack cbuf to xbuf and xbuf will be used to write to file */
         xbuf = cbuf;
         if (need_convert) { /* user buf type != nc var type defined in file */
-            xbuf = NCI_Malloc(nbytes);
+            xbuf = NCI_Malloc((size_t)nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
@@ -1343,7 +1368,7 @@ err_check:
 #ifdef DISABLE_IN_PLACE_SWAP
             if (cbuf == buf) {
                 /* allocate cbuf and copy buf to xbuf, before byte-swap */
-                xbuf = NCI_Malloc(nbytes);
+                xbuf = NCI_Malloc((size_t)nbytes);
                 memcpy(xbuf, buf, nbytes);
             }
 #endif
@@ -1361,7 +1386,7 @@ err_check:
         if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL && !need_convert)
             xbuf = buf;
         else
-            xbuf = NCI_Malloc(nbytes);
+            xbuf = NCI_Malloc((size_t)nbytes);
     }
 
 mpi_io:
@@ -1380,8 +1405,8 @@ mpi_io:
 
     if (rw_flag == WRITE_REQ) {
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, nbytes, MPI_BYTE,
-                                            &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, (int)nbytes,
+                                            MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
@@ -1390,8 +1415,8 @@ mpi_io:
             }
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, nbytes, MPI_BYTE, 
-                                        &mpistatus);
+            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, (int)nbytes,
+                                        MPI_BYTE,  &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
@@ -1405,8 +1430,8 @@ mpi_io:
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, nbytes, MPI_BYTE,
-                                           &mpistatus);
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, (int)nbytes,
+                                           MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
@@ -1415,8 +1440,8 @@ mpi_io:
             }
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, nbytes, MPI_BYTE,
-                                       &mpistatus);
+            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, (int)nbytes,
+                                       MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
@@ -1439,14 +1464,17 @@ mpi_io:
         /* xbuf contains the data read from file.
          * Check if it needs to be type-converted + byte-swapped
          */
-        int position, insize=bnelems*el_size;
+        int position;
+        MPI_Offset insize=bnelems*el_size;
+        if (insize != (int)insize && status == NC_NOERR)
+            status = NC_EINTOVERFLOW;
 
         if (need_convert) {
             /* xbuf cannot be buf, but cbuf can */
             if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL)
                 cbuf = buf; /* vars call and buftype is contiguous */
             else
-                cbuf = NCI_Malloc(insize);
+                cbuf = NCI_Malloc((size_t)insize);
 
             /* type conversion + byte-swap from xbuf to cbuf */
             DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
@@ -1471,7 +1499,7 @@ mpi_io:
              * unpack lbuf to buf using buftype.
              * In this case, cbuf cannot be buf and lbuf cannot be buf.
              */
-            lbuf = NCI_Malloc(insize);
+            lbuf = NCI_Malloc((size_t)insize);
         else if (imaptype == MPI_DATATYPE_NULL) /* not varm */
             lbuf = cbuf;
         else /* varm and buftype is contiguous */
@@ -1480,7 +1508,7 @@ mpi_io:
         if (imaptype != MPI_DATATYPE_NULL) {
             /* unpack cbuf to lbuf based on imaptype */
             position = 0;
-            MPI_Unpack(cbuf, insize, &position, lbuf, 1, imaptype,
+            MPI_Unpack(cbuf, (int)insize, &position, lbuf, 1, imaptype,
                        MPI_COMM_SELF);
             MPI_Type_free(&imaptype);
         }
@@ -1490,8 +1518,8 @@ mpi_io:
         if (!buftype_is_contig) {
             /* unpack lbuf to buf based on buftype */
             position = 0;
-            MPI_Unpack(lbuf, insize, &position, buf, bufcount, buftype,
-                       MPI_COMM_SELF);
+            MPI_Unpack(lbuf, (int)insize, &position, buf, (int)bufcount,
+                       buftype, MPI_COMM_SELF);
         }
         /* done with lbuf */
         if (lbuf != buf) NCI_Free(lbuf);

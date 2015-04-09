@@ -345,7 +345,7 @@ ncmpii_concatenate_datatypes(int           num,
     addrs = (MPI_Aint*) displacements; /* cast ok: types same size */
 #else
     /* if (sizeof(MPI_Offset) != sizeof(MPI_Aint)) */
-    addrs = (MPI_Aint *) NCI_Malloc(num * sizeof(MPI_Aint));
+    addrs = (MPI_Aint *) NCI_Malloc((size_t)num * SIZEOF_MPI_AINT);
     for (i=0; i<num; i++) {
         addrs[i] = displacements[i];
         if (displacements[i] != addrs[i]) {
@@ -391,9 +391,9 @@ ncmpii_construct_filetypes(NC           *ncp,
     }
 
     /* hereinafter, num_reqs > 0 */
-    blocklens     = (int*)          NCI_Malloc(num_reqs * sizeof(int));
-    displacements = (MPI_Offset*)   NCI_Malloc(num_reqs * sizeof(MPI_Offset));
-    ftypes        = (MPI_Datatype*) NCI_Malloc(num_reqs * sizeof(MPI_Datatype));
+    blocklens     = (int*)          NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
+    displacements = (MPI_Offset*)   NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_OFFSET);
+    ftypes        = (MPI_Datatype*) NCI_Malloc((size_t)num_reqs * sizeof(MPI_Datatype));
 
     /* create a filetype for each request */
     int last_contig_req = -1; /* index of the last contiguous request */
@@ -471,16 +471,15 @@ ncmpii_construct_buffertypes(int           num_reqs,
     if (num_reqs == 0) return NC_NOERR;
 
     /* create the I/O buffer derived data type */
-    int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
-    MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
+    int *blocklengths = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
+    MPI_Aint *disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs*SIZEOF_MPI_AINT);
     MPI_Aint a0, ai;
-    MPI_Offset int8;
 
     /* process only valid requests */
     for (i=0, j=0; i<num_reqs; i++) {
         /* check int overflow */
-        int8  = reqs[i].bnelems * reqs[i].varp->xsz;
-        blocklengths[j] = int8;
+        MPI_Offset int8 = reqs[i].bnelems * reqs[i].varp->xsz;
+        blocklengths[j] = (int)int8;
         if (int8 != blocklengths[j]) { /* skip this request */
             status = NC_EINTOVERFLOW;
             continue;
@@ -753,15 +752,18 @@ err_check:
              * It needs to be type-converted + byte-swapped to cbuf
              */
             void *cbuf, *lbuf;
-            int el_size, position, insize;
+            int el_size, position;
+            MPI_Offset insize;
 
             MPI_Type_size(cur_req->ptype, &el_size);
             insize = cur_req->bnelems * el_size;
+            if (insize != (int)insize && status == NC_NOERR)
+                status = NC_EINTOVERFLOW;
 
             if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
                 if (cur_req->imaptype != MPI_DATATYPE_NULL ||
                     !cur_req->buftype_is_contig)
-                    cbuf = NCI_Malloc(insize);
+                    cbuf = NCI_Malloc((size_t)insize);
                 else
                     cbuf = cur_req->buf;
 
@@ -782,12 +784,12 @@ err_check:
                 if (cur_req->buftype_is_contig)
                     lbuf = cur_req->buf;
                 else
-                    lbuf = NCI_Malloc(insize);
+                    lbuf = NCI_Malloc((size_t)insize);
 
                 /* unpack cbuf to lbuf based on imaptype */
                 position = 0;
-                MPI_Unpack(cbuf, insize, &position, lbuf, 1, cur_req->imaptype,
-                           MPI_COMM_SELF);
+                MPI_Unpack(cbuf, (int)insize, &position, lbuf, 1,
+                           cur_req->imaptype, MPI_COMM_SELF);
                 MPI_Type_free(&cur_req->imaptype);
 
                 /* cbuf is no longer needed
@@ -801,8 +803,10 @@ err_check:
             if (!cur_req->buftype_is_contig) {
                 /* unpack lbuf to buf based on buftype */
                 position = 0;
-                MPI_Unpack(lbuf, insize, &position, cur_req->buf,
-                           cur_req->bufcount, cur_req->buftype, MPI_COMM_SELF);
+                if (cur_req->bufcount != (int)cur_req->bufcount && status == NC_NOERR)
+                    status = NC_EINTOVERFLOW;
+                MPI_Unpack(lbuf, (int)insize, &position, cur_req->buf,
+                           (int)cur_req->bufcount, cur_req->buftype, MPI_COMM_SELF);
             }
             /* lbuf is no longer needed */
             if (lbuf != cur_req->buf && lbuf != cur_req->xbuf)
@@ -816,16 +820,20 @@ err_check:
             /* free space allocated for the request objects
              * tmpBuf is used only by nonblocking varn APIs */
             if (cur_req->tmpBuf != NULL) {
-                int position=0, insize;
+                int position=0, bufsize;
+                MPI_Offset insize;
 
                 /* unpack tmpBuf to userBuf and free tmpBuf
                  * Note this unpack must wait for all above unpacks are done
                  * because cur_req->buf may be part of cur_req->userBuf
                  */
-                MPI_Type_size(cur_req->buftype, &insize);
-                insize *= cur_req->bufcount;
-                MPI_Unpack(cur_req->tmpBuf, insize, &position,
-                           cur_req->userBuf, cur_req->bufcount,
+                MPI_Type_size(cur_req->buftype, &bufsize);
+                insize = cur_req->bufcount * bufsize;
+                if (insize != (int)insize && status == NC_NOERR)
+                    status = NC_EINTOVERFLOW;
+
+                MPI_Unpack(cur_req->tmpBuf, (int)insize, &position,
+                           cur_req->userBuf, (int)cur_req->bufcount,
                            cur_req->buftype, MPI_COMM_SELF);
                 NCI_Free(cur_req->tmpBuf);
                 MPI_Type_free(&cur_req->buftype);
@@ -859,7 +867,7 @@ off_compare(const void *a, const void *b)
 
 /*----< ncmpii_flatten() >----------------------------------------------------*/
 /* flatten a subarray request into a list of offset-length pairs */
-static int
+static MPI_Offset
 ncmpii_flatten(int          ndim,    /* number of dimensions */
                int          el_size, /* array element size */
                MPI_Offset  *dimlen,  /* [ndim] dimension lengths */
@@ -887,7 +895,7 @@ ncmpii_flatten(int          ndim,    /* number of dimensions */
     }
 
     if (stride == NULL) { /* equivalent to {1, 1, ..., 1} */
-        stride = (MPI_Offset*) NCI_Malloc(ndim * sizeof(MPI_Offset));
+        stride = (MPI_Offset*) NCI_Malloc((size_t)ndim * SIZEOF_MPI_OFFSET);
         for (i=0; i<ndim; i++) stride[i] = 1;
         to_free_stride = 1;
     }
@@ -1014,7 +1022,7 @@ ncmpii_merge_requests(NC          *ncp,
     }
 
     /* now we can allocate a contiguous memory space for the off-len pairs */
-    off_len *seg_ptr = (off_len*) NCI_Malloc(*nsegs * sizeof(off_len));
+    off_len *seg_ptr = (off_len*) NCI_Malloc((size_t)(*nsegs) * sizeof(off_len));
     *segs = seg_ptr;
 
     /* now re-run the loop to fill in the off-len pairs */
@@ -1057,7 +1065,7 @@ ncmpii_merge_requests(NC          *ncp,
     }
     if (i < *nsegs) /* not in an increasing order */
         /* sort the off-len array, segs[], in an increasing order */
-        qsort(*segs, *nsegs, sizeof(off_len), off_compare);
+        qsort(*segs, (size_t)(*nsegs), sizeof(off_len), off_compare);
 
     /* merge the overlapped requests, skip the overlapped regions for those
      * requests with higher j indices (i.e. requests with lower j indices
@@ -1128,21 +1136,23 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
         }
     }
     /* j+1 is the coalesced length */
-    blocklengths  = (int*)      NCI_Malloc((j+1) * sizeof(int));;
-    displacements = (MPI_Aint*) NCI_Malloc((j+1) * sizeof(MPI_Aint));
+    blocklengths  = (int*)      NCI_Malloc((size_t)(j+1) * SIZEOF_INT);
+    displacements = (MPI_Aint*) NCI_Malloc((size_t)(j+1) * SIZEOF_MPI_AINT);
 
     /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
-    displacements[0] = segs[0].off;
-    blocklengths[0]  = segs[0].len;
+    if (segs[0].len != (int)segs[0].len) return NC_EINTOVERFLOW;
+    displacements[0] =      segs[0].off;
+    blocklengths[0]  = (int)segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
+        if (segs[i].len != (int)segs[i].len) return NC_EINTOVERFLOW;
         if (displacements[j] + blocklengths[j] == segs[i].off)
             /* j and i are contiguous */
-            blocklengths[j] += segs[i].len;
+            blocklengths[j] += (int)segs[i].len;
             /* TODO: take care of 4-byte int overflow problem */
         else {
             j++;
-            displacements[j] = segs[i].off;
-            blocklengths[j]  = segs[i].len;
+            displacements[j] =      segs[i].off;
+            blocklengths[j]  = (int)segs[i].len;
         }
     }
     /* j+1 is the coalesced length */
@@ -1183,21 +1193,22 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
         }
     }
     /* j+1 is the coalesced length */
-    blocklengths  = (int*)      NCI_Malloc((j+1) * sizeof(int));;
-    displacements = (MPI_Aint*) NCI_Malloc((j+1) * sizeof(MPI_Aint));
+    blocklengths  = (int*)      NCI_Malloc((size_t)(j+1) * SIZEOF_INT);
+    displacements = (MPI_Aint*) NCI_Malloc((size_t)(j+1) * SIZEOF_MPI_AINT);
 
     /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
-    displacements[0] = segs[0].buf_addr;
-    blocklengths[0]  = segs[0].len;
+    if (segs[0].len != (int)segs[0].len) return NC_EINTOVERFLOW;
+    displacements[0] =      segs[0].buf_addr;
+    blocklengths[0]  = (int)segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
+        if (segs[i].len != (int)segs[i].len) return NC_EINTOVERFLOW;
         if (displacements[j] + blocklengths[j] == segs[i].buf_addr)
             /* j and i are contiguous */
-            blocklengths[j] += segs[i].len;
-            /* TODO: take care of 4-byte int overflow problem */
+            blocklengths[j] += (int)segs[i].len;
         else {
             j++;
-            displacements[j] = segs[i].buf_addr;
-            blocklengths[j]  = segs[i].len;
+            displacements[j] =      segs[i].buf_addr;
+            blocklengths[j]  = (int)segs[i].len;
         }
     }
     /* j+1 is the coalesced length */
@@ -1293,8 +1304,8 @@ ncmpii_req_aggregation(NC     *ncp,
         }
     }
 
-    group_index = (int*) NCI_Malloc((ngroups+1) * sizeof(int));
-    group_type  = (int*) NCI_Malloc((ngroups+1) * sizeof(int));
+    group_index = (int*) NCI_Malloc((size_t)(ngroups+1) * SIZEOF_INT);
+    group_type  = (int*) NCI_Malloc((size_t)(ngroups+1) * SIZEOF_INT);
 
     /* calculate the starting index of each group and determine group type */
     ngroups        = 1;
@@ -1335,11 +1346,11 @@ ncmpii_req_aggregation(NC     *ncp,
     MPI_Aint      b_begin, b_addr, *f_disps, *b_disps;
     MPI_Datatype  filetype, buf_type, *ftypes, *btypes;
 
-    ftypes = (MPI_Datatype*) NCI_Malloc(2 * ngroups * sizeof(MPI_Datatype));
+    ftypes = (MPI_Datatype*) NCI_Malloc((size_t)ngroups*2*sizeof(MPI_Datatype));
     btypes = ftypes + ngroups;
-    f_blocklengths = (int*) NCI_Malloc(2 * ngroups * sizeof(int));
+    f_blocklengths = (int*) NCI_Malloc((size_t)ngroups*2*SIZEOF_INT);
     b_blocklengths = f_blocklengths + ngroups;
-    f_disps = (MPI_Aint*) NCI_Malloc(2 * ngroups*sizeof(MPI_Aint));
+    f_disps = (MPI_Aint*) NCI_Malloc((size_t)ngroups*2*SIZEOF_MPI_AINT);
     b_disps = f_disps + ngroups;
 
     buf = reqs[0].xbuf; /* the buffer of 1st request */
@@ -1635,7 +1646,7 @@ ncmpii_wait_getput(NC     *ncp,
     /* pack the linked list into an array to be sorted and remove invalid
        requests, such as out-of-boundary ones
      */
-    reqs = (NC_req*) NCI_Malloc(num_reqs * sizeof(NC_req));
+    reqs = (NC_req*) NCI_Malloc((size_t)num_reqs * sizeof(NC_req));
     i = 0;
     cur_req = req_head;
     while (cur_req != NULL) {
@@ -1675,7 +1686,7 @@ ncmpii_wait_getput(NC     *ncp,
     if (i < num_reqs) { /* not in an increasing order */
         /* sort reqs[] based on reqs[].offset_start */
         fcnt = (int (*)(const void *, const void *))req_compare;
-        qsort(reqs, num_reqs, sizeof(NC_req), fcnt);
+        qsort(reqs, (size_t)num_reqs, sizeof(NC_req), fcnt);
     }
 
     /* check for any interleaved rquests */
@@ -1789,28 +1800,26 @@ ncmpii_mgetput(NC           *ncp,
         len = 0;
     }
     else if (num_reqs == 1) {
-        MPI_Offset int8 = reqs[0].bnelems;
-        int8 *= reqs[0].varp->xsz;
-        len = int8;
-        if (len != int8) {
+        MPI_Offset int8 = reqs[0].bnelems * reqs[0].varp->xsz;
+        len = (int)int8;
+        if (int8 != len) {
             if (status == NC_NOERR) status = NC_EINTOVERFLOW;
             len = 0; /* skip this request */
         }
         buf = reqs[0].xbuf;
     }
     else if (num_reqs > 1) { /* create the I/O buffer derived data type */
-        int *blocklengths = (int*) NCI_Malloc(num_reqs * sizeof(int));
-        MPI_Aint *disps = (MPI_Aint*) NCI_Malloc(num_reqs*sizeof(MPI_Aint));
+        int *blocklengths = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
+        MPI_Aint *disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs*SIZEOF_MPI_AINT);
         MPI_Aint a0=0, ai, a_last_contig;
-        MPI_Offset int8;
 
         int last_contig_req = 0; /* index of the last contiguous request */
         buf = NULL;
         /* process only valid requests */
         for (i=0, j=0; i<num_reqs; i++) {
             /* check int overflow */
-            int8  = reqs[i].bnelems * reqs[i].varp->xsz;
-            blocklengths[j] = int8;
+            MPI_Offset int8 = reqs[i].bnelems * reqs[i].varp->xsz;
+            blocklengths[j] = (int)int8;
             if (int8 != blocklengths[j]) { /* skip this request */
                 if (status == NC_NOERR) status = NC_EINTOVERFLOW;
                 blocklengths[j] = 0;

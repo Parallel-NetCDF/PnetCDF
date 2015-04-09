@@ -92,7 +92,7 @@ ncmpi_mput_var_$1$5(int ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -176,7 +176,7 @@ ncmpi_mput_var1_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -263,7 +263,7 @@ ncmpi_mput_vara_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -353,7 +353,7 @@ ncmpi_mput_vars_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -446,7 +446,7 @@ ncmpi_mput_varm_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -527,7 +527,7 @@ ncmpi_mget_var_$1$5(int ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -611,7 +611,7 @@ ncmpi_mget_var1_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -698,7 +698,7 @@ ncmpi_mget_vara_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -788,7 +788,7 @@ ncmpi_mget_vars_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -881,7 +881,7 @@ ncmpi_mget_varm_$1$5(int                ncid,
     int i, err;
     MPI_Datatype *datatypes;
 
-    datatypes = (MPI_Datatype*) NCI_Malloc(num * sizeof(MPI_Datatype));
+    datatypes = (MPI_Datatype*) NCI_Malloc((size_t)num * sizeof(MPI_Datatype));
     for (i=0; i<num; i++)
         datatypes[i] = $3;
 
@@ -975,7 +975,7 @@ err_check:
         num = 0;
 
     if (num > 0) {
-        req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
+        req_ids  = (int*) NCI_Malloc((size_t)(2 * num * SIZEOF_INT));
         statuses = req_ids + num;
     }
 

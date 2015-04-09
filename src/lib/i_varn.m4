@@ -235,26 +235,29 @@ ncmpii_igetput_varn(int               ncid,
 
         if (status != NC_NOERR) return status;
 
+        if (bufcount != (int)bufcount) return NC_EINTOVERFLOW;
+
         /* check if buftype is contiguous, if not, pack to one, cbuf */
         if (! iscontig_of_ptypes && bnelems > 0) {
             int position = 0;
-            int packsize = bnelems*el_size;
+            MPI_Offset packsize = bnelems*el_size;
+            if (packsize != (int)packsize) return NC_EINTOVERFLOW;
 
-            cbuf = NCI_Malloc(packsize);
+            cbuf = NCI_Malloc((size_t)packsize);
             free_cbuf = 1;
             /* if not use_abuf, need a callback to free cbuf */
 
             if (rw_flag == WRITE_REQ)
-                MPI_Pack(buf, bufcount, buftype, cbuf, packsize, &position,
-                         MPI_COMM_SELF);
+                MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)packsize,
+                         &position, MPI_COMM_SELF);
         }
     }
 
     /* We allow counts == NULL and treat this the same as all 1s */
     if (counts == NULL) {
-        _counts    = (MPI_Offset**) NCI_Malloc(num * sizeof(MPI_Offset*));
-        _counts[0] = (MPI_Offset*)  NCI_Malloc(num * varp->ndims *
-                                               sizeof(MPI_Offset));
+        _counts    = (MPI_Offset**) NCI_Malloc((size_t)num * sizeof(MPI_Offset*));
+        _counts[0] = (MPI_Offset*)  NCI_Malloc((size_t)(num * varp->ndims *
+                                                        SIZEOF_MPI_OFFSET));
         for (i=1; i<num; i++)
             _counts[i] = _counts[i-1] + varp->ndims;
         for (i=0; i<num; i++)
@@ -302,7 +305,7 @@ ncmpii_igetput_varn(int               ncid,
         if (rw_flag == READ_REQ) {
             /* tell wait() to unpack cbuf to buf and free cbuf */
             status = ncmpii_set_iget_callback(ncp, *reqid, cbuf, buf,
-                                              bufcount, buftype);
+                                              (int)bufcount, buftype);
         }
         else { /* WRITE_REQ */
             if (use_abuf)

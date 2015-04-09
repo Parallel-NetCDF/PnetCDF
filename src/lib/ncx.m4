@@ -139,7 +139,7 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
 
 
 static void
-swapn2b(void *dst, const void *src, size_t nn)
+swapn2b(void *dst, const void *src, MPI_Offset nn)
 {
 	char *op = dst;
 	const char *ip = src;
@@ -185,7 +185,7 @@ swap4b(void *dst, const void *src)
 # endif /* !vax */
 
 static void
-swapn4b(void *dst, const void *src, size_t nn)
+swapn4b(void *dst, const void *src, MPI_Offset nn)
 {
 	char *op = dst;
 	const char *ip = src;
@@ -264,7 +264,7 @@ swap8b(void *dst, const void *src)
 
 # ifndef vax
 static void
-swapn8b(void *dst, const void *src, size_t nn)
+swapn8b(void *dst, const void *src, MPI_Offset nn)
 {
 	char *op = dst;
 	const char *ip = src;
@@ -893,7 +893,7 @@ static void
 get_ix_float(const void *xp, float *ip)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(ip, xp, sizeof(float));
+	(void) memcpy(ip, xp, SIZEOF_FLOAT);
 #else
 	swap4b(ip, xp);
 #endif
@@ -1351,7 +1351,7 @@ static void
 get_ix_double(const void *xp, double *ip)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(ip, xp, sizeof(double));
+	(void) memcpy(ip, xp, SIZEOF_DOUBLE);
 #else
 	swap8b(ip, xp);
 #endif
@@ -2071,14 +2071,14 @@ ncmpix_put_int64(void **xpp, const long long ip)
 #else
     uchar *cp = (uchar *) *xpp;
     /* below is the same as calling swap8b(*xpp, &ip) */
-    *cp++ = (uchar)((ip & 0xff00000000000000ULL) >> 56);
+    *cp++ = (uchar) (ip                          >> 56);
     *cp++ = (uchar)((ip & 0x00ff000000000000ULL) >> 48);
     *cp++ = (uchar)((ip & 0x0000ff0000000000ULL) >> 40);
     *cp++ = (uchar)((ip & 0x000000ff00000000ULL) >> 32);
     *cp++ = (uchar)((ip & 0x00000000ff000000ULL) >> 24);
     *cp++ = (uchar)((ip & 0x0000000000ff0000ULL) >> 16);
     *cp++ = (uchar)((ip & 0x000000000000ff00ULL) >>  8);
-    *cp   = (uchar)( ip & 0x00000000000000ffULL);
+    *cp   = (uchar) (ip & 0x00000000000000ffULL);
 #endif
     /* advance *xpp 8 bytes */
     *xpp  = (void *)((char *)(*xpp) + 8);
@@ -2101,7 +2101,7 @@ dnl NCX_GETN_Byte_Body (body for one byte types on diagonal)
 dnl
 define(`NCX_GETN_Byte_Body',dnl
 `dnl
-	(void) memcpy(tp, *xpp, nelems);
+	(void) memcpy(tp, *xpp, (size_t)nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 	return NC_NOERR;
 ')dnl
@@ -2116,7 +2116,7 @@ define(`NCX_PAD_GETN_Byte_Body',dnl
 	if(rndup)
 		rndup = X_ALIGN - rndup;
 
-	(void) memcpy(tp, *xpp, nelems);
+	(void) memcpy(tp, *xpp, (size_t)nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems + rndup);
 
 	return NC_NOERR;
@@ -2226,7 +2226,7 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
   for (j=0; j<nelems && nrange==0; j+=LOOPCNT) {
     ni=Min(nelems-j,LOOPCNT);
     if (realign) {
-      memcpy(tmp, *xpp, ni*Isizeof($1));
+      memcpy(tmp, *xpp, (size_t)(ni*Isizeof($1)));
       xp = tmp;
     } else {
       xp = ($1 *) *xpp;
@@ -2299,7 +2299,7 @@ dnl NCX_PUTN_Byte_Body(Type) (body for one byte types)
 dnl
 define(`NCX_PUTN_Byte_Body',dnl
 `dnl
-	(void) memcpy(*xpp, tp, nelems);
+	(void) memcpy(*xpp, tp, (size_t)nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 
 	return NC_NOERR;
@@ -2314,12 +2314,12 @@ define(`NCX_PAD_PUTN_Byte_Body',dnl
 	if(rndup)
 		rndup = X_ALIGN - rndup;
 
-	(void) memcpy(*xpp, tp, nelems);
+	(void) memcpy(*xpp, tp, (size_t)nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 
 	if(rndup)
 	{
-		(void) memcpy(*xpp, nada, rndup);
+		(void) memcpy(*xpp, nada, (size_t)rndup);
 		*xpp = (void *)((char *)(*xpp) + rndup);
 	}
 
@@ -2375,7 +2375,7 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 
 	if(rndup)
 	{
-		(void) memcpy(xp, nada, rndup);
+		(void) memcpy(xp, nada, (size_t)rndup);
 		xp += rndup;
 	}
 
@@ -2472,7 +2472,7 @@ ifelse( $1$2, intfloat,dnl
     }
    /* copy workspace back if necessary */
     if (realign) {
-      memcpy(*xpp, tmp, ni*Xsizeof($1));
+      memcpy(*xpp, tmp, (size_t)*ni*Xsizeof($1)));
       xp = ($1 *) *xpp;
     }
    /* update xpp and tp */
@@ -2522,7 +2522,7 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 
 	if(rndup != 0)
 	{
-		(void) memcpy(xp, nada, Xsizeof($1));
+		(void) memcpy(xp, nada, (size_t)(Xsizeof($1)));
 		xp += Xsizeof($1);
 	}
 
@@ -2726,7 +2726,7 @@ int
 ncmpix_getn_short_short(const void **xpp, MPI_Offset nelems, short *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(short));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_SHORT);
 # else
 	swapn2b(tp, *xpp, nelems);
 # endif
@@ -2765,7 +2765,7 @@ int
 ncmpix_putn_short_short(void **xpp, MPI_Offset nelems, const short *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_SHORT);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_SHORT);
 # else
 	swapn2b(*xpp, tp, nelems);
 # endif
@@ -2807,7 +2807,7 @@ int
 ncmpix_getn_ushort_ushort(const void **xpp, MPI_Offset nelems, unsigned short *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(unsigned short));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_UNSIGNED_SHORT);
 # else
 	swapn2b(tp, *xpp, nelems);
 # endif
@@ -2846,7 +2846,7 @@ int
 ncmpix_putn_ushort_ushort(void **xpp, MPI_Offset nelems, const unsigned short *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_USHORT);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_USHORT);
 # else
 	swapn2b(*xpp, tp, nelems);
 # endif
@@ -2888,7 +2888,7 @@ int
 ncmpix_getn_int_int(const void **xpp, MPI_Offset nelems, int *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(int));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_INT);
 # else
 	swapn4b(tp, *xpp, nelems);
 # endif
@@ -2915,7 +2915,7 @@ int
 ncmpix_putn_int_int(void **xpp, MPI_Offset nelems, const int *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_INT);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_INT);
 # else
 	swapn4b(*xpp, tp, nelems);
 # endif
@@ -2944,7 +2944,7 @@ int
 ncmpix_getn_uint_uint(const void **xpp, MPI_Offset nelems, unsigned int *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(uint));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_UINT);
 # else
 	swapn4b(tp, *xpp, nelems);
 # endif
@@ -2971,7 +2971,7 @@ int
 ncmpix_putn_uint_uint(void **xpp, MPI_Offset nelems, const unsigned int *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_UINT);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_UINT);
 # else
 	swapn4b(*xpp, tp, nelems);
 # endif
@@ -3001,7 +3001,7 @@ int
 ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(float));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_FLOAT);
 # else
 	swapn4b(tp, *xpp, nelems);
 # endif
@@ -3059,7 +3059,7 @@ int
 ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_FLOAT);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_FLOAT);
 # else
 	swapn4b(*xpp, tp, nelems);
 # endif
@@ -3118,7 +3118,7 @@ int
 ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(double));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_DOUBLE);
 # else
 	swapn8b(tp, *xpp, nelems);
 # endif
@@ -3175,7 +3175,7 @@ int
 ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_DOUBLE);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_DOUBLE);
 # else
 	swapn8b(*xpp, tp, nelems);
 # endif
@@ -3235,7 +3235,7 @@ int
 ncmpix_getn_int64_longlong(const void **xpp, MPI_Offset nelems, long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(long long));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_LONG_LONG);
 # else
 	swapn8b(tp, *xpp, nelems);
 # endif
@@ -3262,7 +3262,7 @@ int
 ncmpix_putn_int64_longlong(void **xpp, MPI_Offset nelems, const long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_INT64);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_INT64);
 # else
 	swapn8b(*xpp, tp, nelems);
 # endif
@@ -3291,7 +3291,7 @@ int
 ncmpix_getn_uint64_ulonglong(const void **xpp, MPI_Offset nelems, unsigned long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(tp, *xpp, nelems * sizeof(unsigned long long));
+	(void) memcpy(tp, *xpp, (size_t)nelems * SIZEOF_UNSIGNED_LONG_LONG);
 # else
 	swapn8b(tp, *xpp, nelems);
 # endif
@@ -3318,7 +3318,7 @@ int
 ncmpix_putn_uint64_ulonglong(void **xpp, MPI_Offset nelems, const unsigned long long *tp)
 {
 #ifdef WORDS_BIGENDIAN
-	(void) memcpy(*xpp, tp, nelems * X_SIZEOF_UINT64);
+	(void) memcpy(*xpp, tp, (size_t)nelems * X_SIZEOF_UINT64);
 # else
 	swapn8b(*xpp, tp, nelems);
 # endif

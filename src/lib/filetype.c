@@ -204,7 +204,7 @@ ncmpii_get_offset(NC               *ncp,
     ndims  = varp->ndims; /* number of dimensions of this variable */
 
     if (counts != NULL)
-        end_off = (MPI_Offset*) NCI_Malloc(ndims * sizeof(MPI_Offset));
+        end_off = (MPI_Offset*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_OFFSET);
 
     if (counts != NULL && strides != NULL) {
         for (i=0; i<ndims; i++)
@@ -476,13 +476,17 @@ ncmpii_type_create_subarray64(int           ndims,
     if (tag == 0) {
         /* none of dimensions > 2^31-1, we can safely use
          * MPI_Type_create_subarray */
-        int *sizes    = (int*) NCI_Malloc(3 * ndims * sizeof(int));
+        int *sizes    = (int*) NCI_Malloc((size_t)ndims * 3 * SIZEOF_INT);
         int *subsizes = sizes    + ndims;
         int *starts   = subsizes + ndims;
         for (i=0; i<ndims; i++) {
-            sizes[i]    = array_of_sizes[i];
-            subsizes[i] = array_of_subsizes[i];
-            starts[i]   = array_of_starts[i];
+            sizes[i]    = (int)array_of_sizes[i];
+            subsizes[i] = (int)array_of_subsizes[i];
+            starts[i]   = (int)array_of_starts[i];
+            if (array_of_sizes[i]    != sizes[i] ||
+                array_of_subsizes[i] != subsizes[i] ||
+                array_of_starts[i]   != starts[i])
+                return NC_EINTOVERFLOW;
         }
 #ifdef HAVE_MPI_TYPE_CREATE_SUBARRAY
         err = MPI_Type_create_subarray(ndims, sizes, subsizes, starts,
@@ -524,7 +528,7 @@ ncmpii_type_create_subarray64(int           ndims,
 
     if (ndims == 1) {
         /* blklens argument in MPI_Type_create_hindexed() is of type int */
-        blklens[1] = array_of_subsizes[0];
+        blklens[1] = (int)array_of_subsizes[0];
         if (array_of_subsizes[0] != blklens[1]) /* check int overflow */
             return NC_EINTOVERFLOW;
         disps[1] = extent * array_of_starts[0];
@@ -559,8 +563,8 @@ ncmpii_type_create_subarray64(int           ndims,
     /* count and blocklength arguments in MPI_Type_create_hvector() are of
      * type int. We need to check for integer overflow */
     int count, blocklength;
-    count = array_of_subsizes[ndims-2];
-    blocklength = array_of_subsizes[ndims-1];
+    count = (int)array_of_subsizes[ndims-2];
+    blocklength = (int)array_of_subsizes[ndims-1];
     if (array_of_subsizes[ndims-2] != count ||
         array_of_subsizes[ndims-1] != blocklength) /* check int overflow */
         return NC_EINTOVERFLOW;
@@ -578,7 +582,7 @@ ncmpii_type_create_subarray64(int           ndims,
 
     /* now iterate through the rest dimensions */
     for (i=ndims-3; i>=0; i--) {
-        count = array_of_subsizes[i];
+        count = (int)array_of_subsizes[i];
         if (array_of_subsizes[i] != count) /* check int overflow */
             return NC_EINTOVERFLOW;
         stride *= array_of_sizes[i+1];
@@ -665,7 +669,8 @@ ncmpii_vara_create_filetype(NC               *ncp,
 
     for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
 
-    *blocklen = varp->xsz * nelems;
+    *blocklen = (int)(nelems * varp->xsz);
+    if (nelems * varp->xsz != *blocklen) return NC_EINTOVERFLOW;
     /* Warning: blocklen might overflow when requested size > 2^31-1 */
 
     /* check if the request is contiguous in file
@@ -716,7 +721,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
              * single record, i.e. for dimension 1 ... ndims-1 */
             MPI_Offset *shape64, *subcount64, *substart64;
 
-            shape64 = (MPI_Offset*) NCI_Malloc(3 * varp->ndims * sizeof(MPI_Offset));
+            shape64 = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * 3 * SIZEOF_MPI_OFFSET);
             subcount64 = shape64    + varp->ndims;
             substart64 = subcount64 + varp->ndims;
 
@@ -742,16 +747,17 @@ ncmpii_vara_create_filetype(NC               *ncp,
             MPI_Type_commit(&rectype);
             blocklength = 1;
         }
-        else /* no subarray datatype is needed */
+        else { /* no subarray datatype is needed */
             blocklength = varp->xsz;
+        }
 
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-        err = MPI_Type_create_hvector(count[0], blocklength, ncp->recsize,
+        err = MPI_Type_create_hvector((int)count[0], blocklength, ncp->recsize,
                                       rectype, &filetype);
         if (err != MPI_SUCCESS)
             return ncmpii_handle_error(err, "MPI_Type_create_hvector");
 #else
-        err = MPI_Type_hvector(count[0], blocklength, ncp->recsize, rectype,
+        err = MPI_Type_hvector((int)count[0], blocklength, ncp->recsize, rectype,
                                &filetype);
         if (err != MPI_SUCCESS) {
             return ncmpii_handle_error(err, "MPI_Type_hvector");
@@ -760,7 +766,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
     }
     else { /* for non-record variable, just create a subarray datatype */
         MPI_Offset *shape64, *subcount64, *substart64;
-        shape64 = (MPI_Offset*) NCI_Malloc(3 * varp->ndims * sizeof(MPI_Offset));
+        shape64 = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * 3 * SIZEOF_MPI_OFFSET);
         subcount64 = shape64    + varp->ndims;
         substart64 = subcount64 + varp->ndims;
 
@@ -864,20 +870,20 @@ ncmpii_vars_create_filetype(NC               *ncp,
     MPI_Datatype tmptype;
 
     ndims       = varp->ndims;
-    blockcounts = (int*) NCI_Malloc(2 * ndims * sizeof(int));
+    blockcounts = (int*) NCI_Malloc((size_t)ndims * 2 * SIZEOF_INT);
     blocklens   = blockcounts + ndims;
 
-    blockstride = (MPI_Aint*) NCI_Malloc(ndims * sizeof(MPI_Aint));
+    blockstride = (MPI_Aint*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_AINT);
 
     tmptype = MPI_BYTE;
 
-    blockcounts[ndims-1] = count[ndims-1];
+    blockcounts[ndims-1] = (int)count[ndims-1];
     /* check 4-byte integer overflow (blockcounts in MPI_Type_hvector
        is of type int while count[] is of type MPI_Offset */
     if (count[ndims-1] != blockcounts[ndims-1])
         return NC_EINTOVERFLOW;
     /* blocklens[] is unlikely a big value */
-    blocklens[ndims-1]  = varp->xsz;
+    blocklens[ndims-1] = varp->xsz;
 
     if (ndims == 1 && IS_RECVAR(varp)) {
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
@@ -917,7 +923,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
 
         if (dim - 1 >= 0) {
             blocklens[dim-1]  = 1;
-            blockcounts[dim-1] = count[dim - 1];
+            blockcounts[dim-1] = (int)count[dim - 1];
             /* check 4-byte integer overflow */
             if (count[dim-1] != blockcounts[dim-1])
                 return NC_EINTOVERFLOW;
@@ -975,9 +981,12 @@ ncmpii_file_set_view(NC           *ncp,
         MPI_Datatype root_filetype, ftypes[2];
 
         /* first block is the header extent */
-        blocklens[0] = ncp->begin_var;
+        blocklens[0] = (int)ncp->begin_var;
             disps[0] = 0;
            ftypes[0] = MPI_BYTE;
+
+        /* check if header size > 2^31 */
+        if (ncp->begin_var != blocklens[0]) status = NC_EINTOVERFLOW;
 
         /* second block is filetype, the suarray request(s) to the variable */
         blocklens[1] = 1;

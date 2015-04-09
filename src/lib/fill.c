@@ -101,7 +101,7 @@ ncmpii_fill_var_buf(const NC_var *varp,
         /* Use the user defined value */
         char *bufp = buf;
         for (i=0; i<bnelems; i++) {
-            memcpy(bufp, attrp->xvalue, varp->xsz);
+            memcpy(bufp, attrp->xvalue, (size_t)varp->xsz);
             bufp += varp->xsz;
         }
     }
@@ -124,7 +124,7 @@ ncmpii_fill_var_buf(const NC_var *varp,
 
         char *bufp = buf;
         for (i=0; i<bnelems; i++) {
-            memcpy(bufp, xvalue, varp->xsz);
+            memcpy(bufp, xvalue, (size_t)varp->xsz);
             bufp += varp->xsz;
         }
     }
@@ -171,7 +171,7 @@ ncmpii_fill_var_rec(NC         *ncp,
     }
 
     /* allocate buffer space */
-    buf = NCI_Malloc(count * varp->xsz);
+    buf = NCI_Malloc((size_t)(count * varp->xsz));
 
     /* fill buffer with file values */
     err = ncmpii_fill_var_buf(varp, count, buf);
@@ -187,9 +187,14 @@ ncmpii_fill_var_rec(NC         *ncp,
     /* make the entire file visible */
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                 MPI_INFO_NULL);
-    TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, count * varp->xsz,
+
+    count *= varp->xsz;
+    if (count != (int)count) err = NC_EINTOVERFLOW;
+    TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, (int)count,
                                     MPI_BYTE, &mpistatus);
     NCI_Free(buf);
+
+    if (err != NC_NOERR) return err;
 
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
@@ -326,17 +331,17 @@ ncmpi_def_var_fill(int   ncid,
         }
 
         /* check if fill_value is consistent among processes */
-        void *root_fill_value = NCI_Malloc(varp->xsz);
+        void *root_fill_value = NCI_Malloc((size_t)varp->xsz);
         if (fill_value == NULL) {
             /* user intends to use default fill value */
-            fill_value = NCI_Malloc(varp->xsz);
+            fill_value = NCI_Malloc((size_t)varp->xsz);
             inq_default_fill_value(varp->type, fill_value);
             free_fill_value=1;
         }
-        memcpy(root_fill_value, fill_value, varp->xsz);
+        memcpy(root_fill_value, fill_value, (size_t)varp->xsz);
             
         TRACE_COMM(MPI_Bcast)(root_fill_value, varp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
-        if (memcmp(fill_value, root_fill_value, varp->xsz)) {
+        if (memcmp(fill_value, root_fill_value, (size_t)varp->xsz)) {
             /* variable's fill value is inconsistent with root's */
             printf("Warning: variable (%s) fill value set in %s() is inconsistent\n",
                    varp->name->cp, __func__);

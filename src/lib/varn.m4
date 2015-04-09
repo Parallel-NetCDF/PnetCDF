@@ -175,10 +175,10 @@ ncmpii_getput_varn(int               ncid,
                    int               io_method) /* COLL_IO or INDEP_IO */
 {
     int i, j, el_size, status=NC_NOERR, min_st, err, free_cbuf=0;
-    int req_id=NC_REQ_NULL, st, isSameGroup, position, packsize=0;
+    int req_id=NC_REQ_NULL, st, isSameGroup, position;
     void *cbuf=NULL;
     char *bufp;
-    MPI_Offset **_counts=NULL;
+    MPI_Offset packsize=0, **_counts=NULL;
     MPI_Datatype ptype;
     NC     *ncp;
     NC_var *varp=NULL;
@@ -232,15 +232,24 @@ ncmpii_getput_varn(int               ncid,
 
         if (status != NC_NOERR) goto err_check;
 
+        if (bufcount != (int)bufcount) {
+            status = NC_EINTOVERFLOW;
+            goto err_check;
+        }
+
         /* check if buftype is contiguous, if not, pack to one, cbuf */
         if (! iscontig_of_ptypes && bnelems > 0) {
             position = 0;
             packsize  = bnelems*el_size;
-            cbuf = NCI_Malloc(packsize);
+            if (packsize != (int)packsize) {
+                status = NC_EINTOVERFLOW;
+                goto err_check;
+            }
+            cbuf = NCI_Malloc((size_t)packsize);
             free_cbuf = 1;
             if (rw_flag == WRITE_REQ)
-                MPI_Pack(buf, bufcount, buftype, cbuf, packsize, &position,
-                         MPI_COMM_SELF);
+                MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)packsize,
+                         &position, MPI_COMM_SELF);
         }
     }
     else {
@@ -250,9 +259,9 @@ ncmpii_getput_varn(int               ncid,
 
     /* We allow counts == NULL and treat this the same as all 1s */
     if (counts == NULL) {
-        _counts    = (MPI_Offset**) NCI_Malloc(num * sizeof(MPI_Offset*));
-        _counts[0] = (MPI_Offset*)  NCI_Malloc(num * varp->ndims *
-                                               sizeof(MPI_Offset));
+        _counts    = (MPI_Offset**) NCI_Malloc((size_t)num * sizeof(MPI_Offset*));
+        _counts[0] = (MPI_Offset*)  NCI_Malloc((size_t)(num * varp->ndims *
+                                                        SIZEOF_MPI_OFFSET));
         for (i=1; i<num; i++)
             _counts[i] = _counts[i-1] + varp->ndims;
         for (i=0; i<num; i++)
@@ -327,7 +336,7 @@ err_check:
     /* unpack to user buf, if buftype is contiguous */
     if (rw_flag == READ_REQ && free_cbuf) {
         position = 0;
-        MPI_Unpack(cbuf, packsize, &position, buf, bufcount, buftype,
+        MPI_Unpack(cbuf, (int)packsize, &position, buf, (int)bufcount, buftype,
                    MPI_COMM_SELF);
     }
 

@@ -289,13 +289,13 @@ ncmpii_NC_check_name_CDF2(const char *name)
 NC_new_string(count, str)
  */
 NC_string *
-ncmpii_new_NC_string(MPI_Offset  slen,
+ncmpii_new_NC_string(size_t      slen,
                      const char *str)
 {
     /* str may not be NULL terminated */
     NC_string *ncstrp;
-    int sizeof_NC_string = M_RNDUP(sizeof(NC_string));
-    MPI_Offset sz = sizeof_NC_string + slen + 1;
+    size_t sizeof_NC_string = M_RNDUP(sizeof(NC_string));
+    size_t sz = slen + sizeof_NC_string + 1;
     /* one char more space for NULL terminate char */
 
 #if 0
@@ -306,7 +306,7 @@ ncmpii_new_NC_string(MPI_Offset  slen,
     if (ncstrp == NULL) return NULL;
 
     /* make space occupied by ncstrp->cp part of ncstrp */
-    ncstrp->nchars = slen;
+    ncstrp->nchars = (MPI_Offset)slen;
     ncstrp->cp = (char *)ncstrp + sizeof_NC_string;
 
     /* in PnetCDF, we want to make name->cp always NULL character terminated */
@@ -342,9 +342,9 @@ ncmpii_set_NC_string(NC_string  *ncstrp,
 
     /* in PnetCDF, we want to make name->cp always NULL character terminated */
     if (ncstrp->nchars > (MPI_Offset)slen)
-        memset(ncstrp->cp + slen, 0, ncstrp->nchars - slen);
+        memset(ncstrp->cp + slen, 0, (size_t)ncstrp->nchars - slen);
 
-    ncstrp->nchars = slen;
+    ncstrp->nchars = (MPI_Offset)slen;
 
     return NC_NOERR;
 }

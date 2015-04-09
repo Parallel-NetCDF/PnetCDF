@@ -896,7 +896,7 @@ ncmpii_getput_varnm(int                ncid,
         return status;
 
     if (num > 0) {
-        req_ids  = (int*) NCI_Malloc(2 * num * sizeof(int));
+        req_ids  = (int*) NCI_Malloc(2 * num * SIZEOF_INT);
         statuses = req_ids + num;
 
         lbuf = buf;
@@ -927,7 +927,7 @@ ncmpii_getput_varnm(int                ncid,
             if (varp->ndims > 0) NCI_Free(start);
         }
     } else if (counts == NULL) {  /* var1 */
-        count = (MPI_Offset*) NCI_Malloc(varp->ndims * sizeof(MPI_Offset));
+        count = (MPI_Offset*) NCI_Malloc(varp->ndims * SIZEOF_MPI_OFFSET);
         for (j=0; j<varp->ndims; j++) count[j] = 1;
         for (i=0; i<num; i++) {
             status = ncmpii_igetput_varm(ncp, varp, starts[i], count, NULL,

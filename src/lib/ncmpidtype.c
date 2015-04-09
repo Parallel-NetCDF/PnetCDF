@@ -239,7 +239,7 @@ ncmpii_darray_get_totalblks(int rank,
   /* Process Grid ranking is always in C ORDER,
      so compute proc coordinates from last dim */
 
-  for (i=ndims-1; i>=0; i--) {
+  for (i=(int)ndims-1; i>=0; i--) {
     if ( array_of_distribs[i] == MPI_DISTRIBUTE_NONE ) {
       total_blocks *= array_of_gsizes[i];
     } else {
@@ -347,10 +347,10 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     return NC_NOERR;
   }
 
-  memsz = num_ints*sizeof(int)
-        + num_adds*sizeof(MPI_Aint)
-        + num_dtypes*sizeof(MPI_Datatype);
-  arraybuf = (void *)NCI_Malloc(memsz);
+  memsz = num_ints * SIZEOF_INT
+        + num_adds * SIZEOF_MPI_AINT
+        + num_dtypes * (int)sizeof(MPI_Datatype);
+  arraybuf = (void *)NCI_Malloc((size_t)memsz);
   array_of_ints = (int *)(arraybuf);
   array_of_adds = (MPI_Aint *)(array_of_ints + num_ints);
   array_of_dtypes = (MPI_Datatype *)(array_of_adds + num_adds);
@@ -561,12 +561,15 @@ int ncmpii_data_repack(void *inbuf,
     return NC_NOERR;
 
   /* local pack-n-unpack, using MPI_COMM_SELF */
-  MPI_Pack_size(incount, intype, MPI_COMM_SELF, &packsz);
-  packbuf = (void *)NCI_Malloc(packsz);
+  if (incount  != (int)incount)  return NC_EINTOVERFLOW;
+  if (outcount != (int)outcount) return NC_EINTOVERFLOW;
+
+  MPI_Pack_size((int)incount, intype, MPI_COMM_SELF, &packsz);
+  packbuf = (void *)NCI_Malloc((size_t)packsz);
   packpos = 0;
-  MPI_Pack(inbuf, incount, intype, packbuf, packsz, &packpos, MPI_COMM_SELF);
+  MPI_Pack(inbuf, (int)incount, intype, packbuf, packsz, &packpos, MPI_COMM_SELF);
   packpos = 0;
-  MPI_Unpack(packbuf, packsz, &packpos, outbuf, outcount, outtype, MPI_COMM_SELF);
+  MPI_Unpack(packbuf, packsz, &packpos, outbuf, (int)outcount, outtype, MPI_COMM_SELF);
   NCI_Free(packbuf);
 
   return NC_NOERR;

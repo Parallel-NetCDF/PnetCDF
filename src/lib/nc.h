@@ -120,7 +120,7 @@ extern int
 ncmpii_NC_check_name(const char *name, int file_ver);
 
 extern NC_string *
-ncmpii_new_NC_string(MPI_Offset slen, const char *str);
+ncmpii_new_NC_string(size_t slen, const char *str);
 
 extern int
 ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
@@ -327,7 +327,7 @@ ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
  * NC variable: description and data
  */
 typedef struct {
-    MPI_Offset    xsz;    /* byte size of 1 array element */
+    int           xsz;    /* byte size of 1 array element */
     MPI_Offset   *shape;  /* dim->size of each dim */
     MPI_Offset   *dsizes; /* the right to left product of shape */
     NC_string    *name;   /* name of the variable */
@@ -686,7 +686,7 @@ typedef struct bufferinfo {
     MPI_Offset  get_size; /* amount of reads  so far in bytes */
 } bufferinfo;
 
-extern MPI_Offset
+extern int
 ncmpix_len_nctype(nc_type type);
 
 #if 0
@@ -850,7 +850,7 @@ ncmpii_wait(NC *ncp, int io_method, int num_reqs, int *req_ids,
 extern int
 ncmpii_cancel(NC *ncp, int num_req, int *req_ids, int *statuses);
 
-extern void
+extern int
 ncmpii_inq_malloc_size(MPI_Offset *size);
 
 extern int
@@ -878,7 +878,7 @@ ncmpii_end_indep_data(NC *ncp);
 extern int                
 ncmpii_file_set_view(NC *ncp, MPI_File fh, MPI_Offset *offset, MPI_Datatype filetype);
 
-extern void
+extern int
 ncmpii_create_imaptype(NC_var *varp, const MPI_Offset *count,
                        const MPI_Offset *imap, const MPI_Offset  bnelems,
                        const int el_size, MPI_Datatype ptype,

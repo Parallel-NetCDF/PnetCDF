@@ -80,11 +80,11 @@ ncmpii_new_x_NC_attr(NC_string  *strp,
 {
     NC_attr *attrp;
     const MPI_Offset xsz = ncmpix_len_NC_attrV(type, nelems);
-    MPI_Offset sz = M_RNDUP(sizeof(NC_attr));
+    size_t sz = M_RNDUP(sizeof(NC_attr));
 
     assert(!(xsz == 0 && nelems != 0));
 
-    sz += xsz;
+    sz += (size_t)xsz;
 
     attrp = (NC_attr *) NCI_Malloc(sz);
     if (attrp == NULL ) return NULL;
@@ -143,7 +143,7 @@ dup_NC_attr(const NC_attr *rattrp)
                                         rattrp->type,
                                         rattrp->nelems);
     if (attrp == NULL) return NULL;
-    memcpy(attrp->xvalue, rattrp->xvalue, rattrp->xsz);
+    memcpy(attrp->xvalue, rattrp->xvalue, (size_t)rattrp->xsz);
     return attrp;
 }
 
@@ -192,7 +192,7 @@ ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
     }
 
     if (ref->nalloc > 0) {
-        ncap->value = (NC_attr **) NCI_Calloc(ref->nalloc, sizeof(NC_attr *));
+        ncap->value = (NC_attr **) NCI_Calloc((size_t)ref->nalloc, sizeof(NC_attr*));
         if (ncap->value == NULL) return NC_ENOMEM;
         ncap->nalloc = ref->nalloc;
     }
@@ -232,7 +232,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 	if(ncap->nalloc == 0)
 	{
 		assert(ncap->ndefined == 0);
-		vp = (NC_attr **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_attr *));
+		vp = (NC_attr **) NCI_Malloc(sizeof(NC_attr*) * NC_ARRAY_GROWBY);
 		if(vp == NULL)
 			return NC_ENOMEM;
 
@@ -242,7 +242,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 	else if(ncap->ndefined +1 > ncap->nalloc)
 	{
 		vp = (NC_attr **) NCI_Realloc(ncap->value,
-			(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr *));
+			(size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr*));
 		if(vp == NULL)
 			return NC_ENOMEM;
 
@@ -301,7 +301,8 @@ int
 ncmpii_NC_findattr(const NC_attrarray *ncap,
                    const char         *uname)
 {
-    int i, nchars;
+    int i;
+    size_t nchars;
 
     assert(ncap != NULL);
 
@@ -511,9 +512,9 @@ ncmpi_rename_att(int         ncid,
      */
 
     if (ncp->safe_mode) {
-        MPI_Offset nchars=strlen(newname);
-        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (nchars != (MPI_Offset) strlen(newname)) {
+        int nchars = (int) strlen(newname);
+        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (nchars != strlen(newname)) {
             /* newname's length is inconsistent with root's */
             printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
@@ -530,7 +531,7 @@ ncmpi_rename_att(int         ncid,
      * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    TRACE_COMM(MPI_Bcast)(attrp->name->cp, attrp->name->nchars, MPI_CHAR, 0,
+    TRACE_COMM(MPI_Bcast)(attrp->name->cp, (int)attrp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
 
     /* Let root write the entire header to the file. Note that we cannot just
@@ -583,19 +584,21 @@ ncmpi_copy_att(int         ncid_in,
             if (iattrp->xsz > attrp->xsz) return NC_ENOTINDEFINE;
             /* else, we can reuse existing without redef */
 
+            if (iattrp->xsz != (int)iattrp->xsz) return NC_EINTOVERFLOW;
+
             attrp->xsz = iattrp->xsz;
             attrp->type = iattrp->type;
             attrp->nelems = iattrp->nelems;
 
-            memcpy(attrp->xvalue, iattrp->xvalue, iattrp->xsz);
+            memcpy(attrp->xvalue, iattrp->xvalue, (size_t)iattrp->xsz);
 
             /* PnetCDF expects all processes use the same name, However, when
              * new attributes are not the same, only root's value is
              * significant. Broadcast the new attribute at root to overwrite
              * new names at other processes.
              */
-            TRACE_COMM(MPI_Bcast)((void*)attrp->xvalue, attrp->xsz, MPI_CHAR, 0,
-                                  ncp->nciop->comm);
+            TRACE_COMM(MPI_Bcast)((void*)attrp->xvalue, (int)attrp->xsz,
+                                  MPI_CHAR, 0, ncp->nciop->comm);
 
             /* Let root write the entire header to the file. Note that we
              * cannot just update the variable name in its space occupied in
@@ -618,7 +621,7 @@ ncmpi_copy_att(int         ncid_in,
     attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
     if (attrp == NULL) return NC_ENOMEM;
 
-    memcpy(attrp->xvalue, iattrp->xvalue, iattrp->xsz);
+    memcpy(attrp->xvalue, iattrp->xvalue, (size_t)iattrp->xsz);
 
     if (indx >= 0) {
         assert(old != NULL);
@@ -675,7 +678,7 @@ ncmpi_del_att(int         ncid,
     return NC_NOERR;
 }
 
-static nc_type longtype = (sizeof(long) == sizeof(int) ? NC_INT : NC_INT64);
+static nc_type longtype = (SIZEOF_LONG == SIZEOF_INT ? NC_INT : NC_INT64);
 
 /* ncmpi_pad_xxx APIs are only applicable for filetypes of size smaller
  * than 4 bytes
@@ -1117,6 +1120,8 @@ ncmpii_put_att(int         ncid,
                 return NC_ENOTINDEFINE;
             /* else, we can reuse existing without redef */
 
+            if (xsz != (int)xsz) return NC_EINTOVERFLOW;
+
             attrp->xsz = xsz;
             attrp->type = filetype;
             attrp->nelems = nelems;
@@ -1135,7 +1140,7 @@ ncmpii_put_att(int         ncid,
                  * value is significant. Broadcast the new attribute at root to
                  * overwrite new attribute at other processes.
                  */
-                TRACE_COMM(MPI_Bcast)(attrp->xvalue, attrp->xsz, MPI_BYTE, 0,
+                TRACE_COMM(MPI_Bcast)(attrp->xvalue, (int)attrp->xsz, MPI_BYTE, 0,
                                       ncp->nciop->comm);
             }
 

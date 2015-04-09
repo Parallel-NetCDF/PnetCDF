@@ -129,7 +129,7 @@ NC_finddim(const NC_dimarray  *ncap,
            NC_dim            **dimpp)
 {
     int dimid;
-    MPI_Offset nchars;
+    size_t nchars;
 
     assert(ncap != NULL);
 
@@ -201,7 +201,7 @@ ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
     }
 
     if (ref->nalloc > 0) {
-        ncap->value = (NC_dim **) NCI_Calloc(ref->nalloc, sizeof(NC_dim *));
+        ncap->value = (NC_dim **) NCI_Calloc((size_t)ref->nalloc, sizeof(NC_dim *));
         if (ncap->value == NULL) return NC_ENOMEM;
         ncap->nalloc = ref->nalloc;
     }
@@ -249,7 +249,7 @@ incr_NC_dimarray(NC_dimarray *ncap,
     }
     else if (ncap->ndefined + 1 > ncap->nalloc) {
         vp = (NC_dim **) NCI_Realloc(ncap->value,
-             (ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_dim *));
+             (size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_dim *));
         if (vp == NULL) return NC_ENOMEM;
 
         ncap->value = vp;
@@ -317,7 +317,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
      * size_t -- normally unsigned
      * In 1999 ISO C standard, size_t is a unsigned integer type of at least
      * 16 bit. */
-    if ((ncp->flags & NC_64BIT_OFFSET) && sizeof(off_t) > 4) {
+    if ((ncp->flags & NC_64BIT_OFFSET) && SIZEOF_OFF_T > 4) {
         /* CDF2 format and LFS */
         if (size > X_UINT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
@@ -484,9 +484,9 @@ ncmpi_rename_dim(int         ncid,
      */
 
     if (ncp->safe_mode) {
-        MPI_Offset nchars=strlen(newname);
-        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (nchars != (MPI_Offset) strlen(newname)) {
+        int nchars = (int)strlen(newname);
+        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (nchars != strlen(newname)) {
             /* newname's length is inconsistent with root's */
             printf("Warning: dimension name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
@@ -503,7 +503,7 @@ ncmpi_rename_dim(int         ncid,
      * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    TRACE_COMM(MPI_Bcast)(dimp->name->cp, dimp->name->nchars, MPI_CHAR, 0,
+    TRACE_COMM(MPI_Bcast)(dimp->name->cp, (int)dimp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
 
     /* Let root write the entire header to the file. Note that we cannot just

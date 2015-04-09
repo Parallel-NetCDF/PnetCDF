@@ -579,7 +579,7 @@ ncmpii_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf, int *abuf_index)
         ncp->abuf->table_size += NC_ABUF_DEFAULT_TABLE_SIZE;
         ncp->abuf->occupy_table = (NC_buf_status*)
                    NCI_Realloc(ncp->abuf->occupy_table,
-                               ncp->abuf->table_size * sizeof(NC_buf_status));
+                               (size_t)ncp->abuf->table_size * sizeof(NC_buf_status));
     }
     /* mark the new entry is used and store the requested buffer size */
     ncp->abuf->occupy_table[ncp->abuf->tail].is_used  = 1;
@@ -655,12 +655,15 @@ ncmpii_igetput_varm(NC               *ncp,
     /* check whether this is a true varm call, if yes, imaptype will be a
      * newly created MPI derived data type, otherwise MPI_DATATYPE_NULL
      */
-    ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
-                           &imaptype);
+    err = ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
+                                 &imaptype);
+    if (err != NC_NOERR) return err;
 
     if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
-        int position, outsize=bnelems*el_size, abuf_allocated=0;
+        int position, abuf_allocated=0;
+        MPI_Offset outsize=bnelems*el_size;
         /* assert(bnelems > 0); */
+        if (outsize != (int)outsize) return NC_EINTOVERFLOW;
 
         /* attached buffer allocation logic
          * if (use_abuf)
@@ -701,12 +704,14 @@ ncmpii_igetput_varm(NC               *ncp,
                     return ((warning != NC_NOERR) ? warning : status);
                 abuf_allocated = 1;
             }
-            else lbuf = NCI_Malloc(outsize);
+            else lbuf = NCI_Malloc((size_t)outsize);
+
+            if (bufcount != (int)bufcount) return NC_EINTOVERFLOW;
 
             /* pack buf into lbuf using buftype */
             position = 0;
-            MPI_Pack(buf, bufcount, buftype, lbuf, outsize, &position,
-                     MPI_COMM_SELF);
+            MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)outsize,
+                     &position, MPI_COMM_SELF);
         }
         else /* for contiguous case, we reuse buf */
             lbuf = buf;
@@ -723,11 +728,11 @@ ncmpii_igetput_varm(NC               *ncp,
                 }
                 abuf_allocated = 1;
             }
-            else cbuf = NCI_Malloc(outsize);
+            else cbuf = NCI_Malloc((size_t)outsize);
 
             /* pack lbuf to cbuf using imaptype */
             position = 0;
-            MPI_Pack(lbuf, 1, imaptype, cbuf, outsize, &position,
+            MPI_Pack(lbuf, 1, imaptype, cbuf, (int)outsize, &position,
                      MPI_COMM_SELF);
             MPI_Type_free(&imaptype);
         }
@@ -752,7 +757,7 @@ ncmpii_igetput_varm(NC               *ncp,
                 }
                 abuf_allocated = 1;
             }
-            else xbuf = NCI_Malloc(nbytes);
+            else xbuf = NCI_Malloc((size_t)nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
             DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
@@ -767,7 +772,7 @@ ncmpii_igetput_varm(NC               *ncp,
                     if (cbuf != buf) NCI_Free(cbuf);
                     return ((warning != NC_NOERR) ? warning : status);
                 }
-                memcpy(xbuf, cbuf, nbytes);
+                memcpy(xbuf, cbuf, (size_t)nbytes);
             }
             else xbuf = cbuf;
 
@@ -775,8 +780,8 @@ ncmpii_igetput_varm(NC               *ncp,
 #ifdef DISABLE_IN_PLACE_SWAP
                 if (xbuf == buf) {
                     /* allocate xbuf and copy buf to xbuf, before byte-swap */
-                    xbuf = NCI_Malloc(nbytes);
-                    memcpy(xbuf, buf, nbytes);
+                    xbuf = NCI_Malloc((size_t)nbytes);
+                    memcpy(xbuf, buf, (size_t)nbytes);
                 }
 #endif
                 /* perform array in-place byte swap on xbuf */
@@ -796,7 +801,7 @@ ncmpii_igetput_varm(NC               *ncp,
         if (buftype_is_contig && imaptype == MPI_DATATYPE_NULL && !need_convert)
             xbuf = buf;  /* there is no buffered read (bget_var, etc.) */
         else
-            xbuf = NCI_Malloc(nbytes);
+            xbuf = NCI_Malloc((size_t)nbytes);
     }
 
     /* allocate a new request object to store the write info */
@@ -857,7 +862,7 @@ pack_request(NC               *ncp,
     size_t  dims_chunk;
     NC_req *subreqs;
 
-    dims_chunk       = varp->ndims * sizeof(MPI_Offset);
+    dims_chunk       = (size_t)varp->ndims * SIZEOF_MPI_OFFSET;
 
     req->varp        = varp;
     req->next        = NULL;
@@ -865,9 +870,9 @@ pack_request(NC               *ncp,
     req->num_subreqs = 0;
 
     if (stride != NULL)
-        req->start = (MPI_Offset*) NCI_Malloc(3*dims_chunk);
+        req->start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
     else
-        req->start = (MPI_Offset*) NCI_Malloc(2*dims_chunk);
+        req->start = (MPI_Offset*) NCI_Malloc(dims_chunk*2);
 
     req->count = req->start + varp->ndims;
 
@@ -903,16 +908,16 @@ pack_request(NC               *ncp,
         for (i=1; i<varp->ndims; i++)
             rec_bufcount *= req->count[i];
 
-        subreqs = (NC_req*) NCI_Malloc(req->count[0]*sizeof(NC_req));
+        subreqs = (NC_req*) NCI_Malloc((size_t)req->count[0]*sizeof(NC_req));
         for (i=0; i<req->count[0]; i++) {
             MPI_Offset span;
             subreqs[i] = *req; /* inherit most attributes from req */
 
             /* each sub-request contains <= one record size */
             if (stride != NULL)
-                subreqs[i].start = (MPI_Offset*) NCI_Malloc(3*dims_chunk);
+                subreqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*3);
             else
-                subreqs[i].start = (MPI_Offset*) NCI_Malloc(2*dims_chunk);
+                subreqs[i].start = (MPI_Offset*) NCI_Malloc(dims_chunk*2);
 
             subreqs[i].count = subreqs[i].start + varp->ndims;
 
@@ -947,8 +952,11 @@ pack_request(NC               *ncp,
             subreqs[i].xbuf     = (char*)(req->xbuf) + span;
             subreqs[i].bufcount = rec_bufcount;
         }
-        req->num_subreqs = req->count[0];
+        req->num_subreqs = (int)req->count[0];
         req->subreqs     = subreqs;
+
+        if (req->count[0] != (int)req->count[0])
+            return NC_EINTOVERFLOW;
     }
 
     return NC_NOERR;

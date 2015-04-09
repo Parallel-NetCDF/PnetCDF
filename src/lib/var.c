@@ -23,9 +23,6 @@
 #include "macro.h"
 #include "utf8proc.h"
 
-/* Prototypes for functions used only in this file */
-static MPI_Offset ncx_szof(nc_type type);
-
 /*----< ncmpii_free_NC_var() >------------------------------------------------*/
 /*
  * Free var
@@ -56,13 +53,13 @@ ncmpii_new_x_NC_var(NC_string *strp,
                     int        ndims)
 {
     NC_var *varp;
+    int shape_space   = M_RNDUP(ndims * SIZEOF_MPI_OFFSET);
+    int dsizes_space  = M_RNDUP(ndims * SIZEOF_MPI_OFFSET);
+    int dimids_space  = M_RNDUP(ndims * SIZEOF_INT);
     size_t sizeof_NC_var = M_RNDUP(sizeof(NC_var));
-    size_t shape_space   = M_RNDUP(ndims * sizeof(MPI_Offset));
-    size_t dsizes_space  = M_RNDUP(ndims * sizeof(MPI_Offset));
-    size_t dimids_space  = M_RNDUP(ndims * sizeof(int));
-    size_t sz = sizeof_NC_var + shape_space + dsizes_space + dimids_space;
+    size_t sz = sizeof_NC_var + (size_t)(shape_space + dsizes_space + dimids_space);
 
-    /* wkliao: this function allocates a contiguous memory space to put all
+    /* this function allocates a contiguous memory space to put all
      * members of NC_var structure together:
      * dimid_space is for dimids[],
      * shape_space is for shape[],
@@ -127,7 +124,7 @@ ncmpii_new_NC_var(const char *uname,  /* variable name (NULL terminated) */
     varp->type = type;
 
     if (ndims != 0 && dimids != NULL)
-        memcpy(varp->dimids, dimids, ndims * sizeof(int));
+        memcpy(varp->dimids, dimids, (size_t)ndims * SIZEOF_INT);
 
     return(varp);
 }
@@ -150,8 +147,8 @@ dup_NC_var(const NC_var *rvarp)
     /* copy the contents of shape may not be necessary, as one must call
      * ncmpii_NC_computeshapes() to recompute it after a new variable is
      * created */
-    memcpy(varp->shape,  rvarp->shape,  rvarp->ndims * sizeof(MPI_Offset));
-    memcpy(varp->dsizes, rvarp->dsizes, rvarp->ndims * sizeof(MPI_Offset));
+    memcpy(varp->shape,  rvarp->shape,  (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
+    memcpy(varp->dsizes, rvarp->dsizes, (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
     varp->xsz = rvarp->xsz;
     varp->len = rvarp->len;
     varp->begin = rvarp->begin;
@@ -206,7 +203,7 @@ ncmpii_dup_NC_vararray(NC_vararray       *ncap,
     }
 
     if (ref->nalloc > 0) {
-        ncap->value = (NC_var **) NCI_Calloc(ref->nalloc, sizeof(NC_var*));
+        ncap->value = (NC_var **) NCI_Calloc((size_t)ref->nalloc, sizeof(NC_var*));
         if (ncap->value == NULL) return NC_ENOMEM;
         ncap->nalloc = ref->nalloc;
     }
@@ -255,7 +252,7 @@ incr_NC_vararray(NC_vararray *ncap,
     }
     else if (ncap->ndefined + 1 > ncap->nalloc) {
         vp = (NC_var **) NCI_Realloc(ncap->value,
-                         (ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_var *));
+                         (size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_var *));
         if (vp == NULL) return NC_ENOMEM;
 
         ncap->value = vp;
@@ -301,7 +298,8 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
                   const char         *uname,
                   NC_var            **varpp)
 {
-    int varid, nchars;
+    int varid;
+    size_t nchars;
     char *name;
     NC_var **loc;
 
@@ -337,7 +335,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 NC_xtypelen
  * See also ncx_len()
  */
-inline static MPI_Offset
+static int
 ncx_szof(nc_type type)
 {
     switch(type){
@@ -624,10 +622,10 @@ ncmpi_inq_var(int      ncid,
 #ifdef ENABLE_SUBFILING
         /* varp->dimids_org is already set during open or enddef */
         if (varp->num_subfiles > 1)
-            memcpy(dimids, varp->dimids_org, varp->ndims_org * sizeof(int));
+            memcpy(dimids, varp->dimids_org, (size_t)varp->ndims_org * SIZEOF_INT);
         else
 #endif
-            memcpy(dimids, varp->dimids, varp->ndims * sizeof(int));
+            memcpy(dimids, varp->dimids, (size_t)varp->ndims * SIZEOF_INT);
     }
     if (nattsp != 0)
         *nattsp = (int) varp->attrs.ndefined;
@@ -723,10 +721,10 @@ ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
     if (dimids != 0) {
 #ifdef ENABLE_SUBFILING
         if (varp->num_subfiles > 1)
-            memcpy(dimids, varp->dimids_org, varp->ndims_org * sizeof(int));
+            memcpy(dimids, varp->dimids_org, (size_t)varp->ndims_org * SIZEOF_INT);
         else
 #endif
-            memcpy(dimids, varp->dimids, varp->ndims * sizeof(int));
+            memcpy(dimids, varp->dimids, (size_t)varp->ndims * SIZEOF_INT);
     }
 
     return NC_NOERR;
@@ -807,9 +805,9 @@ ncmpi_rename_var(int         ncid,
      */
 
     if (ncp->safe_mode) {
-        MPI_Offset nchars=strlen(newname);
-        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_OFFSET, 0, ncp->nciop->comm);
-        if (nchars != (MPI_Offset) strlen(newname)) {
+        int nchars = (int)strlen(newname);
+        TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (nchars != (int) strlen(newname)) {
             /* newname's length is inconsistent with root's */
             printf("Warning: variable name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
@@ -826,7 +824,7 @@ ncmpi_rename_var(int         ncid,
      * new name at root to overwrite new names at other processes.
      * (This API is collective if called in data mode)
      */
-    TRACE_COMM(MPI_Bcast)(varp->name->cp, varp->name->nchars, MPI_CHAR, 0,
+    TRACE_COMM(MPI_Bcast)(varp->name->cp, (int)varp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
 
     /* Let root write the entire header to the file. Note that we cannot just
