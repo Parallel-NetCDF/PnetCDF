@@ -196,8 +196,8 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int err, status=NC_NOERR, safe_mode=0, mpireturn;
-    char *env_str=NULL, *hint_str;
+    int flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
+    char *env_str=NULL, *hint_str, value[MPI_MAX_INFO_VAL];
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
@@ -274,8 +274,6 @@ ncmpi_create(MPI_Comm    comm,
 
     /* get header chunk size from user info */
     if (env_info != MPI_INFO_NULL) {
-        char value[MPI_MAX_INFO_VAL];
-        int  flag;
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) chunksize = atoll(value);
@@ -291,8 +289,6 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode = 1;
     if (env_info != MPI_INFO_NULL) {
-        char value[MPI_MAX_INFO_VAL];
-        int  flag;
         MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "disable") == 0)
@@ -364,8 +360,8 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)
 {
-    int i, err, status=NC_NOERR, safe_mode=0, mpireturn;
-    char *env_str=NULL, *hint_str;
+    int i, flag, err, status=NC_NOERR, safe_mode=0, mpireturn;
+    char *env_str=NULL, *hint_str, value[MPI_MAX_INFO_VAL];
     MPI_Info   env_info;
     MPI_Offset chunksize=NC_DEFAULT_CHUNKSIZE;
     NC *ncp;
@@ -435,8 +431,6 @@ ncmpi_open(MPI_Comm    comm,
 
     /* get header chunk size from user info, if provided */
     if (env_info != MPI_INFO_NULL) {
-        char value[MPI_MAX_INFO_VAL];
-        int  flag;
         MPI_Info_get(env_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) chunksize = atoll(value);
@@ -451,8 +445,6 @@ ncmpi_open(MPI_Comm    comm,
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode = 1;
     if (env_info != MPI_INFO_NULL) {
-        char value[MPI_MAX_INFO_VAL];
-        int  flag;
         MPI_Info_get(env_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag && strcasecmp(value, "disable") == 0)

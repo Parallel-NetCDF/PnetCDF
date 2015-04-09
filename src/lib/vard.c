@@ -117,6 +117,11 @@ ncmpii_getput_vard(NC               *ncp,
         goto err_check;
     }
 
+    if (bufcount != (int)bufcount) {
+        err = NC_EINTOVERFLOW;
+        goto err_check;
+    }
+
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and will be set to the size of
          * filetype. Note buf's data type must match the data type of variable
@@ -130,25 +135,35 @@ ncmpii_getput_vard(NC               *ncp,
         bnelems = bufcount;
     }
     else {
+        MPI_Offset outsize;
+
         /* find whether buftype is contiguous */
         err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &btnelems,
                                   &isderived, &buftype_is_contig);
         if (err != NC_NOERR) goto err_check;
 
-        bnelems = bufcount * btnelems;
-        buftype_size = el_size * btnelems;
-        if (filetype_size != bufcount * buftype_size)
-            return NC_ETYPESIZE_MISMATCH;
+        if (btnelems != (int)btnelems) {
+            err = NC_EINTOVERFLOW;
+            goto err_check;
+        }
+
+        bnelems      = bufcount * btnelems;
+        buftype_size = el_size  * (int)btnelems;
+        outsize      = bufcount * buftype_size;
+
+        if (outsize != filetype_size) {
+            err = NC_ETYPESIZE_MISMATCH;
+            goto err_check;
+        }
 
         /* if buf is not contiguous, we need to pack it to one, cbuf */
         if (!buftype_is_contig && bnelems > 0) {
-            int outsize = buftype_size * bufcount;
-            cbuf = NCI_Malloc(outsize);
+            cbuf = NCI_Malloc((size_t)outsize);
 
             if (rw_flag == WRITE_REQ) {
                 /* pack buf into cbuf, a contiguous buffer */
                 int position = 0;
-                MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
+                MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize, &position,
                          MPI_COMM_SELF);
             }
             buftype = ptype;
@@ -163,7 +178,7 @@ ncmpii_getput_vard(NC               *ncp,
 #ifdef DISABLE_IN_PLACE_SWAP
             if (cbuf == buf) {
                 /* allocate cbuf and copy buf to cbuf, cbuf is to be freed */
-                cbuf = NCI_Malloc(filetype_size);
+                cbuf = NCI_Malloc((size_t)filetype_size);
                 memcpy(cbuf, buf, filetype_size);
             }
 #endif
@@ -209,12 +224,12 @@ err_check:
 
     if (rw_flag == WRITE_REQ) {
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_write_at)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_write_at)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_write_at");
         }
@@ -224,12 +239,12 @@ err_check:
     }
     else {  /* rw_flag == READ_REQ */
         if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_read_at_all)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
         }
         else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_read_at)(fh, offset, cbuf, bufcount, buftype, &mpistatus);
+            TRACE_IO(MPI_File_read_at)(fh, offset, cbuf, (int)bufcount, buftype, &mpistatus);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_handle_error(mpireturn, "MPI_File_read_at");
         }
@@ -251,9 +266,13 @@ err_check:
         if (!buftype_is_contig && bnelems > 0) {
             /* unpack cbuf, a contiguous buffer, to buf using buftype */
             int position = 0;
-            int insize = bnelems * el_size;
-            MPI_Unpack(cbuf, insize, &position, buf, orig_bufcount,
-                       orig_buftype, MPI_COMM_SELF);
+            MPI_Offset insize = bnelems * el_size;
+            if (insize != (int)insize) {
+                if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+            }
+            else
+                MPI_Unpack(cbuf, (int)insize, &position, buf, (int)orig_bufcount,
+                           orig_buftype, MPI_COMM_SELF);
         }
     }
     else { /* WRITE_REQ */
@@ -278,8 +297,10 @@ err_check:
                     set_NC_ndirty(ncp);
                 }
             }
-            else /* COLL_IO: sync numrecs in memory and file */
+            else { /* COLL_IO: sync numrecs in memory and file */
                 err = ncmpii_sync_numrecs(ncp, new_numrecs);
+                if (err != NC_NOERR && status == NC_NOERR) status = err;
+            }
         }
 
         if (NC_doFsync(ncp)) { /* NC_SHARE is set */
@@ -291,7 +312,7 @@ err_check:
 
     FINAL_CLEAN_UP  /* swap back the put buffer and free temp buffers */
 
-    return err;
+    return status;
 }
 
 /*----< ncmpi_get_vard() >---------------------------------------------------*/

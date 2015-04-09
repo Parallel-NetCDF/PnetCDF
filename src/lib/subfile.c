@@ -313,7 +313,7 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
 
             for (jj=0; jj < ncp->nc_num_subfiles; jj++)
                 for (k=0; k<var_ndims; k++)
-                    key[jj][k] = (char*) NCI_Calloc(256, sizeof(char));
+                    key[jj][k] = (char*) NCI_Calloc((size_t)256, sizeof(char));
 
             /* save original value ndims to attribute before making to 0 */
             status = ncmpi_put_att_int(ncp->nciop->fd, i, "_PnetCDF_SubFiling.ndims_org", NC_INT, 1, &vpp[i]->ndims);
@@ -384,8 +384,8 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
             } /* for each dim */
 
             /* master file: replace the original var with scalar var */
-            vpp[i]->dimids_org = (int*) NCI_Malloc(vpp[i]->ndims * sizeof(int));
-            memcpy(vpp[i]->dimids_org, vpp[i]->dimids, vpp[i]->ndims*sizeof(int));
+            vpp[i]->dimids_org = (int*) NCI_Malloc((size_t)vpp[i]->ndims * SIZEOF_INT);
+            memcpy(vpp[i]->dimids_org, vpp[i]->dimids, (size_t)vpp[i]->ndims*SIZEOF_INT);
             vpp[i]->ndims_org = vpp[i]->ndims;
             vpp[i]->ndims = 0;
             vpp[i]->dimids = (IS_RECVAR(vpp[i])?&vpp[i]->dimids[0]:NULL);
@@ -502,10 +502,10 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                                &color);
     TEST_HANDLE_ERR(status)
 
-    count_my_req_per_proc = (int *)NCI_Calloc(nprocs, sizeof(int));
-    count_others_req_per_proc = (int *)NCI_Calloc(nprocs, sizeof(int));
-    buf_count_my = (MPI_Offset *)NCI_Calloc(nprocs, sizeof(MPI_Offset));
-    buf_count_others = (MPI_Offset *)NCI_Calloc(nprocs, sizeof(MPI_Offset));
+    count_my_req_per_proc = (int *)NCI_Calloc((size_t)nprocs, SIZEOF_INT);
+    count_others_req_per_proc = (int *)NCI_Calloc((size_t)nprocs, SIZEOF_INT);
+    buf_count_my = (MPI_Offset *)NCI_Calloc((size_t)nprocs, SIZEOF_MPI_OFFSET);
+    buf_count_others = (MPI_Offset *)NCI_Calloc((size_t)nprocs, SIZEOF_MPI_OFFSET);
 
     /* TODO: shouldn't it be initialized to 0? */
     for (i=0; i<nprocs; i++) {
@@ -514,11 +514,11 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     }
 
     /* allocate space for my_req */
-    my_req = (NC_subfile_access*) NCI_Calloc(nprocs, sizeof(NC_subfile_access));
+    my_req = (NC_subfile_access*) NCI_Calloc((size_t)nprocs, sizeof(NC_subfile_access));
 
     /* init allocated my_req */
     for (i=0; i<nprocs; i++) {
-        my_req[i].start = (MPI_Offset*)NCI_Malloc(3 * ndims_org * sizeof(MPI_Offset));
+        my_req[i].start = (MPI_Offset*)NCI_Malloc((size_t)(3 * ndims_org * SIZEOF_MPI_OFFSET));
         my_req[i].count = my_req[i].start + ndims_org;
         my_req[i].start_org = my_req[i].count + ndims_org;
         /* init start/count to -1 */
@@ -686,10 +686,10 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         buf_count_my[myrank] *= my_req[myrank].count[i];
 
     /* build other proc's request */
-    others_req = (NC_subfile_access *) NCI_Calloc(nprocs, sizeof(NC_subfile_access));
+    others_req = (NC_subfile_access *) NCI_Calloc((size_t)nprocs, sizeof(NC_subfile_access));
     /* init allocated others_req */
     for (i=0; i<nprocs; i++) {
-        others_req[i].start = (MPI_Offset *)NCI_Malloc(3 * ndims_org * sizeof(MPI_Offset));
+        others_req[i].start = (MPI_Offset *)NCI_Malloc((size_t)(3 * ndims_org * SIZEOF_MPI_OFFSET));
         others_req[i].count = others_req[i].start + ndims_org;
         others_req[i].start_org = others_req[i].count + ndims_org;
         /* init start/count to -1 */
@@ -774,13 +774,14 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     /* NOTE: no conversion and byte swap are performed here
        as they are done underneath layer */
     if (!buftype_is_contig && bufcount > 0 && bnelems > 0) {
-        int position=0, outsize;
-        bnelems = bnelems*bufcount; /* update bnelems */
-        outsize = bnelems * el_size;
-        cbuf = NCI_Malloc(outsize);
+        int position=0;
+        MPI_Offset outsize = bnelems * bufcount * el_size;
+        if (outsize  != (int)outsize) return NC_EINTOVERFLOW;
+        if (bufcount != (int)bufcount) return NC_EINTOVERFLOW;
+        cbuf = NCI_Malloc((size_t)outsize);
         if (rw_flag == WRITE_REQ)
-            MPI_Pack(buf, bufcount, buftype, cbuf, outsize, &position,
-                     MPI_COMM_SELF);
+            MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
+                     &position, MPI_COMM_SELF);
     }
     else
         cbuf = (void *)buf;
@@ -825,7 +826,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     int *array_of_requests;
     int *array_of_statuses;
     /* TODO: each proc can't get more than nprocs-1?? */
-    array_of_requests = (int *)NCI_Malloc(nprocs * sizeof(int));
+    array_of_requests = (int *)NCI_Malloc((size_t)nprocs * SIZEOF_INT);
     for (i=0; i<nprocs; i++)
         array_of_requests[i] = NC_REQ_NULL;
 
@@ -854,7 +855,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 
     /* doing other proc's request to my subfile
        TODO: each proc can't get more than nprocs?? */
-    requests = (MPI_Request *)NCI_Malloc(2*nprocs*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc((size_t)nprocs*2*sizeof(MPI_Request));
 
     j = 0;
 #ifdef TAU_SSON
@@ -872,7 +873,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         if (count_others_req_per_proc[i] != 0 && i != myrank)
             TRACE_COMM(MPI_Isend)(&count_my_req_per_proc[i], 1, MPI_INT, i, i+myrank, ncp->nciop->comm, &requests[j++]);
 
-    statuses = (MPI_Status *)NCI_Malloc(j*sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc((size_t)j*sizeof(MPI_Status));
     TRACE_COMM(MPI_Waitall)(j, requests, statuses);
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t52);
@@ -882,7 +883,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     NCI_Free(requests);
 
     j = 0;
-    requests = (MPI_Request *)NCI_Malloc(2*nprocs*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc((size_t)nprocs*2*sizeof(MPI_Request));
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t53, "SSON --- getput_vars: exch start,count,", "", TAU_USER);
@@ -891,7 +892,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     /* when dest rank == myrank */
     if (count_others_req_per_proc[myrank] > 0)
         memcpy(others_req[myrank].start, my_req[myrank].start,
-               3 * ndims_org * sizeof(MPI_Offset));
+               (size_t)ndims_org * 3 * SIZEOF_MPI_OFFSET);
 
     /* exchange my_req's and others_req's start[], count[], and start_org[] */
     for (i=0; i<nprocs; i++) {
@@ -906,7 +907,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
                       i+myrank, ncp->nciop->comm, &requests[j++]);
     }
 
-    statuses = (MPI_Status *)NCI_Malloc(j*sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc((size_t)j*sizeof(MPI_Status));
     TRACE_COMM(MPI_Waitall)(j, requests, statuses);
     NCI_Free(statuses);
     NCI_Free(requests);
@@ -948,9 +949,9 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #endif
 
     j = 0;
-    requests = (MPI_Request *)NCI_Malloc(2*nprocs*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc((size_t)nprocs*2*sizeof(MPI_Request));
 
-    xbuf = (void**)NCI_Calloc(nprocs, sizeof(void *));
+    xbuf = (void**)NCI_Calloc((size_t)nprocs, sizeof(void *));
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t54, "SSON --- getput_vars: exch buf", "", TAU_USER);
@@ -967,7 +968,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
 #ifdef SUBFILE_DEBUG
             printf("rank(%d): recv from rank %d: buf_count_others[%d]=%d\n", myrank, i, i, buf_count_others[i]);
 #endif
-            xbuf[i] = (void*)NCI_Calloc(buf_count_others[i], el_size);
+            xbuf[i] = (void*)NCI_Calloc((size_t)buf_count_others[i], (size_t)el_size);
             TRACE_COMM(MPI_Irecv)(xbuf[i], buf_count_others[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->nciop->comm, &requests[j++]);
         }
     }
@@ -1004,7 +1005,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         } /* end if() */
     } /* end for() */
 
-    statuses = (MPI_Status *)NCI_Malloc(j * sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc((size_t)j * sizeof(MPI_Status));
     TRACE_COMM(MPI_Waitall)(j, requests, statuses);
     NCI_Free(statuses);
     NCI_Free(requests);
@@ -1052,7 +1053,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     double stime, wait_time;
     stime = MPI_Wtime();
     */
-    array_of_statuses = (int *)NCI_Malloc(nasyncios * sizeof(int));
+    array_of_statuses = (int *)NCI_Malloc((size_t)nasyncios * SIZEOF_INT);
     status = ncmpii_wait(ncp_sf, COLL_IO, nasyncios, array_of_requests, array_of_statuses);
     TEST_HANDLE_ERR(status)
     NCI_Free(array_of_statuses);

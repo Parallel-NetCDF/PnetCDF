@@ -89,7 +89,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 
 #define GET_ONE_COUNT(count) {                                                \
     int _i;                                                                   \
-    count = (MPI_Offset*) NCI_Malloc(varp->ndims * sizeof(MPI_Offset));       \
+    count = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * SIZEOF_MPI_OFFSET);\
     for (_i=0; _i<varp->ndims; _i++)                                          \
         count[_i] = 1;                                                        \
 }
@@ -118,7 +118,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     int _i;                                                                   \
     int _ndims;                                                               \
     _ndims = (varp->num_subfiles>1?varp->ndims_org:varp->ndims);              \
-    start = (MPI_Offset*) NCI_Malloc(2 * _ndims * sizeof(MPI_Offset));        \
+    start = (MPI_Offset*) NCI_Malloc((size_t)_ndims*2*SIZEOF_MPI_OFFSET);     \
     count = start + _ndims;                                                   \
                                                                               \
     for (_i=0; _i<_ndims; _i++) {                                             \
@@ -136,7 +136,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 #else /* without subfiling */
 #define GET_FULL_DIMENSIONS(start, count) {                                   \
     int _i;                                                                   \
-    start = (MPI_Offset*) NCI_Malloc(2 * varp->ndims * sizeof(MPI_Offset));   \
+    start = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims*2*SIZEOF_MPI_OFFSET);\
     count = start + varp->ndims;                                              \
                                                                               \
     for (_i=0; _i<varp->ndims; _i++) {                                        \

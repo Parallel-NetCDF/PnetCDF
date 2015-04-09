@@ -8,14 +8,12 @@
 
 #include "pnetcdf.h"
 #include "nc.h"
-#include "rnd.h"
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include "ncx.h"
 #include "macro.h"
 
 /* structure for storing access info of this process's request

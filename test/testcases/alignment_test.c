@@ -20,7 +20,7 @@
  * This program tests if the file header size and variable offsets are properly
  * set when using a different set of alignment hints to open an existing file
  * and entering the redef mode to add more dimensions, attributes, and
- * variables.
+ * variables, causing the expansion of the header.
  *
  * The compile and run commands are given below.
  *

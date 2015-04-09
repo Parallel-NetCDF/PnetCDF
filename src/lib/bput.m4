@@ -467,7 +467,7 @@ ncmpi_buffer_attach(int        ncid,
     ncp->abuf->occupy_table = (NC_buf_status*)
                NCI_Calloc(NC_ABUF_DEFAULT_TABLE_SIZE, sizeof(NC_buf_status));
     ncp->abuf->tail = 0;
-    ncp->abuf->buf = NCI_Malloc(bufsize);
+    ncp->abuf->buf = NCI_Malloc((size_t)bufsize);
     return NC_NOERR;
 }
 

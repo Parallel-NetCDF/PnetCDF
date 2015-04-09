@@ -73,7 +73,8 @@
  * using 64 bit offsets.
  *  see also X_SIZE_MAX, X_OFF_MAX below
  */
-#define X_SIZEOF_OFF_T		(sizeof(off_t))
+/* #define X_SIZEOF_OFF_T		(sizeof(off_t)) */
+#define X_SIZEOF_OFF_T		SIZEOF_OFF_T
 #define X_SIZEOF_SIZE_T		X_SIZEOF_INT
 
 /*

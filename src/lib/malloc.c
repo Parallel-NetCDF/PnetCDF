@@ -28,6 +28,7 @@
 #endif
 
 #include <mpi.h>
+#include "nc.h"
 
 /* global variables for malloc tracing */
 static void       *ncmpii_mem_root;
@@ -76,12 +77,12 @@ int ncmpii_inq_malloc_max_size(MPI_Offset *size)
 #endif
 
 typedef struct {
-    void       *self;
-    void       *buf;
-    MPI_Offset  size;
-    int         lineno;
-    char       *func;
-    char       *filename;
+    void   *self;
+    void   *buf;
+    size_t  size;
+    int     lineno;
+    char   *func;
+    char   *filename;
 } ncmpii_mem_entry;
 
 inline static
@@ -99,7 +100,7 @@ void walker(const void *node, const VISIT which, const int depth) {
     ncmpii_mem_entry *f;
     f = *(ncmpii_mem_entry **)node;
     if (which == preorder || which == leaf)
-        printf("Warning: malloc yet to be freed (buf=%p size=%lld filename=%s func=%s line=%d)\n", f->buf, f->size, f->filename, f->func, f->lineno);
+        printf("Warning: malloc yet to be freed (buf=%p size=%zd filename=%s func=%s line=%d)\n", f->buf, f->size, f->filename, f->func, f->lineno);
 }
 #endif
 
@@ -121,7 +122,7 @@ int ncmpii_inq_malloc_list(void)
 /* add a new malloc entry to the table */
 static
 void ncmpii_add_mem_entry(void       *buf,
-                          MPI_Offset  size,
+                          size_t      size,
                           const int   lineno,
                           const char *func,
                           const char *filename)
@@ -145,7 +146,7 @@ void ncmpii_add_mem_entry(void       *buf,
         printf("Error: tsearch()\n");
         return;
     }
-    ncmpii_mem_alloc += size;
+    ncmpii_mem_alloc += (MPI_Offset)size;
     ncmpii_max_mem_alloc = MAX(ncmpii_max_mem_alloc, ncmpii_mem_alloc);
 }
 
@@ -169,7 +170,7 @@ void ncmpii_del_mem_entry(void *buf)
         free((*found)->filename);
 
         /* substract the space amount to be freed */
-        ncmpii_mem_alloc -= (*found)->size;
+        ncmpii_mem_alloc -= (MPI_Offset)((*found)->size);
         void *tmp = (*found)->self;
         ret = tdelete(&node, &ncmpii_mem_root, ncmpii_cmp);
         if (ret == NULL) {
