@@ -122,7 +122,7 @@ Conform with netCDF
        (in principle, all constants should conform with netCDF)
 
  - Make sure file src/lib/pnetcdf.h.in is updated with the latest netCDF
-   header
+   header, by building the latest netCDF with --enable-pnetcdf option.
 
  - Similarly, check Fortran error codes defined as parameters in
        src/libf/pnetcdf.inc.in

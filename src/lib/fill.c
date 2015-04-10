@@ -380,8 +380,8 @@ ncmpi_def_var_fill(int   ncid,
 int
 ncmpi_inq_var_fill(int   ncid,
                    int   varid,
-                   int  *no_fill,    /* 1: no fill, 0: fill */
-                   void *fill_value) /* when NULL, use default fill value */
+                   int  *no_fill,    /* OUT: 1 not fill mode, 0 fill mode */
+                   void *fill_value) /* OUT: user-defined or default fill value */
 {
     int err;
     NC *ncp;
