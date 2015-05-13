@@ -552,7 +552,7 @@ ncmpii_wait(NC  *ncp,
 {
     int i, j, err=NC_NOERR, status=NC_NOERR;
     int do_read, do_write, num_w_reqs=0, num_r_reqs=0;
-    NC_req *pre_req, *cur_req;
+    NC_req *pre_req, *cur_req, *next_req;
     NC_req *w_req_head=NULL, *w_req_tail=NULL;
     NC_req *r_req_head=NULL, *r_req_tail=NULL;
 
@@ -610,6 +610,8 @@ ncmpii_wait(NC  *ncp,
                 else /* move pre_req and cur_req to next */
                     pre_req->next = cur_req->next;
 
+                next_req = cur_req->next;
+
                 if (cur_req->rw_flag == READ_REQ) {
                     /* add cur_req to r_req_tail */
                     if (r_req_head == NULL) {
@@ -642,7 +644,7 @@ ncmpii_wait(NC  *ncp,
                      * its subrequests (one for each individual record) */
                 }
                 found_id = req_ids[i]; /* indicating previous found ID */
-                cur_req = (pre_req == ncp->head) ? pre_req : pre_req->next;
+                cur_req = next_req;
             }
             else if (found_id >= 0) {
                 /* same request IDs are stored contiguously in the linked list
