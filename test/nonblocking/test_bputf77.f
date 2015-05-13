@@ -169,9 +169,11 @@
       if (rank .EQ. 0) then
          msg = '*** TESTING F77 '//trim(cmd)//' for bput_varm_real API'
          if (no_err .GT. 0) then
-             write(*,"(A67,A)") msg,'------ failed'
+             write(*,"(A67,A)") msg,
+     +       '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
          else
-             write(*,"(A67,A)") msg,'------ pass'
+             write(*,"(A67,A)") msg,
+     +       '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
          endif
       endif
 

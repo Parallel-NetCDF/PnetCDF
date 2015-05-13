@@ -12,6 +12,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 /* The file name is taken as a command-line argument. */
 
 static int verbose;
@@ -674,8 +677,10 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
     if (mynod == 0) {
-        if (n_fails) printf("%-66s ------ failed with %d errors\n", cmd_str, n_fails);
-        else         printf("%-66s ------ pass\n", cmd_str);
+        if (n_fails)
+            printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        else
+            printf("%-66s ------ " PASS_COLOR, cmd_str);
     }
 
     MPI_Finalize();
