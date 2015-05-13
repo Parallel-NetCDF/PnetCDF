@@ -8,6 +8,7 @@ inq_num_vars.o: inq_num_vars.c
 inq_num_varsf.o: inq_num_varsf.f90
 inq_recsize.o: inq_recsize.c
 inq_recsizef.o: inq_recsizef.f90
+ivarn.o: ivarn.c
 modes.o: modes.c
 ncmpi_vars_null_stride.o: ncmpi_vars_null_stride.c
 noclobber.o: noclobber.c

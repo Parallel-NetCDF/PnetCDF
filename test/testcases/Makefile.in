@@ -36,6 +36,7 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            inq_recsize.c \
            test_vard.c \
            varn_contig.c \
+           ivarn.c \
            redef1.c
 
 F77_SRCS = test_vardf.f \
@@ -130,6 +131,9 @@ test_vard: test_vard.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 profile: profile.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+ivarn: ivarn.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)
