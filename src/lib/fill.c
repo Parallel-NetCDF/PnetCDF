@@ -247,7 +247,11 @@ ncmpi_fill_var_rec(int        ncid,
 }
 
 /*----< ncmpi_set_fill() >---------------------------------------------------*/
-/* this API is collective, must be called in define mode */
+/* this API is collective, must be called in define mode, contrary to netCDF
+ * where nc_set_fill() can also be called in data mode. The reason of PnetCDF
+ * enforcing this requirement is because PnetCDF only fills fix-sized variables
+ * at ncmpi_enddef() and record variables in ncmpi_fill_var_rec().
+ */
 int
 ncmpi_set_fill(int  ncid,
                int  fill_mode,
