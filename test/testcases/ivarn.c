@@ -64,19 +64,83 @@
 #define LEN 16
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
-int check_contents_for_fail(int *buffer)
+int check_int_buf(int *buffer)
 {
     int i, nprocs;
-    int expected[LEN] = {3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
-                           0, 2, 2, 2, 3, 1};
+    int expected[LEN];
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    for (i=0; i<LEN; i++) expected[i] = i+1;
+    expected[1] = expected[7] = expected[14] = NC_FILL_INT;
+
     /* check if the contents of buf are expected */
     for (i=0; i<LEN; i++) {
-        if (expected[i] >= nprocs) continue;
+        if (nprocs == 1) { if (i == 4) break; }
+        else if (nprocs == 2) {
+            if (3 < i && i < 7) continue;
+            if (i == 12) break;
+        }
+        else if (nprocs == 3) { if (i == 12) break; }
+
         if (buffer[i] != expected[i]) {
             printf("Expected read buf[%d]=%d, but got %d\n",
+                   i,expected[i],buffer[i]);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int check_flt_buf(float *buffer, float extra)
+{
+    int i, nprocs;
+    float expected[LEN];
+
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    for (i=0; i<LEN; i++) expected[i] = extra+i+1;
+    expected[1] = expected[7] = expected[14] = NC_FILL_FLOAT;
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<LEN; i++) {
+        if (nprocs == 1) { if (i == 4) break; }
+        else if (nprocs == 2) {
+            if (3 < i && i < 7) continue;
+            if (i == 12) break;
+        }
+        else if (nprocs == 3) { if (i == 12) break; }
+
+        if (buffer[i] != expected[i]) {
+            printf("Expected read buf[%d]=%.1f, but got %.1f\n",
+                   i,expected[i],buffer[i]);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int check_dbl_buf(double *buffer, double extra)
+{
+    int i, nprocs;
+    double expected[LEN];
+
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    for (i=0; i<LEN; i++) expected[i] = extra+i+1;
+    expected[1] = expected[7] = expected[14] = NC_FILL_DOUBLE;
+
+    /* check if the contents of buf are expected */
+    for (i=0; i<LEN; i++) {
+        if (nprocs == 1) { if (i == 4) break; }
+        else if (nprocs == 2) {
+            if (3 < i && i < 7) continue;
+            if (i == 12) break;
+        }
+        else if (nprocs == 3) { if (i == 12) break; }
+
+        if (buffer[i] != expected[i]) {
+            printf("Expected read buf[%d]=%.1f, but got %.1f\n",
                    i,expected[i],buffer[i]);
             return 1;
         }
@@ -314,6 +378,41 @@ int main(int argc, char** argv)
     free(counts[0]);
     free(starts);
     free(counts);
+
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
+
+    err = ncmpi_inq_varid(ncid, "vari0001", &vari0001); ERR
+    err = ncmpi_inq_varid(ncid, "varr0001", &varr0001); ERR
+    err = ncmpi_inq_varid(ncid, "vard0001", &vard0001); ERR
+    err = ncmpi_inq_varid(ncid, "vari0002", &vari0002); ERR
+    err = ncmpi_inq_varid(ncid, "varr0002", &varr0002); ERR
+    err = ncmpi_inq_varid(ncid, "vard0002", &vard0002); ERR
+
+    for (i=0; i<LEN; i++) ibuf1[i] = -1;
+    err = ncmpi_get_var_int_all(ncid, vari0001, ibuf1); ERR
+    nfails += check_int_buf(ibuf1);
+
+    for (i=0; i<LEN; i++) ibuf2[i] = -1;
+    err = ncmpi_get_var_int_all(ncid, vari0002, ibuf2); ERR
+    nfails += check_int_buf(ibuf2);
+
+    for (i=0; i<LEN; i++) rbuf1[i] = -1;
+    err = ncmpi_get_var_float_all(ncid, varr0001, rbuf1); ERR
+    nfails += check_flt_buf(rbuf1, 0.1);
+
+    for (i=0; i<LEN; i++) rbuf2[i] = -1;
+    err = ncmpi_get_var_float_all(ncid, varr0002, rbuf2); ERR
+    nfails += check_flt_buf(rbuf2, 0.2);
+
+    for (i=0; i<LEN; i++) dbuf1[i] = -1;
+    err = ncmpi_get_var_double_all(ncid, vard0001, dbuf1); ERR
+    nfails += check_dbl_buf(dbuf1, 0.3);
+
+    for (i=0; i<LEN; i++) dbuf2[i] = -1;
+    err = ncmpi_get_var_double_all(ncid, vard0002, dbuf2); ERR
+    nfails += check_dbl_buf(dbuf2, 0.4);
+
+    err = ncmpi_close(ncid); ERR
 
     MPI_Allreduce(MPI_IN_PLACE, &nfails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
