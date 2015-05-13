@@ -48,6 +48,9 @@ This is essentially a placeholder for the next release note ...
 
   o New test program
     * nc_test/tst_nofill.c borrowed from netCDF
+    * testcases/ivarn.c tests bug fix r2023 when the request IDs stored in
+      argument array_of_requests[] of ncmpi_wait_all() are not in an
+      increasing order.
 
   o New optimization
     * none
@@ -68,4 +71,6 @@ This is essentially a placeholder for the next release note ...
     * Add missing F90 function overloading for f90mpi_put_var_all,
       f90mpi_get_var_all, f90mpi_put_vard_all, and f90mpi_get_vard_all,
       when the user buffer is a scalar.
+    * Fix when the request IDs stored in argument array_of_requests[] of
+      ncmpi_wait_all() are not in an increasing order. See r2023.
 
