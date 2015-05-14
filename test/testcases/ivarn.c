@@ -155,7 +155,7 @@ int main(int argc, char** argv)
     int ncid, cmode, dimid[2];
     int vari0001, vari0002, varr0001, varr0002, vard0001, vard0002;
     MPI_Offset **starts, **counts;
-    int req[LEN], st[LEN], num_reqs;
+    int req[LEN], st[LEN], num_reqs=0;
     int ibuf1[LEN], ibuf2[LEN];
     float rbuf1[LEN], rbuf2[LEN];
     double dbuf1[LEN], dbuf2[LEN];
