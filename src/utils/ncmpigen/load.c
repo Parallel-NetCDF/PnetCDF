@@ -555,5 +555,5 @@ load_netcdf(
 	derror("Unhandled type %d\n", vars[varnum].type);
 	break;
     }
-    check_err(stat);
+    check_err(stat, "ncmpi_put_vara_xxx", __func__, __LINE__, __FILE__);
 }

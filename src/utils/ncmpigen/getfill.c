@@ -38,6 +38,21 @@ nc_getfill(
       case NC_DOUBLE:
 	gval->doublev = NC_FILL_DOUBLE;
 	return;
+      case NC_UBYTE:
+	gval->ubytev = NC_FILL_UBYTE;
+	return;
+      case NC_USHORT:
+	gval->ushortv = NC_FILL_USHORT;
+	return;
+      case NC_UINT:
+	gval->uintv = NC_FILL_UINT;
+	return;
+      case NC_INT64:
+	gval->int64v = NC_FILL_INT64;
+	return;
+      case NC_UINT64:
+	gval->uint64v = NC_FILL_UINT64;
+	return;
       default:
 	derror("nc_getfill: unrecognized type");
     }

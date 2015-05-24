@@ -38,7 +38,7 @@ extern void	derror ( const char *fmt, ... )
 	__attribute__ ((format (printf, 1, 2)))
 #endif
 ;
-extern void	check_err ( int status );
+extern void	check_err(int stat, const char *ncmpi_func, const char *calling_func, int lineno, const char *calling_file);
 extern void	*emalloc ( size_t size );
 extern void	*ecalloc ( size_t size );
 extern void	*erealloc ( void *ptr, size_t size );
@@ -48,6 +48,7 @@ extern void	grow_varray ( int narray, struct vars **array );
 extern void	grow_darray ( int narray, struct dims **array );
 extern void	grow_aarray ( int narray, struct atts **array );
 extern char*	decodify (const char *name);
+extern void     deescapify (char *name);
 
 extern int put_variable ( void* rec_start );
 
