@@ -53,6 +53,11 @@ byte|BYTE		{return (BYTE_K);}
 short|SHORT		{return (SHORT_K);}
 long|LONG|int|INT|integer|INTEGER	{return (INT_K);}
 double|DOUBLE		{return (DOUBLE_K);}
+ubyte|UBYTE		{return (UBYTE_K);}
+ushort|USHORT		{return (USHORT_K);}
+uint|UINT		{return (UINT_K);}
+int64|INT64		{return (INT64_K);}
+uint64|UINT64		{return (UINT64_K);}
 unlimited|UNLIMITED	{int_val = -1;
 			 return (NC_UNLIMITED_K);}
 
@@ -97,7 +102,7 @@ FloatInf|-?Inff	{ /* missing value (pre-2.4 backward compatibility) */
 		        return (FILLVALUE);
 		if ((yylval = lookup((char *)yytext)) == NULL) {
 			yylval = install((char *)yytext);
-			}
+		}
 		return (IDENT);
 		}
 
@@ -173,7 +178,7 @@ FloatInf|-?Inff	{ /* missing value (pre-2.4 backward compatibility) */
                     return INT_CONST;
                 }
 	        }
-\'[^\\]\'          {
+\'[^\\]\'       {
 	        (void) sscanf((char*)&yytext[1],"%c",&byte_val);
 		return (BYTE_CONST);
                 }
@@ -185,7 +190,7 @@ FloatInf|-?Inff	{ /* missing value (pre-2.4 backward compatibility) */
 		byte_val = (char) strtol((char*)&yytext[3], (char **) 0, 16);
 		return (BYTE_CONST);
                 }
-\'\\.\'        {
+\'\\.\'		{
 	       switch ((char)yytext[2]) {
 	          case 'a': byte_val = '\007'; break; /* not everyone under-
 						       * stands '\a' yet */

@@ -5,12 +5,9 @@
  *********************************************************************/
 
 /* yacc source for "ncmpigen", a netCDL parser and netCDF generator */
-/* there is a shift-reduce conflict in this definition but does not appear to
- * be critical */
-%expect 1
 
 %{
-#ifndef lint
+#ifdef sccs
 static char SccsId[] = "$Id$";
 #endif
 #include        <string.h>
@@ -49,6 +46,11 @@ static int int_val;		/* last int value read */
 static short short_val;		/* last short value read */
 static char char_val;		/* last char value read */
 static signed char byte_val;	/* last byte value read */
+static unsigned char ubyte_val;		/* last byte value read */
+static unsigned short ushort_val;	/* last byte value read */
+static unsigned int uint_val;		/* last byte value read */
+static long long int64_val;		/* last byte value read */
+static unsigned long long uint64_val;	/* last byte value read */
 
 static nc_type type_code;	/* holds declared type for variables */
 static nc_type atype_code;	/* holds derived type for attributes */
@@ -62,17 +64,30 @@ static short *short_valp;
 static int *int_valp;
 static float *float_valp;
 static double *double_valp;
+static unsigned char *ubyte_valp;
+static unsigned short *ushort_valp;
+static unsigned int *uint_valp;
+static long long *int64_valp;
+static unsigned long long *uint64_valp;
+
 static void *rec_cur;		/* pointer to where next data value goes */
 static void *rec_start;		/* start of space for data */
 
-/* function prototypes */
-#ifdef vms                                                                     
-void                                                                           
-#else                                                                          
-int                                                                            
-#endif                                                                         
-yyerror( char *s);
-int yylex(void);
+/* Forward declarations */
+void defatt();
+void equalatt();
+
+#ifdef YYLEX_PARAM
+int yylex(YYLEX_PARAM);
+#else
+int yylex();
+#endif
+
+#ifdef vms
+void yyerror(char*);
+#else
+int yyerror(char*);
+#endif
 %}
 
 /* DECLARATIONS */
@@ -85,6 +100,11 @@ int yylex(void);
 	INT_K	    /* keyword for int datatype */
 	FLOAT_K	    /* keyword for float datatype */
 	DOUBLE_K    /* keyword for double datatype */
+        UBYTE_K     /* keyword for unsigned byte datatype */
+        USHORT_K    /* keyword for unsigned short datatype */
+        UINT_K      /* keyword for unsigned int datatype */
+        INT64_K     /* keyword for long long datatype */
+        UINT64_K    /* keyword for unsigned long long datatype */
 	IDENT	    /* name for a dimension, variable, or attribute */
 	TERMSTRING  /* terminal string */
 	BYTE_CONST  /* byte constant */
@@ -93,6 +113,11 @@ int yylex(void);
 	INT_CONST   /* int constant */
 	FLOAT_CONST /* float constant */
 	DOUBLE_CONST /* double constant */
+ 	UBYTE_CONST  /* unsigned char constant */
+ 	USHORT_CONST /* unsigned short constant */
+ 	UINT_CONST   /* unsigned int constant */
+ 	INT64_CONST  /* long long constant */
+ 	UINT64_CONST /* unsigned long long constant */
 	DIMENSIONS  /* keyword starting dimensions section, if any */
 	VARIABLES   /* keyword starting variables section, if any */
 	NETCDF      /* keyword declaring netcdf name */
@@ -114,7 +139,7 @@ ncdesc:	NETCDF
 		       if (derror_count == 0)
 			 define_netcdf(netcdfname);
 		       if (derror_count > 0)
-		       	exit(6);
+			   exit(6);
 		   }
 		datasection     /* data, variables loaded as encountered */
                 '}'
@@ -138,17 +163,17 @@ dimdecl:        dimd '=' INT_CONST
 		     dims[ndims].size = int_val;
 		     ndims++;
 		   }
-		| dimd '=' DOUBLE_CONST
-		   { /* for rare case where 2^31 < dimsize < 2^32 */
-		   	if (double_val <= 0)
-				derror("dimension length must be positive");
-			if (double_val > 4294967295.0)
-				derror("dimension too large");
-			if (double_val - (MPI_Offset) double_val > 0)
-				derror("dimension length must be an integer");
-			dims[ndims].size = (MPI_Offset) double_val;
-			ndims++;
-		   }
+                | dimd '=' DOUBLE_CONST
+                   { /* for rare case where 2^31 < dimsize < 2^32 */
+		       if (double_val <= 0)
+			 derror("dimension length must be positive");
+		       if (double_val > 4294967295.0)
+			 derror("dimension too large");
+		       if (double_val - (MPI_Offset) double_val > 0)
+			 derror("dimension length must be an integer");
+		       dims[ndims].size = (MPI_Offset) double_val;
+		       ndims++;
+                   }
                 | dimd '=' NC_UNLIMITED_K
 		   {  if (rec_dim != -1)
 			 derror("only one NC_UNLIMITED dimension allowed");
@@ -158,7 +183,8 @@ dimdecl:        dimd '=' INT_CONST
 		   }
                 ;
 dimd:           dim
-		   { if ($1->is_dim == 1) {
+		   { 
+		    if ($1->is_dim == 1) {
 		        derror( "duplicate dimension declaration for %s",
 		                $1->name);
 		     }
@@ -182,12 +208,10 @@ vasection:      /* empty */
 vadecls:        vadecl ';'
                 | vadecls vadecl ';'
                 ;
-vadecl:         vardecl | attdecl
+vadecl:         vardecl | attdecl | gattdecl
                 ;
 gattdecls:      gattdecl ';'
                 | gattdecls gattdecl ';'
-                ;
-gattdecl:       attdecl		/* causes a shift/reduce conflict */
                 ;
 vardecl:        type varlist
                 ;
@@ -197,6 +221,11 @@ type:             BYTE_K  { type_code = NC_BYTE; }
 		| INT_K   { type_code = NC_INT; }
 		| FLOAT_K { type_code = NC_FLOAT; }
 		| DOUBLE_K{ type_code = NC_DOUBLE; }
+ 		| UBYTE_K { type_code = NC_UBYTE; }
+ 		| USHORT_K{ type_code = NC_USHORT; }
+ 		| UINT_K  { type_code = NC_UINT; }
+ 		| INT64_K { type_code = NC_INT64; }
+ 		| UINT64_K{ type_code = NC_UINT64; }
 		;
 varlist:        varspec
                 | varlist ',' varspec
@@ -271,51 +300,26 @@ vdim:		dim
 		;
 attdecl:        att
 		   {
-		       valnum = 0;
-		       valtype = NC_UNSPECIFIED;
-		       /* get a large block for attributes, realloc later */
-		       att_space = emalloc(MAX_NC_ATTSIZE);
-		       /* make all kinds of pointers point to it */
-		       char_valp = (char *) att_space;
-		       byte_valp = (signed char *) att_space;
-		       short_valp = (short *) att_space;
-		       int_valp = (int *) att_space;
-		       float_valp = (float *) att_space;
-		       double_valp = (double *) att_space;
+                   defatt();
 		   }
 		'=' attvallist
 		   {
-		       {	/* check if duplicate attribute for this var */
-			   int i;
-			   for(i=0; i<natts; i++) { /* expensive */
-			       if(atts[i].var == varnum &&
-				  STREQ(atts[i].name,atts[natts].name)) {
-				   derror("duplicate attribute %s:%s",
-					  vars[varnum].name,atts[natts].name);
-			       }
-			   }
-		       }
-		       atts[natts].var = varnum ;
-		       atts[natts].type = valtype;
-		       atts[natts].len = valnum;
-		       /* shrink space down to what was really needed */
-		       att_space = erealloc(att_space, valnum*nctypesize(valtype));
-		       atts[natts].val = att_space;
-		       if (STREQ(atts[natts].name, _FillValue) &&
-			   atts[natts].var != NC_GLOBAL) {
-			   nc_putfill(atts[natts].type,
-				       atts[natts].val,
-				       &vars[atts[natts].var].fill_value);
-			   if(atts[natts].type != vars[atts[natts].var].type) {
-			       derror("variable %s: %s type mismatch",
-				      vars[atts[natts].var].name, _FillValue);
-			   }
-		       }
-		       natts++;
+                   equalatt();
 		   }
                 ;
+gattdecl:       gatt
+		   {
+                   defatt();
+		   }
+		'=' attvallist
+		   {
+                   equalatt();
+		   }
+                ;
+
 att:            avar ':' attr
-                |    ':' attr
+
+gatt:           ':' attr
 		   {
 		    varnum = NC_GLOBAL;  /* handle of "global" attribute */
 		   }
@@ -403,6 +407,36 @@ attconst:      CHAR_CONST
 		       *double_valp++ = double_val;
 		       valnum++;
 		   }
+                | UBYTE_CONST
+                   {
+		       atype_code = NC_UBYTE;
+		       *ubyte_valp++ = ubyte_val;
+		       valnum++;
+		   }
+                | USHORT_CONST
+                   {
+		       atype_code = NC_USHORT;
+		       *ushort_valp++ = ushort_val;
+		       valnum++;
+		   }
+                | UINT_CONST
+                   {
+		       atype_code = NC_UINT;
+		       *uint_valp++ = uint_val;
+		       valnum++;
+		   }
+                | INT64_CONST
+                   {
+		       atype_code = NC_INT64;
+		       *int64_valp++ = int64_val;
+		       valnum++;
+		   }
+                | UINT64_CONST
+                   {
+		       atype_code = NC_UINT64;
+		       *uint64_valp++ = uint64_val;
+		       valnum++;
+		   }
                 ;
 
 datasection:    /* empty */
@@ -436,7 +470,7 @@ datadecl:       avar
 			   exit(9);
 		       }
 		       rec_len = var_len;
-		       rec_start = malloc ((MPI_Offset)rec_len*var_size);
+		       rec_start = malloc ((MPI_Offset)(rec_len*var_size));
 		       if (rec_start == 0) {
 			   derror ("out of memory\n");
 			   exit(3);
@@ -461,10 +495,22 @@ datadecl:       avar
 			 case NC_DOUBLE:
 			   double_valp = (double *) rec_start;
 			   break;
-			 default:
-			   derror("Unhandled type %d\n", valtype);
+			 case NC_UBYTE:
+			   ubyte_valp = (unsigned char *) rec_start;
 			   break;
-
+			 case NC_USHORT:
+			   ushort_valp = (unsigned short *) rec_start;
+			   break;
+			 case NC_UINT:
+			   uint_valp = (unsigned int *) rec_start;
+			   break;
+			 case NC_INT64:
+			   int64_valp = (long long *) rec_start;
+			   break;
+			 case NC_UINT64:
+			   uint64_valp = (unsigned long long *) rec_start;
+			   break;
+			 default: break;
 		       }
 		 }
 		'=' constlist
@@ -498,7 +544,7 @@ dconst:
 				      multiple of record size */
 			       ptrdiff_t rec_inc = (char *)rec_cur
 				   - (char *)rec_start;
-			       var_len = rec_len * (1 + valnum )/rec_len;
+			       var_len = rec_len * (1 + valnum / rec_len);
 			       rec_start = erealloc(rec_start, var_len*var_size);
 			       rec_cur = (char *)rec_start + rec_inc;
 			       char_valp = (char *) rec_cur;
@@ -507,6 +553,11 @@ dconst:
 			       int_valp = (int *) rec_cur;
 			       float_valp = (float *) rec_cur;
 			       double_valp = (double *) rec_cur;
+			       ubyte_valp = (unsigned char *) rec_cur;
+			       ushort_valp = (unsigned short *) rec_cur;
+			       uint_valp = (unsigned int *) rec_cur;
+			       int64_valp = (long long *) rec_cur;
+			       uint64_valp = (unsigned long long *) rec_cur;
 			   }
 		       }
 		       not_a_string = 1;
@@ -533,9 +584,22 @@ dconst:
 			     case NC_DOUBLE:
 			       rec_cur = (void *) double_valp;
 			       break;
-			     default: 
-			       derror("Unhandled type %d\n", valtype);
+			     case NC_UBYTE:
+			       rec_cur = (void *) ubyte_valp;
 			       break;
+			     case NC_USHORT:
+			       rec_cur = (void *) ushort_valp;
+			       break;
+			     case NC_UINT:
+			       rec_cur = (void *) uint_valp;
+			       break;
+			     case NC_INT64:
+			       rec_cur = (void *) int64_valp;
+			       break;
+			     case NC_UINT64:
+			       rec_cur = (void *) uint64_valp;
+			       break;
+			     default: break;
 			   }
 		       }
 		   }
@@ -562,10 +626,23 @@ const:         CHAR_CONST
 			   break;
 			 case NC_DOUBLE:
 			   *double_valp++ = char_val;
-			   break; 
-			 default: 
-			   derror("Unhandled type %d\n", valtype);
 			   break;
+			 case NC_UBYTE:
+			   *ubyte_valp++ = char_val;
+			   break; 
+			 case NC_USHORT:
+			   *ushort_valp++ = char_val;
+			   break; 
+			 case NC_UINT:
+			   *uint_valp++ = char_val;
+			   break; 
+			 case NC_INT64:
+			   *int64_valp++ = char_val;
+			   break; 
+			 case NC_UINT64:
+			   *uint64_valp++ = char_val;
+			   break; 
+			 default: break;
 		       }
 		       valnum++;
 		   }
@@ -596,7 +673,6 @@ const:         CHAR_CONST
 				   int ld;
 				   MPI_Offset i, sl;
 				   (void)strncpy(char_valp,termstring,len);
-				   
 				   ld = vars[varnum].ndims-1;
 				   if (ld > 0) {/* null-fill to size of last dim */
 				       sl = dims[vars[varnum].dims[ld]].size;
@@ -621,9 +697,7 @@ const:         CHAR_CONST
 			       derror("string value invalid for %s variable",
 				      nctype(valtype));
 			       break;
-			     default: 
-			       derror("Unhandled type %d\n", valtype);
-			       break;
+			     default: break;
 			   }
 		       }
 		   }
@@ -649,9 +723,22 @@ const:         CHAR_CONST
 			 case NC_DOUBLE:
 			   *double_valp++ = byte_val;
 			   break;
-			 default: 
-			   derror("Unhandled type %d\n", valtype);
+			 case NC_UBYTE:
+			   *ubyte_valp++ = byte_val;
 			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = byte_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = byte_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = byte_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = byte_val;
+			   break;
+			 default: break;
 		       }
 		       valnum++;
 		   }
@@ -677,9 +764,22 @@ const:         CHAR_CONST
 			 case NC_DOUBLE:
 			   *double_valp++ = short_val;
 			   break;
-			 default: 
-			   derror("Unhandled type %d\n", valtype);
+			 case NC_UBYTE:
+			   *ubyte_valp++ = short_val;
 			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = short_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = short_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = short_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = short_val;
+			   break;
+			 default: break;			
 		       }
 		       valnum++;
 		   }
@@ -705,9 +805,22 @@ const:         CHAR_CONST
 			 case NC_DOUBLE:
 			   *double_valp++ = int_val;
 			   break;
-			 default: 
-			   derror("Unhandled type %d\n", valtype);
+			 case NC_UBYTE:
+			   *ubyte_valp++ = int_val;
 			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = int_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = int_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = int_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = int_val;
+			   break;
+			 default: break;
 		       }
 		       valnum++;
 		   }
@@ -733,9 +846,22 @@ const:         CHAR_CONST
 			 case NC_DOUBLE:
 			   *double_valp++ = float_val;
 			   break;
-			 default: 
-			   derror("Unhandled type %d\n", valtype);
+			 case NC_UBYTE:
+			   *ubyte_valp++ = float_val;
 			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = float_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = float_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = float_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = float_val;
+			   break;
+			 default: break;
 		       }
 		       valnum++;
 		   }
@@ -764,12 +890,240 @@ const:         CHAR_CONST
 			 case NC_DOUBLE:
 			   *double_valp++ = double_val;
 			   break;
+			 case NC_UBYTE:
+			   *ubyte_valp++ = double_val;
+			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = double_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = double_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = double_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = double_val;
+			   break;
+			 default: break;
+		       }
+		       valnum++;
+		   }
+                | UBYTE_CONST
+                   {
+		       atype_code = NC_UBYTE;
+		       switch (valtype) {
+			 case NC_CHAR:
+			   *char_valp++ = ubyte_val;
+			   break;
+			 case NC_BYTE:
+			   *byte_valp++ = ubyte_val;
+			   break;
+			 case NC_SHORT:
+			   *short_valp++ = ubyte_val;
+			   break;
+			 case NC_INT:
+			   *int_valp++ = ubyte_val;
+			   break;
+			 case NC_FLOAT:
+			     *float_valp++ = ubyte_val;
+			   break;
+			 case NC_DOUBLE:
+			   *double_valp++ = ubyte_val;
+			   break;
+			 case NC_UBYTE:
+			   *ubyte_valp++ = ubyte_val;
+			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = ubyte_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = ubyte_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = ubyte_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = ubyte_val;
+			   break;
 			 default: 
 			   derror("Unhandled type %d\n", valtype);
 			   break;
 		       }
 		       valnum++;
 		   }
+                | USHORT_CONST
+                   {
+		       atype_code = NC_USHORT;
+		       switch (valtype) {
+			 case NC_CHAR:
+			   *char_valp++ = ushort_val;
+			   break;
+			 case NC_BYTE:
+			   *byte_valp++ = ushort_val;
+			   break;
+			 case NC_SHORT:
+			   *short_valp++ = ushort_val;
+			   break;
+			 case NC_INT:
+			   *int_valp++ = ushort_val;
+			   break;
+			 case NC_FLOAT:
+			   *float_valp++ = ushort_val;
+			   break;
+			 case NC_DOUBLE:
+			   *double_valp++ = ushort_val;
+			   break;
+			 case NC_UBYTE:
+			   *ubyte_valp++ = ushort_val;
+			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = ushort_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = ushort_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = ushort_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = ushort_val;
+			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
+			   break;
+		       }
+		       valnum++;
+		   }
+                | UINT_CONST
+                   {
+		       atype_code = NC_UINT;
+		       switch (valtype) {
+			 case NC_CHAR:
+			   *char_valp++ = uint_val;
+			   break;
+			 case NC_BYTE:
+			   *byte_valp++ = uint_val;
+			   break;
+			 case NC_SHORT:
+			   *short_valp++ = uint_val;
+			   break;
+			 case NC_INT:
+			   *int_valp++ = uint_val;
+			   break;
+			 case NC_FLOAT:
+			   *float_valp++ = uint_val;
+			   break;
+			 case NC_DOUBLE:
+			   *double_valp++ = uint_val;
+			   break;
+			 case NC_UBYTE:
+			   *ubyte_valp++ = uint_val;
+			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = uint_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = uint_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = uint_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = uint_val;
+			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
+			   break;
+		       }
+		       valnum++;
+		   }
+                | INT64_CONST
+                   {
+		       atype_code = NC_INT64;
+		       switch (valtype) {
+			 case NC_CHAR:
+			   *char_valp++ = int64_val;
+			   break;
+			 case NC_BYTE:
+			   *byte_valp++ = int64_val;
+			   break;
+			 case NC_SHORT:
+			   *short_valp++ = int64_val;
+			   break;
+			 case NC_INT:
+			   *int_valp++ = int64_val;
+			   break;
+			 case NC_FLOAT:
+			   *float_valp++ = int64_val;
+			   break;
+			 case NC_DOUBLE:
+			   *double_valp++ = int64_val;
+			   break;
+			 case NC_UBYTE:
+			   *ubyte_valp++ = int64_val;
+			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = int64_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = int64_val;
+			   break;
+			 case NC_INT64:
+			   *int64_valp++ = int64_val;
+			   break;
+			 case NC_UINT64:
+			   *uint64_valp++ = int64_val;
+			   break;
+			 default: 
+			   derror("Unhandled type %d\n", valtype);
+			   break;
+		       }
+		       valnum++;
+		   }
+                | UINT64_CONST
+                   {
+		       atype_code = NC_UINT64;
+		       switch (valtype) {
+			 case NC_CHAR:
+			   *char_valp++ = uint64_val;
+			   break;
+			 case NC_BYTE:
+			   *byte_valp++ = uint64_val;
+			   break;
+			 case NC_SHORT:
+			   *short_valp++ = uint64_val;
+			   break;
+			 case NC_INT:
+			   *int_valp++ = uint64_val;
+			   break;
+			 case NC_FLOAT:
+			   *float_valp++ = uint64_val;
+			   break;
+			 case NC_DOUBLE:
+			   *double_valp++ = uint64_val;
+			   break;
+			 case NC_UBYTE:
+			   *ubyte_valp++ = uint64_val;
+			   break;
+			 case NC_USHORT:
+			   *ushort_valp++ = uint64_val;
+			   break;
+			 case NC_UINT:
+			   *uint_valp++ = uint64_val;
+ 			   break;
+ 			 case NC_INT64:
+ 			   *int64_valp++ = uint64_val;
+ 			   break;
+ 			 case NC_UINT64:
+ 			   *uint64_valp++ = uint64_val;
+ 			   break;
+ 			 default: 
+ 			   derror("Unhandled type %d\n", valtype);
+ 			   break;
+ 		       }
+ 		       valnum++;
+ 		   }
                 | FILLVALUE
                    {
 		       /* store fill_value */
@@ -798,9 +1152,27 @@ const:         CHAR_CONST
 			   nc_fill(valtype, 1, (void *)double_valp++,
 				   vars[varnum].fill_value);
 			   break;
-		       default: 
-			   derror("Unhandled type %d\n", valtype);
+		       case NC_UBYTE:
+			   nc_fill(valtype, 1, (void *)ubyte_valp++,
+				   vars[varnum].fill_value);
 			   break;
+		       case NC_USHORT:
+			   nc_fill(valtype, 1, (void *)ushort_valp++,
+				   vars[varnum].fill_value);
+			   break;
+		       case NC_UINT:
+			   nc_fill(valtype, 1, (void *)uint_valp++,
+				   vars[varnum].fill_value);
+			   break;
+		       case NC_INT64:
+			   nc_fill(valtype, 1, (void *)int64_valp++,
+				   vars[varnum].fill_value);
+			   break;
+		       case NC_UINT64:
+			   nc_fill(valtype, 1, (void *)uint64_valp++,
+				   vars[varnum].fill_value);
+			   break;
+			default: break;
 		       }
 		       valnum++;
 		   }
@@ -810,6 +1182,55 @@ const:         CHAR_CONST
 
 %%
 
+/* HELPER PROGRAMS */
+void defatt()
+{
+    valnum = 0;
+    valtype = NC_UNSPECIFIED;
+    /* get a large block for attributes, realloc later */
+    att_space = emalloc(MAX_NC_ATTSIZE);
+    /* make all kinds of pointers point to it */
+    char_valp = (char *) att_space;
+    byte_valp = (signed char *) att_space;
+    short_valp = (short *) att_space;
+    int_valp = (int *) att_space;
+    float_valp = (float *) att_space;
+    double_valp = (double *) att_space;
+    ubyte_valp = (unsigned char *) att_space;
+    ushort_valp = (unsigned short *) att_space;
+     uint_valp = (unsigned int *) att_space;
+     int64_valp = (long long *) att_space;
+     uint64_valp = (unsigned long long *) att_space;
+}
+
+void equalatt()
+{
+    /* check if duplicate attribute for this var */
+    int i;
+    for(i=0; i<natts; i++) { /* expensive */
+        if(atts[i].var == varnum &&
+           STREQ(atts[i].name,atts[natts].name)) {
+            derror("duplicate attribute %s:%s",
+                   vars[varnum].name,atts[natts].name);
+        }
+    }
+    atts[natts].var = varnum ;
+    atts[natts].type = valtype;
+    atts[natts].len = valnum;
+    /* shrink space down to what was really needed */
+    att_space = erealloc(att_space, valnum*nctypesize(valtype));
+    atts[natts].val = att_space;
+    if (STREQ(atts[natts].name, _FillValue) &&
+        atts[natts].var != NC_GLOBAL) {
+        nc_putfill(atts[natts].type,atts[natts].val,
+                   &vars[atts[natts].var].fill_value);
+        if(atts[natts].type != vars[atts[natts].var].type) {
+            derror("variable %s: %s type mismatch",
+                   vars[atts[natts].var].name, _FillValue);
+        }
+    }
+    natts++;
+}
 /* PROGRAMS */
 
 #ifdef vms
@@ -840,10 +1261,16 @@ ncmpiwrap(void)			/* returns 1 on EOF if no more input */
 
 /* Symbol table operations for ncmpigen tool */
 
-YYSTYPE lookup(       /* find sname in symbol table (linear search) */
-	const char *sname)
+/* Find CDL name in symbol table (linear search).  Note, this has a
+ * side-effect: it handles escape characters in the name, deleting
+ * single escape characters from the CDL name, before looking it up.
+ */
+YYSTYPE lookup(char *sname)
 {
     YYSTYPE sp;
+    deescapify(sname);		/* delete escape chars from names,
+				 * e.g. 'ab\:cd\ ef' becomes 
+				 * 'ab:cd ef' */
     for (sp = symlist; sp != (YYSTYPE) 0; sp = sp -> next)
 	if (STREQ(sp -> name, sname)) {
 	    return sp;
@@ -881,4 +1308,9 @@ clearout(void)	/* reset symbol table to empty */
 }
 
 /* get lexical input routine generated by lex  */
+
+/* Keep compile quiet */
+#define YY_NO_UNPUT
+#define YY_NO_INPUT
+
 #include "ncmpigenyy.c"

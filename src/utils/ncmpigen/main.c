@@ -75,9 +75,7 @@ static void usage(void)
 
 
 int
-main(
-	int argc,
-	char *argv[])
+main(int argc, char *argv[])
 {
     extern int optind;
     extern int opterr;
@@ -93,7 +91,7 @@ main(
 #endif
     
 #ifdef MDEBUG
-	malloc_debug(2) ;	/* helps find malloc/free errors on Sun */
+    malloc_debug(2) ;	/* helps find malloc/free errors on Sun */
 #endif /* MDEBUG */
 
     opterr = 1;			/* print error message if bad option */
@@ -195,9 +193,9 @@ main(
     if (fortran_flag && c_flag) {
 	derror("Only one of -c or -f may be specified");
 	return(8);
-      }
+    }
     if (fortran_flag) {
-	    derror("Generating Fortran interface not supported yet");
+	    derror("Generating Fortran interface currently not supported yet");
             return(0);
     }
 

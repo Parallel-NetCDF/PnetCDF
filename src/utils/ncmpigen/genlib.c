@@ -46,7 +46,6 @@ gen_netcdf(
     if (giantfile_flag) {
 	    stat = ncmpi_create(MPI_COMM_WORLD, filename, 
 			    NC_CLOBBER|NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid);
-	    check_err(stat);
     } else if (giantvar_flag) {
 	    stat = ncmpi_create(MPI_COMM_WORLD, filename,
 			    NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid);
@@ -54,11 +53,12 @@ gen_netcdf(
 	    stat = ncmpi_create(MPI_COMM_WORLD, filename, 
 			    NC_CLOBBER, MPI_INFO_NULL, &ncid);
     }
+    check_err(stat, "ncmpi_create", __func__, __LINE__, __FILE__);
 
     /* define dimensions from info in dims array */
     for (idim = 0; idim < ndims; idim++) {
 	stat = ncmpi_def_dim(ncid, dims[idim].name, dims[idim].size, &dimid);
-	check_err(stat);
+	check_err(stat, "ncmpi_def_dim", __func__, __LINE__, __FILE__);
     }
 
     /* define variables from info in vars array */
@@ -69,7 +69,7 @@ gen_netcdf(
 			  vars[ivar].ndims,
 			  vars[ivar].dims,
 			  &varid);
-	check_err(stat);
+	check_err(stat, "ncmpi_def_var", __func__, __LINE__, __FILE__);
     }
 
     /* define attributes from info in atts array */
@@ -106,17 +106,42 @@ gen_netcdf(
 				    atts[iatt].type, atts[iatt].len,
 				    (double *) atts[iatt].val);
 	    break;
+	case NC_UBYTE:
+	    stat = ncmpi_put_att_ubyte(ncid, varid, atts[iatt].name,
+				    atts[iatt].type, atts[iatt].len,
+				    (unsigned char *) atts[iatt].val);
+	    break;
+	case NC_USHORT:
+	    stat = ncmpi_put_att_ushort(ncid, varid, atts[iatt].name,
+				    atts[iatt].type, atts[iatt].len,
+				    (unsigned short *) atts[iatt].val);
+	    break;
+	case NC_UINT:
+	    stat = ncmpi_put_att_uint(ncid, varid, atts[iatt].name,
+				    atts[iatt].type, atts[iatt].len,
+				    (unsigned int *) atts[iatt].val);
+	    break;
+	case NC_INT64:
+	    stat = ncmpi_put_att_longlong(ncid, varid, atts[iatt].name,
+				    atts[iatt].type, atts[iatt].len,
+				    (long long *) atts[iatt].val);
+	    break;
+	case NC_UINT64:
+	    stat = ncmpi_put_att_ulonglong(ncid, varid, atts[iatt].name,
+				    atts[iatt].type, atts[iatt].len,
+				    (unsigned long long *) atts[iatt].val);
+	    break;
 	default:
 	    stat = NC_EBADTYPE;
 	}
-	check_err(stat);
+	check_err(stat, "ncmpi_put_att_xxx", __func__, __LINE__, __FILE__);
     }
 
     /* serial netcdf calls nc_set_fill(NC_NOFILL) here, but we do not
      * implement that routine (NC_NOFILL is our default and only behavior) */
 
     stat = ncmpi_enddef(ncid);
-    check_err(stat);
+    check_err(stat, "ncmpi_enddef", __func__, __LINE__, __FILE__);
 }
 
 
@@ -137,6 +162,11 @@ cstring(
     int *intp;
     float *floatp;
     double *doublep;
+    unsigned char *ubytep;
+    unsigned short *ushortp;
+    unsigned int *uintp;
+    long long *int64p;
+    unsigned long long *uint64p;
 
     switch (type) {
       case NC_CHAR:
@@ -200,6 +230,37 @@ cstring(
 	(void) sprintf(cp,"%.16g",* (doublep + num));
 	return cp;
 
+      case NC_UBYTE:
+	cp = (char *) emalloc (7);
+	ubytep = (unsigned char *)valp;
+	/* Need to convert '\377' to -1, for example, on all platforms */
+	(void) sprintf(cp,"%hhu", (unsigned char) *(ubytep+num));
+	return cp;
+
+      case NC_USHORT:
+	cp = (char *) emalloc (10);
+	ushortp = (unsigned short *)valp;
+	(void) sprintf(cp,"%hu",* (ushortp + num));
+	return cp;
+
+      case NC_UINT:
+	cp = (char *) emalloc (20);
+	uintp = (unsigned int *)valp;
+	(void) sprintf(cp,"%u",* (uintp + num));
+	return cp;
+
+      case NC_INT64:
+	cp = (char *) emalloc (20);
+	int64p = (long long *)valp;
+	(void) sprintf(cp,"%lld",* (int64p + num));
+	return cp;
+
+      case NC_UINT64:
+	cp = (char *) emalloc (20);
+	uint64p = (unsigned long long *)valp;
+	(void) sprintf(cp,"%llu",* (uint64p + num));
+	return cp;
+
       default:
 	derror("cstring: bad type code");
 	return 0;
@@ -226,9 +287,9 @@ gen_c(
     cline("#include <mpi.h>");
     cline("");
     cline("void");
-    cline("check_err(const int stat, const int line, const char *file) {");
+    cline("check_err(int stat, const char *ncmpi_func, const char *calling_func, int lineno, const char *calling_file) {");
     cline("    if (stat != NC_NOERR) {");
-    cline("	   (void) fprintf(stderr, \"line %d of %s: %s\\n\", line, file, ncmpi_strerror(stat));");
+    cline("        fprintf(stderr, \"ncmpigen error when calling %s in %s() at line %d of %s: %s\\n\", ncmpi_func, calling_func, lineno, calling_file, ncmpi_strerror(stat));");
     cline("        exit(1);");
     cline("    }");
     cline("}");
@@ -341,7 +402,7 @@ gen_c(
 			    filename);
     }
     cline(stmnt);
-    cline("   check_err(stat,__LINE__,__FILE__);");
+    cline("   check_err(stat,\"ncmpi_create\", __func__, __LINE__,__FILE__);");
     
     /* define dimensions from info in dims array */
     if (ndims > 0) {
@@ -353,7 +414,7 @@ gen_c(
 		"   stat = ncmpi_def_dim(ncid, \"%s\", %s_len, &%s_dim);",
 		dims[idim].name, dims[idim].lname, dims[idim].lname);
 	cline(stmnt);
-	cline("   check_err(stat,__LINE__,__FILE__);");
+	cline("   check_err(stat,\"ncmpi_def_dim\", __func__, __LINE__,__FILE__);");
     }
 
     /* define variables from info in vars array */
@@ -387,7 +448,7 @@ gen_c(
 			vars[ivar].lname);
 	    }
 	    cline(stmnt);
-	    cline("   check_err(stat,__LINE__,__FILE__);");
+	    cline("   check_err(stat,\"ncmpi_def_var\", __func__, __LINE__,__FILE__);");
 	}
     }
     
@@ -432,7 +493,7 @@ gen_c(
 			atts[iatt].lname);
 		cline(stmnt);
 	    }
-	    cline("   check_err(stat,__LINE__,__FILE__);");
+	    cline("   check_err(stat,\"ncmpi_put_att_xxx\", __func__, __LINE__,__FILE__);");
 	}
     }
     /* here's another place where serial netcdf would insert a call to
@@ -440,7 +501,7 @@ gen_c(
     cline("");
     cline("   /* leave define mode */");
     cline("   stat = ncmpi_enddef (ncid);");
-    cline("   check_err(stat,__LINE__,__FILE__);");
+    cline("   check_err(stat,\"ncmpi_enddef\", __func__, __LINE__,__FILE__);");
 }
 
 
@@ -734,7 +795,7 @@ gen_fortran(
 	    sprintf(stmnt, "iret = nfmpi_create(\'%s\', NF_CLOBBER, ncid)", filename);
     }
     fline(stmnt);
-    fline("call check_err(iret)");
+    fline("call check_err(iret,\"nfmpi_create\", __func__, __LINE__,__FILE__)");
     
     /* define dimensions from info in dims array */
     if (ndims > 0)
@@ -748,7 +809,7 @@ gen_fortran(
                     dims[idim].name, (unsigned long) dims[idim].size,
 			dims[idim].lname);
 	fline(stmnt);
-	fline("call check_err(iret)");
+	fline("call check_err(iret,\"nfmpi_def_dim\", __func__, __LINE__,__FILE__)");
     }
 	  
     /* define variables from info in vars array */
@@ -779,7 +840,7 @@ gen_fortran(
 			vars[ivar].lname);
 	    }
 	    fline(stmnt);
-	    fline("call check_err(iret)");
+	    fline("call check_err(iret,\"nfmpi_def_var\", __func__, __LINE__,__FILE__)");
 	}
     }
 
@@ -797,7 +858,7 @@ gen_fortran(
 			(unsigned long) atts[iatt].len,
 			val_string);
 		fline(stmnt);
-		fline("call check_err(iret)");
+		fline("call check_err(iret,\"nfmpi_put_att_text\", __func__, __LINE__,__FILE__)");
 		free(val_string);
 	    } else {
 		for (jatt = 0; jatt < atts[iatt].len ; jatt++) {
@@ -820,14 +881,14 @@ gen_fortran(
 			(unsigned long) atts[iatt].len,
 			nfstype(atts[iatt].type));
 		fline(stmnt);
-		fline("call check_err(iret)");
+		fline("call check_err(iret,\"nfmpi_put_att_xxx\", __func__, __LINE__,__FILE__)");
 	    }
 	}
     }
     /* skip the call to nfmpi_set_fill until we implement it */
     fline("* leave define mode");
     fline("iret = nfmpi_enddef(ncid)");
-    fline("call check_err(iret)");
+    fline("call check_err(iret,\"nfmpi_enddef\", __func__, __LINE__,__FILE__)");
 }
 
 
@@ -886,18 +947,17 @@ nctype(
      nc_type type)			/* netCDF type code */
 {
     switch (type) {
-      case NC_BYTE:
-	return "NC_BYTE";
-      case NC_CHAR:
-	return "NC_CHAR";
-      case NC_SHORT:
-	return "NC_SHORT";
-      case NC_INT:
-	return "NC_INT";
-      case NC_FLOAT:
-	return "NC_FLOAT";
-      case NC_DOUBLE:
-	return "NC_DOUBLE";
+      case NC_BYTE:    return "NC_BYTE";
+      case NC_CHAR:    return "NC_CHAR";
+      case NC_SHORT:   return "NC_SHORT";
+      case NC_INT:     return "NC_INT";
+      case NC_FLOAT:   return "NC_FLOAT";
+      case NC_DOUBLE:  return "NC_DOUBLE";
+      case NC_UBYTE:   return "NC_UBYTE";
+      case NC_USHORT:  return "NC_USHORT";
+      case NC_UINT:    return "NC_UINT";
+      case NC_INT64:   return "NC_INT64";
+      case NC_UINT64:  return "NC_UINT64";
       default:
 	derror("nctype: bad type code");
 	return 0;
@@ -925,6 +985,16 @@ ncctype(
 	return "float";
       case NC_DOUBLE:
 	return "double";
+      case NC_UBYTE:
+	return "unsigned char";
+      case NC_USHORT:
+	return "unsigned short";
+      case NC_UINT:
+	return "unsigned int";
+      case NC_INT64:
+	return "long long";
+      case NC_UINT64:
+	return "unsigned long long";
       default:
 	derror("ncctype: bad type code");
 	return 0;
@@ -953,6 +1023,16 @@ ncstype(
 	return "float";
       case NC_DOUBLE:
 	return "double";
+      case NC_UBYTE:
+	return "uchar";
+      case NC_USHORT:
+	return "ushort";
+      case NC_UINT:
+	return "uint";
+      case NC_INT64:
+	return "longlong";
+      case NC_UINT64:
+	return "ulonglong";
       default:
 	derror("ncstype: bad type code");
 	return 0;
@@ -980,6 +1060,11 @@ ncatype(
 	return "float";
       case NC_DOUBLE:
 	return "double";
+      case NC_UBYTE: return "uchar";
+      case NC_USHORT: return "ushort";
+      case NC_UINT: return "uint";
+      case NC_INT64: return "ulonglong";
+      case NC_UINT64: return "longlong";
       default:
 	derror("ncatype: bad type code");
 	return 0;
@@ -1005,6 +1090,16 @@ nctypesize(
 	return sizeof(float);
       case NC_DOUBLE:
 	return sizeof(double);
+      case NC_UBYTE:
+	return sizeof(unsigned char);
+      case NC_USHORT:
+	return sizeof(unsigned short);
+      case NC_UINT:
+	return sizeof(unsigned int);
+      case NC_INT64:
+	return sizeof(long long);
+      case NC_UINT64:
+	return sizeof(unsigned long long);
       default:
 	derror("nctypesize: bad type code");
 	return 0;
@@ -1243,7 +1338,7 @@ static void
 cl_netcdf(void)
 {
     int stat = ncmpi_close(ncid);
-    check_err(stat);
+    check_err(stat, "ncmpi_close", __func__, __LINE__, __FILE__);
 }
 
 
@@ -1251,7 +1346,7 @@ static void
 cl_c(void)
 {
     cline("   stat = ncmpi_close(ncid);");
-    cline("   check_err(stat,__LINE__,__FILE__);");
+    cline("   check_err(stat,\"ncmpi_close\", __func__, __LINE__,__FILE__);");
     cline("   MPI_Finalize();");
 #ifndef vms
     cline("   return 0;");
@@ -1352,7 +1447,7 @@ cl_fortran(void)
     
     fline(" ");
     fline("iret = nfmpi_close(ncid)");
-    fline("call check_err(iret)");
+    fline("call check_err(iret,\"nfmpi_close\", __func__, __LINE__,__FILE__)");
     fline("end");
 
     fline(" ");
@@ -1534,7 +1629,7 @@ cl_fortran(void)
 		}
 		
 		fline(stmnt);
-		fline("call check_err(iret)");
+		fline("call check_err(iret,\"nfmpi_put_vara_xxx\", __func__, __LINE__,__FILE__)");
 	    }
 	}
 
@@ -1545,11 +1640,15 @@ cl_fortran(void)
         fline(" ");
     }
 
-    fline("subroutine check_err(iret)");
+    fline("subroutine check_err(iret, nfmpi_func, calling_func, lineno, calling_file)");
     fline("integer iret");
+    fline("character*80 nfmpi_func");
+    fline("character*80 calling_func");
+    fline("character*80 calling_file");
+    fline("integer lineno");
     fline("include 'pnetcdf.inc'");
     fline("if (iret .ne. NF_NOERR) then");
-    fline("print *, nfmpi_strerror(iret)");
+    fline("print *, \"ncmpigen error when calling \",trim(nfmpi_func),\" in \",trim(ncmpi_func),\"() at line \",lineno, \" of \",trim(calling_file),\": \", nfmpi_strerror(iret)");
     fline("stop");
     fline("endif");
     fline("end");
@@ -1597,9 +1696,9 @@ close_netcdf(void)
 
 
 void
-check_err(int stat) {
+check_err(int stat, const char *ncmpi_func, const char *calling_func, int lineno, const char *calling_file) {
     if (stat != NC_NOERR) {
-	fprintf(stderr, "ncmpigen: %s\n", ncmpi_strerror(stat));
+	fprintf(stderr, "ncmpigen error when calling %s in %s() at line %d of %s: %s\n", ncmpi_func, calling_func, lineno, calling_file, ncmpi_strerror(stat));
 	derror_count++;
     }
 }
@@ -1902,3 +2001,43 @@ decodify (
     *sp = '\0';
     return newname;
 }
+
+/*
+ * Replace escaped chars in CDL representation of name such as
+ * 'abc\:def\ gh\\i' with unescaped version, such as 'abc:def gh\i'.
+ */
+void
+deescapify (char *name)
+{
+    const char *cp = name;
+    char *sp;
+    size_t len = strlen(name);
+    char *newname;
+
+    if(strchr(name, '\\') == NULL)
+        return;
+
+    newname = (char *) emalloc(len + 1);
+    cp = name;
+    sp = newname;
+    while(*cp != '\0') { /* delete '\' chars, except change '\\' to '\' */
+        switch (*cp) {
+        case '\\':
+            if(*(cp+1) == '\\') {
+                *sp++ = '\\';
+                cp++;
+            }
+            break;
+        default:
+            *sp++ = *cp;
+            break;
+        }
+        cp++;
+    }
+    *sp = '\0';
+    /* assert(strlen(newname) <= strlen(name)); */
+    strncpy(name, newname, len);
+    free(newname);
+    return;
+}
+
