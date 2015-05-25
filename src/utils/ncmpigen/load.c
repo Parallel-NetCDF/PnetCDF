@@ -65,6 +65,11 @@ gen_load_c(
     int *intvalp = NULL;
     float *floatvalp = NULL;
     double *doublevalp = NULL;
+    unsigned char *ubytevalp = NULL;
+    unsigned short *ushortvalp = NULL;
+    unsigned int *uintvalp = NULL;
+    long long *int64valp = NULL;
+    unsigned long long *uint64valp = NULL;
     char stmnt[C_MAX_STMNT];
     MPI_Offset stmnt_len;
     char s2[C_MAX_STMNT];
@@ -117,6 +122,21 @@ gen_load_c(
 	      case NC_DOUBLE:
 		doublevalp = (double *) rec_start;
 		break;
+	      case NC_UBYTE:
+		ubytevalp = (unsigned char *) rec_start;
+		break;
+	      case NC_USHORT:
+		ushortvalp = (unsigned short *) rec_start;
+		break;
+	      case NC_UINT:
+		uintvalp = (unsigned int *) rec_start;
+		break;
+	      case NC_INT64:
+		int64valp = (long long *) rec_start;
+		break;
+	      case NC_UINT64:
+		uint64valp = (unsigned long long *) rec_start;
+		break;
 	      default:
 		derror("Unhandled type %d\n", vars[varnum].type);
 		break;
@@ -139,6 +159,21 @@ gen_load_c(
 			sprintf(s2, "%#.16g", *doublevalp++);
 			tztrim(s2);
 			strcat(s2, ", ");
+		    break;
+		  case NC_UBYTE:
+			sprintf(s2, "%hhu, ", (unsigned char)*ubytevalp++);
+		    break;
+		  case NC_USHORT:
+			sprintf(s2, "%hu, ", (unsigned short)*ushortvalp++);
+		    break;
+		  case NC_UINT:
+			sprintf(s2, "%u, ", (unsigned int)*uintvalp++);
+		    break;
+		  case NC_INT64:
+			sprintf(s2, "%lld, ", (long long)*int64valp++);
+		    break;
+		  case NC_UINT64:
+			sprintf(s2, "%llu, ", (unsigned long long)*uint64valp++);
 		    break;
 		  default:
 		    derror("Unhandled type %d\n", vars[varnum].type);
@@ -171,6 +206,21 @@ gen_load_c(
 		  case NC_DOUBLE:
 			sprintf(s2, "%#.16g", *doublevalp++);
 			tztrim(s2);
+		    break;
+		  case NC_UBYTE:
+			sprintf(s2, "%hhu, ", (unsigned char)*ubytevalp++);
+		    break;
+		  case NC_USHORT:
+			sprintf(s2, "%hu, ", (unsigned short)*ushortvalp++);
+		    break;
+		  case NC_UINT:
+			sprintf(s2, "%u, ", (unsigned int)*uintvalp++);
+		    break;
+		  case NC_INT64:
+			sprintf(s2, "%lld, ", (long long)*int64valp++);
+		    break;
+		  case NC_UINT64:
+			sprintf(s2, "%llu, ", (unsigned long long)*uint64valp++);
 		    break;
 		  default:
 		    derror("Unhandled type %d\n", vars[varnum].type);
@@ -267,6 +317,26 @@ gen_load_c(
 	    sprintf(s2, "%#.16g", *doublevalp++);
 	    tztrim(s2);
 	    break;
+	  case NC_UBYTE:
+	    ubytevalp = (unsigned char *) rec_start;
+	    sprintf(s2, "%hhu", (unsigned char)*ubytevalp);
+	    break;
+	  case NC_USHORT:
+	    ushortvalp = (unsigned short *) rec_start;
+	    sprintf(s2, "%hu", (unsigned short)*ushortvalp);
+	    break;
+	  case NC_UINT:
+	    uintvalp = (unsigned int *) rec_start;
+	    sprintf(s2, "%u", (unsigned int)*uintvalp);
+	    break;
+	  case NC_INT64:
+	    int64valp = (long long *) rec_start;
+	    sprintf(s2, "%lld", (long long)*int64valp);
+	    break;
+	  case NC_UINT64:
+	    uint64valp = (unsigned long long *) rec_start;
+	    sprintf(s2, "%llu", (unsigned long long)*uint64valp);
+	    break;
 	  default:
 	    derror("Unhandled type %d\n", vars[varnum].type);
 	    break;
@@ -329,6 +399,11 @@ f_var_init(
     int *intvalp;
     float *floatvalp;
     double *doublevalp;
+    unsigned char *ubytevalp;
+    unsigned short *ushortvalp;
+    unsigned int *uintvalp;
+    long long *int64valp;
+    unsigned long long *uint64valp;
     char stmnt[FORT_MAX_STMNT];
     MPI_Offset stmnt_len;
     char s2[FORT_MAX_STMNT];
@@ -389,6 +464,51 @@ f_var_init(
 	sprintf(s2, "%#.16g", *doublevalp++);
 	tztrim(s2);
 	expe2d(s2);
+	fstrcat(stmnt, s2, &stmnt_len);
+	break;
+    case NC_UBYTE:
+	ubytevalp = (unsigned char *) rec_start;
+	for (ival = 0; ival < var_len-1; ival++) {
+	    sprintf(s2, "%hhu, ", (unsigned char)*ubytevalp++);
+	    fstrcat(stmnt, s2, &stmnt_len);
+	}
+	sprintf(s2, "%hhu", (unsigned char)*ubytevalp);
+	fstrcat(stmnt, s2, &stmnt_len);
+	break;
+    case NC_USHORT:
+	ushortvalp = (unsigned short *) rec_start;
+	for (ival = 0; ival < var_len-1; ival++) {
+	    sprintf(s2, "%hu, ", (unsigned short)*ushortvalp++);
+	    fstrcat(stmnt, s2, &stmnt_len);
+	}
+	sprintf(s2, "%hu", (unsigned short)*ushortvalp);
+	fstrcat(stmnt, s2, &stmnt_len);
+	break;
+    case NC_UINT:
+	uintvalp = (unsigned int *) rec_start;
+	for (ival = 0; ival < var_len-1; ival++) {
+	    sprintf(s2, "%u, ", (unsigned int)*uintvalp++);
+	    fstrcat(stmnt, s2, &stmnt_len);
+	}
+	sprintf(s2, "%u", (unsigned int)*uintvalp);
+	fstrcat(stmnt, s2, &stmnt_len);
+	break;
+    case NC_INT64:
+	int64valp = (long long *) rec_start;
+	for (ival = 0; ival < var_len-1; ival++) {
+	    sprintf(s2, "%lld, ", (long long)*int64valp++);
+	    fstrcat(stmnt, s2, &stmnt_len);
+	}
+	sprintf(s2, "%lld", (long long)*int64valp);
+	fstrcat(stmnt, s2, &stmnt_len);
+	break;
+    case NC_UINT64:
+	uint64valp = (unsigned long long *) rec_start;
+	for (ival = 0; ival < var_len-1; ival++) {
+	    sprintf(s2, "%llu, ", (unsigned long long)*uint64valp++);
+	    fstrcat(stmnt, s2, &stmnt_len);
+	}
+	sprintf(s2, "%llu", (unsigned long long)*uint64valp);
 	fstrcat(stmnt, s2, &stmnt_len);
 	break;
     default:
@@ -461,9 +581,7 @@ gen_load_fortran(
  * struct dims[]     - structure containing name and size of dimensions.
  */
 int
-put_variable(
-    void *rec_start		/* points to data to be loaded  */
-    )
+put_variable(void *rec_start)	/* points to data to be loaded  */
 {
     if (netcdf_flag)
       load_netcdf(rec_start);	/* put variable values */
@@ -478,11 +596,9 @@ put_variable(
 
 /* write out variable's data from in-memory structure */
 void
-load_netcdf(
-    void *rec_start
-    )
+load_netcdf(void *rec_start)
 {
-    int idim;
+    int i, idim;
     int stat = NC_NOERR;
     MPI_Offset start[NC_MAX_VAR_DIMS];
     MPI_Offset count[NC_MAX_VAR_DIMS];
@@ -491,6 +607,12 @@ load_netcdf(
     int *intvalp = NULL;
     float *floatvalp = NULL;
     double *doublevalp = NULL;
+    unsigned char *ubytevalp = NULL;
+    unsigned short *ushortvalp = NULL;
+    unsigned int *uintvalp = NULL;
+    long long *int64valp = NULL;
+    unsigned long long *uint64valp = NULL;
+    MPI_Offset total_size;
 
     /* load values into variable */
 
@@ -511,6 +633,21 @@ load_netcdf(
       case NC_DOUBLE:
 	doublevalp = (double *) rec_start;
 	break;
+      case NC_UBYTE:
+	ubytevalp = (unsigned char *) rec_start;
+	break;
+      case NC_USHORT:
+	ushortvalp = (unsigned short *) rec_start;
+	break;
+      case NC_UINT:
+	uintvalp = (unsigned int *) rec_start;
+	break;
+      case NC_INT64:
+	int64valp = (long long *) rec_start;
+	break;
+      case NC_UINT64:
+	uint64valp = (unsigned long long *) rec_start;
+	break;
       default:
 	derror("Unhandled type %d\n", vars[varnum].type);
 	break;
@@ -530,30 +667,115 @@ load_netcdf(
 	start[idim] = 0;
 	count[idim] = dims[vars[varnum].dims[idim]].size;
     }
-    
-    switch (vars[varnum].type) {
-      case NC_BYTE:
-	stat = ncmpi_put_vara_schar(ncid, varnum, start, count,
-				 (signed char *)charvalp);
-	break;
-      case NC_CHAR:
-	stat = ncmpi_put_vara_text_all(ncid, varnum, start, count, charvalp);
-	break;
-      case NC_SHORT:
-	stat = ncmpi_put_vara_short_all(ncid, varnum, start, count, shortvalp);
-	break;
-      case NC_INT:
-	stat = ncmpi_put_vara_int_all(ncid, varnum, start, count, intvalp);
-	break;
-      case NC_FLOAT:
-	stat = ncmpi_put_vara_float_all(ncid, varnum, start, count, floatvalp);
-	break;
-      case NC_DOUBLE:
-	stat = ncmpi_put_vara_double_all(ncid, varnum, start, count, doublevalp);
-	break;
-      default:
-	derror("Unhandled type %d\n", vars[varnum].type);
-	break;
+
+    total_size = nctypesize(vars[varnum].type);
+    for (idim=0; idim<vars[varnum].ndims; idim++)
+        total_size *= count[idim];
+
+    if (total_size > 2147483648) {
+        for (i=0; i<count[0]; i++) {
+            start[0] = i;
+            count[0] = 1;
+            switch (vars[varnum].type) {
+                case NC_BYTE:
+	             stat = ncmpi_put_vara_schar_all(ncid, varnum, start, count, (signed char *)charvalp);
+                     check_err(stat, "ncmpi_put_vara_schar_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_CHAR:
+	             stat = ncmpi_put_vara_text_all(ncid, varnum, start, count, charvalp);
+                     check_err(stat, "ncmpi_put_vara_text_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_SHORT:
+	             stat = ncmpi_put_vara_short_all(ncid, varnum, start, count, shortvalp);
+                     check_err(stat, "ncmpi_put_vara_short_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_INT:
+	             stat = ncmpi_put_vara_int_all(ncid, varnum, start, count, intvalp);
+                     check_err(stat, "ncmpi_put_vara_int_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_FLOAT:
+	             stat = ncmpi_put_vara_float_all(ncid, varnum, start, count, floatvalp);
+                     check_err(stat, "ncmpi_put_vara_float_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_DOUBLE:
+	             stat = ncmpi_put_vara_double_all(ncid, varnum, start, count, doublevalp);
+                     check_err(stat, "ncmpi_put_vara_double_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_UBYTE:
+	             stat = ncmpi_put_vara_uchar_all(ncid, varnum, start, count, ubytevalp);
+                     check_err(stat, "ncmpi_put_vara_uchar_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_USHORT:
+	             stat = ncmpi_put_vara_ushort_all(ncid, varnum, start, count, ushortvalp);
+                     check_err(stat, "ncmpi_put_vara_ushort_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_UINT:
+	             stat = ncmpi_put_vara_uint_all(ncid, varnum, start, count, uintvalp);
+                     check_err(stat, "ncmpi_put_vara_uint_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_INT64:
+	             stat = ncmpi_put_vara_longlong_all(ncid, varnum, start, count, int64valp);
+                     check_err(stat, "ncmpi_put_vara_longlong_all", __func__, __LINE__, __FILE__);
+	             break;
+                case NC_UINT64:
+	             stat = ncmpi_put_vara_ulonglong_all(ncid, varnum, start, count, uint64valp);
+                     check_err(stat, "ncmpi_put_vara_ulonglong_all", __func__, __LINE__, __FILE__);
+	             break;
+                default:
+	             derror("Unhandled type %d\n", vars[varnum].type);
+	             break;
+            }
+        }
     }
-    check_err(stat, "ncmpi_put_vara_xxx", __func__, __LINE__, __FILE__);
+    else {
+        switch (vars[varnum].type) {
+            case NC_BYTE:
+	        stat = ncmpi_put_vara_schar_all(ncid, varnum, start, count, (signed char *)charvalp);
+                check_err(stat, "ncmpi_put_vara_schar_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_CHAR:
+	        stat = ncmpi_put_vara_text_all(ncid, varnum, start, count, charvalp);
+                check_err(stat, "ncmpi_put_vara_text_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_SHORT:
+	        stat = ncmpi_put_vara_short_all(ncid, varnum, start, count, shortvalp);
+                check_err(stat, "ncmpi_put_vara_short_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_INT:
+	        stat = ncmpi_put_vara_int_all(ncid, varnum, start, count, intvalp);
+                check_err(stat, "ncmpi_put_vara_int_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_FLOAT:
+	        stat = ncmpi_put_vara_float_all(ncid, varnum, start, count, floatvalp);
+                check_err(stat, "ncmpi_put_vara_float_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_DOUBLE:
+	        stat = ncmpi_put_vara_double_all(ncid, varnum, start, count, doublevalp);
+                check_err(stat, "ncmpi_put_vara_double_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_UBYTE:
+	        stat = ncmpi_put_vara_uchar_all(ncid, varnum, start, count, ubytevalp);
+                check_err(stat, "ncmpi_put_vara_uchar_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_USHORT:
+	        stat = ncmpi_put_vara_ushort_all(ncid, varnum, start, count, ushortvalp);
+                check_err(stat, "ncmpi_put_vara_ushort_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_UINT:
+	        stat = ncmpi_put_vara_uint_all(ncid, varnum, start, count, uintvalp);
+                check_err(stat, "ncmpi_put_vara_uint_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_INT64:
+	        stat = ncmpi_put_vara_longlong_all(ncid, varnum, start, count, int64valp);
+                check_err(stat, "ncmpi_put_vara_longlong_all", __func__, __LINE__, __FILE__);
+	        break;
+            case NC_UINT64:
+	        stat = ncmpi_put_vara_ulonglong_all(ncid, varnum, start, count, uint64valp);
+                check_err(stat, "ncmpi_put_vara_ulonglong_all", __func__, __LINE__, __FILE__);
+	        break;
+            default:
+	        derror("Unhandled type %d\n", vars[varnum].type);
+	        break;
+        }
+    }
 }
