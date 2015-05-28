@@ -25,7 +25,7 @@
  *
  *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
- *    // file format: CDF-1
+ *    // file format: CDF-5 (big variables)
  *    dimensions:
  *            y = 10 ;
  *            x = 16 ;
@@ -33,6 +33,7 @@
  *            int var(y, x) ;
  *                var:str_att_name = "example attribute of type text." ;
  *                var:float_att_name = 0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f ;
+ *                var:int64_att_name = 10000000000L ;
  *    // global attributes:
  *                :history = "Wed Apr 30 11:18:58 2014\n",
  *       "" ;
@@ -111,7 +112,7 @@ int main(int argc, char** argv)
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
+    cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     ERR
 
@@ -153,6 +154,10 @@ int main(int argc, char** argv)
     for (i=0; i<8; i++) float_att[i] = i;
     err = ncmpi_put_att_float(ncid, varid, "float_att_name", NC_FLOAT, 8,
                               &float_att[0]);
+    ERR
+    long long int64_att=10000000000;
+    err = ncmpi_put_att_longlong(ncid, varid, "int64_att_name", NC_INT64, 1,
+                              &int64_att);
     ERR
 
     /* do not forget to exit define mode */
