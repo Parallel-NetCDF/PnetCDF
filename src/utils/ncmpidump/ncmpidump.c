@@ -261,23 +261,23 @@ pr_att_vals(nc_type       type,
                 break;
             case NC_UBYTE:
                 uc = (unsigned char) vals[iel] & 0377;
-                Printf ("%hhuUB", uc);
+                Printf ("%hhuUB", uc); /* match netCDF4 ncdump type indicator */
                 break;
             case NC_USHORT:
                 us = vals[iel];
-                Printf ("%huUS", us);
+                Printf ("%huUS", us); /* match netCDF4 ncdump type indicator */
                 break;
             case NC_UINT:
                 ui = vals[iel];
-                Printf ("%uU", ui);
+                Printf ("%uU", ui); /* match netCDF4 ncdump type indicator */
                 break;
             case NC_INT64:
                 sll = vals[iel];
-                Printf ("%lldL", sll);
+                Printf ("%lldL", sll); /* match netCDF4 ncdump type indicator */
                 break;
             case NC_UINT64:
                 ull = vals[iel];
-                Printf ("%lluUL", ull);
+                Printf ("%lluUL", ull);/* match netCDF4 ncdump type indicator */
                 break;
             default:
                 error("pr_att_vals: bad type");
