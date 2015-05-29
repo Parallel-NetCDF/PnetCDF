@@ -372,7 +372,8 @@ inline int
 ncmpii_cktype(int     cdf_ver,
               nc_type type)
 {
-    if (type <= 0 || type > NC_MAX_ATOMIC_TYPE)
+    /* the max data type supported by CDF-5 is NC_UINT64 */
+    if (type <= 0 || type > NC_UINT64)
         return NC_EBADTYPE;
 
     /* For CDF-1 and CDF-2 files, only classic types are allowed. */
