@@ -10,6 +10,7 @@
 #ifdef sccs
 static char SccsId[] = "$Id$";
 #endif
+
 #include        <string.h>
 #include	<stdlib.h>
 #include	<stddef.h>  /* ptrdiff_t */
@@ -100,11 +101,11 @@ int yyerror(char*);
 	INT_K	    /* keyword for int datatype */
 	FLOAT_K	    /* keyword for float datatype */
 	DOUBLE_K    /* keyword for double datatype */
-        UBYTE_K     /* keyword for unsigned byte datatype */
-        USHORT_K    /* keyword for unsigned short datatype */
-        UINT_K      /* keyword for unsigned int datatype */
-        INT64_K     /* keyword for long long datatype */
-        UINT64_K    /* keyword for unsigned long long datatype */
+	UBYTE_K     /* keyword for unsigned char datatype */
+	USHORT_K    /* keyword for unsigned short datatype */
+	UINT_K      /* keyword for unsigned int datatype */
+	INT64_K     /* keyword for long long datatype */
+	UINT64_K    /* keyword for unsigned long long datatype */
 	IDENT	    /* name for a dimension, variable, or attribute */
 	TERMSTRING  /* terminal string */
 	BYTE_CONST  /* byte constant */
@@ -113,11 +114,11 @@ int yyerror(char*);
 	INT_CONST   /* int constant */
 	FLOAT_CONST /* float constant */
 	DOUBLE_CONST /* double constant */
- 	UBYTE_CONST  /* unsigned char constant */
- 	USHORT_CONST /* unsigned short constant */
- 	UINT_CONST   /* unsigned int constant */
- 	INT64_CONST  /* long long constant */
- 	UINT64_CONST /* unsigned long long constant */
+	UBYTE_CONST  /* unsigned char constant */
+	USHORT_CONST /* unsigned short constant */
+	UINT_CONST   /* unsigned int constant */
+	INT64_CONST  /* long long constant */
+	UINT64_CONST /* unsigned long long constant */
 	DIMENSIONS  /* keyword starting dimensions section, if any */
 	VARIABLES   /* keyword starting variables section, if any */
 	NETCDF      /* keyword declaring netcdf name */

@@ -694,6 +694,8 @@ char *ncmpitext;
 #define FILL_STRING "_"
 #define XDR_INT_MIN (-2147483647-1)
 #define XDR_INT_MAX 2147483647
+#define XDR_INT64_MIN  (-9223372036854775807LL-1)
+#define XDR_INT64_MAX  (9223372036854775807LL)
 
 char errstr[100];		/* for short error messages */
 
@@ -708,7 +710,7 @@ char errstr[100];		/* for short error messages */
                                    but make sure every action ends with
                                    "return" or "break"! */
 
-#line 712 "lex.ncmpi.c"
+#line 714 "lex.ncmpi.c"
 
 #define INITIAL 0
 
@@ -890,9 +892,9 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 36 "./ncmpigen.l"
+#line 38 "./ncmpigen.l"
 
-#line 896 "lex.ncmpi.c"
+#line 898 "lex.ncmpi.c"
 
 	if ( !(yy_init) )
 		{
@@ -977,7 +979,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 37 "./ncmpigen.l"
+#line 39 "./ncmpigen.l"
 { /* comment */ 
                           break;
                         }
@@ -985,7 +987,7 @@ YY_RULE_SETUP
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 41 "./ncmpigen.l"
+#line 43 "./ncmpigen.l"
 {
 			 if(ncmpileng > MAXTRST) {
 				yyerror("string too long, truncated\n");
@@ -997,84 +999,84 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 50 "./ncmpigen.l"
+#line 52 "./ncmpigen.l"
 {return (FLOAT_K);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 51 "./ncmpigen.l"
+#line 53 "./ncmpigen.l"
 {return (CHAR_K);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 52 "./ncmpigen.l"
+#line 54 "./ncmpigen.l"
 {return (BYTE_K);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 53 "./ncmpigen.l"
+#line 55 "./ncmpigen.l"
 {return (SHORT_K);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 54 "./ncmpigen.l"
+#line 56 "./ncmpigen.l"
 {return (INT_K);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 55 "./ncmpigen.l"
+#line 57 "./ncmpigen.l"
 {return (DOUBLE_K);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 56 "./ncmpigen.l"
+#line 58 "./ncmpigen.l"
 {return (UBYTE_K);}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 57 "./ncmpigen.l"
+#line 59 "./ncmpigen.l"
 {return (USHORT_K);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 58 "./ncmpigen.l"
+#line 60 "./ncmpigen.l"
 {return (UINT_K);}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 59 "./ncmpigen.l"
+#line 61 "./ncmpigen.l"
 {return (INT64_K);}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 60 "./ncmpigen.l"
+#line 62 "./ncmpigen.l"
 {return (UINT64_K);}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 61 "./ncmpigen.l"
+#line 63 "./ncmpigen.l"
 {int_val = -1;
 			 return (NC_UNLIMITED_K);}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 64 "./ncmpigen.l"
+#line 66 "./ncmpigen.l"
 {return (DIMENSIONS);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 65 "./ncmpigen.l"
+#line 67 "./ncmpigen.l"
 {return (VARIABLES);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 66 "./ncmpigen.l"
+#line 68 "./ncmpigen.l"
 {return (DATA);}
 	YY_BREAK
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 67 "./ncmpigen.l"
+#line 69 "./ncmpigen.l"
 {
 		char *s = (char*)ncmpitext+strlen("netcdf");
 		char *t = (char*)ncmpitext+ncmpileng-1;
@@ -1095,7 +1097,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 84 "./ncmpigen.l"
+#line 86 "./ncmpigen.l"
 { /* missing value (pre-2.4 backward compatibility) */
                 if (ncmpitext[0] == '-') {
 		    double_val = -NC_FILL_DOUBLE;
@@ -1107,7 +1109,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 92 "./ncmpigen.l"
+#line 94 "./ncmpigen.l"
 { /* missing value (pre-2.4 backward compatibility) */
                 if (ncmpitext[0] == '-') {
 		    float_val = -NC_FILL_FLOAT;
@@ -1119,7 +1121,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 100 "./ncmpigen.l"
+#line 102 "./ncmpigen.l"
 {
                 if (STREQ((char *)ncmpitext, FILL_STRING))
 		        return (FILLVALUE);
@@ -1132,7 +1134,7 @@ YY_RULE_SETUP
 case 22:
 /* rule 22 can match eol */
 YY_RULE_SETUP
-#line 109 "./ncmpigen.l"
+#line 111 "./ncmpigen.l"
 {
 		lineno++ ;
                 break;
@@ -1140,7 +1142,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 114 "./ncmpigen.l"
+#line 116 "./ncmpigen.l"
 {
                 int ii;
 		if (sscanf((char*)ncmpitext, "%d", &ii) != 1) {
@@ -1157,7 +1159,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 128 "./ncmpigen.l"
+#line 130 "./ncmpigen.l"
 {
 		if (sscanf((char*)ncmpitext, "%le", &double_val) != 1) {
 		    sprintf(errstr,"bad long or double constant: %s",(char*)ncmpitext);
@@ -1168,7 +1170,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 135 "./ncmpigen.l"
+#line 137 "./ncmpigen.l"
 {
 		if (sscanf((char*)ncmpitext, "%e", &float_val) != 1) {
 		    sprintf(errstr,"bad float constant: %s",(char*)ncmpitext);
@@ -1179,7 +1181,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 142 "./ncmpigen.l"
+#line 144 "./ncmpigen.l"
 {
 		if (sscanf((char*)ncmpitext, "%hd", &short_val) != 1) {
 		    sprintf(errstr,"bad short constant: %s",(char*)ncmpitext);
@@ -1190,7 +1192,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 149 "./ncmpigen.l"
+#line 151 "./ncmpigen.l"
 {
     		char *ptr;
                 errno = 0;
@@ -1209,7 +1211,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 164 "./ncmpigen.l"
+#line 166 "./ncmpigen.l"
 {
     		char *ptr;
                 long long_val;
@@ -1231,7 +1233,7 @@ YY_RULE_SETUP
 case 29:
 /* rule 29 can match eol */
 YY_RULE_SETUP
-#line 181 "./ncmpigen.l"
+#line 183 "./ncmpigen.l"
 {
 	        (void) sscanf((char*)&ncmpitext[1],"%c",&byte_val);
 		return (BYTE_CONST);
@@ -1239,7 +1241,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 185 "./ncmpigen.l"
+#line 187 "./ncmpigen.l"
 {
 		byte_val = (char) strtol((char*)&ncmpitext[2], (char **) 0, 8);
 		return (BYTE_CONST);
@@ -1247,7 +1249,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 189 "./ncmpigen.l"
+#line 191 "./ncmpigen.l"
 {
 		byte_val = (char) strtol((char*)&ncmpitext[3], (char **) 0, 16);
 		return (BYTE_CONST);
@@ -1255,7 +1257,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 193 "./ncmpigen.l"
+#line 195 "./ncmpigen.l"
 {
 	       switch ((char)ncmpitext[2]) {
 	          case 'a': byte_val = '\007'; break; /* not everyone under-
@@ -1276,22 +1278,22 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 211 "./ncmpigen.l"
+#line 213 "./ncmpigen.l"
 { /* whitespace */ 
 		  break;        
 		}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 214 "./ncmpigen.l"
+#line 216 "./ncmpigen.l"
 return (ncmpitext[0]) ;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 215 "./ncmpigen.l"
+#line 217 "./ncmpigen.l"
 ECHO;
 	YY_BREAK
-#line 1295 "lex.ncmpi.c"
+#line 1297 "lex.ncmpi.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2289,4 +2291,4 @@ void ncmpifree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 215 "./ncmpigen.l"
+#line 217 "./ncmpigen.l"

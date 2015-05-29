@@ -47,6 +47,7 @@ static int yygrowstack(void);
 #ifdef sccs
 static char SccsId[] = "$Id$";
 #endif
+
 #include        <string.h>
 #include	<stdlib.h>
 #include	<stddef.h>  /* ptrdiff_t */
@@ -125,7 +126,7 @@ void yyerror(char*);
 #else
 int yyerror(char*);
 #endif
-#line 129 "y.tab.c"
+#line 130 "y.tab.c"
 #define NC_UNLIMITED_K 257
 #define BYTE_K 258
 #define CHAR_K 259
@@ -442,7 +443,7 @@ static short   *yyss;
 static short   *yysslim;
 static YYSTYPE *yyvs;
 static int      yystacksize;
-#line 1184 "./ncmpigen.y"
+#line 1185 "./ncmpigen.y"
 
 /* HELPER PROGRAMS */
 void defatt()
@@ -576,7 +577,7 @@ clearout(void)	/* reset symbol table to empty */
 #define YY_NO_INPUT
 
 #include "ncmpigenyy.c"
-#line 580 "y.tab.c"
+#line 581 "y.tab.c"
 /* allocate initial stack or double stack size, up to YYMAXDEPTH */
 static int yygrowstack(void)
 {
@@ -758,11 +759,11 @@ yyreduce:
     switch (yyn)
     {
 case 1:
-#line 135 "./ncmpigen.y"
+#line 136 "./ncmpigen.y"
 { init_netcdf(); }
 break;
 case 2:
-#line 138 "./ncmpigen.y"
+#line 139 "./ncmpigen.y"
 {
 		       if (derror_count == 0)
 			 define_netcdf(netcdfname);
@@ -771,14 +772,14 @@ case 2:
 		   }
 break;
 case 3:
-#line 146 "./ncmpigen.y"
+#line 147 "./ncmpigen.y"
 {
 		       if (derror_count == 0)
 			 close_netcdf();
 		   }
 break;
 case 10:
-#line 161 "./ncmpigen.y"
+#line 162 "./ncmpigen.y"
 { if (int_val <= 0)
 			 derror("dimension length must be positive");
 		     dims[ndims].size = int_val;
@@ -786,7 +787,7 @@ case 10:
 		   }
 break;
 case 11:
-#line 167 "./ncmpigen.y"
+#line 168 "./ncmpigen.y"
 { /* for rare case where 2^31 < dimsize < 2^32 */
 		       if (double_val <= 0)
 			 derror("dimension length must be positive");
@@ -799,7 +800,7 @@ case 11:
                    }
 break;
 case 12:
-#line 178 "./ncmpigen.y"
+#line 179 "./ncmpigen.y"
 {  if (rec_dim != -1)
 			 derror("only one NC_UNLIMITED dimension allowed");
 		     rec_dim = ndims; /* the unlimited (record) dimension */
@@ -808,7 +809,7 @@ case 12:
 		   }
 break;
 case 13:
-#line 186 "./ncmpigen.y"
+#line 187 "./ncmpigen.y"
 { 
 		    if (yyvsp[0]->is_dim == 1) {
 		        derror( "duplicate dimension declaration for %s",
@@ -826,51 +827,51 @@ case 13:
 		   }
 break;
 case 26:
-#line 218 "./ncmpigen.y"
+#line 219 "./ncmpigen.y"
 { type_code = NC_BYTE; }
 break;
 case 27:
-#line 219 "./ncmpigen.y"
+#line 220 "./ncmpigen.y"
 { type_code = NC_CHAR; }
 break;
 case 28:
-#line 220 "./ncmpigen.y"
+#line 221 "./ncmpigen.y"
 { type_code = NC_SHORT; }
 break;
 case 29:
-#line 221 "./ncmpigen.y"
+#line 222 "./ncmpigen.y"
 { type_code = NC_INT; }
 break;
 case 30:
-#line 222 "./ncmpigen.y"
+#line 223 "./ncmpigen.y"
 { type_code = NC_FLOAT; }
 break;
 case 31:
-#line 223 "./ncmpigen.y"
+#line 224 "./ncmpigen.y"
 { type_code = NC_DOUBLE; }
 break;
 case 32:
-#line 224 "./ncmpigen.y"
+#line 225 "./ncmpigen.y"
 { type_code = NC_UBYTE; }
 break;
 case 33:
-#line 225 "./ncmpigen.y"
+#line 226 "./ncmpigen.y"
 { type_code = NC_USHORT; }
 break;
 case 34:
-#line 226 "./ncmpigen.y"
+#line 227 "./ncmpigen.y"
 { type_code = NC_UINT; }
 break;
 case 35:
-#line 227 "./ncmpigen.y"
+#line 228 "./ncmpigen.y"
 { type_code = NC_INT64; }
 break;
 case 36:
-#line 228 "./ncmpigen.y"
+#line 229 "./ncmpigen.y"
 { type_code = NC_UINT64; }
 break;
 case 39:
-#line 234 "./ncmpigen.y"
+#line 235 "./ncmpigen.y"
 {
 		    static struct vars dummyvar;
 
@@ -905,14 +906,14 @@ case 39:
 		   }
 break;
 case 40:
-#line 267 "./ncmpigen.y"
+#line 268 "./ncmpigen.y"
 {
 		    vars[nvars].ndims = nvdims;
 		    nvars++;
 		   }
 break;
 case 46:
-#line 281 "./ncmpigen.y"
+#line 282 "./ncmpigen.y"
 {
 		    if (nvdims >= NC_MAX_VAR_DIMS) {
 		       derror("%s has too many dimensions",vars[nvars].name);
@@ -934,37 +935,37 @@ case 46:
 		   }
 break;
 case 47:
-#line 302 "./ncmpigen.y"
+#line 303 "./ncmpigen.y"
 {
                    defatt();
 		   }
 break;
 case 48:
-#line 306 "./ncmpigen.y"
+#line 307 "./ncmpigen.y"
 {
                    equalatt();
 		   }
 break;
 case 49:
-#line 311 "./ncmpigen.y"
+#line 312 "./ncmpigen.y"
 {
                    defatt();
 		   }
 break;
 case 50:
-#line 315 "./ncmpigen.y"
+#line 316 "./ncmpigen.y"
 {
                    equalatt();
 		   }
 break;
 case 52:
-#line 323 "./ncmpigen.y"
+#line 324 "./ncmpigen.y"
 {
 		    varnum = NC_GLOBAL;  /* handle of "global" attribute */
 		   }
 break;
 case 53:
-#line 329 "./ncmpigen.y"
+#line 330 "./ncmpigen.y"
 { if (yyvsp[0]->is_var == 1)
 		       varnum = yyvsp[0]->vnum;
 		    else {
@@ -975,7 +976,7 @@ case 53:
 		   }
 break;
 case 54:
-#line 339 "./ncmpigen.y"
+#line 340 "./ncmpigen.y"
 {
 		       /* make sure atts array will hold attributes */
 		       grow_aarray(natts,  /* must hold natts+1 atts */
@@ -987,7 +988,7 @@ case 54:
 		   }
 break;
 case 57:
-#line 353 "./ncmpigen.y"
+#line 354 "./ncmpigen.y"
 {
 		    if (valtype == NC_UNSPECIFIED)
 		      valtype = atype_code;
@@ -996,7 +997,7 @@ case 57:
 		   }
 break;
 case 58:
-#line 362 "./ncmpigen.y"
+#line 363 "./ncmpigen.y"
 {
 		       atype_code = NC_CHAR;
 		       *char_valp++ = char_val;
@@ -1004,7 +1005,7 @@ case 58:
 		   }
 break;
 case 59:
-#line 368 "./ncmpigen.y"
+#line 369 "./ncmpigen.y"
 {
 		       atype_code = NC_CHAR;
 		       {
@@ -1019,7 +1020,7 @@ case 59:
 		   }
 break;
 case 60:
-#line 381 "./ncmpigen.y"
+#line 382 "./ncmpigen.y"
 {
 		       atype_code = NC_BYTE;
 		       *byte_valp++ = byte_val;
@@ -1027,7 +1028,7 @@ case 60:
 		   }
 break;
 case 61:
-#line 387 "./ncmpigen.y"
+#line 388 "./ncmpigen.y"
 {
 		       atype_code = NC_SHORT;
 		       *short_valp++ = short_val;
@@ -1035,7 +1036,7 @@ case 61:
 		   }
 break;
 case 62:
-#line 393 "./ncmpigen.y"
+#line 394 "./ncmpigen.y"
 {
 		       atype_code = NC_INT;
 		       *int_valp++ = int_val;
@@ -1043,7 +1044,7 @@ case 62:
 		   }
 break;
 case 63:
-#line 399 "./ncmpigen.y"
+#line 400 "./ncmpigen.y"
 {
 		       atype_code = NC_FLOAT;
 		       *float_valp++ = float_val;
@@ -1051,7 +1052,7 @@ case 63:
 		   }
 break;
 case 64:
-#line 405 "./ncmpigen.y"
+#line 406 "./ncmpigen.y"
 {
 		       atype_code = NC_DOUBLE;
 		       *double_valp++ = double_val;
@@ -1059,7 +1060,7 @@ case 64:
 		   }
 break;
 case 65:
-#line 411 "./ncmpigen.y"
+#line 412 "./ncmpigen.y"
 {
 		       atype_code = NC_UBYTE;
 		       *ubyte_valp++ = ubyte_val;
@@ -1067,7 +1068,7 @@ case 65:
 		   }
 break;
 case 66:
-#line 417 "./ncmpigen.y"
+#line 418 "./ncmpigen.y"
 {
 		       atype_code = NC_USHORT;
 		       *ushort_valp++ = ushort_val;
@@ -1075,7 +1076,7 @@ case 66:
 		   }
 break;
 case 67:
-#line 423 "./ncmpigen.y"
+#line 424 "./ncmpigen.y"
 {
 		       atype_code = NC_UINT;
 		       *uint_valp++ = uint_val;
@@ -1083,7 +1084,7 @@ case 67:
 		   }
 break;
 case 68:
-#line 429 "./ncmpigen.y"
+#line 430 "./ncmpigen.y"
 {
 		       atype_code = NC_INT64;
 		       *int64_valp++ = int64_val;
@@ -1091,7 +1092,7 @@ case 68:
 		   }
 break;
 case 69:
-#line 435 "./ncmpigen.y"
+#line 436 "./ncmpigen.y"
 {
 		       atype_code = NC_UINT64;
 		       *uint64_valp++ = uint64_val;
@@ -1099,7 +1100,7 @@ case 69:
 		   }
 break;
 case 75:
-#line 451 "./ncmpigen.y"
+#line 452 "./ncmpigen.y"
 {
 		       valtype = vars[varnum].type; /* variable type */
 		       valnum = 0;	/* values accumulated for variable */
@@ -1167,7 +1168,7 @@ case 75:
 		 }
 break;
 case 76:
-#line 517 "./ncmpigen.y"
+#line 518 "./ncmpigen.y"
 {
 		       if (valnum < var_len) { /* leftovers */
 			   nc_fill(valtype,
@@ -1184,7 +1185,7 @@ case 76:
 		 }
 break;
 case 79:
-#line 536 "./ncmpigen.y"
+#line 537 "./ncmpigen.y"
 {
 		       if(valnum >= var_len) {
 			   if (vars[varnum].dims[0] != rec_dim) { /* not recvar */
@@ -1216,7 +1217,7 @@ case 79:
                    }
 break;
 case 80:
-#line 566 "./ncmpigen.y"
+#line 567 "./ncmpigen.y"
 {
 		       if (not_a_string) {
 			   switch (valtype) {
@@ -1259,7 +1260,7 @@ case 80:
 		   }
 break;
 case 81:
-#line 609 "./ncmpigen.y"
+#line 610 "./ncmpigen.y"
 {
 		       atype_code = NC_CHAR;
 		       switch (valtype) {
@@ -1302,7 +1303,7 @@ case 81:
 		   }
 break;
 case 82:
-#line 650 "./ncmpigen.y"
+#line 651 "./ncmpigen.y"
 {
 		       not_a_string = 0;
 		       atype_code = NC_CHAR;
@@ -1359,7 +1360,7 @@ case 82:
 		   }
 break;
 case 83:
-#line 705 "./ncmpigen.y"
+#line 706 "./ncmpigen.y"
 {
 		       atype_code = NC_BYTE;
 		       switch (valtype) {
@@ -1402,7 +1403,7 @@ case 83:
 		   }
 break;
 case 84:
-#line 746 "./ncmpigen.y"
+#line 747 "./ncmpigen.y"
 {
 		       atype_code = NC_SHORT;
 		       switch (valtype) {
@@ -1445,7 +1446,7 @@ case 84:
 		   }
 break;
 case 85:
-#line 787 "./ncmpigen.y"
+#line 788 "./ncmpigen.y"
 {
 		       atype_code = NC_INT;
 		       switch (valtype) {
@@ -1488,7 +1489,7 @@ case 85:
 		   }
 break;
 case 86:
-#line 828 "./ncmpigen.y"
+#line 829 "./ncmpigen.y"
 {
 		       atype_code = NC_FLOAT;
 		       switch (valtype) {
@@ -1531,7 +1532,7 @@ case 86:
 		   }
 break;
 case 87:
-#line 869 "./ncmpigen.y"
+#line 870 "./ncmpigen.y"
 {
 		       atype_code = NC_DOUBLE;
 		       switch (valtype) {
@@ -1577,7 +1578,7 @@ case 87:
 		   }
 break;
 case 88:
-#line 913 "./ncmpigen.y"
+#line 914 "./ncmpigen.y"
 {
 		       atype_code = NC_UBYTE;
 		       switch (valtype) {
@@ -1622,7 +1623,7 @@ case 88:
 		   }
 break;
 case 89:
-#line 956 "./ncmpigen.y"
+#line 957 "./ncmpigen.y"
 {
 		       atype_code = NC_USHORT;
 		       switch (valtype) {
@@ -1667,7 +1668,7 @@ case 89:
 		   }
 break;
 case 90:
-#line 999 "./ncmpigen.y"
+#line 1000 "./ncmpigen.y"
 {
 		       atype_code = NC_UINT;
 		       switch (valtype) {
@@ -1712,7 +1713,7 @@ case 90:
 		   }
 break;
 case 91:
-#line 1042 "./ncmpigen.y"
+#line 1043 "./ncmpigen.y"
 {
 		       atype_code = NC_INT64;
 		       switch (valtype) {
@@ -1757,7 +1758,7 @@ case 91:
 		   }
 break;
 case 92:
-#line 1085 "./ncmpigen.y"
+#line 1086 "./ncmpigen.y"
 {
 		       atype_code = NC_UINT64;
 		       switch (valtype) {
@@ -1802,7 +1803,7 @@ case 92:
  		   }
 break;
 case 93:
-#line 1128 "./ncmpigen.y"
+#line 1129 "./ncmpigen.y"
 {
 		       /* store fill_value */
 		       switch (valtype) {
@@ -1855,7 +1856,7 @@ case 93:
 		       valnum++;
 		   }
 break;
-#line 1859 "y.tab.c"
+#line 1860 "y.tab.c"
     }
     yyssp -= yym;
     yystate = *yyssp;
