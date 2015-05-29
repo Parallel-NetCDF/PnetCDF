@@ -129,8 +129,8 @@ Conform with netCDF
        src/libf90/nf90_constants.f90
        src/libf90/nfmpi_constants.f90.in
 
- - PnetCDF error codes start in -201
- - PnetCDF error codes for inconsistent header data start in -250
+ - PnetCDF error codes start from -201
+ - PnetCDF error codes for inconsistent header data start from -250
 
  - PnetCDF developers are reminded to periodically sync the followings with
    netCDF release.
