@@ -250,6 +250,31 @@ inconsistency of any kind start at -250.
 
 
 =====================================================
+Note on setting the last modify time of files to avoid rebuild
+=====================================================
+Under directory src/utils/ncmpigen, the following files are pre-built and
+provided in the releases as is. They are no longer required to be built by
+PnetCDF users since 1.5.0.
+    ncmpigenyy.c
+    ncmpigentab.c
+    ncmpigentab.h
+
+Their dependency are
+ncmpigenyy.c: ncmpigen.l
+ncmpigentab.c ncmpigentab.h: ncmpigen.y ncmpigenyy.c ncmpigen.h
+
+When their source files are modified, these files must be regenerated.
+However, when using command "svn commit" to commit the changes to svn repo,
+the modify time will be reset by svn, which may cause make to regenerate them
+again. To make the last modify time of these 3 files newer than their source
+files, one solution is to run two separate commit commands.
+First, run "svn commit" for the source files.
+Second, run "svn del" to delete these 3 files.
+Third, run "svn add" to add these 3 files.
+Fourth, run "svn commit" for these 3 files.
+
+
+=====================================================
 Some tricks for wiki trac format
 =====================================================
 Escape character is !
