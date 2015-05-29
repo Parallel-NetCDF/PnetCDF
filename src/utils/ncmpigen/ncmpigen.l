@@ -12,6 +12,8 @@
 #define FILL_STRING "_"
 #define XDR_INT_MIN (-2147483647-1)
 #define XDR_INT_MAX 2147483647
+#define XDR_INT64_MIN  (-9223372036854775807LL-1)
+#define XDR_INT64_MAX  (9223372036854775807LL)
 
 char errstr[100];		/* for short error messages */
 

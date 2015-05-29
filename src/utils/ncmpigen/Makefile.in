@@ -71,7 +71,7 @@ ifeq (@have_yacc_lex@, yes)
 	cp -f y.tab.c ncmpigentab.c; \
 	cp -f y.tab.h ncmpigentab.h
 else
-	@echo "Error: cannot find bison or yacc, required to generate $@"
+	@echo "Error: one of $? is modified, but cannot find bison or yacc, required to re-generate $@"
 endif
 
 ncmpigenyy.c:	ncmpigen.l
@@ -79,7 +79,7 @@ ifeq (@have_yacc_lex@, yes)
 	$(lex) $(srcdir)/ncmpigen.l; \
 	cp -f lex.ncmpi.c ncmpigenyy.c
 else
-	@echo "Error: cannot find flex or lex, required to generate $@"
+	@echo "Error: $? is modified, but cannot find flex or lex, required to re-generate $@"
 endif
 
 vmstab.h \
