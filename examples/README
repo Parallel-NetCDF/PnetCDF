@@ -5,9 +5,10 @@
 # $Id$
 #
 
-This directory contains several example programs. An example run script
-"run.csh" is provided, which can be customized with the desired MPI run
-command and the number of MPI processes.
+This directory contains several example programs. Detailed descriptions of
+each program, compile and run instructions, and sample outputs are provided
+at the biginning of each file. Most of the example programs are developed
+with C, C++, F77, and F90 versions.
 
 
 ./tutorial

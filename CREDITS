@@ -22,7 +22,7 @@ help from the community.  A partial list follows.  Thanks everyone!
   large file support
 
 - Jim Edwards <jedwards@ucar.edu> provided a great deal of assitance with our
-  AIX port
+  AIX port, and testing the nonblocking APIs.
 
 - Tyce Mclarty <mclarty3@llnl.gov> also did a lot of AIX work for us
 
