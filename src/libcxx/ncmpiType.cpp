@@ -106,7 +106,7 @@ string inq_type(int myId) {
         case NC_DOUBLE : return string("double");
         default: break;
     }
-    return NULL;
+    return string("");
 }
 
 // Returns the type name.
