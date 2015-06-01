@@ -2,6 +2,72 @@ Parallel NetCDF Release Notes:
 =====================================
 
 -------------------------------------
+version  1.6.1 (June 1, 2015)
+-------------------------------------
+
+  o New features
+    * PnetCDF now supports fill mode. ncmpi_set_fill() can be used to set the
+      fill mode for the entire data set. Note the differences from netCDF:
+      1. The default mode in PnetCDF is NC_NOFILL. 
+      2. Setting fill mode for the entire file or individual variables must be
+         done in define mode.
+      3. For non-record variables, they are filled at the time ncmpi_enddef()
+         is called.
+      4. For record variables, users must explicitly call ncmpi_fill_var_rec()
+         to fill one record at a time before writing to the record of that
+         variable.
+
+  o New APIs
+    * ncmpi_def_var_fill() sets fill mode for an individual variable. This API
+      must be called in define mode.
+    * ncmpi_inq_var_fill() inquires fill mode of a variable.
+    * ncmpi_fill_var_rec() is a collective API that fills a record of a record
+      variable. This API must be called at data mode.
+    * ncmpi_inq_default_format() for inquiring the default file format for
+      new file creation. Note the default format can be changed by
+      ncmpi_set_default_format().
+    * The above new API are also available in Fortran and C++ versions.
+
+  o New error code
+    * NC_ENOTRECVAR when attempting operation only for record variables
+    * NC_ENOTFILL when attempting to fill a variable when its fill mode is off
+    * NC_EMULTIDEFINE_FILL_MODE	when inconsistent dataset fill mode is detected
+    * NC_EMULTIDEFINE_VAR_FILL_MODE when inconsistent variable fill mode is
+      detected
+    * NC_EMULTIDEFINE_VAR_FILL_VALUE when inconsistent variable fill value is
+      detected
+    * Fortran versions of the above error codes are also added.
+
+  o New example programs
+    * C/fill_mode.c shows the use of ncmpi_set_fill(), ncmpi_def_var_fill(),
+      ncmpi_inq_var_fill() and ncmpi_fill_var_rec()
+      F77/fill_mode.f is the Fortran version.
+      F90/fill_mode.f90 is the Fortran 90 version.
+      CXX/fill_mode.cpp is the C++ version.
+    * C/ghost_cell.c shows how to use varm API for writing from a user buffer
+      as a 2D array with ghost cells on both ends of every dimension.
+
+  o New test programs
+    * nc_test/tst_nofill.c borrowed from netCDF
+    * testcases/ivarn.c tests bug fix r2023 when the request IDs stored in
+      argument array_of_requests[] of ncmpi_wait_all() are not in an
+      increasing order.
+
+  o Other updates:
+    * Change the chunk size used for moving variable data when the file header
+      extent expands. The default is now 1MB. If the file's striping unit
+      size is known (from MPI-IO hint striping_unit) then the chunk size is
+      set to the striping unit size.
+
+  o Bug fixes
+    * Add missing F90 function overloading for f90mpi_put_var_all,
+      f90mpi_get_var_all, f90mpi_put_vard_all, and f90mpi_get_vard_all,
+      when the user buffer is a scalar.
+    * Fix when the request IDs passed in argument array_of_requests[] of
+      ncmpi_wait_all() are not in an increasing order. See r2023.
+    * Fix C++ compile error for converting NULL to string. See r2039.
+
+-------------------------------------
 version  1.6.0 (February 2, 2015)
 -------------------------------------
 

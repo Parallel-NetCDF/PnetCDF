@@ -22,7 +22,7 @@ Tasks immediately before a new release (must run in the following order)
     It is automatically generated from the 2nd argument of AC_INIT call.
     Revise that string to the right release version.  For example,
 
-    AC_INIT([parallel-netcdf], [1.6.0], [parallel-netcdf@mcs.anl.gov])
+    AC_INIT([parallel-netcdf], [1.6.1], [parallel-netcdf@mcs.anl.gov])
                                 ^^^^^
 
  3. Update file "RELEASE_NOTES".
@@ -35,14 +35,14 @@ Tasks immediately before a new release (must run in the following order)
     updated in file "configure.in". That string will be used as the official
     release date.
 
-    svn commit -m "set release date of version 1.6.0 to today"
+    svn commit -m "set release date of version 1.6.1 to today"
 
  5. Create an SVN tag.
     Run command below to duplicate the current trunk to the new tag:
 
     svn copy https://svn.mcs.anl.gov/repos/parallel-netcdf/trunk \
-             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-6-0 \
-             -m "Tagging release version 1.6.0"
+             https://svn.mcs.anl.gov/repos/parallel-netcdf/tags/v1-6-1 \
+             -m "Tagging release version 1.6.1"
 
  6. Generate a new file "configure" with a new release date.
     Run command "autoreconf" to generate file "configure"  which will be
@@ -60,11 +60,11 @@ Tasks immediately before a new release (must run in the following order)
 
  9. Generate SHA1 checksums
     Run command:
-    openssl sha1 parallel-netcdf-1.6.0.tar.gz
-    openssl sha1 parallel-netcdf-1.6.0.tar.bz2
+    openssl sha1 parallel-netcdf-1.6.1.tar.gz
+    openssl sha1 parallel-netcdf-1.6.1.tar.bz2
 
     Example command-line output:
-    SHA1(parallel-netcdf-1.6.0.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+    SHA1(parallel-netcdf-1.6.1.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
 
 =====================================================
 Convention of setting version numbers.
