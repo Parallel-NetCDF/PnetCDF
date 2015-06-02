@@ -1121,7 +1121,7 @@ int NcmpiGroup::getTypeCount(NcmpiGroup::Location location) const {
 
   // search in current group
   if(location == Current || location == ParentsAndCurrent || location == ChildrenAndCurrent || location == All ) {
-    int ntypesp;
+    int ntypesp=0;
     int* typeidsp=NULL;
     ncmpiCheck(ncmpi_inq_typeids(getId(), &ntypesp,typeidsp),__FILE__,__LINE__);
     ntypes+= ntypesp;
@@ -1159,7 +1159,7 @@ int NcmpiGroup::getTypeCount(NcmpiType::ncmpiType enumType, NcmpiGroup::Location
 
   // search in current group
   if(location == Current || location == ParentsAndCurrent || location == ChildrenAndCurrent || location == All ) {
-    int ntypesp;
+    int ntypesp=0;
     int* typeidsp=NULL;
     ncmpiCheck(ncmpi_inq_typeids(getId(), &ntypesp,typeidsp),__FILE__,__LINE__);
     if (ntypesp){
