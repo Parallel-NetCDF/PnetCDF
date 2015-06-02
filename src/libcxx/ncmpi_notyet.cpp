@@ -109,7 +109,7 @@ ncmpi_inq_type(int ncid, nc_type xtype, char *name, MPI_Offset *size){printf("%s
 /* Find all user-defined types for a location. This finds all
  *  * user-defined types in a group. */
  int
-ncmpi_inq_typeids(int ncid, int *ntypes, int *typeids){printf("%s not implemented\n",__func__); return NC_EINVAL;}
+ncmpi_inq_typeids(int ncid, int *ntypes, int *typeids){*ntypes=0; printf("%s not implemented\n",__func__); return NC_EINVAL;}
 
 /* Are two types equal? */
  int
