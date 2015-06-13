@@ -39,7 +39,7 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
-    * none
+    * Add README.INTEL for when using Intel MPI compiler 4.x
 
   o Bug fixes
     * none
