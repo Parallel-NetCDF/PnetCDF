@@ -271,6 +271,28 @@ AC_ARG_ENABLE(cxx,
     [enable_cxx=${enableval}], [enable_cxx=auto]
 )
 
+dnl Check if older Intel MPI C compiler (4.x) for issue of redefined SEEK_SET
+dnl See https://software.intel.com/en-us/articles/intel-cluster-toolkit-for-linux-error-when-compiling-c-aps-using-intel-mpi-library-compilation-driver-mpiicpc
+AC_DEFUN([UD_CHECK_MPI_CPP_SEEK_SET], [
+   AC_MSG_CHECKING(if MPI C++ compiler redefines SEEK_SET )
+   CXX=${MPICXX}
+   AC_LANG_PUSH(C++)
+   AC_COMPILE_IFELSE(
+      [AC_LANG_SOURCE([
+          #include <stdio.h>
+          #include <mpi.h>
+          int main() { return 0; }
+      ])],
+      [AC_MSG_RESULT(no)
+       ac_cv_CHECK_MPI_CPP_SEEK_SET=no
+      ],
+      [AC_MSG_RESULT(yes)
+       ac_cv_CHECK_MPI_CPP_SEEK_SET=yes
+      ]
+   )
+   AC_LANG_POP(C++)]
+)
+
 if test "x${enable_cxx}" != xno ; then
    UD_CHECK_MPI_COMPILER([MPICXX], [$CANDIDATE_MPICXX])
 
@@ -308,6 +330,11 @@ if test "x${enable_cxx}" != xno ; then
           )])
           AC_LANG_POP(C++)
       fi
+   fi
+   UD_CHECK_MPI_CPP_SEEK_SET
+   UD_MSG_DEBUG(ac_cv_CHECK_MPI_CPP_SEEK_SET=$ac_cv_CHECK_MPI_CPP_SEEK_SET)
+   if test "x${ac_cv_CHECK_MPI_CPP_SEEK_SET}" = xyes ; then
+      CXXCPPFLAGS="${CXXCPPFLAGS} -DMPICH_IGNORE_CXX_SEEK -DMPICH_SKIP_MPICXX"
    fi
 else
 has_mpicxx=no
