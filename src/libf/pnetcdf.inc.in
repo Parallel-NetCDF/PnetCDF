@@ -76,9 +76,9 @@
       parameter (nf_fill_double = 9.9692099683868690e+36)
       parameter (nf_fill_ubyte = 255)
       parameter (nf_fill_ushort = 65535)
-      parameter (nf_fill_uint = 4294967295_8)
-      parameter (nf_fill_int64 = -9223372036854775806_8)
-      ! parameter (nf_fill_uint64 = 18446744073709551614_8)  ! currently not supported
+      parameter (nf_fill_uint = @PNF_FILL_UINT@)
+      parameter (nf_fill_int64 = @PNF_FILL_INT64@)
+      ! parameter (nf_fill_uint64 = @PNF_FILL_UINT64@)  ! currently not supported
       parameter (nf_fill_uint64 = 1.8446744073709551614e+19)
 
 !
