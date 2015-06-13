@@ -1,6 +1,5 @@
 #include <string>
 #include "ncmpiGroup.h"
-#include <mpi.h>
 
 #ifndef NcmpiFileClass
 #define NcmpiFileClass
