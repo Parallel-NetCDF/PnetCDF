@@ -1,4 +1,3 @@
-#include <mpi.h>
 #include <pnetcdf.h>
 #include <iostream>
 #include "ncmpi_notyet.h"
