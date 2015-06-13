@@ -42,5 +42,7 @@ This is essentially a placeholder for the next release note ...
     * Add README.INTEL for when using Intel MPI compiler 4.x
 
   o Bug fixes
-    * none
+    * Fix Fortran 77 constants nf_fill_uint and nf_fill_int64 (thanks Jim
+      Edwards) that pgf77-based MPI compiler does not like "_8" modifier.
+      the "_8" modifier 
 

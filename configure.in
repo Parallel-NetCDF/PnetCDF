@@ -492,6 +492,23 @@ if test "x${enable_fortran}" = xyes ; then
            ;;
    esac
 
+   dnl Check if pgf77 is used, as pgf77 does not like "_8" modifier
+   pgf77_version=`${MPIF77} --version`
+   pgf77_vendor=`echo ${pgf77_version} | cut -d' ' -f1`
+   if test "x${pgf77_vendar}" = xpgf77 ; then
+      dnl echo "Fortran 77 uses pgf77"
+      PNF_FILL_UINT=4294967295
+      PNF_FILL_INT64=-9223372036854775806
+      PNF_FILL_UINT64=18446744073709551614
+   else
+      PNF_FILL_UINT=4294967295_8
+      PNF_FILL_INT64=-9223372036854775806_8
+      PNF_FILL_UINT64=18446744073709551614_8
+   fi
+   AC_SUBST(PNF_FILL_UINT)
+   AC_SUBST(PNF_FILL_INT64)
+   AC_SUBST(PNF_FILL_UINT64)
+
    AC_SUBST(MPIF77)
    AC_SUBST(MPIF90)
 
