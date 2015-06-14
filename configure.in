@@ -331,10 +331,12 @@ if test "x${enable_cxx}" != xno ; then
           AC_LANG_POP(C++)
       fi
    fi
-   UD_CHECK_MPI_CPP_SEEK_SET
-   UD_MSG_DEBUG(ac_cv_CHECK_MPI_CPP_SEEK_SET=$ac_cv_CHECK_MPI_CPP_SEEK_SET)
-   if test "x${ac_cv_CHECK_MPI_CPP_SEEK_SET}" = xyes ; then
-      CXXCPPFLAGS="${CXXCPPFLAGS} -DMPICH_IGNORE_CXX_SEEK -DMPICH_SKIP_MPICXX"
+   if test "x${has_mpicxx}" = xyes ; then
+      UD_CHECK_MPI_CPP_SEEK_SET
+      UD_MSG_DEBUG(ac_cv_CHECK_MPI_CPP_SEEK_SET=$ac_cv_CHECK_MPI_CPP_SEEK_SET)
+      if test "x${ac_cv_CHECK_MPI_CPP_SEEK_SET}" = xyes ; then
+         CXXCPPFLAGS="${CXXCPPFLAGS} -DMPICH_IGNORE_CXX_SEEK -DMPICH_SKIP_MPICXX"
+      fi
    fi
 else
 has_mpicxx=no
