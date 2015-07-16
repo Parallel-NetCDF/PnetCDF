@@ -1491,3 +1491,35 @@ AC_DEFUN([UD_CHECK_HEADER_PATH],
     AS_VAR_POPDEF([ac_Path])dnl
 ])
 
+dnl Check if Fortran 77 compiler allows _8 modifier (a Fortran 90 feature)
+dnl for integer*8 parameter
+dnl
+AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
+    AC_CACHE_CHECK([Fortran compiler treating constant modifier], [ac_cv_fc_constant_modifier],
+    [AC_LANG_PUSH([Fortran 77])
+        ac_cv_fc_constant_modifier=no
+        AC_COMPILE_IFELSE([[
+         program main
+         integer*8  nf_fill_uint
+         integer*8  nf_fill_int64
+         parameter (nf_fill_uint  = 4294967295_8)
+         parameter (nf_fill_int64 = -9223372036854775806_8) 
+         end program]],
+        [ac_cv_fc_constant_modifier=yes])
+    ])
+    AC_LANG_POP([Fortran 77])
+])
+
+dnl Check if Fortran 77 compiler is pgf77
+dnl
+AC_DEFUN([UD_CHECK_PGF77],[
+    AC_CACHE_CHECK([if Fortran 77 compiler is pgf77], [ac_cv_fc_pgf77],
+    [ac_cv_fc_pgf77=no
+     pgf77_version=`${MPIF77} --version`
+     pgf77_vendor=`echo ${pgf77_version} | cut -d' ' -f1`
+     if test "x${pgf77_vendar}" = xpgf77 ; then
+        ac_cv_fc_pgf77=yes
+     fi
+    ])
+])
+

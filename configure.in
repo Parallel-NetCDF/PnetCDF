@@ -521,11 +521,14 @@ if test "x${enable_fortran}" = xyes ; then
            ;;
    esac
 
-   dnl Check if pgf77 is used, as pgf77 does not like "_8" modifier
-   pgf77_version=`${MPIF77} --version`
-   pgf77_vendor=`echo ${pgf77_version} | cut -d' ' -f1`
-   if test "x${pgf77_vendar}" = xpgf77 ; then
-      dnl echo "Fortran 77 uses pgf77"
+   dnl Some Fortran 77 compilers, such as pgf77, do not allow "_8" modifier,
+   dnl because _8 modifier is a Fortran 90 feature
+   dnl UD_CHECK_PGF77
+   dnl UD_MSG_DEBUG([ac_cv_fc_pgf77=$ac_cv_fc_pgf77 pgf77_vendar=$pgf77_vendar])
+
+   UD_FC_CONSTANT_MODIFIER
+   UD_MSG_DEBUG([ac_cv_fc_constant_modifier=$ac_cv_fc_constant_modifier])
+   if test "x${ac_cv_fc_constant_modifier}" = xno ; then
       PNF_FILL_UINT=4294967295
       PNF_FILL_INT64=-9223372036854775806
       PNF_FILL_UINT64=18446744073709551614
