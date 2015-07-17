@@ -40,9 +40,10 @@ This is essentially a placeholder for the next release note ...
 
   o Other updates:
     * Add README.INTEL for when using Intel MPI compiler 4.x
+    * Build dependency rule is added for files configure and configure.in
 
   o Bug fixes
     * Fix Fortran 77 constants nf_fill_uint and nf_fill_int64 (thanks Jim
       Edwards) that pgf77-based MPI compiler does not like "_8" modifier.
-      the "_8" modifier 
+      See r2045 and r2051.
 

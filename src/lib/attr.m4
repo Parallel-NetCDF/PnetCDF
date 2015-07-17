@@ -303,12 +303,13 @@ ncmpii_NC_findattr(const NC_attrarray *ncap,
 {
     int i;
     size_t nchars;
+    char *name;
 
     assert(ncap != NULL);
 
     if (ncap->ndefined == 0) return -1; /* none created yet */
 
-    char *name = (char *)utf8proc_NFC((const unsigned char *)uname);
+    name = (char *)utf8proc_NFC((const unsigned char *)uname);
     nchars = strlen(name);
 
     for (i=0; i<ncap->ndefined; i++) {

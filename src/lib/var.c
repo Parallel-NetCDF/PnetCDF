@@ -599,6 +599,10 @@ ncmpi_inq_var(int      ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
+    /* using NC_GLOBAL in varid is illegal for this API. See
+     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
+     */
+
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) return NC_ENOTVAR;
 
