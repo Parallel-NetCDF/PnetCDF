@@ -177,6 +177,8 @@ cscope:
 	find $(srcdir) -iname "*.[ch]" > $(srcdir)/cscope.files
 	( cd $(srcdir); cscope -be -i $(srcdir)/cscope.files )
 
+# The following dependency is for configure.in and configure
+# See autoconf manual 2.69, Section 4.8.5 Automatic Remaking
 $(srcdir)/configure: configure.in aclocal.m4
 	cd '$(srcdir)' && autoconf
      
