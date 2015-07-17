@@ -1128,6 +1128,8 @@ AC_CONFIG_FILES(macros.make \
                 benchmarks/FLASH-IO/Makefile \
                 test/subfile/Makefile)
 
+# The following dependency is for configure.in and configure
+# See autoconf manual 2.69, Section 4.8.5 Automatic Remaking
 AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
 
 AC_OUTPUT
