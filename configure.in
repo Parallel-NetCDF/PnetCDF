@@ -1128,6 +1128,8 @@ AC_CONFIG_FILES(macros.make \
                 benchmarks/FLASH-IO/Makefile \
                 test/subfile/Makefile)
 
+AC_CONFIG_FILES([stamp-h], [echo timestamp > stamp-h])
+
 AC_OUTPUT
 echo "--------------------------------------------------------------------"
 
