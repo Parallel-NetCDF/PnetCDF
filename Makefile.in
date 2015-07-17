@@ -53,7 +53,8 @@ PACKING_LIST	= Makefile.in \
 		  README.large_files \
 		  RELEASE_NOTES \
 		  pbs.script \
-		  cobalt.script
+		  cobalt.script \
+		  stamp-h.in
 
 PACKING_SUBDIRS	= $(SUBDIRS)
 
