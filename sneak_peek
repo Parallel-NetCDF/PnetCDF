@@ -41,6 +41,11 @@ This is essentially a placeholder for the next release note ...
   o Other updates:
     * Add README.INTEL for when using Intel MPI compiler 4.x
     * Build dependency rule is added for files configure and configure.in
+    * PnetCDF checks MPICC/MPICXX/MPIF77/MPIF90 instead of CC/CXX/F77/F90/FC.
+      If MPICC/MPICXX/MPIF77/MPIF90 are set, PnetCDF will ignore
+      CC/CXX/F77/F90/FC. If CC/CXX/F77/F90/FC is set instead of
+      MPICC/MPICXX/MPIF77/MPIF90, PnetCDF will now copy them to
+      MPICC/MPICXX/MPIF77/MPIF90.
 
   o Bug fixes
     * Fix Fortran 77 constants nf_fill_uint and nf_fill_int64 (thanks Jim
