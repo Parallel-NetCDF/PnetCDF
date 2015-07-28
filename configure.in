@@ -123,7 +123,7 @@ if test "x${MPI_INSTALL}" != x && (! test -d "${MPI_INSTALL}") ; then
 fi
 
 AC_DEFUN([UD_CHECK_MPI_COMPILER], [
-   if test "x$MPI_INSTALL"  != x ; then
+   if test "x$MPI_INSTALL" != x ; then
       UD_MSG_DEBUG(--with-mpi=$MPI_INSTALL is used)
       if test "x$$1" = x ; then
          if test "x$$1" = x && (test -d "${MPI_INSTALL}/bin") ; then
@@ -172,10 +172,19 @@ AC_ARG_VAR(MPICXX, MPI C++ compiler)
 AC_ARG_VAR(MPIF77, MPI Fortran 77 compiler)
 AC_ARG_VAR(MPIF90, MPI Fortran 90 compiler)
 
-CANDIDATE_MPICC="mpicc"
-CANDIDATE_MPICXX="mpicxx mpic++ mpiCC"
-CANDIDATE_MPIF77="mpif77"
-CANDIDATE_MPIF90="mpif90"
+dnl Check if MPICC, MPICXX, MPIF77, MPIF90 are set by the user.
+dnl If not, set MPICC equal to CC. Similarly, for MPICXX, MPIF77, and MPIF90
+if test "x$MPICC"  = x && test "x$CC"  != x ; then MPICC=$CC   ; fi
+if test "x$MPICXX" = x && test "x$CXX" != x ; then MPICXX=$CXX ; fi
+if test "x$MPIF77" = x && test "x$F77" != x ; then MPIF77=$F77 ; fi
+if test "x$MPIF77" = x && test "x$FC"  != x ; then MPIF77=$FC  ; fi
+if test "x$MPIF90" = x && test "x$F90" != x ; then MPIF90=$F90 ; fi
+if test "x$MPIF90" = x && test "x$FC"  != x ; then MPIF90=$FC  ; fi
+
+CANDIDATE_MPICC="${MPICC} mpicc"
+CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC"
+CANDIDATE_MPIF77="${MPIF77} mpif77"
+CANDIDATE_MPIF90="${MPIF90} mpif90"
 
 dnl add IBM MPI compilers
 CANDIDATE_MPICC="${CANDIDATE_MPICC} mpcc_r mpcc mpixlc_r mpixlc"
