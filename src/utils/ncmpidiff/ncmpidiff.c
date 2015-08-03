@@ -30,6 +30,27 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#ifndef ubyte
+#define ubyte unsigned char
+#endif
+#ifndef ushort
+#define ushort unsigned short
+#endif
+#ifndef uint
+#define uint unsigned int
+#endif
+#ifndef int64
+#define int64 long long
+#endif
+#ifndef uint64
+#define uint64 unsigned long long
+#endif
+
+#define OOM_ERROR { \
+    fprintf(stderr, "Error: malloc() out of memory at line %d\n",__LINE__); \
+    exit(1); \
+}
+
 #define HANDLE_ERROR {                                         \
     if (err != NC_NOERR) {                                     \
         fprintf(stderr, "Error at line %d (%s)\n", __LINE__,   \
@@ -42,7 +63,9 @@
 #define CHECK_GLOBAL_ATT_DIFF(type, func, nctype) {                    \
     int   pos, len = attlen1 * sizeof(type);                           \
     type *b1 = (type *)malloc(len);                                    \
+    if (!b1) OOM_ERROR                                                 \
     type *b2 = (type *)malloc(len);                                    \
+    if (!b2) OOM_ERROR                                                 \
     err = func(ncid1, NC_GLOBAL, name1, b1);                           \
     HANDLE_ERROR                                                       \
     err = func(ncid2, NC_GLOBAL, name1, b2);                           \
@@ -62,7 +85,9 @@
 #define CHECK_VAR_ATT_DIFF(type, func, nctype) {                              \
     int   pos, len = attlen1 * sizeof(type);                                  \
     type *b1 = (type *)malloc(len);                                           \
+    if (!b1) OOM_ERROR                                                        \
     type *b2 = (type *)malloc(len);                                           \
+    if (!b2) OOM_ERROR                                                        \
     err = func(ncid1, i, attrname, b1);                                       \
     HANDLE_ERROR                                                              \
     err = func(ncid2, varid, attrname, b2);                                   \
@@ -82,7 +107,9 @@
 #define CHECK_VAR_DIFF(type, func, nctype) {                                 \
     int   pos, isDiff, len = varsize * sizeof(type);                         \
     type *b1 = (type *)malloc(len);                                          \
+    if (!b1) OOM_ERROR                                                       \
     type *b2 = (type *)malloc(len);                                          \
+    if (!b2) OOM_ERROR                                                       \
     err = func(ncid1, varid1, start, shape, b1);                             \
     HANDLE_ERROR                                                             \
     err = func(ncid2, varid2, start, shape, b2);                             \
@@ -115,6 +142,7 @@ char *progname;
 /*
  *  * Print error message to stderr and exit
  */
+#if 0
 static void
 error(const char *fmt, ...)
 {
@@ -129,6 +157,7 @@ error(const char *fmt, ...)
     (void) fflush(stderr);      /* to ensure log files are current */
     exit(EXIT_FAILURE);
 }
+#endif
 
 /*----< usage() >-------------------------------------------------------------*/
 static void
@@ -169,7 +198,7 @@ get_var_names(char *optarg, struct vspec* vspecp)
             nvars++;
 
     vspecp->names = (char **) malloc(nvars * sizeof(char*));
-    if (!vspecp->names) error("out of memory");
+    if (!vspecp->names) OOM_ERROR
 
     cpp = vspecp->names;
     /* copy variable names into list */
@@ -178,7 +207,7 @@ get_var_names(char *optarg, struct vspec* vspecp)
          cp = strtok((char *) NULL, ",")) {
 
         *cpp = (char *) malloc(strlen(cp) + 1);
-        if (!*cpp) error("out of memory");
+        if (!*cpp) OOM_ERROR
         strcpy(*cpp, cp);
         cpp++;
     }
@@ -195,6 +224,11 @@ get_type(int type)
         case NC_INT:    return "int";
         case NC_FLOAT:  return "float";
         case NC_DOUBLE: return "double";
+        case NC_UBYTE:  return "unsigned char";
+        case NC_USHORT: return "unsigned short";
+        case NC_UINT:   return "unsigned int";
+        case NC_INT64:  return "long long";
+        case NC_UINT64: return "unsigned long long";
     }
     return "";
 }
@@ -262,11 +296,17 @@ int main(int argc, char **argv)
     }
 
     dimids1 = (int*) malloc(NC_MAX_DIMS * sizeof(int));
+    if (!dimids1) OOM_ERROR
     dimids2 = (int*) malloc(NC_MAX_DIMS * sizeof(int));
+    if (!dimids2) OOM_ERROR
     name1   = (char*) malloc(NC_MAX_NAME);
+    if (!name1) OOM_ERROR
     name2   = (char*) malloc(NC_MAX_NAME);
+    if (!name2) OOM_ERROR
     shape   = (MPI_Offset*) malloc(NC_MAX_VAR_DIMS * sizeof(MPI_Offset));
+    if (!shape) OOM_ERROR
     start   = (MPI_Offset*) malloc(NC_MAX_VAR_DIMS * sizeof(MPI_Offset));
+    if (!start) OOM_ERROR
 
     /* Nov. 18, 2014 -- disable subfiling as it does not correctly handle the
      * cases when  nprocs < num_subfiles */
@@ -346,11 +386,16 @@ int main(int argc, char **argv)
                 printf("\tSAME: length (%lld)\n",(long long int)attlen1);
 
             switch (type1) {
-                case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text,   NC_CHAR)
-                case NC_SHORT:  CHECK_GLOBAL_ATT_DIFF(short,  ncmpi_get_att_short,  NC_SHORT)
-                case NC_INT:    CHECK_GLOBAL_ATT_DIFF(int,    ncmpi_get_att_int,    NC_INT)
-                case NC_FLOAT:  CHECK_GLOBAL_ATT_DIFF(float,  ncmpi_get_att_float,  NC_FLOAT)
-                case NC_DOUBLE: CHECK_GLOBAL_ATT_DIFF(double, ncmpi_get_att_double, NC_DOUBLE)
+                case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text,      NC_CHAR)
+                case NC_SHORT:  CHECK_GLOBAL_ATT_DIFF(short,  ncmpi_get_att_short,     NC_SHORT)
+                case NC_INT:    CHECK_GLOBAL_ATT_DIFF(int,    ncmpi_get_att_int,       NC_INT)
+                case NC_FLOAT:  CHECK_GLOBAL_ATT_DIFF(float,  ncmpi_get_att_float,     NC_FLOAT)
+                case NC_DOUBLE: CHECK_GLOBAL_ATT_DIFF(double, ncmpi_get_att_double,    NC_DOUBLE)
+                case NC_UBYTE:  CHECK_GLOBAL_ATT_DIFF(ubyte,  ncmpi_get_att_uchar,     NC_UBYTE)
+                case NC_USHORT: CHECK_GLOBAL_ATT_DIFF(ushort, ncmpi_get_att_ushort,    NC_USHORT)
+                case NC_UINT:   CHECK_GLOBAL_ATT_DIFF(uint,   ncmpi_get_att_uint,      NC_UINT)
+                case NC_INT64:  CHECK_GLOBAL_ATT_DIFF(int64,  ncmpi_get_att_longlong,  NC_INT64)
+                case NC_UINT64: CHECK_GLOBAL_ATT_DIFF(uint64, ncmpi_get_att_ulonglong, NC_UINT64)
                 default: ; /* TODO: handle unexpected types */
             }
         }
@@ -512,11 +557,16 @@ int main(int argc, char **argv)
                     printf("\t\tSAME: length (%lld)\n",(long long int)attlen1);
 
                 switch (type1) {
-                    case NC_CHAR:   CHECK_VAR_ATT_DIFF(char,   ncmpi_get_att_text,   NC_CHAR)
-                    case NC_SHORT:  CHECK_VAR_ATT_DIFF(short,  ncmpi_get_att_short,  NC_SHORT)
-                    case NC_INT:    CHECK_VAR_ATT_DIFF(int,    ncmpi_get_att_int,    NC_INT)
-                    case NC_FLOAT:  CHECK_VAR_ATT_DIFF(float,  ncmpi_get_att_float,  NC_FLOAT)
-                    case NC_DOUBLE: CHECK_VAR_ATT_DIFF(double, ncmpi_get_att_double, NC_DOUBLE)
+                    case NC_CHAR:   CHECK_VAR_ATT_DIFF(char,   ncmpi_get_att_text,      NC_CHAR)
+                    case NC_SHORT:  CHECK_VAR_ATT_DIFF(short,  ncmpi_get_att_short,     NC_SHORT)
+                    case NC_INT:    CHECK_VAR_ATT_DIFF(int,    ncmpi_get_att_int,       NC_INT)
+                    case NC_FLOAT:  CHECK_VAR_ATT_DIFF(float,  ncmpi_get_att_float,     NC_FLOAT)
+                    case NC_DOUBLE: CHECK_VAR_ATT_DIFF(double, ncmpi_get_att_double,    NC_DOUBLE)
+                    case NC_UBYTE:  CHECK_VAR_ATT_DIFF(ubyte,  ncmpi_get_att_uchar,     NC_UBYTE)
+                    case NC_USHORT: CHECK_VAR_ATT_DIFF(ushort, ncmpi_get_att_ushort,    NC_USHORT)
+                    case NC_UINT:   CHECK_VAR_ATT_DIFF(uint,   ncmpi_get_att_uint,      NC_UINT)
+                    case NC_INT64:  CHECK_VAR_ATT_DIFF(int64,  ncmpi_get_att_longlong,  NC_INT64)
+                    case NC_UINT64: CHECK_VAR_ATT_DIFF(uint64, ncmpi_get_att_ulonglong, NC_UINT64)
                     default: ; /* TODO: handle unexpected types */
                 }
             }
@@ -558,10 +608,12 @@ int main(int argc, char **argv)
         ncmpi_inq_nvars(ncid1, &nvars);
         var_list.nvars = nvars;
         var_list.names = (char**) malloc(nvars * sizeof(char*));
+        if (!var_list.names) OOM_ERROR
         /* get all the variable names from file1 */
         for (i=0; i<nvars; i++) {
             ncmpi_inq_varname(ncid1, i, name1);
             var_list.names[i] = (char *) malloc(strlen(name1) + 1);
+            if (!var_list.names[i]) OOM_ERROR
             strcpy(var_list.names[i], name1);
         }
     }
@@ -668,6 +720,11 @@ int main(int argc, char **argv)
             case NC_INT:    CHECK_VAR_DIFF(int,    ncmpi_get_vara_int_all,    NC_INT)
             case NC_FLOAT:  CHECK_VAR_DIFF(float,  ncmpi_get_vara_float_all,  NC_FLOAT)
             case NC_DOUBLE: CHECK_VAR_DIFF(double, ncmpi_get_vara_double_all, NC_DOUBLE)
+            case NC_UBYTE:  CHECK_VAR_DIFF(ubyte,  ncmpi_get_vara_uchar,      NC_UBYTE)
+            case NC_USHORT: CHECK_VAR_DIFF(ushort, ncmpi_get_vara_ushort,     NC_USHORT)
+            case NC_UINT:   CHECK_VAR_DIFF(uint,   ncmpi_get_vara_uint,       NC_UINT)
+            case NC_INT64:  CHECK_VAR_DIFF(int64,  ncmpi_get_vara_longlong,   NC_INT64)
+            case NC_UINT64: CHECK_VAR_DIFF(uint64, ncmpi_get_vara_ulonglong,  NC_UINT64)
             default: ; /* TODO: handle unexpected types */
         }
     }
@@ -717,7 +774,6 @@ int main(int argc, char **argv)
     if (rank == 0) numDIFF = varDIFF + numHeadDIFF;
     MPI_Bcast(&numDIFF, 1, MPI_LONG_LONG_INT, 0, comm);
 
-numDIFF = 2;
     MPI_Finalize();
 #ifdef vms
     if (quiet) exit((numDIFF == 0) ? 0 : 1);
