@@ -78,7 +78,7 @@ main(int argc, char **argv) {
    printf("*** Creating large file %s...", FILE_NAME);
 
    /* enter define mode */
-   stat = ncmpi_create(MPI_COMM_SELF, FILE_NAME, NC_CLOBBER|NC_64BIT_OFFSET, 
+   stat = ncmpi_create(MPI_COMM_SELF, FILE_NAME, NC_CLOBBER|NC_64BIT_DATA, 
 		   MPI_INFO_NULL, &ncid);
    check_err(stat,__LINE__,__FILE__);
  
