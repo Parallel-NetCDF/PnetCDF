@@ -303,8 +303,8 @@ pr_att(int         ncid,
     NC_CHECK(ncmpi_inq_att(ncid, varid, att.name, &att.type, &att.len));
 
     if (att.len == 0) {    /* show 0-length attributes as empty strings */
-        att.type = NC_CHAR;
-        att.len = 1;
+        Printf ("\"\" ;\n");
+        return;
     }
     switch (att.type) {
         case NC_CHAR:
