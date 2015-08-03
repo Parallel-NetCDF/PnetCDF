@@ -181,6 +181,18 @@ swap4b(void *dst, const void *src)
 	op[1] = ip[2];
 	op[2] = ip[1];
 	op[3] = ip[0];
+
+/* We can use bitwise operations as below.
+   Here, unsigned int must be of size 4 bytes.
+
+    unsigned int *cp = (unsigned int *) dst;
+    unsigned int *ip = (unsigned int *) src;
+
+    *cp =  ((*ip) << 24)
+        | (((*ip) & 0x0000ff00) << 8)
+        | (((*ip) & 0x00ff0000) >> 8)
+        | (((*ip) >> 24));
+*/
 }
 # endif /* !vax */
 
@@ -814,9 +826,9 @@ get_ix_uint(const void *xp, ix_uint *ip)
 {
 	const uchar *cp = (const uchar *) xp;
 
-	*ip = *cp++ << 24;
-	*ip |= (*cp++ << 16);
-	*ip |= (*cp++ << 8);
+	*ip  = (ix_uint)(*cp++ << 24);
+	*ip |= (ix_uint)(*cp++ << 16);
+	*ip |= (ix_uint)(*cp++ << 8);
 	*ip |= *cp;
 }
 
@@ -1882,9 +1894,9 @@ ncmpix_get_size_t(const void **xpp,  size_t *ulp)
 	/* similar to get_ix_int */
 	const uchar *cp = (const uchar *) *xpp;
 
-	*ulp = (unsigned)(*cp++ << 24);
-	*ulp |= (*cp++ << 16);
-	*ulp |= (*cp++ << 8);
+	*ulp  = (size_t)(*cp++ << 24);
+	*ulp |= (size_t)(*cp++ << 16);
+	*ulp |= (size_t)(*cp++ << 8);
 	*ulp |= *cp;
 
 	*xpp = (const void *)((const char *)(*xpp) + X_SIZEOF_SIZE_T);
@@ -1925,13 +1937,13 @@ ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 		*cp   = (uchar)( (*lp) & 0x000000ff);
 #else
 		*cp++ = (uchar) ((*lp)                          >> 56);
-		*cp++ = (uchar)(((*lp) & 0x00ff000000000000ULL) >> 48);
-		*cp++ = (uchar)(((*lp) & 0x0000ff0000000000ULL) >> 40);
-		*cp++ = (uchar)(((*lp) & 0x000000ff00000000ULL) >> 32);
-		*cp++ = (uchar)(((*lp) & 0x00000000ff000000ULL) >> 24);
-		*cp++ = (uchar)(((*lp) & 0x0000000000ff0000ULL) >> 16);
-		*cp++ = (uchar)(((*lp) & 0x000000000000ff00ULL) >>  8);
-		*cp   = (uchar)( (*lp) & 0x00000000000000ffULL);
+		*cp++ = (uchar)(((*lp) & 0x00ff000000000000LL) >> 48);
+		*cp++ = (uchar)(((*lp) & 0x0000ff0000000000LL) >> 40);
+		*cp++ = (uchar)(((*lp) & 0x000000ff00000000LL) >> 32);
+		*cp++ = (uchar)(((*lp) & 0x00000000ff000000LL) >> 24);
+		*cp++ = (uchar)(((*lp) & 0x0000000000ff0000LL) >> 16);
+		*cp++ = (uchar)(((*lp) & 0x000000000000ff00LL) >>  8);
+		*cp   = (uchar)( (*lp) & 0x00000000000000ffLL);
 #endif
 	}
 	*xpp = (void *)((char *)(*xpp) + sizeof_off_t);
@@ -2072,13 +2084,13 @@ ncmpix_put_int64(void **xpp, const long long ip)
     uchar *cp = (uchar *) *xpp;
     /* below is the same as calling swap8b(*xpp, &ip) */
     *cp++ = (uchar) (ip                          >> 56);
-    *cp++ = (uchar)((ip & 0x00ff000000000000ULL) >> 48);
-    *cp++ = (uchar)((ip & 0x0000ff0000000000ULL) >> 40);
-    *cp++ = (uchar)((ip & 0x000000ff00000000ULL) >> 32);
-    *cp++ = (uchar)((ip & 0x00000000ff000000ULL) >> 24);
-    *cp++ = (uchar)((ip & 0x0000000000ff0000ULL) >> 16);
-    *cp++ = (uchar)((ip & 0x000000000000ff00ULL) >>  8);
-    *cp   = (uchar) (ip & 0x00000000000000ffULL);
+    *cp++ = (uchar)((ip & 0x00ff000000000000LL) >> 48);
+    *cp++ = (uchar)((ip & 0x0000ff0000000000LL) >> 40);
+    *cp++ = (uchar)((ip & 0x000000ff00000000LL) >> 32);
+    *cp++ = (uchar)((ip & 0x00000000ff000000LL) >> 24);
+    *cp++ = (uchar)((ip & 0x0000000000ff0000LL) >> 16);
+    *cp++ = (uchar)((ip & 0x000000000000ff00LL) >>  8);
+    *cp   = (uchar) (ip & 0x00000000000000ffLL);
 #endif
     /* advance *xpp 8 bytes */
     *xpp  = (void *)((char *)(*xpp) + 8);
