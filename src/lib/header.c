@@ -723,7 +723,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
     if (pbp->version == 5)
         status = ncmpix_put_int64((void**)(&pbp->pos), varp->len);
     else {
-        if (varp->len != (int)varp->len) return NC_EINTOVERFLOW;
+        if (varp->len != (int)varp->len) return NC_EVARSIZE;
         status = ncmpix_put_int32((void**)(&pbp->pos), (int)varp->len);
     }
     if (status != NC_NOERR) return status;
