@@ -2010,16 +2010,16 @@ sub intToSizeTArr_ftoc {
     if ($justCopy) {
     print $OUTFD "
 #ifdef HAVE_SIZET_LARGER_THAN_FINT
-    { int ln = $Array_size;
-    if (ln > 0) {
+    { int ndims = $Array_size;
+    if (ndims > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
-        for (li=0; li<ln; li++) 
+        l$count = (MPI_Offset *)$malloc( (size_t)ndims * sizeof(MPI_Offset) );
+        for (li=0; li<ndims; li++) 
             l$count\[li\] = v$count\[li\];
     }
-    else if (ln < 0) {
+    else if (ndims < 0) {
         /* Error return */
-        $errparmlval = ln; 
+        $errparmlval = ndims; 
         return $errparmrval;
     }
     else l$count = 0;
@@ -2031,16 +2031,16 @@ sub intToSizeTArr_ftoc {
     else {
 	# Always copy and invert order
 	print $OUTFD "
-    { int ln = $Array_size;
-    if (ln > 0) {
+    { int ndims = $Array_size;
+    if (ndims > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
-        for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-1-li\];
+        l$count = (MPI_Offset *)$malloc( (size_t)ndims * sizeof(MPI_Offset) );
+        for (li=0; li<ndims; li++) 
+            l$count\[li\] = v$count\[ndims-1-li\];
     }
-    else if (ln < 0) {
+    else if (ndims < 0) {
         /* Error return */
-        $errparmlval = ln; 
+        $errparmlval = ndims; 
 	return $errparmrval;
     }
     }\n";
@@ -2089,16 +2089,16 @@ sub intToOffsetArr_ftoc {
     if ($justCopy && 0) {
     print $OUTFD "
 #ifdef HAVE_SIZET_LARGER_THAN_FINT
-    { int ln = $Array_size;
-    if (ln > 0) {
+    { int ndims = $Array_size;
+    if (ndims > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
-        for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-li-1\] - 1;
+        l$count = (MPI_Offset *)$malloc( (size_t)ndims * sizeof(MPI_Offset) );
+        for (li=0; li<ndims; li++) 
+            l$count\[li\] = v$count\[ndims-li-1\] - 1;
     }
-    else if (ln < 0) {
+    else if (ndims < 0) {
         /* Error return */
-        $errparmlval = ln; 
+        $errparmlval = ndims; 
 	return $errparmrval;
     }
     else l$count = 0;
@@ -2110,16 +2110,16 @@ sub intToOffsetArr_ftoc {
     else {
 	# Always copy and invert order
 	print $OUTFD "
-    { int ln = $Array_size;
-    if (ln > 0) {
+    { int ndims = $Array_size;
+    if (ndims > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(MPI_Offset) );
-        for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-1-li\] - 1;
+        l$count = (MPI_Offset *)$malloc( (size_t)ndims * sizeof(MPI_Offset) );
+        for (li=0; li<ndims; li++) 
+            l$count\[li\] = v$count\[ndims-1-li\] - 1;
     }
-    else if (ln < 0) {
+    else if (ndims < 0) {
         /* Error return */
-        $errparmlval = ln; 
+        $errparmlval = ndims; 
 	return $errparmrval;
     }
     }\n";
@@ -2152,8 +2152,9 @@ sub Start1DToStart2D_ftoc {
     { int ndims = $Array_size; /* var's number dims */
     if (ndims > 0) {
         int li, lj;
-        l$count    = (MPI_Offset**)$malloc(*v3 * sizeof(MPI_Offset*) );
-        l$count\[0\] = (MPI_Offset*) $malloc(*v3 * ndims * sizeof(MPI_Offset));
+        size_t len = (size_t)*v3;
+        l$count    = (MPI_Offset**)$malloc(len * sizeof(MPI_Offset*) );
+        l$count\[0\] = (MPI_Offset*) $malloc(len * (size_t)ndims * sizeof(MPI_Offset));
         for (lj=1; lj<*v3; lj++) 
             l$count\[lj\] = l$count\[lj-1\] + ndims;
         for (lj=0; lj<*v3; lj++) 
@@ -2204,8 +2205,9 @@ sub Count1DToCount2D_ftoc {
     { int ndims = $Array_size; /* var's number dims */
     if (ndims > 0) {
         int li, lj;
-        l$count    = (MPI_Offset**)$malloc(*v3 * sizeof(MPI_Offset*) );
-        l$count\[0\] = (MPI_Offset*) $malloc(*v3 * ndims * sizeof(MPI_Offset));
+        size_t len = (size_t)*v3;
+        l$count    = (MPI_Offset**)$malloc(len * sizeof(MPI_Offset*) );
+        l$count\[0\] = (MPI_Offset*) $malloc(len * (size_t)ndims * sizeof(MPI_Offset));
         for (lj=1; lj<*v3; lj++) 
             l$count\[lj\] = l$count\[lj-1\] + ndims;
         for (lj=0; lj<*v3; lj++) 
@@ -2256,12 +2258,12 @@ sub reorderIntArr_ftoc {
     # call a function of some of the other arguments to get the array size
     # Always copy and invert order
     print $OUTFD "
-    { int ln = $Array_size;
-    if (ln > 0) {
+    { int ndims = $Array_size;
+    if (ndims > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( ln * sizeof(int) );
-        for (li=0; li<ln; li++) 
-            l$count\[li\] = v$count\[ln-1-li\];
+        l$count = (MPI_Offset *)$malloc( (size_t)ndims * sizeof(int) );
+        for (li=0; li<ndims; li++) 
+            l$count\[li\] = v$count\[ndims-1-li\];
     }}\n";
     $clean_up .= "    $free( l$count );\n";
 }
@@ -2296,7 +2298,7 @@ sub reorderIntArrOut_out_ftoc {
     print $OUTFD "
     ln$count = $Array_size;
     if (ln$count > 0) {
-        l$count = (int *)$malloc( ln$count * sizeof(int) );
+        l$count = (int *)$malloc( (size_t)ln$count * sizeof(int) );
     }\n";
 }
 sub reorderIntArrOut_out_arg {
@@ -2435,7 +2437,7 @@ sub OffsetIndexInArr_ftoc {
     { ln$count = $Array_size;
     if (ln$count > 0) {
         int li;
-        l$count = (int *)$malloc( ln$count * sizeof(int) );
+        l$count = (int *)$malloc( (size_t)ln$count * sizeof(int) );
         for (li=0; li<ln$count; li++) 
             l$count\[li\] = v$count\[ln$count-li-1\]-1;
       }}\n";
@@ -2504,7 +2506,7 @@ sub blankpad_out_ftoc {
 
     # Allocate space to hold the C version of the output
     $strlen = "d$count";
-    print $OUTFD "    p$count = (char *)$calloc( $strlen + 1,1 );\n";
+    print $OUTFD "    p$count = (char *)$calloc( (size_t)$strlen + 1,1 );\n";
 }
 
 # ---------------------------------------------------------------------------
