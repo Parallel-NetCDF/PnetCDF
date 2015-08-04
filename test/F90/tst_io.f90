@@ -133,7 +133,8 @@ program tst_io
 !        real(ncint3)/real(wrint3);
 
    msg = '*** TESTING F90 '//trim(cmd)
-   if (my_rank .eq. 0)   write(*,"(A67,A)") msg,'------ pass'
+   if (my_rank .eq. 0) write(*,"(A67,A)") msg, &
+       '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
 
  999 call MPI_Finalize(err)
 

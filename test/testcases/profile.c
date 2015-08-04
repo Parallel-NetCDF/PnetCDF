@@ -17,6 +17,9 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define NY 2
 #define NX 5
 #define ERR {if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err));}}

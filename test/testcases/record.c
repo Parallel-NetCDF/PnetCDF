@@ -30,6 +30,9 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 void test_only_record_var_1D(char *filename,
@@ -278,8 +281,8 @@ int main(int argc, char** argv) {
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for write records in reversed order", argv[0]);
     if (rank == 0) {
-        if (pass) printf("%-66s ------ pass\n", cmd_str);
-        else      printf("%-66s ------ failed\n", cmd_str);
+        if (pass) printf("%-66s ------ " PASS_COLOR, cmd_str);
+        else      printf("%-66s ------ " FAIL_COLOR, cmd_str);
     }
 
 fn_exit:

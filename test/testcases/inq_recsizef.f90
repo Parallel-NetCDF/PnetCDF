@@ -146,9 +146,11 @@
           msg = '*** TESTING F90 '//trim(cmd)//' for inquiring record size'
           if (rank .eq. 0) then
               if (pass .EQ. 1) then
-                  write(*,"(A67,A)") msg,'------ pass'
+                  write(*,"(A67,A)") msg, &
+                  '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
               else
-                  write(*,"(A67,A)") msg,'------ failed'
+                  write(*,"(A67,A)") msg, &
+                  '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
               endif
           endif
 

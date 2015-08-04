@@ -14,6 +14,9 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define ERR_EXP(e, exp) {if (e != exp) { printf("Error (line %d): expecting error code %d but got %d\n", __LINE__, exp, e); nerr++; }}
 #define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2) { printf("Error (line %d): expecting error code %d or %d but got %d\n", __LINE__, exp1, exp2, e); nerr++; }}
 
@@ -605,10 +608,8 @@ int main(int argc, char **argv)
     if (rank == 0) {
         char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for header consistency", argv[0]);
-        if (sum_nerr == 0)
-            printf("%-66s ------ pass\n", cmd_str);
-        else
-            printf("%-66s ------ failed\n", cmd_str);
+        if (sum_nerr == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
+        else               printf("%-66s ------ " FAIL_COLOR, cmd_str);
     }
     MPI_Finalize();
     return 0;

@@ -12,6 +12,9 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define MAXLINE 128
 
 /* The file name is taken as a command-line argument. */
@@ -401,10 +404,8 @@ end:
     if (mynod == 0) {
         char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for subfiling", argv[0]);
-        if (sum_nerr == 0)
-            printf("%-66s ------ pass\n", cmd_str);
-        else
-            printf("%-66s ------ failed\n", cmd_str);
+        if (sum_nerr == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
+        else               printf("%-66s ------ " FAIL_COLOR, cmd_str);
     }
 
     MPI_Finalize();

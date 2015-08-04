@@ -21,6 +21,9 @@
 #include <limits.h> /* INT_MIN */
 #include <pnetcdf.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 static int verbose;
 
 #define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
@@ -2230,8 +2233,8 @@ int main(int argc, char *argv[])
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_atts ", argv[0]);
     if (rank == 0) {
-        if (nerrs) printf("%-66s ------ failed\n", cmd_str);
-        else       printf("%-66s ------ pass\n", cmd_str);
+        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
     }
 
     MPI_Finalize();
