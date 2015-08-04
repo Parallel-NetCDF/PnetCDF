@@ -7,6 +7,9 @@ using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 int main( int argc, char *argv[] )
 {
    char filename[256];
@@ -82,8 +85,8 @@ int main( int argc, char *argv[] )
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C++ %s for creation of classic format file", argv[0]);
     if (rank == 0) {
-        if (pass) printf("%-66s ------ pass\n", cmd_str);
-        else      printf("%-66s ------ failed\n", cmd_str);
+        if (pass) printf("%-66s ------ " PASS_COLOR, cmd_str);
+        else      printf("%-66s ------ " FAIL_COLOR, cmd_str);
     }
 
    MPI_Finalize();

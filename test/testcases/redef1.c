@@ -3,6 +3,9 @@
 #include <string.h>
 #include <pnetcdf.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define PNCDF_Error(err, msg) \
     if (err != NC_NOERR) { \
         printf("Error: %s (%s)\n", msg, ncmpi_strerror(err)); \
@@ -162,8 +165,8 @@ fn_exit:
     if (rank == 0) {
         char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for entering re-define mode ", argv[0]);
-        if (pass) printf("%-66s ------ pass\n", cmd_str);
-        else      printf("%-66s ------ failed\n", cmd_str);
+        if (pass) printf("%-66s ------ " PASS_COLOR, cmd_str);
+        else      printf("%-66s ------ " FAIL_COLOR, cmd_str);
     }
 
     MPI_Finalize();

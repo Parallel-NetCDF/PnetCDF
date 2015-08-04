@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 static void handle_error(int status)
 {
     fprintf(stderr, "%s\n", ncmpi_strerror(status));
@@ -70,7 +73,7 @@ int main(int argc, char **argv)
     if (rank == 0) {
         char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for NULL stride ", argv[0]);
-        printf("%-66s ------ pass\n", cmd_str);
+        printf("%-66s ------ " PASS_COLOR, cmd_str);
     }
 
     MPI_Finalize();

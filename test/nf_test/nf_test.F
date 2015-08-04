@@ -56,11 +56,13 @@
         write(msg,"(A,I1)") '*** TESTING F77 '//trim(PROGNAME)//
      +                      ' for CDF-', cdf_format
         if (nfailsTotal .eq. 0) then
-          write(*,"(A67,A)") msg,'------ pass'
+          write(*,"(A67,A)") msg,
+     +    '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
         else
           write(*,*) trim(PROGNAME)//' expects to see 0 failure ... '//
      +               'Total number of failures: ', nfailsTotal
-          write(*,"(A67,A)") msg,'------ failed'
+          write(*,"(A67,A)") msg,
+     +    '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
         endif
         end
 

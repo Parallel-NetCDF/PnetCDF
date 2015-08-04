@@ -118,6 +118,8 @@
 #define ABS(x)  ((x) < 0 ? -(x) : (x))
 #endif /* ABS */
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
     /* Parameters of test data */
 

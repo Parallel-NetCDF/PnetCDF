@@ -560,12 +560,12 @@ fn_exit:
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
     if (nfailsTotal == 0)  {
-        printf("%-66s ------ pass\n", cmd_str);
+        printf("%-66s ------ " PASS_COLOR, cmd_str);
     }
     else {
         print("\n%s: expects 0 failures ... ",argv[0]);
         print("Total number of failures: %d\n", nfailsTotal);
-        printf("%-66s ------ failed\n\n", cmd_str);
+        printf("%-66s ------ " FAIL_COLOR, cmd_str);
     }
     MPI_Finalize();
     return nfailsTotal > 0;

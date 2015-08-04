@@ -27,6 +27,9 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 void check_num_vars(int  ncid,
@@ -118,9 +121,9 @@ int main(int argc, char** argv) {
         char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for no. record/fixed variables", argv[0]);
         if (nfailed_all > 0)
-            printf("%s ------ failed with %d mismatches\n",cmd_str,nfailed_all);
+            printf("%s ------ "FAIL_COLOR" with %d mismatches\n",cmd_str,nfailed_all);
         else
-            printf("%-66s ------ pass\n", cmd_str);
+            printf("%-66s ------ " PASS_COLOR, cmd_str);
     }
 
 fn_exit:

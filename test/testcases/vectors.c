@@ -12,6 +12,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define NC_CHECK(fn) {int ncstat; ncstat = (fn); if (ncstat != NC_NOERR) handle_error_nc(ncstat, NULL); }
 
 static void handle_error_nc(int ncerr, char *str)
@@ -112,7 +115,7 @@ int main(int argc, char ** argv)
     if (rank == 0) {
         char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for put_vara/get_vara ", argv[0]);
-        printf("%-66s ------ pass\n", cmd_str);
+        printf("%-66s ------ " PASS_COLOR, cmd_str);
     }
     MPI_Finalize();
 

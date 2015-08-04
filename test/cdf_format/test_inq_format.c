@@ -11,6 +11,9 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
 
 int main(int argc, char **argv) {
@@ -48,8 +51,8 @@ int main(int argc, char **argv) {
     sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file format ", argv[0]);
     MPI_Reduce(&nerr, &err, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (err == 0) printf("%-66s ------ pass\n", cmd_str);
-        else          printf("%-66s ------ failed\n", cmd_str);
+        if (err == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
+        else          printf("%-66s ------ " FAIL_COLOR, cmd_str);
     }
 
     MPI_Finalize();

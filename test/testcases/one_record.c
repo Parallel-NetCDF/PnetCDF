@@ -21,6 +21,9 @@
 #include <pnetcdf.h>
 
 
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+
 #define ERRCODE 2
 #define ERR if (err != NC_NOERR) {printf("Error at line %d: err=%d %s\n", __LINE__, err, ncmpi_strerror(err));}
 
@@ -102,10 +105,8 @@ int main(int argc, char **argv)
         char cmd_str[256];
         sprintf(cmd_str, "*** TESTING C   %s for only one record variable ", argv[0]);
 
-        if (nerrs)
-            printf("%-66s ------ failed\n", cmd_str);
-        else
-            printf("%-66s ------ pass\n", cmd_str);
+        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
     }
 
     MPI_Finalize();
