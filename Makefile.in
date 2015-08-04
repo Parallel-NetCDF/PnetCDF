@@ -33,7 +33,8 @@ GARBAGE		=
 DIST_GARBAGE	= config.cache \
 		  config.status \
 		  config.log \
-		  macros.make
+		  macros.make \
+		  stamp-h
 
 PACKING_LIST	= Makefile.in \
 		  aclocal.m4 \
