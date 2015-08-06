@@ -146,7 +146,7 @@ swapn2b(void *dst, const void *src, MPI_Offset nn)
 
 /* unroll the following to reduce loop overhead
  *
- *	while(nn-- != 0)
+ *	while(nn-- > 0)
  *	{
  *		*op++ = *(++ip);
  *		*op++ = *(ip++ -1);
@@ -164,7 +164,7 @@ swapn2b(void *dst, const void *src, MPI_Offset nn)
 		*op++ = *(ip++ -1);
 		nn -= 4;
 	}
-	while(nn-- != 0)
+	while(nn-- > 0)
 	{
 		*op++ = *(++ip);
 		*op++ = *(ip++ -1);
@@ -203,7 +203,7 @@ swapn4b(void *dst, const void *src, MPI_Offset nn)
 	const char *ip = src;
 
 /* unroll the following to reduce loop overhead
- *	while(nn-- != 0)
+ *	while(nn-- > 0)
  *	{
  *		op[0] = ip[3];
  *		op[1] = ip[2];
@@ -235,7 +235,7 @@ swapn4b(void *dst, const void *src, MPI_Offset nn)
 		ip += 16;
 		nn -= 4;
 	}
-	while(nn-- != 0)
+	while(nn-- > 0)
 	{
 		op[0] = ip[3];
 		op[1] = ip[2];
@@ -282,7 +282,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
 	const char *ip = src;
 
 /* unroll the following to reduce loop overhead
- *	while(nn-- != 0)
+ *	while(nn-- > 0)
  *	{
  *		op[0] = ip[7];
  *		op[1] = ip[6];
@@ -319,7 +319,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
 		ip += 16;
 		nn -= 2;
 	}
-	while(nn-- != 0)
+	while(nn-- > 0)
 	{
 		op[0] = ip[7];
 		op[1] = ip[6];
@@ -333,7 +333,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
 		ip += 8;
 	}
 #  else
-	while(nn-- != 0)
+	while(nn-- > 0)
 	{
 		op[0] = ip[3];
 		op[1] = ip[2];
