@@ -342,8 +342,8 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
                 {
                     double xx = x*(double)color;
                     double yy = x*(double)(color+1);
-                    min = xx+(color==0||(xx-(int)xx==0.0)?0:1);
-                    max = yy-(yy-(int)yy==0.0?1:0);
+                    min = (int)xx+(color==0||(xx-(int)xx==0.0)?0:1);
+                    max = (int)yy-(yy-(int)yy==0.0?1:0);
                     if (max >= dpp[vpp[i]->dimids[j]]->size) max = dpp[vpp[i]->dimids[j]]->size-1;
                     dim_sz = max-min+1;
                 }
@@ -363,9 +363,9 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
                     double xx, yy;
                     sprintf(key[jj][j], "_PnetCDF_SubFiling.range(%s).subfile.%d", dpp[vpp[i]->dimids[j]]->name->cp, jj); /* dim name*/
                     xx = x*(double)jj;
-                    min = xx+(jj==0||(xx-(int)xx==0.0)?0:1);
+                    min = (int)xx+(jj==0||(xx-(int)xx==0.0)?0:1);
                     yy = x*(double)(jj+1);
-                    max = yy-(yy-(int)yy==0.0?1:0);
+                    max = (int)yy-(yy-(int)yy==0.0?1:0);
                     if (max >= dpp[vpp[i]->dimids[j]]->size) max = dpp[vpp[i]->dimids[j]]->size-1;
 #ifdef SUBFILE_DEBUG
                     if (myrank == 0) printf("subfile(%d): min=%d, max=%d\n", jj, min, max);
@@ -540,9 +540,9 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             int min, max;
 
             xx = (ratio)*(double)i; /* i: each subfile */
-            min = xx+(i==0||(xx-(int)xx==0.0)?0:1);
+            min = (int)xx+(i==0||(xx-(int)xx==0.0)?0:1);
             yy = (ratio)*(double)(i+1);
-            max = yy-(yy-(int)yy==0.0?1:0);
+            max = (int)yy-(yy-(int)yy==0.0?1:0);
             if (max >= nprocs) max = nprocs-1;
             /* scaled = (double)rand()/RAND_MAX; */
             scaled = (double)myrank/ratio-(double)color;
@@ -553,7 +553,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
             double xx;
             int min;
             xx = (ratio)*(double)i;
-            min = xx+(i==0||(xx-(int)xx==0.0)?0:1);
+            min = (int)xx+(i==0||(xx-(int)xx==0.0)?0:1);
             aproc = (i==color)?myrank:min;
         }
 
@@ -786,20 +786,21 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     else
         cbuf = (void *)buf;
 
-    int diff[ndims_org];
+    MPI_Offset diff[ndims_org];
     for (i=0; i < ndims_org; i++) {
-        int stride_count;
+        MPI_Offset stride_count;
         stride_count = (stride == NULL?1:stride[i]);
         /* making diff is necessary?? */
         diff[i] = ABS(my_req[myrank].start_org[i]-start[i])/stride_count;
 #ifdef SUBFILE_DEBUG
-        if (myrank == 0) printf("rank(%d): my_req[%d].start_org[%d]=%d, start[%d]=%d, diff[%d]=%d\n", myrank,
+        if (myrank == 0) printf("rank(%d): my_req[%d].start_org[%d]=%d, start[%d]=%d, diff[%d]=%lld\n", myrank,
                myrank, i, my_req[myrank].start_org[i], i, start[i], i, diff[i]);
 #endif
     }
 
     for (i=0; i<ndims_org; i++) {
-        int l, tmp=1;
+        int l;
+        MPI_Offset tmp=1;
         for (l=i+1; l < ndims_org ; l++) {
             tmp *= my_req[myrank].count[l];
         }
@@ -976,9 +977,10 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     for (i=0; i<nprocs; i++) {
         buf_count_my[i] = 1;
         if (count_my_req_per_proc[i] != 0 && i != myrank) {
-            int diff[ndims_org];
+            MPI_Offset diff[ndims_org];
             for (k=0; k < ndims_org; k++) {
-                int stride_count, tmp=1, l;
+                int l;
+                MPI_Offset stride_count, tmp=1;
 
                 stride_count = (stride == NULL?1:stride[k]);
                 diff[k] = ABS(my_req[i].start_org[k]-start[k])/stride_count;

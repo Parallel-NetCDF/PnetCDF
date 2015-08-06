@@ -2148,7 +2148,7 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	while(nelems-- != 0)
 	{
 ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, `		if (*xp < 0) status = NC_ERANGE;')')
-		*tp++ = *xp++;
+		*tp++ = ($2) (*xp++);  /* type cast from $1 to $2 */
 	}
 
 	*xpp = (const void *)xp;
@@ -2174,7 +2174,7 @@ ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	while(nelems-- != 0)
 	{
 ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, `		if (*xp < 0) status = NC_ERANGE;')')
-		*tp++ = *xp++;
+		*tp++ = ($2)(*xp++);  /* type cast from $1 to $2 */
 	}
 
 	*xpp = (void *)(xp + rndup);
@@ -2354,7 +2354,7 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	{
 		if(*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
 			status = NC_ERANGE;
-		*xp++ = ($1) *tp++;
+		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
 	}
 
 	*xpp = (void *)xp;
@@ -2381,7 +2381,7 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	{
 		if(*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
 			status = NC_ERANGE;
-		*xp++ = ($1) *tp++;
+		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
 	}
 
 
