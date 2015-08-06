@@ -2,6 +2,7 @@
 #include "ncmpiGroup.h"
 #include "ncmpiCheck.h"
 #include <vector>
+#include <assert.h>
 
 using namespace std;
 using namespace PnetCDF;
@@ -96,13 +97,14 @@ void NcmpiAtt::getValues(string& dataValues) const {
 
   MPI_Offset att_len=getAttLength();
   char* tmpValues;
-  tmpValues = (char *) malloc(att_len + 1);  /* + 1 for trailing null */
+  assert(att_len == (MPI_Offset)(size_t)att_len);
+  tmpValues = (char *) malloc((size_t)att_len + 1);  /* + 1 for trailing null */
 
   if(typeClass == NcmpiType::ncmpi_VLEN || typeClass == NcmpiType::ncmpi_OPAQUE || typeClass == NcmpiType::ncmpi_ENUM || typeClass == NcmpiType::ncmpi_COMPOUND) 
     ncmpiCheck(ncmpi_get_att(groupId,varId,myName.c_str(),tmpValues),__FILE__,__LINE__);
   else
     ncmpiCheck(ncmpi_get_att_text(groupId,varId,myName.c_str(),tmpValues),__FILE__,__LINE__);
-  dataValues=string(tmpValues,att_len);
+  dataValues=string(tmpValues, (size_t)att_len);
   free(tmpValues);
 }
 
