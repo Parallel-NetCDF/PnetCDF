@@ -279,7 +279,7 @@ ncmpii_new_NC(const MPI_Offset *chunkp)
 int
 ncmpi_set_default_format(int format, int *old_formatp)
 {
-    int safe_mode, mpireturn, status=NC_NOERR;
+    int safe_mode=0, mpireturn, status=NC_NOERR;
     char *env_str;
 
     /* Return existing format if desired. */
