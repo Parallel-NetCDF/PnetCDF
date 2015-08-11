@@ -254,7 +254,7 @@ $returnType   = "int";
 # we still need an argument for the array size
 #
 # Other transformations:
-#   variable ids and dimension ids must be shifted by 1 (0... in C, 1... in 
+#   variable ids and dimension ids must be shifted by 1 (0... in C, 1... in
 #   Fortran.  This is done with out:OffsetIndex and in:IntIndexIn or
 #   out:IntIndex and in:IntIndexIn).
 #   Arrays of ids are handled with in:IntIndexInArr:dimension
@@ -313,54 +313,54 @@ $returnType   = "int";
 
 	'get_var1' => '2:3',
 		'get_var1-2'		=> 'in:IntIndexIn',
-		'get_var1-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1-3'		=> 'in:reorderOffsetArr:true',
 	'get_var1_all' => '2:3',
 		'get_var1_all-2'	=> 'in:IntIndexIn',
-		'get_var1_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_all-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_text' => '2:3:4',
 		'get_var1_text-2'	=> 'in:IntIndexIn',
 		'get_var1_text-4'	=> 'out:charBufferOut',
-		'get_var1_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_text-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_text_all' => '2:3:4',
 		'get_var1_text_all-2'	=> 'in:IntIndexIn',
 		'get_var1_text_all-4'	=> 'out:charBufferOut',
-		'get_var1_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_text_all-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_schar' => '2:3',
 		'get_var1_schar-2'	=> 'in:IntIndexIn',
-		'get_var1_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_schar-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_schar_all' => '2:3',
 		'get_var1_schar_all-2'	=> 'in:IntIndexIn',
-		'get_var1_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_schar_all-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_short' => '2:3',
 		'get_var1_short-2'	=> 'in:IntIndexIn',
-		'get_var1_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_short-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_short_all' => '2:3',
 		'get_var1_short_all-2'	=> 'in:IntIndexIn',
-		'get_var1_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_short_all-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_int' => '2:3',
 		'get_var1_int-2'	=> 'in:IntIndexIn',
-		'get_var1_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_int-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_int_all' => '2:3',
 		'get_var1_int_all-2'	=> 'in:IntIndexIn',
-		'get_var1_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_int_all-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_float' => '2:3',
 		'get_var1_float-2'	=> 'in:IntIndexIn',
-		'get_var1_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_float-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_float_all' => '2:3',
 		'get_var1_float_all-2'	=> 'in:IntIndexIn',
-		'get_var1_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_float_all-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_double' => '2:3',
 		'get_var1_double-2'	=> 'in:IntIndexIn',
-		'get_var1_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_double-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_double_all' => '2:3',
 		'get_var1_double_all-2'	=> 'in:IntIndexIn',
-		'get_var1_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_double_all-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_longlong' => '2:3',
 		'get_var1_longlong-2'	=> 'in:IntIndexIn',
-		'get_var1_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_longlong-3'	=> 'in:reorderOffsetArr:true',
 	'get_var1_longlong_all' => '2:3',
 		'get_var1_longlong_all-2'	=> 'in:IntIndexIn',
-		'get_var1_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'get_var1_longlong_all-3'	=> 'in:reorderOffsetArr:true',
 
 	'get_var' => '2',
 		'get_var-2'		=> 'in:IntIndexIn',
@@ -399,252 +399,252 @@ $returnType   = "int";
 
 	'get_vara' => '2:3:4',
 		'get_vara-2'		=> 'in:IntIndexIn',
-		'get_vara-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara-4'		=> 'in:intToOffsetArr',
+		'get_vara-3'		=> 'in:reorderOffsetArr:true',
+		'get_vara-4'		=> 'in:reorderOffsetArr',
 	'get_vara_all' => '2:3:4',
 		'get_vara_all-2'	=> 'in:IntIndexIn',
-		'get_vara_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_all-4'	=> 'in:reorderOffsetArr',
 	'get_vara_text' => '2:3:4:5',
 		'get_vara_text-2'	=> 'in:IntIndexIn',
-		'get_vara_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_text-4'	=> 'in:intToOffsetArr',
+		'get_vara_text-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_text-4'	=> 'in:reorderOffsetArr',
 		'get_vara_text-5'	=> 'out:charBufferOut',
 	'get_vara_text_all' => '2:3:4:5',
 		'get_vara_text_all-2'	=> 'in:IntIndexIn',
-		'get_vara_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_text_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_text_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_text_all-4'	=> 'in:reorderOffsetArr',
 		'get_vara_text_all-5'	=> 'out:charBufferOut',
 	'get_vara_schar' => '2:3:4',
 		'get_vara_schar-2'	=> 'in:IntIndexIn',
-		'get_vara_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_schar-4'	=> 'in:intToOffsetArr',
+		'get_vara_schar-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_schar-4'	=> 'in:reorderOffsetArr',
 	'get_vara_schar_all' => '2:3:4',
 		'get_vara_schar_all-2'	=> 'in:IntIndexIn',
-		'get_vara_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_schar_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_schar_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_schar_all-4'	=> 'in:reorderOffsetArr',
 	'get_vara_short' => '2:3:4',
 		'get_vara_short-2'	=> 'in:IntIndexIn',
-		'get_vara_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_short-4'	=> 'in:intToOffsetArr',
+		'get_vara_short-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_short-4'	=> 'in:reorderOffsetArr',
 	'get_vara_short_all' => '2:3:4',
 		'get_vara_short_all-2'	=> 'in:IntIndexIn',
-		'get_vara_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_short_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_short_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_short_all-4'	=> 'in:reorderOffsetArr',
 	'get_vara_int' => '2:3:4',
 		'get_vara_int-2'	=> 'in:IntIndexIn',
-		'get_vara_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_int-4'	=> 'in:intToOffsetArr',
+		'get_vara_int-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_int-4'	=> 'in:reorderOffsetArr',
 	'get_vara_int_all' => '2:3:4',
 		'get_vara_int_all-2'	=> 'in:IntIndexIn',
-		'get_vara_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_int_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_int_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_int_all-4'	=> 'in:reorderOffsetArr',
 	'get_vara_float' => '2:3:4',
 		'get_vara_float-2'	=> 'in:IntIndexIn',
-		'get_vara_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_float-4'	=> 'in:intToOffsetArr',
+		'get_vara_float-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_float-4'	=> 'in:reorderOffsetArr',
 	'get_vara_float_all' => '2:3:4',
 		'get_vara_float_all-2'	=> 'in:IntIndexIn',
-		'get_vara_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_float_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_float_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_float_all-4'	=> 'in:reorderOffsetArr',
 	'get_vara_double' => '2:3:4',
 		'get_vara_double-2'	=> 'in:IntIndexIn',
-		'get_vara_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_double-4'	=> 'in:intToOffsetArr',
+		'get_vara_double-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_double-4'	=> 'in:reorderOffsetArr',
 	'get_vara_double_all' => '2:3:4',
 		'get_vara_double_all-2'	=> 'in:IntIndexIn',
-		'get_vara_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_double_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_double_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_double_all-4'	=> 'in:reorderOffsetArr',
 	'get_vara_longlong' => '2:3:4',
 		'get_vara_longlong-2'	=> 'in:IntIndexIn',
-		'get_vara_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_longlong-4'	=> 'in:intToOffsetArr',
+		'get_vara_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_longlong-4'	=> 'in:reorderOffsetArr',
 	'get_vara_longlong_all' => '2:3:4',
 		'get_vara_longlong_all-2'	=> 'in:IntIndexIn',
-		'get_vara_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vara_longlong_all-4'	=> 'in:intToOffsetArr',
+		'get_vara_longlong_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vara_longlong_all-4'	=> 'in:reorderOffsetArr',
 
 	'get_vars' => '2:3:4:5',
 		'get_vars-2'		=> 'in:IntIndexIn',
-		'get_vars-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars-4'		=> 'in:intToOffsetArr',
-		'get_vars-5'		=> 'in:intToOffsetArr',
+		'get_vars-3'		=> 'in:reorderOffsetArr:true',
+		'get_vars-4'		=> 'in:reorderOffsetArr',
+		'get_vars-5'		=> 'in:reorderOffsetArr',
 	'get_vars_all' => '2:3:4:5',
 		'get_vars_all-2'	=> 'in:IntIndexIn',
-		'get_vars_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_all-5'	=> 'in:reorderOffsetArr',
 	'get_vars_text' => '2:3:4:5:6',
 		'get_vars_text-2'	=> 'in:IntIndexIn',
-		'get_vars_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_text-4'	=> 'in:intToOffsetArr',
-		'get_vars_text-5'	=> 'in:intToOffsetArr',
+		'get_vars_text-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_text-4'	=> 'in:reorderOffsetArr',
+		'get_vars_text-5'	=> 'in:reorderOffsetArr',
 		'get_vars_text-6'	=> 'out:charBufferOut',
 	'get_vars_text_all' => '2:3:4:5:6',
 		'get_vars_text_all-2'	=> 'in:IntIndexIn',
-		'get_vars_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_text_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_text_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_text_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_text_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_text_all-5'	=> 'in:reorderOffsetArr',
 		'get_vars_text_all-6'	=> 'out:charBufferOut',
 	'get_vars_schar' => '2:3:4:5',
 		'get_vars_schar-2'	=> 'in:IntIndexIn',
-		'get_vars_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_schar-4'	=> 'in:intToOffsetArr',
-		'get_vars_schar-5'	=> 'in:intToOffsetArr',
+		'get_vars_schar-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_schar-4'	=> 'in:reorderOffsetArr',
+		'get_vars_schar-5'	=> 'in:reorderOffsetArr',
 	'get_vars_schar_all' => '2:3:4:5',
 		'get_vars_schar_all-2'	=> 'in:IntIndexIn',
-		'get_vars_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_schar_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_schar_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_schar_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_schar_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_schar_all-5'	=> 'in:reorderOffsetArr',
 	'get_vars_short' => '2:3:4:5',
 		'get_vars_short-2'	=> 'in:IntIndexIn',
-		'get_vars_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_short-4'	=> 'in:intToOffsetArr',
-		'get_vars_short-5'	=> 'in:intToOffsetArr',
+		'get_vars_short-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_short-4'	=> 'in:reorderOffsetArr',
+		'get_vars_short-5'	=> 'in:reorderOffsetArr',
 	'get_vars_short_all' => '2:3:4:5',
 		'get_vars_short_all-2'	=> 'in:IntIndexIn',
-		'get_vars_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_short_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_short_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_short_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_short_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_short_all-5'	=> 'in:reorderOffsetArr',
 	'get_vars_int' => '2:3:4:5',
 		'get_vars_int-2'	=> 'in:IntIndexIn',
-		'get_vars_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_int-4'	=> 'in:intToOffsetArr',
-		'get_vars_int-5'	=> 'in:intToOffsetArr',
+		'get_vars_int-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_int-4'	=> 'in:reorderOffsetArr',
+		'get_vars_int-5'	=> 'in:reorderOffsetArr',
 	'get_vars_int_all' => '2:3:4:5',
 		'get_vars_int_all-2'	=> 'in:IntIndexIn',
-		'get_vars_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_int_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_int_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_int_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_int_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_int_all-5'	=> 'in:reorderOffsetArr',
 	'get_vars_float' => '2:3:4:5',
 		'get_vars_float-2'	=> 'in:IntIndexIn',
-		'get_vars_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_float-4'	=> 'in:intToOffsetArr',
-		'get_vars_float-5'	=> 'in:intToOffsetArr',
+		'get_vars_float-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_float-4'	=> 'in:reorderOffsetArr',
+		'get_vars_float-5'	=> 'in:reorderOffsetArr',
 	'get_vars_float_all' => '2:3:4:5',
 		'get_vars_float_all-2'	=> 'in:IntIndexIn',
-		'get_vars_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_float_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_float_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_float_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_float_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_float_all-5'	=> 'in:reorderOffsetArr',
 	'get_vars_double' => '2:3:4:5',
 		'get_vars_double-2'	=> 'in:IntIndexIn',
-		'get_vars_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_double-4'	=> 'in:intToOffsetArr',
-		'get_vars_double-5'	=> 'in:intToOffsetArr',
+		'get_vars_double-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_double-4'	=> 'in:reorderOffsetArr',
+		'get_vars_double-5'	=> 'in:reorderOffsetArr',
 	'get_vars_double_all' => '2:3:4:5',
 		'get_vars_double_all-2'	=> 'in:IntIndexIn',
-		'get_vars_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_double_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_double_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_double_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_double_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_double_all-5'	=> 'in:reorderOffsetArr',
 	'get_vars_longlong' => '2:3:4:5',
 		'get_vars_longlong-2'	=> 'in:IntIndexIn',
-		'get_vars_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_longlong-4'	=> 'in:intToOffsetArr',
-		'get_vars_longlong-5'	=> 'in:intToOffsetArr',
+		'get_vars_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_longlong-4'	=> 'in:reorderOffsetArr',
+		'get_vars_longlong-5'	=> 'in:reorderOffsetArr',
 	'get_vars_longlong_all' => '2:3:4:5',
 		'get_vars_longlong_all-2'	=> 'in:IntIndexIn',
-		'get_vars_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_vars_longlong_all-4'	=> 'in:intToOffsetArr',
-		'get_vars_longlong_all-5'	=> 'in:intToOffsetArr',
+		'get_vars_longlong_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_vars_longlong_all-4'	=> 'in:reorderOffsetArr',
+		'get_vars_longlong_all-5'	=> 'in:reorderOffsetArr',
 
 	'get_varm' => '2:3:4:5:6',
 		'get_varm-2'		=> 'in:IntIndexIn',
-		'get_varm-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm-4'		=> 'in:intToOffsetArr',
-		'get_varm-5'		=> 'in:intToOffsetArr',
-		'get_varm-6'		=> 'in:intToOffsetArr',
+		'get_varm-3'		=> 'in:reorderOffsetArr:true',
+		'get_varm-4'		=> 'in:reorderOffsetArr',
+		'get_varm-5'		=> 'in:reorderOffsetArr',
+		'get_varm-6'		=> 'in:reorderOffsetArr',
 	'get_varm_all' => '2:3:4:5:6',
 		'get_varm_all-2'	=> 'in:IntIndexIn',
-		'get_varm_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_all-6'	=> 'in:reorderOffsetArr',
 	'get_varm_text' => '2:3:4:5:6:7',
 		'get_varm_text-2'	=> 'in:IntIndexIn',
-		'get_varm_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_text-4'	=> 'in:intToOffsetArr',
-		'get_varm_text-5'	=> 'in:intToOffsetArr',
-		'get_varm_text-6'	=> 'in:intToOffsetArr',
+		'get_varm_text-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_text-4'	=> 'in:reorderOffsetArr',
+		'get_varm_text-5'	=> 'in:reorderOffsetArr',
+		'get_varm_text-6'	=> 'in:reorderOffsetArr',
 		'get_varm_text-7'	=> 'out:charBufferOut',
 	'get_varm_text_all' => '2:3:4:5:6:7',
 		'get_varm_text_all-2'	=> 'in:IntIndexIn',
-		'get_varm_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_text_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_text_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_text_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_text_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_text_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_text_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_text_all-6'	=> 'in:reorderOffsetArr',
 		'get_varm_text_all-7'	=> 'out:charBufferOut',
 	'get_varm_schar' => '2:3:4:5:6',
 		'get_varm_schar-2'	=> 'in:IntIndexIn',
-		'get_varm_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_schar-4'	=> 'in:intToOffsetArr',
-		'get_varm_schar-5'	=> 'in:intToOffsetArr',
-		'get_varm_schar-6'	=> 'in:intToOffsetArr',
+		'get_varm_schar-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_schar-4'	=> 'in:reorderOffsetArr',
+		'get_varm_schar-5'	=> 'in:reorderOffsetArr',
+		'get_varm_schar-6'	=> 'in:reorderOffsetArr',
 	'get_varm_schar_all' => '2:3:4:5:6',
 		'get_varm_schar_all-2'	=> 'in:IntIndexIn',
-		'get_varm_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_schar_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_schar_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_schar_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_schar_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_schar_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_schar_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_schar_all-6'	=> 'in:reorderOffsetArr',
 	'get_varm_short' => '2:3:4:5:6',
 		'get_varm_short-2'	=> 'in:IntIndexIn',
-		'get_varm_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_short-4'	=> 'in:intToOffsetArr',
-		'get_varm_short-5'	=> 'in:intToOffsetArr',
-		'get_varm_short-6'	=> 'in:intToOffsetArr',
+		'get_varm_short-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_short-4'	=> 'in:reorderOffsetArr',
+		'get_varm_short-5'	=> 'in:reorderOffsetArr',
+		'get_varm_short-6'	=> 'in:reorderOffsetArr',
 	'get_varm_short_all' => '2:3:4:5:6',
 		'get_varm_short_all-2'	=> 'in:IntIndexIn',
-		'get_varm_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_short_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_short_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_short_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_short_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_short_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_short_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_short_all-6'	=> 'in:reorderOffsetArr',
 	'get_varm_int' => '2:3:4:5:6',
 		'get_varm_int-2'	=> 'in:IntIndexIn',
-		'get_varm_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_int-4'	=> 'in:intToOffsetArr',
-		'get_varm_int-5'	=> 'in:intToOffsetArr',
-		'get_varm_int-6'	=> 'in:intToOffsetArr',
+		'get_varm_int-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_int-4'	=> 'in:reorderOffsetArr',
+		'get_varm_int-5'	=> 'in:reorderOffsetArr',
+		'get_varm_int-6'	=> 'in:reorderOffsetArr',
 	'get_varm_int_all' => '2:3:4:5:6',
 		'get_varm_int_all-2'	=> 'in:IntIndexIn',
-		'get_varm_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_int_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_int_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_int_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_int_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_int_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_int_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_int_all-6'	=> 'in:reorderOffsetArr',
 	'get_varm_float' => '2:3:4:5:6',
 		'get_varm_float-2'	=> 'in:IntIndexIn',
-		'get_varm_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_float-4'	=> 'in:intToOffsetArr',
-		'get_varm_float-5'	=> 'in:intToOffsetArr',
-		'get_varm_float-6'	=> 'in:intToOffsetArr',
+		'get_varm_float-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_float-4'	=> 'in:reorderOffsetArr',
+		'get_varm_float-5'	=> 'in:reorderOffsetArr',
+		'get_varm_float-6'	=> 'in:reorderOffsetArr',
 	'get_varm_float_all' => '2:3:4:5:6',
 		'get_varm_float_all-2'	=> 'in:IntIndexIn',
-		'get_varm_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_float_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_float_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_float_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_float_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_float_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_float_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_float_all-6'	=> 'in:reorderOffsetArr',
 	'get_varm_double' => '2:3:4:5:6',
 		'get_varm_double-2'	=> 'in:IntIndexIn',
-		'get_varm_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_double-4'	=> 'in:intToOffsetArr',
-		'get_varm_double-5'	=> 'in:intToOffsetArr',
-		'get_varm_double-6'	=> 'in:intToOffsetArr',
+		'get_varm_double-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_double-4'	=> 'in:reorderOffsetArr',
+		'get_varm_double-5'	=> 'in:reorderOffsetArr',
+		'get_varm_double-6'	=> 'in:reorderOffsetArr',
 	'get_varm_double_all' => '2:3:4:5:6',
 		'get_varm_double_all-2'	=> 'in:IntIndexIn',
-		'get_varm_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_double_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_double_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_double_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_double_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_double_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_double_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_double_all-6'	=> 'in:reorderOffsetArr',
 	'get_varm_longlong' => '2:3:4:5:6',
 		'get_varm_longlong-2'	=> 'in:IntIndexIn',
-		'get_varm_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_longlong-4'	=> 'in:intToOffsetArr',
-		'get_varm_longlong-5'	=> 'in:intToOffsetArr',
-		'get_varm_longlong-6'	=> 'in:intToOffsetArr',
+		'get_varm_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_longlong-4'	=> 'in:reorderOffsetArr',
+		'get_varm_longlong-5'	=> 'in:reorderOffsetArr',
+		'get_varm_longlong-6'	=> 'in:reorderOffsetArr',
 	'get_varm_longlong_all' => '2:3:4:5:6',
 		'get_varm_longlong_all-2'	=> 'in:IntIndexIn',
-		'get_varm_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'get_varm_longlong_all-4'	=> 'in:intToOffsetArr',
-		'get_varm_longlong_all-5'	=> 'in:intToOffsetArr',
-		'get_varm_longlong_all-6'	=> 'in:intToOffsetArr',
+		'get_varm_longlong_all-3'	=> 'in:reorderOffsetArr:true',
+		'get_varm_longlong_all-4'	=> 'in:reorderOffsetArr',
+		'get_varm_longlong_all-5'	=> 'in:reorderOffsetArr',
+		'get_varm_longlong_all-6'	=> 'in:reorderOffsetArr',
 
 	'inq' => '5',
 		'inq-5'			=> 'out:IntDimIndex',
@@ -750,54 +750,54 @@ $returnType   = "int";
 
 	'put_var1' => '2:3',
 		'put_var1-2'		=> 'in:IntIndexIn',
-		'put_var1-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1-3'		=> 'in:reorderOffsetArr:true',
 	'put_var1_all' => '2:3',
 		'put_var1_all-2'	=> 'in:IntIndexIn',
-		'put_var1_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_all-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_text' => '2:3:4',
 		'put_var1_text-2'	=> 'in:IntIndexIn',
-		'put_var1_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_text-3'	=> 'in:reorderOffsetArr:true',
 		'put_var1_text-4'	=> 'in:charBufferIn',
 	'put_var1_text_all' => '2:3:4',
 		'put_var1_text_all-2'	=> 'in:IntIndexIn',
-		'put_var1_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_text_all-3'	=> 'in:reorderOffsetArr:true',
 		'put_var1_text_all-4'	=> 'in:charBufferIn',
 	'put_var1_schar' => '2:3',
 		'put_var1_schar-2'	=> 'in:IntIndexIn',
-		'put_var1_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_schar-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_schar_all' => '2:3',
 		'put_var1_schar_all-2'	=> 'in:IntIndexIn',
-		'put_var1_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_schar_all-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_short' => '2:3',
 		'put_var1_short-2'	=> 'in:IntIndexIn',
-		'put_var1_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_short-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_short_all' => '2:3',
 		'put_var1_short_all-2'	=> 'in:IntIndexIn',
-		'put_var1_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_short_all-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_int' => '2:3',
 		'put_var1_int-2'	=> 'in:IntIndexIn',
-		'put_var1_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_int-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_int_all' => '2:3',
 		'put_var1_int_all-2'	=> 'in:IntIndexIn',
-		'put_var1_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_int_all-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_float' => '2:3',
 		'put_var1_float-2'	=> 'in:IntIndexIn',
-		'put_var1_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_float-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_float_all' => '2:3',
 		'put_var1_float_all-2'	=> 'in:IntIndexIn',
-		'put_var1_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_float_all-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_double' => '2:3',
 		'put_var1_double-2'	=> 'in:IntIndexIn',
-		'put_var1_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_double-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_double_all' => '2:3',
 		'put_var1_double_all-2'	=> 'in:IntIndexIn',
-		'put_var1_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_double_all-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_longlong' => '2:3',
 		'put_var1_longlong-2'	=> 'in:IntIndexIn',
-		'put_var1_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_longlong-3'	=> 'in:reorderOffsetArr:true',
 	'put_var1_longlong_all' => '2:3',
 		'put_var1_longlong_all-2'	=> 'in:IntIndexIn',
-		'put_var1_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'put_var1_longlong_all-3'	=> 'in:reorderOffsetArr:true',
 
 	'put_var_text' => '2:3',
 		'put_var_text-2'	=> 'in:IntIndexIn',
@@ -834,389 +834,389 @@ $returnType   = "int";
 		'put_var-2'		=> 'in:IntIndexIn',
 	'put_vara' => '2:3:4',
 		'put_vara-2'		=> 'in:IntIndexIn',
-		'put_vara-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara-4'		=> 'in:intToOffsetArr',
+		'put_vara-3'		=> 'in:reorderOffsetArr:true',
+		'put_vara-4'		=> 'in:reorderOffsetArr',
 	'put_vara_all' => '2:3:4',
 		'put_vara_all-2'	=> 'in:IntIndexIn',
-		'put_vara_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_all-4'	=> 'in:reorderOffsetArr',
 	'put_vara_text' => '2:3:4:5',
 		'put_vara_text-2'	=> 'in:IntIndexIn',
-		'put_vara_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_text-4'	=> 'in:intToOffsetArr',
+		'put_vara_text-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_text-4'	=> 'in:reorderOffsetArr',
 		'put_vara_text-5'	=> 'in:charBufferIn',
 	'put_vara_text_all' => '2:3:4:5',
 		'put_vara_text_all-2'	=> 'in:IntIndexIn',
-		'put_vara_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_text_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_text_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_text_all-4'	=> 'in:reorderOffsetArr',
 		'put_vara_text_all-5'	=> 'in:charBufferIn',
 	'put_vara_schar' => '2:3:4',
 		'put_vara_schar-2'	=> 'in:IntIndexIn',
-		'put_vara_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_schar-4'	=> 'in:intToOffsetArr',
+		'put_vara_schar-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_schar-4'	=> 'in:reorderOffsetArr',
 	'put_vara_schar_all' => '2:3:4',
 		'put_vara_schar_all-2'	=> 'in:IntIndexIn',
-		'put_vara_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_schar_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_schar_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_schar_all-4'	=> 'in:reorderOffsetArr',
 	'put_vara_short' => '2:3:4',
 		'put_vara_short-2'	=> 'in:IntIndexIn',
-		'put_vara_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_short-4'	=> 'in:intToOffsetArr',
+		'put_vara_short-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_short-4'	=> 'in:reorderOffsetArr',
 	'put_vara_short_all' => '2:3:4',
 		'put_vara_short_all-2'	=> 'in:IntIndexIn',
-		'put_vara_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_short_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_short_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_short_all-4'	=> 'in:reorderOffsetArr',
 	'put_vara_int' => '2:3:4',
 		'put_vara_int-2'	=> 'in:IntIndexIn',
-		'put_vara_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_int-4'	=> 'in:intToOffsetArr',
+		'put_vara_int-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_int-4'	=> 'in:reorderOffsetArr',
 	'put_vara_int_all' => '2:3:4',
 		'put_vara_int_all-2'	=> 'in:IntIndexIn',
-		'put_vara_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_int_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_int_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_int_all-4'	=> 'in:reorderOffsetArr',
 	'put_vara_float' => '2:3:4',
 		'put_vara_float-2'	=> 'in:IntIndexIn',
-		'put_vara_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_float-4'	=> 'in:intToOffsetArr',
+		'put_vara_float-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_float-4'	=> 'in:reorderOffsetArr',
 	'put_vara_float_all' => '2:3:4',
 		'put_vara_float_all-2'	=> 'in:IntIndexIn',
-		'put_vara_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_float_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_float_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_float_all-4'	=> 'in:reorderOffsetArr',
 	'put_vara_double' => '2:3:4',
 		'put_vara_double-2'	=> 'in:IntIndexIn',
-		'put_vara_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_double-4'	=> 'in:intToOffsetArr',
+		'put_vara_double-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_double-4'	=> 'in:reorderOffsetArr',
 	'put_vara_double_all' => '2:3:4',
 		'put_vara_double_all-2'	=> 'in:IntIndexIn',
-		'put_vara_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_double_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_double_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_double_all-4'	=> 'in:reorderOffsetArr',
 	'put_vara_longlong' => '2:3:4',
 		'put_vara_longlong-2'	=> 'in:IntIndexIn',
-		'put_vara_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_longlong-4'	=> 'in:intToOffsetArr',
+		'put_vara_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_longlong-4'	=> 'in:reorderOffsetArr',
 	'put_vara_longlong_all' => '2:3:4',
 		'put_vara_longlong_all-2'	=> 'in:IntIndexIn',
-		'put_vara_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vara_longlong_all-4'	=> 'in:intToOffsetArr',
+		'put_vara_longlong_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vara_longlong_all-4'	=> 'in:reorderOffsetArr',
 
 	'put_vars' => '2:3:4:5',
 		'put_vars-2'		=> 'in:IntIndexIn',
-		'put_vars-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars-4'		=> 'in:intToOffsetArr',
-		'put_vars-5'		=> 'in:intToOffsetArr',
+		'put_vars-3'		=> 'in:reorderOffsetArr:true',
+		'put_vars-4'		=> 'in:reorderOffsetArr',
+		'put_vars-5'		=> 'in:reorderOffsetArr',
 	'put_vars_all' => '2:3:4:5',
 		'put_vars_all-2'	=> 'in:IntIndexIn',
-		'put_vars_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_all-5'	=> 'in:reorderOffsetArr',
 	'put_vars_text' => '2:3:4:5:6',
 		'put_vars_text-2'	=> 'in:IntIndexIn',
-		'put_vars_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_text-4'	=> 'in:intToOffsetArr',
-		'put_vars_text-5'	=> 'in:intToOffsetArr',
+		'put_vars_text-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_text-4'	=> 'in:reorderOffsetArr',
+		'put_vars_text-5'	=> 'in:reorderOffsetArr',
 		'put_vars_text-6'	=> 'in:charBufferIn',
 	'put_vars_text_all' => '2:3:4:5:6',
 		'put_vars_text_all-2'	=> 'in:IntIndexIn',
-		'put_vars_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_text_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_text_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_text_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_text_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_text_all-5'	=> 'in:reorderOffsetArr',
 		'put_vars_text_all-6'	=> 'in:charBufferIn',
 	'put_vars_schar' => '2:3:4:5',
 		'put_vars_schar-2'	=> 'in:IntIndexIn',
-		'put_vars_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_schar-4'	=> 'in:intToOffsetArr',
-		'put_vars_schar-5'	=> 'in:intToOffsetArr',
+		'put_vars_schar-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_schar-4'	=> 'in:reorderOffsetArr',
+		'put_vars_schar-5'	=> 'in:reorderOffsetArr',
 	'put_vars_schar_all' => '2:3:4:5',
 		'put_vars_schar_all-2'	=> 'in:IntIndexIn',
-		'put_vars_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_schar_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_schar_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_schar_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_schar_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_schar_all-5'	=> 'in:reorderOffsetArr',
 	'put_vars_short' => '2:3:4:5',
 		'put_vars_short-2'	=> 'in:IntIndexIn',
-		'put_vars_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_short-4'	=> 'in:intToOffsetArr',
-		'put_vars_short-5'	=> 'in:intToOffsetArr',
+		'put_vars_short-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_short-4'	=> 'in:reorderOffsetArr',
+		'put_vars_short-5'	=> 'in:reorderOffsetArr',
 	'put_vars_short_all' => '2:3:4:5',
 		'put_vars_short_all-2'	=> 'in:IntIndexIn',
-		'put_vars_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_short_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_short_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_short_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_short_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_short_all-5'	=> 'in:reorderOffsetArr',
 	'put_vars_int' => '2:3:4:5',
 		'put_vars_int-2'	=> 'in:IntIndexIn',
-		'put_vars_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_int-4'	=> 'in:intToOffsetArr',
-		'put_vars_int-5'	=> 'in:intToOffsetArr',
+		'put_vars_int-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_int-4'	=> 'in:reorderOffsetArr',
+		'put_vars_int-5'	=> 'in:reorderOffsetArr',
 	'put_vars_int_all' => '2:3:4:5',
 		'put_vars_int_all-2'	=> 'in:IntIndexIn',
-		'put_vars_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_int_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_int_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_int_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_int_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_int_all-5'	=> 'in:reorderOffsetArr',
 	'put_vars_float' => '2:3:4:5',
 		'put_vars_float-2'	=> 'in:IntIndexIn',
-		'put_vars_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_float-4'	=> 'in:intToOffsetArr',
-		'put_vars_float-5'	=> 'in:intToOffsetArr',
+		'put_vars_float-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_float-4'	=> 'in:reorderOffsetArr',
+		'put_vars_float-5'	=> 'in:reorderOffsetArr',
 	'put_vars_float_all' => '2:3:4:5',
 		'put_vars_float_all-2'	=> 'in:IntIndexIn',
-		'put_vars_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_float_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_float_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_float_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_float_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_float_all-5'	=> 'in:reorderOffsetArr',
 	'put_vars_double' => '2:3:4:5',
 		'put_vars_double-2'	=> 'in:IntIndexIn',
-		'put_vars_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_double-4'	=> 'in:intToOffsetArr',
-		'put_vars_double-5'	=> 'in:intToOffsetArr',
+		'put_vars_double-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_double-4'	=> 'in:reorderOffsetArr',
+		'put_vars_double-5'	=> 'in:reorderOffsetArr',
 	'put_vars_double_all' => '2:3:4:5',
 		'put_vars_double_all-2'	=> 'in:IntIndexIn',
-		'put_vars_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_double_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_double_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_double_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_double_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_double_all-5'	=> 'in:reorderOffsetArr',
 	'put_vars_longlong' => '2:3:4:5',
 		'put_vars_longlong-2'	=> 'in:IntIndexIn',
-		'put_vars_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_longlong-4'	=> 'in:intToOffsetArr',
-		'put_vars_longlong-5'	=> 'in:intToOffsetArr',
+		'put_vars_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_longlong-4'	=> 'in:reorderOffsetArr',
+		'put_vars_longlong-5'	=> 'in:reorderOffsetArr',
 	'put_vars_longlong_all' => '2:3:4:5',
 		'put_vars_longlong_all-2'	=> 'in:IntIndexIn',
-		'put_vars_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_vars_longlong_all-4'	=> 'in:intToOffsetArr',
-		'put_vars_longlong_all-5'	=> 'in:intToOffsetArr',
+		'put_vars_longlong_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_vars_longlong_all-4'	=> 'in:reorderOffsetArr',
+		'put_vars_longlong_all-5'	=> 'in:reorderOffsetArr',
 
 	'put_varm' => '2:3:4:5:6',
 		'put_varm-2'		=> 'in:IntIndexIn',
-		'put_varm-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm-4'		=> 'in:intToOffsetArr',
-		'put_varm-5'		=> 'in:intToOffsetArr',
-		'put_varm-6'		=> 'in:intToOffsetArr',
+		'put_varm-3'		=> 'in:reorderOffsetArr:true',
+		'put_varm-4'		=> 'in:reorderOffsetArr',
+		'put_varm-5'		=> 'in:reorderOffsetArr',
+		'put_varm-6'		=> 'in:reorderOffsetArr',
 	'put_varm_all' => '2:3:4:5:6',
 		'put_varm_all-2'	=> 'in:IntIndexIn',
-		'put_varm_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_all-6'	=> 'in:reorderOffsetArr',
 	'put_varm_text' => '2:3:4:5:6:7',
 		'put_varm_text-2'	=> 'in:IntIndexIn',
-		'put_varm_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_text-4'	=> 'in:intToOffsetArr',
-		'put_varm_text-5'	=> 'in:intToOffsetArr',
-		'put_varm_text-6'	=> 'in:intToOffsetArr',
+		'put_varm_text-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_text-4'	=> 'in:reorderOffsetArr',
+		'put_varm_text-5'	=> 'in:reorderOffsetArr',
+		'put_varm_text-6'	=> 'in:reorderOffsetArr',
 		'put_varm_text-7'	=> 'in:charBufferIn',
 	'put_varm_text_all' => '2:3:4:5:6:7',
 		'put_varm_text_all-2'	=> 'in:IntIndexIn',
-		'put_varm_text_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_text_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_text_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_text_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_text_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_text_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_text_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_text_all-6'	=> 'in:reorderOffsetArr',
 		'put_varm_text_all-7'	=> 'in:charBufferIn',
 	'put_varm_schar' => '2:3:4:5:6',
 		'put_varm_schar-2'	=> 'in:IntIndexIn',
-		'put_varm_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_schar-4'	=> 'in:intToOffsetArr',
-		'put_varm_schar-5'	=> 'in:intToOffsetArr',
-		'put_varm_schar-6'	=> 'in:intToOffsetArr',
+		'put_varm_schar-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_schar-4'	=> 'in:reorderOffsetArr',
+		'put_varm_schar-5'	=> 'in:reorderOffsetArr',
+		'put_varm_schar-6'	=> 'in:reorderOffsetArr',
 	'put_varm_schar_all' => '2:3:4:5:6',
 		'put_varm_schar_all-2'	=> 'in:IntIndexIn',
-		'put_varm_schar_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_schar_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_schar_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_schar_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_schar_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_schar_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_schar_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_schar_all-6'	=> 'in:reorderOffsetArr',
 	'put_varm_short' => '2:3:4:5:6',
 		'put_varm_short-2'	=> 'in:IntIndexIn',
-		'put_varm_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_short-4'	=> 'in:intToOffsetArr',
-		'put_varm_short-5'	=> 'in:intToOffsetArr',
-		'put_varm_short-6'	=> 'in:intToOffsetArr',
+		'put_varm_short-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_short-4'	=> 'in:reorderOffsetArr',
+		'put_varm_short-5'	=> 'in:reorderOffsetArr',
+		'put_varm_short-6'	=> 'in:reorderOffsetArr',
 	'put_varm_short_all' => '2:3:4:5:6',
 		'put_varm_short_all-2'	=> 'in:IntIndexIn',
-		'put_varm_short_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_short_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_short_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_short_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_short_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_short_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_short_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_short_all-6'	=> 'in:reorderOffsetArr',
 	'put_varm_int' => '2:3:4:5:6',
 		'put_varm_int-2'	=> 'in:IntIndexIn',
-		'put_varm_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_int-4'	=> 'in:intToOffsetArr',
-		'put_varm_int-5'	=> 'in:intToOffsetArr',
-		'put_varm_int-6'	=> 'in:intToOffsetArr',
+		'put_varm_int-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_int-4'	=> 'in:reorderOffsetArr',
+		'put_varm_int-5'	=> 'in:reorderOffsetArr',
+		'put_varm_int-6'	=> 'in:reorderOffsetArr',
 	'put_varm_int_all' => '2:3:4:5:6',
 		'put_varm_int_all-2'	=> 'in:IntIndexIn',
-		'put_varm_int_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_int_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_int_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_int_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_int_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_int_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_int_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_int_all-6'	=> 'in:reorderOffsetArr',
 	'put_varm_float' => '2:3:4:5:6',
 		'put_varm_float-2'	=> 'in:IntIndexIn',
-		'put_varm_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_float-4'	=> 'in:intToOffsetArr',
-		'put_varm_float-5'	=> 'in:intToOffsetArr',
-		'put_varm_float-6'	=> 'in:intToOffsetArr',
+		'put_varm_float-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_float-4'	=> 'in:reorderOffsetArr',
+		'put_varm_float-5'	=> 'in:reorderOffsetArr',
+		'put_varm_float-6'	=> 'in:reorderOffsetArr',
 	'put_varm_float_all' => '2:3:4:5:6',
 		'put_varm_float_all-2'	=> 'in:IntIndexIn',
-		'put_varm_float_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_float_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_float_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_float_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_float_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_float_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_float_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_float_all-6'	=> 'in:reorderOffsetArr',
 	'put_varm_double' => '2:3:4:5:6',
 		'put_varm_double-2'	=> 'in:IntIndexIn',
-		'put_varm_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_double-4'	=> 'in:intToOffsetArr',
-		'put_varm_double-5'	=> 'in:intToOffsetArr',
-		'put_varm_double-6'	=> 'in:intToOffsetArr',
+		'put_varm_double-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_double-4'	=> 'in:reorderOffsetArr',
+		'put_varm_double-5'	=> 'in:reorderOffsetArr',
+		'put_varm_double-6'	=> 'in:reorderOffsetArr',
 	'put_varm_double_all' => '2:3:4:5:6',
 		'put_varm_double_all-2'	=> 'in:IntIndexIn',
-		'put_varm_double_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_double_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_double_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_double_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_double_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_double_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_double_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_double_all-6'	=> 'in:reorderOffsetArr',
 	'put_varm_longlong' => '2:3:4:5:6',
 		'put_varm_longlong-2'	=> 'in:IntIndexIn',
-		'put_varm_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_longlong-4'	=> 'in:intToOffsetArr',
-		'put_varm_longlong-5'	=> 'in:intToOffsetArr',
-		'put_varm_longlong-6'	=> 'in:intToOffsetArr',
+		'put_varm_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_longlong-4'	=> 'in:reorderOffsetArr',
+		'put_varm_longlong-5'	=> 'in:reorderOffsetArr',
+		'put_varm_longlong-6'	=> 'in:reorderOffsetArr',
 	'put_varm_longlong_all' => '2:3:4:5:6',
 		'put_varm_longlong_all-2'	=> 'in:IntIndexIn',
-		'put_varm_longlong_all-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'put_varm_longlong_all-4'	=> 'in:intToOffsetArr',
-		'put_varm_longlong_all-5'	=> 'in:intToOffsetArr',
-		'put_varm_longlong_all-6'	=> 'in:intToOffsetArr',
+		'put_varm_longlong_all-3'	=> 'in:reorderOffsetArr:true',
+		'put_varm_longlong_all-4'	=> 'in:reorderOffsetArr',
+		'put_varm_longlong_all-5'	=> 'in:reorderOffsetArr',
+		'put_varm_longlong_all-6'	=> 'in:reorderOffsetArr',
 
 	'get_varn' => '2:4:5',
 		'get_varn-2'		=> 'in:IntIndexIn',
-		'get_varn-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_text' => '2:4:5:6',
 		'get_varn_text-2'	=> 'in:IntIndexIn',
-		'get_varn_text-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_text-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_text-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_text-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'get_varn_text-6'	=> 'out:charBufferOut',
 	'get_varn_schar' => '2:4:5',
 		'get_varn_schar-2'	=> 'in:IntIndexIn',
-		'get_varn_schar-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_schar-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_schar-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_schar-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_short' => '2:4:5',
 		'get_varn_short-2'	=> 'in:IntIndexIn',
-		'get_varn_short-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_short-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_short-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_short-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_int' => '2:4:5',
 		'get_varn_int-2'	=> 'in:IntIndexIn',
-		'get_varn_int-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_int-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_int-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_int-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_float' => '2:4:5',
 		'get_varn_float-2'	=> 'in:IntIndexIn',
-		'get_varn_float-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_float-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_float-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_float-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_double' => '2:4:5',
 		'get_varn_double-2'	=> 'in:IntIndexIn',
-		'get_varn_double-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_double-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_double-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_double-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_longlong' => '2:4:5',
 		'get_varn_longlong-2'	=> 'in:IntIndexIn',
-		'get_varn_longlong-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_longlong-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_longlong-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 
 	'get_varn_all' => '2:4:5',
 		'get_varn_all-2'		=> 'in:IntIndexIn',
-		'get_varn_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_all-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_text_all' => '2:4:5:6',
 		'get_varn_text_all-2'		=> 'in:IntIndexIn',
-		'get_varn_text_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_text_all-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn_text_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_text_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 		'get_varn_text_all-6'		=> 'out:charBufferOut',
 	'get_varn_schar_all' => '2:4:5',
 		'get_varn_schar_all-2'		=> 'in:IntIndexIn',
-		'get_varn_schar_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_schar_all-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn_schar_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_schar_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_short_all' => '2:4:5',
 		'get_varn_short_all-2'		=> 'in:IntIndexIn',
-		'get_varn_short_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_short_all-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn_short_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_short_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_int_all' => '2:4:5',
 		'get_varn_int_all-2'		=> 'in:IntIndexIn',
-		'get_varn_int_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_int_all-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn_int_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_int_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_float_all' => '2:4:5',
 		'get_varn_float_all-2'		=> 'in:IntIndexIn',
-		'get_varn_float_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_float_all-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn_float_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_float_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_double_all' => '2:4:5',
 		'get_varn_double_all-2'		=> 'in:IntIndexIn',
-		'get_varn_double_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_double_all-5'		=> 'in:Offset1DToOffset2D',
+		'get_varn_double_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_double_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_longlong_all' => '2:4:5',
 		'get_varn_longlong_all-2'	=> 'in:IntIndexIn',
-		'get_varn_longlong_all-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'get_varn_longlong_all-5'	=> 'in:Offset1DToOffset2D',
+		'get_varn_longlong_all-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_longlong_all-5'	=> 'in:reorderOffsetArr1DTo2D',
 
 	'put_varn' => '2:4:5',
 		'put_varn-2'		=> 'in:IntIndexIn',
-		'put_varn-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_text' => '2:4:5:6',
 		'put_varn_text-2'	=> 'in:IntIndexIn',
-		'put_varn_text-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_text-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_text-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_text-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'put_varn_text-6'	=> 'in:charBufferIn',
 	'put_varn_schar' => '2:4:5',
 		'put_varn_schar-2'	=> 'in:IntIndexIn',
-		'put_varn_schar-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_schar-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_schar-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_schar-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_short' => '2:4:5',
 		'put_varn_short-2'	=> 'in:IntIndexIn',
-		'put_varn_short-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_short-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_short-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_short-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_int' => '2:4:5',
 		'put_varn_int-2'	=> 'in:IntIndexIn',
-		'put_varn_int-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_int-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_int-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_int-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_float' => '2:4:5',
 		'put_varn_float-2'	=> 'in:IntIndexIn',
-		'put_varn_float-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_float-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_float-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_float-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_double' => '2:4:5',
 		'put_varn_double-2'	=> 'in:IntIndexIn',
-		'put_varn_double-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_double-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_double-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_double-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_longlong' => '2:4:5',
 		'put_varn_longlong-2'	=> 'in:IntIndexIn',
-		'put_varn_longlong-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_longlong-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_longlong-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 
 	'put_varn_all' => '2:4:5',
 		'put_varn_all-2'		=> 'in:IntIndexIn',
-		'put_varn_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_all-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_text_all' => '2:4:5:6',
 		'put_varn_text_all-2'		=> 'in:IntIndexIn',
-		'put_varn_text_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_text_all-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn_text_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_text_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 		'put_varn_text_all-6'		=> 'in:charBufferIn',
 	'put_varn_schar_all' => '2:4:5',
 		'put_varn_schar_all-2'		=> 'in:IntIndexIn',
-		'put_varn_schar_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_schar_all-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn_schar_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_schar_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_short_all' => '2:4:5',
 		'put_varn_short_all-2'		=> 'in:IntIndexIn',
-		'put_varn_short_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_short_all-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn_short_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_short_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_int_all' => '2:4:5',
 		'put_varn_int_all-2'		=> 'in:IntIndexIn',
-		'put_varn_int_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_int_all-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn_int_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_int_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_float_all' => '2:4:5',
 		'put_varn_float_all-2'		=> 'in:IntIndexIn',
-		'put_varn_float_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_float_all-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn_float_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_float_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_double_all' => '2:4:5',
 		'put_varn_double_all-2'		=> 'in:IntIndexIn',
-		'put_varn_double_all-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_double_all-5'		=> 'in:Offset1DToOffset2D',
+		'put_varn_double_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_double_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_longlong_all' => '2:4:5',
 		'put_varn_longlong_all-2'	=> 'in:IntIndexIn',
-		'put_varn_longlong_all-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'put_varn_longlong_all-5'	=> 'in:Offset1DToOffset2D',
+		'put_varn_longlong_all-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_longlong_all-5'	=> 'in:reorderOffsetArr1DTo2D',
 
 	'get_vard' => '2',
 		'get_vard-2'		=> 'in:IntIndexIn',
@@ -1229,29 +1229,29 @@ $returnType   = "int";
 
 	'iget_var1' => '2:3',
 		'iget_var1-2'		=> 'in:IntIndexIn',
-		'iget_var1-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1-3'		=> 'in:reorderOffsetArr:true',
 	'iget_var1_text' => '2:3:4',
 		'iget_var1_text-2'	=> 'in:IntIndexIn',
-		'iget_var1_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1_text-3'	=> 'in:reorderOffsetArr:true',
 		'iget_var1_text-4'	=> 'out:charBufferOut',
 	'iget_var1_schar' => '2:3',
 		'iget_var1_schar-2'	=> 'in:IntIndexIn',
-		'iget_var1_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1_schar-3'	=> 'in:reorderOffsetArr:true',
 	'iget_var1_short' => '2:3',
 		'iget_var1_short-2'	=> 'in:IntIndexIn',
-		'iget_var1_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1_short-3'	=> 'in:reorderOffsetArr:true',
 	'iget_var1_int' => '2:3',
 		'iget_var1_int-2'	=> 'in:IntIndexIn',
-		'iget_var1_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1_int-3'	=> 'in:reorderOffsetArr:true',
 	'iget_var1_float' => '2:3',
 		'iget_var1_float-2'	=> 'in:IntIndexIn',
-		'iget_var1_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1_float-3'	=> 'in:reorderOffsetArr:true',
 	'iget_var1_double' => '2:3',
 		'iget_var1_double-2'	=> 'in:IntIndexIn',
-		'iget_var1_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1_double-3'	=> 'in:reorderOffsetArr:true',
 	'iget_var1_longlong' => '2:3',
 		'iget_var1_longlong-2'	=> 'in:IntIndexIn',
-		'iget_var1_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iget_var1_longlong-3'	=> 'in:reorderOffsetArr:true',
 
 	'iget_var' => '2',
 		'iget_var-2'		=> 'in:IntIndexIn',
@@ -1270,158 +1270,158 @@ $returnType   = "int";
 		'iget_var_longlong-2'	=> 'in:IntIndexIn',
 	'iget_var_int' => '2',
 		'iget_var_int-2'	=> 'in:IntIndexIn',
-	      
+
 	'iget_vara' => '2:3:4',
 		'iget_vara-2'		=> 'in:IntIndexIn',
-		'iget_vara-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara-4'		=> 'in:intToOffsetArr',
+		'iget_vara-3'		=> 'in:reorderOffsetArr:true',
+		'iget_vara-4'		=> 'in:reorderOffsetArr',
 	'iget_vara_text' => '2:3:4:5',
 		'iget_vara_text-2'	=> 'in:IntIndexIn',
-		'iget_vara_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara_text-4'	=> 'in:intToOffsetArr',
+		'iget_vara_text-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vara_text-4'	=> 'in:reorderOffsetArr',
 		'iget_vara_text-5'	=> 'out:charBufferOut',
 	'iget_vara_schar' => '2:3:4',
 		'iget_vara_schar-2'	=> 'in:IntIndexIn',
-		'iget_vara_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara_schar-4'	=> 'in:intToOffsetArr',
+		'iget_vara_schar-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vara_schar-4'	=> 'in:reorderOffsetArr',
 	'iget_vara_short' => '2:3:4',
 		'iget_vara_short-2'	=> 'in:IntIndexIn',
-		'iget_vara_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara_short-4'	=> 'in:intToOffsetArr',
+		'iget_vara_short-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vara_short-4'	=> 'in:reorderOffsetArr',
 	'iget_vara_int' => '2:3:4',
 		'iget_vara_int-2'	=> 'in:IntIndexIn',
-		'iget_vara_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara_int-4'	=> 'in:intToOffsetArr',
+		'iget_vara_int-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vara_int-4'	=> 'in:reorderOffsetArr',
 	'iget_vara_float' => '2:3:4',
 		'iget_vara_float-2'	=> 'in:IntIndexIn',
-		'iget_vara_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara_float-4'	=> 'in:intToOffsetArr',
+		'iget_vara_float-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vara_float-4'	=> 'in:reorderOffsetArr',
 	'iget_vara_double' => '2:3:4',
 		'iget_vara_double-2'	=> 'in:IntIndexIn',
-		'iget_vara_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara_double-4'	=> 'in:intToOffsetArr',
+		'iget_vara_double-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vara_double-4'	=> 'in:reorderOffsetArr',
 	'iget_vara_longlong' => '2:3:4',
 		'iget_vara_longlong-2'	=> 'in:IntIndexIn',
-		'iget_vara_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vara_longlong-4'	=> 'in:intToOffsetArr',
+		'iget_vara_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vara_longlong-4'	=> 'in:reorderOffsetArr',
 
 	'iget_vars' => '2:3:4:5',
 		'iget_vars-2'		=> 'in:IntIndexIn',
-		'iget_vars-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars-4'		=> 'in:intToOffsetArr',
-		'iget_vars-5'		=> 'in:intToOffsetArr',
+		'iget_vars-3'		=> 'in:reorderOffsetArr:true',
+		'iget_vars-4'		=> 'in:reorderOffsetArr',
+		'iget_vars-5'		=> 'in:reorderOffsetArr',
 	'iget_vars_text' => '2:3:4:5:6',
 		'iget_vars_text-2'	=> 'in:IntIndexIn',
-		'iget_vars_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars_text-4'	=> 'in:intToOffsetArr',
-		'iget_vars_text-5'	=> 'in:intToOffsetArr',
+		'iget_vars_text-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vars_text-4'	=> 'in:reorderOffsetArr',
+		'iget_vars_text-5'	=> 'in:reorderOffsetArr',
 		'iget_vars_text-6'	=> 'out:charBufferOut',
 	'iget_vars_schar' => '2:3:4:5',
 		'iget_vars_schar-2'	=> 'in:IntIndexIn',
-		'iget_vars_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars_schar-4'	=> 'in:intToOffsetArr',
-		'iget_vars_schar-5'	=> 'in:intToOffsetArr',
+		'iget_vars_schar-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vars_schar-4'	=> 'in:reorderOffsetArr',
+		'iget_vars_schar-5'	=> 'in:reorderOffsetArr',
 	'iget_vars_short' => '2:3:4:5',
 		'iget_vars_short-2'	=> 'in:IntIndexIn',
-		'iget_vars_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars_short-4'	=> 'in:intToOffsetArr',
-		'iget_vars_short-5'	=> 'in:intToOffsetArr',
+		'iget_vars_short-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vars_short-4'	=> 'in:reorderOffsetArr',
+		'iget_vars_short-5'	=> 'in:reorderOffsetArr',
 	'iget_vars_int' => '2:3:4:5',
 		'iget_vars_int-2'	=> 'in:IntIndexIn',
-		'iget_vars_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars_int-4'	=> 'in:intToOffsetArr',
-		'iget_vars_int-5'	=> 'in:intToOffsetArr',
+		'iget_vars_int-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vars_int-4'	=> 'in:reorderOffsetArr',
+		'iget_vars_int-5'	=> 'in:reorderOffsetArr',
 	'iget_vars_float' => '2:3:4:5',
 		'iget_vars_float-2'	=> 'in:IntIndexIn',
-		'iget_vars_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars_float-4'	=> 'in:intToOffsetArr',
-		'iget_vars_float-5'	=> 'in:intToOffsetArr',
+		'iget_vars_float-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vars_float-4'	=> 'in:reorderOffsetArr',
+		'iget_vars_float-5'	=> 'in:reorderOffsetArr',
 	'iget_vars_double' => '2:3:4:5',
 		'iget_vars_double-2'	=> 'in:IntIndexIn',
-		'iget_vars_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars_double-4'	=> 'in:intToOffsetArr',
-		'iget_vars_double-5'	=> 'in:intToOffsetArr',
+		'iget_vars_double-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vars_double-4'	=> 'in:reorderOffsetArr',
+		'iget_vars_double-5'	=> 'in:reorderOffsetArr',
 	'iget_vars_longlong' => '2:3:4:5',
 		'iget_vars_longlong-2'	=> 'in:IntIndexIn',
-		'iget_vars_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_vars_longlong-4'	=> 'in:intToOffsetArr',
-		'iget_vars_longlong-5'	=> 'in:intToOffsetArr',
+		'iget_vars_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'iget_vars_longlong-4'	=> 'in:reorderOffsetArr',
+		'iget_vars_longlong-5'	=> 'in:reorderOffsetArr',
 
 	'iget_varm' => '2:3:4:5:6',
 		'iget_varm-2'		=> 'in:IntIndexIn',
-		'iget_varm-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm-4'		=> 'in:intToOffsetArr',
-		'iget_varm-5'		=> 'in:intToOffsetArr',
-		'iget_varm-6'		=> 'in:intToOffsetArr',
+		'iget_varm-3'		=> 'in:reorderOffsetArr:true',
+		'iget_varm-4'		=> 'in:reorderOffsetArr',
+		'iget_varm-5'		=> 'in:reorderOffsetArr',
+		'iget_varm-6'		=> 'in:reorderOffsetArr',
 	'iget_varm_text' => '2:3:4:5:6:7',
 		'iget_varm_text-2'	=> 'in:IntIndexIn',
-		'iget_varm_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm_text-4'	=> 'in:intToOffsetArr',
-		'iget_varm_text-5'	=> 'in:intToOffsetArr',
-		'iget_varm_text-6'	=> 'in:intToOffsetArr',
+		'iget_varm_text-3'	=> 'in:reorderOffsetArr:true',
+		'iget_varm_text-4'	=> 'in:reorderOffsetArr',
+		'iget_varm_text-5'	=> 'in:reorderOffsetArr',
+		'iget_varm_text-6'	=> 'in:reorderOffsetArr',
 		'iget_varm_text-7'	=> 'out:charBufferOut',
 	'iget_varm_schar' => '2:3:4:5:6',
 		'iget_varm_schar-2'	=> 'in:IntIndexIn',
-		'iget_varm_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm_schar-4'	=> 'in:intToOffsetArr',
-		'iget_varm_schar-5'	=> 'in:intToOffsetArr',
-		'iget_varm_schar-6'	=> 'in:intToOffsetArr',
+		'iget_varm_schar-3'	=> 'in:reorderOffsetArr:true',
+		'iget_varm_schar-4'	=> 'in:reorderOffsetArr',
+		'iget_varm_schar-5'	=> 'in:reorderOffsetArr',
+		'iget_varm_schar-6'	=> 'in:reorderOffsetArr',
 	'iget_varm_short' => '2:3:4:5:6',
 		'iget_varm_short-2'	=> 'in:IntIndexIn',
-		'iget_varm_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm_short-4'	=> 'in:intToOffsetArr',
-		'iget_varm_short-5'	=> 'in:intToOffsetArr',
-		'iget_varm_short-6'	=> 'in:intToOffsetArr',
+		'iget_varm_short-3'	=> 'in:reorderOffsetArr:true',
+		'iget_varm_short-4'	=> 'in:reorderOffsetArr',
+		'iget_varm_short-5'	=> 'in:reorderOffsetArr',
+		'iget_varm_short-6'	=> 'in:reorderOffsetArr',
 	'iget_varm_int' => '2:3:4:5:6',
 		'iget_varm_int-2'	=> 'in:IntIndexIn',
-		'iget_varm_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm_int-4'	=> 'in:intToOffsetArr',
-		'iget_varm_int-5'	=> 'in:intToOffsetArr',
-		'iget_varm_int-6'	=> 'in:intToOffsetArr',
+		'iget_varm_int-3'	=> 'in:reorderOffsetArr:true',
+		'iget_varm_int-4'	=> 'in:reorderOffsetArr',
+		'iget_varm_int-5'	=> 'in:reorderOffsetArr',
+		'iget_varm_int-6'	=> 'in:reorderOffsetArr',
 	'iget_varm_float' => '2:3:4:5:6',
 		'iget_varm_float-2'	=> 'in:IntIndexIn',
-		'iget_varm_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm_float-4'	=> 'in:intToOffsetArr',
-		'iget_varm_float-5'	=> 'in:intToOffsetArr',
-		'iget_varm_float-6'	=> 'in:intToOffsetArr',
+		'iget_varm_float-3'	=> 'in:reorderOffsetArr:true',
+		'iget_varm_float-4'	=> 'in:reorderOffsetArr',
+		'iget_varm_float-5'	=> 'in:reorderOffsetArr',
+		'iget_varm_float-6'	=> 'in:reorderOffsetArr',
 	'iget_varm_double' => '2:3:4:5:6',
 		'iget_varm_double-2'	=> 'in:IntIndexIn',
-		'iget_varm_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm_double-4'	=> 'in:intToOffsetArr',
-		'iget_varm_double-5'	=> 'in:intToOffsetArr',
-		'iget_varm_double-6'	=> 'in:intToOffsetArr',
+		'iget_varm_double-3'	=> 'in:reorderOffsetArr:true',
+		'iget_varm_double-4'	=> 'in:reorderOffsetArr',
+		'iget_varm_double-5'	=> 'in:reorderOffsetArr',
+		'iget_varm_double-6'	=> 'in:reorderOffsetArr',
 	'iget_varm_longlong' => '2:3:4:5:6',
 		'iget_varm_longlong-2'	=> 'in:IntIndexIn',
-		'iget_varm_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iget_varm_longlong-4'	=> 'in:intToOffsetArr',
-		'iget_varm_longlong-5'	=> 'in:intToOffsetArr',
-		'iget_varm_longlong-6'	=> 'in:intToOffsetArr',
+		'iget_varm_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'iget_varm_longlong-4'	=> 'in:reorderOffsetArr',
+		'iget_varm_longlong-5'	=> 'in:reorderOffsetArr',
+		'iget_varm_longlong-6'	=> 'in:reorderOffsetArr',
 
 	'iput_var1' => '2:3',
 		'iput_var1-2'		=> 'in:IntIndexIn',
-		'iput_var1-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1-3'		=> 'in:reorderOffsetArr:true',
 	'iput_var1_text' => '2:3:4',
 		'iput_var1_text-2'	=> 'in:IntIndexIn',
-		'iput_var1_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1_text-3'	=> 'in:reorderOffsetArr:true',
 		'iput_var1_text-4'	=> 'in:charBufferIn',
 	'iput_var1_schar' => '2:3',
 		'iput_var1_schar-2'	=> 'in:IntIndexIn',
-		'iput_var1_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1_schar-3'	=> 'in:reorderOffsetArr:true',
 	'iput_var1_short' => '2:3',
 		'iput_var1_short-2'	=> 'in:IntIndexIn',
-		'iput_var1_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1_short-3'	=> 'in:reorderOffsetArr:true',
 	'iput_var1_int' => '2:3',
 		'iput_var1_int-2'	=> 'in:IntIndexIn',
-		'iput_var1_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1_int-3'	=> 'in:reorderOffsetArr:true',
 	'iput_var1_float' => '2:3',
 		'iput_var1_float-2'	=> 'in:IntIndexIn',
-		'iput_var1_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1_float-3'	=> 'in:reorderOffsetArr:true',
 	'iput_var1_double' => '2:3',
 		'iput_var1_double-2'	=> 'in:IntIndexIn',
-		'iput_var1_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1_double-3'	=> 'in:reorderOffsetArr:true',
 	'iput_var1_longlong' => '2:3',
 		'iput_var1_longlong-2'	=> 'in:IntIndexIn',
-		'iput_var1_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'iput_var1_longlong-3'	=> 'in:reorderOffsetArr:true',
 
 	'iput_var' => '2',
 		'iput_var-2'		=> 'in:IntIndexIn',
@@ -1443,257 +1443,257 @@ $returnType   = "int";
 
 	'iput_vara' => '2:3:4',
 		'iput_vara-2'		=> 'in:IntIndexIn',
-		'iput_vara-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara-4'		=> 'in:intToOffsetArr',
+		'iput_vara-3'		=> 'in:reorderOffsetArr:true',
+		'iput_vara-4'		=> 'in:reorderOffsetArr',
 	'iput_vara_text' => '2:3:4:5',
 		'iput_vara_text-2'	=> 'in:IntIndexIn',
-		'iput_vara_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara_text-4'	=> 'in:intToOffsetArr',
+		'iput_vara_text-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vara_text-4'	=> 'in:reorderOffsetArr',
 		'iput_vara_text-5'	=> 'in:charBufferIn',
 	'iput_vara_schar' => '2:3:4',
 		'iput_vara_schar-2'	=> 'in:IntIndexIn',
-		'iput_vara_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara_schar-4'	=> 'in:intToOffsetArr',
+		'iput_vara_schar-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vara_schar-4'	=> 'in:reorderOffsetArr',
 	'iput_vara_short' => '2:3:4',
 		'iput_vara_short-2'	=> 'in:IntIndexIn',
-		'iput_vara_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara_short-4'	=> 'in:intToOffsetArr',
+		'iput_vara_short-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vara_short-4'	=> 'in:reorderOffsetArr',
 	'iput_vara_int' => '2:3:4',
 		'iput_vara_int-2'	=> 'in:IntIndexIn',
-		'iput_vara_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara_int-4'	=> 'in:intToOffsetArr',
+		'iput_vara_int-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vara_int-4'	=> 'in:reorderOffsetArr',
 	'iput_vara_float' => '2:3:4',
 		'iput_vara_float-2'	=> 'in:IntIndexIn',
-		'iput_vara_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara_float-4'	=> 'in:intToOffsetArr',
+		'iput_vara_float-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vara_float-4'	=> 'in:reorderOffsetArr',
 	'iput_vara_double' => '2:3:4',
 		'iput_vara_double-2'	=> 'in:IntIndexIn',
-		'iput_vara_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara_double-4'	=> 'in:intToOffsetArr',
+		'iput_vara_double-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vara_double-4'	=> 'in:reorderOffsetArr',
 	'iput_vara_longlong' => '2:3:4',
 		'iput_vara_longlong-2'	=> 'in:IntIndexIn',
-		'iput_vara_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vara_longlong-4'	=> 'in:intToOffsetArr',
+		'iput_vara_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vara_longlong-4'	=> 'in:reorderOffsetArr',
 
 	'iput_vars' => '2:3:4:5',
 		'iput_vars-2'		=> 'in:IntIndexIn',
-		'iput_vars-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars-4'		=> 'in:intToOffsetArr',
-		'iput_vars-5'		=> 'in:intToOffsetArr',
+		'iput_vars-3'		=> 'in:reorderOffsetArr:true',
+		'iput_vars-4'		=> 'in:reorderOffsetArr',
+		'iput_vars-5'		=> 'in:reorderOffsetArr',
 	'iput_vars_text' => '2:3:4:5:6',
 		'iput_vars_text-2'	=> 'in:IntIndexIn',
-		'iput_vars_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars_text-4'	=> 'in:intToOffsetArr',
-		'iput_vars_text-5'	=> 'in:intToOffsetArr',
+		'iput_vars_text-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vars_text-4'	=> 'in:reorderOffsetArr',
+		'iput_vars_text-5'	=> 'in:reorderOffsetArr',
 		'iput_vars_text-6'	=> 'in:charBufferIn',
 	'iput_vars_schar' => '2:3:4:5',
 		'iput_vars_schar-2'	=> 'in:IntIndexIn',
-		'iput_vars_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars_schar-4'	=> 'in:intToOffsetArr',
-		'iput_vars_schar-5'	=> 'in:intToOffsetArr',
+		'iput_vars_schar-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vars_schar-4'	=> 'in:reorderOffsetArr',
+		'iput_vars_schar-5'	=> 'in:reorderOffsetArr',
 	'iput_vars_short' => '2:3:4:5',
 		'iput_vars_short-2'	=> 'in:IntIndexIn',
-		'iput_vars_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars_short-4'	=> 'in:intToOffsetArr',
-		'iput_vars_short-5'	=> 'in:intToOffsetArr',
+		'iput_vars_short-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vars_short-4'	=> 'in:reorderOffsetArr',
+		'iput_vars_short-5'	=> 'in:reorderOffsetArr',
 	'iput_vars_int' => '2:3:4:5',
 		'iput_vars_int-2'	=> 'in:IntIndexIn',
-		'iput_vars_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars_int-4'	=> 'in:intToOffsetArr',
-		'iput_vars_int-5'	=> 'in:intToOffsetArr',
+		'iput_vars_int-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vars_int-4'	=> 'in:reorderOffsetArr',
+		'iput_vars_int-5'	=> 'in:reorderOffsetArr',
 	'iput_vars_float' => '2:3:4:5',
 		'iput_vars_float-2'	=> 'in:IntIndexIn',
-		'iput_vars_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars_float-4'	=> 'in:intToOffsetArr',
-		'iput_vars_float-5'	=> 'in:intToOffsetArr',
+		'iput_vars_float-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vars_float-4'	=> 'in:reorderOffsetArr',
+		'iput_vars_float-5'	=> 'in:reorderOffsetArr',
 	'iput_vars_double' => '2:3:4:5',
 		'iput_vars_double-2'	=> 'in:IntIndexIn',
-		'iput_vars_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars_double-4'	=> 'in:intToOffsetArr',
-		'iput_vars_double-5'	=> 'in:intToOffsetArr',
+		'iput_vars_double-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vars_double-4'	=> 'in:reorderOffsetArr',
+		'iput_vars_double-5'	=> 'in:reorderOffsetArr',
 	'iput_vars_longlong' => '2:3:4:5',
 		'iput_vars_longlong-2'	=> 'in:IntIndexIn',
-		'iput_vars_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_vars_longlong-4'	=> 'in:intToOffsetArr',
-		'iput_vars_longlong-5'	=> 'in:intToOffsetArr',
+		'iput_vars_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'iput_vars_longlong-4'	=> 'in:reorderOffsetArr',
+		'iput_vars_longlong-5'	=> 'in:reorderOffsetArr',
 
 	'iput_varm' => '2:3:4:5:6',
 		'iput_varm-2'		=> 'in:IntIndexIn',
-		'iput_varm-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm-4'		=> 'in:intToOffsetArr',
-		'iput_varm-5'		=> 'in:intToOffsetArr',
-		'iput_varm-6'		=> 'in:intToOffsetArr',
+		'iput_varm-3'		=> 'in:reorderOffsetArr:true',
+		'iput_varm-4'		=> 'in:reorderOffsetArr',
+		'iput_varm-5'		=> 'in:reorderOffsetArr',
+		'iput_varm-6'		=> 'in:reorderOffsetArr',
 	'iput_varm_text' => '2:3:4:5:6:7',
 		'iput_varm_text-2'	=> 'in:IntIndexIn',
-		'iput_varm_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm_text-4'	=> 'in:intToOffsetArr',
-		'iput_varm_text-5'	=> 'in:intToOffsetArr',
-		'iput_varm_text-6'	=> 'in:intToOffsetArr',
+		'iput_varm_text-3'	=> 'in:reorderOffsetArr:true',
+		'iput_varm_text-4'	=> 'in:reorderOffsetArr',
+		'iput_varm_text-5'	=> 'in:reorderOffsetArr',
+		'iput_varm_text-6'	=> 'in:reorderOffsetArr',
 		'iput_varm_text-7'	=> 'in:charBufferIn',
 	'iput_varm_schar' => '2:3:4:5:6',
 		'iput_varm_schar-2'	=> 'in:IntIndexIn',
-		'iput_varm_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm_schar-4'	=> 'in:intToOffsetArr',
-		'iput_varm_schar-5'	=> 'in:intToOffsetArr',
-		'iput_varm_schar-6'	=> 'in:intToOffsetArr',
+		'iput_varm_schar-3'	=> 'in:reorderOffsetArr:true',
+		'iput_varm_schar-4'	=> 'in:reorderOffsetArr',
+		'iput_varm_schar-5'	=> 'in:reorderOffsetArr',
+		'iput_varm_schar-6'	=> 'in:reorderOffsetArr',
 	'iput_varm_short' => '2:3:4:5:6',
 		'iput_varm_short-2'	=> 'in:IntIndexIn',
-		'iput_varm_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm_short-4'	=> 'in:intToOffsetArr',
-		'iput_varm_short-5'	=> 'in:intToOffsetArr',
-		'iput_varm_short-6'	=> 'in:intToOffsetArr',
+		'iput_varm_short-3'	=> 'in:reorderOffsetArr:true',
+		'iput_varm_short-4'	=> 'in:reorderOffsetArr',
+		'iput_varm_short-5'	=> 'in:reorderOffsetArr',
+		'iput_varm_short-6'	=> 'in:reorderOffsetArr',
 	'iput_varm_int' => '2:3:4:5:6',
 		'iput_varm_int-2'	=> 'in:IntIndexIn',
-		'iput_varm_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm_int-4'	=> 'in:intToOffsetArr',
-		'iput_varm_int-5'	=> 'in:intToOffsetArr',
-		'iput_varm_int-6'	=> 'in:intToOffsetArr',
+		'iput_varm_int-3'	=> 'in:reorderOffsetArr:true',
+		'iput_varm_int-4'	=> 'in:reorderOffsetArr',
+		'iput_varm_int-5'	=> 'in:reorderOffsetArr',
+		'iput_varm_int-6'	=> 'in:reorderOffsetArr',
 	'iput_varm_float' => '2:3:4:5:6',
 		'iput_varm_float-2'	=> 'in:IntIndexIn',
-		'iput_varm_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm_float-4'	=> 'in:intToOffsetArr',
-		'iput_varm_float-5'	=> 'in:intToOffsetArr',
-		'iput_varm_float-6'	=> 'in:intToOffsetArr',
+		'iput_varm_float-3'	=> 'in:reorderOffsetArr:true',
+		'iput_varm_float-4'	=> 'in:reorderOffsetArr',
+		'iput_varm_float-5'	=> 'in:reorderOffsetArr',
+		'iput_varm_float-6'	=> 'in:reorderOffsetArr',
 	'iput_varm_double' => '2:3:4:5:6',
 		'iput_varm_double-2'	=> 'in:IntIndexIn',
-		'iput_varm_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm_double-4'	=> 'in:intToOffsetArr',
-		'iput_varm_double-5'	=> 'in:intToOffsetArr',
-		'iput_varm_double-6'	=> 'in:intToOffsetArr',
+		'iput_varm_double-3'	=> 'in:reorderOffsetArr:true',
+		'iput_varm_double-4'	=> 'in:reorderOffsetArr',
+		'iput_varm_double-5'	=> 'in:reorderOffsetArr',
+		'iput_varm_double-6'	=> 'in:reorderOffsetArr',
 	'iput_varm_longlong' => '2:3:4:5:6',
 		'iput_varm_longlong-2'	=> 'in:IntIndexIn',
-		'iput_varm_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'iput_varm_longlong-4'	=> 'in:intToOffsetArr',
-		'iput_varm_longlong-5'	=> 'in:intToOffsetArr',
-		'iput_varm_longlong-6'	=> 'in:intToOffsetArr',
+		'iput_varm_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'iput_varm_longlong-4'	=> 'in:reorderOffsetArr',
+		'iput_varm_longlong-5'	=> 'in:reorderOffsetArr',
+		'iput_varm_longlong-6'	=> 'in:reorderOffsetArr',
 
 	'iget_varn' => '2:4:5',
 		'iget_varn-2'		=> 'in:IntIndexIn',
-		'iget_varn-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn-5'		=> 'in:Offset1DToOffset2D',
+		'iget_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'iget_varn_text' => '2:4:5:6',
 		'iget_varn_text-2'	=> 'in:IntIndexIn',
-		'iget_varn_text-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn_text-5'	=> 'in:Offset1DToOffset2D',
+		'iget_varn_text-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn_text-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'iget_varn_text-6'	=> 'out:charBufferOut',
 	'iget_varn_schar' => '2:4:5',
 		'iget_varn_schar-2'	=> 'in:IntIndexIn',
-		'iget_varn_schar-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn_schar-5'	=> 'in:Offset1DToOffset2D',
+		'iget_varn_schar-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn_schar-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iget_varn_short' => '2:4:5',
 		'iget_varn_short-2'	=> 'in:IntIndexIn',
-		'iget_varn_short-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn_short-5'	=> 'in:Offset1DToOffset2D',
+		'iget_varn_short-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn_short-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iget_varn_int' => '2:4:5',
 		'iget_varn_int-2'	=> 'in:IntIndexIn',
-		'iget_varn_int-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn_int-5'	=> 'in:Offset1DToOffset2D',
+		'iget_varn_int-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn_int-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iget_varn_float' => '2:4:5',
 		'iget_varn_float-2'	=> 'in:IntIndexIn',
-		'iget_varn_float-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn_float-5'	=> 'in:Offset1DToOffset2D',
+		'iget_varn_float-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn_float-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iget_varn_double' => '2:4:5',
 		'iget_varn_double-2'	=> 'in:IntIndexIn',
-		'iget_varn_double-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn_double-5'	=> 'in:Offset1DToOffset2D',
+		'iget_varn_double-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn_double-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iget_varn_longlong' => '2:4:5',
 		'iget_varn_longlong-2'	=> 'in:IntIndexIn',
-		'iget_varn_longlong-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iget_varn_longlong-5'	=> 'in:Offset1DToOffset2D',
+		'iget_varn_longlong-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iget_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 
 	'iput_varn' => '2:4:5',
 		'iput_varn-2'		=> 'in:IntIndexIn',
-		'iput_varn-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn-5'		=> 'in:Offset1DToOffset2D',
+		'iput_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'iput_varn_text' => '2:4:5:6',
 		'iput_varn_text-2'	=> 'in:IntIndexIn',
-		'iput_varn_text-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn_text-5'	=> 'in:Offset1DToOffset2D',
+		'iput_varn_text-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn_text-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'iput_varn_text-6'	=> 'in:charBufferIn',
 	'iput_varn_schar' => '2:4:5',
 		'iput_varn_schar-2'	=> 'in:IntIndexIn',
-		'iput_varn_schar-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn_schar-5'	=> 'in:Offset1DToOffset2D',
+		'iput_varn_schar-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn_schar-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iput_varn_short' => '2:4:5',
 		'iput_varn_short-2'	=> 'in:IntIndexIn',
-		'iput_varn_short-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn_short-5'	=> 'in:Offset1DToOffset2D',
+		'iput_varn_short-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn_short-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iput_varn_int' => '2:4:5',
 		'iput_varn_int-2'	=> 'in:IntIndexIn',
-		'iput_varn_int-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn_int-5'	=> 'in:Offset1DToOffset2D',
+		'iput_varn_int-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn_int-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iput_varn_float' => '2:4:5',
 		'iput_varn_float-2'	=> 'in:IntIndexIn',
-		'iput_varn_float-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn_float-5'	=> 'in:Offset1DToOffset2D',
+		'iput_varn_float-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn_float-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iput_varn_double' => '2:4:5',
 		'iput_varn_double-2'	=> 'in:IntIndexIn',
-		'iput_varn_double-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn_double-5'	=> 'in:Offset1DToOffset2D',
+		'iput_varn_double-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn_double-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'iput_varn_longlong' => '2:4:5',
 		'iput_varn_longlong-2'	=> 'in:IntIndexIn',
-		'iput_varn_longlong-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'iput_varn_longlong-5'	=> 'in:Offset1DToOffset2D',
+		'iput_varn_longlong-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'iput_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 
 	'bput_varn' => '2:4:5',
 		'bput_varn-2'		=> 'in:IntIndexIn',
-		'bput_varn-4'		=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn-5'		=> 'in:Offset1DToOffset2D',
+		'bput_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'bput_varn_text' => '2:4:5:6',
 		'bput_varn_text-2'	=> 'in:IntIndexIn',
-		'bput_varn_text-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn_text-5'	=> 'in:Offset1DToOffset2D',
+		'bput_varn_text-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn_text-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'bput_varn_text-6'	=> 'in:charBufferIn',
 	'bput_varn_schar' => '2:4:5',
 		'bput_varn_schar-2'	=> 'in:IntIndexIn',
-		'bput_varn_schar-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn_schar-5'	=> 'in:Offset1DToOffset2D',
+		'bput_varn_schar-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn_schar-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'bput_varn_short' => '2:4:5',
 		'bput_varn_short-2'	=> 'in:IntIndexIn',
-		'bput_varn_short-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn_short-5'	=> 'in:Offset1DToOffset2D',
+		'bput_varn_short-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn_short-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'bput_varn_int' => '2:4:5',
 		'bput_varn_int-2'	=> 'in:IntIndexIn',
-		'bput_varn_int-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn_int-5'	=> 'in:Offset1DToOffset2D',
+		'bput_varn_int-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn_int-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'bput_varn_float' => '2:4:5',
 		'bput_varn_float-2'	=> 'in:IntIndexIn',
-		'bput_varn_float-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn_float-5'	=> 'in:Offset1DToOffset2D',
+		'bput_varn_float-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn_float-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'bput_varn_double' => '2:4:5',
 		'bput_varn_double-2'	=> 'in:IntIndexIn',
-		'bput_varn_double-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn_double-5'	=> 'in:Offset1DToOffset2D',
+		'bput_varn_double-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn_double-5'	=> 'in:reorderOffsetArr1DTo2D',
 	'bput_varn_longlong' => '2:4:5',
 		'bput_varn_longlong-2'	=> 'in:IntIndexIn',
-		'bput_varn_longlong-4'	=> 'in:Offset1DToOffset2D:ncmpixVardim(*v1,*v2-1)',
-		'bput_varn_longlong-5'	=> 'in:Offset1DToOffset2D',
+		'bput_varn_longlong-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'bput_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 
 	'bput_var1' => '2:3',
 		'bput_var1-2'		=> 'in:IntIndexIn',
-		'bput_var1-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1-3'		=> 'in:reorderOffsetArr:true',
 	'bput_var1_text' => '2:3:4',
 		'bput_var1_text-2'	=> 'in:IntIndexIn',
-		'bput_var1_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1_text-3'	=> 'in:reorderOffsetArr:true',
 		'bput_var1_text-4'	=> 'in:charBufferIn',
 	'bput_var1_schar' => '2:3',
 		'bput_var1_schar-2'	=> 'in:IntIndexIn',
-		'bput_var1_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1_schar-3'	=> 'in:reorderOffsetArr:true',
 	'bput_var1_short' => '2:3',
 		'bput_var1_short-2'	=> 'in:IntIndexIn',
-		'bput_var1_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1_short-3'	=> 'in:reorderOffsetArr:true',
 	'bput_var1_int' => '2:3',
 		'bput_var1_int-2'	=> 'in:IntIndexIn',
-		'bput_var1_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1_int-3'	=> 'in:reorderOffsetArr:true',
 	'bput_var1_float' => '2:3',
 		'bput_var1_float-2'	=> 'in:IntIndexIn',
-		'bput_var1_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1_float-3'	=> 'in:reorderOffsetArr:true',
 	'bput_var1_double' => '2:3',
 		'bput_var1_double-2'	=> 'in:IntIndexIn',
-		'bput_var1_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1_double-3'	=> 'in:reorderOffsetArr:true',
 	'bput_var1_longlong' => '2:3',
 		'bput_var1_longlong-2'	=> 'in:IntIndexIn',
-		'bput_var1_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
+		'bput_var1_longlong-3'	=> 'in:reorderOffsetArr:true',
 
 	'bput_var' => '2',
 		'bput_var-2'		=> 'in:IntIndexIn',
@@ -1715,129 +1715,129 @@ $returnType   = "int";
 
 	'bput_vara' => '2:3:4',
 		'bput_vara-2'		=> 'in:IntIndexIn',
-		'bput_vara-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara-4'		=> 'in:intToOffsetArr',
+		'bput_vara-3'		=> 'in:reorderOffsetArr:true',
+		'bput_vara-4'		=> 'in:reorderOffsetArr',
 	'bput_vara_text' => '2:3:4:5',
 		'bput_vara_text-2'	=> 'in:IntIndexIn',
-		'bput_vara_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara_text-4'	=> 'in:intToOffsetArr',
+		'bput_vara_text-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vara_text-4'	=> 'in:reorderOffsetArr',
 		'bput_vara_text-5'	=> 'in:charBufferIn',
 	'bput_vara_schar' => '2:3:4',
 		'bput_vara_schar-2'	=> 'in:IntIndexIn',
-		'bput_vara_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara_schar-4'	=> 'in:intToOffsetArr',
+		'bput_vara_schar-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vara_schar-4'	=> 'in:reorderOffsetArr',
 	'bput_vara_short' => '2:3:4',
 		'bput_vara_short-2'	=> 'in:IntIndexIn',
-		'bput_vara_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara_short-4'	=> 'in:intToOffsetArr',
+		'bput_vara_short-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vara_short-4'	=> 'in:reorderOffsetArr',
 	'bput_vara_int' => '2:3:4',
 		'bput_vara_int-2'	=> 'in:IntIndexIn',
-		'bput_vara_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara_int-4'	=> 'in:intToOffsetArr',
+		'bput_vara_int-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vara_int-4'	=> 'in:reorderOffsetArr',
 	'bput_vara_float' => '2:3:4',
 		'bput_vara_float-2'	=> 'in:IntIndexIn',
-		'bput_vara_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara_float-4'	=> 'in:intToOffsetArr',
+		'bput_vara_float-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vara_float-4'	=> 'in:reorderOffsetArr',
 	'bput_vara_double' => '2:3:4',
 		'bput_vara_double-2'	=> 'in:IntIndexIn',
-		'bput_vara_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara_double-4'	=> 'in:intToOffsetArr',
+		'bput_vara_double-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vara_double-4'	=> 'in:reorderOffsetArr',
 	'bput_vara_longlong' => '2:3:4',
 		'bput_vara_longlong-2'	=> 'in:IntIndexIn',
-		'bput_vara_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vara_longlong-4'	=> 'in:intToOffsetArr',
+		'bput_vara_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vara_longlong-4'	=> 'in:reorderOffsetArr',
 
 	'bput_vars' => '2:3:4:5',
 		'bput_vars-2'		=> 'in:IntIndexIn',
-		'bput_vars-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars-4'		=> 'in:intToOffsetArr',
-		'bput_vars-5'		=> 'in:intToOffsetArr',
+		'bput_vars-3'		=> 'in:reorderOffsetArr:true',
+		'bput_vars-4'		=> 'in:reorderOffsetArr',
+		'bput_vars-5'		=> 'in:reorderOffsetArr',
 	'bput_vars_text' => '2:3:4:5:6',
 		'bput_vars_text-2'	=> 'in:IntIndexIn',
-		'bput_vars_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars_text-4'	=> 'in:intToOffsetArr',
-		'bput_vars_text-5'	=> 'in:intToOffsetArr',
+		'bput_vars_text-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vars_text-4'	=> 'in:reorderOffsetArr',
+		'bput_vars_text-5'	=> 'in:reorderOffsetArr',
 		'bput_vars_text-6'	=> 'in:charBufferIn',
 	'bput_vars_schar' => '2:3:4:5',
 		'bput_vars_schar-2'	=> 'in:IntIndexIn',
-		'bput_vars_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars_schar-4'	=> 'in:intToOffsetArr',
-		'bput_vars_schar-5'	=> 'in:intToOffsetArr',
+		'bput_vars_schar-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vars_schar-4'	=> 'in:reorderOffsetArr',
+		'bput_vars_schar-5'	=> 'in:reorderOffsetArr',
 	'bput_vars_short' => '2:3:4:5',
 		'bput_vars_short-2'	=> 'in:IntIndexIn',
-		'bput_vars_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars_short-4'	=> 'in:intToOffsetArr',
-		'bput_vars_short-5'	=> 'in:intToOffsetArr',
+		'bput_vars_short-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vars_short-4'	=> 'in:reorderOffsetArr',
+		'bput_vars_short-5'	=> 'in:reorderOffsetArr',
 	'bput_vars_int' => '2:3:4:5',
 		'bput_vars_int-2'	=> 'in:IntIndexIn',
-		'bput_vars_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars_int-4'	=> 'in:intToOffsetArr',
-		'bput_vars_int-5'	=> 'in:intToOffsetArr',
+		'bput_vars_int-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vars_int-4'	=> 'in:reorderOffsetArr',
+		'bput_vars_int-5'	=> 'in:reorderOffsetArr',
 	'bput_vars_float' => '2:3:4:5',
 		'bput_vars_float-2'	=> 'in:IntIndexIn',
-		'bput_vars_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars_float-4'	=> 'in:intToOffsetArr',
-		'bput_vars_float-5'	=> 'in:intToOffsetArr',
+		'bput_vars_float-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vars_float-4'	=> 'in:reorderOffsetArr',
+		'bput_vars_float-5'	=> 'in:reorderOffsetArr',
 	'bput_vars_double' => '2:3:4:5',
 		'bput_vars_double-2'	=> 'in:IntIndexIn',
-		'bput_vars_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars_double-4'	=> 'in:intToOffsetArr',
-		'bput_vars_double-5'	=> 'in:intToOffsetArr',
+		'bput_vars_double-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vars_double-4'	=> 'in:reorderOffsetArr',
+		'bput_vars_double-5'	=> 'in:reorderOffsetArr',
 	'bput_vars_longlong' => '2:3:4:5',
 		'bput_vars_longlong-2'	=> 'in:IntIndexIn',
-		'bput_vars_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_vars_longlong-4'	=> 'in:intToOffsetArr',
-		'bput_vars_longlong-5'	=> 'in:intToOffsetArr',
+		'bput_vars_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'bput_vars_longlong-4'	=> 'in:reorderOffsetArr',
+		'bput_vars_longlong-5'	=> 'in:reorderOffsetArr',
 
 	'bput_varm' => '2:3:4:5:6',
 		'bput_varm-2'		=> 'in:IntIndexIn',
-		'bput_varm-3'		=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm-4'		=> 'in:intToOffsetArr',
-		'bput_varm-5'		=> 'in:intToOffsetArr',
-		'bput_varm-6'		=> 'in:intToOffsetArr',
+		'bput_varm-3'		=> 'in:reorderOffsetArr:true',
+		'bput_varm-4'		=> 'in:reorderOffsetArr',
+		'bput_varm-5'		=> 'in:reorderOffsetArr',
+		'bput_varm-6'		=> 'in:reorderOffsetArr',
 	'bput_varm_text' => '2:3:4:5:6:7',
 		'bput_varm_text-2'	=> 'in:IntIndexIn',
-		'bput_varm_text-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm_text-4'	=> 'in:intToOffsetArr',
-		'bput_varm_text-5'	=> 'in:intToOffsetArr',
-		'bput_varm_text-6'	=> 'in:intToOffsetArr',
+		'bput_varm_text-3'	=> 'in:reorderOffsetArr:true',
+		'bput_varm_text-4'	=> 'in:reorderOffsetArr',
+		'bput_varm_text-5'	=> 'in:reorderOffsetArr',
+		'bput_varm_text-6'	=> 'in:reorderOffsetArr',
 		'bput_varm_text-7'	=> 'in:charBufferIn',
 	'bput_varm_schar' => '2:3:4:5:6',
 		'bput_varm_schar-2'	=> 'in:IntIndexIn',
-		'bput_varm_schar-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm_schar-4'	=> 'in:intToOffsetArr',
-		'bput_varm_schar-5'	=> 'in:intToOffsetArr',
-		'bput_varm_schar-6'	=> 'in:intToOffsetArr',
+		'bput_varm_schar-3'	=> 'in:reorderOffsetArr:true',
+		'bput_varm_schar-4'	=> 'in:reorderOffsetArr',
+		'bput_varm_schar-5'	=> 'in:reorderOffsetArr',
+		'bput_varm_schar-6'	=> 'in:reorderOffsetArr',
 	'bput_varm_short' => '2:3:4:5:6',
 		'bput_varm_short-2'	=> 'in:IntIndexIn',
-		'bput_varm_short-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm_short-4'	=> 'in:intToOffsetArr',
-		'bput_varm_short-5'	=> 'in:intToOffsetArr',
-		'bput_varm_short-6'	=> 'in:intToOffsetArr',
+		'bput_varm_short-3'	=> 'in:reorderOffsetArr:true',
+		'bput_varm_short-4'	=> 'in:reorderOffsetArr',
+		'bput_varm_short-5'	=> 'in:reorderOffsetArr',
+		'bput_varm_short-6'	=> 'in:reorderOffsetArr',
 	'bput_varm_int' => '2:3:4:5:6',
 		'bput_varm_int-2'	=> 'in:IntIndexIn',
-		'bput_varm_int-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm_int-4'	=> 'in:intToOffsetArr',
-		'bput_varm_int-5'	=> 'in:intToOffsetArr',
-		'bput_varm_int-6'	=> 'in:intToOffsetArr',
+		'bput_varm_int-3'	=> 'in:reorderOffsetArr:true',
+		'bput_varm_int-4'	=> 'in:reorderOffsetArr',
+		'bput_varm_int-5'	=> 'in:reorderOffsetArr',
+		'bput_varm_int-6'	=> 'in:reorderOffsetArr',
 	'bput_varm_float' => '2:3:4:5:6',
 		'bput_varm_float-2'	=> 'in:IntIndexIn',
-		'bput_varm_float-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm_float-4'	=> 'in:intToOffsetArr',
-		'bput_varm_float-5'	=> 'in:intToOffsetArr',
-		'bput_varm_float-6'	=> 'in:intToOffsetArr',
+		'bput_varm_float-3'	=> 'in:reorderOffsetArr:true',
+		'bput_varm_float-4'	=> 'in:reorderOffsetArr',
+		'bput_varm_float-5'	=> 'in:reorderOffsetArr',
+		'bput_varm_float-6'	=> 'in:reorderOffsetArr',
 	'bput_varm_double' => '2:3:4:5:6',
 		'bput_varm_double-2'	=> 'in:IntIndexIn',
-		'bput_varm_double-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm_double-4'	=> 'in:intToOffsetArr',
-		'bput_varm_double-5'	=> 'in:intToOffsetArr',
-		'bput_varm_double-6'	=> 'in:intToOffsetArr',
+		'bput_varm_double-3'	=> 'in:reorderOffsetArr:true',
+		'bput_varm_double-4'	=> 'in:reorderOffsetArr',
+		'bput_varm_double-5'	=> 'in:reorderOffsetArr',
+		'bput_varm_double-6'	=> 'in:reorderOffsetArr',
 	'bput_varm_longlong' => '2:3:4:5:6',
 		'bput_varm_longlong-2'	=> 'in:IntIndexIn',
-		'bput_varm_longlong-3'	=> 'in:intToOffsetArr:ncmpixVardim(*v1,*v2-1)',
-		'bput_varm_longlong-4'	=> 'in:intToOffsetArr',
-		'bput_varm_longlong-5'	=> 'in:intToOffsetArr',
-		'bput_varm_longlong-6'	=> 'in:intToOffsetArr',
+		'bput_varm_longlong-3'	=> 'in:reorderOffsetArr:true',
+		'bput_varm_longlong-4'	=> 'in:reorderOffsetArr',
+		'bput_varm_longlong-5'	=> 'in:reorderOffsetArr',
+		'bput_varm_longlong-6'	=> 'in:reorderOffsetArr',
 
 
 	'rename_att' => '2:3:4',
@@ -1970,7 +1970,7 @@ $declarg{'bput_vara_int8-5'}		= 'const long long *';
 $declarg{'bput_vars_int8-6'}		= 'const long long *';
 $declarg{'bput_varm_int8-7'}		= 'const long long *';
 
-# Special argument handling 
+# Special argument handling
 # Special routines are used whose names are created from the name
 # used in the hashes above (routinename-position) and these special routine
 # names.
@@ -1985,59 +1985,58 @@ $declarg{'bput_varm_int8-7'}		= 'const long long *';
 # /* Special post call processing (for out variables) */
 # <name>_ctof( l$count, v$count ) /* local (C) variable name, fortran var name */
 # Not all routines must be provided
-#    use $declarg{routine-position} to replace the handling of input 
+#    use $declarg{routine-position} to replace the handling of input
 #    arguments (in the definition)
 #    E.g., $declarg{'put_att_schar-6'} = 'const signed char *';
 #
 # Routines needed for special argument handling for MPI_Offset
 
 # ---------------------------------------------------------------------------
-# Convert from an int array to an MPI_Offset array for routines taking an
-# MPI_Offset array as input and invert order of array elements
-# usage is 
-#    'Type_struct' => '3', 'Type_struct-3' => 'in:intToOffsetArr:*v1',
-# where *v1 will give the array size (the number is the number of the argument)
-# If $Array_size is provided, it also converts from 1-based to 0-based values.
-# Otherwise, n converting from 1-based to 0-based values.
+# F2C dimension reorder from a Fortran 1D array of type MPI_Offset to a C
+# 1D array of type MPI_Offset.
+# usage is
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderOffsetArr:true',
+# or
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderOffsetArr',
+# where true indicates the array values of the array will be converted
+# from 1-based to 0-based.  Without it, no conversion is done.
 #
-
-sub intToOffsetArr_in_decl {
+sub reorderOffsetArr_in_decl {
     my $count = $_[0];
     print $OUTFD "    MPI_Offset *l$count = NULL;\n";
 }
-sub intToOffsetArr_ftoc {
+sub reorderOffsetArr_ftoc {
     my $count = $_[0];
     # We use a local variable for the array size because we may need to
     # call a function of some of the other arguments to get the array size
     if ($Array_size) {
-	print $OUTFD "
+        print $OUTFD "
     int ndims;
-    ierr = ncmpi_inq_varndims(*v1, l2, &ndims);
-    if (ierr != NC_NOERR) /* Error return */
-        return ierr;
+    ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
+    if (ierr != NC_NOERR) return ierr;
 
     if (ndims > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( (size_t)ndims * sizeof(MPI_Offset));
-        for (li=0; li<ndims; li++) 
-            l$count\[li\] = v$count\[ndims-1-li\] - 1;
+        l$count = (MPI_Offset*) $malloc((size_t)ndims * sizeof(MPI_Offset));
+        for (li=0; li<ndims; li++) /* convert Fortran order to C order */
+            l$count\[li\] = v$count\[ndims-1-li\] - 1; /* convert 1-based to 0-based */
     }\n";
     } else {
-	print $OUTFD "
+        print $OUTFD "
     if (ndims > 0) {
         int li;
-        l$count = (MPI_Offset *)$malloc( (size_t)ndims * sizeof(MPI_Offset));
-        for (li=0; li<ndims; li++) 
+        l$count = (MPI_Offset*) $malloc((size_t)ndims * sizeof(MPI_Offset));
+        for (li=0; li<ndims; li++) /* convert Fortran order to C order */
             l$count\[li\] = v$count\[ndims-1-li\];
     }\n";
     }
 }
-sub intToOffsetArr_in_arg {
+sub reorderOffsetArr_in_arg {
     my $count = $_[0];
     print $OUTFD "l$count";
 }
 # This routine is invoked even for the in case (to free the result)
-sub intToOffsetArr_in_ctof {
+sub reorderOffsetArr_in_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
@@ -2046,50 +2045,52 @@ sub intToOffsetArr_in_ctof {
 }
 
 # ---------------------------------------------------------------------------
-# Convert from an MPI_Offset 1D array to an MPI_Offset 2D array for C routines
-# taking a 2D array argument
-# If $Array_size is provided, it also converts from 1-based to 0-based values.
-# Otherwise, n converting from 1-based to 0-based values.
+# F2C dimension reorder from a Fortran MPI_Offset 1D array to a C MPI_Offset
+# 2D array.
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderOffsetArr1DTo2D:true',
+# or
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderOffsetArr1DTo2D',
+# where true indicates the array values of the array will be converted
+# from 1-based to 0-based.  Without it, no conversion is done.
 #
-sub Offset1DToOffset2D_in_decl {
+sub reorderOffsetArr1DTo2D_in_decl {
     my $count = $_[0];
-    print $OUTFD "    MPI_Offset **l$count = 0;\n";
+    print $OUTFD "    MPI_Offset **l$count = NULL;\n";
 }
-sub Offset1DToOffset2D_ftoc {
+sub reorderOffsetArr1DTo2D_ftoc {
     my $count = $_[0];
     if ($Array_size) {
-	print $OUTFD "
+        print $OUTFD "
     int ndims;
-    ierr = ncmpi_inq_varndims(*v1, l2, &ndims);
-    if (ierr != NC_NOERR) /* Error return */
-        return ierr;\n"
+    ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
+    if (ierr != NC_NOERR) return ierr;\n"
     }
     print $OUTFD "
     if (ndims > 0) {
         int li, lj;
         size_t len = (size_t)*v3;
-        l$count    = (MPI_Offset**)$malloc(len * sizeof(MPI_Offset*) );
-        l$count\[0\] = (MPI_Offset*) $malloc(len * (size_t)ndims * sizeof(MPI_Offset));
-        for (lj=1; lj<*v3; lj++) 
+        l$count    = (MPI_Offset**) $malloc(len * sizeof(MPI_Offset*));
+        l$count\[0\] = (MPI_Offset*)  $malloc(len * (size_t)ndims * sizeof(MPI_Offset));
+        for (lj=1; lj<*v3; lj++)
             l$count\[lj\] = l$count\[lj-1\] + ndims;
-        for (lj=0; lj<*v3; lj++) 
-            for (li=0; li<ndims; li++)\n";
+        for (lj=0; lj<*v3; lj++)
+            for (li=0; li<ndims; li++) /* convert Fortran order to C order */";
     if ($Array_size) {
-	print $OUTFD "
-                l$count\[lj\]\[li\] = v$count\[lj*ndims + ndims-1-li\] - 1;
+        print $OUTFD "
+                l$count\[lj\]\[li\] = v$count\[lj*ndims + ndims-1-li\] - 1; /* convert 1-based to 0-based */
     }\n";
     } else {
-	print $OUTFD "
+        print $OUTFD "
                 l$count\[lj\]\[li\] = v$count\[lj*ndims + ndims-1-li\];
     }\n";
     }
 }
-sub Offset1DToOffset2D_in_arg {
+sub reorderOffsetArr1DTo2D_in_arg {
     my $count = $_[0];
     print $OUTFD "l$count";
 }
 # This routine is invoked even for the in case (to free the result)
-sub Offset1DToOffset2D_in_ctof {
+sub reorderOffsetArr1DTo2D_in_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
@@ -2098,11 +2099,14 @@ sub Offset1DToOffset2D_in_ctof {
 }
 
 # -------------------------------------------------------------------------
-# Convert from an int array to an int array with the values reordered
-# usage is 
-#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderIntArr:*v1',
-# where *v1 will give the array size (the number is the number of the argument)
-
+# F2C dimension reorder from a Fortran int array to a C int array.
+# usage is
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderIntArr:true',
+# or
+#    'Type_struct' => '3', 'Type_struct-3' => 'in:reorderIntArr",
+# where true indicates the array values of the array will be converted
+# from 1-based to 0-based.  Without it, no conversion is done.
+#
 sub reorderIntArr_in_decl {
     my $count = $_[0];
     print $OUTFD "    int *l$count=NULL;\n";
@@ -2112,16 +2116,17 @@ sub reorderIntArr_ftoc {
     # We use a local variable for the array size because we may need to
     # call a function of some of the other arguments to get the array size
     # Always copy and invert order
-    print $OUTFD "
+    if ($Array_size) {
+        print $OUTFD "
     int ndims;
-    ierr = ncmpi_inq_varndims(*v1, l2, &ndims);
-    if (ierr != NC_NOERR) /* Error return */
-        return ierr;
-
+    ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
+    if (ierr != NC_NOERR) return ierr;\n"
+    }
+    print $OUTFD "
     if (ndims > 0) {
         int li;
         l$count = (int*) $malloc((size_t)ndims * sizeof(int));
-        for (li=0; li<ndims; li++) 
+        for (li=0; li<ndims; li++) /* convert Fortran order to C order */
             l$count\[li\] = v$count\[ndims-1-li\];
     }\n";
     $clean_up .= "    $free(l$count);\n";
@@ -2138,13 +2143,14 @@ sub reorderIntArr_in_ctof {
     if ($lname) { $free($lname); }
 ";
 }
-# -------------------------------------------------------------------------
-# Convert from an int array to an int array with the values reordered
-# for an OUTPUT array
-# usage is 
-#    'Type_struct' => '3', 'Type_struct-3' => 'out:reorderIntArrOut:*v1',
-# where *v1 will give the array size (the number is the number of the argument)
 
+# -------------------------------------------------------------------------
+# Convert from a C int array to a Fortran int array with the values reordered
+# for an OUTPUT array
+# usage is
+#    'Type_struct' => '3', 'Type_struct-3' => 'out:reorderIntArrOut',
+# the array values will be converted from C 0-based to Fortran 1-based.
+#
 sub reorderIntArrOut_out_decl {
     my $count = $_[0];
     print $OUTFD "    int *l$count=NULL;\n";
@@ -2156,9 +2162,8 @@ sub reorderIntArrOut_out_ftoc {
     # Always copy and invert order
     print $OUTFD "
     int ndims;
-    ierr = ncmpi_inq_varndims(*v1, l2, &ndims);
-    if (ierr != NC_NOERR) /* Error return */
-        return ierr;
+    ierr = ncmpi_inq_varndims(*v1, l2, &ndims); /* get number of dimensions */
+    if (ierr != NC_NOERR) return ierr;
 
     if (ndims > 0) {
         l$count = (int*) $malloc((size_t)ndims * sizeof(int));
@@ -2173,13 +2178,14 @@ sub reorderIntArrOut_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
     print $OUTFD "
-    if (ndims > 0) { 
-	int li;
-        for (li=0; li<ndims; li++) 
-            v$count\[li\] = l$count\[ndims-1-li\] + 1;
+    if (ndims > 0) {
+        int li;
+        for (li=0; li<ndims; li++) /* convert C order to Fortran order */
+            v$count\[li\] = l$count\[ndims-1-li\] + 1; /* convert from 0-based to 1-based */
         $free($lname);
     }\n";
 }
+
 # -------------------------------------------------------------------------
 sub intToOffset_in_decl {
     my $count = $_[0];
@@ -2198,30 +2204,11 @@ sub intToOffset_in_ctof {
     my $vname = $_[1];
 }
 
-# sizet as output
-sub sizetToInt_out_decl {
-    my $count = $_[0];
-    print $OUTFD "    MPI_Offset l$count=NULL;\n";
-}
-sub sizetToInt_ftoc {
-    my $count = $_[0];
-}
-sub sizetToInt_out_arg {
-    my $count = $_[0];
-    print $OUTFD "\&l$count";
-}
-# This routine is invoked even for the in case (to free the result)
-sub sizetToInt_ctof {
-    my $lname = $_[0];
-    my $vname = $_[1];
-    print $OUTFD "    if (!$errparmrval) *v$count = (int)l$count;\n";
-}
-
 # -------------------------------------------------------------------------
 # For output of int indices, add one to the result
-# usage is 
+# usage is
 #    'inq_varid' => '3', 'inq_varid-3' => 'out:IntIndex',
-
+#
 sub IntIndex_out_decl {
     my $count = $_[0];
 }
@@ -2238,11 +2225,12 @@ sub IntIndex_ctof {
     print $OUTFD "
     if (!$errparmrval) *v$count = *v$count + 1;\n";
 }
+
 # -------------------------------------------------------------------------
 # For output of MPI_Offset indices, add one to the result
-# usage is 
+# usage is
 #    'inq_varid' => '3', 'inq_varid-3' => 'out:OffsetIndex',
-
+#
 sub OffsetIndex_out_decl {
     my $count = $_[0];
 }
@@ -2259,12 +2247,13 @@ sub OffsetIndex_ctof {
     print $OUTFD "
     if (!$errparmrval) *v$count = *v$count + 1;\n";
 }
+
 # -------------------------------------------------------------------------
 # For output of dimension indices, add one to the result
 # If no unlimited length dimension has been defined, -1 is returned.
-# usage is 
+# usage is
 #    'inq_varid' => '3', 'inq_varid-3' => 'out:IntDimIndex',
-
+#
 sub IntDimIndex_out_decl {
     my $count = $_[0];
 }
@@ -2281,11 +2270,12 @@ sub IntDimIndex_ctof {
     print $OUTFD "
     if (!$errparmrval && *v$count != -1) *v$count = *v$count + 1;\n";
 }
+
 # -------------------------------------------------------------------------
 # For input of int indices, subtract one to the result
-# usage is 
+# usage is
 #    'inq_dim' => '3', 'inq_dim-3' => 'in:IntIndexIn',
-
+#
 sub IntIndexIn_in_decl {
     my $count = $_[0];
     print $OUTFD "    int l$count = *v$count - 1;\n";
@@ -2301,11 +2291,12 @@ sub IntIndexIn_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
 }
+
 # -------------------------------------------------------------------------
 # For input of MPI_Offset indices, subtract one to the result
-# usage is 
+# usage is
 #    'inq_dim' => '3', 'inq_dim-3' => 'in:OffsetIndexIn',
-
+#
 sub OffsetIndexIn_in_decl {
     my $count = $_[0];
     print $OUTFD "    MPI_Offset l$count = *v$count - 1;\n";
@@ -2321,13 +2312,15 @@ sub OffsetIndexIn_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
 }
+
 # -------------------------------------------------------------------------
 # For input of an array of int indices, subtract one from the result.
 # Also, reverse the order of the array indices
-# usage is 
+# usage is
 #    'def_var' => '3', 'def_var-3' => 'in:IntIndexInArr',
 # Note:
 #   This did not match the one use of this routine, in defA-var
+#
 sub IntIndexInArr_in_decl {
     my $count = $_[0];
     print $OUTFD "    int *l$count=NULL;\n    int ln$count;\n";
@@ -2338,9 +2331,9 @@ sub IntIndexInArr_ftoc {
     { ln$count = $Array_size;
     if (ln$count > 0) {
         int li;
-        l$count = (int *)$malloc( (size_t)ln$count * sizeof(int) );
-        for (li=0; li<ln$count; li++) 
-            l$count\[li\] = v$count\[ln$count-li-1\]-1;
+        l$count = (int*) $malloc( (size_t)ln$count * sizeof(int));
+        for (li=0; li<ln$count; li++) /* convert Fortran order to C order */
+            l$count\[li\] = v$count\[ln$count-li-1\]-1; /* convert 1-based to 0-based */
       }}\n";
       $clean_up .= "    $free(l$count);\n";
 }
@@ -2355,45 +2348,11 @@ sub IntIndexInArr_ctof {
     if ($lname) { $free($lname); }
 ";
 }
-# -------------------------------------------------------------------------
-# For input of an array of MPI_Offset indices, subtract one from the result.
-# Also, reverse the order of the array indices
-# usage is 
-#    'def_var' => '3', 'def_var-3' => 'in:OffsetIndexInArr',
-# Note:
-#   This used MPI_Offset instead of int for the type in the C call.
-#   This did not match the one use of this routine, in defA-var
-sub OffsetIndexInArr_in_decl {
-    my $count = $_[0];
-    print $OUTFD "    int *l$count=NULL;\n    int ln$count;\n";
-}
-sub OffsetIndexInArr_ftoc {
-    my $count = $_[0];
-    print $OUTFD "
-    { ln$count = $Array_size;
-    if (ln$count > 0) {
-        int li;
-        l$count = (int *)$malloc( (size_t)ln$count * sizeof(int) );
-        for (li=0; li<ln$count; li++) 
-            l$count\[li\] = v$count\[ln$count-li-1\]-1;
-      }}\n";
-      $clean_up .= "    $free(l$count);\n";
-}
-sub OffsetIndexInArr_in_arg {
-    my $count = $_[0];
-    print $OUTFD "l$count";
-}
-sub OffsetIndexInArr_ctof {
-    my $lname = $_[0];
-    my $vname = $_[1];
-    print $OUTFD "
-    if ($lname) { $free($lname); }
-";
-}
+
 # ---------------------------------------------------------------------------
 # charBufferIn and charBufferOut are basically no-ops.  They are provided
 # in case special processing is required for the character buffers.
-
+#
 sub charBufferIn_in_decl {
 }
 sub charBufferIn_in_arg {
@@ -2411,9 +2370,11 @@ sub charBufferOut_out_arg {
 }
 sub charBufferOut_ctof {
 }
+
 # -----------------------------------------------------------------------------
 # integer*1 in Fortran to signed char in C
 # FIXME: Not done yet
+#
 sub int1toschar_out_arg {
     my $count = $_[0];
     print $OUTFD "v$count";
@@ -2468,14 +2429,13 @@ sub ncfxstrerror {
     int i;
     /* d2 is the length of the string passed into the routine */
     for (i=0; i<d2 && *p; i++) {
-	v2[i] = *p++;
+        v2[i] = *p++;
     }
     /* Blank pad */
     for (; i<d2; i++) v2[i] = ' ';
     return 0;
 }\n";
     close ($OUTFD);
-
 }
 
 # Note that this works for errors because the Netcdf errors are negative
@@ -2485,10 +2445,10 @@ sub ncfxutil {
     $files[$#files+1] = "nfxutil.c";
     &print_copyright( );
     print $OUTFD "
-int ncmpixVardim( int ncid, int varid ) 
+int ncmpixVardim( int ncid, int varid )
 {
     int ndims, status;
-    status = ncmpi_inq_varndims(ncid, varid, &ndims);
+    status = ncmpi_inq_varndims(ncid, varid, &ndims); /* get number of dimensions */
     if (status != NC_NOERR) return status;
     return ndims;
 }\n";
@@ -2509,14 +2469,13 @@ sub ncfxinqlibvers {
     int i;
     /* d1 is the length of the string passed into the routine */
     for (i=0; i<d1 && *p; i++) {
-	v1[i] = *p++;
+        v1[i] = *p++;
     }
     /* Blank pad */
     for (; i<d1; i++) v1[i] = ' ';
     return 0;
 }\n";
     close ($OUTFD);
-
 }
 
 sub ncfissyserr {
@@ -2556,7 +2515,6 @@ sub inq_file_info {
     return ierr;
 }\n";
     close ($OUTFD);
-
 }
 
 sub get_file_info {
@@ -2577,7 +2535,6 @@ sub get_file_info {
     return ierr;
 }\n";
     close ($OUTFD);
-
 }
 
 
