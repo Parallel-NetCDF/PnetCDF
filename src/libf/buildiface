@@ -1404,7 +1404,7 @@ sub logical_array_ftoc {
 sub logical_array_in_decl {
     my $count = $_[0];
     print $OUTFD "    int *l$count = (int *)$malloc((size_t)($Array_size) * sizeof(int));\n";
-    $clean_up .= "    $free( l$count );\n";
+    $clean_up .= "    $free(l$count);\n";
 }
 sub logical_array_in_arg {
     my $count = $_[0];
@@ -1740,13 +1740,13 @@ sub blankpad_ctof {
     $strlen =~ s/^v/d/;
     my $cvar = $outvar; 
     $cvar =~ s/^v/p/;
-    print $OUTFD "\
-    {char *p = $outvar, *pc=$cvar;
+    print $OUTFD "
+    {
+        char *p = $outvar, *pc=$cvar;
         while (*pc) {*p++ = *pc++;}
         while ((p-$outvar) < $strlen) { *p++ = ' '; }
-    }
-";
-    $clean_up .= "    $free( $cvar );\n";
+    }\n";
+    $clean_up .= "    $free($cvar);\n";
 }
 #
 # Blankpad strings if a flag is true (for info_get, perhaps others?)
