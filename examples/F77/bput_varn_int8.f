@@ -112,7 +112,7 @@
           integer(kind=MPI_OFFSET_KIND) count(NDIMS, 6, 4)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
           integer(kind=MPI_OFFSET_KIND) req_len, bbufsize
-          integer*8 buffer(NX*NY,4)
+          integer(kind=8) buffer(NX*NY,4)
           character(len = 4) :: quiet_mode
           logical verbose
 
@@ -240,7 +240,7 @@
                 bbufsize = bbufsize + req_len
              enddo
           enddo
-          bbufsize = bbufsize * 8  ! 8 is size of integer*8
+          bbufsize = bbufsize * 8  ! 8 is size of integer(kind=8)
           if (bbufsize .GT. 0) then
               err = nfmpi_buffer_attach(ncid, bbufsize)
               call check(err, 'In nfmpi_buffer_attach')
