@@ -59,7 +59,7 @@
       nf_fill_double = 9.9692099683868690e+36, &
       nf_fill_uint64 = 1.8446744073709551614e+19
 
-      integer*8, parameter, public :: &
+      integer (KIND=8), parameter, public :: &
       nf_fill_uint  = 4294967295_8, &
       nf_fill_int64 = -9223372036854775806_8
 

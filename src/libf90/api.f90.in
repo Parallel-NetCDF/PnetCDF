@@ -9,10 +9,10 @@
 ! miscellaneous subroutines:
 !
 INTERFACE
-    character*80   FUNCTION nfmpi_inq_libvers()
+    character(LEN=80) FUNCTION nfmpi_inq_libvers()
     END FUNCTION   nfmpi_inq_libvers
 
-    character*80   FUNCTION nfmpi_strerror(ncerr)
+    character(LEN=80) FUNCTION nfmpi_strerror(ncerr)
                             INTEGER,                       INTENT(IN)  :: ncerr
     END FUNCTION   nfmpi_strerror
 
@@ -287,36 +287,40 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_att_int1(ncid, varid, name, xtype, len, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_att_int1
 
     INTEGER        FUNCTION nfmpi_get_att_int1(ncid, varid, name, i1vals)
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             CHARACTER(len=*),              INTENT(IN)  :: name
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_att_int1
 
     INTEGER        FUNCTION nfmpi_put_att_int2(ncid, varid, name, xtype, len, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(IN)  :: i2vals(*)
     END FUNCTION   nfmpi_put_att_int2
 
     INTEGER        FUNCTION nfmpi_get_att_int2(ncid, varid, name, i2vals)
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             CHARACTER(len=*),              INTENT(IN)  :: name
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_att_int2
 
     INTEGER        FUNCTION nfmpi_put_att_int(ncid, varid, name, xtype, len, IVALS)
@@ -372,19 +376,21 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_att_int8(ncid, varid, name, xtype, len, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             CHARACTER(len=*),              INTENT(IN)  :: name
                             INTEGER,                       INTENT(IN)  :: xtype
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: len
-                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(IN)  :: i8vals(*)
     END FUNCTION   nfmpi_put_att_int8
 
     INTEGER        FUNCTION nfmpi_get_att_int8(ncid, varid, name, i8vals)
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             CHARACTER(len=*),              INTENT(IN)  :: name
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_att_int8
 
 !
@@ -533,39 +539,45 @@ INTERFACE
     END FUNCTION   nfmpi_get_var_text_all
 
     INTEGER        FUNCTION nfmpi_put_var_int1(ncid, varid, i1vals)
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_var_int1
 
     INTEGER        FUNCTION nfmpi_get_var_int1(ncid, varid, i1vals)
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_var_int1
 
     INTEGER        FUNCTION nfmpi_get_var_int1_all(ncid, varid, i1vals)
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_var_int1_all
 
     INTEGER        FUNCTION nfmpi_put_var_int2(ncid, varid, i2vals)
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION   nfmpi_put_var_int2
 
     INTEGER        FUNCTION nfmpi_get_var_int2(ncid, varid, i2vals)
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_var_int2
 
     INTEGER        FUNCTION nfmpi_get_var_int2_all(ncid, varid, i2vals)
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_var_int2_all
 
     INTEGER        FUNCTION nfmpi_put_var_int(ncid, varid, ivals)
@@ -623,21 +635,24 @@ INTERFACE
     END FUNCTION   nfmpi_get_var_double_all
 
     INTEGER        FUNCTION nfmpi_put_var_int8(ncid, varid, i8vals)
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION   nfmpi_put_var_int8
 
     INTEGER        FUNCTION nfmpi_get_var_int8(ncid, varid, i8vals)
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_var_int8
 
     INTEGER        FUNCTION nfmpi_get_var_int8_all(ncid, varid, i8vals)
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_var_int8_all
 
 !
@@ -717,66 +732,74 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_var1_int1(ncid, varid, index, i1val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1val
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1val
     END FUNCTION   nfmpi_put_var1_int1
 
     INTEGER        FUNCTION nfmpi_put_var1_int1_all(ncid, varid, index, i1val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1val
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1val
     END FUNCTION   nfmpi_put_var1_int1_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int1(ncid, varid, index, i1val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1val
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1val
     END FUNCTION   nfmpi_get_var1_int1
 
     INTEGER        FUNCTION nfmpi_get_var1_int1_all(ncid, varid, index, i1val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1val
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1val
     END FUNCTION   nfmpi_get_var1_int1_all
 
     INTEGER        FUNCTION nfmpi_put_var1_int2(ncid, varid, index, i2val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2val
     END FUNCTION   nfmpi_put_var1_int2
 
     INTEGER        FUNCTION nfmpi_put_var1_int2_all(ncid, varid, index, i2val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2val
     END FUNCTION   nfmpi_put_var1_int2_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int2(ncid, varid, index, i2val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2val
     END FUNCTION   nfmpi_get_var1_int2
 
     INTEGER        FUNCTION nfmpi_get_var1_int2_all(ncid, varid, index, i2val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2val
     END FUNCTION   nfmpi_get_var1_int2_all
 
     INTEGER        FUNCTION nfmpi_put_var1_int(ncid, varid, index, ival)
@@ -877,34 +900,38 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_var1_int8(ncid, varid, index, i8val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8val
     END FUNCTION   nfmpi_put_var1_int8
 
     INTEGER        FUNCTION nfmpi_put_var1_int8_all(ncid, varid, index, i8val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8val
     END FUNCTION   nfmpi_put_var1_int8_all
 
     INTEGER        FUNCTION nfmpi_get_var1_int8(ncid, varid, index, i8val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8val
     END FUNCTION   nfmpi_get_var1_int8
 
     INTEGER        FUNCTION nfmpi_get_var1_int8_all(ncid, varid, index, i8val)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8val
     END FUNCTION   nfmpi_get_var1_int8_all
 
 !
@@ -992,74 +1019,82 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_vara_int1(ncid, varid, start, count, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_vara_int1
 
     INTEGER        FUNCTION nfmpi_put_vara_int1_all(ncid, varid, start, count, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_vara_int1_all
 
     INTEGER        FUNCTION nfmpi_get_vara_int1(ncid, varid, start, count, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_vara_int1
 
     INTEGER        FUNCTION nfmpi_get_vara_int1_all(ncid, varid, start, count, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_vara_int1_all
 
     INTEGER        FUNCTION nfmpi_put_vara_int2(ncid, varid, start, count, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vara_int2
 
     INTEGER        FUNCTION nfmpi_put_vara_int2_all(ncid, varid, start, count, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vara_int2_all
 
     INTEGER        FUNCTION nfmpi_get_vara_int2(ncid, varid, start, count, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_vara_int2
 
     INTEGER        FUNCTION nfmpi_get_vara_int2_all(ncid, varid, start, count, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_vara_int2_all
 
     INTEGER        FUNCTION nfmpi_put_vara_int(ncid, varid, start, count, ivals)
@@ -1172,38 +1207,42 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_vara_int8(ncid, varid, start, count, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vara_int8
 
     INTEGER        FUNCTION nfmpi_put_vara_int8_all(ncid, varid, start, count, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vara_int8_all
 
     INTEGER        FUNCTION nfmpi_get_vara_int8(ncid, varid, start, count, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_vara_int8
 
     INTEGER        FUNCTION nfmpi_get_vara_int8_all(ncid, varid, start, count, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_vara_int8_all
 
 !
@@ -1299,82 +1338,90 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_vars_int1(ncid, varid, start, count, stride, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_vars_int1
 
     INTEGER        FUNCTION nfmpi_put_vars_int1_all(ncid, varid, start, count, stride, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_vars_int1_all
 
     INTEGER        FUNCTION nfmpi_get_vars_int1(ncid, varid, start, count, stride, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_vars_int1
 
     INTEGER        FUNCTION nfmpi_get_vars_int1_all(ncid, varid, start, count, stride, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_vars_int1_all
 
     INTEGER        FUNCTION nfmpi_put_vars_int2(ncid, varid, start, count, stride, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vars_int2
 
     INTEGER        FUNCTION nfmpi_put_vars_int2_all(ncid, varid, start, count, stride, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION   nfmpi_put_vars_int2_all
 
     INTEGER        FUNCTION nfmpi_get_vars_int2(ncid, varid, start, count, stride, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_vars_int2
 
     INTEGER        FUNCTION nfmpi_get_vars_int2_all(ncid, varid, start, count, stride, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_vars_int2_all
 
     INTEGER        FUNCTION nfmpi_put_vars_int(ncid, varid, start, count, stride, ivals)
@@ -1499,42 +1546,46 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_vars_int8(ncid, varid, start, count, stride, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vars_int8
 
     INTEGER        FUNCTION nfmpi_put_vars_int8_all(ncid, varid, start, count, stride, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION   nfmpi_put_vars_int8_all
 
     INTEGER        FUNCTION nfmpi_get_vars_int8(ncid, varid, start, count, stride, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_vars_int8
 
     INTEGER        FUNCTION nfmpi_get_vars_int8_all(ncid, varid, start, count, stride, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_vars_int8_all
 
 !
@@ -1638,90 +1689,98 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_varm_int1(ncid, varid, start, count, stride, imap, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_varm_int1
 
     INTEGER        FUNCTION nfmpi_put_varm_int1_all(ncid, varid, start, count, stride, imap, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION   nfmpi_put_varm_int1_all
 
     INTEGER        FUNCTION nfmpi_get_varm_int1(ncid, varid, start, count, stride, imap, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_varm_int1
 
     INTEGER        FUNCTION nfmpi_get_varm_int1_all(ncid, varid, start, count, stride, imap, i1vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION   nfmpi_get_varm_int1_all
 
     INTEGER        FUNCTION nfmpi_put_varm_int2(ncid, varid, start, count, stride, imap, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION   nfmpi_put_varm_int2
 
     INTEGER        FUNCTION nfmpi_put_varm_int2_all(ncid, varid, start, count, stride, imap, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION   nfmpi_put_varm_int2_all
 
     INTEGER        FUNCTION nfmpi_get_varm_int2(ncid, varid, start, count, stride, imap, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_varm_int2
 
     INTEGER        FUNCTION nfmpi_get_varm_int2_all(ncid, varid, start, count, stride, imap, i2vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION   nfmpi_get_varm_int2_all
 
     INTEGER        FUNCTION nfmpi_put_varm_int (ncid, varid, start, count, stride, imap, ivals)
@@ -1858,46 +1917,50 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_put_varm_int8(ncid, varid, start, count, stride, imap, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION   nfmpi_put_varm_int8
 
     INTEGER        FUNCTION nfmpi_put_varm_int8_all(ncid, varid, start, count, stride, imap, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION   nfmpi_put_varm_int8_all
 
     INTEGER        FUNCTION nfmpi_get_varm_int8(ncid, varid, start, count, stride, imap, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_varm_int8
 
     INTEGER        FUNCTION nfmpi_get_varm_int8_all(ncid, varid, start, count, stride, imap, i8vals)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION   nfmpi_get_varm_int8_all
 
 !
@@ -1945,30 +2008,34 @@ INTERFACE
     END FUNCTION   nfmpi_iget_var_text
 
     INTEGER        FUNCTION nfmpi_iput_var_int1(ncid, varid, i1vals, req)
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_int1
 
     INTEGER        FUNCTION nfmpi_iget_var_int1(ncid, varid, i1vals, req)
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_int1
 
     INTEGER        FUNCTION nfmpi_iput_var_int2(ncid, varid, i2vals, req)
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_int2
 
     INTEGER        FUNCTION nfmpi_iget_var_int2(ncid, varid, i2vals, req)
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_int2
 
@@ -2015,16 +2082,18 @@ INTERFACE
     END FUNCTION   nfmpi_iget_var_double
 
     INTEGER        FUNCTION nfmpi_iput_var_int8(ncid, varid, i8vals, req)
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var_int8
 
     INTEGER        FUNCTION nfmpi_iget_var_int8(ncid, varid, i8vals, req)
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var_int8
 
@@ -2075,37 +2144,41 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_var1_int1(ncid, varid, index, i1val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1val
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_int1
 
     INTEGER        FUNCTION nfmpi_iget_var1_int1(ncid, varid, index, i1val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1val
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var1_int1
 
     INTEGER        FUNCTION nfmpi_iput_var1_int2(ncid, varid, index, i2val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_int2
 
     INTEGER        FUNCTION nfmpi_iget_var1_int2(ncid, varid, index, i2val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var1_int2
 
@@ -2165,19 +2238,21 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_var1_int8(ncid, varid, index, i8val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_var1_int8
 
     INTEGER        FUNCTION nfmpi_iget_var1_int8(ncid, varid, index, i8val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_var1_int8
 
@@ -2232,41 +2307,45 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_vara_int1(ncid, varid, start, count, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_int1
 
     INTEGER        FUNCTION nfmpi_iget_vara_int1(ncid, varid, start, count, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_int1
 
     INTEGER        FUNCTION nfmpi_iput_vara_int2(ncid, varid, start, count, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_int2
 
     INTEGER        FUNCTION nfmpi_iget_vara_int2(ncid, varid, start, count, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_int2
 
@@ -2332,21 +2411,23 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_vara_int8(ncid, varid, start, count, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vara_int8
 
     INTEGER        FUNCTION nfmpi_iget_vara_int8(ncid, varid, start, count, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vara_int8
 
@@ -2405,45 +2486,49 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_vars_int1(ncid, varid, start, count, stride, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_int1
 
     INTEGER        FUNCTION nfmpi_iget_vars_int1(ncid, varid, start, count, stride, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vars_int1
 
     INTEGER        FUNCTION nfmpi_iput_vars_int2(ncid, varid, start, count, stride, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_int2
 
     INTEGER        FUNCTION nfmpi_iget_vars_int2(ncid, varid, start, count, stride, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vars_int2
 
@@ -2515,23 +2600,25 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_vars_int8(ncid, varid, start, count, stride, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_vars_int8
 
     INTEGER        FUNCTION nfmpi_iget_vars_int8(ncid, varid, start, count, stride, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_vars_int8
 
@@ -2594,49 +2681,53 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_varm_int1(ncid, varid, start, count, stride, imap, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_int1
 
     INTEGER        FUNCTION nfmpi_iget_varm_int1(ncid, varid, start, count, stride, imap, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_varm_int1
 
     INTEGER        FUNCTION nfmpi_iput_varm_int2(ncid, varid, start, count, stride, imap, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_int2
 
     INTEGER        FUNCTION nfmpi_iget_varm_int2(ncid, varid, start, count, stride, imap, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_varm_int2
 
@@ -2714,25 +2805,27 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_iput_varm_int8(ncid, varid, start, count, stride, imap, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iput_varm_int8
 
     INTEGER        FUNCTION nfmpi_iget_varm_int8(ncid, varid, start, count, stride, imap, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_iget_varm_int8
 
@@ -2769,16 +2862,18 @@ INTERFACE
     END FUNCTION   nfmpi_bput_var_text
 
     INTEGER        FUNCTION nfmpi_bput_var_int1(ncid, varid, i1vals, req)
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_var_int1
 
     INTEGER        FUNCTION nfmpi_bput_var_int2(ncid, varid, i2vals, req)
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(IN)  :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_var_int2
 
@@ -2804,9 +2899,10 @@ INTERFACE
     END FUNCTION   nfmpi_bput_var_double
 
     INTEGER        FUNCTION nfmpi_bput_var_int8(ncid, varid, i8vals, req)
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
-                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(IN)  :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_var_int8
 
@@ -2844,19 +2940,21 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_var1_int1(ncid, varid, index, i1val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1val
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_var1_int1
 
     INTEGER        FUNCTION nfmpi_bput_var1_int2(ncid, varid, index, i2val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2val
+                            INTEGER(KIND=TwoByteInt),      INTENT(IN)  :: i2val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_var1_int2
 
@@ -2889,10 +2987,11 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_var1_int8(ncid, varid, index, i8val, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: index(*)
-                            INTEGER*8,                     INTENT(IN)  :: i8val
+                            INTEGER(KIND=EightByteInt),    INTENT(IN)  :: i8val
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_var1_int8
 
@@ -2933,21 +3032,23 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_vara_int1(ncid, varid, start, count, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_vara_int1
 
     INTEGER        FUNCTION nfmpi_bput_vara_int2(ncid, varid, start, count, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(IN)  :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_vara_int2
 
@@ -2983,11 +3084,12 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_vara_int8(ncid, varid, start, count, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
-                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(IN)  :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_vara_int8
 
@@ -3031,23 +3133,25 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_vars_int1(ncid, varid, start, count, stride, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_vars_int1
 
     INTEGER        FUNCTION nfmpi_bput_vars_int2(ncid, varid, start, count, stride, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(IN)  :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_vars_int2
 
@@ -3086,12 +3190,13 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_vars_int8(ncid, varid, start, count, stride, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
-                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(IN)  :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_vars_int8
 
@@ -3138,25 +3243,27 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_varm_int1(ncid, varid, start, count, stride, imap, i1vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                            INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_varm_int1
 
     INTEGER        FUNCTION nfmpi_bput_varm_int2(ncid, varid, start, count, stride, imap, i2vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: TwoByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*2,                     INTENT(IN)  :: i2vals(*)
+                            INTEGER(KIND=TwoByteInt),      INTENT(IN)  :: i2vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_varm_int2
 
@@ -3198,13 +3305,14 @@ INTERFACE
 
     INTEGER        FUNCTION nfmpi_bput_varm_int8(ncid, varid, start, count, stride, imap, i8vals, req)
                    use mpi, only: MPI_OFFSET_KIND
+                   import :: EightByteInt
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: varid
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: start(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: count(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: stride(*)
                             INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: imap(*)
-                            INTEGER*8,                     INTENT(IN)  :: i8vals(*)
+                            INTEGER(KIND=EightByteInt),    INTENT(IN)  :: i8vals(*)
                             INTEGER,                       INTENT(OUT) :: req
     END FUNCTION   nfmpi_bput_varm_int8
 
@@ -3379,22 +3487,24 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_get_varn_int1(ncid, varid, num, starts, counts, i1vals)
             use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                     INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION nfmpi_get_varn_int1
 
     INTEGER FUNCTION nfmpi_get_varn_int2(ncid, varid, num, starts, counts, i2vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: TwoByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION nfmpi_get_varn_int2
 
     INTEGER FUNCTION nfmpi_get_varn_int(ncid, varid, num, starts, counts, ivals)
@@ -3429,12 +3539,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_get_varn_int8(ncid, varid, num, starts, counts, i8vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: EightByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION nfmpi_get_varn_int8
 
     INTEGER FUNCTION nfmpi_get_varn_text_all(ncid, varid, num, starts, counts, text)
@@ -3449,22 +3560,24 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_get_varn_int1_all(ncid, varid, num, starts, counts, i1vals)
             use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                     INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
     END FUNCTION nfmpi_get_varn_int1_all
 
     INTEGER FUNCTION nfmpi_get_varn_int2_all(ncid, varid, num, starts, counts, i2vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: TwoByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
     END FUNCTION nfmpi_get_varn_int2_all
 
     INTEGER FUNCTION nfmpi_get_varn_int_all(ncid, varid, num, starts, counts, ivals)
@@ -3499,12 +3612,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_get_varn_int8_all(ncid, varid, num, starts, counts, i8vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: EightByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
     END FUNCTION nfmpi_get_varn_int8_all
 
 
@@ -3520,22 +3634,24 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_varn_int1(ncid, varid, num, starts, counts, i1vals)
             use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                     INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION nfmpi_put_varn_int1
 
     INTEGER FUNCTION nfmpi_put_varn_int2(ncid, varid, num, starts, counts, i2vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: TwoByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION nfmpi_put_varn_int2
 
     INTEGER FUNCTION nfmpi_put_varn_int(ncid, varid, num, starts, counts, ivals)
@@ -3570,12 +3686,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_varn_int8(ncid, varid, num, starts, counts, i8vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: EightByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION nfmpi_put_varn_int8
 
     INTEGER FUNCTION nfmpi_put_varn_text_all(ncid, varid, num, starts, counts, text)
@@ -3590,22 +3707,24 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_varn_int1_all(ncid, varid, num, starts, counts, i1vals)
             use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                     INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
     END FUNCTION nfmpi_put_varn_int1_all
 
     INTEGER FUNCTION nfmpi_put_varn_int2_all(ncid, varid, num, starts, counts, i2vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: TwoByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
     END FUNCTION nfmpi_put_varn_int2_all
 
     INTEGER FUNCTION nfmpi_put_varn_int_all(ncid, varid, num, starts, counts, ivals)
@@ -3640,12 +3759,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_put_varn_int8_all(ncid, varid, num, starts, counts, i8vals)
             use mpi, only: MPI_OFFSET_KIND
+            import :: EightByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
     END FUNCTION nfmpi_put_varn_int8_all
 
 !
@@ -3688,23 +3808,25 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iget_varn_int1(ncid, varid, num, starts, counts, i1vals, req)
             use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*1,                     INTENT(OUT) :: i1vals(*)
+                     INTEGER(KIND=OneByteInt),      INTENT(OUT) :: i1vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iget_varn_int1
 
     INTEGER FUNCTION nfmpi_iget_varn_int2(ncid, varid, num, starts, counts, i2vals, req)
             use mpi, only: MPI_OFFSET_KIND
+            import :: TwoByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*2,                     INTENT(OUT) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(OUT) :: i2vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iget_varn_int2
 
@@ -3743,12 +3865,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iget_varn_int8(ncid, varid, num, starts, counts, i8vals, req)
             use mpi, only: MPI_OFFSET_KIND
+            import :: EightByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*8,                     INTENT(OUT) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(OUT) :: i8vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iget_varn_int8
 
@@ -3765,23 +3888,25 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iput_varn_int1(ncid, varid, num, starts, counts, i1vals, req)
             use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                     INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_int1
 
     INTEGER FUNCTION nfmpi_iput_varn_int2(ncid, varid, num, starts, counts, i2vals, req)
             use mpi, only: MPI_OFFSET_KIND
+            import :: TwoByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_int2
 
@@ -3820,12 +3945,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_iput_varn_int8(ncid, varid, num, starts, counts, i8vals, req)
             use mpi, only: MPI_OFFSET_KIND
+            import :: EightByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_iput_varn_int8
 
@@ -3854,23 +3980,25 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_bput_varn_int1(ncid, varid, num, starts, counts, i1vals, req)
             use mpi, only: MPI_OFFSET_KIND
+                   import :: OneByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*1,                     INTENT(IN)  :: i1vals(*)
+                     INTEGER(KIND=OneByteInt),      INTENT(IN)  :: i1vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_int1
 
     INTEGER FUNCTION nfmpi_bput_varn_int2(ncid, varid, num, starts, counts, i2vals, req)
             use mpi, only: MPI_OFFSET_KIND
+            import :: TwoByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*2,                     INTENT(@INOUT@) :: i2vals(*)
+                     INTEGER(KIND=TwoByteInt),      INTENT(@INOUT@) :: i2vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_int2
 
@@ -3909,12 +4037,13 @@ INTERFACE
 
     INTEGER FUNCTION nfmpi_bput_varn_int8(ncid, varid, num, starts, counts, i8vals, req)
             use mpi, only: MPI_OFFSET_KIND
+            import :: EightByteInt
                      INTEGER,                       INTENT(IN)  :: ncid
                      INTEGER,                       INTENT(IN)  :: varid
                      INTEGER,                       INTENT(IN)  :: num
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: starts(*)
                      INTEGER(KIND=MPI_OFFSET_KIND), INTENT(IN)  :: counts(*)
-                     INTEGER*8,                     INTENT(@INOUT@) :: i8vals(*)
+                     INTEGER(KIND=EightByteInt),    INTENT(@INOUT@) :: i8vals(*)
                      INTEGER,                       INTENT(OUT) :: req
     END FUNCTION nfmpi_bput_varn_int8
 
