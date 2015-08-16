@@ -1239,10 +1239,10 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
 /*----< req_compare() >-------------------------------------------------------*/
 /* used to sort the the string file offsets of reqs[] */
 static int
-req_compare(const NC_req *a, const NC_req *b)
+req_compare(const void *a, const void *b)
 {
-    if (a->offset_start > b->offset_start) return (1);
-    if (a->offset_start < b->offset_start) return (-1);
+    if (((NC_req*)a)->offset_start > ((NC_req*)b)->offset_start) return (1);
+    if (((NC_req*)a)->offset_start < ((NC_req*)b)->offset_start) return (-1);
     return (0);
 }
 
@@ -1599,6 +1599,7 @@ ncmpii_req_aggregation(NC     *ncp,
     return status;
 }
 
+#if 0
 /*----< ncmpii_check_edge() >-------------------------------------------------*/
 static
 int ncmpii_check_edge(NC     *ncp,
@@ -1632,6 +1633,7 @@ int ncmpii_check_edge(NC     *ncp,
     }
     return err;
 }
+#endif
 
 /*----< ncmpii_wait_getput() >------------------------------------------------*/
 static int
@@ -1643,14 +1645,30 @@ ncmpii_wait_getput(NC     *ncp,
 {
     int i, j, err, status=NC_NOERR, access_interleaved=0;
     NC_req *reqs, *cur_req;
-    int (*fcnt)(const void*, const void*);
+
+    /* pack the requests from linked list into an array to be sorted,
+     * including sub-requests */
+    reqs = (NC_req*) NCI_Malloc((size_t)num_reqs * sizeof(NC_req));
+    i = 0;
+    cur_req = req_head;
+    while (cur_req != NULL) {
+        if (cur_req->num_subreqs == 0)
+            reqs[i++] = *cur_req;
+        else {
+            for (j=0; j<cur_req->num_subreqs; j++)
+                reqs[i++] = cur_req->subreqs[j];
+        }
+        cur_req = cur_req->next;
+    }
+#if 0
+    /* Below block checks NC_EEDGE error for all request and subrequest, but
+     * this checking is already done when posting the nonblocking requests,
+     * i.e. ncmpi_iput_vara_float()
+     */
 
     /* pack the linked list into an array to be sorted and remove invalid
        requests, such as out-of-boundary ones
      */
-    reqs = (NC_req*) NCI_Malloc((size_t)num_reqs * sizeof(NC_req));
-    i = 0;
-    cur_req = req_head;
     while (cur_req != NULL) {
         if (cur_req->num_subreqs == 0) {
             err = ncmpii_check_edge(ncp, cur_req, rw_flag);
@@ -1678,6 +1696,7 @@ ncmpii_wait_getput(NC     *ncp,
         if (reqs != NULL) NCI_Free(reqs);
         return status;
     }
+#endif
 
     /* check if reqs[].offset_start are in an increasing order */
     for (i=1; i<num_reqs; i++) {
@@ -1685,13 +1704,11 @@ ncmpii_wait_getput(NC     *ncp,
             break;
         }
     }
-    if (i < num_reqs) { /* not in an increasing order */
+    if (i < num_reqs) /* a non-increasing order is found */
         /* sort reqs[] based on reqs[].offset_start */
-        fcnt = (int (*)(const void *, const void *))req_compare;
-        qsort(reqs, (size_t)num_reqs, sizeof(NC_req), fcnt);
-    }
+        qsort(reqs, (size_t)num_reqs, sizeof(NC_req), req_compare);
 
-    /* check for any interleaved rquests */
+    /* check for any interleaved requests */
     for (i=1; i<num_reqs; i++) {
         if (reqs[i-1].offset_end > reqs[i].offset_start) {
             access_interleaved = 1;
@@ -1704,7 +1721,7 @@ ncmpii_wait_getput(NC     *ncp,
                                  access_interleaved);
     if (status == NC_NOERR) status = err;
 
-    /* update the number of records if new records are added */
+    /* update the number of records if new records have been created */
     if (rw_flag == WRITE_REQ) {
         /* Because netCDF allows only one unlimited dimension, find the
          * maximum number of records from all nonblocking requests and
