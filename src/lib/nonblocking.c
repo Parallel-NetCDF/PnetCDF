@@ -556,27 +556,27 @@ ncmpii_wait(NC  *ncp,
     NC_req *w_req_head=NULL, *w_req_tail=NULL;
     NC_req *r_req_head=NULL, *r_req_tail=NULL;
 
-    /* check if it is in define mode */
-    if (NC_indef(ncp)) {
+    if (NC_indef(ncp)) { /* This API can only be called in data mode */
         err = NC_EINDEFINE;
         goto err_check;
     }
 
-    /* check whether collective or independent mode */
+    /* check the MPI file handles for collective or independent mode */
     if (io_method == INDEP_IO)
         err = ncmpii_check_mpifh(ncp, 0);
     else if (io_method == COLL_IO)
         err = ncmpii_check_mpifh(ncp, 1);
     if (err != NC_NOERR) goto err_check;
 
-    /* extract the requests from the linked list into two separate linked
-     * lists for read and write. In the meantime coalesce the linked list.
+    /* extract the matched requests from the pending queue (a linked list
+     * containing all nonblocking requests posted by far) into two separate
+     * linked lists for read and write. In the meantime coalesce the pending
+     * request queue.
      */
-
     for (i=0; i<num_reqs; i++) {
         int found_id=-1;
 
-        statuses[i] = NC_NOERR;
+        statuses[i] = NC_NOERR; /* initialize the request's status */
 
         if (req_ids[i] == NC_REQ_NULL) continue; /* skip NULL request */
 
@@ -589,16 +589,17 @@ ncmpii_wait(NC  *ncp,
             /* don't break loop i, continue to set the error status */
         }
 
-        /* find req_ids[i] from the request linked list */
+        /* find req_ids[i] from the pending queue */
         pre_req = cur_req = ncp->head;
         while (cur_req != NULL) {
-            /* there may be more than one linked node with the same ID.
-             * In this case these requests are from a single nonblocking
+            /* there may be more than one pending request with the same ID.
+             * In this case, these requests are from a single nonblocking
              * varn API.
              */
-            if (cur_req->id == req_ids[i]) { /* found */
-                /* point all subrequests' statuses to status */
+            if (cur_req->id == req_ids[i]) { /* found it */
+                /* point status of this request to user's statuses[i] */
                 cur_req->status = statuses + i;
+                /* point all subrequests' statuses to status */
                 for (j=0; j<cur_req->num_subreqs; j++)
                     cur_req->subreqs[j].status = cur_req->status;
 
@@ -625,7 +626,7 @@ ncmpii_wait(NC  *ncp,
                     r_req_tail->next = NULL;
                     num_r_reqs += (cur_req->num_subreqs == 0) ?
                                   1 : cur_req->num_subreqs;
-                    /* if this request is for record variable, then count only
+                    /* if this request is to a record variable, then count all
                      * its subrequests (one for each individual record) */
                 }
                 else { /* add cur_req to w_req_tail */
@@ -640,20 +641,20 @@ ncmpii_wait(NC  *ncp,
                     w_req_tail->next = NULL;
                     num_w_reqs += (cur_req->num_subreqs == 0) ?
                                   1 : cur_req->num_subreqs;
-                    /* if this request is for record variable, then count only
+                    /* if this request is to a record variable, then count all
                      * its subrequests (one for each individual record) */
                 }
                 found_id = req_ids[i]; /* indicating previous found ID */
                 cur_req = next_req;
             }
             else if (found_id >= 0) {
-                /* same request IDs are stored contiguously in the linked list
-                 * so if it is already found and this next request has a
-                 * different ID, no need to continue checking the rest list */
+                /* same request IDs (for varn APIs) are stored contiguously in
+                 * the linked list so if it is already found and this next
+                 * request has a different ID, no need to continue checking
+                 * the rest list */
                 break; /* while loop */
             }
-            else {
-            /* move on to next request ID */
+            else { /* not found: move on to next pending request in the queue */
                 if (cur_req == pre_req) cur_req = pre_req->next;
                 else {
                     pre_req = cur_req;
@@ -664,12 +665,11 @@ ncmpii_wait(NC  *ncp,
 
         if (found_id == -1) { /* no such request ID */
             statuses[i] = NC_EINVAL_REQUEST;
-            /* retain the first error status */
-            if (status == NC_NOERR)
+            if (status == NC_NOERR) /* retain the first error status */
                 status = NC_EINVAL_REQUEST;
         }
     }
-    /* make sure ncp->tail pointing to the tail */
+    /* make sure ncp->tail pointing to the tail of the pending request queue */
     ncp->tail = ncp->head;
     while (ncp->tail != NULL && ncp->tail->next != NULL)
         ncp->tail = ncp->tail->next;
@@ -687,8 +687,8 @@ err_check:
         /* if error occurs, return the API collectively */
         if (do_io[2] != -NC_NOERR) return err;
 
-        /* make sure if at least one process has a non-zero request, all
-           processes participate the collective read/write */
+        /* if at least one process has a non-zero request, all processes must
+         * participate the collective read/write */
         do_read  = do_io[0];
         do_write = do_io[1];
     }
@@ -711,9 +711,10 @@ err_check:
     if (status == NC_NOERR) status = err;
 
     /* post-IO data processing: In write case, we may need to byte-swap user
-     * write buf if it is used as the write buffer in MPI write call. For read
-     * case, we may need to unpack/byte-swap/type-convert a temp buffer to
-     * user read buf */
+     * write buf if it is used as the write buffer in MPI write call and the
+     * target machine is little Endian. For read case, we may need to
+     * unpack/byte-swap/type-convert a temp buffer to the user read buf
+     */
 
     if (w_req_head != NULL) {
         cur_req = w_req_head;
@@ -730,8 +731,15 @@ err_check:
         }
         cur_req = w_req_head;
         while (cur_req != NULL) {
-            /* free temp space allocated for iput/bput varn requests
-             * tmpBuf is used only by nonblocking varn APIs */
+            /* free temp space allocated for iput/bput varn requests. Note that
+             * tmpBuf is used only by nonblocking varn APIs. This while loop
+             * is not combined with the one above because the nonblocking varn
+             * APIs may be used. During the posting of a nonblocking varn
+             * request, the temporary buffer, if allocated, can be divided into
+             * several sub-buffers, each used in a separate requests. Only the
+             * first subrequest's tmpBuf will be set to non-NULL, indicating
+             * it should be freed.
+             */
             if (cur_req->tmpBuf != NULL && cur_req->abuf_index == -1)
                 NCI_Free(cur_req->tmpBuf);
 
@@ -741,7 +749,7 @@ err_check:
             NCI_Free(pre_req);
         }
         /* once the bput requests are served, we reclaim the space and try
-         * coalesce the freed space */
+         * coalesce the freed space for the attached buffer */
         if (ncp->abuf != NULL) ncmpii_abuf_coalesce(ncp);
     }
 
@@ -763,6 +771,8 @@ err_check:
                 status = NC_EINTOVERFLOW;
 
             if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
+                /* need type conversion from the external type to user buffer
+                   type */
                 if (cur_req->imaptype != MPI_DATATYPE_NULL ||
                     !cur_req->buftype_is_contig)
                     cbuf = NCI_Malloc((size_t)insize);
@@ -782,7 +792,8 @@ err_check:
                 cbuf = cur_req->xbuf;
             }
 
-            if (cur_req->imaptype != MPI_DATATYPE_NULL) { /* a true varm */
+            if (cur_req->imaptype != MPI_DATATYPE_NULL) {
+                /* handle the case for a true get_varm */
                 if (cur_req->buftype_is_contig)
                     lbuf = cur_req->buf;
                 else
@@ -805,10 +816,12 @@ err_check:
             if (!cur_req->buftype_is_contig) {
                 /* unpack lbuf to buf based on buftype */
                 position = 0;
-                if (cur_req->bufcount != (int)cur_req->bufcount && status == NC_NOERR)
+                if (cur_req->bufcount != (int)cur_req->bufcount &&
+                    status == NC_NOERR)
                     status = NC_EINTOVERFLOW;
                 MPI_Unpack(lbuf, (int)insize, &position, cur_req->buf,
-                           (int)cur_req->bufcount, cur_req->buftype, MPI_COMM_SELF);
+                           (int)cur_req->bufcount, cur_req->buftype,
+                           MPI_COMM_SELF);
             }
             /* lbuf is no longer needed */
             if (lbuf != cur_req->buf && lbuf != cur_req->xbuf)
@@ -820,7 +833,14 @@ err_check:
         cur_req = r_req_head;
         while (cur_req != NULL) {
             /* free space allocated for the request objects
-             * tmpBuf is used only by nonblocking varn APIs */
+             * tmpBuf is used only by nonblocking varn APIs. This while loop
+             * is not combined with the one above because the nonblocking varn
+             * APIs may be used. During the posting of a nonblocking varn
+             * request, the temporary buffer, if allocated, can be divided into
+             * several sub-buffers, each used in a separate requests. Only the
+             * first subrequest's tmpBuf will be set to non-NULL, indicating
+             * it should be freed.
+             */
             if (cur_req->tmpBuf != NULL) {
                 int position=0, bufsize;
                 MPI_Offset insize;
@@ -1247,6 +1267,8 @@ req_compare(const void *a, const void *b)
 }
 
 /*----< ncmpii_req_aggregation() >--------------------------------------------*/
+/* aggregate multiple read/write (non-contiguous) requests and call MPI-IO
+ */
 static int
 ncmpii_req_aggregation(NC     *ncp,
                        int     num_reqs,    /* # requests */
@@ -1261,10 +1283,6 @@ ncmpii_req_aggregation(NC     *ncp,
     if (num_reqs == 0) { /* only COLL_IO can reach here for 0 request */
         assert(io_method == COLL_IO);
         /* simply participate the collective call */
-        /* for nonblocking APIs, there is no way for a process to know whether
-         * others write to a record variable or not. Hence, we sync number of
-         * records for all WRITE_REQ (set the 3rd argument to 1 below)
-         */
         return ncmpii_getput_zero_req(ncp, rw_flag);
     }
     if (! interleaved) {
@@ -1646,8 +1664,8 @@ ncmpii_wait_getput(NC     *ncp,
     int i, j, err, status=NC_NOERR, access_interleaved=0;
     NC_req *reqs, *cur_req;
 
-    /* pack the requests from linked list into an array to be sorted,
-     * including sub-requests */
+    /* pack the requests and sub-requests from the linked list into an array,
+     * so they can be sorted */
     reqs = (NC_req*) NCI_Malloc((size_t)num_reqs * sizeof(NC_req));
     i = 0;
     cur_req = req_head;
@@ -1721,7 +1739,11 @@ ncmpii_wait_getput(NC     *ncp,
                                  access_interleaved);
     if (status == NC_NOERR) status = err;
 
-    /* update the number of records if new records have been created */
+    /* Update the number of records if new records have been created.
+     * For nonblocking APIs, there is no way for a process to know whether
+     * others write to a record variable or not. Hence, we must sync the
+     * number of records for write request
+     */
     if (rw_flag == WRITE_REQ) {
         /* Because netCDF allows only one unlimited dimension, find the
          * maximum number of records from all nonblocking requests and
@@ -1772,7 +1794,12 @@ ncmpii_wait_getput(NC     *ncp,
 }
 
 /*----< ncmpii_mgetput() >----------------------------------------------------*/
-/* all the fileviews in the requests can be concatenated one after another */
+/* Before reaching to this subroutine, all the filetypes in the request array
+ * are sorted in a non-decreasing order and not interleaved. This subroutine
+ * concatenates the filetypes into a single fileview and calls MPI-IO function.
+ * This subroutine also concatenates user buffertypes into a single derived
+ * data type to be used in the MPI read/write function call.
+ */
 static int
 ncmpii_mgetput(NC           *ncp,
                int           num_reqs,
@@ -1791,13 +1818,13 @@ ncmpii_mgetput(NC           *ncp,
     else
         fh = ncp->nciop->independent_fh;
 
-    /* construct a MPI file type by concatenating all requests */
+    /* construct a MPI file type by concatenating fileviews of all requests */
     status = ncmpii_construct_filetypes(ncp,num_reqs, reqs, rw_flag, &filetype);
     if (status != NC_NOERR) { /* if failed, skip this request */
         if (io_method == INDEP_IO) return status;
 
         /* For collective I/O, we still need to participate the successive
-           collective calls: read/write/setview */
+           collective calls: setview/read/write */
         num_reqs = 0;
         filetype = MPI_BYTE;
     }
@@ -1839,10 +1866,10 @@ ncmpii_mgetput(NC           *ncp,
             /* check int overflow */
             MPI_Offset int8 = reqs[i].bnelems * reqs[i].varp->xsz;
             blocklengths[j] = (int)int8;
-            if (int8 != blocklengths[j]) { /* skip this request */
+            if (int8 != blocklengths[j]) { /* int overflow */
                 if (status == NC_NOERR) status = NC_EINTOVERFLOW;
                 blocklengths[j] = 0;
-                continue;
+                continue; /* skip this request */
             }
 #ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(reqs[i].xbuf, &ai);
@@ -1857,7 +1884,7 @@ ncmpii_mgetput(NC           *ncp,
 
             if (ai - a_last_contig == blocklengths[last_contig_req])
                 /* user buffer of request j is contiguous from j-1
-                 * we concatenate j to j-1 */
+                 * we coalesce j to j-1 */
                 blocklengths[last_contig_req] += blocklengths[j];
             else if (j > 0) {
                 /* not contiguous from request last_contig_req */
@@ -1871,7 +1898,7 @@ ncmpii_mgetput(NC           *ncp,
 
         /* last_contig_req is the index of last contiguous request */
         if (last_contig_req == 0) {
-            /* user buffers in all requests are acutally contiguous */
+            /* user buffers can be concatenated into a contiguous buffer */
             buf_type = MPI_BYTE;
             len = blocklengths[0];
         }
@@ -1923,6 +1950,7 @@ ncmpii_mgetput(NC           *ncp,
                     status = (err == NC_EFILE) ? NC_EREAD : err;
             }
         }
+        /* update the number of bytes read since file open */
         int get_size;
         MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
         ncp->nciop->get_size += get_size;
@@ -1947,12 +1975,13 @@ ncmpii_mgetput(NC           *ncp,
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
             }
         }
+        /* update the number of bytes written since file open */
         int put_size;
         MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
         ncp->nciop->put_size += put_size;
     }
 
-    if (buf_type != MPI_BYTE)
+    if (buf_type != MPI_BYTE) /* free user buffer type */
         mpireturn = MPI_Type_free(&buf_type);
 
     /* No longer need to reset the file view, as the root's fileview includes
