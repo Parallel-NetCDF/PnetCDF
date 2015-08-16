@@ -31,513 +31,6 @@ dnl
 #endif
 
 
-define(`CollIndep', `ifelse(`$1', `_all', `COLL_IO', `INDEP_IO')')dnl
-define(`ReadWrite', `ifelse(`$1', `get',  `READ_REQ', `WRITE_REQ')')dnl
-define(`BufConst',  `ifelse(`$1', `put',  `const')')dnl
-
-dnl
-dnl VAR_FLEXIBLE
-dnl
-define(`VAR_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_var$2() >---------------------------------------------------*/
-int
-ncmpi_$1_var$2(int                ncid,
-               int                varid,
-               BufConst($1) void *buf,
-               MPI_Offset         bufcount,
-               MPI_Datatype       buftype)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *start, *count;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (bufcount < 0) return NC_EINVAL;
-
-    GET_FULL_DIMENSIONS(start, count)
-
-    /* $1_var is a special case of $1_vars */
-    status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)buf,
-                                bufcount, buftype, ReadWrite($1),
-                                CollIndep($2), 0);
-    if (varp->ndims > 0) NCI_Free(start);
-    return status;
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VAR_FLEXIBLE(put)
-VAR_FLEXIBLE(get)
-VAR_FLEXIBLE(put, _all)
-VAR_FLEXIBLE(get, _all)
-
-dnl
-dnl VAR(ncid, varid, op)
-dnl
-define(`VAR',dnl
-`dnl
-/*----< ncmpi_$1_var_$3$2() >------------------------------------------------*/
-int
-ncmpi_$1_var_$3$2(int              ncid,
-                  int              varid,
-                  BufConst($1) $4 *op)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *start, *count;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    GET_FULL_DIMENSIONS(start, count)
-
-    /* $1_var is a special case of $1_vars */
-    status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)op,
-                                -1, $5, ReadWrite($1), CollIndep($2), 0);
-    if (varp->ndims > 0) NCI_Free(start);
-    return status;
-}
-')dnl
-
-VAR(put,     , text,      char,               MPI_CHAR)
-VAR(put,     , schar,     schar,              MPI_BYTE)
-VAR(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR(put,     , short,     short,              MPI_SHORT)
-VAR(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR(put,     , int,       int,                MPI_INT)
-VAR(put,     , uint,      uint,               MPI_UNSIGNED)
-VAR(put,     , long,      long,               MPI_LONG)
-VAR(put,     , float,     float,              MPI_FLOAT)
-VAR(put,     , double,    double,             MPI_DOUBLE)
-VAR(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VAR(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR(put, _all, text,      char,               MPI_CHAR)
-VAR(put, _all, schar,     schar,              MPI_BYTE)
-VAR(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR(put, _all, short,     short,              MPI_SHORT)
-VAR(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR(put, _all, int,       int,                MPI_INT)
-VAR(put, _all, uint,      uint,               MPI_UNSIGNED)
-VAR(put, _all, long,      long,               MPI_LONG)
-VAR(put, _all, float,     float,              MPI_FLOAT)
-VAR(put, _all, double,    double,             MPI_DOUBLE)
-VAR(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR(get,     , text,      char,               MPI_CHAR)
-VAR(get,     , schar,     schar,              MPI_BYTE)
-VAR(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR(get,     , short,     short,              MPI_SHORT)
-VAR(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR(get,     , int,       int,                MPI_INT)
-VAR(get,     , uint,      uint,               MPI_UNSIGNED)
-VAR(get,     , long,      long,               MPI_LONG)
-VAR(get,     , float,     float,              MPI_FLOAT)
-VAR(get,     , double,    double,             MPI_DOUBLE)
-VAR(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VAR(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR(get, _all, text,      char,               MPI_CHAR)
-VAR(get, _all, schar,     schar,              MPI_BYTE)
-VAR(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR(get, _all, short,     short,              MPI_SHORT)
-VAR(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR(get, _all, int,       int,                MPI_INT)
-VAR(get, _all, uint,      uint,               MPI_UNSIGNED)
-VAR(get, _all, long,      long,               MPI_LONG)
-VAR(get, _all, float,     float,              MPI_FLOAT)
-VAR(get, _all, double,    double,             MPI_DOUBLE)
-VAR(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-dnl
-dnl VAR1_FLEXIBLE
-dnl
-define(`VAR1_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_var1$2() >--------------------------------------------------*/
-int
-ncmpi_$1_var1$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *count;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (bufcount < 0) return NC_EINVAL;
-
-    GET_ONE_COUNT(count)
-
-    status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)buf,
-                                bufcount, buftype, ReadWrite($1),
-                                CollIndep($2), 0);
-    if (varp->ndims > 0) NCI_Free(count);
-    return status;
-}
-')dnl
-
-VAR1_FLEXIBLE(put)
-VAR1_FLEXIBLE(get)
-VAR1_FLEXIBLE(put, _all)
-VAR1_FLEXIBLE(get, _all)
-
-dnl
-dnl VAR1
-dnl
-define(`VAR1',dnl
-`dnl
-/*----< ncmpi_$1_var1_$3$2() >-----------------------------------------------*/
-int
-ncmpi_$1_var1_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   BufConst($1) $4  *op)
-{
-    int         status;
-    NC         *ncp;
-    NC_var     *varp=NULL;
-    MPI_Offset *count;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-
-    GET_ONE_COUNT(count)
-
-    /* $1_var1 is a special case of $1_vars */
-    status = ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)op,
-                                -1, $5, ReadWrite($1), CollIndep($2), 0);
-    if (varp->ndims > 0) NCI_Free(count);
-    return status;
-}
-')dnl
-
-VAR1(put,     , text,      char,               MPI_CHAR)
-VAR1(put,     , schar,     schar,              MPI_BYTE)
-VAR1(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(put,     , short,     short,              MPI_SHORT)
-VAR1(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(put,     , int,       int,                MPI_INT)
-VAR1(put,     , uint,      uint,               MPI_UNSIGNED)
-VAR1(put,     , long,      long,               MPI_LONG)
-VAR1(put,     , float,     float,              MPI_FLOAT)
-VAR1(put,     , double,    double,             MPI_DOUBLE)
-VAR1(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR1(put, _all, text,      char,               MPI_CHAR)
-VAR1(put, _all, schar,     schar,              MPI_BYTE)
-VAR1(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(put, _all, short,     short,              MPI_SHORT)
-VAR1(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(put, _all, int,       int,                MPI_INT)
-VAR1(put, _all, uint,      uint,               MPI_UNSIGNED)
-VAR1(put, _all, long,      long,               MPI_LONG)
-VAR1(put, _all, float,     float,              MPI_FLOAT)
-VAR1(put, _all, double,    double,             MPI_DOUBLE)
-VAR1(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR1(get,     , text,      char,               MPI_CHAR)
-VAR1(get,     , schar,     schar,              MPI_BYTE)
-VAR1(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(get,     , short,     short,              MPI_SHORT)
-VAR1(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(get,     , int,       int,                MPI_INT)
-VAR1(get,     , uint,      uint,               MPI_UNSIGNED)
-VAR1(get,     , long,      long,               MPI_LONG)
-VAR1(get,     , float,     float,              MPI_FLOAT)
-VAR1(get,     , double,    double,             MPI_DOUBLE)
-VAR1(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VAR1(get, _all, text,      char,               MPI_CHAR)
-VAR1(get, _all, schar,     schar,              MPI_BYTE)
-VAR1(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VAR1(get, _all, short,     short,              MPI_SHORT)
-VAR1(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VAR1(get, _all, int,       int,                MPI_INT)
-VAR1(get, _all, uint,      uint,               MPI_UNSIGNED)
-VAR1(get, _all, long,      long,               MPI_LONG)
-VAR1(get, _all, float,     float,              MPI_FLOAT)
-VAR1(get, _all, double,    double,             MPI_DOUBLE)
-VAR1(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VAR1(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-dnl
-dnl VARA_FLEXIBLE
-dnl
-define(`VARA_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_vara$2() >--------------------------------------------------*/
-int
-ncmpi_$1_vara$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                const MPI_Offset   count[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
-
-    /* $1_vara is a special case of $1_vars */
-    return ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)buf,
-                              bufcount, buftype, ReadWrite($1), CollIndep($2),
-                              0);
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARA_FLEXIBLE(put)
-VARA_FLEXIBLE(get)
-VARA_FLEXIBLE(put, _all)
-VARA_FLEXIBLE(get, _all)
-
-dnl
-dnl VARA
-dnl
-define(`VARA',dnl
-`dnl
-/*----< ncmpi_$1_vara_$3$2() >-----------------------------------------------*/
-int
-ncmpi_$1_vara_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   BufConst($1) $4  *op)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-
-    /* $1_vara is a special case of $1_vars */
-    return ncmpii_getput_vars(ncp, varp, start, count, NULL, (void*)op,
-                              -1, $5, ReadWrite($1), CollIndep($2), 0);
-}
-')dnl
-
-VARA(put,     , text,      char,               MPI_CHAR)
-VARA(put,     , schar,     schar,              MPI_BYTE)
-VARA(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARA(put,     , short,     short,              MPI_SHORT)
-VARA(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARA(put,     , int,       int,                MPI_INT)
-VARA(put,     , uint,      uint,               MPI_UNSIGNED)
-VARA(put,     , long,      long,               MPI_LONG)
-VARA(put,     , float,     float,              MPI_FLOAT)
-VARA(put,     , double,    double,             MPI_DOUBLE)
-VARA(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VARA(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARA(put, _all, text,      char,               MPI_CHAR)
-VARA(put, _all, schar,     schar,              MPI_BYTE)
-VARA(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARA(put, _all, short,     short,              MPI_SHORT)
-VARA(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARA(put, _all, int,       int,                MPI_INT)
-VARA(put, _all, uint,      uint,               MPI_UNSIGNED)
-VARA(put, _all, long,      long,               MPI_LONG)
-VARA(put, _all, float,     float,              MPI_FLOAT)
-VARA(put, _all, double,    double,             MPI_DOUBLE)
-VARA(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VARA(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARA(get,     , text,      char,               MPI_CHAR)
-VARA(get,     , schar,     schar,              MPI_BYTE)
-VARA(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARA(get,     , short,     short,              MPI_SHORT)
-VARA(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARA(get,     , int,       int,                MPI_INT)
-VARA(get,     , uint,      uint,               MPI_UNSIGNED)
-VARA(get,     , long,      long,               MPI_LONG)
-VARA(get,     , float,     float,              MPI_FLOAT)
-VARA(get,     , double,    double,             MPI_DOUBLE)
-VARA(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VARA(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARA(get, _all, text,      char,               MPI_CHAR)
-VARA(get, _all, schar,     schar,              MPI_BYTE)
-VARA(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARA(get, _all, short,     short,              MPI_SHORT)
-VARA(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARA(get, _all, int,       int,                MPI_INT)
-VARA(get, _all, uint,      uint,               MPI_UNSIGNED)
-VARA(get, _all, long,      long,               MPI_LONG)
-VARA(get, _all, float,     float,              MPI_FLOAT)
-VARA(get, _all, double,    double,             MPI_DOUBLE)
-VARA(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VARA(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-dnl
-dnl VARS_FLEXIBLE
-dnl
-define(`VARS_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_vars$2() >--------------------------------------------------*/
-int
-ncmpi_$1_vars$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                const MPI_Offset   count[],
-                const MPI_Offset   stride[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
-
-    return ncmpii_getput_vars(ncp, varp, start, count, stride, (void*)buf,
-                              bufcount, buftype, ReadWrite($1), CollIndep($2),
-                              0);
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARS_FLEXIBLE(put)
-VARS_FLEXIBLE(get)
-VARS_FLEXIBLE(put, _all)
-VARS_FLEXIBLE(get, _all)
-
-dnl
-dnl VARS
-dnl
-define(`VARS',dnl
-`dnl
-/*----< ncmpi_$1_vars_$3$2() >-----------------------------------------------*/
-int
-ncmpi_$1_vars_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   BufConst($1) $4  *op)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-
-    return ncmpii_getput_vars(ncp, varp, start, count, stride, (void*)op,
-                              -1, $5, ReadWrite($1), CollIndep($2), 0);
-}
-')dnl
-
-VARS(put,     , text,      char,               MPI_CHAR)
-VARS(put,     , schar,     schar,              MPI_BYTE)
-VARS(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARS(put,     , short,     short,              MPI_SHORT)
-VARS(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARS(put,     , int,       int,                MPI_INT)
-VARS(put,     , uint,      uint,               MPI_UNSIGNED)
-VARS(put,     , long,      long,               MPI_LONG)
-VARS(put,     , float,     float,              MPI_FLOAT)
-VARS(put,     , double,    double,             MPI_DOUBLE)
-VARS(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VARS(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARS(put, _all, text,      char,               MPI_CHAR)
-VARS(put, _all, schar,     schar,              MPI_BYTE)
-VARS(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARS(put, _all, short,     short,              MPI_SHORT)
-VARS(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARS(put, _all, int,       int,                MPI_INT)
-VARS(put, _all, uint,      uint,               MPI_UNSIGNED)
-VARS(put, _all, long,      long,               MPI_LONG)
-VARS(put, _all, float,     float,              MPI_FLOAT)
-VARS(put, _all, double,    double,             MPI_DOUBLE)
-VARS(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VARS(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARS(get,     , text,      char,               MPI_CHAR)
-VARS(get,     , schar,     schar,              MPI_BYTE)
-VARS(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARS(get,     , short,     short,              MPI_SHORT)
-VARS(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARS(get,     , int,       int,                MPI_INT)
-VARS(get,     , uint,      uint,               MPI_UNSIGNED)
-VARS(get,     , long,      long,               MPI_LONG)
-VARS(get,     , float,     float,              MPI_FLOAT)
-VARS(get,     , double,    double,             MPI_DOUBLE)
-VARS(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VARS(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARS(get, _all, text,      char,               MPI_CHAR)
-VARS(get, _all, schar,     schar,              MPI_BYTE)
-VARS(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARS(get, _all, short,     short,              MPI_SHORT)
-VARS(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARS(get, _all, int,       int,                MPI_INT)
-VARS(get, _all, uint,      uint,               MPI_UNSIGNED)
-VARS(get, _all, long,      long,               MPI_LONG)
-VARS(get, _all, float,     float,              MPI_FLOAT)
-VARS(get, _all, double,    double,             MPI_DOUBLE)
-VARS(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VARS(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-
-/* for write case, buf needs to swapped back if swapped previously */
-#define FINAL_CLEAN_UP {                                                       \
-    if (need_swap_back_buf) /* byte-swap back to buf's original contents */    \
-        ncmpii_in_swapn(buf, bnelems, ncmpix_len_nctype(varp->type));          \
-                                                                               \
-    if (xbuf != NULL && xbuf != cbuf) NCI_Free(xbuf);                          \
-    if (cbuf != NULL && cbuf !=  buf) NCI_Free(cbuf);                          \
-}
-
-/* buffer layers:
-
-   User Level              buf     (user defined buffer of MPI_Datatype)
-   MPI Datatype Level      cbuf    (contiguous buffer of ptype)
-   NetCDF XDR Level        xbuf    (XDR I/O buffer)
-
-   The principle of buffer management is:
-
-   for put_vars:
-     1. pack buf to cbuf based on buftype
-     2. type convert and byte swap cbuf to xbuf
-     3. write from xbuf
-     4. byte swap the buf back to its original, if it is swapped
-     5. free up temp buffers, cbuf and xbuf if they were allocated separately
-
-   for get_vars:
-     1. allocate cbuf
-     2. allocate xbuf
-     3. read to xbuf
-     4. type convert and byte swap xbuf to cbuf
-     5. unpack cbuf to buf based on buftype
-     6. free up temp buffers, cbuf and xbuf if they were allocated separately
-*/
-
 /*----< ncmpii_calc_datatype_elems() >---------------------------------------*/
 /* calculate the followings:
  * ptype: element data type (MPI primitive type) in buftype
@@ -691,8 +184,8 @@ ncmpii_create_imaptype(NC_var           *varp,
         MPI_Datatype tmptype;
         if (count[dim] != (int)count[dim]) return NC_EINTOVERFLOW;
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
-        MPI_Type_create_hvector((int)count[dim], 1, imap[dim]*el_size, *imaptype,
-                                &tmptype);
+        MPI_Type_create_hvector((int)count[dim], 1, imap[dim]*el_size,
+                                *imaptype, &tmptype);
 #else
         MPI_Type_hvector((int)count[dim], 1, imap[dim]*el_size, *imaptype,
                          &tmptype);
@@ -704,349 +197,14 @@ ncmpii_create_imaptype(NC_var           *varp,
     return NC_NOERR;
 }
 
-/*----< ncmpii_getput_vars() >-----------------------------------------------*/
-int
-ncmpii_getput_vars(NC               *ncp,
-                   NC_var           *varp,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   void             *buf,
-                   MPI_Offset        bufcount, /* -1: from a high-level API */
-                   MPI_Datatype      buftype,  /* data type of the bufer */
-                   int               rw_flag,
-                   int               io_method,
-                   int               isTempBuf) /* if is an internal buf */
-{
-    void *cbuf=NULL, *xbuf=NULL;
-    int el_size, mpireturn, err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
-    int buftype_is_contig, need_swap=0, need_convert=0, need_swap_back_buf=0;
-    MPI_Offset bnelems=0, nbytes=0, offset=0;
-    MPI_Status mpistatus;
-    MPI_Datatype ptype, filetype=MPI_BYTE;
-    MPI_File fh;
-
-#ifdef ENABLE_SUBFILING
-    /* call a separate routine if variable is stored in subfiles */
-    if (varp->num_subfiles > 1) {
-#ifdef SUBFILE_DEBUG
-        printf("var(%s) is stored in subfiles\n", varp->name->cp);
-#endif
-        return ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
-                                          buf, bufcount, buftype,
-                                          rw_flag, io_method);
-    }
-#endif
-
-    /* calculate the followings:
-     * ptype: element data type (MPI primitive type) in buftype
-     * bufcount: if it is -1, it means this is called from a high-level API,
-     *     i.e. buftype is an MPI primitive data type. We recalculate it to
-     *     match with count[].
-     * bnelems: number of ptypes in user buffer
-     * nbytes: number of bytes (in external data representation) to read/write
-     *     from/to the file
-     * el_size: size of ptype
-     * buftype_is_contig: whether buftype is contiguous
-     */
-    err = ncmpii_calc_datatype_elems(varp, count, buftype, &ptype, &bufcount,
-                                     &bnelems, &nbytes, &el_size,
-                                     &buftype_is_contig);
-    if (err == NC_EIOMISMATCH) warning = err;
-    else if (err != NC_NOERR) goto err_check;
-
-    /* because nbytes will be used for the argument of "cout" in MPI
-     * read/write calls and "count" is of type int */
-    if (nbytes != (int)nbytes) {
-        err = NC_EINTOVERFLOW;
-        goto err_check;
-    }
-
-    if (nbytes == 0) {
-        /* this process has nothing to read/write */
-        err = NCcoordck(ncp, varp, start, rw_flag);
-        goto err_check;
-    }
-
-    /* TODO: if record variables are too big (so big that we cannot store the
-     * stride between records in an MPI_Aint, for example) then we will
-     * have to process this one record at a time.
-     */
-
-    /* check if the request is contiguous in file */
-    if (stride == NULL &&
-        ncmpii_is_request_contiguous(ncp, varp, start, count)) {
-
-        err = NCedgeck(ncp, varp, start, count);
-        if (err != NC_NOERR ||
-            (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-             start[0] + count[0] > NC_get_numrecs(ncp))) { /* API error */
-            err = NCcoordck(ncp, varp, start, rw_flag);
-            if (err == NC_NOERR) err = NC_EEDGE;
-            goto err_check;
-        }
-
-        /* this is a contiguous file access, no need to create a filetype, but
-         * we need find the starting file offset. If start[] is out of defined
-         * size, then this will return NC_EINVALCOORDS error
-         */
-        err = ncmpii_get_offset(ncp, varp, start, NULL, NULL, rw_flag, &offset);
-        if (err != NC_NOERR) goto err_check;
-    }
-    else {
-        /* this request is non-contiguous in file, create the mpi file type */
-        int blocklen, is_filetype_contig;
-        err = ncmpii_vars_create_filetype(ncp, varp, start, count, stride,
-                                          rw_flag, &blocklen, &offset,
-                                          &filetype, &is_filetype_contig);
-        if (err != NC_NOERR) goto err_check;
-    }
-
-    if (bufcount != (int)bufcount) err = NC_EINTOVERFLOW;
-
-err_check:
-    /* If io_method is COLL_IO and an error occurs, we'll still conduct a
-     * zero-byte read/write (because every process must participate the
-     * collective I/O call).
-     */
-    if (err != NC_NOERR || nbytes == 0) {
-        if (io_method == INDEP_IO) return err;
-
-        /* COLL_IO: participate the collective I/O operations */
-        filetype = MPI_BYTE;
-        status   = err;
-        nbytes   = 0;
-        goto mpi_io;
-    }
-
-    /* check if type conversion and Endianness byte swap is needed */
-    need_convert = ncmpii_need_convert(varp->type, ptype);
-    need_swap    = ncmpii_need_swap(varp->type, ptype);
-
-    if (rw_flag == WRITE_REQ) { /* pack request to xbuf */
-        int position;
-        MPI_Offset outsize=bnelems*el_size;
-        /* assert(bnelems > 0); */
-        if (outsize != (int)outsize && status == NC_NOERR)
-            status = NC_EINTOVERFLOW;
-
-        /* Step 1: pack buf into a contiguous buffer, cbuf */
-        if (!buftype_is_contig) { /* buftype is not contiguous */
-            /* pack buf into cbuf, a contiguous buffer, using buftype */
-            cbuf = NCI_Malloc((size_t)outsize);
-            position = 0;
-            MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
-                     &position, MPI_COMM_SELF);
-        }
-        else
-            cbuf = buf;
-
-        /* Step 2: pack cbuf to xbuf and xbuf will be used to write to file */
-        xbuf = cbuf;
-        if (need_convert) { /* user buf type != nc var type defined in file */
-            xbuf = NCI_Malloc((size_t)nbytes);
-
-            /* datatype conversion + byte-swap from cbuf to xbuf */
-            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
-            /* retain the first error status */
-            if (status == NC_NOERR) status = err;
-        }
-        else if (need_swap) {
-#ifdef DISABLE_IN_PLACE_SWAP
-            if (isTempBuf == 0 && cbuf == buf) {
-                /* allocate cbuf and copy buf to cbuf, byte-swap in cbuf */
-                xbuf = NCI_Malloc((size_t)nbytes);
-                memcpy(xbuf, buf, nbytes);
-            }
-#endif
-            /* perform array in-place byte-swap on xbuf */
-            ncmpii_in_swapn(xbuf, bnelems, ncmpix_len_nctype(varp->type));
-
-            if (xbuf == buf) need_swap_back_buf = 1;
-            /* user buf needs to be swapped back to its original contents */
-        }
-        /* cbuf is no longer needed */
-        if (cbuf != buf && cbuf != xbuf) NCI_Free(cbuf);
-    }
-    else { /* rw_flag == READ_REQ */
-        /* allocate xbuf for reading */
-        if (buftype_is_contig && !need_convert)
-            xbuf = buf;
-        else
-            xbuf = NCI_Malloc((size_t)nbytes);
-    }
-    /* xbuf is the buffer whose data has been converted into the external
-     * data type, ready to be written to the netCDF file. For read,
-     * after read from file, the contents of xbuf are in external type
-     */
-
-mpi_io:
-    if (io_method == COLL_IO)
-        fh = ncp->nciop->collective_fh;
-    else
-        fh = ncp->nciop->independent_fh;
-
-    /* MPI_File_set_view is collective if (io_method == COLL_IO) */
-    err = ncmpii_file_set_view(ncp, fh, &offset, filetype);
-    if (err != NC_NOERR) {
-        nbytes = 0; /* skip this request */
-        if (status == NC_NOERR) status = err;
-    }
-    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
-
-    if (rw_flag == WRITE_REQ) {
-        if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, (int)nbytes,
-                                            MPI_BYTE, &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-            }
-        }
-        else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, (int)nbytes,
-                                        MPI_BYTE, &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
-                    status = (err == NC_EFILE) ? NC_EWRITE : err;
-            }
-        }
-        int put_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-        ncp->nciop->put_size += put_size;
-    }
-    else {  /* rw_flag == READ_REQ */
-        if (io_method == COLL_IO) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, (int)nbytes,
-                                           MPI_BYTE, &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-            }
-        }
-        else { /* io_method == INDEP_IO */
-            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, (int)nbytes,
-                                       MPI_BYTE, &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
-                    status = (err == NC_EFILE) ? NC_EREAD : err;
-            }
-        }
-        int get_size;
-        MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-        ncp->nciop->get_size += get_size;
-    }
-
-    /* No longer need to reset the file view, as the root's fileview includes
-     * the whole file header.
-     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                 MPI_INFO_NULL);
-     */
-
-    if (rw_flag == READ_REQ && nbytes > 0) {
-        /* xbuf contains the data read from file.
-         * Check if it needs to be type-converted + byte-swapped
-         */
-        int position;
-        MPI_Offset insize=bnelems*el_size;
-        if (insize != (int)insize && status == NC_NOERR)
-            status = NC_EINTOVERFLOW;
-
-        if (need_convert) {
-            /* xbuf cannot be buf, but cbuf can */
-            if (buftype_is_contig)
-                cbuf = buf;
-            else
-                cbuf = NCI_Malloc((size_t)insize);
-
-            /* type conversion + swap from xbuf to cbuf */
-            DATATYPE_GET_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
-            /* retain the first error status */
-            if (status == NC_NOERR) status = err;
-            NCI_Free(xbuf);
-        } else {
-            if (need_swap) /* perform array in-place byte-swap on xbuf */
-                ncmpii_in_swapn(xbuf, bnelems, ncmpix_len_nctype(varp->type));
-            cbuf = xbuf;
-        }
-        /* done with xbuf */
-
-        if (!buftype_is_contig) {
-            /* unpack cbuf, a contiguous buffer, to buf using buftype */
-            position = 0;
-            MPI_Unpack(cbuf, (int)insize, &position, buf, (int)bufcount,
-                       buftype, MPI_COMM_SELF);
-        }
-        /* done with cbuf */
-        if (cbuf != buf) NCI_Free(cbuf);
-    }
-    else if (rw_flag == WRITE_REQ) {
-        if (xbuf != buf) NCI_Free(xbuf);
-
-        if (need_swap_back_buf) /* byte-swap back to buf's original contents */
-            ncmpii_in_swapn(buf, bnelems, ncmpix_len_nctype(varp->type));
-
-        if (IS_RECVAR(varp)) {
-            /* update header's number of records in memory */
-            MPI_Offset new_numrecs = ncp->numrecs;
-
-            /* calculate the max record ID written by this request */
-            if (status == NC_NOERR) { /* do this only if no error */
-                if (stride == NULL)
-                    new_numrecs = start[0] + count[0];
-                else
-                    new_numrecs = start[0] + (count[0] - 1) * stride[0] + 1;
-
-                /* note new_numrecs can be smaller than ncp->numrecs */
-            }
-
-            if (io_method == INDEP_IO) {
-                /* For independent put, we delay the sync for numrecs until
-                 * the next collective call, such as end_indep(), sync(),
-                 * enddef(), or close(). This is because if we update numrecs
-                 * to file now, race condition can happen. Note numrecs in
-                 * memory may be inconsistent and obsolete till then.
-                 */
-                if (ncp->numrecs < new_numrecs) {
-                    ncp->numrecs = new_numrecs;
-                    set_NC_ndirty(ncp);
-                }
-            }
-            else { /* COLL_IO: sync numrecs in memory and file */
-                /* In ncmpii_sync_numrecs(), new_numrecs is checked against
-                 * ncp->numrecs.
-                 */
-                err = ncmpii_sync_numrecs(ncp, new_numrecs);
-                if (status == NC_NOERR) status = err;
-            }
-        }
-
-        if (NC_doFsync(ncp)) { /* NC_SHARE is set */
-            TRACE_IO(MPI_File_sync)(fh);
-            if (io_method == COLL_IO)
-                TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
-        }
-    }
-
-    return ((warning != NC_NOERR) ? warning : status);
-}
-
+/*----< ncmpii_getput_varm() >------------------------------------------------*/
 /* buffer layers:
 
    User Level              buf     (user defined buffer of MPI_Datatype)
    MPI Datatype Level      cbuf    (contiguous buffer of ptype)
    NetCDF XDR Level        xbuf    (XDR I/O buffer)
-*/
 
-/* varm: there maybe two layer of memory layout (remapping):
+   varm: there maybe two layer of memory layout (remapping):
          one is specified by MPI derived datatype,
          the other is specified by imap[],
          it's encouraged to use only one option of them,
@@ -1087,139 +245,18 @@ mpi_io:
      8. unpack lbuf to buf based on buftype
 */
 
-dnl
-dnl VARM_FLEXIBLE
-dnl
-define(`VARM_FLEXIBLE',dnl
-`dnl
-/*----< ncmpi_$1_varm$2() >--------------------------------------------------*/
-int
-ncmpi_$1_varm$2(int                ncid,
-                int                varid,
-                const MPI_Offset   start[],
-                const MPI_Offset   count[],
-                const MPI_Offset   stride[],
-                const MPI_Offset   imap[],
-                BufConst($1) void *buf,
-                MPI_Offset         bufcount,
-                MPI_Datatype       buftype)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
-
-    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
-                              (void*)buf, bufcount, buftype, ReadWrite($1),
-                              CollIndep($2));
-}
-')dnl
-
-dnl PnetCDF flexible APIs
-VARM_FLEXIBLE(put)
-VARM_FLEXIBLE(get)
-VARM_FLEXIBLE(put, _all)
-VARM_FLEXIBLE(get, _all)
-
-dnl
-dnl VARM
-dnl
-define(`VARM',dnl
-`dnl
-/*----< ncmpi_$1_varm_$3$2() >-------------------------------------------------*/
-int
-ncmpi_$1_varm_$3$2(int               ncid,
-                   int               varid,
-                   const MPI_Offset  start[],
-                   const MPI_Offset  count[],
-                   const MPI_Offset  stride[],
-                   const MPI_Offset  imap[],
-                   BufConst($1) $4  *op)
-{
-    int     status;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-
-    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
-                              (void*)op, -1, $5, ReadWrite($1),
-                              CollIndep($2));
-}
-')dnl
-
-VARM(put,     , text,      char,               MPI_CHAR)
-VARM(put,     , schar,     schar,              MPI_BYTE)
-VARM(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARM(put,     , short,     short,              MPI_SHORT)
-VARM(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARM(put,     , int,       int,                MPI_INT)
-VARM(put,     , uint,      uint,               MPI_UNSIGNED)
-VARM(put,     , long,      long,               MPI_LONG)
-VARM(put,     , float,     float,              MPI_FLOAT)
-VARM(put,     , double,    double,             MPI_DOUBLE)
-VARM(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VARM(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARM(put, _all, text,      char,               MPI_CHAR)
-VARM(put, _all, schar,     schar,              MPI_BYTE)
-VARM(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARM(put, _all, short,     short,              MPI_SHORT)
-VARM(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARM(put, _all, int,       int,                MPI_INT)
-VARM(put, _all, uint,      uint,               MPI_UNSIGNED)
-VARM(put, _all, long,      long,               MPI_LONG)
-VARM(put, _all, float,     float,              MPI_FLOAT)
-VARM(put, _all, double,    double,             MPI_DOUBLE)
-VARM(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VARM(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARM(get,     , text,      char,               MPI_CHAR)
-VARM(get,     , schar,     schar,              MPI_BYTE)
-VARM(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARM(get,     , short,     short,              MPI_SHORT)
-VARM(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARM(get,     , int,       int,                MPI_INT)
-VARM(get,     , uint,      uint,               MPI_UNSIGNED)
-VARM(get,     , long,      long,               MPI_LONG)
-VARM(get,     , float,     float,              MPI_FLOAT)
-VARM(get,     , double,    double,             MPI_DOUBLE)
-VARM(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
-VARM(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-VARM(get, _all, text,      char,               MPI_CHAR)
-VARM(get, _all, schar,     schar,              MPI_BYTE)
-VARM(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
-VARM(get, _all, short,     short,              MPI_SHORT)
-VARM(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
-VARM(get, _all, int,       int,                MPI_INT)
-VARM(get, _all, uint,      uint,               MPI_UNSIGNED)
-VARM(get, _all, long,      long,               MPI_LONG)
-VARM(get, _all, float,     float,              MPI_FLOAT)
-VARM(get, _all, double,    double,             MPI_DOUBLE)
-VARM(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
-VARM(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
-
-
-/*----< ncmpii_getput_varm() >------------------------------------------------*/
-int
+static int
 ncmpii_getput_varm(NC               *ncp,
                    NC_var           *varp,
                    const MPI_Offset  start[],
                    const MPI_Offset  count[],
-                   const MPI_Offset  stride[], /* can be NULL */
-                   const MPI_Offset  imap[],   /* can be NULL */
+                   const MPI_Offset  stride[],  /* can be NULL */
+                   const MPI_Offset  imap[],    /* can be NULL */
                    void             *buf,
-                   MPI_Offset        bufcount, /* -1: from high-level API */
+                   MPI_Offset        bufcount,  /* -1: from high-level API */
                    MPI_Datatype      buftype,
-                   int               rw_flag,    /* WRITE_REQ or READ_REQ */
-                   int               io_method)  /* COLL_IO or INDEP_IO */
+                   int               rw_flag,   /* WRITE_REQ or READ_REQ */
+                   int               io_method) /* COLL_IO or INDEP_IO */
 {
     void *lbuf=NULL, *cbuf=NULL, *xbuf=NULL;
     int mpireturn, err=NC_NOERR, status=NC_NOERR, warning=NC_NOERR;
@@ -1229,6 +266,23 @@ ncmpii_getput_varm(NC               *ncp,
     MPI_Status mpistatus;
     MPI_Datatype ptype, filetype=MPI_BYTE, imaptype=MPI_DATATYPE_NULL;
     MPI_File fh;
+
+#ifdef ENABLE_SUBFILING
+    /* call a separate routine if variable is stored in subfiles */
+    if (varp->num_subfiles > 1) {
+#ifdef SUBFILE_DEBUG
+        printf("var(%s) is stored in subfiles\n", varp->name->cp);
+#endif
+        if (imap != NULL) {
+            fprintf(stderr, "varm APIs for subfiling is yet to be implemented\n");
+            return NC_ENOTSUPPORT;
+        }
+        
+        return ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
+                                          buf, bufcount, buftype,
+                                          rw_flag, io_method);
+    }
+#endif
 
     /* calculate the followings:
      * ptype: element data type (MPI primitive type) in buftype
@@ -1255,6 +309,7 @@ ncmpii_getput_varm(NC               *ncp,
     }
 
     if (nbytes == 0) { /* this process has nothing to read/write */
+        /* check NC_EINVALCOORDS error for start[] */
         err = NCcoordck(ncp, varp, start, rw_flag);
         goto err_check;
     }
@@ -1264,36 +319,14 @@ ncmpii_getput_varm(NC               *ncp,
      * have to process this one record at a time.
      */
 
-    /* construct an MPI filetype to be set as this process's fileview.
-     * First, check if the request is contiguous in file */
-    if (stride == NULL &&
-        ncmpii_is_request_contiguous(ncp, varp, start, count)) {
-
-        err = NCedgeck(ncp, varp, start, count);
-        if (err != NC_NOERR ||
-            (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-             start[0] + count[0] > NC_get_numrecs(ncp))) {
-            /* cannot read beyond what is already there */
-            err = NCcoordck(ncp, varp, start, rw_flag);
-            if (err == NC_NOERR) err = NC_EEDGE;
-            goto err_check;
-        }
-
-        /* this is a contiguous file access, no need to create a filetype, but
-         * we need find the starting file offset. If start[] is out of defined
-         * size, then this will return NC_EINVALCOORDS error
-         */
-        err = ncmpii_get_offset(ncp, varp, start, NULL, NULL, rw_flag, &offset);
-        if (err != NC_NOERR) goto err_check;
-    }
-    else {
-        /* this request is non-contiguous in file, create a MPI file type */
-        int blocklen, is_filetype_contig;
-        err = ncmpii_vars_create_filetype(ncp, varp, start, count, stride,
-                                          rw_flag, &blocklen, &offset,
-                                          &filetype, &is_filetype_contig);
-        if (err != NC_NOERR) goto err_check;
-    }
+    /* Create the filetype for this request and calculate the the beginning
+     * file offset for this request.  If this request is contiguous in file,
+     * then filetype == MPI_BYTE. Otherwise filetype will be an MPI derived
+     * data type.
+     */
+    err = ncmpii_vars_create_filetype(ncp, varp, start, count, stride, rw_flag,
+                                      NULL, &offset, &filetype, NULL);
+    if (err != NC_NOERR) goto err_check;
 
     if (bufcount != (int)bufcount) err = NC_EINTOVERFLOW;
 
@@ -1388,6 +421,10 @@ err_check:
         else
             xbuf = NCI_Malloc((size_t)nbytes);
     }
+    /* xbuf is the buffer whose data has been converted into the external
+     * data type, ready to be written to the netCDF file. For read,
+     * after read from file, the contents of xbuf are in external type
+     */
 
 mpi_io:
     if (io_method == COLL_IO)
@@ -1574,4 +611,595 @@ mpi_io:
 
     return ((warning != NC_NOERR) ? warning : status);
 }
+
+
+define(`CollIndep', `ifelse(`$1', `_all', `COLL_IO', `INDEP_IO')')dnl
+define(`ReadWrite', `ifelse(`$1', `get',  `READ_REQ', `WRITE_REQ')')dnl
+define(`BufConst',  `ifelse(`$1', `put',  `const')')dnl
+
+dnl
+dnl VAR_FLEXIBLE
+dnl
+define(`VAR_FLEXIBLE',dnl
+`dnl
+/*----< ncmpi_$1_var$2() >---------------------------------------------------*/
+int
+ncmpi_$1_var$2(int                ncid,
+               int                varid,
+               BufConst($1) void *buf,
+               MPI_Offset         bufcount,
+               MPI_Datatype       buftype)
+{
+    int         status;
+    NC         *ncp;
+    NC_var     *varp=NULL;
+    MPI_Offset *start, *count;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (bufcount < 0) return NC_EINVAL;
+
+    GET_FULL_DIMENSIONS(start, count)
+
+    /* $1_var is a special case of $1_vars */
+    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
+                                bufcount, buftype, ReadWrite($1),
+                                CollIndep($2));
+    if (varp->ndims > 0) NCI_Free(start);
+    return status;
+}
+')dnl
+
+dnl PnetCDF flexible APIs
+VAR_FLEXIBLE(put)
+VAR_FLEXIBLE(get)
+VAR_FLEXIBLE(put, _all)
+VAR_FLEXIBLE(get, _all)
+
+dnl
+dnl VAR(ncid, varid, op)
+dnl
+define(`VAR',dnl
+`dnl
+/*----< ncmpi_$1_var_$3$2() >------------------------------------------------*/
+int
+ncmpi_$1_var_$3$2(int              ncid,
+                  int              varid,
+                  BufConst($1) $4 *op)
+{
+    int         status;
+    NC         *ncp;
+    NC_var     *varp=NULL;
+    MPI_Offset *start, *count;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    GET_FULL_DIMENSIONS(start, count)
+
+    /* $1_var is a special case of $1_vars */
+    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
+                                -1, $5, ReadWrite($1), CollIndep($2));
+    if (varp->ndims > 0) NCI_Free(start);
+    return status;
+}
+')dnl
+
+VAR(put,     , text,      char,               MPI_CHAR)
+VAR(put,     , schar,     schar,              MPI_BYTE)
+VAR(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR(put,     , short,     short,              MPI_SHORT)
+VAR(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR(put,     , int,       int,                MPI_INT)
+VAR(put,     , uint,      uint,               MPI_UNSIGNED)
+VAR(put,     , long,      long,               MPI_LONG)
+VAR(put,     , float,     float,              MPI_FLOAT)
+VAR(put,     , double,    double,             MPI_DOUBLE)
+VAR(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VAR(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR(put, _all, text,      char,               MPI_CHAR)
+VAR(put, _all, schar,     schar,              MPI_BYTE)
+VAR(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR(put, _all, short,     short,              MPI_SHORT)
+VAR(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR(put, _all, int,       int,                MPI_INT)
+VAR(put, _all, uint,      uint,               MPI_UNSIGNED)
+VAR(put, _all, long,      long,               MPI_LONG)
+VAR(put, _all, float,     float,              MPI_FLOAT)
+VAR(put, _all, double,    double,             MPI_DOUBLE)
+VAR(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VAR(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR(get,     , text,      char,               MPI_CHAR)
+VAR(get,     , schar,     schar,              MPI_BYTE)
+VAR(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR(get,     , short,     short,              MPI_SHORT)
+VAR(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR(get,     , int,       int,                MPI_INT)
+VAR(get,     , uint,      uint,               MPI_UNSIGNED)
+VAR(get,     , long,      long,               MPI_LONG)
+VAR(get,     , float,     float,              MPI_FLOAT)
+VAR(get,     , double,    double,             MPI_DOUBLE)
+VAR(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VAR(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR(get, _all, text,      char,               MPI_CHAR)
+VAR(get, _all, schar,     schar,              MPI_BYTE)
+VAR(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR(get, _all, short,     short,              MPI_SHORT)
+VAR(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR(get, _all, int,       int,                MPI_INT)
+VAR(get, _all, uint,      uint,               MPI_UNSIGNED)
+VAR(get, _all, long,      long,               MPI_LONG)
+VAR(get, _all, float,     float,              MPI_FLOAT)
+VAR(get, _all, double,    double,             MPI_DOUBLE)
+VAR(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VAR(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+dnl
+dnl VAR1_FLEXIBLE
+dnl
+define(`VAR1_FLEXIBLE',dnl
+`dnl
+/*----< ncmpi_$1_var1$2() >--------------------------------------------------*/
+int
+ncmpi_$1_var1$2(int                ncid,
+                int                varid,
+                const MPI_Offset   start[],
+                BufConst($1) void *buf,
+                MPI_Offset         bufcount,
+                MPI_Datatype       buftype)
+{
+    int         status;
+    NC         *ncp;
+    NC_var     *varp=NULL;
+    MPI_Offset *count;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (bufcount < 0) return NC_EINVAL;
+
+    GET_ONE_COUNT(count)
+
+    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
+                                bufcount, buftype, ReadWrite($1),
+                                CollIndep($2));
+    if (varp->ndims > 0) NCI_Free(count);
+    return status;
+}
+')dnl
+
+VAR1_FLEXIBLE(put)
+VAR1_FLEXIBLE(get)
+VAR1_FLEXIBLE(put, _all)
+VAR1_FLEXIBLE(get, _all)
+
+dnl
+dnl VAR1
+dnl
+define(`VAR1',dnl
+`dnl
+/*----< ncmpi_$1_var1_$3$2() >-----------------------------------------------*/
+int
+ncmpi_$1_var1_$3$2(int               ncid,
+                   int               varid,
+                   const MPI_Offset  start[],
+                   BufConst($1) $4  *op)
+{
+    int         status;
+    NC         *ncp;
+    NC_var     *varp=NULL;
+    MPI_Offset *count;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+
+    GET_ONE_COUNT(count)
+
+    /* $1_var1 is a special case of $1_vars */
+    status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
+                                -1, $5, ReadWrite($1), CollIndep($2));
+    if (varp->ndims > 0) NCI_Free(count);
+    return status;
+}
+')dnl
+
+VAR1(put,     , text,      char,               MPI_CHAR)
+VAR1(put,     , schar,     schar,              MPI_BYTE)
+VAR1(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(put,     , short,     short,              MPI_SHORT)
+VAR1(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(put,     , int,       int,                MPI_INT)
+VAR1(put,     , uint,      uint,               MPI_UNSIGNED)
+VAR1(put,     , long,      long,               MPI_LONG)
+VAR1(put,     , float,     float,              MPI_FLOAT)
+VAR1(put,     , double,    double,             MPI_DOUBLE)
+VAR1(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR1(put, _all, text,      char,               MPI_CHAR)
+VAR1(put, _all, schar,     schar,              MPI_BYTE)
+VAR1(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(put, _all, short,     short,              MPI_SHORT)
+VAR1(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(put, _all, int,       int,                MPI_INT)
+VAR1(put, _all, uint,      uint,               MPI_UNSIGNED)
+VAR1(put, _all, long,      long,               MPI_LONG)
+VAR1(put, _all, float,     float,              MPI_FLOAT)
+VAR1(put, _all, double,    double,             MPI_DOUBLE)
+VAR1(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR1(get,     , text,      char,               MPI_CHAR)
+VAR1(get,     , schar,     schar,              MPI_BYTE)
+VAR1(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(get,     , short,     short,              MPI_SHORT)
+VAR1(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(get,     , int,       int,                MPI_INT)
+VAR1(get,     , uint,      uint,               MPI_UNSIGNED)
+VAR1(get,     , long,      long,               MPI_LONG)
+VAR1(get,     , float,     float,              MPI_FLOAT)
+VAR1(get,     , double,    double,             MPI_DOUBLE)
+VAR1(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VAR1(get, _all, text,      char,               MPI_CHAR)
+VAR1(get, _all, schar,     schar,              MPI_BYTE)
+VAR1(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VAR1(get, _all, short,     short,              MPI_SHORT)
+VAR1(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VAR1(get, _all, int,       int,                MPI_INT)
+VAR1(get, _all, uint,      uint,               MPI_UNSIGNED)
+VAR1(get, _all, long,      long,               MPI_LONG)
+VAR1(get, _all, float,     float,              MPI_FLOAT)
+VAR1(get, _all, double,    double,             MPI_DOUBLE)
+VAR1(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VAR1(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+dnl
+dnl VARA_FLEXIBLE
+dnl
+define(`VARA_FLEXIBLE',dnl
+`dnl
+/*----< ncmpi_$1_vara$2() >--------------------------------------------------*/
+int
+ncmpi_$1_vara$2(int                ncid,
+                int                varid,
+                const MPI_Offset   start[],
+                const MPI_Offset   count[],
+                BufConst($1) void *buf,
+                MPI_Offset         bufcount,
+                MPI_Datatype       buftype)
+{
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
+
+    /* $1_vara is a special case of $1_vars */
+    return ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
+                              bufcount, buftype, ReadWrite($1), CollIndep($2));
+}
+')dnl
+
+dnl PnetCDF flexible APIs
+VARA_FLEXIBLE(put)
+VARA_FLEXIBLE(get)
+VARA_FLEXIBLE(put, _all)
+VARA_FLEXIBLE(get, _all)
+
+dnl
+dnl VARA
+dnl
+define(`VARA',dnl
+`dnl
+/*----< ncmpi_$1_vara_$3$2() >-----------------------------------------------*/
+int
+ncmpi_$1_vara_$3$2(int               ncid,
+                   int               varid,
+                   const MPI_Offset  start[],
+                   const MPI_Offset  count[],
+                   BufConst($1) $4  *op)
+{
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+
+    /* $1_vara is a special case of $1_vars */
+    return ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
+                              -1, $5, ReadWrite($1), CollIndep($2));
+}
+')dnl
+
+VARA(put,     , text,      char,               MPI_CHAR)
+VARA(put,     , schar,     schar,              MPI_BYTE)
+VARA(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARA(put,     , short,     short,              MPI_SHORT)
+VARA(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARA(put,     , int,       int,                MPI_INT)
+VARA(put,     , uint,      uint,               MPI_UNSIGNED)
+VARA(put,     , long,      long,               MPI_LONG)
+VARA(put,     , float,     float,              MPI_FLOAT)
+VARA(put,     , double,    double,             MPI_DOUBLE)
+VARA(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VARA(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARA(put, _all, text,      char,               MPI_CHAR)
+VARA(put, _all, schar,     schar,              MPI_BYTE)
+VARA(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARA(put, _all, short,     short,              MPI_SHORT)
+VARA(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARA(put, _all, int,       int,                MPI_INT)
+VARA(put, _all, uint,      uint,               MPI_UNSIGNED)
+VARA(put, _all, long,      long,               MPI_LONG)
+VARA(put, _all, float,     float,              MPI_FLOAT)
+VARA(put, _all, double,    double,             MPI_DOUBLE)
+VARA(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VARA(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARA(get,     , text,      char,               MPI_CHAR)
+VARA(get,     , schar,     schar,              MPI_BYTE)
+VARA(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARA(get,     , short,     short,              MPI_SHORT)
+VARA(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARA(get,     , int,       int,                MPI_INT)
+VARA(get,     , uint,      uint,               MPI_UNSIGNED)
+VARA(get,     , long,      long,               MPI_LONG)
+VARA(get,     , float,     float,              MPI_FLOAT)
+VARA(get,     , double,    double,             MPI_DOUBLE)
+VARA(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VARA(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARA(get, _all, text,      char,               MPI_CHAR)
+VARA(get, _all, schar,     schar,              MPI_BYTE)
+VARA(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARA(get, _all, short,     short,              MPI_SHORT)
+VARA(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARA(get, _all, int,       int,                MPI_INT)
+VARA(get, _all, uint,      uint,               MPI_UNSIGNED)
+VARA(get, _all, long,      long,               MPI_LONG)
+VARA(get, _all, float,     float,              MPI_FLOAT)
+VARA(get, _all, double,    double,             MPI_DOUBLE)
+VARA(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VARA(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+dnl
+dnl VARS_FLEXIBLE
+dnl
+define(`VARS_FLEXIBLE',dnl
+`dnl
+/*----< ncmpi_$1_vars$2() >--------------------------------------------------*/
+int
+ncmpi_$1_vars$2(int                ncid,
+                int                varid,
+                const MPI_Offset   start[],
+                const MPI_Offset   count[],
+                const MPI_Offset   stride[],
+                BufConst($1) void *buf,
+                MPI_Offset         bufcount,
+                MPI_Datatype       buftype)
+{
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
+
+    return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)buf,
+                              bufcount, buftype, ReadWrite($1), CollIndep($2));
+}
+')dnl
+
+dnl PnetCDF flexible APIs
+VARS_FLEXIBLE(put)
+VARS_FLEXIBLE(get)
+VARS_FLEXIBLE(put, _all)
+VARS_FLEXIBLE(get, _all)
+
+dnl
+dnl VARS
+dnl
+define(`VARS',dnl
+`dnl
+/*----< ncmpi_$1_vars_$3$2() >-----------------------------------------------*/
+int
+ncmpi_$1_vars_$3$2(int               ncid,
+                   int               varid,
+                   const MPI_Offset  start[],
+                   const MPI_Offset  count[],
+                   const MPI_Offset  stride[],
+                   BufConst($1) $4  *op)
+{
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+
+    return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)op,
+                              -1, $5, ReadWrite($1), CollIndep($2));
+}
+')dnl
+
+VARS(put,     , text,      char,               MPI_CHAR)
+VARS(put,     , schar,     schar,              MPI_BYTE)
+VARS(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARS(put,     , short,     short,              MPI_SHORT)
+VARS(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARS(put,     , int,       int,                MPI_INT)
+VARS(put,     , uint,      uint,               MPI_UNSIGNED)
+VARS(put,     , long,      long,               MPI_LONG)
+VARS(put,     , float,     float,              MPI_FLOAT)
+VARS(put,     , double,    double,             MPI_DOUBLE)
+VARS(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VARS(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARS(put, _all, text,      char,               MPI_CHAR)
+VARS(put, _all, schar,     schar,              MPI_BYTE)
+VARS(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARS(put, _all, short,     short,              MPI_SHORT)
+VARS(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARS(put, _all, int,       int,                MPI_INT)
+VARS(put, _all, uint,      uint,               MPI_UNSIGNED)
+VARS(put, _all, long,      long,               MPI_LONG)
+VARS(put, _all, float,     float,              MPI_FLOAT)
+VARS(put, _all, double,    double,             MPI_DOUBLE)
+VARS(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VARS(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARS(get,     , text,      char,               MPI_CHAR)
+VARS(get,     , schar,     schar,              MPI_BYTE)
+VARS(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARS(get,     , short,     short,              MPI_SHORT)
+VARS(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARS(get,     , int,       int,                MPI_INT)
+VARS(get,     , uint,      uint,               MPI_UNSIGNED)
+VARS(get,     , long,      long,               MPI_LONG)
+VARS(get,     , float,     float,              MPI_FLOAT)
+VARS(get,     , double,    double,             MPI_DOUBLE)
+VARS(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VARS(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARS(get, _all, text,      char,               MPI_CHAR)
+VARS(get, _all, schar,     schar,              MPI_BYTE)
+VARS(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARS(get, _all, short,     short,              MPI_SHORT)
+VARS(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARS(get, _all, int,       int,                MPI_INT)
+VARS(get, _all, uint,      uint,               MPI_UNSIGNED)
+VARS(get, _all, long,      long,               MPI_LONG)
+VARS(get, _all, float,     float,              MPI_FLOAT)
+VARS(get, _all, double,    double,             MPI_DOUBLE)
+VARS(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VARS(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+dnl
+dnl VARM_FLEXIBLE
+dnl
+define(`VARM_FLEXIBLE',dnl
+`dnl
+/*----< ncmpi_$1_varm$2() >--------------------------------------------------*/
+int
+ncmpi_$1_varm$2(int                ncid,
+                int                varid,
+                const MPI_Offset   start[],
+                const MPI_Offset   count[],
+                const MPI_Offset   stride[],
+                const MPI_Offset   imap[],
+                BufConst($1) void *buf,
+                MPI_Offset         bufcount,
+                MPI_Datatype       buftype)
+{
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    if (bufcount < 0) return NC_EINVAL;
+
+    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
+                              (void*)buf, bufcount, buftype, ReadWrite($1),
+                              CollIndep($2));
+}
+')dnl
+
+dnl PnetCDF flexible APIs
+VARM_FLEXIBLE(put)
+VARM_FLEXIBLE(get)
+VARM_FLEXIBLE(put, _all)
+VARM_FLEXIBLE(get, _all)
+
+dnl
+dnl VARM
+dnl
+define(`VARM',dnl
+`dnl
+/*----< ncmpi_$1_varm_$3$2() >------------------------------------------------*/
+int
+ncmpi_$1_varm_$3$2(int               ncid,
+                   int               varid,
+                   const MPI_Offset  start[],
+                   const MPI_Offset  count[],
+                   const MPI_Offset  stride[],
+                   const MPI_Offset  imap[],
+                   BufConst($1) $4  *op)
+{
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+
+    return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, (void*)op,
+                              -1, $5, ReadWrite($1), CollIndep($2));
+}
+')dnl
+
+VARM(put,     , text,      char,               MPI_CHAR)
+VARM(put,     , schar,     schar,              MPI_BYTE)
+VARM(put,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARM(put,     , short,     short,              MPI_SHORT)
+VARM(put,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARM(put,     , int,       int,                MPI_INT)
+VARM(put,     , uint,      uint,               MPI_UNSIGNED)
+VARM(put,     , long,      long,               MPI_LONG)
+VARM(put,     , float,     float,              MPI_FLOAT)
+VARM(put,     , double,    double,             MPI_DOUBLE)
+VARM(put,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VARM(put,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARM(put, _all, text,      char,               MPI_CHAR)
+VARM(put, _all, schar,     schar,              MPI_BYTE)
+VARM(put, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARM(put, _all, short,     short,              MPI_SHORT)
+VARM(put, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARM(put, _all, int,       int,                MPI_INT)
+VARM(put, _all, uint,      uint,               MPI_UNSIGNED)
+VARM(put, _all, long,      long,               MPI_LONG)
+VARM(put, _all, float,     float,              MPI_FLOAT)
+VARM(put, _all, double,    double,             MPI_DOUBLE)
+VARM(put, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VARM(put, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARM(get,     , text,      char,               MPI_CHAR)
+VARM(get,     , schar,     schar,              MPI_BYTE)
+VARM(get,     , uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARM(get,     , short,     short,              MPI_SHORT)
+VARM(get,     , ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARM(get,     , int,       int,                MPI_INT)
+VARM(get,     , uint,      uint,               MPI_UNSIGNED)
+VARM(get,     , long,      long,               MPI_LONG)
+VARM(get,     , float,     float,              MPI_FLOAT)
+VARM(get,     , double,    double,             MPI_DOUBLE)
+VARM(get,     , longlong,  long long,          MPI_LONG_LONG_INT)
+VARM(get,     , ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
+VARM(get, _all, text,      char,               MPI_CHAR)
+VARM(get, _all, schar,     schar,              MPI_BYTE)
+VARM(get, _all, uchar,     uchar,              MPI_UNSIGNED_CHAR)
+VARM(get, _all, short,     short,              MPI_SHORT)
+VARM(get, _all, ushort,    ushort,             MPI_UNSIGNED_SHORT)
+VARM(get, _all, int,       int,                MPI_INT)
+VARM(get, _all, uint,      uint,               MPI_UNSIGNED)
+VARM(get, _all, long,      long,               MPI_LONG)
+VARM(get, _all, float,     float,              MPI_FLOAT)
+VARM(get, _all, double,    double,             MPI_DOUBLE)
+VARM(get, _all, longlong,  long long,          MPI_LONG_LONG_INT)
+VARM(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
+
 
