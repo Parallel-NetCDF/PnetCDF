@@ -652,8 +652,8 @@ ncmpii_vara_create_filetype(NC               *ncp,
                             int              *is_filetype_contig)
 {
     int          dim, status, err;
-    MPI_Offset   nelems=1, offset=varp->begin;
-    MPI_Datatype filetype=MPI_BYTE;
+    MPI_Offset   nbytes, offset;
+    MPI_Datatype filetype;
 
     /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
     status = NCedgeck(ncp, varp, start, count);
@@ -661,45 +661,42 @@ ncmpii_vara_create_filetype(NC               *ncp,
                                start[0] + count[0] > NC_get_numrecs(ncp)))
     {
         status = NCcoordck(ncp, varp, start, rw_flag);
-        if (status != NC_NOERR)
-            return status;
-        else
-            return NC_EEDGE;
+        if (status != NC_NOERR) return status;
+        return NC_EEDGE;
     }
 
-    for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
+    /* calculate the request size */
+    nbytes = varp->xsz;
+    for (dim=0; dim<varp->ndims; dim++) nbytes *= count[dim];
+    if (nbytes != (int)nbytes) return NC_EINTOVERFLOW;
+    if (blocklen != NULL) *blocklen = (int)nbytes;
 
-    *blocklen = (int)(nelems * varp->xsz);
-    if (nelems * varp->xsz != *blocklen) return NC_EINTOVERFLOW;
-    /* Warning: blocklen might overflow when requested size > 2^31-1 */
-
-    /* check if the request is contiguous in file
-       if yes, there is no need to create a filetype */
-    if (ncmpii_is_request_contiguous(ncp, varp, start, count)) {
-        status = ncmpii_get_offset(ncp, varp, start, NULL, NULL, rw_flag, &offset);
-        *offset_ptr         = offset;
-        *filetype_ptr       = filetype;
-        *is_filetype_contig = 1;
-        return status;
-    }
-
-    /* filetype is defined only when varp is not a scalar and
-       the number of requested elemenst > 0
-       (varp->ndims == 0 meaning this is a scalar variable)
-       Otherwise, keep filetype MPI_BYTE
+    /* when nbytes == 0 or varp is a scalar, i.e. varp->ndims == 0, no need to
+     * create a filetype
      */
-    if (varp->ndims == 0 || nelems == 0) {
-        *offset_ptr         = offset;
-        *filetype_ptr       = filetype;
-        *is_filetype_contig = 1;
+    if (varp->ndims == 0 || nbytes == 0) {
+        *offset_ptr   = varp->begin;
+        *filetype_ptr = MPI_BYTE;
+        if (is_filetype_contig != NULL) *is_filetype_contig = 1;
         return NC_NOERR;
     }
 
-    /* hereinafter varp->ndims > 0 && nelems > 0 && fileview is noncontiguous,
-     * so, filetype != MPI_BYTE
+    /* if the request is contiguous in file, no need to create a filetype */
+    if (ncmpii_is_request_contiguous(ncp, varp, start, count)) {
+        status = ncmpii_get_offset(ncp, varp, start, NULL, NULL, rw_flag,
+                                   &offset);
+        *offset_ptr   = offset;
+        *filetype_ptr = MPI_BYTE;
+        if (is_filetype_contig != NULL) *is_filetype_contig = 1;
+        return status;
+    }
+
+    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE.
+     * Since we will construct a filetype, blocklen is set to 1.
      */
-    *blocklen           = 1;
-    *is_filetype_contig = 0;
+    if (blocklen           != NULL) *blocklen           = 1;
+    if (is_filetype_contig != NULL) *is_filetype_contig = 0;
+    offset = varp->begin;
 
     /* previously, request size has been checked and it must > 0 */
     if (IS_RECVAR(varp)) {
@@ -757,9 +754,9 @@ ncmpii_vara_create_filetype(NC               *ncp,
         if (err != MPI_SUCCESS)
             return ncmpii_handle_error(err, "MPI_Type_create_hvector");
 #else
-        err = MPI_Type_hvector((int)count[0], blocklength, ncp->recsize, rectype,
-                               &filetype);
-        if (err != MPI_SUCCESS) {
+        err = MPI_Type_hvector((int)count[0], blocklength, ncp->recsize,
+                               rectype, &filetype);
+        if (err != MPI_SUCCESS)
             return ncmpii_handle_error(err, "MPI_Type_hvector");
 #endif
         if (rectype != MPI_BYTE) MPI_Type_free(&rectype);
@@ -807,64 +804,63 @@ ncmpii_vars_create_filetype(NC               *ncp,
                             int              *is_filetype_contig)
 {
     int          dim, status, err;
-    MPI_Offset   offset, stride_off, nelems=1;
-    MPI_Datatype filetype;
+    MPI_Offset   offset, stride_off, nelems;
+    MPI_Datatype filetype=MPI_BYTE;
 
     if (stride == NULL)
         return ncmpii_vara_create_filetype(ncp, varp, start, count, rw_flag,
                                            blocklen, offset_ptr, filetype_ptr,
                                            is_filetype_contig);
-    offset   = varp->begin;
-    filetype = MPI_BYTE;
 
+    /* check if all stride[] == 1 */
     for (dim=0; dim<varp->ndims && stride[dim]==1; dim++) ;
-
-    if (dim == varp->ndims) /* if stride[] all == 1 */
+    if (dim == varp->ndims) /* all stride[] == 1, same as stride == NULL */
         return ncmpii_vara_create_filetype(ncp, varp, start, count, rw_flag,
                                            blocklen, offset_ptr, filetype_ptr,
                                            is_filetype_contig);
 
-    /* now stride[] indicates a non-contiguous fileview, we must define an
-     * MPI derived data type for the fileview. */
-    *blocklen = 1;
+    /* now stride[] indicates a non-contiguous fileview */
 
     /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
     status = NCedgeck(ncp, varp, start, count);
-    if ((status != NC_NOERR) ||
-        (rw_flag == READ_REQ &&
-         IS_RECVAR(varp) &&
-         start[0] + count[0] > NC_get_numrecs(ncp)))
+    if (status != NC_NOERR || (rw_flag == READ_REQ && IS_RECVAR(varp) &&
+                               start[0] + count[0] > NC_get_numrecs(ncp)))
     {
         status = NCcoordck(ncp, varp, start, rw_flag);
-        if (status != NC_NOERR)
-            return status;
-        else
-            return NC_EEDGE;
+        if (status != NC_NOERR) return status;
+        return NC_EEDGE;
     }
 
     status = NCstrideedgeck(ncp, varp, start, count, stride);
-    if (status != NC_NOERR)
-        return status;
+    if (status != NC_NOERR) return status;
 
     if ( rw_flag == READ_REQ && IS_RECVAR(varp) &&
         ( (*count > 0 && *start+1 + (*count-1) * *stride > NC_get_numrecs(ncp)) ||
           (*count == 0 && *start > NC_get_numrecs(ncp)) ) )
         return NC_EEDGE;
 
+    /* calculate request amount */
+    nelems = 1;
     for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
 
-    /* filetype is defined only when varp is not a scalar and
-       the number of requested elemenst > 0
-       (varp->ndims == 0 meaning this is a scalar variable)
-       Otherwise, keep filetype MPI_BYTE
+    /* when nelems == 0 or varp is a scalar, i.e. varp->ndims == 0, no need to
+     * create a filetype
      */
     if (varp->ndims == 0 || nelems == 0) {
-        *offset_ptr   = offset;
-        *filetype_ptr = filetype;
+        *offset_ptr   = varp->begin;
+        *filetype_ptr = MPI_BYTE;
+        if (blocklen           != NULL) *blocklen           = 0;
+        if (is_filetype_contig != NULL) *is_filetype_contig = 1;
         return NC_NOERR;
     }
 
-    /* now, varp->ndims > 0 && nelems > 0 */
+    /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE.
+     * Since we will construct a filetype, blocklen is set to 1.
+     */
+    if (blocklen           != NULL) *blocklen           = 1;
+    if (is_filetype_contig != NULL) *is_filetype_contig = 0;
+    offset = varp->begin;
+
     int ndims, *blockcounts, *blocklens;
     MPI_Aint *blockstride;
     MPI_Datatype tmptype;
@@ -892,7 +888,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
 #endif
         stride_off = stride[ndims-1] * ncp->recsize;
         blockstride[ndims-1] = stride_off;
-        offset += start[ndims - 1] * ncp->recsize;
+        offset += start[ndims-1] * ncp->recsize;
     } else {
         stride_off = stride[ndims-1] * varp->xsz;
         blockstride[ndims-1] = stride_off;
