@@ -465,8 +465,9 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     int color;
     int nasyncios=0;
 
-    /* "API error" will abort this API call, but not the entire program */
-    status = NC_NOERR;
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
+    if (status != NC_NOERR) return status;
 
     MPI_Comm_rank(ncp->nciop->comm, &myrank);
     MPI_Comm_size(ncp->nciop->comm, &nprocs);

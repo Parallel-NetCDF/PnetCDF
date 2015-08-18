@@ -32,8 +32,6 @@ dnl
 define(`CollIndep',   `ifelse(`$1',`_all', `COLL_IO', `INDEP_IO')')dnl
 define(`ReadWrite',   `ifelse(`$1', `get', `READ_REQ', `WRITE_REQ')')dnl
 define(`BufConst',    `ifelse(`$1', `put', `const')')dnl
-define(`CheckRecord1',`ifelse(`$1', `get', `if (IS_RECVAR(varp) && start[0] + 1 > NC_get_numrecs(ncp)) return NC_EEDGE;')')dnl
-define(`CheckRecords',`ifelse(`$1', `get', `if (IS_RECVAR(varp) && start[0] + count[0] > NC_get_numrecs(ncp)) return NC_EEDGE;')')dnl
 
 dnl
 dnl VAR_FLEXIBLE
@@ -154,9 +152,10 @@ ncmpi_i$1_var1(int                ncid,
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (bufcount < 0) return NC_EINVAL;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    CheckRecord1($1)
+
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -192,9 +191,10 @@ ncmpi_i$1_var1_$2(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    CheckRecord1($1)
+
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -258,11 +258,9 @@ ncmpi_i$1_vara(int                ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
     if (bufcount < 0) return NC_EINVAL;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    status = NCedgeck(ncp, varp, start, count);
-    if (status != NC_NOERR) return status;
-    CheckRecords($1)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, buftype, reqid,
@@ -296,11 +294,9 @@ ncmpi_i$1_vara_$2(int               ncid,
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    status = NCedgeck(ncp, varp, start, count);
-    if (status != NC_NOERR) return status;
-    CheckRecords($1)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -365,11 +361,9 @@ ncmpi_i$1_vars(int                ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
     if (bufcount < 0) return NC_EINVAL;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
-    if (status != NC_NOERR) return status;
-    CheckRecords($1)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, buftype, reqid,
@@ -407,11 +401,9 @@ ncmpi_i$1_vars_$2(int               ncid,
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
-    if (status != NC_NOERR) return status;
-    CheckRecords($1)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -489,11 +481,9 @@ ncmpi_i$1_varm(int                ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
     if (bufcount < 0) return NC_EINVAL;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
-    if (status != NC_NOERR) return status;
-    CheckRecords($1)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, bufcount, buftype, reqid,
@@ -532,11 +522,9 @@ ncmpi_i$1_varm_$2(int               ncid,
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
-    status = NCcoordck(ncp, varp, start, ReadWrite($1));
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
     if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
-    if (status != NC_NOERR) return status;
-    CheckRecords($1)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -638,7 +626,7 @@ ncmpii_igetput_varm(NC               *ncp,
         /* zero-length request, mark this as a NULL request */
         if (!isSameGroup) /* only if this is not part of a group request */
             *reqid = NC_REQ_NULL;
-        return NC_NOERR; /* NCcoordck(ncp, varp, start, rw_flag); */
+        return NC_NOERR;
     }
 
     /* for bput call, check if the remaining buffer space is sufficient

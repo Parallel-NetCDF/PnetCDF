@@ -1003,14 +1003,10 @@ err_check:
             if (status == NC_NOERR) status = err;
             if (varp->ndims > 0) NCI_Free(start);
         } else if (counts == NULL) {  /* var1 */
-            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            /* check whether starts[i] is valid */
+            err = NC_start_count_stride_ck(ncp, varp, starts[i], NULL, NULL, rw_flag);
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) continue; /* skip this request */
-            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
-                if (status == NC_NOERR) status = NC_EEDGE;
-                continue; /* skip this request */
-            }
             GET_ONE_COUNT(count)
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) buflen = 1;
@@ -1021,17 +1017,10 @@ err_check:
             if (status == NC_NOERR) status = err;
             if (varp->ndims > 0) NCI_Free(count);
         } else if (strides == NULL) { /* vara */
-            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            /* check whether starts[i] and counts[i] are valid */
+            err = NC_start_count_stride_ck(ncp, varp, starts[i], counts[i], NULL, rw_flag);
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) continue; /* skip this request */
-            err = NCedgeck(ncp, varp, starts[i], counts[i]);
-            if (status == NC_NOERR) status = err;
-            if (err != NC_NOERR) continue; /* skip this request */
-            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
-                if (status == NC_NOERR) status = NC_EEDGE;
-                continue; /* skip this request */
-            }
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
@@ -1042,17 +1031,10 @@ err_check:
                                       &req_ids[i], rw_flag, 0, 0);
             if (status == NC_NOERR) status = err;
         } else if (imaps == NULL) {   /* vars */
-            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            /* check whether starts[i], counts[i], and strides[i] are valid */
+            err = NC_start_count_stride_ck(ncp, varp, starts[i], counts[i], strides[i], rw_flag);
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) continue; /* skip this request */
-            err = NCedgeck(ncp, varp, starts[i], counts[i]);
-            if (status == NC_NOERR) status = err;
-            if (err != NC_NOERR) continue; /* skip this request */
-            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
-                if (status == NC_NOERR) status = NC_EEDGE;
-                continue; /* skip this request */
-            }
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
@@ -1064,17 +1046,10 @@ err_check:
                                       rw_flag, 0, 0);
             if (status == NC_NOERR) status = err;
         } else {                      /* varm */
-            err = NCcoordck(ncp, varp, starts[i], rw_flag);
+            /* check whether starts[i], counts[i], and strides[i] are valid */
+            err = NC_start_count_stride_ck(ncp, varp, starts[i], counts[i], strides[i], rw_flag);
             if (status == NC_NOERR) status = err;
             if (err != NC_NOERR) continue; /* skip this request */
-            err = NCedgeck(ncp, varp, starts[i], counts[i]);
-            if (status == NC_NOERR) status = err;
-            if (err != NC_NOERR) continue; /* skip this request */
-            if (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-                starts[i][0] + 1 > NC_get_numrecs(ncp)) {
-                if (status == NC_NOERR) status = NC_EEDGE;
-                continue; /* skip this request */
-            }
             /* when bufcounts == NULL, it means the same as counts[] */
             if (bufcounts == NULL) {
                 for (buflen=1, j=0; j<varp->ndims; j++)
