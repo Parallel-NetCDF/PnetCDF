@@ -308,11 +308,12 @@ ncmpii_getput_varm(NC               *ncp,
         goto err_check;
     }
 
-    if (nbytes == 0) { /* this process has nothing to read/write */
-        /* check NC_EINVALCOORDS error for start[] */
-        err = NCcoordck(ncp, varp, start, rw_flag);
+    /* check whether start, count, and stride are valid */
+    err = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
+    if (err != NC_NOERR) goto err_check;
+
+    if (nbytes == 0) /* this process has nothing to read/write */
         goto err_check;
-    }
 
     /* TODO: if record variables are too big (so big that we cannot store the
      * stride between records in an MPI_Aint, for example) then we will

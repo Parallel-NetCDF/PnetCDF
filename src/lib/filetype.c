@@ -23,8 +23,6 @@
 
 
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-static int check_recsize_too_big(NC *ncp);
-
 /*----< check_recsize_too_big() >--------------------------------------------*/
 inline static int
 check_recsize_too_big(NC *ncp)
@@ -48,34 +46,54 @@ check_recsize_too_big(NC *ncp)
 }
 #endif
 
-/*----< NCcoordck() >--------------------------------------------------------*/
+/*----< NC_start_count_stride_ck() >-----------------------------------------*/
 /*
- * Check whether 'coord' values (indices) are valid for the variable.
+ * Check whether start, count, stride values are valid for the variable.
  * Note that even if the request size is zero, this check is enforced in both
  * netCDF and PnetCDF. Otherwise, many test cases under test directoy can fail.
+ * Arguments count and stride can be NULL.
  */
 int
-NCcoordck(NC               *ncp,
-          const NC_var     *varp,
-          const MPI_Offset *coord,  /* i.e. start[] */
-          const int         rw_flag)
+NC_start_count_stride_ck(const NC         *ncp,
+                         const NC_var     *varp,
+                         const MPI_Offset *start,
+                         const MPI_Offset *count,
+                         const MPI_Offset *stride,
+                         const int         rw_flag) /* for read or write */
 {
-    const MPI_Offset *ip;
-    MPI_Offset *up;
+    int i=0;
 
-    if (varp->ndims == 0)
-        return NC_NOERR;        /* 'scalar' variable */
+    if (varp->ndims == 0) return NC_NOERR; /* 'scalar' variable */
+
+    /* negative start[] is illegal */
+    if (start[0] < 0) return NC_EINVALCOORDS;
 
     if (IS_RECVAR(varp)) {
-        if (! fIsSet(ncp->flags, NC_64BIT_DATA)) /* not CDF-5 */
-            if (*coord > X_UINT_MAX)
-                return NC_EINVALCOORDS; /* sanity check */
+        if (!fIsSet(ncp->flags, NC_64BIT_DATA) && /* not CDF-5 */
+            start[0] > X_UINT_MAX) /* sanity check */
+            return NC_EINVALCOORDS;
 
         /* for record variable, [0] is the NC_UNLIMITED dimension */
         if (rw_flag == READ_REQ) {
-            if (coord[0] >= ncp->numrecs)
+            if (start[0] >= ncp->numrecs)
                 return NC_EINVALCOORDS;
+
+            if (count != NULL) {
+                if (stride == NULL) { /* for vara APIs */
+                    if (start[0] + count[0] > ncp->numrecs)
+                        return NC_EEDGE;
+                }
+                else { /* for vars APIs */
+                    if (count[0] > 0 &&
+                        start[0] + (count[0]-1) * stride[0] >= ncp->numrecs)
+                        return NC_EEDGE;
+                }
+            }
+            /* else is for var1 APIs */
         }
+
+        if (stride != NULL && stride[0] == 0) return NC_ESTRIDE;
+
         /* In collective data mode where numrecs is always kept consistent
          * across memory, then there is no need to update numrecs.
          * (If NC_SHARE is set, then numrecs is even sync-ed with file.)
@@ -96,93 +114,30 @@ NCcoordck(NC               *ncp,
          */
 
         /* skip checking the record dimension */
-        ip = coord + 1;
-        up = varp->shape + 1;
-    }
-    else {
-        ip = coord;
-        up = varp->shape;
+        i = 1;
     }
 
-    for (; ip < coord + varp->ndims; ip++, up++) {
-        if ( (*ip < 0) || (*ip >= *up) )
+    for (; i<varp->ndims; i++) {
+        if (start[i] < 0 || start[i] >= varp->shape[i])
             return NC_EINVALCOORDS;
+
+        if (varp->shape[i] < 0) return NC_EEDGE;
+
+        if (count != NULL) {
+            if (stride == NULL) { /* for vara APIs */
+                if (count[i] > varp->shape[i] ||
+                    start[i] + count[i] > varp->shape[i])
+                    return NC_EEDGE;
+            }
+            else { /* for vars APIs */
+                if (count[i] > 0 &&
+                    start[i] + (count[i]-1) * stride[i] >= varp->shape[i])
+                    return NC_EEDGE;
+                if (stride[i] == 0) return NC_ESTRIDE;
+            }
+        }
+        /* else is for var1 APIs */
     }
-    return NC_NOERR;
-}
-
-
-/*----< NCedgeck() >---------------------------------------------------------*/
-/*
- * Check whether 'edges' are valid for the variable and 'start'
- */
-/*ARGSUSED*/
-int
-NCedgeck(const NC         *ncp,
-         const NC_var     *varp,
-         const MPI_Offset *start,
-         const MPI_Offset *edges)  /* i.e. count[] */
-{
-    const MPI_Offset *const end = start + varp->ndims;
-    const MPI_Offset *shp = varp->shape;
-
-    if (varp->ndims == 0)
-        return NC_NOERR;  /* 'scalar' variable */
-
-    if (IS_RECVAR(varp)) {
-        if (start[0] < 0) return NC_EEDGE;
-        start++;
-        edges++;
-        shp++;
-    }
-
-    /* out-of-boundary and negative starts is illegal */
-    for (; start < end; start++, edges++, shp++) {
-        if ( (*shp < 0) || (*edges > *shp) ||
-             (*start < 0) || (*start + *edges > *shp))
-            return NC_EEDGE;
-    }
-
-    return NC_NOERR;
-}
-
-/*----< NCstrideedgeck() >---------------------------------------------------*/
-int
-NCstrideedgeck(const NC         *ncp,
-               const NC_var     *varp,
-               const MPI_Offset *start,
-               const MPI_Offset *edges,  /* i.e. count[] */
-               const MPI_Offset *stride)
-{
-    const MPI_Offset *const end = start + varp->ndims;
-    const MPI_Offset *shp = varp->shape; /* use MPI_Offset for now :( */
-
-    if (varp->ndims == 0)
-        return NC_NOERR;  /* 'scalar' variable */
-
-    if (IS_RECVAR(varp)) {
-        if ( *stride == 0 ) /*|| *stride >= X_INT64_T_MAX)*/
-            /* cast needed for braindead systems with signed MPI_Offset */
-            return NC_ESTRIDE;
-
-        start++;
-        edges++;
-        shp++;
-        stride++;
-    }
-
-    for (; start < end; start++, edges++, shp++, stride++) {
-        if ( (*shp < 0) ||
-            (*edges > *shp) ||
-            (*edges > 0 && *start+1 + (*edges-1) * *stride > *shp) ||
-            (*edges == 0 && *start > *shp) )
-            return NC_EEDGE;
-
-        if ( *stride == 0)/* || *stride >= X_INT64_T_MAX)*/
-            /* cast needed for braindead systems with signed MPI_Offset */
-            return NC_ESTRIDE;
-    }
-
     return NC_NOERR;
 }
 
@@ -218,10 +173,11 @@ ncmpii_get_offset(NC               *ncp,
         end_off = (MPI_Offset*) starts;
     }
 
-    status = NCcoordck(ncp, varp, end_off, rw_flag);  /* validate end_off[] */
+    /* check whether end_off is valid */
+    status = NC_start_count_stride_ck(ncp, varp, end_off, NULL, NULL, rw_flag);
     if (status != NC_NOERR) {
 #ifdef CDEBUG
-        printf("ncmpii_get_offset(): NCcoordck() fails\n");
+        printf("%s(): NC_start_count_stride_ck() fails\n",__func__);
 #endif
         return status;
     }
@@ -655,15 +611,9 @@ ncmpii_vara_create_filetype(NC               *ncp,
     MPI_Offset   nbytes, offset;
     MPI_Datatype filetype;
 
-    /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
-    status = NCedgeck(ncp, varp, start, count);
-    if (status != NC_NOERR || (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-                               start[0] + count[0] > NC_get_numrecs(ncp)))
-    {
-        status = NCcoordck(ncp, varp, start, rw_flag);
-        if (status != NC_NOERR) return status;
-        return NC_EEDGE;
-    }
+    /* check whether start, count are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, rw_flag);
+    if (status != NC_NOERR) return status;
 
     /* calculate the request size */
     nbytes = varp->xsz;
@@ -821,23 +771,9 @@ ncmpii_vars_create_filetype(NC               *ncp,
 
     /* now stride[] indicates a non-contiguous fileview */
 
-    /* New coordinate/edge check to fix NC_EINVALCOORDS bug */
-    status = NCedgeck(ncp, varp, start, count);
-    if (status != NC_NOERR || (rw_flag == READ_REQ && IS_RECVAR(varp) &&
-                               start[0] + count[0] > NC_get_numrecs(ncp)))
-    {
-        status = NCcoordck(ncp, varp, start, rw_flag);
-        if (status != NC_NOERR) return status;
-        return NC_EEDGE;
-    }
-
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
+    /* check whether start, count, stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
     if (status != NC_NOERR) return status;
-
-    if ( rw_flag == READ_REQ && IS_RECVAR(varp) &&
-        ( (*count > 0 && *start+1 + (*count-1) * *stride > NC_get_numrecs(ncp)) ||
-          (*count == 0 && *start > NC_get_numrecs(ncp)) ) )
-        return NC_EEDGE;
 
     /* calculate request amount */
     nelems = 1;

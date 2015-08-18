@@ -1617,42 +1617,6 @@ ncmpii_req_aggregation(NC     *ncp,
     return status;
 }
 
-#if 0
-/*----< ncmpii_check_edge() >-------------------------------------------------*/
-static
-int ncmpii_check_edge(NC     *ncp,
-                      NC_req *req,
-                      int     rw_flag)
-{
-    int is_recvar, err;
-
-    /* check for example out-of-boundary request, and set its status to NC
-       error codes. Because some requests are subrequests of the same
-       record-variable request, their status pointed to the same memory
-       address of the parent request's status. Hece, if one of the
-       subrequests is invalid, we mark the parent request invalid and skip it.
-
-       Note that all reqs[].status have been initialized to NC_NOERR
-       in ncmpii_wait()
-     */
-    if (*req->status != NC_NOERR) /* skip this invalid req */
-        return *req->status;
-
-    is_recvar = IS_RECVAR(req->varp);
-
-    /* Check for out-of-boundary */
-    err = NCedgeck(ncp, req->varp, req->start, req->count);
-    if (err != NC_NOERR ||
-        (rw_flag == READ_REQ && is_recvar &&
-         req->start[0] + req->count[0] > NC_get_numrecs(ncp))) {
-        err = NCcoordck(ncp, req->varp, req->start, rw_flag);
-        if (err == NC_NOERR) err = NC_EEDGE;
-        *req->status = err;
-    }
-    return err;
-}
-#endif
-
 /*----< ncmpii_wait_getput() >------------------------------------------------*/
 static int
 ncmpii_wait_getput(NC     *ncp,
@@ -1678,43 +1642,6 @@ ncmpii_wait_getput(NC     *ncp,
         }
         cur_req = cur_req->next;
     }
-#if 0
-    /* Below block checks NC_EEDGE error for all request and subrequest, but
-     * this checking is already done when posting the nonblocking requests,
-     * i.e. ncmpi_iput_vara_float()
-     */
-
-    /* pack the linked list into an array to be sorted and remove invalid
-       requests, such as out-of-boundary ones
-     */
-    while (cur_req != NULL) {
-        if (cur_req->num_subreqs == 0) {
-            err = ncmpii_check_edge(ncp, cur_req, rw_flag);
-            if (status == NC_NOERR) status = err;
-            if (err == NC_NOERR) /* add this valid request to reqs[] */
-                reqs[i++] = *cur_req;
-        }
-        else {
-            for (j=0; j<cur_req->num_subreqs; j++) {
-                err = ncmpii_check_edge(ncp, cur_req->subreqs+j, rw_flag);
-                if (status == NC_NOERR) status = err;
-                if (err != NC_NOERR) /* skip all subreqs[] */
-                    break;
-                /* add this valid request to reqs[] */
-                reqs[i++] = cur_req->subreqs[j];
-            }
-        }
-        cur_req = cur_req->next;
-    }
-    /* i is the number of valid requests */
-    num_reqs = i;
-
-    /* for independent wait and there is no valid request, we can return now */
-    if (num_reqs == 0 && io_method == INDEP_IO) {
-        if (reqs != NULL) NCI_Free(reqs);
-        return status;
-    }
-#endif
 
     /* check if reqs[].offset_start are in an increasing order */
     for (i=1; i<num_reqs; i++) {

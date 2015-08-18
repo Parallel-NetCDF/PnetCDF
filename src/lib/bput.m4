@@ -126,8 +126,11 @@ ncmpi_bput_var1(int               ncid,
     if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
+
+    /* check whether start is valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, WRITE_REQ);
     if (status != NC_NOERR) return status;
+
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -160,8 +163,11 @@ ncmpi_bput_var1_$1(int               ncid,
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
+
+    /* check whether start is valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, WRITE_REQ);
     if (status != NC_NOERR) return status;
+
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -208,9 +214,9 @@ ncmpi_bput_vara(int               ncid,
     if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
-    if (status != NC_NOERR) return status;
-    status = NCedgeck(ncp, varp, start, count);
+
+    /* check whether start and count are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, WRITE_REQ);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -243,10 +249,11 @@ ncmpi_bput_vara_$1(int               ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
+
+    /* check whether start and count are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, WRITE_REQ);
     if (status != NC_NOERR) return status;
-    status = NCedgeck(ncp, varp, start, count);
-    if (status != NC_NOERR) return status;
+
     GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -292,9 +299,9 @@ ncmpi_bput_vars(int               ncid,
     if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
-    if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
+
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
@@ -328,10 +335,11 @@ ncmpi_bput_vars_$1(int               ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
+
+    /* check whether start, count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
     if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
-    if (status != NC_NOERR) return status;
+
     GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
@@ -377,9 +385,9 @@ ncmpi_bput_varm(int               ncid,
     if (bufcount < 0) return NC_EINVAL;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
-    if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
+
+    /* check whether start, and count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
     if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
@@ -414,10 +422,11 @@ ncmpi_bput_varm_$1(int               ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-    status = NCcoordck(ncp, varp, start, WRITE_REQ);
+
+    /* check whether start, and count, and stride are valid */
+    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
     if (status != NC_NOERR) return status;
-    status = NCstrideedgeck(ncp, varp, start, count, stride);
-    if (status != NC_NOERR) return status;
+
     GET_NUM_ELEMENTS(nelems)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,

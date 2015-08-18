@@ -791,14 +791,9 @@ int ncmpii_x_getn_int64 (const void *xbuf, void *buf, MPI_Offset nelems,
 int ncmpii_x_getn_uint64(const void *xbuf, void *buf, MPI_Offset nelems,
                         MPI_Datatype datatype);
 
-int NCedgeck(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
-                const MPI_Offset *edges);
-
-int NCstrideedgeck(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
-                const MPI_Offset *edges, const MPI_Offset *stride);
-
-int NCcoordck(NC *ncp, const NC_var *varp, const MPI_Offset *coord, const int rw_flag);
-
+int NC_start_count_stride_ck(const NC *ncp, const NC_var *varp,
+                const MPI_Offset *start, const MPI_Offset *count,
+                const MPI_Offset *stride, const int rw_flag);
 
 int ncmpii_need_convert(nc_type nctype,MPI_Datatype mpitype);
 
