@@ -46,6 +46,8 @@ This is essentially a placeholder for the next release note ...
       CC/CXX/F77/F90/FC. If CC/CXX/F77/F90/FC is set instead of
       MPICC/MPICXX/MPIF77/MPIF90, PnetCDF will now copy them to
       MPICC/MPICXX/MPIF77/MPIF90.
+    * Enforce netCDF convention on error code priority: NC_ECHAR trumps
+      NC_EINVALCOORDS, NC_EEDGE, and NC_ESTRIDE.
 
   o Bug fixes
     * Fix Fortran 77 constants nf_fill_uint and nf_fill_int64 (thanks Jim
