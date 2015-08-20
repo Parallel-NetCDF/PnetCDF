@@ -152,10 +152,6 @@ ncmpi_i$1_var1(int                ncid,
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (bufcount < 0) return NC_EINVAL;
 
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, ReadWrite($1));
-    if (status != NC_NOERR) return status;
-
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -190,10 +186,6 @@ ncmpi_i$1_var1_$2(int               ncid,
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, ReadWrite($1));
-    if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
 
@@ -258,10 +250,6 @@ ncmpi_i$1_vara(int                ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
     if (bufcount < 0) return NC_EINVAL;
 
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, ReadWrite($1));
-    if (status != NC_NOERR) return status;
-
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, buftype, reqid,
                                ReadWrite($1), 0, 0);
@@ -293,10 +281,6 @@ ncmpi_i$1_vara_$2(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, ReadWrite($1));
-    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -361,10 +345,6 @@ ncmpi_i$1_vars(int                ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
     if (bufcount < 0) return NC_EINVAL;
 
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
-    if (status != NC_NOERR) return status;
-
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, buftype, reqid,
                                ReadWrite($1), 0, 0);
@@ -400,10 +380,6 @@ ncmpi_i$1_vars_$2(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
-    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -481,10 +457,6 @@ ncmpi_i$1_varm(int                ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
     if (bufcount < 0) return NC_EINVAL;
 
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
-    if (status != NC_NOERR) return status;
-
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, bufcount, buftype, reqid,
                                ReadWrite($1), 0, 0);
@@ -521,10 +493,6 @@ ncmpi_i$1_varm_$2(int               ncid,
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, ReadWrite($1));
-    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -622,11 +590,15 @@ ncmpii_igetput_varm(NC               *ncp,
     if (err == NC_EIOMISMATCH) warning = err; 
     else if (err != NC_NOERR) return err;
 
+    /* check whether start, count, and stride are valid */
+    err = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
+    if (err != NC_NOERR) return err;
+
     if (bnelems == 0) {
         /* zero-length request, mark this as a NULL request */
         if (!isSameGroup) /* only if this is not part of a group request */
             *reqid = NC_REQ_NULL;
-        return NC_NOERR;
+        return ((warning != NC_NOERR) ? warning : NC_NOERR);
     }
 
     /* for bput call, check if the remaining buffer space is sufficient
@@ -688,8 +660,7 @@ ncmpii_igetput_varm(NC               *ncp,
             /* allocate lbuf */
             if (use_abuf && imaptype == MPI_DATATYPE_NULL && !need_convert) {
                 status = ncmpii_abuf_malloc(ncp, nbytes, &lbuf, &abuf_index);
-                if (status != NC_NOERR)
-                    return ((warning != NC_NOERR) ? warning : status);
+                if (status != NC_NOERR) return status;
                 abuf_allocated = 1;
             }
             else lbuf = NCI_Malloc((size_t)outsize);
@@ -712,7 +683,7 @@ ncmpii_igetput_varm(NC               *ncp,
                 status = ncmpii_abuf_malloc(ncp, nbytes, &cbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (lbuf != buf) NCI_Free(lbuf);
-                    return ((warning != NC_NOERR) ? warning : status);
+                    return status;
                 }
                 abuf_allocated = 1;
             }
@@ -741,16 +712,23 @@ ncmpii_igetput_varm(NC               *ncp,
                 status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (cbuf != buf) NCI_Free(cbuf);
-                    return ((warning != NC_NOERR) ? warning : status);
+                    return status;
                 }
                 abuf_allocated = 1;
             }
             else xbuf = NCI_Malloc((size_t)nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
-            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
-            /* retain the first error status */
-            if (status == NC_NOERR) status = err;
+            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, status)
+            /* NC_ERANGE can be caused by a subset of buf that is out of range
+             * of the external data type, it is not considered a fatal error.
+             * The request must continue to finish.
+             */
+            if (status != NC_NOERR && status != NC_ERANGE) {
+                if (cbuf != buf)  NCI_Free(cbuf);
+                if (xbuf != NULL) NCI_Free(xbuf);
+                return status;
+            }
         }
         else {
             if (use_abuf && buftype_is_contig && imaptype == MPI_DATATYPE_NULL){
@@ -758,7 +736,7 @@ ncmpii_igetput_varm(NC               *ncp,
                 status = ncmpii_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
                 if (status != NC_NOERR) {
                     if (cbuf != buf) NCI_Free(cbuf);
-                    return ((warning != NC_NOERR) ? warning : status);
+                    return status;
                 }
                 memcpy(xbuf, cbuf, (size_t)nbytes);
             }
