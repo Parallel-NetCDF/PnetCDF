@@ -407,10 +407,10 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                     if (.not. canConvert) then
                         if (err .ne. NF_ECHAR)
      +                      call errore('conversion: ', err)
-                        else
-                            if (err .ne. NF_EINVALCOORDS)
-     +                          call errore('bad index: ', err)
-                        endif
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad index: ', err)
+                    endif
                     index(j) = 0
                 end if
 3           continue

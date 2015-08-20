@@ -159,8 +159,15 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 if (var_dimid(j,i) .gt. 1) then         !/* skip record dim */
                     index(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, value(1:1),reqid(1), index)
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad index: ', err)
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad index: ', err)
+                    endif
                     index(j) = 0
                 end if
 3           continue
@@ -172,7 +179,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                 value = MAKE_TYPE($1, hash_$1(var_type(i),var_rank(i), &
                                   index, NFT_ITYPE($1)))
                 err = nf90mpi_iput_var(ncid, i, value(1:1), reqid(1), index)
-                if (err .eq. NF90_NOERR) &
+                if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                     err_w = nf90mpi_wait_all(ncid,1,reqid,st)
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
@@ -182,7 +189,6 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                     else
                         if (err .ne. NF90_ERANGE) &
                             call errore('Range error: ', err)
-                        err = nf90mpi_cancel(ncid, 1, reqid,st)
                     end if
                 else
                     if (err .ne. NF90_ECHAR) &
@@ -270,7 +276,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
             err = nf90mpi_iput_var(ncid, i, value, reqid(1), count=var_shape(:,i))
             if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                 err_w = nf90mpi_wait_all(ncid, 1, reqid, st)
-                ! NF90_ERANGE is not a fatal error?
+                ! NF90_ERANGE is not a fatal error
 
             if (canConvert) then
                 if (allInExtRange) then
@@ -335,7 +341,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
                 err = nf90mpi_iput_var(ncid, i, value, reqid(1), count=var_shape(:,i))
                 if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                     err_w = nf90mpi_wait_all(ncid, 1, reqid, st)
-                    ! NF90_ERANGE is not a fatal error?
+                    ! NF90_ERANGE is not a fatal error
                 if (canConvert) then
                     if (allInExtRange) then
                         if (err .ne. NF90_NOERR) &
@@ -430,14 +436,29 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                 if (var_dimid(j,i) .ne. RECDIM) then    !/* skip record dim */
                     start(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, value,reqid(1), start, edge)
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad start: ', err)
-
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                        ! NF90_ERANGE is not a fatal error
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, value,reqid(1), start, edge)
-                    if (err .ne. NF90_EEDGE) &
-                        call errore('bad edge: ', err)
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                        ! NF90_ERANGE is not a fatal error
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EEDGE) &
+                            call errore('bad edge: ', err)
+                    endif
                     edge(j) = 1
                 end if
 3           continue
@@ -456,13 +477,21 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                 if (var_dimid(j,i) .gt. 1) then     ! skip record dim
                     start(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, value,reqid(1), start, edge)
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad start: ', err)
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid, 1, reqid, st)
+                        ! NF90_ERANGE is not a fatal error
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                 endif
 21          continue
             err = nf90mpi_iput_var(ncid, i, value, reqid(1), start, edge)
-            if (err .eq. NF90_NOERR) &
+            if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                 err_w = nf90mpi_wait_all(ncid,1,reqid,st)
             if (canConvert) then
                 if (st(1) .ne. 0)  &
@@ -514,7 +543,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                 err = nf90mpi_iput_var(ncid, i, value,reqid(1), start, edge)
                 if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
                     err_w = nf90mpi_wait_all(ncid,1,reqid,st)
-                    ! NF90_ERANGE is not a fatal error?
+                    ! NF90_ERANGE is not a fatal error
                 if (canConvert) then
                     if (allInExtRange) then
                         if (st(1) .ne. 0)  &
@@ -616,20 +645,39 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                 if (var_dimid(j,i) .ne. RECDIM) then    ! skip record dim
                     start(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, value,reqid(1), start, edge, stride)
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad start: ', err)
-
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                                call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, value,reqid(1), start, edge, stride)
-                    if (err .ne. NF90_EEDGE) &
-                        call errore('bad edge: ', err)
-
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EEDGE) &
+                            call errore('bad edge: ', err)
+                    endif
                     edge(j) = 1
                     stride(j) = 0
                     err = nf90mpi_iput_var(ncid, i, value,reqid(1), start, edge, stride)
-                    if (err .ne. NF90_ESTRIDE) &
-                        call errore('bad stride: ', err)
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_ESTRIDE) &
+                            call errore('bad stride: ', err)
+                    endif
                     stride(j) = 1
                 end if
 3           continue
@@ -808,22 +856,41 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                     start(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, &
                                          value,reqid(1), start, edge, stride, imap)
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad start: ', err)
-
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
                     err = nf90mpi_iput_var(ncid, i, &
                                          value,reqid(1), start, edge, stride, imap)
-                    if (err .ne. NF90_EEDGE) &
-                        call errore('bad edge: ', err)
-
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_EEDGE) &
+                            call errore('bad edge: ', err)
+                    endif
                     edge(j) = 1
                     stride(j) = 0
                     err = nf90mpi_iput_var(ncid, i, &
                                          value,reqid(1), start, edge, stride, imap)
-                    if (err .ne. NF90_ESTRIDE) &
-                        call errore('bad stride: ', err)
+                    if (err .eq. NF90_NOERR .or. err .eq. NF90_ERANGE) &
+                        err_w = nf90mpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF90_ECHAR) &
+                            call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF90_ESTRIDE) &
+                            call errore('bad stride: ', err)
+                    endif
                     stride(j) = 1
                 end if
 3           continue

@@ -108,8 +108,15 @@ define([TEST_NFMPI_IGET_VAR1],[dnl
                 index(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_var1_$1(ncid,i,index,value,
      +                               reqid(1))
-                if (err .ne. NF_EINVALCOORDS)
-     +              call errore('bad index: ', err)
+                if (err .eq. NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid, 1, reqid, st)
+                if (.not. canConvert) then
+                    if (err .ne. NF_ECHAR)
+     +                  call errore('conversion: ', err)
+                else
+                    if (err .ne. NF_EINVALCOORDS)
+     +                  call errore('bad index: ', err)
+                endif
                 index(j) = 1
 3           continue
             do 4, j = 1, var_nels(i)
@@ -324,22 +331,18 @@ define([TEST_NFMPI_IGET_VARA],[dnl
                 start(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_vara_$1(ncid, i, start,
      +                               edge, value,reqid(1))
-                if (err .ne. NF_EINVALCOORDS)
+                if (canConvert .and. err .ne. NF_EINVALCOORDS)
      +              call errore('bad index: ', err)
-
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_vara_$1(ncid, i, start,
      +                               edge, value,reqid(1))
-                if (err == NF_NOERR) then
-                    err_w = nfmpi_wait_all(ncid,1,reqid,st)
-                    if (st(1) .ne. NF_EINVALCOORDS) then
-                        call errore('bad index/edge: ', st(1))
-                    endif
-                else
-                    if (canConvert .and.  err .ne. NF_EEDGE)
-     +                  call errore('bad index/edge: ', err)
-                endif
+                if (canConvert .and. err .ne. NF_EEDGE)
+     +              call errore('bad edge: ', err)
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 edge(j) = 1
 3           continue
 
@@ -362,19 +365,20 @@ C           /* there is nothing to get (edge(j).eq.0) */
                         start(j) = var_shape(j,i) + 1
                         err = nfmpi_iget_vara_$1(ncid, i,
      +                          start, edge, value,reqid(1))
-                        if (err .ne. NF_EINVALCOORDS)
-     +                      call errore(
-     +                      'Error:nfmpi_iget_vara_$1: ', err)
+                        if (canConvert .and. err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                        if (err == NF_NOERR)
+     +                      err_w = nfmpi_wait_all(ncid,1,reqid,st)
                         start(j) = 1
                     endif
 11              continue
                 err = nfmpi_iget_vara_$1(ncid, i, start,
      +                          edge, value,reqid(1))
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (canConvert) then
                     if (err .ne. NF_NOERR) then
                         call error(nfmpi_strerror(err))
-                    else
-                        err_w = nfmpi_wait_all(ncid,1,reqid,st)
                     endif
                 else
                     if (err .ne. NF_ECHAR)
@@ -550,27 +554,41 @@ define([TEST_NFMPI_IGET_VARS],dnl
                 start(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_vars_$1(ncid, i, start, edge,
      +                                    stride,value,reqid(1))
-                if (err .ne. NF_EINVALCOORDS)
-     +              call errore('bad index: ', err)
-
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                if (.not. canConvert) then
+                    if (err .ne. NF_ECHAR)
+     +                  call errore('conversion: ', err)
+                else
+                    if (err .ne. NF_EINVALCOORDS)
+     +                  call errore('bad index: ', err)
+                endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_vars_$1(ncid, i, start, edge,
      +                               stride,value,reqid(1))
-                if (err == NF_NOERR) then
-                    err_w = nfmpi_wait_all(ncid,1,reqid,st)
-                    if (st(1) .ne. NF_EINVALCOORDS)
-     +                  call errore('bad index: ', st(1))
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                if (.not. canConvert) then
+                    if (err .ne. NF_ECHAR)
+     +                  call errore('conversion: ', err)
                 else
-                    if (canConvert .and. err .ne. NF_EEDGE)
+                    if (err .ne. NF_EEDGE)
      +                  call errore('bad edge: ', err)
                 endif
                 edge(j) = 1
                 stride(j) = 0
                 err = nfmpi_iget_vars_$1(ncid, i, start, edge,
      +                                stride,value,reqid(1))
-                if (err .ne. NF_ESTRIDE)
-     +              call errore('bad stride: ', err)
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                if (.not. canConvert) then
+                    if (err .ne. NF_ECHAR)
+     +                  call errore('conversion: ', err)
+                else
+                    if (err .ne. NF_ESTRIDE)
+     +                  call errore('bad stride: ', err)
+                endif
                 stride(j) = 1
 3           continue
 C               Choose a random point dividing each dim into 2 parts
@@ -771,28 +789,41 @@ define([TEST_NFMPI_IGET_VARM],dnl
                 start(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_varm_$1(ncid, i, start, edge,
      +                                stride, imap, value,reqid(1))
-                if (err .ne. NF_EINVALCOORDS)
-     +              call errore('bad index: ', err)
-
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                if (.not. canConvert) then
+                    if (err .ne. NF_ECHAR)
+     +                  call errore('conversion: ', err)
+                else
+                    if (err .ne. NF_EINVALCOORDS)
+     +                  call errore('bad index: ', err)
+                endif
                 start(j) = 1
                 edge(j) = var_shape(j,i) + 1
                 err = nfmpi_iget_varm_$1(ncid, i, start, edge,
      +                                stride, imap, value,reqid(1))
-                if (err == NF_NOERR) then
-                    err_w = nfmpi_wait_all(ncid,1,reqid,st)
-                    if (st(1) .ne. NF_EINVALCOORDS)
-     +                  call errore('bad index: ', st(1))
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                if (.not. canConvert) then
+                    if (err .ne. NF_ECHAR)
+     +                  call errore('conversion: ', err)
                 else
-                    if (canConvert .and. err .ne. NF_EEDGE)
+                    if (err .ne. NF_EEDGE)
      +                  call errore('bad edge: ', err)
                 endif
-
                 edge(j) = 1
                 stride(j) = 0
                 err = nfmpi_iget_varm_$1(ncid, i, start, edge,
      +                                stride, imap, value, reqid(1))
-                if (err .ne. NF_ESTRIDE)
-     +              call errore('bad stride: ', err)
+                if (err == NF_NOERR)
+     +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                if (.not. canConvert) then
+                    if (err .ne. NF_ECHAR)
+     +                  call errore('conversion: ', err)
+                else
+                    if (err .ne. NF_ESTRIDE)
+     +                  call errore('bad stride: ', err)
+                endif
                 stride(j) = 1
 3           continue
 C           Choose a random point dividing each dim into 2 parts 
