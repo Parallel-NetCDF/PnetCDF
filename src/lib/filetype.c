@@ -73,6 +73,9 @@ NC_start_count_stride_ck(const NC         *ncp,
             start[0] > X_UINT_MAX) /* sanity check */
             return NC_EINVALCOORDS;
 
+        if (count != NULL && count[0] < 0) /* no negative count[] */
+            return NC_ENEGATIVECNT;
+
         /* for record variable, [0] is the NC_UNLIMITED dimension */
         if (rw_flag == READ_REQ) {
             if (start[0] >= ncp->numrecs)
@@ -124,6 +127,9 @@ NC_start_count_stride_ck(const NC         *ncp,
         if (varp->shape[i] < 0) return NC_EEDGE;
 
         if (count != NULL) {
+            if (count[i] < 0) /* no negative count[] */
+                return NC_ENEGATIVECNT;
+
             if (stride == NULL) { /* for vara APIs */
                 if (count[i] > varp->shape[i] ||
                     start[i] + count[i] > varp->shape[i])
