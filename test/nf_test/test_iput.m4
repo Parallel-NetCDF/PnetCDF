@@ -150,8 +150,15 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
                     index(j) = var_shape(j,i) + 1
                     err = nfmpi_iput_var1_$1(ncid, i,
      +                                   index, value,reqid(1))
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad index: ', err)
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad index: ', err)
+                    endif
                     index(j) = 0
                 end if
 3           continue
@@ -164,7 +171,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
      +                            index, NFT_ITYPE($1)))
                 err = nfmpi_iput_var1_$1(ncid, i, index, value,
      +                                   reqid(1))
-                if (err .eq. NF_NOERR)
+                if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +              err_w = nfmpi_wait_all(ncid,1,reqid,st)
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
@@ -262,7 +269,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
             err = nfmpi_iput_var_$1(ncid, i, value,reqid(1))
             if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
      +          err_w = nfmpi_wait_all(ncid, 1, reqid, st)
-                ! NF_ERANGE is not a fatal error?
+                ! NF_ERANGE is not a fatal error
 
             if (canConvert) then
                 if (allInExtRange) then
@@ -423,15 +430,30 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                     start(j) = var_shape(j,i) + 1
                     err = nfmpi_iput_vara_$1(ncid, i, start, 
      +                                   edge, value,reqid(1))
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid, 1, reqid, st)
+                        ! NF_ERANGE is not a fatal error
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
                     err = nfmpi_iput_vara_$1(ncid, i, start, 
      +                                   edge, value,reqid(1))
-                    if (err .ne. NF_EEDGE)
-     +                  call errore('bad edge: ', err)
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid, 1, reqid, st)
+                        ! NF_ERANGE is not a fatal error
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EEDGE)
+     +                      call errore('bad edge: ', err)
+                    endif
                     edge(j) = 1
                 end if
 3           continue
@@ -453,15 +475,24 @@ C           /* Check correct error returned even when nothing to put */
                     start(j) = var_shape(j,i) + 1
                     err = nfmpi_iput_vara_$1(ncid, i, start,
      +                      edge, value,reqid(1))
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid, 1, reqid, st)
+                        ! NF_ERANGE is not a fatal error
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                 endif
 21          continue
             err = nfmpi_iput_vara_$1(ncid, i, start, edge, value,
      +                                   reqid(1))
-            if (err .eq. NF_NOERR)
-     +          err_w = nfmpi_wait_all(ncid,1,reqid,st)
+            if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +          err_w = nfmpi_wait_all(ncid, 1, reqid, st)
+                ! NF_ERANGE is not a fatal error
             if (canConvert) then
                 if (st(1) .ne. 0) 
      +              call error(nfmpi_strerror(st(1)))
@@ -619,24 +650,46 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                     err = nfmpi_iput_vars_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   value,reqid(1))
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                        ! NF_ERANGE is not a fatal error?
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                          call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
                     err = nfmpi_iput_vars_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   value,reqid(1))
-                    if (err .ne. NF_EEDGE)
-     +                  call errore('bad edge: ', err)
-
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                        ! NF_ERANGE is not a fatal error?
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EEDGE)
+     +                      call errore('bad edge: ', err)
+                    endif
                     edge(j) = 1
                     stride(j) = 0
                     err = nfmpi_iput_vars_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   value,reqid(1))
-                    if (err .ne. NF_ESTRIDE)
-     +                  call errore('bad stride: ', err)
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                        ! NF_ERANGE is not a fatal error?
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_ESTRIDE)
+     +                      call errore('bad stride: ', err)
+                    endif
                     stride(j) = 1
                 end if
 3           continue
@@ -820,24 +873,46 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                     err = nfmpi_iput_varm_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value,reqid(1))
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                        ! NF_ERANGE is not a fatal error?
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                     start(j) = 1
                     edge(j) = var_shape(j,i) + 1
                     err = nfmpi_iput_varm_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value,reqid(1))
-                    if (err .ne. NF_EEDGE)
-     +                  call errore('bad edge: ', err)
-
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                        ! NF_ERANGE is not a fatal error?
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_EEDGE)
+     +                      call errore('bad edge: ', err)
+                    endif
                     edge(j) = 1
                     stride(j) = 0
                     err = nfmpi_iput_varm_$1(ncid, i, start,
      +                                   edge, stride, 
      +                                   imap, value,reqid(1))
-                    if (err .ne. NF_ESTRIDE)
-     +                  call errore('bad stride: ', err)
+                    if (err .eq. NF_NOERR .or. err .eq. NF_ERANGE)
+     +                  err_w = nfmpi_wait_all(ncid,1,reqid,st)
+                        ! NF_ERANGE is not a fatal error?
+                    if (.not. canConvert) then
+                        if (err .ne. NF_ECHAR)
+     +                      call errore('conversion: ', err)
+                    else
+                        if (err .ne. NF_ESTRIDE)
+     +                      call errore('bad stride: ', err)
+                    endif
                     stride(j) = 1
                 end if
 3           continue

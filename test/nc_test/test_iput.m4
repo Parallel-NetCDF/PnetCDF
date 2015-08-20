@@ -89,11 +89,11 @@ check_vars_$1(const char *filename)
     nc_type datatype;
     int ndims;
     int dimids[MAX_RANK];
-    double expect;
     char name[NC_MAX_NAME];
     MPI_Offset length;
     int canConvert;     /* Both text or both numeric */
     int nok = 0;      /* count of valid comparisons */
+    double expect;
 
     err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
     IF (err != NC_NOERR)
@@ -123,36 +123,33 @@ check_vars_$1(const char *filename)
                 IF (err != NC_NOERR)
                     error("error in toMixedBase 2");
                 expect = hash4( var_type[i], var_rank[i], index, NCT_ITYPE($1));
-                ncmpi_begin_indep_data(ncid);
-                err = ncmpi_get_var1_$1(ncid, i, index, &value);
-                if (inRange3(expect,datatype,NCT_ITYPE($1))) {
-                    if (expect >= $1_min && expect <= $1_max) {
-                        IF (err != NC_NOERR) {
-                            error("ncmpi_get_var1_$1: %s", ncmpi_strerror(err));
-                        } else {
-                            IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
-                                error("Var value read not that expected");
-                                if (verbose) {
-                                    error("\n");
-                                    error("varid: %d, ", i);
-                                    error("var_name: %s, ", var_name[i]);
-                                    error("index:");
-                                    for (d = 0; d < var_rank[i]; d++)
-                                        error(" %d", index[d]);
-                                    error(", expect: %g, ", expect);
-                                    error("got: %g", (double) value);
-                                }
-                            } else {
-                                ++nok;
-                            }
+                err = ncmpi_get_var1_$1_all(ncid, i, index, &value);
+                if (inRange3(expect,datatype,NCT_ITYPE($1)) &&
+                    expect >= $1_min && expect <= $1_max) {
+                    IF (err != NC_NOERR) {
+                        error("error in ncmpi_get_var1_$1_all $s",__func__);
+                    } else IF (!equal(value,expect,var_type[i],NCT_ITYPE($1))) {
+                        error("Var value read not that expected");
+                        if (verbose) {
+                            error("\n");
+                            error("varid: %d, ", i);
+                            error("var_name: %s, ", var_name[i]);
+                            error("var_type: %s, ", s_nc_type(var_type[i]));
+                            error("put type: $1, ");
+                            error("index:");
+                            for (d = 0; d < var_rank[i]; d++)
+                                error(" %d", index[d]);
+                            error(", expect: %g, ", expect);
+                            error("got: %g", (double) value);
                         }
+                    } else {
+                        ++nok;
                     }
                 }
-                ncmpi_end_indep_data(ncid);
             }
         }
     }
-    err = ncmpi_close (ncid);
+    err = ncmpi_close(ncid);
     IF (err != NC_NOERR)
         error("ncmpi_close: %s", ncmpi_strerror(err));
     return nok;
@@ -173,7 +170,6 @@ CHECK_VARS(longlong)
 CHECK_VARS(ulonglong)
 
 
-
 dnl TEST_NC_IPUT_VAR1(TYPE)
 dnl
 define(`TEST_NC_IPUT_VAR1',dnl
@@ -188,7 +184,7 @@ test_ncmpi_iput_var1_$1(void)
     MPI_Offset index[MAX_RANK];
     int canConvert;        /* Both text or both numeric */
     $1 value = 5;        /* any value would do - only for error cases */
-    int reqid, status;
+    int reqid, status=NC_NOERR;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
@@ -217,9 +213,10 @@ test_ncmpi_iput_var1_$1(void)
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 index[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_var1_$1(ncid, i, index, &value, &reqid);
-                IF (err != NC_EINVALCOORDS)
+                IF (canConvert && err != NC_EINVALCOORDS)
                     error("bad index: err = %d", err);
                 ELSE_NOK
+                if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
                 index[j] = 0;
             }
         }
@@ -232,22 +229,19 @@ test_ncmpi_iput_var1_$1(void)
                 err = ncmpi_iput_var1_$1(ncid, i, NULL, &value, &reqid);
             else
                 err = ncmpi_iput_var1_$1(ncid, i, index, &value, &reqid);
-
-            if (err == NC_NOERR) {
-                /*
-                ncmpi_begin_indep_data(ncid);
-                err = ncmpi_wait(ncid, 1, &reqid, &status);
-                ncmpi_end_indep_data(ncid);
-                */
+            if (err == NC_NOERR || err == NC_ERANGE)
+                /* NC_ERANGE is not fatal, must continue */
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
-            }
-
             if (canConvert) {
                 if (inRange3(value, var_type[i],NCT_ITYPE($1))) {
+                    IF (err != NC_NOERR)
+                        error("%s", ncmpi_strerror(err));
+                    ELSE_NOK
                     IF (status != NC_NOERR)
                         error("%s", ncmpi_strerror(status));
                     ELSE_NOK
                 } else {
+                    /* NC_ERANGE is checked at ncmpi_iput_var1_$1() */
                     IF (err != NC_ERANGE) {
                         error("Range error: err = %d", err);
                         error("\n\t\tfor type %s value %.17e %ld",
@@ -255,9 +249,9 @@ test_ncmpi_iput_var1_$1(void)
                                 (double)value, (long)value, &reqid);
                     }
                     ELSE_NOK
-                    ncmpi_cancel(ncid, 1, &reqid, &status);
                 }
             } else {
+                /* NC_ECHAR is checked at ncmpi_iput_var1_$1() */
                 IF (err != NC_ECHAR)
                     error("wrong type: err = %d", err);
                 ELSE_NOK
@@ -309,7 +303,7 @@ test_ncmpi_iput_var_$1(void)
     int canConvert;        /* Both text or both numeric */
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
-    int reqid, status;
+    int reqid, status=NC_NOERR;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
@@ -349,7 +343,7 @@ test_ncmpi_iput_var_$1(void)
         }
         err = ncmpi_iput_var_$1(ncid, i, value, &reqid);
         if (err == NC_NOERR || err == NC_ERANGE)
-            /* NC_ERANGE is not a fatal error? */
+            /* NC_ERANGE is not fatal, must continue */
             ncmpi_wait_all(ncid, 1, &reqid, &status);
 
         if (canConvert) {
@@ -357,12 +351,17 @@ test_ncmpi_iput_var_$1(void)
                 IF (err != NC_NOERR) 
                     error("%s", ncmpi_strerror(err));
                 ELSE_NOK
+                IF (status != NC_NOERR) 
+                    error("%s", ncmpi_strerror(status));
+                ELSE_NOK
             } else {
+                /* NC_ERANGE is checked at ncmpi_iput_var_$1() */
                 IF (err != NC_ERANGE && var_dimid[i][0] != RECDIM)
-                    error("range error: err = %d", err);
+                    error("expecting range error, but err = %d", err);
                 ELSE_NOK
             }
-        } else {       /* should flag wrong type even if nothing to write */
+        } else { /* should flag wrong type even if nothing to write */
+            /* NC_ECHAR is checked at ncmpi_iput_var_$1() */
             IF (nels > 0 && err != NC_ECHAR)
                 error("wrong type: err = %d", err);
             ELSE_NOK
@@ -381,20 +380,18 @@ test_ncmpi_iput_var_$1(void)
     err = ncmpi_iput_var1_text(ncid, varid, index, "x", &reqid);
     IF (err != NC_NOERR)
         error("ncmpi_iput_var1_text: %s", ncmpi_strerror(err));
-    else {
-        /*
-        ncmpi_begin_indep_data(ncid);
-        ncmpi_wait(ncid, 1, &reqid, &status);
-        ncmpi_end_indep_data(ncid);
-        */
+    else
         ncmpi_wait_all(ncid, 1, &reqid, &status);
-    }
 
     for (i = 0; i < numVars; i++) {
         if (var_dimid[i][0] == RECDIM) {  /* only test record variables here */
             canConvert = (var_type[i] == NC_CHAR) == (NCT_ITYPE($1) == NCT_TEXT);
             assert(var_rank[i] <= MAX_RANK);
             assert(var_nels[i] <= MAX_NELS);
+            err = ncmpi_iput_var_$1(BAD_ID, i, value, &reqid);
+            IF (err != NC_EBADID) 
+                error("expecting bad ncid, but err = %d", err);
+            ELSE_NOK
 
             nels = 1;
             for (j = 0; j < var_rank[i]; j++) {
@@ -411,20 +408,24 @@ test_ncmpi_iput_var_$1(void)
             }
             err = ncmpi_iput_var_$1(ncid, i, value, &reqid);
             if (err == NC_NOERR || err == NC_ERANGE)
-                /* NC_ERANGE is not a fatal error? */
+                /* NC_ERANGE is not fatal, must continue */
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
-
             if (canConvert) {
                 if (allInExtRange) {
                     IF (err != NC_NOERR) 
                         error("%s", ncmpi_strerror(err));
                     ELSE_NOK
+                    IF (status != NC_NOERR) 
+                        error("%s", ncmpi_strerror(status));
+                    ELSE_NOK
                 } else {
+                    /* NC_ERANGE is checked at ncmpi_iput_var_$1() */
                     IF (err != NC_ERANGE)
                         error("range error: err = %d", err);
                     ELSE_NOK
                 }
             } else {
+                /* NC_ECHAR is checked at ncmpi_iput_var_$1() */
                 IF (nels > 0 && err != NC_ECHAR)
                     error("wrong type: err = %d", err);
                 ELSE_NOK
@@ -441,6 +442,7 @@ test_ncmpi_iput_var_$1(void)
     err = ncmpi_delete(scratch, info);
     IF (err != NC_NOERR)
         error("remove of %s failed", scratch);
+
     return nok;
 }
 ')dnl
@@ -481,7 +483,7 @@ test_ncmpi_iput_vara_$1(void)
     int canConvert;        /* Both text or both numeric */
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
-    int reqid, status;
+    int reqid, status=NC_NOERR;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
@@ -515,16 +517,17 @@ test_ncmpi_iput_vara_$1(void)
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];      /* out of bundary check */
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
-                IF (err != NC_EINVALCOORDS)
-                    error("bad start: err = %d", err);
+                IF (canConvert && err != NC_EINVALCOORDS)
+                    error("expecting bad start, but err = %d", err);
                 ELSE_NOK
-
+                if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
                 start[j] = 0;
                 edge[j] = var_shape[i][j] + 1;  /* edge error check */
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
-                IF (err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
+                IF (canConvert && err != NC_EEDGE)
+                    error("expecting bad edge, but err = %d", err);
                 ELSE_NOK
+                if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
                 edge[j] = 1;
             }
         }
@@ -544,31 +547,14 @@ test_ncmpi_iput_vara_$1(void)
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
-                IF (err != NC_EINVALCOORDS)
+                IF (canConvert && err != NC_EINVALCOORDS)
                     error("bad start: err = %d", err);
                 ELSE_NOK
+                if (err == NC_NOERR) ncmpi_wait_all(ncid, 1, &reqid, &status);
                 start[j] = 0;
             }
         }
-        err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
-        if (err == NC_NOERR) {
-            /*
-            ncmpi_begin_indep_data(ncid);
-            err = ncmpi_wait(ncid, i, &reqid, &status);
-            ncmpi_end_indep_data(ncid);
-            */
-            ncmpi_wait_all(ncid, 1, &reqid, &status);
-        }
 
-        if (canConvert) {
-            IF (status != NC_NOERR) 
-                error("%s", ncmpi_strerror(status));
-            ELSE_NOK
-        } else {
-            IF (err != NC_ECHAR)
-                error("wrong type: err = %d", err);
-            ELSE_NOK
-        }
         for (j = 0; j < var_rank[i]; j++) {
             edge[j] = 1;
         }
@@ -609,20 +595,24 @@ test_ncmpi_iput_vara_$1(void)
             else
                 err = ncmpi_iput_vara_$1(ncid, i, start, edge, value, &reqid);
             if (err == NC_NOERR || err == NC_ERANGE)
-                /* NC_ERANGE is not a fatal error? */
+                /* NC_ERANGE is not fatal, must continue */
                 ncmpi_wait_all(ncid, 1, &reqid, &status);
-
             if (canConvert) {
                 if (allInExtRange) {
+                    IF (err != NC_NOERR) 
+                        error("%s", ncmpi_strerror(err));
+                    ELSE_NOK
                     IF (status != NC_NOERR) 
                         error("%s", ncmpi_strerror(status));
                     ELSE_NOK
                 } else {
+                    /* NC_ERANGE is checked at ncmpi_iput_vara_$1() */
                     IF (err != NC_ERANGE)
                         error("range error: err = %d", err);
                     ELSE_NOK
                 }
             } else {
+                /* NC_ECHAR is checked at ncmpi_iput_vara_$1() */
                 IF (nels > 0 && err != NC_ECHAR)
                     error("wrong type: err = %d", err);
                 ELSE_NOK
@@ -685,7 +675,7 @@ test_ncmpi_iput_vars_$1(void)
     int canConvert;        /* Both text or both numeric */
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
-    int reqid, status;
+    int reqid, status=NC_NOERR;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
@@ -719,24 +709,28 @@ test_ncmpi_iput_vars_$1(void)
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                IF (err != NC_EINVALCOORDS)
-                    error("bad start: err = %d", err);
-                ELSE_NOK
-
-                start[j] = 0;
-                edge[j] = var_shape[i][j] + 1;  /* edge error check */
-                err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                IF (err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
-                ELSE_NOK
-
-                edge[j] = 1;
-                stride[j] = 0;  /* strided edge error check */
-                err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
-                IF (err != NC_ESTRIDE)
-                    error("bad stride: err = %d", err);
-                ELSE_NOK
-                stride[j] = 1;
+                if (!canConvert) {
+                    IF (err != NC_ECHAR)
+                        error("conversion: err = %d", err);
+                    ELSE_NOK
+                } else {
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting bad start, but err = %d", err);
+                    ELSE_NOK
+                    start[j] = 0;
+                    edge[j] = var_shape[i][j] + 1;  /* edge error check */
+                    err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+                    IF (err != NC_EEDGE)
+                        error("expecting bad edge, but err = %d", err);
+                    ELSE_NOK
+                    edge[j] = 1;
+                    stride[j] = 0;  /* strided edge error check */
+                    err = ncmpi_iput_vars_$1(ncid, i, start, edge, stride, value, &reqid);
+                    IF (err != NC_ESTRIDE)
+                        error("expecting bad stride, but err = %d", err);
+                    ELSE_NOK
+                    stride[j] = 1;
+                }
             }
         }
         /* Choose a random point dividing each dim into 2 parts */
@@ -797,20 +791,24 @@ test_ncmpi_iput_vars_$1(void)
                 else
                     err = ncmpi_iput_vars_$1(ncid, i, index, count, stride, value, &reqid);
                 if (err == NC_NOERR || err == NC_ERANGE)
-                    /* NC_ERANGE is not a fatal error? */
+                    /* NC_ERANGE is not fatal, must continue */
                     ncmpi_wait_all(ncid, 1, &reqid, &status);
-
                 if (canConvert) {
                     if (allInExtRange) {
+                        IF (err != NC_NOERR) 
+                            error("%s", ncmpi_strerror(err));
+                        ELSE_NOK
                         IF (status != NC_NOERR) 
                             error("%s", ncmpi_strerror(status));
                         ELSE_NOK
                     } else {
+                        /* NC_ERANGE is checked at ncmpi_iput_vars_$1() */
                         IF (err != NC_ERANGE)
                             error("range error: err = %d", err);
                         ELSE_NOK
                     }
                 } else {
+                    /* NC_ECHAR is checked at ncmpi_iput_vars_$1() */
                     IF (nels > 0 && err != NC_ECHAR)
                         error("wrong type: err = %d", err);
                     ELSE_NOK
@@ -875,7 +873,7 @@ test_ncmpi_iput_varm_$1(void)
     int canConvert;        /* Both text or both numeric */
     int allInExtRange;        /* all values within external range? */
     $1 value[MAX_NELS];
-    int reqid, status;
+    int reqid, status=NC_NOERR;
 
     err = ncmpi_create(comm, scratch, NC_CLOBBER|extra_flags, info, &ncid);
     IF (err != NC_NOERR) {
@@ -910,24 +908,28 @@ test_ncmpi_iput_varm_$1(void)
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 start[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                IF (err != NC_EINVALCOORDS)
-                    error("bad start: err = %d", err);
-                ELSE_NOK
-
-                start[j] = 0;
-                edge[j] = var_shape[i][j] + 1;  /* edge error check */
-                err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                IF (err != NC_EEDGE)
-                    error("bad edge: err = %d", err);
-                ELSE_NOK
-
-                edge[j] = 1;
-                stride[j] = 0;  /* strided edge error check */
-                err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
-                IF (err != NC_ESTRIDE)
-                    error("bad stride: err = %d", err);
-                ELSE_NOK
-                stride[j] = 1;
+                if (!canConvert) {
+                    IF (err != NC_ECHAR)
+                        error("conversion: err = %d", err);
+                    ELSE_NOK
+                } else {
+                    IF (err != NC_EINVALCOORDS)
+                        error("expecting bad start, but err = %d", err);
+                    ELSE_NOK
+                    start[j] = 0;
+                    edge[j] = var_shape[i][j] + 1;  /* edge error check */
+                    err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+                    IF (err != NC_EEDGE)
+                        error("expecting bad edge, but err = %d", err);
+                    ELSE_NOK
+                    edge[j] = 1;
+                    stride[j] = 0;  /* strided edge error check */
+                    err = ncmpi_iput_varm_$1(ncid, i, start, edge, stride, imap, value, &reqid);
+                    IF (err != NC_ESTRIDE)
+                        error("expecting bad stride, but err = %d", err);
+                    ELSE_NOK
+                    stride[j] = 1;
+                }
             }
         }
         /* Choose a random point dividing each dim into 2 parts */
@@ -994,20 +996,24 @@ test_ncmpi_iput_varm_$1(void)
                 else
                     err = ncmpi_iput_varm_$1(ncid,i,index,count,stride,imap,value,&reqid);
                 if (err == NC_NOERR || err == NC_ERANGE)
-                    /* NC_ERANGE is not a fatal error? */
+                    /* NC_ERANGE is not fatal, must continue */
                     ncmpi_wait_all(ncid, 1, &reqid, &status);
-
                 if (canConvert) {
                     if (allInExtRange) {
+                        IF (err != NC_NOERR)
+                            error("%s", ncmpi_strerror(err));
+                        ELSE_NOK
                         IF (status != NC_NOERR)
                             error("%s", ncmpi_strerror(status));
                         ELSE_NOK
                     } else {
+                        /* NC_ERANGE is checked at ncmpi_iput_varm_$1() */
                         IF (err != NC_ERANGE)
                             error("range error: err = %d", err);
                         ELSE_NOK
                     }
                 } else {
+                    /* NC_ECHAR is checked at ncmpi_iput_varm_$1() */
                     IF (nels > 0 && err != NC_ECHAR)
                         error("wrong type: err = %d", err);
                     ELSE_NOK

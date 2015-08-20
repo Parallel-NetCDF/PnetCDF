@@ -433,10 +433,10 @@ define([TEST_NFMPI_PUT_VAR1],dnl
                     if (.not. canConvert) then
                         if (err .ne. NF90_ECHAR) &
                             call errore('conversion: ', err)
-                        else
-                            if (err .ne. NF90_EINVALCOORDS) &
-                                call errore('bad index: ', err)
-                        endif
+                    else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad index: ', err)
+                    endif
                     index(j) = 0
                 end if
 3           continue
@@ -582,7 +582,6 @@ define([TEST_NFMPI_PUT_VAR],dnl
                     stop 'var_rank(i) .gt. MAX_RANK'
                 if (var_nels(i) .gt. MAX_NELS) &
                     stop 'var_nels(i) .gt. MAX_NELS'
-                err = nf90mpi_put_var(BAD_ID, i, value)
 
                 nels = 1
                 do 6 j = 1, var_rank(i)
