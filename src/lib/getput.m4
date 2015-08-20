@@ -394,9 +394,22 @@ err_check:
             xbuf = NCI_Malloc((size_t)nbytes);
 
             /* datatype conversion + byte-swap from cbuf to xbuf */
-            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, err)
-            /* retain the first error status */
-            if (status == NC_NOERR) status = err;
+            DATATYPE_PUT_CONVERT(varp->type, xbuf, cbuf, bnelems, ptype, status)
+            /* NC_ERANGE can be caused by a subset of buf that is out of range
+             * of the external data type, it is not considered a fatal error.
+             * The request must continue to finish.
+             */
+            if (status != NC_NOERR && status != NC_ERANGE) {
+                if (cbuf != buf)  NCI_Free(cbuf);
+                NCI_Free(xbuf);
+                xbuf = NULL;
+                if (io_method == INDEP_IO) return status;
+
+                /* COLL_IO: participate the collective I/O operations */
+                filetype  = MPI_BYTE;
+                nbytes    = 0;
+                goto mpi_io;
+            }
         }
         else if (need_swap) {
 #ifdef DISABLE_IN_PLACE_SWAP
@@ -563,7 +576,7 @@ mpi_io:
         if (lbuf != buf) NCI_Free(lbuf);
     }
     else if (rw_flag == WRITE_REQ) {
-        if (xbuf != buf) NCI_Free(xbuf);
+        if (xbuf != NULL && xbuf != buf) NCI_Free(xbuf);
 
         if (need_swap_back_buf) /* byte-swap back to buf's original contents */
             ncmpii_in_swapn(buf, bnelems, ncmpix_len_nctype(varp->type));
