@@ -255,8 +255,8 @@ ncmpiio_create(MPI_Comm     comm,
     /* extract MPI-IO hints */
     ncmpiio_extract_hints(nciop, info);
 
-    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode,
-                            info, &nciop->collective_fh);
+    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, info
+                            &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
 #ifndef HAVE_ACCESS
@@ -302,7 +302,7 @@ ncmpiio_create(MPI_Comm     comm,
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_handle_error(mpireturn, "MPI_Comm_dup");
 
-    /* get the file info used by MPI-IO */
+    /* get the file info actually used by MPI-IO (maybe alter user's info) */
     MPI_File_get_info(nciop->collective_fh, &nciop->mpiinfo);
 
     ncp->nciop = nciop;

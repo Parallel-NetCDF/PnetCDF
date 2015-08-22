@@ -147,6 +147,11 @@ ncmpi_strerror(int err)
              */
         case NC_ENEGATIVECNT:
             return "Negative count is prohibited";
+            /* In netCDF, count (or edge) argument is of type size_t, which is
+             * an unsigned integer. A negative count will make the value very
+             * large, causing NC_EEDGE error and hence netCDF need no such
+             * error code.
+             */
         case NC_EUNSPTETYPE:
             return "Unsupported etype is used in MPI datatype for memory data";
             /* when using flexible APIs, the argument MPI derived datatype is

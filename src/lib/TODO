@@ -4,7 +4,7 @@
 #
 # $Id$
 
-DATA MODE FUNCTIONS: U == unimpplemented I == implemented
+DATA MODE FUNCTIONS: U == unimplemented I == implemented
 
 ncmpi_get  text uchar schar short int long float double ushort uint int64 uint64
 var1         I   I      I    I     I   I    I      I      I     I     I     I
@@ -45,5 +45,5 @@ vard_all     I   I      I    I     I   I    I      I      I     I     I     I
 OTHER FUNCTIONS:
 
 Not yet implemented:
-* fill mode -- It has not been implemented because of performance issue.
+*
 
