@@ -36,7 +36,7 @@ Here is configure command.
 ===============================================================================
     SGI IRIX64
 ===============================================================================
-The pnetcdf library should build fine under IRIX.  There are just a few
+The PnetCDF library should build fine under IRIX.  There are just a few
 issues not directly related to the library:
 
 . The IRIX compiler does not like the cnap.c test.  gcc compiles the

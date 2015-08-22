@@ -155,7 +155,7 @@ typedef int nc_type;
  */
 #define NC_LOCK          0x0400
 
-/** Share updates, limit cacheing.
+/** Share updates, limit caching.
 Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_SHARE         0x0800
 
@@ -300,7 +300,7 @@ there. */
 The specified netCDF ID does not refer to an
 open netCDF dataset. */
 #define	NC_EBADID	(-33)
-#define	NC_ENFILE	(-34)	   /**< Too many netcdfs open */
+#define	NC_ENFILE	(-34)	   /**< Too many netcdf files open */
 #define	NC_EEXIST	(-35)	   /**< netcdf file exists && NC_NOCLOBBER */
 #define	NC_EINVAL	(-36)	   /**< Invalid Argument */
 #define	NC_EPERM	(-37)	   /**< Write to read only */
@@ -478,7 +478,7 @@ by the desired type. */
 #define NC_EINDEP			(-203) /**< Operation not allowed in independent data mode */
 #define NC_EFILE			(-204) /**< Unknown error in file operation */
 #define NC_EREAD			(-205) /**< Unknown error in reading file */
-#define NC_EWRITE			(-206) /**< Unknown error in writting to file */
+#define NC_EWRITE			(-206) /**< Unknown error in writing to file */
 #define NC_EOFILE			(-207) /**< file open/creation failed */
 #define NC_EMULTITYPES			(-208) /**< Multiple types used in memory data */
 #define NC_EIOMISMATCH			(-209) /**< Input/Output data amount mismatch */
@@ -551,7 +551,8 @@ by the desired type. */
 #define NC_ENUMRECS_MULTIDEFINE		NC_EMULTIDEFINE_NUMRECS
 #define NC_EVARS_BEGIN_MULTIDEFINE	NC_EMULTIDEFINE_VAR_BEGIN
 
-#define NC_REQ_NULL -1  /* zeor-length nonblocking request will be ignored */
+/* invalid nonblocking reqeust ID and zero-length request */
+#define NC_REQ_NULL -1
 
 
 /*

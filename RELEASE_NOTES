@@ -230,7 +230,7 @@ version  1.6.0 (February 2, 2015)
       according to Unicode NFC normalization rules during encoding as UTF-8
       for storing in the file header.
     * A new configure option, --enable-large-file-test, to enable testing
-      I/O on large files and large variables. Note the testing prgrams will
+      I/O on large files and large variables. Note the testing programs will
       run very slowly.
 
   o Bug fixes
