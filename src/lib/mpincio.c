@@ -255,7 +255,7 @@ ncmpiio_create(MPI_Comm     comm,
     /* extract MPI-IO hints */
     ncmpiio_extract_hints(nciop, info);
 
-    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, info
+    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, info,
                             &nciop->collective_fh);
     if (mpireturn != MPI_SUCCESS) {
         ncmpiio_free(nciop);
