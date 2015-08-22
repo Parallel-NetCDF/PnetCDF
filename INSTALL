@@ -189,13 +189,22 @@ Note the keyword "NP" used in the environment variable string TEST_MPIRUN.
 It will be replaced with the different numbers of MPI processes used in
 testing. Currently, the testing uses up to 8 processes. Hence, please make
 sure the process allocation at least contains 8 processes.
-One can also run "make ptest" on batch queue systems. One example PBS
-script is provide "pbs.script".
+One can also run "make ptest" on batch queue systems. One example PBS script is
+provide "pbs.script". It is recommended to build all the testing executables
+before submitting the batch job. This can be done by running the below command.
+    cd test ; make ; cd ../examples ; make ; cd ..
 
 Note on setting TEST_OUTDIR. In order to run parallel test correctly, the
 output directory must be on a file system accessible to all MPI processes.
 We recommend to use parallel file systems or POSIX compliant file systems
 (Using NFS will most likely fail the parallel test.)
+
+Issue with older MPI-IO implementation.
+    During "make check", one may encounter the following error message:
+    "MPI error (MPI_File_delete) : MPI_ERR_IO: input/output error"
+    This is due to the underneath MPI-IO libraries fail to return the correct
+    error class MPI_ERR_NO_SUCH_FILE when trying to delete a non-existing
+    file. This message can be ignored.
 
 -------------------------------------------------------------------------
 

@@ -24,7 +24,7 @@ First, it is important that your MPI-IO implementation uses an 8 byte
 type to represent the 'MPI_Offset'
 
 Second, your platform should use an 8 byte type to represent the 'off_t'
-type.  On linux, solaris, IRIX64 (and quite possibly others), parallel-netcdf
+type.  On Linux, solaris, IRIX64 (and quite possibly others), parallel-netcdf
 will automatically add the right options to the compiler to make this
 happen.   
 

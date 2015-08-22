@@ -1,5 +1,5 @@
 Parallel-netCDF is a joint effort between Northwestern University and Argonne
-National Laboratory.  We have aslo been fortunate to recieve a great deal of
+National Laboratory.  We have also been fortunate to receive a great deal of
 help from the community.  A partial list follows.  Thanks everyone!
 
 - Parallel-NetCDF uses a great deal of NetCDF code, so the project would not
@@ -21,7 +21,7 @@ help from the community.  A partial list follows.  Thanks everyone!
 - Greg Sjaardema's <gdsjaar@sandia.gov> CDF-2 patch gave us and serial NetCDF
   large file support
 
-- Jim Edwards <jedwards@ucar.edu> provided a great deal of assitance with our
+- Jim Edwards <jedwards@ucar.edu> provided a great deal of assistance with our
   AIX port, and testing the nonblocking APIs.
 
 - Tyce Mclarty <mclarty3@llnl.gov> also did a lot of AIX work for us
