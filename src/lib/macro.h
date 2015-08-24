@@ -116,8 +116,7 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 #ifdef ENABLE_SUBFILING
 #define GET_FULL_DIMENSIONS(start, count) {                                   \
     int _i;                                                                   \
-    int _ndims;                                                               \
-    _ndims = (varp->num_subfiles>1?varp->ndims_org:varp->ndims);              \
+    int _ndims = (varp->num_subfiles>1?varp->ndims_org:varp->ndims);          \
     start = (MPI_Offset*) NCI_Malloc((size_t)_ndims*2*SIZEOF_MPI_OFFSET);     \
     count = start + _ndims;                                                   \
                                                                               \

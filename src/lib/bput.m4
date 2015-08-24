@@ -127,10 +127,6 @@ ncmpi_bput_var1(int               ncid,
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
-    /* check whether start is valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, WRITE_REQ);
-    if (status != NC_NOERR) return status;
-
     GET_ONE_COUNT(count)
 
     status = ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
@@ -163,10 +159,6 @@ ncmpi_bput_var1_$1(int               ncid,
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-
-    /* check whether start is valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, NULL, NULL, WRITE_REQ);
-    if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
 
@@ -215,10 +207,6 @@ ncmpi_bput_vara(int               ncid,
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
-    /* check whether start and count are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, WRITE_REQ);
-    if (status != NC_NOERR) return status;
-
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, buftype, reqid,
                                WRITE_REQ, 1, 0);
@@ -249,10 +237,6 @@ ncmpi_bput_vara_$1(int               ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-
-    /* check whether start and count are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, NULL, WRITE_REQ);
-    if (status != NC_NOERR) return status;
 
     GET_NUM_ELEMENTS(nelems)
 
@@ -300,10 +284,6 @@ ncmpi_bput_vars(int               ncid,
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
-    if (status != NC_NOERR) return status;
-
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, buftype, reqid,
                                WRITE_REQ, 1, 0);
@@ -335,10 +315,6 @@ ncmpi_bput_vars_$1(int               ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-
-    /* check whether start, count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
-    if (status != NC_NOERR) return status;
 
     GET_NUM_ELEMENTS(nelems)
 
@@ -386,10 +362,6 @@ ncmpi_bput_varm(int               ncid,
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
-    /* check whether start, and count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
-    if (status != NC_NOERR) return status;
-
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, bufcount, buftype, reqid,
                                WRITE_REQ, 1, 0);
@@ -422,10 +394,6 @@ ncmpi_bput_varm_$1(int               ncid,
     if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
 
     if (ncp->abuf == NULL) return NC_ENULLABUF;
-
-    /* check whether start, and count, and stride are valid */
-    status = NC_start_count_stride_ck(ncp, varp, start, count, stride, WRITE_REQ);
-    if (status != NC_NOERR) return status;
 
     GET_NUM_ELEMENTS(nelems)
 

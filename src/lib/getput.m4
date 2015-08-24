@@ -54,7 +54,7 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
                            int                *el_size,   /* out */
                            int                *buftype_is_contig) /* out */
 {
-    int i, err, warning=NC_NOERR;
+    int i, err=NC_NOERR, enegativecnt=NC_NOERR;
     MPI_Offset fnelems;
 
     /* fnelems is the total number of nc_type elements calculated from
@@ -64,7 +64,8 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
     fnelems = 1;
     for (i=0; i<varp->ndims; i++) {
         if (count[i] < 0) /* no negative count[] */
-            return NC_ENEGATIVECNT;
+            /* Do not return now, because netCDF reports NC_ECHAR first */
+            enegativecnt = NC_ENEGATIVECNT;
         fnelems *= count[i];
     }
 
@@ -72,6 +73,9 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
         /* this subroutine is called from a high-level API */
         err = NCMPII_ECHAR(varp->type, buftype);
         if (err != NC_NOERR) return err;
+
+        /* In netCDF, NC_ECHAR, if detected, is reported first */
+        if (enegativecnt != NC_NOERR) return NC_ENEGATIVECNT;
 
         *bnelems = *bufcount = fnelems;
         *ptype = buftype;
@@ -81,6 +85,9 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
         *nbytes = *bnelems * varp->xsz; /* varp->xsz is external element size */
     }
     else if (buftype == MPI_DATATYPE_NULL) {
+        /* In netCDF, NC_ECHAR, if detected, is reported first */
+        if (enegativecnt != NC_NOERR) return NC_ENEGATIVECNT;
+
         /* In this case, bufcount is set to match count[], and buf's data type
          * to match the data type of variable defined in the file - no data
          * conversion will be done.
@@ -106,12 +113,15 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
         err = NCMPII_ECHAR(varp->type, *ptype);
         if (err != NC_NOERR) return err;
 
+        /* In netCDF, NC_ECHAR, if detected, is reported first */
+        if (enegativecnt != NC_NOERR) return NC_ENEGATIVECNT;
+
         /* make bnelems the number of ptype in the whole user buf */
         *bnelems *= *bufcount;
 
         /* check mismatch between bnelems and fnelems */
         if (fnelems != *bnelems) {
-            if (warning == NC_NOERR) warning = NC_EIOMISMATCH;
+            err = NC_EIOMISMATCH;
             (fnelems>*bnelems) ? (fnelems=*bnelems) : (*bnelems=fnelems);
             /* only handle partial of the request, smaller number of the two */
         }
@@ -120,11 +130,13 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
         /* nbytes is the amount in bytes of this request to file */
         *nbytes = *bnelems * varp->xsz;
     }
-    return (warning != NC_NOERR) ? warning : NC_NOERR;
+    return err;
 }
 
 /*----< ncmpii_create_imaptype() >-------------------------------------------*/
-/* check if a request is a true varm call */
+/* Check if a request is a true varm call. If yes, create an MPI derived
+ * data type, imaptype, using imap[]
+ */
 int
 ncmpii_create_imaptype(NC_var           *varp,
                        const MPI_Offset *count,
@@ -350,7 +362,9 @@ err_check:
     need_convert = ncmpii_need_convert(varp->type, ptype);
     need_swap    = ncmpii_need_swap(varp->type, ptype);
 
-    /* check if this is a vars call or a true varm call */
+    /* Check if this is a vars call or a true varm call.
+     * Construct a derived datatype, imaptype, if a true varm call
+     */
     err = ncmpii_create_imaptype(varp, count, imap, bnelems, el_size, ptype,
                                  &imaptype);
     if (status == NC_NOERR) status = err;
@@ -388,7 +402,9 @@ err_check:
         /* lbuf is no longer needed */
         if (lbuf != buf && lbuf != cbuf) NCI_Free(lbuf);
 
-        /* Step 3: pack cbuf to xbuf and xbuf will be used to write to file */
+        /* Step 3: pack cbuf to xbuf. The contents of xbuf will be in the
+         * external representation, ready to be written to file.
+         */
         xbuf = cbuf;
         if (need_convert) { /* user buf type != nc var type defined in file */
             xbuf = NCI_Malloc((size_t)nbytes);
@@ -411,7 +427,7 @@ err_check:
                 goto mpi_io;
             }
         }
-        else if (need_swap) {
+        else if (need_swap) { /* no need to convert, just byte swap */
 #ifdef DISABLE_IN_PLACE_SWAP
             if (cbuf == buf) {
                 /* allocate cbuf and copy buf to xbuf, before byte-swap */

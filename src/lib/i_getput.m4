@@ -335,10 +335,6 @@ ncmpi_i$1_vars(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    if (stride == NULL)
-        return ncmpi_i$1_vara(ncid, varid, start, count, buf, bufcount,
-                              buftype, reqid);
-
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
@@ -372,9 +368,6 @@ ncmpi_i$1_vars_$2(int               ncid,
     int     status;
     NC     *ncp;
     NC_var *varp=NULL;
-
-    if (stride == NULL)
-        return ncmpi_i$1_vara_$2(ncid, varid, start, count, buf, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
@@ -447,10 +440,6 @@ ncmpi_i$1_varm(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    if (imap == NULL)
-        return ncmpi_i$1_vars(ncid, varid, start, count, stride, buf, bufcount,
-                              buftype, reqid);
-
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
     if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
@@ -485,9 +474,6 @@ ncmpi_i$1_varm_$2(int               ncid,
     int     status;
     NC     *ncp;
     NC_var *varp=NULL;
-
-    if (imap == NULL)
-        return ncmpi_i$1_vars_$2(ncid, varid, start, count, stride, buf, reqid);
 
     *reqid = NC_REQ_NULL;
     SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
