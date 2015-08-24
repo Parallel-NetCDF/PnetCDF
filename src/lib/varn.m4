@@ -253,6 +253,10 @@ ncmpii_getput_varn(int               ncid,
         }
     }
     else {
+        /* this subroutine is called from a high-level API */
+        status = NCMPII_ECHAR(varp->type, buftype);
+        if (status != NC_NOERR) goto err_check;
+
         ptype = buftype;
         el_size = ncmpix_len_nctype(varp->type);
     }
