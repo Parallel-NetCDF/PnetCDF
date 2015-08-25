@@ -73,7 +73,8 @@ ncmpii_getput_vard(NC               *ncp,
     }
 #endif
 
-    /* PROBLEM: type size can only be a 4-byte integer */
+    /* PROBLEM: argument filetype_size is a 4-byte integer, cannot be used
+     * for largefiletypes */
     mpireturn = MPI_Type_size(filetype, &filetype_size);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_handle_error(mpireturn, "MPI_Type_size");
@@ -140,6 +141,9 @@ ncmpii_getput_vard(NC               *ncp,
         /* find whether buftype is contiguous */
         err = ncmpii_dtype_decode(buftype, &ptype, &el_size, &btnelems,
                                   &isderived, &buftype_is_contig);
+        if (err != NC_NOERR) goto err_check;
+
+        err = NCMPII_ECHAR(varp->type, ptype);
         if (err != NC_NOERR) goto err_check;
 
         if (btnelems != (int)btnelems) {
