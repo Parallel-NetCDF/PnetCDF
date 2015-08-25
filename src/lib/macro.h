@@ -73,10 +73,8 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     }                                                                          \
                                                                                \
     /* check if varid is valid */                                              \
-    if (status == NC_NOERR) {                                                  \
-        varp = ncmpii_NC_lookupvar(ncp, varid);                                \
-        if (varp == NULL) status = NC_ENOTVAR;                                 \
-    }                                                                          \
+    if (status == NC_NOERR)                                                    \
+        status = ncmpii_NC_lookupvar(ncp, varid, &varp);                       \
                                                                                \
     if (ncp->safe_mode == 1 && io_method == COLL_IO)                           \
         MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);\

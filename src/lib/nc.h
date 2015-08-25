@@ -383,8 +383,8 @@ ncmpii_NC_var_shape64(NC *ncp, NC_var *varp, const NC_dimarray *dims);
 extern int
 ncmpii_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);
 
-extern NC_var *
-ncmpii_NC_lookupvar(NC *ncp, int varid);
+extern int
+ncmpii_NC_lookupvar(NC *ncp, int varid, NC_var **varp);
 
 extern int
 ncmpi_def_var(int ncid, const char *name, nc_type type,
