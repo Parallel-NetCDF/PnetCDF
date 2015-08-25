@@ -662,8 +662,9 @@ ncmpi_del_att(int         ncid,
 
     /* deleting attribute _FillValue means disabling fill mode */
     if (!strcmp(name, _FillValue)) {
-        NC_var *varp = ncmpii_NC_lookupvar(ncp, varid);
-        if (varp == NULL) return NC_ENOTVAR;
+        NC_var *varp;
+        status = ncmpii_NC_lookupvar(ncp, varid, &varp);
+        if (status != NC_NOERR) return status;
         varp->no_fill = 1;
     }
 
@@ -1041,8 +1042,8 @@ ncmpii_put_att(int         ncid,
     NC_attrarray *ncap;
     NC_attr *attrp, *old=NULL;
 
-   if (!name || strlen(name) > NC_MAX_NAME)
-      return NC_EBADNAME;
+    if (!name || strlen(name) > NC_MAX_NAME)
+        return NC_EBADNAME;
 
     /* Should CDF-5 allow very large file header? */
     /* if (len > X_INT_MAX) return NC_EINVAL; */
@@ -1058,20 +1059,20 @@ ncmpii_put_att(int         ncid,
     if (nelems > 0 && buf == NULL)
         return NC_EINVAL; /* Null arg */
 
-   /* If this is the _FillValue attribute, then let PnetCDF return the
-    * same error codes as netCDF
-    */
-   if (!strcmp(name, "_FillValue") && varid != NC_GLOBAL) {
+    /* If this is the _FillValue attribute, then let PnetCDF return the
+     * same error codes as netCDF
+     */
+    if (!strcmp(name, "_FillValue")) {
+        NC_var *varp;
+        status = ncmpii_NC_lookupvar(ncp, varid, &varp);
+        if (status != NC_NOERR) return status;
 
-      NC_var *varp = ncmpii_NC_lookupvar(ncp, varid);
-      if (varp == NULL) return NC_ENOTVAR;
+        /* Fill value must be same type and have exactly one value */
+        if (filetype != varp->type)
+            return NC_EBADTYPE;
 
-      /* Fill value must be same type and have exactly one value */
-      if (filetype != varp->type)
-         return NC_EBADTYPE;
-
-      if (nelems != 1)
-         return NC_EINVAL;
+        if (nelems != 1)
+            return NC_EINVAL;
     }
 
     /* get the file format version */

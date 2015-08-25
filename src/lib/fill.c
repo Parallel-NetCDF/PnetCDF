@@ -231,8 +231,8 @@ ncmpi_fill_var_rec(int        ncid,
     /* must be called in collective data mode */
     if (NC_indep(ncp)) return NC_EINDEP;
 
-    varp = ncmpii_NC_lookupvar(ncp, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    err = ncmpii_NC_lookupvar(ncp, varid, &varp);
+    if (err != NC_NOERR) return err;
 
     /* error if this is not a record variable */
     if (!IS_RECVAR(varp)) return NC_ENOTRECVAR;
@@ -321,8 +321,8 @@ ncmpi_def_var_fill(int   ncid,
     if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
 
     /* find the pointer to this variable's object */
-    varp = ncmpii_NC_lookupvar(ncp, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    err = ncmpii_NC_lookupvar(ncp, varid, &varp);
+    if (err != NC_NOERR) return err;
 
     if (ncp->safe_mode) {
         int root_no_fill=no_fill;
@@ -395,8 +395,8 @@ ncmpi_inq_var_fill(int   ncid,
     if (err != NC_NOERR) return err;
 
     /* find the pointer to this variable's object */
-    varp = ncmpii_NC_lookupvar(ncp, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    err = ncmpii_NC_lookupvar(ncp, varid, &varp);
+    if (err != NC_NOERR) return err;
 
     *no_fill = varp->no_fill;
 

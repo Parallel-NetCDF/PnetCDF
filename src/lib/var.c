@@ -467,20 +467,19 @@ ncmpii_NC_check_vlen(NC_var     *varp,
  * Formerly
 NC_hlookupvar()
  */
-NC_var *
-ncmpii_NC_lookupvar(NC  *ncp,
-                    int  varid)
+int
+ncmpii_NC_lookupvar(NC      *ncp,
+                    int      varid,
+                    NC_var **varp)
 {
-    NC_var *varp;
-
     if (varid == NC_GLOBAL) /* Global is error in this context */
-        return NULL;
+        return NC_EGLOBAL;
 
-    varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NULL;
-    /* error check is at the upper level */
+    *varp = elem_NC_vararray(&ncp->vars, varid);
+    if (*varp == NULL) /* could not find variable with varid */
+        return NC_ENOTVAR;
 
-    return(varp);
+    return NC_NOERR;
 }
 
 
@@ -602,6 +601,7 @@ ncmpi_inq_var(int      ncid,
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
+    if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) return NC_ENOTVAR;
@@ -651,6 +651,11 @@ ncmpi_inq_varname(int   ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
+    /* using NC_GLOBAL in varid is illegal for this API. See
+     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
+     */
+    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) return NC_ENOTVAR;
 
@@ -674,6 +679,11 @@ ncmpi_inq_vartype(int      ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
+    /* using NC_GLOBAL in varid is illegal for this API. See
+     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
+     */
+    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) return NC_ENOTVAR;
 
@@ -692,6 +702,11 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
+
+    /* using NC_GLOBAL in varid is illegal for this API. See
+     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
+     */
+    if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) return NC_ENOTVAR;
@@ -718,6 +733,11 @@ ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
+
+    /* using NC_GLOBAL in varid is illegal for this API. See
+     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
+     */
+    if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) return NC_ENOTVAR;
@@ -776,6 +796,10 @@ ncmpi_rename_var(int         ncid,
 
     if (NC_readonly(ncp)) return NC_EPERM;
 
+    /* check if variable ID is valid*/
+    status = ncmpii_NC_lookupvar(ncp, varid, &varp);
+    if (status != NC_NOERR) return status;
+
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
         file_ver = 2;
@@ -789,10 +813,6 @@ ncmpi_rename_var(int         ncid,
     other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
     if (other != -1)
         return NC_ENAMEINUSE;
-
-    /* check if variable ID is valid*/
-    varp = ncmpii_NC_lookupvar(ncp, varid);
-    if (varp == NULL) return NC_ENOTVAR;
 
     /* if called in define mode, just update to the NC object */
     if (NC_indef(ncp)) {
@@ -856,6 +876,11 @@ ncmpi_inq_varoffset(int         ncid,
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
+
+    /* using NC_GLOBAL in varid is illegal for this API. See
+     * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
+     */
+    if (varid == NC_GLOBAL) return NC_EGLOBAL;
 
     varp = elem_NC_vararray(&ncp->vars, varid);
     if (varp == NULL) return NC_ENOTVAR;

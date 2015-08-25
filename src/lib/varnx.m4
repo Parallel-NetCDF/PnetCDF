@@ -865,10 +865,8 @@ ncmpii_getput_varnm(int                ncid,
     }
 
     /* check if varid is valid */
-    if (status == NC_NOERR) {
-        varp = ncmpii_NC_lookupvar(ncp, varid);
-        if (varp == NULL) status = NC_ENOTVAR;
-    }
+    if (status == NC_NOERR)
+        status = ncmpii_NC_lookupvar(ncp, varid, &varp);
 
     /* decode buftype */
     if (status == NC_NOERR) {

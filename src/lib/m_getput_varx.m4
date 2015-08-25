@@ -985,8 +985,12 @@ err_check:
         MPI_Offset *start, *count, buflen=0;
 
         req_ids[i] = NC_REQ_NULL;
-        varp = ncmpii_NC_lookupvar(ncp, varids[i]);
-        if (varp == NULL) continue; /* invalid varid, skip this request */
+
+        err = ncmpii_NC_lookupvar(ncp, varids[i], &varp);
+        if (err != NC_NOERR) {
+            if (status == NC_NOERR) status = err;
+            continue; /* invalid varid, skip this request */
+        }
 
         if (bufcounts != NULL) buflen = bufcounts[i];
 
