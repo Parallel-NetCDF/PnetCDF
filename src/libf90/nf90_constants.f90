@@ -5,7 +5,7 @@
 ! $Id$
 !
 ! This file is taken from netcdf_constants.f90 with changes for PnetCDF use
-!  
+!
 !
   !
   ! external netcdf data types:
@@ -28,7 +28,7 @@
     nf90_uint   = 9,            &
     nf90_int64  = 10,           &
     nf90_uint64 = 11
-                        
+
   !
   ! default fill values:
   !
@@ -54,8 +54,8 @@
     nf90_fill_real8  = nf90_fill_double,              &
     nf90_fill_uint64 = 1.8446744073709551614e+19
   integer (kind = EightByteInt), parameter, public :: &
-    nf90_fill_uint   = 4294967295_8,                  &
-    nf90_fill_int64  = -9223372036854775806_8
+    nf90_fill_uint   = 4294967295_EightByteInt,       &
+    nf90_fill_int64  = -9223372036854775806_EightByteInt
 
   !
   ! mode flags for opening and creating a netcdf dataset:
@@ -70,11 +70,11 @@
     nf90_64bit_offset = 512,    &
     nf90_64bit_data   = 32,     &
     nf90_lock         = 1024,   &
-    nf90_share        = 2048 
-  
+    nf90_share        = 2048
+
   integer, parameter, public ::  &
-    nf90_sizehint_default = 0,   & 
-    nf90_align_chunk      = -1 
+    nf90_sizehint_default = 0,   &
+    nf90_align_chunk      = -1
 
   !
   ! size argument for defining an unlimited dimension:
@@ -102,7 +102,7 @@
     nf90_max_vars     = 8192,   &
     nf90_max_name     = 256,    &
     nf90_max_var_dims = 1024
-  
+
   !
   ! error handling modes:
   !
@@ -184,34 +184,34 @@
 
   ! netCDF-4 error codes (copied from netCDF release)
   integer, parameter, public :: &
-    NF90_EHDFERR        = NF_EHDFERR       , & ! Error at HDF5 layer. 
-    NF90_ECANTREAD      = NF_ECANTREAD     , & ! Can't read. 
-    NF90_ECANTWRITE     = NF_ECANTWRITE    , & ! Can't write. 
-    NF90_ECANTCREATE    = NF_ECANTCREATE   , & ! Can't create. 
-    NF90_EFILEMETA      = NF_EFILEMETA     , & ! Problem with file metadata. 
-    NF90_EDIMMETA       = NF_EDIMMETA      , & ! Problem with dimension metadata. 
-    NF90_EATTMETA       = NF_EATTMETA      , & ! Problem with attribute metadata. 
-    NF90_EVARMETA       = NF_EVARMETA      , & ! Problem with variable metadata. 
-    NF90_ENOCOMPOUND    = NF_ENOCOMPOUND   , & ! Not a compound type. 
-    NF90_EATTEXISTS     = NF_EATTEXISTS    , & ! Attribute already exists. 
-    NF90_ENOTNC4        = NF_ENOTNC4       , & ! Attempting netcdf-4 operation on netcdf-3 file.   
-    NF90_ESTRICTNC3     = NF_ESTRICTNC3    , & ! Attempting netcdf-4 operation on strict nc3 netcdf-4 file.   
-    NF90_ENOTNC3        = NF_ENOTNC3       , & ! Attempting netcdf-3 operation on netcdf-4 file.   
-    NF90_ENOPAR         = NF_ENOPAR        , & ! Parallel operation on file opened for non-parallel access.   
-    NF90_EPARINIT       = NF_EPARINIT      , & ! Error initializing for parallel access.   
-    NF90_EBADGRPID      = NF_EBADGRPID     , & ! Bad group ID.   
-    NF90_EBADTYPID      = NF_EBADTYPID     , & ! Bad type ID.   
-    NF90_ETYPDEFINED    = NF_ETYPDEFINED   , & ! Type has already been defined and may not be edited. 
-    NF90_EBADFIELD      = NF_EBADFIELD     , & ! Bad field ID.   
-    NF90_EBADCLASS      = NF_EBADCLASS     , & ! Bad class.   
-    NF90_EMAPTYPE       = NF_EMAPTYPE      , & ! Mapped access for atomic types only.   
-    NF90_ELATEFILL      = NF_ELATEFILL     , & ! Attempt to define fill value when data already exists. 
+    NF90_EHDFERR        = NF_EHDFERR       , & ! Error at HDF5 layer.
+    NF90_ECANTREAD      = NF_ECANTREAD     , & ! Can't read.
+    NF90_ECANTWRITE     = NF_ECANTWRITE    , & ! Can't write.
+    NF90_ECANTCREATE    = NF_ECANTCREATE   , & ! Can't create.
+    NF90_EFILEMETA      = NF_EFILEMETA     , & ! Problem with file metadata.
+    NF90_EDIMMETA       = NF_EDIMMETA      , & ! Problem with dimension metadata.
+    NF90_EATTMETA       = NF_EATTMETA      , & ! Problem with attribute metadata.
+    NF90_EVARMETA       = NF_EVARMETA      , & ! Problem with variable metadata.
+    NF90_ENOCOMPOUND    = NF_ENOCOMPOUND   , & ! Not a compound type.
+    NF90_EATTEXISTS     = NF_EATTEXISTS    , & ! Attribute already exists.
+    NF90_ENOTNC4        = NF_ENOTNC4       , & ! Attempting netcdf-4 operation on netcdf-3 file.
+    NF90_ESTRICTNC3     = NF_ESTRICTNC3    , & ! Attempting netcdf-4 operation on strict nc3 netcdf-4 file.
+    NF90_ENOTNC3        = NF_ENOTNC3       , & ! Attempting netcdf-3 operation on netcdf-4 file.
+    NF90_ENOPAR         = NF_ENOPAR        , & ! Parallel operation on file opened for non-parallel access.
+    NF90_EPARINIT       = NF_EPARINIT      , & ! Error initializing for parallel access.
+    NF90_EBADGRPID      = NF_EBADGRPID     , & ! Bad group ID.
+    NF90_EBADTYPID      = NF_EBADTYPID     , & ! Bad type ID.
+    NF90_ETYPDEFINED    = NF_ETYPDEFINED   , & ! Type has already been defined and may not be edited.
+    NF90_EBADFIELD      = NF_EBADFIELD     , & ! Bad field ID.
+    NF90_EBADCLASS      = NF_EBADCLASS     , & ! Bad class.
+    NF90_EMAPTYPE       = NF_EMAPTYPE      , & ! Mapped access for atomic types only.
+    NF90_ELATEFILL      = NF_ELATEFILL     , & ! Attempt to define fill value when data already exists.
     NF90_ELATEDEF       = NF_ELATEDEF      , & ! Attempt to define var properties, like deflate, after enddef.
     NF90_EDIMSCALE      = NF_EDIMSCALE     , & ! Probem with HDF5 dimscales.
     NF90_ENOGRP         = NF_ENOGRP        , & ! No group found.
     NF90_ESTORAGE       = NF_ESTORAGE      , & ! Can't specify both contiguous and chunking.
     NF90_EBADCHUNK      = NF_EBADCHUNK     , & ! Bad chunksize.
-    NF90_ENOTBUILT      = NF_ENOTBUILT     , & ! Attempt to use feature that was not turned on when netCDF was built.
+    NF90_ENOTBUILT      = NF_ENOTBUILT     , & ! Attempt to use feature that was not turned on when netCDF was built
     NF90_EDISKLESS      = NF_EDISKLESS     , & ! Error in using diskless  access.
     NF90_ECANTEXTEND    = NF_ECANTEXTEND   , & ! Attempt to extend dataset during ind. I/O operation.
     NF90_EMPI           = NF_EMPI              ! MPI operation failed.
@@ -251,9 +251,12 @@
       NF90_EQUOTA                   = NF_EQUOTA                   , & ! Quota exceeded
       NF90_ENULLSTART               = NF_ENULLSTART               , & ! argument start is a NULL pointer
       NF90_ENULLCOUNT               = NF_ENULLCOUNT               , & ! argument count is a NULL pointer
-      NF90_EINVAL_CMODE             = NF_EINVAL_CMODE             , & ! Invalid file create mode, cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA
-      NF90_ETYPESIZE                = NF_ETYPESIZE                , & ! MPI derived data type size error (bigger than the variable size)
-      NF90_ETYPE_MISMATCH           = NF_ETYPE_MISMATCH           , & ! element type of the MPI derived data type mismatches the variable type
+      NF90_EINVAL_CMODE             = NF_EINVAL_CMODE             , & ! Invalid file create mode, cannot have both
+                                                                      ! NC_64BIT_OFFSET & NC_64BIT_DATA
+      NF90_ETYPESIZE                = NF_ETYPESIZE                , & ! MPI derived data type size error (bigger than the
+                                                                      ! variable size)
+      NF90_ETYPE_MISMATCH           = NF_ETYPE_MISMATCH           , & ! element type of the MPI derived data type mismatches
+                                                                      ! the variable type
       NF90_ETYPESIZE_MISMATCH       = NF_ETYPESIZE_MISMATCH       , & ! file type size mismatches buffer type size
       NF90_ESTRICTCDF2              = NF_ESTRICTCDF2              , & ! Attempting CDF-5 operation on CDF-2 file
       NF90_ENOTRECVAR               = NF_ENOTRECVAR               , & ! Attempting operation only for record variables
