@@ -818,7 +818,6 @@ AC_DEFUN(UD_CHECK_CTYPE_FORTRAN,
            integer status, sub
            data values /-1, -2, -3, -4/
            status = sub(values)
-           call exit(status)
            end
 EOF
     ac_cv_ctype_fortran=no
@@ -1168,7 +1167,7 @@ dnl steal from autoconf 2.69
 # Cray: -module dir, -p dir (-J dir for writing)
 #       -e m is needed to enable writing .mod files at all
 # Compaq: -Idir
-# NAGWare: -I dir
+# NAGWare: -I dir (-mdir dir for writing)
 # PathScale: -I dir  (but -module dir is looked at first)
 # Portland: -module dir (first -module also names dir for writing)
 # Fujitsu: -Am -Idir (-Mdir for writing is searched first, then '.', then -I)
@@ -1189,7 +1188,7 @@ AC_COMPILE_IFELSE([[
   [cd ..
    ac_fc_module_flag_FCFLAGS_save=$FCFLAGS
    # Flag ordering is significant for gfortran and Sun.
-   for ac_flag in -M -I '-I ' '-M ' -p '-mod ' '-module ' '-Am -I'; do
+   for ac_flag in -M -I '-I ' '-M ' -p '-mod ' '-mdir ' '-module ' '-Am -I'; do
      # Add the flag twice to prevent matching an output flag.
      FCFLAGS="$ac_fc_module_flag_FCFLAGS_save ${ac_flag}conftest.dir ${ac_flag}conftest.dir"
      AC_COMPILE_IFELSE([[
@@ -1244,7 +1243,7 @@ ac_fc_module_output_flag_FCFLAGS_save=$FCFLAGS
 # Flag ordering is significant: put flags late which some compilers use
 # for the search path.
 for ac_flag in -J '-J ' -fmod= -moddir= +moddir= -qmoddir= '-mod ' \
-	      '-module ' -M '-Am -M' '-e m -J '; do
+	      '-mdir ' '-module ' -M '-Am -M' '-e m -J '; do
   FCFLAGS="$ac_fc_module_output_flag_FCFLAGS_save ${ac_flag}sub"
   AC_COMPILE_IFELSE([[
       module conftest_module
