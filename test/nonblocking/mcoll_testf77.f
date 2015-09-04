@@ -465,7 +465,7 @@
       integer ierr
       integer ii
               
-      real*4  delmax, delmin, delta
+      real*4  delmax(1), delmin(1), delta
       real*4  diff
               
       real*4  wr(5)
@@ -499,9 +499,9 @@
       call MPI_Allreduce(ws(5), delmin, 1, MPI_REAL, MPI_MIN,
      +                   comm_cart, ierr)
 
-      diff   = Sqrt (wr(1) / wr(2))         ! normalized error
-      delmax = Sqrt (wr(3) * delmax/wr(2))  ! normalized max difference
-      delmin = Sqrt (wr(3) * delmin/wr(2))  ! normalized min difference
+      diff      = Sqrt (wr(1) / wr(2))         ! normalized error
+      delmax(1) = Sqrt (wr(3) * delmax(1)/wr(2))  ! normalized max difference
+      delmin(1) = Sqrt (wr(3) * delmin(1)/wr(2))  ! normalized min difference
 
 
       Return
