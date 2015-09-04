@@ -27,8 +27,8 @@
 !     Parameter declarations.
 !     -----------------------
 
-      integer NREADS, NWRITES 
-      parameter (NREADS = 5, NWRITES = 5 )
+      integer NWRITES 
+      parameter (NWRITES = 5 )
       ! number of read samples
       ! number of write samples
 
