@@ -537,15 +537,20 @@ if test "x${enable_fortran}" = xyes ; then
 
    UD_FC_CONSTANT_MODIFIER
    UD_MSG_DEBUG([ac_cv_fc_constant_modifier=$ac_cv_fc_constant_modifier])
-   if test "x${ac_cv_fc_constant_modifier}" = xno ; then
+   PNF_INT8_MODIFIER=""
+   if test "x${ac_cv_fc_constant_modifier}" = xnone ; then
       PNF_FILL_UINT=4294967295
       PNF_FILL_INT64=-9223372036854775806
       PNF_FILL_UINT64=18446744073709551614
    else
-      PNF_FILL_UINT=4294967295_8
-      PNF_FILL_INT64=-9223372036854775806_8
-      PNF_FILL_UINT64=18446744073709551614_8
+      if test "x${ac_cv_fc_constant_modifier}" = xEightByteInt ; then
+         PNF_INT8_MODIFIER="      integer, parameter :: EightByteInt = selected_int_kind(18)"
+      fi
+      PNF_FILL_UINT=4294967295_${ac_cv_fc_constant_modifier}
+      PNF_FILL_INT64=-9223372036854775806_${ac_cv_fc_constant_modifier}
+      PNF_FILL_UINT64=18446744073709551614_${ac_cv_fc_constant_modifier}
    fi
+   AC_SUBST(PNF_INT8_MODIFIER)
    AC_SUBST(PNF_FILL_UINT)
    AC_SUBST(PNF_FILL_INT64)
    AC_SUBST(PNF_FILL_UINT64)
@@ -1164,18 +1169,18 @@ echo \
               Build Fortran APIs               - ${enable_fortran}
               Build nonblocking APIs           - ${enable_nonblocking}
               Build CDF-5 support              - ${enable_cdf5}
-	      Build subfiling support          - ${enable_subfiling}"
+              Build subfiling support          - ${enable_subfiling}"
 if test "x${ac_cv_c_bigendian}" = xno  && (test "x${in_place_swap}" = xno) ; then
   echo "\
-	      Memory in-place byte swap        - disabled"
+              Memory in-place byte swap        - disabled"
 fi
 if test "x${large_file_test}" = xyes; then
   echo "\
-	      Testing large file/variable I/O  - enabled"
+              Testing large file/variable I/O  - enabled"
 fi
 if test "x${debug}" = xyes; then
   echo "\
-	      PnetCDF internal debug mode      - enabled"
+              PnetCDF internal debug mode      - enabled"
 fi
 
 echo "\
