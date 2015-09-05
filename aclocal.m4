@@ -1496,15 +1496,35 @@ dnl
 AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
     AC_CACHE_CHECK([Fortran compiler treating constant modifier], [ac_cv_fc_constant_modifier],
     [AC_LANG_PUSH([Fortran 77])
-        ac_cv_fc_constant_modifier=no
+        ac_cv_fc_constant_modifier=none
         AC_COMPILE_IFELSE([[
+         program main
+         integer*8  nf_fill_uint
+         integer*8  nf_fill_int64
+         parameter (nf_fill_uint  = 4294967295)
+         parameter (nf_fill_int64 = -9223372036854775806) 
+         end program]],
+        [],
+        [AC_COMPILE_IFELSE([[
          program main
          integer*8  nf_fill_uint
          integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295_8)
          parameter (nf_fill_int64 = -9223372036854775806_8) 
          end program]],
-        [ac_cv_fc_constant_modifier=yes])
+        [ac_cv_fc_constant_modifier=8],
+        [AC_COMPILE_IFELSE([[
+         program main
+         integer, parameter :: EightByteInt = selected_int_kind(18)
+         integer*8  nf_fill_uint
+         integer*8  nf_fill_int64
+         parameter (nf_fill_uint  = 4294967295_EightByteInt)
+         parameter (nf_fill_int64 = -9223372036854775806_EightByteInt) 
+         end program]],
+        [ac_cv_fc_constant_modifier=EightByteInt],
+        [AC_MSG_ERROR[no appropriate modifier]])
+        ])
+        ])
     ])
     AC_LANG_POP([Fortran 77])
 ])
