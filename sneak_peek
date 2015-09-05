@@ -48,6 +48,8 @@ This is essentially a placeholder for the next release note ...
       MPICC/MPICXX/MPIF77/MPIF90.
     * Enforce netCDF convention on error code priority: NC_ECHAR trumps
       NC_EINVALCOORDS, NC_EEDGE, and NC_ESTRIDE.
+    * Return error code NC_EGLOBAL instead of NC_ENOTVAR for APIs where using
+      NC_GLOBAL as the variable ID argument is prohibited.
 
   o Bug fixes
     * Fix Fortran 77 constants nf_fill_uint and nf_fill_int64 (thanks Jim
