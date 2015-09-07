@@ -30,9 +30,9 @@
         "" ;
     data:
 
-         v1 = 0, 16777216, 33554432, 50331648 ;
+         v1 = 0, 1, 2, 3 ;
 
-         v2 = 0, 16777216, 33554432, 50331648 ;
+         v2 = 0, 1, 2, 3 ;
     }
 */
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     int ret, ncfile, nprocs, rank, dimid, varid1, varid2, ndims=1;
     MPI_Offset start, count=1;
     char buf[13] = "Hello World\n";
-    int data;
+    int data1, data2;
     int requests[2], statuses[2];
 
     MPI_Init(&argc, &argv);
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     ret = ncmpi_enddef(ncfile);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-    start=rank, count=1, data=rank;
+    start=rank, count=1, data1=rank, data2=rank;
 
     /* in this simple example every process writes its rank to two 1d variables */
 
@@ -102,11 +102,11 @@ int main(int argc, char **argv) {
     /* furthermore, we use the non-blocking interface to essentially
      * schedule the two write operations.  No i/o actually happens here,
      * which is why these routines do not need to be collective.   */
-    ret = ncmpi_iput_vara(ncfile, varid1, &start, &count, &data, count,
+    ret = ncmpi_iput_vara(ncfile, varid1, &start, &count, &data1, count,
             MPI_INT, &requests[0]);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
-    ret = ncmpi_iput_vara(ncfile, varid2, &start, &count, &data, count, 
+    ret = ncmpi_iput_vara(ncfile, varid2, &start, &count, &data2, count, 
             MPI_INT, &requests[1]);
     if (ret != NC_NOERR) handle_error(ret, __LINE__);
 
