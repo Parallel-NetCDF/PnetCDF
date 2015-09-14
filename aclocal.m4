@@ -1496,7 +1496,6 @@ dnl
 AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
     AC_CACHE_CHECK([Fortran compiler treating constant modifier], [ac_cv_fc_constant_modifier],
     [AC_LANG_PUSH([Fortran 77])
-        ac_cv_fc_constant_modifier=none
         AC_COMPILE_IFELSE([[
          program main
          integer*8  nf_fill_uint
@@ -1504,7 +1503,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          parameter (nf_fill_uint  = 4294967295)
          parameter (nf_fill_int64 = -9223372036854775806) 
          end program]],
-        [],
+        [ac_cv_fc_constant_modifier=none],
         [AC_COMPILE_IFELSE([[
          program main
          integer*8  nf_fill_uint
@@ -1522,7 +1521,7 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          parameter (nf_fill_int64 = -9223372036854775806_EightByteInt) 
          end program]],
         [ac_cv_fc_constant_modifier=EightByteInt],
-        [AC_MSG_ERROR[no appropriate modifier]])
+        [AC_MSG_ERROR([no appropriate modifier found])])
         ])
         ])
     ])
