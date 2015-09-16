@@ -14,7 +14,7 @@ include ../../macros.make
 
 # F90FLAGS = @FC_DEFINE@MPI_OFFSET_KIND=@SIZEOF_MPI_OFFSET@
 
-INCLUDES = -I. -I$(srcdir)/../lib -I../lib
+INCLUDES = -I. -I$(srcdir) -I$(srcdir)/../lib -I../lib
 
 LIBRARY = ../lib/libpnetcdf.a
 
