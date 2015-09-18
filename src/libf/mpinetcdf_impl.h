@@ -13,7 +13,7 @@
 #endif
 
 #include <stdlib.h>
-#include "pnetcdf.h"
+#include <pnetcdf.h>
 
 /* Support Windows extension to specify calling convention */
 #ifdef USE_FORT_STDCALL
