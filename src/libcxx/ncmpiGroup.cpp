@@ -16,7 +16,7 @@
 #include "ncmpiUint64.h"
 #include "ncmpiFloat.h"
 #include "ncmpiDouble.h"
-#include <ncmpiException.h>
+#include "ncmpiException.h"
 #include "ncmpiCheck.h"
 using namespace std;
 using namespace PnetCDF::exceptions;
