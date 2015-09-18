@@ -13,7 +13,11 @@ include ../../../macros.make
 
 NCGEN		= ../ncmpigen/ncmpigen
 
-INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
+# For VPATH build:
+# Add ../../lib into search path because ../../lib/pnetcdf.h is created in
+# the build directory at configure time and is included by C files here.
+INCLUDES	= -I../../lib
+
 LDFLAGS        += -L../../lib
 LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
 
