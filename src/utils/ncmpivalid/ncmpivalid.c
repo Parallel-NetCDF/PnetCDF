@@ -21,9 +21,8 @@
 
 #include <mpi.h>
 
-#include "nc.h"
-#include "ncx.h"
-#include "macro.h"
+#include <ncx.h>
+#include <macro.h>
 
 /*
  * "magic number" at beginning of file: 0x43444601 (big endian) 
