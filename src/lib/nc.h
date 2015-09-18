@@ -16,6 +16,32 @@
 #include "ncio.h"       /* ncio */
 #include "fbits.h"
 
+/* define MPI_OFFSET if not defined */
+#ifndef HAVE_MPI_OFFSET_DATATYPE
+    #ifdef HAVE_MPI_LONG_LONG_INT
+        #define MPI_OFFSET MPI_LONG_LONG_INT
+    #else
+        #define MPI_OFFSET MPI_INT
+    #endif
+#endif
+
+enum API_KIND {
+    API_VARD, /* do not check start and count, no flexible APIs */
+    API_VARN, /* do not check start and count */
+    API_VAR,  /* do not check start and count */
+    API_VAR1, /* check start */
+    API_VARA, /* check start and count */
+    API_VARS, /* check start and count */
+    API_VARM  /* check start and count */
+};
+
+#define WRITE_REQ 0
+#define READ_REQ  1
+
+#define INDEP_IO 0
+#define COLL_IO  1
+#define NONBLOCKING_IO  -1
+
 /* C macros for TRACE MPI calls */
 #ifdef PNETCDF_TRACE_MPI_COMM
 #define TRACE_COMM(x) printf("TRACE-MPI-COMM: FILE %s FUNC %s() LINE %d calling %s()\n",__FILE__,__func__,__LINE__,#x),mpireturn=x
@@ -29,15 +55,6 @@
 #define TRACE_IO(x) mpireturn=x
 #endif
 
-
-/* define MPI_OFFSET if not defined */
-#ifndef HAVE_MPI_OFFSET_DATATYPE
-    #ifdef HAVE_MPI_LONG_LONG_INT
-        #define MPI_OFFSET MPI_LONG_LONG_INT
-    #else
-        #define MPI_OFFSET MPI_INT
-    #endif
-#endif
 
 /* XXX: this seems really low.  do we end up spending a ton of time mallocing?
  * could we reduce that by increasing this to something 21st century? */
@@ -516,7 +533,7 @@ struct NC {
 };
 
 #define NC_readonly(ncp) \
-        (!fIsSet(ncp->nciop->ioflags, NC_WRITE))
+        (!fIsSet((ncp)->nciop->ioflags, NC_WRITE))
 
 #define NC_IsNew(ncp) \
         fIsSet((ncp)->flags, NC_CREAT)
@@ -561,7 +578,7 @@ struct NC {
         {if((nrecs) > (ncp)->numrecs) ((ncp)->numrecs = (nrecs));}
 
 #define ErrIsHeaderDiff(err) \
-        (NC_EMULTIDEFINE_FIRST >= err && err >= NC_EMULTIDEFINE_LAST)
+        (NC_EMULTIDEFINE_FIRST >= (err) && (err) >= NC_EMULTIDEFINE_LAST)
 
 #define IsPrimityMPIType(buftype) (buftype == MPI_FLOAT          || \
                                    buftype == MPI_DOUBLE         || \
@@ -869,13 +886,20 @@ ncmpii_create_imaptype(NC_var *varp, const MPI_Offset *count,
                        MPI_Datatype *imaptype);
 
 extern int
-ncmpii_calc_datatype_elems(NC_var *varp, const MPI_Offset *count,
-                           MPI_Datatype buftype, MPI_Datatype *ptype,
-                           MPI_Offset *bufcount, MPI_Offset *bnelems,
-                           MPI_Offset *nbytes, int *el_size,
-                           int *buftype_is_contig);
+ncmpii_calc_datatype_elems(NC *ncp, NC_var *varp, const MPI_Offset *start,
+                           const MPI_Offset *count, const MPI_Offset *stride,
+                           int rw_flag, MPI_Datatype buftype,
+                           MPI_Datatype *ptype, MPI_Offset *bufcount,
+                           MPI_Offset *bnelems, MPI_Offset *nbytes,
+                           int *el_size, int *buftype_is_contig);
 
 extern int
 ncmpii_fill_vars(NC *ncp);
+
+extern int
+ncmpii_sanity_check(int ncid, int varid, const MPI_Offset *start,
+                    const MPI_Offset *count, MPI_Offset bufcount,
+                    enum API_KIND api, int isFlexAPI, int rw_flag,
+                    int io_method, NC **ncp, NC_var **varp);
 
 #endif /* _NC_H_ */

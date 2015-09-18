@@ -10,7 +10,7 @@ dnl
 /* $Id$ */
 
 #if HAVE_CONFIG_H
-# include <ncconfig.h>
+# include "ncconfig.h"
 #endif
 
 #include <stdio.h>
@@ -32,51 +32,69 @@ dnl
 
 
 /*----< ncmpii_calc_datatype_elems() >---------------------------------------*/
-/* calculate the followings:
+/* check NC_ECHAR and obtain the following metadata about buftype:
  * ptype: element data type (MPI primitive type) in buftype
- * bufcount: if it is -1, it means this is called from a high-level API,
- *     i.e. buftype is an MPI primitive data type. We recalculate it to
- *     match with count[].
+ * bufcount: If it is -1, then this is called from a high-level API and in
+ * this case buftype will be an MPI primitive data type. If not, then this
+ * is called from a flexible API. In that case, we recalculate bufcount to
+ * match with count[].
  * bnelems: number of ptypes in user buffer
  * nbytes: number of bytes (in external data representation) to read/write
- *     from/to the file
+ * from/to the file
  * el_size: size of ptype
  * buftype_is_contig: whether buftype is contiguous
  */
 int
-ncmpii_calc_datatype_elems(NC_var             *varp,
-                           const MPI_Offset   *count,
-                           MPI_Datatype        buftype,
-                           MPI_Datatype       *ptype,
-                           MPI_Offset         *bufcount,  /* out */
-                           MPI_Offset         *bnelems,   /* out */
-                           MPI_Offset         *nbytes,    /* out */
-                           int                *el_size,   /* out */
-                           int                *buftype_is_contig) /* out */
+ncmpii_calc_datatype_elems(NC               *ncp,
+                           NC_var           *varp,
+                           const MPI_Offset *start,
+                           const MPI_Offset *count,
+                           const MPI_Offset *stride,
+                           int               rw_flag,
+                           MPI_Datatype      buftype,
+                           MPI_Datatype     *ptype,             /* out */
+                           MPI_Offset       *bufcount,          /* out */
+                           MPI_Offset       *bnelems,           /* out */
+                           MPI_Offset       *nbytes,            /* out */
+                           int              *el_size,           /* out */
+                           int              *buftype_is_contig) /* out */
 {
-    int i, err=NC_NOERR, enegativecnt=NC_NOERR;
+    int i, err=NC_NOERR;
     MPI_Offset fnelems;
+
+    /* In netCDF, error code reporting priority is NC_ECHAR, NC_EINVALCOORDS,
+     * NC_EEDGE, NC_ESTRIDE
+     */
+    if (*bufcount == -1) { /* same as if (IsPrimityMPIType(buftype)) */
+        /* this subroutine is called from a high-level API */
+        err = NCMPII_ECHAR(varp->type, buftype);
+        if (err != NC_NOERR) return err;
+    }
+    else if (buftype != MPI_DATATYPE_NULL) {
+        /* This subroutine is called from a flexible API */
+        int isderived;
+        err = ncmpii_dtype_decode(buftype, ptype, el_size, bnelems,
+                                  &isderived, buftype_is_contig);
+        if (err != NC_NOERR) return err;
+
+        err = NCMPII_ECHAR(varp->type, *ptype);
+        if (err != NC_NOERR) return err;
+    }
+
+    /* check whether start, count, and stride are valid */
+    err = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
+    if (err != NC_NOERR) return err;
 
     /* fnelems is the total number of nc_type elements calculated from
      * count[]. count[] is the access count to the variable defined in
      * the netCDF file.
      */
     fnelems = 1;
-    for (i=0; i<varp->ndims; i++) {
-        if (count[i] < 0) /* no negative count[] */
-            /* Do not return now, because netCDF reports NC_ECHAR first */
-            enegativecnt = NC_ENEGATIVECNT;
+    for (i=0; i<varp->ndims; i++)
         fnelems *= count[i];
-    }
 
     if (*bufcount == -1) { /* if (IsPrimityMPIType(buftype)) */
         /* this subroutine is called from a high-level API */
-        err = NCMPII_ECHAR(varp->type, buftype);
-        if (err != NC_NOERR) return err;
-
-        /* In netCDF, NC_ECHAR, if detected, is reported first */
-        if (enegativecnt != NC_NOERR) return NC_ENEGATIVECNT;
-
         *bnelems = *bufcount = fnelems;
         *ptype = buftype;
         MPI_Type_size(buftype, el_size); /* buffer element size */
@@ -85,12 +103,10 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
         *nbytes = *bnelems * varp->xsz; /* varp->xsz is external element size */
     }
     else if (buftype == MPI_DATATYPE_NULL) {
-        /* In netCDF, NC_ECHAR, if detected, is reported first */
-        if (enegativecnt != NC_NOERR) return NC_ENEGATIVECNT;
-
-        /* In this case, bufcount is set to match count[], and buf's data type
-         * to match the data type of variable defined in the file - no data
-         * conversion will be done.
+        /* This is called from a flexible API and buftype is set by user
+         * to MPI_DATATYPE_NULL. In this case, bufcount is set to match
+         * count[], and buf's data type to match the data type of variable
+         * defined in the file - no data conversion will be done.
          */
         *bnelems = *bufcount = fnelems;
         *ptype = buftype = ncmpii_nc2mpitype(varp->type);
@@ -100,21 +116,7 @@ ncmpii_calc_datatype_elems(NC_var             *varp,
         *nbytes = *bnelems * varp->xsz;
     }
     else {
-        /* find the ptype (primitive MPI data type) of buftype
-         * el_size is the element size of ptype
-         * bnelems is the total number of ptype elements in buftype
-         * nbytes is the amount of read/write in bytes
-         */
-        int isderived;
-        err = ncmpii_dtype_decode(buftype, ptype, el_size, bnelems,
-                                  &isderived, buftype_is_contig);
-        if (err != NC_NOERR) return err;
-
-        err = NCMPII_ECHAR(varp->type, *ptype);
-        if (err != NC_NOERR) return err;
-
-        /* In netCDF, NC_ECHAR, if detected, is reported first */
-        if (enegativecnt != NC_NOERR) return NC_ENEGATIVECNT;
+        /* This is called from a flexible API */
 
         /* make bnelems the number of ptype in the whole user buf */
         *bnelems *= *bufcount;
@@ -296,33 +298,30 @@ ncmpii_getput_varm(NC               *ncp,
     }
 #endif
 
-    /* calculate the followings:
+    /* check NC_ECHAR error and calculate the followings:
      * ptype: element data type (MPI primitive type) in buftype
-     * bufcount: if it is -1, it means this is called from a high-level API,
-     *     i.e. buftype is an MPI primitive data type. We recalculate it to
-     *     match with count[].
+     * bufcount: If it is -1, then this is called from a high-level API and in
+     * this case buftype will be an MPI primitive data type. If not, then this
+     * is called from a flexible API. In that case, we recalculate bufcount to
+     * match with count[].
      * bnelems: number of ptypes in user buffer
      * nbytes: number of bytes (in external data representation) to read/write
-     *     from/to the file
+     * from/to the file
      * el_size: size of ptype
      * buftype_is_contig: whether buftype is contiguous
      */
-    err = ncmpii_calc_datatype_elems(varp, count, buftype, &ptype, &bufcount,
-                                     &bnelems, &nbytes, &el_size,
-                                     &buftype_is_contig);
+    err = ncmpii_calc_datatype_elems(ncp, varp, start, count, stride, rw_flag,
+                                     buftype, &ptype, &bufcount, &bnelems,
+                                     &nbytes, &el_size, &buftype_is_contig);
     if (err == NC_EIOMISMATCH) warning = err; 
     else if (err != NC_NOERR) goto err_check;
 
-    /* because nbytes will be used for the argument "cout" in MPI-IO
+    /* because nbytes will be used as the argument "cout" in MPI-IO
      * read/write calls and the argument "count" is of type int */
     if (nbytes != (int)nbytes) {
         err = NC_EINTOVERFLOW;
         goto err_check;
     }
-
-    /* check whether start, count, and stride are valid */
-    err = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
-    if (err != NC_NOERR) goto err_check;
 
     if (nbytes == 0) /* this process has nothing to read/write */
         goto err_check;
@@ -665,12 +664,13 @@ ncmpi_$1_var$2(int                ncid,
     NC_var     *varp=NULL;
     MPI_Offset *start, *count;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
+                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     GET_FULL_DIMENSIONS(start, count)
 
-    /* $1_var is a special case of $1_vars */
+    /* $1_var is a special case of $1_varm */
     status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
                                 bufcount, buftype, ReadWrite($1),
                                 CollIndep($2));
@@ -701,10 +701,13 @@ ncmpi_$1_var_$3$2(int              ncid,
     NC_var     *varp=NULL;
     MPI_Offset *start, *count;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
+                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
+
     GET_FULL_DIMENSIONS(start, count)
 
-    /* $1_var is a special case of $1_vars */
+    /* $1_var is a special case of $1_varm */
     status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
                                 -1, $5, ReadWrite($1), CollIndep($2));
     if (varp->ndims > 0) NCI_Free(start);
@@ -783,9 +786,9 @@ ncmpi_$1_var1$2(int                ncid,
     NC_var     *varp=NULL;
     MPI_Offset *count;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
+                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
 
@@ -819,12 +822,13 @@ ncmpi_$1_var1_$3$2(int               ncid,
     NC_var     *varp=NULL;
     MPI_Offset *count;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
+                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
 
-    /* $1_var1 is a special case of $1_vars */
+    /* $1_var1 is a special case of $1_varm */
     status = ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
                                 -1, $5, ReadWrite($1), CollIndep($2));
     if (varp->ndims > 0) NCI_Free(count);
@@ -903,12 +907,11 @@ ncmpi_$1_vara$2(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
+                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
-    /* $1_vara is a special case of $1_vars */
+    /* $1_vara is a special case of $1_varm */
     return ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)buf,
                               bufcount, buftype, ReadWrite($1), CollIndep($2));
 }
@@ -937,11 +940,11 @@ ncmpi_$1_vara_$3$2(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
+                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
-    /* $1_vara is a special case of $1_vars */
+    /* $1_vara is a special case of $1_varm */
     return ncmpii_getput_varm(ncp, varp, start, count, NULL, NULL, (void*)op,
                               -1, $5, ReadWrite($1), CollIndep($2));
 }
@@ -1019,10 +1022,9 @@ ncmpi_$1_vars$2(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
+                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)buf,
                               bufcount, buftype, ReadWrite($1), CollIndep($2));
@@ -1053,9 +1055,9 @@ ncmpi_$1_vars_$3$2(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
+                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, NULL, (void*)op,
                               -1, $5, ReadWrite($1), CollIndep($2));
@@ -1135,10 +1137,9 @@ ncmpi_$1_varm$2(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
+                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap,
                               (void*)buf, bufcount, buftype, ReadWrite($1),
@@ -1171,9 +1172,9 @@ ncmpi_$1_varm_$3$2(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), CollIndep($2), status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
+                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varm(ncp, varp, start, count, stride, imap, (void*)op,
                               -1, $5, ReadWrite($1), CollIndep($2));

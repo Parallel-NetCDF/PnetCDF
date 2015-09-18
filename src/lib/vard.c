@@ -5,7 +5,7 @@
 /* $Id$ */
 
 #if HAVE_CONFIG_H
-# include <ncconfig.h>
+# include "ncconfig.h"
 #endif
 
 #include <stdio.h>
@@ -332,7 +332,9 @@ ncmpi_get_vard(int           ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, READ_REQ, INDEP_IO, status)
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
+                                 1, READ_REQ, INDEP_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
                               READ_REQ, INDEP_IO);
@@ -351,7 +353,9 @@ ncmpi_get_vard_all(int           ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, READ_REQ, COLL_IO, status)
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
+                                 1, READ_REQ, COLL_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
                               READ_REQ, COLL_IO);
@@ -370,7 +374,9 @@ ncmpi_put_vard(int           ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, INDEP_IO, status)
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
+                                 1, WRITE_REQ, INDEP_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,
                               buftype, WRITE_REQ, INDEP_IO);
@@ -389,7 +395,9 @@ ncmpi_put_vard_all(int           ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    SANITY_CHECK(ncid, ncp, varp, WRITE_REQ, COLL_IO, status)
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
+                                 1, WRITE_REQ, COLL_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,
                               buftype, WRITE_REQ, COLL_IO);
