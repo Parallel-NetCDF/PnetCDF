@@ -10,7 +10,7 @@ dnl
 /* $Id$ */
 
 #if HAVE_CONFIG_H
-# include <ncconfig.h>
+# include "ncconfig.h"
 #endif
 
 #include <stdio.h>
@@ -46,8 +46,8 @@ dnl
  */
 
 static int
-ncmpii_getput_varn(int               ncid,
-                   int               varid,
+ncmpii_getput_varn(NC               *ncp,
+                   NC_var           *varp,
                    int               num,
                    MPI_Offset* const starts[],  /* [num][varp->ndims] */
                    MPI_Offset* const counts[],  /* [num][varp->ndims] */
@@ -77,7 +77,15 @@ ncmpi_$1_varn$2(int                ncid,
                 MPI_Offset         bufcount,
                 MPI_Datatype       buftype)
 {
-    return ncmpii_getput_varn(ncid, varid, num, starts, counts, (void*)buf,
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARN,
+                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
+
+    return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,
                               bufcount, buftype, ReadWrite($1), CollIndep($2));
 }
 ')dnl
@@ -102,8 +110,16 @@ ncmpi_$1_varn_$3$2(int                ncid,
                    MPI_Offset* const  counts[],
                    BufConst($1) $4   *buf)
 {
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VARN,
+                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+    if (status != NC_NOERR) return status;
+
     /* set bufcount to -1 indicating non-flexible API */
-    return ncmpii_getput_varn(ncid, varid, num, starts, counts, (void*)buf,
+    return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,
                               -1, $5, ReadWrite($1), CollIndep($2));
 }
 ')dnl
@@ -163,8 +179,8 @@ VARN(get, _all, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 /*----< ncmpii_getput_varn() >------------------------------------------------*/
 static int
-ncmpii_getput_varn(int               ncid,
-                   int               varid,
+ncmpii_getput_varn(NC               *ncp,
+                   NC_var           *varp,
                    int               num,
                    MPI_Offset* const starts[],  /* [num][varp->ndims] */
                    MPI_Offset* const counts[],  /* [num][varp->ndims] */
@@ -180,12 +196,6 @@ ncmpii_getput_varn(int               ncid,
     char *bufp;
     MPI_Offset packsize=0, **_counts=NULL;
     MPI_Datatype ptype;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    /* check if ncid is valid, if yes, get varp from varid */
-    SANITY_CHECK(ncid, ncp, varp, rw_flag, io_method, status)
-    if (status != NC_NOERR) goto err_check;
 
     /* check for zero-size request */
     if (num == 0 || bufcount == 0) goto err_check;
@@ -201,17 +211,21 @@ ncmpii_getput_varn(int               ncid,
          * counts[]. Note buf's data type must match the data type of
          * variable defined in the file - no data conversion will be done.
          */
-        bufcount = 0;
-        for (j=0; j<num; j++) {
-            MPI_Offset bufcount_j = 1;
-            for (i=0; i<varp->ndims; i++) {
-                if (counts[j][i] < 0) { /* no negative counts[][] */
-                    err = NC_ENEGATIVECNT;
-                    goto err_check;
+        if (counts == NULL)
+            bufcount = 1;
+        else {
+            bufcount = 0;
+            for (j=0; j<num; j++) {
+                MPI_Offset bufcount_j = 1;
+                for (i=0; i<varp->ndims; i++) {
+                    if (counts[j][i] < 0) { /* no negative counts[][] */
+                        err = NC_ENEGATIVECNT;
+                        goto err_check;
+                    }
+                    bufcount_j *= counts[j][i];
                 }
-                bufcount_j *= counts[j][i];
+                bufcount += bufcount_j;
             }
-            bufcount += bufcount_j;
         }
         /* assign buftype match with the variable's data type */
         buftype = ncmpii_nc2mpitype(varp->type);
@@ -332,13 +346,14 @@ err_check:
            calls in wait_all */
         num = 0;
 
-    if (io_method == COLL_IO)
-        err = ncmpi_wait_all(ncid, num, &req_id, &st);
-    else
-        err = ncmpi_wait(ncid, num, &req_id, &st);
+#ifdef ENABLE_NONBLOCKING
+    err = ncmpii_wait(ncp, io_method, num, &req_id, &st);
+#else
+    err = ncmpii_wait(ncp, INDEP_IO, num, &req_id, &st);
+#endif
 
     /* unpack to user buf, if buftype is contiguous */
-    if (rw_flag == READ_REQ && free_cbuf) {
+    if (status == NC_NOERR && rw_flag == READ_REQ && free_cbuf) {
         position = 0;
         MPI_Unpack(cbuf, (int)packsize, &position, buf, (int)bufcount, buftype,
                    MPI_COMM_SELF);

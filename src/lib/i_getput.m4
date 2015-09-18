@@ -10,7 +10,7 @@ dnl
 /* $Id$ */
 
 #if HAVE_CONFIG_H
-# include <ncconfig.h>
+# include "ncconfig.h"
 #endif
 
 #include <stdio.h>
@@ -53,8 +53,9 @@ ncmpi_i$1_var(int                ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
+                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     GET_FULL_DIMENSIONS(start, count)
 
@@ -88,7 +89,10 @@ ncmpi_i$1_var_$2(int              ncid,
     MPI_Offset *start, *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
+
     GET_FULL_DIMENSIONS(start, count)
 
     /* i$1_var is a special case of i$1_varm */
@@ -148,9 +152,9 @@ ncmpi_i$1_var1(int                ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
+                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
 
@@ -184,8 +188,9 @@ ncmpi_i$1_var1_$2(int               ncid,
     MPI_Offset *count;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
+    status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     GET_ONE_COUNT(count)
 
@@ -245,10 +250,9 @@ ncmpi_i$1_vara(int                ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
+                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, buftype, reqid,
@@ -278,9 +282,9 @@ ncmpi_i$1_vara_$2(int               ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -336,10 +340,9 @@ ncmpi_i$1_vars(int                ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
+                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, buftype, reqid,
@@ -370,9 +373,9 @@ ncmpi_i$1_vars_$2(int               ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -441,10 +444,9 @@ ncmpi_i$1_varm(int                ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
+                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, bufcount, buftype, reqid,
@@ -476,9 +478,9 @@ ncmpi_i$1_varm_$2(int               ncid,
     NC_var *varp=NULL;
 
     *reqid = NC_REQ_NULL;
-    SANITY_CHECK(ncid, ncp, varp, ReadWrite($1), NONBLOCKING_IO, status)
-    if (varp->ndims > 0 && start == NULL) return NC_ENULLSTART;
-    if (varp->ndims > 0 && count == NULL) return NC_ENULLCOUNT;
+    status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, -1, $4, reqid, ReadWrite($1), 0, 0);
@@ -559,26 +561,23 @@ ncmpii_igetput_varm(NC               *ncp,
     MPI_Datatype ptype, imaptype=MPI_DATATYPE_NULL;
     NC_req *req;
 
-    /* calculate the followings:
+    /* check NC_ECHAR error and calculate the followings:
      * ptype: element data type (MPI primitive type) in buftype
-     * bufcount: if it is -1, it means this is called from a high-level API,
-     *     i.e. buftype is an MPI primitive data type. We recalculate it to
-     *     match with count[].
+     * bufcount: If it is -1, then this is called from a high-level API and in
+     * this case buftype will be an MPI primitive data type. If not, then this
+     * is called from a flexible API. In that case, we recalculate bufcount to
+     * match with count[].
      * bnelems: number of ptypes in user buffer
      * nbytes: number of bytes (in external data representation) to read/write
-     *     from/to the file
+     * from/to the file
      * el_size: size of ptype
      * buftype_is_contig: whether buftype is contiguous
      */
-    err = ncmpii_calc_datatype_elems(varp, count, buftype, &ptype, &bufcount,
-                                     &bnelems, &nbytes, &el_size,
-                                     &buftype_is_contig);
-    if (err == NC_EIOMISMATCH) warning = err; 
+    err = ncmpii_calc_datatype_elems(ncp, varp, start, count, stride, rw_flag,
+                                     buftype, &ptype, &bufcount, &bnelems,
+                                     &nbytes, &el_size, &buftype_is_contig);
+    if (err == NC_EIOMISMATCH) warning = err;
     else if (err != NC_NOERR) return err;
-
-    /* check whether start, count, and stride are valid */
-    err = NC_start_count_stride_ck(ncp, varp, start, count, stride, rw_flag);
-    if (err != NC_NOERR) return err;
 
     if (bnelems == 0) {
         /* zero-length request, mark this as a NULL request */

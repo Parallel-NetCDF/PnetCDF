@@ -10,7 +10,7 @@ dnl
 /* $Id$ */
 
 #if HAVE_CONFIG_H
-# include <ncconfig.h>
+# include "ncconfig.h"
 #endif
 
 #include <stdio.h>
@@ -47,8 +47,8 @@ dnl
  */
 
 static int
-ncmpii_igetput_varn(int               ncid,
-                    int               varid,
+ncmpii_igetput_varn(NC               *ncp,
+                    NC_var           *varp,
                     int               num,
                     MPI_Offset* const starts[],  /* [num][varp->ndims] */
                     MPI_Offset* const counts[],  /* [num][varp->ndims] */
@@ -80,14 +80,20 @@ ncmpi_$1_varn(int                 ncid,
               MPI_Datatype        buftype,
               int                *reqid)
 {
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
     *reqid = NC_REQ_NULL;
 
     /* check for zero-size request */
     if (num == 0 || bufcount == 0) return NC_NOERR;
 
-    if (bufcount < 0) return NC_EINVAL;
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARN,
+                                 1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
 
-    return ncmpii_igetput_varn(ncid, varid, num, starts, counts, (void*)buf,
+    return ncmpii_igetput_varn(ncp, varp, num, starts, counts, (void*)buf,
                                bufcount, buftype, reqid, ReadWrite($1),
                                IsBput($1));
 }
@@ -113,13 +119,21 @@ ncmpi_$1_varn_$2(int                ncid,
                  BufConst($1) $3   *buf,
                  int               *reqid)
 {
+    int     status;
+    NC     *ncp;
+    NC_var *varp=NULL;
+
     *reqid = NC_REQ_NULL;
 
     /* check for zero request */
     if (num == 0) return NC_NOERR;
 
+    status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VARN,
+                                 0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
+    if (status != NC_NOERR) return status;
+
     /* set bufcount to -1 indicating non-flexible API */
-    return ncmpii_igetput_varn(ncid, varid, num, starts, counts, (void*)buf,
+    return ncmpii_igetput_varn(ncp, varp, num, starts, counts, (void*)buf,
                                -1, $4, reqid, ReadWrite($1), IsBput($1));
 }
 ')dnl
@@ -166,8 +180,8 @@ VARN(bput, ulonglong, unsigned long long, MPI_UNSIGNED_LONG_LONG)
 
 /*----< ncmpii_igetput_varn() >-----------------------------------------------*/
 static int
-ncmpii_igetput_varn(int               ncid,
-                    int               varid,
+ncmpii_igetput_varn(NC               *ncp,
+                    NC_var           *varp,
                     int               num,
                     MPI_Offset* const starts[],  /* [num][varp->ndims] */
                     MPI_Offset* const counts[],  /* [num][varp->ndims] */
@@ -183,12 +197,6 @@ ncmpii_igetput_varn(int               ncid,
     char *bufp;
     MPI_Offset **_counts=NULL;
     MPI_Datatype ptype;
-    NC     *ncp;
-    NC_var *varp=NULL;
-
-    /* check if ncid is valid, if yes, get varp from varid */
-    SANITY_CHECK(ncid, ncp, varp, rw_flag, NONBLOCKING_IO, status)
-    if (status != NC_NOERR) return status;
 
     if (use_abuf && ncp->abuf == NULL) return NC_ENULLABUF;
 

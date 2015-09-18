@@ -28,3 +28,4 @@ i_getput.o: i_getput.c ncconfig.h nc.h pnetcdf.h ncio.h fbits.h ncx.h rnd.h ncty
 subfile.o: subfile.c ncconfig.h subfile.h pnetcdf.h nc.h ncio.h fbits.h macro.h ncmpidtype.h
 vard.o: vard.c ncconfig.h pnetcdf.h nc.h ncio.h fbits.h rnd.h ncx.h nctypes.h macro.h ncmpidtype.h
 fill.o: fill.c nc.h ncio.h pnetcdf.h fbits.h macro.h
+util.o: util.c nc.h ncio.h pnetcdf.h fbits.h macro.h

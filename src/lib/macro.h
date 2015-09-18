@@ -7,13 +7,6 @@
 #ifndef _H_MACRO
 #define _H_MACRO
 
-#define WRITE_REQ 0
-#define READ_REQ  1
-
-#define INDEP_IO 0
-#define COLL_IO  1
-#define NONBLOCKING_IO  -1
-
 #ifndef MAX
 #define MAX(mm,nn) (((mm) > (nn)) ? (mm) : (nn))
 #endif
@@ -44,71 +37,11 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     }                                                                         \
 }
 
-
-#define SANITY_CHECK(ncid, ncp, varp, rw_flag, io_method, status) {            \
-    /* all errors detected here are fatal, must return immediately */          \
-    int min_st;                                                                \
-                                                                               \
-    /* check if ncid is valid */                                               \
-    status = ncmpii_NC_check_id(ncid, &ncp);                                   \
-    if (status != NC_NOERR) return status;                                     \
-    /* For invalid ncid, we must return error now, as there is no way to       \
-     * continue with invalid ncp. However, collective APIs might hang if this  \
-     * error occurs only on a subset of processes */                           \
-                                                                               \
-    /* check if it is in define mode. This must be called in data mode */      \
-    if (NC_indef(ncp)) status = NC_EINDEFINE;                                  \
-                                                                               \
-    /* check file write permission if this is write request */                 \
-    if (status == NC_NOERR && rw_flag == WRITE_REQ && NC_readonly(ncp))        \
-        status = NC_EPERM;                                                     \
-                                                                               \
-    /* check whether collective or independent mode */                         \
-    if (status == NC_NOERR) {                                                  \
-        if (io_method == INDEP_IO)                                             \
-            status = ncmpii_check_mpifh(ncp, 0);                               \
-        else if (io_method == COLL_IO)                                         \
-            status = ncmpii_check_mpifh(ncp, 1);                               \
-        /* else if (io_method == NONBLOCKING_IO) */                            \
-    }                                                                          \
-                                                                               \
-    /* check if varid is valid */                                              \
-    if (status == NC_NOERR)                                                    \
-        status = ncmpii_NC_lookupvar(ncp, varid, &varp);                       \
-                                                                               \
-    if (ncp->safe_mode == 1 && io_method == COLL_IO)                           \
-        MPI_Allreduce(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->nciop->comm);\
-    else                                                                       \
-        min_st = status;                                                       \
-                                                                               \
-    if (min_st != NC_NOERR)                                                    \
-        return status;                                                         \
-}
-
 #define GET_ONE_COUNT(count) {                                                \
     int _i;                                                                   \
     count = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * SIZEOF_MPI_OFFSET);\
     for (_i=0; _i<varp->ndims; _i++)                                          \
         count[_i] = 1;                                                        \
-}
-
-#define GET_TOTAL_NUM_ELEMENTS(nelems) {                                      \
-    int ndims = varp->ndims;                                                  \
-    if (ndims == 0)                                                           \
-        nelems = 1;                                                           \
-    else if (!IS_RECVAR(varp))                                                \
-        nelems = varp->dsizes[0];                                             \
-    else if (ndims > 1)                                                       \
-        nelems = ncp->numrecs * varp->dsizes[1];                              \
-    else                                                                      \
-        nelems = ncp->numrecs;                                                \
-}
-
-#define GET_NUM_ELEMENTS(nelems) {                                            \
-    int _i;                                                                   \
-    nelems = 1;                                                               \
-    for (_i=0; _i<varp->ndims; _i++)                                          \
-        nelems *= count[_i];                                                  \
 }
 
 #ifdef ENABLE_SUBFILING
@@ -132,69 +65,21 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
 }
 #else /* without subfiling */
 #define GET_FULL_DIMENSIONS(start, count) {                                   \
-    int _i;                                                                   \
+    int _i=0;                                                                 \
     start = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims*2*SIZEOF_MPI_OFFSET);\
     count = start + varp->ndims;                                              \
                                                                               \
-    for (_i=0; _i<varp->ndims; _i++) {                                        \
-        NC_dim *dimp;                                                         \
-        dimp = ncmpii_elem_NC_dimarray(&ncp->dims, varp->dimids[_i]);         \
-        if (dimp->size == NC_UNLIMITED)                                       \
-            count[_i] = NC_get_numrecs(ncp);                                  \
-        else                                                                  \
-            count[_i] = dimp->size;                                           \
+    if (IS_RECVAR(varp)) { /* find current numrec if varp is record var */    \
+        count[0] = NC_get_numrecs(ncp);                                       \
+        start[0] = 0;                                                         \
+        _i = 1;                                                               \
+    }                                                                         \
+    for (; _i<varp->ndims; _i++) {                                            \
+        count[_i] = varp->shape[_i];                                          \
         start[_i] = 0;                                                        \
     }                                                                         \
 }
 #endif
-
-#define CHECK_NELEMS(varp, fnelems, fcount, bnelems, bufcount, nbytes, err) { \
-    int _i;                                                                   \
-    /* bnelems is the number of elements in the I/O buffer and the element    \
-     * is of MPI primitive type. When input, bnelems is the number of         \
-     * MPI primitive type elements in the user's derived data type.           \
-     * Here, we make it the total MPI primitive type elements in the          \
-     * user's buffer                                                          \
-     */                                                                       \
-    bnelems *= bufcount;                                                      \
-                                                                              \
-    /* fnelems is the total number of nc_type elements calculated from        \
-     * fcount[]. fcount[] is the access count to the variable defined in      \
-     * the netCDF file.                                                       \
-     */                                                                       \
-    fnelems = 1;                                                              \
-    for (_i=0; _i<(varp)->ndims; _i++) {                                      \
-        if (fcount[_i] < 0) { /* API error */                                 \
-            err = NC_ENEGATIVECNT;                                            \
-            goto err_check;                                                   \
-            /* for collective call must return collectively */                \
-        }                                                                     \
-        fnelems *= fcount[_i];                                                \
-    }                                                                         \
-                                                                              \
-    /* check mismatch between bnelems and fnelems */                          \
-    if (fnelems != bnelems) {                                                 \
-        if (warning == NC_NOERR)                                              \
-            warning = NC_EIOMISMATCH;                                         \
-        (fnelems>bnelems) ? (fnelems=bnelems) : (bnelems=fnelems);            \
-        /* only handle partial of the request, smaller number of the two */   \
-    }                                                                         \
-    /* now fnelems == bnelems */                                              \
-                                                                              \
-    /* nbytes is the amount of this request in bytes */                       \
-    nbytes = fnelems * (varp)->xsz;                                           \
-    if (nbytes < 0) { /* API error */                                         \
-        /* uncomment to print debug message                                   \
-        int rank;                                                             \
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                 \
-        printf("%2d: Error - negative request amount at line %d of %s\n",     \
-               rank, __LINE__, __FILE__);                                     \
-        */                                                                    \
-        err = NC_ENEGATIVECNT;                                                \
-        goto err_check;                                                       \
-        /* cannot return now, for collective call must return collectively */ \
-    }                                                                         \
-}
 
 #define DATATYPE_GET_CONVERT(vartype, inbuf, outbuf, cnelems, memtype, err) { \
     /* vartype is the variable's data type defined in the nc file             \
