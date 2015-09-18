@@ -5,7 +5,7 @@
 /* $Id$ */
 
 #if HAVE_CONFIG_H
-# include <ncconfig.h>
+# include "ncconfig.h"
 #endif
 
 #ifdef HAVE_STDLIB_H

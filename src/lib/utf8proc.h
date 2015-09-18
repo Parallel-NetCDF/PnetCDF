@@ -62,7 +62,7 @@
 #define UTF8PROC_H
 
 #if HAVE_CONFIG_H
-# include <ncconfig.h>
+# include "ncconfig.h"
 #endif
 
 #include <stdlib.h>
