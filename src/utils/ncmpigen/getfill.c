@@ -4,7 +4,7 @@
  *   $Header$
  *********************************************************************/
 
-#include "pnetcdf.h"
+#include <pnetcdf.h>
 #include "generic.h"
 #include "ncmpigen.h"
 #include "genlib.h"
