@@ -56,4 +56,6 @@ This is essentially a placeholder for the next release note ...
       Edwards) that pgf77-based MPI compiler does not like "_8" modifier.
       See r2045 and r2051. The same issue for NAG Fortran compiler is also
       resolved. See r2089 and r2093.
+    * In the example program examples/tutorial/pnetcdf-write-nb.c, the write
+      buffers used in two iput API calls should be different. See r2095.
 
