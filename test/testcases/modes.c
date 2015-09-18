@@ -30,6 +30,13 @@
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
+#define EXPECT_ERR(err_no) \
+    if (err != err_no) { \
+        nfails++; \
+        printf("Error at line %d: expect error code %d but got %d\n", \
+               __LINE__,err_no,err); \
+    }
+
 int main(int argc, char** argv)
 {
     char filename[256];
@@ -52,6 +59,7 @@ int main(int argc, char** argv)
     /* create a new file and test various cmodes ----------------------------*/
     cmode = NC_CLOBBER;
 
+    /* NC_64BIT_OFFSET and NC_64BIT_DATA should not appear together */
     cmode |= NC_64BIT_OFFSET | NC_64BIT_DATA;
 
     /* delete the file and ignore error */
@@ -60,30 +68,23 @@ int main(int argc, char** argv)
     /* test under safe mode enabled */
     setenv("PNETCDF_SAFE_MODE", "1", 1);
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    if (err != NC_EINVAL_CMODE) {
-        nfails++;
-        printf("Error: expect error code %d, but got %d\n",NC_EINVAL_CMODE,err);
-        if (err == NC_NOERR) ncmpi_close(ncid);
-    }
+    EXPECT_ERR(NC_EINVAL_CMODE)
+    if (err == NC_NOERR) ncmpi_close(ncid);
+
     /* no file should be created when in safe mode */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    if (err != NC_ENOENT) {
-        nfails++;
-        printf("Error: expect error code %d but got %d\n",NC_ENOENT,err);
-    }
+    EXPECT_ERR(NC_ENOENT)
 
     /* test under safe mode disabled */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    if (err != NC_EINVAL_CMODE) {
-        nfails++;
-        printf("Error: expect error code %d, but got %d\n",NC_EINVAL_CMODE,err);
-    }
+    EXPECT_ERR(NC_EINVAL_CMODE)
+
     /* file should be created and is in CDF-5 format */
     err = ncmpi_inq_format(ncid, &format);
     ERR
     if (format != 5) {
-        printf("Error (line=%d): expecting CDF-5 format for file %s but got CDF-%d\n",__LINE__,filename,format);
+        printf("Error at line=%d: expecting CDF-5 format for file %s but got CDF-%d\n",__LINE__,filename,format);
         nfails++;
     }
     err = ncmpi_close(ncid);
