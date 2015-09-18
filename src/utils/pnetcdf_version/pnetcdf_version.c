@@ -5,6 +5,8 @@
 /* $Id$ */
 
 #if HAVE_CONFIG_H
+/* PNETCDF_VERSION, PNETCDF_RELEASE_DATE, CONFIGURE_ARGS_CLEAN are defined
+ * in ncconfig.h */
 # include <ncconfig.h>
 #else
 #error "ncconfig.h is required to build this program"
