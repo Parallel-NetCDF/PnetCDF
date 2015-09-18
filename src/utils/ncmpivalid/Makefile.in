@@ -11,7 +11,13 @@ VPATH  = @srcdir@
 
 include ../../../macros.make
 
-INCLUDES	= -I. -I../../lib -I$(srcdir)/../../lib -I$(srcdir)
+# For VPATH build:
+# Add ../../lib into search path because ../../lib/pnetcdf.h is created at the
+# configure time and included by ncmpivalid.c
+# Add $(srcdir)/../../lib into search path because $(srcdir)/../../lib/ncx.h
+# and $(srcdir)/../../lib/macro.h are included by ncmpivalid.c
+INCLUDES	= -I../../lib -I$(srcdir)/../../lib
+
 LDFLAGS        += -L../../lib
 LIBS           := -lpnetcdf $(LIBS) @LCOV_LIB@
 
