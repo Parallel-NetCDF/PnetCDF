@@ -1,4 +1,4 @@
-#include <ncmpiException.h>
+#include "ncmpiException.h"
 #include <sstream>
 #include <pnetcdf.h>
 using namespace std;
