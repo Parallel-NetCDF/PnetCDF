@@ -1,48 +1,9 @@
-close.o: ../../lib/pnetcdf.h
-close.o: close.c
-close.o: generic.h
-close.o: genlib.h
-close.o: ncmpigen.h
-escapes.o: ../../lib/pnetcdf.h
-escapes.o: escapes.c
-escapes.o: generic.h
-escapes.o: genlib.h
-escapes.o: ncmpigen.h
-genlib.o: ../../lib/pnetcdf.h
-genlib.o: generic.h
-genlib.o: genlib.c
-genlib.o: genlib.h
-genlib.o: ncmpigen.h
-getfill.o: ../../lib/pnetcdf.h
-getfill.o: generic.h
-getfill.o: genlib.h
-getfill.o: getfill.c
-getfill.o: ncmpigen.h
-init.o: ../../lib/pnetcdf.h
-init.o: generic.h
-init.o: init.c
-init.o: ncmpigen.h
-load.o: ../../lib/pnetcdf.h
-load.o: generic.h
-load.o: genlib.h
-load.o: load.c
-load.o: ncmpigen.h
-main.o: ../../lib/pnetcdf.h
-main.o: generic.h
-main.o: genlib.h
-main.o: main.c
-main.o: ncmpigen.h
-msofttab.o: ../../lib/pnetcdf.h
-msofttab.o: generic.h
-msofttab.o: msofttab.c
-msofttab.o: ncmpigen.h
-msofttab.o: ncmpigenyy.c
-msoftyy.o: msoftyy.c
-ncmpigenyy.o: ncmpigenyy.c
-vms_yy.o: vms_yy.c
-vmstab.o: ../../lib/pnetcdf.h
-vmstab.o: generic.h
-vmstab.o: genlib.h
-vmstab.o: ncmpigen.h
-vmstab.o: ncmpigenyy.c
-vmstab.o: vmstab.c
+escapes.o: escapes.c generic.h ncmpigen.h genlib.h ../../lib/pnetcdf.h
+genlib.o: genlib.c generic.h ncmpigen.h genlib.h ../../lib/pnetcdf.h
+getfill.o: getfill.c generic.h ncmpigen.h genlib.h ../../lib/pnetcdf.h
+init.o: init.c generic.h ncmpigen.h genlib.h ../../lib/pnetcdf.h
+load.o: load.c generic.h ncmpigen.h genlib.h ../../lib/pnetcdf.h
+main.o: main.c generic.h ncmpigen.h genlib.h ../../lib/pnetcdf.h
+ncmpigenyy.o: ncmpigenyy.c genlib.h ncmpigentab.h ../../lib/pnetcdf.h
+ncmpigentab.o: ncmpigentab.c generic.h ncmpigen.h genlib.h ncmpigenyy.c \
+ ncmpigentab.h ../../lib/pnetcdf.h
