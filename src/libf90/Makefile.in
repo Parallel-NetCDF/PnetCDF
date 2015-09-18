@@ -14,7 +14,13 @@ include ../../macros.make
 
 # F90FLAGS = @FC_DEFINE@MPI_OFFSET_KIND=@SIZEOF_MPI_OFFSET@
 
-INCLUDES = -I. -I$(srcdir) -I$(srcdir)/../lib -I../lib
+# For VPATH build:
+# Add . into search path because api.f90 and nfmpi_constants.f90 are created in
+# the build directory at configure time and they are included in pnetcdf.f90.
+# If NAG compiler is used, $(srcdir) must also be added into search path
+# because NAG does not seem to look for include file in the same directory as
+# the source file.
+INCLUDES = -I. -I$(srcdir)
 
 LIBRARY = ../lib/libpnetcdf.a
 
@@ -54,6 +60,9 @@ PACKING_LIST = $(F90_SRCS) \
 GARBAGE		= $(PNETCDF_MOD) $(M4_SRCS:.m4=.f90)
 DIST_GARBAGE	= api.f90 nfmpi_constants.f90
 
+%.mod: %.f90 $(SRCS)
+	$(COMPILE.f90) $<
+
 all: $(LIBRARY)
 
 objs: $(LIB_OBJS)
@@ -63,12 +72,10 @@ library $(LIBRARY): $(LIB_OBJS)
 	$(RANLIB) $(LIBRARY)
 
 $(LIB_OBJS): $(SRCS)
-	$(COMPILE.F90) $(srcdir)/pnetcdf.f90
 
 $(PNETCDF_MOD): $(SRCS)
-	$(COMPILE.F90) $(srcdir)/pnetcdf.f90
 
-install:
+install: $(PNETCDF_MOD)
 	$(INSTALL) -d -m 755 $(INCDIR)
 	$(INSTALL_DATA) $(PNETCDF_MOD) $(INCDIR)
 
