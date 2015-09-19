@@ -192,6 +192,8 @@
 
       if (MyPE .EQ. MasterPE) then
 
+          striping_factor = 0
+          striping_unit   = 0
           call get_file_striping(info_used, striping_factor, striping_unit)
 
           time_total = tmax(1) + tmax(2) + tmax(3)
@@ -228,8 +230,10 @@
           print 1003,'        I/O amount     : ',corner_io/1048576, '  MiB'
           print 1004
           print 1007,' File base name        : ', trim(basenm)
-          print 1001,'   file striping count : ',striping_factor
-          print 1002,'   file striping size  : ',striping_unit, '     bytes'
+          if (striping_factor .GT. 0) then
+              print 1001,'   file striping count : ',striping_factor
+              print 1002,'   file striping size  : ',striping_unit, '     bytes'
+          endif
           print 1003,' Total I/O amount      : ',io_amount,'  MiB'
           print 1004
           print 1005
