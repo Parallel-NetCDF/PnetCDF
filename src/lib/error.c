@@ -267,9 +267,9 @@ ncmpi_strerror(int err)
         case NC_EMULTIDEFINE_VAR_TYPE:
             return "Data type of this variable is defined inconsistently among processes.";
         case NC_EMULTIDEFINE_VAR_LEN:
-            return "Total number of elements of this variable is defined inconsistently among processes.";
+            return "Number of elements of this variable is defined inconsistently among processes.";
         case NC_EMULTIDEFINE_VAR_BEGIN:
-            return "(Internal error) beginning file offset of this variable is inconsistent among processes.";
+            return "Starting file offset of this variable is inconsistent among processes.";
         case NC_EMULTIDEFINE_NUMRECS:
             return "Number of records is inconsistent among processes.";
         case NC_EMULTIDEFINE_ATTR_NUM:

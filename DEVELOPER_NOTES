@@ -247,7 +247,8 @@ inconsistency of any kind start at -250.
        src/libf/pnetcdf.inc.in
        src/libf90/nf90_constants.f90
        src/libf90/nfmpi_constants.f90.in
-
+4. The error message should be kept less than 80 characters, because this is
+   the string length used in Fortran API nfmpi_strerror().
 
 =====================================================
 Note on setting the last modify time of files to avoid rebuild
