@@ -19,21 +19,21 @@ HEADERS = testutils.h
 
 OBJS    = $(SRCS:.c=.o)
 
-PROGS   = libtestutils.a
+UTIL_LIB = libtestutils.a
 
-GARBAGE      = $(PROGS)
+GARBAGE      = $(UTIL_LIB)
 PACKING_LIST = $(SRCS) $(HEADERS) Makefile.in
 
-all: $(PROGS)
+all: $(UTIL_LIB)
 
-libtestutils.a: $(OBJS)
+$(UTIL_LIB): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $<
 
 testutils.o: testutils.c testutils.h
 
-testing check verbose_testing:
+testing check verbose_testing: $(UTIL_LIB)
 
-ptest ptests:
+ptest ptests: $(UTIL_LIB)
 
 include $(srcdir)/../../rules.make
 
