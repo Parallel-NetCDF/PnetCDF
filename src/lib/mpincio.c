@@ -329,6 +329,23 @@ ncmpiio_open(MPI_Comm     comm,
         if (err == 0) return NC_EINVAL;
     }
 
+    /* When open an non-existing file for read, we can either call access() to
+     * check and return error code NC_ENOENT, or call MPI_File_open and expect
+     * error class MPI_ERR_NO_SUCH_FILE. For now, we let MPI-IO to check.
+     */
+#if 0 && defined(HAVE_ACCESS)
+    if (mpiomode == MPI_MODE_RDONLY) { /* file should already exit */
+        int rank, file_exist;
+        MPI_Comm_rank(comm, &rank);
+        if (rank == 0) {
+            if (access(path, F_OK) == 0) file_exist = 1;
+            else                         file_exist = 0;
+        }
+        TRACE_COMM(MPI_Bcast)(&file_exist, 1, MPI_INT, 0, comm);
+        if (!file_exist) return NC_ENOENT;
+    }
+#endif
+
     nciop = ncmpiio_new(path, ioflags);
     if (nciop == NULL)
         return NC_ENOMEM;
@@ -346,7 +363,7 @@ ncmpiio_open(MPI_Comm     comm,
         return ncmpii_handle_error(mpireturn, "MPI_File_open");
     }
 
-    for (i = 0; i < MAX_NC_ID && IDalloc[i] != 0; i++);
+    for (i=0; i<MAX_NC_ID && IDalloc[i] != 0; i++);
     if (i == MAX_NC_ID) {
         ncmpiio_free(nciop);
         return NC_ENFILE;
