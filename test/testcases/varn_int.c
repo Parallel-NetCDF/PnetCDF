@@ -46,8 +46,9 @@
 #include <string.h> /* strcpy(), memset() */
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define NY 4
@@ -90,7 +91,7 @@ void permute(MPI_Offset a[NDIMS], MPI_Offset b[NDIMS])
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, rank, nprocs, err, verbose=0, nfails=0;
+    int i, j, rank, nprocs, err, verbose=0, nerrs=0;
     int ncid, cmode, varid[3], dimid[2], num_reqs, *buffer, *r_buffer;
     MPI_Offset w_len, **starts, **counts;
 
@@ -106,6 +107,12 @@ int main(int argc, char** argv)
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for ncmpi_put_varn_int_all() ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     if (verbose && nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
@@ -212,8 +219,8 @@ int main(int argc, char** argv)
     /* check error code: NC_ENULLSTART */
     err = ncmpi_put_varn_int_all(ncid, varid[0], 1, NULL, NULL, NULL);
     if (err != NC_ENULLSTART) {
-        printf("expecting error code NC_ENULLSTART=%d but got %d\n",NC_ENULLSTART,err);
-        nfails++;
+        printf("expecting error code NC_ENULLSTART but got %s\n",nc_err_code_name(err));
+        nerrs++;
     }
 
     /* write using varn API */
@@ -226,7 +233,7 @@ int main(int argc, char** argv)
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);
     ERR
-    nfails += check_contents_for_fail(r_buffer);
+    nerrs += check_contents_for_fail(r_buffer);
 
     /* permute write order */
     if (num_reqs > 0) {
@@ -242,7 +249,7 @@ int main(int argc, char** argv)
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
     ERR
-    nfails += check_contents_for_fail(r_buffer);
+    nerrs += check_contents_for_fail(r_buffer);
 
     /* read back using get_varn API and check contents */
     for (i=0; i<w_len; i++) buffer[i] = -1;
@@ -253,7 +260,7 @@ int main(int argc, char** argv)
         if (buffer[i] != rank) {
             printf("Error at line %d: expecting buffer[%d]=%d but got %d\n",
                    __LINE__,i,rank,buffer[i]);
-            nfails++;
+            nerrs++;
         }
     }
 
@@ -272,12 +279,12 @@ int main(int argc, char** argv)
         if (i%2 && buffer[i] != -1) {
             printf("Error at line %d: expecting buffer[%d]=-1 but got %d\n",
                    __LINE__,i,buffer[i]);
-            nfails++;
+            nerrs++;
         }
         if (i%2 == 0 && buffer[i] != rank) {
             printf("Error at line %d: expecting buffer[%d]=%d but got %d\n",
                    __LINE__,i,rank,buffer[i]);
-            nfails++;
+            nerrs++;
         }
     }
 
@@ -291,8 +298,6 @@ int main(int argc, char** argv)
     free(starts);
     free(counts);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nfails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -303,13 +308,13 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for ncmpi_put_varn_int_all() ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nfails) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else        printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
-
 
     MPI_Finalize();
     return 0;

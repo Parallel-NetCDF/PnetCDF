@@ -12,7 +12,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define NVARS 8
@@ -37,7 +37,7 @@
 
 int main(int argc, char** argv) {
     char *filename="redef1.nc";
-    int i, j, rank, nprocs, err, verbose=0, nfailed=0, nfailed_all;
+    int i, j, rank, nprocs, err, verbose=0, nerrs=0;
     int ncid, cmode, varid[NVARS], dimid[2], *buf;
     char str[32];
     MPI_Offset start[2], count[2];
@@ -55,6 +55,12 @@ int main(int argc, char** argv) {
         return 0;
     }
     if (argc == 2) filename = argv[1];
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for alignment ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -240,7 +246,7 @@ int main(int argc, char** argv) {
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000 + i*10 + j) {
                     printf("read error i=%d buf[j=%d]=%d != %d\n",i,j,buf[j],rank*1000+i*10+j);
-                    nfailed++;
+                    nerrs++;
                 }
         }
 #endif
@@ -252,14 +258,14 @@ int main(int argc, char** argv) {
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000+i*10+j) {
                     printf("read error i=%d buf[j=%d]=%d != %d\n",i,j,buf[j],rank*1000+i*10+j);
-                    nfailed++;
+                    nerrs++;
                 }
             start[0] = 1;
             err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); ERR
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000 + 100 + i*10 + j) {
                     printf("read error i=%d buf[j=%d]=%d != %d\n",i,j,buf[j],rank*1000+100+i*10+j);
-                    nfailed++;
+                    nerrs++;
                 }
         }
 #endif
@@ -278,14 +284,12 @@ int main(int argc, char** argv) {
                    sum_size);
     }
 
-    MPI_Reduce(&nfailed, &nfailed_all, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for alignment ", argv[0]);
-        if (nfailed_all > 0)
-            printf("%s ------ "FAIL_COLOR" with %d mismatches\n",cmd_str,nfailed_all);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
         else
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
+            printf(PASS_COLOR);
     }
     MPI_Finalize();
     return 0;

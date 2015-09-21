@@ -19,7 +19,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define NY 4
@@ -29,12 +29,12 @@
 #define ERR \
     if (err != NC_NOERR) { \
         printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
-        nfails++; \
+        nerrs++; \
     }
 
 int main(int argc, char** argv)
 {
-    int i, j, rank, nprocs, err, nfails=0;
+    int i, j, rank, nprocs, err, nerrs=0;
     int ncid, varid, dimid[2], req, st;
     MPI_Offset start[2], count[2], stride[2];
     unsigned char buffer[NY][NX];
@@ -42,6 +42,12 @@ int main(int argc, char** argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for ncmpi_end_indep_data ", argv[0]);
+        printf("%-66s ------ ",cmd_str);
+    }
 
     err = ncmpi_create(MPI_COMM_WORLD, "testfile.nc", NC_CLOBBER|NC_64BIT_DATA,
                        MPI_INFO_NULL, &ncid);
@@ -71,8 +77,6 @@ int main(int argc, char** argv)
     err = ncmpi_buffer_detach(ncid); ERR
     err = ncmpi_close(ncid); ERR
 
-    MPI_Allreduce(MPI_IN_PLACE, &nfails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -83,13 +87,12 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[80];
-    sprintf(cmd_str, "*** TESTING C   %s for ncmpi_end_indep_data ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nfails)
-            printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
         else
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();

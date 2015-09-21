@@ -62,6 +62,7 @@
 #include <string.h> /* strcpy() */
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
 #define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
@@ -278,8 +279,8 @@ int main(int argc, char** argv)
     err = ncmpi_iput_varn_longlong(ncid, varid[0], 1, NULL, NULL,
                                    NULL, &reqs[0]);
     if (err != NC_ENULLSTART) {
-        printf("expecting error code NC_ENULLSTART=%d but got %d\n",
-               NC_ENULLSTART,err);
+        printf("expecting error code NC_ENULLSTART but got %s\n",
+               nc_err_code_name(err));
         nfails++;
     }
 

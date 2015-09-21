@@ -10,18 +10,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
-static void handle_error(int status)
-{
-    fprintf(stderr, "%s\n", ncmpi_strerror(status));
-    exit(-1);
+#define HANDLE_ERROR(err) { \
+    nerrs++; \
+    fprintf(stderr, "Error at line %d: %s\n", __LINE__, ncmpi_strerror(err)); \
+    goto fn_exit; \
 }
+
 #define NDIMS 1
 int main(int argc, char **argv)
 {
-    int err, ncfile, dimid, varid, ndims=NDIMS;
+    int err, nerrs=0, ncfile, dimid, varid, ndims=NDIMS;
     int i, nprocs, rank;
     MPI_Offset start[NDIMS] = {0};
     MPI_Offset count[NDIMS] = {0};
@@ -39,26 +40,32 @@ int main(int argc, char **argv)
     }
     if (argc == 2) filename = argv[1];
 
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for NULL stride ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
+
     err = ncmpi_create(MPI_COMM_WORLD, filename, 0, MPI_INFO_NULL, &ncfile);
-    if (err != NC_NOERR) handle_error(err);
+    if (err != NC_NOERR) HANDLE_ERROR(err)
 
     err = ncmpi_def_dim(ncfile, "d1", nprocs, &dimid);
-    if (err != NC_NOERR) handle_error(err);
+    if (err != NC_NOERR) HANDLE_ERROR(err)
 
     err = ncmpi_def_var(ncfile, "v1", NC_INT, ndims, &dimid, &varid);
-    if (err != NC_NOERR) handle_error(err);
+    if (err != NC_NOERR) HANDLE_ERROR(err)
 
     err = ncmpi_enddef(ncfile);
-    if (err != NC_NOERR) handle_error(err);
+    if (err != NC_NOERR) HANDLE_ERROR(err)
 
     start[0] = rank;
     count[0] = 1;
     for (i=0; i<512; i++) buf[i] = rank;
     err = ncmpi_put_vars_int_all(ncfile, varid, start, count, NULL, buf);
-    if (err != NC_NOERR) handle_error(err);
+    if (err != NC_NOERR) HANDLE_ERROR(err)
 
     err = ncmpi_close(ncfile);
-    if (err != NC_NOERR) handle_error(err);
+    if (err != NC_NOERR) HANDLE_ERROR(err)
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -70,10 +77,13 @@ int main(int argc, char **argv)
                    sum_size);
     }
 
+fn_exit:
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for NULL stride ", argv[0]);
-        printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();

@@ -55,7 +55,7 @@
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #include <stdio.h>
@@ -154,7 +154,7 @@ int check_dbl_buf(double *buffer, double extra)
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, rank, nprocs, err, verbose=0, nfails=0;
+    int i, rank, nprocs, err, verbose=0, nerrs=0;
     int ncid, cmode, dimid[2];
     int vari0001, vari0002, varr0001, varr0002, vard0001, vard0002;
     MPI_Offset **starts, **counts;
@@ -175,6 +175,12 @@ int main(int argc, char** argv)
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for ncmpi_iput_varn_<type>() ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     if (verbose && nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
@@ -393,31 +399,29 @@ int main(int argc, char** argv)
 
     for (i=0; i<LEN; i++) ibuf1[i] = -1;
     err = ncmpi_get_var_int_all(ncid, vari0001, ibuf1); ERR
-    nfails += check_int_buf(ibuf1);
+    nerrs += check_int_buf(ibuf1);
 
     for (i=0; i<LEN; i++) ibuf2[i] = -1;
     err = ncmpi_get_var_int_all(ncid, vari0002, ibuf2); ERR
-    nfails += check_int_buf(ibuf2);
+    nerrs += check_int_buf(ibuf2);
 
     for (i=0; i<LEN; i++) rbuf1[i] = -1;
     err = ncmpi_get_var_float_all(ncid, varr0001, rbuf1); ERR
-    nfails += check_flt_buf(rbuf1, 0.1);
+    nerrs += check_flt_buf(rbuf1, 0.1);
 
     for (i=0; i<LEN; i++) rbuf2[i] = -1;
     err = ncmpi_get_var_float_all(ncid, varr0002, rbuf2); ERR
-    nfails += check_flt_buf(rbuf2, 0.2);
+    nerrs += check_flt_buf(rbuf2, 0.2);
 
     for (i=0; i<LEN; i++) dbuf1[i] = -1;
     err = ncmpi_get_var_double_all(ncid, vard0001, dbuf1); ERR
-    nfails += check_dbl_buf(dbuf1, 0.3);
+    nerrs += check_dbl_buf(dbuf1, 0.3);
 
     for (i=0; i<LEN; i++) dbuf2[i] = -1;
     err = ncmpi_get_var_double_all(ncid, vard0002, dbuf2); ERR
-    nfails += check_dbl_buf(dbuf2, 0.4);
+    nerrs += check_dbl_buf(dbuf2, 0.4);
 
     err = ncmpi_close(ncid); ERR
-
-    MPI_Allreduce(MPI_IN_PLACE, &nfails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -429,13 +433,13 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for ncmpi_iput_varn_<type>() ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nfails) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else        printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
-
 
     MPI_Finalize();
     return 0;

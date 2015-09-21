@@ -11,9 +11,10 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
+LDFLAGS  := $(LDFLAGS) -L../common
+LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
 NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff
@@ -50,6 +51,8 @@ F90_SRCS = inq_num_varsf.f90 \
 PROGS    = $(C_SRCS:.c=)
 OBJS     = $(C_SRCS:.c=.o)
 
+UTIL_OBJS = ../common/testutils.o
+
 ifeq (@has_fortran@, yes)
 PROGS   += $(F77_SRCS:.f=)   $(F90_SRCS:.f90=)
 OBJS    += $(F77_SRCS:.f=.o) $(F90_SRCS:.f90=.o)
@@ -71,88 +74,88 @@ PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
 all: $(PROGS)
 
 ncmpi_vars_null_stride: ncmpi_vars_null_stride.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 vectors: vectors.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 bigrecords: bigrecords.o $(LIBRARY)
-	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+	$(LINK.f) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 redef1: redef1.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 collective_error: collective_error.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 test_varm: test_varm.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 alignment_test: alignment_test.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 flexible: flexible.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 flexible2: flexible2.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 flexible_varm: flexible_varm.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 nonblocking: nonblocking.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 noclobber: noclobber.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 record: record.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 inq_num_vars: inq_num_vars.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 varn_int: varn_int.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 varn_contig: varn_contig.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 modes: modes.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 one_record: one_record.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 inq_recsize: inq_recsize.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 test_vard: test_vard.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 profile: profile.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 ivarn: ivarn.o $(LIBRARY)
-	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+	$(LINK.c) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 inq_recsizef: inq_recsizef.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 test_vardf: test_vardf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 varn_intf: varn_intf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 test_vardf90: test_vardf90.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 varn_real: varn_real.o $(LIBRARY)
-	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F90) $< $(UTIL_OBJS) $(LDFLAGS) $(LIBS)
 
 testing check verbose_testing : $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc

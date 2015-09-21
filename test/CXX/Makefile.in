@@ -11,8 +11,9 @@ VPATH	= @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib -I../../src/libcxx
-LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
+INCLUDES  = -I../../src/lib -I../../src/libcxx -I$(srcdir)/../common
+LDFLAGS  := $(LDFLAGS) -L../common
+LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
 SRCS    = nctst.cpp \
           test_classic.cpp

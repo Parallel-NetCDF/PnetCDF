@@ -13,6 +13,7 @@
 #include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
 #define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
@@ -39,7 +40,7 @@ int test_attr_types(char *filename,
         sprintf(name, "gattr_%d", i);
         err = ncmpi_put_att_int(ncid, NC_GLOBAL, name, xtype[i], 1, &attr);
         if (err != NC_ESTRICTCDF2) {
-            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %d\n", __LINE__,err);
+            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %s\n", __LINE__,nc_err_code_name(err));
             nerr++;
         }
     }
@@ -71,7 +72,7 @@ int test_var_types(char *filename,
         sprintf(name, "var_%d", i);
         err = ncmpi_def_var(ncid, name, xtype[i], 1, &dimid, &varid[i]);
         if (err != NC_ESTRICTCDF2) {
-            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %d\n", __LINE__,err);
+            printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %s\n", __LINE__,nc_err_code_name(err));
             nerr++;
         }
     }

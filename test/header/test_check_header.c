@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
   status = ncmpi_enddef(ncid);
   if ((rank == 0 && status != NC_EMULTIDEFINE) ||
       (rank  > 0 && status != NC_EDIMS_SIZE_MULTIDEFINE)) {  
-      fprintf(stderr, "%d: Unexpected Error: %s!\n",rank, ncmpi_strerror(status));
+      fprintf(stderr, "%d: Unexpected Error code %s: %s!\n",rank, nc_err_code_name(status),ncmpi_strerror(status));
       status = ncmpi_close(ncid);
       ERR
   }

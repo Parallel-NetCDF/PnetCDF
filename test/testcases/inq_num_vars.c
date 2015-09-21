@@ -27,7 +27,7 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
@@ -36,7 +36,7 @@ void check_num_vars(int  ncid,
                     int  expected_nvars,
                     int  expected_num_rec_vars,
                     int  expected_num_fix_vars,
-                    int *nfailed)
+                    int *nerrs)
 {
     int err, nvars, num_rec_vars, num_fix_vars;
 
@@ -46,21 +46,21 @@ void check_num_vars(int  ncid,
 
     if (nvars != expected_nvars) {
         printf("Error: expecting %d number of variables defined, but got %d\n", expected_nvars, nvars);
-        (*nfailed)++;
+        (*nerrs)++;
     }
     if (num_rec_vars != expected_num_rec_vars) {
         printf("Error: expecting %d number of record variables defined, but got %d\n", expected_num_rec_vars, num_rec_vars);
-        (*nfailed)++;
+        (*nerrs)++;
     }
     if (num_fix_vars != expected_num_fix_vars) {
         printf("Error: expecting %d number of fixed-size variables defined, but got %d\n", expected_num_fix_vars, num_fix_vars);
-        (*nfailed)++;
+        (*nerrs)++;
     }
 }
 
 int main(int argc, char** argv) {
     char *filename="testfile.nc";
-    int nfailed, nfailed_all, rank, nprocs, err;
+    int nerrs, rank, nprocs, err;
     int ncid, cmode, varid[7], dimid[3];
     MPI_Info info=MPI_INFO_NULL;
 
@@ -74,6 +74,12 @@ int main(int argc, char** argv) {
     }
     if (argc == 2) filename = argv[1];
 
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for no. record/fixed variables", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
+
     /* printf("PnetCDF version string: \"%s\"\n", ncmpi_inq_libvers()); */
 
     /* create a new file for writing ----------------------------------------*/
@@ -85,24 +91,24 @@ int main(int argc, char** argv) {
     err = ncmpi_def_dim(ncid, "Y",       2,            &dimid[1]); ERR
     err = ncmpi_def_dim(ncid, "X",       10,           &dimid[2]); ERR
 
-    nfailed = 0;
+    nerrs = 0;
 
     err = ncmpi_def_var(ncid, "REC_VAR_1", NC_INT, 1, dimid, &varid[0]); ERR
     err = ncmpi_def_var(ncid, "REC_VAR_2", NC_INT, 3, dimid, &varid[1]); ERR
     err = ncmpi_def_var(ncid, "REC_VAR_3", NC_INT, 2, dimid, &varid[2]); ERR
     err = ncmpi_def_var(ncid, "REC_VAR_4", NC_INT, 1, dimid, &varid[3]); ERR
 
-    check_num_vars(ncid, 4, 4, 0, &nfailed);
+    check_num_vars(ncid, 4, 4, 0, &nerrs);
 
     err = ncmpi_def_var(ncid, "FIX_VAR_1", NC_INT, 2, dimid+1, &varid[4]); ERR
     err = ncmpi_def_var(ncid, "FIX_VAR_2", NC_INT, 1, dimid+1, &varid[5]); ERR
     err = ncmpi_def_var(ncid, "FIX_VAR_3", NC_INT, 1, dimid+2, &varid[6]); ERR
 
-    check_num_vars(ncid, 7, 4, 3, &nfailed);
+    check_num_vars(ncid, 7, 4, 3, &nerrs);
 
     err = ncmpi_enddef(ncid); ERR
 
-    check_num_vars(ncid, 7, 4, 3, &nfailed);
+    check_num_vars(ncid, 7, 4, 3, &nerrs);
 
     err = ncmpi_close(ncid); ERR
 
@@ -116,14 +122,12 @@ int main(int argc, char** argv) {
                    sum_size);
     }
 
-    MPI_Reduce(&nfailed, &nfailed_all, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for no. record/fixed variables", argv[0]);
-        if (nfailed_all > 0)
-            printf("%s ------ "FAIL_COLOR" with %d mismatches\n",cmd_str,nfailed_all);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
         else
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
+            printf(PASS_COLOR);
     }
 
 fn_exit:

@@ -3,20 +3,20 @@
 #include <string.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define PNCDF_Error(err, msg) \
     if (err != NC_NOERR) { \
         printf("Error: %s (%s)\n", msg, ncmpi_strerror(err)); \
-        pass = 0; \
+        nerrs++; \
         goto fn_exit; \
     }  
 
 int main(int argc, char** argv)
 {
     char filename[256]="redef1.nc";
-    int i, j, k, commsize, rank, ncid, verbose=0, err, pass=1;
+    int i, j, k, commsize, rank, ncid, verbose=0, err, nerrs=0;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
     int *data;
@@ -35,6 +35,12 @@ int main(int argc, char** argv)
         return 0;
     }
     if (argc == 2) strcpy(filename, argv[1]);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for entering re-define mode ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     if (commsize > 1 && rank == 0 && verbose)
         printf("Warning: %s is designed to run on 1 process\n",argv[0]);
@@ -162,11 +168,12 @@ int main(int argc, char** argv)
     }
 
 fn_exit:
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for entering re-define mode ", argv[0]);
-        if (pass) printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else      printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();
