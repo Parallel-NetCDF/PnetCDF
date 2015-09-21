@@ -17,19 +17,19 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define NY 2
 #define NX 5
-#define ERR {if (err!=NC_NOERR) {printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err));}}
+#define ERR {if (err!=NC_NOERR) {nerrs++; printf("Error at line %d: %s\n", __LINE__,ncmpi_strerror(err));}}
 #define TRC(x) if(verbose) printf("%d: ---- before %s() ----\n",rank,#x);err=x
 
 static int verbose;
 
 static int test_vara(int ncid, int *varid)
 {
-    int rank, err, buf[2][NX];
+    int rank, err, nerrs=0, buf[2][NX];
     MPI_Offset start[2], count[2];
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -51,12 +51,12 @@ static int test_vara(int ncid, int *varid)
     TRC(ncmpi_get_vara_int)(ncid, varid[0], start, count, &buf[0][0]); ERR
     TRC(ncmpi_end_indep_data)(ncid); ERR
 
-    return 1;
+    return nerrs;
 }
 
 static int test_ivara(int ncid, int *varid)
 {
-    int rank, err, buf1[2][NX], buf2[2][NX], req[2], st[2];
+    int rank, err, nerrs=0, buf1[2][NX], buf2[2][NX], req[2], st[2];
     MPI_Offset start[2], count[2];
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -81,12 +81,12 @@ static int test_ivara(int ncid, int *varid)
     TRC(ncmpi_wait)(ncid, 2, req, st); ERR
     TRC(ncmpi_end_indep_data)(ncid); ERR
 
-    return 1;
+    return nerrs;
 }
 
 static int test_vard(int ncid, int *varid)
 {
-    int          rank, nprocs, err, i, buf[NY+4][NX+4];
+    int          rank, nprocs, err, nerrs=0, i, buf[NY+4][NX+4];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     MPI_Offset   start[2], count[2];
     MPI_Datatype buftype, rec_filetype, fix_filetype;
@@ -151,12 +151,12 @@ static int test_vard(int ncid, int *varid)
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
     MPI_Type_free(&buftype);
-    return 1;
+    return nerrs;
 }
 
 static int test_varn(int ncid)
 {
-    int i, rank, nprocs, err, num_reqs, dimids[2], varid, *buffer;
+    int i, rank, nprocs, err, nerrs=0, num_reqs, dimids[2], varid, *buffer;
     MPI_Offset **starts, **counts;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -249,12 +249,12 @@ static int test_varn(int ncid)
     free(counts[0]);
     free(starts);
     free(counts);
-    return 1;
+    return nerrs;
 }
 
 static int test_ivarn(int ncid)
 {
-    int i, j, rank, nprocs, err, num_reqs[4], dimids[2], varid[4], *buffer[4];
+    int i, j, rank, nprocs, err, nerrs=0, num_reqs[4], dimids[2], varid[4], *buffer[4];
     int req[5], st[5];
     MPI_Offset **starts[4], **counts[4];
 
@@ -338,7 +338,7 @@ static int test_ivarn(int ncid)
         free(starts[i]);
         free(counts[i]);
     }
-    return 1;
+    return nerrs;
 }
 
 /*----< main() >------------------------------------------------------------*/
@@ -351,6 +351,12 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for profiling ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     err = verbose = 0;
     if (rank == 0) {
@@ -392,11 +398,11 @@ int main(int argc, char **argv) {
     err = ncmpi_put_att_text(ncid, varid[0], "att_name", 14, "attribute text"); ERR
     TRC(ncmpi_enddef)(ncid); ERR
 
-    // test_vara(ncid, varid);
-    // test_ivara(ncid, varid);
-    // test_vard(ncid, varid);
-    // test_varn(ncid);
-    test_ivarn(ncid);
+    // nerrs += test_vara(ncid, varid);
+    // nerrs += test_ivara(ncid, varid);
+    // nerrs += test_vard(ncid, varid);
+    // nerrs += test_varn(ncid);
+    nerrs += test_ivarn(ncid);
 
     TRC(ncmpi_close)(ncid); ERR
 
@@ -408,6 +414,14 @@ int main(int argc, char **argv) {
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+    }
+
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();

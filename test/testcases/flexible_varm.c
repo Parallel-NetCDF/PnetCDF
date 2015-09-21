@@ -49,7 +49,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define NY 6
@@ -139,6 +139,12 @@ int main(int argc, char** argv)
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for flexible varm APIs ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
@@ -220,8 +226,6 @@ int main(int argc, char** argv)
 
     err = ncmpi_close(ncid); ERR
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -232,11 +236,12 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for flexible varm APIs ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs) printf("%s ------ "FAIL_COLOR" with %d errors\n",cmd_str,nerrs);
-        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();

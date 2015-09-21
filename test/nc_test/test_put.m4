@@ -301,18 +301,18 @@ test_ncmpi_put_var1_$1(void)
             index[j] = 0;
         err = ncmpi_put_var1_$1_all(BAD_ID, i, index, &value);
         IF (err != NC_EBADID) 
-            error("expecting bad ncid, but err = %d", err);
+            error("expecting NC_EBADID (bad ncid), but err = %s", nc_err_code_name(err));
         ELSE_NOK
         err = ncmpi_put_var1_$1_all(ncid, BAD_VARID, index, &value);
         IF (err != NC_ENOTVAR) 
-            error("expecting bad var id, but err = %d", err);
+            error("expecting NC_ENOTVAR (bad var id), but err = %s", nc_err_code_name(err));
         ELSE_NOK
         for (j = 0; j < var_rank[i]; j++) {
             if (var_dimid[i][j] > 0) {                /* skip record dim */
                 index[j] = var_shape[i][j];     /* out of boundary check */
                 err = ncmpi_put_var1_$1_all(ncid, i, index, &value);
                 IF (canConvert && err != NC_EINVALCOORDS)
-                    error("expecting bad index, but err = %d", err);
+                    error("expecting NC_EINVALCOORDS (bad index), but err = %s", nc_err_code_name(err));
                 ELSE_NOK
                 index[j] = 0;
             }

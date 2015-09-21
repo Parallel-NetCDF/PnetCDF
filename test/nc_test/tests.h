@@ -15,7 +15,8 @@
 #include <errno.h>
 #include <mpi.h>
 
-#include "pnetcdf.h"
+#include <pnetcdf.h>
+#include <testutils.h>
 #include "error.h"
 
 #include "ncconfig.h" /* output of 'configure' */

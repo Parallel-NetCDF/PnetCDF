@@ -21,7 +21,7 @@
 #include <pnetcdf.h>
 
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define ERRCODE 2
@@ -50,6 +50,12 @@ int main(int argc, char **argv)
         return 0;
     }
     if (argc == 2) filename = argv[1];
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for only one record variable ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     strcpy(data[0], "2005-04-11_12:00:00"); /* 19 bytes not a multiply of 4 */
     strcpy(data[1], "2005-04-11_13:00:00");
@@ -101,12 +107,12 @@ int main(int argc, char **argv)
                    sum_size);
     }
 
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for only one record variable ", argv[0]);
-
-        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();

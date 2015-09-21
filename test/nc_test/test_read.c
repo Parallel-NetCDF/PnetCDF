@@ -5,6 +5,10 @@
  *  $Id$
  */
 
+#include <sys/types.h> /* open() */
+#include <sys/stat.h> /* open() */
+#include <fcntl.h> /* open() */
+#include <unistd.h> /* unlink(), write() */
 #include "tests.h"
 
 /* 
@@ -88,10 +92,11 @@ test_ncmpi_strerror(void)
  *    Open a netCDF file with NC_WRITE mode, write something, close it.
  * On exit, any open netCDF files are closed.
  */
+#define NOT_NC_FILE "dummy_not_nc_file"
 int
 test_ncmpi_open(void)
 {
-    int err;
+    int err, fd;
     int ncid;
     int ncid2;
     int nok=0;
@@ -107,11 +112,19 @@ test_ncmpi_open(void)
         nok++;
     }
 
+    /* create a not-nc file */
+    fd = open(NOT_NC_FILE, O_CREAT|O_WRONLY, 0600);
+    write(fd, "0123456789abcdefghijklmnopqrstuvwxyz", 36);
+    close(fd);
+
     /* Open a file that is not a netCDF file. */
-    err = ncmpi_open(comm, "test_get.c", NC_NOWRITE, info, &ncid);/* should fail */
-    IF (err != NC_ENOTNC && err != NC_EOFILE)
-	error("ncmpi_open of non-netCDF file: status = %d", err);
+    err = ncmpi_open(comm, NOT_NC_FILE, NC_NOWRITE, info, &ncid);/* should fail */
+    IF (err != NC_ENOTNC)
+	error("ncmpi_open of non-netCDF file: expecting NC_ENOTNC but got %s", nc_err_code_name(err));
     ELSE_NOK
+
+    /* delete the not-nc file */
+    unlink(NOT_NC_FILE);
 
     /* Open a netCDF file in read-only mode, check that write fails */
     err = ncmpi_open(comm, testfile, NC_NOWRITE, info, &ncid);

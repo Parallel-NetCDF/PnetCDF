@@ -61,6 +61,7 @@
 #include <string.h> /* strcpy() */
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
 #define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
@@ -301,8 +302,8 @@ int main(int argc, char** argv)
     /* test error code: NC_ENULLABUF */
     err = ncmpi_bput_varn_uint(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
     if (err != NC_ENULLABUF) {
-        printf("Error at line %d: expecting error code NC_ENULLABUF=%d but got %d\n",
-               __LINE__, NC_ENULLABUF,err);
+        printf("Error at line %d: expecting error code NC_ENULLABUF but got %s\n",
+               __LINE__, nc_err_code_name(err));
         nfails++;
     }
 
@@ -341,8 +342,8 @@ int main(int argc, char** argv)
     /* test error code: NC_ENULLSTART */
     err = ncmpi_bput_varn_uint(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
     if (rank < 4 && err != NC_ENULLSTART) {
-        printf("Error at line %d: expecting error code NC_ENULLSTART=%d but got %d\n",
-               __LINE__, NC_ENULLSTART,err);
+        printf("Error at line %d: expecting error code NC_ENULLSTART but got %s\n",
+               __LINE__, nc_err_code_name(err));
         nfails++;
     }
 
@@ -451,8 +452,8 @@ int main(int argc, char** argv)
     /* test error code: NC_ENULLABUF */
     err = ncmpi_inq_buffer_usage(ncid, NULL);
     if (err != NC_ENULLABUF) {
-        printf("expecting error code NC_ENULLABUF=%d but got %d\n",
-               NC_ENULLABUF,err);
+        printf("expecting error code NC_ENULLABUF but got %s\n",
+               nc_err_code_name(err));
         nfails++;
     }
 

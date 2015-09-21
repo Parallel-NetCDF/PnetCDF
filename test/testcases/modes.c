@@ -21,26 +21,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* strcpy() */
-#include <unistd.h> /* unlink() */
+#include <unistd.h> /* unlink(), access() */
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
 
 #define EXPECT_ERR(err_no) \
     if (err != err_no) { \
-        nfails++; \
-        printf("Error at line %d: expect error code %d but got %d\n", \
-               __LINE__,err_no,err); \
+        nerrs++; \
+        printf("Error at line %d: expect error code %s but got %s\n", \
+               __LINE__,nc_err_code_name(err_no),nc_err_code_name(err)); \
     }
 
 int main(int argc, char** argv)
 {
     char filename[256];
-    int rank, nprocs, err, nfails=0;
+    int rank, nprocs, err, nerrs=0, file_exist;
     int ncid, cmode, format;
 
     MPI_Init(&argc, &argv);
@@ -55,6 +56,12 @@ int main(int argc, char** argv)
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for file create/open modes ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     /* create a new file and test various cmodes ----------------------------*/
     cmode = NC_CLOBBER;
@@ -71,9 +78,29 @@ int main(int argc, char** argv)
     EXPECT_ERR(NC_EINVAL_CMODE)
     if (err == NC_NOERR) ncmpi_close(ncid);
 
-    /* no file should be created when in safe mode */
+    /* When opening a non-existing file for read, no file should be created */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     EXPECT_ERR(NC_ENOENT)
+
+    file_exist = 0;
+    if (rank == 0 && access(filename, F_OK) == 0) file_exist = 1;
+    MPI_Bcast(&file_exist, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (file_exist) {
+        printf("Error at line %d: opening a non-existing file (%s) creates the file by mistake\n", __LINE__, filename);
+        nerrs++;
+    }
+
+    /* When opening a non-existing file for write, no file should be created */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    EXPECT_ERR(NC_ENOENT)
+
+    file_exist = 0;
+    if (rank == 0 && access(filename, F_OK) == 0) file_exist = 1;
+    MPI_Bcast(&file_exist, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (file_exist) {
+        printf("Error at line %d: opening a non-existing file (%s) creates the file by mistake\n", __LINE__, filename);
+        nerrs++;
+    }
 
     /* test under safe mode disabled */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
@@ -85,12 +112,10 @@ int main(int argc, char** argv)
     ERR
     if (format != 5) {
         printf("Error at line=%d: expecting CDF-5 format for file %s but got CDF-%d\n",__LINE__,filename,format);
-        nfails++;
+        nerrs++;
     }
     err = ncmpi_close(ncid);
     ERR
-
-    MPI_Allreduce(MPI_IN_PLACE, &nfails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -102,13 +127,13 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for file create/open modes ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nfails) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else        printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
-
 
     MPI_Finalize();
     return 0;

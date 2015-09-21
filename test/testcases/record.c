@@ -30,15 +30,14 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR) {nerrs++; printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
-void test_only_record_var_1D(char *filename,
-                             int  *pass)
+int test_only_record_var_1D(char *filename)
 {
-    int ncid, cmode, varid, dimid, buf[20], err;
+    int ncid, cmode, varid, dimid, buf[20], err, nerrs=0;
     MPI_Offset start, count, length;
     MPI_Info info=MPI_INFO_NULL;
 
@@ -64,10 +63,10 @@ void test_only_record_var_1D(char *filename,
     err = ncmpi_inq_dimlen(ncid, dimid, &length); ERR
     if (length != 2) {
         printf("Error: expecting 2 records, but got %lld record(s)\n",length);
-        *pass = 0;
+        nerrs++;
     }
 
-    if (*pass) { /* test independent data mode */
+    if (nerrs == 0) { /* test independent data mode */
         err = ncmpi_begin_indep_data(ncid); ERR
         /* write the 4th record */
         buf[0] = 93;
@@ -83,17 +82,17 @@ void test_only_record_var_1D(char *filename,
         if (length != 4) {
             printf("Error: expecting 4 records, but got %lld record(s)\n",
                    length);
-            *pass = 0;
+            nerrs++;
         }
         err = ncmpi_end_indep_data(ncid); ERR
     }
     err = ncmpi_close(ncid); ERR
+    return nerrs;
 }
 
-void test_only_record_var_3D(char *filename,
-                             int  *pass)
+int test_only_record_var_3D(char *filename)
 {
-    int i, ncid, cmode, varid, dimid[3], buf[20], err;
+    int i, ncid, cmode, varid, dimid[3], buf[20], err, nerrs=0;
     MPI_Offset start[3], count[3], length;
     MPI_Info info=MPI_INFO_NULL;
 
@@ -123,10 +122,10 @@ void test_only_record_var_3D(char *filename,
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
     if (length != 2) {
         printf("Error: expecting 2 records, but got %lld record(s)\n",length);
-        *pass = 0;
+        nerrs++;
     }
 
-    if (*pass) { /* test independent data mode */
+    if (nerrs == 0) { /* test independent data mode */
         err = ncmpi_begin_indep_data(ncid); ERR
         /* write the 4th record */
         for (i=0; i<20; i++) buf[i] = 93;
@@ -142,17 +141,17 @@ void test_only_record_var_3D(char *filename,
         if (length != 4) {
             printf("Error: expecting 4 records, but got %lld record(s)\n",
                    length);
-            *pass = 0;
+            nerrs++;
         }
         err = ncmpi_end_indep_data(ncid); ERR
     }
     err = ncmpi_close(ncid); ERR
+    return nerrs;
 }
 
-void test_two_record_var(char *filename,
-                         int  *pass)
+int test_two_record_var(char *filename)
 {
-    int i, ncid, cmode, varid[2], dimid[3], buf[20], err;
+    int i, ncid, cmode, varid[2], dimid[3], buf[20], err, nerrs=0;
     MPI_Offset start[3], count[3], length;
     MPI_Info info=MPI_INFO_NULL;
 
@@ -181,10 +180,10 @@ void test_two_record_var(char *filename,
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
     if (length != 2) {
         printf("Error: expecting 2 records, but got %lld record(s)\n",length);
-        *pass = 0;
+        nerrs++;
     }
 
-    if (*pass) { /* test independent data mode */
+    if (nerrs == 0) { /* test independent data mode */
         err = ncmpi_begin_indep_data(ncid); ERR
         /* write the 4th record */
         buf[0] = 93;
@@ -200,7 +199,7 @@ void test_two_record_var(char *filename,
         if (length != 4) {
             printf("Error: expecting 4 records, but got %lld record(s)\n",
                    length);
-            *pass = 0;
+            nerrs++;
         }
         err = ncmpi_end_indep_data(ncid); ERR
     }
@@ -220,10 +219,10 @@ void test_two_record_var(char *filename,
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); ERR
     if (length != 4) {
         printf("Error: expecting 4 records, but got %lld record(s)\n",length);
-        *pass = 0;
+        nerrs++;
     }
 
-    if (*pass) { /* test independent data mode */
+    if (nerrs == 0) { /* test independent data mode */
         err = ncmpi_begin_indep_data(ncid); ERR
         /* write the 4th record */
         for (i=0; i<20; i++) buf[i] = 93;
@@ -239,16 +238,17 @@ void test_two_record_var(char *filename,
         if (length != 4) {
             printf("Error: expecting 4 records, but got %lld record(s)\n",
                    length);
-            *pass = 0;
+            nerrs++;
         }
         err = ncmpi_end_indep_data(ncid); ERR
     }
     err = ncmpi_close(ncid); ERR
+    return nerrs;
 }
 
 int main(int argc, char** argv) {
     char *filename="testfile.nc";
-    int pass=1, rank, nprocs, err;
+    int nerrs=0, rank, nprocs, err;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -260,16 +260,22 @@ int main(int argc, char** argv) {
     }
     if (argc == 2) filename = argv[1];
 
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for write records in reversed order", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
+
     if (rank >= 1) goto fn_exit; /* this test is for running 1 process */
 
     /* test only one 1D record variable */
-    test_only_record_var_1D(filename, &pass);
+    nerrs += test_only_record_var_1D(filename);
 
     /* test only one 3D record variable */
-    test_only_record_var_3D(filename, &pass);
+    nerrs += test_only_record_var_3D(filename);
 
     /* test two record variables */
-    test_two_record_var(filename, &pass);
+    nerrs += test_two_record_var(filename);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size;
@@ -278,14 +284,15 @@ int main(int argc, char** argv) {
         printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                malloc_size);
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for write records in reversed order", argv[0]);
+fn_exit:
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (pass) printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else      printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
-fn_exit:
     MPI_Finalize();
     return 0;
 }

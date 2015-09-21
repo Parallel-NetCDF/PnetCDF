@@ -37,7 +37,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define NY 4
@@ -48,7 +48,7 @@
 int main(int argc, char **argv) {
 
     char       filename[256];
-    int        i, j, err, ncid, varid, dimids[2], req[2], st[2], pass;
+    int        i, j, err, ncid, varid, dimids[2], req[2], st[2], nerrs=0;
     int        rank, nprocs, buf[NY+1][NX];
     MPI_Offset start[2], count[2];
     MPI_Info   info;
@@ -65,6 +65,12 @@ int main(int argc, char **argv) {
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for using ncmpi_iput_vara_int() ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     MPI_Info_create(&info);
     /* When using PVFS2, unexpected buffer value error message might occur.
@@ -127,18 +133,15 @@ int main(int argc, char **argv) {
     err = ncmpi_close(ncid); ERR
 
     /* check if the contents of buf are expected */
-    pass = 1;
     for (j=0; j<2; j++) {
         int val = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
             if (buf[j][i] != val) {
                 printf("Unexpected read buf[%d][%d]=%d, should be %d\n",
                        j,i,buf[j][i],val);
-                pass = 0;
+                nerrs++;
             }
     }
-
-    MPI_Allreduce(MPI_IN_PLACE, &pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -150,11 +153,12 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for using ncmpi_iput_vara_int() ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (pass) printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else      printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();

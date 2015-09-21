@@ -11,10 +11,11 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 F90FLAGS += @FC_MODOUT@.
-LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
+LDFLAGS  := $(LDFLAGS) -L../common
+LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
 C_SRCS   = test_subfile.c
 

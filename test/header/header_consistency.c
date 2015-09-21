@@ -13,23 +13,24 @@
 #include <string.h>
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
 #define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
-#define ERR_EXP(e, exp) {if (e != exp) { printf("Error (line %d): expecting error code %d but got %d\n", __LINE__, exp, e); nerr++; }}
-#define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2) { printf("Error (line %d): expecting error code %d or %d but got %d\n", __LINE__, exp1, exp2, e); nerr++; }}
+#define ERR_EXP(e, exp) {if (e != exp) { printf("Error (line %d): expecting error code %s but got %s\n", __LINE__, nc_err_code_name(exp), nc_err_code_name(e)); nerr++; }}
+#define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2) { printf("Error (line %d): expecting error code %s or %s but got %s\n", __LINE__, nc_err_code_name(exp1), nc_err_code_name(exp2), nc_err_code_name(e)); nerr++; }}
 
 #define CHECK_ERR(expect) { \
     if (safe_mode) { \
         if (err != NC_EMULTIDEFINE && err != expect) { \
-            printf("Error (line %d): expecting error code %d or %d but got %d\n", __LINE__, NC_EMULTIDEFINE, expect, err); \
+            printf("Error (line %d): expecting error code NC_EMULTIDEFINE or %s but got %s\n", __LINE__, nc_err_code_name(expect), nc_err_code_name(err)); \
             nerr++; \
         } \
     } \
     else if (rank > 0) { \
         if (err != expect) { \
-            printf("Error (line %d): expecting error code %d but got %d\n", __LINE__, expect, err); \
+            printf("Error (line %d): expecting error code %s but got %s\n", __LINE__, nc_err_code_name(expect), nc_err_code_name(err)); \
             nerr++; \
         } \
     } \

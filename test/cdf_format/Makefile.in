@@ -11,8 +11,9 @@ VPATH   = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib
-LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
+LDFLAGS  := $(LDFLAGS) -L../common
+LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
 SRCS    = test_inq_format.c cdf_type.c
 

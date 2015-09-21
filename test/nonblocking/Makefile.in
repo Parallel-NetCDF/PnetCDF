@@ -11,9 +11,10 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES  = -I../../src/lib
+INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
-LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
+LDFLAGS  := -L../common $(LDFLAGS)
+LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
 C_SRCS   = mcoll_perf.c \
            test_bput.c \

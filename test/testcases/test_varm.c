@@ -12,7 +12,7 @@
 
 #define PRINT_ERR_ON_SCREEN
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
+#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
 #define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 #define ERRCODE 2
@@ -21,7 +21,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j, err, nerrs=0, max_nerrs, rank, nprocs, verbose;
+    int i, j, err, nerrs=0, rank, nprocs, verbose;
     int ncid, dimid[2], varid, req, status;
 
     MPI_Offset start[2], count[2], stride[2], imap[2];
@@ -40,6 +40,12 @@ int main(int argc, char **argv)
         return 0;
     }
     if (argc == 2) filename = argv[1];
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for get/put varm ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     verbose = 0;
     if (nprocs > 1 && rank == 0 && verbose)
@@ -183,16 +189,16 @@ int main(int argc, char **argv)
                    sum_size);
     }
 
-    MPI_Allreduce(&nerrs, &max_nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for get/put varm ", argv[0]);
-        if (max_nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else           printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs > 0)
+            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
+        else
+            printf(PASS_COLOR);
     }
 
     MPI_Finalize();
 
-    return (max_nerrs == 0) ? 0 : 1;
+    return (nerrs == 0) ? 0 : 1;
 }
 
