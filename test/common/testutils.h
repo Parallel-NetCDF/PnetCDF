@@ -21,4 +21,7 @@ typedef struct {
 
 void parse_read_args(int argc, char **argv, int rank, params *p);
 void parse_write_args(int argc, char **argv, int rank, params *p);
+
+extern char* nc_err_code_name(int err);
+
 #endif
