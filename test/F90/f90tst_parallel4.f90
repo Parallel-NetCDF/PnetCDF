@@ -33,9 +33,9 @@ program f90tst
 
   call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
-  if (nprocs .ne. 8 .AND. my_rank .eq. 0) then
-     print *, 'Warning: ',trim(cmd),' is design to run on 8 processes.'
-  endif
+!  if (nprocs .ne. 8 .AND. my_rank .eq. 0) then
+!     print *, 'Warning: ',trim(cmd),' is design to run on 8 processes.'
+!  endif
 
   nmode = ior(NF90_CLOBBER,NF90_64BIT_DATA)
 

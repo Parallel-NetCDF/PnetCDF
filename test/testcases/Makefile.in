@@ -38,6 +38,7 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            test_vard.c \
            varn_contig.c \
            ivarn.c \
+           check_striping.c \
            redef1.c
 
 F77_SRCS = test_vardf.f \
@@ -137,6 +138,9 @@ profile: profile.o $(LIBRARY)
 ivarn: ivarn.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+check_striping: check_striping.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
@@ -168,6 +172,9 @@ testing check verbose_testing : $(PROGS)
 # Run them on 4 processes to see if they can handle well
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 ptest: $(PROGS)
+	echo "============================================="
+	echo "    Parallel testing on 4 MPI processes"
+	echo "============================================="
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
@@ -178,14 +185,23 @@ ptest: $(PROGS)
 TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
 TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
 ptests: $(PROGS)
+	echo "============================================="
+	echo "    Parallel testing on 4 MPI processes"
+	echo "============================================="
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	echo "============================================="
+	echo "    Parallel testing on 2 MPI processes"
+	echo "============================================="
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	echo "============================================="
+	echo "    Parallel testing on 6 MPI processes"
+	echo "============================================="
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc $(TEST_OUTDIR)/redef1.nc
 	for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \

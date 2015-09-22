@@ -31,9 +31,9 @@ program tst_f90_nc4
 
   call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
-  if (p .ne. 1 .AND. my_rank .eq. 0) then
-     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
-  endif
+!  if (p .ne. 1 .AND. my_rank .eq. 0) then
+!     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
+!  endif
 
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, fh))
