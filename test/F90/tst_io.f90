@@ -46,9 +46,9 @@ program tst_io
 
   call MPI_Bcast(dirpath, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
-  if (p .ne. 1 .AND. my_rank .eq. 0) then
-     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
-  endif
+!  if (p .ne. 1 .AND. my_rank .eq. 0) then
+!     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
+!  endif
 
   psr = 1.7/real(prsz1)
   ! print *, "Starting data initialization."

@@ -33,7 +33,7 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR){nerrs++;printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
 int main(int argc, char** argv) {
     char *filename="redef1.nc";

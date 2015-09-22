@@ -99,6 +99,9 @@ PARALLEL_PROGS = f90tst_parallel f90tst_parallel2 f90tst_parallel3 f90tst_parall
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 ptest: $(PARALLEL_PROGS)
+	echo "============================================="
+	echo "    Parallel testing on 4 MPI processes"
+	echo "============================================="
 	$(TEST_MPIRUN_4) ./f90tst_parallel  $(TEST_OUTDIR)/testfile.nc
 	$(TEST_MPIRUN_4) ./f90tst_parallel2 $(TEST_OUTDIR)/testfile.nc
 	$(TEST_MPIRUN_4) ./f90tst_parallel3 $(TEST_OUTDIR)/testfile.nc
@@ -108,15 +111,27 @@ TEST_MPIRUN_2   = $(subst NP,2,$(TEST_MPIRUN))
 TEST_MPIRUN_8   = $(subst NP,8,$(TEST_MPIRUN))
 TEST_MPIRUN_10  = $(subst NP,10,$(TEST_MPIRUN))
 ptests: $(PARALLEL_PROGS)
+	echo "============================================="
+	echo "    Parallel testing on 4 MPI processes"
+	echo "============================================="
 	@for i in $(PARALLEL_PROGS); do ( \
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	echo "============================================="
+	echo "    Parallel testing on 2 MPI processes"
+	echo "============================================="
 	@for i in $(PARALLEL_PROGS); do ( \
 	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	echo "============================================="
+	echo "    Parallel testing on 8 MPI processes"
+	echo "============================================="
 	@for i in $(PARALLEL_PROGS); do ( \
 	$(TEST_MPIRUN_8) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	echo "============================================="
+	echo "    Parallel testing on 10 MPI processes"
+	echo "============================================="
 	@for i in $(PARALLEL_PROGS); do ( \
 	$(TEST_MPIRUN_10) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done

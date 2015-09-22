@@ -46,6 +46,9 @@ check testing verbose_testing: $(PROGS)
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 
 ptest: $(PAR_PROGS)
+	echo "============================================="
+	echo "    Parallel testing on 4 MPI processes"
+	echo "============================================="
 	@for i in $(PAR_PROGS); do ( \
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
@@ -53,12 +56,21 @@ ptest: $(PAR_PROGS)
 TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
 TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
 ptests: $(PROGS)
+	echo "============================================="
+	echo "    Parallel testing on 4 MPI processes"
+	echo "============================================="
 	@for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	echo "============================================="
+	echo "    Parallel testing on 2 MPI processes"
+	echo "============================================="
 	@for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+	echo "============================================="
+	echo "    Parallel testing on 6 MPI processes"
+	echo "============================================="
 	@for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_6) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
