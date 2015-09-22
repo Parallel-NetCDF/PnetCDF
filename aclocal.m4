@@ -995,6 +995,8 @@ AC_DEFUN([UD_FC_PP_SRCEXT],
 AC_CACHE_CHECK([for Fortran flag to compile preprocessed .$1 files],
                 ac_cv_fc_pp_srcext_$1,
 [ac_ext=$1
+FCFLAGS_SRCEXT_save=$FCFLAGS_SRCEXT
+FCFLAGS_SRCEXT=
 ac_fcflags_pp_srcext_save=$ac_fcflags_srcext
 ac_fcflags_srcext=
 ac_cv_fc_pp_srcext_$1=unknown
@@ -1004,7 +1006,7 @@ case $ac_ext in #(
 esac
 for ac_flag in none -ftpp -fpp -Tf "-fpp -Tf" -xpp=fpp -Mpreprocess "-e Z" \
                -cpp -xpp=cpp -qsuffix=cpp=$1 "-x $ac_try" +cpp -Cpp; do
-  test "x$ac_flag" != xnone && ac_fcflags_srcext="$ac_flag"
+  test "x$ac_flag" != xnone && FCFLAGS_SRCEXT="$ac_flag" && ac_fcflags_srcext="$ac_flag"
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
 #if 0
 #include <ac_nonexistent.h>
@@ -1019,6 +1021,7 @@ for ac_flag in none -ftpp -fpp -Tf "-fpp -Tf" -xpp=fpp -Mpreprocess "-e Z" \
        [ac_cv_fc_pp_srcext_$1=$ac_flag; break])])
 done
 ${RM} -f conftest.$ac_objext conftest.$1
+FCFLAGS_SRCEXT=$FCFLAGS_SRCEXT_save
 ac_fcflags_srcext=$ac_fcflags_pp_srcext_save
 ])
 if test "x$ac_cv_fc_pp_srcext_$1" = xunknown; then
@@ -1027,11 +1030,11 @@ if test "x$ac_cv_fc_pp_srcext_$1" = xunknown; then
 else
   ac_fc_srcext=$1
   if test "x$ac_cv_fc_pp_srcext_$1" = xnone; then
-    ac_fcflags_srcext=""
+    FCFLAGS_SRCEXT=""
     ac_cv_fc_pp_srcext_$1=""
     dnl FCPPFLAGS_[]$1[]=""
   else
-    ac_fcflags_srcext=$ac_cv_fc_pp_srcext_$1
+    FCFLAGS_SRCEXT=$ac_cv_fc_pp_srcext_$1
     dnl FCPPFLAGS_[]$1[]=$ac_cv_fc_pp_srcext_$1
   fi
   dnl AC_SUBST(FCPPFLAGS_[]$1)

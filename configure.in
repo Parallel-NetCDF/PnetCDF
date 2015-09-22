@@ -512,6 +512,7 @@ if test "x${enable_fortran}" = xyes ; then
    UD_FC_PP_DEFINE
 
    dnl check compiler flags for file extentions in .f .F .f90 .F90
+   AC_LANG_PUSH([Fortran])
    AC_FC_SRCEXT([f])
    AC_FC_SRCEXT([F])
    AC_FC_SRCEXT([f90])
@@ -520,6 +521,7 @@ if test "x${enable_fortran}" = xyes ; then
    AC_SUBST(F77FLAGS_F)
    AC_SUBST(F90FLAGS_f90)
    AC_SUBST(F90FLAGS_F90)
+   AC_LANG_POP([Fortran])
 
    dnl get flag for Fortran fixed form (this flag is only used in testing)
    UD_FC_FIXEDFORM
