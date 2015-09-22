@@ -1028,12 +1028,13 @@ else
   ac_fc_srcext=$1
   if test "x$ac_cv_fc_pp_srcext_$1" = xnone; then
     ac_fcflags_srcext=""
-    FCFLAGS_[]$1[]=""
+    ac_cv_fc_pp_srcext_$1=""
+    dnl FCPPFLAGS_[]$1[]=""
   else
     ac_fcflags_srcext=$ac_cv_fc_pp_srcext_$1
-    FCFLAGS_[]$1[]=$ac_cv_fc_pp_srcext_$1
+    dnl FCPPFLAGS_[]$1[]=$ac_cv_fc_pp_srcext_$1
   fi
-  AC_SUBST(FCFLAGS_[]$1)
+  dnl AC_SUBST(FCPPFLAGS_[]$1)
   $2
 fi
 AC_LANG_POP(Fortran)dnl
