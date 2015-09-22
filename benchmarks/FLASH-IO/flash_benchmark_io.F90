@@ -5,11 +5,18 @@
 ! performance.
 ! 
 
+#ifdef NAGf90Fortran
+      USE F90_UNIX_ENV, only : iargc, getarg
+#endif
+
 ! the main data structures are contained in common blocks, defined in the
 ! include files
 
 #include "common.fh"
 
+#ifndef NAGf90Fortran
+      integer iargc
+#endif
       integer i, argc, ierr
       character(len=128) executable
       logical isArgvRight
@@ -20,9 +27,6 @@
       double precision plotfile_ncmpi_par
 
       integer, parameter :: local_blocks = INT(0.8*maxblocks)
-
-      ! declare external functions
-      integer IARGC
 
 ! initialize MPI and get the rank and size
       call MPI_INIT(ierr)

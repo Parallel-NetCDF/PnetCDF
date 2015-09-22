@@ -63,7 +63,7 @@
 ! data variables
       real  interfaces(interfaces_len)
 
-      integer  myid, ierr, n
+      integer  myid, err, ierr, n, get_args
       integer  numprocs
 
       integer*8 i8_size
@@ -78,7 +78,6 @@
      + 310, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 199.10001/
 
       character(len = 256) :: filename, cmd, msg
-      integer argc, IARGC
 
 ! attribute vectors
 ! enter define mode
@@ -88,14 +87,15 @@
       call MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, numprocs, ierr)
 
-      call getarg(0, cmd)
-      argc = IARGC()
-      if (argc .GT. 1) then
-          if (myid .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-          goto 999
+      if (myid .EQ. 0) then
+          filename = "testfile.nc"
+          err = get_args(cmd, filename)
       endif
-      filename = "testfile.nc"
-      if (argc .EQ. 1) call getarg(1, filename)
+      call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+      if (err .EQ. 0) goto 999
+
+      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+     +               ierr)
 
       iret = nfmpi_create( MPI_COMM_WORLD, filename,
      +                       IOR(NF_CLOBBER,NF_64BIT_DATA), 

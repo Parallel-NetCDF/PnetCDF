@@ -1531,12 +1531,25 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
 dnl Check if Fortran 77 compiler is pgf77
 dnl
 AC_DEFUN([UD_CHECK_PGF77],[
-    AC_CACHE_CHECK([if Fortran 77 compiler is pgf77], [ac_cv_fc_pgf77],
-    [ac_cv_fc_pgf77=no
+    AC_CACHE_CHECK([if Fortran 77 compiler is pgf77], [ac_cv_fc_compiler_pgf77],
+    [ac_cv_fc_compiler_pgf77=no
      pgf77_version=`${MPIF77} --version`
      pgf77_vendor=`echo ${pgf77_version} | cut -d' ' -f1`
      if test "x${pgf77_vendar}" = xpgf77 ; then
-        ac_cv_fc_pgf77=yes
+        ac_cv_fc_compiler_pgf77=yes
+     fi
+    ])
+])
+
+dnl Check if Fortran compiler is NAG
+dnl
+AC_DEFUN([UD_CHECK_FC_NAG],[
+    AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
+    [ac_cv_fc_compiler_nag=no
+     nag_fc_version=`${MPIF90} --version`
+     nag_fc_vendor=`echo ${nag_fc_version} | cut -d' ' -f1`
+     if test "x${nag_fc_vendar}" = xNAG ; then
+        ac_cv_fc_compiler_nag=yes
      fi
     ])
 ])

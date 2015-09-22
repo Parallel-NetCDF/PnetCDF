@@ -57,7 +57,7 @@
           PARAMETER(NDIMS=2)
 
           character(LEN=128) filename, cmd, msg
-          integer rank, nprocs, err, num_reqs, argc, iargc
+          integer rank, nprocs, err, ierr, num_reqs, get_args
           integer ncid, cmode, varid, dimid(2), y, x, i, j, nerrs
           integer, allocatable :: req_lens(:)
           real, allocatable :: buffer(:), buffer2D(:,:)
@@ -67,35 +67,27 @@
           integer(kind=MPI_OFFSET_KIND), allocatable :: starts(:,:)
           integer(kind=MPI_OFFSET_KIND), allocatable :: counts(:,:)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
-          character(len = 4) :: quiet_mode
-          logical verbose
 
           NY = 4
           NX = 10
 
-          call MPI_Init(err)
-          call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
-          call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
+          call MPI_Init(ierr)
+          call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
+          call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
           ! take filename from command-line argument if there is any
-          call getarg(0, cmd)
-          argc = IARGC()
-          if (argc .GT. 2) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [-v] [filename]'
-              goto 999
+          if (rank .EQ. 0) then
+              filename = "testfile.nc"
+              err = get_args(cmd, filename)
           endif
-          verbose  = .FALSE.
-          filename = "testfile.nc"
-          nerrs    = 0
-          call getarg(1, quiet_mode)
-          if (quiet_mode(1:2) .EQ. '-v') then
-              verbose = .TRUE.
-              if (argc .EQ. 2) call getarg(2, filename)
-          else
-              if (argc .EQ. 1) call getarg(1, filename)
-          endif
+          call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+          if (err .EQ. 0) goto 999
+          
+          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
-          if (verbose .AND. nprocs .NE. 4 .AND. rank .EQ. 0) &
+          nerrs = 0
+
+          if (.FALSE. .AND. nprocs .NE. 4 .AND. rank .EQ. 0) &
               print*,'Warning: ',trim(cmd),' is intended to run on ', &
                      '4 processes'
 
@@ -292,7 +284,7 @@
           err = nf90mpi_inq_malloc_size(malloc_size)
           if (err == NF90_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, &
-                              MPI_SUM, 0, MPI_COMM_WORLD, err)
+                              MPI_SUM, 0, MPI_COMM_WORLD, ierr)
               if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998, &
                   'heap memory allocated by PnetCDF internally has ',  &
                   sum_size/1048576, ' MiB yet to be freed'
@@ -309,7 +301,7 @@
               endif
           endif
 
- 999      call MPI_Finalize(err)
+ 999      call MPI_Finalize(ierr)
 
       end program
 

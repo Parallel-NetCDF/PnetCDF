@@ -11,8 +11,8 @@
       include "pnetcdf.inc"
 
       logical verbose
-      integer i, j, ncid, varid, err, rank, nprocs, info
-      integer no_err, cmode
+      integer i, j, ncid, varid, err, ierr, rank, nprocs, info
+      integer no_err, cmode, get_args
       integer dimid(2), req(2), status(2)
       integer(kind=MPI_OFFSET_KIND) start(2)
       integer(kind=MPI_OFFSET_KIND) count(2)
@@ -20,22 +20,21 @@
       integer(kind=MPI_OFFSET_KIND) imap(2)
       integer(kind=MPI_OFFSET_KIND) bufsize
       real  var(6,4)
-
-      integer argc, IARGC
       character(len=256) :: filename, cmd, msg
 
-      call MPI_INIT(err)
-      call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
-      call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
+      call MPI_INIT(ierr)
+      call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
+      call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, ierr)
 
-      call getarg(0, cmd)
-      argc = IARGC()
-      if (argc .GT. 1) then
-          if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-          goto 999
+      if (rank .EQ. 0) then
+          filename = "testfile.nc"
+          err = get_args(cmd, filename)
       endif
-      filename = "testfile.nc"
-      if (argc .EQ. 1) call getarg(1, filename)
+      call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+      if (err .EQ. 0) goto 999
+
+      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+     +               ierr)
 
       verbose = .FALSE.
       if (nprocs > 1 .AND. rank .EQ. 0 .AND. verbose) then
@@ -43,8 +42,8 @@
      +           ' is designed to run on 1 process'
       endif
 
-      call MPI_Info_create(info, err)
-      ! call MPI_Info_set(info, "romio_pvfs2_posix_write","enable",err)
+      call MPI_Info_create(info, ierr)
+      ! call MPI_Info_set(info, "romio_pvfs2_posix_write","enable",ierr)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, 'testfile.nc', cmode,
@@ -52,7 +51,7 @@
       if (err < NF_NOERR) print*,'Error at nfmpi_create ',
      +                           nfmpi_strerror(err)
 
-      call MPI_Info_free(info, err)
+      call MPI_Info_free(info, ierr)
 
       ! define a variable of a 4 x 6 integer array in the nc file
       err = nfmpi_def_dim(ncid, 'X', 4_MPI_OFFSET_KIND, dimid(1))
@@ -177,7 +176,7 @@
          endif
       endif
 
- 999  CALL MPI_Finalize(err)
+ 999  CALL MPI_Finalize(ierr)
 
       end program
 

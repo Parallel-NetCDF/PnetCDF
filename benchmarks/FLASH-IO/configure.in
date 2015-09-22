@@ -76,6 +76,13 @@ dnl Check if MPIF90 is a valid MPI compiler
 FC=${MPIF90}
 AC_PROG_FC
 
+dnl Check if the Fortran compiler is an NAG
+UD_CHECK_FC_NAG
+if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
+   NAGf90FPPFLAGS="-DNAGf90Fortran"
+   AC_SUBST(NAGf90FPPFLAGS)
+fi
+
 dnl find compile flags for handling files with .F .F90 .f90 extensions
 dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make UD_FC_PP_SRCEXT
 UD_FC_PP_SRCEXT([F90])
@@ -115,7 +122,7 @@ PNETCDF_INSTALL=""
 AC_ARG_WITH(pnetcdf,
     [AS_HELP_STRING([--with-pnetcdf=/path/to/implementation],
                     [installation prefix for PnetCDF implementation])],
-    if test "x${withval}" = xyes; then
+    if test "x${withval}" = xyes ; then
         AC_MSG_ERROR(--with-pnetcdf must be given a pathname)
     else
         PNETCDF_INSTALL=${withval}
@@ -123,7 +130,7 @@ AC_ARG_WITH(pnetcdf,
 )
 
 AC_MSG_CHECKING(PnetCDF Fortran library)
-if test "x${PNETCDF_INSTALL}" != x; then
+if test "x${PNETCDF_INSTALL}" != x ; then
    PNETCDF_INC=${PNETCDF_INSTALL}/include
    PNETCDF_LIB="-L${PNETCDF_INSTALL}/lib"
 fi
@@ -133,8 +140,11 @@ have_pnetcdf=no
 AC_LANG_PUSH([Fortran])
 FCFLAGS_save=${FCFLAGS}
 LIBS_save=${LIBS}
-if test "x${PNETCDF_INC}" != x; then
+if test "x${PNETCDF_INC}" != x ; then
    FCFLAGS="${FCFLAGS} ${FPPFLAGS} ${FC_MODINC}${PNETCDF_INC}"
+fi
+if test "x${PNETCDF_LIB}" != x ; then
+   LDFLAGS="${LDFLAGS} ${PNETCDF_LIB}"
 fi
 LIBS="-lpnetcdf ${LIBS}"
 AC_LINK_IFELSE([AC_LANG_CALL([], [nfmpi_create])],
@@ -150,11 +160,11 @@ AC_LANG_POP([Fortran])
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
-if test "x${have_pnetcdf}" = xno; then
+if test "x${have_pnetcdf}" = xno ; then
     AC_MSG_ERROR([
     ------------------------------------------------------------
      The PnetCDF library and header file are required to build
-     the GCRM I/O kernel. Use option
+     the FLASH I/O kernel. Use option
          --with-pnetcdf=/path/to/implementation
      to specify the location of PnetCDF build.  Stopping ...
      Check 'config.log' for more information.

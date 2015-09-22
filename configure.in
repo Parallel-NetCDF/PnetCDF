@@ -533,7 +533,14 @@ if test "x${enable_fortran}" = xyes ; then
    dnl Some Fortran 77 compilers, such as pgf77, do not allow "_8" modifier,
    dnl because _8 modifier is a Fortran 90 feature
    dnl UD_CHECK_PGF77
-   dnl UD_MSG_DEBUG([ac_cv_fc_pgf77=$ac_cv_fc_pgf77 pgf77_vendar=$pgf77_vendar])
+   dnl UD_MSG_DEBUG([ac_cv_fc_compiler_pgf77=$ac_cv_fc_compiler_pgf77 pgf77_vendar=$pgf77_vendar])
+
+   dnl Check if the Fortran compiler is an NAG
+   UD_CHECK_FC_NAG
+   if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
+      NAGf90FPPFLAGS="-DNAGf90Fortran"
+      AC_SUBST(NAGf90FPPFLAGS)
+   fi
 
    UD_FC_CONSTANT_MODIFIER
    UD_MSG_DEBUG([ac_cv_fc_constant_modifier=$ac_cv_fc_constant_modifier])

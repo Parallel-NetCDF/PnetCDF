@@ -32,7 +32,7 @@
           implicit none
 
           character(LEN=256) filename, cmd
-          integer argc, IARGC, err, rank
+          integer err, ierr, rank, get_args
           integer cmode, ncid, varid, dimid(1), req(1), status(1)
           integer(kind=MPI_OFFSET_KIND) start(1)
           integer(kind=MPI_OFFSET_KIND) count(1)
@@ -54,18 +54,18 @@
           PARAMETER( dbuf=(/1.0,2.0,3.0/))
           PARAMETER(i8buf=(/1_8,2_8,3_8/))
 
-          call MPI_Init(err)
-          call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
+          call MPI_Init(ierr)
+          call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
           ! take filename from command-line argument if there is any
-          call getarg(0, cmd)
-          argc = IARGC()
-          if (argc .GT. 1) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-              goto 999
+          if (rank .EQ. 0) then
+              filename = 'testfile.nc'
+              err = get_args(cmd, filename)
           endif
-          filename = "testfile.nc"
-          if (argc .EQ. 1) call getarg(1, filename)
+          call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+          if (err .EQ. 0) goto 999
+
+          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
@@ -137,6 +137,6 @@
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')
 
- 999      call MPI_Finalize(err)
+ 999      call MPI_Finalize(ierr)
       end program main
 

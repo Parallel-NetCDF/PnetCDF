@@ -44,7 +44,7 @@
       logical isperiodic(3)
               
       integer comm_cart                   ! Cartesian communicator
-      integer ierr
+      integer err, ierr, get_args
       INTEGER(KIND=MPI_OFFSET_KIND) istart, jstart, kstart      ! offsets of 3D field
       INTEGER(KIND=MPI_OFFSET_KIND) locsiz
       integer mype                        ! rank in comm_cart
@@ -57,7 +57,7 @@
                                           !   determined by MPI where a
                                           !   zero is specified
 
-      integer argc, IARGC, rank, Write_File
+      integer rank, Write_File
       character(len=256) :: filename, cmd, msg
 
       real*4  filsiz
@@ -84,14 +84,15 @@
       call MPI_Comm_Size(MPI_COMM_WORLD, totpes, ierr)
       call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
-      call getarg(0, cmd)
-      argc = IARGC()
-      if (argc .GT. 1) then
-          if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-          goto 999
+      if (rank .EQ. 0) then
+          filename = "testfile.nc"
+          err = get_args(cmd, filename)
       endif
-      filename = "testfile.nc"
-      if (argc .EQ. 1) call getarg(1, filename)
+      call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+      if (err .EQ. 0) goto 999
+
+      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+     +               ierr)
 
       call MPI_Dims_Create (totpes, 3, numpes, ierr)
 

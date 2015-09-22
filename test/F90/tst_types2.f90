@@ -31,25 +31,25 @@ program tst_types2
        data7_out(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN, DLEN)
   integer (kind = 8), parameter :: REALLY_BIG = 9223372036854775807_8
 
-  integer :: cmode, err
+  integer :: cmode, err, ierr, get_args
   integer(KIND=MPI_OFFSET_KIND) :: dlen_ll
   character(LEN=256) filename, cmd, msg
-  integer my_rank, p, argc, iargc
+  integer my_rank, p
   logical verbose
 
-  call MPI_Init(err)
-  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
-  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+  call MPI_Init(ierr)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
   ! take filename from command-line argument if there is any
-  call getarg(0, cmd)
-  argc = IARGC()
-  if (argc .GT. 1) then
-     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-     goto 999
+  if (my_rank .EQ. 0) then
+      filename = FILE_NAME
+      err = get_args(cmd, filename)
   endif
-  filename = FILE_NAME
-  if (argc .EQ. 1) call getarg(1, filename)
+  call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  if (err .EQ. 0) goto 999
+
+  call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
   verbose = .FALSE.
   if (p .ne. 4 .AND. my_rank .eq. 0 .AND. verbose) then
@@ -275,7 +275,7 @@ program tst_types2
    if (my_rank .eq. 0) write(*,"(A67,A)") msg, &
        '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
 
- 999 call MPI_Finalize(err)
+ 999 call MPI_Finalize(ierr)
 
 !     This subroutine handles errors by printing an error message and
 !     exiting with a non-zero status.

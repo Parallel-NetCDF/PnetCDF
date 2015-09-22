@@ -16,7 +16,7 @@ program tst_io
        prsz3 = 50, prsz4 = 50, repct = 10
   integer :: i1, i2, i3, i4
   real :: psr
-  integer :: err
+  integer :: err, ierr, get_args
   integer :: start, now, ncint1, ncint2, size
   ! integer :: wrint1, wrint2, wrint3, ncint3
   real, dimension (prsz1, prsz2, prsz3, prsz4) :: s, t, u, v, w, x, y, z
@@ -30,21 +30,21 @@ program tst_io
   integer :: ncid, x1id, x2id, x3id, x4id, vrid
   ! integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
   character(LEN=256) dirpath, cmd, msg
-  integer argc, iargc, my_rank, p
+  integer my_rank, p
 
-  call MPI_Init(err)
-  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
-  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+  call MPI_Init(ierr)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
   ! take filename from command-line argument if there is any
-  call getarg(0, cmd)
-  argc = IARGC()
-  if (argc .GT. 1) then
-     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [dirpath]'
-     goto 999
+  if (my_rank .EQ. 0) then
+      dirpath = '.'
+      err = get_args(cmd, dirpath)
   endif
-  dirpath = '.'
-  if (argc .EQ. 1) call getarg(1, dirpath)
+  call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  if (err .EQ. 0) goto 999
+
+  call MPI_Bcast(dirpath, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
   if (p .ne. 1 .AND. my_rank .eq. 0) then
      print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
@@ -136,7 +136,7 @@ program tst_io
    if (my_rank .eq. 0) write(*,"(A67,A)") msg, &
        '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
 
- 999 call MPI_Finalize(err)
+ 999 call MPI_Finalize(ierr)
 
 contains
   subroutine check (st, n) ! checks the return error code
