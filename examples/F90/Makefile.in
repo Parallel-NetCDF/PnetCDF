@@ -32,9 +32,12 @@ F90_SRCS  = nonblocking_write.f90 \
 PROGS     = $(F90_SRCS:.f90=)
 OBJS      = $(F90_SRCS:.f90=.o)
 
+UTIL_SRCS  = utils.F90
+UTIL_OBJS  = $(UTIL_SRCS:.F90=.o)
+
 GARBAGE      = $(PROGS) *.nc
 
-PACKING_LIST = $(F90_SRCS) depend Makefile.in
+PACKING_LIST = $(F90_SRCS) $(UTIL_SRCS) depend Makefile.in
 
 all: $(PROGS)
 
@@ -42,41 +45,41 @@ install:
 
 uninstall:
 
-nonblocking_write: nonblocking_write.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+nonblocking_write: nonblocking_write.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-get_info: get_info.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+get_info: get_info.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-column_wise: column_wise.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+column_wise: column_wise.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-block_cyclic: block_cyclic.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+block_cyclic: block_cyclic.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-put_var: put_var.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+put_var: put_var.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-hints: hints.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+hints: hints.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-flexible_api: flexible_api.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+flexible_api: flexible_api.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-put_varn_int: put_varn_int.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+put_varn_int: put_varn_int.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-put_varn_real: put_varn_real.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+put_varn_real: put_varn_real.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-transpose: transpose.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+transpose: transpose.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-vard_int: vard_int.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+vard_int: vard_int.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
-fill_mode: fill_mode.o $(LIBRARY)
-	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
+fill_mode: fill_mode.o $(UTIL_OBJS) $(LIBRARY)
+	$(LINK.F90) $< $(UTIL_OBJS) $(F90LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))

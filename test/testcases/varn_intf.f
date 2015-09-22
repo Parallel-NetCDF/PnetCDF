@@ -72,7 +72,7 @@
           PARAMETER(NDIMS=2, NX=4, NY=10)
 
           character(LEN=128) filename, cmd, msg
-          integer i, j, argc, IARGC, err, nprocs, rank, nerrs
+          integer i, j, err, ierr, nprocs, rank, nerrs, get_args
           integer cmode, ncid, varid, dimid(NDIMS), num_reqs
 
           integer(kind=MPI_OFFSET_KIND) w_len, w_req_len
@@ -80,33 +80,25 @@
           integer(kind=MPI_OFFSET_KIND) counts(NDIMS, 13)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
           integer buffer(13)
-          character(len = 4) :: quiet_mode
-          logical verbose
 
-          call MPI_Init(err)
-          call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
-          call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
+          call MPI_Init(ierr)
+          call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
+          call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
           ! take filename from command-line argument if there is any
-          call getarg(0, cmd)
-          argc = IARGC()
-          if (argc .GT. 2) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),
-     +                         ' [-v] [filename]'
-              goto 999
+          if (rank .EQ. 0) then
+              filename = "testfile.nc"
+              err = get_args(cmd, filename)
           endif
-          verbose  = .FALSE.
-          filename = "testfile.nc"
-          nerrs    = 0
-          call getarg(1, quiet_mode)
-          if (quiet_mode(1:2) .EQ. '-v') then
-              verbose = .TRUE.
-              if (argc .EQ. 2) call getarg(2, filename)
-          else
-              if (argc .EQ. 1) call getarg(1, filename)
-          endif
+          call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+          if (err .EQ. 0) goto 999
 
-          if (verbose .AND. nprocs .NE. 4 .AND. rank .EQ. 0)
+          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0,
+     +                   MPI_COMM_WORLD, ierr)
+
+          nerrs = 0
+
+          if (.FALSE. .AND. nprocs .NE. 4 .AND. rank .EQ. 0)
      +        print*,'Warning: ',trim(cmd),' is intended to run on ',
      +               '4 processes'
 
@@ -283,6 +275,6 @@
               endif
           endif
 
- 999      call MPI_Finalize(err)
+ 999      call MPI_Finalize(ierr)
       end program main
 

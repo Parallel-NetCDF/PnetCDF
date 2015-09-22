@@ -23,25 +23,25 @@ program tst_flarge
   double precision, parameter :: VAL2 = -42.5
   double precision :: val1_in
   double precision :: val2_in
-  integer :: cmode, err
+  integer :: cmode, err, ierr, get_args
   double precision dbl_buf(1)
   integer(KIND=MPI_OFFSET_KIND) :: start(1), count(1)
   character(LEN=256) filename, cmd, msg
-  integer argc, iargc, my_rank, p
+  integer my_rank, p
 
-  call MPI_Init(err)
-  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
-  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+  call MPI_Init(ierr)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
   ! take filename from command-line argument if there is any
-  call getarg(0, cmd)
-  argc = IARGC()
-  if (argc .GT. 1) then
-     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-     goto 999
+  if (my_rank .EQ. 0) then
+      filename = FILE_NAME
+      err = get_args(cmd, filename)
   endif
-  filename = FILE_NAME
-  if (argc .EQ. 1) call getarg(1, filename)
+  call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  if (err .EQ. 0) goto 999
+
+  call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
   if (p .ne. 1 .AND. my_rank .eq. 0) then
      print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
@@ -87,7 +87,7 @@ program tst_flarge
    if (my_rank .eq. 0) write(*,"(A67,A)") msg, &
        '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
 
- 999  call MPI_Finalize(err)
+ 999  call MPI_Finalize(ierr)
 
 contains
   ! Internal subroutine - checks error status after each netcdf, prints out text message each time

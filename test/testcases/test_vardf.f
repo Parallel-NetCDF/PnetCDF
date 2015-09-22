@@ -182,7 +182,7 @@
           include "mpif.h"
           include "pnetcdf.inc"
           character(LEN=128) filename, cmd, msg
-          integer argc, IARGC, err, nprocs, rank, i, j
+          integer err, ierr, nprocs, rank, i, j, get_args
           integer cmode, ncid, varid0, varid1, varid2, dimid(2), nerrs
           integer NX, NY
           PARAMETER(NX=5, NY=2)
@@ -193,30 +193,21 @@
           integer(kind=MPI_OFFSET_KIND) start(2), count(2), len
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size, recsize
           integer(kind=MPI_ADDRESS_KIND) a0, a1, disps(2)
-          character(len = 4) :: quiet_mode
-          logical verbose
 
-          call MPI_Init(err)
-          call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
-          call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
+          call MPI_Init(ierr)
+          call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
+          call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
           ! take filename from command-line argument if there is any
-          call getarg(0, cmd)
-          argc = IARGC()
-          if (argc .GT. 2) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),
-     +                                ' [-q] [filename]'
-              goto 999
+          if (rank .EQ. 0) then
+              filename = "testfile.nc"
+              err = get_args(cmd, filename)
           endif
-          verbose = .TRUE.
-          filename = "testfile.nc"
-          call getarg(1, quiet_mode)
-          if (quiet_mode(1:2) .EQ. '-q') then
-              verbose = .FALSE.
-              if (argc .EQ. 2) call getarg(2, filename)
-          else
-              if (argc .EQ. 1) call getarg(1, filename)
-          endif
+          call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+          if (err .EQ. 0) goto 999
+
+          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0,
+     +                   MPI_COMM_WORLD, ierr)
 
           nerrs = 0
 
@@ -228,13 +219,13 @@
           ! construct various MPI derived data types
           blocklengths(1) = NX;
           blocklengths(2) = NX;
-          call MPI_Get_address(buf(1,2), a0, err)
-          call MPI_Get_address(buf(1,1), a1, err)
+          call MPI_Get_address(buf(1,2), a0, ierr)
+          call MPI_Get_address(buf(1,1), a1, ierr)
           disps(1) = 0
           disps(2) = a1 - a0
           call MPI_Type_create_hindexed(2, blocklengths, disps,
-     +                  MPI_INTEGER, buftype, err)
-          call MPI_Type_commit(buftype, err)
+     +                  MPI_INTEGER, buftype, ierr)
+          call MPI_Type_commit(buftype, ierr)
 
           ! create a file type for the fixed-size variable
           array_of_sizes(1) = NX*nprocs
@@ -245,8 +236,8 @@
           array_of_starts(2) = INT(start(2))
           call MPI_Type_create_subarray(2, array_of_sizes,
      +         array_of_subsizes, array_of_starts, MPI_ORDER_FORTRAN,
-     +         MPI_INTEGER, fix_filetype, err)
-          call MPI_Type_commit(fix_filetype, err)
+     +         MPI_INTEGER, fix_filetype, ierr)
+          call MPI_Type_commit(fix_filetype, ierr)
 
           ! create a buftype with ghost cells on each side */
           array_of_sizes(1) = INT(count(1))+4
@@ -257,8 +248,8 @@
           array_of_starts(2) = 2
           call MPI_Type_create_subarray(2, array_of_sizes,
      +         array_of_subsizes, array_of_starts, MPI_ORDER_FORTRAN,
-     +         MPI_INTEGER, ghost_buftype, err)
-          call MPI_Type_commit(ghost_buftype, err)
+     +         MPI_INTEGER, ghost_buftype, ierr)
+          call MPI_Type_commit(ghost_buftype, ierr)
 
           ! initialized buffer contents
           do j=1, INT(count(2))
@@ -306,8 +297,8 @@
           disps(1) = start(1)*4
           disps(2) = recsize + start(1)*4
           call MPI_Type_create_hindexed(2, blocklengths, disps,
-     +                                  MPI_INTEGER, rec_filetype, err)
-          call MPI_Type_commit(rec_filetype, err)
+     +                                  MPI_INTEGER, rec_filetype, ierr)
+          call MPI_Type_commit(rec_filetype, ierr)
 
           ! write the record variable */
           err = nfmpi_put_vard_all(ncid, varid0, rec_filetype, buf(:,2),
@@ -357,17 +348,17 @@
           err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close: ')
 
-          call MPI_Type_free(rec_filetype, err)
-          call MPI_Type_free(fix_filetype, err)
-          call MPI_Type_free(buftype, err)
-          call MPI_Type_free(ghost_buftype, err)
+          call MPI_Type_free(rec_filetype, ierr)
+          call MPI_Type_free(fix_filetype, ierr)
+          call MPI_Type_free(buftype, ierr)
+          call MPI_Type_free(ghost_buftype, ierr)
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
           err = nfmpi_inq_malloc_size(malloc_size)
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
-     +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
+     +                        MPI_SUM, 0, MPI_COMM_WORLD, ierr)
               if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
@@ -384,6 +375,6 @@
               endif
           endif
 
- 999      call MPI_Finalize(err)
+ 999      call MPI_Finalize(ierr)
       end program main
 

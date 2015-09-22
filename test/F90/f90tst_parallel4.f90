@@ -13,26 +13,25 @@ program f90tst
   implicit none
 
   character (len = *), parameter :: FILE_NAME = "f90tst_nc4_par.nc"
-  integer :: nmode, ierr, fh, my_rank, nprocs, i, varid
+  integer :: nmode, err, ierr, fh, my_rank, nprocs, i, varid, get_args
   integer :: dimid(3)
   integer(KIND=MPI_OFFSET_KIND) :: start(3), count(3)
   real :: f(3)
   character(LEN=256) filename, cmd, msg
-  integer argc, iargc
 
   call MPI_INIT(ierr)
   call MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierr)
   call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, ierr)
 
   ! take filename from command-line argument if there is any
-  call getarg(0, cmd)
-  argc = IARGC() 
-  if (argc .GT. 1) then 
-     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-     goto 999 
-  endif   
-  filename = FILE_NAME
-  if (argc .EQ. 1) call getarg(1, filename)
+  if (my_rank .EQ. 0) then
+      filename = FILE_NAME
+      err = get_args(cmd, filename)
+  endif
+  call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  if (err .EQ. 0) goto 999
+
+  call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
   if (nprocs .ne. 8 .AND. my_rank .eq. 0) then
      print *, 'Warning: ',trim(cmd),' is design to run on 8 processes.'

@@ -47,7 +47,7 @@
           include 'pnetcdf.inc'
 
           character(LEN=128) filename, cmd
-          integer argc, IARGC, err, nprocs, rank, lower_dims
+          integer err, ierr, nprocs, rank, lower_dims, get_args, dummy
           integer cmode, ncid, psizes(3), dimids(3), dimidsT(3)
           integer XYZ_id, XZY_id, YZX_id, YXZ_id, ZYX_id, ZXY_id
           integer(kind=MPI_OFFSET_KIND) gsizes(3), starts(3)
@@ -57,7 +57,6 @@
           integer i, j, k, nx, ny, nz
           PARAMETER(nx=4, ny=3, nz=2)
           integer buf(nx,ny,nz)
-          character(len = 4) :: quiet_mode
           logical verbose
 
           call MPI_Init(err)
@@ -65,22 +64,18 @@
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
-          call getarg(0, cmd)
-          argc = IARGC()
-          if (argc .GT. 2) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),
-     +                         ' [-q] [filename]'
-              goto 999
+          if (rank .EQ. 0) then
+              verbose = .TRUE.
+              filename = "testfile.nc"
+              ierr = get_args(2, cmd, filename, verbose, dummy)
           endif
-          verbose = .TRUE.
-          filename = "testfile.nc"
-          call getarg(1, quiet_mode)
-          if (quiet_mode(1:2) .EQ. '-q') then
-              verbose = .FALSE.
-              if (argc .EQ. 2) call getarg(2, filename)
-          else
-              if (argc .EQ. 1) call getarg(1, filename)
-          endif
+          call MPI_Bcast(ierr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+          if (ierr .EQ. 0) goto 999
+
+          call MPI_Bcast(verbose, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD,
+     +                   err)
+          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0,
+     +                   MPI_COMM_WORLD, err)
 
           ! calculate number of processes along each dimension
           psizes = 0

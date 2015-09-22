@@ -62,7 +62,7 @@ program netcdfTest
   integer (kind = EightByteInt), parameter :: numLats = 4, numLons = 3, &
                         numFrTimes = 2, timeStringLen = 20
   character (len = *), parameter :: FILE_NAME = "tst_f90.nc"
-  integer :: counter, err
+  integer :: counter, err, ierr, get_args
   real, dimension(numLons, numLats, numFrTimes) :: pressure
   integer (kind = FourByteInt), dimension(numFrTimes) :: frTimeVals
   real (kind = FourByteReal) fillVal, scalarVarBuf
@@ -71,21 +71,21 @@ program netcdfTest
   real (kind = FourByteReal), dimension(numLats) :: latVarBuf
   real (kind = FourByteReal), dimension(numLons) :: lonVarBuf
   character(LEN=256) filename, cmd, msg
-  integer argc, iargc, my_rank, p, info
+  integer my_rank, p, info
 
-  call MPI_Init(err)
-  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, err)
-  call MPI_Comm_size(MPI_COMM_WORLD, p, err)
+  call MPI_Init(ierr)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
+  call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
   ! take filename from command-line argument if there is any
-  call getarg(0, cmd)
-  argc = IARGC()
-  if (argc .GT. 1) then
-     if (my_rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-     goto 999
+  if (my_rank .EQ. 0) then
+      filename = FILE_NAME
+      err = get_args(cmd, filename)
   endif
-  filename = FILE_NAME
-  if (argc .EQ. 1) call getarg(1, filename)
+  call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  if (err .EQ. 0) goto 999
+
+  call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
   if (p .ne. 1 .AND. my_rank .eq. 0) then
      print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
@@ -99,8 +99,8 @@ program netcdfTest
     stop
   end if
 
-  call MPI_Info_create(info, err)
-  ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",err)
+  call MPI_Info_create(info, ierr)
+  ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",ierr)
 
   ! Create the file
   call check(nf90mpi_create(MPI_COMM_WORLD, filename, nf90_clobber, info, ncFileID))
@@ -185,13 +185,13 @@ program netcdfTest
      stop 2
   endif
   call check(nf90mpi_close(ncFileID))
-  call MPI_Info_free(info, err)
+  call MPI_Info_free(info, ierr)
 
   msg = '*** TESTING F90 '//trim(cmd)
   if (my_rank .eq. 0) write(*,"(A67,A)") msg, &
        '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
 
- 999 call MPI_Finalize(err)
+ 999 call MPI_Finalize(ierr)
 
 contains
   ! Internal subroutine - checks error status after each netcdf, prints out text message each time

@@ -67,7 +67,7 @@
           PARAMETER(NX=10, NY=4)
 
           character(LEN=128) filename, cmd
-          integer i, j, rank, nprocs, err, num_reqs, argc, iargc
+          integer i, j, rank, nprocs, err, ierr, num_reqs, get_args
           integer ncid, cmode, varid, dimid(2), stride, block_len
           integer buf(NX, NY)
           integer reqs(NY), sts(NY)
@@ -75,30 +75,26 @@
      +                                  global_nx, global_ny
           integer(kind=MPI_OFFSET_KIND) start(2), count(2)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
-          character(len = 4) :: quiet_mode
           logical verbose
+          integer dummy
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, err)
 
           ! take filename from command-line argument if there is any
-          call getarg(0, cmd)
-          argc = IARGC()
-          if (argc .GT. 2) then
-              if (rank .EQ. 0) print*,'Usage: ',trim(cmd),
-     +                         ' [-q] [filename]'
-              goto 999
+          if (rank .EQ. 0) then
+              verbose = .TRUE.
+              filename = "testfile.nc"
+              ierr = get_args(2, cmd, filename, verbose, dummy)
           endif
-          verbose = .TRUE.
-          filename = "testfile.nc"
-          call getarg(1, quiet_mode)
-          if (quiet_mode(1:2) .EQ. '-q') then
-              verbose = .FALSE.
-              if (argc .EQ. 2) call getarg(2, filename)
-          else
-              if (argc .EQ. 1) call getarg(1, filename)
-          endif
+          call MPI_Bcast(ierr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+          if (ierr .EQ. 0) goto 999
+
+          call MPI_Bcast(verbose, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD,
+     +                   err)
+          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0,
+     +                   MPI_COMM_WORLD, err)
 
           ! create file, truncate it if exists
           cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)

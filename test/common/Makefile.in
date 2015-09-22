@@ -13,23 +13,27 @@ include ../../macros.make
 
 INCLUDES = -I../../src/lib
 
-SRCS    = testutils.c
+C_SRCS   = testutils.c
 
-HEADERS = testutils.h
+F_SRCS   = testutilsf.F90
 
-OBJS    = $(SRCS:.c=.o)
+HEADERS  = testutils.h
+
+OBJS     = $(C_SRCS:.c=.o) $(F_SRCS:.F90=.o)
 
 UTIL_LIB = libtestutils.a
 
-GARBAGE      = $(UTIL_LIB)
-PACKING_LIST = $(SRCS) $(HEADERS) Makefile.in
+GARBAGE      = $(UTIL_LIB) *.mod
+PACKING_LIST = $(C_SRCS) $(F_SRCS) $(HEADERS) Makefile.in
 
 all: $(UTIL_LIB)
 
 $(UTIL_LIB): $(OBJS)
-	$(AR) $(ARFLAGS) $@ $<
+	$(AR) $(ARFLAGS) $@ $(OBJS)
 
 testutils.o: testutils.c testutils.h
+
+testutilsf.o: testutilsf.F90
 
 testing check verbose_testing: $(UTIL_LIB)
 

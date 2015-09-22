@@ -12,9 +12,10 @@ VPATH   = @srcdir@
 include ../../macros.make
 
 INCLUDES  =
-FPPFLAGS += @FC_MODINC@../../src/libf90
+FPPFLAGS += @FC_MODINC@../../src/libf90 @FC_MODINC@../common
 F90FLAGS += @FC_MODOUT@.
-LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
+LDFLAGS  := $(LDFLAGS) -L../common
+LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
 F90_SRCS = tst_f90.f90 \
            tst_io.f90 \

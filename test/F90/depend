@@ -1,4 +1,3 @@
-typeSizes.o: typeSizes.f90
 tst_f90.o: tst_f90.f90
 tst_io.o: tst_io.f90
 f90tst_vars.o: f90tst_vars.f90
