@@ -46,29 +46,37 @@ FPPFLAGS	= $(INCLUDES) @FPPFLAGS@ @NAGf90FPPFLAGS@
 CC		= @MPICC@
 CXX		= @MPICXX@
 F77		= @MPIF77@
-FC		= @MPIF77@
 F90		= @MPIF90@
 
+# debugging and optimization options for compiling and linking
 CFLAGS		= @CFLAGS@
 CXXFLAGS	= @CXXFLAGS@
-FFLAGS		= @FFLAGS@
-FCFLAGS		= @FCFLAGS@
+F77FLAGS	= @F77FLAGS@
 F90FLAGS	= @F90FLAGS@
-FCFLAGS_f90	= @FCFLAGS_f90@
-FCFLAGS_F	= @FCFLAGS_F@
-FCFLAGS_F90	= @FCFLAGS_F90@
+
+# compiler options for different file extensions: .f .F .f90 .F90
+F77FLAGS_f	= @F77FLAGS_f@
+F77FLAGS_F	= @F77FLAGS_F@
+F90FLAGS_f90	= @F90FLAGS_f90@
+F90FLAGS_F90	= @F90FLAGS_F90@
+
+# preprocessor options for different file extensions: .f .F .f90 .F90
+F77PPFLAGS_f	= @F77PPFLAGS_f@
+F77PPFLAGS_F	= @F77PPFLAGS_F@
+F90PPFLAGS_f90	= @F90PPFLAGS_f90@
+F90PPFLAGS_F90	= @F90PPFLAGS_F90@
 
 # NETCDF.MOD	= @NETCDF_MOD@
 CC_MAKEDEPEND	= @CC_MAKEDEPEND@
 
-COMPILE.c	= $(CC)  -c $(CFLAGS)   $(CPPFLAGS)
-COMPILE.cxx	= $(CXX) -c $(CXXFLAGS) $(CXXCPPFLAGS)
-COMPILE.f	= $(F77) -c $(FFLAGS)   $(FPPFLAGS)
-COMPILE.f90	= $(F90) -c $(F90FLAGS) $(FPPFLAGS) $(FCFLAGS_f90)
-# The following command isn't available on some systems; therefore, the
-# `.F.o' rule is relatively complicated.
-COMPILE.F	= $(FC)  -c $(FCFLAGS)  $(FPPFLAGS) $(FCFLAGS_F)
-COMPILE.F90	= $(F90) -c $(F90FLAGS) $(FPPFLAGS) $(FCFLAGS_F90)
+COMPILE.c	= $(CC)  $(CFLAGS)       $(CPPFLAGS) -c
+COMPILE.cxx	= $(CXX) $(CXXFLAGS)     $(CXXCPPFLAGS) -c
+COMPILE.f	= $(F77) $(F77FLAGS_f)   $(FPPFLAGS) $(F77LAGS) -c
+COMPILE.f90	= $(F90) $(F90FLAGS_f90) $(FPPFLAGS) $(F90FLAGS) -c
+COMPILE.F	= $(F90) $(F77FLAGS_F)   $(FPPFLAGS) $(F77FLAGS) $(F77PPFLAGS_F) -c
+COMPILE.F90	= $(F90) $(F90FLAGS_F90) $(FPPFLAGS) $(F90FLAGS) $(F90PPFLAGS_F90) -c
+# In PnetCDF, we follow the file extension convention that .F and .F90 files
+# require preprocessing, while .f and .f90 do not.
 
 
 # Linking:
@@ -82,8 +90,8 @@ LIBS		= @LIBS@
 
 LINK.c		= $(CC)  $(CFLAGS)   -o $@
 LINK.cxx	= $(CXX) $(CXXFLAGS) -o $@
-LINK.f		= $(F77) $(FFLAGS)   -o $@
-LINK.F		= $(FC)  $(FCFLAGS)  -o $@
+LINK.f		= $(F77) $(F77LAGS)  -o $@
+LINK.F		= $(F90) $(F77FLAGS) -o $@
 LINK.F90	= $(F90) $(F90FLAGS) -o $@
 
 TEST_MPIRUN	= @TEST_MPIRUN@
