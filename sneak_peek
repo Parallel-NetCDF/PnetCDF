@@ -27,7 +27,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
-    * none
+    * testcases/check_striping.c checks if the file striping unit and factor
+      returned from MPI-IO hints are consistent among processes.
 
   o New optimization
     * none
