@@ -183,6 +183,10 @@ main(int argc, char **argv)
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
+    char cmd_str[256];
+    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_norm ", argv[0]);
+    if (rank == 0) printf("%-66s ------ ", cmd_str);
+
     if (verbose) printf("\n*** testing UTF-8 normalization...");
 
     /* test CDF-2 format */
@@ -205,11 +209,9 @@ main(int argc, char **argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_norm ", argv[0]);
     if (rank == 0) {
-        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_COLOR);
+        else       printf(PASS_COLOR);
     }
 
     MPI_Finalize();

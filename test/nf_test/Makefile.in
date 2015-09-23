@@ -74,7 +74,7 @@ verbose_testing: all
 #	(cd ../nc_test && $(MAKE) $(MFLAGS) nc_test && ./nc_test -c)
 #	cp ../nc_test/test.nc .
 
-ptest ptests:
+ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
 include $(srcdir)/../../rules.make
 include $(srcdir)/depend

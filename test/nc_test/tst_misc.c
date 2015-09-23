@@ -43,6 +43,9 @@ main(int argc, char **argv)
     if (argc == 2) strcpy(filename, argv[1]);
     if (rank > 0) goto fn_exit;
 
+    char cmd_str[256];
+    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", argv[0]);
+    if (rank == 0) printf("%-66s ------ ", cmd_str);
 /*
    printf("\n*** Testing some extra stuff.\n");
    printf("*** Trying to open non-netCDF files of tiny length...");
@@ -89,11 +92,9 @@ fn_exit:
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_misc ", argv[0]);
     if (rank == 0) {
-        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_COLOR);
+        else       printf(PASS_COLOR);
     }
 
     MPI_Finalize();

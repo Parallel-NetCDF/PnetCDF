@@ -198,6 +198,10 @@ main(int argc, char *argv[])
             unlink(scratch);
     }
 
+    char cmd_str[256];
+    sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
+    printf("%-66s ------ ",cmd_str);
+
     /* Test read-only functions, using pregenerated test-file */
     NC_TEST(ncmpi_strerror);
     NC_TEST(ncmpi_open);
@@ -557,15 +561,13 @@ main(int argc, char *argv[])
 fn_exit:
     MPI_Info_free(&info);
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for format CDF-%d ", argv[0], cdf_format);
     if (nfailsTotal == 0)  {
-        printf("%-66s ------ " PASS_COLOR, cmd_str);
+        printf(PASS_COLOR);
     }
     else {
         print("\n%s: expects 0 failures ... ",argv[0]);
         print("Total number of failures: %d\n", nfailsTotal);
-        printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        printf(FAIL_COLOR);
     }
     MPI_Finalize();
     return nfailsTotal > 0;
