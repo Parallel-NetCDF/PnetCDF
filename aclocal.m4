@@ -1552,7 +1552,7 @@ AC_DEFUN([UD_CHECK_FC_NAG],[
     [ac_cv_fc_compiler_nag=no
      nag_fc_version=`${MPIF90} --version`
      nag_fc_vendor=`echo ${nag_fc_version} | cut -d' ' -f1`
-     if test "x${nag_fc_vendar}" = xNAG ; then
+     if test "x${nag_fc_vendor}" = xNAG ; then
         ac_cv_fc_compiler_nag=yes
      fi
     ])
