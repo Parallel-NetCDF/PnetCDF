@@ -32,27 +32,23 @@ all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) $(MFLAGS) -C $@
 
-PTEST_DIRS = $(SUBDIRS:%=ptest-%)
-ptest: $(PTEST_DIRS)
-$(PTEST_DIRS):
-	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+ptest: all
+	(echo "=============================================")  && \
+	(echo "    Parallel testing on 4 MPI processes")  && \
+	(echo "=============================================")  && \
+	( for d in $(SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest4 ; \
+	done ) ;
 
-# make ptest cannot run in parallel. use dependency to ensure.
-ptest-tutorial: ptest-C
-ptest-CXX:      ptest-tutorial
-ptest-F77:      ptest-CXX
-ptest-F90:      ptest-F77
-
-PTESTS_DIRS = $(SUBDIRS:%=ptests-%)
-ptests: $(PTESTS_DIRS)
-$(PTESTS_DIRS):
-	$(MAKE) $(MFLAGS) -C $(@:ptests-%=%) ptests
-
-# make ptests cannot run in parallel. use dependency to ensure.
-ptests-tutorial: ptests-C
-ptests-CXX:      ptests-tutorial
-ptests-F77:      ptests-CXX
-ptests-F90:      ptests-F77
+ptests: all
+	for i in 3 4 8 ; do \
+	(echo "=============================================")  && \
+	(echo "    Parallel testing on $$i MPI processes")  && \
+	(echo "=============================================")  && \
+	( for d in $(SUBDIRS) ; do \
+	$(MAKE) $(MFLAGS) -C $$d ptest$$i ; \
+	done ) ; \
+	done ;
 
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)

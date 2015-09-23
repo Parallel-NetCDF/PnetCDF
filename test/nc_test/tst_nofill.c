@@ -366,11 +366,15 @@ main(int argc, char **argv)
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-   sprintf(fill_filename, "%s.fill", filename);
-   sprintf(nofill_filename, "%s.nofill", filename);
-   nerrs += create_file(nofill_filename, NC_NOFILL);
-   nerrs += create_file(fill_filename, NC_FILL);
-   {
+    char cmd_str[256];
+    sprintf(cmd_str, "*** TESTING C   %s for fill/nofill modes ", argv[0]);
+    if (rank == 0) printf("%-66s ------ ", cmd_str);
+
+    sprintf(fill_filename, "%s.fill", filename);
+    sprintf(nofill_filename, "%s.nofill", filename);
+    nerrs += create_file(nofill_filename, NC_NOFILL);
+    nerrs += create_file(fill_filename, NC_FILL);
+    {
        int ncid1, ncid2;
        int nvars1, nvars2;
        int varid;
@@ -473,11 +477,9 @@ main(int argc, char **argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for fill/nofill modes ", argv[0]);
     if (rank == 0) {
-        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_COLOR);
+        else       printf(PASS_COLOR);
     }
 
     MPI_Finalize();

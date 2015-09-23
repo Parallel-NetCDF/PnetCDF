@@ -39,5 +39,7 @@ testing check verbose_testing: $(UTIL_LIB)
 
 ptest ptests: $(UTIL_LIB)
 
+ptest2 ptest4 ptest6 ptest8 ptest10:
+
 include $(srcdir)/../../rules.make
 

@@ -233,6 +233,10 @@ main(int argc, char **argv)
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
 
+    char cmd_str[256];
+    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_names ", argv[0]);
+    if (rank == 0) printf("%-66s ------ ", cmd_str);
+
 #define ERROR {printf("Error at line %d: %s\n",__LINE__,ncmpi_strerror(res)); nerrs++;}
 #define ERRORI {printf("Error at line %d (loop=%d): %s\n",__LINE__,i,ncmpi_strerror(res)); nerrs++;}
 
@@ -315,11 +319,9 @@ main(int argc, char **argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_names ", argv[0]);
     if (rank == 0) {
-        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_COLOR);
+        else       printf(PASS_COLOR);
     }
 
     MPI_Finalize();

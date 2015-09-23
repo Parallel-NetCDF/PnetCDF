@@ -68,15 +68,23 @@ verbose_check verbose_testing: $(VCHECK_DIRS)
 $(VCHECK_DIRS):
 	$(MAKE) $(MFLAGS) -C $(@:vcheck-%=%) verbose_testing
 
-PTEST_DIRS = $(SUBDIRS:%=ptest-%)
-ptest: $(PTEST_DIRS)
-$(PTEST_DIRS):
-	$(MAKE) $(MFLAGS) -C $(@:ptest-%=%) ptest
+ptest: all
+	(echo "=============================================")  && \
+	(echo "    Parallel testing on 4 MPI processes")  && \
+	(echo "=============================================")  && \
+	( for d in $(SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest4 ; \
+	  done ) ;
 
-PTESTS_DIRS = $(SUBDIRS:%=ptests-%)
-ptests: $(PTESTS_DIRS)
-$(PTESTS_DIRS):
-	$(MAKE) $(MFLAGS) -C $(@:ptests-%=%) ptests
+ptests: all
+	for i in 2 4 6 8 10 ; do \
+	(echo "=============================================")  && \
+	(echo "    Parallel testing on $$i MPI processes")  && \
+	(echo "=============================================")  && \
+	( for d in $(SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest$$i ; \
+	  done ) ; \
+	done ;
 
 INSTALLDIRS = $(SUBDIRS:%=install-%)
 install: all $(INSTALLDIRS)

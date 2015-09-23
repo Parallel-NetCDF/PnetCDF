@@ -32,28 +32,23 @@ header_consistency: header_consistency.o $(LIBRARY)
 testing check verbose_testing:
 
 TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
-ptest: $(PROGS)
-	echo "============================================="
-	echo "    Parallel testing on 2 MPI processes"
-	echo "============================================="
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+
+ptest2: $(PROGS)
 	@for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
-ptests: $(PROGS)
-	echo "============================================="
-	echo "    Parallel testing on 2 MPI processes"
-	echo "============================================="
-	@for i in $(PROGS); do ( \
-	$(TEST_MPIRUN_2) ./$$i $(TEST_OUTDIR)/testfile.nc \
-	; ) ; done
-	echo "============================================="
-	echo "    Parallel testing on 4 MPI processes"
-	echo "============================================="
+ptest4: $(PROGS)
 	@for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
+
+ptest: ptest2
+
+ptests: ptest2 ptest4
+ptest6 ptest8 ptest10:
+
 include $(srcdir)/../../rules.make
 
 $(LIBRARY): ;

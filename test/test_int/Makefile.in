@@ -51,7 +51,7 @@ test_read64: test_read64.o $(LIBRARY)
 
 testing check verbose_testing:
 
-ptest ptests:
+ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
 
 include $(srcdir)/../../rules.make
 
