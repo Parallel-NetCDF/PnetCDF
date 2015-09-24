@@ -62,8 +62,11 @@ PACKING_SUBDIRS	= $(SUBDIRS)
 all:
 	$(MAKE) $(MFLAGS) -C src
 
-tests:
-	$(MAKE) $(MFLAGS) -C test
+TESTS_SUBDIRS = test examples benchmarks
+TESTS_DIRS = $(TESTS_SUBDIRS:%=tests-%)
+tests: $(TESTS_DIRS)
+$(TESTS_DIRS): 
+	$(MAKE) $(MFLAGS) -C $(@:tests-%=%)
 
 check testing:
 	$(MAKE) $(MFLAGS) -C test testing
