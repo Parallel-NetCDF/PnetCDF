@@ -1539,7 +1539,7 @@ AC_DEFUN([UD_CHECK_PGF77],[
     AC_CACHE_CHECK([if Fortran 77 compiler is pgf77], [ac_cv_fc_compiler_pgf77],
     [ac_cv_fc_compiler_pgf77=no
      eval $MPIF77 -V </dev/null >& conftest.ver
-     _F77_VENDOR=`head -n1 conftest.ver | cut -d' ' -f1`
+     _F77_VENDOR=`head -c 5 conftest.ver`
      if test "x${_F77_VENDOR}" = xpgf77 ; then
         ac_cv_fc_compiler_pgf77=yes
      fi
@@ -1555,8 +1555,8 @@ AC_DEFUN([UD_CHECK_FC_NAG],[
     AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
     [ac_cv_fc_compiler_nag=no
      eval $MPIF90 -V </dev/null >& conftest.ver
-     _FC_VENDOR=`head -n1 conftest.ver | cut -d' ' -f1`
-     if test "x${_FC_VENDOR}" = xGNU ; then
+     _FC_VENDOR=`head -c 3 conftest.ver`
+     if test "x${_FC_VENDOR}" = xNAG ; then
         ac_cv_fc_compiler_nag=yes
      fi
      ${RM} -f conftest.ver
