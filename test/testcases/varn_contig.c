@@ -48,7 +48,7 @@
 #define NX 10
 #define NDIMS 2
 
-#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+#define ERR {if(err!=NC_NOERR){printf("Error at %s line=%d: %s\n", __FILE__,__LINE__, ncmpi_strerror(err)); nerrs++;}}
 
 int check_contents_for_fail(int *buffer)
 {
