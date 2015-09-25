@@ -571,7 +571,7 @@ if test "x${enable_fortran}" = xyes ; then
    dnl Some Fortran 77 compilers, such as pgf77, do not allow "_8" modifier,
    dnl because _8 modifier is a Fortran 90 feature
    dnl UD_CHECK_PGF77
-   dnl UD_MSG_DEBUG([ac_cv_fc_compiler_pgf77=$ac_cv_fc_compiler_pgf77 pgf77_vendar=$pgf77_vendar])
+   dnl UD_MSG_DEBUG([ac_cv_fc_compiler_pgf77=$ac_cv_fc_compiler_pgf77])
 
    dnl Check if the Fortran compiler is an NAG
    UD_CHECK_FC_NAG
@@ -580,6 +580,8 @@ if test "x${enable_fortran}" = xyes ; then
       AC_SUBST(NAGf90FPPFLAGS)
    fi
 
+   dnl check Fortran parameter modifier for 8-byte integer type
+   dnl We need this to set the max constants for UINT INT64 and UINT64
    UD_FC_CONSTANT_MODIFIER
    UD_MSG_DEBUG([ac_cv_fc_constant_modifier=$ac_cv_fc_constant_modifier])
    PNF_INT8_MODIFIER=""
@@ -607,7 +609,7 @@ fi
 AC_PROG_INSTALL
 
 have_yacc_lex=no
-dnl Starting from 1.5.0, yacc and lex is no longer needed
+dnl Starting from PnetCDF 1.5.0, yacc and lex is no longer needed
 dnl see comments in src/utils/ncmpigen/Makefile.in for build rules for
 dnl ncmpigenyy.c and ncmpigentab.c. If rebuild is desired, un-comment
 dnl below checking to check availability of yacc/lex/bison
@@ -639,7 +641,7 @@ dnl AC_PROG_SED and AC_PROG_GREP are only available on autoconf 2.60 and later
 dnl AC_PROG_SED
 dnl AC_PROG_GREP
 
-dnl YACC and LEX are required to build PnetCDF
+dnl YACC and LEX are required to build PnetCDF utility tool ncmpigen
 dnl if configure finds bison then YACC is set to bison -y, so we need to clean
 dnl up the output a bit before testing 
 dnl Below checks commands yacc and lex availability under PATH. However, this
