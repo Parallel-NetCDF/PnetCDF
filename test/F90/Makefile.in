@@ -41,6 +41,8 @@ PACKING_LIST = $(F90_SRCS) Makefile.in depend
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 tst_f90: tst_f90.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 

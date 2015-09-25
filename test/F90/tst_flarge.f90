@@ -83,9 +83,8 @@ program tst_flarge
 
   call check(nf90mpi_close(ncFileID))
 
-   msg = '*** TESTING F90 '//trim(cmd)//' for large files'
-   if (my_rank .eq. 0) write(*,"(A67,A)") msg, &
-       '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
+  msg = '*** TESTING F90 '//trim(cmd)//' for large files'
+  if (my_rank .eq. 0) call pass_fail(0, msg)
 
  999  call MPI_Finalize(ierr)
 

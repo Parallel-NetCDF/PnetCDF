@@ -13,7 +13,8 @@ include ../../macros.make
 
 INCLUDES  = -I../../src/lib -I../../src/libf
 INCLUDES += -I$(srcdir) -I$(srcdir)/../../src/libf
-LIBS     := $(LIBRARY) $(LIBS) @LCOV_LIB@
+LDFLAGS  := $(LDFLAGS) -L../common
+LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
 
 M4SRCS    = test_get.m4 \
             test_put.m4  \
@@ -44,6 +45,8 @@ GARBAGE = $(PROGS) $(M4SRCS_F) \
 PACKING_LIST = $(C_SRCS) $(F_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in README
 
 all: $(PROGS)
+
+$(PROGS): ../common/libtestutils.a
 
 nf_test: $(OBJS) $(LIBRARY)
 	$(LINK.F) $(OBJS) $(LDFLAGS) $(LIBS)

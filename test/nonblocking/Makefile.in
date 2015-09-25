@@ -42,6 +42,8 @@ PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) Makefile.in README depend
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 mcoll_perf: mcoll_perf.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

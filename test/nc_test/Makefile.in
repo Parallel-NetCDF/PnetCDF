@@ -51,6 +51,8 @@ PACKING_LIST = $(SRCS) $(M4_SRCS) $(HEADERS) $(PROG_SRCS) \
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 nc_test: nc_test.o $(OBJS) $(LIBRARY)
 	$(LINK.c) $< $(OBJS) $(LDFLAGS) $(LIBS)
 

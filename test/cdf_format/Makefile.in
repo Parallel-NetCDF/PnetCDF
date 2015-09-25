@@ -26,6 +26,8 @@ PACKING_LIST = $(SRCS) Makefile.in
 all: $(PROGS)
 	set -e ; cd ../data && $(MAKE) $(MFLAGS) all
 
+$(PROGS): ../common/libtestutils.a
+
 test_inq_format: test_inq_format.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

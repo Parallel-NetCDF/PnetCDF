@@ -47,7 +47,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 inq_num_varsf.f90 for no. record/fixed variables'
-              write(*,"(A67,A)") msg,'------ failed'
+              call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
@@ -60,7 +60,7 @@
           character(LEN=128) filename, cmd, msg
           integer err, ierr, nprocs, rank, cmode, ncid, get_args
           integer varid(7), dimid(3), dimid_1D(1), dimid_2D(2)
-          integer pass, nvars, num_rec_vars, num_fix_vars
+          integer nerrs, nvars, num_rec_vars, num_fix_vars
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
 
           call MPI_Init(ierr)
@@ -130,18 +130,18 @@
           call check(err, 'In nf90mpi_inq_num_fix_vars: ')
 
           ! check if the numbers of variables are expected
-          pass = 1
+          nerrs = 0
           if (nvars .NE. 7) then
               write(6,*) "Error: expecting 7 number of variables defined, but got ", nvars
-              pass = pass - 1
+              nerrs = nerrs + 1
           endif
           if (num_rec_vars .NE. 4) then
               write(6,*) "Error: expecting 4 number of recond variables defined, but got ", nvars
-              pass = pass - 1
+              nerrs = nerrs + 1
           endif
           if (num_fix_vars .NE. 3) then
               write(6,*) "Error: expecting 3 number of fixed-size variables defined, but got ", nvars
-              pass = pass - 1
+              nerrs = nerrs + 1
           endif
 
           err = nf90mpi_close(ncid)
@@ -159,15 +159,7 @@
           endif
 
           msg = '*** TESTING F90 '//trim(cmd)//' for no. record/fixed variables'
-          if (rank .eq. 0) then
-              if (pass .EQ. 1) then
-                 write(*,"(A67,A)") msg, &
-                 '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
-              else
-                 write(*,"(A67,A)") msg, &
-                 '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
-              endif
-          endif
+          if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)
       end program main

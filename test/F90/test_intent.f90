@@ -21,7 +21,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_intent.f90 '
-              write(*,"(A67,A)") msg,'------ failed'
+              call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
@@ -31,7 +31,7 @@
           use pnetcdf
           implicit none
 
-          character(LEN=256) filename, cmd
+          character(LEN=256) filename, cmd, msg
           integer err, ierr, rank, get_args
           integer cmode, ncid, varid, dimid(1), req(1), status(1)
           integer(kind=MPI_OFFSET_KIND) start(1)
@@ -136,6 +136,9 @@
           ! close the file
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')
+
+          msg = '*** TESTING F90 '//trim(cmd)//' for INTENT modifier '
+          if (rank .eq. 0) call pass_fail(0, msg)
 
  999      call MPI_Finalize(ierr)
       end program main

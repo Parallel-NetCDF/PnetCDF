@@ -52,15 +52,11 @@
 
         write(msg,"(A,I1)") '*** TESTING F90 '//trim(PROGNAME)// &
                             ' for CDF-', cdf_format
-        if (nfailsTotal .eq. 0) then
-          write(*,"(A67,A)") msg, &
-          '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
-        else
+        if (nfailsTotal .ne. 0) then
           write(*,*) trim(PROGNAME)//' expects to see 0 failure ... '//&
                      'Total number of failures: ', nfailsTotal
-          write(*,"(A67,A)") msg, &
-          '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
         endif
+        call pass_fail(nfailsTotal, msg)
         end
 
         subroutine test(name, func)

@@ -247,8 +247,7 @@
 !      endif
 
       msg = '*** TESTING F77 '//trim(cmd)//' for NF_64BIT_DATA'
-      if (myid .eq. 0) write(*,"(A67,A)") msg,
-     +       '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
+      if (myid .eq. 0) call pass_fail(0, msg)
 
  999  call MPI_FINALIZE(ierr)
       end program main
@@ -320,9 +319,8 @@
 
       if (iret .ne. NF_NOERR) then
           print *, msg, nfmpi_strerror(iret)
-          write(*,"(A67,A)")
-     +       '** TESTING Fortran bigrecords.f NF_64BIT_DATA ',
-     +       '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
+          msg = '*** TESTING F77 '//trim(cmd)//' for NF_64BIT_DATA'
+          call pass_fail(1, msg)
           stop
       endif
       end subroutine check_err

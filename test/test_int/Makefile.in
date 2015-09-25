@@ -31,6 +31,8 @@ PACKING_LIST = $(SRCS) Makefile.in README header.txt
 all: $(PROGS)
 	set -e; cd ../data && $(MAKE) $(MFLAGS) all
 
+$(PROGS): ../common/libtestutils.a
+
 test_read: test_read.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

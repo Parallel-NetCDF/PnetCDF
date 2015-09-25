@@ -29,6 +29,8 @@ PACKING_LIST = $(SRCS) $(HEADERS) Makefile.in README
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 test_subarray: test_subarray.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
