@@ -346,11 +346,7 @@ err_check:
            calls in wait_all */
         num = 0;
 
-#ifdef ENABLE_NONBLOCKING
     err = ncmpii_wait(ncp, io_method, num, &req_id, &st);
-#else
-    err = ncmpii_wait(ncp, INDEP_IO, num, &req_id, &st);
-#endif
 
     /* unpack to user buf, if buftype is contiguous */
     if (status == NC_NOERR && rw_flag == READ_REQ && free_cbuf) {
