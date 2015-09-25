@@ -188,8 +188,7 @@ program netcdfTest
   call MPI_Info_free(info, ierr)
 
   msg = '*** TESTING F90 '//trim(cmd)
-  if (my_rank .eq. 0) write(*,"(A67,A)") msg, &
-       '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
+  if (my_rank .eq. 0) call pass_fail(0, msg)
 
  999 call MPI_Finalize(ierr)
 

@@ -28,6 +28,8 @@ PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 nctst.o: nctst.cpp 
 
 nctst: nctst.o $(LIBRARY) $(LIBRARY)

@@ -26,6 +26,8 @@ PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 pres_temp_4D_wr.o: pres_temp_4D_wr.c 
 
 pres_temp_4D_wr: pres_temp_4D_wr.o $(LIBRARY)

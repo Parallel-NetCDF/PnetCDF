@@ -53,6 +53,8 @@ all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) $(MFLAGS) -C $@
 
+tests: all
+
 test_int: common
 test_float: common
 test_double_int: common

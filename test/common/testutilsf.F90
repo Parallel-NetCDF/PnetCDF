@@ -30,3 +30,24 @@
         if (argc .EQ. 1) call getarg(1, filename)
     end function get_args
 
+    ! This function prints the pass/fail message on screen
+    subroutine pass_fail(nerrs, msg)
+        implicit none
+        integer nerrs
+        character(len=*) msg
+
+        ! local variables
+        CHARACTER ESC
+        PARAMETER (ESC=char(27))
+
+        CHARACTER (LEN=20) PASS_STR, FAIL_STR
+        PARAMETER (PASS_STR='------ '//ESC//'[32mpass'//ESC//'[0m')
+        PARAMETER (FAIL_STR='------ '//ESC//'[31mfail'//ESC//'[0m')
+
+        if (nerrs .EQ. 0) then
+            write(*,"(A67,A)") msg, PASS_STR
+        else
+            write(*,"(A67,A)") msg, FAIL_STR
+        endif
+    end subroutine pass_fail
+

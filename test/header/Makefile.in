@@ -26,6 +26,8 @@ PACKING_LIST = $(SRCS) test_check_header.c test_check_header1.c \
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 header_consistency: header_consistency.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

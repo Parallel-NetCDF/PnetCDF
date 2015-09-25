@@ -43,7 +43,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) message, trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 varn_real.f90 for varn API '
-              write(*,"(A67,A)") msg,'------ failed'
+              call pass_fail(1, msg)
               ! call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
@@ -291,15 +291,7 @@
           endif
 
           msg = '*** TESTING F90 '//trim(cmd)//' for varn API '
-          if (rank .eq. 0) then
-              if (nerrs .EQ. 0) then
-                  write(*,"(A67,A)") msg, &
-                  '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
-              else
-                  write(*,"(A67,A)") msg, &
-                  '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
-              endif
-          endif
+          if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)
 

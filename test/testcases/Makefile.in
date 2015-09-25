@@ -72,6 +72,8 @@ PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
 
 all: $(PROGS)
 
+$(PROGS): ../common/libtestutils.a
+
 ncmpi_vars_null_stride: ncmpi_vars_null_stride.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 

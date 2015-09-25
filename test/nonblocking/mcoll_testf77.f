@@ -194,8 +194,7 @@
       call MPI_Comm_Free (comm_cart, ierr)
 
       msg = '*** TESTING F77 '//trim(cmd)//' for iput API'
-      if (rank .EQ. 0) write(*,"(A67,A)") msg,
-     +       '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
+      if (rank .EQ. 0) call pass_fail(0, msg)
 
  999  call MPI_Finalize  (ierr)
 

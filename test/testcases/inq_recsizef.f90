@@ -30,7 +30,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 inq_recsizef.f90 for inquiring record size'
-              write(*,"(A67,A)") msg,'------ failed'
+              call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check
@@ -41,7 +41,7 @@
           implicit none
 
           character(LEN=128) filename, cmd, msg
-          integer err, ierr, nprocs, rank, cmode, ncid, pass, get_args
+          integer err, ierr, nprocs, rank, cmode, ncid, nerrs, get_args
           integer varid(7), dimid(3), dimid_1D(1), dimid_2D(2)
           integer(kind=MPI_OFFSET_KIND) expected_recsize, recsize
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
@@ -114,10 +114,10 @@
           err = nf90mpi_inq_recsize(ncid, recsize)
           call check(err, 'In nf90mpi_inquire: ')
 
-          pass = 1
+          nerrs = 0
           if (expected_recsize .NE. recsize) then
               write(6,*) "Error: expecting resize ", expected_recsize,", but got ", recsize
-              pass = pass - 1
+              nerrs = nerrs + 1
           endif
 
           err = nf90mpi_close(ncid)
@@ -135,15 +135,7 @@
           endif
 
           msg = '*** TESTING F90 '//trim(cmd)//' for inquiring record size'
-          if (rank .eq. 0) then
-              if (pass .EQ. 1) then
-                  write(*,"(A67,A)") msg, &
-                  '------ '//achar(27)//'[32mpass'//achar(27)//'[0m'
-              else
-                  write(*,"(A67,A)") msg, &
-                  '------ '//achar(27)//'[31mfail'//achar(27)//'[0m'
-              endif
-          endif
+          if (rank .eq. 0) call pass_fail(nerrs, msg)
 
  999      call MPI_Finalize(ierr)
       end program main
