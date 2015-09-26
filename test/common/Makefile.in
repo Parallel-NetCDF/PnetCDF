@@ -11,7 +11,12 @@ VPATH  = @srcdir@
 
 include ../../macros.make
 
-INCLUDES = -I../../src/lib
+INCLUDES  = -I../../src/lib
+
+ifeq (@PNC_DEBUG@, yes)
+CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
+FPPFLAGS := $(FPPFLAGS) @FC_DEFINE@PNC_DEBUG
+endif
 
 C_SRCS   = testutils.c
 
@@ -27,6 +32,8 @@ GARBAGE      = $(UTIL_LIB) *.mod
 PACKING_LIST = $(C_SRCS) $(F_SRCS) $(HEADERS) Makefile.in
 
 all: $(UTIL_LIB)
+
+$(C_SRCS:.c=.o) : $(HEADERS)
 
 $(UTIL_LIB): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)

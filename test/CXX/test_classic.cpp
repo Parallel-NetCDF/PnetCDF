@@ -2,18 +2,16 @@
 #include <string.h>
 #include <iostream>
 #include <pnetcdf>
+#include <testutils.h>
 
 using namespace std;
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
-
 int main( int argc, char *argv[] )
 {
    char filename[256];
-   int rank, pass=1, verbose=0;
+   int rank, nerrs=0, verbose=0;
 
    MPI_Init(&argc, &argv);
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -24,6 +22,12 @@ int main( int argc, char *argv[] )
    }
    strcpy(filename, "testfile.nc");
    if (argc == 2) strcpy(filename, argv[1]);
+
+   if (rank == 0) {
+       char cmd_str[256];
+       sprintf(cmd_str, "*** TESTING C++ %s for creation of classic format file", argv[0]);
+       printf("%-66s ------ ", cmd_str);
+   }
 
    try
    {
@@ -70,7 +74,7 @@ int main( int argc, char *argv[] )
    catch(NcmpiException& e)
    {
       cout << e.what() << " error code=" << e.errorCode() << " Error!\n";
-      pass = 0;
+      nerrs++;
    }
 
     MPI_Offset malloc_size, sum_size;
@@ -82,11 +86,9 @@ int main( int argc, char *argv[] )
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C++ %s for creation of classic format file", argv[0]);
     if (rank == 0) {
-        if (pass) printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else      printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
    MPI_Finalize();

@@ -15,34 +15,31 @@
 #include <pnetcdf.h>
 #include <testutils.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
-
-#define ERR_EXP(e, exp) {if (e != exp) { printf("Error (line %d): expecting error code %s but got %s\n", __LINE__, nc_err_code_name(exp), nc_err_code_name(e)); nerr++; }}
-#define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2) { printf("Error (line %d): expecting error code %s or %s but got %s\n", __LINE__, nc_err_code_name(exp1), nc_err_code_name(exp2), nc_err_code_name(e)); nerr++; }}
+#define ERR_EXP(e, exp) {if (e != exp) { printf("Error (line %d): expecting error code %s but got %s\n", __LINE__, nc_err_code_name(exp), nc_err_code_name(e)); nerrs++; }}
+#define ERR_EXP2(e, exp1, exp2) {if (e != exp1 && e != exp2) { printf("Error (line %d): expecting error code %s or %s but got %s\n", __LINE__, nc_err_code_name(exp1), nc_err_code_name(exp2), nc_err_code_name(e)); nerrs++; }}
 
 #define CHECK_ERR(expect) { \
     if (safe_mode) { \
         if (err != NC_EMULTIDEFINE && err != expect) { \
             printf("Error (line %d): expecting error code NC_EMULTIDEFINE or %s but got %s\n", __LINE__, nc_err_code_name(expect), nc_err_code_name(err)); \
-            nerr++; \
+            nerrs++; \
         } \
     } \
     else if (rank > 0) { \
         if (err != expect) { \
             printf("Error (line %d): expecting error code %s but got %s\n", __LINE__, nc_err_code_name(expect), nc_err_code_name(err)); \
-            nerr++; \
+            nerrs++; \
         } \
     } \
 }
 
-#define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
+#define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerrs++; }}
 
 /*----< test_open_mode() >----------------------------------------------------*/
 static
 int test_open_mode(char *filename, int safe_mode)
 {
-    int err, rank, ncid, cmode, omode, nerr=0;
+    int err, rank, ncid, cmode, omode, nerrs=0;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -72,7 +69,7 @@ int test_open_mode(char *filename, int safe_mode)
     err = ncmpi_inq_file_format(filename, &format); ERR
     if (format != 1) {
         printf("Error (line %d): output file should be in CDF-1 format\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
 
     /* Test inconsistent omode -----------------------------------------------*/
@@ -104,14 +101,14 @@ int test_open_mode(char *filename, int safe_mode)
          * will not be opened by MPI-IO and hence we need not close the file.
          */
     }
-    return nerr;
+    return nerrs;
 }
 
 /*----< test_dim() >----------------------------------------------------------*/
 static
 int test_dim(char *filename, int safe_mode)
 {
-    int err, rank, ncid, cmode, ndims, dimid1, dimid2, dimid3, nerr=0;
+    int err, rank, ncid, cmode, ndims, dimid1, dimid2, dimid3, nerrs=0;
     MPI_Offset dimlen;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -132,13 +129,13 @@ int test_dim(char *filename, int safe_mode)
     err = ncmpi_inq_ndims(ncid, &ndims); ERR
     if (ndims != 2) {
         printf("Error (line %d): number of dimesnions (%d) defined should be 2\n",__LINE__,ndims);
-        nerr++;
+        nerrs++;
     }
     /* all processes should be able to see dim "y" */
     err = ncmpi_inq_dimid(ncid, "y", &dimid2);
     if (err != NC_NOERR) {
         printf("Error (line %d): all processes should be able to see dim \"y\"\n",__LINE__);
-        nerr++;
+        nerrs++;
         ERR
     }
     err = ncmpi_close(ncid); ERR
@@ -156,7 +153,7 @@ int test_dim(char *filename, int safe_mode)
     err = ncmpi_inq_ndims(ncid, &ndims); ERR
     if (ndims != 1) {
         printf("Error (line %d): number of dimesnions (%d) defined should be 1\n",__LINE__,ndims);
-        nerr++;
+        nerrs++;
     }
     /* no process should be able to get dim "y" */
     err = ncmpi_inq_dimid(ncid, "y", &dimid2);
@@ -199,18 +196,18 @@ int test_dim(char *filename, int safe_mode)
     err = ncmpi_inq_dimlen(ncid, dimid1, &dimlen); ERR
     if (dimlen != 99) {
         printf("Error (line %d): dimesnion size (%lld) should be 99\n",__LINE__,dimlen);
-        nerr++;
+        nerrs++;
     }
 
     err = ncmpi_close(ncid); ERR
-    return nerr;
+    return nerrs;
 }
 
 /*----< test_attr() >---------------------------------------------------------*/
 static
 int test_attr(char *filename, int safe_mode)
 {
-    int err, rank, ncid, cmode, nerr=0;
+    int err, rank, ncid, cmode, nerrs=0;
     char  gattr[128];
     int   int_attr;
     float flt_attr;
@@ -275,14 +272,14 @@ int test_attr(char *filename, int safe_mode)
     CHECK_ERR(NC_EMULTIDEFINE_ATTR_VAL)
     err = ncmpi_close(ncid); ERR
 
-    return nerr;
+    return nerrs;
 }
 
 /*----< test_var() >----------------------------------------------------------*/
 static
 int test_var(char *filename, int safe_mode)
 {
-    int err, rank, ncid, cmode, nerr=0;
+    int err, rank, ncid, cmode, nerrs=0;
     int ndims, dimid[3], nvars, varid1, varid2, int_attr;
     float flt_attr;
     char name[128], var_attr[128];
@@ -372,7 +369,7 @@ int test_var(char *filename, int safe_mode)
     err = ncmpi_inq_nvars(ncid, &nvars); ERR
     if (nvars != 2) {
         printf("Error (line %d): all processes should see 2 variables\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
 
@@ -387,7 +384,7 @@ int test_var(char *filename, int safe_mode)
     err = ncmpi_inq_varname(ncid, varid1, name); ERR
     if (strcmp(name, "var.0")) {
         printf("Error (line %d): all processes should see variable name: \"var.0\"\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
 
@@ -406,7 +403,7 @@ int test_var(char *filename, int safe_mode)
     err = ncmpi_inq_varndims(ncid, varid1, &ndims); ERR
     if (ndims != 2) {
         printf("Error (line %d): all processes should see var has 2 dimensions\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
 
@@ -424,7 +421,7 @@ int test_var(char *filename, int safe_mode)
     err = ncmpi_inq_vartype(ncid, varid1, &xtype); ERR
     if (xtype != NC_INT) {
         printf("Error (line %d): all processes should see var is of type NC_INT\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
 
@@ -446,22 +443,22 @@ int test_var(char *filename, int safe_mode)
     err = ncmpi_inq_dimname(ncid, dimid[0], name); ERR
     if (strcmp(name, "dim0")) {
         printf("Error (line %d): all processes should see var's dim[0] name \"dim0\"\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_inq_dimname(ncid, dimid[1], name); ERR
     if (strcmp(name, "dim1")) {
         printf("Error (line %d): all processes should see var's dim[1] name \"dim1\"\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_inq_dimlen(ncid, dimid[0], &dimlen); ERR
     if (dimlen != 5) {
         printf("Error (line %d): all processes should see var's dim[0] len == 5\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_inq_dimlen(ncid, dimid[1], &dimlen); ERR
     if (dimlen != 4) {
         printf("Error (line %d): all processes should see var's dim[1] len == 4\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
 
@@ -483,23 +480,23 @@ int test_var(char *filename, int safe_mode)
     err = ncmpi_inq_dimname(ncid, dimid[0], name); ERR
     if (strcmp(name, "Y")) {
         printf("Error (line %d): all processes should see var's dim[0] name \"Y\"\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_inq_dimname(ncid, dimid[1], name); ERR
     if (strcmp(name, "X")) {
         printf("Error (line %d): all processes should see var's dim[1] name \"X\"\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
 
-    return nerr;
+    return nerrs;
 }
 
 /*----< test_dim_var() >------------------------------------------------------*/
 static
 int test_dim_var(char *filename, int safe_mode)
 {
-    int i, err, rank, ncid, cmode, nerr=0;
+    int i, err, rank, ncid, cmode, nerrs=0;
     int ndims, dimid[3], varid1;
     char name[128], dimname[128];
     MPI_Offset dimlen;
@@ -526,7 +523,7 @@ int test_dim_var(char *filename, int safe_mode)
     err = ncmpi_inq_ndims(ncid, &ndims); ERR
     if (ndims != 3) {
         printf("Error (line %d): all processes should see 3 dimensions\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     dimid[0] = dimid[1] = dimid[2] = -1;
     err = ncmpi_inq_vardimid(ncid, varid1, dimid); ERR
@@ -535,30 +532,30 @@ int test_dim_var(char *filename, int safe_mode)
         sprintf(dimname, "dim%d", i);
         if (!strcmp(name, dimname)) {
             printf("Error (line %d): all processes should see dimid[%d] name \"%s\"\n",__LINE__,i,dimname);
-            nerr++;
+            nerrs++;
         }
     }
     err = ncmpi_inq_dimlen(ncid, dimid[0], &dimlen); ERR
     if (dimlen != 4) {
         printf("Error (line %d): all processes should see dimid[0] len = 4\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_inq_dimlen(ncid, dimid[1], &dimlen); ERR
     if (dimlen != 3) {
         printf("Error (line %d): all processes should see dimid[1] len = 3\n",__LINE__);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
 
 
-    return nerr;
+    return nerrs;
 }
 
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
     char *filename="testfile.nc", *mode[2] = {"0", "1"};
-    int i, rank, nprocs, verbose, nerr=0, sum_nerr;
+    int i, rank, nprocs, verbose, nerrs=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -577,6 +574,12 @@ int main(int argc, char **argv)
     }
     if (argc == 2) filename = argv[1];
 
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for header consistency", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
+
     verbose = 0;
     for (i=verbose; i>=0; i--) {
         /* test with safe mode off and on :
@@ -585,15 +588,15 @@ int main(int argc, char **argv)
          * PNETCDF_SAFE_MODE to 0.
          */
         setenv("PNETCDF_SAFE_MODE", mode[i], 1);
-        nerr += test_open_mode(filename, i);
+        nerrs += test_open_mode(filename, i);
 
-        nerr += test_dim(filename, i);
+        nerrs += test_dim(filename, i);
 
-        nerr += test_attr(filename, i);
+        nerrs += test_attr(filename, i);
 
-        nerr += test_var(filename, i);
+        nerrs += test_var(filename, i);
 
-        nerr += test_dim_var(filename, i);
+        nerrs += test_dim_var(filename, i);
     }
 
     MPI_Offset malloc_size, sum_size;
@@ -605,13 +608,12 @@ int main(int argc, char **argv)
                    sum_size);
     }
 
-    MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for header consistency", argv[0]);
-        if (sum_nerr == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else               printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
+
     MPI_Finalize();
     return 0;
 }

@@ -6,14 +6,13 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pnetcdf.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 #define MAXLINE 128
 
@@ -29,7 +28,7 @@
         if ((status) != NC_NOERR) {                     \
             printf("Error at line %d (%s)\n", __LINE__, \
                    ncmpi_strerror((status)) );          \
-            nerr++;                                     \
+            nerrs++;                                     \
         }                                               \
 
 int main(int argc, char **argv)
@@ -38,7 +37,7 @@ int main(int argc, char **argv)
     extern char *optarg;
     extern int optind;
     int i, j, array_of_gsizes[3];
-    int nprocs, len, **buf, mynod;
+    int nprocs, len, **buf, rank;
     MPI_Offset bufcount;
     int array_of_psizes[3];
     int status;
@@ -59,15 +58,15 @@ int main(int argc, char **argv)
     int num_sf = 2;
     int par_dim_id = 0; /* default is 0 */
     int do_read = 0;
-    int nerr=0, sum_nerr;
+    int nerrs=0;
 
     MPI_Init(&argc,&argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* process 0 takes the file name as a command-line argument and
        broadcasts it to other processes */
-    if (!mynod) {
+    if (!rank) {
 	while ((opt = getopt(argc, argv, "f:s:rp:n:l:")) != EOF) {
 	    switch (opt) {
 	    case 'f': basename = optarg;
@@ -111,6 +110,12 @@ int main(int argc, char **argv)
         MPI_Bcast(&nvars, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&do_read, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&length, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    }
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for subfiling", argv[0]);
+        printf("%-66s ------ ", cmd_str);
     }
 
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
@@ -161,7 +166,7 @@ int main(int argc, char **argv)
     }
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
     if (verbose)
-        for(i=0; i<ndims&&mynod==0; i++)
+        for(i=0; i<ndims&&rank==0; i++)
 	    printf("array_of_psizes[%d]=%d\n", i, array_of_psizes[i]);
 
     /* subarray in each process is len x len x len */
@@ -169,9 +174,9 @@ int main(int argc, char **argv)
         array_of_gsizes[i] = length * array_of_psizes[i];
 
     /* mynd's process rank in each dimension (in MPI_ORDER_C) */
-    rank_dim[2] =  mynod %  array_of_psizes[2];
-    rank_dim[1] = (mynod /  array_of_psizes[2]) % array_of_psizes[1];
-    rank_dim[0] =  mynod / (array_of_psizes[2]  * array_of_psizes[1]);
+    rank_dim[2] =  rank %  array_of_psizes[2];
+    rank_dim[1] = (rank /  array_of_psizes[2]) % array_of_psizes[1];
+    rank_dim[0] =  rank / (array_of_psizes[2]  * array_of_psizes[1]);
 
     /* starting coordinates of the subarray in each dimension */
     for (i=0; i<ndims; i++)
@@ -194,7 +199,7 @@ int main(int argc, char **argv)
 	}
 
 	for (j=0; j<bufcount; j++)
-	    buf[i][j]=mynod+1;
+	    buf[i][j]=rank+1;
     }
 
     MPI_Info_create(&info);
@@ -216,7 +221,7 @@ int main(int argc, char **argv)
 
     MPI_Allreduce(&open_tim, &new_open_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
-    if (verbose && mynod == 0)
+    if (verbose && rank == 0)
         printf("create time = %f sec\n", new_open_tim);
 
     /* define dimensions */
@@ -265,23 +270,23 @@ int main(int argc, char **argv)
 	sprintf(varname, "var0_%d", i);
         if (strcmp(name, varname)) {
             printf("Error: unexpected var[%d] name %s, should be %s\n",i,name,varname);
-            nerr++;
+            nerrs++;
             continue;
         }
         if (typep != NC_INT) {
             printf("Error: unexpected var[%d] type %d, should be %d\n",i,typep,NC_INT);
-            nerr++;
+            nerrs++;
             continue;
         }
         if (ndimsp != ndims) {
             printf("Error: unexpected var[%d] ndims %d, should be %d\n",i,ndimsp,ndims);
-            nerr++;
+            nerrs++;
             continue;
         }
         for (j=0; j<ndims; j++) {
             if (dimids[j] != dimids0[j]) {
                 printf("Error: unexpected var[%d] dimids[%d] %d, should be %d\n",i,j,dimids0[j],dimids[j]);
-                nerr++;
+                nerrs++;
                 continue;
             }
         }
@@ -291,7 +296,7 @@ int main(int argc, char **argv)
     }
 
 #if 0
-    if (mynod == 0)
+    if (rank == 0)
         printf("*** Testing to write 1 non-record variable by using ncmpi_put_vara_all() ...");
 #endif
     stim = MPI_Wtime();
@@ -307,7 +312,7 @@ int main(int argc, char **argv)
     MPI_Allreduce(&write_tim, &new_write_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
 
-    if (verbose && mynod == 0) {
+    if (verbose && rank == 0) {
         write_bw = ((double)array_of_gsizes[0]*(double)array_of_gsizes[1]*(double)array_of_gsizes[2]*(double)sizeof(int)*(double)nvars)/(new_write_tim*1024.0*1024.0);
         printf("Global array size %d x %d x %d integers\n", array_of_gsizes[0], array_of_gsizes[1], array_of_gsizes[2]);
         printf("Collective write time = %f sec, Collective write bandwidth = %f Mbytes/sec\n", new_write_tim, write_bw);
@@ -324,7 +329,7 @@ int main(int argc, char **argv)
     MPI_Allreduce(&close_tim, &new_close_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
 
-    if (verbose && mynod == 0) {
+    if (verbose && rank == 0) {
         fprintf(stderr, "close time = %f sec\n", new_close_tim);
     }
 
@@ -355,7 +360,7 @@ read:
     MPI_Allreduce(&read_tim, &new_read_tim, 1, MPI_DOUBLE, MPI_MAX,
                   MPI_COMM_WORLD);
 
-    if (verbose && mynod == 0) {
+    if (verbose && rank == 0) {
         read_bw = ((double)array_of_gsizes[0]*(double)array_of_gsizes[1]*(double)array_of_gsizes[2]*sizeof(int)*(double)nvars)/(new_read_tim*1024.0*1024.0);
         printf("Collective read time = %f sec, Collective read bandwidth = %f Mbytes/sec\n", new_read_tim, read_bw);
     }
@@ -395,17 +400,15 @@ end:
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (mynod == 0 && sum_size > 0)
+        if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
     }
 
-    MPI_Reduce(&nerr, &sum_nerr, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (mynod == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for subfiling", argv[0]);
-        if (sum_nerr == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else               printf("%-66s ------ " FAIL_COLOR, cmd_str);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

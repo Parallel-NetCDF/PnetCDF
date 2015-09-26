@@ -19,8 +19,7 @@
 #include <pnetcdf.h>
 #include <signal.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 #define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 #define ERRV {printf("Unexpected result at %s line %d\n",__func__,__LINE__); return 1;}
@@ -779,8 +778,8 @@ int main(int argc, char *argv[])
     }
 
     if (rank == 0) {
-        if (nerrs) printf(FAIL_COLOR);
-        else       printf(PASS_COLOR);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

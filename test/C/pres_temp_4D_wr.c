@@ -24,9 +24,7 @@
 #include <string.h>
 #include <pnetcdf.h>
 #include <mpi.h>
-
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 /* This is the name of the data file we will create. */
 #define FILE_NAME "pres_temp_4D.nc"
@@ -68,12 +66,11 @@
  * non-zero status. */
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); return 2;}
 
-static void
-check_err(const int stat, const int line, const char *file) {
-    if (stat != NC_NOERR) {
-           (void) fprintf(stderr, "line %d of %s: %s\n", line, file, ncmpi_strerror(stat));
-/*        exit(1); */
-    }
+#define CHECK_ERR { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error: %s at line %d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err)); \
+    } \
 }
 
 
@@ -81,7 +78,7 @@ int
 main(int argc, char ** argv)
 {
    /* IDs for the netCDF file, dimensions, and variables. */
-   int nprocs, rank;
+   int nprocs, rank, nerrs=0;
    int ncid;
    int lon_dimid, lat_dimid, lvl_dimid, rec_dimid;
    int lat_varid, lon_varid, pres_varid, temp_varid;
@@ -103,7 +100,7 @@ main(int argc, char ** argv)
    int lvl, lat, lon, rec, i = 0;
    
    /* Error handling. */
-   int retval;
+   int err;
 
    char *filename=FILE_NAME;
 
@@ -117,6 +114,12 @@ main(int argc, char ** argv)
        return 0;
    }
    if (argc == 2) filename = argv[1];
+
+   if (rank == 0) {
+       char cmd_str[256];
+       sprintf(cmd_str, "*** TESTING C   %s for writing file", argv[0]);
+       printf("%-66s ------ ", cmd_str);
+   }
 
    /* Create some pretend data. If this wasn't an example program, we
     * would have some real data to write, for example, model
@@ -135,21 +138,21 @@ main(int argc, char ** argv)
 	 }
 
    /* Create the file. */
-   if ((retval = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid)))
+   err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
 
-	check_err(retval,__LINE__,__FILE__);
+   CHECK_ERR
 
    /* Define the dimensions. The record dimension is defined to have
     * unlimited length - it can grow as needed. In this example it is
     * the time dimension.*/
-   if ((retval = ncmpi_def_dim(ncid, LVL_NAME, NLVL, &lvl_dimid)))
-      check_err(retval,__LINE__,__FILE__);
-   if ((retval = ncmpi_def_dim(ncid, LAT_NAME, NLAT, &lat_dimid)))
-      check_err(retval,__LINE__,__FILE__);
-   if ((retval = ncmpi_def_dim(ncid, LON_NAME, NLON, &lon_dimid)))
-      check_err(retval,__LINE__,__FILE__);
-   if ((retval = ncmpi_def_dim(ncid, REC_NAME, NC_UNLIMITED, &rec_dimid)))
-      check_err(retval,__LINE__,__FILE__);
+   err = ncmpi_def_dim(ncid, LVL_NAME, NLVL, &lvl_dimid);
+   CHECK_ERR
+   err = ncmpi_def_dim(ncid, LAT_NAME, NLAT, &lat_dimid);
+   CHECK_ERR
+   err = ncmpi_def_dim(ncid, LON_NAME, NLON, &lon_dimid);
+   CHECK_ERR
+   err = ncmpi_def_dim(ncid, REC_NAME, NC_UNLIMITED, &rec_dimid);
+   CHECK_ERR
 
    /* Define the coordinate variables. We will only define coordinate
       variables for lat and lon.  Ordinarily we would need to provide
@@ -157,20 +160,18 @@ main(int argc, char ** argv)
       since coordinate variables only have one dimension, we can
       simply provide the address of that dimension ID (&lat_dimid) and
       similarly for (&lon_dimid). */
-   if ((retval = ncmpi_def_var(ncid, LAT_NAME, NC_FLOAT, 1, &lat_dimid, 
-			    &lat_varid)))
-      check_err(retval,__LINE__,__FILE__);
-   if ((retval = ncmpi_def_var(ncid, LON_NAME, NC_FLOAT, 1, &lon_dimid, 
-			    &lon_varid)))
-      check_err(retval,__LINE__,__FILE__);
+   err = ncmpi_def_var(ncid, LAT_NAME, NC_FLOAT, 1, &lat_dimid, &lat_varid);
+   CHECK_ERR
+   err = ncmpi_def_var(ncid, LON_NAME, NC_FLOAT, 1, &lon_dimid, &lon_varid);
+   CHECK_ERR
 
    /* Assign units attributes to coordinate variables. */
-   if ((retval = ncmpi_put_att_text(ncid, lat_varid, UNITS, 
-				 strlen(DEGREES_NORTH), DEGREES_NORTH)))
-      check_err(retval,__LINE__,__FILE__);
-   if ((retval = ncmpi_put_att_text(ncid, lon_varid, UNITS, 
-				 strlen(DEGREES_EAST), DEGREES_EAST)))
-      check_err(retval,__LINE__,__FILE__);
+   err = ncmpi_put_att_text(ncid, lat_varid, UNITS, 
+				 strlen(DEGREES_NORTH), DEGREES_NORTH);
+   CHECK_ERR
+   err = ncmpi_put_att_text(ncid, lon_varid, UNITS, 
+				 strlen(DEGREES_EAST), DEGREES_EAST);
+   CHECK_ERR
 
    /* The dimids array is used to pass the dimids of the dimensions of
       the netCDF variables. Both of the netCDF variables we are
@@ -183,35 +184,32 @@ main(int argc, char ** argv)
 
    /* Define the netCDF variables for the pressure and temperature
     * data. */
-   if ((retval = ncmpi_def_var(ncid, PRES_NAME, NC_FLOAT, NDIMS, 
-			    dimids, &pres_varid)))
-      check_err(retval,__LINE__,__FILE__);
-   if ((retval = ncmpi_def_var(ncid, TEMP_NAME, NC_FLOAT, NDIMS, 
-			    dimids, &temp_varid)))
-      check_err(retval,__LINE__,__FILE__);
+   err = ncmpi_def_var(ncid, PRES_NAME, NC_FLOAT, NDIMS, dimids, &pres_varid);
+   CHECK_ERR
+   err = ncmpi_def_var(ncid, TEMP_NAME, NC_FLOAT, NDIMS, dimids, &temp_varid);
+   CHECK_ERR
 
    /* Assign units attributes to the netCDF variables. */
-   if ((retval = ncmpi_put_att_text(ncid, pres_varid, UNITS, 
-				 strlen(PRES_UNITS), PRES_UNITS)))
-      check_err(retval,__LINE__,__FILE__);
-   if ((retval = ncmpi_put_att_text(ncid, temp_varid, UNITS, 
-				 strlen(TEMP_UNITS), TEMP_UNITS)))
-      check_err(retval,__LINE__,__FILE__);
+   err = ncmpi_put_att_text(ncid, pres_varid, UNITS, 
+				 strlen(PRES_UNITS), PRES_UNITS);
+   CHECK_ERR
+   err = ncmpi_put_att_text(ncid, temp_varid, UNITS, 
+				 strlen(TEMP_UNITS), TEMP_UNITS);
+   CHECK_ERR
 
    /* End define mode. */
-   if ((retval = ncmpi_enddef(ncid)))
-      check_err(retval,__LINE__,__FILE__);
+   err = ncmpi_enddef(ncid);
+   CHECK_ERR
 
-  retval = ncmpi_begin_indep_data(ncid);
+   err = ncmpi_begin_indep_data(ncid);
    /* Write the coordinate variable data. This will put the latitudes
       and longitudes of our data grid into the netCDF file. */
-   if ((retval = ncmpi_put_var_float(ncid, lat_varid, &lats[0]))){
-      check_err(retval,__LINE__,__FILE__);
-      printf("------------------------\n");
-      }
-   if ((retval = ncmpi_put_var_float(ncid, lon_varid, &lons[0])))
-      check_err(retval,__LINE__,__FILE__);
-  retval = ncmpi_end_indep_data(ncid);
+   err = ncmpi_put_var_float(ncid, lat_varid, &lats[0]);
+   CHECK_ERR
+   err = ncmpi_put_var_float(ncid, lon_varid, &lons[0]);
+   CHECK_ERR
+   err = ncmpi_end_indep_data(ncid);
+   CHECK_ERR
 
    /* These settings tell netcdf to write one timestep of data. (The
      setting of start[0] inside the loop below tells netCDF which
@@ -233,19 +231,19 @@ main(int argc, char ** argv)
    for (rec = 0; rec < NREC; rec++)
    {
       start[0] = rec;
-      if ((retval = ncmpi_put_vara_float_all(ncid, pres_varid, start, count, &pres_out[0][0][0])))
-      check_err(retval,__LINE__,__FILE__);
-      if ((retval = ncmpi_put_vara_float_all(ncid, temp_varid, start, count, &temp_out[0][0][0])))
-      check_err(retval,__LINE__,__FILE__);
+      err = ncmpi_put_vara_float_all(ncid, pres_varid, start, count, &pres_out[0][0][0]);
+      CHECK_ERR
+      err = ncmpi_put_vara_float_all(ncid, temp_varid, start, count, &temp_out[0][0][0]);
+      CHECK_ERR
    }
 
    /* Close the file. */
-   if ((retval = ncmpi_close(ncid)))
-      check_err(retval,__LINE__,__FILE__);
+   err = ncmpi_close(ncid);
+   CHECK_ERR
    
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
-    int err = ncmpi_inq_malloc_size(&malloc_size);
+    err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
@@ -253,13 +251,12 @@ main(int argc, char ** argv)
                    sum_size);
     }
 
-   if (rank == 0) {
-       char cmd_str[256];
-       sprintf(cmd_str, "*** TESTING C   %s for writing file", argv[0]);
-       printf("%-66s ------ " PASS_COLOR, cmd_str);
-   }
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
+    }
 
-   MPI_Finalize();
+    MPI_Finalize();
 
-   return 0;
+    return 0;
 }

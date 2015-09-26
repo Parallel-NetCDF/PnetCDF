@@ -10,16 +10,15 @@
 #include <string.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 #define FILE_NAME "testfile.nc"
 
-#define ERR if (err!=NC_NOERR) {printf("Error at line %d: err=%d %s\n", __LINE__, err, ncmpi_strerror(err)); errs++;}
+#define ERR if (err!=NC_NOERR) {printf("Error at line %d: err=%d %s\n", __LINE__, err, ncmpi_strerror(err)); nerrs++;}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int i, j, ncid, dimid[2], varid, err, errs=0, rank, nprocs, verbose;
+    int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs, verbose;
     int req[2], status[2];
     float  var[4][6];
     char *filename="testfile.nc";
@@ -40,6 +39,12 @@ int main(int argc, char **argv) {
         return 0;
     }
     if (argc == 2) filename = argv[1];
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for bput API ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
 
     MPI_Info_create(&info);
     /* MPI_Info_set(info, "romio_pvfs2_posix_write","enable"); */
@@ -87,7 +92,7 @@ int main(int argc, char **argv) {
     for (i=0; i<2; i++)
         if (status[i] != NC_NOERR) {
             printf("Error at line %d: err=%d %s\n", __LINE__, status[i], ncmpi_strerror(err));
-            errs++;
+            nerrs++;
         }
 
     err = ncmpi_buffer_detach(ncid); ERR
@@ -110,7 +115,7 @@ int main(int argc, char **argv) {
                 /* this error is a pntecdf internal error, if occurs */
                 printf("Error: bput_varm write buffer has been altered at j=%d i=%d\n",j,i);
 #endif
-                errs++;
+                nerrs++;
                 break;
             }
         }
@@ -127,17 +132,14 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for bput API ", argv[0]);
-
-        if (errs)
-            printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
+
     MPI_Finalize();
 
-    return errs;
+    return nerrs;
 }
 

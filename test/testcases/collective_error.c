@@ -5,20 +5,18 @@
  *  $Id$
  */
 
+/* This test program checks if a collective API can be nicely aborted without
+ * causing the program to hang. It runs on 2 processes. One process deliberately
+ * produces an error (using an illegal start argument), while the other does not.
+ */
+
 #include <mpi.h>
 #include <pnetcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
 #include <testutils.h>
-
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
-
-/* This test program checks if a collective API can be nicely aborted without
- * causing the program to hang. It runs on 2 processes. One process deliberately
- * produces an error (using an illegal start argument), while the other does not.
- */
 
 #define ERR { if (err!=NC_NOERR){printf("PE %d: error at line %d (%s)\n",rank,__LINE__,ncmpi_strerror(err)); nerrs++;}}
 #define CHECK_ERROR(fn) { \
@@ -121,10 +119,8 @@ int main(int argc, char *argv[])
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs > 0)
-            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
-        else
-            printf(PASS_COLOR);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

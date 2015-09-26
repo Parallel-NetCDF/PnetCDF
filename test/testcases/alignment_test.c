@@ -5,19 +5,6 @@
  *  $Id$
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <mpi.h>
-#include <pnetcdf.h>
-
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
-
-#define NVARS 8
-#define NX 5
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * This program tests if the file header size and variable offsets are properly
@@ -32,6 +19,18 @@
  *    % mpiexec -l -n 4 alignment_test testfile.nc
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <mpi.h>
+#include <pnetcdf.h>
+
+#include <testutils.h>
+
+#define NVARS 8
+#define NX 5
 
 #define ERR {if(err!=NC_NOERR){nerrs++;printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}}
 
@@ -286,11 +285,10 @@ int main(int argc, char** argv) {
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs > 0)
-            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
-        else
-            printf(PASS_COLOR);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
+
     MPI_Finalize();
     return 0;
 }

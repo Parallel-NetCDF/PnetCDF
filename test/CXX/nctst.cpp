@@ -14,12 +14,10 @@ using namespace std;
 
 #include <string.h>
 #include <pnetcdf>
+#include <testutils.h>
 
 using namespace PnetCDF;
 using namespace PnetCDF::exceptions;
-
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
 
 const char LAT[] = "lat";
 const char LON[] = "lon";
@@ -513,9 +511,11 @@ main(int argc, char* argv[])	// test new netCDF interface
    strcpy(filename, "testfile.nc");
    if (argc == 2) strcpy(filename, argv[1]);
 
-   if (rank == 0 && verbose)
-       cout << "*** Testing C++ API with " << NUM_FORMATS 
-	    << " different netCDF formats.\n";
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
 
    // Set up the format constants.
    NcmpiFile::FileFormat format[NUM_FORMATS] =
@@ -524,7 +524,7 @@ main(int argc, char* argv[])	// test new netCDF interface
    char format_name[NUM_FORMATS][NC_MAX_NAME] = 
         {"classic", "classic2", "classic5"};
 
-   int errs = 0;
+   int nerrs = 0;
    for (int i = 0; i < NUM_FORMATS; i++)
    {
       if (gen(MPI_COMM_WORLD, filename, format[i]) || 
@@ -532,13 +532,13 @@ main(int argc, char* argv[])	// test new netCDF interface
       {
 	 if (verbose)
              cout << "*** FAILURE with format " << format_name[i] << "\n";
-	 errs++;
+	 nerrs++;
       }
       else if (verbose)
 	 cout << "*** SUCCESS with format " << format_name[i] << "\n";
    }
 
-   if (verbose) cout << "\n*** Total number of failures: " << errs << "\n";
+   if (verbose) cout << "\n*** Total number of failures: " << nerrs << "\n";
 
     MPI_Offset malloc_size, sum_size;
     int err = ncmpi_inq_malloc_size(&malloc_size);
@@ -549,13 +549,12 @@ main(int argc, char* argv[])	// test new netCDF interface
                    sum_size);
     }
 
-   char cmd_str[256];
-   sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", argv[0]);
-   if (rank == 0) {
-       if (errs == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
-       else           printf("%-66s ------ " FAIL_COLOR, cmd_str);
-   }
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
+    }
+
 
    MPI_Finalize();
-   return errs;
+   return nerrs;
 }

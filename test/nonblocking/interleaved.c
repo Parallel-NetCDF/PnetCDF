@@ -48,9 +48,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
-
+#include <testutils.h>
 
 #define NY 10
 #define NX 20
@@ -60,7 +58,7 @@
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, rank, nprocs, err, pass, expected;
+    int i, j, rank, nprocs, err, nerrs=0, expected;
     int ncid, cmode, varid, dimid[2], req[3], st[3], *buf;
     MPI_Offset start[2], count[2];
     MPI_Info info;
@@ -80,6 +78,12 @@ int main(int argc, char** argv)
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for writing interleaved fileviews ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "romio_cb_write", "disable");
@@ -156,14 +160,13 @@ int main(int argc, char** argv)
     err = ncmpi_get_var_int_all(ncid, varid, buf); ERR
 
     /* check if the contents of buf are expected */
-    pass = 1;
     expected = 10;
     for (j=6; j<9; j++) {
         for (i=8; i<18; i++) {
             if (buf[j*NX+i] != expected) {
                 printf("%d: Unexpected read buf[%d]=%d, should be %d\n",
                        rank, i, buf[j*NX+i], expected);
-                pass = 0;
+                nerrs++;
             }
             expected++;
         }
@@ -179,16 +182,13 @@ int main(int argc, char** argv)
     if (err == NC_NOERR && malloc_size > 0)
         printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n", malloc_size);
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for writing interleaved fileviews ", argv[0]);
+fn_exit:
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (pass)
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else
-            printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
-fn_exit:
     MPI_Finalize();
     return 0;
 }

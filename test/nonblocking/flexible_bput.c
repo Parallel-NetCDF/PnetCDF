@@ -51,8 +51,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 #define NY 6
 #define NX 4
@@ -141,6 +140,12 @@ int main(int argc, char** argv)
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for flexible bput_varm ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -255,13 +260,10 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for flexible bput_varm ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs)
-            printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();
