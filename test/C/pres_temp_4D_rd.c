@@ -23,9 +23,7 @@
 #include <string.h>
 #include <pnetcdf.h>
 #include <mpi.h>
-
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 /* This is the name of the data file we will read. */
 #define FILE_NAME "pres_temp_4D.nc"
@@ -65,7 +63,11 @@
 
 /* Handle errors by printing an error message and exiting with a
  * non-zero status. */
-#define ERR(e) {printf("Error: %s\n", ncmpi_strerror(e)); return 2;}
+#define CHECK_ERR { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error: %s a5 line %d (%s)\n", __FILE__,__LINE__,ncmpi_strerror(err)); } }
+
 
 int
 main(int argc, char **argv)
@@ -89,7 +91,7 @@ main(int argc, char **argv)
    int lvl, lat, lon, rec, i = 0;
    
    /* Error handling. */
-   int retval;
+   int err, nerrs=0;
 
    char *filename = FILE_NAME;
 
@@ -104,22 +106,28 @@ main(int argc, char **argv)
    }
    if (argc == 2) filename = argv[1];
 
+   if (rank == 0) {
+       char cmd_str[256];
+       sprintf(cmd_str, "*** TESTING C   %s for reading file", argv[0]);
+       printf("%-66s ------ ", cmd_str);
+   }
+
    /* Open the file. */
-   if ((retval = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid)))
-      ERR(retval);
+   err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+   CHECK_ERR
 
    /* Get the varids of the latitude and longitude coordinate
     * variables. */
-   if ((retval = ncmpi_inq_varid(ncid, LAT_NAME, &lat_varid)))
-      ERR(retval);
-   if ((retval = ncmpi_inq_varid(ncid, LON_NAME, &lon_varid)))
-      ERR(retval);
+   err = ncmpi_inq_varid(ncid, LAT_NAME, &lat_varid);
+   CHECK_ERR
+   err = ncmpi_inq_varid(ncid, LON_NAME, &lon_varid);
+   CHECK_ERR
 
    /* Read the coordinate variable data. */
-   if ((retval = ncmpi_get_var_float_all(ncid, lat_varid, &lats[0])))
-      ERR(retval);
-   if ((retval = ncmpi_get_var_float_all(ncid, lon_varid, &lons[0])))
-      ERR(retval);
+   err = ncmpi_get_var_float_all(ncid, lat_varid, &lats[0]);
+   CHECK_ERR
+   err = ncmpi_get_var_float_all(ncid, lon_varid, &lons[0]);
+   CHECK_ERR
 
    /* Check the coordinate variable data. */
    for (lat = 0; lat < NLAT; lat++)
@@ -131,10 +139,10 @@ main(int argc, char **argv)
 
    /* Get the varids of the pressure and temperature netCDF
     * variables. */
-   if ((retval = ncmpi_inq_varid(ncid, PRES_NAME, &pres_varid)))
-      ERR(retval);
-   if ((retval = ncmpi_inq_varid(ncid, TEMP_NAME, &temp_varid)))
-      ERR(retval);
+   err = ncmpi_inq_varid(ncid, PRES_NAME, &pres_varid);
+   CHECK_ERR
+   err = ncmpi_inq_varid(ncid, TEMP_NAME, &temp_varid);
+   CHECK_ERR
 
    /* Read the data. Since we know the contents of the file we know
     * that the data arrays in this program are the correct size to
@@ -151,12 +159,12 @@ main(int argc, char **argv)
    for (rec = 0; rec < NREC; rec++)
    {
       start[0] = rec;
-      if ((retval = ncmpi_get_vara_float_all(ncid, pres_varid, start, 
-				      count, &pres_in[0][0][0])))
-	 ERR(retval);
-      if ((retval = ncmpi_get_vara_float_all(ncid, temp_varid, start,
-				      count, &temp_in[0][0][0])))
-	 ERR(retval);
+      err = ncmpi_get_vara_float_all(ncid, pres_varid, start, 
+				      count, &pres_in[0][0][0]);
+      CHECK_ERR
+      err = ncmpi_get_vara_float_all(ncid, temp_varid, start,
+				      count, &temp_in[0][0][0]);
+      CHECK_ERR
 
       /* Check the data. */
       i = 0;
@@ -174,12 +182,12 @@ main(int argc, char **argv)
    } /* next record */
 
    /* Close the file. */
-   if ((retval = ncmpi_close(ncid)))
-      ERR(retval);
+   err = ncmpi_close(ncid);
+   CHECK_ERR
 
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
-    int err = ncmpi_inq_malloc_size(&malloc_size);
+    err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
@@ -187,11 +195,10 @@ main(int argc, char **argv)
                    sum_size);
     }
 
-   if (rank == 0) {
-       char cmd_str[256];
-       sprintf(cmd_str, "*** TESTING C   %s for reading file", argv[0]);
-       printf("%-66s ------ " PASS_COLOR, cmd_str);
-   }
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
+    }
 
    MPI_Finalize();
    return 0;

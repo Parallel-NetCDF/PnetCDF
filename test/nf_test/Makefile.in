@@ -46,6 +46,8 @@ PACKING_LIST = $(C_SRCS) $(F_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in READM
 
 all: $(PROGS)
 
+$(C_OBJS): $(srcdir)/../common/testutils.h
+
 $(PROGS): ../common/libtestutils.a
 
 nf_test: $(OBJS) $(LIBRARY)

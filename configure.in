@@ -713,6 +713,8 @@ if test "x${debug}" = xyes; then
    fi
 fi
 AC_MSG_RESULT($debug)
+PNC_DEBUG=${debug}
+AC_SUBST(PNC_DEBUG)
 
 AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
 if test "x${ac_cv_type_MPI_Offset}" = xyes; then

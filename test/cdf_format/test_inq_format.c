@@ -10,17 +10,21 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
-
-#define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
+#define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerrs++; }}
 
 int main(int argc, char **argv) {
-    int err, rank, nerr=0, format, ncid;
+    int err, rank, nerrs=0, format, ncid;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file format ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
 
     err = ncmpi_open(MPI_COMM_WORLD, "../data/test_int.nc", 0, MPI_INFO_NULL, &ncid);
     ERR
@@ -28,14 +32,14 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_format(ncid, &format); ERR
     if (format != 1) {
         printf("Error (line=%d): expecting CDF-1 format for file ../data/test.nc but got %d\n",__LINE__,format);
-        nerr++;
+        nerrs++;
     }
     err = ncmpi_close(ncid); ERR
   
     err = ncmpi_inq_file_format("../data/test_int_cdf5.nc", &format); ERR
     if (format != 5) {
         printf("Error (line=%d): expecting CDF-5 format for file ../data/test_int_cdf5.nc but got %d\n",__LINE__,format);
-        nerr++;
+        nerrs++;
     }
 
     MPI_Offset malloc_size, sum_size;
@@ -47,12 +51,10 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for inquiring CDF file format ", argv[0]);
-    MPI_Reduce(&nerr, &err, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (err == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
-        else          printf("%-66s ------ " FAIL_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

@@ -29,6 +29,7 @@
 #include <string.h> /* strcpy() */
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <testutils.h>
 
 #define FOUR_G 4294967296
 #define TWO_G  2147483648
@@ -59,7 +60,7 @@ void swapn(void       *buf,
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, rank, nprocs, err, pass, bufsize;
+    int i, j, rank, nprocs, err, nerrs=0, bufsize;
     int ncid, cmode, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
     MPI_Offset offset, var_offset, start[3], count[3];
     MPI_File fh;
@@ -78,6 +79,12 @@ int main(int argc, char** argv)
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for writing to a large variable ", argv[0]);
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+    }
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -164,13 +171,12 @@ int main(int argc, char** argv)
     err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf); ERR
 
     /* check if the contents of buf are expected */
-    pass = 1;
     for (i=0; i<bufsize; i++) {
         int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
         if (buf[i] != expected) {
             printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
                    rank, __LINE__, i, buf[i], expected);
-            pass = 0;
+            nerrs++;
         }
     }
 
@@ -185,7 +191,7 @@ int main(int argc, char** argv)
         if (buf[i] != expected) {
             printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
                    rank, __LINE__, i, buf[i], expected);
-            pass = 0;
+            nerrs++;
         }
     }
 
@@ -224,13 +230,12 @@ int main(int argc, char** argv)
     }
 
     /* check if the contents of buf are expected */
-    pass = 1;
     for (i=0; i<bufsize; i++) {
         int expected = (rank == nprocs - 1) ? i : (rank+1)*100 + i;
         if (buf[i] != expected) {
             printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
                    rank, __LINE__, i, buf[i], expected);
-            pass = 0;
+            nerrs++;
         }
     }
 
@@ -256,13 +261,11 @@ int main(int argc, char** argv)
         if (buf[i] != expected) {
             printf("%d (at line %d): Unexpected read buf[%d]=%d, should be %d\n",
                    rank, __LINE__, i, buf[i], expected);
-            pass = 0;
+            nerrs++;
         }
     }
 
     MPI_File_close(&fh);
-
-    MPI_Allreduce(MPI_IN_PLACE, &pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
 
     free(buf);
 
@@ -276,11 +279,10 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for writing to a large variable ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (pass) printf("%-66s ------ pass\n", cmd_str);
-        else      printf("%-66s ------ failed\n", cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

@@ -562,12 +562,11 @@ fn_exit:
     MPI_Info_free(&info);
 
     if (nfailsTotal == 0)  {
-        printf(PASS_COLOR);
+        printf(PASS_STR);
     }
     else {
         print("\n%s: expects 0 failures ... ",argv[0]);
-        print("Total number of failures: %d\n", nfailsTotal);
-        printf(FAIL_COLOR);
+        printf(FAIL_STR, nfailsTotal);
     }
     MPI_Finalize();
     return nfailsTotal > 0;

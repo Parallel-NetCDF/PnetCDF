@@ -14,6 +14,9 @@ include ../../macros.make
 INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+ifeq (@PNC_DEBUG@, yes)
+CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
+endif
 
 SRCS      = test_read.c \
             test_read_indep.c \
@@ -28,6 +31,8 @@ PACKING_LIST = $(SRCS) Makefile.in README
 
 all: $(PROGS)
 	set -e; cd ../data && $(MAKE) $(MFLAGS) all
+
+$(OBJS): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 

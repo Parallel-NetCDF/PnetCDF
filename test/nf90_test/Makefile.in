@@ -47,6 +47,8 @@ PACKING_LIST = $(C_SRCS) $(F90_SRCS) $(M4SRCS) $(HEADERS) depend Makefile.in REA
 
 all: $(PROGS)
 
+$(C_OBJS): $(srcdir)/../common/testutils.h
+
 $(PROGS): ../common/libtestutils.a
 
 nf90_test: $(OBJS) $(LIBRARY)

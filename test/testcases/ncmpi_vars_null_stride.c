@@ -5,13 +5,12 @@
  *  $Id$
  */
 
-#include <mpi.h>
-#include <pnetcdf.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <mpi.h>
+#include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 #define HANDLE_ERROR(err) { \
     nerrs++; \
@@ -80,10 +79,8 @@ int main(int argc, char **argv)
 fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs > 0)
-            printf(FAIL_COLOR" with %d mismatches\n",nerrs);
-        else
-            printf(PASS_COLOR);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

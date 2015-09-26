@@ -31,8 +31,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 #define MAXSHORT	32767
 #define MAXINT		2147483647
@@ -624,6 +623,12 @@ int main(int argc, char *argv[])
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_nc ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
+
     /* test CDF-1 format */
     cmode = NC_CLOBBER;
     nerrs += t_nc(filename, cmode);
@@ -636,8 +641,6 @@ int main(int argc, char *argv[])
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     nerrs += t_nc(filename, cmode);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -648,11 +651,10 @@ int main(int argc, char *argv[])
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF t_nc ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs) printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else       printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

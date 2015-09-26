@@ -21,8 +21,7 @@
 #include <limits.h> /* INT_MIN */
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 static int verbose;
 
@@ -2235,8 +2234,8 @@ int main(int argc, char *argv[])
     }
 
     if (rank == 0) {
-        if (nerrs) printf(FAIL_COLOR);
-        else       printf(PASS_COLOR);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

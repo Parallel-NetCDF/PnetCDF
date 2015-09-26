@@ -12,13 +12,12 @@
 #include <string.h>
 #include <unistd.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 /* The file name is taken as a command-line argument. */
 
 static int verbose;
-static int n_fails;
+static int nerrs;
 
 /* Measures the I/O bandwidth for writing/reading a 3D
    block-distributed array to a file corresponding to the global array
@@ -30,7 +29,7 @@ static int n_fails;
     if (status != NC_NOERR) {                             \
         printf("Error: func=%s line=%d err=%s\n",         \
                __func__,__LINE__,ncmpi_strerror(status)); \
-        n_fails++;                                        \
+        nerrs++;                                        \
     }
 
 #define HANDLE_DIFF(str) {                                       \
@@ -54,7 +53,7 @@ static int n_fails;
     if ((pos = memcmp(b1, b2, len)) != 0) {                                  \
         printf("P%d: diff at line %d (attribute[%d] %s: %s buf1 != buf2 at position %d)\n", \
                rank,__LINE__,i,name1,#nctype,pos);                           \
-        n_fails++;                                                           \
+        nerrs++;                                                           \
     }                                                                        \
     free(b1);                                                                \
     free(b2);                                                                \
@@ -72,7 +71,7 @@ static int n_fails;
     if ((pos = memcmp(b1, b2, len)) != 0) {                                  \
         printf("P%d: diff at line %d (variable[%d] %s: attribute[%d] %s: %s buf1 != buf2 at position %d)\n", \
                rank,__LINE__,i,name,j,name1,#nctype,pos);                    \
-        n_fails++;                                                           \
+        nerrs++;                                                           \
     }                                                                        \
     free(b1);                                                                \
     free(b2);                                                                \
@@ -91,7 +90,7 @@ static int n_fails;
     if ((pos = memcmp(b1, b2, len)) != 0) {                                  \
         printf("P%d: diff at line %d variable[%d] %s: %s buf1 != buf2 at position %d)\n", \
                rank,__LINE__,i,name,#nctype,pos);                            \
-        n_fails++;                                                           \
+        nerrs++;                                                           \
     }                                                                        \
     free(b1);                                                                \
     free(b2);                                                                \
@@ -293,7 +292,7 @@ int ncmpi_diff(char *filename1, char *filename2) {
 int main(int argc, char **argv)
 {
     int i, j, array_of_gsizes[3];
-    int nprocs, **buf, mynod;
+    int nprocs, **buf, rank;
     MPI_Offset bufcount;
     int array_of_psizes[3];
     int status;
@@ -319,19 +318,25 @@ int main(int argc, char **argv)
 */
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    n_fails = 0;
+    nerrs = 0;
     verbose = 0;
     if (argc > 2) {
-        if (!mynod) printf("Usage: %s [file base name]\n",argv[0]);
+        if (!rank) printf("Usage: %s [file base name]\n",argv[0]);
         MPI_Finalize();
         return 0;
     }
     strcpy(basename, "testfile.nc");
     if (argc == 2) strcpy(basename, argv[1]);
     MPI_Bcast(basename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
 
     length = 2;
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
@@ -392,9 +397,9 @@ int main(int argc, char **argv)
         array_of_gsizes[i] = length * array_of_psizes[i];
 
     /* mynd's process rank in each dimension (in MPI_ORDER_C) */
-    rank_dim[2] =  mynod %  array_of_psizes[2];
-    rank_dim[1] = (mynod /  array_of_psizes[2]) % array_of_psizes[1];
-    rank_dim[0] =  mynod / (array_of_psizes[2]  * array_of_psizes[1]);
+    rank_dim[2] =  rank %  array_of_psizes[2];
+    rank_dim[1] = (rank /  array_of_psizes[2]) % array_of_psizes[1];
+    rank_dim[0] =  rank / (array_of_psizes[2]  * array_of_psizes[1]);
 
     /* starting coordinates of the subarray in each dimension */
     for (i=0; i<ndims; i++)
@@ -418,11 +423,11 @@ int main(int argc, char **argv)
 
     for (i=0; i<nvars; i++) {
         for (j=0; j<bufcount; j++)
-            buf[i][j]=mynod+1;
+            buf[i][j]=rank+1;
     }
     buf_var = (int *) malloc(bufcount*nprocs*sizeof(int));
     for (i=0; i<bufcount*nprocs; i++)
-        buf_var[i] = mynod + 1;  
+        buf_var[i] = rank + 1;  
 
     int nvars2 = (nvars > nprocs) ? nvars : nprocs;
     varid = (int *)malloc(nvars2*sizeof(int));
@@ -490,7 +495,7 @@ int main(int argc, char **argv)
         HANDLE_ERROR
 
         if (k == 0) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_put_vara_all() ...");
             for (i=0; i<nvars; i++){
                 status = ncmpi_put_vara_all(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT);
@@ -499,7 +504,7 @@ int main(int argc, char **argv)
         }
 
         if (k == 1) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_put_vara() ...");
             status = ncmpi_begin_indep_data(ncid);
             HANDLE_ERROR
@@ -512,14 +517,14 @@ int main(int argc, char **argv)
         } 
 
         if (k == 2) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_mput_vara_all() ...");
             status = ncmpi_mput_vara_all(ncid, nvars, varid, starts, counts, (void**)buf, bufcounts, datatype_list);
             HANDLE_ERROR
         }
 
         if (k == 3) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vara() and ncmpi_wait() ...");
             status = ncmpi_begin_indep_data(ncid);
             HANDLE_ERROR
@@ -534,7 +539,7 @@ int main(int argc, char **argv)
         }
 
         if (k == 4) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vara() and ncmpi_wait_all() ...");
             for (i=0; i<nvars; i++){
                 status = ncmpi_iput_vara(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT, &reqs[i]);
@@ -545,7 +550,7 @@ int main(int argc, char **argv)
         } 
 
         if (k == 5) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vars() and ncmpi_wait() ...");
             stride[0] = 1;
             stride[1] = 1;
@@ -563,7 +568,7 @@ int main(int argc, char **argv)
         } 
 
         if (k == 6) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_iput_vars() and ncmpi_wait_all() ...");
             stride[0] = 1;
             stride[1] = 1;
@@ -576,20 +581,20 @@ int main(int argc, char **argv)
             HANDLE_ERROR
         } 
         if (k == 7) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_put_var() ...", nprocs);
             status = ncmpi_begin_indep_data(ncid);
             HANDLE_ERROR
-            status = ncmpi_put_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT);
+            status = ncmpi_put_var(ncid, varid[rank], buf_var, bufcount*nprocs, MPI_INT);
             HANDLE_ERROR
             status = ncmpi_end_indep_data(ncid);
             HANDLE_ERROR
         }
         if (k == 8) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_iput_var() and ncmpi_wait() ...", nprocs);
             i = 0;
-            status = ncmpi_iput_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT, &reqs[i]);
+            status = ncmpi_iput_var(ncid, varid[rank], buf_var, bufcount*nprocs, MPI_INT, &reqs[i]);
             HANDLE_ERROR
             status = ncmpi_begin_indep_data(ncid);
             HANDLE_ERROR
@@ -599,9 +604,9 @@ int main(int argc, char **argv)
             HANDLE_ERROR
         }
         if (k == 9) {
-            if (mynod == 0 && verbose)
+            if (rank == 0 && verbose)
                 printf("*** Testing to write %d non-record variable(s) by using ncmpi_iput_var() and ncmpi_wait_all() ...", nprocs);
-            status = ncmpi_iput_var(ncid, varid[mynod], buf_var, bufcount*nprocs, MPI_INT, &reqs[0]);
+            status = ncmpi_iput_var(ncid, varid[rank], buf_var, bufcount*nprocs, MPI_INT, &reqs[0]);
             HANDLE_ERROR
             status = ncmpi_wait_all(ncid, 1, &reqs[0], &sts[0]);
             HANDLE_ERROR
@@ -613,17 +618,17 @@ int main(int argc, char **argv)
         if (status == NC_NOERR){
             if ((k>0)&&(k<7)){
             status = ncmpi_diff(filename1, filename3);
-            if (mynod == 0 && status == NC_NOERR && verbose)
+            if (rank == 0 && status == NC_NOERR && verbose)
                 printf("\t OK\n");                                       
             } else if (k>7){
 /*
 printf("filename2=%s filename3=%s\n",filename2, filename3);
                 status = ncmpi_diff(filename2, filename3);
-                if (mynod == 0 && status == NC_NOERR && verbose)
+                if (rank == 0 && status == NC_NOERR && verbose)
                     printf("\t OK\n");                                       
 */
             } else {
-             if (mynod == 0 && verbose)
+             if (rank == 0 && verbose)
                  printf("\t OK\n");                                       
             }
         }
@@ -667,20 +672,15 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
     int err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (mynod == 0 && sum_size > 0)
+        if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
     }
 
-    MPI_Allreduce(MPI_IN_PLACE, &n_fails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", argv[0]);
-    if (mynod == 0) {
-        if (n_fails)
-            printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

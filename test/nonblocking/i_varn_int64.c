@@ -62,10 +62,8 @@
 #include <string.h> /* strcpy() */
 #include <mpi.h>
 #include <pnetcdf.h>
-#include <testutils.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 #define NY 4
 #define NX 10
@@ -74,7 +72,7 @@
 #define ERR \
     if (err != NC_NOERR) { \
         printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); \
-        nfails++; \
+        nerrs++; \
     }
 
 #define ERRS(n,a) { \
@@ -83,7 +81,7 @@
         if ((a)[_i] != NC_NOERR) { \
             printf("Error at line=%d: err[%d] %s\n", __LINE__, _i, \
                    ncmpi_strerror((a)[_i])); \
-            nfails++; \
+            nerrs++; \
         } \
     } \
 }
@@ -179,7 +177,7 @@ void permute(MPI_Offset *a, MPI_Offset *b)
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, k, rank, nprocs, verbose=0, err, nfails=0, bufsize=0;
+    int i, j, k, rank, nprocs, verbose=0, err, nerrs=0, bufsize=0;
     int ncid, cmode, varid[4], dimid[2], nreqs, reqs[4], sts[4];
     long long *buffer[4], *cbuffer[4];
     int num_segs[4] = {4, 6, 5, 4};
@@ -227,6 +225,12 @@ int main(int argc, char** argv)
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for iput/iget varn ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
+    }
 
     if (verbose && nprocs != 4 && rank == 0)
         printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
@@ -281,7 +285,7 @@ int main(int argc, char** argv)
     if (err != NC_ENULLSTART) {
         printf("expecting error code NC_ENULLSTART but got %s\n",
                nc_err_code_name(err));
-        nfails++;
+        nerrs++;
     }
 
     /* only rank 0, 1, 2, and 3 do I/O:
@@ -312,12 +316,12 @@ int main(int argc, char** argv)
                                        counts[i], buffer[i], &reqs[i]);
         ERR
     }
-    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
     /* all processes read entire variables back and check contents */
-    nfails += check_contents_for_fail(ncid, varid);
+    nerrs += check_contents_for_fail(ncid, varid);
 
     /* try with buffer being a single contiguous space */
     for (i=0; i<nreqs; i++) bufsize += req_lens[i];
@@ -332,12 +336,12 @@ int main(int argc, char** argv)
                                        counts[i], cbuffer[i], &reqs[i]);
         ERR
     }
-    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
     /* all processes read entire variables back and check contents */
-    nfails += check_contents_for_fail(ncid, varid);
+    nerrs += check_contents_for_fail(ncid, varid);
 
     /* permute write order: so starts[*] are not in an increasing order:
      * swap segment 0 with segment 2 and swap segment 1 with segment 3
@@ -354,12 +358,12 @@ int main(int argc, char** argv)
                                        counts[i], buffer[i], &reqs[i]);
         ERR
     }
-    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
     /* all processes read entire variables back and check contents */
-    nfails += check_contents_for_fail(ncid, varid);
+    nerrs += check_contents_for_fail(ncid, varid);
 
     /* read using get_varn API and check contents */
     for (i=0; i<nreqs; i++) {
@@ -368,7 +372,7 @@ int main(int argc, char** argv)
                                        counts[i], buffer[i], &reqs[i]);
         ERR
     }
-    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
@@ -377,7 +381,7 @@ int main(int argc, char** argv)
             if (buffer[i][j] != rank) {
                 printf("Error at line %d: expecting buffer[%d][%d]=%d but got %lld\n",
                        __LINE__,i,j,rank,buffer[i][j]);
-                nfails++;
+                nerrs++;
             }
         }
     }
@@ -398,12 +402,12 @@ int main(int argc, char** argv)
         ERR
         MPI_Type_free(&buftype);
     }
-    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
     /* all processes read entire variables back and check contents */
-    nfails += check_contents_for_fail(ncid, varid);
+    nerrs += check_contents_for_fail(ncid, varid);
 
     /* test flexible get API, using a noncontiguous buftype */
     for (i=0; i<nreqs; i++) {
@@ -416,7 +420,7 @@ int main(int argc, char** argv)
         ERR
         MPI_Type_free(&buftype);
     }
-    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
@@ -425,12 +429,12 @@ int main(int argc, char** argv)
             if (j%2 && buffer[i][j] != -1) {
                 printf("Error at line %d: expecting buffer[%d][%d]=-1 but got %lld\n",
                        __LINE__,i,j,buffer[i][j]);
-                nfails++;
+                nerrs++;
             }
             if (j%2 == 0 && buffer[i][j] != rank) {
                 printf("Error at line %d: expecting buffer[%d][%d]=%d but got %lld\n",
                        __LINE__,i,j,rank,buffer[i][j]);
-                nfails++;
+                nerrs++;
             }
         }
     }
@@ -450,7 +454,7 @@ int main(int argc, char** argv)
                                        counts[i], cbuffer[i], &reqs[i]);
         ERR
     }
-    nfails += check_num_pending_reqs(ncid, nreqs, __LINE__);
+    nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
@@ -459,7 +463,7 @@ int main(int argc, char** argv)
             if (cbuffer[i][j] != rank) {
                 printf("Error at line %d: expecting buffer[%d][%d]=%d but got %lld\n",
                        __LINE__,i,j,rank,cbuffer[i][j]);
-                nfails++;
+                nerrs++;
             }
         }
     }
@@ -474,7 +478,7 @@ int main(int argc, char** argv)
     free(starts[0]);
     free(counts[0]);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nfails, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -486,13 +490,10 @@ int main(int argc, char** argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for iput/iget varn ", argv[0]);
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nfails)
-            printf("%-66s ------ " FAIL_COLOR, cmd_str);
-        else
-            printf("%-66s ------ " PASS_COLOR, cmd_str);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

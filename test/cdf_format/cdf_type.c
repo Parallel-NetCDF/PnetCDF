@@ -15,17 +15,14 @@
 #include <pnetcdf.h>
 #include <testutils.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
-
-#define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerr++; }}
+#define ERR {if(err!=NC_NOERR) {printf("Error(%d) at line %d: %s\n",err,__LINE__,ncmpi_strerror(err)); nerrs++; }}
 
 /*----< test_attr_types() >---------------------------------------------------*/
 static
 int test_attr_types(char *filename,
                     int   format)
 {
-    int i, err, rank, ncid, cmode, nerr=0, attr=0;
+    int i, err, rank, ncid, cmode, nerrs=0, attr=0;
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
     nc_type xtype[5]={NC_UBYTE, NC_USHORT, NC_UINT, NC_INT64, NC_UINT64};
@@ -41,13 +38,13 @@ int test_attr_types(char *filename,
         err = ncmpi_put_att_int(ncid, NC_GLOBAL, name, xtype[i], 1, &attr);
         if (err != NC_ESTRICTCDF2) {
             printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %s\n", __LINE__,nc_err_code_name(err));
-            nerr++;
+            nerrs++;
         }
     }
 
     err = ncmpi_close(ncid); ERR
 
-    return nerr;
+    return nerrs;
 }
 
 /*----< test_var_types() >----------------------------------------------------*/
@@ -55,7 +52,7 @@ static
 int test_var_types(char *filename,
                    int   format)
 {
-    int i, err, rank, ncid, cmode, nerr=0;
+    int i, err, rank, ncid, cmode, nerrs=0;
     int dimid, varid[5];
     MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -73,19 +70,19 @@ int test_var_types(char *filename,
         err = ncmpi_def_var(ncid, name, xtype[i], 1, &dimid, &varid[i]);
         if (err != NC_ESTRICTCDF2) {
             printf("Error (line=%d): expecting NC_ESTRICTCDF2 but got %s\n", __LINE__,nc_err_code_name(err));
-            nerr++;
+            nerrs++;
         }
     }
     err = ncmpi_close(ncid); ERR
 
-    return nerr;
+    return nerrs;
 }
 
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
     char *filename="testfile.nc";
-    int rank, nerr=0;
+    int rank, nerrs=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -97,16 +94,17 @@ int main(int argc, char **argv)
     }
     if (argc == 2) filename = argv[1];
 
-    if (rank > 0) {
-        MPI_Finalize();
-        return 0;
+    if (rank == 0) {
+        char cmd_str[256];
+        sprintf(cmd_str, "*** TESTING C   %s for CDF-5 type in CDF-1 and 2 ", argv[0]);
+        printf("%-66s ------ ", cmd_str);
     }
 
-    nerr += test_attr_types(filename, 0);
-    nerr += test_attr_types(filename, NC_64BIT_OFFSET);
+    nerrs += test_attr_types(filename, 0);
+    nerrs += test_attr_types(filename, NC_64BIT_OFFSET);
 
-    nerr += test_var_types(filename, 0);
-    nerr += test_var_types(filename, NC_64BIT_OFFSET);
+    nerrs += test_var_types(filename, 0);
+    nerrs += test_var_types(filename, NC_64BIT_OFFSET);
 
     MPI_Offset malloc_size, sum_size;
     int err = ncmpi_inq_malloc_size(&malloc_size);
@@ -117,10 +115,10 @@ int main(int argc, char **argv)
                    sum_size);
     }
 
-    char cmd_str[256];
-    sprintf(cmd_str, "*** TESTING C   %s for CDF-5 type in CDF-1 and 2 ", argv[0]);
-    if (nerr == 0) printf("%-66s ------ " PASS_COLOR, cmd_str);
-    else           printf("%-66s ------ " FAIL_COLOR, cmd_str);
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
+    }
 
     MPI_Finalize();
     return 0;

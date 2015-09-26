@@ -18,8 +18,7 @@
 #include <string.h>
 #include <pnetcdf.h>
 
-#define FAIL_COLOR "\x1b[31mfail\x1b[0m\n"
-#define PASS_COLOR "\x1b[32mpass\x1b[0m\n"
+#include <testutils.h>
 
 /* The data file we will create. */
 #define UNITS "units"
@@ -197,8 +196,6 @@ main(int argc, char **argv)
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     nerrs += tst_norm(filename, cmode);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -209,9 +206,10 @@ main(int argc, char **argv)
                    sum_size);
     }
 
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs) printf(FAIL_COLOR);
-        else       printf(PASS_COLOR);
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
     }
 
     MPI_Finalize();

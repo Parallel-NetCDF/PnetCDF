@@ -34,7 +34,7 @@ main(int argc, char **argv) {
 
    int  stat;			/* return status */
    int  ncid;			/* netCDF id */
-   int rec, i, j, k, rank, nprocs;
+   int rec, i, j, k, rank, nprocs, nerrs=0;
    signed char x[] = {42, 21};
 
    /* dimension ids */
@@ -169,7 +169,7 @@ main(int argc, char **argv) {
 		       if (var1[j][k] != (signed char) n) {
 			   printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
 				  "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n); 
-			   return 1;
+			   nerrs++;
 		       }
 		       n++;
 		   }
@@ -178,7 +178,7 @@ main(int argc, char **argv) {
 	   ncmpi_get_vara_schar_all(ncid, x_id, x_start, x_count, x);
 	   if(x[0] != 42 || x[1] != 21) {
 	       printf("Error on read, x[] = %d, %d\n", x[0], x[1]);
-	       return 1;
+	       nerrs++;
 	   }
        }
    }

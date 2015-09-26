@@ -15,6 +15,9 @@ INCLUDES  = -I../../src/lib -I$(srcdir)/../common
 FPPFLAGS += -I../../src/libf @FC_MODINC@../../src/libf90
 LDFLAGS  := $(LDFLAGS) -L../common
 LIBS     := $(LIBRARY) -ltestutils $(LIBS) @LCOV_LIB@
+ifeq (@PNC_DEBUG@, yes)
+CPPFLAGS := $(CPPFLAGS) -DPNC_DEBUG
+endif
 
 NCMPIGEN  = ../../src/utils/ncmpigen/ncmpigen
 NCMPIDIFF = ../../src/utils/ncmpidiff/ncmpidiff
@@ -71,6 +74,8 @@ PACKING_LIST = $(C_SRCS) $(F77_SRCS) $(F90_SRCS) \
                redef1.sh
 
 all: $(PROGS)
+
+$(C_SRCS:.c=.o): $(srcdir)/../common/testutils.h
 
 $(PROGS): ../common/libtestutils.a
 
