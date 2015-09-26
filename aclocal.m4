@@ -1002,6 +1002,7 @@ ac_fcflags_srcext=
 ac_cv_fc_pp_srcext_$1=unknown
 case $ac_ext in #(
   [[fF]]77) ac_try=f77-cpp-input;; #(
+  [[fF]]) ac_try=f77-cpp-input;; #(
   *) ac_try=f95-cpp-input;;
 esac
 for ac_flag in none -ftpp -fpp -Tf "-fpp -Tf" -xpp=fpp -Mpreprocess "-e Z" \
