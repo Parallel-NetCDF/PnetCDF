@@ -9,3 +9,4 @@ i_varn_int64.o: i_varn_int64.c
 bput_varn_uint.o: bput_varn_uint.c
 flexible_bput.o: flexible_bput.c
 wait_after_indep.o: wait_after_indep.c
+column_wise.o: column_wise.c
