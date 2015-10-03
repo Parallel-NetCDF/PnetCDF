@@ -29,6 +29,10 @@ This is essentially a placeholder for the next release note ...
   o New test program
     * testcases/check_striping.c checks if the file striping unit and factor
       returned from MPI-IO hints are consistent among processes.
+    * test/nonblocking/column_wise.c checks if PnetCDF detects interleaved
+      fileviews from multiple nonblocking requests and correctly breaks and
+      reconstructs the fileviews so the combined fileview is monotonic
+      non-decreasing in file offsets.
 
   o New optimization
     * none

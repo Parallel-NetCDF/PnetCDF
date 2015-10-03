@@ -77,7 +77,7 @@ NC_start_count_stride_ck(const NC         *ncp,
             return NC_ENEGATIVECNT;
 
         /* for record variable, [0] is the NC_UNLIMITED dimension */
-        if (rw_flag == READ_REQ) {
+        if (rw_flag == READ_REQ) { /* read cannot go beyond current numrecs */
             if (start[0] >= ncp->numrecs)
                 return NC_EINVALCOORDS;
 
