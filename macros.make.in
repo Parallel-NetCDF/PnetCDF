@@ -51,8 +51,8 @@ F90		= @MPIF90@
 # debugging and optimization options for compiling and linking
 CFLAGS		= @CFLAGS@
 CXXFLAGS	= @CXXFLAGS@
-F77FLAGS	= @F77FLAGS@
-F90FLAGS	= @F90FLAGS@
+F77FLAGS	= @F77FLAGS@ @NAG_FCFLAGS@
+F90FLAGS	= @F90FLAGS@ @NAG_FCFLAGS@
 
 # compiler options for different file extensions: .f .F .f90 .F90
 F77FLAGS_f	= @F77FLAGS_f@
@@ -71,7 +71,7 @@ CC_MAKEDEPEND	= @CC_MAKEDEPEND@
 
 COMPILE.c	= $(CC)  $(CFLAGS)       $(CPPFLAGS) -c
 COMPILE.cxx	= $(CXX) $(CXXFLAGS)     $(CXXCPPFLAGS) -c
-COMPILE.f	= $(F77) $(F77FLAGS_f)   $(FPPFLAGS) $(F77LAGS) -c
+COMPILE.f	= $(F77) $(F77FLAGS_f)   $(FPPFLAGS) $(F77FLAGS) -c
 COMPILE.f90	= $(F90) $(F90FLAGS_f90) $(FPPFLAGS) $(F90FLAGS) -c
 COMPILE.F	= $(F90) $(F77FLAGS_F)   $(FPPFLAGS) $(F77FLAGS) $(F77PPFLAGS_F) -c
 COMPILE.F90	= $(F90) $(F90FLAGS_F90) $(FPPFLAGS) $(F90FLAGS) $(F90PPFLAGS_F90) -c
@@ -90,7 +90,7 @@ LIBS		= @LIBS@
 
 LINK.c		= $(CC)  $(CFLAGS)   -o $@
 LINK.cxx	= $(CXX) $(CXXFLAGS) -o $@
-LINK.f		= $(F77) $(F77LAGS)  -o $@
+LINK.f		= $(F77) $(F77FLAGS) -o $@
 LINK.F		= $(F90) $(F77FLAGS) -o $@
 LINK.F90	= $(F90) $(F90FLAGS) -o $@
 

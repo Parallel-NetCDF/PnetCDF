@@ -67,9 +67,9 @@
           call check(err, 'In nf90mpi_create: ')
 
           ! define dimensions
-          err = nf90mpi_def_dim(ncid, "X", 10_8, dimid(1))
+          err = nf90mpi_def_dim(ncid, "X", 10_MPI_OFFSET_KIND, dimid(1))
           call check(err, 'In nf90mpi_def_dim X: ')
-          err = nf90mpi_def_dim(ncid, "Y", 2_8,  dimid(2))
+          err = nf90mpi_def_dim(ncid, "Y", 2_MPI_OFFSET_KIND,  dimid(2))
           call check(err, 'In nf90mpi_def_dim Y: ')
           err = nf90mpi_def_dim(ncid, "REC_DIM", NF90MPI_UNLIMITED, dimid(3))
           call check(err, 'In nf90mpi_def_dim REC_DIM: ')
@@ -129,7 +129,7 @@
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, &
                               MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998, &
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND) print 998, &
                   'heap memory allocated by PnetCDF internally has ',  &
                   sum_size/1048576, ' MiB yet to be freed'
           endif

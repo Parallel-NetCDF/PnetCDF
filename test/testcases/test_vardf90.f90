@@ -136,7 +136,7 @@
 
           ! read back using flexible vara API
           err = nf90mpi_get_var_all(ncid, varid, buf(:,2), start, count, &
-                                    BUFCOUNT=1_8, BUFTYPE=buftype)
+                                    BUFCOUNT=1_MPI_OFFSET_KIND, BUFTYPE=buftype)
           call check(err, 'In nf90mpi_get_var_all: ')
 
           ! check if the contents of buf are expected
@@ -145,7 +145,7 @@
 
           ! read back using vard API and permuted buftype
           err = nf90mpi_get_vard_all(ncid, varid, filetype, buf(:,2), &
-                                     1_8, buftype)
+                                     1_MPI_OFFSET_KIND, buftype)
           call check(err, 'In nf90mpi_get_vard_all: ')
 
           ! check if the contents of buf are expected
@@ -153,7 +153,7 @@
           call clear_buf(NX, NY, buf)
 
           ! read back using vard API and no buftype
-          err = nf90mpi_get_vard_all(ncid, varid, filetype, buf, 0_8, &
+          err = nf90mpi_get_vard_all(ncid, varid, filetype, buf, 0_MPI_OFFSET_KIND, &
                                      MPI_DATATYPE_NULL)
           call check(err, 'In nf90mpi_get_vard_all: ')
 
@@ -161,7 +161,7 @@
           call check_value_permuted(rank, NX, NY, buf, nerrs)
 
           ! read back using ghost buftype
-          err = nf90mpi_get_vard_all(ncid, varid, filetype, ncbuf, 1_8,&
+          err = nf90mpi_get_vard_all(ncid, varid, filetype, ncbuf, 1_MPI_OFFSET_KIND,&
                                      ghost_buftype)
           call check(err, 'In nf90mpi_get_vard_all: ')
 
@@ -278,7 +278,7 @@
           call check(err, 'In nf90mpi_def_var: dummy_rec ')
 
           ! define 2D fixed-size variable of integer type
-          err = nf90mpi_def_dim(ncid, "FIX_DIM", 2_8, dimid(2))
+          err = nf90mpi_def_dim(ncid, "FIX_DIM", 2_MPI_OFFSET_KIND, dimid(2))
           call check(err, 'In nf90mpi_def_dim RECV_DIM: ')
           err = nf90mpi_def_var(ncid, "fix_var", NF90_INT, dimid, varid1)
           call check(err, 'In nf90mpi_def_var: fix_var ')
@@ -302,7 +302,7 @@
 
           ! write the record variable */
           err = nf90mpi_put_vard_all(ncid, varid0, rec_filetype, buf(:,2), &
-                                     1_8, buftype)
+                                     1_MPI_OFFSET_KIND, buftype)
           call check(err, 'In nf90mpi_put_vard_all: ')
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
@@ -313,7 +313,7 @@
 
           ! write the fixed-size variable
           err = nf90mpi_put_vard_all(ncid, varid1, fix_filetype, buf(:,2), &
-                                     1_8, buftype)
+                                     1_MPI_OFFSET_KIND, buftype)
           call check(err, 'In nf90mpi_put_vard_all: ')
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
@@ -359,7 +359,7 @@
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, &
                               MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998, &
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND) print 998, &
                   'heap memory allocated by PnetCDF internally has ',  &
                   sum_size/1048576, ' MiB yet to be freed'
           endif

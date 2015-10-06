@@ -100,6 +100,7 @@ test_ncmpi_open(void)
     int ncid;
     int ncid2;
     int nok=0;
+    ssize_t w_len;
     
     /* Try to open a nonexistent file */
     err = ncmpi_open(comm, "tooth-fairy.nc", NC_NOWRITE, info, &ncid);/* should fail */
@@ -114,7 +115,7 @@ test_ncmpi_open(void)
 
     /* create a not-nc file */
     fd = open(NOT_NC_FILE, O_CREAT|O_WRONLY, 0600);
-    write(fd, "0123456789abcdefghijklmnopqrstuvwxyz", 36);
+    w_len = write(fd, "0123456789abcdefghijklmnopqrstuvwxyz", 36);
     close(fd);
 
     /* Open a file that is not a netCDF file. */
