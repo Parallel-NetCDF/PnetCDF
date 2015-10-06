@@ -577,7 +577,9 @@ if test "x${enable_fortran}" = xyes ; then
    UD_CHECK_FC_NAG
    if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
       NAGf90FPPFLAGS="-DNAGf90Fortran"
+      NAG_FCFLAGS="-mismatch"
       AC_SUBST(NAGf90FPPFLAGS)
+      AC_SUBST(NAG_FCFLAGS)
    fi
 
    dnl check Fortran parameter modifier for 8-byte integer type

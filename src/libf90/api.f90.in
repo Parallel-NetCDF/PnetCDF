@@ -183,7 +183,6 @@ INTERFACE
     END FUNCTION   nfmpi_inq_dim
 
     INTEGER        FUNCTION nfmpi_inq_dimname(ncid, dimid, name)
-                   use mpi, only: MPI_OFFSET_KIND
                             INTEGER,                       INTENT(IN)  :: ncid
                             INTEGER,                       INTENT(IN)  :: dimid
                             CHARACTER(len=*),              INTENT(OUT) :: name

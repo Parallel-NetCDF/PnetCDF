@@ -227,7 +227,7 @@
 
           ! read a scalar back and check the content
           oneReal = -1.0  ! a scalar
-          if (rank .GE. 4) starts = 1_8
+          if (rank .GE. 4) starts = 1_MPI_OFFSET_KIND
           err = nf90mpi_get_varn_all(ncid, varid, oneReal, starts)
           call check(err, ' 22 In nf90mpi_get_varn_all: ')
 
@@ -285,7 +285,7 @@
           if (err == NF90_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, &
                               MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998, &
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND) print 998, &
                   'heap memory allocated by PnetCDF internally has ',  &
                   sum_size/1048576, ' MiB yet to be freed'
           endif
