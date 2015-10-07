@@ -21,15 +21,16 @@ program tst_types2
   integer :: dimids1(1), dimids2(2), dimids3(3), dimids4(4), dimids5(5), dimids6(6), dimids7(7)
   integer :: i1, i2, i3, i4, i5, i6, i7
   integer, parameter :: DLEN = 2
-  integer (kind = 8) :: data1_in(DLEN), data1_out(DLEN)
-  integer (kind = 8) :: data2_in(DLEN, DLEN), data2_out(DLEN, DLEN)
-  integer (kind = 8) :: data3_in(DLEN, DLEN, DLEN), data3_out(DLEN, DLEN, DLEN)
-  integer (kind = 8) :: data4_in(DLEN, DLEN, DLEN, DLEN), data4_out(DLEN, DLEN, DLEN, DLEN)
-  integer (kind = 8) :: data5_in(DLEN, DLEN, DLEN, DLEN, DLEN), data5_out(DLEN, DLEN, DLEN, DLEN, DLEN)
-  integer (kind = 8) :: data6_in(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN), data6_out(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN)
-  integer (kind = 8) :: data7_in(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN, DLEN), &
+  integer, parameter :: EightByteInt = selected_int_kind(18)
+  integer (kind = EightByteInt) :: data1_in(DLEN), data1_out(DLEN)
+  integer (kind = EightByteInt) :: data2_in(DLEN, DLEN), data2_out(DLEN, DLEN)
+  integer (kind = EightByteInt) :: data3_in(DLEN, DLEN, DLEN), data3_out(DLEN, DLEN, DLEN)
+  integer (kind = EightByteInt) :: data4_in(DLEN, DLEN, DLEN, DLEN), data4_out(DLEN, DLEN, DLEN, DLEN)
+  integer (kind = EightByteInt) :: data5_in(DLEN, DLEN, DLEN, DLEN, DLEN), data5_out(DLEN, DLEN, DLEN, DLEN, DLEN)
+  integer (kind = EightByteInt) :: data6_in(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN), data6_out(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN)
+  integer (kind = EightByteInt) :: data7_in(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN, DLEN), &
        data7_out(DLEN, DLEN, DLEN, DLEN, DLEN, DLEN, DLEN)
-  integer (kind = 8), parameter :: REALLY_BIG = 9223372036854775807_8
+  integer (kind = EightByteInt), parameter :: REALLY_BIG = 9223372036854775807_EightByteInt
 
   integer :: cmode, err, ierr, get_args
   integer(KIND=MPI_OFFSET_KIND) :: dlen_ll

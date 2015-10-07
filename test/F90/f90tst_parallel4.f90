@@ -41,9 +41,9 @@ program f90tst
 
   call handle_err(nf90mpi_create(MPI_COMM_WORLD, filename, nmode, MPI_INFO_NULL, fh))
 
-  call handle_err(nf90mpi_def_dim(fh, 'dim1', 6_8, dimid(1)))
-  call handle_err(nf90mpi_def_dim(fh, 'dim2', 4_8, dimid(2)))
-  call handle_err(nf90mpi_def_dim(fh, 'dim3', 1_8, dimid(3)))
+  call handle_err(nf90mpi_def_dim(fh, 'dim1', 6_MPI_OFFSET_KIND, dimid(1)))
+  call handle_err(nf90mpi_def_dim(fh, 'dim2', 4_MPI_OFFSET_KIND, dimid(2)))
+  call handle_err(nf90mpi_def_dim(fh, 'dim3', 1_MPI_OFFSET_KIND, dimid(3)))
 
 
   call handle_err(nf90mpi_def_var(fh, 'var1', NF90_DOUBLE, dimid, varid))

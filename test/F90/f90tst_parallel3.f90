@@ -27,6 +27,11 @@ program f90tst_parallel3
   use pnetcdf
   implicit none
   
+  integer, parameter ::   OneByteInt = selected_int_kind(2), &
+                          TwoByteInt = selected_int_kind(4), &
+                         FourByteInt = selected_int_kind(9), &
+                        EightByteInt = selected_int_kind(18)
+
   ! This is the name of the data file we will create.
   character (len = *), parameter :: FILE_NAME = "f90tst_parallel3.nc"
   integer, parameter :: MAX_DIMS = 2
@@ -42,12 +47,12 @@ program f90tst_parallel3
   integer :: var_type(NUM_VARS) = (/ nf90_byte, nf90_short, nf90_int, &
        nf90_float, nf90_double, nf90_int64 /)
   integer :: x_dimid, y_dimid
-  integer(kind=1) :: byte_out(HALF_NY, HALF_NX), byte_in(HALF_NY, HALF_NX)
-  integer(kind=2) :: short_out(HALF_NY, HALF_NX), short_in(HALF_NY, HALF_NX)
+  integer(kind=OneByteInt) :: byte_out(HALF_NY, HALF_NX), byte_in(HALF_NY, HALF_NX)
+  integer(kind=TwoByteInt) :: short_out(HALF_NY, HALF_NX), short_in(HALF_NY, HALF_NX)
   integer :: int_out(HALF_NY, HALF_NX), int_in(HALF_NY, HALF_NX)
   real :: areal_out(HALF_NY, HALF_NX), areal_in(HALF_NY, HALF_NX)
   double precision :: double_out(HALF_NY, HALF_NX), double_in(HALF_NY, HALF_NX)
-  integer (kind=8) :: int64_out(HALF_NY, HALF_NX), int64_in(HALF_NY, HALF_NX)
+  integer (kind=EightByteInt) :: int64_out(HALF_NY, HALF_NX), int64_in(HALF_NY, HALF_NX)
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
   integer :: x, y, v
   integer :: p, my_rank, err, ierr, get_args
@@ -78,7 +83,7 @@ program f90tst_parallel3
   do x = 1, HALF_NX
      do y = 1, HALF_NY
         byte_out(y, x) = INT(my_rank,1) * (-1_1)
-        short_out(y, x) = INT2(my_rank) * (-2_2)
+        short_out(y, x) = INT(my_rank, TwoByteInt) * (-2_2)
         int_out(y, x) = my_rank * (-4)
         areal_out(y, x) = my_rank * 2.5
         double_out(y, x) = my_rank * (-4.5)

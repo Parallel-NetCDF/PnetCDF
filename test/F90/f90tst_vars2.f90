@@ -28,7 +28,8 @@ program f90tst_vars2
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
   integer :: x, y
   integer, parameter :: DEFLATE_LEVEL = 4
-  integer (kind = 8) :: TOE_SAN_VALUE = 2147483648_8
+  integer, parameter :: EightByteInt = selected_int_kind(18)
+  integer (kind = EightByteInt) :: TOE_SAN_VALUE = 2147483648_EightByteInt
   character (len = *), parameter :: VAR1_NAME = "Chon-Ji"
   character (len = *), parameter :: VAR2_NAME = "Tan-Gun"
   character (len = *), parameter :: VAR3_NAME = "Toe-San"
@@ -41,7 +42,7 @@ program f90tst_vars2
   integer :: varid1_in, varid2_in, varid3_in, varid4_in, varid5_in
   integer :: xtype_in, ndims_in, natts_in, dimids_in(MAX_DIMS)
   character (len = nf90_max_name) :: name_in
-  integer (kind = 8) :: toe_san_in(1)
+  integer (kind = EightByteInt) :: toe_san_in(1)
   integer :: cmode, err, ierr, get_args
   integer(KIND=MPI_OFFSET_KIND) :: nx_ll, ny_ll
   character(LEN=256) filename, cmd, msg
