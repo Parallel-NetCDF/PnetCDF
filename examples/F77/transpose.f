@@ -179,7 +179,8 @@
           call check(err, 'In nfmpi_put_vara_int_all XYZ: ')
 
           ! write the transposed variable:  XYZ -> XZY
-          imap    = (/ 1_8, counts(1)*counts(2), counts(1) /)
+          imap    = (/ 1_MPI_OFFSET_KIND, counts(1)*counts(2),
+     +                 counts(1) /)
           startsT = (/ starts(1), starts(3), starts(2) /)
           countsT = (/ counts(1), counts(3), counts(2) /)
           err = nfmpi_put_varm_int_all(ncid, XZY_id, startsT, countsT,
@@ -187,7 +188,8 @@
           call check(err, 'In nfmpi_put_varm_int_all XZY: ')
 
           ! write the transposed variable:  XYZ -> YXZ
-          imap    = (/ counts(1), 1_8, counts(1)*counts(2) /)
+          imap    = (/ counts(1), 1_MPI_OFFSET_KIND,
+     +                 counts(1)*counts(2) /)
           startsT = (/ starts(2), starts(1), starts(3) /)
           countsT = (/ counts(2), counts(1), counts(3) /)
           err = nfmpi_put_varm_int_all(ncid, YXZ_id, startsT, countsT,
@@ -195,7 +197,8 @@
           call check(err, 'In nfmpi_put_varm_int_all YZX: ')
 
           ! write the transposed variable:  XYZ -> YZX
-          imap    = (/ counts(1), counts(1)*counts(2), 1_8 /)
+          imap    = (/ counts(1), counts(1)*counts(2),
+     +                 1_MPI_OFFSET_KIND /)
           startsT = (/ starts(2), starts(3), starts(1) /)
           countsT = (/ counts(2), counts(3), counts(1) /)
           err = nfmpi_put_varm_int_all(ncid, YZX_id, startsT, countsT,
@@ -203,7 +206,8 @@
           call check(err, 'In nfmpi_put_varm_int_all YZX: ')
 
           ! write the transposed variable:  XYZ -> ZXY
-          imap    = (/ counts(1)*counts(2), 1_8, counts(1) /)
+          imap    = (/ counts(1)*counts(2), 1_MPI_OFFSET_KIND,
+     +                 counts(1) /)
           startsT = (/ starts(3), starts(1), starts(2) /)
           countsT = (/ counts(3), counts(1), counts(2) /)
           err = nfmpi_put_varm_int_all(ncid, ZXY_id, startsT, countsT,
@@ -211,7 +215,8 @@
           call check(err, 'In nfmpi_put_varm_int_all ZXY: ')
 
           ! write the transposed variable:  XYZ -> ZYX
-          imap    = (/ counts(1)*counts(2), counts(1), 1_8 /)
+          imap    = (/ counts(1)*counts(2), counts(1),
+     +                 1_MPI_OFFSET_KIND /)
           startsT = (/ starts(3), starts(2), starts(1) /)
           countsT = (/ counts(3), counts(2), counts(1) /)
           err = nfmpi_put_varm_int_all(ncid, ZYX_id, startsT, countsT,
@@ -228,12 +233,13 @@
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, 
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998,
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+     +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
  999      call MPI_Finalize(err)
-          call EXIT(0)
+          ! call EXIT(0) ! EXIT() is a GNU extension
       end program main
 

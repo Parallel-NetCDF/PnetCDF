@@ -120,7 +120,8 @@
           call check(err, 'In nfmpi_def_var: rec_var ')
 
           ! define 2D fixed-size variable of integer type
-          err = nfmpi_def_dim(ncid, "FIX_DIM", 2_8, dimid(2))
+          err = nfmpi_def_dim(ncid, "FIX_DIM", 2_MPI_OFFSET_KIND,
+     +                        dimid(2))
           call check(err, 'In nfmpi_def_dim RECV_DIM: ')
           err = nfmpi_def_var(ncid, "fix_var", NF_INT, 2, dimid, varid1)
           call check(err, 'In nfmpi_def_var: fix_var ')
@@ -205,12 +206,13 @@
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998,
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+     +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
  999      call MPI_Finalize(err)
-          call EXIT(0)
+          ! call EXIT(0) ! EXIT() is a GNU extension
       end program main
 
