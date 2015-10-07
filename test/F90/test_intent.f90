@@ -31,6 +31,11 @@
           use pnetcdf
           implicit none
 
+          integer, parameter ::   OneByteInt = selected_int_kind(2), &
+                                  TwoByteInt = selected_int_kind(4), &
+                                 FourByteInt = selected_int_kind(9), &
+                                EightByteInt = selected_int_kind(18)
+
           character(LEN=256) filename, cmd, msg
           integer err, ierr, rank, get_args
           integer cmode, ncid, varid, dimid(1), req(1), status(1)
@@ -38,21 +43,21 @@
           integer(kind=MPI_OFFSET_KIND) count(1)
           integer(kind=MPI_OFFSET_KIND) bufsize
 
-          character(LEN=3)  cbuf
-          integer*1        i1buf(3)
-          integer*2         sbuf(3)
-          integer           ibuf(3)
-          real              rbuf(3)
-          double precision  dbuf(3)
-          integer*8        i8buf(3)
+          character(LEN=3)           cbuf
+          integer(KIND=OneByteInt)   i1buf(3)
+          integer(KIND=TwoByteInt)   sbuf(3)
+          integer                    ibuf(3)
+          real                       rbuf(3)
+          double precision           dbuf(3)
+          integer(KIND=EightByteInt) i8buf(3)
 
           PARAMETER( cbuf="123")
-          PARAMETER(i1buf=(/1_1,2_1,3_1/))
-          PARAMETER( sbuf=(/1_2,2_2,3_2/))
+          PARAMETER(i1buf=(/1_OneByteInt,2_OneByteInt,3_OneByteInt/))
+          PARAMETER( sbuf=(/1_TwoByteInt,2_TwoByteInt,3_TwoByteInt/))
           PARAMETER( ibuf=(/1,2,3/))
           PARAMETER( rbuf=(/1.0,2.0,3.0/))
           PARAMETER( dbuf=(/1.0,2.0,3.0/))
-          PARAMETER(i8buf=(/1_8,2_8,3_8/))
+          PARAMETER(i8buf=(/1_EightByteInt,2_EightByteInt,3_EightByteInt/))
 
           call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
@@ -88,19 +93,19 @@
           err = nf90mpi_put_att(ncid, NF90_GLOBAL, 'nf90_attr_int8', i8buf)
           call check(err, 'In nf90mpi_put_att: ')
 
-          err = nfmpi_put_att_text(ncid, NF90_GLOBAL, 'nf_attr_text', 3_8, cbuf)
+          err = nfmpi_put_att_text(ncid, NF90_GLOBAL, 'nf_attr_text', 3_MPI_OFFSET_KIND, cbuf)
           call check(err, 'In nfmpi_put_att_text: ')
-          err = nfmpi_put_att_int1(ncid, NF90_GLOBAL, 'nf_attr_int1', NF90_INT1, 3_8, i1buf)
+          err = nfmpi_put_att_int1(ncid, NF90_GLOBAL, 'nf_attr_int1', NF90_INT1, 3_MPI_OFFSET_KIND, i1buf)
           call check(err, 'In nfmpi_put_att_int1: ')
-          err = nfmpi_put_att_int2(ncid, NF90_GLOBAL, 'nf_attr_int2', NF90_INT2, 3_8, sbuf)
+          err = nfmpi_put_att_int2(ncid, NF90_GLOBAL, 'nf_attr_int2', NF90_INT2, 3_MPI_OFFSET_KIND, sbuf)
           call check(err, 'In nfmpi_put_att_int2: ')
-          err = nfmpi_put_att_int(ncid, NF90_GLOBAL, 'nf_attr_int', NF90_INT, 3_8, ibuf)
+          err = nfmpi_put_att_int(ncid, NF90_GLOBAL, 'nf_attr_int', NF90_INT, 3_MPI_OFFSET_KIND, ibuf)
           call check(err, 'In nfmpi_put_att_int: ')
-          err = nfmpi_put_att_real(ncid, NF90_GLOBAL, 'nf_attr_real', NF90_FLOAT, 3_8, rbuf)
+          err = nfmpi_put_att_real(ncid, NF90_GLOBAL, 'nf_attr_real', NF90_FLOAT, 3_MPI_OFFSET_KIND, rbuf)
           call check(err, 'In nfmpi_put_att_real: ')
-          err = nfmpi_put_att_double(ncid, NF90_GLOBAL, 'nf_attr_double', NF90_DOUBLE, 3_8, dbuf)
+          err = nfmpi_put_att_double(ncid, NF90_GLOBAL, 'nf_attr_double', NF90_DOUBLE, 3_MPI_OFFSET_KIND, dbuf)
           call check(err, 'In nfmpi_put_att_double: ')
-          err = nfmpi_put_att_int8(ncid, NF90_GLOBAL, 'nf_attr_int8', NF90_INT64, 3_8, i8buf)
+          err = nfmpi_put_att_int8(ncid, NF90_GLOBAL, 'nf_attr_int8', NF90_INT64, 3_MPI_OFFSET_KIND, i8buf)
           call check(err, 'In nfmpi_put_att_int8: ')
 
           ! define a variable of an integer array of size 3 in the nc file

@@ -12,7 +12,8 @@ program tst_io
   use mpi
   use pnetcdf
   implicit none
-  integer(kind=8), parameter :: prsz1 = 50, prsz2 = 50, &
+  integer, parameter :: EightByteInt = selected_int_kind(18)
+  integer(kind=EightByteInt), parameter :: prsz1 = 50, prsz2 = 50, &
        prsz3 = 50, prsz4 = 50, repct = 10
   integer :: i1, i2, i3, i4
   real :: psr
@@ -151,7 +152,7 @@ contains
     character(len = *), intent(in) :: fn
     real, dimension (:, :, :, :), intent (in) :: vrnam
 
-    integer(kind=8), intent(in) :: d1, d2, d3, d4
+    integer(kind=EightByteInt), intent(in) :: d1, d2, d3, d4
     integer, intent(in) :: stat, deb
     integer, intent(out) :: do1, do2, do3, do4, vr
     integer, intent(inout) :: nc

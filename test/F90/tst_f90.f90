@@ -167,7 +167,8 @@ program netcdfTest
   pressure = 949. + real(reshape( (/ (counter, counter = 1, numLats * numLons * numFrTimes) /),  &
                                     (/ numLons, numLats, numFrTimes /) ) )
   call check(nf90mpi_put_var_all(ncFileID, pressVarID, pressure(:, :, 1:1)) )
-  call check(nf90mpi_put_var_all(ncFileID, pressVarID, pressure(:, :, 2:2), start = (/ 1_8, 1_8, 2_8 /)) )
+  call check(nf90mpi_put_var_all(ncFileID, pressVarID, pressure(:, :, 2:2), &
+                                 start = (/ 1_EightByteInt, 1_EightByteInt, 2_EightByteInt /)) )
   
   call check(nfmpi_begin_indep_data(ncFileID))
   scalarVarBuf = 10
