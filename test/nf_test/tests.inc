@@ -5,6 +5,10 @@
 !  $Id$
 !
 
+      integer, parameter :: INT1_KIND = selected_int_kind(2)
+      integer, parameter :: INT2_KIND = selected_int_kind(4)
+      integer, parameter :: INT8_KIND = selected_int_kind(18) 
+
 !!!!
 ! Do not tabify this unless you like hitting the 72 char limit !!!
 !!!
@@ -85,8 +89,8 @@
 #define X_DOUBLE_MAX 1.7976931348623157D+200
 #endif
 #define X_DOUBLE_MIN (-X_DOUBLE_MAX)
-#define X_INT8_MIN (-9223372036854775807_8)
-#define X_INT8_MAX 9223372036854775807_8
+#define X_INT8_MIN (-9223372036854775807_INT8_KIND)
+#define X_INT8_MAX 9223372036854775807_INT8_KIND
 #define X_UINT8_MIN (-18446744073709551615.0)
 #define X_UINT8_MAX 18446744073709551615.0
 
@@ -103,7 +107,7 @@
 #define X_UBYTE_MIN     X_UCHAR_MIN
 #define X_USHORT_MAX    65535
 #define X_USHORT_MIN    0
-#define X_UINT_MAX      4294967295_8
+#define X_UINT_MAX      4294967295_INT8_KIND
 #define X_UINT_MIN      0
 
 !/*
