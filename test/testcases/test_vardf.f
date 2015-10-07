@@ -121,7 +121,6 @@
           integer i, j, rank, err, ncid, varid, nerrs, buf(NX, NY)
           integer buftype, ghost_buftype, filetype
           integer ncbuf(NX+4, NY+4)
-          integer, parameter :: INT8 = selected_int_kind(18)
 
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
           ! clear the contents of the read buffer
@@ -137,7 +136,7 @@
 
           ! read back using flexible vara API
           err = nfmpi_get_vara_all(ncid, varid, start, count, buf(:,2),
-     +                             1_INT8, buftype)
+     +                             1_MPI_OFFSET_KIND, buftype)
           call check(err, 'In nfmpi_get_vara_all: ')
 
           ! check if the contents of buf are expected
@@ -146,7 +145,7 @@
 
           ! read back using vard API and permuted buftype
           err = nfmpi_get_vard_all(ncid, varid, filetype, buf(:,2),
-     +                             1_INT8, buftype)
+     +                             1_MPI_OFFSET_KIND, buftype)
           call check(err, 'In nfmpi_get_vard_all: ')
 
           ! check if the contents of buf are expected
@@ -154,16 +153,16 @@
           call clear_buf(NX, NY, buf)
 
           ! read back using vard API and no buftype
-          err = nfmpi_get_vard_all(ncid, varid, filetype, buf, 0_INT8,
-     +                             MPI_DATATYPE_NULL)
+          err = nfmpi_get_vard_all(ncid, varid, filetype, buf,
+     +                             0_MPI_OFFSET_KIND, MPI_DATATYPE_NULL)
           call check(err, 'In nfmpi_get_vard_all: ')
 
           ! check if the contents of buf are expected
           call check_value_permuted(rank, NX, NY, buf, nerrs)
 
           ! read back using ghost buftype
-          err = nfmpi_get_vard_all(ncid, varid, filetype, ncbuf, 1_INT8,
-     +                             ghost_buftype)
+          err = nfmpi_get_vard_all(ncid, varid, filetype, ncbuf,
+     +                             1_MPI_OFFSET_KIND, ghost_buftype)
           call check(err, 'In nfmpi_get_vard_all: ')
 
  543      format(A,I2,A,I2,A,I3,A,I3)
@@ -194,7 +193,6 @@
           integer(kind=MPI_OFFSET_KIND) start(2), count(2), len
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size, recsize
           integer(kind=MPI_ADDRESS_KIND) a0, a1, disps(2)
-          integer, parameter :: INT8 = selected_int_kind(18)
 
           call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
@@ -280,7 +278,8 @@
           call check(err, 'In nfmpi_def_var: dummy_rec ')
 
           ! define 2D fixed-size variable of integer type
-          err = nfmpi_def_dim(ncid, "FIX_DIM", 2_INT8, dimid(2))
+          err = nfmpi_def_dim(ncid, "FIX_DIM", 2_MPI_OFFSET_KIND,
+     +                        dimid(2))
           call check(err, 'In nfmpi_def_dim RECV_DIM: ')
           err = nfmpi_def_var(ncid, "fix_var", NF_INT, 2, dimid, varid1)
           call check(err, 'In nfmpi_def_var: fix_var ')
@@ -304,7 +303,7 @@
 
           ! write the record variable */
           err = nfmpi_put_vard_all(ncid, varid0, rec_filetype, buf(:,2),
-     +                             1_INT8, buftype)
+     +                             1_MPI_OFFSET_KIND, buftype)
           call check(err, 'In nfmpi_put_vard_all: ')
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
@@ -315,7 +314,7 @@
 
           ! write the fixed-size variable
           err = nfmpi_put_vard_all(ncid, varid1, fix_filetype, buf(:,2),
-     +                             1_INT8, buftype)
+     +                             1_MPI_OFFSET_KIND, buftype)
           call check(err, 'In nfmpi_put_vard_all: ')
           ! check if the contents of buf are altered
           call check_value(rank, NX, NY, buf, nerrs)
@@ -361,7 +360,8 @@
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_INT8) print 998,
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+     +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
           endif

@@ -119,9 +119,9 @@ dnl
 define([MAKE_TYPE], [dnl
 ifelse($1, text, char(int($2)),
        ifelse($1, int, INT($2),
-       ifelse($1, int1, INT($2,KIND=1),
-       ifelse($1, int2, INT($2,KIND=2),
-       ifelse($1, int8, INT($2,KIND=8),
+       ifelse($1, int1, INT($2,KIND=INT1_KIND),
+       ifelse($1, int2, INT($2,KIND=INT2_KIND),
+       ifelse($1, int8, INT($2,KIND=INT8_KIND),
        ifelse($1, real, REAL($2),
        $2))))))[]dnl
 ])
