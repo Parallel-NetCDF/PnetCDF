@@ -150,13 +150,17 @@
           call check(err, 'In nfmpi_def_dim X: ')
 
           ! define 4 2D variables of real type
-          err = nfmpi_def_var(ncid, "var0", NF_REAL, 2_8,dimid,varid(1))
+          err = nfmpi_def_var(ncid, "var0", NF_REAL, 2_MPI_OFFSET_KIND,
+     +                        dimid,varid(1))
           call check(err, 'In nfmpi_def_var var0: ')
-          err = nfmpi_def_var(ncid, "var1", NF_REAL, 2_8,dimid,varid(2))
+          err = nfmpi_def_var(ncid, "var1", NF_REAL, 2_MPI_OFFSET_KIND,
+     +                        dimid,varid(2))
           call check(err, 'In nfmpi_def_var var1: ')
-          err = nfmpi_def_var(ncid, "var2", NF_REAL, 2_8,dimid,varid(3))
+          err = nfmpi_def_var(ncid, "var2", NF_REAL, 2_MPI_OFFSET_KIND,
+     +                        dimid,varid(3))
           call check(err, 'In nfmpi_def_var var2: ')
-          err = nfmpi_def_var(ncid, "var3", NF_REAL, 2_8,dimid,varid(4))
+          err = nfmpi_def_var(ncid, "var3", NF_REAL, 2_MPI_OFFSET_KIND,
+     +                        dimid,varid(4))
           call check(err, 'In nfmpi_def_var var3: ')
 
           ! do not forget to exit define mode
@@ -245,12 +249,13 @@
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET,
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998,
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+     +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size, ' B yet to be freed'
           endif
 
  999      call MPI_Finalize(err)
-          call EXIT(0)
+          ! call EXIT(0) ! EXIT() is a GNU extension
       end program main
 

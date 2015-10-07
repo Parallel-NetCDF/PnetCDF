@@ -152,7 +152,7 @@
           ! set a customized fill value -1
           fill_value = -1
           err = nfmpi_put_att_int(ncid, rec_varid, "_FillValue", NF_INT,
-     +                            1_8, fill_value)
+     +                            1_MPI_OFFSET_KIND, fill_value)
           call check(err, 'In nfmpi_put_att_int: ')
 
           ! do not forget to exit define mode
@@ -210,12 +210,13 @@
           if (err == NF_NOERR) then
               call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, 
      +                        MPI_SUM, 0, MPI_COMM_WORLD, err)
-              if (rank .EQ. 0 .AND. sum_size .GT. 0_8) print 998,
+              if (rank .EQ. 0 .AND. sum_size .GT. 0_MPI_OFFSET_KIND)
+     +            print 998,
      +            'heap memory allocated by PnetCDF internally has ',
      +            sum_size/1048576, ' MiB yet to be freed'
           endif
 
  999      call MPI_Finalize(err)
-          call EXIT(0)
+          ! call EXIT(0) ! EXIT() is a GNU extension
       end program main
 
