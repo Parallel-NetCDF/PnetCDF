@@ -141,6 +141,6 @@
       if (err < NF_NOERR) print*,'Error at nfmpi_close ',
      +                           nfmpi_strerror(err)
 
- 999  CALL MPI_Finalize(err)
+      CALL MPI_Finalize(err)
       end program
 
