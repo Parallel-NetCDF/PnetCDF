@@ -835,15 +835,17 @@ ncmpi_sync_numrecs(int ncid) {
 
 #ifndef DISABLE_FILE_SYNC
     if (NC_doFsync(ncp)) { /* NC_SHARE is set */
-        int mpireturn;
+        int err, mpireturn;
         if (NC_indep(ncp)) {
             TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
         }
         else {
             TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
         }
-        if (mpireturn != MPI_SUCCESS)
-            status = ncmpii_handle_error(mpireturn, "MPI_File_sync");
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_handle_error(mpireturn, "MPI_File_sync");
+            if (status == NC_NOERR) status = err;
+        }
         TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
     }
 #endif

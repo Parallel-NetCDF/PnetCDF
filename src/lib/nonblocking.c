@@ -683,6 +683,8 @@ err_check:
         io_req[2] = -err;   /* all NC errors are negative */
         TRACE_COMM(MPI_Allreduce)(io_req, do_io, 3, MPI_INT, MPI_MAX,
                                   ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+ 	    return ncmpii_handle_error(mpireturn, "MPI_Allreduce"); 
 
         /* if error occurs, return the API collectively */
         if (do_io[2] != -NC_NOERR) return err;
@@ -1707,9 +1709,17 @@ ncmpii_wait_getput(NC     *ncp,
             int mpireturn;
             if (io_method == INDEP_IO) {
                 TRACE_IO(MPI_File_sync)(ncp->nciop->independent_fh);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_handle_error(mpireturn, "MPI_File_sync"); 
+                    if (status == NC_NOERR) status = err;
+                }
             }
             else {
                 TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_handle_error(mpireturn, "MPI_File_sync"); 
+                    if (status == NC_NOERR) status = err;
+                }
                 TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
             }
         }

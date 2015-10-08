@@ -271,6 +271,8 @@ ncmpi_set_fill(int  ncid,
     if (ncp->safe_mode) {
         int root_fill_mode=fill_mode;
         TRACE_COMM(MPI_Bcast)(&root_fill_mode, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return  ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
         if (fill_mode != root_fill_mode) {
             /* dataset's fill mode is inconsistent with root's */
             printf("Warning: fill mode set in %s() is inconsistent\n", __func__);
@@ -327,6 +329,9 @@ ncmpi_def_var_fill(int   ncid,
     if (ncp->safe_mode) {
         int root_no_fill=no_fill;
         TRACE_COMM(MPI_Bcast)(&root_no_fill, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return  ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+
         if (no_fill != root_no_fill) {
             /* variable's fill mode is inconsistent with root's */
             printf("Warning: variable (%s) fill mode (%d) set in %s() is inconsistent\n",
