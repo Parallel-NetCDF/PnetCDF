@@ -19,22 +19,13 @@
       integer*8 bufsize
       integer*8 put_size
       real  var(6,4)
-      character(len=256) filename, cmd
-      integer argc, IARGC
+      character(len=256) filename
 
       call MPI_INIT(err)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, err)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, err)
 
-      call getarg(0, cmd)
-      argc = IARGC()
-      if (argc .GT. 1) then
-          if (rank .EQ. 0) print*,'Usage: ',trim(cmd),' [filename]'
-          goto 999
-      endif
       filename = "testfile.nc"
-      if (argc .EQ. 1) call getarg(1, filename)
-
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
      +                   MPI_INFO_NULL, ncid)
@@ -151,6 +142,5 @@
      +                           nfmpi_strerror(err)
 
  999  CALL MPI_Finalize(err)
-      CALL EXIT(0)
       end program
 
