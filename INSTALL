@@ -12,8 +12,8 @@ PnetCDF Installation Guide
 1. Getting Started
 ==================
 
-The following instructions take you through a sequence of steps to get
-the default configuration of PnetCDF up and running.
+The following instructions take you through a sequence of steps to get the
+default configuration of PnetCDF up and running.
 
 (a) You will need the following prerequisites.
 
@@ -24,27 +24,24 @@ the default configuration of PnetCDF up and running.
     - REQUIRED: GNU m4 (https://www.gnu.org/software/m4/m4.html)
 
     - OPTIONAL: An MPI C++ compiler, if C++ applications are to be used.
-      If you do not require support for C++ applications,
-      you can disable this support using the configure option
-      --disable-cxx (configuring PnetCDF is described in step 1(d)
-      below).
-
-    - OPTIONAL: An MPI Fortran 77 compiler, if Fortran 77 applications are
-      to be used. If you do not require
-      support for Fortran 77 applications, you can disable this
-      support using --disable-fortran (configuring PnetCDF is described in
-      step 1(d) below).
-
-    - OPTIONAL: An MPI Fortran 90 compiler, if Fortran 90 applications are
-      to be used. If you do not require
-      support for Fortran 90 applications, you can disable this
-      support using --disable-fortran. Note that Fortran 77 support is a
-      prerequisite for Fortran 90 support (configuring PnetCDF is
+      If you do not require support for C++ applications, you can disable this
+      support using the configure option --disable-cxx (configuring PnetCDF is
       described in step 1(d) below).
 
-    Also, you need to know what shell you are using since different shell
-    has different command syntax. Command "echo $SHELL" prints out the
-    current shell used by your terminal program.
+    - OPTIONAL: An MPI Fortran 77 compiler, if Fortran 77 applications are to
+      be used. If you do not require support for Fortran 77 applications, you
+      can disable this support using --disable-fortran (configuring PnetCDF is
+      described in step 1(d) below).
+
+    - OPTIONAL: An MPI Fortran 90 compiler, if Fortran 90 applications are to
+      be used. If you do not require support for Fortran 90 applications, you
+      can disable this support using --disable-fortran. Note that Fortran 77
+      support is a prerequisite for Fortran 90 support (configuring PnetCDF is
+      described in step 1(d) below).
+
+    Also, you need to know what shell you are using since different shell has
+    different command syntax. Command "echo $SHELL" prints out the current
+    shell used by your terminal program.
 
 (b) Unpack the tar file and go to the top level directory:
 
@@ -74,9 +71,8 @@ the default configuration of PnetCDF up and running.
 
       make install prefix=/OTHER/INSTALL/DIRECTORY
 
-(g) Add the bin subdirectory of the installation directory to your
-    path in your startup script (.bashrc for bash, .cshrc for csh,
-    etc.):
+(g) Add the bin subdirectory of the installation directory to your path in your
+    startup script (.bashrc for bash, .cshrc for csh, etc.):
 
     for csh and tcsh:
 
@@ -91,11 +87,11 @@ the default configuration of PnetCDF up and running.
       which ncmpidump
       which ncmpidiff
 
-    These commands should display the path to your bin subdirectory of
-    your install directory.
+    These commands should display the path to your bin subdirectory of your
+    install directory.
 
-If you have completed all of the above steps, you have successfully
-installed PnetCDF.
+If you have completed all of the above steps, you have successfully installed
+PnetCDF.
 
 -------------------------------------------------------------------------
 
@@ -141,9 +137,9 @@ Optional Packages:
   --with-mpi=/path/to/implementation
                           installation prefix for MPI implementation
 
-PnetCDF can automatically detect the available MPI compilers and compile
-flags. If alternate compilers or flags are desired, they can be specified
-by the following environment variables and/or configure options.
+PnetCDF can automatically detect the available MPI compilers and compile flags.
+If alternate compilers or flags are desired, they can be specified by the
+following environment variables and/or configure options.
 
 Some influential environment variables:
     CFLAGS, CPPFLAGS, CXXFLAGS, FFLAGS, FCFLAGS, LDFLAGS and LIBS
@@ -151,8 +147,9 @@ Some influential environment variables:
     with these flags.
 
     MPICC, MPICXX, MPIF77, MPIF90
-    Setting these variables would result in the PnetCDF library being
-    built with these compilers.
+    Setting these variables would result in the PnetCDF library being built
+    with these compilers. CC, CXX, F77, and F90 will be ignored if these MPI
+    variables are present.
 
     Note the compile flags, such as -O2 or -g, should be given in CFLAGS and
     other flag environment variables. Please do not set them in compiler
@@ -173,7 +170,11 @@ For testing sequential programs, the command is
      make check
 For testing parallel programs, the command is
      make ptest
-The parallel test uses up to 8 MPI processes.
+The parallel test uses up to 10 MPI processes.
+
+Command "make tests" will build executables of all the test programs. This can
+be handy if testing must run through a batch job system. Having the testing
+executables built before submitting a batch job could save a lot of time.
 
 There are three environment variables that can be used to run make check/ptest
 on a cross compile platform.
@@ -185,26 +186,27 @@ Examples:
     make check TEST_OUTDIR=/scratch
     make ptest TEST_MPIRUN="aprun -n NP" TEST_OUTDIR=/scratch
 
-Note the keyword "NP" used in the environment variable string TEST_MPIRUN.
-It will be replaced with the different numbers of MPI processes used in
-testing. Currently, the testing uses up to 8 processes. Hence, please make
-sure the process allocation at least contains 8 processes.
+Note the keyword "NP" used in the environment variable string TEST_MPIRUN.  It
+will be replaced with the different numbers of MPI processes used in testing.
+Currently, the testing uses up to 8 processes. Hence, please make sure the
+process allocation at least contains 8 processes.
+
 One can also run "make ptest" on batch queue systems. One example PBS script is
 provide "pbs.script". It is recommended to build all the testing executables
 before submitting the batch job. This can be done by running the below command.
     cd test ; make ; cd ../examples ; make ; cd ..
 
 Note on setting TEST_OUTDIR. In order to run parallel test correctly, the
-output directory must be on a file system accessible to all MPI processes.
-We recommend to use parallel file systems or POSIX compliant file systems
-(Using NFS will most likely fail the parallel test.)
+output directory must be on a file system accessible to all MPI processes.  We
+recommend to use parallel file systems or POSIX compliant file systems (Using
+NFS will most likely fail the parallel test.)
 
 Issue with older MPI-IO implementation.
     During "make check", one may encounter the following error message:
     "MPI error (MPI_File_delete) : MPI_ERR_IO: input/output error"
     This is due to the underneath MPI-IO libraries fail to return the correct
-    error class MPI_ERR_NO_SUCH_FILE when trying to delete a non-existing
-    file. This message can be ignored.
+    error class MPI_ERR_NO_SUCH_FILE when trying to delete a non-existing file.
+    This message can be ignored.
 
 -------------------------------------------------------------------------
 
