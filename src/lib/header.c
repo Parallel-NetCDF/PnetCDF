@@ -683,10 +683,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
      * NON_NEG     = <non-negative INT> |  // CDF-1 and CDF-2
      *               <non-negative INT64>  // CDF-5
      */
-    int i, status, sizeof_t, sizeof_off_t;
-
-    sizeof_t     = pbp->version == 5 ? 8 : 4;  /* for vsize */
-    sizeof_off_t = pbp->version == 1 ? 4 : 8;  /* for begin */
+    int i, status;
 
     /* copy name */
     status = hdr_put_NC_name(pbp, varp->name);
@@ -2237,7 +2234,6 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                     NC         *ncp)
 {
     int rank, err, status=NC_NOERR;
-    char *root_magic;
     schar magic[sizeof(ncmagic1)];
     MPI_Offset nrecs=0, chunksize=NC_DEFAULT_CHUNKSIZE;
     MPI_Aint pos_addr, base_addr;
@@ -2274,16 +2270,12 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
      * ncmpi_create()
      */
     if (magic[sizeof(ncmagic1)-1] == 0x5) {
-        root_magic = "CDF-5";
         fSet(root_ncp->flags, NC_64BIT_DATA);
     }
     else if (magic[sizeof(ncmagic1)-1] == 0x2) {
-        root_magic = "CDF-2";
         fSet(root_ncp->flags, NC_64BIT_OFFSET);
     }
-    else if (magic[sizeof(ncmagic1)-1] == 0x1)
-        root_magic = "CDF-1";
-    else {
+    else if (magic[sizeof(ncmagic1)-1] != 0x1) {
         /* Fatal error, as root's header is significant */
         if (ncp->safe_mode)
             fprintf(stderr,"Error: root's header indicates not CDF 1/2/5 format\n");
