@@ -115,6 +115,8 @@ int ncmpii_subfile_create(NC *ncp, int *ncidp)
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
     TRACE_COMM(MPI_Comm_split)(ncp->nciop->comm, color, myrank, &comm_sf);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Comm_split"); 
 
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->nciop->path, color, "nc");
 
@@ -166,6 +168,8 @@ ncmpii_subfile_open(NC *ncp, int *ncidp)
     /* TODO: fix error when using generated key value.
      * for now, just passing 0 value. */
     TRACE_COMM(MPI_Comm_split)(ncp->nciop->comm, color, myrank, &comm_sf);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Comm_split"); 
 
     /* char path[1024], file[1024]; */
     /* find_path_and_fname(ncp->nciop->path, path, file); */

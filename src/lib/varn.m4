@@ -324,6 +324,9 @@ err_check:
         int mpireturn;
         TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
                                   ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce"); 
+
         if (min_st != NC_NOERR) {
             if (req_id != NC_REQ_NULL) /* cancel pending nonblocking request */
                 ncmpii_cancel(ncp, 1, &req_id, &st);

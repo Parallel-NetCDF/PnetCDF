@@ -515,6 +515,9 @@ ncmpi_rename_att(int         ncid,
     if (ncp->safe_mode) {
         int nchars = (int) strlen(newname);
         TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+
         if (nchars != strlen(newname)) {
             /* newname's length is inconsistent with root's */
             printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
@@ -600,6 +603,8 @@ ncmpi_copy_att(int         ncid_in,
              */
             TRACE_COMM(MPI_Bcast)((void*)attrp->xvalue, (int)attrp->xsz,
                                   MPI_CHAR, 0, ncp->nciop->comm);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
 
             /* Let root write the entire header to the file. Note that we
              * cannot just update the variable name in its space occupied in
@@ -1142,8 +1147,12 @@ ncmpii_put_att(int         ncid,
                  * value is significant. Broadcast the new attribute at root to
                  * overwrite new attribute at other processes.
                  */
-                TRACE_COMM(MPI_Bcast)(attrp->xvalue, (int)attrp->xsz, MPI_BYTE, 0,
-                                      ncp->nciop->comm);
+                TRACE_COMM(MPI_Bcast)(attrp->xvalue, (int)attrp->xsz, MPI_BYTE,
+                                      0, ncp->nciop->comm);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+                    if (status == NC_NOERR) status = err;
+                }
             }
 
             /* Let root write the entire header to the file. Note that we

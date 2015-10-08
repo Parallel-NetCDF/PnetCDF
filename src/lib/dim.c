@@ -72,8 +72,8 @@ ncmpii_new_NC_dim(const char *uname,  /* dimension name */
 
     dimp = ncmpii_new_x_NC_dim(strp);
     if (dimp == NULL) {
-    	ncmpii_free_NC_string(strp);
-    	return NULL;
+        ncmpii_free_NC_string(strp);
+        return NULL;
     }
 
     dimp->size = size;
@@ -486,6 +486,9 @@ ncmpi_rename_dim(int         ncid,
     if (ncp->safe_mode) {
         int nchars = (int)strlen(newname);
         TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+
         if (nchars != strlen(newname)) {
             /* newname's length is inconsistent with root's */
             printf("Warning: dimension name(%s) used in %s() is inconsistent\n",
@@ -505,6 +508,10 @@ ncmpi_rename_dim(int         ncid,
      */
     TRACE_COMM(MPI_Bcast)(dimp->name->cp, (int)dimp->name->nchars, MPI_CHAR, 0,
                           ncp->nciop->comm);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+        if (status == NC_NOERR) status = err;
+    }
 
     /* Let root write the entire header to the file. Note that we cannot just
      * update the variable name in its space occupied in the file header,

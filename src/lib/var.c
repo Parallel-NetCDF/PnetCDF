@@ -831,6 +831,9 @@ ncmpi_rename_var(int         ncid,
     if (ncp->safe_mode) {
         int nchars = (int)strlen(newname);
         TRACE_COMM(MPI_Bcast)(&nchars, 1, MPI_INT, 0, ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
+
         if (nchars != (int) strlen(newname)) {
             /* newname's length is inconsistent with root's */
             printf("Warning: variable name(%s) used in %s() is inconsistent\n",

@@ -141,6 +141,9 @@ NC_check_header(NC         *ncp,
     if (ncp->safe_mode) {
         TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,
                                   ncp->nciop->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce"); 
+
         if (g_status != NC_NOERR) { /* some headers are inconsistent */
             if (status == NC_NOERR) status = NC_EMULTIDEFINE;
         }
@@ -448,6 +451,8 @@ NC_begins(NC         *ncp,
 
     /* only root's header size matters */
     TRACE_COMM(MPI_Bcast)(&ncp->xsz, 1, MPI_OFFSET, 0, ncp->nciop->comm);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_handle_error(mpireturn, "MPI_Bcast"); 
 
     /* This function is called in ncmpi_enddef(), which can happen either when
      * creating a new file or opening an existing file with metadata modified.
@@ -1017,6 +1022,8 @@ ncmpii_NC_check_vlens(NC *ncp)
         int g_status;                                                        \
         TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,   \
                                   ncp->nciop->comm);                         \
+        if (mpireturn != MPI_SUCCESS)                                        \
+            return ncmpii_handle_error(mpireturn, "MPI_Allreduce");          \
         if (g_status != NC_NOERR) return status;                             \
     }                                                                        \
     else if (status != NC_NOERR)                                             \
