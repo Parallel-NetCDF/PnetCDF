@@ -842,6 +842,8 @@ ncmpi_sync_numrecs(int ncid) {
         else {
             TRACE_IO(MPI_File_sync)(ncp->nciop->collective_fh);
         }
+        if (mpireturn != MPI_SUCCESS)
+            status = ncmpii_handle_error(mpireturn, "MPI_File_sync");
         TRACE_COMM(MPI_Barrier)(ncp->nciop->comm);
     }
 #endif
