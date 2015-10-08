@@ -260,7 +260,7 @@
           ierr = nfmpi_inq_malloc_size(malloc_size)
           call MPI_Reduce(malloc_size, sum_size, 1, MPI_OFFSET, MPI_SUM, &
                           MasterPE, MPI_COMM_WORLD, ierr)
-          if (MyPE .EQ. MasterPE .AND. sum_size .GT. 0_8) &
+          if (MyPE .EQ. MasterPE .AND. sum_size .GT. 0_MPI_OFFSET_KIND) &
               print 1002, &
               'heap memory allocated by PnetCDF internally has ', &
               sum_size/1048576, ' MiB yet to be freed'
