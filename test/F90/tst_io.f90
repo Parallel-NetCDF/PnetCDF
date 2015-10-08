@@ -147,11 +147,12 @@ contains
     endif
   end subroutine check
 
-  subroutine setupNetCDF(fn, nc, vr, vrnam, d1, d2, d3, d4, do1, do2, &
+!  subroutine setupNetCDF(fn, nc, vr, vrnam, d1, d2, d3, d4, do1, do2, &
+!    real, dimension (:, :, :, :), intent (in) :: vrnam
+  subroutine setupNetCDF(fn, nc, vr, d1, d2, d3, d4, do1, do2, &
        do3, do4, stat, deb)
-    character(len = *), intent(in) :: fn
-    real, dimension (:, :, :, :), intent (in) :: vrnam
 
+    character(len = *), intent(in) :: fn
     integer(kind=EightByteInt), intent(in) :: d1, d2, d3, d4
     integer, intent(in) :: stat, deb
     integer, intent(out) :: do1, do2, do3, do4, vr
