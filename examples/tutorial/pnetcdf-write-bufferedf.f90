@@ -142,6 +142,6 @@
       if (err < NF90_NOERR) print*,'Error at nf90mpi_close ', &
                                    nf90mpi_strerror(err)
 
- 999  CALL MPI_Finalize(err)
+      CALL MPI_Finalize(err)
       end program
 
