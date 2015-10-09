@@ -71,7 +71,8 @@ program tst_io
      enddo
   enddo
 
-  call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+  ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+  call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
        x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
   call system_clock(start)
   call check(nfmpi_begin_indep_data(ncid), 11)
@@ -87,7 +88,8 @@ program tst_io
 
   call system_clock(start)
   do i1 = 1, repct
-     call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+     ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+     call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
           x1id, x2id, x3id, x4id, NF90_CLOBBER, 130)
      call check(nfmpi_begin_indep_data(ncid), 11)
      call check (NF90MPI_PUT_VAR(ncid, vrid, x), 23 + i1)
