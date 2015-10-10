@@ -48,46 +48,46 @@ install:
 uninstall:
 
 nonblocking_write: nonblocking_write.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 get_info: get_info.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 column_wise: column_wise.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 block_cyclic: block_cyclic.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 put_vara: put_vara.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 hints: hints.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 flexible_api: flexible_api.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 put_varn_int: put_varn_int.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 put_varn_real: put_varn_real.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 transpose: transpose.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 vard_int: vard_int.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 i_varn_real: i_varn_real.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 bput_varn_int8: bput_varn_int8.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 fill_mode: fill_mode.o $(UTIL_OBJS) $(LIBRARY)
-	$(LINK.f) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(UTIL_OBJS) $(FLDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))

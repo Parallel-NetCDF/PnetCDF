@@ -75,7 +75,7 @@ column_wise: column_wise.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 mcoll_testf77: mcoll_testf77.o $(LIBRARY)
-	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 mcoll_testf: mcoll_testf.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
@@ -84,7 +84,7 @@ test_bputf: test_bputf.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 test_bputf77: test_bputf77.o $(LIBRARY)
-	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 check testing verbose_check verbose_testing: $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc*

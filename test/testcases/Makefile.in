@@ -86,7 +86,7 @@ vectors: vectors.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 bigrecords: bigrecords.o $(LIBRARY)
-	$(LINK.f) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 redef1: redef1.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
@@ -155,10 +155,10 @@ inq_recsizef: inq_recsizef.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
 test_vardf: test_vardf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 varn_intf: varn_intf.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 test_vardf90: test_vardf90.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)

@@ -87,7 +87,7 @@ pnetcdf-write-bufferedf: pnetcdf-write-bufferedf.o $(LIBRARY)
 	$(LINK.F90) $< $(F90LDFLAGS) $(LIBS)
 
 pnetcdf-write-bufferedf77: pnetcdf-write-bufferedf77.o $(LIBRARY)
-	$(LINK.f) $< $(FLDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(FLDFLAGS) $(LIBS)
 
 pnetcdf-permute: pnetcdf-permute.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
