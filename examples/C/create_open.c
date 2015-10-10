@@ -69,6 +69,8 @@ int main(int argc, char** argv)
     argv += optind;
     if (argc == 1) filename = argv[0]; /* optional argument */
 
+    if (verbose && rank == 0) printf("%s: example of file create and open\n",__FILE__);
+
     /* create a new file using clobber mode ----------------------------------*/
     cmode = NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);

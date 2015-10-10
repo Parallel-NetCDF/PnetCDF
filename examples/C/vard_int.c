@@ -97,6 +97,8 @@ int main(int argc, char **argv) {
 
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
+    if (verbose && rank == 0) printf("%s: example of using vard APIs\n",__FILE__);
+
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
 

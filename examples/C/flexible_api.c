@@ -125,6 +125,8 @@ int main(int argc, char** argv)
     argv += optind;
     if (argc == 1) filename = argv[0]; /* optional argument */
 
+    if (verbose && rank == 0) printf("%s: example of using flexible APIs\n",__FILE__);
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);

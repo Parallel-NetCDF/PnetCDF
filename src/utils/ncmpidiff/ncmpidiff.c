@@ -236,7 +236,7 @@ get_type(int type)
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
-    int i, j, c, err, isRecvar, rank, nprocs, verbose, quiet;
+    int i, j, c, err, rank, nprocs, verbose, quiet;
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, *dimids1;
     int ncid2, ndims2, nvars2, natts2, unlimdimid2, *dimids2;
     char *name1, *name2;
@@ -700,7 +700,6 @@ int main(int argc, char **argv)
         if (j != ndims1)
             continue; /* skip this variable */
 
-        isRecvar = 0;
         varsize  = 1;
         /* block partition the variable along the 1st dimension */
         for (j=0; j<ndims1; j++) {
@@ -709,8 +708,6 @@ int main(int argc, char **argv)
                 start[j] = shape[j] * rank;
             }
             varsize *= shape[j];
-            if (dimids1[j] == unlimdimid1)
-                isRecvar = 1;
         }
  
         /* compare the variable contents */

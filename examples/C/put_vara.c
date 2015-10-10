@@ -111,6 +111,8 @@ int main(int argc, char** argv)
 
     MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
 
+    if (verbose && rank == 0) printf("%s: example of using put_vara APIs\n",__FILE__);
+
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
