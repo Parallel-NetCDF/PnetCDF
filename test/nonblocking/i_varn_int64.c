@@ -89,12 +89,10 @@
 void clear_file_contents(int ncid, int *varid)
 {
     int i, err, rank;
-    MPI_Offset len=0;
     long long *w_buffer = (long long*) malloc(NY*NX * sizeof(long long));
     for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank == 0) len = NY*NX;
 
     for (i=0; i<4; i++) {
         err = ncmpi_put_var_longlong_all(ncid, varid[i], w_buffer);

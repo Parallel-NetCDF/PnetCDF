@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   double power_M;
   int *array_of_sizes, *array_of_subsizes, *array_of_starts;
   int ncid, *dimids, varid_1, varid_2;
-  MPI_Offset *local_starts, *local_edges, *stride, *imap;
+  MPI_Offset *local_starts, *local_edges;
   char dimname[20];
   nc_type nc_etype;
   MPI_Datatype mpi_etype, mpi_subarray;
@@ -182,8 +182,6 @@ int main(int argc, char** argv) {
   dimids = array_of_starts + ndims;
   local_starts = (MPI_Offset *)(dimids + ndims);
   local_edges = local_starts + ndims;
-  stride = local_edges + ndims;
-  imap = stride + ndims;
 
   total_sz = 1;
   power_M = 1;

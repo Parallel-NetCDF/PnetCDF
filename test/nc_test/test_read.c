@@ -116,6 +116,7 @@ test_ncmpi_open(void)
     /* create a not-nc file */
     fd = open(NOT_NC_FILE, O_CREAT|O_WRONLY, 0600);
     w_len = write(fd, "0123456789abcdefghijklmnopqrstuvwxyz", 36);
+    assert(w_len >= 0);
     close(fd);
 
     /* Open a file that is not a netCDF file. */

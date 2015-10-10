@@ -30,6 +30,8 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#define ERR {if(err!=NC_NOERR)printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));}
+
 /*** Field parameters ***/
 
 const MPI_Offset totsiz_3d[3] = { 256, 256, 256 }; /* global sizes of 3D field */
@@ -174,7 +176,7 @@ void write_file(char *filename, double *t) {
   double t1, t2, t3;
   int dim_id[3];
   int lon_id, lat_id, lev_id;
-  int ierr;
+  int err;
   int file_id;
   int t_id, smf_id;
   int ii;
@@ -210,38 +212,40 @@ void write_file(char *filename, double *t) {
 
     t1 = MPI_Wtime();
 
-    ierr = ncmpi_create(comm_cart, filename, NC_CLOBBER, MPI_INFO_NULL,
-                        &file_id);
+    err = ncmpi_create(comm_cart, filename, NC_CLOBBER, MPI_INFO_NULL,
+                        &file_id); ERR
 
-/*  ierr = nc_set_fill(file_id,fillmode,&old_fillmode); */
+/*  err = nc_set_fill(file_id,fillmode,&old_fillmode); ERR */
 
-    ierr = ncmpi_def_dim(file_id,"level",    (MPI_Offset) totsiz_3d[0],&lev_id);
-    ierr = ncmpi_def_dim(file_id,"latitude", (MPI_Offset) totsiz_3d[1],&lat_id);
-    ierr = ncmpi_def_dim(file_id,"longitude",(MPI_Offset) totsiz_3d[2],&lon_id);
+    err = ncmpi_def_dim(file_id,"level",    (MPI_Offset) totsiz_3d[0],&lev_id); ERR
+    err = ncmpi_def_dim(file_id,"latitude", (MPI_Offset) totsiz_3d[1],&lat_id); ERR
+    err = ncmpi_def_dim(file_id,"longitude",(MPI_Offset) totsiz_3d[2],&lon_id); ERR
 
     dim_id[0] = lev_id; dim_id[1] = lat_id; dim_id[2] = lon_id;
 
-    ierr = ncmpi_def_var(file_id,"t",NC_DOUBLE,3,dim_id,&t_id);
+    err = ncmpi_def_var(file_id,"t",NC_DOUBLE,3,dim_id,&t_id); ERR
 
-    if (! only_3d)
-      ierr = ncmpi_def_var(file_id,"smf",NC_DOUBLE,2,&dim_id[1],&smf_id);
+    if (! only_3d) {
+      err = ncmpi_def_var(file_id,"smf",NC_DOUBLE,2,&dim_id[1],&smf_id); ERR
+    }
 
-    ierr = ncmpi_enddef(file_id);
+    err = ncmpi_enddef(file_id); ERR
 
     t2 = MPI_Wtime();
 
-    ierr = ncmpi_put_vara_double_all(file_id,t_id,start_3d,count_3d,tt);
+    err = ncmpi_put_vara_double_all(file_id,t_id,start_3d,count_3d,tt); ERR
 
     if (! only_3d) {
-      ierr = ncmpi_begin_indep_data(file_id);
+      err = ncmpi_begin_indep_data(file_id); ERR
 
-      if (has_2d)
-      ierr = ncmpi_put_vara_double(file_id,smf_id,start_2d,count_2d,smf);
+      if (has_2d) {
+        err = ncmpi_put_vara_double(file_id,smf_id,start_2d,count_2d,smf); ERR
+      }
 
-      ierr = ncmpi_end_indep_data(file_id);
+      err = ncmpi_end_indep_data(file_id); ERR
     }
 
-    ierr = ncmpi_close(file_id);
+    err = ncmpi_close(file_id); ERR
 
     MPI_Barrier(comm_cart);
     t3 = MPI_Wtime();
@@ -264,7 +268,7 @@ void read_file(char *filename, double *t) {
   double dt1, dt2=0;
   int ncid;
   int vid_t, vid_smf;
-  int i, j, k, ii, ierr;
+  int i, j, k, ii, err;
 
   MPI_Offset start_3d[3];
   MPI_Offset count_3d[3];
@@ -304,33 +308,36 @@ void read_file(char *filename, double *t) {
     MPI_Barrier(comm_cart);
     t1 = MPI_Wtime();
 
-    ierr = ncmpi_open(comm_cart, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm_cart, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 
-    ierr = ncmpi_inq_varid(ncid,"t",&vid_t);
-    if (! only_3d) ierr = ncmpi_inq_varid(ncid,"smf",&vid_smf);
+    err = ncmpi_inq_varid(ncid,"t",&vid_t);
+    if (! only_3d) {
+        err = ncmpi_inq_varid(ncid,"smf",&vid_smf); ERR
+    }
 
     t2 = MPI_Wtime();
 
-    ierr = ncmpi_get_vara_double_all(ncid,vid_t,start_3d,count_3d,buf);
+    err = ncmpi_get_vara_double_all(ncid,vid_t,start_3d,count_3d,buf); ERR
 
     dt1 = MPI_Wtime();
     if (ii == 1) compare_vec(tt,buf,3,locsiz_3d,1);
     dt1 = MPI_Wtime() - dt1;
 
     if (! only_3d) {
-      ierr = ncmpi_begin_indep_data(ncid);
+      err = ncmpi_begin_indep_data(ncid); ERR
 
-      if (has_2d)
-      ierr = ncmpi_get_vara_double(ncid,vid_smf,start_2d,count_2d,buf);
+      if (has_2d) {
+          err = ncmpi_get_vara_double(ncid,vid_smf,start_2d,count_2d,buf); ERR
+      }
 
       dt2 = MPI_Wtime();
       if (ii == 1) compare_vec(smf,buf,2,locsiz_2d,has_2d);
       dt2 = MPI_Wtime() - dt2;
 
-      ierr = ncmpi_end_indep_data(ncid);
+      err = ncmpi_end_indep_data(ncid); ERR
     }
 
-    ierr = ncmpi_close(ncid);
+    err = ncmpi_close(ncid); ERR
 
     MPI_Barrier(comm_cart);
     t3 = MPI_Wtime();

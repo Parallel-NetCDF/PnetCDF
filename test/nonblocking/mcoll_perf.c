@@ -100,7 +100,7 @@ static int nerrs;
 
 static
 int ncmpi_diff(char *filename1, char *filename2) {
-    int i, j, status, isRecvar, rank, nprocs;
+    int i, j, status, rank, nprocs;
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, dimids1[NC_MAX_DIMS];
     int ncid2, ndims2, nvars2, natts2, unlimdimid2, dimids2[NC_MAX_DIMS];
     char str[512], name1[NC_MAX_NAME], name2[NC_MAX_NAME], name[NC_MAX_NAME];
@@ -253,7 +253,6 @@ int ncmpi_diff(char *filename1, char *filename2) {
         start[i] = 0;
 
     for (i=0; i<nvars1; i++) {
-        isRecvar = 0;
         varsize = 1;
         status = ncmpi_inq_var(ncid1, i, name1, &type1, &ndims1, dimids1, &natts1);
         HANDLE_ERROR
@@ -267,8 +266,6 @@ int ncmpi_diff(char *filename1, char *filename2) {
                 start[j] = shape[j] * rank;
             }
             varsize *= shape[j];
-            if (dimids1[j] == unlimdimid1)
-                isRecvar = 1;
         }
         switch (type1) {
             case NC_CHAR:   CHECK_VAR_DIFF(char,   ncmpi_get_vara_text_all,   NC_CHAR)
