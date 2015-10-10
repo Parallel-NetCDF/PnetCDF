@@ -1497,6 +1497,9 @@ AC_DEFUN([UD_CHECK_HEADER_PATH],
 
 dnl Check if Fortran 77 compiler allows _8 modifier (a Fortran 90 feature)
 dnl for integer*8 parameter
+dnl NAG nagfor requires a modifier but does not like _8
+dnl xlf is OK with _8 but when none is used it strangely passes the
+dnl compilation with a warning message
 dnl
 AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
     AC_CACHE_CHECK([Fortran compiler treating constant modifier], [ac_cv_fc_constant_modifier],
@@ -1505,18 +1508,18 @@ AC_DEFUN([UD_FC_CONSTANT_MODIFIER],[
          program main
          integer*8  nf_fill_uint
          integer*8  nf_fill_int64
-         parameter (nf_fill_uint  = 4294967295)
-         parameter (nf_fill_int64 = -9223372036854775806) 
-         end program]],
-        [ac_cv_fc_constant_modifier=none],
-        [AC_COMPILE_IFELSE([[
-         program main
-         integer*8  nf_fill_uint
-         integer*8  nf_fill_int64
          parameter (nf_fill_uint  = 4294967295_8)
          parameter (nf_fill_int64 = -9223372036854775806_8) 
          end program]],
         [ac_cv_fc_constant_modifier=8],
+        [AC_COMPILE_IFELSE([[
+         program main
+         integer*8  nf_fill_uint
+         integer*8  nf_fill_int64
+         parameter (nf_fill_uint  = 4294967295)
+         parameter (nf_fill_int64 = -9223372036854775806) 
+         end program]],
+        [ac_cv_fc_constant_modifier=none],
         [AC_COMPILE_IFELSE([[
          program main
          integer, parameter :: EightByteInt = selected_int_kind(18)
