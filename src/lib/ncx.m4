@@ -16,6 +16,11 @@ dnl
 #include <mpi.h>
 
 /*
+ * The only error code returned from subroutines in this file is NC_ERANGE,
+ * if errors are detected.
+ */
+
+/*
  * An external data representation interface.
  */
 

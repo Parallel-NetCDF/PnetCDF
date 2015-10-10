@@ -1182,13 +1182,18 @@ ncmpii_put_att(int         ncid,
         void *xp = attrp->xvalue;
         status = ncmpix_pad_putn(&xp, nelems, buf, filetype, buftype);
         /* wkliao: no immediately return error code here? Strange ... 
-         *         instead, continue calling incr_NC_attrarray(), adding this
-         *         attribute as it is legal. But if we return error and reject
-         *         this attribute, then nc_test will fail with this error
-         *         message:
+         *         Instead, we continue and call incr_NC_attrarray() to add
+         *         this attribute (for create case) as it is legal. But if
+         *         we return error and reject this attribute, then nc_test will
+         *         fail with this error message below:
          *         FAILURE at line 252 of test_read.c: ncmpi_inq: wrong number
          *         of global atts returned, 3
          *         Check netCDF-4, it is doing the same thing!
+         *
+         *         One of the error codes returned from ncmpix_pad_putn() is
+         *         NC_ERANGE, meaning one or more elements are type overflow.
+         *         Should we reject the entire attribute array if only part of
+         *         the array overflow? For netCDF4, the answer is NO.
          */ 
 /*
         if (status != NC_NOERR) {
