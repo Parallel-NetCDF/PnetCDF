@@ -90,8 +90,7 @@ LIBS		= @LIBS@
 
 LINK.c		= $(CC)  $(CFLAGS)   -o $@
 LINK.cxx	= $(CXX) $(CXXFLAGS) -o $@
-LINK.f		= $(F77) $(F77FLAGS) -o $@
-LINK.F		= $(F77) $(F77FLAGS) -o $@
+LINK.F77	= $(F77) $(F77FLAGS) -o $@
 LINK.F90	= $(F90) $(F90FLAGS) -o $@
 
 TEST_MPIRUN	= @TEST_MPIRUN@

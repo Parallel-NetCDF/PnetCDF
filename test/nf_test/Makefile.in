@@ -51,7 +51,7 @@ $(C_OBJS): $(srcdir)/../common/testutils.h
 $(PROGS): ../common/libtestutils.a
 
 nf_test: $(OBJS) $(LIBRARY)
-	$(LINK.F) $(OBJS) $(LDFLAGS) $(LIBS)
+	$(LINK.F77) $(OBJS) $(LDFLAGS) $(LIBS)
 
 tags: $(F_SRCS) $(C_SRCS) FORCE
 	ctags -t $(F_SRCS) $(C_SRCS) ../fortran/*.c ../libsrc/*.c
