@@ -27,3 +27,4 @@ test_vardf90.o: test_vardf90.f90
 test_varm.o: test_varm.c
 vectors.o: vectors.c
 check_striping.o: check_striping.c
+attrf.o: attrf.f

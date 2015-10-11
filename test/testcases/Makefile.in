@@ -45,7 +45,8 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            redef1.c
 
 F77_SRCS = test_vardf.f \
-           varn_intf.f
+           varn_intf.f \
+           attrf.f
 
 F90_SRCS = inq_num_varsf.f90 \
            inq_recsizef.f90 \
@@ -158,6 +159,9 @@ test_vardf: test_vardf.o $(LIBRARY)
 	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 varn_intf: varn_intf.o $(LIBRARY)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
+
+attrf: attrf.o $(LIBRARY)
 	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 test_vardf90: test_vardf90.o $(LIBRARY)
