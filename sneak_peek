@@ -27,6 +27,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * testcases/attrf.f checks NF_ERANGE is returned instead of coredump. This
+      is particularly for NAG Fortran compiler that may report "Arithmetics
+       exception".
     * testcases/check_striping.c checks if the file striping unit and factor
       returned from MPI-IO hints are consistent among processes.
     * test/nonblocking/column_wise.c checks if PnetCDF detects interleaved
