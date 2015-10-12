@@ -21,8 +21,8 @@
 
 #include <testutils.h>
 
-#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
-#define ERRV {printf("Unexpected result at %s line %d\n",__func__,__LINE__); return 1;}
+#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); nerrs++;}}
+#define ERRV {printf("Unexpected result at %s line %d\n",__func__,__LINE__); nerrs++;}
 static int verbose;
 
 #define VAR1_NAME "Horace_Rumpole"
@@ -91,7 +91,7 @@ Cry 'God for Harry, England, and Saint George!'";
 int
 tst_att_ordering(char *filename, int cmode)
 {
-   int ncid, err;
+   int ncid, err, nerrs=0;
    char name[NUM_ATTS][ATT_MAX_NAME + 1] = {"Gc", "Gb", "Gs", "Gi", "Gf", 
 					    "Gd", "Gatt-name-dashes", "Gatt.name.dots"};
    int len[NUM_ATTS] = {0, 2, 3, 3, 3, 3, 1, 1};
@@ -126,14 +126,14 @@ tst_att_ordering(char *filename, int cmode)
 
    /* Close up shop. */
    err=ncmpi_close(ncid); ERR
-   return 0;
+   return nerrs;
 }
 
 int
 tst_atts3(char *filename, int cmode)
 {
     char filename2[128];
-    int err;
+    int err, nerrs=0;
     signed char schar_in[ATT_LEN], schar_out[ATT_LEN] = {NC_MIN_BYTE, 1, NC_MAX_BYTE};
     unsigned char uchar_in[ATT_LEN];
     short short_in[ATT_LEN], short_out[ATT_LEN] = {NC_MIN_SHORT, -128, NC_MAX_SHORT};
@@ -198,8 +198,10 @@ tst_atts3(char *filename, int cmode)
        * supported C types. though the conversion may encounter
        * out-of-range values */
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_INT_NAME, uchar_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+	if (i == 0 || i == 2) continue;
 	if (uchar_in[i] != (unsigned char) int_out[i]) ERRV
+      }
 
       /* This was bug NCF-171: on 32-bit platforms, bad values returned */
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_INT_NAME, longlong_in); ERR
@@ -319,8 +321,10 @@ tst_atts3(char *filename, int cmode)
       for (i = 0; i < ATT_LEN; i++)
 	 if (short_in[i] != short_out[i]) ERRV
       if ((err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_INT_NAME, short_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+          if (i == 0 || i == 2) continue;
 	  if (short_in[i] != (short) int_out[i]) ERRV
+      }
       err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_FLOAT_NAME, short_in); ERR
       for (i = 0; i < ATT_LEN; i++)
 	  if (short_in[i] != (short) float_out[i]) ERRV
@@ -333,11 +337,15 @@ tst_atts3(char *filename, int cmode)
       for (i = 0; i < ATT_LEN; i++)
 	 if (schar_in[i] != schar_out[i]) ERRV
       if ((err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_SHORT_NAME, schar_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+         if (i == 0 || i == 2) continue;
 	 if (schar_in[i] != (signed char) short_out[i]) ERRV
+      }
       if ((err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_INT_NAME, schar_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+	 if (i == 0 || i == 2) continue;
 	 if (schar_in[i] != (signed char) int_out[i]) ERRV
+      }
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_FLOAT_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
 	 if (schar_in[i] != (signed char) float_out[i]) ERRV
@@ -350,17 +358,25 @@ tst_atts3(char *filename, int cmode)
       for (i = 0; i < ATT_LEN; i++)
 	 if (uchar_in[i] != (unsigned char) schar_out[i]) ERRV
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SHORT_NAME, uchar_in)) != NC_ERANGE) ERR
+/*
       for (i = 0; i < ATT_LEN; i++)
 	 if (uchar_in[i] != (unsigned char) short_out[i]) ERRV
+*/
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_INT_NAME, uchar_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+	 if (i == 0 || i == 2) continue;
 	 if (uchar_in[i] != (unsigned char) int_out[i]) ERRV
+      }
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_FLOAT_NAME, uchar_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+	 if (i == 0) continue;
 	 if (uchar_in[i] != (unsigned char) float_out[i]) ERRV
+      }
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, uchar_in)) != NC_ERANGE) ERR
-      for (i = 0; i < ATT_LEN; i++)
+      for (i = 0; i < ATT_LEN; i++) {
+	 if (i == 0) continue;
 	 if (uchar_in[i] != (unsigned char) double_out[i]) ERRV
+      }
 
       /* Read all atts (except text) into long long variable. */
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_SCHAR_NAME, longlong_in); ERR
@@ -729,7 +745,7 @@ tst_atts3(char *filename, int cmode)
       err=ncmpi_close(ncid); ERR
    }
    if (verbose) printf("ok\n");
-   return 0;
+   return nerrs;
 }
 
 int main(int argc, char *argv[])
