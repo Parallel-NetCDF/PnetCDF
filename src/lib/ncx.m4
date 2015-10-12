@@ -401,8 +401,36 @@ dnl
 dnl For GET APIs and either $1 and $2 is float or double:
 dnl
 define(`GETF_CheckBND',
-`ifelse(`$1', `double', `	if(xx > Upcase($2)_MAX || xx < Dmin($2)) return NC_ERANGE;',
-		       `ifelse(`$1', `float', `ifelse(`$2', `double',,`	if(xx > (double)Upcase($2)_MAX || xx < Fmin($2)) return NC_ERANGE;')')'dnl
+`ifelse(`$1', `double', `if (xx > Upcase($2)_MAX || xx < Dmin($2)) return NC_ERANGE;'
+`	*ip = ($2)xx;',
+`ifelse(`$1', `float', `ifelse(`$2', `double', `*ip = ($2)xx;',
+`if (xx > (double)Upcase($2)_MAX || xx < Fmin($2)) return NC_ERANGE;'
+`	*ip = ($2)xx;'
+)',
+`*ip = ($2)xx;'
+)')')
+
+dnl
+dnl For GET APIs and either $1 and $2 is float or double:
+dnl (this is for when $2 is either 'longlong' or 'ulonglong'
+dnl
+define(`GETF_CheckBND2',
+`ifelse(`$1', `double',
+        `ifelse(index(`$2',`u'), 0,
+                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;',dnl for unsigned type
+                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;dnl for signed type
+	else if (xx == Upcase($2)_MIN) *ip = Upcase($2)_MIN;')
+	else if (xx > Upcase($2)_MAX || xx < Dmin($2)) return NC_ERANGE;
+	else *ip = ($2)xx;',
+        `ifelse(`$1', `float',
+                `ifelse(`$2', `double',,
+                        `ifelse(index(`$2',`u'), 0,
+                                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;',
+                                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;
+	else if (xx == Upcase($2)_MIN) *ip = Upcase($2)_MIN;')
+	else if (xx > (double)Upcase($2)_MAX || xx < Fmin($2)) return NC_ERANGE;
+	else *ip = ($2)xx;'
+       )')'dnl
 )')
 
 dnl
@@ -444,8 +472,9 @@ ncmpix_get_$1_$2(const void *xp, $2 *ip)
 {
 	ix_$1 xx;
 	get_ix_$1(xp, &xx);
-	*ip = ($2) xx;
-GETF_CheckBND($1, $2)
+	ifelse(`$2', `longlong', GETF_CheckBND2($1, $2),
+		ifelse(`$2', `ulonglong', GETF_CheckBND2($1, $2),
+			GETF_CheckBND($1, $2)))
 	return NC_NOERR;
 }
 ')dnl
@@ -467,9 +496,9 @@ ifelse(`$3', `1',
 ')dnl
 	ix_$1 xx;
 	get_ix_$1(xp, &xx);
-	*ip = ($2) xx;
 GETI_CheckBND($1, $2)
 GETI_CheckNeg($1, $2)
+	*ip = ($2) xx;
 ifelse(`$3', `1', ``#'endif
 ')dnl
 	return NC_NOERR;
@@ -485,9 +514,9 @@ define(`NCX_PUT1F',dnl
 static int
 ncmpix_put_$1_$2(void *xp, const $2 *ip)
 {
+PUTF_CheckBND($1, $2)
 	ix_$1 xx = (ix_$1)*ip;
 	put_ix_$1(xp, &xx);
-PUTF_CheckBND($1, $2)
 	return NC_NOERR;
 }
 ')dnl
@@ -507,10 +536,10 @@ ifelse(`$3', `1',
 	return NC_NOERR;
 `#'else
 ')dnl
-	ix_$1 xx = (ix_$1)*ip;
-	put_ix_$1(xp, &xx);
 PUTI_CheckBND($1, $2)
 PUTI_CheckNeg($1, $2)
+	ix_$1 xx = (ix_$1)*ip;
+	put_ix_$1(xp, &xx);
 ifelse(`$3', `1', ``#'endif
 ')dnl
 	return NC_NOERR;
@@ -671,13 +700,13 @@ NCX_GET1F(ushort, double)
 static int
 ncmpix_put_ushort_schar(void *xp, const schar *ip)
 {
+        if (*ip < 0) return NC_ERANGE;
 	uchar *cp = (uchar *) xp;
 	if(*ip & 0x80)
 		*cp++ = 0xff;
 	else
 		*cp++ = 0;
 	*cp = (uchar)*ip;
-        if (*ip < 0) return NC_ERANGE;
 
 	return NC_NOERR;
 }
@@ -866,13 +895,13 @@ NCX_GET1F(uint, double)
 static int
 ncmpix_put_uint_schar(void *xp, const schar *ip)
 {
+	if (*ip < 0) return NC_ERANGE;
+
 	uchar *cp = (uchar *) xp;
 	*cp++ = 0x00;
 	*cp++ = 0x00;
 	*cp++ = 0x00;
 	*cp = (uchar)*ip;
-
-	if (*ip < 0) return NC_ERANGE;
 
 	return NC_NOERR;
 }
@@ -1339,11 +1368,11 @@ NCX_GET1F(float, ulonglong)
 static int
 ncmpix_put_float_float(void *xp, const float *ip)
 {
-	put_ix_float(xp, ip);
 #ifdef NO_IEEE_FLOAT
 	if(*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
 		return NC_ERANGE;
 #endif
+	put_ix_float(xp, ip);
 	return NC_NOERR;
 }
 #endif
@@ -1691,12 +1720,12 @@ NCX_PUT1F(double, ulonglong)
 static int
 ncmpix_put_double_float(void *xp, const float *ip)
 {
-	double xx = (double) *ip;
-	put_ix_double(xp, &xx);
 #if 0	/* TODO: figure this out (if condition below will never be true)*/
 	if((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
+	double xx = (double) *ip;
+	put_ix_double(xp, &xx);
 	return NC_NOERR;
 }
 
@@ -1704,11 +1733,11 @@ ncmpix_put_double_float(void *xp, const float *ip)
 static int
 ncmpix_put_double_double(void *xp, const double *ip)
 {
-	put_ix_double(xp, ip);
 #ifdef NO_IEEE_FLOAT
 	if(*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
+	put_ix_double(xp, ip);
 	return NC_NOERR;
 }
 #endif
@@ -1913,15 +1942,16 @@ ncmpix_get_size_t(const void **xpp,  size_t *ulp)
 int
 ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 {
-	/* similar to put_ix_int() */
-	uchar *cp = (uchar *) *xpp;
-		/* No negative offsets stored in netcdf */
+	/* No negative offsets stored in netcdf */
 	if (*lp < 0) {
 	  /* Assume this is an overflow of a 32-bit int... */
 	  return NC_ERANGE;
 	}
 
 	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
+
+	/* similar to put_ix_int() */
+	uchar *cp = (uchar *) *xpp;
 
 	if (sizeof_off_t == 4) {
 		*cp++ = (uchar) ((*lp)               >> 24);
