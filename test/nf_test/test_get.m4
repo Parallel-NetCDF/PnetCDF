@@ -137,7 +137,11 @@ define([TEST_NFMPI_GET_VAR1],[dnl
                                 if (.not. equal(val, expect, 
      +                                          var_type(i), 
      +                                          NFT_ITYPE($1))) then
+                                    call errori('varid: ', i)
+                                    call errorc('var_name: ',
+     +                                  var_name(i))
                                     call errord('unexpected: ', val)
+                                    call errord('expecting: ', expect)
                                 else
                                     nok = nok + 1
                                 end if
@@ -248,6 +252,7 @@ define([TEST_NFMPI_GET_VAR],[dnl
      +                                  var_type(i), 
      +                                  NFT_ITYPE($1))) then
                             call errord('unexpected: ', val)
+                            call errord('expecting: ', expect(j))
                         else
                             nok = nok + 1
                         end if

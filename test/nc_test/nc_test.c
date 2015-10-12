@@ -33,7 +33,7 @@ int numTypes;  /* number of netCDF data types to test */
  *     read test.nc (see below) 
  *     write scratch.nc (deleted after each test)
  * 
- * The file test.nc is created by running ncmpi_test with the -c (create) option.
+ * The file test.nc is created by running nc_test with the -c (create) option.
  * It is described by the following global variables.
  */
 

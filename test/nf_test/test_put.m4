@@ -96,6 +96,23 @@ ifelse($1, text, char(int($2)),
        $2))))))[]dnl
 ])
 
+dnl  MAKE_TYPE2(funf_suffix, var_dest, var_src)
+dnl
+define([MAKE_TYPE2], [dnl
+ifelse($1, text, $2 = char(int($3)),
+       ifelse($1, int, $2 = INT($3),
+       ifelse($1, int1, $2 = INT($3,KIND=INT1_KIND),
+       ifelse($1, int2, $2 = INT($3,KIND=INT2_KIND),
+       ifelse($1, int8,
+                if ($3 .EQ. X_INT8_MAX) then
+                    $2 = X_INT8_MAX
+                else
+                    $2 = INT($3,KIND=INT8_KIND)
+                endif,
+       ifelse($1, real, $2 = REAL($3),
+       $2 = $3))))))[]dnl
+])
+
 dnl HASH(TYPE)
 dnl
 define([HASH],
@@ -419,8 +436,9 @@ define([TEST_NFMPI_PUT_VAR1],dnl
      +                              index)
                 if (err .ne. NF_NOERR) 
      +              call error('error in index2indexes 1')
-                value = MAKE_TYPE($1, hash_$1(var_type(i),var_rank(i),
-     +                            index, NFT_ITYPE($1)))
+                val = hash_$1(var_type(i),var_rank(i),
+     +                            index, NFT_ITYPE($1))
+                MAKE_TYPE2($1, value, val)
                 err = nfmpi_put_var1_$1(ncid, i, index, value)
                 if (canConvert) then
                     val = ARITH_VAR1($1, value)
@@ -507,9 +525,9 @@ define([TEST_NFMPI_PUT_VAR],dnl
      +                              index)
                 if (err .ne. NF_NOERR) 
      +              call error('error in index2indexes 1')
-                VAR_ELEM($1, value, j) = 
-     +            MAKE_TYPE($1,hash_$1(var_type(i), var_rank(i),
-     +            index, NFT_ITYPE($1)))
+                val = hash_$1(var_type(i), var_rank(i),
+     +                        index, NFT_ITYPE($1))
+                MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
                 val = ARITH3($1, value, j)
                 allInExtRange = allInExtRange .and.
      +              inRange3(val, var_type(i), NFT_ITYPE($1))
@@ -568,9 +586,9 @@ C           Only test record variables here
      +                              index)
                     if (err .ne. NF_NOERR) 
      +                  call error('error in index2indexes()')
-                    VAR_ELEM($1, value, j) =
-     +                 MAKE_TYPE($1,hash_$1(var_type(i), var_rank(i),
-     +                 index, NFT_ITYPE($1)))
+                    val = hash_$1(var_type(i), var_rank(i),
+     +                            index, NFT_ITYPE($1))
+                    MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
                     val = ARITH3($1, value, j)
                     allInExtRange = allInExtRange .and.
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
@@ -768,9 +786,9 @@ C           /* Check correct error returned even when nothing to put */
                     do 8, d = 1, var_rank(i)
                         index(d) = index(d) + start(d) - 1
 8                   continue
-                    VAR_ELEM($1, value, j)=
-     +                MAKE_TYPE($1, hash_$1(var_type(i), var_rank(i),
-     +                index, NFT_ITYPE($1)))
+                    val = hash_$1(var_type(i), var_rank(i),
+     +                            index, NFT_ITYPE($1))
+                    MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
                     val = ARITH3($1, value, j)
                     allInExtRange = allInExtRange .and.
      +                  inRange3(val, var_type(i), NFT_ITYPE($1))
@@ -971,9 +989,9 @@ C*/
                             index2(d) = index(d) + 
      +                                  (index2(d)-1) * stride(d)
 10                      continue
-                        VAR_ELEM($1, value, j) =
-     +                    MAKE_TYPE($1, hash_$1(var_type(i), var_rank(i), 
-     +                    index2, NFT_ITYPE($1)))
+                        val = hash_$1(var_type(i), var_rank(i),
+     +                                index2, NFT_ITYPE($1))
+                        MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
                         val = ARITH3($1, value, j)
                         allInExtRange = allInExtRange .and.
      +                      inRange3(val, var_type(i), 
@@ -1189,9 +1207,9 @@ C*/
                             index2(d) = index(d) + 
      +                          (index2(d)-1) * stride(d)
 12                      continue
-                        VAR_ELEM($1, value, j) =
-     +                    MAKE_TYPE($1, hash_$1(var_type(i),var_rank(i), 
-     +                    index2, NFT_ITYPE($1)))
+                        val = hash_$1(var_type(i),var_rank(i), 
+     +                                index2, NFT_ITYPE($1))
+                        MAKE_TYPE2($1, VAR_ELEM($1, value, j), val)
                         val = ARITH3($1, value, j)
                         allInExtRange = allInExtRange .and.
      +                      inRange3(val, var_type(i), 
@@ -1288,9 +1306,9 @@ define([TEST_NFMPI_PUT_ATT],dnl
                     allInExtRange = .true.
                     do 3, k = 1, int(ATT_LEN_LL)
                         ndx(1) = k
-                        VAR_ELEM($1, value, k) =
-     +                      MAKE_TYPE($1,hash_$1(ATT_TYPE(j,i),
-     +                                -1, ndx, NFT_ITYPE($1)))
+                        val = hash_$1(ATT_TYPE(j,i),
+     +                                -1, ndx, NFT_ITYPE($1))
+                        MAKE_TYPE2($1, VAR_ELEM($1, value, k), val)
                         val = ARITH3($1, value, k)
                         allInExtRange = allInExtRange .and.
      +                      inRange3(val, ATT_TYPE(j,i), 
