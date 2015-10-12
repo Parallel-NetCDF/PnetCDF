@@ -200,7 +200,7 @@
 #include "common.fh"
 
       integer filenum
-      double precision simtime
+      real simtime
       
       integer block_no
       integer i, j, k, ivar, i_store, j_store, k_store
