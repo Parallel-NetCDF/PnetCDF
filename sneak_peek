@@ -66,4 +66,6 @@ This is essentially a placeholder for the next release note ...
       resolved. See r2089 and r2093.
     * In the example program examples/tutorial/pnetcdf-write-nb.c, the write
       buffers used in two iput API calls should be different. See r2095.
+    * Fix the error reporting mechanism for NC_ERANGE, for when an arithmetic
+      overflow happens. Overflow checking is now performed before I/O.
 
