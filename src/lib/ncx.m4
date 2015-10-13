@@ -151,13 +151,13 @@ swapn2b(void *dst, const void *src, MPI_Offset nn)
 
 /* unroll the following to reduce loop overhead
  *
- *	while(nn-- > 0)
+ *	while (nn-- > 0)
  *	{
  *		*op++ = *(++ip);
  *		*op++ = *(ip++ -1);
  *	}
  */
-	while(nn > 3)
+	while (nn > 3)
 	{
 		*op++ = *(++ip);
 		*op++ = *(ip++ -1);
@@ -169,7 +169,7 @@ swapn2b(void *dst, const void *src, MPI_Offset nn)
 		*op++ = *(ip++ -1);
 		nn -= 4;
 	}
-	while(nn-- > 0)
+	while (nn-- > 0)
 	{
 		*op++ = *(++ip);
 		*op++ = *(ip++ -1);
@@ -208,7 +208,7 @@ swapn4b(void *dst, const void *src, MPI_Offset nn)
 	const char *ip = src;
 
 /* unroll the following to reduce loop overhead
- *	while(nn-- > 0)
+ *	while (nn-- > 0)
  *	{
  *		op[0] = ip[3];
  *		op[1] = ip[2];
@@ -218,7 +218,7 @@ swapn4b(void *dst, const void *src, MPI_Offset nn)
  *		ip += 4;
  *	}
  */
-	while(nn > 3)
+	while (nn > 3)
 	{
 		op[0] = ip[3];
 		op[1] = ip[2];
@@ -240,7 +240,7 @@ swapn4b(void *dst, const void *src, MPI_Offset nn)
 		ip += 16;
 		nn -= 4;
 	}
-	while(nn-- > 0)
+	while (nn-- > 0)
 	{
 		op[0] = ip[3];
 		op[1] = ip[2];
@@ -287,7 +287,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
 	const char *ip = src;
 
 /* unroll the following to reduce loop overhead
- *	while(nn-- > 0)
+ *	while (nn-- > 0)
  *	{
  *		op[0] = ip[7];
  *		op[1] = ip[6];
@@ -302,7 +302,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
  *	}
  */
 #  ifndef FLOAT_WORDS_BIGENDIAN
-	while(nn > 1)
+	while (nn > 1)
 	{
 		op[0] = ip[7];
 		op[1] = ip[6];
@@ -324,7 +324,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
 		ip += 16;
 		nn -= 2;
 	}
-	while(nn-- > 0)
+	while (nn-- > 0)
 	{
 		op[0] = ip[7];
 		op[1] = ip[6];
@@ -338,7 +338,7 @@ swapn8b(void *dst, const void *src, MPI_Offset nn)
 		ip += 8;
 	}
 #  else
-	while(nn-- > 0)
+	while (nn-- > 0)
 	{
 		op[0] = ip[3];
 		op[1] = ip[2];
@@ -383,70 +383,60 @@ define(`DXmin', `ifelse(index(`$1',`u'), 0, `0',         `Xmin($1)')')dnl
 
 dnl
 dnl For GET APIs:
-dnl       check for negative xx if xp is   signed && ip is unsigned
-dnl Don't check for negative xx if xp is   signed && ip is   signed
-dnl Don't check for negative xx if xp is unsigned
+dnl       check for negative $3 if $1 is   signed && $2 is unsigned
+dnl Don't check for negative $3 if $1 is   signed && $2 is   signed
+dnl Don't check for negative $3 if $1 is unsigned
+dnl $5 is either "return" or "status ="
 dnl
-define(`GETI_CheckNeg', `ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, `	if (xx < 0) return NC_ERANGE; /* because ip is unsigned */')')')dnl
+define(`GETI_CheckNeg',
+       `ifelse(index(`$1',`u'), 0, ,
+               index(`$2',`u'), 0,
+               `if ($3 < 0) $5 NC_ERANGE; /* because $4 is unsigned */')')dnl
 
 dnl
 dnl For PUT APIs:
-dnl       check for negative ip if xp is unsigned && ip is   signed
-dnl Don't check for negative ip if xp is unsigned && ip is unsigned
-dnl Don't check for negative ip if xp is   signed
+dnl       check for negative $3 if $1 is unsigned && $2 is   signed
+dnl Don't check for negative $3 if $1 is unsigned && $2 is unsigned
+dnl Don't check for negative $3 if $1 is   signed
 dnl
-define(`PUTI_CheckNeg', `ifelse(index(`$1',`u'), 0, `ifelse(index(`$2',`u'), 0, , `	if (*ip < 0) return NC_ERANGE; /* because xp is unsigned */')')')dnl
+define(`PUTI_CheckNeg',
+       `ifelse(index(`$1',`u'), 0,
+               `ifelse(index(`$2',`u'), 0, ,
+                       `	if ($3 < 0) return NC_ERANGE; /* because $4 is unsigned */')')')dnl
 
 dnl
-dnl For GET APIs and either $1 and $2 is float or double:
+dnl For GET APIs boundary check
 dnl
 define(`GETF_CheckBND',
-`ifelse(`$1', `double', `if (xx > Upcase($2)_MAX || xx < Dmin($2)) return NC_ERANGE;'
-`	*ip = ($2)xx;',
-`ifelse(`$1', `float', `ifelse(`$2', `double', `*ip = ($2)xx;',
-`if (xx > (double)Upcase($2)_MAX || xx < Fmin($2)) return NC_ERANGE;'
-`	*ip = ($2)xx;'
-)',
-`*ip = ($2)xx;'
-)')')
+`if (xx > Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
+	*ip = ($1)xx;')
 
 dnl
-dnl For GET APIs and either $1 and $2 is float or double:
-dnl (this is for when $2 is either 'longlong' or 'ulonglong'
+dnl For GET APIs boudnary check for when $1 is either 'longlong' or 'ulonglong'
 dnl
 define(`GETF_CheckBND2',
-`ifelse(`$1', `double',
-        `ifelse(index(`$2',`u'), 0,
-                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;',dnl for unsigned type
-                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;dnl for signed type
-	else if (xx == Upcase($2)_MIN) *ip = Upcase($2)_MIN;')
-	else if (xx > Upcase($2)_MAX || xx < Dmin($2)) return NC_ERANGE;
-	else *ip = ($2)xx;',
-        `ifelse(`$1', `float',
-                `ifelse(`$2', `double',,
-                        `ifelse(index(`$2',`u'), 0,
-                                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;',
-                                `if (xx == Upcase($2)_MAX)      *ip = Upcase($2)_MAX;
-	else if (xx == Upcase($2)_MIN) *ip = Upcase($2)_MIN;')
-	else if (xx > (double)Upcase($2)_MAX || xx < Fmin($2)) return NC_ERANGE;
-	else *ip = ($2)xx;'
-       )')'dnl
-)')
+       `ifelse(index(`$1',`u'), 0,
+`if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;',dnl for unsigned type
+`if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;
+	else if (xx == Upcase($1)_MIN) *ip = Upcase($1)_MIN;')
+	else if (xx > Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
+	else *ip = ($1)xx;')
 
 dnl
 dnl For PUT APIs and either $1 and $2 is float or double:
 dnl
 define(`PUTF_CheckBND',
-`ifelse(`$2', `double', `	if(*ip > Xmax($1) || *ip < DXmin($1)) return NC_ERANGE;',
-		       `ifelse(`$2', `float', `	if(*ip > (double)Xmax($1) || *ip < FXmin($1)) return NC_ERANGE;')'dnl
-)')
+`ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) return NC_ERANGE;',
+        `$2', `float',  `if (*ip > (double)Xmax($1) || *ip < FXmin($1)) return NC_ERANGE;')')
 
 dnl
 dnl For GET APIs and $1 and $2 are not float or double
 dnl
 define(`GETI_CheckBND',
 ``#'if IXmax($1) > Imax($2)
-	if (xx > Imax($2)'`ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, , ` || xx < Imin($2)')')'`) return NC_ERANGE;'
+	if (xx > Imax($2)'`ifelse(index(`$1',`u'), 0, ,
+                                  index(`$2',`u'), 0, ,
+                                  ` || xx < Imin($2)')'`) return NC_ERANGE;'
 `#'endif)
 
 dnl
@@ -454,7 +444,9 @@ dnl For PUT APIs and $1 and $2 are not float or double
 dnl
 define(`PUTI_CheckBND',
 ``#'if IXmax($1) < Imax($2)
-	if (*ip > IXmax($1)'`ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, , ` || *ip < Xmin($1)')')'`) return NC_ERANGE;'
+	if (*ip > IXmax($1)'`ifelse(index(`$1',`u'), 0, ,
+                                    index(`$2',`u'), 0, ,
+                                    ` || *ip < Xmin($1)')'`) return NC_ERANGE;'
 `#'endif)
 
 /*
@@ -472,9 +464,14 @@ ncmpix_get_$1_$2(const void *xp, $2 *ip)
 {
 	ix_$1 xx;
 	get_ix_$1(xp, &xx);
-	ifelse(`$2', `longlong', GETF_CheckBND2($1, $2),
-		ifelse(`$2', `ulonglong', GETF_CheckBND2($1, $2),
-			GETF_CheckBND($1, $2)))
+	ifelse(`$1', `float',  `ifelse(`$2',  `longlong', GETF_CheckBND2($2),
+	                               `$2', `ulonglong', GETF_CheckBND2($2),
+	                               `$2',    `double', `*ip = ($2)xx;',
+				                          GETF_CheckBND($2))',
+	       `$1', `double', `ifelse(`$2',  `longlong', GETF_CheckBND2($2),
+	                               `$2', `ulonglong', GETF_CheckBND2($2),
+				                          GETF_CheckBND($2))',
+	       `*ip = ($2)xx;')
 	return NC_NOERR;
 }
 ')dnl
@@ -497,7 +494,7 @@ ifelse(`$3', `1',
 	ix_$1 xx;
 	get_ix_$1(xp, &xx);
 GETI_CheckBND($1, $2)
-GETI_CheckNeg($1, $2)
+	GETI_CheckNeg($1, $2, xx, ip, return)
 	*ip = ($2) xx;
 ifelse(`$3', `1', ``#'endif
 ')dnl
@@ -514,8 +511,9 @@ define(`NCX_PUT1F',dnl
 static int
 ncmpix_put_$1_$2(void *xp, const $2 *ip)
 {
-PUTF_CheckBND($1, $2)
-	ix_$1 xx = (ix_$1)*ip;
+	ix_$1 xx;
+	PUTF_CheckBND($1, $2)
+	xx = (ix_$1)*ip;
 	put_ix_$1(xp, &xx);
 	return NC_NOERR;
 }
@@ -536,9 +534,10 @@ ifelse(`$3', `1',
 	return NC_NOERR;
 `#'else
 ')dnl
+	ix_$1 xx;
 PUTI_CheckBND($1, $2)
-PUTI_CheckNeg($1, $2)
-	ix_$1 xx = (ix_$1)*ip;
+PUTI_CheckNeg($1, $2, *ip, xp)
+	xx = (ix_$1)*ip;
 	put_ix_$1(xp, &xx);
 ifelse(`$3', `1', ``#'endif
 ')dnl
@@ -580,7 +579,7 @@ get_ix_short(const void *xp, ix_short *ip)
 	const uchar *cp = (const uchar *) xp;
 	*ip = *cp++ << 8;
 #if SIZEOF_IX_SHORT > X_SIZEOF_SHORT
-	if(*ip & 0x8000)
+	if (*ip & 0x8000)
 	{
 		/* extern is negative */
 		*ip |= (~(0xffff)); /* N.B. Assumes "twos complement" */
@@ -613,7 +612,7 @@ static int
 ncmpix_put_short_schar(void *xp, const schar *ip)
 {
 	uchar *cp = (uchar *) xp;
-	if(*ip & 0x80)
+	if (*ip & 0x80)
 		*cp++ = 0xff;
 	else
 		*cp++ = 0;
@@ -668,7 +667,7 @@ get_ix_ushort(const void *xp, ix_ushort *ip)
 	const uchar *cp = (const uchar *) xp;
 	*ip = *cp++ << 8;
 #if SIZEOF_IX_SHORT > X_SIZEOF_SHORT
-	if(*ip & 0x8000)
+	if (*ip & 0x8000)
 	{
 		/* extern is negative */
 		*ip |= (~(0xffff)); /* N.B. Assumes "twos complement" */
@@ -700,9 +699,10 @@ NCX_GET1F(ushort, double)
 static int
 ncmpix_put_ushort_schar(void *xp, const schar *ip)
 {
+	uchar *cp;
         if (*ip < 0) return NC_ERANGE;
-	uchar *cp = (uchar *) xp;
-	if(*ip & 0x80)
+	cp = (uchar *) xp;
+	if (*ip & 0x80)
 		*cp++ = 0xff;
 	else
 		*cp++ = 0;
@@ -756,7 +756,7 @@ get_ix_int(const void *xp, ix_int *ip)
 
 	*ip = *cp++ << 24;
 #if SIZEOF_IX_INT > X_SIZEOF_INT
-	if(*ip & 0x80000000)
+	if (*ip & 0x80000000)
 	{
 		/* extern is negative */
 		*ip |= (~(0xffffffff)); /* N.B. Assumes "twos complement" */
@@ -796,7 +796,7 @@ static int
 ncmpix_put_int_schar(void *xp, const schar *ip)
 {
 	uchar *cp = (uchar *) xp;
-	if(*ip & 0x80)
+	if (*ip & 0x80)
 	{
 		*cp++ = 0xff;
 		*cp++ = 0xff;
@@ -895,9 +895,10 @@ NCX_GET1F(uint, double)
 static int
 ncmpix_put_uint_schar(void *xp, const schar *ip)
 {
+	uchar *cp;
 	if (*ip < 0) return NC_ERANGE;
 
-	uchar *cp = (uchar *) xp;
+	cp = (uchar *) xp;
 	*cp++ = 0x00;
 	*cp++ = 0x00;
 	*cp++ = 0x00;
@@ -1004,7 +1005,7 @@ define(`GET_VAX_DFLOAT_Body',dnl
 		switch(exp) {
 		case 0 :
 			/* ieee subnormal */
-			if(isp->mant_hi == min.ieee.mant_hi
+			if (isp->mant_hi == min.ieee.mant_hi
 				&& isp->mant_lo_hi == min.ieee.mant_lo_hi
 				&& isp->mant_lo_lo == min.ieee.mant_lo_lo)
 			{
@@ -1016,7 +1017,7 @@ define(`GET_VAX_DFLOAT_Body',dnl
 					 | isp->mant_lo_hi << 8
 					 | isp->mant_lo_lo;
 				unsigned tmp = mantissa >> 20;
-				if(tmp >= 4) {
+				if (tmp >= 4) {
 					vsp->exp = 2;
 				} else if (tmp >= 2) {
 					vsp->exp = 1;
@@ -1079,8 +1080,8 @@ define(`PUT_VAX_DFLOAT_Body',dnl
 		}
 			break;
 		case 0xff : /* max.s.exp */
-			if( vsp->mantissa2 == max.s.mantissa2
-				&& vsp->mantissa1 == max.s.mantissa1)
+			if (vsp->mantissa2 == max.s.mantissa2 &&
+			    vsp->mantissa1 == max.s.mantissa1)
 			{
 				/* map largest vax float to ieee infinity */
 				*isp = max.ieee;
@@ -1170,11 +1171,11 @@ define(`GET_IX_FLOAT_Body',dnl
 `dnl
 		cray_single *csp = (cray_single *) ip;
 
-		if(isp->exp == 0)
+		if (isp->exp == 0)
 		{
 			/* ieee subnormal */
 			*ip = (double)isp->mant;
-			if(isp->mant != 0)
+			if (isp->mant != 0)
 			{
 				csp->exp -= (ieee_single_bias + 22);
 			}
@@ -1199,13 +1200,13 @@ define(`PUT_IX_FLOAT_Body',dnl
 
 	isp->sign = csp->sign;
 
-	if(ieee_exp >= 0xff)
+	if (ieee_exp >= 0xff)
 	{
 		/* NC_ERANGE => ieee Inf */
 		isp->exp = 0xff;
 		isp->mant = 0x0;
 	}
-	else if(ieee_exp > 0)
+	else if (ieee_exp > 0)
 	{
 		/* normal ieee representation */
 		isp->exp  = ieee_exp;
@@ -1214,7 +1215,7 @@ define(`PUT_IX_FLOAT_Body',dnl
 		isp->mant = (((csp->mant << 1) &
 				0xffffffffffff) >> (48 - 23));
 	}
-	else if(ieee_exp > -23)
+	else if (ieee_exp > -23)
 	{
 		/* ieee subnormal, right shift */
 		const int rshift = (48 - 23 - ieee_exp);
@@ -1222,7 +1223,7 @@ define(`PUT_IX_FLOAT_Body',dnl
 		isp->mant = csp->mant >> rshift;
 
 #if 0
-		if(csp->mant & (1 << (rshift -1)))
+		if (csp->mant & (1 << (rshift -1)))
 		{
 			/* round up */
 			isp->mant++;
@@ -1243,7 +1244,7 @@ static void
 get_ix_float(const void *xp, float *ip)
 {
 
-	if(word_align(xp) == 0)
+	if (word_align(xp) == 0)
 	{
 		const ieee_single_hi *isp = (const ieee_single_hi *) xp;
 GET_IX_FLOAT_Body
@@ -1258,7 +1259,7 @@ GET_IX_FLOAT_Body
 static void
 put_ix_float(void *xp, const float *ip)
 {
-	if(word_align(xp) == 0)
+	if (word_align(xp) == 0)
 	{
 		ieee_single_hi *isp = (ieee_single_hi*)xp;
 PUT_IX_FLOAT_Body
@@ -1278,10 +1279,10 @@ get_ix_float(const void *xp, float *ip)
 
 	ieee_double *idp = (ieee_double *) ip;
 
-	if(word_align(xp) == 0)
+	if (word_align(xp) == 0)
 	{
 		const ieee_single_hi *isp = (const ieee_single_hi *) xp;
-		if(isp->exp == 0 && isp->mant == 0)
+		if (isp->exp == 0 && isp->mant == 0)
 		{
 			idp->exp = 0;
 			idp->mant = 0;
@@ -1296,7 +1297,7 @@ get_ix_float(const void *xp, float *ip)
 	else
 	{
 		const ieee_single_lo *isp = (const ieee_single_lo *) xp;
-		if(isp->exp == 0 && isp->mant == 0)
+		if (isp->exp == 0 && isp->mant == 0)
 		{
 			idp->exp = 0;
 			idp->mant = 0;
@@ -1314,10 +1315,10 @@ static void
 put_ix_float(void *xp, const float *ip)
 {
 	const ieee_double *idp = (const ieee_double *) ip;
-	if(word_align(xp) == 0)
+	if (word_align(xp) == 0)
 	{
 		ieee_single_hi *isp = (ieee_single_hi*)xp;
-		if(idp->exp > (ieee_double_bias - ieee_single_bias))
+		if (idp->exp > (ieee_double_bias - ieee_single_bias))
 			isp->exp = idp->exp - (ieee_double_bias - ieee_single_bias);
 		else
 			isp->exp = 0;
@@ -1327,7 +1328,7 @@ put_ix_float(void *xp, const float *ip)
 	else
 	{
 		ieee_single_lo *isp = (ieee_single_lo*)xp;
-		if(idp->exp > (ieee_double_bias - ieee_single_bias))
+		if (idp->exp > (ieee_double_bias - ieee_single_bias))
 			isp->exp = idp->exp - (ieee_double_bias - ieee_single_bias);
 		else
 			isp->exp = 0;
@@ -1369,7 +1370,7 @@ static int
 ncmpix_put_float_float(void *xp, const float *ip)
 {
 #ifdef NO_IEEE_FLOAT
-	if(*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
+	if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
 		return NC_ERANGE;
 #endif
 	put_ix_float(xp, ip);
@@ -1547,14 +1548,14 @@ define(`PUT_VAX_DDOUBLE_Body',dnl
 		unsigned mant_hi = (vdp->mantissa1 << 13)
 				 | (vdp->mantissa2 >> 3);
 
-		if((vdp->mantissa4 & 7) > 4)
+		if ((vdp->mantissa4 & 7) > 4)
 		{
 			/* round up */
 			mant_lo++;
-			if(mant_lo == 0)
+			if (mant_lo == 0)
 			{
 				mant_hi++;
-				if(mant_hi > 0xffffff)
+				if (mant_hi > 0xffffff)
 				{
 					mant_hi = 0;
 					exp++;
@@ -1588,11 +1589,11 @@ get_ix_double(const void *xp, double *ip)
 	const ieee_double *idp = (const ieee_double *) xp;
 	cray_single *csp = (cray_single *) ip;
 
-	if(idp->exp == 0)
+	if (idp->exp == 0)
 	{
 		/* ieee subnormal */
 		*ip = (double)idp->mant;
-		if(idp->mant != 0)
+		if (idp->mant != 0)
 		{
 			csp->exp -= (ieee_double_bias + 51);
 		}
@@ -1616,13 +1617,13 @@ put_ix_double(void *xp, const double *ip)
 
 	idp->sign = csp->sign;
 
-	if(ieee_exp >= 0x7ff)
+	if (ieee_exp >= 0x7ff)
 	{
 		/* NC_ERANGE => ieee Inf */
 		idp->exp = 0x7ff;
 		idp->mant = 0x0;
 	}
-	else if(ieee_exp > 0)
+	else if (ieee_exp > 0)
 	{
 		/* normal ieee representation */
 		idp->exp  = ieee_exp;
@@ -1631,14 +1632,14 @@ put_ix_double(void *xp, const double *ip)
 		idp->mant = (((csp->mant << 1) &
 				0xffffffffffff) << (52 - 48));
 	}
-	else if(ieee_exp >= (-(52 -48)))
+	else if (ieee_exp >= (-(52 -48)))
 	{
 		/* ieee subnormal, left shift */
 		const int lshift = (52 - 48) + ieee_exp;
 		idp->mant = csp->mant << lshift;
 		idp->exp  = 0;
 	}
-	else if(ieee_exp >= -52)
+	else if (ieee_exp >= -52)
 	{
 		/* ieee subnormal, right shift */
 		const int rshift = (- (52 - 48) - ieee_exp);
@@ -1646,7 +1647,7 @@ put_ix_double(void *xp, const double *ip)
 		idp->mant = csp->mant >> rshift;
 
 #if 0
-		if(csp->mant & (1 << (rshift -1)))
+		if (csp->mant & (1 << (rshift -1)))
 		{
 			/* round up */
 			idp->mant++;
@@ -1683,12 +1684,12 @@ ncmpix_get_double_float(const void *xp, float *ip)
 {
 	double xx;
 	get_ix_double(xp, &xx);
-	if(xx > FLT_MAX)
+	if (xx > FLT_MAX)
 	{
 		*ip = FLT_MAX;
 		return NC_ERANGE;
 	}
-	if(xx < (-FLT_MAX))
+	if (xx < (-FLT_MAX))
 	{
 		*ip = (-FLT_MAX);
 		return NC_ERANGE;
@@ -1721,7 +1722,7 @@ static int
 ncmpix_put_double_float(void *xp, const float *ip)
 {
 #if 0	/* TODO: figure this out (if condition below will never be true)*/
-	if((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
+	if ((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
 	double xx = (double) *ip;
@@ -1734,7 +1735,7 @@ static int
 ncmpix_put_double_double(void *xp, const double *ip)
 {
 #ifdef NO_IEEE_FLOAT
-	if(*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
+	if (*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
 		return NC_ERANGE;
 #endif
 	put_ix_double(xp, ip);
@@ -2138,8 +2139,8 @@ ncmpix_put_int64(void **xpp, const long long ip)
  * Aggregate numeric conversion functions.
  */
 dnl
-define(`GETN_CheckBND', `ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, `|| xp[i] < 0', `|| xp[i] < Imin($2)')')')dnl
-define(`PUTN_CheckBND', `ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| tp[i] < 0', `|| tp[i] < Xmin($1)')')')dnl
+define(`GETN_CheckBND', `ifelse(index(`$1',`u'), 0, , index(`$2',`u'), 0, `|| xp[i] < 0', `|| xp[i] < Imin($2)')')dnl
+define(`PUTN_CheckBND', `ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| tp[i] < 0', `|| tp[i] < Xmin($1)')')dnl
 
 dnl
 dnl dnl dnl
@@ -2160,7 +2161,7 @@ define(`NCX_PAD_GETN_Byte_Body',dnl
 `dnl
 	MPI_Offset rndup = nelems % X_ALIGN;
 
-	if(rndup)
+	if (rndup)
 		rndup = X_ALIGN - rndup;
 
 	(void) memcpy(tp, *xpp, (size_t)nelems);
@@ -2180,9 +2181,9 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	int status = NC_NOERR;
 	$1 *xp = ($1 *)(*xpp);
 
-	while(nelems-- != 0)
+	while (nelems-- != 0)
 	{
-ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, `		if (*xp < 0) status = NC_ERANGE;')')
+		GETI_CheckNeg($1, $2, *xp, tp, status =)
 		*tp++ = ($2) (*xp++);  /* type cast from $1 to $2 */
 	}
 
@@ -2203,12 +2204,12 @@ ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	MPI_Offset rndup = nelems % X_ALIGN;
 	$1 *xp = ($1 *) *xpp;
 
-	if(rndup)
+	if (rndup)
 		rndup = X_ALIGN - rndup;
 
-	while(nelems-- != 0)
+	while (nelems-- != 0)
 	{
-ifelse(index(`$1',`u'), 0, , `ifelse(index(`$2',`u'), 0, `		if (*xp < 0) status = NC_ERANGE;')')
+		GETI_CheckNeg($1, $2, *xp, tp, status =)
 		*tp++ = ($2)(*xp++);  /* type cast from $1 to $2 */
 	}
 
@@ -2233,7 +2234,7 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	{
 		const int lstatus = ncmpix_get_$1_$1(xp, &xx);
 		*tp = ($2)xx;
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2303,7 +2304,7 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		const int lstatus = ncmpix_get_$1_$2(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2329,11 +2330,11 @@ ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		const int lstatus = ncmpix_get_$1_$2(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
-	if(rndup != 0)
+	if (rndup != 0)
 		xp += Xsizeof($1);
 
 	*xpp = (void *)xp;
@@ -2358,13 +2359,13 @@ dnl
 define(`NCX_PAD_PUTN_Byte_Body',dnl
 	MPI_Offset rndup = nelems % X_ALIGN;
 
-	if(rndup)
+	if (rndup)
 		rndup = X_ALIGN - rndup;
 
 	(void) memcpy(*xpp, tp, (size_t)nelems);
 	*xpp = (void *)((char *)(*xpp) + nelems);
 
-	if(rndup)
+	if (rndup)
 	{
 		(void) memcpy(*xpp, nada, (size_t)rndup);
 		*xpp = (void *)((char *)(*xpp) + rndup);
@@ -2385,9 +2386,9 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	int status = NC_NOERR;
 	$1 *xp = ($1 *) *xpp;
 
-	while(nelems-- != 0)
+	while (nelems-- != 0)
 	{
-		if(*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
+		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
 			status = NC_ERANGE;
 		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
 	}
@@ -2409,18 +2410,18 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	MPI_Offset rndup = nelems % X_ALIGN;
 	$1 *xp = ($1 *) *xpp;
 
-	if(rndup)
+	if (rndup)
 		rndup = X_ALIGN - rndup;
 
-	while(nelems-- != 0)
+	while (nelems-- != 0)
 	{
-		if(*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , `ifelse(index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)')'))
+		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
 			status = NC_ERANGE;
 		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
 	}
 
 
-	if(rndup)
+	if (rndup)
 	{
 		(void) memcpy(xp, nada, (size_t)rndup);
 		xp += rndup;
@@ -2448,7 +2449,7 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 		xx = ($1) *tp;
 		{
 		int lstatus = ncmpix_put_$1_$1(xp, &xx);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 		}
 	}
@@ -2537,7 +2538,7 @@ ifelse( $1$2, intfloat,dnl
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		int lstatus = ncmpix_put_$1_$2(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -2563,11 +2564,11 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	for( ; nelems != 0; nelems--, xp += Xsizeof($1), tp++)
 	{
 		int lstatus = ncmpix_put_$1_$2(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
-	if(rndup != 0)
+	if (rndup != 0)
 	{
 		(void) memcpy(xp, nada, (size_t)(Xsizeof($1)));
 		xp += Xsizeof($1);
@@ -3061,7 +3062,7 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nfloats, float *ip)
 {
 	float *const end = ip + nfloats;
 
-	while(ip < end)
+	while (ip < end)
 	{
 GET_VAX_DFLOAT_Body(`(*xpp)')
 
@@ -3080,7 +3081,7 @@ ncmpix_getn_float_float(const void **xpp, MPI_Offset nelems, float *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		const int lstatus = ncmpix_get_float_float(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3119,7 +3120,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nfloats, const float *ip)
 {
 	const float *const end = ip + nfloats;
 
-	while(ip < end)
+	while (ip < end)
 	{
 PUT_VAX_DFLOAT_Body(`(*xpp)')
 
@@ -3138,7 +3139,7 @@ ncmpix_putn_float_float(void **xpp, MPI_Offset nelems, const float *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_FLOAT, tp++)
 	{
 		int lstatus = ncmpix_put_float_float(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3178,7 +3179,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset ndoubles, double *ip)
 {
 	double *const end = ip + ndoubles;
 
-	while(ip < end)
+	while (ip < end)
 	{
 GET_VAX_DDOUBLE_Body(`(*xpp)')
 		ip++;
@@ -3197,7 +3198,7 @@ ncmpix_getn_double_double(const void **xpp, MPI_Offset nelems, double *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		const int lstatus = ncmpix_get_double_double(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
@@ -3235,7 +3236,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset ndoubles, const double *ip)
 {
 	const double *const end = ip + ndoubles;
 
-	while(ip < end)
+	while (ip < end)
 	{
 PUT_VAX_DDOUBLE_Body(`(*xpp)')
 		ip++;
@@ -3254,7 +3255,7 @@ ncmpix_putn_double_double(void **xpp, MPI_Offset nelems, const double *tp)
 	for( ; nelems != 0; nelems--, xp += X_SIZEOF_DOUBLE, tp++)
 	{
 		int lstatus = ncmpix_put_double_double(xp, tp);
-		if(lstatus != NC_NOERR)
+		if (lstatus != NC_NOERR)
 			status = lstatus;
 	}
 
