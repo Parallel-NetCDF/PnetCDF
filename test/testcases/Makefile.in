@@ -42,6 +42,7 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            varn_contig.c \
            ivarn.c \
            check_striping.c \
+           add_var.c \
            redef1.c
 
 F77_SRCS = test_vardf.f \
@@ -147,6 +148,9 @@ ivarn: ivarn.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 check_striping: check_striping.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+add_var: add_var.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)

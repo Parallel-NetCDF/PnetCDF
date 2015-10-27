@@ -28,3 +28,4 @@ test_varm.o: test_varm.c
 vectors.o: vectors.c
 check_striping.o: check_striping.c
 attrf.o: attrf.f
+add_var.o: add_var.c
