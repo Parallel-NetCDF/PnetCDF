@@ -27,6 +27,8 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * testcases/add_var.c checks the starting file offsets of newly added
+      variables from re-entering the define mode
     * testcases/attrf.f checks NF_ERANGE is returned instead of coredump. This
       is particularly for NAG Fortran compiler that may report "Arithmetics
        exception".
