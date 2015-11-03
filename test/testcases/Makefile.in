@@ -174,7 +174,7 @@ attrf: attrf.o $(LIBRARY)
 	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 buftype_freef: buftype_freef.o $(LIBRARY)
-	$(LINK.F) $< $(LDFLAGS) $(LIBS)
+	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
 
 test_vardf90: test_vardf90.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
