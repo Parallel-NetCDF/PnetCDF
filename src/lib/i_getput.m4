@@ -762,7 +762,6 @@ ncmpii_igetput_varm(NC               *ncp,
     req->xbuf               = xbuf;
     req->bnelems            = bnelems;
     req->bufcount           = bufcount;
-    req->buftype            = buftype;
     req->ptype              = ptype;
     req->buftype_is_contig  = buftype_is_contig;
     req->need_swap_back_buf = need_swap_back_buf;
@@ -771,6 +770,14 @@ ncmpii_igetput_varm(NC               *ncp,
     req->abuf_index         = abuf_index;
     req->tmpBuf             = NULL;
     req->userBuf            = NULL;
+
+    /* only when read and buftype is not contiguous, we duplicate buftype for
+     * later in the wait call to unpack buffer based on buftype
+     */
+    if (rw_flag == READ_REQ && !buftype_is_contig)
+        MPI_Type_dup(buftype, &req->buftype);
+    else
+        req->buftype = MPI_DATATYPE_NULL;
 
     pack_request(ncp, varp, req, start, count, stride);
 

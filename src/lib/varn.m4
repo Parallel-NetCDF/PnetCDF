@@ -351,7 +351,7 @@ err_check:
 
     err = ncmpii_wait(ncp, io_method, num, &req_id, &st);
 
-    /* unpack to user buf, if buftype is contiguous */
+    /* unpack to user buf, if buftype is noncontiguous */
     if (status == NC_NOERR && rw_flag == READ_REQ && free_cbuf) {
         position = 0;
         MPI_Unpack(cbuf, (int)packsize, &position, buf, (int)bufcount, buftype,
