@@ -25,7 +25,7 @@
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) trim(message), trim(nfmpi_strerror(err))
-              msg = '*** TESTING F77 free_buftype.f for flexible API '
+              msg = '*** TESTING F77 buftype_freef.f for flexible API '
               call pass_fail(1, msg)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
