@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for freeing buftype in flexibel API ", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for free buftype in flexible API ", argv[0]);
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 

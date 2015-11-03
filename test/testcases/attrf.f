@@ -102,8 +102,13 @@
      +                            1_MPI_OFFSET_KIND, buf_int)
           call check(err, 'In nfmpi_put_att_int: ', nerrs)
 
+          ! because of the NF_ERANGE error, the attributes may become
+          ! inconsistent among processes, So NC_EMULTIDEFINE_ATTR_VAL
+          ! or NF_EMULTIDEFINE may be returned from nfmpi_enddef.
           err = nfmpi_enddef(ncid)
-          call check(err, 'In nfmpi_enddef: ', nerrs)
+          if (err .NE. NF_NOERR .AND. err .NE. NF_EMULTIDEFINE .AND.
+     +        err .NE. NF_EMULTIDEFINE_ATTR_VAL)
+     +        call check(err, 'In nfmpi_enddef: ', nerrs)
 
           err = nfmpi_get_att_int2(ncid, NF_GLOBAL, "attr4", buf_int2)
           if (err .NE. NF_ERANGE) then
