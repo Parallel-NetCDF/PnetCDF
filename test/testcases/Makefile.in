@@ -43,11 +43,13 @@ C_SRCS   = ncmpi_vars_null_stride.c \
            ivarn.c \
            check_striping.c \
            add_var.c \
+           buftype_free.c \
            redef1.c
 
 F77_SRCS = test_vardf.f \
            varn_intf.f \
-           attrf.f
+           attrf.f \
+           buftype_freef.f
 
 F90_SRCS = inq_num_varsf.f90 \
            inq_recsizef.f90 \
@@ -153,6 +155,9 @@ check_striping: check_striping.o $(LIBRARY)
 add_var: add_var.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
+buftype_free: buftype_free.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
 inq_num_varsf: inq_num_varsf.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)
 
@@ -167,6 +172,9 @@ varn_intf: varn_intf.o $(LIBRARY)
 
 attrf: attrf.o $(LIBRARY)
 	$(LINK.F77) $< $(LDFLAGS) $(LIBS)
+
+buftype_freef: buftype_freef.o $(LIBRARY)
+	$(LINK.F) $< $(LDFLAGS) $(LIBS)
 
 test_vardf90: test_vardf90.o $(LIBRARY)
 	$(LINK.F90) $< $(LDFLAGS) $(LIBS)

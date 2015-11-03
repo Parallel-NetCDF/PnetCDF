@@ -824,6 +824,7 @@ err_check:
                 MPI_Unpack(lbuf, (int)insize, &position, cur_req->buf,
                            (int)cur_req->bufcount, cur_req->buftype,
                            MPI_COMM_SELF);
+                MPI_Type_free(&cur_req->buftype);
             }
             /* lbuf is no longer needed */
             if (lbuf != cur_req->buf && lbuf != cur_req->xbuf)

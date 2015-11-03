@@ -29,3 +29,5 @@ vectors.o: vectors.c
 check_striping.o: check_striping.c
 attrf.o: attrf.f
 add_var.o: add_var.c
+buftype_free.o: buftype_free.c
+buftype_freef.o: buftype_freef.f
