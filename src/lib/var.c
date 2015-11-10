@@ -421,14 +421,19 @@ ncmpii_NC_var_shape64(NC                *ncp,
 out :
     /*
      * For CDF-1 and CDF-2 formats, the total number of array elements
-     * cannot exceed 2^32
-     */
+     * cannot exceed 2^32, unless this variable is the last fixed-size
+     * variable, there is no record variable, and the file starting
+     * offset of this variable is less than 2GiB.
+     * We will check this in ncmpi_enddef() which calls ncmpii_NC_enddef()
+     * which calls ncmpii_NC_check_vlens()
+     *
     if (! fIsSet(ncp->flags, NC_64BIT_DATA) && product >= X_UINT_MAX)
         return NC_EVARSIZE;
+     */
 
     /*
-     * align variable size to 4 byte boundary, required by all netcdf file
-     * formats
+     * align variable size to 4 byte boundary, required by all netcdf
+     * file formats
      */
     varp->len = product * varp->xsz;
     if (varp->len % 4 > 0)
