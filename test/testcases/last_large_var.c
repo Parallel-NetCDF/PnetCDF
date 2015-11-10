@@ -50,11 +50,163 @@
 
 #define ERR {if(err!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++;}}
 
+int check_last_var(char *filename)
+{
+    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+
+    /* create a new file ---------------------------------------------------*/
+    cmode = NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    ERR
+
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 5, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "YY", 66661, &dimid[2]); ERR
+    err = ncmpi_def_dim(ncid, "XX", 66661, &dimid[3]); ERR
+
+    /* define only fixed-size variables */
+    err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid+1, &varid); ERR
+    err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); ERR
+
+    err = ncmpi_enddef(ncid); ERR
+    err = ncmpi_close(ncid); ERR
+
+    return nerrs;
+}
+
+int check_rec_var(char *filename)
+{
+    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+
+    /* create a new file ---------------------------------------------------*/
+    cmode = NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    ERR
+
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 5, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "YY", 66661, &dimid[2]); ERR
+    err = ncmpi_def_dim(ncid, "XX", 66661, &dimid[3]); ERR
+
+    /* define a record variable */
+    err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid, &varid); ERR
+    err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); ERR
+
+    err = ncmpi_enddef(ncid);
+    if (err != NC_EVARSIZE) {
+        printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
+        nerrs++;
+    }
+    err = ncmpi_close(ncid);
+    if (err != NC_EVARSIZE) {
+        printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
+        nerrs++;
+    }
+
+    return nerrs;
+}
+
+int check_not_last_var(char *filename)
+{
+    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+
+    /* create a new file ---------------------------------------------------*/
+    cmode = NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    ERR
+
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 5, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "YY", 66661, &dimid[2]); ERR
+    err = ncmpi_def_dim(ncid, "XX", 66661, &dimid[3]); ERR
+
+    /* the large variable is not the last */
+    err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid+1, &varid); ERR
+
+    err = ncmpi_enddef(ncid);
+    if (err != NC_EVARSIZE) {
+        printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
+        nerrs++;
+    }
+
+    err = ncmpi_close(ncid);
+    if (err != NC_EVARSIZE) {
+        printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
+        nerrs++;
+    }
+    return nerrs;
+}
+
+int check_add_var(char *filename)
+{
+    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+
+    /* create a new file ---------------------------------------------------*/
+    cmode = NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    ERR
+
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 5, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "YY", 66661, &dimid[2]); ERR
+    err = ncmpi_def_dim(ncid, "XX", 66661, &dimid[3]); ERR
+
+    err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid+1, &varid); ERR
+    err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); ERR
+
+    err = ncmpi_enddef(ncid); ERR
+
+    /* add a new fixed-size variable */
+    err = ncmpi_redef(ncid); ERR
+    err = ncmpi_def_var(ncid, "var_new", NC_INT, 2, dimid, &varid); ERR
+
+    err = ncmpi_enddef(ncid);
+    if (err != NC_EVARSIZE) {
+        printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
+        nerrs++;
+    }
+
+    err = ncmpi_close(ncid);
+    if (err != NC_EVARSIZE) {
+        printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
+        nerrs++;
+    }
+    return nerrs;
+}
+
+int check_var_offset(char *filename)
+{
+    int err, nerrs=0, ncid, cmode, varid, dimid[4];
+
+    /* create a new file ---------------------------------------------------*/
+    cmode = NC_CLOBBER;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    ERR
+
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); ERR
+    err = ncmpi_def_dim(ncid, "X", 5, &dimid[1]); ERR
+    err = ncmpi_def_dim(ncid, "YY", 66661, &dimid[2]); ERR
+    err = ncmpi_def_dim(ncid, "XX", 66661, &dimid[3]); ERR
+
+    err = ncmpi_def_var(ncid, "var", NC_INT, 1, dimid+1, &varid); ERR
+    err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); ERR
+
+    /* make the file header size larger than 2 GiB */
+    err = ncmpi__enddef(ncid, 2147483648, 1, 1, 1);
+    if (err != NC_EVARSIZE) {
+        printf("\nError at line=%d: expecting error code NC_EVARSIZE but got %s\n",__LINE__,nc_err_code_name(err));
+        nerrs++;
+    }
+
+    err = ncmpi_close(ncid); ERR
+    return nerrs;
+}
+
 int main(int argc, char** argv)
 {
     char filename[256];
     int  rank, nprocs, err, nerrs=0;
-    int ncid, cmode, varid, dimid[4];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -75,35 +227,11 @@ int main(int argc, char** argv)
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 
-    /* create a new file ---------------------------------------------------*/
-    cmode = NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    ERR
-
-    err = ncmpi_def_dim(ncid, "Y", 4, &dimid[0]); ERR
-    err = ncmpi_def_dim(ncid, "X", 5, &dimid[1]); ERR
-    err = ncmpi_def_dim(ncid, "YY", 66661, &dimid[2]); ERR
-    err = ncmpi_def_dim(ncid, "XX", 66661, &dimid[3]); ERR
-
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid); ERR
-    err = ncmpi_def_var(ncid, "var_last", NC_FLOAT, 2, dimid+2, &varid); ERR
-
-    err = ncmpi_enddef(ncid); ERR
-
-    err = ncmpi_redef(ncid); ERR
-    err = ncmpi_def_var(ncid, "var_new", NC_INT, 2, dimid, &varid); ERR
-
-    err = ncmpi_enddef(ncid);
-    if (err != NC_EVARSIZE) {
-        printf("\nError: expecting error code NC_EVARSIZE but got %d\n",err);
-        nerrs++;
-    }
-
-    err = ncmpi_close(ncid);
-    if (err != NC_EVARSIZE) {
-        printf("\nError: expecting error code NC_EVARSIZE but got %d\n",err);
-        nerrs++;
-    }
+    nerrs += check_last_var(filename);
+    nerrs += check_rec_var(filename);
+    nerrs += check_not_last_var(filename);
+    nerrs += check_add_var(filename);
+    nerrs += check_var_offset(filename);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
