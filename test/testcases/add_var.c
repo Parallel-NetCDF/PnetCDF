@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     err = ncmpi_inq_varoffset(ncid, 0, &prev_off); ERR
     for (i=1; i<nvars; i++) {
         err = ncmpi_inq_varoffset(ncid, i, &off); ERR
-        if (off <= prev_off) {
+        if (off < prev_off + 5*4*4) { /* each variable is of size 5*4*4 bytes */
             err = ncmpi_inq_varname(ncid, i, var_name); ERR
             printf("Error in %s line %d: variable %s offset is set incorrectly\n",
                    __FILE__,__LINE__,var_name);
