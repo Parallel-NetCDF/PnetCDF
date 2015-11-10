@@ -720,7 +720,13 @@ hdr_put_NC_var(bufferinfo   *pbp,
     if (pbp->version == 5)
         status = ncmpix_put_int64((void**)(&pbp->pos), varp->len);
     else {
-        if (varp->len != (int)varp->len) return NC_EVARSIZE;
+        /* Special case, when there is no record variable, the last fixed-size
+         * variable can be larger than 2 GiB if its file starting offset is
+         * less than 2 GiB. This checking has already been done in the call
+         * to ncmpii_NC_check_vlens() in ncmpii_NC_enddef().
+         *
+         * if (varp->len != (int)varp->len) return NC_EVARSIZE;
+         */
         status = ncmpix_put_int32((void**)(&pbp->pos), (int)varp->len);
     }
     if (status != NC_NOERR) return status;

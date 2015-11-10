@@ -156,6 +156,12 @@
           counts(2) = ny
           nTypes    = 1
 
+          ! In Fortran, subarray buffer type can also use array index ranges
+          ! for example in this case
+          !    buf(1+ghost_len:nx+ghost_len, 1+ghost_len:ny+ghost_len)
+          ! However, this does not work for nonblocking APIs because
+          ! wait/wait_all is called separately from the nonblocking calls
+          ! Fortran the subarray indexing is lost in the wait call
           err = nfmpi_put_vara_all(ncid, varid, starts, counts, buf,
      +                             nTypes, subarray)
           call check(err, 'In nfmpi_put_vara_all: ')

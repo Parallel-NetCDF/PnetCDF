@@ -27,6 +27,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New test program
+    * test/last_large_var.c tests the special case when there is no record
+      variable, the last fixed-size variable can be larger than 2GiB in size
+      if its starting file offset is less than 2GiB.
     * test/testcases/buftype_free.c and test/testcases/buftype_freef.f test
       the bug in r2160.
     * testcases/add_var.c checks the starting file offsets of newly added
@@ -64,6 +67,9 @@ This is essentially a placeholder for the next release note ...
       NC_GLOBAL as the variable ID argument is prohibited.
 
   o Bug fixes
+    * Fix the bug for the special case when there is no record variable, the
+      last fixed-size variable can be larger than 2GiB in size if its starting
+      file offset is less than 2GiB.
     * Fix the nonblocking flexible APIs that fail to save (duplicate) the user
       MPI derived data type that later is needed to unpack read data to the
       user buffer (a call to MPI_Unpack). See r2160.

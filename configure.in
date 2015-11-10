@@ -414,6 +414,9 @@ if test "x${MPIF90}" != x ; then
    FC=${MPIF90}
    AC_PROG_FC
    dnl FCFLAGS is set in AC_PROG_FC
+
+   AC_FC_LIBRARY_LDFLAGS
+
    dnl We use F90FLAGS for debugging and optimization options for Fortran 90 programs
    F90FLAGS=${FCFLAGS}
    AC_SUBST(F90FLAGS)
@@ -439,6 +442,9 @@ if test "x${MPIF77}" != x ; then
    F77=${MPIF77}
    AC_PROG_F77
    dnl FFLAGS is set in AC_PROG_F77
+
+   AC_F77_LIBRARY_LDFLAGS
+
    dnl We use F77FLAGS for debugging and optimization options for Fortran 77 programs
    F77FLAGS=${FFLAGS}
    AC_SUBST(F77FLAGS)
