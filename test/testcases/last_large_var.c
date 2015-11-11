@@ -223,7 +223,7 @@ int main(int argc, char** argv)
 
     if (rank == 0) {
         char cmd_str[256];
-        sprintf(cmd_str, "*** TESTING C   %s for last large fixed-size variable ", argv[0]);
+        sprintf(cmd_str, "*** TESTING C   %s for last large var in CDF-1/2", argv[0]);
         printf("%-66s ------ ", cmd_str); fflush(stdout);
     }
 
