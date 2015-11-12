@@ -2047,13 +2047,18 @@ ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
 int
 ncmpix_get_int32(const void **xpp, int *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(ip, *xpp, X_SIZEOF_INT);
+#else
     const uchar *cp = (const uchar *) *xpp;
 
     *ip  = (*cp++ << 24);
     *ip |= (*cp++ << 16);
     *ip |= (*cp++ <<  8);
     *ip |=  *cp;
-
+#endif
     /* advance *xpp 4 bytes */
     *xpp = (void *)((const char *)(*xpp) + 4);
 
@@ -2064,6 +2069,11 @@ ncmpix_get_int32(const void **xpp, int *ip)
 int
 ncmpix_get_int64(const void **xpp, long long *llp)
 {
+#ifdef WORDS_BIGENDIAN
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(llp, *xpp, X_SIZEOF_INT64);
+#else
     const uchar *cp = (const uchar *) *xpp;
 
     /* below is the same as calling swap8b(llp, *xpp) */
@@ -2075,7 +2085,7 @@ ncmpix_get_int64(const void **xpp, long long *llp)
     *llp |= ((long long)(*cp++) << 16);
     *llp |= ((long long)(*cp++) <<  8);
     *llp |=  (long long)*cp;
-
+#endif
     /* advance *xpp 8 bytes */
     *xpp = (void *)((const char *)(*xpp) + 8);
 
@@ -2090,8 +2100,9 @@ int
 ncmpix_put_int32(void **xpp, const int ip)
 {
 #ifdef WORDS_BIGENDIAN
-    int *ptr = (int*) (*xpp); /* typecast to 4-byte integer */
-    *ptr = ip;
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(*xpp, &ip, X_SIZEOF_INT);
 #else
     /* bitwise shifts below are to produce an integer in Big Endian */
     uchar *cp = (uchar *) *xpp;
@@ -2114,12 +2125,13 @@ int
 ncmpix_put_int64(void **xpp, const long long ip)
 {
 #ifdef WORDS_BIGENDIAN
-    long long *ptr = (long long*) (*xpp); /* typecast to 8-byte integer */
-    *ptr = ip;
+    /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
+     * some system, such as HPUX */
+    (void) memcpy(*xpp, &ip, X_SIZEOF_INT64);
 #else
     uchar *cp = (uchar *) *xpp;
     /* below is the same as calling swap8b(*xpp, &ip) */
-    *cp++ = (uchar) (ip                          >> 56);
+    *cp++ = (uchar) (ip                         >> 56);
     *cp++ = (uchar)((ip & 0x00ff000000000000LL) >> 48);
     *cp++ = (uchar)((ip & 0x0000ff0000000000LL) >> 40);
     *cp++ = (uchar)((ip & 0x000000ff00000000LL) >> 32);
