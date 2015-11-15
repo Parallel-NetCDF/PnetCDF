@@ -142,7 +142,7 @@ NC_finddim(const NC_dimarray  *ncap,
     for (dimid=0; dimid<ncap->ndefined; dimid++) {
         if (ncap->value[dimid]->name->nchars == nchars &&
             strncmp(ncap->value[dimid]->name->cp, name, nchars) == 0) {
-            /* found the mateched name */
+            /* found the matched name */
             if (dimpp != NULL)
                 *dimpp = ncap->value[dimid];
             free(name);
