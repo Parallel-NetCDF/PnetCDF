@@ -89,7 +89,7 @@ void clear_file_contents(int ncid, int *varid)
 {
     int i, err, rank;
     unsigned int *w_buffer = (unsigned int*) malloc(NY*NX * sizeof(unsigned int));
-    for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
+    for (i=0; i<NY*NX; i++) w_buffer[i] = 99999;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -127,7 +127,7 @@ int check_contents_for_fail(int ncid, int *varid)
     if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
 
     for (i=0; i<4; i++) {
-        for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
+        for (j=0; j<NY*NX; j++) r_buffer[j] = 99999;
         err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
         if (err != NC_NOERR) printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(err));
 

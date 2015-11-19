@@ -136,7 +136,7 @@ void partition_array(int ndims,
 
 int main(int argc, char** argv) {
 
-  int i, err;
+  int i;
   double power_M;
   int *array_of_sizes, *array_of_subsizes, *array_of_starts;
   int ncid, *dimids, varid_1, varid_2;
@@ -423,7 +423,7 @@ int main(int argc, char** argv) {
 
  /* COMPARE buf1 and buf2 for equality */
 
-  if ( (err = memcmp((void *)buf1, (void *)buf2, total_sz*sizeof(TEST_NATIVE_ETYPE))) )
+  if (memcmp((void *)buf1, (void *)buf2, total_sz*sizeof(TEST_NATIVE_ETYPE)))
     success = 0;
   else
     success = 1;
