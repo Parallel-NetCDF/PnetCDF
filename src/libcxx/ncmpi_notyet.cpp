@@ -2,6 +2,10 @@
 #include <iostream>
 #include "ncmpi_notyet.h"
 
+#ifndef __func__
+#define __func__ __FUNCTION__
+#endif
+
  int
 ncmpi_insert_compound(int ncid, nc_type xtype, const char *name,
                    MPI_Offset offset, nc_type field_typeid){std::cout << __func__ << " not implemented" << std::endl; return NC_EINVAL;}
