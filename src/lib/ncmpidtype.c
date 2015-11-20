@@ -303,8 +303,6 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
   int *array_of_ints;
   MPI_Aint *array_of_adds;
   MPI_Datatype *array_of_dtypes;
-  void *arraybuf;
-  int memsz;
   MPI_Offset count;
   int ndims;
   int status = NC_NOERR;
@@ -347,13 +345,9 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     return NC_NOERR;
   }
 
-  memsz = num_ints * SIZEOF_INT
-        + num_adds * SIZEOF_MPI_AINT
-        + num_dtypes * (int)sizeof(MPI_Datatype);
-  arraybuf = (void *)NCI_Malloc((size_t)memsz);
-  array_of_ints = (int *)(arraybuf);
-  array_of_adds = (MPI_Aint *)(array_of_ints + num_ints);
-  array_of_dtypes = (MPI_Datatype *)(array_of_adds + num_adds);
+  array_of_ints = (int *) NCI_Malloc(num_ints * SIZEOF_INT);
+  array_of_adds = (MPI_Aint *) NCI_Malloc(num_adds * SIZEOF_MPI_AINT);
+  array_of_dtypes = (MPI_Datatype *) NCI_Malloc(num_dtypes * sizeof(MPI_Datatype));
 
   MPI_Type_get_contents(dtype, num_ints, num_adds, num_dtypes,
                         array_of_ints, array_of_adds, array_of_dtypes);
@@ -515,8 +509,9 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
 
   *nelems *= total_blocks;
 
-  if (memsz > 0)
-    NCI_Free(arraybuf);
+  NCI_Free(array_of_ints);
+  NCI_Free(array_of_adds);
+  NCI_Free(array_of_dtypes);
 
   return status;
 }
