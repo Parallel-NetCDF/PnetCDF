@@ -137,7 +137,7 @@ static void check_contents(int ncid, int *varid)
     unsigned int *r_buffer = (unsigned int*) malloc(NY*NX*sizeof(unsigned int));
 
     for (i=0; i<4; i++) {
-        for (j=0; j<NY*NX; j++) r_buffer[j] = -1;
+        for (j=0; j<NY*NX; j++) r_buffer[j] = 99999;
         err = ncmpi_get_var_uint_all(ncid, varid[i], r_buffer);
         ERR
 
