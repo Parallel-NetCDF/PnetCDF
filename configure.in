@@ -83,6 +83,8 @@ AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([PNC_DEBUG],                [Define if to enable debugging])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
+AH_TEMPLATE([HAVE_FUNC_MACRO],          [Define if C++ macro __func__ is defined])
+AH_TEMPLATE([HAVE_FUNCTION_MACRO],      [Define if C++ macro __FUNCTION__ is defined])
 
 dnl an option to use a customized rm command
 AC_ARG_VAR(RM, Command for deleting files or directories. default: rm)
@@ -1045,6 +1047,16 @@ if test "x${enable_coverage}" = xyes; then
        AC_SUBST(LCOV_LIB)
    else
       AC_MSG_WARN([--enable-coverage is for GNU compiler only])
+   fi
+fi
+
+if test "x${has_mpicxx}" = xyes ; then
+   UD_CXX_MACRO_FUNC
+   if test "x${ac_cv_cxx_macro_func}" == xyes ; then
+      AC_DEFINE(HAVE_FUNC_MACRO)
+   fi
+   if test "x${ac_cv_cxx_macro_function}" == xyes ; then
+      AC_DEFINE(HAVE_FUNCTION_MACRO)
    fi
 fi
 

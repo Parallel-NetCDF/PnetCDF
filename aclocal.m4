@@ -1568,3 +1568,17 @@ AC_DEFUN([UD_CHECK_FC_NAG],[
     ])
 ])
 
+AC_DEFUN([UD_CXX_MACRO_FUNC],[
+   AC_CACHE_CHECK([if C++ macro __func__ or __FUNCTION__ is defined], [ac_cv_cxx_macro_func],
+   [ac_cv_cxx_macro_func=no
+    ac_cv_cxx_macro_function=no
+    AC_LANG_PUSH([C++])
+    AC_TRY_COMPILE([#include <iostream>],
+                   [std::cout << __func__;],
+                   [ac_cv_cxx_macro_func=yes])
+    AC_TRY_COMPILE([#include <iostream>],
+                   [std::cout << __FUNCTION__;],
+                   [ac_cv_cxx_macro_function=yes])
+    AC_LANG_POP([C++])
+   ])
+])
