@@ -488,7 +488,6 @@ ncmpix_get_$1_$2(const void *xp, $2 *ip)
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
 	get_ix_$1(xp, (ix_$1 *)ip);
-	return NC_NOERR;
 `#'else
 ')dnl
 	ix_$1 xx;
@@ -531,7 +530,6 @@ ncmpix_put_$1_$2(void *xp, const $2 *ip)
 ifelse(`$3', `1',
 ``#'if IXsizeof($1) == Isizeof($2) && IXmax($1) == Upcase($2)_MAX
 	put_ix_$1(xp, (const ix_$1 *)ip);
-	return NC_NOERR;
 `#'else
 ')dnl
 	ix_$1 xx;
