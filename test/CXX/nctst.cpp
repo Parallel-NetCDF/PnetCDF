@@ -436,7 +436,7 @@ void DumpableNcmpiFile::dumpgatts( void )
 {
     std::multimap<std::string,NcmpiGroupAtt> attMap = getAtts();
 
-    for (std::map<std::string,NcmpiGroupAtt>::iterator iter=attMap.begin(); iter!=attMap.end(); ++iter) {
+    for (std::multimap<std::string,NcmpiGroupAtt>::iterator iter=attMap.begin(); iter!=attMap.end(); ++iter) {
         NcmpiGroupAtt *ap = &(*iter).second;
         cout << "\t\t" << ":" << ap->getName() << " = " ;
         vector<double>  atest(ap->getAttLength());
