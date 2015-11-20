@@ -1142,7 +1142,6 @@ PNETCDF_LIB="-L${BUILDDIR}/src/lib"
 AC_SUBST(PNETCDF_INC)
 AC_SUBST(PNETCDF_LIB)
 
-TEST_SEQRUN=
 AC_ARG_VAR(TEST_SEQRUN, [Run command (on one process) for make target check on cross-compile environment. Example: "aprun -n 1". @<:@default: none@:>@])
 AC_ARG_VAR(TEST_MPIRUN, [MPI run command for make target ptest, @<:@default: mpiexec -n NP@:>@])
 AC_ARG_VAR(TEST_OUTDIR, [Output file directory for make target ptest, @<:@default: ./@:>@])
@@ -1154,6 +1153,7 @@ if test "x${TEST_OUTDIR}" = x ; then
     dnl set default to current directory
     TEST_OUTDIR=.
 fi
+AC_SUBST(TEST_SEQRUN)
 AC_SUBST(TEST_MPIRUN)
 AC_SUBST(TEST_OUTDIR)
 
