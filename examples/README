@@ -7,7 +7,7 @@
 
 This directory contains several example programs. Detailed descriptions of
 each program, compile and run instructions, and sample outputs are provided
-at the biginning of each file. Most of the example programs are developed
+at the beginning of each file. Most of the example programs are developed
 with C, C++, F77, and F90 versions.
 
 
@@ -194,7 +194,7 @@ with C, C++, F77, and F90 versions.
     use ncmpi_get_vara_int_all() to read a 2D 4-byte integer array in parallel.
     It also reads a global attribute and two attribute of variable named "var".
     The data partitioning pattern is a column-wise partitioning across all
-    proceses.
+    processes.
 
   ./C/transpose.c
 ./CXX/transpose.cpp

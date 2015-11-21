@@ -30,5 +30,5 @@ help from the community.  A partial list follows.  Thanks everyone!
   fixes, improving our handling of cross-compile environments.
 
 - Kurt Glaesemann <kurt.glaesemann@pnl.gov> contributed numerous cleanups for
-  pnetcdf on ia64 with HP-MPI
+  PnetCDF on ia64 with HP-MPI
 
