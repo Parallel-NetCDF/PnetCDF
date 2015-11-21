@@ -252,7 +252,7 @@ As a rule, NC_MAX_VAR_DIMS <= NC_MAX_DIMS.
 /** This is the max size of an SD dataset name in HDF4 (from HDF4 documentation).*/
 #define NC_MAX_HDF4_NAME 64
 
-/** In HDF5 files you can set the endianness of variables with
+/** In HDF5 files you can set the Endianness of variables with
     nc_def_var_endian(). This define is used there. */
 /**@{*/
 #define NC_ENDIAN_NATIVE 0
@@ -551,7 +551,7 @@ by the desired type. */
 #define NC_ENUMRECS_MULTIDEFINE		NC_EMULTIDEFINE_NUMRECS
 #define NC_EVARS_BEGIN_MULTIDEFINE	NC_EMULTIDEFINE_VAR_BEGIN
 
-/* invalid nonblocking reqeust ID and zero-length request */
+/* invalid nonblocking request ID and zero-length request */
 #define NC_REQ_NULL -1
 
 
@@ -1886,7 +1886,7 @@ int ncmpi_put_vard_all(int ncid, int varid, MPI_Datatype filetype, const void *b
 /* Begin {mput,mget}_var */
 
 /* #################################################################### */
-/* Begin: more prototypes to be included for fortran binding conversion */
+/* Begin: more prototypes to be included for Fortran binding conversion */
 
 /* Begin non-blocking data access functions */
 
@@ -3830,7 +3830,7 @@ int ncmpi_mget_varm_ulonglong_all(int ncid, int num, int varids[],
 
 /* End {mput,mget}_var */
 
-/* End: more prototypes to be included for fortran binding conversion */
+/* End: more prototypes to be included for Fortran binding conversion */
 /* ################################################################## */
 
 /* End Prototypes */

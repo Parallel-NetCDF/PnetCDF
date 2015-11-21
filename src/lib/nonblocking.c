@@ -581,7 +581,7 @@ ncmpii_wait(NC  *ncp,
         if (req_ids[i] == NC_REQ_NULL) continue; /* skip NULL request */
 
         if (ncp->head == NULL) {
-            /* no more pending requests in the queue, this reqeust is invalid */
+            /* no more pending requests in the queue, this request is invalid */
             statuses[i] = NC_EINVAL_REQUEST;
             /* retain the first error status */
             if (status == NC_NOERR) status = NC_EINVAL_REQUEST;
@@ -721,7 +721,7 @@ err_check:
     if (w_req_head != NULL) {
         cur_req = w_req_head;
         while (cur_req != NULL) {
-            /* must byte-swap the user buffer back to its original Endianess
+            /* must byte-swap the user buffer back to its original Endianness
                only when the buffer itself has been byte-swapped before,
                i.e. NOT buftype_is_contig && NOT ncmpii_need_convert() &&
                ncmpii_need_swap()
@@ -875,7 +875,7 @@ err_check:
 /* C struct for breaking down a request to a list of offset-length segments */
 typedef struct {
     MPI_Offset off;      /* starting file offset of the request */
-    MPI_Offset len;      /* requested length in bytes strating from off */
+    MPI_Offset len;      /* requested length in bytes starting from off */
     MPI_Aint   buf_addr; /* distance of this request's I/O buffer to the first
                             request to be merged */
 } off_len;
@@ -928,7 +928,7 @@ ncmpii_flatten(int          ndim,    /* number of dimensions */
     /* TODO: check if all stride[] >= 1
        Q: Is it legal if any stride[] <= 0 ? */
 
-    /* caclulate the number of offset-length pairs */
+    /* calculate the number of offset-length pairs */
     *nseg = (stride[ndim-1] == 1) ? 1 : count[ndim-1];
     for (i=0; i<ndim-1; i++)
         *nseg *= count[i];
@@ -1422,7 +1422,7 @@ ncmpii_req_aggregation(NC     *ncp,
              * requests each accessing a single column of a 2D array, that each
              * produces a filetype interleaving with others'.
              *
-             * The pitfall of this flattening is the additional memorys
+             * The pitfall of this flattening is the additional memory
              * requirement, as it will have to break down each request into a
              * list of offset-length pairs, and merge all lists into a sorted
              * list based on their offsets into an increasing order.

@@ -16,8 +16,8 @@
 #ifndef WORDS_BIGENDIAN
 /* LITTLE_ENDIAN: DEC and intel */
 /*
- * Routines to convert to BIGENDIAN.
- * Optimize the swapn?b() and swap?b() routines aggressivly.
+ * Routines to convert to BIG ENDIAN.
+ * Optimize the swapn?b() and swap?b() routines aggressively.
  */
 
 /* netcdf-3.6.2beta5 added loop unrolling to many of these routines.  Could

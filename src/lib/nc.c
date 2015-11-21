@@ -126,7 +126,7 @@ NC_check_header(NC         *ncp,
         gbp.index  = 0;
         gbp.pos    = gbp.base = cmpbuf;
 
-        /* find the insonsistent part of the header, report the difference, and
+        /* find the inconsistent part of the header, report the difference, and
          * overwrite the local header object with root's. ncmpii_hdr_check_NC()
          * should not have any MPI communication calls.
          */
@@ -325,8 +325,8 @@ ncmpi_set_default_format(int format, int *old_formatp)
     return status;
 }
 
-/* returns a value suituable for a create flag.  Will return one or more of the
- * following values ORed together:
+/* returns a value suitable for a create flag.  Will return one or more of the
+ * following values OR-ed together:
  * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
 int
 ncmpi_inq_default_format(int *formatp)
@@ -555,7 +555,7 @@ NC_begins(NC         *ncp,
     /* TODO: alignment for record variables (maybe using a new hint) */
 
     /* loop thru vars, second pass is for the 'record' vars,
-     * re-calculate the straing offset for each record variable */
+     * re-calculate the starting offset for each record variable */
     for (j=0, i=0; i<ncp->vars.ndefined; i++) {
         if (!IS_RECVAR(ncp->vars.value[i]))
             /* skip non-record variables on this pass */
@@ -566,7 +566,7 @@ NC_begins(NC         *ncp,
 
         /* A few attempts at aligning record variables have failed
          * (either with range error or 'value read not that expected',
-         * or with an error in ncmpi_redef )).  Not sufficent to align
+         * or with an error in ncmpi_redef )).  Not sufficient to align
          * 'begin', but haven't figured out what else to adjust */
         ncp->vars.value[i]->begin = end_var;
 
@@ -841,7 +841,7 @@ write_NC(NC *ncp)
 inline int
 ncmpii_dset_has_recvars(NC *ncp)
 {
-    /* possible further optimzation: set a flag on the header data
+    /* possible further optimization: set a flag on the header data
      * structure when record variable created so we can skip this loop*/
     int i;
     NC_var **vpp;
@@ -1014,7 +1014,7 @@ ncmpii_NC_check_vlens(NC *ncp)
 /* Many subroutines called in ncmpii_NC_enddef() are collective. We check the
  * error codes of all processes only in safe mode, so the program can stop
  * collectively, if any one process got an error. However, when safe mode is
- * off, we simply return the error amd program may hang if some processes
+ * off, we simply return the error and program may hang if some processes
  * do not get error and proceed to the next subroutine call.
  */ 
 #define CHECK_ERROR(status) {                                                \
@@ -1055,7 +1055,7 @@ ncmpii_NC_enddef(NC         *ncp,
     r_align = D_RNDUP(r_align, 4);
 
     /* reflect the hint changes to the MPI info object, so the user can
-     * query extacly what hint values are being used
+     * query exactly what hint values are being used
      */
     ncp->nciop->hints.h_align = h_align;
     ncp->nciop->hints.v_align = v_align;
@@ -1084,7 +1084,7 @@ ncmpii_NC_enddef(NC         *ncp,
     }
 #endif
 
-    /* check on dimension lenghths */
+    /* check on dimension lengths */
     status = ncmpii_NC_check_vlens(ncp);
     CHECK_ERROR(status)
 
@@ -1340,7 +1340,7 @@ ncmpii__enddef(NC         *ncp,
 
     /* check if any hints have been set in the environment variable
      * PNETCDF_HINTS, as they will overwrite the ones passed in this function
-     * and those passed-in alignment values will overwite the ones set in the
+     * and those passed-in alignment values will overwrite the ones set in the
      * MPI_info provided in ncmpi_creat() or ncmpi_open() */
     ncmpii_inq_env_align_hints(&env_h_align, &env_v_align, &env_h_chunk,
                                &env_r_align);

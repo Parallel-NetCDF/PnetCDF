@@ -418,7 +418,7 @@ ncmpi_buffer_attach(int        ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    /* check if the buffer has been prviously attached
+    /* check if the buffer has been previously attached
      * note that in nc.c, the NC object is allocated with calloc, so
      * abuf should be initialized to NULL then
      */
@@ -447,7 +447,7 @@ ncmpi_buffer_detach(int ncid)
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    /* check if the buffer has been prviously attached */
+    /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
     /* this API assumes users are responsible for no pending bput */
@@ -485,14 +485,14 @@ ncmpi_buffer_detach(int         ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    /* check if the buffer has been prviously attached */
+    /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
     /* check MPICH2 src/mpi/pt2pt/bsendutil.c for why the bufptr is void* */
     *(void **)bufptr = ncp->abuf->buf;
     *bufsize         = ncp->abuf->size_allocated;
 
-    /* this API assumes users are respobsible for no pending bput when called */
+    /* this API assumes users are responsible for no pending bput when called */
     cur_req = ncp->head;
     while (cur_req != NULL) { /* check if there is a pending bput */
         if (cur_req->abuf_index >= 0)
@@ -520,7 +520,7 @@ ncmpi_inq_buffer_usage(int         ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    /* check if the buffer has been prviously attached */
+    /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
     /* return the current usage in bytes */
@@ -540,7 +540,7 @@ ncmpi_inq_buffer_size(int         ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    /* check if the buffer has been prviously attached */
+    /* check if the buffer has been previously attached */
     if (ncp->abuf == NULL) return NC_ENULLABUF;
 
     /* return the current usage in bytes */

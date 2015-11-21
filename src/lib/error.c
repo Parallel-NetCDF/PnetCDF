@@ -224,7 +224,7 @@ ncmpi_strerror(int err)
              */
         case NC_ENULLSTART:
             return "argument start is a NULL pointer";
-            /* Some APIs require argument start connot be a NULL pointer
+            /* Some APIs require argument start not be a NULL pointer
              */
         case NC_ENULLCOUNT:
             return "argument count is a NULL pointer";

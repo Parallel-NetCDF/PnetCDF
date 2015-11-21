@@ -526,7 +526,7 @@ ncmpi_def_var(int         ncid,
     /* TODO: can ndims > 2^31-1 in CDF-5 ? */
     if ((ndims < 0) || ndims > X_INT_MAX) return NC_EINVAL;
 
-    /* there is an upperbound for the number of variables defeined in a file */
+    /* there is an upperbound for the number of variables defined in a file */
     if (ncp->vars.ndefined >= NC_MAX_VARS) return NC_EMAXVARS;
 
     /* check whether the variable name has been used */

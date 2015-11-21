@@ -29,7 +29,7 @@ dnl
 
 /* ncmpi_get/put_varn_<type>_<mode> API:
  *    type:   data type of I/O buffer, buf
- *    mode:   indpendent (<nond>) or collective (_all)
+ *    mode:   independent (<nond>) or collective (_all)
  *
  * arguments:
  *    num:    number of start and count pairs
@@ -53,7 +53,7 @@ ncmpii_getput_varn(NC               *ncp,
                    MPI_Offset* const counts[],  /* [num][varp->ndims] */
                    void             *buf,
                    MPI_Offset        bufcount,
-                   MPI_Datatype      buftype,   /* data type of the bufer */
+                   MPI_Datatype      buftype,   /* data type of the buffer */
                    int               rw_flag,
                    int               io_method);
 
@@ -186,7 +186,7 @@ ncmpii_getput_varn(NC               *ncp,
                    MPI_Offset* const counts[],  /* [num][varp->ndims] */
                    void             *buf,
                    MPI_Offset        bufcount,
-                   MPI_Datatype      buftype,   /* data type of the bufer */
+                   MPI_Datatype      buftype,   /* data type of the buffer */
                    int               rw_flag,   /* WRITE_REQ or READ_REQ */
                    int               io_method) /* COLL_IO or INDEP_IO */
 {

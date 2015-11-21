@@ -236,7 +236,7 @@ ncmpii_create_imaptype(NC_var           *varp,
 
    These two layers of memory layout will both be represented in MPI
    derived datatype, and if double layers of memory layout is used,
-   we need to elimilate the upper one passed in MPI_Datatype parameter
+   we need to eliminate the upper one passed in MPI_Datatype parameter
    from the user, by packing it to logic contig memory datastream view.
 
    for put_varm:
@@ -316,7 +316,7 @@ ncmpii_getput_varm(NC               *ncp,
     if (err == NC_EIOMISMATCH) warning = err; 
     else if (err != NC_NOERR) goto err_check;
 
-    /* because nbytes will be used as the argument "cout" in MPI-IO
+    /* because nbytes will be used as the argument "count" in MPI-IO
      * read/write calls and the argument "count" is of type int */
     if (nbytes != (int)nbytes) {
         err = NC_EINTOVERFLOW;
@@ -331,7 +331,7 @@ ncmpii_getput_varm(NC               *ncp,
      * have to process this one record at a time.
      */
 
-    /* Create the filetype for this request and calculate the the beginning
+    /* Create the filetype for this request and calculate the beginning
      * file offset for this request.  If this request is contiguous in file,
      * then filetype == MPI_BYTE. Otherwise filetype will be an MPI derived
      * data type.

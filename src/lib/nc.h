@@ -67,7 +67,7 @@ enum API_KIND {
  * in an entire climate header in one go */
 #define NC_DEFAULT_CHUNKSIZE 262144
 
-/* when variabe's nctype is NC_CHAR, I/O buffer's MPI type must be MPI_CHAR
+/* when variable's nctype is NC_CHAR, I/O buffer's MPI type must be MPI_CHAR
  * and vice versa */
 #define NCMPII_ECHAR(nctype, mpitype) ((((nctype) == NC_CHAR) == ((mpitype) != MPI_CHAR)) ? NC_ECHAR : NC_NOERR)
 
@@ -91,7 +91,7 @@ enum API_KIND {
      ABSENT       = ZERO  ZERO                  // Means list is not present
      ZERO         = \x00 \x00 \x00 \x00         // 32-bit zero
 
-  Minmum happens when nothing is defined, i.e.
+  Minimum happens when nothing is defined, i.e.
      magic              -- 4 bytes
      numrecs            -- 4 bytes for CDF-1 and CDF-2, 8 bytes for CDF-5
      dim_list = ABSENT  -- 8 bytes
@@ -145,7 +145,7 @@ ncmpii_set_NC_string(NC_string *ncstrp, const char *str);
 /* End defined in string.c */
 
 /*
- * NC dimension stucture
+ * NC dimension structure
  */
 typedef struct {
     /* all xdr'd */
@@ -493,7 +493,7 @@ typedef struct NC_buf {
 } NC_buf;
 
 struct NC {
-    /* links to make list of open netcdf's */
+    /* linked list of currently opened netcdf files */
     struct NC *next;
     struct NC *prev;
 #ifdef ENABLE_SUBFILING
@@ -512,7 +512,7 @@ struct NC {
 #define NC_HDIRTY 0x800000  /* header info has changed */
 /* NC_NOFILL is defined in netcdf.h, historical interface */
     int           flags;
-    int           safe_mode;    /* 0 or 1, for parameter consistentcy check */
+    int           safe_mode;    /* 0 or 1, for parameter consistency check */
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
     ncio         *nciop;
     MPI_Offset    chunk;    /* largest extent this layer will request from
@@ -761,7 +761,7 @@ int ncmpii_handle_error(int mpi_errorcode, char *msg);
 /* end defined in error.c */
 /*
  * These functions are used to support
- * interface version 2 backward compatiblity.
+ * interface version 2 backward compatibility.
  * N.B. these are tested in ../nc_test even though they are
  * not public. So, be careful to change the declarations in
  * ../nc_test/tests.h if you change these.

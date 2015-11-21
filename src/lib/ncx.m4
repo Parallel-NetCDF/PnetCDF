@@ -130,8 +130,8 @@ static const char nada[X_ALIGN] = {0, 0, 0, 0};
 #ifndef WORDS_BIGENDIAN
 /* LITTLE_ENDIAN: DEC and intel */
 /*
- * Routines to convert to BIGENDIAN.
- * Optimize the swapn?b() and swap?b() routines aggressivly.
+ * Routines to convert to BIG ENDIAN.
+ * Optimize the swapn?b() and swap?b() routines aggressively.
  */
 
 #define SWAP2(a) ( (((a) & 0xff) << 8) | \
@@ -1110,7 +1110,7 @@ PUT_VAX_DFLOAT_Body(xp)
 
 /*
  * Return the number of bytes until the next "word" boundary
- * N.B. This is based on the very wierd YMP address structure,
+ * N.B. This is based on the very weird YMP address structure,
  * which puts the address within a word in the leftmost 3 bits
  * of the address.
  */

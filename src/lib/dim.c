@@ -107,7 +107,7 @@ ncmpii_find_NC_Udim(const NC_dimarray  *ncap,
     /* note that the number of dimensions allowed is < 2^32 */
     for (dimid=0; dimid<ncap->ndefined; dimid++)
         if (ncap->value[dimid]->size == NC_UNLIMITED) {
-            /* found the mateched name */
+            /* found the matched name */
             if (dimpp != NULL)
                 *dimpp = ncap->value[dimid];
             return dimid;
