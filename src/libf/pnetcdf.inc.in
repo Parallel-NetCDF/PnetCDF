@@ -321,7 +321,7 @@
       PARAMETER (NF_EMAPTYPE     = -121)  ! Mapped access for atomic types only.   
       PARAMETER (NF_ELATEFILL    = -122)  ! Attempt to define fill value when data already exists. 
       PARAMETER (NF_ELATEDEF     = -123)  ! Attempt to define var properties, like deflate, after enddef.
-      PARAMETER (NF_EDIMSCALE    = -124)  ! Probem with HDF5 dimscales.
+      PARAMETER (NF_EDIMSCALE    = -124)  ! Problem with HDF5 dimscales.
       PARAMETER (NF_ENOGRP       = -125)  ! No group found.
       PARAMETER (NF_ESTORAGE     = -126)  ! Can't specify both contiguous and chunking.
       PARAMETER (NF_EBADCHUNK    = -127)  ! Bad chunksize.
@@ -400,7 +400,7 @@
       PARAMETER (NF_EINDEP                  = -203)   ! Operation not allowed in independent data mode
       PARAMETER (NF_EFILE                   = -204)   ! Unknown error in file operation
       PARAMETER (NF_EREAD                   = -205)   ! Unknown error in reading file
-      PARAMETER (NF_EWRITE                  = -206)   ! Unknown error in writting to file
+      PARAMETER (NF_EWRITE                  = -206)   ! Unknown error in writing to file
       PARAMETER (NF_EOFILE                  = -207)   ! file open/creation failed
       PARAMETER (NF_EMULTITYPES             = -208)   ! Multiple types used in memory data
       PARAMETER (NF_EIOMISMATCH             = -209)   ! Input/Output data amount mismatch

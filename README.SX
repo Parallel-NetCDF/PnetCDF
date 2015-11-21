@@ -6,7 +6,7 @@
   up necessary aliases on the configure host (cc -> sxcc, etc) or vice versa 
   on the compile host (sxcc -> cc).
 
-. With the following environment variables a pnetcdflib.a has been
+. With the following environment variables a libpnetcdf.a has been
   built successfully
 
     MPICC=mpic++

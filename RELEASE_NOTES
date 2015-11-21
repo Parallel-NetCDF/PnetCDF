@@ -75,7 +75,7 @@ version  1.6.0 (February 2, 2015)
     * Conform with netCDF4 on CDF-1 and CDF-2 formats. The only difference now
       between the two formats are the OFFSET item in the format spec (32 vs.
       64 bit integers.) All names (variable, dimension, attribute) now allow
-      extended characters (eg. special2 and MUTF8).
+      extended characters (e.g. special2 and MUTF8).
 
   o New APIs
     * Nonblocking buffered varn API family.
@@ -727,7 +727,7 @@ version  1.3.1 (September 24, 2012)
     - bug fix to make bput APIs properly return error code NC_EINSUFFBUF.
     - bug fixes for ncmpidump to avoid residue contents from a previous read
       when it read beyond EOF.
-    - bug fixes in the the tutorial example codes.
+    - bug fixes in the tutorial example codes.
     - add more in-line comments for the tutorial example codes.
     - add the error string for error code NC_ENOENT.
 

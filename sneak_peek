@@ -67,9 +67,11 @@ This is essentially a placeholder for the next release note ...
       NC_GLOBAL as the variable ID argument is prohibited.
 
   o Bug fixes
+    * Fix the bus error of invalid address alignment when build with Fujitsu
+      compiler. See r2171 and r2180.
     * Fix the bug for the special case when there is no record variable, the
       last fixed-size variable can be larger than 2GiB in size if its starting
-      file offset is less than 2GiB.
+      file offset is less than 2GiB. See r2166.
     * Fix the nonblocking flexible APIs that fail to save (duplicate) the user
       MPI derived data type that later is needed to unpack read data to the
       user buffer (a call to MPI_Unpack). See r2160.

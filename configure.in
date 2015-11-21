@@ -68,7 +68,7 @@ dnl these used to live in acconfig.h
 dnl autoheader only adds these templates to the first invocation of AC_CONFIG_HEADERS
 AH_TEMPLATE([NCBYTE_T],                 [Type of NC_BYTE])
 AH_TEMPLATE([NCSHORT_T],                [Type of NC_SHORT])
-AH_TEMPLATE([NF_DOUBLEPRECISION_IS_C_], [C type for Fortran dobule])
+AH_TEMPLATE([NF_DOUBLEPRECISION_IS_C_], [C type for Fortran double])
 AH_TEMPLATE([NF_INT1_IS_C_],            [C type for Fortran INT1])
 AH_TEMPLATE([NF_INT1_T],                [Type for Fortran INT1])
 AH_TEMPLATE([NF_INT2_IS_C_],            [C type for Fortran INT2])
@@ -77,7 +77,7 @@ AH_TEMPLATE([NF_INT_IS_C_],             [C type for Fortran INT])
 AH_TEMPLATE([NF_INT8_IS_C_],            [C type for Fortran INT8])
 AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
-AH_TEMPLATE([NO_IEEE_FLOAT],            [Does sytem have IEEE FLOAT])
+AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
 AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],    [Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
@@ -161,7 +161,7 @@ AC_DEFUN([UD_CHECK_MPI_COMPILER], [
           AC_PATH_PROGS([$1], [$$1])
        fi
    fi
-   dnl if $$1 is not empty, then compler file does exist
+   dnl if $$1 is not empty, then compiler file does exist
    dnl if $$1 is empty, search under user's PATH
    if test "x$$1" = x ; then
       UD_MSG_DEBUG(find possible $1 under user's PATH)
@@ -325,7 +325,7 @@ if test "x${enable_cxx}" != xno ; then
    if test "x${MPICXX}" = x ; then
       AC_MSG_ERROR([
          ------------------------------------------------------------
-           configure cannot find a C++ compiler. Please specifiy the
+           configure cannot find a C++ compiler. Please specify the
            locations of the compiler either with the MPICXX
            environment variable or the --with-mpi configure flag.
          ------------------------------------------------------------])
@@ -408,7 +408,7 @@ if test "x${enable_fortran}" = xyes ; then
          ------------------------------------------------------------
            Fortran support is explicitly requested, but configure
            cannot find a Fortran77 or Fortran90 compiler. Please
-           specifiy the locations of the compilers either with the
+           specify the locations of the compilers either with the
            MPIF77 MPIF90 environment variables or the --with-mpi
            configure flag.
          ------------------------------------------------------------])
@@ -499,7 +499,7 @@ fi
 
 if test "x${enable_fortran}" = xyes ; then
    dnl GNU Fortran compiler automatically invokes preprocessor for files with
-   dnl extention .F and .F90. To manually invoke the preprocessor on any file,
+   dnl extension .F and .F90. To manually invoke the preprocessor on any file,
    dnl use compiler flag -cpp. To disable, use -nocpp.
    dnl For other compilers, we need to find the compile flags for Fortran
    dnl preprocessor.
@@ -525,7 +525,7 @@ if test "x${enable_fortran}" = xyes ; then
    dnl compiler command-line define preprocess flag, result in FC_DEFINE
    UD_FC_PP_DEFINE
 
-   dnl check compiler flags for file extentions in .f .F .f90 .F90
+   dnl check compiler flags for file extensions in .f .F .f90 .F90
    AC_LANG_PUSH([Fortran])
    AC_FC_SRCEXT([f])
    AC_FC_SRCEXT([F])
@@ -839,7 +839,7 @@ UD_HAS_MPI_DATATYPE(MPI_UB)
 UD_HAS_MPI_DATATYPE(MPI_LB)
 dnl UD_HAS_MPI_DATATYPE(MPI_OFFSET)
 dnl HAVE_MPI_OFFSET might have already been defined in mpi.h
-dnl Add "_DATATYPE" suffix to distinquish from checking MPI_Offset
+dnl Add "_DATATYPE" suffix to distinguish from checking MPI_Offset
 UD_HAS_MPI_DATATYPE(MPI_OFFSET, _DATATYPE)
 
 dnl Check for presence of Fortran types
@@ -848,7 +848,7 @@ dnl
 dnl We do this for a couple of reasons.  First, the MPI might have been
 dnl built without Fortran support, in which case these types might not
 dnl exist.  Second, we need to map these types to corresponding C types
-dnl where possible to simplify processing at runtime.
+dnl where possible to simplify processing at run time.
 if test "x${enable_fortran}" = xyes ; then
     UD_HAS_MPI_DATATYPE(MPI_CHARACTER)
     UD_HAS_MPI_DATATYPE(MPI_REAL)
@@ -1017,7 +1017,7 @@ dnl
 dnl This is for internal testing only. It should not be enabled for building a
 dnl production PnetCDF. This is because when run an executable compiled with
 dnl converage will produce an output file named "gmon.out". Since coverage is
-dnl not parallelized, runnning a program compiled with coverage may cuase
+dnl not parallelized, running a program compiled with coverage may cause
 dnl problems on concurrently writing to gmon.out in conflicts, possible
 dnl corrupting the file or program hanging. Thus, make target "ptest" should
 dnl also be disabled when coverage is enabled.
