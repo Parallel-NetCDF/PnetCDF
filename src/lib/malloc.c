@@ -30,6 +30,7 @@
 #include <mpi.h>
 #include "nc.h"
 
+#ifdef PNC_MALLOC_TRACE
 /* global variables for malloc tracing */
 static void       *ncmpii_mem_root;
 static MPI_Offset  ncmpii_mem_alloc;
@@ -42,6 +43,7 @@ void ncmpii_init_malloc_tracing(void)
     ncmpii_max_mem_alloc = 0;
     ncmpii_mem_root      = NULL;
 }
+#endif
 
 /*----< ncmpii_inq_malloc_size() >--------------------------------------------*/
 /* get the current aggregate size allocated by malloc */

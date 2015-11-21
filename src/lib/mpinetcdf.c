@@ -239,12 +239,15 @@ ncmpi_create(MPI_Comm    comm,
     }
 
     /* Cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA */
-    if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) == (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
-        status = NC_EINVAL_CMODE;
-        if (safe_mode) /* cmodes are sync-ed */
-            return status;
-        /* when not in safe mode, we let NC_64BIT_DATA triumph NC_64BIT_OFFSET
-         * and return an error */
+    if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
+                 (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
+        return NC_EINVAL_CMODE;
+        /* In safe_mode, cmodes are sync-ed, so all processes will return with
+         * the same error code */
+
+        /* when not in safe mode, if cmode is not consistent, then the program
+         * can hang (because MPI_File_open is a collective call)
+         */
     }
 
     /* take hints from the environment variable PNETCDF_HINTS
