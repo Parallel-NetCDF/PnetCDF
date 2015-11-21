@@ -130,7 +130,7 @@ still see tremendous performance improvements.
 such as IBM's GPFS or Lustre, then an application write becomes a block write
 at the file system layer. If a write straddles two blocks, then locks must be
 acquired for both blocks. Aligning the start of a variable to a block boundary,
-combined with collective I/O optimizations in the MPI-IO library can often
+combined with collective I/O optimization in the MPI-IO library can often
 eliminate all unaligned file system accesses.
 
 - nc_record_align_size: This hint aligns the starting file offset of the
@@ -234,21 +234,29 @@ ncmpi_create(MPI_Comm    comm,
             cmode = root_cmode;
             status = NC_EMULTIDEFINE_OMODE;
         }
+        MPI_Allreduce(&status, &err, 1, MPI_INT, MPI_MIN, comm);
+        if (err != NC_NOERR) return status;
+
         /* when safe_mode is disabled, NC_EMULTIDEFINE_OMODE will be reported at
          * the time ncmpi_enddef() returns */
     }
 
-    /* Cannot have both NC_64BIT_OFFSET & NC_64BIT_DATA */
+    /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
     if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
-                 (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
-        return NC_EINVAL_CMODE;
-        /* In safe_mode, cmodes are sync-ed, so all processes will return with
-         * the same error code */
-
-        /* when not in safe mode, if cmode is not consistent, then the program
-         * can hang (because MPI_File_open is a collective call)
-         */
+                 (NC_64BIT_OFFSET|NC_64BIT_DATA))
+        status = NC_EINVAL_CMODE;
+    /* In safe_mode, cmodes are sync-ed, so all processes can return the same
+     * error code. But, when not in safe mode, if cmode is not consistent
+     * among processes, then some processes might not violate this above rule
+     * which can cause the program to hang (because MPI_File_open is a
+     * collective call). We use MPI_Allreduce below to check the error
+     * code, but it is costly.
+     */
+    if (safe_mode) {
+        MPI_Allreduce(&status, &err, 1, MPI_INT, MPI_MIN, comm);
+        status = err;
     }
+    if (status != NC_NOERR) return status;
 
     /* take hints from the environment variable PNETCDF_HINTS
      * a string of hints separated by ";" and each hint is in the
@@ -314,7 +322,7 @@ ncmpi_create(MPI_Comm    comm,
         if (SIZEOF_OFF_T < 8) return NC_ESMALL;
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
-        /* check default foramt */
+        /* check default format */
         int default_format;
         ncmpi_inq_default_format(&default_format);
         if (default_format == NC_FORMAT_CDF5) {
