@@ -220,7 +220,7 @@ static MPI_Datatype ncmpii_type_filter(MPI_Datatype type)
                     (array of positive integers)
 
   Return:
-. total number of blocks assigned from the distrubted array
+. total number of blocks assigned from the distributed array
 @*/
 #ifdef HAVE_MPI_COMBINER_DARRAY
 static int

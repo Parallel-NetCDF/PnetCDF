@@ -262,7 +262,7 @@ int ncmpii_subfile_partition(NC *ncp, int *ncidp)
     ncp_sf->nciop->hints.v_align = ncp->nciop->hints.v_align;
     ncp_sf->nciop->hints.r_align = ncp->nciop->hints.r_align;
 
-    for(i=0; i<ncp->vars.ndefined; i++) { /* travere all variables */
+    for(i=0; i<ncp->vars.ndefined; i++) { /* traverse all variables */
         NC_var **vpp = ncp->vars.value;
         NC_dim **dpp = ncp->dims.value;
 

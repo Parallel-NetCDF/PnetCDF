@@ -854,8 +854,8 @@ pack_request(NC               *ncp,
                       &req->offset_end);
     req->offset_end += varp->xsz - 1;
 
-    /* check if this is a record varaible. if yes, split the request into
-     * subrequests, one subrequest for a record access. Hereandafter,
+    /* check if this is a record variable. if yes, split the request into
+     * subrequests, one subrequest for a record access. Hereinafter,
      * treat each request as a non-record variable request
      */
 

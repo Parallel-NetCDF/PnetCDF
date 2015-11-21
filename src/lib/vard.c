@@ -326,7 +326,7 @@ ncmpi_get_vard(int           ncid,
                MPI_Datatype  filetype,  /* access layout to the variable in file */
                void         *buf,
                MPI_Offset    bufcount,
-               MPI_Datatype  buftype)   /* data type of the bufer */
+               MPI_Datatype  buftype)   /* data type of the buffer */
 {
     int     status;
     NC     *ncp;
@@ -347,7 +347,7 @@ ncmpi_get_vard_all(int           ncid,
                    MPI_Datatype  filetype,  /* access layout to the variable in file */
                    void         *buf,
                    MPI_Offset    bufcount,
-                   MPI_Datatype  buftype)   /* data type of the bufer */
+                   MPI_Datatype  buftype)   /* data type of the buffer */
 {
     int     status;
     NC     *ncp;
@@ -368,7 +368,7 @@ ncmpi_put_vard(int           ncid,
                MPI_Datatype  filetype,  /* access layout to the variable in file */
                const void   *buf,
                MPI_Offset    bufcount,
-               MPI_Datatype  buftype)   /* data type of the bufer */
+               MPI_Datatype  buftype)   /* data type of the buffer */
 {
     int     status;
     NC     *ncp;
@@ -389,7 +389,7 @@ ncmpi_put_vard_all(int           ncid,
                    MPI_Datatype  filetype,  /* access layout to the variable in file */
                    const void   *buf,
                    MPI_Offset    bufcount,
-                   MPI_Datatype  buftype)   /* data type of the bufer */
+                   MPI_Datatype  buftype)   /* data type of the buffer */
 {
     int     status;
     NC     *ncp;

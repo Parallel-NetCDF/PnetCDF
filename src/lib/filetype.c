@@ -50,7 +50,7 @@ check_recsize_too_big(NC *ncp)
 /*
  * Check whether start, count, stride values are valid for the variable.
  * Note that even if the request size is zero, this check is enforced in both
- * netCDF and PnetCDF. Otherwise, many test cases under test directoy can fail.
+ * netCDF and PnetCDF. Otherwise, many test cases under test directory can fail.
  * Arguments count and stride can be NULL.
  */
 int
@@ -103,12 +103,12 @@ NC_start_count_stride_ck(const NC         *ncp,
          *
          * In independent data mode, numrecs in memory across processes
          * and file can be inconsistent. Even re-reading numrecs from file
-         * cannot get the lastest value, because in independent mode,
+         * cannot get the latest value, because in independent mode,
          * numrecs in file is not updated (due to race condition).
          * For example, a subset of processes write a new record and at
          * the same time another set writes 2 new records. Even if NC_SHARE
          * is set, new values of numrecs cannot be written to the file,
-         * because it can cause a race consition (atomic read-modify IO is
+         * because it can cause a race condition (atomic read-modify IO is
          * required to solve this problem and MPI-IO cannot do it). Simply
          * said, numrecs is not automatically kept consistent in
          * independent mode. Users must call ncmpi_sync_numrecs()
@@ -234,7 +234,7 @@ ncmpii_is_request_contiguous(NC               *ncp,
     most_sig_dim = 0; /* record dimension */
 
     if (IS_RECVAR(varp)) {
-        /* if there are more than one record variabl, then the record
+        /* if there are more than one record variable, then the record
            dimensions, counts[0] must == 1. For now, we assume there
            are more than one record variable.
            TODO: we may need an API to inquire how many record variables
@@ -926,7 +926,7 @@ ncmpii_file_set_view(NC           *ncp,
         /* check if header size > 2^31 */
         if (ncp->begin_var != blocklens[0]) status = NC_EINTOVERFLOW;
 
-        /* second block is filetype, the suarray request(s) to the variable */
+        /* second block is filetype, the subarray request(s) to the variable */
         blocklens[1] = 1;
             disps[1] = *offset;
            ftypes[1] = filetype;

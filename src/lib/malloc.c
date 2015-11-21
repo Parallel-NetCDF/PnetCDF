@@ -171,7 +171,7 @@ void ncmpii_del_mem_entry(void *buf)
         free((*found)->func);
         free((*found)->filename);
 
-        /* substract the space amount to be freed */
+        /* subtract the space amount to be freed */
         ncmpii_mem_alloc -= (MPI_Offset)((*found)->size);
         void *tmp = (*found)->self;
         ret = tdelete(&node, &ncmpii_mem_root, ncmpii_cmp);

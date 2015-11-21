@@ -237,7 +237,7 @@ ncmpiio_create(MPI_Comm     comm,
             }
 #endif
         }
-        /* all processes must wait here util file deletion is completed */
+        /* all processes must wait here until file deletion is completed */
         TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, comm);
         if (err != NC_NOERR) return err;
     }
@@ -552,13 +552,13 @@ int ncmpiio_get_hint(NC *ncp, char *key, char *value, int *flag)
 
     /* info hints can come from the file system but can also come from
      * user-specified hints.  the MPI implementation probably should
-     * merge the two, but some implementaitons not only ignore hints
+     * merge the two, but some implementations not only ignore hints
      * they don't understand, but also fail to incorporate those hints
      * into the info struct (this is unfortunate for us, but entirely
-     * standards compilant).
+     * standards compliant).
      *
      * Our policy will be to use the implementation's info first
-     * (perhaps the implementaiton knows something about the underlying
+     * (perhaps the implementation knows something about the underlying
      * file system), and then consult user-supplied hints should we not
      * find the hint in the info associated with the MPI file descriptor
      */

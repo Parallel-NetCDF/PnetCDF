@@ -234,7 +234,7 @@ ncmpi_create(MPI_Comm    comm,
             cmode = root_cmode;
             status = NC_EMULTIDEFINE_OMODE;
         }
-        MPI_Allreduce(&status, &err, 1, MPI_INT, MPI_MIN, comm);
+        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
         if (err != NC_NOERR) return status;
 
         /* when safe_mode is disabled, NC_EMULTIDEFINE_OMODE will be reported at
@@ -253,7 +253,7 @@ ncmpi_create(MPI_Comm    comm,
      * code, but it is costly.
      */
     if (safe_mode) {
-        MPI_Allreduce(&status, &err, 1, MPI_INT, MPI_MIN, comm);
+        TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
         status = err;
     }
     if (status != NC_NOERR) return status;

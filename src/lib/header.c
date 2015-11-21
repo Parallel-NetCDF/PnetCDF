@@ -876,11 +876,11 @@ ncmpii_hdr_put_NC(NC   *ncp,
 /*
  * Fetch the next header chunk.  the chunk is 'gbp->size' bytes big
  * Takes care to not overwrite leftover (unused) data in the buffer before
- * fetching a new chunk: the current aproach is to re-read the extra data.
+ * fetching a new chunk: the current approach is to re-read the extra data.
  *
  * NOTE: An alternate approach (which we do not do) would be to save the old
  *       data, read the next chunk and then copy the old data into the new
- *       chunk.  This alternate aproach might help if it is important for reads
+ *       chunk.  This alternate approach might help if it is important for reads
  *       to be aligned.
  */
 static int
@@ -1964,7 +1964,7 @@ ncmpii_comp_attrs(int           safe_mode,
             ATTR_WARN(msg, name, lld(v1->xsz), lld(v2->xsz))
             err = NC_EMULTIDEFINE_ATTR_SIZE;
         }
-        /* hereandafter, we have v1->nelems == v2->nelems */
+        /* hereinafter, we have v1->nelems == v2->nelems */
         else if (v1->type == NC_CHAR) {
             if (memcmp(v1->xvalue, v2->xvalue, (size_t)v1->nelems)) {
                 msg = "%s attribute \"%s\" CHAR (root=%s, local=%s)\n";
@@ -2436,7 +2436,7 @@ int ncmpii_write_header(NC *ncp)
     int rank, status=NC_NOERR, mpireturn, err;
     MPI_File fh;
 
-    /* Write the entire header to the file. It funcation may be called from
+    /* Write the entire header to the file. This function may be called from
      * a rename API. In that case, we cannot just change the variable name in
      * the file header, because if the file space occupied by the name shrinks,
      * all metadata following the new name must be moved ahead.
