@@ -102,6 +102,7 @@
       integer nf_format_classic
       integer nf_format_64bit
       integer nf_format_64bit_data
+      integer nf_format_64bit_offset
       integer nf_format_cdf2
       integer nf_format_cdf5
 
@@ -122,6 +123,7 @@
       parameter (nf_format_cdf2 = 2)
       parameter (nf_format_cdf5 = 5)
       parameter (nf_format_64bit = nf_format_cdf2)
+      parameter (nf_format_64bit_offset = nf_format_cdf2)
       parameter (nf_format_64bit_data = nf_format_cdf5)
 
 !
