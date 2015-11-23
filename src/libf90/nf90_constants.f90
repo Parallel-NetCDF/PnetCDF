@@ -120,6 +120,7 @@
     nf90_format_netcdf4_classic = 4, &
     nf90_format_cdf5 = 5, &
     nf90_format_64bit = nf90_format_cdf2, &
+    nf90_format_64bit_offset = nf90_format_cdf2, &
     nf90_format_64bit_data = nf90_format_cdf5
 
   !
