@@ -54,7 +54,9 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Other updates:
-    * Add README.INTEL for when using Intel MPI compiler 4.x
+    * Add README.K-Computer build recipe for using Fujitsu MPI compilers on the
+      K computer at RIKEN in Japan
+    * Add README.INTEL build recipe for using Intel MPI compilers 4.x
     * Build dependency rule is added for files configure and configure.in
     * PnetCDF checks MPICC/MPICXX/MPIF77/MPIF90 instead of CC/CXX/F77/F90/FC.
       If MPICC/MPICXX/MPIF77/MPIF90 are set, PnetCDF will ignore
