@@ -18,9 +18,13 @@ The K computer is a cross-compile system.  Be sure to run configure with the
 --build and --host flags to put it in "cross compile mode".  This will make
 configure use compile-only tests, instead of the usual compile-and-run tests
 (running tests on the K computer login node will not work.) Below shows a
-configure command that was used successfully on K. Note that LDFLAGS="-L."
-is necessary as the Fujitsu Fortran compiler requires no "-L" for its
-internal library files. Without this, configure command may fail.
+configure command that was used successfully on K.
+
+Please read the file README.Fujitsu for a bug in autoconf 2.69 and how to
+obtain the fix patch for it. If this bug is not applied to the autoconf
+utility, please add LDFLAGS="-L." into the PnetCDF configure command line.
+Adding LDFLAGS="-L." is necessary as the Fujitsu Fortran compiler requires no
+"-L" for its internal library files.  Without this, configure command may fail.
 
 ./configure --prefix=/path/to/install \
             --host=sparc64-unknown-linux-gnu \
@@ -37,6 +41,9 @@ internal library files. Without this, configure command may fail.
             TEST_MPIRUN="mpiexec -n NP" \
             TEST_SEQRUN="mpiexec -n 1"
 
+----------------
+Testing PnetCDF:
+----------------
 
 One way to run "make check" or "make ptest" on K's compute nodes is through an
 interactive job.  An example command to submit an interactive job requesting
