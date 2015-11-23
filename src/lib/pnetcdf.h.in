@@ -37,6 +37,7 @@ extern "C" {
 
 /* to make PnetCDF error codes compatible to netCDF, below we keep an exact
  * same copy of netcdf.h and re-use their defined values
+ * Sync-ed with netcdf.h of version 4.4.0-rc5
  */
 #ifndef _NETCDF_
 
@@ -132,22 +133,26 @@ typedef int nc_type;
 #define NC_NOFILL	0x100	/**< Argument to nc_set_fill() to turn off filling of data. */
 
 /* Define the ioflags bits for nc_create and nc_open.
-   currently unused: 0x0010,0x0020,0x0040,0x0080
+   currently unused:
+        0x0002
+	0x0040
+	0x0080
    and the whole upper 16 bits
 */
 
 #define NC_NOWRITE	 0x0000	/**< Set read-only access for nc_open(). */
 #define NC_WRITE    	 0x0001	/**< Set read-write access for nc_open(). */
-/* unused: 0x0002 */
 #define NC_CLOBBER	 0x0000 /**< Destroy existing file. Mode flag for nc_create(). */
 #define NC_NOCLOBBER     0x0004	/**< Don't destroy existing file. Mode flag for nc_create(). */
 
 #define NC_DISKLESS      0x0008  /**< Use diskless file. Mode flag for nc_open() or nc_create(). */
 #define NC_MMAP          0x0010  /**< Use diskless file with mmap. Mode flag for nc_open() or nc_create(). */
 
-#define NC_CLASSIC_MODEL 0x0100 /**< Enforce classic model. Mode flag for nc_create(). */
-#define NC_64BIT_OFFSET  0x0200  /**< Use large (64-bit) file offsets. Mode flag for nc_create(). */
 #define NC_64BIT_DATA    0x0020  /**< CDF-5 format: classic model but 64 bit dimensions and sizes */
+#define NC_CDF5          NC_64BIT_DATA  /**< Alias NC_CDF5 to NC_64BIT_DATA */
+
+#define NC_CLASSIC_MODEL 0x0100 /**< Enforce classic model on netCDF-4. Mode flag for nc_create(). */
+#define NC_64BIT_OFFSET  0x0200  /**< Use large (64-bit) file offsets. Mode flag for nc_create(). */
 
 /** \deprecated The following flag currently is ignored, but use in
  * nc_open() or nc_create() may someday support use of advisory
@@ -167,7 +172,10 @@ Use this in mode flags for both nc_create() and nc_open(). */
 /** Turn on MPI POSIX I/O.
 Use this in mode flags for both nc_create() and nc_open(). */
 #define NC_MPIPOSIX      0x4000 /**< \deprecated As of libhdf5 1.8.13. */
-#define NC_PNETCDF       0x8000	/**< Use parallel-netcdf library. Mode flag for nc_open(). */
+
+#define NC_INMEMORY      0x8000  /**< Read from memory. Mode flag for nc_open() or nc_create(). */
+
+#define NC_PNETCDF       (NC_MPIIO) /**< Use parallel-netcdf library; alias for NC_MPIIO. */
 
 /** Format specifier for nc_set_default_format() and returned
  *  by nc_inq_format. This returns the format as provided by
@@ -176,12 +184,20 @@ Use this in mode flags for both nc_create() and nc_open(). */
  *  4.0 introduces the third one. \see netcdf_format
  */
 /**@{*/
-#define NC_FORMAT_CLASSIC (1)
-#define NC_FORMAT_64BIT   (2)
-#define NC_FORMAT_NETCDF4 (3)
-#define NC_FORMAT_NETCDF4_CLASSIC  (4)
-#define NC_FORMAT_CDF2    NC_FORMAT_64BIT
-#define NC_FORMAT_CDF5    5
+#define NC_FORMAT_CLASSIC         (1)
+/* After adding CDF5 support, this flag
+   is somewhat confusing. So, it is renamed.
+   Note that the name in the contributed code
+   NC_FORMAT_64BIT was renamed to NC_FORMAT_CDF2
+*/
+#define NC_FORMAT_64BIT           (2) /**< \deprecated Saved for compatibility.  Use NC_FORMAT_64BIT_OFFSET or NC_FORMAT_64BIT_DATA, from netCDF 4.4.0 onwards. */
+#define NC_FORMAT_64BIT_OFFSET    (2)
+#define NC_FORMAT_NETCDF4         (3)
+#define NC_FORMAT_NETCDF4_CLASSIC (4)
+#define NC_FORMAT_64BIT_DATA      (5)
+
+/* Alias */
+#define NC_FORMAT_CDF5    NC_FORMAT_64BIT_DATA
 
 /**@}*/
 
@@ -199,16 +215,33 @@ Use this in mode flags for both nc_create() and nc_open(). */
  *    or nc_create.
  * More or less, the #1 values track the set of dispatch tables.
  * The #1 values are as follows.
+ * Note that CDF-5 returns NC_FORMAT_NC3, but sets the mode flag properly.
  */
 /**@{*/
-#define NC_FORMAT_UNDEFINED (0)
-#define NC_FORMAT_NC3     (1)
-#define NC_FORMAT_NC_HDF5 (2) /* netCDF-4 subset of HDF5 */
-#define NC_FORMAT_NC_HDF4 (3) /* netCDF-4 subset of HDF4 */
-#define NC_FORMAT_PNETCDF (4)
-#define NC_FORMAT_DAP2    (5)
-#define NC_FORMAT_DAP4    (6)
-#define NC_FORMAT_NC5     (7)
+
+#define NC_FORMATX_NC3       (1)
+#define NC_FORMATX_NC_HDF5   (2) /**< netCDF-4 subset of HDF5 */
+#define NC_FORMATX_NC4       NC_FORMATX_NC_HDF5 /**< alias */
+#define NC_FORMATX_NC_HDF4   (3) /**< netCDF-4 subset of HDF4 */
+#define NC_FORMATX_PNETCDF   (4)
+#define NC_FORMATX_DAP2      (5)
+#define NC_FORMATX_DAP4      (6)
+#define NC_FORMATX_UNDEFINED (0)
+
+  /* To avoid breaking compatibility (such as in the python library),
+   we need to retain the NC_FORMAT_xxx format as well. This may come
+  out eventually, as the NC_FORMATX is more clear that it's an extended
+  format specifier.*/
+
+#define NC_FORMAT_NC3       NC_FORMATX_NC3 /**< \deprecated As of 4.4.0, use NC_FORMATX_NC3 */
+#define NC_FORMAT_NC_HDF5   NC_FORMATX_NC_HDF5 /**< \deprecated As of 4.4.0, use NC_FORMATX_NC_HDF5 */
+#define NC_FORMAT_NC4       NC_FORMATX_NC4 /**< \deprecated As of 4.4.0, use NC_FORMATX_NC4 */
+#define NC_FORMAT_NC_HDF4   NC_FORMATX_NC_HDF4 /**< \deprecated As of 4.4.0, use NC_FORMATX_HDF4 */
+#define NC_FORMAT_PNETCDF   NC_FORMATX_PNETCDF /**< \deprecated As of 4.4.0, use NC_FORMATX_PNETCDF */
+#define NC_FORMAT_DAP2      NC_FORMATX_DAP2 /**< \deprecated As of 4.4.0, use NC_FORMATX_DAP2 */
+#define NC_FORMAT_DAP4      NC_FORMATX_DAP4 /**< \deprecated As of 4.4.0, use NC_FORMATX_DAP4 */
+#define NC_FORMAT_UNDEFINED NC_FORMATX_UNDEFINED /**< \deprecated As of 4.4.0, use NC_FORMATX_UNDEFINED */
+
 /**@}*/
 
 /** Let nc__create() or nc__open() figure out a suitable buffer size. */
@@ -252,7 +285,7 @@ As a rule, NC_MAX_VAR_DIMS <= NC_MAX_DIMS.
 /** This is the max size of an SD dataset name in HDF4 (from HDF4 documentation).*/
 #define NC_MAX_HDF4_NAME 64
 
-/** In HDF5 files you can set the Endianness of variables with
+/** In HDF5 files you can set the endianness of variables with
     nc_def_var_endian(). This define is used there. */
 /**@{*/
 #define NC_ENDIAN_NATIVE 0
@@ -300,7 +333,7 @@ there. */
 The specified netCDF ID does not refer to an
 open netCDF dataset. */
 #define	NC_EBADID	(-33)
-#define	NC_ENFILE	(-34)	   /**< Too many netcdf files open */
+#define	NC_ENFILE	(-34)	   /**< Too many netcdfs open */
 #define	NC_EEXIST	(-35)	   /**< netcdf file exists && NC_NOCLOBBER */
 #define	NC_EINVAL	(-36)	   /**< Invalid Argument */
 #define	NC_EPERM	(-37)	   /**< Write to read only */
@@ -423,7 +456,7 @@ by the desired type. */
 #define NC_EMAPTYPE      (-121)    /**< Mapped access for atomic types only. */
 #define NC_ELATEFILL     (-122)    /**< Attempt to define fill value when data already exists. */
 #define NC_ELATEDEF      (-123)    /**< Attempt to define var properties, like deflate, after enddef. */
-#define NC_EDIMSCALE     (-124)    /**< Probem with HDF5 dimscales. */
+#define NC_EDIMSCALE     (-124)    /**< Problem with HDF5 dimscales. */
 #define NC_ENOGRP        (-125)    /**< No group found. */
 #define NC_ESTORAGE      (-126)    /**< Can't specify both contiguous and chunking. */
 #define NC_EBADCHUNK     (-127)    /**< Bad chunksize. */
