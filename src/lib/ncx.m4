@@ -377,7 +377,7 @@ define(`Xmin',             ``X_'Upcase($1)`_MIN'')dnl
 define(`IXmax',           ``IX_'Upcase($1)`_MAX'')dnl
 dnl
 define(`Fmin',  `ifelse(index(`$1',`u'), 0, `0', `(double)Imin($1)')')dnl
-define(`Dmin',  `ifelse(index(`$1',`u'), 0, `0',         `Imin($1)')')dnl
+define(`Dmin',  `ifelse(index(`$1',`u'), 0, `0', `(double)Imin($1)')')dnl
 define(`FXmin', `ifelse(index(`$1',`u'), 0, `0', `(double)Xmin($1)')')dnl
 define(`DXmin', `ifelse(index(`$1',`u'), 0, `0',         `Xmin($1)')')dnl
 
@@ -408,7 +408,7 @@ dnl
 dnl For GET APIs boundary check
 dnl
 define(`GETF_CheckBND',
-`if (xx > Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
+`if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
 	*ip = ($1)xx;')
 
 dnl
@@ -419,7 +419,7 @@ define(`GETF_CheckBND2',
 `if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;',dnl for unsigned type
 `if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;
 	else if (xx == Upcase($1)_MIN) *ip = Upcase($1)_MIN;')
-	else if (xx > Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
+	else if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
 	else *ip = ($1)xx;')
 
 dnl
