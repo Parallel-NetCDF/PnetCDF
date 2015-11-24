@@ -9,22 +9,18 @@ RIKEN Advanced Institute for Computational Science in Kobe, Japan.
 http://www.aics.riken.jp/en/k-computer/about/
 
 The MPI compilers on the K computer are wrappers of Fujitsu compilers:
-    Fortran	mpifrtpx	(frtpx)
-    C		mpifccpx	(fccpx)
-    C++		mpiFCCpx	(FCCpx)
+    Language    MPI compiler    Sequential compiler
+  -----------  --------------  --------------------
+    Fortran     mpifrtpx        (frtpx)
+    C           mpifccpx        (fccpx)
+    C++         mpiFCCpx        (FCCpx)
 
 
 The K computer is a cross-compile system.  Be sure to run configure with the
 --build and --host flags to put it in "cross compile mode".  This will make
 configure use compile-only tests, instead of the usual compile-and-run tests
 (running tests on the K computer login node will not work.) Below shows a
-configure command that was used successfully on K.
-
-Please read the file README.Fujitsu for a bug in autoconf 2.69 and how to
-obtain the fix patch for it. If this bug is not applied to the autoconf
-utility, please add LDFLAGS="-L." into the PnetCDF configure command line.
-Adding LDFLAGS="-L." is necessary as the Fujitsu Fortran compiler requires no
-"-L" for its internal library files.  Without this, configure command may fail.
+configure command that was used to build PnetCDF successfully on K.
 
 ./configure --prefix=/path/to/install \
             --host=sparc64-unknown-linux-gnu \
@@ -40,6 +36,13 @@ Adding LDFLAGS="-L." is necessary as the Fujitsu Fortran compiler requires no
             LDFLAGS="-L." \
             TEST_MPIRUN="mpiexec -n NP" \
             TEST_SEQRUN="mpiexec -n 1"
+
+Please read the file README.Fujitsu for a bug in autoconf 2.69 and how to
+obtain the fix patch for it. If this bug is not applied to (or unable to due
+to permission issue) the autoconf utility, please add LDFLAGS="-L." to the
+configure command line.  Adding LDFLAGS="-L." is necessary as the Fujitsu
+Fortran compiler requires no "-L" for its internal library files.  Without
+this, configure command may fail.
 
 ----------------
 Testing PnetCDF:
