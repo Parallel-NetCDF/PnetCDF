@@ -394,12 +394,12 @@ dnl
 define(`GETI_CheckNegReturn',
        `ifelse(index(`$1',`u'), 0, ,
                index(`$2',`u'), 0,
-               `if ($3 < 0) return NC_ERANGE; /* because $4 is unsigned */')')dnl
+               `if ($3 < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because $4 is unsigned */')')dnl
 
 define(`GETI_CheckNegAssign',
        `ifelse(index(`$1',`u'), 0, ,
                index(`$2',`u'), 0,
-               `if ($3 < 0) status = NC_ERANGE; /* because $4 is unsigned */')')dnl
+               `if ($3 < 0) DEBUG_ASSIGN_ERROR(status, NC_ERANGE) /* because $4 is unsigned */')')dnl
 
 dnl
 dnl For PUT APIs:
@@ -2407,7 +2407,7 @@ ncmpix_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	while (nelems-- != 0)
 	{
 		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
-			status = NC_ERANGE;
+			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
 		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
 	}
 
@@ -2434,7 +2434,7 @@ ncmpix_pad_putn_$1_$2(void **xpp, MPI_Offset nelems, const $2 *tp)
 	while (nelems-- != 0)
 	{
 		if (*tp > ($2)Xmax($1) ifelse(index(`$2',`u'), 0, , index(`$1',`u'), 0, `|| *tp < 0',`|| *tp < Xmin(schar)'))
-			status = NC_ERANGE;
+			DEBUG_ASSIGN_ERROR(status, NC_ERANGE)
 		*xp++ = ($1) *tp++; /* type cast from $2 to $1 */
 	}
 
