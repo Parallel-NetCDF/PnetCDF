@@ -202,7 +202,7 @@ ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
 
     if (ref->nalloc > 0) {
         ncap->value = (NC_dim **) NCI_Calloc((size_t)ref->nalloc, sizeof(NC_dim *));
-        if (ncap->value == NULL) return NC_ENOMEM;
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         ncap->nalloc = ref->nalloc;
     }
 
@@ -210,7 +210,7 @@ ncmpii_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
     for (i=0; i<ref->ndefined; i++) {
         ncap->value[i] = dup_NC_dim(ref->value[i]);
         if (ncap->value[i] == NULL) {
-            status = NC_ENOMEM;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
             break;
         }
     }
@@ -242,7 +242,7 @@ incr_NC_dimarray(NC_dimarray *ncap,
     if (ncap->nalloc == 0) {
         assert(ncap->ndefined == 0);
         vp = (NC_dim **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_dim *));
-        if (vp == NULL) return NC_ENOMEM;
+        if (vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         ncap->value = vp;
         ncap->nalloc = NC_ARRAY_GROWBY;
@@ -250,7 +250,7 @@ incr_NC_dimarray(NC_dimarray *ncap,
     else if (ncap->ndefined + 1 > ncap->nalloc) {
         vp = (NC_dim **) NCI_Realloc(ncap->value,
              (size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_dim *));
-        if (vp == NULL) return NC_ENOMEM;
+        if (vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         ncap->value = vp;
         ncap->nalloc += NC_ARRAY_GROWBY;
@@ -301,7 +301,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     if (status != NC_NOERR) return status;
 
     /* check if called in define mode */
-    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
+    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     /* check if the name string is legal for netcdf format */
     file_ver = 1;
@@ -321,16 +321,16 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
         /* CDF2 format and LFS */
         if (size > X_UINT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
-            return NC_EDIMSIZE;
+            DEBUG_RETURN_ERROR(NC_EDIMSIZE)
     } else if ((ncp->flags & NC_64BIT_DATA)) {
         /* CDF5 format*/
         if (size < 0)
-            return NC_EDIMSIZE;
+            DEBUG_RETURN_ERROR(NC_EDIMSIZE)
     } else {
         /* CDF1 format */
         if (size > X_INT_MAX - 3 || (size < 0))
             /* "-3" handles rounded-up size */
-            return NC_EDIMSIZE;
+            DEBUG_RETURN_ERROR(NC_EDIMSIZE)
     }
 
     if (size == NC_UNLIMITED) {
@@ -338,19 +338,19 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
          * one per file
          */
         dimid = ncmpii_find_NC_Udim(&ncp->dims, &dimp);
-        if (dimid != -1) return NC_EUNLIMIT; /* found an existing one */
+        if (dimid != -1) DEBUG_RETURN_ERROR(NC_EUNLIMIT) /* found an existing one */
     }
 
     /* check if exceeds the upperbound has reached */
-    if (ncp->dims.ndefined >= NC_MAX_DIMS) return NC_EMAXDIMS;
+    if (ncp->dims.ndefined >= NC_MAX_DIMS) DEBUG_RETURN_ERROR(NC_EMAXDIMS)
 
     /* check if the name string is previously used */
     dimid = NC_finddim(&ncp->dims, name, &dimp);
-    if (dimid != -1) return NC_ENAMEINUSE;
+    if (dimid != -1) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     /* create a new dimension object */
     dimp = ncmpii_new_NC_dim(name, size);
-    if (dimp == NULL) return NC_ENOMEM;
+    if (dimp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* Add a new handle to the end of an array of handles */
     status = incr_NC_dimarray(&ncp->dims, dimp);
@@ -381,7 +381,7 @@ ncmpi_inq_dimid(int         ncid,
     if (status != NC_NOERR) return status;
 
     dimid = NC_finddim(&ncp->dims, name, NULL);
-    if (dimid == -1) return NC_EBADDIM;
+    if (dimid == -1) DEBUG_RETURN_ERROR(NC_EBADDIM)
 
     *dimid_ptr = dimid;
     return NC_NOERR;
@@ -403,7 +403,7 @@ ncmpi_inq_dim(int         ncid,
     if (status != NC_NOERR) return status;
 
     dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
-    if (dimp == NULL) return NC_EBADDIM;
+    if (dimp == NULL) DEBUG_RETURN_ERROR(NC_EBADDIM)
 
     if (name != NULL)
         /* in PnetCDF, name->cp is always NULL character terminated */
@@ -453,7 +453,7 @@ ncmpi_rename_dim(int         ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp)) return NC_EPERM;
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
@@ -465,14 +465,14 @@ ncmpi_rename_dim(int         ncid,
     if (status != NC_NOERR) return status;
 
     existid = NC_finddim(&ncp->dims, newname, &dimp);
-    if (existid != -1) return NC_ENAMEINUSE;
+    if (existid != -1) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     dimp = ncmpii_elem_NC_dimarray(&ncp->dims, dimid);
-    if (dimp == NULL) return NC_EBADDIM;
+    if (dimp == NULL) DEBUG_RETURN_ERROR(NC_EBADDIM)
 
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-        if (newStr == NULL) return NC_ENOMEM;
+        if (newStr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         ncmpii_free_NC_string(dimp->name);
         dimp->name = newStr;
@@ -493,7 +493,7 @@ ncmpi_rename_dim(int         ncid,
             /* newname's length is inconsistent with root's */
             printf("Warning: dimension name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE_DIM_NAME;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_DIM_NAME)
         }
     }
 

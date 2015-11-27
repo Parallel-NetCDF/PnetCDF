@@ -198,16 +198,16 @@ ncmpii_igetput_varn(NC               *ncp,
     MPI_Offset **_counts=NULL;
     MPI_Datatype ptype;
 
-    if (use_abuf && ncp->abuf == NULL) return NC_ENULLABUF;
+    if (use_abuf && ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* it is illegal for starts to be NULL */
-    if (starts == NULL) return NC_ENULLSTART;
+    if (starts == NULL) DEBUG_RETURN_ERROR(NC_ENULLSTART)
 
     if (counts != NULL) {
         for (j=0; j<num; j++) {
             for (i=0; i<varp->ndims; i++) {
                 if (counts[j][i] < 0) /* no negative counts[][] */
-                    return NC_ENEGATIVECNT;
+                    DEBUG_RETURN_ERROR(NC_ENEGATIVECNT)
             }
         }
     }
@@ -243,13 +243,13 @@ ncmpii_igetput_varn(NC               *ncp,
 
         if (status != NC_NOERR) return status;
 
-        if (bufcount != (int)bufcount) return NC_EINTOVERFLOW;
+        if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
         /* check if buftype is contiguous, if not, pack to one, cbuf */
         if (! iscontig_of_ptypes && bnelems > 0) {
             int position = 0;
             MPI_Offset packsize = bnelems*el_size;
-            if (packsize != (int)packsize) return NC_EINTOVERFLOW;
+            if (packsize != (int)packsize) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             cbuf = NCI_Malloc((size_t)packsize);
             free_cbuf = 1;

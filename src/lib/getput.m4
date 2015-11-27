@@ -123,7 +123,7 @@ ncmpii_calc_datatype_elems(NC               *ncp,
 
         /* check mismatch between bnelems and fnelems */
         if (fnelems != *bnelems) {
-            err = NC_EIOMISMATCH;
+            DEBUG_ASSIGN_ERROR(err, NC_EIOMISMATCH)
             (fnelems>*bnelems) ? (fnelems=*bnelems) : (*bnelems=fnelems);
             /* only handle partial of the request, smaller number of the two */
         }
@@ -182,13 +182,10 @@ ncmpii_create_imaptype(NC_var           *varp,
      * dim is the first dimension (C order, eg. ZYX) that has
      * non-contiguous imap.
      */
-    if (imap_contig_blocklen != (int)imap_contig_blocklen) {
-        fprintf(stderr, "Error at line %d of file %s (%s)\n", __LINE__,
-                __FILE__, ncmpi_strerror(NC_EINTOVERFLOW));
-        return NC_EINTOVERFLOW;
-    }
+    if (imap_contig_blocklen != (int)imap_contig_blocklen)
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     if (count[dim] != (int)count[dim] || imap[dim] != (int)imap[dim])
-        return NC_EINTOVERFLOW;
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     MPI_Type_vector((int)count[dim], (int)imap_contig_blocklen, (int)imap[dim],
                     ptype, imaptype);
@@ -196,7 +193,8 @@ ncmpii_create_imaptype(NC_var           *varp,
 
     for (dim--; dim>=0; dim--) {
         MPI_Datatype tmptype;
-        if (count[dim] != (int)count[dim]) return NC_EINTOVERFLOW;
+        if (count[dim] != (int)count[dim])
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
         MPI_Type_create_hvector((int)count[dim], 1, imap[dim]*el_size,
                                 *imaptype, &tmptype);
@@ -289,7 +287,7 @@ ncmpii_getput_varm(NC               *ncp,
 #endif
         if (imap != NULL) {
             fprintf(stderr, "varm APIs for subfiling is yet to be implemented\n");
-            return NC_ENOTSUPPORT;
+            DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
         }
         
         return ncmpii_subfile_getput_vars(ncp, varp, start, count, stride,
@@ -313,13 +311,13 @@ ncmpii_getput_varm(NC               *ncp,
     err = ncmpii_calc_datatype_elems(ncp, varp, start, count, stride, rw_flag,
                                      buftype, &ptype, &bufcount, &bnelems,
                                      &nbytes, &el_size, &buftype_is_contig);
-    if (err == NC_EIOMISMATCH) warning = err; 
+    if (err == NC_EIOMISMATCH) DEBUG_ASSIGN_ERROR(warning, err) 
     else if (err != NC_NOERR) goto err_check;
 
     /* because nbytes will be used as the argument "count" in MPI-IO
      * read/write calls and the argument "count" is of type int */
     if (nbytes != (int)nbytes) {
-        err = NC_EINTOVERFLOW;
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         goto err_check;
     }
 
@@ -340,7 +338,7 @@ ncmpii_getput_varm(NC               *ncp,
                                       NULL, &offset, &filetype, NULL);
     if (err != NC_NOERR) goto err_check;
 
-    if (bufcount != (int)bufcount) err = NC_EINTOVERFLOW;
+    if (bufcount != (int)bufcount) DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
 
 err_check:
     /* If io_method is COLL_IO and an error occurs, we'll still conduct a
@@ -373,7 +371,7 @@ err_check:
         MPI_Offset outsize=bnelems*el_size;
         /* assert(bnelems > 0); */
         if (outsize != (int)outsize && status == NC_NOERR)
-            status = NC_EINTOVERFLOW;
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         /* Step 1: pack buf into a contiguous buffer, lbuf */
         if (!buftype_is_contig) { /* buftype is not contiguous */
@@ -476,8 +474,10 @@ mpi_io:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         else { /* io_method == INDEP_IO */
@@ -486,8 +486,10 @@ mpi_io:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         int put_size;
@@ -501,8 +503,10 @@ mpi_io:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         else { /* io_method == INDEP_IO */
@@ -511,8 +515,10 @@ mpi_io:
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         int get_size;
@@ -533,7 +539,7 @@ mpi_io:
         int position;
         MPI_Offset insize=bnelems*el_size;
         if (insize != (int)insize && status == NC_NOERR)
-            status = NC_EINTOVERFLOW;
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         if (need_convert) {
             /* xbuf cannot be buf, but cbuf can */

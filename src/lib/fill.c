@@ -76,7 +76,7 @@ inq_default_fill_value(int type, void *fill_value)
         case NC_UINT   :       *(unsigned int*)fill_value = NC_FILL_UINT;   break;
         case NC_INT64  :          *(long long*)fill_value = NC_FILL_INT64;  break;
         case NC_UINT64 : *(unsigned long long*)fill_value = NC_FILL_UINT64; break;
-        default : return NC_EBADTYPE;
+        default : DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
     return NC_NOERR;
 }
@@ -96,7 +96,7 @@ ncmpii_fill_var_buf(const NC_var *varp,
         /* User defined fill value */
         NC_attr *attrp = varp->attrs.value[indx];
         if (attrp->type != varp->type || attrp->nelems != 1)
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
         /* Use the user defined value */
         char *bufp = buf;
@@ -119,7 +119,7 @@ ncmpii_fill_var_buf(const NC_var *varp,
             case NC_UINT   : xvalue = &FILL_UINT[0];   break;
             case NC_INT64  : xvalue = &FILL_INT64[0];  break;
             case NC_UINT64 : xvalue = &FILL_UINT64[0]; break;
-            default : return NC_EBADTYPE;
+            default : DEBUG_RETURN_ERROR(NC_EBADTYPE)
         }
 
         char *bufp = buf;
@@ -189,7 +189,7 @@ ncmpii_fill_var_rec(NC         *ncp,
                                 MPI_INFO_NULL);
 
     count *= varp->xsz;
-    if (count != (int)count) err = NC_EINTOVERFLOW;
+    if (count != (int)count) DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
     TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, (int)count,
                                     MPI_BYTE, &mpistatus);
     NCI_Free(buf);
@@ -223,25 +223,25 @@ ncmpi_fill_var_rec(int        ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) return err;
 
-    if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
 
     /* This must be called in data mode */
-    if (NC_indef(ncp)) return NC_EINDEFINE;                                
+    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)                                
 
     /* must be called in collective data mode */
-    if (NC_indep(ncp)) return NC_EINDEP;
+    if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP)
 
     err = ncmpii_NC_lookupvar(ncp, varid, &varp);
     if (err != NC_NOERR) return err;
 
     /* error if this is not a record variable */
-    if (!IS_RECVAR(varp)) return NC_ENOTRECVAR;
+    if (!IS_RECVAR(varp)) DEBUG_RETURN_ERROR(NC_ENOTRECVAR)
 
     /* check if _FillValue attribute is defined */
     indx = ncmpii_NC_findattr(&varp->attrs, _FillValue);
 
     /* error if the fill mode of this variable is not on */
-    if (varp->no_fill && indx == -1) return NC_ENOTFILL;
+    if (varp->no_fill && indx == -1) DEBUG_RETURN_ERROR(NC_ENOTFILL)
 
     return ncmpii_fill_var_rec(ncp, varp, recno);
 }
@@ -263,10 +263,10 @@ ncmpi_set_fill(int  ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
 
     /* check if called in define mode */
-    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
+    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     if (ncp->safe_mode) {
         int root_fill_mode=fill_mode;
@@ -276,7 +276,7 @@ ncmpi_set_fill(int  ncid,
         if (fill_mode != root_fill_mode) {
             /* dataset's fill mode is inconsistent with root's */
             printf("Warning: fill mode set in %s() is inconsistent\n", __func__);
-            status = NC_EMULTIDEFINE_FILL_MODE;
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_FILL_MODE)
         }
     }
 
@@ -287,7 +287,7 @@ ncmpi_set_fill(int  ncid,
     else if (fill_mode == NC_FILL)
         fClr(ncp->flags, NC_NOFILL);
     else
-        return NC_EINVAL; /* Invalid fill_mode */
+        DEBUG_RETURN_ERROR(NC_EINVAL) /* Invalid fill_mode */
 
     if (old_fill_mode != NULL) *old_fill_mode = oldmode;
 
@@ -317,10 +317,10 @@ ncmpi_def_var_fill(int   ncid,
     err = ncmpii_NC_check_id(ncid, &ncp);
     if (err != NC_NOERR) return err;
 
-    if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
 
     /* must be called in define mode */
-    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
+    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     /* find the pointer to this variable's object */
     err = ncmpii_NC_lookupvar(ncp, varid, &varp);
@@ -336,7 +336,7 @@ ncmpi_def_var_fill(int   ncid,
             /* variable's fill mode is inconsistent with root's */
             printf("Warning: variable (%s) fill mode (%d) set in %s() is inconsistent\n",
                    varp->name->cp, no_fill, __func__);
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE_VAR_FILL_MODE;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_FILL_MODE)
         }
 
         /* check if fill_value is consistent among processes */
@@ -354,7 +354,7 @@ ncmpi_def_var_fill(int   ncid,
             /* variable's fill value is inconsistent with root's */
             printf("Warning: variable (%s) fill value set in %s() is inconsistent\n",
                    varp->name->cp, __func__);
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE_VAR_FILL_VALUE;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_FILL_VALUE)
         }
         if (free_fill_value) {
             NCI_Free(fill_value);

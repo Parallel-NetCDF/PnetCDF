@@ -232,7 +232,7 @@ ncmpi_create(MPI_Comm    comm,
             /* cmodes are inconsistent, overwrite local cmode with root's */
             printf("rank %d: Warning - inconsistent file create mode, overwrite with root's\n",rank);
             cmode = root_cmode;
-            status = NC_EMULTIDEFINE_OMODE;
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
         }
         TRACE_COMM(MPI_Allreduce)(&status, &err, 1, MPI_INT, MPI_MIN, comm);
         if (err != NC_NOERR) return status;
@@ -244,7 +244,7 @@ ncmpi_create(MPI_Comm    comm,
     /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
     if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
                  (NC_64BIT_OFFSET|NC_64BIT_DATA))
-        status = NC_EINVAL_CMODE;
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
     /* In safe_mode, cmodes are sync-ed, so all processes can return the same
      * error code. But, when not in safe mode, if cmode is not consistent
      * among processes, then some processes might not violate this above rule
@@ -292,7 +292,7 @@ ncmpi_create(MPI_Comm    comm,
 
     /* allocate buffer for header object NC */
     if ((ncp = ncmpii_new_NC(&chunksize)) == NULL)
-        return NC_ENOMEM;
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     ncp->safe_mode = safe_mode;
     ncp->abuf      = NULL;
@@ -312,25 +312,25 @@ ncmpi_create(MPI_Comm    comm,
 
     /* set the file format version based on the create mode, cmode */
     if (fIsSet(cmode, NC_64BIT_DATA)) {
-        if (SIZEOF_MPI_OFFSET <  8) return NC_ESMALL;
+        if (SIZEOF_MPI_OFFSET <  8) DEBUG_RETURN_ERROR(NC_ESMALL)
         fSet(ncp->flags, NC_64BIT_DATA);
     } else if (fIsSet(cmode, NC_64BIT_OFFSET)) {
         /* unlike serial netcdf, we will not bother to support
          * NC_64BIT_OFFSET on systems with off_t smaller than 8 bytes.
          * serial netcdf has proven it's possible if datasets are small, but
          * that's a hassle we don't want to worry about */
-        if (SIZEOF_OFF_T < 8) return NC_ESMALL;
+        if (SIZEOF_OFF_T < 8) DEBUG_RETURN_ERROR(NC_ESMALL)
         fSet(ncp->flags, NC_64BIT_OFFSET);
     } else {
         /* check default format */
         int default_format;
         ncmpi_inq_default_format(&default_format);
         if (default_format == NC_FORMAT_CDF5) {
-            if (SIZEOF_MPI_OFFSET <  8) return NC_ESMALL;
+            if (SIZEOF_MPI_OFFSET <  8) DEBUG_RETURN_ERROR(NC_ESMALL)
             fSet(ncp->flags, NC_64BIT_DATA);
         }
         else if (default_format == NC_FORMAT_CDF2) {
-            if (SIZEOF_OFF_T < 8) return NC_ESMALL;
+            if (SIZEOF_OFF_T < 8) DEBUG_RETURN_ERROR(NC_ESMALL)
             fSet(ncp->flags, NC_64BIT_OFFSET);
         }
         else
@@ -411,7 +411,7 @@ ncmpi_open(MPI_Comm    comm,
             /* omodes are inconsistent, overwrite local omode with root's */
             printf("rank %d: Warning - inconsistent file open mode, overwrite with root's\n",rank);
             omode = root_omode;
-            status = NC_EMULTIDEFINE_OMODE;
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
         }
     }
 
@@ -449,7 +449,7 @@ ncmpi_open(MPI_Comm    comm,
 
     ncp = ncmpii_new_NC(&chunksize);
     if (ncp == NULL)
-        return NC_ENOMEM;
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     ncp->safe_mode = safe_mode;
     ncp->old       = NULL;
@@ -570,7 +570,7 @@ ncmpi_inq_file_format(char *filename,
     status = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL,
                         &ncid);
     if (status == NC_ENOTNC)
-        *formatp = NC_FORMAT_UNKNOWN;
+        DEBUG_ASSIGN_ERROR(*formatp, NC_FORMAT_UNKNOWN)
     if (status != NC_NOERR)
         return status;
 
@@ -655,12 +655,12 @@ ncmpi_redef(int ncid) {
     if (status != NC_NOERR)
         return status;
 
-    if (NC_readonly(ncp)) return NC_EPERM; /* read-only */
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM) /* read-only */
     /* if open mode is inconsistent, then this return might cause parallel
      * program to hang */
 
     /* cannot be in define mode */
-    if (NC_indef(ncp)) return NC_EINDEFINE;
+    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     /* sync all metadata, including numrecs, if changed in independent mode.
      * also ensure exiting define mode always entering collective data mode
@@ -675,7 +675,7 @@ ncmpi_redef(int ncid) {
 
     /* duplicate a header to be uses in enddef() for checking if header grows */
     ncp->old = ncmpii_dup_NC(ncp);
-    if (ncp->old == NULL) return NC_ENOMEM;
+    if (ncp->old == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* we are now entering define mode */
     fSet(ncp->flags, NC_INDEF);
@@ -694,7 +694,7 @@ ncmpi_begin_indep_data(int ncid)
     if (status != NC_NOERR) return status;
 
     if (NC_indef(ncp))  /* must not be in define mode */
-        return NC_EINDEFINE;
+        DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     if (NC_indep(ncp))  /* already in indep data mode */
         return NC_NOERR;
@@ -733,7 +733,7 @@ ncmpi_end_indep_data(int ncid) {
     if (status != NC_NOERR) return status;
 
     if (!NC_indep(ncp)) /* must be in independent data mode */
-        return NC_ENOTINDEP;
+        DEBUG_RETURN_ERROR(NC_ENOTINDEP)
 
     return ncmpii_end_indep_data(ncp);
 }
@@ -791,7 +791,7 @@ ncmpi_enddef(int ncid) {
     if (status != NC_NOERR) return status;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
-        return NC_ENOTINDEFINE;
+        DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     return ncmpii_enddef(ncp);
 }
@@ -812,7 +812,7 @@ ncmpi__enddef(int        ncid,
     if (status != NC_NOERR) return status;
 
     if (!NC_indef(ncp)) /* must currently in define mode */
-        return NC_ENOTINDEFINE;
+        DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     return ncmpii__enddef(ncp, h_minfree, v_align, v_minfree, r_align);
 }
@@ -831,7 +831,7 @@ ncmpi_sync_numrecs(int ncid) {
     if (status != NC_NOERR) return status;
 
     /* cannot be in define mode */
-    if (NC_indef(ncp)) return NC_EINDEFINE;
+    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     /* check if we have defined record variables */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
@@ -875,7 +875,7 @@ ncmpi_sync(int ncid) {
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_indef(ncp)) return NC_EINDEFINE;
+    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     if (NC_readonly(ncp))
         /* calling sync for file opened for read only means re-read header */
@@ -992,10 +992,10 @@ ncmpii_check_mpifh(NC  *ncp,
     int mpireturn;
 
     if (collective && NC_indep(ncp)) /* collective handle but in indep mode */
-        return NC_EINDEP;
+        DEBUG_RETURN_ERROR(NC_EINDEP)
 
     if (!collective && !NC_indep(ncp)) /* indep handle but in collective mode */
-        return NC_ENOTINDEP;
+        DEBUG_RETURN_ERROR(NC_ENOTINDEP)
 
     if (collective && !NC_collectiveFhOpened(ncp->nciop)) {
         TRACE_IO(MPI_File_open)(ncp->nciop->comm, (char*)ncp->nciop->path,
@@ -1094,7 +1094,7 @@ int ncmpi_inq_malloc_size(MPI_Offset *size)
     ncmpii_inq_malloc_size(size);
     return NC_NOERR;
 #else
-    return NC_ENOTENABLED;
+    DEBUG_RETURN_ERROR(NC_ENOTENABLED)
 #endif
 }
 
@@ -1106,7 +1106,7 @@ int ncmpi_inq_malloc_max_size(MPI_Offset *size)
     ncmpii_inq_malloc_max_size(size);
     return NC_NOERR;
 #else
-    return NC_ENOTENABLED;
+    DEBUG_RETURN_ERROR(NC_ENOTENABLED)
 #endif
 }
 
@@ -1118,7 +1118,7 @@ int ncmpi_inq_malloc_list(void)
     ncmpii_inq_malloc_list();
     return NC_NOERR;
 #else
-    return NC_ENOTENABLED;
+    DEBUG_RETURN_ERROR(NC_ENOTENABLED)
 #endif
 }
 

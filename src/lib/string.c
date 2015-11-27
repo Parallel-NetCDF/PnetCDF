@@ -8,6 +8,7 @@
 # include "ncconfig.h"
 #endif
 
+#include <stdio.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -52,18 +53,18 @@ ncmpii_NC_check_name_CDF1(const char *name)
     assert(name != NULL);
 
     if (*name == 0)
-        return NC_EBADNAME; /* empty names disallowed */
+        DEBUG_RETURN_ERROR(NC_EBADNAME) /* empty names disallowed */
 
     for (; *cp != 0; cp++) {
         int ch = *cp;
         if (!isalnum(ch)) {
             if (ch != '_' && ch != '-' && ch != '+' && ch != '.' &&
                 ch != ':' && ch != '@' && ch != '(' && ch != ')')
-                return NC_EBADNAME;
+                DEBUG_RETURN_ERROR(NC_EBADNAME)
         }
     }
     if (cp - name > NC_MAX_NAME)
-        return NC_EMAXNAME;
+        DEBUG_RETURN_ERROR(NC_EMAXNAME)
 
     return NC_NOERR;
 }
@@ -240,12 +241,12 @@ ncmpii_NC_check_name_CDF2(const char *name)
 
 	if(*name == 0		/* empty names disallowed */
 	   || strchr(cp, '/'))	/* '/' can't be in a name */
-		return NC_EBADNAME;
+		DEBUG_RETURN_ERROR(NC_EBADNAME)
 
 	/* check validity of any UTF-8 */
 	utf8_stat = utf8proc_check((const unsigned char *)name);
 	if (utf8_stat < 0)
-	    return NC_EBADNAME;
+	    DEBUG_RETURN_ERROR(NC_EBADNAME)
 
 	/* First char must be [a-z][A-Z][0-9]_ | UTF8 */
 	ch = (uchar)*cp;
@@ -254,11 +255,11 @@ ncmpii_NC_check_name_CDF2(const char *name)
 	       && !('a' <= ch && ch <= 'z')
                && !('0' <= ch && ch <= '9')
 	       && ch != '_' )
-		return NC_EBADNAME;
+		DEBUG_RETURN_ERROR(NC_EBADNAME)
 	    cp++;
 	} else {
 	    if((skip = nextUTF8(cp)) < 0)
-		return NC_EBADNAME;
+		DEBUG_RETURN_ERROR(NC_EBADNAME)
 	    cp += skip;
 	}
 
@@ -267,17 +268,17 @@ ncmpii_NC_check_name_CDF2(const char *name)
 	    /* handle simple 0x00-0x7f characters here */
 	    if(ch <= 0x7f) {
                 if( ch < ' ' || ch > 0x7E) /* control char or DEL */
-		  return NC_EBADNAME;
+		  DEBUG_RETURN_ERROR(NC_EBADNAME)
 		cp++;
 	    } else {
-		if((skip = nextUTF8(cp)) < 0) return NC_EBADNAME;
+		if((skip = nextUTF8(cp)) < 0) DEBUG_RETURN_ERROR(NC_EBADNAME)
 		cp += skip;
 	    }
 	    if(cp - name > NC_MAX_NAME)
-		return NC_EMAXNAME;
+		DEBUG_RETURN_ERROR(NC_EMAXNAME)
 	}
 	if(ch <= 0x7f && isspace(ch)) /* trailing spaces disallowed */
-	    return NC_EBADNAME;
+	    DEBUG_RETURN_ERROR(NC_EBADNAME)
 	return NC_NOERR;
 }
 
@@ -336,7 +337,7 @@ ncmpii_set_NC_string(NC_string  *ncstrp,
 
     slen = strlen(str);
 
-    if (ncstrp->nchars < (MPI_Offset)slen) return NC_ENOTINDEFINE;
+    if (ncstrp->nchars < (MPI_Offset)slen) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     memcpy(ncstrp->cp, str, slen);
 

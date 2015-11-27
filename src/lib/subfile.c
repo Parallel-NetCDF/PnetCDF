@@ -756,7 +756,7 @@ ncmpii_subfile_getput_vars(NC               *ncp,
         bufcount = 1;
         for (i=0; i<varp->ndims; i++) {
             if (count[i] < 0)  /* no negative count[] */
-                return NC_ENEGATIVECNT;
+                DEBUG_RETURN_ERROR(NC_ENEGATIVECNT)
             bufcount *= count[i];
         }
         /* assign buftype match with the variable's data type */
@@ -781,8 +781,8 @@ ncmpii_subfile_getput_vars(NC               *ncp,
     if (!buftype_is_contig && bufcount > 0 && bnelems > 0) {
         int position=0;
         MPI_Offset outsize = bnelems * bufcount * el_size;
-        if (outsize  != (int)outsize) return NC_EINTOVERFLOW;
-        if (bufcount != (int)bufcount) return NC_EINTOVERFLOW;
+        if (outsize  != (int)outsize) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         cbuf = NCI_Malloc((size_t)outsize);
         if (rw_flag == WRITE_REQ)
             MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,

@@ -71,7 +71,7 @@
           ! use a number > X_INT_MAX (which is 2147483647)
           buf_flt  =  2147483648.0
           buf_dbl  =  2147483648.0
-          buf_int8 =  2147483648.0
+          buf_int8 =  2147483648_INT8_KIND
 
           err = nfmpi_put_att_real(ncid, NF_GLOBAL, "attr1", NF_INT,
      +                             1_MPI_OFFSET_KIND, buf_flt)

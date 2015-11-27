@@ -37,7 +37,7 @@ check_recsize_too_big(NC *ncp)
      * variables in this dataset */
     if (ncp->recsize != (MPI_Aint)ncp->recsize) {
         fprintf(stderr, "Type overflow: unable to read/write multiple records in this dataset\non this platform. Please either access records of this record variable\none-at-a-time or run on a 64 bit platform\n");
-        ret = NC_ESMALL;
+        DEBUG_ASSIGN_ERROR(ret, NC_ESMALL)
     }
     /* the assert here might be harsh, but without it, users will get corrupt
      * data. Now, we just skip this request to avoid this assertion. */
@@ -66,36 +66,36 @@ NC_start_count_stride_ck(const NC         *ncp,
     if (varp->ndims == 0) return NC_NOERR; /* 'scalar' variable */
 
     /* negative start[] is illegal */
-    if (start[0] < 0) return NC_EINVALCOORDS;
+    if (start[0] < 0) DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 
     if (IS_RECVAR(varp)) {
         if (!fIsSet(ncp->flags, NC_64BIT_DATA) && /* not CDF-5 */
             start[0] > X_UINT_MAX) /* sanity check */
-            return NC_EINVALCOORDS;
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 
         if (count != NULL && count[0] < 0) /* no negative count[] */
-            return NC_ENEGATIVECNT;
+            DEBUG_RETURN_ERROR(NC_ENEGATIVECNT)
 
         /* for record variable, [0] is the NC_UNLIMITED dimension */
         if (rw_flag == READ_REQ) { /* read cannot go beyond current numrecs */
             if (start[0] >= ncp->numrecs)
-                return NC_EINVALCOORDS;
+                DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 
             if (count != NULL) {
                 if (stride == NULL) { /* for vara APIs */
                     if (start[0] + count[0] > ncp->numrecs)
-                        return NC_EEDGE;
+                        DEBUG_RETURN_ERROR(NC_EEDGE)
                 }
                 else { /* for vars APIs */
                     if (count[0] > 0 &&
                         start[0] + (count[0]-1) * stride[0] >= ncp->numrecs)
-                        return NC_EEDGE;
+                        DEBUG_RETURN_ERROR(NC_EEDGE)
                 }
             }
             /* else is for var1 APIs */
         }
 
-        if (stride != NULL && stride[0] == 0) return NC_ESTRIDE;
+        if (stride != NULL && stride[0] == 0) DEBUG_RETURN_ERROR(NC_ESTRIDE)
 
         /* In collective data mode where numrecs is always kept consistent
          * across memory, then there is no need to update numrecs.
@@ -122,24 +122,24 @@ NC_start_count_stride_ck(const NC         *ncp,
 
     for (; i<varp->ndims; i++) {
         if (start[i] < 0 || start[i] >= varp->shape[i])
-            return NC_EINVALCOORDS;
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
 
-        if (varp->shape[i] < 0) return NC_EEDGE;
+        if (varp->shape[i] < 0) DEBUG_RETURN_ERROR(NC_EEDGE)
 
         if (count != NULL) {
             if (count[i] < 0) /* no negative count[] */
-                return NC_ENEGATIVECNT;
+                DEBUG_RETURN_ERROR(NC_ENEGATIVECNT)
 
             if (stride == NULL) { /* for vara APIs */
                 if (count[i] > varp->shape[i] ||
                     start[i] + count[i] > varp->shape[i])
-                    return NC_EEDGE;
+                    DEBUG_RETURN_ERROR(NC_EEDGE)
             }
             else { /* for vars APIs */
                 if (count[i] > 0 &&
                     start[i] + (count[i]-1) * stride[i] >= varp->shape[i])
-                    return NC_EEDGE;
-                if (stride[i] == 0) return NC_ESTRIDE;
+                    DEBUG_RETURN_ERROR(NC_EEDGE)
+                if (stride[i] == 0) DEBUG_RETURN_ERROR(NC_ESTRIDE)
             }
         }
         /* else is for var1 APIs */
@@ -286,7 +286,7 @@ ncmpii_type_create_subarray(int           ndims,
     MPI_Datatype type1, type2;
     MPI_Aint extent, size, array_size, stride, disps[3];
 
-    if (ndims == 0) return NC_EDIMMETA;
+    if (ndims == 0) DEBUG_RETURN_ERROR(NC_EDIMMETA)
 
 #ifdef HAVE_MPI_TYPE_GET_EXTENT
     MPI_Aint lb;
@@ -424,7 +424,7 @@ ncmpii_type_create_subarray64(int           ndims,
     MPI_Aint lb;
 #endif
 
-    if (ndims == 0) return NC_EDIMMETA;
+    if (ndims == 0) DEBUG_RETURN_ERROR(NC_EDIMMETA)
 
     /* check if any of the dimensions is larger than 2^31-1 */
     tag = 0;
@@ -448,7 +448,7 @@ ncmpii_type_create_subarray64(int           ndims,
             if (array_of_sizes[i]    != sizes[i] ||
                 array_of_subsizes[i] != subsizes[i] ||
                 array_of_starts[i]   != starts[i])
-                return NC_EINTOVERFLOW;
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         }
 #ifdef HAVE_MPI_TYPE_CREATE_SUBARRAY
         err = MPI_Type_create_subarray(ndims, sizes, subsizes, starts,
@@ -477,7 +477,7 @@ ncmpii_type_create_subarray64(int           ndims,
      * cause overflow.
      */
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-    return NC_EAINT_TOO_SMALL;
+    DEBUG_RETURN_ERROR(NC_EAINT_TOO_SMALL)
 #endif
 
 #ifdef HAVE_MPI_TYPE_GET_EXTENT
@@ -492,7 +492,7 @@ ncmpii_type_create_subarray64(int           ndims,
         /* blklens argument in MPI_Type_create_hindexed() is of type int */
         blklens[1] = (int)array_of_subsizes[0];
         if (array_of_subsizes[0] != blklens[1]) /* check int overflow */
-            return NC_EINTOVERFLOW;
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         disps[1] = extent * array_of_starts[0];
 
 #if defined (HAVE_MPI_TYPE_CREATE_HINDEXED) && defined(HAVE_MPI_TYPE_CREATE_RESIZED)
@@ -529,7 +529,7 @@ ncmpii_type_create_subarray64(int           ndims,
     blocklength = (int)array_of_subsizes[ndims-1];
     if (array_of_subsizes[ndims-2] != count ||
         array_of_subsizes[ndims-1] != blocklength) /* check int overflow */
-        return NC_EINTOVERFLOW;
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     stride = array_of_sizes[ndims-1] * extent;
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
     err = MPI_Type_create_hvector(count, blocklength, stride, oldtype, &type1);
@@ -546,7 +546,7 @@ ncmpii_type_create_subarray64(int           ndims,
     for (i=ndims-3; i>=0; i--) {
         count = (int)array_of_subsizes[i];
         if (array_of_subsizes[i] != count) /* check int overflow */
-            return NC_EINTOVERFLOW;
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         stride *= array_of_sizes[i+1];
 #ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
         err = MPI_Type_create_hvector(count, 1, stride, type1, &type2);
@@ -624,7 +624,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
     /* calculate the request size */
     nbytes = varp->xsz;
     for (dim=0; dim<varp->ndims; dim++) nbytes *= count[dim];
-    if (nbytes != (int)nbytes) return NC_EINTOVERFLOW;
+    if (nbytes != (int)nbytes) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     if (blocklen != NULL) *blocklen = (int)nbytes;
 
     /* when nbytes == 0 or varp is a scalar, i.e. varp->ndims == 0, no need to
@@ -665,7 +665,7 @@ ncmpii_vara_create_filetype(NC               *ncp,
         if (status != NC_NOERR) return status;
 #endif
         /* check overflow, because 1st argument of hvector is of type int */
-        if (count[0] != (int) count[0]) return NC_EINTOVERFLOW;
+        if (count[0] != (int) count[0]) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
         offset += start[0] * ncp->recsize;
 
@@ -819,7 +819,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
     /* check 4-byte integer overflow (blockcounts in MPI_Type_hvector
        is of type int while count[] is of type MPI_Offset */
     if (count[ndims-1] != blockcounts[ndims-1])
-        return NC_EINTOVERFLOW;
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     /* blocklens[] is unlikely a big value */
     blocklens[ndims-1] = varp->xsz;
 
@@ -839,7 +839,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
     /* check 4-byte integer overflow */
     if (stride_off != blockstride[ndims-1])
-        return NC_EINTOVERFLOW;
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #endif
 
     for (dim=ndims-1; dim>=0; dim--) {
@@ -864,7 +864,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
             blockcounts[dim-1] = (int)count[dim - 1];
             /* check 4-byte integer overflow */
             if (count[dim-1] != blockcounts[dim-1])
-                return NC_EINTOVERFLOW;
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             if (dim-1 == 0 && IS_RECVAR(varp)) {
                 stride_off = stride[dim-1] * ncp->recsize;
@@ -878,7 +878,7 @@ ncmpii_vars_create_filetype(NC               *ncp,
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
             /* check 4-byte integer overflow */
             if (stride_off != blockstride[dim-1])
-                return NC_EINTOVERFLOW;
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #endif
         }
     }
@@ -924,7 +924,7 @@ ncmpii_file_set_view(NC           *ncp,
            ftypes[0] = MPI_BYTE;
 
         /* check if header size > 2^31 */
-        if (ncp->begin_var != blocklens[0]) status = NC_EINTOVERFLOW;
+        if (ncp->begin_var != blocklens[0]) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
         /* second block is filetype, the subarray request(s) to the variable */
         blocklens[1] = 1;
@@ -934,7 +934,7 @@ ncmpii_file_set_view(NC           *ncp,
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
         if (*offset != disps[1]) {
             blocklens[1] = 0;
-            status = NC_EAINT_TOO_SMALL;
+            DEBUG_ASSIGN_ERROR(status, NC_EAINT_TOO_SMALL)
         }
 #endif
 

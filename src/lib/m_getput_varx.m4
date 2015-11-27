@@ -946,13 +946,13 @@ ncmpii_mgetput_varm(int                ncid,
 
     /* check if it is in define mode. This must be called in data mode */
     if (NC_indef(ncp)) {
-        status = NC_EINDEFINE;
+        DEBUG_ASSIGN_ERROR(status, NC_EINDEFINE)
         goto err_check;
     }
 
     /* check file write permission if this is write request */
     if (rw_flag == WRITE_REQ && NC_readonly(ncp)) {
-        status = NC_EPERM;
+        DEBUG_ASSIGN_ERROR(status, NC_EPERM)
         goto err_check;
     }
 

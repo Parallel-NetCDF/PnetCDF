@@ -339,7 +339,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
     /* Predefined datatype */
     *nelems = 1;
     if ( (*ptype = ncmpii_type_filter(dtype)) == MPI_DATATYPE_NULL )
-      return NC_EUNSPTETYPE;
+      DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
     MPI_Type_size(dtype, el_size);
     *iscontig_of_ptypes = 1;
     return NC_NOERR;
@@ -426,7 +426,7 @@ int ncmpii_dtype_decode(MPI_Datatype dtype,
             MPI_Type_free(array_of_dtypes+i);
           if (tmpel_size > 0) {
             if (tmpptype != *ptype)
-              return NC_EMULTITYPES;
+              DEBUG_RETURN_ERROR(NC_EMULTITYPES)
             *nelems += tmpnelems*array_of_ints[1+i];
           }
         }
@@ -556,8 +556,8 @@ int ncmpii_data_repack(void *inbuf,
     return NC_NOERR;
 
   /* local pack-n-unpack, using MPI_COMM_SELF */
-  if (incount  != (int)incount)  return NC_EINTOVERFLOW;
-  if (outcount != (int)outcount) return NC_EINTOVERFLOW;
+  if (incount  != (int)incount)  DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+  if (outcount != (int)outcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
   MPI_Pack_size((int)incount, intype, MPI_COMM_SELF, &packsz);
   packbuf = (void *)NCI_Malloc((size_t)packsz);
