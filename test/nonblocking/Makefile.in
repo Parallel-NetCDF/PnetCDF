@@ -26,7 +26,8 @@ C_SRCS   = mcoll_perf.c \
            bput_varn_uint.c \
            flexible_bput.c \
            wait_after_indep.c \
-           column_wise.c
+           column_wise.c \
+           req_all.c
 
 F77_SRCS = mcoll_testf77.f \
            test_bputf77.f
@@ -72,6 +73,9 @@ wait_after_indep: wait_after_indep.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 column_wise: column_wise.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+req_all: req_all.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 mcoll_testf77: mcoll_testf77.o $(LIBRARY)

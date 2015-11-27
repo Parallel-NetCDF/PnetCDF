@@ -84,7 +84,7 @@ ncmpi_$1_varn(int                 ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
 
     /* check for zero-size request */
     if (num == 0 || bufcount == 0) return NC_NOERR;
@@ -123,7 +123,7 @@ ncmpi_$1_varn_$2(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
 
     /* check for zero request */
     if (num == 0) return NC_NOERR;
@@ -188,11 +188,11 @@ ncmpii_igetput_varn(NC               *ncp,
                     void             *buf,
                     MPI_Offset        bufcount,
                     MPI_Datatype      buftype,   /* data type of the bufer */
-                    int              *reqid,     /* OUT: request ID */
+                    int              *reqidp,    /* OUT: request ID */
                     int               rw_flag,   /* WRITE_REQ or READ_REQ */
                     int               use_abuf)  /* if use attached buffer */
 {
-    int i, j, el_size, status=NC_NOERR, free_cbuf=0, isSameGroup;
+    int i, j, el_size, status=NC_NOERR, free_cbuf=0, isSameGroup, reqid;
     void *cbuf=NULL;
     char *bufp;
     MPI_Offset **_counts=NULL;
@@ -290,7 +290,7 @@ ncmpii_igetput_varn(NC               *ncp,
 
         if (buflen == 0) continue;
         status = ncmpii_igetput_varm(ncp, varp, starts[i], _counts[i], NULL,
-                                     NULL, bufp, buflen, ptype, reqid,
+                                     NULL, bufp, buflen, ptype, &reqid,
                                      rw_flag, use_abuf, isSameGroup);
         if (status != NC_NOERR) goto err_check;
 
@@ -305,7 +305,7 @@ ncmpii_igetput_varn(NC               *ncp,
     if (free_cbuf) { /* cbuf != buf, cbuf is temp allocated */
         if (rw_flag == READ_REQ) {
             /* tell wait() to unpack cbuf to buf and free cbuf */
-            status = ncmpii_set_iget_callback(ncp, *reqid, cbuf, buf,
+            status = ncmpii_set_iget_callback(ncp, reqid, cbuf, buf,
                                               (int)bufcount, buftype);
         }
         else { /* WRITE_REQ */
@@ -315,7 +315,7 @@ ncmpii_igetput_varn(NC               *ncp,
                 NCI_Free(cbuf);
             else
                 /* tell wait() to free cbuf once done */
-                status = ncmpii_set_iput_callback(ncp, *reqid, cbuf);
+                status = ncmpii_set_iput_callback(ncp, reqid, cbuf);
         }
     }
 
@@ -326,10 +326,11 @@ err_check:
     }
 
     if (status != NC_NOERR) {
-        if (*reqid != NC_REQ_NULL) /* cancel pending nonblocking request */
-            ncmpii_cancel(ncp, 1, reqid, NULL);
+        if (reqid != NC_REQ_NULL) /* cancel pending nonblocking request */
+            ncmpii_cancel(ncp, 1, &reqid, NULL);
         if (free_cbuf) NCI_Free(cbuf);
     }
+    if (reqidp != NULL) *reqidp = reqid;
 
     return status;
 }

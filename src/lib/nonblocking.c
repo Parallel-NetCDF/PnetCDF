@@ -127,7 +127,7 @@ ncmpii_abuf_coalesce(NC *ncp)
 /*----< ncmpi_cancel() >------------------------------------------------------*/
 int
 ncmpi_cancel(int  ncid,
-             int  num_req,
+             int  num_req,  /* NC_REQ_ALL or non-negative value */
              int *req_ids,  /* [num_req] */
              int *statuses) /* [num_req] */
 {
@@ -145,7 +145,7 @@ ncmpi_cancel(int  ncid,
 /*----< ncmpii_cancel() >-----------------------------------------------------*/
 int
 ncmpii_cancel(NC  *ncp,
-              int  num_req,
+              int  num_req,  /* NC_REQ_all means all pending requests */
               int *req_ids,  /* [num_req] */
               int *statuses) /* [num_req] can be NULL (ignore status) */
 {
@@ -154,6 +154,19 @@ ncmpii_cancel(NC  *ncp,
 
     if (num_req == 0)
         return NC_NOERR;
+
+    /* cancel all pending requests, ignore req_ids and statuses */
+    if (num_req == NC_REQ_ALL) {
+        cur_req = ncp->head;
+        while (cur_req != NULL) {
+            FREE_REQUEST(cur_req)
+            NCI_Free(cur_req);
+            cur_req = cur_req->next;
+        }
+        ncp->head = NULL;
+        ncp->tail = NULL;
+        return NC_NOERR;
+    }
 
     /* collect the requests from the linked list */
     for (i=0; i<num_req; i++) {
@@ -212,6 +225,7 @@ ncmpii_cancel(NC  *ncp,
 }
 
 /*----< ncmpi_inq_nreqs() >---------------------------------------------------*/
+/* TODO: add member num_reqs into NC_req to track this info */
 int
 ncmpi_inq_nreqs(int  ncid,
                 int *nreqs) /* OUT: number of pending requests */
@@ -241,7 +255,15 @@ ncmpi_inq_nreqs(int  ncid,
 }
 
 /*----< ncmpi_wait() >--------------------------------------------------------*/
-/* ncmpi_wait() is an independent call */
+/* ncmpi_wait() is an independent call
+ * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
+ * nonblocking requests. In this case, arguments req_ids and statuses will be
+ * ignored.
+ * Argument num_reqs must either be NC_REQ_ALL or a non-negative value.
+ * Argument statuses can be NULL, meaning the caller only cares about the
+ * error code returned by this call, but not the statuses of individual
+ * nonblocking requests.
+ */
 int
 ncmpi_wait(int ncid,
            int num_reqs,
@@ -260,21 +282,44 @@ ncmpi_wait(int ncid,
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
     int i, err;
-    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-        if (status == NC_NOERR) status = err;
+    if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
+        /* in this case, arguments req_ids and statuses are ignored */
+        NC_req *cur_req = ncp->head;
+        while (cur_req != NULL) {
+            /* serve one request at a time */
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &cur_req->id, NULL);
+            if (status == NC_NOERR) status = err;
+            cur_req = cur_req->next;
+        }
+    }
+    else {
+        for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+            if (statuses == NULL)
+                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
+            else
+                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+            if (status == NC_NOERR) status = err;
+        }
     }
     return status; /* return the first error encountered */
 #endif
 }
 
 /*----< ncmpi_wait_all() >----------------------------------------------------*/
-/* ncmpi_wait_all() is a collective call */
+/* ncmpi_wait_all() is a collective call
+ * Argument num_reqs can be NC_REQ_ALL which means to flush all pending
+ * nonblocking requests. In this case, arguments req_ids and statuses will be
+ * ignored.
+ * Argument num_reqs must either be NC_REQ_ALL or a non-negative value.
+ * Argument statuses can be NULL, meaning the caller only cares about the
+ * error code returned by this call, but not the statuses of individual
+ * nonblocking requests.
+ */
 int
 ncmpi_wait_all(int  ncid,
                int  num_reqs, /* number of requests */
                int *req_ids,  /* [num_reqs] */
-               int *statuses) /* [num_reqs] */
+               int *statuses) /* [num_reqs], can be NULL */
 {
     int  status=NC_NOERR;
     NC  *ncp;
@@ -303,9 +348,24 @@ ncmpi_wait_all(int  ncid,
     err = ncmpi_begin_indep_data(ncid);
     if (status == NC_NOERR) status = err;
 
-    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-        err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-        if (status == NC_NOERR) status = err;
+    if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
+        /* in this case, arguments req_ids and statuses are ignored */
+        NC_req *cur_req = ncp->head;
+        while (cur_req != NULL) {
+            /* serve one request at a time */
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &cur_req->id, NULL);
+            if (status == NC_NOERR) status = err;
+            cur_req = cur_req->next;
+        }
+    }
+    else {
+        for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+            if (statuses == NULL)
+                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
+            else
+                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+            if (status == NC_NOERR) status = err;
+        }
     }
 
     /* return to collective data mode */
@@ -411,8 +471,13 @@ ncmpii_construct_filetypes(NC           *ncp,
                                           &displacements[j], /* to offset 0 */
                                           &ftypes[j],
                                           &is_filetype_contig);
-        if (*reqs[i].status == NC_NOERR) *reqs[i].status = err;
-        if (status == NC_NOERR) status = err; /* report the first error */
+        if (err != NC_NOERR) {
+            reqs[i].bnelems = 0; /* make this request no effect */
+            if (reqs[i].status != NULL && *reqs[i].status == NC_NOERR)
+                *reqs[i].status = err;
+            if (status == NC_NOERR) status = err; /* report the first error */
+            continue;
+        }
 
         if (is_filetype_contig) {
             if (last_contig_req >= 0 &&
@@ -568,6 +633,49 @@ ncmpii_wait(NC  *ncp,
         err = ncmpii_check_mpifh(ncp, 1);
     if (err != NC_NOERR) goto err_check;
 
+    if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
+        /* in this case, arguments req_ids[] and statuses[] are ignored */
+        cur_req = ncp->head;
+        while (cur_req != NULL) {
+            cur_req->status = NULL;
+            next_req = cur_req->next;
+            if (cur_req->rw_flag == READ_REQ) {
+                /* add cur_req to r_req_tail */
+                if (r_req_head == NULL) {
+                    r_req_head = cur_req;
+                    r_req_tail = cur_req;
+                }
+                else {
+                    r_req_tail->next = cur_req;
+                    r_req_tail = r_req_tail->next;
+                }
+                r_req_tail->next = NULL;
+                num_r_reqs += (cur_req->num_subreqs == 0) ?
+                              1 : cur_req->num_subreqs;
+                /* if this request is to a record variable, then count all
+                 * its subrequests (one for each individual record) */
+            }
+            else { /* add cur_req to w_req_tail */
+                if (w_req_head == NULL) {
+                    w_req_head = cur_req;
+                    w_req_tail = cur_req;
+                }
+                else {
+                    w_req_tail->next = cur_req;
+                    w_req_tail = w_req_tail->next;
+                }
+                w_req_tail->next = NULL;
+                num_w_reqs += (cur_req->num_subreqs == 0) ?
+                              1 : cur_req->num_subreqs;
+                /* if this request is to a record variable, then count all
+                 * its subrequests (one for each individual record) */
+            }
+            cur_req = next_req;
+        }
+        ncp->head = NULL;
+        ncp->tail = NULL;
+        num_reqs = 0; /* to skip the loop below */
+    }
     /* extract the matched requests from the pending queue (a linked list
      * containing all nonblocking requests posted by far) into two separate
      * linked lists for read and write. In the meantime coalesce the pending
@@ -576,13 +684,14 @@ ncmpii_wait(NC  *ncp,
     for (i=0; i<num_reqs; i++) {
         int found_id=-1;
 
-        statuses[i] = NC_NOERR; /* initialize the request's status */
+        if (statuses != NULL)
+            statuses[i] = NC_NOERR; /* initialize the request's status */
 
         if (req_ids[i] == NC_REQ_NULL) continue; /* skip NULL request */
 
         if (ncp->head == NULL) {
             /* no more pending requests in the queue, this request is invalid */
-            statuses[i] = NC_EINVAL_REQUEST;
+            if (statuses != NULL) statuses[i] = NC_EINVAL_REQUEST;
             /* retain the first error status */
             if (status == NC_NOERR) status = NC_EINVAL_REQUEST;
             continue;
@@ -598,7 +707,10 @@ ncmpii_wait(NC  *ncp,
              */
             if (cur_req->id == req_ids[i]) { /* found it */
                 /* point status of this request to user's statuses[i] */
-                cur_req->status = statuses + i;
+                if (statuses != NULL)
+                    cur_req->status = statuses + i;
+                else
+                    cur_req->status = NULL;
                 /* point all subrequests' statuses to status */
                 for (j=0; j<cur_req->num_subreqs; j++)
                     cur_req->subreqs[j].status = cur_req->status;
@@ -664,7 +776,7 @@ ncmpii_wait(NC  *ncp,
         } /* done with searching the entire linked list for this request ID */
 
         if (found_id == -1) { /* no such request ID */
-            statuses[i] = NC_EINVAL_REQUEST;
+            if (statuses != NULL) statuses[i] = NC_EINVAL_REQUEST;
             if (status == NC_NOERR) /* retain the first error status */
                 status = NC_EINVAL_REQUEST;
         }
@@ -699,7 +811,6 @@ err_check:
         do_read  = num_r_reqs;
         do_write = num_w_reqs;
     }
-
     /* carry out writes and reads separately (writes first) */
     if (do_write > 0)
         err = ncmpii_wait_getput(ncp, num_w_reqs, w_req_head, WRITE_REQ,
@@ -785,7 +896,8 @@ err_check:
                 DATATYPE_GET_CONVERT(varp->type, cur_req->xbuf, cbuf,
                                      cur_req->bnelems, cur_req->ptype, err)
                 /* keep the first error */
-                if (*cur_req->status == NC_NOERR) *cur_req->status = err;
+                if (cur_req->status != NULL && *cur_req->status == NC_NOERR)
+                    *cur_req->status = err;
                 if (status == NC_NOERR) status = err;
             } else {
                 if (ncmpii_need_swap(varp->type, cur_req->ptype))
@@ -1681,10 +1793,10 @@ ncmpii_wait_getput(NC     *ncp,
          */
         MPI_Offset newnumrecs = ncp->numrecs;
         for (i=0; i<num_reqs; i++) {
-            if (*reqs[i].status == NC_NOERR && IS_RECVAR(reqs[i].varp)) {
-                newnumrecs = MAX(newnumrecs,
-                                 reqs[i].start[0] + reqs[i].count[0]);
-            }
+            if (!IS_RECVAR(reqs[i].varp)) continue; /* not a record var */
+            if (reqs[i].bnelems == 0) continue; /* 0-len or invalid request */
+
+            newnumrecs = MAX(newnumrecs, reqs[i].start[0] + reqs[i].count[0]);
         }
 
         if (io_method == COLL_IO) {

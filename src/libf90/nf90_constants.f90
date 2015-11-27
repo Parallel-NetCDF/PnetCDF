@@ -88,6 +88,9 @@
   ! NULL request for non-blocking I/O APIs
   integer, parameter, public :: nf90_req_null = -1
 
+  ! indicate to flush all pending non-blocking requests
+  integer, parameter, public :: nf90_req_all = -1
+
   !
   ! global attribute id:
   !

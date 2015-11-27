@@ -433,17 +433,18 @@ NC_begins(NC         *ncp,
           MPI_Offset  v_minfree,/* free space for fixed variable section */
           MPI_Offset  r_align)  /* alignment for record variable section */
 {
-    int i, j, rank, sizeof_off_t, mpireturn;
+    int i, j, rank, cdf_format, mpireturn;
     MPI_Offset end_var=0;
     NC_var *last = NULL;
     NC_var *first_var = NULL;       /* first "non-record" var */
 
-    /* sizeof_off_t is for the variable's "begin" in the header */
-    if (fIsSet(ncp->flags, NC_64BIT_OFFSET) ||
-        fIsSet(ncp->flags, NC_64BIT_DATA))
-        sizeof_off_t = 8;  /* CDF-2 and CDF-5 */
+    /* cdf_format determines the size of variable's "begin" in the header */
+    if (fIsSet(ncp->flags, NC_64BIT_DATA))
+        cdf_format = 5;  /* CDF-5 */
+    else if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
+        cdf_format = 2;  /* CDF-2 */
     else
-        sizeof_off_t = 4;  /* CDF-1 */
+        cdf_format = 1;  /* CDF-1 */
 
     /* get the true header size (un-aligned one) */
     MPI_Comm_rank(ncp->nciop->comm, &rank);
@@ -487,8 +488,8 @@ NC_begins(NC         *ncp,
             continue;
         if (first_var == NULL) first_var = ncp->vars.value[i];
 
-        /* for CDF-1 check if over the file size limit */
-        if (sizeof_off_t == 4 && (end_var > X_OFF_MAX || end_var < 0))
+        /* for CDF-1 check if over the file size limit 32-bit integer */
+        if (cdf_format == 1 && end_var > X_OFF_MAX)
             return NC_EVARSIZE;
 
         /* this will pad out non-record variables with zero to the
@@ -561,7 +562,8 @@ NC_begins(NC         *ncp,
             /* skip non-record variables on this pass */
             continue;
 
-        if (sizeof_off_t == 4 && (end_var > X_OFF_MAX || end_var < 0))
+        /* X_OFF_MAX is the max of 32-bit integer */
+        if (cdf_format == 1 && end_var > X_OFF_MAX)
             return NC_EVARSIZE;
 
         /* A few attempts at aligning record variables have failed
