@@ -52,7 +52,7 @@ ncmpi_i$1_var(int                ncid,
     NC_var     *varp=NULL;
     MPI_Offset *start, *count;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VAR,
                                  1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -88,7 +88,7 @@ ncmpi_i$1_var_$2(int              ncid,
     NC_var     *varp=NULL;
     MPI_Offset *start, *count;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VAR,
                                  0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -151,7 +151,7 @@ ncmpi_i$1_var1(int                ncid,
     NC_var     *varp=NULL;
     MPI_Offset *count;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, NULL, bufcount, API_VAR1,
                                  1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -187,7 +187,7 @@ ncmpi_i$1_var1_$2(int               ncid,
     NC_var     *varp=NULL;
     MPI_Offset *count;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, NULL, 0, API_VAR1,
                                  0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -249,7 +249,7 @@ ncmpi_i$1_vara(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARA,
                                  1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -281,7 +281,7 @@ ncmpi_i$1_vara_$2(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARA,
                                  0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -339,7 +339,7 @@ ncmpi_i$1_vars(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARS,
                                  1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -372,7 +372,7 @@ ncmpi_i$1_vars_$2(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARS,
                                  0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -443,7 +443,7 @@ ncmpi_i$1_varm(int                ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, bufcount, API_VARM,
                                  1, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -477,7 +477,7 @@ ncmpi_i$1_varm_$2(int               ncid,
     NC     *ncp;
     NC_var *varp=NULL;
 
-    *reqid = NC_REQ_NULL;
+    if (reqid != NULL) *reqid = NC_REQ_NULL;
     status = ncmpii_sanity_check(ncid, varid, start, count, 0, API_VARM,
                                  0, ReadWrite($1), NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
@@ -548,7 +548,7 @@ ncmpii_igetput_varm(NC               *ncp,
                     void             *buf,      /* user buffer */
                     MPI_Offset        bufcount,
                     MPI_Datatype      buftype,
-                    int              *reqid,    /* out */
+                    int              *reqid,    /* out, can be NULL */
                     int               rw_flag,
                     int               use_abuf,    /* if use attached buffer */
                     int               isSameGroup) /* if part of a varn group */
@@ -581,7 +581,8 @@ ncmpii_igetput_varm(NC               *ncp,
 
     if (bnelems == 0) {
         /* zero-length request, mark this as a NULL request */
-        if (!isSameGroup) /* only if this is not part of a group request */
+        if (!isSameGroup && reqid != NULL)
+            /* only if this is not part of a group request */
             *reqid = NC_REQ_NULL;
         return ((warning != NC_NOERR) ? warning : NC_NOERR);
     }
@@ -788,10 +789,10 @@ ncmpii_igetput_varm(NC               *ncp,
         ncp->tail = ncp->head;
     }
     else { /* add to the tail */
-        if (isSameGroup)
-            req->id = *reqid;
-        else
+        if (!isSameGroup)
             req->id = ncp->tail->id + 1;
+        else if (reqid != NULL)
+            req->id = *reqid;
         ncp->tail->next = req;
         ncp->tail = req;
     }
@@ -799,7 +800,7 @@ ncmpii_igetput_varm(NC               *ncp,
         req->subreqs[i].id = req->id;
 
     /* return the request ID */
-    *reqid = req->id;
+    if (reqid != NULL) *reqid = req->id;
 
     return ((warning != NC_NOERR) ? warning : status);
 }

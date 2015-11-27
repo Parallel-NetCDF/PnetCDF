@@ -587,6 +587,9 @@ by the desired type. */
 /* invalid nonblocking request ID and zero-length request */
 #define NC_REQ_NULL -1
 
+/* indicate to flush all pending non-blocking requests */
+#define NC_REQ_ALL -1
+
 
 /*
  * The Interface

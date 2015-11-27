@@ -18,3 +18,4 @@ i_varn_int64.o: i_varn_int64.c
 bput_varn_uint.o: bput_varn_uint.c
 fill_mode.o: fill_mode.c
 ghost_cell.o: ghost_cell.c
+req_all.o: req_all.c

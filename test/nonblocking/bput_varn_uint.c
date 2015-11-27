@@ -349,7 +349,7 @@ int main(int argc, char** argv)
         nerrs++;
     }
 
-    /* write usning varn API */
+    /* write usning varn API, one bput call per variable */
     clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         err = ncmpi_bput_varn_uint(ncid, varid[i], my_nsegs[i], starts[i],
@@ -374,7 +374,7 @@ int main(int argc, char** argv)
         permute(starts[i][1],starts[i][3]); permute(counts[i][1],counts[i][3]);
     }
 
-    /* write using varn API */
+    /* write using varn API, one bput call per variable */
     clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         err = ncmpi_bput_varn_uint(ncid, varid[i], my_nsegs[i], starts[i],
@@ -423,7 +423,8 @@ int main(int argc, char** argv)
         permute(starts[i][1],starts[i][3]); permute(counts[i][1],counts[i][3]);
     }
 
-    /* test flexible API, using a noncontiguous buftype */
+    /* test flexible API, using a noncontiguous buftype, one bput call per
+     * variable */
     clear_file_contents(ncid, varid);
     for (i=0; i<nreqs; i++) {
         MPI_Datatype buftype;

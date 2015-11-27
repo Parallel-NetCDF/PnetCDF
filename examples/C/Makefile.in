@@ -35,7 +35,8 @@ C_SRCS  = collective_write.c \
           i_varn_int64.c \
           bput_varn_uint.c \
           fill_mode.c \
-          ghost_cell.c
+          ghost_cell.c \
+          req_all.c
 
 # Note: put_vara must be run immediately before get_vara
 
@@ -110,6 +111,9 @@ fill_mode: fill_mode.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 ghost_cell: ghost_cell.o $(LIBRARY)
+	$(LINK.c) $< $(LDFLAGS) $(LIBS)
+
+req_all: req_all.o $(LIBRARY)
 	$(LINK.c) $< $(LDFLAGS) $(LIBS)
 
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))

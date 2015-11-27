@@ -21,12 +21,15 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o New example programs
-    * none
+    * examples/C/req_all.c shows an example of using NC_REQ_ALL to flush all
+      pending nonblocking requests without providing the requests IDs.
 
   o New programs for I/O benchmarks
     * none
 
   o New test program
+    * test/nonblocking/req_all.c tests the use of NC_REQ_ALL for flushing
+      all pending nonblocking requests without providing the requests IDs.
     * test/last_large_var.c tests the special case when there is no record
       variable, the last fixed-size variable can be larger than 2GiB in size
       if its starting file offset is less than 2GiB.
@@ -51,7 +54,17 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Semantics updates
-    * none
+    * All nonblocking APIs now take a NULL pointer for the request ID argument.
+      If NULL request IDs are used, users should use NC_REQ_ALL when calling
+      ncmpi_wait_all/ncmpi_wait to commit all pending nonblocking requests.
+      This feature can relinquish users the responsibility of tracking the IDs
+      of all pending requests.
+    * When using NC_REQ_ALL as the 2nd argument "num" in ncmpi_wait_all/
+      ncmpi_wait will flush all the pending nonblocking. In this case, the
+      arguments "array_of_requests" and "array_of_statuses" will be ignored.
+      Thus, NULLs can be used for these two arguments.
+    * When using NC_REQ_ALL in ncmpi_cancel will cancel all the pending
+      nonblocking requests.
 
   o Other updates:
     * Add README.K-Computer build recipe for using Fujitsu MPI compilers on the

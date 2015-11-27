@@ -310,3 +310,6 @@ with C, C++, F77, and F90 versions.
 ./F90/fill_mode.f90
   These examples show how to enable file mode
 
+  ./C/req_all.c
+  This example show how to use NC_REQ_ALL to flush all pending nonblocking
+  requests without providing the request IDs and status array.
