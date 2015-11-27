@@ -180,7 +180,7 @@ ncmpiio_create(MPI_Comm     comm,
         int isPathValid=1;
         if (path == NULL || *path == 0) isPathValid = 0;
         TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
-        if (err == 0) return NC_EINVAL;
+        if (err == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
     }
 
     MPI_Comm_rank(comm, &rank);
@@ -209,7 +209,7 @@ ncmpiio_create(MPI_Comm     comm,
             else                             file_exist = 0;
         }
         TRACE_COMM(MPI_Bcast)(&file_exist, 1, MPI_INT, 0, comm);
-        if (file_exist) return NC_EEXIST;
+        if (file_exist) DEBUG_RETURN_ERROR(NC_EEXIST)
 #else
         /* use MPI_MODE_EXCL mode in MPI_File_open and check returned error */
         fSet(mpiomode, MPI_MODE_EXCL);
@@ -223,7 +223,7 @@ ncmpiio_create(MPI_Comm     comm,
 #ifdef HAVE_UNLINK
             err = unlink(path);
             if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
-                err = NC_EFILE; /* other error */
+                DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
             else
                 err = NC_NOERR;
 #else
@@ -247,7 +247,7 @@ ncmpiio_create(MPI_Comm     comm,
 
     nciop = ncmpiio_new(path, ioflags); /* allocate buffer */
     if (nciop == NULL)
-        return NC_ENOMEM;
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     nciop->mpiomode  = MPI_MODE_RDWR;
     nciop->mpioflags = 0;
@@ -271,7 +271,7 @@ ncmpiio_create(MPI_Comm     comm,
              * file open call and can be the only one having errno set.
              */
             TRACE_COMM(MPI_Bcast)(&errno, 1, MPI_INT, 0, comm);
-            if (errno == EEXIST) return NC_EEXIST;
+            if (errno == EEXIST) DEBUG_RETURN_ERROR(NC_EEXIST)
         }
 #endif
         return ncmpii_handle_error(mpireturn, "MPI_File_open");
@@ -288,7 +288,7 @@ ncmpiio_create(MPI_Comm     comm,
 
     if (i == MAX_NC_ID) {
         ncmpiio_free(nciop);
-        return NC_ENFILE;
+        DEBUG_RETURN_ERROR(NC_ENFILE)
     }
 
     *((int *)&nciop->fd) = i;
@@ -326,7 +326,7 @@ ncmpiio_open(MPI_Comm     comm,
         int isPathValid=1, err;
         if (path == NULL || *path == 0) isPathValid = 0;
         TRACE_COMM(MPI_Allreduce)(&isPathValid, &err, 1, MPI_INT, MPI_LAND, comm);
-        if (err == 0) return NC_EINVAL;
+        if (err == 0) DEBUG_RETURN_ERROR(NC_EINVAL)
     }
 
     /* When open an non-existing file for read, we can either call access() to
@@ -342,13 +342,13 @@ ncmpiio_open(MPI_Comm     comm,
             else                         file_exist = 0;
         }
         TRACE_COMM(MPI_Bcast)(&file_exist, 1, MPI_INT, 0, comm);
-        if (!file_exist) return NC_ENOENT;
+        if (!file_exist) DEBUG_RETURN_ERROR(NC_ENOENT)
     }
 #endif
 
     nciop = ncmpiio_new(path, ioflags);
     if (nciop == NULL)
-        return NC_ENOMEM;
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     nciop->mpiomode  = mpiomode;
     nciop->mpioflags = 0;
@@ -366,7 +366,7 @@ ncmpiio_open(MPI_Comm     comm,
     for (i=0; i<MAX_NC_ID && IDalloc[i] != 0; i++);
     if (i == MAX_NC_ID) {
         ncmpiio_free(nciop);
-        return NC_ENFILE;
+        DEBUG_RETURN_ERROR(NC_ENFILE)
     }
     *((int *)&nciop->fd) = i;
     IDalloc[i] = 1;
@@ -415,7 +415,7 @@ ncmpiio_close(ncio *nciop, int doUnlink) {
     int mpireturn;
 
     if (nciop == NULL) /* this should never occur */
-        return NC_EINVAL;
+        DEBUG_RETURN_ERROR(NC_EINVAL)
 
     if (NC_independentFhOpened(nciop)) {
         TRACE_IO(MPI_File_close)(&(nciop->independent_fh));
@@ -460,7 +460,7 @@ ncmpiio_move(ncio *const nciop,
     if (nciop->striping_unit > 0) chunk_size = nciop->striping_unit;
 
     buf = NCI_Malloc((size_t)chunk_size);
-    if (buf == NULL) return NC_ENOMEM;
+    if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* make fileview entire file visible */
     TRACE_IO(MPI_File_set_view)(nciop->collective_fh, 0, MPI_BYTE, MPI_BYTE,
@@ -489,7 +489,7 @@ ncmpiio_move(ncio *const nciop,
                                        buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
-            if (err == NC_EFILE) status = NC_EREAD;
+            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EREAD)
         }
         else {
             int get_size;
@@ -509,7 +509,7 @@ ncmpiio_move(ncio *const nciop,
                                         buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
-            if (err == NC_EFILE) status = NC_EWRITE;
+            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
             int put_size;

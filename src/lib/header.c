@@ -112,7 +112,7 @@ ncmpii_NC_computeshapes(NC *ncp)
 
     if (first_rec != NULL) {
         if (ncp->begin_rec > first_rec->begin)
-            return NC_ENOTNC; /* not a netCDF file or corrupted */
+            DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
 
         ncp->begin_rec = first_rec->begin;
         /*
@@ -131,7 +131,7 @@ ncmpii_NC_computeshapes(NC *ncp)
         ncp->xsz > ncp->begin_var ||
         ncp->begin_rec <= 0 ||
         ncp->begin_var > ncp->begin_rec)
-        return NC_ENOTNC; /* not a netCDF file or corrupted */
+        DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
 
     return NC_NOERR;
 }
@@ -432,7 +432,7 @@ hdr_put_NC_name(bufferinfo      *pbp,
     if (pbp->version == 5)
         status = ncmpix_put_int64((void**)(&pbp->pos), ncstrp->nchars);
     else {
-        if (ncstrp->nchars != (int)ncstrp->nchars) return NC_EINTOVERFLOW;
+        if (ncstrp->nchars != (int)ncstrp->nchars) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_int32((void**)(&pbp->pos), (int)ncstrp->nchars);
     }
     if (status != NC_NOERR) return status;
@@ -474,7 +474,7 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
     sz *= attrp->nelems;
     padding = attrp->xsz - sz;
 
-    if (sz != (size_t) sz) return NC_EINTOVERFLOW;
+    if (sz != (size_t) sz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     memcpy(pbp->pos, attrp->xvalue, (size_t)sz);
     pbp->pos = (void *)((char *)pbp->pos + sz);
 
@@ -507,7 +507,7 @@ hdr_put_NC_dim(bufferinfo   *pbp,
     if (pbp->version == 5)
         status = ncmpix_put_int64((void**)(&pbp->pos), dimp->size);
     else {
-        if (dimp->size != (int)dimp->size) return NC_EINTOVERFLOW;
+        if (dimp->size != (int)dimp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_int32((void**)(&pbp->pos), (int)dimp->size);
     }
     if (status != NC_NOERR) return status;
@@ -596,7 +596,7 @@ hdr_put_NC_attr(bufferinfo    *pbp,
     if (pbp->version == 5)
         status = ncmpix_put_int64((void**)(&pbp->pos), attrp->nelems);
     else {
-        if (attrp->nelems != (int)attrp->nelems) return NC_EINTOVERFLOW;
+        if (attrp->nelems != (int)attrp->nelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_int32((void**)(&pbp->pos), (int)attrp->nelems);
     }
     if (status != NC_NOERR) return status;
@@ -725,7 +725,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
          * less than 2 GiB. This checking has already been done in the call
          * to ncmpii_NC_check_vlens() in ncmpii_NC_enddef().
          *
-         * if (varp->len != (int)varp->len) return NC_EVARSIZE;
+         * if (varp->len != (int)varp->len) DEBUG_RETURN_ERROR(NC_EVARSIZE)
          */
         status = ncmpix_put_int32((void**)(&pbp->pos), (int)varp->len);
     }
@@ -736,7 +736,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
      * in CDF-2 and CDF-5, it is a 64-bit integer
      */
     if (pbp->version == 1) {
-        if (varp->begin != (int)varp->begin) return NC_EINTOVERFLOW;
+        if (varp->begin != (int)varp->begin) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_int32((void**)(&pbp->pos), (int)varp->begin);
     }
     else
@@ -846,7 +846,7 @@ ncmpii_hdr_put_NC(NC   *ncp,
     if (ncp->flags & NC_64BIT_DATA)
         status = ncmpix_put_int64((void**)(&putbuf.pos), nrecs);
     else {
-        if (nrecs != (int)nrecs) return NC_EINTOVERFLOW;
+        if (nrecs != (int)nrecs) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_int32((void**)(&putbuf.pos), (int)nrecs);
     }
     if (status != NC_NOERR) return status;
@@ -905,8 +905,8 @@ hdr_fetch(bufferinfo *gbp) {
      * all data in the buffer has been consumed */
     if (slack == gbp->size) slack = 0;
 
-    if (gbp->size != (size_t)gbp->size) return NC_EINTOVERFLOW;
-    if (gbp->size != (int)gbp->size) return NC_EINTOVERFLOW;
+    if (gbp->size != (size_t)gbp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (gbp->size != (int)gbp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     memset(gbp->base, 0, (size_t)gbp->size);
     gbp->pos = gbp->base;
@@ -922,7 +922,7 @@ hdr_fetch(bufferinfo *gbp) {
                                    (int)gbp->size, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
-            if (err == NC_EFILE) err = NC_EREAD;
+            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
         }
         else {
             int get_size;
@@ -1045,7 +1045,7 @@ hdr_get_nc_type(bufferinfo *gbp,
         type != NC_INT64   &&
         type != NC_UINT64
        )
-        return NC_EINVAL;
+        DEBUG_RETURN_ERROR(NC_EINVAL)
 
     *typep = (nc_type) type;
     return NC_NOERR;
@@ -1105,7 +1105,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
 
     /* Allocate a NC_string structure large enough to hold nchars characters */
     ncstrp = ncmpii_new_NC_string((size_t)nchars, NULL);
-    if (ncstrp == NULL) return NC_ENOMEM;
+    if (ncstrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     nbytes = nchars * X_SIZEOF_CHAR;
     padding = _RNDUP(X_SIZEOF_CHAR * ncstrp->nchars, X_ALIGN)
@@ -1124,7 +1124,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     while (nbytes > 0) {
         if (bufremain > 0) {
             strcount = MIN(bufremain, nbytes);
-            if (strcount != (size_t)strcount) return NC_EINTOVERFLOW;
+            if (strcount != (size_t)strcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             memcpy(cpos, gbp->pos, (size_t)strcount);
             nbytes -= strcount;
             gbp->pos = (void *)((char *)gbp->pos + strcount);
@@ -1146,7 +1146,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
             ncmpii_free_NC_string(ncstrp);
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL)
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
         gbp->index += padding;
@@ -1178,7 +1178,7 @@ hdr_get_NC_dim(bufferinfo  *gbp,
     if (status != NC_NOERR) return status;
 
     dimp = ncmpii_new_x_NC_dim(ncstrp);
-    if (dimp == NULL) return NC_ENOMEM;
+    if (dimp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* get dim_length */
     if (gbp->version == 5)
@@ -1235,19 +1235,19 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
-    if (ndefined != (int)ndefined) return NC_EINTOVERFLOW;
+    if (ndefined != (int)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     ncap->ndefined = (int)ndefined;
     /* TODO: we should allow ndefined > 2^32, considering change the data type
      * of ndefined from int to MPI_Offset */
 
     if (ndefined == 0) {
         if (type != NC_DIMENSION && type != NC_UNSPECIFIED)
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL)
     } else {
-        if (type != NC_DIMENSION) return NC_EINVAL;
+        if (type != NC_DIMENSION) DEBUG_RETURN_ERROR(NC_EINVAL)
 
         ncap->value = (NC_dim **) NCI_Malloc((size_t)ndefined * sizeof(NC_dim*));
-        if (ncap->value == NULL) return NC_ENOMEM;
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         ncap->nalloc = (int)ndefined;
         /* TODO: we should allow nalloc > 2^32, considering change the data
          * type of nalloc from int to MPI_Offset */
@@ -1304,7 +1304,7 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     while (nbytes > 0) {
         if (bufremain > 0) {
             attcount = MIN(bufremain, nbytes);
-            if (attcount != (size_t)attcount) return NC_EINTOVERFLOW;
+            if (attcount != (size_t)attcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             memcpy(value, gbp->pos, (size_t)attcount);
             nbytes -= attcount;
             gbp->pos = (void *)((char *)gbp->pos + attcount);
@@ -1321,7 +1321,7 @@ hdr_get_NC_attrV(bufferinfo *gbp,
     /* handle the padding */
     if (padding > 0) {
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) return NC_EINVAL;
+        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) DEBUG_RETURN_ERROR(NC_EINVAL)
         gbp->pos = (void *)((char *)gbp->pos + padding);
         gbp->index += padding;
     }
@@ -1428,17 +1428,17 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
-    if (ndefined != (int)ndefined) return NC_EINTOVERFLOW;
+    if (ndefined != (int)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     ncap->ndefined = (int)ndefined;
 
     if (ndefined == 0) {
         if (type != NC_ATTRIBUTE && type != NC_UNSPECIFIED)
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL)
     } else {
-        if (type != NC_ATTRIBUTE) return NC_EINVAL;
+        if (type != NC_ATTRIBUTE) DEBUG_RETURN_ERROR(NC_EINVAL)
 
         ncap->value = (NC_attr **)NCI_Malloc((size_t)ndefined * sizeof(NC_attr*));
-        if (ncap->value == NULL) return NC_ENOMEM;
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         ncap->nalloc = (int)ndefined;
 
         /* get [attr ...] */
@@ -1498,13 +1498,13 @@ hdr_get_NC_var(bufferinfo  *gbp,
          ncmpii_free_NC_string(strp);
          return status;
     }
-    if (ndims != (int)ndims) return NC_EINTOVERFLOW;
+    if (ndims != (int)ndims) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* allocate space for var object */
     varp = ncmpii_new_x_NC_var(strp, (int)ndims);
     if (varp == NULL) {
         ncmpii_free_NC_string(strp);
-        return NC_ENOMEM;
+        DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
     /* get [dimid ...] */
@@ -1635,19 +1635,19 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         ndefined = (MPI_Offset)tmp;
     }
     if (status != NC_NOERR) return status;
-    if (ndefined != (int)ndefined) return NC_EINTOVERFLOW;
+    if (ndefined != (int)ndefined) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     ncap->ndefined = (int)ndefined;
     /* TODO: we should allow ndefined > 2^32, considering change the data type
      * of ndefined from int to MPI_Offset */
 
     if (ndefined == 0) { /* no variable defined */
         if (type != NC_VARIABLE && type != NC_UNSPECIFIED)
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL)
     } else {
-        if (type != NC_VARIABLE) return NC_EINVAL;
+        if (type != NC_VARIABLE) DEBUG_RETURN_ERROR(NC_EINVAL)
 
         ncap->value = (NC_var **) NCI_Malloc((size_t)ndefined * sizeof(NC_var*));
-        if (ncap->value == NULL) return NC_ENOMEM;
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         ncap->nalloc = (int)ndefined;
 
         /* get [var ...] */
@@ -1701,7 +1701,7 @@ ncmpii_hdr_get_NC(NC *ncp)
     if (getbuf.size > NC_DEFAULT_CHUNKSIZE)
         getbuf.size = NC_DEFAULT_CHUNKSIZE;
 
-    if (getbuf.size != (size_t)getbuf.size) return NC_EINTOVERFLOW;
+    if (getbuf.size != (size_t)getbuf.size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     getbuf.pos = getbuf.base = (void *)NCI_Malloc((size_t)getbuf.size);
     getbuf.index = 0;
 
@@ -1723,7 +1723,7 @@ ncmpii_hdr_get_NC(NC *ncp)
      */
     if (memcmp(magic, ncmagic1, sizeof(ncmagic1)-1) != 0) {
         NCI_Free(getbuf.base);
-        return NC_ENOTNC;
+        DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
     /* check version number in last byte of magic */
@@ -1737,18 +1737,18 @@ ncmpii_hdr_get_NC(NC *ncp)
             /* take the easy way out: if we can't support all CDF-2
              * files, return immediately */
             NCI_Free(getbuf.base);
-            return NC_ESMALL;
+            DEBUG_RETURN_ERROR(NC_ESMALL)
         }
     } else if (magic[sizeof(ncmagic1)-1] == 0x5) {
         getbuf.version = 5;
         fSet(ncp->flags, NC_64BIT_DATA);
         if (SIZEOF_MPI_OFFSET != 8) {
             NCI_Free(getbuf.base);
-            return NC_ESMALL;
+            DEBUG_RETURN_ERROR(NC_ESMALL)
         }
     } else {
         NCI_Free(getbuf.base);
-        return NC_ENOTNC; /* not an netCDF file */
+        DEBUG_RETURN_ERROR(NC_ENOTNC) /* not an netCDF file */
     }
 
     /** Ensure that 'nextread' bytes (numrecs) are available. */
@@ -1845,7 +1845,7 @@ ncmpii_comp_dims(int          safe_mode,
         if (safe_mode)
             printf("%s number of dimensions (local=%d, root=%d)\n",
                    WARN_STR, local_dim->ndefined, root_dim->ndefined);
-        status = NC_EMULTIDEFINE_DIM_NUM;
+        DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_DIM_NUM)
     }
 
     for (i=0; i<root_dim->ndefined; i++) {
@@ -1868,13 +1868,13 @@ ncmpii_comp_dims(int          safe_mode,
             if (safe_mode)
                 printf("%s dimension name length (local=%lld, root=%lld)\n",
                        WARN_STR, local_name->nchars, root_name->nchars);
-            err = NC_EMULTIDEFINE_DIM_NAME;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
         }
         else if (memcmp(root_name->cp, local_name->cp, (size_t)root_name->nchars) != 0) {
             if (safe_mode)
                 printf("%s dimension name (local=%s, root=%s)\n",
                        WARN_STR, local_name->cp, root_name->cp);
-            err = NC_EMULTIDEFINE_DIM_NAME;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_NAME)
         }
         else if (root_dim->value[i]->size != local_dim->value[i]->size) {
             /* check dimension size */
@@ -1882,7 +1882,7 @@ ncmpii_comp_dims(int          safe_mode,
                 printf("%s dimension %s's size (local=%lld, root=%lld)\n",
                        WARN_STR, root_dim->value[i]->name->cp,
                        root_dim->value[i]->size, local_dim->value[i]->size);
-            err = NC_EMULTIDEFINE_DIM_SIZE;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_DIM_SIZE)
         }
         if (status == NC_NOERR) status = err;
 
@@ -1919,7 +1919,7 @@ ncmpii_comp_attrs(int           safe_mode,
         if (safe_mode)
             printf("%s number of attributes (root=%d, local=%d)\n",
                    WARN_STR, root_attr->ndefined, local_attr->ndefined);
-        status = NC_EMULTIDEFINE_ATTR_NUM;
+        DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_ATTR_NUM)
     }
 
     for (i=0; i<root_attr->ndefined; i++) {
@@ -1947,29 +1947,29 @@ ncmpii_comp_attrs(int           safe_mode,
             memcmp(name, v2->name->cp, (size_t)v1->name->nchars) != 0) {
             msg ="%s attribute %s (root=%s, local=%s)\n";
             ATTR_WARN(msg, "name", name, v2->name->cp)
-            err = NC_EMULTIDEFINE_ATTR_NAME;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_NAME)
         }
         else if (v1->type != v2->type) {
             msg = "%s attribute \"%s\" type (root=%d, local=%d)\n";
             ATTR_WARN(msg, name, v1->type, v2->type)
-            err = NC_EMULTIDEFINE_ATTR_TYPE;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_TYPE)
         }
         else if (v1->nelems != v2->nelems) {
             msg = "%s attribute \"%s\" length (root=%lld, local=%lld)\n";
             ATTR_WARN(msg, name, lld(v1->nelems), lld(v2->nelems))
-            err = NC_EMULTIDEFINE_ATTR_LEN;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_LEN)
         }
         else if (v1->xsz != v2->xsz) { /* internal check */
             msg = "%s attribute \"%s\" size (root=%lld, local=%lld)\n";
             ATTR_WARN(msg, name, lld(v1->xsz), lld(v2->xsz))
-            err = NC_EMULTIDEFINE_ATTR_SIZE;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_SIZE)
         }
         /* hereinafter, we have v1->nelems == v2->nelems */
         else if (v1->type == NC_CHAR) {
             if (memcmp(v1->xvalue, v2->xvalue, (size_t)v1->nelems)) {
                 msg = "%s attribute \"%s\" CHAR (root=%s, local=%s)\n";
                 ATTR_WARN(msg, name, (char*)v1->xvalue, (char*)v2->xvalue);
-                err = NC_EMULTIDEFINE_ATTR_VAL;
+                DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
             }
         }
         else if (v1->type == NC_BYTE) {
@@ -1979,7 +1979,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (sba[j] != sbb[j]) {
                     msg = "%s attribute \"%s\"[%d] BYTE (root=%hhdb, local=%hhdb)\n";
                     ATTR_WARN_J(msg, name, j, sba[j], sbb[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -1991,7 +1991,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (uba[j] != ubb[j]) {
                     msg = "%s attribute \"%s\"[%d] UBYTE (root=%hhuub, local=%hhuub)\n";
                     ATTR_WARN_J(msg, name, j, uba[j], ubb[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2003,7 +2003,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (ssa[j] != ssb[j]) {
                     msg = "%s attribute \"%s\"[%d] SHORT (root=%hds, local=%hds)\n";
                     ATTR_WARN_J(msg, name, j, ssa[j], ssb[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2015,7 +2015,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (usa[j] != usb[j]) {
                     msg = "%s attribute \"%s\"[%d] USHORT (root=%huus, local=%huus)\n";
                     ATTR_WARN_J(msg, name, j, usa[j], usb[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2027,7 +2027,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (sia[j] != sib[j]) {
                     msg = "%s attribute \"%s\"[%d] INT (root=%d, local=%d)\n";
                     ATTR_WARN_J(msg, name, j, sia[j], sib[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2039,7 +2039,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (uia[j] != uib[j]) {
                     msg = "%s attribute \"%s\"[%d] UINT (root=%uu, local=%uu)\n";
                     ATTR_WARN_J(msg, name, j, uia[j], uib[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2054,7 +2054,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (fa[j] != fb[j]) {
                     msg = "%s attribute \"%s\"[%d] FLOAT (root=%f, local=%f)\n";
                     ATTR_WARN_J(msg, name, j, fa[j], fb[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2069,7 +2069,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (da[j] != db[j]) {
                     msg = "%s attribute \"%s\"[%d] DOUBLE (root=%f, local=%f)\n";
                     ATTR_WARN_J(msg, name, j, da[j], db[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2081,7 +2081,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (slla[j] != sllb[j]) {
                     msg = "%s attribute \"%s\"[%d] INT64 (root=%lldll, local=%lldll)\n";
                     ATTR_WARN_J(msg, name, j, slla[j], sllb[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2093,7 +2093,7 @@ ncmpii_comp_attrs(int           safe_mode,
                 if (ulla[j] != ullb[j]) {
                     msg = "%s attribute \"%s\"[%d] UINT64 (root=%llull, local=%llull)\n";
                     ATTR_WARN_J(msg, name, j, ulla[j], ullb[j])
-                    err = NC_EMULTIDEFINE_ATTR_VAL;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)
                     break;
                 }
             }
@@ -2133,7 +2133,7 @@ ncmpii_comp_vars(int          safe_mode,
         if (safe_mode)
             printf("%s number of variables (root=%d, local=%d)\n",
                    WARN_STR, root_var->ndefined, local_var->ndefined);
-        status = NC_EMULTIDEFINE_VAR_NUM;
+        DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_NUM)
     }
 
     for (i=0; i<root_var->ndefined; i++) {
@@ -2167,34 +2167,34 @@ ncmpii_comp_vars(int          safe_mode,
             strncmp(v1->name->cp, v2->name->cp, (size_t)v1->name->nchars) != 0) {
             msg = "%s variable %s (root=%s, local=%s)\n";
             VAR_WARN(msg, "name", name, v2->name->cp)
-            err = NC_EMULTIDEFINE_VAR_NAME;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_NAME)
         }
         else if (v1->ndims != v2->ndims) {
             msg = "%s variable %s's ndims (root=%d, local=%d)\n";
             VAR_WARN(msg, name, v1->ndims, v2->ndims)
-            err = NC_EMULTIDEFINE_VAR_NDIMS;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_NDIMS)
         }
         else if (v1->type != v2->type) {
             msg = "%s variable %s's type (root=%d, local=%d)\n";
             VAR_WARN(msg, name, v1->type, v2->type)
-            err = NC_EMULTIDEFINE_VAR_TYPE;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_TYPE)
         }
         else if (v1->len != v2->len) {
             msg = "%s variable %s's len (root=%lld, local=%lld)\n";
             VAR_WARN(msg, name, v1->len, v2->len)
-            err = NC_EMULTIDEFINE_VAR_LEN;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_LEN)
         }
         else if (v1->begin != v2->begin) {
             msg = "%s variable %s's begin (root=%lld, local=%lld)\n";
             VAR_WARN(msg, name, v1->begin, v2->begin)
-            err = NC_EMULTIDEFINE_VAR_BEGIN;
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_BEGIN)
         }
         else {
             for (j=0; j<v1->ndims; j++) {
                 if (v1->dimids[j] != v2->dimids[j]) {
                     msg = "%s variable %s's %dth dim ID (root=%d, local=%ld)\n";
                     VAR_WARN_J(msg, name, j, v1->dimids[j], v2->dimids[j])
-                    err = NC_EMULTIDEFINE_VAR_DIMIDS;
+                    DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_DIMIDS)
                     break;
                 }
             }
@@ -2266,7 +2266,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         /* Fatal error, as root's header is significant */
         if (ncp->safe_mode)
             fprintf(stderr,"Error: root's header indicates not a CDF file\n");
-        return NC_ENOTNC; /* should not continue */
+        DEBUG_RETURN_ERROR(NC_ENOTNC) /* should not continue */
     }
 
     /* allocate a header object and fill it with root's header */
@@ -2285,7 +2285,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         /* Fatal error, as root's header is significant */
         if (ncp->safe_mode)
             fprintf(stderr,"Error: root's header indicates not CDF 1/2/5 format\n");
-        return NC_ENOTNC; /* should not continue */
+        DEBUG_RETURN_ERROR(NC_ENOTNC) /* should not continue */
     }
 
     /* check version number in last byte of magic */
@@ -2308,7 +2308,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
         else if (root_ver  == 0x2) fSet(ncp->flags, NC_64BIT_OFFSET);
 
         /* this inconsistency is not fatal */
-        status = NC_EMULTIDEFINE_OMODE;
+        DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
     }
     getbuf->version = root_ver; /* getbuf's version has not been set before */
 
@@ -2316,7 +2316,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
     if (root_ver > 1) {
         /* for NC_64BIT_DATA or NC_64BIT_OFFSET, MPI_Offset must be 8 bytes */
         if (ncp->safe_mode) fprintf(stderr,"Error: cannot support CDF-2 and CDF-5 on this machine\n");
-        return NC_ESMALL; /* should not continue */
+        DEBUG_RETURN_ERROR(NC_ESMALL) /* should not continue */
     }
 #endif
 
@@ -2359,7 +2359,7 @@ ncmpii_hdr_check_NC(bufferinfo *getbuf, /* header from root */
                    WARN_STR, ncp->numrecs, root_ncp->numrecs);
         /* overwrite the local header's numrecs */
         ncp->numrecs = root_ncp->numrecs;
-        if (status == NC_NOERR) err = NC_EMULTIDEFINE_NUMRECS;
+        if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_NUMRECS)
     }
 
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -2454,12 +2454,14 @@ int ncmpii_write_header(NC *ncp)
         /* copy header object to write buffer */
         status = ncmpii_hdr_put_NC(ncp, buf);
 
-        if (ncp->xsz != (int)ncp->xsz) return NC_EINTOVERFLOW;
+        if (ncp->xsz != (int)ncp->xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         TRACE_IO(MPI_File_write_at)(fh, 0, buf, (int)ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (status == NC_NOERR)
+            if (status == NC_NOERR) {
                 status = (err == NC_EFILE) ? NC_EWRITE : err;
+                DEBUG_ASSIGN_ERROR(status, status)
+            }
         }
         else {
             int put_size;
@@ -2474,7 +2476,7 @@ int ncmpii_write_header(NC *ncp)
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
         /* root's write has failed, which is serious */
-        if (root_status == NC_EWRITE) status = NC_EWRITE;
+        if (root_status == NC_EWRITE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
     }
 
     /* update file header size */

@@ -8,8 +8,11 @@
 # include "ncconfig.h"
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <mpi.h>
 #include "nc.h"
+#include "macro.h"
 
 /*----< ncmpii_sanity_check() >----------------------------------------------*/
 int ncmpii_sanity_check(int               ncid,
@@ -37,13 +40,13 @@ int ncmpii_sanity_check(int               ncid,
 
     /* in this context, define mode is wrong, must be called in data mode */
     if (NC_indef(*ncp)) {
-        status = NC_EINDEFINE;
+        DEBUG_ASSIGN_ERROR(status, NC_EINDEFINE)
         goto fn_exit;
     }
 
     /* check file write permission if this is write request */
     if (rw_flag == WRITE_REQ && NC_readonly(*ncp)) {
-        status = NC_EPERM;
+        DEBUG_ASSIGN_ERROR(status, NC_EPERM)
         goto fn_exit;
     }
 
@@ -60,19 +63,19 @@ int ncmpii_sanity_check(int               ncid,
 
     /* for API var1, vara, vars, varm, and varn, start cannot be NULL */
     if (start == NULL && api >= API_VAR1 && (*varp)->ndims > 0) {
-        status = NC_ENULLSTART;
+        DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART)
         goto fn_exit;
     }
 
     /* for API vara, vars, and varm, count cannot be NULL */
     if (count == NULL && api >= API_VARA && (*varp)->ndims > 0) {
-        status = NC_ENULLCOUNT;
+        DEBUG_ASSIGN_ERROR(status, NC_ENULLCOUNT)
         goto fn_exit;
     }
 
     /* for flexible APIs, bufcount cannot be negative */
     if (isFlexAPI && bufcount < 0) {
-        status = NC_EINVAL;
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL)
         goto fn_exit;
     }
 

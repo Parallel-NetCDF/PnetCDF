@@ -576,7 +576,7 @@ ncmpii_igetput_varm(NC               *ncp,
     err = ncmpii_calc_datatype_elems(ncp, varp, start, count, stride, rw_flag,
                                      buftype, &ptype, &bufcount, &bnelems,
                                      &nbytes, &el_size, &buftype_is_contig);
-    if (err == NC_EIOMISMATCH) warning = err;
+    if (err == NC_EIOMISMATCH) DEBUG_ASSIGN_ERROR(warning, err)
     else if (err != NC_NOERR) return err;
 
     if (bnelems == 0) {
@@ -592,7 +592,7 @@ ncmpii_igetput_varm(NC               *ncp,
      */
     if (rw_flag == WRITE_REQ && use_abuf &&
         ncp->abuf->size_allocated - ncp->abuf->size_used < nbytes)
-        return NC_EINSUFFBUF;
+        DEBUG_RETURN_ERROR(NC_EINSUFFBUF)
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(varp->type, ptype);
@@ -609,7 +609,7 @@ ncmpii_igetput_varm(NC               *ncp,
         int position, abuf_allocated=0;
         MPI_Offset outsize=bnelems*el_size;
         /* assert(bnelems > 0); */
-        if (outsize != (int)outsize) return NC_EINTOVERFLOW;
+        if (outsize != (int)outsize) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
         /* attached buffer allocation logic
          * if (use_abuf)
@@ -651,7 +651,7 @@ ncmpii_igetput_varm(NC               *ncp,
             }
             else lbuf = NCI_Malloc((size_t)outsize);
 
-            if (bufcount != (int)bufcount) return NC_EINTOVERFLOW;
+            if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             /* pack buf into lbuf using buftype */
             position = 0;
@@ -915,7 +915,7 @@ pack_request(NC               *ncp,
         req->subreqs     = subreqs;
 
         if (req->count[0] != (int)req->count[0])
-            return NC_EINTOVERFLOW;
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     }
 
     return NC_NOERR;

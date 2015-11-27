@@ -902,4 +902,7 @@ ncmpii_sanity_check(int ncid, int varid, const MPI_Offset *start,
                     enum API_KIND api, int isFlexAPI, int rw_flag,
                     int io_method, NC **ncp, NC_var **varp);
 
+extern char*
+ncmpii_err_code_name(int err);
+
 #endif /* _NC_H_ */

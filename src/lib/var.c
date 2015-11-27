@@ -204,7 +204,7 @@ ncmpii_dup_NC_vararray(NC_vararray       *ncap,
 
     if (ref->nalloc > 0) {
         ncap->value = (NC_var **) NCI_Calloc((size_t)ref->nalloc, sizeof(NC_var*));
-        if (ncap->value == NULL) return NC_ENOMEM;
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         ncap->nalloc = ref->nalloc;
     }
 
@@ -212,7 +212,7 @@ ncmpii_dup_NC_vararray(NC_vararray       *ncap,
     for (i=0; i<ref->ndefined; i++) {
         ncap->value[i] = dup_NC_var(ref->value[i]);
         if (ncap->value[i] == NULL) {
-            status = NC_ENOMEM;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
             break;
         }
     }
@@ -245,7 +245,7 @@ incr_NC_vararray(NC_vararray *ncap,
     if (ncap->nalloc == 0) { /* no variable has been allocated yet */
         assert(ncap->ndefined == 0);
         vp = (NC_var **) NCI_Malloc(NC_ARRAY_GROWBY * sizeof(NC_var *));
-        if (vp == NULL) return NC_ENOMEM;
+        if (vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         ncap->value = vp;
         ncap->nalloc = NC_ARRAY_GROWBY;
@@ -253,7 +253,7 @@ incr_NC_vararray(NC_vararray *ncap,
     else if (ncap->ndefined + 1 > ncap->nalloc) {
         vp = (NC_var **) NCI_Realloc(ncap->value,
                          (size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_var *));
-        if (vp == NULL) return NC_ENOMEM;
+        if (vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         ncap->value = vp;
         ncap->nalloc += NC_ARRAY_GROWBY;
@@ -311,7 +311,7 @@ ncmpii_NC_findvar(const NC_vararray  *ncap,
 
     /* normalized version of uname */
     name = (char *)utf8proc_NFC((const unsigned char *)uname);
-    if (name == NULL) return NC_ENOMEM;
+    if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     nchars = strlen(name);
 
     for (varid=0; varid<ncap->ndefined; varid++, loc++) {
@@ -381,10 +381,10 @@ ncmpii_NC_var_shape64(NC                *ncp,
         const NC_dim *dimp;
 
         if (varp->dimids[i] < 0)
-            return NC_EBADDIM;
+            DEBUG_RETURN_ERROR(NC_EBADDIM)
 
         if (varp->dimids[i] >= ((dims != NULL) ? dims->ndefined : 1))
-            return NC_EBADDIM;
+            DEBUG_RETURN_ERROR(NC_EBADDIM)
 
         /* get the pointer to the dim object */
         dimp = ncmpii_elem_NC_dimarray(dims, varp->dimids[i]);
@@ -393,7 +393,7 @@ ncmpii_NC_var_shape64(NC                *ncp,
         /* check for record variable, only the highest dimension can
          * be unlimited */
         if (varp->shape[i] == NC_UNLIMITED && i != 0)
-            return NC_EUNLIMPOS;
+            DEBUG_RETURN_ERROR(NC_EUNLIMPOS)
     }
 
     /*
@@ -428,7 +428,7 @@ out :
      * which calls ncmpii_NC_check_vlens()
      *
     if (! fIsSet(ncp->flags, NC_64BIT_DATA) && product >= X_UINT_MAX)
-        return NC_EVARSIZE;
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
      */
 
     /*
@@ -478,11 +478,11 @@ ncmpii_NC_lookupvar(NC      *ncp,
                     NC_var **varp)
 {
     if (varid == NC_GLOBAL) /* Global is error in this context */
-        return NC_EGLOBAL;
+        DEBUG_RETURN_ERROR(NC_EGLOBAL)
 
     *varp = elem_NC_vararray(&ncp->vars, varid);
     if (*varp == NULL) /* could not find variable with varid */
-        return NC_ENOTVAR;
+        DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     return NC_NOERR;
 }
@@ -508,7 +508,7 @@ ncmpi_def_var(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* check if called in define mode */
-    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
+    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     /* check if the name string is legal for netcdf format */
     file_ver = 1;
@@ -524,18 +524,18 @@ ncmpi_def_var(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* TODO: can ndims > 2^31-1 in CDF-5 ? */
-    if ((ndims < 0) || ndims > X_INT_MAX) return NC_EINVAL;
+    if ((ndims < 0) || ndims > X_INT_MAX) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     /* there is an upperbound for the number of variables defined in a file */
-    if (ncp->vars.ndefined >= NC_MAX_VARS) return NC_EMAXVARS;
+    if (ncp->vars.ndefined >= NC_MAX_VARS) DEBUG_RETURN_ERROR(NC_EMAXVARS)
 
     /* check whether the variable name has been used */
     varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
-    if (varid != -1) return NC_ENAMEINUSE;
+    if (varid != -1) DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     /* create a new variable */
     varp = ncmpii_new_NC_var(name, type, ndims, dimids);
-    if (varp == NULL) return NC_ENOMEM;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* set up array dimensional structures */
     status = ncmpii_NC_var_shape64(ncp, varp, &ncp->dims);
@@ -580,7 +580,7 @@ ncmpi_inq_varid(int         ncid,
     if (status != NC_NOERR) return status;
 
     varid = ncmpii_NC_findvar(&ncp->vars, name, &varp);
-    if (varid == -1) return NC_ENOTVAR;
+    if (varid == -1) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     *varid_ptr = varid;
     return NC_NOERR;
@@ -606,10 +606,10 @@ ncmpi_inq_var(int      ncid,
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
 
     varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (name != NULL)
         /* in PnetCDF, name->cp is always NULL character terminated */
@@ -659,10 +659,10 @@ ncmpi_inq_varname(int   ncid,
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
 
     varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (name != NULL)
         /* in PnetCDF, name->cp is always NULL character terminated */
@@ -687,10 +687,10 @@ ncmpi_inq_vartype(int      ncid,
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
 
     varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (typep != NULL) *typep = varp->type;
 
@@ -711,10 +711,10 @@ ncmpi_inq_varndims(int ncid, int varid, int *ndimsp)
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
 
     varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (ndimsp != 0) {
 #ifdef ENABLE_SUBFILNIG
@@ -742,10 +742,10 @@ ncmpi_inq_vardimid(int ncid, int varid, int *dimids)
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
 
     varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (dimids != 0) {
 #ifdef ENABLE_SUBFILING
@@ -777,7 +777,7 @@ ncmpi_inq_varnatts(int  ncid,
     if (status != NC_NOERR) return status;
 
     varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (nattsp != NULL)
         *nattsp = (int) varp->attrs.ndefined;
@@ -799,7 +799,7 @@ ncmpi_rename_var(int         ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp)) return NC_EPERM;
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
     /* check if variable ID is valid*/
     status = ncmpii_NC_lookupvar(ncp, varid, &varp);
@@ -817,12 +817,12 @@ ncmpi_rename_var(int         ncid,
     /* check for name in use */
     other = ncmpii_NC_findvar(&ncp->vars, newname, &varp);
     if (other != -1)
-        return NC_ENAMEINUSE;
+        DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     /* if called in define mode, just update to the NC object */
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-        if (newStr == NULL) return NC_ENOMEM;
+        if (newStr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         ncmpii_free_NC_string(varp->name);
         varp->name = newStr;
@@ -843,7 +843,7 @@ ncmpi_rename_var(int         ncid,
             /* newname's length is inconsistent with root's */
             printf("Warning: variable name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE_VAR_NAME;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_VAR_NAME)
         }
     }
 
@@ -888,10 +888,10 @@ ncmpi_inq_varoffset(int         ncid,
     /* using NC_GLOBAL in varid is illegal for this API. See
      * http://www.unidata.ucar.edu/mailing_lists/archives/netcdfgroup/2015/msg00196.html
      */
-    if (varid == NC_GLOBAL) return NC_EGLOBAL;
+    if (varid == NC_GLOBAL) DEBUG_RETURN_ERROR(NC_EGLOBAL)
 
     varp = elem_NC_vararray(&ncp->vars, varid);
-    if (varp == NULL) return NC_ENOTVAR;
+    if (varp == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     if (offset != NULL)
         *offset = varp->begin;

@@ -202,7 +202,7 @@ ncmpii_getput_varn(NC               *ncp,
 
     /* it is illegal for starts to be NULL */
     if (starts == NULL) {
-        status = NC_ENULLSTART;
+        DEBUG_ASSIGN_ERROR(status, NC_ENULLSTART)
         goto err_check;
     }
 
@@ -219,7 +219,7 @@ ncmpii_getput_varn(NC               *ncp,
                 MPI_Offset bufcount_j = 1;
                 for (i=0; i<varp->ndims; i++) {
                     if (counts[j][i] < 0) { /* no negative counts[][] */
-                        err = NC_ENEGATIVECNT;
+                        DEBUG_ASSIGN_ERROR(err, NC_ENEGATIVECNT)
                         goto err_check;
                     }
                     bufcount_j *= counts[j][i];
@@ -247,7 +247,7 @@ ncmpii_getput_varn(NC               *ncp,
         if (status != NC_NOERR) goto err_check;
 
         if (bufcount != (int)bufcount) {
-            status = NC_EINTOVERFLOW;
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             goto err_check;
         }
 
@@ -256,7 +256,7 @@ ncmpii_getput_varn(NC               *ncp,
             position = 0;
             packsize  = bnelems*el_size;
             if (packsize != (int)packsize) {
-                status = NC_EINTOVERFLOW;
+                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
                 goto err_check;
             }
             cbuf = NCI_Malloc((size_t)packsize);
@@ -296,7 +296,7 @@ ncmpii_getput_varn(NC               *ncp,
         MPI_Offset buflen;
         for (buflen=1, j=0; j<varp->ndims; j++) {
             if (_counts[i][j] < 0) { /* any negative counts[][] is illegal */
-                status = NC_ENEGATIVECNT;
+                DEBUG_ASSIGN_ERROR(status, NC_ENEGATIVECNT)
                 goto err_check;
             }
             buflen *= _counts[i][j];

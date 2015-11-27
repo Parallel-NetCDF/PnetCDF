@@ -193,7 +193,7 @@ ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
 
     if (ref->nalloc > 0) {
         ncap->value = (NC_attr **) NCI_Calloc((size_t)ref->nalloc, sizeof(NC_attr*));
-        if (ncap->value == NULL) return NC_ENOMEM;
+        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
         ncap->nalloc = ref->nalloc;
     }
 
@@ -201,7 +201,7 @@ ncmpii_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
     for (i=0; i<ref->ndefined; i++) {
         ncap->value[i] = dup_NC_attr(ref->value[i]);
         if (ncap->value[i] == NULL) {
-            status = NC_ENOMEM;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
             break;
         }
     }
@@ -233,8 +233,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 	{
 		assert(ncap->ndefined == 0);
 		vp = (NC_attr **) NCI_Malloc(sizeof(NC_attr*) * NC_ARRAY_GROWBY);
-		if(vp == NULL)
-			return NC_ENOMEM;
+		if(vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
 		ncap->value = vp;
 		ncap->nalloc = NC_ARRAY_GROWBY;
@@ -243,8 +242,7 @@ incr_NC_attrarray(NC_attrarray *ncap, NC_attr *newelemp)
 	{
 		vp = (NC_attr **) NCI_Realloc(ncap->value,
 			(size_t)(ncap->nalloc + NC_ARRAY_GROWBY) * sizeof(NC_attr*));
-		if(vp == NULL)
-			return NC_ENOMEM;
+		if(vp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
 		ncap->value = vp;
 		ncap->nalloc += NC_ARRAY_GROWBY;
@@ -343,12 +341,10 @@ NC_lookupattr(int ncid,
         return status;
 
     ncap = NC_attrarray0(ncp, varid);
-    if(ncap == NULL)
-        return NC_ENOTVAR;
+    if(ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if(indx == -1)
-        return NC_ENOTATT;
+    if(indx == -1) DEBUG_RETURN_ERROR(NC_ENOTATT)
 
     if(attrpp != NULL)
         *attrpp = ncap->value[indx];
@@ -375,10 +371,10 @@ ncmpi_inq_attname(int   ncid,
     if (status != NC_NOERR) return status;
 
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) return NC_ENOTVAR;
+    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     attrp = elem_NC_attrarray(ncap, attid);
-    if (attrp == NULL) return NC_ENOTATT;
+    if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOTATT)
 
     /* in PnetCDF, name->cp is always NULL character terminated */
     assert(name != NULL);
@@ -403,10 +399,10 @@ ncmpi_inq_attid(int         ncid,
     if (status != NC_NOERR) return status;
 
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) return NC_ENOTVAR;
+    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if (indx == -1) return NC_ENOTATT;
+    if (indx == -1) DEBUG_RETURN_ERROR(NC_ENOTATT)
 
     if (attidp != NULL)
         *attidp = indx;
@@ -475,10 +471,10 @@ ncmpi_rename_att(int         ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp)) return NC_EPERM;
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) return NC_ENOTVAR;
+    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     file_ver = 1;
     if (fIsSet(ncp->flags, NC_64BIT_OFFSET))
@@ -490,18 +486,18 @@ ncmpi_rename_att(int         ncid,
     if (status != NC_NOERR) return status;
 
     indx = ncmpii_NC_findattr(ncap, name);
-    if (indx < 0) return NC_ENOTATT;
+    if (indx < 0) DEBUG_RETURN_ERROR(NC_ENOTATT)
 
     attrp = ncap->value[indx];
     /* end inline clone NC_lookupattr() */
 
     if (ncmpii_NC_findattr(ncap, newname) >= 0)
         /* name in use */
-        return NC_ENAMEINUSE;
+        DEBUG_RETURN_ERROR(NC_ENAMEINUSE)
 
     if (NC_indef(ncp)) {
         NC_string *newStr = ncmpii_new_NC_string(strlen(newname), newname);
-        if (newStr == NULL) return NC_ENOMEM;
+        if (newStr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         ncmpii_free_NC_string(attrp->name);
         attrp->name = newStr;
@@ -522,7 +518,7 @@ ncmpi_rename_att(int         ncid,
             /* newname's length is inconsistent with root's */
             printf("Warning: attribute name(%s) used in %s() is inconsistent\n",
                    newname, __func__);
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE_ATTR_NAME;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_ATTR_NAME)
         }
     }
 
@@ -570,10 +566,10 @@ ncmpi_copy_att(int         ncid_in,
     status = ncmpii_NC_check_id(ncid_out, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_readonly(ncp)) return NC_EPERM;
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
     ncap = NC_attrarray0(ncp, varid_out);
-    if (ncap == NULL) return NC_ENOTVAR;
+    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx >= 0) { /* name in use */
@@ -585,10 +581,10 @@ ncmpi_copy_att(int         ncid_in,
 
             attrp = ncap->value[indx]; /* convenience */
 
-            if (iattrp->xsz > attrp->xsz) return NC_ENOTINDEFINE;
+            if (iattrp->xsz > attrp->xsz) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
             /* else, we can reuse existing without redef */
 
-            if (iattrp->xsz != (int)iattrp->xsz) return NC_EINTOVERFLOW;
+            if (iattrp->xsz != (int)iattrp->xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             attrp->xsz = iattrp->xsz;
             attrp->type = iattrp->type;
@@ -618,14 +614,14 @@ ncmpi_copy_att(int         ncid_in,
     }
     else {
         if (!NC_indef(ncp)) /* add new attribute is not allowed in data mode */
-            return NC_ENOTINDEFINE;
+            DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
         if (ncap->ndefined >= NC_MAX_ATTRS)
-            return NC_EMAXATTS;
+            DEBUG_RETURN_ERROR(NC_EMAXATTS)
     }
 
     attrp = ncmpii_new_NC_attr(name, iattrp->type, iattrp->nelems);
-    if (attrp == NULL) return NC_ENOMEM;
+    if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     memcpy(attrp->xvalue, iattrp->xvalue, (size_t)iattrp->xsz);
 
@@ -657,13 +653,13 @@ ncmpi_del_att(int         ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
+    if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) return NC_ENOTVAR;
+    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     attrid = ncmpii_NC_findattr(ncap, name);
-    if (attrid == -1) return NC_ENOTATT;
+    if (attrid == -1) DEBUG_RETURN_ERROR(NC_ENOTATT)
 
     /* deleting attribute _FillValue means disabling fill mode */
     if (!strcmp(name, _FillValue)) {
@@ -726,7 +722,7 @@ ncmpix_pad_getn_$1(const void **xpp,
             return ncmpix_pad_getn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
             assert("ncmpix_pad_getn_$1 invalid buffer type" == 0);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 ')dnl
@@ -772,7 +768,7 @@ ncmpix_getn_$1(const void **xpp,
             return ncmpix_getn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
             assert("ncmpix_pad_getn_$1 invalid buffer type" == 0);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 ')dnl
@@ -820,7 +816,7 @@ ncmpix_pad_getn(const void **xpp,
             return ncmpix_getn_uint64    (xpp, nelems, tp, buftype);
         default:
             assert("ncmpix_pad_getn invalid filetype" == 0);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 
@@ -843,7 +839,7 @@ ncmpii_get_att(int         ncid,
     /* No character conversions are allowed. */
     if (attrp->type != buftype &&
         (attrp->type == NC_CHAR || buftype == NC_CHAR))
-        return NC_ECHAR;
+        DEBUG_RETURN_ERROR(NC_ECHAR)
 
     const void *xp = attrp->xvalue;
     return ncmpix_pad_getn(&xp, attrp->nelems, tp, attrp->type, buftype);
@@ -928,7 +924,7 @@ ncmpix_pad_putn_$1(void       **xpp,
             return ncmpix_pad_putn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
             assert("ncmpix_pad_putn_$1 invalid type" == 0);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 ')dnl
@@ -974,7 +970,7 @@ ncmpix_putn_$1(void       **xpp,
             return ncmpix_putn_$1_ulonglong(xpp, nelems, (ulonglong*)tp);
         default:
             assert("ncmpix_putn_$1 invalid type" == 0);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 ')dnl
@@ -1022,7 +1018,7 @@ ncmpix_pad_putn(void       **xpp,
             return ncmpix_putn_uint64    (xpp, nelems, tp, buftype);
         default:
             assert("ncmpix_pad_putn invalid filetype" == 0);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 
@@ -1048,21 +1044,21 @@ ncmpii_put_att(int         ncid,
     NC_attr *attrp, *old=NULL;
 
     if (!name || strlen(name) > NC_MAX_NAME)
-        return NC_EBADNAME;
+        DEBUG_RETURN_ERROR(NC_EBADNAME)
 
     /* Should CDF-5 allow very large file header? */
-    /* if (len > X_INT_MAX) return NC_EINVAL; */
+    /* if (len > X_INT_MAX) DEBUG_RETURN_ERROR(NC_EINVAL) */
 
     /* get the file ID */
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
     /* file should be opened with writable permission */
-    if (NC_readonly(ncp)) return NC_EPERM;
+    if (NC_readonly(ncp)) DEBUG_RETURN_ERROR(NC_EPERM)
 
     /* nelems can be zero, i.e. an attribute with only its name */
     if (nelems > 0 && buf == NULL)
-        return NC_EINVAL; /* Null arg */
+        DEBUG_RETURN_ERROR(NC_EINVAL) /* Null arg */
 
     /* If this is the _FillValue attribute, then let PnetCDF return the
      * same error codes as netCDF
@@ -1074,10 +1070,10 @@ ncmpii_put_att(int         ncid,
 
         /* Fill value must be same type and have exactly one value */
         if (filetype != varp->type)
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
         if (nelems != 1)
-            return NC_EINVAL;
+            DEBUG_RETURN_ERROR(NC_EINVAL)
     }
 
     /* get the file format version */
@@ -1088,7 +1084,7 @@ ncmpii_put_att(int         ncid,
         file_ver = 5;
 
     if (nelems < 0 || (nelems > X_INT_MAX && file_ver <= 2))
-        return NC_EINVAL; /* Invalid nelems */
+        DEBUG_RETURN_ERROR(NC_EINVAL) /* Invalid nelems */
 
     /* check if filetype is valid, as filetype is given by user
      * no need to check buftype, as buftype is set internally
@@ -1099,7 +1095,7 @@ ncmpii_put_att(int         ncid,
     /* No character conversions are allowed. */
     if (filetype != buftype &&
         (filetype == NC_CHAR || buftype == NC_CHAR))
-        return NC_ECHAR;
+        DEBUG_RETURN_ERROR(NC_ECHAR)
 
     /* check if the attribute name is legal */
     status = ncmpii_NC_check_name(name, file_ver);
@@ -1107,7 +1103,7 @@ ncmpii_put_att(int         ncid,
 
     /* get the pointer to the attribute array */
     ncap = NC_attrarray0(ncp, varid);
-    if (ncap == NULL) return NC_ENOTVAR;
+    if (ncap == NULL) DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     indx = ncmpii_NC_findattr(ncap, name);
     if (indx >= 0) { /* name in use */
@@ -1124,10 +1120,10 @@ ncmpii_put_att(int         ncid,
             attrp = ncap->value[indx]; /* convenience */
 
             if (xsz > attrp->xsz) /* new attribute requires a larger space */
-                return NC_ENOTINDEFINE;
+                DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
             /* else, we can reuse existing without redef */
 
-            if (xsz != (int)xsz) return NC_EINTOVERFLOW;
+            if (xsz != (int)xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
             attrp->xsz = xsz;
             attrp->type = filetype;
@@ -1168,15 +1164,15 @@ ncmpii_put_att(int         ncid,
     }
     else { /* name never been used */
         /* creating new attributes must be done in define mode */
-        if (!NC_indef(ncp)) return NC_ENOTINDEFINE;
+        if (!NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_ENOTINDEFINE)
 
         if (ncap->ndefined >= NC_MAX_ATTRS)
-            return NC_EMAXATTS;
+            DEBUG_RETURN_ERROR(NC_EMAXATTS)
     }
 
     /* create a new attribute object */
     attrp = ncmpii_new_NC_attr(name, filetype, nelems);
-    if (attrp == NULL) return NC_ENOMEM;
+    if (attrp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     if (nelems != 0) { /* non-zero length attribute */
         void *xp = attrp->xvalue;

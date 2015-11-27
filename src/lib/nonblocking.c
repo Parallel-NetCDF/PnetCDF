@@ -63,12 +63,14 @@ ncmpii_getput_zero_req(NC  *ncp,
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_read_all");
             status = (err == NC_EFILE) ? NC_EREAD : err;
+            DEBUG_ASSIGN_ERROR(status, status)
         }
     } else { /* WRITE_REQ */
         TRACE_IO(MPI_File_write_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_all");
             status = (err == NC_EFILE) ? NC_EWRITE : err;
+            DEBUG_ASSIGN_ERROR(status, status)
         }
     }
 
@@ -137,7 +139,7 @@ ncmpi_cancel(int  ncid,
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
 
-    if (NC_indef(ncp)) return NC_EINDEFINE;
+    if (NC_indef(ncp)) DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
     return ncmpii_cancel(ncp, num_req, req_ids, statuses);
 }
@@ -177,8 +179,8 @@ ncmpii_cancel(NC  *ncp,
             continue;
 
         if (ncp->head == NULL) {
-            if (statuses != NULL) statuses[i] = NC_EINVAL_REQUEST;
-            if (status == NC_NOERR) status = NC_EINVAL_REQUEST;
+            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
             continue;
         }
 
@@ -210,9 +212,9 @@ ncmpii_cancel(NC  *ncp,
         }
 
         if (found_id == -1) { /* no such request ID */
-            if (statuses != NULL) statuses[i] = NC_EINVAL_REQUEST;
+            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
             /* retain the first error status */
-            if (status == NC_NOERR) status = NC_EINVAL_REQUEST;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
         }
     }
 
@@ -341,7 +343,7 @@ ncmpi_wait_all(int  ncid,
 
     /* This API is collective, so make it illegal in indep mode. This also
        ensures the program will returns back to collective mode. */
-    if (NC_indep(ncp)) return NC_EINDEP;
+    if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP;
 
     /* must enter independent mode, as num_reqs may be different among
        processes */
@@ -410,7 +412,7 @@ ncmpii_concatenate_datatypes(int           num,
         addrs[i] = displacements[i];
         if (displacements[i] != addrs[i]) {
             NCI_Free(addrs);
-            return NC_EAINT_TOO_SMALL;
+            DEBUG_RETURN_ERROR(NC_EAINT_TOO_SMALL)
         }
     }
 #endif
@@ -546,7 +548,7 @@ ncmpii_construct_buffertypes(int           num_reqs,
         MPI_Offset int8 = reqs[i].bnelems * reqs[i].varp->xsz;
         blocklengths[j] = (int)int8;
         if (int8 != blocklengths[j]) { /* skip this request */
-            status = NC_EINTOVERFLOW;
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             continue;
         }
 #ifdef HAVE_MPI_GET_ADDRESS
@@ -622,7 +624,7 @@ ncmpii_wait(NC  *ncp,
     NC_req *r_req_head=NULL, *r_req_tail=NULL;
 
     if (NC_indef(ncp)) { /* This API can only be called in data mode */
-        err = NC_EINDEFINE;
+        DEBUG_ASSIGN_ERROR(err, NC_EINDEFINE)
         goto err_check;
     }
 
@@ -691,9 +693,9 @@ ncmpii_wait(NC  *ncp,
 
         if (ncp->head == NULL) {
             /* no more pending requests in the queue, this request is invalid */
-            if (statuses != NULL) statuses[i] = NC_EINVAL_REQUEST;
+            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
             /* retain the first error status */
-            if (status == NC_NOERR) status = NC_EINVAL_REQUEST;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
             continue;
             /* don't break loop i, continue to set the error status */
         }
@@ -776,9 +778,9 @@ ncmpii_wait(NC  *ncp,
         } /* done with searching the entire linked list for this request ID */
 
         if (found_id == -1) { /* no such request ID */
-            if (statuses != NULL) statuses[i] = NC_EINVAL_REQUEST;
+            if (statuses != NULL) DEBUG_ASSIGN_ERROR(statuses[i], NC_EINVAL_REQUEST)
             if (status == NC_NOERR) /* retain the first error status */
-                status = NC_EINVAL_REQUEST;
+                DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
         }
     }
     /* make sure ncp->tail pointing to the tail of the pending request queue */
@@ -881,7 +883,7 @@ err_check:
             MPI_Type_size(cur_req->ptype, &el_size);
             insize = cur_req->bnelems * el_size;
             if (insize != (int)insize && status == NC_NOERR)
-                status = NC_EINTOVERFLOW;
+                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
             if (ncmpii_need_convert(varp->type, cur_req->ptype)) {
                 /* need type conversion from the external type to user buffer
@@ -932,7 +934,7 @@ err_check:
                 position = 0;
                 if (cur_req->bufcount != (int)cur_req->bufcount &&
                     status == NC_NOERR)
-                    status = NC_EINTOVERFLOW;
+                    DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
                 MPI_Unpack(lbuf, (int)insize, &position, cur_req->buf,
                            (int)cur_req->bufcount, cur_req->buftype,
                            MPI_COMM_SELF);
@@ -967,7 +969,7 @@ err_check:
                 MPI_Type_size(cur_req->buftype, &bufsize);
                 insize = cur_req->bufcount * bufsize;
                 if (insize != (int)insize && status == NC_NOERR)
-                    status = NC_EINTOVERFLOW;
+                    DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
                 MPI_Unpack(cur_req->tmpBuf, (int)insize, &position,
                            cur_req->userBuf, (int)cur_req->bufcount,
@@ -1277,11 +1279,11 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
     displacements = (MPI_Aint*) NCI_Malloc((size_t)(j+1) * SIZEOF_MPI_AINT);
 
     /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
-    if (segs[0].len != (int)segs[0].len) return NC_EINTOVERFLOW;
+    if (segs[0].len != (int)segs[0].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     displacements[0] =      segs[0].off;
     blocklengths[0]  = (int)segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
-        if (segs[i].len != (int)segs[i].len) return NC_EINTOVERFLOW;
+        if (segs[i].len != (int)segs[i].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         if (displacements[j] + blocklengths[j] == segs[i].off)
             /* j and i are contiguous */
             blocklengths[j] += (int)segs[i].len;
@@ -1334,11 +1336,11 @@ ncmpii_construct_off_len_type(MPI_Offset    nsegs,    /* no. off-len pairs */
     displacements = (MPI_Aint*) NCI_Malloc((size_t)(j+1) * SIZEOF_MPI_AINT);
 
     /* coalesce segs[].off and len to dispalcements[] and blocklengths[] */
-    if (segs[0].len != (int)segs[0].len) return NC_EINTOVERFLOW;
+    if (segs[0].len != (int)segs[0].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     displacements[0] =      segs[0].buf_addr;
     blocklengths[0]  = (int)segs[0].len;
     for (j=0,i=1; i<nsegs; i++) {
-        if (segs[i].len != (int)segs[i].len) return NC_EINTOVERFLOW;
+        if (segs[i].len != (int)segs[i].len) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         if (displacements[j] + blocklengths[j] == segs[i].buf_addr)
             /* j and i are contiguous */
             blocklengths[j] += (int)segs[i].len;
@@ -1670,9 +1672,10 @@ ncmpii_req_aggregation(NC     *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EREAD : err;
-
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         } else {
             TRACE_IO(MPI_File_read_at)(fh, offset, buf, buf_len, buf_type,
@@ -1680,8 +1683,10 @@ ncmpii_req_aggregation(NC     *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         if (mpireturn == MPI_SUCCESS) {
@@ -1696,8 +1701,10 @@ ncmpii_req_aggregation(NC     *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         } else {
             TRACE_IO(MPI_File_write_at)(fh, offset, buf, buf_len, buf_type,
@@ -1705,8 +1712,10 @@ ncmpii_req_aggregation(NC     *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         if (mpireturn == MPI_SUCCESS) {
@@ -1899,7 +1908,7 @@ ncmpii_mgetput(NC           *ncp,
         MPI_Offset int8 = reqs[0].bnelems * reqs[0].varp->xsz;
         len = (int)int8;
         if (int8 != len) {
-            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             len = 0; /* skip this request */
         }
         buf = reqs[0].xbuf;
@@ -1917,7 +1926,7 @@ ncmpii_mgetput(NC           *ncp,
             MPI_Offset int8 = reqs[i].bnelems * reqs[i].varp->xsz;
             blocklengths[j] = (int)int8;
             if (int8 != blocklengths[j]) { /* int overflow */
-                if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+                if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
                 blocklengths[j] = 0;
                 continue; /* skip this request */
             }
@@ -1987,8 +1996,10 @@ ncmpii_mgetput(NC           *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         } else {
             TRACE_IO(MPI_File_read_at)(fh, offset, buf, len, buf_type,
@@ -1996,8 +2007,10 @@ ncmpii_mgetput(NC           *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_read_at");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EREAD : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         /* update the number of bytes read since file open */
@@ -2012,8 +2025,10 @@ ncmpii_mgetput(NC           *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at_all");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         } else {
             TRACE_IO(MPI_File_write_at)(fh, offset, buf, len, buf_type,
@@ -2021,8 +2036,10 @@ ncmpii_mgetput(NC           *ncp,
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
                 /* return the first encountered error if there is any */
-                if (status == NC_NOERR)
+                if (status == NC_NOERR) {
                     status = (err == NC_EFILE) ? NC_EWRITE : err;
+                    DEBUG_ASSIGN_ERROR(status, status)
+                }
             }
         }
         /* update the number of bytes written since file open */
@@ -2064,7 +2081,7 @@ int ncmpii_set_iget_callback(NC           *ncp,
 
     if (reqid == NC_REQ_NULL) return NC_NOERR;
 
-    if (ncp->head == NULL) return NC_EINVAL_REQUEST;
+    if (ncp->head == NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
 
     cur_req = ncp->head;
     while (cur_req != NULL) {
@@ -2091,7 +2108,7 @@ int ncmpii_set_iget_callback(NC           *ncp,
         }
         cur_req = cur_req->next;
     }
-    if (cur_req == NULL) return NC_EINVAL_REQUEST;
+    if (cur_req == NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
 
     return NC_NOERR;
 }
@@ -2109,7 +2126,7 @@ int ncmpii_set_iput_callback(NC   *ncp,
 
     if (reqid == NC_REQ_NULL) return NC_NOERR;
 
-    if (ncp->head == NULL) return NC_EINVAL_REQUEST;
+    if (ncp->head == NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
 
     cur_req = ncp->head;
     while (cur_req != NULL) {
@@ -2123,7 +2140,7 @@ int ncmpii_set_iput_callback(NC   *ncp,
             break; /* requests with same ID are in consecutive linked nodes */
         cur_req = cur_req->next;
     }
-    if (found_req_id == NC_REQ_NULL) return NC_EINVAL_REQUEST;
+    if (found_req_id == NC_REQ_NULL) DEBUG_RETURN_ERROR(NC_EINVAL_REQUEST)
 
     return NC_NOERR;
 }

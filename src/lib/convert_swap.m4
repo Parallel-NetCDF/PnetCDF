@@ -25,6 +25,7 @@ dnl
 
 #include "nc.h"
 #include "ncx.h"
+#include "macro.h"
 
 /* Prototypes for functions used only in this file */
 #if 0
@@ -235,7 +236,7 @@ ncmpii_x_putn_$1(void         *xp,      /* file buffer of type schar */
         return ncmpix_putn_$1_longlong (&xp, nelems, (const longlong*)  putbuf);
     else if (puttype == MPI_UNSIGNED_LONG_LONG)
         return ncmpix_putn_$1_ulonglong(&xp, nelems, (const ulonglong*) putbuf);
-    return NC_EBADTYPE;
+    DEBUG_RETURN_ERROR(NC_EBADTYPE)
 }
 ')dnl
 
@@ -285,7 +286,7 @@ ncmpii_x_getn_$1(const void   *xp,      /* file buffer of type schar */
         return ncmpix_getn_$1_longlong (&xp, nelems, (longlong*)  getbuf);
     else if (gettype == MPI_UNSIGNED_LONG_LONG)
         return ncmpix_getn_$1_ulonglong(&xp, nelems, (ulonglong*) getbuf);
-    return NC_EBADTYPE;
+    DEBUG_RETURN_ERROR(NC_EBADTYPE)
 }
 ')dnl
 

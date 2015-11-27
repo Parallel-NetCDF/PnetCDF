@@ -103,10 +103,10 @@
           ! define an MPI datatype using MPI_Type_create_subarray()
           one        = 1_MPI_OFFSET_KIND
           ghost      = 2
-          gsize(1)   = NX + 2 * ghost
-          gsize(2)   = NY + 2 * ghost
-          subsize(1) = NX
-          subsize(2) = NY
+          gsize(1)   = INT(NX) + 2 * ghost
+          gsize(2)   = INT(NY) + 2 * ghost
+          subsize(1) = INT(NX)
+          subsize(2) = INT(NY)
           a_start(1) = ghost - 1
           a_start(2) = ghost - 1
 

@@ -37,6 +37,30 @@ void  NCI_Free_fn(void *ptr, int lineno, const char *func, const char *fname);
     }                                                                         \
 }
 
+#ifdef PNC_DEBUG
+#define DEBUG_RETURN_ERROR(err) {                                       \
+    int _rank;                                                          \
+    char *env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");               \
+    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                              \
+    if (env_str != NULL && *env_str != '0')                             \
+        fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
+        _rank,ncmpii_err_code_name(err),__LINE__,__func__,__FILE__);    \
+    return err;                                                         \
+}
+#define DEBUG_ASSIGN_ERROR(status, err) {                               \
+    int _rank;                                                          \
+    char *env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");               \
+    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                              \
+    if (env_str != NULL && *env_str != '0')                             \
+        fprintf(stderr, "Rank %d: %s error at line %d of %s in %s\n",   \
+        _rank,ncmpii_err_code_name(err),__LINE__,__func__,__FILE__);    \
+    status = err;                                                       \
+}
+#else
+#define DEBUG_RETURN_ERROR(err) return err;
+#define DEBUG_ASSIGN_ERROR(status, err) status = err;
+#endif
+
 #define GET_ONE_COUNT(count) {                                                \
     int _i;                                                                   \
     count = (MPI_Offset*) NCI_Malloc((size_t)varp->ndims * SIZEOF_MPI_OFFSET);\

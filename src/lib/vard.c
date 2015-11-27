@@ -69,7 +69,7 @@ ncmpii_getput_vard(NC               *ncp,
     /* call a separate routine if variable is stored in subfiles */
     if (varp->num_subfiles > 1) {
         printf("This feature for subfiling is yet to implement\n");
-        return NC_ENOTSUPPORT;
+        DEBUG_RETURN_ERROR(NC_ENOTSUPPORT)
     }
 #endif
 
@@ -100,7 +100,7 @@ ncmpii_getput_vard(NC               *ncp,
             var_size *= varp->shape[i];
 
         if (extent > var_size) {
-            err = NC_ETYPESIZE;
+            DEBUG_ASSIGN_ERROR(err, NC_ETYPESIZE)
             goto err_check;
         }
     }
@@ -114,12 +114,12 @@ ncmpii_getput_vard(NC               *ncp,
 
     /* element type of filetype must be the same as variable's type */
     if (ptype != ncmpii_nc2mpitype(varp->type)) {
-        err = NC_ETYPE_MISMATCH;
+        DEBUG_ASSIGN_ERROR(err, NC_ETYPE_MISMATCH)
         goto err_check;
     }
 
     if (bufcount != (int)bufcount) {
-        err = NC_EINTOVERFLOW;
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         goto err_check;
     }
 
@@ -147,7 +147,7 @@ ncmpii_getput_vard(NC               *ncp,
         if (err != NC_NOERR) goto err_check;
 
         if (btnelems != (int)btnelems) {
-            err = NC_EINTOVERFLOW;
+            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
             goto err_check;
         }
 
@@ -156,7 +156,7 @@ ncmpii_getput_vard(NC               *ncp,
         outsize      = bufcount * buftype_size;
 
         if (outsize != filetype_size) {
-            err = NC_ETYPESIZE_MISMATCH;
+            DEBUG_ASSIGN_ERROR(err, NC_ETYPESIZE_MISMATCH)
             goto err_check;
         }
 
@@ -272,7 +272,7 @@ err_check:
             int position = 0;
             MPI_Offset insize = bnelems * el_size;
             if (insize != (int)insize) {
-                if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+                if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             }
             else
                 MPI_Unpack(cbuf, (int)insize, &position, buf, (int)orig_bufcount,

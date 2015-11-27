@@ -112,7 +112,7 @@ NC_check_header(NC         *ncp,
      * due to the 2nd argument, count, of MPI_Bcast being of type int.
      * Possible solution is to broadcast in chunks of 2^31 bytes.
      */
-    if (ncp->xsz != (int)ncp->xsz) return NC_EINTOVERFLOW;
+    if (ncp->xsz != (int)ncp->xsz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     TRACE_COMM(MPI_Bcast)(cmpbuf, (int)ncp->xsz, MPI_BYTE, 0, ncp->nciop->comm);
 
     if (rank > 0 && (ncp->xsz != local_xsz || memcmp(buf, cmpbuf, (size_t)ncp->xsz))) {
@@ -145,7 +145,7 @@ NC_check_header(NC         *ncp,
             return ncmpii_handle_error(mpireturn, "MPI_Allreduce"); 
 
         if (g_status != NC_NOERR) { /* some headers are inconsistent */
-            if (status == NC_NOERR) status = NC_EMULTIDEFINE;
+            if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE)
         }
     }
 
@@ -178,7 +178,7 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   MPI_Allreduce(&compare, &errcheck, 1, MPI_OFFSET, MPI_LOR, comm);
 
   if (errcheck)
-    return NC_EMULTIDEFINE;
+    DEBUG_RETURN_ERROR(NC_EMULTIDEFINE)
 
   if (rank == 0)
     cmpbuf = buf;
@@ -195,7 +195,7 @@ NC_check_def(MPI_Comm comm, void *buf, MPI_Offset nn) {
   MPI_Allreduce(&compare, &errcheck, 1, MPI_OFFSET, MPI_LOR, comm);
 
   if (errcheck){
-    return NC_EMULTIDEFINE;
+    DEBUG_RETURN_ERROR(NC_EMULTIDEFINE)
   }else{
     return NC_NOERR;
   }
@@ -219,7 +219,7 @@ ncmpii_NC_check_id(int   ncid,
     }
 
     /* else, not found */
-    return NC_EBADID;
+    DEBUG_RETURN_ERROR(NC_EBADID)
 }
 
 
@@ -233,7 +233,7 @@ ncmpii_inq_files_opened(int *num, int *ncids)
     for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
         printf("still open %s\n",ncp->nciop->path);
 */
-    if (num == NULL) return NC_EINVAL;
+    if (num == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     *num = 0;
     for (ncp=NClist; ncp!=NULL; ncp=ncp->next)
@@ -309,7 +309,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
             /* formats are inconsistent, overwrite local format with root's */
             printf("rank %d: Warning - inconsistent file format, overwrite with root's\n",rank);
             format = root_format;
-            status = NC_EMULTIDEFINE_OMODE;
+            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
         }
     }
 
@@ -318,7 +318,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
     if (format != NC_FORMAT_CLASSIC &&
         format != NC_FORMAT_CDF2 &&
         format != NC_FORMAT_CDF5) {
-        return NC_EINVAL;
+        DEBUG_RETURN_ERROR(NC_EINVAL)
     }
     default_create_format = format;
 
@@ -331,7 +331,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
 int
 ncmpi_inq_default_format(int *formatp)
 {
-    if (formatp == NULL) return NC_EINVAL;
+    if (formatp == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
     *formatp = default_create_format;
     return NC_NOERR;
@@ -377,11 +377,11 @@ ncmpii_cktype(int     cdf_ver,
 {
     /* the max data type supported by CDF-5 is NC_UINT64 */
     if (type <= 0 || type > NC_UINT64)
-        return NC_EBADTYPE;
+        DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
     /* For CDF-1 and CDF-2 files, only classic types are allowed. */
     if (cdf_ver < 5 && type > NC_DOUBLE)
-        return NC_ESTRICTCDF2;
+        DEBUG_RETURN_ERROR(NC_ESTRICTCDF2)
 
     return NC_NOERR;
 }
@@ -490,7 +490,7 @@ NC_begins(NC         *ncp,
 
         /* for CDF-1 check if over the file size limit 32-bit integer */
         if (cdf_format == 1 && end_var > X_OFF_MAX)
-            return NC_EVARSIZE;
+            DEBUG_RETURN_ERROR(NC_EVARSIZE)
 
         /* this will pad out non-record variables with zero to the
          * requested alignment.  record variables are a bit trickier.
@@ -564,7 +564,7 @@ NC_begins(NC         *ncp,
 
         /* X_OFF_MAX is the max of 32-bit integer */
         if (cdf_format == 1 && end_var > X_OFF_MAX)
-            return NC_EVARSIZE;
+            DEBUG_RETURN_ERROR(NC_EVARSIZE)
 
         /* A few attempts at aligning record variables have failed
          * (either with range error or 'value read not that expected',
@@ -590,7 +590,7 @@ NC_begins(NC         *ncp,
         /* check if record size must fit in 32-bits */
 #if SIZEOF_OFF_T == SIZEOF_SIZE_T && SIZEOF_SIZE_T == 4
         if (ncp->recsize > X_UINT_MAX - ncp->vars.value[i]->len)
-            return NC_EVARSIZE;
+            DEBUG_RETURN_ERROR(NC_EVARSIZE)
 #endif
         ncp->recsize += ncp->vars.value[i]->len;
         last = ncp->vars.value[i];
@@ -686,7 +686,7 @@ ncmpii_sync_numrecs(NC         *ncp,
             status = ncmpix_put_int64((void**)&buf, max_numrecs);
         }
         else {
-            if (max_numrecs != (int)max_numrecs) status = NC_EINTOVERFLOW;
+            if (max_numrecs != (int)max_numrecs) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
             len = X_SIZEOF_SIZE_T;
             status = ncmpix_put_int32((void**)&buf, (int)max_numrecs);
         }
@@ -698,7 +698,7 @@ ncmpii_sync_numrecs(NC         *ncp,
                                     MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
-            if (status == NC_NOERR && err == NC_EFILE) status = NC_EWRITE;
+            if (status == NC_NOERR && err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
             int put_size;
@@ -716,7 +716,7 @@ ncmpii_sync_numrecs(NC         *ncp,
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
         /* root's write has failed, which is serious */
-        if (root_status == NC_EWRITE) status = NC_EWRITE;
+        if (root_status == NC_EWRITE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
     }
 
     /* clear numrecs dirty bit */
@@ -811,13 +811,13 @@ write_NC(NC *ncp)
     if (rank == 0) {
         /* rank 0's fileview already includes the file header */
         MPI_Status mpistatus;
-        if (ncp->xsz != (int)ncp->xsz) status = NC_EINTOVERFLOW;
+        if (ncp->xsz != (int)ncp->xsz) DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
         TRACE_IO(MPI_File_write_at)(ncp->nciop->collective_fh, 0, buf,
                                     (int)ncp->xsz, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_handle_error(mpireturn, "MPI_File_write_at");
             /* write has failed, which is more serious than inconsistency */
-            if (err == NC_EFILE) status = NC_EWRITE;
+            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
             int put_size;
@@ -831,7 +831,7 @@ write_NC(NC *ncp)
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->nciop->comm);
         /* root's write has failed, which is more serious than inconsistency */
-        if (root_status == NC_EWRITE) status = NC_EWRITE;
+        if (root_status == NC_EWRITE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
     }
 
     fClr(ncp->flags, NC_NDIRTY);
@@ -974,16 +974,16 @@ ncmpii_NC_check_vlens(NC *ncp)
     /* OK if last non-record variable size too large, since not used to
        compute an offset */
     if( large_vars_count > 1) { /* only one "too-large" variable allowed */
-      return NC_EVARSIZE;
+      DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
     /* and it has to be the last one */
     if( large_vars_count == 1 && last == 0) {
-      return NC_EVARSIZE;
+      DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
     if( rec_vars_count > 0 ) {
        /* and if it's the last one, there can't be any record variables */
        if( large_vars_count == 1 && last == 1) {
-           return NC_EVARSIZE;
+           DEBUG_RETURN_ERROR(NC_EVARSIZE)
        }
        /* Loop through vars, second pass is for record variables.   */
        large_vars_count = 0;
@@ -1000,11 +1000,11 @@ ncmpii_NC_check_vlens(NC *ncp)
        /* OK if last record variable size too large, since not used to
           compute an offset */
        if( large_vars_count > 1) { /* only one "too-large" variable allowed */
-           return NC_EVARSIZE;
+           DEBUG_RETURN_ERROR(NC_EVARSIZE)
        }
        /* and it has to be the last one */
        if( large_vars_count == 1 && last == 0) {
-           return NC_EVARSIZE;
+           DEBUG_RETURN_ERROR(NC_EVARSIZE)
        }
     }
     return NC_NOERR;

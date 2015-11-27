@@ -13,6 +13,8 @@ dnl
 # include "ncconfig.h"
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <mpi.h>
 
 /*
@@ -24,10 +26,11 @@ dnl
  * An external data representation interface.
  */
 
-#include "ncx.h"
-#include "nc.h"
 #include <string.h>
 #include <limits.h>
+#include "ncx.h"
+#include "nc.h"
+#include "macro.h"
 
 /* alias poorly named limits.h macros */
 #define  SHORT_MAX  SHRT_MAX
@@ -388,10 +391,15 @@ dnl Don't check for negative $3 if $1 is   signed && $2 is   signed
 dnl Don't check for negative $3 if $1 is unsigned
 dnl $5 is either "return" or "status ="
 dnl
-define(`GETI_CheckNeg',
+define(`GETI_CheckNegReturn',
        `ifelse(index(`$1',`u'), 0, ,
                index(`$2',`u'), 0,
-               `if ($3 < 0) $5 NC_ERANGE; /* because $4 is unsigned */')')dnl
+               `if ($3 < 0) return NC_ERANGE; /* because $4 is unsigned */')')dnl
+
+define(`GETI_CheckNegAssign',
+       `ifelse(index(`$1',`u'), 0, ,
+               index(`$2',`u'), 0,
+               `if ($3 < 0) status = NC_ERANGE; /* because $4 is unsigned */')')dnl
 
 dnl
 dnl For PUT APIs:
@@ -402,13 +410,13 @@ dnl
 define(`PUTI_CheckNeg',
        `ifelse(index(`$1',`u'), 0,
                `ifelse(index(`$2',`u'), 0, ,
-                       `	if ($3 < 0) return NC_ERANGE; /* because $4 is unsigned */')')')dnl
+                       `	if ($3 < 0) DEBUG_RETURN_ERROR(NC_ERANGE) /* because $4 is unsigned */')')')dnl
 
 dnl
 dnl For GET APIs boundary check
 dnl
 define(`GETF_CheckBND',
-`if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
+`if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)
 	*ip = ($1)xx;')
 
 dnl
@@ -419,15 +427,15 @@ define(`GETF_CheckBND2',
 `if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;',dnl for unsigned type
 `if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;
 	else if (xx == Upcase($1)_MIN) *ip = Upcase($1)_MIN;')
-	else if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) return NC_ERANGE;
+	else if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)
 	else *ip = ($1)xx;')
 
 dnl
 dnl For PUT APIs and either $1 and $2 is float or double:
 dnl
 define(`PUTF_CheckBND',
-`ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) return NC_ERANGE;',
-        `$2', `float',  `if (*ip > (double)Xmax($1) || *ip < FXmin($1)) return NC_ERANGE;')')
+`ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)',
+        `$2', `float',  `if (*ip > (double)Xmax($1) || *ip < FXmin($1)) DEBUG_RETURN_ERROR(NC_ERANGE)')')
 
 dnl
 dnl For GET APIs and $1 and $2 are not float or double
@@ -436,7 +444,7 @@ define(`GETI_CheckBND',
 ``#'if IXmax($1) > Imax($2)
 	if (xx > Imax($2)'`ifelse(index(`$1',`u'), 0, ,
                                   index(`$2',`u'), 0, ,
-                                  ` || xx < Imin($2)')'`) return NC_ERANGE;'
+                                  ` || xx < Imin($2)')'`) DEBUG_RETURN_ERROR(NC_ERANGE)'
 `#'endif)
 
 dnl
@@ -446,7 +454,7 @@ define(`PUTI_CheckBND',
 ``#'if IXmax($1) < Imax($2)
 	if (*ip > IXmax($1)'`ifelse(index(`$1',`u'), 0, ,
                                     index(`$2',`u'), 0, ,
-                                    ` || *ip < Xmin($1)')'`) return NC_ERANGE;'
+                                    ` || *ip < Xmin($1)')'`) DEBUG_RETURN_ERROR(NC_ERANGE)'
 `#'endif)
 
 /*
@@ -493,7 +501,7 @@ ifelse(`$3', `1',
 	ix_$1 xx;
 	get_ix_$1(xp, &xx);
 GETI_CheckBND($1, $2)
-	GETI_CheckNeg($1, $2, xx, ip, return)
+	GETI_CheckNegReturn($1, $2, xx, ip)
 	*ip = ($2) xx;
 ifelse(`$3', `1', ``#'endif
 ')dnl
@@ -698,7 +706,7 @@ static int
 ncmpix_put_ushort_schar(void *xp, const schar *ip)
 {
 	uchar *cp;
-        if (*ip < 0) return NC_ERANGE;
+        if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE)
 	cp = (uchar *) xp;
 	if (*ip & 0x80)
 		*cp++ = 0xff;
@@ -894,7 +902,7 @@ static int
 ncmpix_put_uint_schar(void *xp, const schar *ip)
 {
 	uchar *cp;
-	if (*ip < 0) return NC_ERANGE;
+	if (*ip < 0) DEBUG_RETURN_ERROR(NC_ERANGE)
 
 	cp = (uchar *) xp;
 	*cp++ = 0x00;
@@ -1369,7 +1377,7 @@ ncmpix_put_float_float(void *xp, const float *ip)
 {
 #ifdef NO_IEEE_FLOAT
 	if (*ip > X_FLOAT_MAX || *ip < X_FLOAT_MIN)
-		return NC_ERANGE;
+		DEBUG_RETURN_ERROR(NC_ERANGE)
 #endif
 	put_ix_float(xp, ip);
 	return NC_NOERR;
@@ -1685,12 +1693,12 @@ ncmpix_get_double_float(const void *xp, float *ip)
 	if (xx > FLT_MAX)
 	{
 		*ip = FLT_MAX;
-		return NC_ERANGE;
+		DEBUG_RETURN_ERROR(NC_ERANGE)
 	}
 	if (xx < (-FLT_MAX))
 	{
 		*ip = (-FLT_MAX);
-		return NC_ERANGE;
+		DEBUG_RETURN_ERROR(NC_ERANGE)
 	}
 	*ip = (float) xx;
 	return NC_NOERR;
@@ -1721,7 +1729,7 @@ ncmpix_put_double_float(void *xp, const float *ip)
 {
 #if 0	/* TODO: figure this out (if condition below will never be true)*/
 	if ((double)(*ip) > X_DOUBLE_MAX || (double)(*ip) < X_DOUBLE_MIN)
-		return NC_ERANGE;
+		DEBUG_RETURN_ERROR(NC_ERANGE)
 #endif
 	double xx = (double) *ip;
 	put_ix_double(xp, &xx);
@@ -1734,7 +1742,7 @@ ncmpix_put_double_double(void *xp, const double *ip)
 {
 #ifdef NO_IEEE_FLOAT
 	if (*ip > X_DOUBLE_MAX || *ip < X_DOUBLE_MIN)
-		return NC_ERANGE;
+		DEBUG_RETURN_ERROR(NC_ERANGE)
 #endif
 	put_ix_double(xp, ip);
 	return NC_NOERR;
@@ -1944,7 +1952,7 @@ ncmpix_put_off_t(void **xpp, const off_t *lp, size_t sizeof_off_t)
 	/* No negative offsets stored in netcdf */
 	if (*lp < 0) {
 	  /* Assume this is an overflow of a 32-bit int... */
-	  return NC_ERANGE;
+	  DEBUG_RETURN_ERROR(NC_ERANGE)
 	}
 
 	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
@@ -2010,7 +2018,7 @@ ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
  * on this system.  Set an error code and return.
  */
 		if (*lp != 0) {
-		  return NC_ERANGE;
+		  DEBUG_RETURN_ERROR(NC_ERANGE)
 		}
 
 		*lp  = ((off_t)(*cp++) << 24);
@@ -2024,7 +2032,7 @@ ncmpix_get_off_t(const void **xpp, off_t *lp, size_t sizeof_off_t)
 		   * than 2^32 which is not allowed, but is not caught
 		   * by the previous check
 		   */
-		  return NC_ERANGE;
+		  DEBUG_RETURN_ERROR(NC_ERANGE)
 		}
 #else
 		*lp =  ((off_t)(*cp++) << 56);
@@ -2193,7 +2201,7 @@ ncmpix_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 
 	while (nelems-- != 0)
 	{
-		GETI_CheckNeg($1, $2, *xp, tp, status =)
+		GETI_CheckNegAssign($1, $2, *xp, tp)
 		*tp++ = ($2) (*xp++);  /* type cast from $1 to $2 */
 	}
 
@@ -2219,7 +2227,7 @@ ncmpix_pad_getn_$1_$2(const void **xpp, MPI_Offset nelems, $2 *tp)
 
 	while (nelems-- != 0)
 	{
-		GETI_CheckNeg($1, $2, *xp, tp, status =)
+		GETI_CheckNegAssign($1, $2, *xp, tp)
 		*tp++ = ($2)(*xp++);  /* type cast from $1 to $2 */
 	}
 

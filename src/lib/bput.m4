@@ -47,7 +47,7 @@ ncmpi_bput_var(int           ncid,
                                  1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     GET_FULL_DIMENSIONS(start, count)
 
@@ -82,7 +82,7 @@ ncmpi_bput_var_$1(int       ncid,
                                  0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     GET_FULL_DIMENSIONS(start, count)
 
@@ -128,7 +128,7 @@ ncmpi_bput_var1(int               ncid,
                                  1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     GET_ONE_COUNT(count)
 
@@ -162,7 +162,7 @@ ncmpi_bput_var1_$1(int               ncid,
                                  0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     GET_ONE_COUNT(count)
 
@@ -207,7 +207,7 @@ ncmpi_bput_vara(int               ncid,
                                  1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)buf, bufcount, buftype, reqid,
@@ -237,7 +237,7 @@ ncmpi_bput_vara_$1(int               ncid,
                                  0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, NULL, NULL,
                                (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
@@ -279,7 +279,7 @@ ncmpi_bput_vars(int               ncid,
                                  1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)buf, bufcount, buftype, reqid,
@@ -310,7 +310,7 @@ ncmpi_bput_vars_$1(int               ncid,
                                  0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, NULL,
                                (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
@@ -352,7 +352,7 @@ ncmpi_bput_varm(int               ncid,
                                  1, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)buf, bufcount, buftype, reqid,
@@ -384,7 +384,7 @@ ncmpi_bput_varm_$1(int               ncid,
                                  0, WRITE_REQ, NONBLOCKING_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     return ncmpii_igetput_varm(ncp, varp, start, count, stride, imap,
                                (void*)op, -1, $3, reqid, WRITE_REQ, 1, 0);
@@ -413,7 +413,7 @@ ncmpi_buffer_attach(int        ncid,
     int status;
     NC *ncp;
 
-    if (bufsize <= 0) return NC_ENULLBUF;
+    if (bufsize <= 0) DEBUG_RETURN_ERROR(NC_ENULLBUF)
 
     status = ncmpii_NC_check_id(ncid, &ncp);
     if (status != NC_NOERR) return status;
@@ -422,7 +422,7 @@ ncmpi_buffer_attach(int        ncid,
      * note that in nc.c, the NC object is allocated with calloc, so
      * abuf should be initialized to NULL then
      */
-    if (ncp->abuf != NULL) return NC_EPREVATTACHBUF;
+    if (ncp->abuf != NULL) DEBUG_RETURN_ERROR(NC_EPREVATTACHBUF)
 
     ncp->abuf = (NC_buf*) NCI_Malloc(sizeof(NC_buf));
 
@@ -448,13 +448,13 @@ ncmpi_buffer_detach(int ncid)
     if (status != NC_NOERR) return status;
 
     /* check if the buffer has been previously attached */
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* this API assumes users are responsible for no pending bput */
     cur_req = ncp->head;
     while (cur_req != NULL) { /* check if there is a pending bput */
         if (cur_req->abuf_index >= 0)
-            return NC_EPENDINGBPUT;
+            DEBUG_RETURN_ERROR(NC_EPENDINGBPUT)
             /* return now, so users can call wait and try detach again */
         cur_req = cur_req->next;
     }
@@ -486,7 +486,7 @@ ncmpi_buffer_detach(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* check if the buffer has been previously attached */
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* check MPICH2 src/mpi/pt2pt/bsendutil.c for why the bufptr is void* */
     *(void **)bufptr = ncp->abuf->buf;
@@ -496,7 +496,7 @@ ncmpi_buffer_detach(int         ncid,
     cur_req = ncp->head;
     while (cur_req != NULL) { /* check if there is a pending bput */
         if (cur_req->abuf_index >= 0)
-            return NC_EPENDINGBPUT;
+            DEBUG_RETURN_ERROR(NC_EPENDINGBPUT)
         cur_req = cur_req->next;
     }
 
@@ -521,7 +521,7 @@ ncmpi_inq_buffer_usage(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* check if the buffer has been previously attached */
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* return the current usage in bytes */
     *usage = ncp->abuf->size_used;
@@ -541,7 +541,7 @@ ncmpi_inq_buffer_size(int         ncid,
     if (status != NC_NOERR) return status;
 
     /* check if the buffer has been previously attached */
-    if (ncp->abuf == NULL) return NC_ENULLABUF;
+    if (ncp->abuf == NULL) DEBUG_RETURN_ERROR(NC_ENULLABUF)
 
     /* return the current usage in bytes */
     *buf_size = ncp->abuf->size_allocated;
