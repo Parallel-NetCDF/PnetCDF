@@ -18,6 +18,7 @@ dnl
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <string.h> /* memcpy() */
 #include <assert.h>
 
 #include <mpi.h>
