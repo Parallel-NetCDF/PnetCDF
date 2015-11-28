@@ -24,8 +24,7 @@ OBJS      = $(SRCS:.c=.o)
 PROGS     = $(SRCS:.c=)
 
 GARBAGE      = $(PROGS) *.nc
-PACKING_LIST = $(SRCS) test_check_header.c test_check_header1.c \
-               Makefile.in README
+PACKING_LIST = $(SRCS) Makefile.in
 
 all: $(PROGS)
 
@@ -51,7 +50,7 @@ ptest4: $(PROGS)
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
-ptest: ptest2
+ptest: ptest4
 
 ptests: ptest2 ptest4
 ptest6 ptest8 ptest10:
