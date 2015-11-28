@@ -63,6 +63,8 @@ TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 ptest: $(PROGS)
 	$(TEST_MPIRUN_4) ./$(PROGS) $(TEST_OUTDIR)/flash_io_test_
 
+ptests:
+
 MANIFEST.echo: FORCE
 	echo $(PACKING_LIST) | fmt -1
 

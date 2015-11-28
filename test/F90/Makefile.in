@@ -124,7 +124,7 @@ ptest10: $(PARALLEL_PROGS)
 	$(TEST_MPIRUN_10) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
-ptest: ptest4 ptest8
+ptest: ptest4
 ptests: ptest2 ptest4 ptest8 ptest10
 ptest6:
 
