@@ -24,8 +24,6 @@ SRCS    = nctst.cpp \
 OBJS    = $(SRCS:.cpp=.o)
 PROGS   = $(SRCS:.cpp=)
 
-PAR_PROGS =
-
 GARBAGE      = $(PROGS) *.nc
 PACKING_LIST = $(SRCS) Makefile.in
 
@@ -53,8 +51,8 @@ TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
 TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
 
-ptest4: $(PAR_PROGS)
-	@for i in $(PAR_PROGS); do ( \
+ptest4: $(PROGS)
+	@for i in $(PROGS); do ( \
 	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
 	; ) ; done
 
