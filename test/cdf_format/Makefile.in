@@ -43,7 +43,15 @@ testing check verbose_testing: all
 	$(TEST_SEQRUN) ./test_inq_format
 	$(TEST_SEQRUN) ./cdf_type $(TEST_OUTDIR)/testfile.nc
 
-ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10:
+ptest4: $(PROGS)
+	$(RM) -f $(TEST_OUTDIR)/testfile.nc
+	for i in $(PROGS); do ( \
+	$(TEST_MPIRUN_4) ./$$i $(TEST_OUTDIR)/testfile.nc \
+	; ) ; done
+
+ptest ptests: ptest4
+
+ptest2 ptest6 ptest8 ptest10:
 
 include $(srcdir)/../../rules.make
 

@@ -85,10 +85,6 @@ TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
 TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
 TEST_MPIRUN_3  = $(subst NP,3,$(TEST_MPIRUN))
 
-ptest: ptest4
-ptests: ptest3 ptest4 ptest8
-ptest2 ptest6 ptest10:
-
 ptest4: $(PROGS)
 	@for i in $(PROGS); do ( \
         $(TEST_MPIRUN_4) ./$$i -q $(TEST_OUTDIR)/testfile.nc ; \
@@ -115,6 +111,10 @@ ptest3: $(PROGS)
         else \
            echo "FAILED: parallel run on 3 processes ----------------- $$i"; \
         fi ; ) ; done
+
+ptest: ptest4
+ptests: ptest3 ptest4 ptest8
+ptest2 ptest6 ptest10:
 
 include $(srcdir)/depend
 include $(srcdir)/../../rules.make

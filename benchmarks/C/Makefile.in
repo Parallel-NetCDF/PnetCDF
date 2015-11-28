@@ -49,6 +49,8 @@ ptest: $(PROGS)
 	; ) ; done
 	@echo "-----------------------------------------------------"
 
+ptests:
+
 include $(srcdir)/depend
 
 include $(srcdir)/../../rules.make

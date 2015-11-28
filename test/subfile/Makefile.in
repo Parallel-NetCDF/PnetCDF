@@ -65,7 +65,7 @@ ptest4: $(PROGS)
 	$(TEST_MPIRUN_4) ./$$i -f $(TEST_OUTDIR)/testfile.nc -s 2 \
 	; ) ; done
 
-ptest: ptest2
+ptest: ptest4
 ptests: ptest2 ptest4
 ptest6 ptest8 ptest10:
 
