@@ -283,26 +283,45 @@ ncmpi_wait(int ncid,
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, INDEP_IO, num_reqs, req_ids, statuses);
 #else
-    int i, err;
+    int i, err, *reqids=NULL;
     if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
         /* in this case, arguments req_ids and statuses are ignored */
-        NC_req *cur_req = ncp->head;
-        while (cur_req != NULL) {
-            /* serve one request at a time */
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &cur_req->id, NULL);
-            if (status == NC_NOERR) status = err;
-            cur_req = cur_req->next;
+        int prev_id = NC_REQ_NULL;
+        NC_req *req_ptr = ncp->head;
+        num_reqs = 0;
+        while (req_ptr != NULL) {
+            /* some requests in the linked list may share the same ID, they were
+             * corresponding to the subrequests made from iput/iget/bput varn APIs.
+             */
+            if (req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                num_reqs++;
+            }
+            req_ptr = req_ptr->next;
         }
-    }
-    else {
-        for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-            if (statuses == NULL)
-                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
-            else
-                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-            if (status == NC_NOERR) status = err;
+        /* allocate ID array */
+        reqids = (int*) NCI_Malloc(num_reqs * sizeof(int));
+        req_ptr = ncp->head;
+        num_reqs = 0;
+        prev_id = NC_REQ_NULL;
+        while (req_ptr != NULL) {
+            if (req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                reqids[num_reqs++] = prev_id;
+            }
+            req_ptr = req_ptr->next;
         }
+        req_ids = reqids;
     }
+    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+        if (statuses == NULL)
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
+        else
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        if (status == NC_NOERR) status = err;
+    }
+    if (reqids != NULL) NCI_Free(reqids);
+
     return status; /* return the first error encountered */
 #endif
 }
@@ -339,7 +358,7 @@ ncmpi_wait_all(int  ncid,
 #ifdef ENABLE_NONBLOCKING
     return ncmpii_wait(ncp, COLL_IO, num_reqs, req_ids, statuses);
 #else
-    int  i, err;
+    int i, err, *reqids=NULL;
 
     /* This API is collective, so make it illegal in indep mode. This also
        ensures the program will returns back to collective mode. */
@@ -351,24 +370,41 @@ ncmpi_wait_all(int  ncid,
     if (status == NC_NOERR) status = err;
 
     if (num_reqs == NC_REQ_ALL) { /* flush all pending requests */
-        /* in this case, arguments req_ids and statuses are ignored */
-        NC_req *cur_req = ncp->head;
-        while (cur_req != NULL) {
-            /* serve one request at a time */
-            err = ncmpii_wait(ncp, INDEP_IO, 1, &cur_req->id, NULL);
-            if (status == NC_NOERR) status = err;
-            cur_req = cur_req->next;
+        int prev_id = NC_REQ_NULL;
+        NC_req *req_ptr = ncp->head;
+        num_reqs = 0;
+        while (req_ptr != NULL) {
+            /* some requests in the linked list may share the same ID, they were
+             * corresponding to the subrequests made from iput/iget/bput varn APIs.
+             */
+            if (req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                num_reqs++;
+            }
+            req_ptr = req_ptr->next;
         }
-    }
-    else {
-        for (i=0; i<num_reqs; i++) { /* serve one request at a time */
-            if (statuses == NULL)
-                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
-            else
-                err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
-            if (status == NC_NOERR) status = err;
+        /* allocate ID array */
+        reqids = (int*) NCI_Malloc(num_reqs * sizeof(int));
+        req_ptr = ncp->head;
+        num_reqs = 0;
+        prev_id = NC_REQ_NULL;
+        while (req_ptr != NULL) {
+            if (req_ptr->id != prev_id) {
+                prev_id = req_ptr->id;
+                reqids[num_reqs++] = prev_id;
+            }
+            req_ptr = req_ptr->next;
         }
+        req_ids = reqids;
     }
+    for (i=0; i<num_reqs; i++) { /* serve one request at a time */
+        if (statuses == NULL)
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], NULL);
+        else
+            err = ncmpii_wait(ncp, INDEP_IO, 1, &req_ids[i], &statuses[i]);
+        if (status == NC_NOERR) status = err;
+    }
+    if (reqids != NULL) NCI_Free(reqids);
 
     /* return to collective data mode */
     err = ncmpi_end_indep_data(ncid);
