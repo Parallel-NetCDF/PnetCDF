@@ -344,7 +344,8 @@ ncmpi_def_var_fill(int   ncid,
         if (fill_value == NULL) {
             /* user intends to use default fill value */
             fill_value = NCI_Malloc((size_t)varp->xsz);
-            inq_default_fill_value(varp->type, fill_value);
+            err = inq_default_fill_value(varp->type, fill_value);
+            if (err != NC_NOERR) return err;
             free_fill_value=1;
         }
         memcpy(root_fill_value, fill_value, (size_t)varp->xsz);
@@ -409,8 +410,10 @@ ncmpi_inq_var_fill(int   ncid,
         err = ncmpi_get_att(ncid, varid, _FillValue, fill_value);
         if (err != NC_NOERR && err != NC_ENOTATT)
             return err;
-        if (err == NC_ENOTATT)
-            inq_default_fill_value(varp->type, fill_value);
+        if (err == NC_ENOTATT) {
+            err = inq_default_fill_value(varp->type, fill_value);
+            if (err != NC_NOERR) return err;
+        }
     }
 
     return NC_NOERR;
