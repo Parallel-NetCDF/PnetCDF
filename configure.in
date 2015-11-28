@@ -1096,9 +1096,9 @@ fi
 chmod u+x ${srcdir}/scripts/install-sh
 
 AC_ARG_ENABLE([subfiling],
-   [AS_HELP_STRING([--disable-subfiling],
-                   [Turns off subfiling support. @<:@default: enabled@:>@])],
-   [enable_subfiling=${enableval}], [enable_subfiling=yes]
+   [AS_HELP_STRING([--enable-subfiling],
+                   [Enable subfiling support. @<:@default: disabled@:>@])],
+   [enable_subfiling=${enableval}], [enable_subfiling=no]
 )
 if test "x$enable_subfiling" = "xyes" ; then
    AC_DEFINE(ENABLE_SUBFILING)
