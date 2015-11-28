@@ -68,7 +68,7 @@ usage(char *argv0)
 int main(int argc, char **argv) {
 
     extern int optind;
-    char         filename[128];
+    char         filename[256];
     int          i, j, err, ncid, verbose=1, varid0, varid1, dimids[2];
     int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
     else strcpy(filename, "testfile.nc");
 
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (verbose && rank == 0) printf("%s: example of using vard APIs\n",__FILE__);
 

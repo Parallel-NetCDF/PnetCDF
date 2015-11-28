@@ -166,7 +166,7 @@ int tst_norm(char *filename, int cmode)
 int
 main(int argc, char **argv)
 {
-    char filename[128];
+    char filename[256];
     int rank, nprocs, cmode, err, nerrs=0, verbose=0;
 
     MPI_Init(&argc, &argv);
@@ -180,7 +180,7 @@ main(int argc, char **argv)
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for emulating netCDF tst_norm ", argv[0]);

@@ -362,7 +362,7 @@ main(int argc, char **argv)
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     char cmd_str[256];
     sprintf(cmd_str, "*** TESTING C   %s for fill/nofill modes ", argv[0]);

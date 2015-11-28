@@ -40,7 +40,7 @@
           integer(kind=MPI_OFFSET_KIND) NX, NY
           PARAMETER(NREQS=4, NX=4, NY=4)
 
-          character(LEN=128) filename, cmd, msg, varname, str
+          character(LEN=256) filename, cmd, msg, varname, str
           integer i, err, ierr, nprocs, rank, nerrs, get_args
           integer ncid, ghost
           integer var(64,4), varid(4), dimid(2), req(4), st(4)

@@ -181,7 +181,7 @@
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          character(LEN=128) filename, cmd, msg
+          character(LEN=256) filename, cmd, msg
           integer err, ierr, nprocs, rank, i, j, get_args
           integer cmode, ncid, varid0, varid1, varid2, dimid(2), nerrs
           integer NX, NY

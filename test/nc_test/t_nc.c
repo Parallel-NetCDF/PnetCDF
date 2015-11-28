@@ -607,7 +607,7 @@ int t_nc(char *filename, int cmode)
 
 int main(int argc, char *argv[])
 {
-    char filename[128];
+    char filename[256];
     int rank, nprocs, cmode, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
@@ -621,7 +621,7 @@ int main(int argc, char *argv[])
     }
     strcpy(filename, "testfile.nc");
     if (argc == 2) strcpy(filename, argv[1]);
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char cmd_str[256];

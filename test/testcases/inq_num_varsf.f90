@@ -57,7 +57,7 @@
           use pnetcdf
           implicit none
 
-          character(LEN=128) filename, cmd, msg
+          character(LEN=256) filename, cmd, msg
           integer err, ierr, nprocs, rank, cmode, ncid, get_args
           integer varid(7), dimid(3), dimid_1D(1), dimid_2D(2)
           integer nerrs, nvars, num_rec_vars, num_fix_vars
