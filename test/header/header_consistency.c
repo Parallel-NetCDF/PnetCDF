@@ -5,7 +5,8 @@
 /* $Id$ */
 
 /* This program tests if PnetCDF can detect file header inconsistency and
- * overwrite the inconsistent header with root's
+ * overwrite the inconsistent header with root's.
+ * This program is designed to run on more than 2 MPI processes.
  */
 
 #include <stdio.h>
