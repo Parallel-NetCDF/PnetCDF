@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 {
     extern int optind;
     char *filename = "testfile.nc";
-    int i, j, verbose=1, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
+    int i, j, verbose=1, rank, nprocs, err, myNX, G_NX, myOff;
     int ncid, cmode, varid, dimid[2], **buf;
     MPI_Offset start[2], count[2];
 
@@ -132,7 +132,6 @@ int main(int argc, char** argv)
         printf("%2d: start=%3lld %3lld count=%3lld %3lld\n",
                rank, start[0],start[1], count[0],count[1]);
 
-    num_reqs = 0;
     for (i=0; i<myNX; i++) {
         err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[i], NULL);
         ERR
@@ -149,7 +148,6 @@ int main(int argc, char** argv)
     start[0]  = 0;   start[1] = rank;
     count[0]  = NY;  count[1] = 1;
 
-    num_reqs = 0;
     for (i=0; i<myNX; i++) {
         err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[i], NULL);
         ERR
