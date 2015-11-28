@@ -56,7 +56,7 @@
           integer NDIMS
           PARAMETER(NDIMS=2)
 
-          character(LEN=128) filename, cmd, msg
+          character(LEN=256) filename, cmd, msg
           integer rank, nprocs, err, ierr, num_reqs, get_args
           integer ncid, cmode, varid, dimid(2), y, x, i, j, nerrs
           integer, allocatable :: req_lens(:)

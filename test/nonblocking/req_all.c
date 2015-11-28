@@ -68,7 +68,7 @@
 
 int main(int argc, char** argv)
 {
-    char filename[128];
+    char filename[256];
     int i, j, rank, nprocs, nerrs=0, err;
     int ncid, cmode, varid[2], dimid[2], buf_int[NY][NX];
     float buf_flt[NY][NX];

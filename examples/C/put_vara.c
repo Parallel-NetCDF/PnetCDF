@@ -82,7 +82,7 @@ usage(char *argv0)
 int main(int argc, char** argv)
 {
     extern int optind;
-    char filename[128];
+    char filename[256];
     int i, j, rank, nprocs, verbose=1, err;
     int ncid, cmode, varid, dimid[2], buf[NY][NX];
     char str_att[128];
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
     if (argc == 1) strcpy(filename, argv[0]); /* optional argument */
     else strcpy(filename, "testfile.nc");
 
-    MPI_Bcast(filename, 128, MPI_CHAR, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (verbose && rank == 0) printf("%s: example of using put_vara APIs\n",__FILE__);
 
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
     err = ncmpi_put_att_float(ncid, varid, "float_att_name", NC_FLOAT, 8,
                               &float_att[0]);
     ERR
-    long long int64_att=10000000000;
+    long long int64_att=10000000000LL;
     err = ncmpi_put_att_longlong(ncid, varid, "int64_att_name", NC_INT64, 1,
                               &int64_att);
     ERR

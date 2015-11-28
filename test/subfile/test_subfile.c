@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     int array_of_psizes[3];
     int status;
     MPI_Offset array_of_starts[3];
-    char *basename = NULL, *basename1 = NULL, filename[100];
+    char *basename = NULL, *basename1 = NULL, filename[256];
     char dimname[20], varname[20];
     int ncid, dimids0[3], rank_dim[3], *varid=NULL;
     MPI_Info info=MPI_INFO_NULL, info_used=MPI_INFO_NULL;

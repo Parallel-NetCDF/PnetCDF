@@ -43,7 +43,7 @@
           integer(kind=INT2_KIND) buf_int2
           integer(kind=INT8_KIND) buf_int8
 
-          character(LEN=128) filename, cmd, msg
+          character(LEN=256) filename, cmd, msg
           integer ncid, err, ierr, nerrs, nprocs, rank, get_args
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
 
