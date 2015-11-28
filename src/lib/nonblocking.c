@@ -343,7 +343,7 @@ ncmpi_wait_all(int  ncid,
 
     /* This API is collective, so make it illegal in indep mode. This also
        ensures the program will returns back to collective mode. */
-    if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP;
+    if (NC_indep(ncp)) DEBUG_RETURN_ERROR(NC_EINDEP);
 
     /* must enter independent mode, as num_reqs may be different among
        processes */
