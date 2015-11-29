@@ -53,7 +53,7 @@ test_subfile: test_subfile.o $(LIBRARY)
 testing check verbose_testing:
 
 TEST_MPIRUN_2 = $(subst NP,2,$(TEST_MPIRUN))
-TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+TEST_MPIRUN_4 = $(subst NP,4,$(TEST_MPIRUN))
 
 ptest2: $(PROGS)
 	@for i in $(PROGS); do ( \

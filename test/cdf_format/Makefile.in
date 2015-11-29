@@ -43,6 +43,16 @@ testing check verbose_testing: all
 	$(TEST_SEQRUN) ./test_inq_format
 	$(TEST_SEQRUN) ./cdf_type $(TEST_OUTDIR)/testfile.nc
 
+# Some of these tests are designed to run on one process,
+# # Run them on 4 processes to see if they can handle well
+# Some of these tests are designed to run on 4 processes,
+# # Run them on 2, 4, and 6 processes to see if they can handle well
+TEST_MPIRUN_2  = $(subst NP,2,$(TEST_MPIRUN))
+TEST_MPIRUN_4  = $(subst NP,4,$(TEST_MPIRUN))
+TEST_MPIRUN_6  = $(subst NP,6,$(TEST_MPIRUN))
+TEST_MPIRUN_8  = $(subst NP,8,$(TEST_MPIRUN))
+TEST_MPIRUN_10 = $(subst NP,10,$(TEST_MPIRUN))
+
 ptest4: $(PROGS)
 	$(RM) -f $(TEST_OUTDIR)/testfile.nc
 	for i in $(PROGS); do ( \
