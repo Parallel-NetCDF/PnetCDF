@@ -310,8 +310,6 @@ int gen(const MPI_Comm        &comm,
 
         lon.putVar_all(lons);
 
-        frtime.putVar_all(frtimes);
-
         // make sure tailing characters are all '\0'
         char *str = (char*) calloc(TIMESTRINGLEN, 1);
         strcpy(str, s);
@@ -327,10 +325,12 @@ int gen(const MPI_Comm        &comm,
         countp.push_back(NLATS);
         countp.push_back(NLONS);
 
-        P.putVar_all(startp,countp,&P_data[0][0][0]); // write zero-th record
+        P.putVar_all(startp,countp,&P_data[0][0][0]); // write 1st record
 
         startp[0] = 1;
-        P.putVar_all(startp,countp,&P_data[1][0][0]); // write zero-th record
+        P.putVar_all(startp,countp,&P_data[1][0][0]); // write 2nd record
+
+        frtime.putVar_all(frtimes);
 
         // close of nc takes place in destructor
     }
