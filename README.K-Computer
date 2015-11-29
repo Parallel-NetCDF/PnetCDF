@@ -33,13 +33,15 @@ configure command that was used to build PnetCDF successfully on K.
             CXXFLAGS="-Kfast" \
             FFLAGS="-Kfast" \
             FCFLAGS="-Kfast" \
-            LDFLAGS="-L." \
             TEST_MPIRUN="mpiexec -n NP" \
             TEST_SEQRUN="mpiexec -n 1"
 
-Please read the file README.Fujitsu for a bug in autoconf 2.69 and how to
-obtain the fix patch for it. If this bug is not applied to (or unable to due
-to permission issue) the autoconf utility, please add LDFLAGS="-L." to the
+For users who would customize the source codes and edit configure.in, it is
+necessary to run command "autoreconf" to generate an updated "configure" file.
+However, there is a bug in autoconf 2.69 that causes building the PnetCDF
+Fortran interfaces to fail. Please read file README.Fujitsu for the bug patch
+to autoconf 2.69. If this bug fix is not applied to (or unable to due to
+permission issue) the autoconf utility, please add LDFLAGS="-L." to the
 configure command line.  Adding LDFLAGS="-L." is necessary as the Fujitsu
 Fortran compiler requires no "-L" for its internal library files.  Without
 this, configure command may fail.

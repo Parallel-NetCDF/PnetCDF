@@ -1,5 +1,8 @@
 # $Id$
 
+This file is for users who will edit file "configure.in" and run command
+"autoreconf" to regenerate file "configure".
+
 Autoconf 2.69 has a problem of checking the version of the Fujitsu Fortran
 compiler, which causes errors for building PnetCDF at the configure time.
 
@@ -46,8 +49,14 @@ or
               CXXFLAGS="-Kfast" \
               FFLAGS="-Kfast" \
               FCFLAGS="-Kfast" \
-              LDFLAGS="-L." \
               TEST_MPIRUN="mpiexec -n NP" \
               TEST_SEQRUN="mpiexec -n 1"
 
+
+----------------------------------
+If the above patch is not (or unable to) applied to the autoconf utility,
+please add LDFLAGS="-L." to the command line when running configure. This is
+necessary to prevent the failure of building PnetCDF Fortran interfaces, due to
+Fujitsu Fortran compiler requires no "-L" for linking internal libraries.
+Adding "-L." to force the linker to use this flag.
 
