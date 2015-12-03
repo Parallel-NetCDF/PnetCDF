@@ -121,7 +121,7 @@ Here lists a few important options:
   --enable-debug          Enable PnetCDF internal debug mode. This also
                           enables safe mode. [default: disabled]
   --disable-in-place-swap Disable memory in-place byte swap on Little Endian
-                          machines. [default: enabled]
+                          machines. [default: enabled]. See note below.
   --enable-coverage       Compile with coverage support (gcc-based only).
                           [default: disabled]
   --disable-subfiling     Turns off subfiling support. [default:
@@ -159,6 +159,29 @@ Some influential environment variables:
  - For platform-specific build instructions, see one of the README.<ARCH>
    files.  
 
+
+----
+Note on configure option "--disable-in-place-swap"
+----
+   This option disables the byte-swap operations running in-place on the user's
+   write buffers.  The purpose of providing this option is to deal with the
+   problem when a Fortran program uses a immutable buffer for put APIs, e.g.
+   the buffer is declared as a PARAMETER, and in-place byte swap on this buffer
+   causes segmentation fault. See discussion threads of
+   http://lists.mcs.anl.gov/pipermail/parallel-netcdf/2013-July/001498.html
+
+   Impacts:
+      1. It takes effect only on Little Endian machines.
+      2. It only affects put/iput data APIs, but not attribute APIs.
+      3. The INTENT of buffer arguments in all Fortran 90 put/iput APIs will be
+         declared as "IN". Without this setting, the default is "INOUT".
+      4. It has an impact on performance, as an extra internal temporary buffer
+         will be allocated to copy data over from user's put buffer, so byte
+         swap can be run on the temporary buffer.
+
+   The default setting is to enable in-place byte swap. PnetCDF tries not to
+   allocate additional memory space, due to performance concern. Users are
+   discouraged to use Fortran PARAMETER buffers in put APIs.
 
 -------------------------------------------------------------------------
 

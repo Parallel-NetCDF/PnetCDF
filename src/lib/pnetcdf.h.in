@@ -481,6 +481,7 @@ by the desired type. */
 #define NC_ECONSTRAINT  (NC_EDAPCONSTRAINT)   /* Malformed Constraint*/
 
 #endif
+/* end of #ifndef _NETCDF_ */
 
 /* now some definitions used in PnetCDF only */
 
