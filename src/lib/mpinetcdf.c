@@ -555,7 +555,7 @@ ncmpi_inq_format(int  ncid,
     } else {
         *formatp = NC_FORMAT_UNKNOWN;
     }
-    return 0;
+    return status;
 }
 
 /*----< ncmpi_inq_file_format() >--------------------------------------------*/
@@ -589,7 +589,7 @@ ncmpi_inq_file_format(char *filename,
     }
     status = ncmpi_close(ncid);
 
-    return 0;
+    return status;
 }
 
 /*----< ncmpi_inq_file_info() >-----------------------------------------------*/

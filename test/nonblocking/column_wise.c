@@ -151,12 +151,17 @@ int main(int argc, char** argv)
     ERR
 
     /* check status of all requests */
-    for (i=0; i<num_reqs; i++)
+    for (i=0; i<num_reqs; i++) {
+        if (reqs[i] != NC_REQ_NULL) { /* add in PnetCDF v1.6.2 */
+            printf("Error: request ID %d fails to be set to NC_REQ_NULL\n",i);
+            nerrs++;
+        }
         if (sts[i] != NC_NOERR) {
             printf("Error: nonblocking write fails on request %d (%s)\n",
                    i, ncmpi_strerror(sts[i]));
             nerrs++;
         }
+    }
 
     /* read back using the same access pattern */
     for (i=0; i<myNX; i++)
