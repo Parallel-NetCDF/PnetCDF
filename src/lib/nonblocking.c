@@ -148,7 +148,7 @@ ncmpi_cancel(int  ncid,
 int
 ncmpii_cancel(NC  *ncp,
               int  num_req,  /* NC_REQ_all means all pending requests */
-              int *req_ids,  /* [num_req] */
+              int *req_ids,  /* [num_req]: IN/OUT */
               int *statuses) /* [num_req] can be NULL (ignore status) */
 {
     int i, j, status=NC_NOERR;
@@ -216,6 +216,7 @@ ncmpii_cancel(NC  *ncp,
             /* retain the first error status */
             if (status == NC_NOERR) DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
         }
+        else req_ids[i] = NC_REQ_NULL;
     }
 
     /* make sure ncp->tail pointing to the tail */
@@ -269,7 +270,7 @@ ncmpi_inq_nreqs(int  ncid,
 int
 ncmpi_wait(int ncid,
            int num_reqs,
-           int *req_ids,  /* [num_reqs] */
+           int *req_ids,  /* [num_reqs]: IN/OUT */
            int *statuses) /* [num_reqs] */
 {
     int  status=NC_NOERR;
@@ -339,7 +340,7 @@ ncmpi_wait(int ncid,
 int
 ncmpi_wait_all(int  ncid,
                int  num_reqs, /* number of requests */
-               int *req_ids,  /* [num_reqs] */
+               int *req_ids,  /* [num_reqs]: IN/OUT */
                int *statuses) /* [num_reqs], can be NULL */
 {
     int  status=NC_NOERR;
@@ -818,6 +819,7 @@ ncmpii_wait(NC  *ncp,
             if (status == NC_NOERR) /* retain the first error status */
                 DEBUG_ASSIGN_ERROR(status, NC_EINVAL_REQUEST)
         }
+        else req_ids[i] = NC_REQ_NULL;
     }
     /* make sure ncp->tail pointing to the tail of the pending request queue */
     ncp->tail = ncp->head;

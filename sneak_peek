@@ -9,7 +9,10 @@ This is essentially a placeholder for the next release note ...
     * none
 
   o Syntax changes
-    * none
+    * In ncmpi_wait_all(), ncmpi_wait(), and ncmpi_cancel(), the API's third
+      argument, array of requests IDs, is changed to INOUT. Upon successful
+      completion or cancellation of individual nonblocking requests, the
+      corresponding request IDs are set to NC_REQ_NULL.
 
   o New PnetCDF hint
     * none
