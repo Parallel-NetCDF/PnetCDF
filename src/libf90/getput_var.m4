@@ -619,28 +619,28 @@ NBVAR(bput, 7D, EightByteInt, integer, int8, `:,:,:,:,:,:,:', inout)
 !
 
    function nf90mpi_wait(ncid, num, req, st)
-     integer,               intent( in) :: ncid, num
-     integer, dimension(:), intent( in) :: req
-     integer, dimension(:), intent(out) :: st
-     integer                            :: nf90mpi_wait
+     integer,               intent(in)    :: ncid, num
+     integer, dimension(:), intent(inout) :: req
+     integer, dimension(:), intent(out)   :: st
+     integer                              :: nf90mpi_wait
  
      nf90mpi_wait = nfmpi_wait(ncid, num, req, st)
    end function nf90mpi_wait
 
    function nf90mpi_wait_all(ncid, num, req, st)
-     integer,               intent( in) :: ncid, num
-     integer, dimension(:), intent( in) :: req
-     integer, dimension(:), intent(out) :: st
-     integer                            :: nf90mpi_wait_all
+     integer,               intent(in)    :: ncid, num
+     integer, dimension(:), intent(inout) :: req
+     integer, dimension(:), intent(out)   :: st
+     integer                              :: nf90mpi_wait_all
  
      nf90mpi_wait_all = nfmpi_wait_all(ncid, num, req, st)
    end function nf90mpi_wait_all
 
    function nf90mpi_cancel(ncid, num, req, st)
-     integer,               intent( in) :: ncid, num
-     integer, dimension(:), intent( in) :: req
-     integer, dimension(:), intent(out) :: st
-     integer                            :: nf90mpi_cancel
+     integer,               intent(in)    :: ncid, num
+     integer, dimension(:), intent(inout) :: req
+     integer, dimension(:), intent(out)   :: st
+     integer                              :: nf90mpi_cancel
  
      nf90mpi_cancel = nfmpi_cancel(ncid, num, req, st)
    end function nf90mpi_cancel

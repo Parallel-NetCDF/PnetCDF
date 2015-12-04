@@ -3342,24 +3342,24 @@ INTERFACE
 !
 
     INTEGER        FUNCTION nfmpi_wait(ncid, count, req, status)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: count
-                            INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(OUT) :: status(count)
+                            INTEGER,                       INTENT(IN)   :: ncid
+                            INTEGER,                       INTENT(IN)   :: count
+                            INTEGER,                       INTENT(INOUT):: req(count)
+                            INTEGER,                       INTENT(OUT)  :: status(count)
     END FUNCTION   nfmpi_wait
 
     INTEGER        FUNCTION nfmpi_wait_all(ncid, count, req, status)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: count
-                            INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(OUT) :: status(count)
+                            INTEGER,                       INTENT(IN)   :: ncid
+                            INTEGER,                       INTENT(IN)   :: count
+                            INTEGER,                       INTENT(INOUT):: req(count)
+                            INTEGER,                       INTENT(OUT)  :: status(count)
     END FUNCTION   nfmpi_wait_all
 
     INTEGER        FUNCTION nfmpi_cancel(ncid, count, req, status)
-                            INTEGER,                       INTENT(IN)  :: ncid
-                            INTEGER,                       INTENT(IN)  :: count
-                            INTEGER,                       INTENT(IN)  :: req(count)
-                            INTEGER,                       INTENT(OUT) :: status(count)
+                            INTEGER,                       INTENT(IN)   :: ncid
+                            INTEGER,                       INTENT(IN)   :: count
+                            INTEGER,                       INTENT(INOUT):: req(count)
+                            INTEGER,                       INTENT(OUT)  :: status(count)
     END FUNCTION   nfmpi_cancel
 
     INTEGER        FUNCTION nfmpi_inq_put_size(ncid, size)
