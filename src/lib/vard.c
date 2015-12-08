@@ -334,7 +334,7 @@ ncmpi_get_vard(int           ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
-                                 1, READ_REQ, INDEP_IO, &ncp, &varp);
+                                 1, 1, READ_REQ, INDEP_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
@@ -355,7 +355,7 @@ ncmpi_get_vard_all(int           ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
-                                 1, READ_REQ, COLL_IO, &ncp, &varp);
+                                 1, 1, READ_REQ, COLL_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, buf, bufcount, buftype,
@@ -376,7 +376,7 @@ ncmpi_put_vard(int           ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
-                                 1, WRITE_REQ, INDEP_IO, &ncp, &varp);
+                                 1, 1, WRITE_REQ, INDEP_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,
@@ -397,7 +397,7 @@ ncmpi_put_vard_all(int           ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARD,
-                                 1, WRITE_REQ, COLL_IO, &ncp, &varp);
+                                 1, 1, WRITE_REQ, COLL_IO, &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_vard(ncp, varp, filetype, (void*)buf, bufcount,

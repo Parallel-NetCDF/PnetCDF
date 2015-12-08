@@ -21,6 +21,7 @@ int ncmpii_sanity_check(int               ncid,
                         const MPI_Offset *count,
                         MPI_Offset        bufcount,
                         enum API_KIND     api,
+                        int               mustInDataMode,
                         int               isFlexAPI,
                         int               rw_flag,
                         int               io_method,
@@ -38,8 +39,9 @@ int ncmpii_sanity_check(int               ncid,
      * error occurs only on a subset of processes
      */
 
-    /* in this context, define mode is wrong, must be called in data mode */
-    if (NC_indef(*ncp)) {
+    /* if this call must be made in data mode, check if currently is in define
+     * mode */
+    if (mustInDataMode && NC_indef(*ncp)) {
         DEBUG_ASSIGN_ERROR(status, NC_EINDEFINE)
         goto fn_exit;
     }

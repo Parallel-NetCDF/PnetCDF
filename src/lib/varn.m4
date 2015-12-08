@@ -82,7 +82,7 @@ ncmpi_$1_varn$2(int                ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, bufcount, API_VARN,
-                                 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 1, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     return ncmpii_getput_varn(ncp, varp, num, starts, counts, (void*)buf,
@@ -115,7 +115,7 @@ ncmpi_$1_varn_$3$2(int                ncid,
     NC_var *varp=NULL;
 
     status = ncmpii_sanity_check(ncid, varid, NULL, NULL, 0, API_VARN,
-                                 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
+                                 1, 0, ReadWrite($1), CollIndep($2), &ncp, &varp);
     if (status != NC_NOERR) return status;
 
     /* set bufcount to -1 indicating non-flexible API */
